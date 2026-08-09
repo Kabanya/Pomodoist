@@ -1,0 +1,280 @@
+:root {
+  color-scheme: var(--tg-color-scheme, light);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--tg-theme-bg-color, #fffaf8);
+  color: var(--tg-theme-text-color, #201416);
+  accent-color: var(--tg-theme-button-color, #e75749);
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: inherit;
+  color: inherit;
+}
+button, input {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+
+.shell {
+  width: min(100%, 680px);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: calc(18px + max(var(--tg-safe-area-inset-top, env(safe-area-inset-top)), var(--tg-content-safe-area-inset-top, 0px)))
+    calc(18px + max(var(--tg-safe-area-inset-right, env(safe-area-inset-right)), var(--tg-content-safe-area-inset-right, 0px)))
+    calc(96px + max(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom)), var(--tg-content-safe-area-inset-bottom, 0px)))
+    calc(18px + max(var(--tg-safe-area-inset-left, env(safe-area-inset-left)), var(--tg-content-safe-area-inset-left, 0px)));
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+h1, h2, p {
+  margin-top: 0;
+}
+h1 {
+  margin-bottom: 0;
+  font-size: 30px;
+  letter-spacing: -0.04em;
+}
+.eyebrow {
+  margin-bottom: 3px;
+  color: var(--tg-theme-hint-color, #8d7477);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.muted {
+  color: var(--tg-theme-hint-color, #806f72);
+  line-height: 1.45;
+}
+
+.icon-button, .dialog-close {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--tg-theme-secondary-bg-color, #f4e8e5);
+  color: inherit;
+}
+
+.add-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.add-form input {
+  min-width: 0;
+  height: 48px;
+  padding: 0 16px;
+  border: 1px solid
+    color-mix(in srgb, var(--tg-theme-hint-color, #806f72) 25%, transparent);
+  border-radius: 15px;
+  outline: none;
+  background: var(--tg-theme-secondary-bg-color, #f7ece9);
+  color: inherit;
+}
+.add-form input:focus {
+  border-color: var(--tg-theme-button-color, #e75749);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--tg-theme-button-color, #e75749) 18%, transparent);
+}
+.add-form button, .primary-button, .primary-link {
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 15px;
+  background: var(--tg-theme-button-color, #e75749);
+  color: var(--tg-theme-button-text-color, #fff);
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task-list {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.task {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 10px 10px 10px 14px;
+  border-radius: 17px;
+  background: var(--tg-theme-secondary-bg-color, #f7ece9);
+}
+.task input {
+  width: 21px;
+  height: 21px;
+}
+.task-title {
+  overflow-wrap: anywhere;
+}
+.focus-button {
+  border: 0;
+  border-radius: 12px;
+  padding: 9px 11px;
+  background: color-mix(
+    in srgb,
+    var(--tg-theme-button-color, #e75749) 13%,
+    transparent
+  );
+  color: var(--tg-theme-link-color, #bd4339);
+  font-weight: 700;
+}
+
+.focus-card {
+  margin-bottom: 18px;
+  padding: 24px;
+  border-radius: 22px;
+  text-align: center;
+  background: linear-gradient(
+    145deg,
+    var(--tg-theme-button-color, #e75749),
+    #a52f37
+  );
+  color: var(--tg-theme-button-text-color, white);
+  box-shadow: 0 15px 35px
+    color-mix(in srgb, var(--tg-theme-button-color, #e75749) 25%, transparent);
+}
+.focus-task {
+  margin-bottom: 8px;
+  opacity: 0.84;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.focus-clock {
+  display: block;
+  font-size: clamp(54px, 18vw, 84px);
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  letter-spacing: -0.07em;
+}
+
+.center-card {
+  min-height: calc(100vh - 110px);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+}
+.mark {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  margin-bottom: 20px;
+  border-radius: 22px;
+  background: var(--tg-theme-button-color, #e75749);
+  color: white;
+  font-size: 34px;
+  font-weight: 800;
+}
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--tg-theme-secondary-bg-color, #eadeda);
+  border-top-color: var(--tg-theme-button-color, #e75749);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.empty {
+  padding: 44px 16px;
+  text-align: center;
+  color: var(--tg-theme-hint-color, #806f72);
+}
+
+.settings-dialog {
+  width: min(calc(100% - 32px), 420px);
+  padding: 26px;
+  border: 0;
+  border-radius: 24px;
+  background: var(--tg-theme-bg-color, #fffaf8);
+  color: var(--tg-theme-text-color, #201416);
+  box-shadow: 0 24px 70px #0005;
+}
+.settings-dialog::backdrop {
+  background: #0007;
+}
+.dialog-close {
+  position: absolute;
+  inset-inline-end: 16px;
+  top: 16px;
+  font-size: 24px;
+}
+.settings-dialog .primary-button {
+  width: 100%;
+}
+
+.toast {
+  position: fixed;
+  z-index: 4;
+  inset-inline: 16px;
+  bottom: calc(
+    18px + var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom))
+  );
+  max-width: 648px;
+  margin: auto;
+  padding: 13px 14px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--tg-theme-text-color, #201416);
+  color: var(--tg-theme-bg-color, #fffaf8);
+  box-shadow: 0 10px 35px #0004;
+}
+.toast button {
+  border: 0;
+  background: transparent;
+  color: var(--tg-theme-link-color, #ff8073);
+  font-weight: 800;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+[hidden] {
+  display: none !important;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

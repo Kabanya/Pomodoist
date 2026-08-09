@@ -1,0 +1,490 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "add.add" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "إضافة"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Hinzufügen"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Add"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Añadir"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Ajouter"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Добавить"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "添加"}}
+      }
+    },
+    "add.addDrafts" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "إضافة المسودات"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Entwürfe hinzufügen"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Add drafts"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Añadir borradores"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Ajouter les brouillons"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Добавить черновики"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "添加草稿"}}
+      }
+    },
+    "add.analyze" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "تحليل"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Analysieren"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Analyze"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Analizar"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Analyser"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Разобрать"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "分析"}}
+      }
+    },
+    "add.textUnavailable" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "تعذرت معالجة النص"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Text konnte nicht verarbeitet werden"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Could not process text"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "No se pudo procesar el texto"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Impossible de traiter le texte"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Не удалось обработать текст"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "无法处理文本"}}
+      }
+    },
+    "add.dictatePlaceholder" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "أملي المهام"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Aufgaben diktieren"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Dictate tasks"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Dicta tareas"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Dicter des tâches"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Продиктуйте задачи"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "口述任务"}}
+      }
+    },
+    "add.draft" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "مسودة"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Entwurf"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Draft"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Borrador"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Brouillon"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Черновик"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "草稿"}}
+      }
+    },
+    "add.mode" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "الوضع"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Modus"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Mode"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Modo"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Mode"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Режим"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "模式"}}
+      }
+    },
+    "add.quickAddPlaceholder" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "مهمة سريعة"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Schnellaufgabe"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Quick add"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Añadir rápido"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Ajout rapide"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Быстрая задача"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "快速添加"}}
+      }
+    },
+    "add.processing" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "جارٍ المعالجة…"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Wird verarbeitet…"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Processing…"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Procesando…"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Traitement…"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Обработка…"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "处理中…"}}
+      }
+    },
+    "add.recent" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "الأخيرة"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Zuletzt"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Recent"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Recientes"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Récentes"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Недавние"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "最近"}}
+      }
+    },
+    "add.remove" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "إزالة"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Entfernen"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Remove"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Quitar"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Retirer"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Удалить"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "移除"}}
+      }
+    },
+    "add.text" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "نص"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Text"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Text"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Texto"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Texte"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Текст"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "文本"}}
+      }
+    },
+    "add.title" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "إضافة"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Hinzufügen"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Add"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Añadir"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Ajouter"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Добавить"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "添加"}}
+      }
+    },
+    "browse.empty" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "لا توجد مهام"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Keine Aufgaben"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "No tasks"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Sin tareas"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Aucune tâche"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Нет задач"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "没有任务"}}
+      }
+    },
+    "browse.inbox" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "الوارد"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Eingang"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Inbox"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Entrada"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Boîte"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Входящие"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "收件箱"}}
+      }
+    },
+    "browse.projects" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "المشاريع"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Projekte"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Projects"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Proyectos"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Projets"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Проекты"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "项目"}}
+      }
+    },
+    "browse.title" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "عرض"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Übersicht"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Browse"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Explorar"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Parcourir"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Обзор"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "浏览"}}
+      }
+    },
+    "browse.today" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "اليوم"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Heute"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Today"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Hoy"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Aujourd’hui"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Сегодня"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "今天"}}
+      }
+    },
+    "browse.upcoming" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "القادمة"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Demnächst"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Upcoming"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Próximas"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "À venir"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Предстоящее"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "即将到来"}}
+      }
+    },
+    "common.cancel" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "إلغاء"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Abbrechen"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Cancel"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Cancelar"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Annuler"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Отмена"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "取消"}}
+      }
+    },
+    "error.iphoneUnavailable" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "iPhone غير متاح"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "iPhone nicht verfügbar"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "iPhone unavailable"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "iPhone no disponible"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "iPhone indisponible"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "iPhone недоступен"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "iPhone 不可用"}}
+      }
+    },
+    "error.openIphone" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "iPhone غير متاح"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "iPhone nicht verfügbar"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "iPhone unavailable"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "iPhone no disponible"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "iPhone indisponible"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "iPhone недоступен"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "iPhone 不可用"}}
+      }
+    },
+    "focus.break" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "استراحة"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Pause"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Break"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Descanso"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Pause"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Перерыв"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "休息"}}
+      }
+    },
+    "focus.complete" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "إنهاء"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Abschließen"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Complete"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Completar"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Terminer"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Завершить"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "完成"}}
+      }
+    },
+    "focus.idle" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "لا توجد جلسة"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Keine Sitzung"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "No session"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Sin sesión"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Aucune session"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Нет сессии"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "无会话"}}
+      }
+    },
+    "focus.longBreak" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "استراحة طويلة"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Lange Pause"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Long break"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Descanso largo"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Pause longue"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Длинный перерыв"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "长休息"}}
+      }
+    },
+    "focus.noPreset" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "لا قالب"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Kein Preset"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "No preset"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Sin preset"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Aucun préréglage"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Нет пресета"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "无预设"}}
+      }
+    },
+    "focus.pause" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "إيقاف مؤقت"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Pause"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Pause"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Pausa"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Pause"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Пауза"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "暂停"}}
+      }
+    },
+    "focus.ready" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "جاهز"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Bereit"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Ready"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Listo"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Prêt"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Готово"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "准备好"}}
+      }
+    },
+    "focus.progress" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "تقدم التركيز"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Fokusfortschritt"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Focus progress"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Progreso de enfoque"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Progression de focus"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Прогресс фокуса"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "专注进度"}}
+      }
+    },
+    "focus.restart" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "إعادة البدء"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Neu starten"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Restart"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Reiniciar"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Redémarrer"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Повторить"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "重新开始"}}
+      }
+    },
+    "focus.replaceAction" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "استبدال"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Ersetzen"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Replace"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Reemplazar"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Remplacer"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Заменить"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "替换"}}
+      }
+    },
+    "focus.replaceTitle" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "استبدال جلسة التركيز الحالية؟"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Aktuellen Fokus ersetzen?"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Replace current focus?"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "¿Reemplazar el enfoque actual?"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Remplacer la session de concentration actuelle ?"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Заменить текущий фокус?"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "替换当前专注？"}}
+      }
+    },
+    "focus.resume" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "متابعة"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Fortsetzen"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Resume"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Continuar"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Reprendre"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Продолжить"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "继续"}}
+      }
+    },
+    "focus.shortBreak" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "استراحة قصيرة"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Kurze Pause"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Short break"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Descanso corto"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Pause courte"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Короткий перерыв"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "短休息"}}
+      }
+    },
+    "focus.skip" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "تخطي"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Überspringen"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Skip"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Saltar"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Passer"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Пропустить"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "跳过"}}
+      }
+    },
+    "focus.start" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "بدء"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Start"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Start"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Iniciar"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Démarrer"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Начать"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "开始"}}
+      }
+    },
+    "focus.startTask" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "بدء التركيز على المهمة"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Fokus für Aufgabe starten"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Start focus for task"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Iniciar enfoque para la tarea"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Démarrer la concentration pour la tâche"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Запустить фокус для задачи"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "为任务开始专注"}}
+      }
+    },
+    "focus.stop" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "إيقاف"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Stopp"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Stop"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Detener"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Arrêter"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Стоп"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "停止"}}
+      }
+    },
+    "focus.work" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "عمل"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Arbeit"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Work"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Trabajo"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Travail"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Работа"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "工作"}}
+      }
+    },
+    "sync.queueFull" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "قائمة الانتظار ممتلئة"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Offline-Warteschlange voll"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Offline queue full"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Cola sin conexión llena"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "File hors ligne pleine"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Офлайн-очередь заполнена"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "离线队列已满"}}
+      }
+    },
+    "sync.queued" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "في الانتظار"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "In Warteschlange"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Queued"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "En cola"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "En attente"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "В очереди"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "已排队"}}
+      }
+    },
+    "sync.resolveOnIphone" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "حل على iPhone"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Auf iPhone lösen"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Resolve on iPhone"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Resolver en iPhone"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Résoudre sur iPhone"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Решить на iPhone"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "在 iPhone 上解决"}}
+      }
+    },
+    "sync.syncing" : {
+      "localizations" : {
+        "ar" : {"stringUnit" : {"state" : "translated", "value" : "تتم المزامنة…"}},
+        "de" : {"stringUnit" : {"state" : "translated", "value" : "Synchronisiere…"}},
+        "en" : {"stringUnit" : {"state" : "translated", "value" : "Syncing…"}},
+        "es" : {"stringUnit" : {"state" : "translated", "value" : "Sincronizando…"}},
+        "fr" : {"stringUnit" : {"state" : "translated", "value" : "Synchronisation…"}},
+        "ru" : {"stringUnit" : {"state" : "translated", "value" : "Синхронизация…"}},
+        "zh" : {"stringUnit" : {"state" : "translated", "value" : "正在同步…"}}
+      }
+    }
+  },
+  "version" : "1.0"
+}

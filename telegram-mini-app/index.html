@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    >
+    <meta name="color-scheme" content="light dark">
+    <title>Pomodoist</title>
+    <link rel="stylesheet" href="/telegram/styles.css">
+    <script src="https://telegram.org/js/telegram-web-app.js?63"></script>
+    <script src="/config.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <section id="outside" class="center-card" hidden>
+        <div class="mark" aria-hidden="true">P</div>
+        <h1 id="outside-title"></h1>
+        <p id="outside-body" class="muted"></p>
+        <a
+          id="open-bot"
+          class="primary-link"
+          href="https://t.me/pomodoist_bot?startapp"
+          rel="noopener"
+        ></a>
+      </section>
+
+      <section id="loading" class="center-card" aria-live="polite">
+        <div class="spinner" aria-hidden="true"></div>
+        <p id="loading-text"></p>
+      </section>
+
+      <section id="app" hidden>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Pomodoist</p>
+            <h1 id="inbox-title"></h1>
+          </div>
+          <button
+            id="account-button"
+            class="icon-button"
+            type="button"
+            aria-label="Account"
+          >
+            •••
+          </button>
+        </header>
+
+        <section id="focus-card" class="focus-card" hidden aria-live="polite">
+          <p id="focus-task" class="focus-task"></p>
+          <output id="focus-clock" class="focus-clock">25:00</output>
+        </section>
+
+        <form id="add-form" class="add-form">
+          <label class="sr-only" for="task-input" id="task-label"></label>
+          <input id="task-input" maxlength="2000" autocomplete="off">
+          <button id="add-button" type="submit"></button>
+        </form>
+
+        <p id="empty" class="empty" hidden></p>
+        <ul id="task-list" class="task-list" aria-live="polite"></ul>
+      </section>
+
+      <section id="error" class="center-card" hidden role="alert">
+        <p id="error-text"></p>
+        <button id="retry-button" class="primary-button" type="button"></button>
+      </section>
+    </main>
+
+    <dialog id="settings-dialog" class="settings-dialog">
+      <form method="dialog">
+        <button
+          id="close-settings"
+          class="dialog-close"
+          value="close"
+          aria-label="Close"
+        >
+          ×
+        </button>
+      </form>
+      <h2 id="settings-title"></h2>
+      <p id="account-status" class="muted"></p>
+      <button id="link-account" class="primary-button" type="button"></button>
+    </dialog>
+
+    <div id="toast" class="toast" hidden role="status">
+      <span id="toast-text"></span>
+      <button id="undo-button" type="button"></button>
+    </div>
+
+    <script type="module" src="/telegram/app.js"></script>
+  </body>
+</html>
