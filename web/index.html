@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="pomodoist">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>pomodoist</title>
+  <link rel="manifest" href="manifest.json">
+  <script>
+    (() => {
+      const validPreferences = ['light', 'dark', 'system'];
+      const cookieTheme = document.cookie
+        .split(';')
+        .map((cookie) => cookie.trim())
+        .find((cookie) => cookie.startsWith('pomodoist-theme='))
+        ?.slice('pomodoist-theme='.length);
+      let preference = validPreferences.includes(cookieTheme)
+        ? cookieTheme
+        : null;
+
+      if (!preference) {
+        try {
+          const encoded = localStorage.getItem('flutter.app.themeMode');
+          const stored = encoded ? JSON.parse(encoded) : null;
+          if (validPreferences.includes(stored)) {
+            preference = stored;
+            const hostname = window.location.hostname;
+            if (
+              hostname === 'pomodoist.com' ||
+              hostname.endsWith('.pomodoist.com')
+            ) {
+              document.cookie = `pomodoist-theme=${preference}; Domain=pomodoist.com; Path=/; Max-Age=31536000; SameSite=Lax; Secure`;
+            }
+          }
+        } catch (_) {
+          // Ignore unavailable or malformed legacy storage.
+        }
+      }
+
+      const useDark = preference === 'dark' || (
+        (!preference || preference === 'system') &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches
+      );
+      document.documentElement.dataset.theme = useDark ? 'dark' : 'light';
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --loader-background: #fffdfb;
+      --loader-text: #1e2227;
+      --loader-muted: #646b72;
+      --loader-track: #eadfda;
+      --loader-accent: #e34432;
+      background: var(--loader-background);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --loader-background: #160d10;
+      --loader-text: #f7edee;
+      --loader-muted: #d1c1c5;
+      --loader-track: #342027;
+      --loader-accent: #ff6b5e;
+    }
+
+    #pomodoist-web-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483647;
+      display: grid;
+      place-items: center;
+      background: var(--loader-background);
+      color: var(--loader-text);
+      opacity: 1;
+      transition: opacity 180ms ease;
+    }
+
+    #pomodoist-web-loader.is-hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .pomodoist-loading-content {
+      display: grid;
+      justify-items: center;
+      gap: 14px;
+      width: min(280px, calc(100vw - 48px));
+      text-align: center;
+    }
+
+    .pomodoist-loading-brand {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .pomodoist-loading-indicator {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--loader-track);
+      border-top-color: var(--loader-accent);
+      border-radius: 50%;
+      animation: pomodoist-spin 750ms linear infinite;
+    }
+
+    .pomodoist-loading-stage {
+      margin: 0;
+      color: var(--loader-muted);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .pomodoist-loading-reload {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 18px;
+      background: var(--loader-accent);
+      color: white;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    @keyframes pomodoist-spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <script src="config.js"></script>
+  <div id="pomodoist-web-loader" role="status" aria-live="polite">
+    <div class="pomodoist-loading-content">
+      <div class="pomodoist-loading-brand">Pomodoist</div>
+      <div class="pomodoist-loading-indicator" aria-hidden="true"></div>
+      <p class="pomodoist-loading-stage" id="pomodoist-web-loader-stage">Loading Pomodoist</p>
+      <button
+        class="pomodoist-loading-reload"
+        id="pomodoist-web-loader-reload"
+        type="button"
+        hidden
+      ></button>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const loader = document.getElementById('pomodoist-web-loader');
+      const stage = document.getElementById('pomodoist-web-loader-stage');
+      const reload = document.getElementById('pomodoist-web-loader-reload');
+      const russian = navigator.language.toLowerCase().startsWith('ru');
+      const copy = russian
+        ? {
+            bootstrap: 'Загружаем Pomodoist',
+            session: 'Проверяем сессию',
+            app: 'Открываем приложение',
+            slow: 'Первый запуск может занять немного больше времени',
+            failed: 'Не удалось запустить Pomodoist. Обновите страницу.',
+            reload: 'Обновить страницу',
+          }
+        : {
+            bootstrap: 'Loading Pomodoist',
+            session: 'Checking your session',
+            app: 'Opening the app',
+            slow: 'The first launch can take a little longer',
+            failed: 'Pomodoist could not start. Please reload the page.',
+            reload: 'Reload page',
+          };
+      let failed = false;
+      const fallback = window.setTimeout(() => {
+        stage.textContent = copy.slow;
+      }, 8000);
+      const watchdog = window.setTimeout(() => {
+        window.pomodoistShowLoadingFailure();
+      }, 30000);
+
+      const clearLoadingTimers = () => {
+        window.clearTimeout(fallback);
+        window.clearTimeout(watchdog);
+      };
+
+      stage.textContent = copy.bootstrap;
+      reload.textContent = copy.reload;
+      reload.addEventListener('click', () => window.location.reload());
+      window.pomodoistSetLoadingStage = (name) => {
+        if (!failed) stage.textContent = copy[name] || copy.bootstrap;
+      };
+      window.pomodoistHideLoading = () => {
+        clearLoadingTimers();
+        loader.classList.add('is-hidden');
+        window.setTimeout(() => loader.remove(), 180);
+      };
+      window.pomodoistShowLoadingFailure = () => {
+        clearLoadingTimers();
+        failed = true;
+        stage.textContent = copy.failed;
+        const indicator = loader.querySelector('.pomodoist-loading-indicator');
+        if (indicator) indicator.hidden = true;
+        reload.hidden = false;
+      };
+    })();
+  </script>
+  <!--
+    You can customize the "flutter_bootstrap.js" script.
+    This is useful to provide a custom configuration to the Flutter loader
+    or to give the user feedback during the initialization process.
+
+    For more details:
+    * https://docs.flutter.dev/platform-integration/web/initialization
+  -->
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

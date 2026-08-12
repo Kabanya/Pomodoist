@@ -1,0 +1,4 @@
+// Copy this file to GoogleOAuth.xcconfig and fill it with a Google OAuth
+// client of type Desktop app.
+GOOGLE_DESKTOP_CLIENT_ID = your-desktop-client-id.apps.googleusercontent.com
+GOOGLE_DESKTOP_CLIENT_SECRET =

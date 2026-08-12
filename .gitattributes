@@ -1,0 +1,22 @@
+* text=auto
+
+# Images
+*.avif binary
+*.bmp binary
+*.gif binary
+*.heic binary
+*.heif binary
+*.icns binary
+*.ico binary
+*.jfif binary
+*.jpe binary
+*.jpeg binary
+*.jpg binary
+*.png binary
+*.svg text eol=lf
+*.tif binary
+*.tiff binary
+*.webp binary
+
+# Audio
+*.wav binary

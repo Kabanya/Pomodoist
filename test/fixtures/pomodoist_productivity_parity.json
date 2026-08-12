@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "utc",
+      "userId": "81000000-0000-4000-8000-000000000001",
+      "reportDate": "2026-03-29",
+      "timeZone": "UTC",
+      "tasks": [
+        {"id":"utc-open-due","content":"UTC due","projectId":"inbox","status":"open","estimatedFocusIntervals":2,"dueJson":"{\"type\":\"allDay\",\"date\":\"2026-03-29\"}"},
+        {"id":"utc-open-unscheduled","content":"UTC unscheduled","projectId":"inbox","status":"open","estimatedFocusIntervals":9,"dueJson":null}
+      ],
+      "taskCompletions": [
+        {"id":"utc-c1","taskId":"utc-task-a","completedAt":"2026-03-29T00:30:00Z"},
+        {"id":"utc-c2","taskId":"utc-task-b","completedAt":"2026-03-29T12:00:00Z"},
+        {"id":"utc-c3","taskId":"utc-task-c","completedAt":"2026-03-29T23:30:00Z"}
+      ],
+      "focusIntervals": [
+        {"id":"utc-w1","taskId":"utc-task-a","type":"work","status":"completed","startedAt":"2026-03-29T00:00:00Z","completedAt":"2026-03-29T00:25:00Z","stoppedAt":null,"pausedTotalSeconds":60,"isDeleted":false},
+        {"id":"utc-w2","taskId":"utc-task-b","type":"work","status":"completed","startedAt":"2026-03-29T11:00:00Z","completedAt":"2026-03-29T11:20:00Z","stoppedAt":null,"pausedTotalSeconds":0,"isDeleted":false},
+        {"id":"utc-w3","taskId":"utc-task-c","type":"work","status":"completed","startedAt":"2026-03-29T23:00:00Z","completedAt":"2026-03-29T23:20:00Z","stoppedAt":null,"pausedTotalSeconds":0,"isDeleted":false},
+        {"id":"utc-w-legacy","taskId":null,"type":"work","status":"completed","startedAt":"2026-03-29T18:00:00Z","completedAt":null,"stoppedAt":"2026-03-29T18:10:00Z","pausedTotalSeconds":60,"isDeleted":false},
+        {"id":"utc-stopped","taskId":null,"type":"work","status":"stopped","startedAt":"2026-03-28T20:00:00Z","completedAt":null,"stoppedAt":"2026-03-28T20:05:00Z","pausedTotalSeconds":0,"isDeleted":false}
+      ],
+      "expected": {
+        "reportDate":"2026-03-29",
+        "timeZone":"UTC",
+        "daily":{"completedTasks":3,"completedFocusIntervals":4,"totalFocusSeconds":4380},
+        "plannedFocusIntervals":2,
+        "openTasks":2,
+        "allTime":{"completedTasks":3,"completedFocusIntervals":4},
+        "lastSevenDays":[
+          {"date":"2026-03-23","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-03-24","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-03-25","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-03-26","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-03-27","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-03-28","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-03-29","completedTasks":3,"completedFocusIntervals":4,"totalFocusSeconds":4380}
+        ],
+        "achievementInputs":{
+          "completedTasks":3,
+          "completedWorkIntervals":4,
+          "comboFlags":{"dayNotWasted":true,"focusPlusCheck":true,"noFuss":false,"cleanEntry":true,"tomatoClosed":true}
+        }
+      }
+    },
+    {
+      "name": "europe_moscow",
+      "userId": "81000000-0000-4000-8000-000000000002",
+      "reportDate": "2026-03-30",
+      "timeZone": "Europe/Moscow",
+      "tasks": [
+        {"id":"moscow-open-due","content":"Moscow due","projectId":"inbox","status":"open","estimatedFocusIntervals":3,"dueJson":"{\"type\":\"timed\",\"start\":\"2026-03-29T21:00:00Z\",\"end\":\"2026-03-29T22:00:00Z\",\"timeZone\":\"Europe/Moscow\"}"},
+        {"id":"moscow-open-future","content":"Moscow future","projectId":"inbox","status":"open","estimatedFocusIntervals":4,"dueJson":"{\"type\":\"allDay\",\"date\":\"2026-03-31\"}"},
+        {"id":"moscow-open-unscheduled","content":"Moscow unscheduled","projectId":"inbox","status":"open","estimatedFocusIntervals":5,"dueJson":null}
+      ],
+      "taskCompletions": [
+        {"id":"moscow-c1","taskId":"moscow-task-a","completedAt":"2026-03-29T20:30:00Z"},
+        {"id":"moscow-c2","taskId":"moscow-task-b","completedAt":"2026-03-29T21:30:00Z"}
+      ],
+      "focusIntervals": [
+        {"id":"moscow-w1","taskId":"moscow-task-a","type":"work","status":"completed","startedAt":"2026-03-29T20:00:00Z","completedAt":"2026-03-29T20:20:00Z","stoppedAt":null,"pausedTotalSeconds":0,"isDeleted":false},
+        {"id":"moscow-w2","taskId":"moscow-task-b","type":"work","status":"completed","startedAt":"2026-03-29T21:00:00Z","completedAt":"2026-03-29T21:25:00Z","stoppedAt":null,"pausedTotalSeconds":0,"isDeleted":false},
+        {"id":"moscow-stopped","taskId":null,"type":"work","status":"stopped","startedAt":"2026-03-29T21:40:00Z","completedAt":null,"stoppedAt":"2026-03-29T21:45:00Z","pausedTotalSeconds":0,"isDeleted":false}
+      ],
+      "expected": {
+        "reportDate":"2026-03-30",
+        "timeZone":"Europe/Moscow",
+        "daily":{"completedTasks":1,"completedFocusIntervals":1,"totalFocusSeconds":1500},
+        "plannedFocusIntervals":3,
+        "openTasks":3,
+        "allTime":{"completedTasks":2,"completedFocusIntervals":2},
+        "lastSevenDays":[
+          {"date":"2026-03-24","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-03-25","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-03-26","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-03-27","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-03-28","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-03-29","completedTasks":1,"completedFocusIntervals":1,"totalFocusSeconds":1200},
+          {"date":"2026-03-30","completedTasks":1,"completedFocusIntervals":1,"totalFocusSeconds":1500}
+        ],
+        "achievementInputs":{
+          "completedTasks":2,
+          "completedWorkIntervals":2,
+          "comboFlags":{"dayNotWasted":true,"focusPlusCheck":false,"noFuss":false,"cleanEntry":true,"tomatoClosed":true}
+        }
+      }
+    },
+    {
+      "name": "america_new_york_dst_fallback",
+      "userId": "81000000-0000-4000-8000-000000000003",
+      "reportDate": "2026-11-01",
+      "timeZone": "America/New_York",
+      "tasks": [
+        {"id":"ny-open-due","content":"New York due","projectId":"inbox","status":"open","estimatedFocusIntervals":4,"dueJson":"{\"type\":\"timed\",\"start\":\"2026-11-02T04:30:00Z\",\"end\":\"2026-11-02T05:00:00Z\",\"timeZone\":\"America/New_York\"}"},
+        {"id":"ny-open-future","content":"New York future","projectId":"inbox","status":"open","estimatedFocusIntervals":8,"dueJson":"{\"type\":\"timed\",\"start\":\"2026-11-02T05:30:00Z\",\"end\":\"2026-11-02T06:00:00Z\",\"timeZone\":\"America/New_York\"}"}
+      ],
+      "taskCompletions": [
+        {"id":"ny-c1","taskId":"ny-task-a","completedAt":"2026-11-01T05:30:00Z"},
+        {"id":"ny-c2","taskId":"ny-task-b","completedAt":"2026-11-01T06:30:00Z"},
+        {"id":"ny-c3","taskId":"ny-task-c","completedAt":"2026-11-01T12:00:00Z"}
+      ],
+      "focusIntervals": [
+        {"id":"ny-w1","taskId":"ny-task-a","type":"work","status":"completed","startedAt":"2026-11-01T04:30:00Z","completedAt":"2026-11-01T04:50:00Z","stoppedAt":null,"pausedTotalSeconds":0,"isDeleted":false},
+        {"id":"ny-w2","taskId":"ny-task-b","type":"work","status":"completed","startedAt":"2026-11-01T05:00:00Z","completedAt":"2026-11-01T05:20:00Z","stoppedAt":null,"pausedTotalSeconds":0,"isDeleted":false},
+        {"id":"ny-w3","taskId":"ny-task-c","type":"work","status":"completed","startedAt":"2026-11-01T06:00:00Z","completedAt":"2026-11-01T06:20:00Z","stoppedAt":null,"pausedTotalSeconds":0,"isDeleted":false},
+        {"id":"ny-w4","taskId":null,"type":"work","status":"completed","startedAt":"2026-11-01T07:00:00Z","completedAt":"2026-11-01T07:20:00Z","stoppedAt":null,"pausedTotalSeconds":0,"isDeleted":false},
+        {"id":"ny-w5","taskId":null,"type":"work","status":"completed","startedAt":"2026-11-01T08:00:00Z","completedAt":"2026-11-01T08:20:00Z","stoppedAt":null,"pausedTotalSeconds":0,"isDeleted":false},
+        {"id":"ny-stopped-previous-day","taskId":null,"type":"work","status":"stopped","startedAt":"2026-11-01T03:00:00Z","completedAt":null,"stoppedAt":"2026-11-01T03:05:00Z","pausedTotalSeconds":0,"isDeleted":false}
+      ],
+      "expected": {
+        "reportDate":"2026-11-01",
+        "timeZone":"America/New_York",
+        "daily":{"completedTasks":3,"completedFocusIntervals":5,"totalFocusSeconds":6000},
+        "plannedFocusIntervals":4,
+        "openTasks":2,
+        "allTime":{"completedTasks":3,"completedFocusIntervals":5},
+        "lastSevenDays":[
+          {"date":"2026-10-26","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-10-27","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-10-28","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-10-29","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-10-30","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-10-31","completedTasks":0,"completedFocusIntervals":0,"totalFocusSeconds":0},
+          {"date":"2026-11-01","completedTasks":3,"completedFocusIntervals":5,"totalFocusSeconds":6000}
+        ],
+        "achievementInputs":{
+          "completedTasks":3,
+          "completedWorkIntervals":5,
+          "comboFlags":{"dayNotWasted":true,"focusPlusCheck":true,"noFuss":true,"cleanEntry":true,"tomatoClosed":true}
+        }
+      }
+    }
+  ]
+}

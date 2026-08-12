@@ -1,0 +1,76 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+ios/Flutter/GoogleOAuth.xcconfig
+macos/Runner/Configs/GoogleOAuth.xcconfig
+web/GoogleOAuth.env
+.env
+.env.*
+!.env.example
+AuthKey_*.p8
+private_keys/
+.appstoreconnect/private_keys/
+.dart_tool/
+.flutter-plugins-dependencies
+pubspec_overrides.yaml
+.pub-cache/
+.pub/
+/build/
+/coverage/
+/.worktrees/
+
+# Generated sidecar files for the checked-in Drift web worker asset.
+/web/drift_worker.js.deps
+/web/drift_worker.js.map
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+**.png
+!android/app/src/main/res/mipmap-*/ic_launcher.png
+!ios/Runner/Assets.xcassets/AppIcon.appiconset/*.png
+!ios/PomodoistWatch/Assets.xcassets/AppIcon.appiconset/*.png
+!macos/Runner/Assets.xcassets/AppIcon.appiconset/*.png
+!web/favicon.png
+!web/icons/*.png
+pomodoist_app_icon_no_background.png
+!ios/Runner/pomodoist_app_icon_no_background.png
+key-**.md
+key-**.p8
+outputs/pricing-report-2026-07-24/Pomodoist_pricing_comparison_2026-07-24.xlsx
+.gitignore
+docs/
+output/
+tmp/

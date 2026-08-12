@@ -1,0 +1,113 @@
+{
+  "identifier": "504F4D4F",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "99",
+      "familyShareable": false,
+      "internalID": "P1000004",
+      "localizations": [
+        {
+          "description": "Lifetime access to Pomodoist Pro.",
+          "displayName": "Pomodoist Pro Lifetime",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "pomodoist.pro.lifetime",
+      "referenceName": "Pomodoist Pro Lifetime",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "89",
+      "familyShareable": false,
+      "internalID": "P1000007",
+      "localizations": [
+        {
+          "description": "Promotional lifetime access to Pomodoist Pro.",
+          "displayName": "Pomodoist Pro Lifetime Promo",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "pomodoist.pro.lifetime.launch",
+      "referenceName": "Pomodoist Pro Lifetime Promo",
+      "type": "NonConsumable"
+    }
+  ],
+  "settings": {
+    "_billingGracePeriodEnabled": false,
+    "_renewalBillingIssuesEnabled": false,
+    "_storefront": "USA",
+    "_timeRate": 0
+  },
+  "subscriptionGroups": [
+    {
+      "id": "30000001",
+      "localizations": [
+        {
+          "description": "Pomodoist Pro subscription plans.",
+          "displayName": "Pomodoist Pro",
+          "locale": "en_US"
+        }
+      ],
+      "name": "Pomodoist Pro",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "5.99",
+          "familyShareable": false,
+          "groupNumber": 2,
+          "internalID": "P1000001",
+          "introductoryOffer": {
+            "displayPrice": "2.99",
+            "internalID": "P1000005",
+            "paymentMode": "payAsYouGo",
+            "subscriptionPeriod": "P3M"
+          },
+          "localizations": [
+            {
+              "description": "Pomodoist Pro monthly access.",
+              "displayName": "Pomodoist Pro Monthly",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "pomodoist.pro.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Pomodoist Pro Monthly",
+          "subscriptionGroupID": "30000001",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "39",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "P1000002",
+          "introductoryOffer": {
+            "displayPrice": "19",
+            "internalID": "P1000006",
+            "paymentMode": "payUpFront",
+            "subscriptionPeriod": "P1Y"
+          },
+          "localizations": [
+            {
+              "description": "Pomodoist Pro annual access.",
+              "displayName": "Pomodoist Pro Annual",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "pomodoist.pro.annual",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Pomodoist Pro Annual",
+          "subscriptionGroupID": "30000001",
+          "type": "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 2,
+    "minor": 0
+  }
+}
