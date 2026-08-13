@@ -251,6 +251,41 @@ void main() {
     expect(checkouts, 0);
   });
 
+  testWidgets('Stripe failure does not claim the App Store is unavailable', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          billingChannelProvider.overrideWithValue(BillingChannel.stripe),
+          billingSignedInProvider.overrideWithValue(true),
+          billingStripeGatewayProvider.overrideWithValue(
+            BillingStripeGateway(
+              loadCatalog: () => throw Exception('Stripe catalog failed.'),
+              createCheckout: (_, _) => throw UnimplementedError(),
+              openCheckout: (_) async => false,
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: SingleChildScrollView(child: BillingPaywall()),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('The App Store is not available right now.'),
+      findsNothing,
+    );
+    expect(find.textContaining('Stripe catalog failed.'), findsOneWidget);
+  });
+
   testWidgets('Stripe purchase waits for external browser confirmation', (
     tester,
   ) async {

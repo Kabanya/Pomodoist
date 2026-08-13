@@ -1370,7 +1370,9 @@ class BillingPaywall extends ConsumerWidget {
                 ),
               ),
             )
-          else if (!state.storeAvailable && !state.loading)
+          else if (channel == BillingChannel.storeKit &&
+              !state.storeAvailable &&
+              !state.loading)
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(
