@@ -168,7 +168,7 @@
   "csvImportSuccess": "已导入任务",
   "csvImportErrorTitle": "CSV 导入失败",
   "csvImportUnexpectedError": "无法导入该文件。",
-  "csvImportHumanGuide": "1. 将文件保存为 UTF-8 编码的 CSV。使用逗号（推荐）或分号作为分隔符。\\n\\n2. content 列为必填。还可使用：key, description, project, labels, priority, due_date, start_at, end_at, time_zone, recurrence, recurrence_interval, deadline, estimate, kanban_status, parent_key。\\n\\n3. 每行创建一个未完成任务。多个标签用 | 分隔。优先级为 1–4，空值表示 4。项目为空表示 Inbox，状态为空表示 Backlog。缺少的项目、标签和未完成状态会自动创建。\\n\\n4. 全天任务使用 YYYY-MM-DD 格式的 due_date。定时任务需填写带 UTC 偏移的 RFC3339 格式 start_at 和 end_at，并提供 IANA time_zone，例如 Asia/Shanghai。\\n\\n5. 创建子任务时，为父行设置唯一 key，并在子行的 parent_key 中填写该值。父行可以出现在文件后面。子任务必须与父任务使用同一项目。\\n\\n6. Pomodoist 会验证整个文件并在导入前显示预览。只要有一行无效，就不会保存任何内容。再次导入会创建重复任务。",
+  "csvImportHumanGuide": "1. 将文件保存为 UTF-8 编码的 CSV。使用逗号（推荐）或分号作为分隔符。\n\n2. content 列为必填。还可使用：key, description, project, labels, priority, due_date, start_at, end_at, time_zone, recurrence, recurrence_interval, deadline, estimate, kanban_status, parent_key。\n\n3. 每行创建一个未完成任务。多个标签用 | 分隔。优先级为 1–4，空值表示 4。项目为空表示 Inbox，状态为空表示 Backlog。缺少的项目、标签和未完成状态会自动创建。\n\n4. 全天任务使用 YYYY-MM-DD 格式的 due_date。定时任务需填写带 UTC 偏移的 RFC3339 格式 start_at 和 end_at，并提供 IANA time_zone，例如 Asia/Shanghai。\n\n5. 创建子任务时，为父行设置唯一 key，并在子行的 parent_key 中填写该值。父行可以出现在文件后面。子任务必须与父任务使用同一项目。\n\n6. Pomodoist 会验证整个文件并在导入前显示预览。只要有一行无效，就不会保存任何内容。再次导入会创建重复任务。",
   "settingsConnectedAgentsTitle": "已连接的智能体",
   "settingsConnectedAgentsLoading": "正在加载已连接的智能体…",
   "settingsConnectedAgentsEmpty": "尚未连接智能体。",
