@@ -790,6 +790,17 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ],
+          const SizedBox(height: 12),
+          Card(
+            key: const Key('settings-shortcuts-button'),
+            child: ListTile(
+              leading: const Icon(Icons.keyboard_outlined),
+              title: Text(l10n.settingsShortcutsTitle),
+              subtitle: Text(l10n.settingsShortcutsSubtitle),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/settings/shortcuts'),
+            ),
+          ),
         ],
       ),
     );

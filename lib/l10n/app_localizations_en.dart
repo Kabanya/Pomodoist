@@ -484,6 +484,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTitle => 'Settings';
 
   @override
+  String get settingsShortcutsTitle => 'Keyboard shortcuts';
+
+  @override
+  String get settingsShortcutsSubtitle =>
+      'Customize commands available from a hardware keyboard.';
+
+  @override
+  String get settingsShortcutsToggleSidebar => 'Toggle sidebar';
+
+  @override
+  String get settingsShortcutsGlobalQuickAdd => 'Global quick add';
+
+  @override
+  String get settingsShortcutsGlobalQuickAddSubtitle =>
+      'Works even when Pomodoist is not active.';
+
+  @override
+  String get settingsShortcutsRecordTitle => 'Press a shortcut';
+
+  @override
+  String get settingsShortcutsRecordPrompt =>
+      'Use a key with Command, Control, or Alt. Press Esc to cancel.';
+
+  @override
+  String get settingsShortcutsInvalid => 'Include Command, Control, or Alt.';
+
+  @override
+  String get settingsShortcutsConflict => 'This shortcut is already in use.';
+
+  @override
+  String get settingsShortcutsGlobalError =>
+      'That global shortcut is unavailable. The previous shortcut is still active.';
+
+  @override
+  String get settingsShortcutsResetAll => 'Reset all';
+
+  @override
+  String get settingsShortcutsResetDone => 'Keyboard shortcuts reset.';
+
+  @override
   String get csvImportTitle => 'Import tasks from CSV';
 
   @override

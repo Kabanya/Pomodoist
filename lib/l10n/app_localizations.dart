@@ -942,6 +942,78 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settingsTitle;
 
+  /// No description provided for @settingsShortcutsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard shortcuts'**
+  String get settingsShortcutsTitle;
+
+  /// No description provided for @settingsShortcutsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize commands available from a hardware keyboard.'**
+  String get settingsShortcutsSubtitle;
+
+  /// No description provided for @settingsShortcutsToggleSidebar.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle sidebar'**
+  String get settingsShortcutsToggleSidebar;
+
+  /// No description provided for @settingsShortcutsGlobalQuickAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Global quick add'**
+  String get settingsShortcutsGlobalQuickAdd;
+
+  /// No description provided for @settingsShortcutsGlobalQuickAddSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Works even when Pomodoist is not active.'**
+  String get settingsShortcutsGlobalQuickAddSubtitle;
+
+  /// No description provided for @settingsShortcutsRecordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Press a shortcut'**
+  String get settingsShortcutsRecordTitle;
+
+  /// No description provided for @settingsShortcutsRecordPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a key with Command, Control, or Alt. Press Esc to cancel.'**
+  String get settingsShortcutsRecordPrompt;
+
+  /// No description provided for @settingsShortcutsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Include Command, Control, or Alt.'**
+  String get settingsShortcutsInvalid;
+
+  /// No description provided for @settingsShortcutsConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'This shortcut is already in use.'**
+  String get settingsShortcutsConflict;
+
+  /// No description provided for @settingsShortcutsGlobalError.
+  ///
+  /// In en, this message translates to:
+  /// **'That global shortcut is unavailable. The previous shortcut is still active.'**
+  String get settingsShortcutsGlobalError;
+
+  /// No description provided for @settingsShortcutsResetAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset all'**
+  String get settingsShortcutsResetAll;
+
+  /// No description provided for @settingsShortcutsResetDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard shortcuts reset.'**
+  String get settingsShortcutsResetDone;
+
   /// No description provided for @csvImportTitle.
   ///
   /// In en, this message translates to:

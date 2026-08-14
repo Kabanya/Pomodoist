@@ -463,6 +463,43 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsTitle => '设置';
 
   @override
+  String get settingsShortcutsTitle => '键盘快捷键';
+
+  @override
+  String get settingsShortcutsSubtitle => '自定义实体键盘可用的命令。';
+
+  @override
+  String get settingsShortcutsToggleSidebar => '显示或隐藏侧边栏';
+
+  @override
+  String get settingsShortcutsGlobalQuickAdd => '全局快速添加';
+
+  @override
+  String get settingsShortcutsGlobalQuickAddSubtitle => '即使 Pomodoist 未激活也可使用。';
+
+  @override
+  String get settingsShortcutsRecordTitle => '按下快捷键';
+
+  @override
+  String get settingsShortcutsRecordPrompt =>
+      '请将按键与 Command、Control 或 Alt 组合使用。按 Esc 取消。';
+
+  @override
+  String get settingsShortcutsInvalid => '请加入 Command、Control 或 Alt。';
+
+  @override
+  String get settingsShortcutsConflict => '此快捷键已被使用。';
+
+  @override
+  String get settingsShortcutsGlobalError => '该全局快捷键不可用。先前的快捷键仍然有效。';
+
+  @override
+  String get settingsShortcutsResetAll => '全部重置';
+
+  @override
+  String get settingsShortcutsResetDone => '键盘快捷键已重置。';
+
+  @override
   String get csvImportTitle => '从 CSV 导入任务';
 
   @override

@@ -11,6 +11,7 @@ import '../features/planning/presentation/today_screen.dart';
 import '../features/productivity/presentation/reports_screen.dart';
 import '../features/productivity/presentation/achievements_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/settings/presentation/keyboard_shortcuts_screen.dart';
 import '../features/settings/presentation/telegram_account_link_screen.dart';
 import '../features/settings/presentation/captcha_challenge_screen.dart';
 import '../features/settings/presentation/oauth_consent_screen.dart';
@@ -194,6 +195,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/settings',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: SettingsScreen()),
+          ),
+          GoRoute(
+            path: '/settings/shortcuts',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: KeyboardShortcutsScreen()),
           ),
           GoRoute(
             path: '/integrations/google-calendar',

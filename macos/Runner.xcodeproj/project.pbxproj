@@ -29,6 +29,7 @@
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
 		4C5155414448444B45594246 /* QuickAddHotKeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5155414448444B45594346 /* QuickAddHotKeyController.swift */; };
+		4C5155424448444B45594246 /* QuickAddHotKeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5155414448444B45594346 /* QuickAddHotKeyController.swift */; };
 		58BF906B2D72405D8ECF8EEE /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8EF1A173A80BA5C89A55829D /* Pods_RunnerTests.framework */; };
 		7D0000010000000000000001 /* PomodoistFocusShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0000110000000000000001 /* PomodoistFocusShared.swift */; };
 		7D0000020000000000000002 /* PomodoistFocusShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0000110000000000000001 /* PomodoistFocusShared.swift */; };
@@ -568,6 +569,7 @@
 				331C80D8294CF71000263BE5 /* RunnerTests.swift in Sources */,
 				7D0000080000000000000008 /* FlutterControllerResolver.swift in Sources */,
 				7D0000020000000000000002 /* PomodoistFocusShared.swift in Sources */,
+				4C5155424448444B45594246 /* QuickAddHotKeyController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

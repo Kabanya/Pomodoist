@@ -486,6 +486,47 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsTitle => 'Réglages';
 
   @override
+  String get settingsShortcutsTitle => 'Raccourcis clavier';
+
+  @override
+  String get settingsShortcutsSubtitle =>
+      'Personnalisez les commandes disponibles avec un clavier physique.';
+
+  @override
+  String get settingsShortcutsToggleSidebar =>
+      'Afficher ou masquer la barre latérale';
+
+  @override
+  String get settingsShortcutsGlobalQuickAdd => 'Ajout rapide global';
+
+  @override
+  String get settingsShortcutsGlobalQuickAddSubtitle =>
+      'Fonctionne même lorsque Pomodoist n’est pas actif.';
+
+  @override
+  String get settingsShortcutsRecordTitle => 'Appuyez sur un raccourci';
+
+  @override
+  String get settingsShortcutsRecordPrompt =>
+      'Utilisez une touche avec Command, Control ou Alt. Appuyez sur Échap pour annuler.';
+
+  @override
+  String get settingsShortcutsInvalid => 'Ajoutez Command, Control ou Alt.';
+
+  @override
+  String get settingsShortcutsConflict => 'Ce raccourci est déjà utilisé.';
+
+  @override
+  String get settingsShortcutsGlobalError =>
+      'Ce raccourci global est indisponible. Le raccourci précédent reste actif.';
+
+  @override
+  String get settingsShortcutsResetAll => 'Tout réinitialiser';
+
+  @override
+  String get settingsShortcutsResetDone => 'Raccourcis clavier réinitialisés.';
+
+  @override
   String get csvImportTitle => 'Importer des tâches depuis un CSV';
 
   @override

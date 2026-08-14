@@ -486,6 +486,49 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsTitle => 'Einstellungen';
 
   @override
+  String get settingsShortcutsTitle => 'Tastaturkurzbefehle';
+
+  @override
+  String get settingsShortcutsSubtitle =>
+      'Passe Befehle für eine Hardwaretastatur an.';
+
+  @override
+  String get settingsShortcutsToggleSidebar => 'Seitenleiste ein-/ausblenden';
+
+  @override
+  String get settingsShortcutsGlobalQuickAdd => 'Globales schnelles Hinzufügen';
+
+  @override
+  String get settingsShortcutsGlobalQuickAddSubtitle =>
+      'Funktioniert auch, wenn Pomodoist nicht aktiv ist.';
+
+  @override
+  String get settingsShortcutsRecordTitle => 'Tastenkürzel drücken';
+
+  @override
+  String get settingsShortcutsRecordPrompt =>
+      'Verwende eine Taste mit Command, Control oder Alt. Esc bricht ab.';
+
+  @override
+  String get settingsShortcutsInvalid =>
+      'Command, Control oder Alt muss enthalten sein.';
+
+  @override
+  String get settingsShortcutsConflict =>
+      'Dieses Tastenkürzel wird bereits verwendet.';
+
+  @override
+  String get settingsShortcutsGlobalError =>
+      'Dieses globale Tastenkürzel ist nicht verfügbar. Das vorherige bleibt aktiv.';
+
+  @override
+  String get settingsShortcutsResetAll => 'Alle zurücksetzen';
+
+  @override
+  String get settingsShortcutsResetDone =>
+      'Tastaturkurzbefehle wurden zurückgesetzt.';
+
+  @override
   String get csvImportTitle => 'Aufgaben aus CSV importieren';
 
   @override

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ import '../../features/tasks/presentation/widgets/quick_add_bar.dart';
 import '../../features/tasks/presentation/widgets/quick_add_text_controller.dart';
 import '../account_providers.dart';
 import '../app_l10n.dart';
+import '../keyboard_shortcuts.dart';
 import '../providers.dart';
 import '../theme/app_theme.dart';
 import 'mini_focus_player.dart';
@@ -32,17 +34,17 @@ const double _shellTopBarHeight = 52;
 const Duration _wideSidebarAnimationDuration = Duration(milliseconds: 220);
 const Curve _wideSidebarAnimationCurve = Curves.easeOutCubic;
 
-class AdaptiveShell extends StatefulWidget {
+class AdaptiveShell extends ConsumerStatefulWidget {
   const AdaptiveShell({required this.location, required this.child, super.key});
 
   final String location;
   final Widget child;
 
   @override
-  State<AdaptiveShell> createState() => _AdaptiveShellState();
+  ConsumerState<AdaptiveShell> createState() => _AdaptiveShellState();
 }
 
-class _AdaptiveShellState extends State<AdaptiveShell> {
+class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _wideSidebarVisible = true;
   bool _wideSidebarMounted = true;
@@ -50,6 +52,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
   bool _wideSidebarRevealingFromEdge = false;
   double _wideSidebarWidth = _wideSidebarDefaultWidth;
   double _lastExpandedSidebarWidth = _wideSidebarDefaultWidth;
+  bool _quickAddShortcutDialogOpen = false;
 
   @override
   void initState() {
@@ -65,6 +68,8 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(keyboardShortcutsProvider);
+    ref.watch(keyboardShortcutsLoadedProvider);
     final wide = MediaQuery.sizeOf(context).width >= _wideLayoutBreakpoint;
     final focusLocation = _isFocusLocation(widget.location);
     final mobileDestinations = _mobileDestinations(context);
@@ -140,17 +145,52 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
   }
 
   bool _handleKeyEvent(KeyEvent event) {
-    if (event is! KeyDownEvent || event.logicalKey != LogicalKeyboardKey.keyB) {
+    if (event is! KeyDownEvent || widget.location == '/settings/shortcuts') {
       return false;
     }
 
     final keyboard = HardwareKeyboard.instance;
-    if (!keyboard.isControlPressed && !keyboard.isMetaPressed) {
+    AppShortcutCommand? command;
+    for (final entry in ref.read(keyboardShortcutsProvider).entries) {
+      if (entry.value.matches(event, keyboard)) {
+        command = entry.key;
+        break;
+      }
+    }
+    if (command == null) {
       return false;
     }
 
-    _toggleSidebar();
+    switch (command) {
+      case AppShortcutCommand.toggleSidebar:
+        _toggleSidebar();
+      case AppShortcutCommand.quickAdd:
+        _openQuickAddFromShortcut();
+      case AppShortcutCommand.search:
+        _goFromShortcut('/search');
+      case AppShortcutCommand.today:
+        _goFromShortcut('/today');
+      case AppShortcutCommand.inbox:
+        _goFromShortcut('/inbox');
+      case AppShortcutCommand.focus:
+        _goFromShortcut('/focus');
+    }
     return true;
+  }
+
+  void _openQuickAddFromShortcut() {
+    if (_quickAddShortcutDialogOpen) return;
+    _quickAddShortcutDialogOpen = true;
+    unawaited(
+      _showSidebarQuickAddDialog(
+        context,
+      ).whenComplete(() => _quickAddShortcutDialogOpen = false),
+    );
+  }
+
+  void _goFromShortcut(String path) {
+    _scaffoldKey.currentState?.closeDrawer();
+    context.go(path);
   }
 
   void _toggleSidebar() {

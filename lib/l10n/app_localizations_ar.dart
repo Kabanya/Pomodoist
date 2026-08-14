@@ -479,6 +479,47 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsTitle => 'الإعدادات';
 
   @override
+  String get settingsShortcutsTitle => 'اختصارات لوحة المفاتيح';
+
+  @override
+  String get settingsShortcutsSubtitle =>
+      'خصّص الأوامر المتاحة من لوحة مفاتيح فعلية.';
+
+  @override
+  String get settingsShortcutsToggleSidebar => 'إظهار الشريط الجانبي أو إخفاؤه';
+
+  @override
+  String get settingsShortcutsGlobalQuickAdd => 'إضافة سريعة عامة';
+
+  @override
+  String get settingsShortcutsGlobalQuickAddSubtitle =>
+      'يعمل حتى عندما لا يكون Pomodoist نشطًا.';
+
+  @override
+  String get settingsShortcutsRecordTitle => 'اضغط اختصارًا';
+
+  @override
+  String get settingsShortcutsRecordPrompt =>
+      'استخدم مفتاحًا مع Command أو Control أو Alt. اضغط Esc للإلغاء.';
+
+  @override
+  String get settingsShortcutsInvalid => 'أضف Command أو Control أو Alt.';
+
+  @override
+  String get settingsShortcutsConflict => 'هذا الاختصار مستخدم بالفعل.';
+
+  @override
+  String get settingsShortcutsGlobalError =>
+      'هذا الاختصار العام غير متاح. سيبقى الاختصار السابق نشطًا.';
+
+  @override
+  String get settingsShortcutsResetAll => 'إعادة ضبط الكل';
+
+  @override
+  String get settingsShortcutsResetDone =>
+      'تمت إعادة ضبط اختصارات لوحة المفاتيح.';
+
+  @override
   String get csvImportTitle => 'استيراد المهام من CSV';
 
   @override

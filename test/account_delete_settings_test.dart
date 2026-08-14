@@ -22,7 +22,7 @@ void main() {
     SharedPreferences.setMockInitialValues(const {});
   });
 
-  testWidgets('delete account is last and requires two dialog confirmations', (
+  testWidgets('shortcut settings is last and delete requires two confirmations', (
     tester,
   ) async {
     final pending = Completer<AccountFunctionResponse>();
@@ -37,7 +37,14 @@ void main() {
     );
     final settingsChildren =
         (settingsList.childrenDelegate as SliverChildListDelegate).children;
-    expect(settingsChildren.last.key, const Key('account-delete-section'));
+    final keyedChildren = settingsChildren
+        .where((child) => child.key != null)
+        .toList();
+    expect(keyedChildren.last.key, const Key('settings-shortcuts-button'));
+    expect(
+      keyedChildren[keyedChildren.length - 2].key,
+      const Key('account-delete-section'),
+    );
 
     final firstConfirmation = find.byKey(const Key('account-delete-button'));
     await _scrollToDeleteButton(tester);

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -7,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/app_language.dart';
 import 'package:pomodoist/app/app_startup_gate.dart';
 import 'package:pomodoist/app/app_theme_mode.dart';
+import 'package:pomodoist/app/keyboard_shortcuts.dart';
 import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/app/router.dart';
 import 'package:pomodoist/app/theme/app_theme.dart';
@@ -15,10 +18,15 @@ import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/core/time/clock.dart';
 import 'package:pomodoist/features/billing/billing.dart';
 import 'package:pomodoist/features/focus/domain/focus_models.dart';
+import 'package:pomodoist/features/focus/presentation/focus_screen.dart';
 import 'package:pomodoist/features/onboarding/onboarding_gate.dart';
+import 'package:pomodoist/features/planning/presentation/today_screen.dart';
 import 'package:pomodoist/features/productivity/domain/achievement_models.dart';
 import 'package:pomodoist/features/productivity/domain/productivity_models.dart';
+import 'package:pomodoist/features/settings/presentation/keyboard_shortcuts_screen.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/features/tasks/presentation/inbox_screen.dart';
+import 'package:pomodoist/features/tasks/presentation/search_screen.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -121,8 +129,98 @@ void main() {
     await _pressSidebarShortcut(tester, LogicalKeyboardKey.metaLeft);
     expect(find.text('Add task'), findsNothing);
 
-    await _pressSidebarShortcut(tester, LogicalKeyboardKey.controlLeft);
+    await _pressSidebarShortcut(tester, LogicalKeyboardKey.metaLeft);
     expect(find.text('Add task'), findsOneWidget);
+    await _disposeApp(tester);
+  });
+
+  testWidgets('quick add shortcut opens only one existing dialog', (
+    tester,
+  ) async {
+    await _pumpWideApp(tester);
+
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.keyN,
+    );
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.keyN,
+    );
+
+    expect(find.byKey(const Key('sidebar-quick-add-input')), findsOneWidget);
+    await _disposeApp(tester);
+  });
+
+  testWidgets('navigation shortcuts open search, Today, Inbox, and Focus', (
+    tester,
+  ) async {
+    await _pumpWideApp(tester);
+
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.keyK,
+    );
+    expect(find.byType(SearchScreen), findsOneWidget);
+
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.digit1,
+    );
+    expect(find.byType(TodayScreen), findsOneWidget);
+
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.digit2,
+    );
+    expect(find.byType(InboxScreen), findsOneWidget);
+
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.digit3,
+    );
+    expect(find.byType(FocusScreen), findsOneWidget);
+    await _disposeApp(tester);
+  });
+
+  testWidgets('reassigned sidebar shortcut replaces the default', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      onboardingCompletedPreferenceKey: true,
+      launchOfferStartedAtPreferenceKey: '2026-01-01T10:00:00.000Z',
+      keyboardShortcutsPreferenceKey: jsonEncode({
+        AppShortcutCommand.toggleSidebar.storageKey: {
+          'physicalKeyId': PhysicalKeyboardKey.keyJ.usbHidUsage,
+          'keyLabel': 'J',
+          'meta': true,
+          'control': false,
+          'alt': false,
+          'shift': false,
+        },
+      }),
+    });
+    await _pumpWideApp(tester);
+
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.keyB,
+    );
+    expect(find.text('Add task'), findsOneWidget);
+
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.keyJ,
+    );
+    expect(find.text('Add task'), findsNothing);
     await _disposeApp(tester);
   });
 
@@ -577,6 +675,35 @@ void main() {
     await _disposeApp(tester);
   });
 
+  testWidgets('settings shortcut button opens the shortcut route', (
+    tester,
+  ) async {
+    await _pumpWideApp(tester);
+
+    await tester.tap(
+      find.byKey(const ValueKey('sidebar-destination-/settings')),
+    );
+    await _pumpFrames(tester);
+    final settingsScrollable = tester.state<ScrollableState>(
+      find.descendant(
+        of: find.byKey(const Key('settings-list')),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    for (var i = 0; i < 3; i += 1) {
+      settingsScrollable.position.jumpTo(
+        settingsScrollable.position.maxScrollExtent,
+      );
+      await tester.pumpAndSettle();
+    }
+    await tester.tap(find.byKey(const Key('settings-shortcuts-button')));
+    await _pumpFrames(tester);
+
+    expect(find.byType(KeyboardShortcutsScreen), findsOneWidget);
+    expect(find.byKey(const Key('shortcut-row-toggleSidebar')), findsOneWidget);
+    await _disposeApp(tester);
+  });
+
   testWidgets('settings theme selection switches between dark and light', (
     tester,
   ) async {
@@ -823,6 +950,7 @@ Future<_SidebarHarness> _pumpApp(
       overrides: [
         appStartupProvider.overrideWith((ref) => Future<void>.value()),
         appStartupLifecycleProvider.overrideWith((ref) {}),
+        shortcutTargetPlatformProvider.overrideWithValue(TargetPlatform.macOS),
         taskStartNotificationCoordinatorProvider.overrideWith((ref) {}),
         reengagementNotificationCoordinatorProvider.overrideWith((ref) {}),
         clockProvider.overrideWithValue(
@@ -922,9 +1050,30 @@ Future<void> _pressSidebarShortcutWithoutSettling(
   WidgetTester tester,
   LogicalKeyboardKey modifier,
 ) async {
+  await _pressShortcutWithoutSettling(
+    tester,
+    modifier,
+    LogicalKeyboardKey.keyB,
+  );
+}
+
+Future<void> _pressShortcut(
+  WidgetTester tester,
+  LogicalKeyboardKey modifier,
+  LogicalKeyboardKey key,
+) async {
+  await _pressShortcutWithoutSettling(tester, modifier, key);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _pressShortcutWithoutSettling(
+  WidgetTester tester,
+  LogicalKeyboardKey modifier,
+  LogicalKeyboardKey key,
+) async {
   await tester.sendKeyDownEvent(modifier);
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.keyB);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.keyB);
+  await tester.sendKeyDownEvent(key);
+  await tester.sendKeyUpEvent(key);
   await tester.sendKeyUpEvent(modifier);
 }
 

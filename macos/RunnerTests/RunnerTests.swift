@@ -1,8 +1,66 @@
 import Cocoa
+import Carbon.HIToolbox
 import FlutterMacOS
 import XCTest
 
 class RunnerTests: XCTestCase {
+
+  func testQuickAddGlobalShortcutDefaultsAndRoundTrips() {
+    let defaults = UserDefaults(suiteName: UUID().uuidString)!
+    let expected = QuickAddGlobalShortcut.default
+
+    XCTAssertEqual(QuickAddGlobalShortcut.load(from: defaults), expected)
+    XCTAssertEqual(
+      QuickAddGlobalShortcut(dictionary: expected.dictionary),
+      expected
+    )
+    XCTAssertEqual(expected.displayLabel, "⌥Space")
+  }
+
+  func testFailedQuickAddShortcutRegistrationKeepsStoredBinding() {
+    let defaults = UserDefaults(suiteName: UUID().uuidString)!
+    let viewController = FlutterViewController()
+    let channel = FlutterMethodChannel(
+      name: UUID().uuidString,
+      binaryMessenger: viewController.engine.binaryMessenger
+    )
+    let controller = QuickAddHotKeyController(channel: channel, defaults: defaults)
+    let candidate = QuickAddGlobalShortcut(
+      keyCode: UInt32(kVK_ANSI_J),
+      modifiers: UInt32(cmdKey),
+      keyLabel: "J"
+    )
+    var attempts: [QuickAddGlobalShortcut] = []
+
+    let status = controller.applyShortcut(candidate) { shortcut in
+      attempts.append(shortcut)
+      return shortcut == candidate ? OSStatus(-1) : noErr
+    }
+
+    XCTAssertEqual(status, OSStatus(-1))
+    XCTAssertEqual(attempts, [candidate, .default])
+    XCTAssertEqual(controller.currentShortcut, .default)
+    XCTAssertEqual(QuickAddGlobalShortcut.load(from: defaults), .default)
+  }
+
+  func testSuccessfulQuickAddShortcutRegistrationPersistsBinding() {
+    let defaults = UserDefaults(suiteName: UUID().uuidString)!
+    let viewController = FlutterViewController()
+    let channel = FlutterMethodChannel(
+      name: UUID().uuidString,
+      binaryMessenger: viewController.engine.binaryMessenger
+    )
+    let controller = QuickAddHotKeyController(channel: channel, defaults: defaults)
+    let candidate = QuickAddGlobalShortcut(
+      keyCode: UInt32(kVK_ANSI_J),
+      modifiers: UInt32(cmdKey | shiftKey),
+      keyLabel: "J"
+    )
+
+    XCTAssertEqual(controller.applyShortcut(candidate) { _ in noErr }, noErr)
+    XCTAssertEqual(controller.currentShortcut, candidate)
+    XCTAssertEqual(QuickAddGlobalShortcut.load(from: defaults), candidate)
+  }
 
   func testResolvesFlutterControllerFromApplicationWindows() {
     let expected = FlutterViewController()

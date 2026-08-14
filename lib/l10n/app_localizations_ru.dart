@@ -483,6 +483,47 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsTitle => 'Настройки';
 
   @override
+  String get settingsShortcutsTitle => 'Быстрые команды';
+
+  @override
+  String get settingsShortcutsSubtitle =>
+      'Настройте команды для аппаратной клавиатуры.';
+
+  @override
+  String get settingsShortcutsToggleSidebar =>
+      'Показать или скрыть боковую панель';
+
+  @override
+  String get settingsShortcutsGlobalQuickAdd => 'Глобальное быстрое добавление';
+
+  @override
+  String get settingsShortcutsGlobalQuickAddSubtitle =>
+      'Работает, даже когда Pomodoist неактивен.';
+
+  @override
+  String get settingsShortcutsRecordTitle => 'Нажмите сочетание клавиш';
+
+  @override
+  String get settingsShortcutsRecordPrompt =>
+      'Используйте клавишу вместе с Command, Control или Alt. Esc — отмена.';
+
+  @override
+  String get settingsShortcutsInvalid => 'Добавьте Command, Control или Alt.';
+
+  @override
+  String get settingsShortcutsConflict => 'Это сочетание уже используется.';
+
+  @override
+  String get settingsShortcutsGlobalError =>
+      'Глобальное сочетание недоступно. Предыдущее сочетание осталось активным.';
+
+  @override
+  String get settingsShortcutsResetAll => 'Сбросить все';
+
+  @override
+  String get settingsShortcutsResetDone => 'Быстрые команды сброшены.';
+
+  @override
   String get csvImportTitle => 'Импорт задач из CSV';
 
   @override

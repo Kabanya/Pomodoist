@@ -565,15 +565,14 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     await tester.pumpAndSettle();
-    await tester.tap(
-      find
-          .byWidgetPredicate(
-            (widget) =>
-                widget is ChoiceChip &&
-                widget.key == const ValueKey('settings-default-block-45'),
-          )
-          .first,
+    final fortyFiveMinutes = find.byWidgetPredicate(
+      (widget) =>
+          widget is ChoiceChip &&
+          widget.key == const ValueKey('settings-default-block-45'),
     );
+    await tester.ensureVisible(fortyFiveMinutes.first);
+    await tester.pumpAndSettle();
+    await tester.tap(fortyFiveMinutes.first);
     await tester.pumpAndSettle();
     final prefs = await SharedPreferences.getInstance();
 

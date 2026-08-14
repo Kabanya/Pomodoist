@@ -485,6 +485,48 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsTitle => 'Ajustes';
 
   @override
+  String get settingsShortcutsTitle => 'Atajos de teclado';
+
+  @override
+  String get settingsShortcutsSubtitle =>
+      'Personaliza los comandos disponibles con un teclado físico.';
+
+  @override
+  String get settingsShortcutsToggleSidebar =>
+      'Mostrar u ocultar la barra lateral';
+
+  @override
+  String get settingsShortcutsGlobalQuickAdd =>
+      'Añadir rápidamente de forma global';
+
+  @override
+  String get settingsShortcutsGlobalQuickAddSubtitle =>
+      'Funciona incluso cuando Pomodoist no está activo.';
+
+  @override
+  String get settingsShortcutsRecordTitle => 'Pulsa un atajo';
+
+  @override
+  String get settingsShortcutsRecordPrompt =>
+      'Usa una tecla con Command, Control o Alt. Pulsa Esc para cancelar.';
+
+  @override
+  String get settingsShortcutsInvalid => 'Incluye Command, Control o Alt.';
+
+  @override
+  String get settingsShortcutsConflict => 'Este atajo ya está en uso.';
+
+  @override
+  String get settingsShortcutsGlobalError =>
+      'Ese atajo global no está disponible. El atajo anterior sigue activo.';
+
+  @override
+  String get settingsShortcutsResetAll => 'Restablecer todo';
+
+  @override
+  String get settingsShortcutsResetDone => 'Atajos de teclado restablecidos.';
+
+  @override
   String get csvImportTitle => 'Importar tareas desde CSV';
 
   @override
