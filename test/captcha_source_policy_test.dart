@@ -22,6 +22,7 @@ void main() {
         'lib/app/turnstile_widget_web.dart',
         'lib/features/settings/presentation/captcha_challenge_screen.dart',
         'lib/features/settings/presentation/pomodoist_account_actions.dart',
+        'web/auth/challenge.html',
       ];
       final source = (await Future.wait(
         files.map(File.new).map((file) => file.readAsString()),
@@ -41,6 +42,10 @@ void main() {
         expect(source, isNot(contains(forbidden)), reason: forbidden);
       }
       expect(source, isNot(matches(RegExp(r'\blog\s*\('))));
+      expect(source, isNot(contains('console.')));
+      expect(source, isNot(contains('localStorage')));
+      expect(source, isNot(contains('sessionStorage')));
+      expect(source, isNot(contains('document.cookie')));
     },
   );
 
@@ -48,6 +53,7 @@ void main() {
     'web loads only the official explicit Turnstile endpoint under CSP',
     () async {
       final index = await File('web/index.html').readAsString();
+      final challenge = await File('web/auth/challenge.html').readAsString();
       final csp = await File(
         'deploy/web/security-headers.conf.template',
       ).readAsString();
@@ -73,6 +79,23 @@ void main() {
           'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
         ),
       );
+      expect(challenge, contains('<script src="/config.js"></script>'));
+      expect(
+        challenge,
+        contains(
+          'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
+        ),
+      );
+      expect(challenge, isNot(contains('flutter_bootstrap.js')));
+      expect(challenge, isNot(contains('main.dart.js')));
+      expect(challenge, isNot(contains('.wasm')));
+      expect(
+        challenge,
+        contains('callbackUrl.searchParams.set("state", state)'),
+      );
+      expect(challenge, contains('script.onerror'));
+      expect(challenge, contains('"expired-callback"'));
+      expect(challenge, contains('retry.addEventListener("click"'));
       expect(widget, contains("@JS('turnstile.remove')"));
       expect(widget, contains('CaptchaLoadTimeoutGuard'));
       expect(widget, contains('_turnstileReady = null'));

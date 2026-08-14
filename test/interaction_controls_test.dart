@@ -2402,6 +2402,30 @@ void main() {
     );
   });
 
+  testWidgets('project menu renames a project', (tester) async {
+    late GoRouter router;
+    final harness = await _pumpApp(tester, onRouter: (value) => router = value);
+
+    router.go('/projects');
+    await _pumpFrames(tester);
+
+    await _openTextContextMenu(tester, 'Work');
+    await tester.tap(find.text('Rename project'));
+    await tester.pumpAndSettle();
+
+    final input = find.byKey(const Key('project-rename-input'));
+    expect(tester.widget<TextField>(input).controller!.text, 'Work');
+    await tester.enterText(input, 'Renamed project');
+    await tester.tap(find.byKey(const Key('project-rename-submit')));
+    await _pumpFrames(tester);
+
+    expect(harness.projectRepository.updatedProjectIds, ['project-1']);
+    expect(
+      harness.projectRepository.updateProjectPatches.single.name,
+      'Renamed project',
+    );
+  });
+
   testWidgets('browse links to completed tasks without rendering them inline', (
     tester,
   ) async {

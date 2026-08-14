@@ -1173,6 +1173,53 @@ void main() {
       );
     });
 
+    test('project rename trims the name and syncs it', () async {
+      final projectId = await projectRepository.createProject('Original');
+
+      await projectRepository.updateProject(
+        projectId,
+        const UpdateProjectPatch(name: '  Renamed  '),
+      );
+
+      final projects = await projectRepository.watchProjects().first;
+      expect(
+        projects.singleWhere((project) => project.id == projectId).name,
+        'Renamed',
+      );
+      final commands = await syncQueue.watchPending().first;
+      expect(
+        _payloadFor(commands, 'project.update', projectId)['name'],
+        'Renamed',
+      );
+    });
+
+    test(
+      'project rename rejects duplicates without queuing an update',
+      () async {
+        final projectId = await projectRepository.createProject('Original');
+        await projectRepository.createProject('Existing');
+        final pendingBefore = await syncQueue.watchPending().first;
+
+        await expectLater(
+          projectRepository.updateProject(
+            projectId,
+            const UpdateProjectPatch(name: ' existing '),
+          ),
+          throwsArgumentError,
+        );
+
+        final projects = await projectRepository.watchProjects().first;
+        expect(
+          projects.singleWhere((project) => project.id == projectId).name,
+          'Original',
+        );
+        expect(
+          (await syncQueue.watchPending().first).length,
+          pendingBefore.length,
+        );
+      },
+    );
+
     test('places a task branch on the timeline atomically', () async {
       final targetProjectId = await projectRepository.createProject('Target');
       final externalParentId = await taskRepository.createTask(

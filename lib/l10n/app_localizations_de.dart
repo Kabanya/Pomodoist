@@ -547,7 +547,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get csvImportHumanGuide =>
-      '1. Speichere die Datei als UTF-8-CSV. Verwende ein Komma (empfohlen) oder Semikolon als Trennzeichen.\\n\\n2. Die Spalte content ist erforderlich. Außerdem sind verfügbar: key, description, project, labels, priority, due_date, start_at, end_at, time_zone, recurrence, recurrence_interval, deadline, estimate, kanban_status, parent_key.\\n\\n3. Jede Zeile erstellt eine offene Aufgabe. Trenne Labels mit |. Die Priorität liegt zwischen 1 und 4; leer bedeutet 4. Ein leeres Projekt bedeutet Inbox, ein leerer Status Backlog. Fehlende Projekte, Labels und offene Status werden automatisch erstellt.\\n\\n4. Für ganztägige Aufgaben verwende due_date im Format YYYY-MM-DD. Für Aufgaben mit Uhrzeit fülle start_at und end_at als RFC3339-Werte mit UTC-Versatz aus und gib eine IANA-time_zone wie Europe/Berlin an.\\n\\n5. Für Unteraufgaben gib der Elternzeile einen eindeutigen key und trage ihn beim Kind als parent_key ein. Eltern dürfen später in der Datei stehen. Das Projekt des Kindes muss dem Elternprojekt entsprechen.\\n\\n6. Pomodoist prüft die gesamte Datei und zeigt vor dem Import eine Vorschau. Ist eine Zeile ungültig, wird nichts gespeichert. Ein erneuter Import erstellt Duplikate.';
+      '1. Speichere die Datei als UTF-8-CSV. Verwende ein Komma (empfohlen) oder Semikolon als Trennzeichen.\n\n2. Die Spalte content ist erforderlich. Außerdem sind verfügbar: key, description, project, labels, priority, due_date, start_at, end_at, time_zone, recurrence, recurrence_interval, deadline, estimate, kanban_status, parent_key.\n\n3. Jede Zeile erstellt eine offene Aufgabe. Trenne Labels mit |. Die Priorität liegt zwischen 1 und 4; leer bedeutet 4. Ein leeres Projekt bedeutet Inbox, ein leerer Status Backlog. Fehlende Projekte, Labels und offene Status werden automatisch erstellt.\n\n4. Für ganztägige Aufgaben verwende due_date im Format YYYY-MM-DD. Für Aufgaben mit Uhrzeit fülle start_at und end_at als RFC3339-Werte mit UTC-Versatz aus und gib eine IANA-time_zone wie Europe/Berlin an.\n\n5. Für Unteraufgaben gib der Elternzeile einen eindeutigen key und trage ihn beim Kind als parent_key ein. Eltern dürfen später in der Datei stehen. Das Projekt des Kindes muss dem Elternprojekt entsprechen.\n\n6. Pomodoist prüft die gesamte Datei und zeigt vor dem Import eine Vorschau. Ist eine Zeile ungültig, wird nichts gespeichert. Ein erneuter Import erstellt Duplikate.';
 
   @override
   String get settingsConnectedAgentsTitle => 'Verbundene Agenten';
@@ -1118,6 +1118,9 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get renameProject => 'Projekt umbenennen';
 
   @override
   String get deleteProject => 'Projekt löschen';

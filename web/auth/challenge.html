@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>Pomodoist security check</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f7f7f8;
+        color: #19191c;
+      }
+      body {
+        min-height: 100vh;
+        min-height: 100dvh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+      }
+      main {
+        box-sizing: border-box;
+        width: min(420px, calc(100% - 32px));
+        padding: 28px;
+        border: 1px solid #dedee3;
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 12px 40px rgb(0 0 0 / 8%);
+        text-align: center;
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 24px;
+        line-height: 1.25;
+      }
+      p {
+        margin: 0;
+        color: #62626a;
+        line-height: 1.5;
+      }
+      #turnstile-widget {
+        min-height: 70px;
+        margin-top: 22px;
+        display: flex;
+        justify-content: center;
+      }
+      .actions {
+        display: grid;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      button {
+        min-height: 48px;
+        border: 0;
+        border-radius: 12px;
+        padding: 0 18px;
+        background: #dc342a;
+        color: #fff;
+        font: inherit;
+        font-weight: 650;
+        cursor: pointer;
+      }
+      button:focus-visible {
+        outline: 3px solid #ff8c84;
+        outline-offset: 3px;
+      }
+      [hidden] { display: none !important; }
+      @media (prefers-color-scheme: dark) {
+        :root { background: #171113; color: #f5f2f3; }
+        main { background: #241a1d; border-color: #47383d; box-shadow: none; }
+        p { color: #c9bec2; }
+      }
+    </style>
+    <script src="/config.js"></script>
+  </head>
+  <body data-status="loading">
+    <main id="pomodoist-captcha-challenge">
+      <h1 id="title">Pomodoist security check</h1>
+      <p id="status" role="status" aria-live="polite">
+        Loading verification…
+      </p>
+      <div id="turnstile-widget"></div>
+      <div class="actions">
+        <button id="retry-verification" type="button" hidden>Try again</button>
+        <button id="return-to-app" type="button" hidden>
+          Return to Pomodoist
+        </button>
+      </div>
+      <noscript>JavaScript is required for this security check.</noscript>
+    </main>
+    <script>
+      (() => {
+        "use strict";
+
+        const ru = navigator.language.toLowerCase().startsWith("ru");
+        const copy = ru ? {
+          title: "Проверка безопасности Pomodoist",
+          loading: "Загружаем проверку…",
+          prompt: "Подтвердите, что вы человек, чтобы продолжить вход.",
+          invalid: "Ссылка проверки недействительна. Вернитесь в Pomodoist и попробуйте войти ещё раз.",
+          error: "Не удалось загрузить проверку. Проверьте интернет-соединение и повторите попытку.",
+          expired: "Время проверки истекло. Повторите попытку.",
+          returning: "Проверка завершена. Возвращаемся в Pomodoist…",
+          retry: "Повторить проверку",
+          back: "Вернуться в Pomodoist",
+        } : {
+          title: "Pomodoist security check",
+          loading: "Loading verification…",
+          prompt: "Confirm you are human to continue signing in.",
+          invalid: "This verification link is invalid. Return to Pomodoist and try signing in again.",
+          error: "The verification could not load. Check your connection and try again.",
+          expired: "The verification expired. Please try again.",
+          returning: "Verification complete. Returning to Pomodoist…",
+          retry: "Try verification again",
+          back: "Return to Pomodoist",
+        };
+        const title = document.getElementById("title");
+        const status = document.getElementById("status");
+        const widget = document.getElementById("turnstile-widget");
+        const retry = document.getElementById("retry-verification");
+        const back = document.getElementById("return-to-app");
+        const query = new URLSearchParams(location.search);
+        const fragment = new URLSearchParams(location.hash.slice(1));
+        const queryKeys = [...query.keys()];
+        const fragmentKeys = [...fragment.keys()];
+        const state = fragment.get("state") || "";
+        const validRequest = location.pathname === "/auth/challenge" &&
+          queryKeys.length === 1 && queryKeys[0] === "returnTo" &&
+          query.getAll("returnTo").length === 1 &&
+          query.get("returnTo") === "pomodoist://captcha-callback" &&
+          fragmentKeys.length === 1 && fragmentKeys[0] === "state" &&
+          fragment.getAll("state").length === 1 &&
+          state.length >= 32 && state.length <= 128 &&
+          /^[A-Za-z0-9_-]+$/.test(state);
+        let generation = 0;
+        let timeout;
+        let callbackUrl;
+        let widgetId;
+
+        title.textContent = copy.title;
+        retry.textContent = copy.retry;
+        back.textContent = copy.back;
+
+        const setStatus = (name, message) => {
+          document.body.dataset.status = name;
+          status.textContent = message;
+        };
+        const showError = (message) => {
+          setStatus("error", message);
+          retry.hidden = false;
+        };
+        const removeTurnstile = () => {
+          clearTimeout(timeout);
+          document.getElementById("pomodoist-turnstile-script")?.remove();
+          if (widgetId !== undefined && window.turnstile) {
+            try { window.turnstile.remove(widgetId); } catch (_) {}
+          }
+          widgetId = undefined;
+          widget.replaceChildren();
+        };
+        const finish = (token) => {
+          if (callbackUrl || typeof token !== "string" || token.length === 0 ||
+              token.length > 2048 || /[\u0000-\u001f\u007f-\u009f]/.test(token)) {
+            if (!callbackUrl) showError(copy.error);
+            return;
+          }
+          callbackUrl = new URL("pomodoist://captcha-callback");
+          callbackUrl.searchParams.set("state", state);
+          callbackUrl.searchParams.set("token", token);
+          setStatus("success", copy.returning);
+          widget.hidden = true;
+          retry.hidden = true;
+          back.hidden = false;
+          requestAnimationFrame(() => location.replace(callbackUrl.href));
+        };
+        const loadTurnstile = () => {
+          const current = ++generation;
+          removeTurnstile();
+          retry.hidden = true;
+          widget.hidden = false;
+          setStatus("loading", copy.loading);
+          const siteKey = window.pomodoistRuntimeConfig?.turnstileSiteKey;
+          if (typeof siteKey !== "string" || siteKey.length === 0) {
+            showError(copy.error);
+            return;
+          }
+          const script = document.createElement("script");
+          script.id = "pomodoist-turnstile-script";
+          script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+          script.async = true;
+          script.defer = true;
+          script.onerror = () => {
+            clearTimeout(timeout);
+            if (generation === current) showError(copy.error);
+          };
+          script.onload = () => {
+            clearTimeout(timeout);
+            if (generation !== current) return;
+            try {
+              setStatus("ready", copy.prompt);
+              widgetId = window.turnstile.render(widget, {
+                sitekey: siteKey,
+                callback: finish,
+                "expired-callback": () => showError(copy.expired),
+                "error-callback": () => showError(copy.error),
+              });
+            } catch (_) {
+              showError(copy.error);
+            }
+          };
+          timeout = setTimeout(() => {
+            if (generation === current) showError(copy.error);
+          }, 10000);
+          document.head.append(script);
+        };
+
+        retry.addEventListener("click", loadTurnstile);
+        back.addEventListener("click", () => {
+          if (callbackUrl) location.href = callbackUrl.href;
+        });
+        if (!validRequest) {
+          setStatus("invalid", copy.invalid);
+          widget.hidden = true;
+          return;
+        }
+        loadTurnstile();
+      })();
+    </script>
+  </body>
+</html>

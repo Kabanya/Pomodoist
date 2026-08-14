@@ -1082,6 +1082,24 @@ class DriftProjectRepository implements ProjectRepository {
     if (id == inboxProjectId) {
       throw ArgumentError.value(id, 'id', 'Inbox project cannot be changed');
     }
+    final normalizedName = patch.name?.trim();
+    if (patch.name != null && normalizedName!.isEmpty) {
+      throw ArgumentError.value(
+        patch.name,
+        'patch.name',
+        'Project name is empty',
+      );
+    }
+    if (normalizedName != null) {
+      final existing = await findByName(normalizedName);
+      if (existing != null && existing.id != id) {
+        throw ArgumentError.value(
+          patch.name,
+          'patch.name',
+          'Project name already exists',
+        );
+      }
+    }
     final normalizedColor = patch.color == null
         ? null
         : normalizeProjectColor(patch.color);
@@ -1093,7 +1111,9 @@ class DriftProjectRepository implements ProjectRepository {
         'Unsupported project color',
       );
     }
-    if (normalizedColor == null && patch.isFavorite == null) {
+    if (normalizedName == null &&
+        normalizedColor == null &&
+        patch.isFavorite == null) {
       return;
     }
     final now = DateTime.now().toUtc();
@@ -1102,6 +1122,9 @@ class DriftProjectRepository implements ProjectRepository {
         _db.projects,
       )..where((project) => project.id.equals(id))).write(
         ProjectsCompanion(
+          name: normalizedName == null
+              ? const Value.absent()
+              : Value(normalizedName),
           color: normalizedColor == null
               ? const Value.absent()
               : Value(normalizedColor),
@@ -1116,6 +1139,7 @@ class DriftProjectRepository implements ProjectRepository {
         clientId: id,
         payload: {
           'id': id,
+          'name': ?normalizedName,
           'color': ?normalizedColor,
           'isFavorite': ?patch.isFavorite,
         },

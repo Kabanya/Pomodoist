@@ -146,10 +146,11 @@ try {
   const { targetId } = await cdp.send("Target.createTarget", {
     url: "about:blank",
   });
-  const { sessionId } = await cdp.send("Target.attachToTarget", {
+  const attached = await cdp.send("Target.attachToTarget", {
     targetId,
     flatten: true,
   });
+  let sessionId = attached.sessionId;
 
   const diagnostics = [];
   let sentryEnvelopeAttempted = false;
@@ -157,6 +158,8 @@ try {
   let turnstileHandoffEvents = 0;
   let turnstileChallengeStateLeakedToNetwork = false;
   let turnstileHandoffUrl;
+  let turnstileScriptRequests = 0;
+  let challengeWasmRequested = false;
   cdp.listeners.push((message) => {
     if (message.sessionId !== sessionId) return;
     if (message.method === "Log.entryAdded") {
@@ -183,6 +186,19 @@ try {
       }
     } else if (message.method === "Network.requestWillBeSent") {
       const requestUrl = message.params.request.url;
+      if (
+        requestUrl.startsWith(
+          "https://challenges.cloudflare.com/turnstile/v0/api.js",
+        )
+      ) {
+        turnstileScriptRequests += 1;
+      }
+      if (
+        /\.wasm(?:[?#]|$)/i.test(requestUrl) &&
+        new URL(message.params.documentURL).pathname === "/auth/challenge"
+      ) {
+        challengeWasmRequested = true;
+      }
       if (requestUrl.startsWith("pomodoist://captcha-callback?")) {
         turnstileHandoffRequested = true;
         turnstileHandoffEvents += 1;
@@ -261,10 +277,97 @@ try {
   }
 
   const origin = new URL(targetUrl).origin;
+  const { targetId: challengeTargetId } = await cdp.send(
+    "Target.createTarget",
+    { url: "about:blank" },
+  );
+  const challengeTarget = await cdp.send("Target.attachToTarget", {
+    targetId: challengeTargetId,
+    flatten: true,
+  });
+  sessionId = challengeTarget.sessionId;
+  await Promise.all([
+    cdp.send("Page.enable", {}, sessionId),
+    cdp.send("Runtime.enable", {}, sessionId),
+    cdp.send("Log.enable", {}, sessionId),
+    cdp.send("Network.enable", {}, sessionId),
+  ]);
   const challengeState = "A".repeat(43);
+  await cdp.send("Runtime.evaluate", {
+    expression: "localStorage.clear(); sessionStorage.clear()",
+  }, sessionId);
+  const requestsBeforeInvalid = turnstileScriptRequests;
+  const missingStateUrl = `${origin}/auth/challenge?returnTo=` +
+    encodeURIComponent("pomodoist://captcha-callback");
+  await cdp.send("Page.navigate", { url: missingStateUrl }, sessionId);
+  let missingStateRejected = false;
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    const evaluation = await cdp.send("Runtime.evaluate", {
+      expression: "location.pathname === '/auth/challenge' && " +
+        "location.hash === '' && " +
+        "document.body?.dataset.status === 'invalid'",
+      returnByValue: true,
+    }, sessionId);
+    if (evaluation.result?.value === true) {
+      missingStateRejected = true;
+      break;
+    }
+    await delay(100);
+  }
+  await delay(200);
+  const missingStateSkippedTurnstile =
+    turnstileScriptRequests === requestsBeforeInvalid;
+
+  const invalidStateUrl = `${missingStateUrl}#state=short`;
+  const invalidTarget = await cdp.send("Target.createTarget", {
+    url: "about:blank",
+  });
+  const invalidAttachment = await cdp.send("Target.attachToTarget", {
+    targetId: invalidTarget.targetId,
+    flatten: true,
+  });
+  sessionId = invalidAttachment.sessionId;
+  await Promise.all([
+    cdp.send("Page.enable", {}, sessionId),
+    cdp.send("Runtime.enable", {}, sessionId),
+    cdp.send("Log.enable", {}, sessionId),
+    cdp.send("Network.enable", {}, sessionId),
+  ]);
+  await cdp.send("Page.navigate", { url: invalidStateUrl }, sessionId);
+  let invalidStateRejected = false;
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    const evaluation = await cdp.send("Runtime.evaluate", {
+      expression: "location.hash === '#state=short' && " +
+        "document.body?.dataset.status === 'invalid'",
+      returnByValue: true,
+    }, sessionId);
+    if (evaluation.result?.value === true) {
+      invalidStateRejected = true;
+      break;
+    }
+    await delay(100);
+  }
+  await delay(200);
+  const invalidStateSkippedTurnstile =
+    turnstileScriptRequests === requestsBeforeInvalid;
+
   const challengeUrl = `${origin}/auth/challenge?returnTo=` +
     encodeURIComponent("pomodoist://captcha-callback") +
     `#state=${challengeState}`;
+  const validTarget = await cdp.send("Target.createTarget", {
+    url: "about:blank",
+  });
+  const validAttachment = await cdp.send("Target.attachToTarget", {
+    targetId: validTarget.targetId,
+    flatten: true,
+  });
+  sessionId = validAttachment.sessionId;
+  await Promise.all([
+    cdp.send("Page.enable", {}, sessionId),
+    cdp.send("Runtime.enable", {}, sessionId),
+    cdp.send("Log.enable", {}, sessionId),
+    cdp.send("Network.enable", {}, sessionId),
+  ]);
   await cdp.send("Page.navigate", { url: challengeUrl }, sessionId);
   let turnstileReady = false;
   for (let attempt = 0; attempt < 120; attempt += 1) {
@@ -272,7 +375,8 @@ try {
       "Runtime.evaluate",
       {
         expression: "typeof window.turnstile !== 'undefined' && " +
-          "document.getElementById('pomodoist-turnstile-script') !== null",
+          "document.getElementById('pomodoist-turnstile-script') !== null && " +
+          "document.getElementById('pomodoist-captcha-challenge') !== null",
         returnByValue: true,
       },
       sessionId,
@@ -296,6 +400,7 @@ try {
       hash: callback.hash,
       keys,
       stateCount: callback.searchParams.getAll("state").length,
+      stateLength: callback.searchParams.get("state")?.length ?? 0,
       stateMatches: callback.searchParams.get("state") === challengeState,
       tokenCount: callback.searchParams.getAll("token").length,
       tokenLength: token.length,
@@ -328,15 +433,9 @@ try {
       "Runtime.evaluate",
       {
         expression: `(() => {
-          document.querySelector('flt-semantics-placeholder')?.click();
-          const retry = [
-            ...document.querySelectorAll('flt-semantics[role="button"]'),
-          ].find(
-            (element) =>
-              element.getAttribute('aria-label') === 'Return to Pomodoist' ||
-              element.textContent?.includes('Return to Pomodoist'),
-          );
+          const retry = document.getElementById('return-to-app');
           if (!retry) return false;
+          if (retry.hidden) return false;
           retry.click();
           return true;
         })()`,
@@ -350,6 +449,18 @@ try {
     }
     await delay(100);
   }
+  const challengeRuntimeStatus = await cdp.send("Runtime.evaluate", {
+    expression: `(() => ({
+      hasFlutter: [...document.scripts].some((script) =>
+        /main\\.dart\\.js|flutter_bootstrap\\.js/.test(script.src)) ||
+        document.querySelector('flutter-view') !== null,
+      storageEmpty: localStorage.length === 0 && sessionStorage.length === 0,
+      hashStateLength: new URLSearchParams(location.hash.slice(1))
+        .get('state')?.length ?? 0,
+      status: document.body?.dataset.status,
+    }))()`,
+    returnByValue: true,
+  }, sessionId);
   for (let attempt = 0; attempt < 20; attempt += 1) {
     if (turnstileHandoffEvents > handoffEventsBeforeRetry) {
       turnstileManualRetryObserved = true;
@@ -513,12 +624,19 @@ try {
     !loaderGone ||
     cspViolations.length > 0 ||
     !sentryEnvelopeAttempted ||
+    !missingStateRejected ||
+    !missingStateSkippedTurnstile ||
+    !invalidStateRejected ||
+    !invalidStateSkippedTurnstile ||
     !turnstileReady ||
     !turnstileHandoffRequested ||
     !turnstileCallbackValid ||
     !turnstileManualRetryButtonFound ||
     !turnstileManualRetryObserved ||
     turnstileChallengeStateLeakedToNetwork ||
+    challengeWasmRequested ||
+    challengeRuntimeStatus.result?.value?.hasFlutter !== false ||
+    challengeRuntimeStatus.result?.value?.storageEmpty !== true ||
     !telegramOutsideReady ||
     telegramHasFlutterBundle ||
     !telegramInsideReady ||
@@ -532,12 +650,18 @@ try {
         {
           loaderGone,
           sentryEnvelopeAttempted,
+          missingStateRejected,
+          missingStateSkippedTurnstile,
+          invalidStateRejected,
+          invalidStateSkippedTurnstile,
           turnstileReady,
           turnstileHandoffRequested,
           turnstileCallbackValid,
           turnstileManualRetryButtonFound,
           turnstileManualRetryObserved,
           turnstileChallengeStateLeakedToNetwork,
+          challengeWasmRequested,
+          challengeRuntimeStatus: challengeRuntimeStatus.result?.value,
           telegramOutsideReady,
           telegramHasFlutterBundle,
           telegramInsideReady,
@@ -556,7 +680,7 @@ try {
   }
 
   console.log(
-    "Headless browser smoke passed: Flutter, Turnstile, and Telegram optimistic commands rendered without CSP violations.",
+    "Headless browser smoke passed: Flutter, static Turnstile challenge, and Telegram rendered without CSP violations.",
   );
 } catch (error) {
   console.error(`Headless browser smoke failed: ${error.message}`);

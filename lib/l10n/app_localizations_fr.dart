@@ -546,7 +546,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get csvImportHumanGuide =>
-      '1. Enregistrez le fichier au format CSV UTF-8. Utilisez une virgule (recommandé) ou un point-virgule comme séparateur.\\n\\n2. La colonne content est obligatoire. Vous pouvez aussi utiliser : key, description, project, labels, priority, due_date, start_at, end_at, time_zone, recurrence, recurrence_interval, deadline, estimate, kanban_status, parent_key.\\n\\n3. Chaque ligne crée une tâche ouverte. Séparez les étiquettes avec |. La priorité va de 1 à 4 ; une valeur vide signifie 4. Un projet vide signifie Inbox et un statut vide Backlog. Les projets, étiquettes et statuts ouverts manquants sont créés automatiquement.\\n\\n4. Pour une tâche sur la journée, utilisez due_date au format YYYY-MM-DD. Pour une tâche horaire, renseignez start_at et end_at au format RFC3339 avec décalage UTC et une time_zone IANA, par exemple Europe/Paris.\\n\\n5. Pour créer des sous-tâches, donnez un key unique à la ligne parente et placez cette valeur dans parent_key de l’enfant. Le parent peut apparaître plus bas. L’enfant doit utiliser le même projet.\\n\\n6. Pomodoist valide tout le fichier et affiche un aperçu. Si une ligne est invalide, rien n’est enregistré. Une nouvelle importation crée des doublons.';
+      '1. Enregistrez le fichier au format CSV UTF-8. Utilisez une virgule (recommandé) ou un point-virgule comme séparateur.\n\n2. La colonne content est obligatoire. Vous pouvez aussi utiliser : key, description, project, labels, priority, due_date, start_at, end_at, time_zone, recurrence, recurrence_interval, deadline, estimate, kanban_status, parent_key.\n\n3. Chaque ligne crée une tâche ouverte. Séparez les étiquettes avec |. La priorité va de 1 à 4 ; une valeur vide signifie 4. Un projet vide signifie Inbox et un statut vide Backlog. Les projets, étiquettes et statuts ouverts manquants sont créés automatiquement.\n\n4. Pour une tâche sur la journée, utilisez due_date au format YYYY-MM-DD. Pour une tâche horaire, renseignez start_at et end_at au format RFC3339 avec décalage UTC et une time_zone IANA, par exemple Europe/Paris.\n\n5. Pour créer des sous-tâches, donnez un key unique à la ligne parente et placez cette valeur dans parent_key de l’enfant. Le parent peut apparaître plus bas. L’enfant doit utiliser le même projet.\n\n6. Pomodoist valide tout le fichier et affiche un aperçu. Si une ligne est invalide, rien n’est enregistré. Une nouvelle importation crée des doublons.';
 
   @override
   String get settingsConnectedAgentsTitle => 'Agents connectés';
@@ -1122,6 +1122,9 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get renameProject => 'Renommer le projet';
 
   @override
   String get deleteProject => 'Supprimer le projet';

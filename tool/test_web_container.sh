@@ -27,6 +27,12 @@ fail() {
   exit 1
 }
 
+challenge_source="$repo_root/web/auth/challenge.html"
+[ -f "$challenge_source" ] || fail 'static CAPTCHA challenge page is missing'
+challenge_size=$(wc -c <"$challenge_source" | tr -d ' ')
+[ "$challenge_size" -lt 30720 ] ||
+  fail "static CAPTCHA challenge is $challenge_size bytes; expected less than 30720"
+
 assert_header() {
   url=$1
   pattern=$2
@@ -173,6 +179,16 @@ if docker logs "$staging_name" 2>&1 | grep -q "$access_marker"; then
   fail 'CAPTCHA challenge query appeared in nginx access logs'
 fi
 
+challenge_html="$test_root/challenge.html"
+curl --fail --silent --show-error \
+  "$staging_url/auth/challenge?returnTo=pomodoist%3A%2F%2Fcaptcha-callback" \
+  >"$challenge_html"
+grep -q 'id="pomodoist-captcha-challenge"' "$challenge_html" ||
+  fail '/auth/challenge did not serve the static CAPTCHA page'
+if grep -Eiq 'flutter_bootstrap\.js|main\.dart\.js|\.wasm' "$challenge_html"; then
+  fail 'static CAPTCHA challenge references the Flutter runtime or WASM'
+fi
+
 node "$repo_root/tool/test_web_browser.mjs" "$staging_url/login" ||
   fail 'Chrome/Chromium is required and the headless browser smoke failed'
 
@@ -206,7 +222,7 @@ assert version == {"environment": "staging", "release": config["release"]}
 assert "forbidden" not in version_text
 PY
 
-for route in login register today login-callback auth/challenge; do
+for route in login register today login-callback; do
   curl --fail --silent --show-error "$staging_url/$route" | grep -q '<title>pomodoist</title>' ||
     fail "SPA route /$route did not return the Flutter index"
 done
@@ -237,6 +253,11 @@ assert_header "$staging_url/healthz" '^Cache-Control: no-store$'
 assert_header "$staging_url/config.js" '^Cache-Control: no-store$'
 assert_header "$staging_url/version.json" '^Cache-Control: no-store$'
 assert_header "$staging_url/login" '^Cache-Control: no-store$'
+assert_header "$staging_url/auth/challenge" '^Cache-Control: no-store$'
+assert_header "$staging_url/auth/challenge" \
+  'script-src .*https://challenges\.cloudflare\.com'
+assert_header "$staging_url/auth/challenge" \
+  'frame-src https://challenges\.cloudflare\.com'
 assert_header "$staging_url/flutter_bootstrap.js" '^Cache-Control: no-store$'
 assert_header "$staging_url/main.dart.js" '^Cache-Control: no-cache$'
 main_etag=$(curl --fail --silent --head "$staging_url/main.dart.js" |

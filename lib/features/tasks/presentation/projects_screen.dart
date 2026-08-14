@@ -178,6 +178,11 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                         depth: row.depth,
                         count: taskCounts[row.project.id] ?? 0,
                         onTap: () => context.go('/project/${row.project.id}'),
+                        onRename: () => showRenameProjectDialog(
+                          context,
+                          projectId: row.project.id,
+                          projectName: row.project.name,
+                        ),
                         onColor: () => _changeProjectColor(row.project),
                         onFavorite: () => _toggleProjectFavorite(row.project),
                         onDelete: () => _confirmDeleteProject(row.project),
@@ -370,33 +375,59 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
 
 enum _ProjectsMode { projects, labels }
 
-Future<void> _showDeleteMenu({
+Future<void> _showItemMenu({
   required BuildContext context,
   required Offset position,
-  required String label,
+  required String deleteLabel,
   required VoidCallback onDelete,
+  String? renameLabel,
+  VoidCallback? onRename,
 }) async {
-  final action = await showMenu<bool>(
+  final action = await showMenu<_ItemMenuAction>(
     context: context,
     position: _menuPosition(context, position),
     items: [
+      if (renameLabel != null && onRename != null)
+        PopupMenuItem(
+          value: _ItemMenuAction.rename,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.drive_file_rename_outline),
+              const SizedBox(width: 12),
+              Text(renameLabel),
+            ],
+          ),
+        ),
       PopupMenuItem(
-        value: true,
+        value: _ItemMenuAction.delete,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.delete_outline, color: context.appColors.accent),
             const SizedBox(width: 12),
-            Text(label),
+            Text(deleteLabel),
           ],
         ),
       ),
     ],
   );
-  if (action == true && context.mounted) {
-    onDelete();
+  if (!context.mounted) {
+    return;
+  }
+  switch (action) {
+    case _ItemMenuAction.rename:
+      onRename?.call();
+      return;
+    case _ItemMenuAction.delete:
+      onDelete();
+      return;
+    case null:
+      return;
   }
 }
+
+enum _ItemMenuAction { rename, delete }
 
 RelativeRect _menuPosition(BuildContext context, Offset globalPosition) {
   final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
@@ -434,6 +465,7 @@ class _ProjectListTile extends StatelessWidget {
     required this.depth,
     required this.count,
     required this.onTap,
+    required this.onRename,
     required this.onColor,
     required this.onFavorite,
     required this.onDelete,
@@ -443,6 +475,7 @@ class _ProjectListTile extends StatelessWidget {
   final int depth;
   final int count;
   final VoidCallback onTap;
+  final VoidCallback onRename;
   final VoidCallback onColor;
   final VoidCallback onFavorite;
   final VoidCallback onDelete;
@@ -457,16 +490,20 @@ class _ProjectListTile extends StatelessWidget {
     return GestureDetector(
       key: ValueKey('projects-screen-project-${project.id}'),
       behavior: HitTestBehavior.opaque,
-      onSecondaryTapDown: (details) => _showDeleteMenu(
+      onSecondaryTapDown: (details) => _showItemMenu(
         context: context,
         position: details.globalPosition,
-        label: context.l10n.deleteProject,
+        renameLabel: context.l10n.renameProject,
+        deleteLabel: context.l10n.deleteProject,
+        onRename: onRename,
         onDelete: onDelete,
       ),
-      onLongPressStart: (details) => _showDeleteMenu(
+      onLongPressStart: (details) => _showItemMenu(
         context: context,
         position: details.globalPosition,
-        label: context.l10n.deleteProject,
+        renameLabel: context.l10n.renameProject,
+        deleteLabel: context.l10n.deleteProject,
+        onRename: onRename,
         onDelete: onDelete,
       ),
       child: Material(
@@ -560,16 +597,16 @@ class _LabelListTile extends StatelessWidget {
     return GestureDetector(
       key: ValueKey('projects-screen-label-${label.id}'),
       behavior: HitTestBehavior.opaque,
-      onSecondaryTapDown: (details) => _showDeleteMenu(
+      onSecondaryTapDown: (details) => _showItemMenu(
         context: context,
         position: details.globalPosition,
-        label: context.l10n.deleteLabel,
+        deleteLabel: context.l10n.deleteLabel,
         onDelete: onDelete,
       ),
-      onLongPressStart: (details) => _showDeleteMenu(
+      onLongPressStart: (details) => _showItemMenu(
         context: context,
         position: details.globalPosition,
-        label: context.l10n.deleteLabel,
+        deleteLabel: context.l10n.deleteLabel,
         onDelete: onDelete,
       ),
       child: Material(

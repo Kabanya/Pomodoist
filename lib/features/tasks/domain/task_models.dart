@@ -680,8 +680,9 @@ class UpdateTaskPatch {
 }
 
 class UpdateProjectPatch {
-  const UpdateProjectPatch({this.color, this.isFavorite});
+  const UpdateProjectPatch({this.name, this.color, this.isFavorite});
 
+  final String? name;
   final String? color;
   final bool? isFavorite;
 }

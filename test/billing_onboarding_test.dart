@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_account/app_account.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -249,6 +250,79 @@ void main() {
 
     expect(prompts, 1);
     expect(checkouts, 0);
+  });
+
+  testWidgets('Stripe failure does not claim the App Store is unavailable', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          billingChannelProvider.overrideWithValue(BillingChannel.stripe),
+          billingSignedInProvider.overrideWithValue(true),
+          billingStripeGatewayProvider.overrideWithValue(
+            BillingStripeGateway(
+              loadCatalog: () => throw Exception('Stripe catalog failed.'),
+              createCheckout: (_, _) => throw UnimplementedError(),
+              openCheckout: (_) async => false,
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: SingleChildScrollView(child: BillingPaywall()),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('The App Store is not available right now.'),
+      findsNothing,
+    );
+    expect(find.textContaining('Stripe catalog failed.'), findsOneWidget);
+  });
+
+  testWidgets('disabled web checkout shows an availability notice', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          billingChannelProvider.overrideWithValue(BillingChannel.stripe),
+          billingSignedInProvider.overrideWithValue(true),
+          billingStripeGatewayProvider.overrideWithValue(
+            BillingStripeGateway(
+              loadCatalog: () async => const StripeBillingCatalog(
+                enabled: false,
+                introEligible: false,
+                launchOfferEligible: false,
+                launchOfferEndsAt: null,
+              ),
+              createCheckout: (_, _) => throw UnimplementedError(),
+              openCheckout: (_) async => false,
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: SingleChildScrollView(child: BillingPaywall()),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Покупки доступны через App Store.'), findsOneWidget);
+    expect(find.textContaining('Stripe checkout is disabled.'), findsNothing);
   });
 
   testWidgets('Stripe purchase waits for external browser confirmation', (
@@ -1301,6 +1375,28 @@ void main() {
     final state = container.read(billingControllerProvider);
     expect(state.pendingProductId, isNull);
     expect(state.error, contains('timed out'));
+  });
+
+  test('StoreKit user cancellation clears purchase without an error', () async {
+    final container = ProviderContainer(
+      overrides: [
+        billingStoreProvider.overrideWithValue(
+          _CancelledPurchaseBillingStore(),
+        ),
+        applePurchasesSupportedProvider.overrideWithValue(true),
+      ],
+    );
+    addTearDown(container.dispose);
+    container.read(billingControllerProvider);
+    await _settle();
+
+    await container
+        .read(billingControllerProvider.notifier)
+        .purchase(pomodoistAnnualProductId);
+
+    final state = container.read(billingControllerProvider);
+    expect(state.pendingProductId, isNull);
+    expect(state.error, isNull);
   });
 
   test('terminal purchase event cancels the purchase watchdog', () async {
@@ -2386,6 +2482,12 @@ class _HangingPurchaseBillingStore extends _FakeBillingStore {
   @override
   Future<bool> buy(ProductDetails productDetails, {String? appAccountToken}) =>
       Completer<bool>().future;
+}
+
+class _CancelledPurchaseBillingStore extends _FakeBillingStore {
+  @override
+  Future<bool> buy(ProductDetails productDetails, {String? appAccountToken}) =>
+      Future.error(PlatformException(code: 'userCancelled'));
 }
 
 final _fakeAccountEntitlementProvider =

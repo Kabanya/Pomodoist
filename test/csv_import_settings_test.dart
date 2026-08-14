@@ -49,6 +49,8 @@ void main() {
     expect(find.byKey(const Key('csv-import-guide-dialog')), findsOneWidget);
     expect(find.byType(SelectableText), findsOneWidget);
     expect(find.textContaining('content'), findsOneWidget);
+    expect(find.textContaining(r'\n'), findsNothing);
+    expect(find.textContaining('\n\n2.'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('csv-import-guide-close')));
     await tester.pumpAndSettle();

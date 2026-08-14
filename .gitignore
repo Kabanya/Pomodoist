@@ -74,3 +74,4 @@ outputs/pricing-report-2026-07-24/Pomodoist_pricing_comparison_2026-07-24.xlsx
 docs/
 output/
 tmp/
+supabase/.temp/

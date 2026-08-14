@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:app_account/app_account.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -697,7 +698,12 @@ class BillingController extends Notifier<BillingState> {
         return;
       }
       _cancelPurchaseWatchdog();
-      state = state.copyWith(pendingProductId: null, error: '$error');
+      state = state.copyWith(
+        pendingProductId: null,
+        error: error is PlatformException && error.code == 'userCancelled'
+            ? null
+            : '$error',
+      );
     }
   }
 
@@ -917,7 +923,7 @@ class BillingController extends Notifier<BillingState> {
             : const {},
         stripeLaunchOfferEligible: catalog.launchOfferEligible,
         stripeLaunchOfferEndsAt: catalog.launchOfferEndsAt,
-        error: catalog.enabled ? null : 'Stripe checkout is disabled.',
+        error: null,
       );
     } catch (error) {
       if (!ref.mounted) return;
@@ -1360,7 +1366,11 @@ class BillingPaywall extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
           ],
-          if (!state.platformSupported)
+          if (!state.platformSupported ||
+              (channel == BillingChannel.stripe &&
+                  !state.storeAvailable &&
+                  !state.loading &&
+                  state.error == null))
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(
@@ -1370,7 +1380,9 @@ class BillingPaywall extends ConsumerWidget {
                 ),
               ),
             )
-          else if (!state.storeAvailable && !state.loading)
+          else if (channel == BillingChannel.storeKit &&
+              !state.storeAvailable &&
+              !state.loading)
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(

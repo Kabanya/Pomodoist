@@ -539,7 +539,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get csvImportHumanGuide =>
-      '1. احفظ الملف بصيغة CSV وترميز UTF-8. استخدم الفاصلة (موصى بها) أو الفاصلة المنقوطة كفاصل.\\n\\n2. العمود content إلزامي. ويمكنك أيضًا استخدام: key, description, project, labels, priority, due_date, start_at, end_at, time_zone, recurrence, recurrence_interval, deadline, estimate, kanban_status, parent_key.\\n\\n3. ينشئ كل صف مهمة مفتوحة واحدة. افصل التسميات بعلامة |. الأولوية من 1 إلى 4، والقيمة الفارغة تعني 4. المشروع الفارغ يعني Inbox والحالة الفارغة تعني Backlog. تُنشأ المشاريع والتسميات والحالات المفتوحة الناقصة تلقائيًا.\\n\\n4. لمهمة طوال اليوم استخدم due_date بالصيغة YYYY-MM-DD. ولمهمة محددة الوقت املأ start_at وend_at بقيم RFC3339 مع فرق UTC، وحدد time_zone من IANA مثل Asia/Riyadh.\\n\\n5. لإنشاء مهام فرعية، امنح صف المهمة الأصلية key فريدًا وضع قيمته في parent_key للمهمة الفرعية. يمكن أن يظهر الصف الأصلي لاحقًا في الملف. يجب أن يتطابق المشروعان.\\n\\n6. يتحقق Pomodoist من الملف كاملًا ويعرض معاينة قبل الاستيراد. إذا كان أي صف غير صالح فلن يُحفظ شيء. إعادة الاستيراد تنشئ نسخًا مكررة.';
+      '1. احفظ الملف بصيغة CSV وترميز UTF-8. استخدم الفاصلة (موصى بها) أو الفاصلة المنقوطة كفاصل.\n\n2. العمود content إلزامي. ويمكنك أيضًا استخدام: key, description, project, labels, priority, due_date, start_at, end_at, time_zone, recurrence, recurrence_interval, deadline, estimate, kanban_status, parent_key.\n\n3. ينشئ كل صف مهمة مفتوحة واحدة. افصل التسميات بعلامة |. الأولوية من 1 إلى 4، والقيمة الفارغة تعني 4. المشروع الفارغ يعني Inbox والحالة الفارغة تعني Backlog. تُنشأ المشاريع والتسميات والحالات المفتوحة الناقصة تلقائيًا.\n\n4. لمهمة طوال اليوم استخدم due_date بالصيغة YYYY-MM-DD. ولمهمة محددة الوقت املأ start_at وend_at بقيم RFC3339 مع فرق UTC، وحدد time_zone من IANA مثل Asia/Riyadh.\n\n5. لإنشاء مهام فرعية، امنح صف المهمة الأصلية key فريدًا وضع قيمته في parent_key للمهمة الفرعية. يمكن أن يظهر الصف الأصلي لاحقًا في الملف. يجب أن يتطابق المشروعان.\n\n6. يتحقق Pomodoist من الملف كاملًا ويعرض معاينة قبل الاستيراد. إذا كان أي صف غير صالح فلن يُحفظ شيء. إعادة الاستيراد تنشئ نسخًا مكررة.';
 
   @override
   String get settingsConnectedAgentsTitle => 'الوكلاء المتصلون';
@@ -1108,6 +1108,9 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get renameProject => 'إعادة تسمية المشروع';
 
   @override
   String get deleteProject => 'حذف المشروع';
