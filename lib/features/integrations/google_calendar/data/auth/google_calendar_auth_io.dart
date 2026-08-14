@@ -316,17 +316,13 @@ class _LoopbackCalendarAuthService implements GoogleCalendarAuthService {
   }
 
   Future<String?> _desktopClientSecret() async {
-    final candidates = [
-      _config.desktopGoogleSignInClientSecret,
-      Platform.environment['GOOGLE_DESKTOP_CLIENT_SECRET'],
-    ];
-    for (final value in candidates) {
-      final trimmed = value?.trim();
-      if (trimmed != null && trimmed.isNotEmpty) {
-        return trimmed;
-      }
-    }
-    return null;
+    return resolveGoogleCalendarDesktopClientSecret(
+      dartDefineValue: _config.desktopGoogleSignInClientSecret,
+      environmentValue: Platform.environment['GOOGLE_DESKTOP_CLIENT_SECRET'],
+      macOSInfoPlistValue: await _macOSInfoPlistValue(
+        'GoogleDesktopClientSecret',
+      ),
+    );
   }
 
   Future<String?> _macOSInfoPlistValue(String key) async {
@@ -424,6 +420,24 @@ class _LoopbackCalendarAuthService implements GoogleCalendarAuthService {
     final bytes = List<int>.generate(length, (_) => random.nextInt(256));
     return base64UrlEncode(bytes).replaceAll('=', '');
   }
+}
+
+String? resolveGoogleCalendarDesktopClientSecret({
+  required String? dartDefineValue,
+  required String? environmentValue,
+  required String? macOSInfoPlistValue,
+}) {
+  for (final value in [
+    dartDefineValue,
+    environmentValue,
+    macOSInfoPlistValue,
+  ]) {
+    final trimmed = value?.trim();
+    if (trimmed != null && trimmed.isNotEmpty) {
+      return trimmed;
+    }
+  }
+  return null;
 }
 
 bool googleCalendarIsMissingKeychainEntitlement(Object error) {

@@ -24,6 +24,17 @@ void main() {
     );
   });
 
+  test('resolves desktop client secret from the macOS app config', () {
+    expect(
+      resolveGoogleCalendarDesktopClientSecret(
+        dartDefineValue: '',
+        environmentValue: null,
+        macOSInfoPlistValue: ' desktop-secret ',
+      ),
+      'desktop-secret',
+    );
+  });
+
   test('detects missing macOS keychain entitlement', () {
     expect(
       googleCalendarIsMissingKeychainEntitlement(

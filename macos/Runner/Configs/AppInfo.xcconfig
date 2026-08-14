@@ -14,4 +14,5 @@ PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist
 PRODUCT_COPYRIGHT = Copyright © 2026 FinchForge LLC. All rights reserved.
 
 GOOGLE_DESKTOP_CLIENT_ID =
+GOOGLE_DESKTOP_CLIENT_SECRET =
 #include? "GoogleOAuth.xcconfig"

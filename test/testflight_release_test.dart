@@ -71,4 +71,36 @@ SENTRY_DSN=
       greaterThan(output.indexOf('altool --validate-app')),
     );
   });
+
+  test('macOS OAuth preflight rejects a missing client secret', () async {
+    Future<ProcessResult> check(String secret) => Process.run('make', [
+      '-s',
+      'macos-oauth-check',
+      'GOOGLE_DESKTOP_CLIENT_ID=desktop.apps.googleusercontent.com',
+      'GOOGLE_DESKTOP_CLIENT_SECRET=$secret',
+    ]);
+
+    expect((await check('')).exitCode, isNot(0));
+    expect((await check('desktop-secret')).exitCode, 0);
+  });
+
+  test('macOS release build uses the production runtime config', () async {
+    final result = await Process.run('make', [
+      '-n',
+      'build-macos-release',
+      'TESTFLIGHT_CONFIG=pubspec.yaml',
+      'GOOGLE_DESKTOP_CLIENT_ID=desktop.apps.googleusercontent.com',
+      'GOOGLE_DESKTOP_CLIENT_SECRET=desktop-secret',
+    ]);
+    expect(result.exitCode, 0, reason: result.stderr.toString());
+
+    final output = result.stdout.toString();
+    expect(output, contains('flutter build macos --release'));
+    expect(output, contains('--dart-define-from-file="pubspec.yaml"'));
+    expect(output, contains('--dart-define=POMODOIST_RELEASE='));
+    expect(
+      output,
+      contains('--dart-define=POMODOIST_BILLING_CHANNEL=storekit'),
+    );
+  });
 }

@@ -33,6 +33,8 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>GoogleDesktopClientID</key>
 	<string>$(GOOGLE_DESKTOP_CLIENT_ID)</string>
+	<key>GoogleDesktopClientSecret</key>
+	<string>$(GOOGLE_DESKTOP_CLIENT_SECRET)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSApplicationCategoryType</key>
