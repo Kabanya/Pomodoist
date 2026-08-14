@@ -13,13 +13,17 @@ void main() {
       addTearDown(() => directory.delete(recursive: true));
       final config = File('${directory.path}/production.env');
 
-      Future<ProcessResult> check(String role) async {
+      Future<ProcessResult> check(
+        String role, {
+        bool includeRegistrationUrl = true,
+      }) async {
         final payload = base64Url
             .encode(utf8.encode(jsonEncode({'role': role})))
             .replaceAll('=', '');
         await config.writeAsString('''
 POMODOIST_ENVIRONMENT=production
 WEB_APP_URL=https://app.pomodoist.com
+${includeRegistrationUrl ? 'POMODOIST_REGISTRATION_URL=https://app.pomodoist.com/auth/challenge' : ''}
 SUPABASE_URL=https://ewauihswbwduvklrozke.supabase.co
 SUPABASE_ANON_KEY=header.$payload.signature
 GOOGLE_WEB_CLIENT_ID=client.apps.googleusercontent.com
@@ -33,6 +37,10 @@ SENTRY_DSN=
       }
 
       expect((await check('anon')).exitCode, 0);
+      expect(
+        (await check('anon', includeRegistrationUrl: false)).exitCode,
+        isNot(0),
+      );
       expect((await check('service_role')).exitCode, isNot(0));
     },
   );

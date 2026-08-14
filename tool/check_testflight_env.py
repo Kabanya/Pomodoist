@@ -32,6 +32,7 @@ for line in path.read_text(encoding="utf-8").splitlines():
 expected = {
     "POMODOIST_ENVIRONMENT": "production",
     "WEB_APP_URL": "https://app.pomodoist.com",
+    "POMODOIST_REGISTRATION_URL": "https://app.pomodoist.com/auth/challenge",
     "SUPABASE_URL": "https://ewauihswbwduvklrozke.supabase.co",
 }
 for name, value in expected.items():
