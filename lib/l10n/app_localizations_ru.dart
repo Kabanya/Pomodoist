@@ -152,6 +152,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get billingRestore => 'Восстановить покупки';
 
   @override
+  String get privacyPolicy => 'Политика конфиденциальности';
+
+  @override
+  String get termsOfUse => 'Условия использования';
+
+  @override
   String get billingManageLink => 'Управлять через Link';
 
   @override
@@ -952,7 +958,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deleteAccountConfirmation =>
-      'Аккаунт, облачные данные, а также локальные задачи, проекты и история фокуса будут удалены без возможности восстановления. Подписки в магазине не отменяются автоматически.';
+      'Аккаунт, облачные данные, а также локальные задачи, проекты и история фокуса будут удалены без возможности восстановления. Подписки в магазине не отменяются автоматически. Если вы входили через Apple, отдельно отзовите доступ Pomodoist в настройках аккаунта Apple.';
+
+  @override
+  String get manageSignInWithApple => 'Управление входом через Apple';
 
   @override
   String get deleteAccountFinalConfirmation =>

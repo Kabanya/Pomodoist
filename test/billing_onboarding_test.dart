@@ -252,6 +252,33 @@ void main() {
     expect(checkouts, 0);
   });
 
+  testWidgets('paywall keeps privacy policy and terms accessible', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          billingStoreProvider.overrideWithValue(_FakeBillingStore()),
+          applePurchasesSupportedProvider.overrideWithValue(true),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: SingleChildScrollView(child: BillingPaywall()),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('billing-privacy-policy')), findsOneWidget);
+    expect(find.byKey(const Key('billing-terms-of-use')), findsOneWidget);
+    expect(find.text('Privacy Policy'), findsOneWidget);
+    expect(find.text('Terms of Use'), findsOneWidget);
+  });
+
   testWidgets('Stripe failure does not claim the App Store is unavailable', (
     tester,
   ) async {

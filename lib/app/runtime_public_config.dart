@@ -1,6 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum RuntimeEnvironment { local, staging, production }
+
+const _productionSupabaseUrl = 'https://ewauihswbwduvklrozke.supabase.co';
+const _productionSupabasePublishableKey =
+    'sb_publishable_tH-xsHgay-S5L5NEt6u4Rg_BK9aM3rh';
 
 class RuntimePublicConfig {
   const RuntimePublicConfig._({
@@ -77,6 +82,7 @@ class RuntimePublicConfig {
       googleWebClientId: const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID'),
       turnstileSiteKey: const String.fromEnvironment('TURNSTILE_SITE_KEY'),
       sentryDsn: const String.fromEnvironment('SENTRY_DSN'),
+      nativeRelease: kReleaseMode && !kIsWeb,
     );
   }
 
@@ -89,13 +95,18 @@ class RuntimePublicConfig {
     required String googleWebClientId,
     required String turnstileSiteKey,
     required String sentryDsn,
+    bool nativeRelease = false,
   }) {
+    final useSupabaseFallback =
+        nativeRelease && supabaseUrl.isEmpty && supabaseAnonKey.isEmpty;
     return RuntimePublicConfig._validated(
       environment: environment,
       release: release,
       webAppUrl: webAppUrl,
-      supabaseUrl: supabaseUrl,
-      supabaseAnonKey: supabaseAnonKey,
+      supabaseUrl: useSupabaseFallback ? _productionSupabaseUrl : supabaseUrl,
+      supabaseAnonKey: useSupabaseFallback
+          ? _productionSupabasePublishableKey
+          : supabaseAnonKey,
       googleWebClientId: googleWebClientId,
       turnstileSiteKey: turnstileSiteKey,
       sentryDsn: sentryDsn,

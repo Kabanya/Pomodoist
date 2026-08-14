@@ -223,6 +223,26 @@ void main() {
       expect(config.supabaseUrl, isNull);
       expect(config.sentryDsn, isNull);
     });
+
+    test('native release falls back to the production Supabase client', () {
+      final config = RuntimePublicConfig.fromBuildTimeValues(
+        environment: 'local',
+        release: 'development',
+        webAppUrl: 'http://127.0.0.1:7358',
+        supabaseUrl: '',
+        supabaseAnonKey: '',
+        googleWebClientId: '',
+        turnstileSiteKey: '',
+        sentryDsn: '',
+        nativeRelease: true,
+      );
+
+      expect(
+        config.supabaseUrl,
+        Uri.parse('https://ewauihswbwduvklrozke.supabase.co'),
+      );
+      expect(config.supabaseAnonKey, startsWith('sb_publishable_'));
+    });
   });
 }
 

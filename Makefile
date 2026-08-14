@@ -11,11 +11,15 @@ POMODOIST_BILLING_CHANNEL ?= stripe
 ASC_KEY_ID ?=
 ASC_ISSUER_ID ?=
 ASC_KEY_PATH ?= key-$(ASC_KEY_ID).p8
-IOS_ARCHIVE_PATH ?= build/ios/archive/Runner.xcarchive
-IOS_EXPORT_PATH ?= build/ios/export
 IOS_EXPORT_OPTIONS ?= ios/ExportOptions.plist
+IOS_IPA_PATH ?= build/ios/ipa/Pomodoist.ipa
+IOS_GOOGLE_OAUTH_CONFIG ?= ios/Flutter/GoogleOAuth.xcconfig
+TESTFLIGHT_CONFIG ?= .env.testflight
+POMODOIST_RELEASE ?= $(shell git rev-parse HEAD)
+GOOGLE_CLIENT_ID ?= $(strip $(shell awk -F= '/^[[:space:]]*GOOGLE_CLIENT_ID[[:space:]]*=/{sub(/^[^=]*=[[:space:]]*/, ""); sub(/[[:space:]]*$$/, ""); print; exit}' "$(IOS_GOOGLE_OAUTH_CONFIG)" 2>/dev/null))
+GOOGLE_REVERSED_CLIENT_ID ?= $(strip $(shell awk -F= '/^[[:space:]]*GOOGLE_REVERSED_CLIENT_ID[[:space:]]*=/{sub(/^[^=]*=[[:space:]]*/, ""); sub(/[[:space:]]*$$/, ""); print; exit}' "$(IOS_GOOGLE_OAUTH_CONFIG)" 2>/dev/null))
 
-.PHONY: help setup run web analyze test check format build-web build-macos-debug build-macos-release testflight devices clean
+.PHONY: help setup run web analyze test check format build-web build-macos-debug build-macos-release testflight-preflight ios-oauth-check testflight devices clean
 
 help:
 	@if [ -t 1 ] && [ -z "$${NO_COLOR:-}" ]; then \
@@ -82,20 +86,30 @@ build-macos-debug:
 build-macos-release:
 	$(FLUTTER) build macos --release --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
 
-testflight:
+testflight-preflight:
+	python3 tool/check_testflight_env.py "$(TESTFLIGHT_CONFIG)"
+
+ios-oauth-check:
+	@case "$(GOOGLE_CLIENT_ID)" in *.apps.googleusercontent.com) ;; *) echo "Set GOOGLE_CLIENT_ID in $(IOS_GOOGLE_OAUTH_CONFIG)" >&2; exit 1;; esac
+	@client_id="$(GOOGLE_CLIENT_ID)"; expected="com.googleusercontent.apps.$${client_id%.apps.googleusercontent.com}"; \
+		test "$(GOOGLE_REVERSED_CLIENT_ID)" = "$$expected" || (echo "Set the matching GOOGLE_REVERSED_CLIENT_ID in $(IOS_GOOGLE_OAUTH_CONFIG)" >&2; exit 1)
+
+testflight: testflight-preflight ios-oauth-check
 	@test -n "$(ASC_KEY_ID)" || (echo "Set ASC_KEY_ID=<App Store Connect key ID>" >&2; exit 1)
 	@test -n "$(ASC_ISSUER_ID)" || (echo "Set ASC_ISSUER_ID=<App Store Connect issuer ID>" >&2; exit 1)
 	@test -f "$(ASC_KEY_PATH)" || (echo "Missing App Store Connect key: $(ASC_KEY_PATH)" >&2; exit 1)
-	$(FLUTTER) build ios --release --no-codesign \
-		--dart-define=POMODOIST_BILLING_CHANNEL=storekit
-	xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner \
-		-configuration Release -destination generic/platform=iOS \
-		-archivePath "$(IOS_ARCHIVE_PATH)" archive
-	xcodebuild -exportArchive -archivePath "$(IOS_ARCHIVE_PATH)" \
-		-exportPath "$(IOS_EXPORT_PATH)" \
-		-exportOptionsPlist "$(IOS_EXPORT_OPTIONS)"
-	@test -f "$(IOS_EXPORT_PATH)/Pomodoist.ipa" || (echo "Missing $(IOS_EXPORT_PATH)/Pomodoist.ipa" >&2; exit 1)
-	xcrun altool --upload-app -f "$(IOS_EXPORT_PATH)/Pomodoist.ipa" \
+	$(FLUTTER) build ipa --release \
+		--export-options-plist="$(IOS_EXPORT_OPTIONS)" \
+		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
+		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
+		--dart-define=POMODOIST_BILLING_CHANNEL=storekit \
+		--dart-define=GOOGLE_CLIENT_ID="$(GOOGLE_CLIENT_ID)"
+	@test -f "$(IOS_IPA_PATH)" || (echo "Missing $(IOS_IPA_PATH)" >&2; exit 1)
+	xcrun altool --validate-app "$(IOS_IPA_PATH)" \
+		--api-key "$(ASC_KEY_ID)" \
+		--api-issuer "$(ASC_ISSUER_ID)" \
+		--p8-file-path "$(ASC_KEY_PATH)"
+	xcrun altool --upload-app -f "$(IOS_IPA_PATH)" \
 		--api-key "$(ASC_KEY_ID)" \
 		--api-issuer "$(ASC_ISSUER_ID)" \
 		--p8-file-path "$(ASC_KEY_PATH)"

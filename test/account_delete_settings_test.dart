@@ -145,6 +145,27 @@ void main() {
     expect(account.signOutCalls, 0);
   });
 
+  testWidgets('delete dialog offers manual Sign in with Apple revocation', (
+    tester,
+  ) async {
+    final account = _RecordingAccountClient(
+      onInvoke: () async =>
+          const AccountFunctionResponse(status: 200, data: {'deleted': true}),
+    );
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    await db.ensureSeedData();
+    await _pumpSettings(tester, account: account, db: db);
+    await _openDeleteDialog(tester);
+
+    final manageApple = find.byKey(
+      const Key('account-delete-manage-apple-button'),
+    );
+    expect(manageApple, findsOneWidget);
+    expect(find.text('Manage Sign in with Apple'), findsOneWidget);
+    expect(tester.widget<TextButton>(manageApple).onPressed, isNotNull);
+  });
+
   testWidgets('confirmed deletion is single-flight and clears local data', (
     tester,
   ) async {

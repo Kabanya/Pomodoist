@@ -146,6 +146,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get billingRestore => '恢复购买';
 
   @override
+  String get privacyPolicy => '隐私政策';
+
+  @override
+  String get termsOfUse => '使用条款';
+
+  @override
   String get billingManageLink => '通过 Link 管理';
 
   @override
@@ -916,7 +922,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deleteAccountConfirmation =>
-      '这将永久删除您的账户、云端数据，以及本地任务、项目和专注历史记录。此操作无法撤销。应用商店订阅不会自动取消。';
+      '这将永久删除您的账户、云端数据，以及本地任务、项目和专注历史记录。此操作无法撤销。应用商店订阅不会自动取消。如果您使用了“通过 Apple 登录”，还需在 Apple 账户设置中单独撤销 Pomodoist 的访问权限。';
+
+  @override
+  String get manageSignInWithApple => '管理通过 Apple 登录';
 
   @override
   String get deleteAccountFinalConfirmation => '您确定要继续吗？这是最后一次确认。';

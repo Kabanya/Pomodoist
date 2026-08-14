@@ -152,6 +152,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get billingRestore => 'Restaurar compras';
 
   @override
+  String get privacyPolicy => 'Política de privacidad';
+
+  @override
+  String get termsOfUse => 'Términos de uso';
+
+  @override
   String get billingManageLink => 'Gestionar mediante Link';
 
   @override
@@ -952,7 +958,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deleteAccountConfirmation =>
-      'Esto eliminará permanentemente tu cuenta, los datos en la nube y las tareas, proyectos e historial de concentración locales. Esta acción no se puede deshacer. Las suscripciones de la tienda no se cancelan automáticamente.';
+      'Esto eliminará permanentemente tu cuenta, los datos en la nube y las tareas, proyectos e historial de concentración locales. Esta acción no se puede deshacer. Las suscripciones de la tienda no se cancelan automáticamente. Si usaste Iniciar sesión con Apple, revoca por separado el acceso de Pomodoist en la configuración de tu cuenta de Apple.';
+
+  @override
+  String get manageSignInWithApple => 'Gestionar Iniciar sesión con Apple';
 
   @override
   String get deleteAccountFinalConfirmation =>

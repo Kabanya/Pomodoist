@@ -152,6 +152,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get billingRestore => 'Käufe wiederherstellen';
 
   @override
+  String get privacyPolicy => 'Datenschutzrichtlinie';
+
+  @override
+  String get termsOfUse => 'Nutzungsbedingungen';
+
+  @override
   String get billingManageLink => 'Über Link verwalten';
 
   @override
@@ -954,7 +960,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deleteAccountConfirmation =>
-      'Dadurch werden dein Konto, deine Cloud-Daten sowie lokale Aufgaben, Projekte und der Fokusverlauf dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden. Store-Abonnements werden nicht automatisch gekündigt.';
+      'Dadurch werden dein Konto, deine Cloud-Daten sowie lokale Aufgaben, Projekte und der Fokusverlauf dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden. Store-Abonnements werden nicht automatisch gekündigt. Wenn du dich mit Apple angemeldet hast, widerrufe den Pomodoist-Zugriff zusätzlich in deinen Apple-Account-Einstellungen.';
+
+  @override
+  String get manageSignInWithApple => 'Mit Apple anmelden verwalten';
 
   @override
   String get deleteAccountFinalConfirmation =>

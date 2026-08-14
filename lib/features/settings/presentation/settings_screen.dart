@@ -15,6 +15,7 @@ import '../../../app/runtime_public_config.dart';
 import '../../../app/app_language.dart';
 import '../../../app/app_l10n.dart';
 import '../../../app/formatters.dart';
+import '../../../app/legal_urls.dart';
 import '../../../app/providers.dart';
 import '../../../app/app_theme_mode.dart';
 import '../../../app/theme/app_theme.dart';
@@ -1206,6 +1207,16 @@ class _AccountDeleteDialogState extends ConsumerState<_AccountDeleteDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(l10n.deleteAccountConfirmation),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              key: const Key('account-delete-manage-apple-button'),
+              onPressed: _submitting
+                  ? null
+                  : () =>
+                        unawaited(launchPomodoistExternalUrl(appleAccountUrl)),
+              icon: const Icon(Icons.open_in_new),
+              label: Text(l10n.manageSignInWithApple),
+            ),
             if (_error case final error?) ...[
               const SizedBox(height: 12),
               Semantics(

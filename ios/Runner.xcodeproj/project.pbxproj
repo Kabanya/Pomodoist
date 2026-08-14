@@ -32,6 +32,9 @@
 		B20000000000000000000004 /* PomodoistFocusShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* PomodoistFocusShared.swift */; };
 		B20000000000000000000006 /* PomodoistFocusWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000005 /* PomodoistFocusWidget.swift */; };
 		B2000000000000000000000B /* PomodoistFocusWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = B2000000000000000000000A /* PomodoistFocusWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C30000000000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C30000000000000000000011 /* PrivacyInfo.xcprivacy */; };
+		C30000000000000000000002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C30000000000000000000012 /* PrivacyInfo.xcprivacy */; };
+		C30000000000000000000003 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C30000000000000000000013 /* PrivacyInfo.xcprivacy */; };
 		FED9F3A2ECE4033025E62B62 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 80FAD9C7A8E00EF096479990 /* Pods_RunnerTests.framework */; };
 /* End PBXBuildFile section */
 
@@ -144,6 +147,9 @@
 		B20000000000000000000007 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = PomodoistFocusWidget/Info.plist; sourceTree = SOURCE_ROOT; };
 		B20000000000000000000008 /* PomodoistFocusWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = PomodoistFocusWidget.entitlements; path = PomodoistFocusWidget/PomodoistFocusWidget.entitlements; sourceTree = SOURCE_ROOT; };
 		B2000000000000000000000A /* PomodoistFocusWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PomodoistFocusWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C30000000000000000000011 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		C30000000000000000000012 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		C30000000000000000000013 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = PomodoistFocusWidget/PrivacyInfo.xcprivacy; sourceTree = SOURCE_ROOT; };
 		A9B8EC98003F6FCB6719CF43 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		E83FE30CCC86F2897CE3027E /* Pods-RunnerTests.debug-runnerstorekitlocal.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug-runnerstorekitlocal.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug-runnerstorekitlocal.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -249,6 +255,7 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
 				A10000000000000000000017 /* WatchCompanionHost.swift */,
+				C30000000000000000000011 /* PrivacyInfo.xcprivacy */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
@@ -265,6 +272,7 @@
 				A10000000000000000000014 /* Info.plist */,
 				A10000000000000000000015 /* Assets.xcassets */,
 				A10000000000000000000016 /* Localizable.xcstrings */,
+				C30000000000000000000012 /* PrivacyInfo.xcprivacy */,
 			);
 			path = PomodoistWatch;
 			sourceTree = "<group>";
@@ -284,6 +292,7 @@
 				B20000000000000000000005 /* PomodoistFocusWidget.swift */,
 				B20000000000000000000007 /* Info.plist */,
 				B20000000000000000000008 /* PomodoistFocusWidget.entitlements */,
+				C30000000000000000000013 /* PrivacyInfo.xcprivacy */,
 			);
 			name = FocusWidget;
 			sourceTree = "<group>";
@@ -496,6 +505,7 @@
 			files = (
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
+				C30000000000000000000001 /* PrivacyInfo.xcprivacy in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 			);
@@ -507,6 +517,7 @@
 			files = (
 				A10000000000000000000006 /* Assets.xcassets in Resources */,
 				A10000000000000000000007 /* Localizable.xcstrings in Resources */,
+				C30000000000000000000002 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -521,6 +532,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C30000000000000000000003 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

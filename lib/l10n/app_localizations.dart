@@ -366,6 +366,18 @@ abstract class AppLocalizations {
   /// **'Restore purchases'**
   String get billingRestore;
 
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsOfUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Use'**
+  String get termsOfUse;
+
   /// No description provided for @billingManageLink.
   ///
   /// In en, this message translates to:
@@ -1767,8 +1779,14 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountConfirmation.
   ///
   /// In en, this message translates to:
-  /// **'This permanently deletes your account, cloud data, and local tasks, projects, and focus history. This cannot be undone. Store subscriptions are not canceled automatically.'**
+  /// **'This permanently deletes your account, cloud data, and local tasks, projects, and focus history. This cannot be undone. Store subscriptions are not canceled automatically. If you used Sign in with Apple, revoke Pomodoist access separately in your Apple Account settings.'**
   String get deleteAccountConfirmation;
+
+  /// No description provided for @manageSignInWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Sign in with Apple'**
+  String get manageSignInWithApple;
 
   /// No description provided for @deleteAccountFinalConfirmation.
   ///

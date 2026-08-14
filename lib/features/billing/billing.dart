@@ -13,6 +13,7 @@ import 'package:in_app_purchase_storekit/store_kit_2_wrappers.dart';
 import 'package:intl/intl.dart' as intl;
 
 import '../../app/app_l10n.dart';
+import '../../app/legal_urls.dart';
 import '../../app/theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../focus/presentation/focus_view_mode.dart';
@@ -1423,6 +1424,26 @@ class BillingPaywall extends ConsumerWidget {
               ),
             ),
         ],
+        const SizedBox(height: 4),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 4,
+          children: [
+            TextButton(
+              key: const Key('billing-privacy-policy'),
+              onPressed: () => unawaited(
+                launchPomodoistExternalUrl(pomodoistPrivacyPolicyUrl),
+              ),
+              child: Text(l10n.privacyPolicy),
+            ),
+            TextButton(
+              key: const Key('billing-terms-of-use'),
+              onPressed: () =>
+                  unawaited(launchPomodoistExternalUrl(pomodoistTermsOfUseUrl)),
+              child: Text(l10n.termsOfUse),
+            ),
+          ],
+        ),
       ],
     );
   }

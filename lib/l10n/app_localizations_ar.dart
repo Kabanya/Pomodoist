@@ -152,6 +152,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get billingRestore => 'استعادة المشتريات';
 
   @override
+  String get privacyPolicy => 'سياسة الخصوصية';
+
+  @override
+  String get termsOfUse => 'شروط الاستخدام';
+
+  @override
   String get billingManageLink => 'الإدارة عبر Link';
 
   @override
@@ -944,7 +950,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deleteAccountConfirmation =>
-      'سيؤدي هذا إلى حذف حسابك وبياناتك السحابية والمهام والمشاريع وسجل التركيز المحلي نهائيًا. لا يمكن التراجع عن ذلك. لا تُلغى اشتراكات المتجر تلقائيًا.';
+      'سيؤدي هذا إلى حذف حسابك وبياناتك السحابية والمهام والمشاريع وسجل التركيز المحلي نهائيًا. لا يمكن التراجع عن ذلك. لا تُلغى اشتراكات المتجر تلقائيًا. إذا استخدمت تسجيل الدخول باستخدام Apple، فألغِ وصول Pomodoist بشكل منفصل من إعدادات حساب Apple.';
+
+  @override
+  String get manageSignInWithApple => 'إدارة تسجيل الدخول باستخدام Apple';
 
   @override
   String get deleteAccountFinalConfirmation =>
