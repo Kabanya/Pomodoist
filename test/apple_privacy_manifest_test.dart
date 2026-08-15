@@ -1,10 +1,9 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('each Apple executable declares its UserDefaults reason', () async {
+  test('each Apple executable declares its UserDefaults reason', () {
     const expected = {
       'ios/Runner/PrivacyInfo.xcprivacy': '1C8F.1',
       'ios/PomodoistFocusWidget/PrivacyInfo.xcprivacy': '1C8F.1',
@@ -16,22 +15,18 @@ void main() {
       expect(file.existsSync(), isTrue, reason: '${entry.key} is missing');
       if (!file.existsSync()) continue;
 
-      final result = await Process.run('plutil', [
-        '-convert',
-        'json',
-        '-o',
-        '-',
-        entry.key,
-      ]);
-      expect(result.exitCode, 0, reason: result.stderr.toString());
-      final json = jsonDecode(result.stdout.toString()) as Map<String, Object?>;
-      final apiTypes = json['NSPrivacyAccessedAPITypes']! as List<Object?>;
-      final userDefaults = apiTypes.cast<Map<Object?, Object?>>().singleWhere(
-        (item) =>
-            item['NSPrivacyAccessedAPIType'] ==
-            'NSPrivacyAccessedAPICategoryUserDefaults',
+      final userDefaults = RegExp(
+        r'<key>NSPrivacyAccessedAPIType</key>\s*'
+        r'<string>NSPrivacyAccessedAPICategoryUserDefaults</string>\s*'
+        r'<key>NSPrivacyAccessedAPITypeReasons</key>\s*'
+        r'<array>\s*<string>([^<]+)</string>\s*</array>',
+      ).firstMatch(file.readAsStringSync());
+      expect(
+        userDefaults,
+        isNotNull,
+        reason: '${entry.key} must declare its UserDefaults reason',
       );
-      expect(userDefaults['NSPrivacyAccessedAPITypeReasons'], [entry.value]);
+      expect(userDefaults!.group(1), entry.value);
     }
   });
 
