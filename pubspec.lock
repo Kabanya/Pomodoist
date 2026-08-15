@@ -62,8 +62,8 @@ packages:
     dependency: "direct main"
     description:
       path: app_voice
-      ref: "79ef8c50d7bf3c375c42b5a389e915b1f8f5b0ac"
-      resolved-ref: "79ef8c50d7bf3c375c42b5a389e915b1f8f5b0ac"
+      ref: b54edd05328bc689d62c2601b2cde774e8983644
+      resolved-ref: b54edd05328bc689d62c2601b2cde774e8983644
       url: "https://github.com/Kabanya/app-client-platform.git"
     source: git
     version: "0.1.0"
