@@ -22,7 +22,7 @@ void main() {
     SharedPreferences.setMockInitialValues(const {});
   });
 
-  testWidgets('shortcut settings is last and delete requires two confirmations', (
+  testWidgets('delete account is last and requires two confirmations', (
     tester,
   ) async {
     final pending = Completer<AccountFunctionResponse>();
@@ -40,10 +40,10 @@ void main() {
     final keyedChildren = settingsChildren
         .where((child) => child.key != null)
         .toList();
-    expect(keyedChildren.last.key, const Key('settings-shortcuts-button'));
+    expect(keyedChildren.last.key, const Key('account-delete-section'));
     expect(
       keyedChildren[keyedChildren.length - 2].key,
-      const Key('account-delete-section'),
+      const Key('settings-shortcuts-button'),
     );
 
     final firstConfirmation = find.byKey(const Key('account-delete-button'));

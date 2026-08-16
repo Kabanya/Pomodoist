@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -47,16 +49,34 @@ void main() {
         .setMockMethodCallHandler(channel, null);
   });
 
-  testWidgets('screen shows six app shortcuts and the macOS global shortcut', (
+  testWidgets('screen follows sidebar order and shows the global shortcut', (
     tester,
   ) async {
     await _pumpScreen(tester);
 
-    for (final command in AppShortcutCommand.values) {
-      expect(
-        find.byKey(Key('shortcut-row-${command.storageKey}')),
-        findsOneWidget,
+    const commandKeys = [
+      'toggleSidebar',
+      'quickAdd',
+      'browse',
+      'search',
+      'today',
+      'upcoming',
+      'focus',
+      'inbox',
+      'priorityMatrix',
+      'timeline',
+      'kanban',
+      'reports',
+      'settings',
+    ];
+    for (final commandKey in commandKeys) {
+      final row = find.byKey(Key('shortcut-row-$commandKey'));
+      await tester.scrollUntilVisible(
+        row,
+        240,
+        scrollable: find.byType(Scrollable).first,
       );
+      expect(row, findsOneWidget);
     }
     expect(
       find.byKey(const Key('shortcut-row-global')),
@@ -89,6 +109,18 @@ void main() {
     expect(find.text('⌘J'), findsOneWidget);
   });
 
+  testWidgets('recorder uses macOS modifier flags', (tester) async {
+    await _pumpScreen(tester);
+
+    await tester.tap(find.byKey(const Key('shortcut-binding-quickAdd')));
+    await tester.pumpAndSettle();
+    _sendRawMacShortcut(keyCode: 38, character: 'j');
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('shortcut-recorder-dialog')), findsNothing);
+    expect(find.text('⌘J'), findsOneWidget);
+  });
+
   testWidgets(
     'duplicate shortcut remains in the recorder and reset restores defaults',
     (tester) async {
@@ -99,7 +131,7 @@ void main() {
       await _pressShortcut(
         tester,
         LogicalKeyboardKey.metaLeft,
-        LogicalKeyboardKey.keyK,
+        LogicalKeyboardKey.digit2,
       );
       await tester.pumpAndSettle();
 
@@ -123,6 +155,11 @@ void main() {
       );
       await tester.tap(find.byKey(const Key('shortcuts-reset-all')));
       await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('shortcut-binding-quickAdd')),
+        -300,
+        scrollable: find.byType(Scrollable).first,
+      );
 
       expect(find.text('⌘N'), findsOneWidget);
     },
@@ -159,4 +196,15 @@ Future<void> _pressShortcut(
   await tester.sendKeyDownEvent(key);
   await tester.sendKeyUpEvent(key);
   await tester.sendKeyUpEvent(modifier);
+}
+
+void _sendRawMacShortcut({required int keyCode, required String character}) {
+  final data = RawKeyEventDataMacOs(
+    characters: character,
+    charactersIgnoringModifiers: character,
+    keyCode: keyCode,
+    modifiers: RawKeyEventDataMacOs.modifierCommand,
+  );
+  RawKeyboard.instance.handleRawKeyEvent(RawKeyDownEvent(data: data));
+  RawKeyboard.instance.handleRawKeyEvent(RawKeyUpEvent(data: data));
 }

@@ -4,6 +4,24 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('iOS focus widget uses an adaptive nontransparent background', () async {
+    final source = await File(
+      'apple/FocusWidget/PomodoistFocusWidget.swift',
+    ).readAsString();
+
+    expect(source, contains('Color(UIColor.systemBackground)'));
+    expect(
+      source,
+      isNot(
+        contains(
+          'content.containerBackground(for: .widget) {\n'
+          '        Color.clear',
+        ),
+      ),
+    );
+    expect(source, isNot(contains('content.background(Color.clear)')));
+  });
+
   test('iOS project exposes the focus widget extension', () async {
     final tracked = (await Process.run('git', ['ls-files'])).stdout as String;
     final contentsFiles = tracked

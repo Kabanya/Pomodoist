@@ -1,5 +1,8 @@
 import SwiftUI
 import WidgetKit
+#if os(iOS)
+import UIKit
+#endif
 
 struct PomodoistFocusEntry: TimelineEntry {
   let date: Date
@@ -52,11 +55,19 @@ struct PomodoistFocusWidgetView: View {
   var body: some View {
     if #available(iOS 17.0, macOS 14.0, *) {
       content.containerBackground(for: .widget) {
-        Color.clear
+        widgetBackground
       }
     } else {
-      content.background(Color.clear)
+      content.background(widgetBackground)
     }
+  }
+
+  private var widgetBackground: Color {
+    #if os(iOS)
+    Color(UIColor.systemBackground)
+    #else
+    Color.clear
+    #endif
   }
 
   private var content: some View {

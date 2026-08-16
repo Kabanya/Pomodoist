@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -113,10 +115,17 @@ class _KeyboardShortcutsScreenState
     return switch (command) {
       AppShortcutCommand.toggleSidebar => l10n.settingsShortcutsToggleSidebar,
       AppShortcutCommand.quickAdd => l10n.addTask,
+      AppShortcutCommand.browse => l10n.navBrowse,
       AppShortcutCommand.search => l10n.navSearch,
       AppShortcutCommand.today => l10n.navToday,
-      AppShortcutCommand.inbox => l10n.navInbox,
+      AppShortcutCommand.upcoming => l10n.navUpcoming,
       AppShortcutCommand.focus => l10n.navFocus,
+      AppShortcutCommand.inbox => l10n.navInbox,
+      AppShortcutCommand.priorityMatrix => l10n.navPriorityMatrix,
+      AppShortcutCommand.timeline => l10n.navTimeline,
+      AppShortcutCommand.kanban => l10n.navKanban,
+      AppShortcutCommand.reports => l10n.navReports,
+      AppShortcutCommand.settings => l10n.navSettings,
     };
   }
 
@@ -261,7 +270,14 @@ class _ShortcutRecorderDialogState extends State<_ShortcutRecorderDialog> {
   bool _busy = false;
 
   @override
+  void initState() {
+    super.initState();
+    RawKeyboard.instance.addListener(_handleRawKeyEvent);
+  }
+
+  @override
   void dispose() {
+    RawKeyboard.instance.removeListener(_handleRawKeyEvent);
     _focusNode.dispose();
     super.dispose();
   }
@@ -311,6 +327,22 @@ class _ShortcutRecorderDialogState extends State<_ShortcutRecorderDialog> {
       event,
       HardwareKeyboard.instance,
     );
+    if (!binding.isValid) {
+      setState(() => _error = context.l10n.settingsShortcutsInvalid);
+      return;
+    }
+    unawaited(_submit(binding));
+  }
+
+  void _handleRawKeyEvent(RawKeyEvent event) {
+    if (event is! RawKeyDownEvent || event.repeat || _busy) return;
+    if (event.logicalKey == LogicalKeyboardKey.escape) {
+      _busy = true;
+      Navigator.of(context).pop();
+      return;
+    }
+    if (_modifierKeys.contains(event.logicalKey)) return;
+    final binding = AppShortcutBinding.fromRawEvent(event);
     if (!binding.isValid) {
       setState(() => _error = context.l10n.settingsShortcutsInvalid);
       return;

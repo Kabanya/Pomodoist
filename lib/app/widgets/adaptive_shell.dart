@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -53,17 +55,41 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   double _wideSidebarWidth = _wideSidebarDefaultWidth;
   double _lastExpandedSidebarWidth = _wideSidebarDefaultWidth;
   bool _quickAddShortcutDialogOpen = false;
+  int? _rawHandledPhysicalKeyId;
 
   @override
   void initState() {
     super.initState();
     HardwareKeyboard.instance.addHandler(_handleKeyEvent);
+    RawKeyboard.instance.addListener(_handleRawKeyEvent);
   }
 
   @override
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
+    RawKeyboard.instance.removeListener(_handleRawKeyEvent);
     super.dispose();
+  }
+
+  void _handleRawKeyEvent(RawKeyEvent event) {
+    if (event is RawKeyUpEvent) {
+      if (_rawHandledPhysicalKeyId == event.physicalKey.usbHidUsage) {
+        _rawHandledPhysicalKeyId = null;
+      }
+      return;
+    }
+    if (event is! RawKeyDownEvent ||
+        event.repeat ||
+        widget.location == '/settings/shortcuts') {
+      return;
+    }
+    for (final entry in ref.read(keyboardShortcutsProvider).entries) {
+      if (entry.value.matchesRawEvent(event)) {
+        _rawHandledPhysicalKeyId = event.physicalKey.usbHidUsage;
+        _runShortcut(entry.key);
+        return;
+      }
+    }
   }
 
   @override
@@ -149,6 +175,10 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
       return false;
     }
 
+    if (_rawHandledPhysicalKeyId == event.physicalKey.usbHidUsage) {
+      return true;
+    }
+
     final keyboard = HardwareKeyboard.instance;
     AppShortcutCommand? command;
     for (final entry in ref.read(keyboardShortcutsProvider).entries) {
@@ -161,21 +191,39 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
       return false;
     }
 
+    _runShortcut(command);
+    return true;
+  }
+
+  void _runShortcut(AppShortcutCommand command) {
     switch (command) {
       case AppShortcutCommand.toggleSidebar:
         _toggleSidebar();
       case AppShortcutCommand.quickAdd:
         _openQuickAddFromShortcut();
+      case AppShortcutCommand.browse:
+        _goFromShortcut('/browse');
       case AppShortcutCommand.search:
         _goFromShortcut('/search');
       case AppShortcutCommand.today:
         _goFromShortcut('/today');
-      case AppShortcutCommand.inbox:
-        _goFromShortcut('/inbox');
+      case AppShortcutCommand.upcoming:
+        _goFromShortcut('/upcoming');
       case AppShortcutCommand.focus:
         _goFromShortcut('/focus');
+      case AppShortcutCommand.inbox:
+        _goFromShortcut('/inbox');
+      case AppShortcutCommand.priorityMatrix:
+        _goFromShortcut('/priority-matrix');
+      case AppShortcutCommand.timeline:
+        _goFromShortcut('/timeline');
+      case AppShortcutCommand.kanban:
+        _goFromShortcut('/kanban');
+      case AppShortcutCommand.reports:
+        _goFromShortcut('/reports');
+      case AppShortcutCommand.settings:
+        _goFromShortcut('/settings');
     }
-    return true;
   }
 
   void _openQuickAddFromShortcut() {

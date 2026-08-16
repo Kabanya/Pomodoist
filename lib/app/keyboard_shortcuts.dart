@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -10,13 +12,39 @@ const keyboardShortcutsPreferenceKey = 'keyboard.shortcuts.v1';
 enum AppShortcutCommand {
   toggleSidebar,
   quickAdd,
+  browse,
   search,
   today,
+  upcoming,
+  focus,
   inbox,
-  focus;
+  priorityMatrix,
+  timeline,
+  kanban,
+  reports,
+  settings;
 
   String get storageKey => name;
 }
+
+const _legacyAppShortcutCommands = [
+  AppShortcutCommand.toggleSidebar,
+  AppShortcutCommand.quickAdd,
+  AppShortcutCommand.search,
+  AppShortcutCommand.today,
+  AppShortcutCommand.inbox,
+  AppShortcutCommand.focus,
+];
+
+const _newAppShortcutCommands = [
+  AppShortcutCommand.browse,
+  AppShortcutCommand.upcoming,
+  AppShortcutCommand.priorityMatrix,
+  AppShortcutCommand.timeline,
+  AppShortcutCommand.kanban,
+  AppShortcutCommand.reports,
+  AppShortcutCommand.settings,
+];
 
 @immutable
 class AppShortcutBinding {
@@ -46,6 +74,20 @@ class AppShortcutBinding {
     );
   }
 
+  factory AppShortcutBinding.fromRawEvent(RawKeyEvent event) {
+    final logicalLabel = event.logicalKey.keyLabel.trim();
+    return AppShortcutBinding(
+      physicalKeyId: event.physicalKey.usbHidUsage,
+      keyLabel: logicalLabel.isEmpty
+          ? event.physicalKey.debugName ?? 'Key'
+          : logicalLabel.toUpperCase(),
+      meta: event.data.isModifierPressed(ModifierKey.metaModifier),
+      control: event.data.isModifierPressed(ModifierKey.controlModifier),
+      alt: event.data.isModifierPressed(ModifierKey.altModifier),
+      shift: event.data.isModifierPressed(ModifierKey.shiftModifier),
+    );
+  }
+
   final int physicalKeyId;
   final String keyLabel;
   final bool meta;
@@ -70,6 +112,14 @@ class AppShortcutBinding {
         control == keyboard.isControlPressed &&
         alt == keyboard.isAltPressed &&
         shift == keyboard.isShiftPressed;
+  }
+
+  bool matchesRawEvent(RawKeyEvent event) {
+    return physicalKeyId == event.physicalKey.usbHidUsage &&
+        meta == event.data.isModifierPressed(ModifierKey.metaModifier) &&
+        control == event.data.isModifierPressed(ModifierKey.controlModifier) &&
+        alt == event.data.isModifierPressed(ModifierKey.altModifier) &&
+        shift == event.data.isModifierPressed(ModifierKey.shiftModifier);
   }
 
   String labelFor(TargetPlatform platform) {
@@ -145,24 +195,82 @@ class AppShortcutBinding {
 Map<AppShortcutCommand, AppShortcutBinding> defaultAppShortcutBindings(
   TargetPlatform platform,
 ) {
-  final apple = _isApplePlatform(platform);
-  AppShortcutBinding binding(PhysicalKeyboardKey key, String label) {
-    return AppShortcutBinding(
-      physicalKeyId: key.usbHidUsage,
-      keyLabel: label,
-      meta: apple,
-      control: !apple,
-    );
-  }
+  AppShortcutBinding binding(
+    PhysicalKeyboardKey key,
+    String label, {
+    bool shift = false,
+  }) => _platformBinding(platform, key, label, shift: shift);
 
   return {
     AppShortcutCommand.toggleSidebar: binding(PhysicalKeyboardKey.keyB, 'B'),
     AppShortcutCommand.quickAdd: binding(PhysicalKeyboardKey.keyN, 'N'),
-    AppShortcutCommand.search: binding(PhysicalKeyboardKey.keyK, 'K'),
-    AppShortcutCommand.today: binding(PhysicalKeyboardKey.digit1, '1'),
-    AppShortcutCommand.inbox: binding(PhysicalKeyboardKey.digit2, '2'),
-    AppShortcutCommand.focus: binding(PhysicalKeyboardKey.digit3, '3'),
+    AppShortcutCommand.browse: binding(PhysicalKeyboardKey.digit1, '1'),
+    AppShortcutCommand.search: binding(PhysicalKeyboardKey.digit2, '2'),
+    AppShortcutCommand.today: binding(PhysicalKeyboardKey.digit3, '3'),
+    AppShortcutCommand.upcoming: binding(PhysicalKeyboardKey.digit4, '4'),
+    AppShortcutCommand.focus: binding(PhysicalKeyboardKey.digit5, '5'),
+    AppShortcutCommand.inbox: binding(PhysicalKeyboardKey.digit6, '6'),
+    AppShortcutCommand.priorityMatrix: binding(PhysicalKeyboardKey.digit7, '7'),
+    AppShortcutCommand.timeline: binding(PhysicalKeyboardKey.digit8, '8'),
+    AppShortcutCommand.kanban: binding(PhysicalKeyboardKey.digit9, '9'),
+    AppShortcutCommand.reports: binding(PhysicalKeyboardKey.digit0, '0'),
+    AppShortcutCommand.settings: binding(
+      PhysicalKeyboardKey.digit1,
+      '1',
+      shift: true,
+    ),
   };
+}
+
+Map<AppShortcutCommand, AppShortcutBinding> _legacyDefaultBindings(
+  TargetPlatform platform,
+) => {
+  AppShortcutCommand.toggleSidebar: _platformBinding(
+    platform,
+    PhysicalKeyboardKey.keyB,
+    'B',
+  ),
+  AppShortcutCommand.quickAdd: _platformBinding(
+    platform,
+    PhysicalKeyboardKey.keyN,
+    'N',
+  ),
+  AppShortcutCommand.search: _platformBinding(
+    platform,
+    PhysicalKeyboardKey.keyK,
+    'K',
+  ),
+  AppShortcutCommand.today: _platformBinding(
+    platform,
+    PhysicalKeyboardKey.digit1,
+    '1',
+  ),
+  AppShortcutCommand.inbox: _platformBinding(
+    platform,
+    PhysicalKeyboardKey.digit2,
+    '2',
+  ),
+  AppShortcutCommand.focus: _platformBinding(
+    platform,
+    PhysicalKeyboardKey.digit3,
+    '3',
+  ),
+};
+
+AppShortcutBinding _platformBinding(
+  TargetPlatform platform,
+  PhysicalKeyboardKey key,
+  String label, {
+  bool shift = false,
+}) {
+  final apple = _isApplePlatform(platform);
+  return AppShortcutBinding(
+    physicalKeyId: key.usbHidUsage,
+    keyLabel: label,
+    meta: apple,
+    control: !apple,
+    shift: shift,
+  );
 }
 
 bool _isApplePlatform(TargetPlatform platform) =>
@@ -229,11 +337,19 @@ class KeyboardShortcutsController
       return;
     }
     if (decoded is! Map) return;
+    final decodedMap = decoded;
+
+    if (_newAppShortcutCommands.every(
+      (command) => !decodedMap.containsKey(command.storageKey),
+    )) {
+      await _loadLegacy(decodedMap, defaults);
+      return;
+    }
 
     final loaded = <AppShortcutCommand, AppShortcutBinding>{};
     for (final command in AppShortcutCommand.values) {
       loaded[command] =
-          AppShortcutBinding.tryFromJson(decoded[command.storageKey]) ??
+          AppShortcutBinding.tryFromJson(decodedMap[command.storageKey]) ??
           defaults[command]!;
     }
     if (loaded.values.map((value) => value.signature).toSet().length !=
@@ -241,6 +357,32 @@ class KeyboardShortcutsController
       return;
     }
     if (ref.mounted) state = Map.unmodifiable(loaded);
+  }
+
+  Future<void> _loadLegacy(
+    Map decoded,
+    Map<AppShortcutCommand, AppShortcutBinding> defaults,
+  ) async {
+    final loaded = {...defaults};
+    final legacyDefaults = _legacyDefaultBindings(_platform);
+    for (final command in _legacyAppShortcutCommands) {
+      final candidate = AppShortcutBinding.tryFromJson(
+        decoded[command.storageKey],
+      );
+      if (candidate == null ||
+          candidate.signature == legacyDefaults[command]!.signature) {
+        continue;
+      }
+      final conflictsWithNumberedLayout = loaded.entries.any(
+        (entry) =>
+            entry.key != command &&
+            entry.value.signature == candidate.signature,
+      );
+      if (!conflictsWithNumberedLayout) loaded[command] = candidate;
+    }
+    if (!ref.mounted) return;
+    state = Map.unmodifiable(loaded);
+    await _persist();
   }
 
   Future<void> _persist() async {

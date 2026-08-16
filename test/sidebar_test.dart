@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:convert';
 
 import 'package:drift/native.dart';
@@ -23,10 +25,17 @@ import 'package:pomodoist/features/onboarding/onboarding_gate.dart';
 import 'package:pomodoist/features/planning/presentation/today_screen.dart';
 import 'package:pomodoist/features/productivity/domain/achievement_models.dart';
 import 'package:pomodoist/features/productivity/domain/productivity_models.dart';
+import 'package:pomodoist/features/productivity/presentation/reports_screen.dart';
 import 'package:pomodoist/features/settings/presentation/keyboard_shortcuts_screen.dart';
+import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/features/tasks/presentation/browse_screen.dart';
 import 'package:pomodoist/features/tasks/presentation/inbox_screen.dart';
+import 'package:pomodoist/features/tasks/presentation/kanban/kanban_screen.dart';
+import 'package:pomodoist/features/tasks/presentation/priority_matrix_screen.dart';
 import 'package:pomodoist/features/tasks/presentation/search_screen.dart';
+import 'package:pomodoist/features/tasks/presentation/timeline_screen.dart';
+import 'package:pomodoist/features/tasks/presentation/upcoming_screen.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -134,10 +143,30 @@ void main() {
     await _disposeApp(tester);
   });
 
+  testWidgets('macOS modifier flags trigger app shortcuts', (tester) async {
+    await _pumpWideApp(tester);
+
+    expect(find.text('Add task'), findsOneWidget);
+
+    _sendRawMacShortcut(keyCode: 11, character: 'b');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Add task'), findsNothing);
+    await _disposeApp(tester);
+  });
+
   testWidgets('quick add shortcut opens only one existing dialog', (
     tester,
   ) async {
     await _pumpWideApp(tester);
+
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.keyK,
+    );
+    expect(find.byType(TodayScreen), findsOneWidget);
+    expect(find.byType(SearchScreen), findsNothing);
 
     await _pressShortcut(
       tester,
@@ -154,7 +183,7 @@ void main() {
     await _disposeApp(tester);
   });
 
-  testWidgets('navigation shortcuts open search, Today, Inbox, and Focus', (
+  testWidgets('number shortcuts follow the desktop sidebar order', (
     tester,
   ) async {
     await _pumpWideApp(tester);
@@ -162,30 +191,79 @@ void main() {
     await _pressShortcut(
       tester,
       LogicalKeyboardKey.metaLeft,
-      LogicalKeyboardKey.keyK,
-    );
-    expect(find.byType(SearchScreen), findsOneWidget);
-
-    await _pressShortcut(
-      tester,
-      LogicalKeyboardKey.metaLeft,
       LogicalKeyboardKey.digit1,
     );
-    expect(find.byType(TodayScreen), findsOneWidget);
+    expect(find.byType(BrowseScreen), findsOneWidget);
 
     await _pressShortcut(
       tester,
       LogicalKeyboardKey.metaLeft,
       LogicalKeyboardKey.digit2,
     );
-    expect(find.byType(InboxScreen), findsOneWidget);
+    expect(find.byType(SearchScreen), findsOneWidget);
 
     await _pressShortcut(
       tester,
       LogicalKeyboardKey.metaLeft,
       LogicalKeyboardKey.digit3,
     );
+    expect(find.byType(TodayScreen), findsOneWidget);
+
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.digit4,
+    );
+    expect(find.byType(UpcomingScreen), findsOneWidget);
+
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.digit5,
+    );
     expect(find.byType(FocusScreen), findsOneWidget);
+
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.digit6,
+    );
+    expect(find.byType(InboxScreen), findsOneWidget);
+
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.digit7,
+    );
+    expect(find.byType(PriorityMatrixScreen), findsOneWidget);
+
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.digit8,
+    );
+    expect(find.byType(TimelineScreen), findsOneWidget);
+
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.digit9,
+    );
+    expect(find.byType(KanbanScreen), findsOneWidget);
+
+    await _pressShortcut(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.digit0,
+    );
+    expect(find.byType(ReportsScreen), findsOneWidget);
+
+    await _pressShortcutWithShift(
+      tester,
+      LogicalKeyboardKey.metaLeft,
+      LogicalKeyboardKey.digit1,
+    );
+    expect(find.byType(SettingsScreen), findsOneWidget);
     await _disposeApp(tester);
   });
 
@@ -1046,6 +1124,17 @@ Future<void> _pressSidebarShortcut(
   await tester.pumpAndSettle();
 }
 
+void _sendRawMacShortcut({required int keyCode, required String character}) {
+  final data = RawKeyEventDataMacOs(
+    characters: character,
+    charactersIgnoringModifiers: character,
+    keyCode: keyCode,
+    modifiers: RawKeyEventDataMacOs.modifierCommand,
+  );
+  RawKeyboard.instance.handleRawKeyEvent(RawKeyDownEvent(data: data));
+  RawKeyboard.instance.handleRawKeyEvent(RawKeyUpEvent(data: data));
+}
+
 Future<void> _pressSidebarShortcutWithoutSettling(
   WidgetTester tester,
   LogicalKeyboardKey modifier,
@@ -1063,6 +1152,20 @@ Future<void> _pressShortcut(
   LogicalKeyboardKey key,
 ) async {
   await _pressShortcutWithoutSettling(tester, modifier, key);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _pressShortcutWithShift(
+  WidgetTester tester,
+  LogicalKeyboardKey modifier,
+  LogicalKeyboardKey key,
+) async {
+  await tester.sendKeyDownEvent(modifier);
+  await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+  await tester.sendKeyDownEvent(key);
+  await tester.sendKeyUpEvent(key);
+  await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+  await tester.sendKeyUpEvent(modifier);
   await tester.pumpAndSettle();
 }
 

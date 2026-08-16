@@ -13,22 +13,28 @@ void main() {
     SharedPreferences.setMockInitialValues(const {});
   });
 
-  test('Apple defaults expose the six requested command chords', () {
+  test('Apple defaults follow the desktop sidebar order', () {
     final bindings = defaultAppShortcutBindings(TargetPlatform.macOS);
 
     expect(
-      {
-        for (final entry in bindings.entries)
-          entry.key: entry.value.labelFor(TargetPlatform.macOS),
-      },
-      {
-        AppShortcutCommand.toggleSidebar: '⌘B',
-        AppShortcutCommand.quickAdd: '⌘N',
-        AppShortcutCommand.search: '⌘K',
-        AppShortcutCommand.today: '⌘1',
-        AppShortcutCommand.inbox: '⌘2',
-        AppShortcutCommand.focus: '⌘3',
-      },
+      bindings.values
+          .map((binding) => binding.labelFor(TargetPlatform.macOS))
+          .toList(),
+      const [
+        '⌘B',
+        '⌘N',
+        '⌘1',
+        '⌘2',
+        '⌘3',
+        '⌘4',
+        '⌘5',
+        '⌘6',
+        '⌘7',
+        '⌘8',
+        '⌘9',
+        '⌘0',
+        '⇧⌘1',
+      ],
     );
   });
 
@@ -41,7 +47,11 @@ void main() {
     );
     expect(
       bindings[AppShortcutCommand.focus]!.labelFor(TargetPlatform.windows),
-      'Ctrl+3',
+      'Ctrl+5',
+    );
+    expect(
+      bindings.values.last.labelFor(TargetPlatform.windows),
+      'Ctrl+Shift+1',
     );
   });
 
@@ -180,6 +190,138 @@ void main() {
     },
   );
 
+  test(
+    'legacy defaults migrate and persist the complete numbered map',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        keyboardShortcutsPreferenceKey: jsonEncode({
+          AppShortcutCommand.toggleSidebar.storageKey: _storedMacBinding(
+            PhysicalKeyboardKey.keyB,
+            'B',
+          ),
+          AppShortcutCommand.quickAdd.storageKey: _storedMacBinding(
+            PhysicalKeyboardKey.keyN,
+            'N',
+          ),
+          AppShortcutCommand.search.storageKey: _storedMacBinding(
+            PhysicalKeyboardKey.keyK,
+            'K',
+          ),
+          AppShortcutCommand.today.storageKey: _storedMacBinding(
+            PhysicalKeyboardKey.digit1,
+            '1',
+          ),
+          AppShortcutCommand.inbox.storageKey: _storedMacBinding(
+            PhysicalKeyboardKey.digit2,
+            '2',
+          ),
+          AppShortcutCommand.focus.storageKey: _storedMacBinding(
+            PhysicalKeyboardKey.digit3,
+            '3',
+          ),
+        }),
+      });
+      final container = ProviderContainer(
+        overrides: [
+          shortcutTargetPlatformProvider.overrideWithValue(
+            TargetPlatform.macOS,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(keyboardShortcutsLoadedProvider.future);
+
+      expect(
+        container
+            .read(keyboardShortcutsProvider)
+            .values
+            .map((binding) => binding.labelFor(TargetPlatform.macOS))
+            .toList(),
+        const [
+          '⌘B',
+          '⌘N',
+          '⌘1',
+          '⌘2',
+          '⌘3',
+          '⌘4',
+          '⌘5',
+          '⌘6',
+          '⌘7',
+          '⌘8',
+          '⌘9',
+          '⌘0',
+          '⇧⌘1',
+        ],
+      );
+      final stored =
+          jsonDecode(
+                (await SharedPreferences.getInstance()).getString(
+                  keyboardShortcutsPreferenceKey,
+                )!,
+              )
+              as Map<String, dynamic>;
+      expect(stored.keys.toSet(), {
+        for (final command in AppShortcutCommand.values) command.storageKey,
+      });
+    },
+  );
+
+  test('legacy migration preserves non-conflicting custom shortcuts', () async {
+    SharedPreferences.setMockInitialValues({
+      keyboardShortcutsPreferenceKey: jsonEncode({
+        AppShortcutCommand.toggleSidebar.storageKey: _storedMacBinding(
+          PhysicalKeyboardKey.digit4,
+          '4',
+        ),
+        AppShortcutCommand.quickAdd.storageKey: _storedMacBinding(
+          PhysicalKeyboardKey.keyJ,
+          'J',
+        ),
+        AppShortcutCommand.search.storageKey: _storedMacBinding(
+          PhysicalKeyboardKey.keyK,
+          'K',
+        ),
+        AppShortcutCommand.today.storageKey: _storedMacBinding(
+          PhysicalKeyboardKey.digit1,
+          '1',
+        ),
+        AppShortcutCommand.inbox.storageKey: _storedMacBinding(
+          PhysicalKeyboardKey.digit2,
+          '2',
+        ),
+        AppShortcutCommand.focus.storageKey: _storedMacBinding(
+          PhysicalKeyboardKey.digit3,
+          '3',
+        ),
+      }),
+    });
+    final container = ProviderContainer(
+      overrides: [
+        shortcutTargetPlatformProvider.overrideWithValue(TargetPlatform.macOS),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(keyboardShortcutsLoadedProvider.future);
+    final bindings = container.read(keyboardShortcutsProvider);
+
+    expect(
+      bindings[AppShortcutCommand.quickAdd]!.labelFor(TargetPlatform.macOS),
+      '⌘J',
+    );
+    expect(
+      bindings[AppShortcutCommand.toggleSidebar]!.labelFor(
+        TargetPlatform.macOS,
+      ),
+      '⌘B',
+    );
+    expect(
+      bindings[AppShortcutCommand.upcoming]!.labelFor(TargetPlatform.macOS),
+      '⌘4',
+    );
+  });
+
   test('reset restores every platform default', () async {
     final container = ProviderContainer(
       overrides: [
@@ -263,3 +405,13 @@ class _KeyboardState implements HardwareKeyboard {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
+
+Map<String, Object> _storedMacBinding(PhysicalKeyboardKey key, String label) =>
+    {
+      'physicalKeyId': key.usbHidUsage,
+      'keyLabel': label,
+      'meta': true,
+      'control': false,
+      'alt': false,
+      'shift': false,
+    };
