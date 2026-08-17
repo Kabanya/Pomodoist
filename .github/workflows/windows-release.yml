@@ -1,0 +1,308 @@
+name: Windows release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+concurrency:
+  group: windows-release
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows ${{ matrix.architecture }}
+    runs-on: ${{ matrix.runner }}
+    environment: windows-production
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            runner: windows-2022
+          - architecture: arm64
+            runner: windows-11-arm
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      WINDOWS_PUBLISHER: ${{ vars.WINDOWS_PUBLISHER }}
+      TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+      SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+      GOOGLE_DESKTOP_CLIENT_ID: ${{ vars.GOOGLE_DESKTOP_CLIENT_ID }}
+      GOOGLE_DESKTOP_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_CLIENT_SECRET }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@1508160852fb97248640997f7cfb38da241df0ba # v2.9.1
+        with:
+          flutter-version: '3.47.0'
+      - run: flutter pub get
+      - name: Validate release configuration
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_PUBLISHER)) {
+            throw 'WINDOWS_PUBLISHER is required.'
+          }
+          if ([string]::IsNullOrWhiteSpace($env:TURNSTILE_SITE_KEY)) {
+            throw 'TURNSTILE_SITE_KEY is required.'
+          }
+          if ([string]::IsNullOrWhiteSpace($env:GOOGLE_DESKTOP_CLIENT_ID)) {
+            throw 'GOOGLE_DESKTOP_CLIENT_ID is required.'
+          }
+          & dart run tool/windows_release_config.dart metadata `
+            --pubspec pubspec.yaml `
+            --tag $env:GITHUB_REF_NAME
+          if ($LASTEXITCODE -ne 0) { throw 'Release version validation failed.' }
+
+          $config = [ordered]@{
+            POMODOIST_ENVIRONMENT = 'production'
+            WEB_APP_URL = 'https://app.pomodoist.com'
+            TURNSTILE_SITE_KEY = $env:TURNSTILE_SITE_KEY
+            SENTRY_DSN = $env:SENTRY_DSN
+            GOOGLE_DESKTOP_CLIENT_ID = $env:GOOGLE_DESKTOP_CLIENT_ID
+            GOOGLE_DESKTOP_CLIENT_SECRET = $env:GOOGLE_DESKTOP_CLIENT_SECRET
+          }
+          $config | ConvertTo-Json | Set-Content `
+            -LiteralPath "$env:RUNNER_TEMP\windows-production.json" `
+            -Encoding utf8
+      - name: Build release executable
+        run: |
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass `
+            -File .\tool\windows\build.ps1 `
+            -Configuration Release `
+            -ConfigFile "$env:RUNNER_TEMP\windows-production.json" `
+            -ReleaseSha $env:GITHUB_SHA
+      - name: Create unsigned MSIX
+        run: |
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass `
+            -File .\tool\windows\package.ps1 `
+            -Architecture '${{ matrix.architecture }}' `
+            -Publisher $env:WINDOWS_PUBLISHER `
+            -Tag $env:GITHUB_REF_NAME
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: msix-${{ matrix.architecture }}
+          path: build/windows/msix/Pomodoist_${{ matrix.architecture }}.msix
+          if-no-files-found: error
+          retention-days: 7
+
+  bundle-and-sign:
+    name: Bundle and sign
+    needs: build-windows
+    runs-on: windows-2022
+    environment: windows-production
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      WINDOWS_PUBLISHER: ${{ vars.WINDOWS_PUBLISHER }}
+      SIGNPATH_ORGANIZATION_ID: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+      SIGNPATH_PROJECT_SLUG: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+      SIGNPATH_SIGNING_POLICY_SLUG: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+      SIGNPATH_ARTIFACT_CONFIGURATION_SLUG: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@1508160852fb97248640997f7cfb38da241df0ba # v2.9.1
+        with:
+          flutter-version: '3.47.0'
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: msix-x64
+          path: artifacts/x64
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: msix-arm64
+          path: artifacts/arm64
+      - name: Validate monotonic version and bundle architectures
+        run: |
+          $required = @(
+            'WINDOWS_PUBLISHER',
+            'SIGNPATH_ORGANIZATION_ID',
+            'SIGNPATH_PROJECT_SLUG',
+            'SIGNPATH_SIGNING_POLICY_SLUG',
+            'SIGNPATH_ARTIFACT_CONFIGURATION_SLUG'
+          )
+          foreach ($name in $required) {
+            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
+              throw "$name is required. The release remains unsigned."
+            }
+          }
+
+          $metadataArgs = @(
+            'run', 'tool/windows_release_config.dart', 'metadata',
+            '--pubspec', 'pubspec.yaml',
+            '--tag', $env:GITHUB_REF_NAME
+          )
+          $latestTag = (& gh release view --json tagName --jq '.tagName' 2>$null)
+          if ($LASTEXITCODE -eq 0 -and $latestTag -ne $env:GITHUB_REF_NAME) {
+            try {
+              $previousPath = Join-Path $env:RUNNER_TEMP 'previous.appinstaller'
+              Invoke-WebRequest `
+                -Uri 'https://github.com/Kabanya/Pomodoist/releases/latest/download/Pomodoist.appinstaller' `
+                -OutFile $previousPath
+              [xml]$previous = Get-Content -Raw -LiteralPath $previousPath
+              $previousBuild = [int]($previous.AppInstaller.MainBundle.Version.Split('.')[-1])
+              $metadataArgs += @('--previous-build', $previousBuild.ToString())
+            } catch {
+              Write-Host 'No previous Windows App Installer was available.'
+            }
+          }
+          $metadataJson = & dart @metadataArgs
+          if ($LASTEXITCODE -ne 0) { throw 'Release version validation failed.' }
+          $metadataJson | Set-Content -LiteralPath "$env:RUNNER_TEMP\metadata.json"
+
+          $x64 = Get-ChildItem artifacts/x64 -Filter *.msix | Select-Object -First 1
+          $arm64 = Get-ChildItem artifacts/arm64 -Filter *.msix | Select-Object -First 1
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass `
+            -File .\tool\windows\bundle.ps1 `
+            -X64Package $x64.FullName `
+            -Arm64Package $arm64.FullName
+      - name: Upload unsigned bundle for trusted signing
+        id: upload-unsigned
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          path: build/windows/bundle/Pomodoist.msixbundle
+          archive: false
+          if-no-files-found: error
+          retention-days: 7
+      - name: Submit SignPath signing request
+        uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627 # v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ steps.upload-unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: ${{ runner.temp }}/signed
+          skip-decompress: true
+      - name: Verify signed bundle and create App Installer
+        run: |
+          $metadata = Get-Content -Raw "$env:RUNNER_TEMP\metadata.json" | ConvertFrom-Json
+          $signed = Get-ChildItem "$env:RUNNER_TEMP\signed" -Recurse -Filter *.msixbundle |
+            Select-Object -First 1
+          if ($null -eq $signed) { throw 'SignPath returned no signed MSIX bundle.' }
+          New-Item -ItemType Directory -Force -Path release | Out-Null
+          Copy-Item $signed.FullName release/Pomodoist.msixbundle
+
+          & dart run tool/windows_release_config.dart appinstaller `
+            --pubspec pubspec.yaml `
+            --tag $env:GITHUB_REF_NAME `
+            --publisher $env:WINDOWS_PUBLISHER `
+            --repository Kabanya/Pomodoist `
+            --output release/Pomodoist.appinstaller
+          if ($LASTEXITCODE -ne 0) { throw 'App Installer generation failed.' }
+
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass `
+            -File .\tool\windows\verify.ps1 `
+            -Bundle release/Pomodoist.msixbundle `
+            -Publisher $env:WINDOWS_PUBLISHER `
+            -Version $metadata.msixVersion
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: signed-windows-release
+          path: release/*
+          if-no-files-found: error
+          retention-days: 14
+
+  post-sign-smoke:
+    name: Install and launch ${{ matrix.architecture }}
+    needs: bundle-and-sign
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            runner: windows-2022
+          - architecture: arm64
+            runner: windows-11-arm
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: signed-windows-release
+          path: release
+      - name: Install, upgrade, and launch through the protocol
+        run: |
+          $identity = 'com.finchforge.pomodoist'
+          Get-AppxPackage -Name $identity -ErrorAction SilentlyContinue |
+            Remove-AppxPackage -ErrorAction SilentlyContinue
+          $candidate = (Resolve-Path release/Pomodoist.msixbundle).Path
+          $marker = $null
+
+          $latestTag = (& gh release view --json tagName --jq '.tagName' 2>$null)
+          if ($LASTEXITCODE -eq 0 -and $latestTag -ne $env:GITHUB_REF_NAME) {
+            try {
+              $previous = Join-Path $env:RUNNER_TEMP 'previous.msixbundle'
+              Invoke-WebRequest `
+                -Uri 'https://github.com/Kabanya/Pomodoist/releases/latest/download/Pomodoist.msixbundle' `
+                -OutFile $previous
+              Add-AppxPackage -Path $previous
+              $installed = Get-AppxPackage -Name $identity
+              $localState = Join-Path $env:LOCALAPPDATA "Packages\$($installed.PackageFamilyName)\LocalState"
+              New-Item -ItemType Directory -Force -Path $localState | Out-Null
+              $marker = Join-Path $localState 'upgrade-smoke.marker'
+              Set-Content -LiteralPath $marker -Value 'preserve'
+            } catch {
+              Write-Host 'Previous Windows release unavailable; running clean-install smoke.'
+            }
+          }
+
+          Add-AppxPackage -Path $candidate -ForceApplicationShutdown
+          $installed = Get-AppxPackage -Name $identity
+          if ($null -eq $installed) { throw 'Candidate package was not installed.' }
+          if ($null -ne $marker -and -not (Test-Path -LiteralPath $marker)) {
+            throw 'Package LocalState was not preserved during upgrade.'
+          }
+
+          Start-Process 'pomodoist://focus'
+          $deadline = [DateTime]::UtcNow.AddSeconds(30)
+          do {
+            Start-Sleep -Milliseconds 500
+            $process = Get-Process pomodoist -ErrorAction SilentlyContinue
+          } until ($null -ne $process -or [DateTime]::UtcNow -ge $deadline)
+          if ($null -eq $process) { throw 'Pomodoist did not launch through protocol activation.' }
+          $process | Stop-Process -Force
+          Get-AppxPackage -Name $identity | Remove-AppxPackage
+
+  publish:
+    name: Publish stable GitHub release
+    needs: post-sign-smoke
+    runs-on: ubuntu-latest
+    environment: windows-production
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: signed-windows-release
+          path: release
+      - name: Publish both release assets atomically
+        run: |
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" \
+              --draft \
+              --verify-tag \
+              --title "Pomodoist $GITHUB_REF_NAME" \
+              --notes "Official signed Windows release. Code signing policy: https://github.com/Kabanya/Pomodoist/blob/main/CODE_SIGNING_POLICY.md"
+          fi
+          gh release upload "$GITHUB_REF_NAME" \
+            release/Pomodoist.msixbundle \
+            release/Pomodoist.appinstaller \
+            --clobber
+          gh release edit "$GITHUB_REF_NAME" --draft=false --latest

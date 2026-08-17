@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('artifact verifier rejects absolute source paths', () async {
+    if (Platform.isWindows) return;
+
     final root = await Directory.systemTemp.createTemp(
       'pomodoist-absolute-source-verifier.',
     );
@@ -70,6 +72,8 @@ void main() {
       expect(preparer, isNot(contains('account-sync-platform')));
       expect(verifier, contains('debug_id'));
       expect(verifier, isNot(contains('account-sync-platform')));
+
+      if (Platform.isWindows) return;
 
       final root = await Directory.systemTemp.createTemp('pomodoist-verifier.');
       addTearDown(() => root.delete(recursive: true));

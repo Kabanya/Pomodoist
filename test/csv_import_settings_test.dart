@@ -13,7 +13,7 @@ import 'package:pomodoist/features/settings/presentation/csv_task_import_card.da
 import 'package:pomodoist/l10n/app_localizations.dart';
 
 void main() {
-  test('CSV import support is limited to web and macOS', () {
+  test('CSV import is available on web, macOS, and Windows', () {
     expect(
       isCsvTaskImportSupported(web: true, platform: TargetPlatform.windows),
       isTrue,
@@ -24,6 +24,10 @@ void main() {
     );
     expect(
       isCsvTaskImportSupported(web: false, platform: TargetPlatform.windows),
+      isTrue,
+    );
+    expect(
+      isCsvTaskImportSupported(web: false, platform: TargetPlatform.linux),
       isFalse,
     );
   });

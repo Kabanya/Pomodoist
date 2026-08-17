@@ -7,6 +7,8 @@ void main() {
   test(
     'TestFlight preflight accepts only a production client config',
     () async {
+      if (Platform.isWindows) return;
+
       final directory = await Directory.systemTemp.createTemp(
         'testflight-env-',
       );
@@ -39,6 +41,8 @@ SENTRY_DSN=
   );
 
   test('TestFlight builds one fully configured IPA before upload', () async {
+    if (Platform.isWindows) return;
+
     final result = await Process.run('make', [
       '-n',
       'testflight',
@@ -73,6 +77,8 @@ SENTRY_DSN=
   });
 
   test('macOS OAuth preflight rejects a missing client secret', () async {
+    if (Platform.isWindows) return;
+
     Future<ProcessResult> check(String secret) => Process.run('make', [
       '-s',
       'macos-oauth-check',
@@ -85,6 +91,8 @@ SENTRY_DSN=
   });
 
   test('macOS release build uses the production runtime config', () async {
+    if (Platform.isWindows) return;
+
     final result = await Process.run('make', [
       '-n',
       'build-macos-release',

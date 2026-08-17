@@ -9,7 +9,7 @@ fail() {
   exit 1
 }
 
-sha=b54edd05328bc689d62c2601b2cde774e8983644
+sha=e55fdb01db9049839da4479f66ab7beb85ba679e
 url=https://github.com/Kabanya/app-client-platform.git
 
 for package in app_account app_voice; do
@@ -41,12 +41,29 @@ done
 [ -f LICENSING.md ] || fail 'LICENSING.md must document the distribution model'
 grep -Fq 'AGPL-3.0-only' LICENSING.md ||
   fail 'LICENSING.md must preserve the public AGPL license'
-grep -Fq 'Apple Standard EULA' LICENSING.md ||
-  fail 'LICENSING.md must identify the App Store binary terms'
+grep -Fq 'official Pomodoist client binaries' LICENSING.md ||
+  fail 'LICENSING.md must cover official client binaries'
 grep -Fq 'FinchForge LLC' LICENSING.md ||
   fail 'LICENSING.md must identify the official distributor'
 grep -Fq '[licensing model](LICENSING.md)' README.md ||
   fail 'README must link to LICENSING.md'
+grep -Fq 'Free code signing provided by SignPath.io, certificate by SignPath Foundation.' \
+  CODE_SIGNING_POLICY.md || fail 'Code signing policy must include SignPath attribution'
+grep -Fq 'Free code signing provided by SignPath.io, certificate by SignPath Foundation.' \
+  README.md || fail 'README must include SignPath attribution'
+grep -Fq 'https://pomodoist.com/privacy/' CODE_SIGNING_POLICY.md ||
+  fail 'Code signing policy must link to the privacy policy'
+grep -Fq 'Committers and reviewers:' CODE_SIGNING_POLICY.md ||
+  fail 'Code signing policy must identify committers and reviewers'
+grep -Fq 'Approver:' CODE_SIGNING_POLICY.md ||
+  fail 'Code signing policy must identify signing approvers'
+grep -Fq 'Code signing policy: https://github.com/Kabanya/Pomodoist/blob/main/CODE_SIGNING_POLICY.md' \
+  .github/workflows/windows-release.yml ||
+  fail 'Windows release page must link to the code signing policy'
+if grep -Eiq 'Alternative commercial licenses are available|distributed under separate terms|sublicense, relicense|open-source, commercial, or other license terms|Apple Standard EULA' \
+  README.md LICENSING.md CLA.md CONTRIBUTING.md; then
+  fail 'client licensing documents must not offer proprietary/commercial terms'
+fi
 ! git grep -nF 'PolyForm Noncommercial' -- ':!tool/test_public_boundary.sh' >/dev/null ||
   fail 'tracked public files must not use the former PolyForm license'
 for script in tool/export_web_sourcemaps.sh tool/test_sentry_artifacts.sh; do

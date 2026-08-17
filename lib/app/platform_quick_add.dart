@@ -178,7 +178,7 @@ class PlatformQuickAddController {
 
     try {
       await _ref.read(appStartupProvider.future);
-      return _ref.read(quickAddServiceProvider).createTask(input);
+      return await _ref.read(quickAddServiceProvider).createTask(input);
     } on PlatformException {
       rethrow;
     } catch (error) {

@@ -10,7 +10,10 @@ import '../../tasks/data/csv_task_import.dart';
 
 bool isCsvTaskImportSupported({bool? web, TargetPlatform? platform}) =>
     (web ?? kIsWeb) ||
-    (platform ?? defaultTargetPlatform) == TargetPlatform.macOS;
+    switch (platform ?? defaultTargetPlatform) {
+      TargetPlatform.macOS || TargetPlatform.windows => true,
+      _ => false,
+    };
 
 class CsvTaskImportCard extends ConsumerStatefulWidget {
   const CsvTaskImportCard({this.pickFile, super.key});

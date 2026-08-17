@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "pomodoist" "\0"
+            VALUE "CompanyName", "FinchForge LLC" "\0"
+            VALUE "FileDescription", "Pomodoist" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "pomodoist" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 FinchForge LLC. Licensed under AGPL-3.0-only." "\0"
             VALUE "OriginalFilename", "pomodoist.exe" "\0"
-            VALUE "ProductName", "pomodoist" "\0"
+            VALUE "ProductName", "Pomodoist" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

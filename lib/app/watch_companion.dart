@@ -147,33 +147,33 @@ class WatchCompanionController {
     final type = command['type'];
     final commandId = _commandId(command);
     if (commandId != null && _appliedCommandIds.contains(commandId)) {
-      return _ok(appliedCommandId: commandId);
+      return await _ok(appliedCommandId: commandId);
     }
     try {
       switch (type) {
         case watchTaskCreateQuickAdd:
           final input = _requiredString(command, 'input');
           final id = await _quickAddService.createTask(input);
-          return _ok(extra: {'id': id}, appliedCommandId: commandId);
+          return await _ok(extra: {'id': id}, appliedCommandId: commandId);
         case watchTaskDecomposeTranscript:
-          return _ok(
+          return await _ok(
             extra: {'tasks': await _decomposeTranscript(command)},
             includeSnapshot: false,
             appliedCommandId: commandId,
           );
         case watchTaskCommitDrafts:
           final ids = await _commitDrafts(command['tasks']);
-          return _ok(extra: {'ids': ids}, appliedCommandId: commandId);
+          return await _ok(extra: {'ids': ids}, appliedCommandId: commandId);
         case watchTaskComplete:
           await _taskRepository.completeTask(_requiredTaskId(command));
-          return _ok(appliedCommandId: commandId);
+          return await _ok(appliedCommandId: commandId);
         case watchTaskUncomplete:
           await _taskRepository.uncompleteTask(_requiredTaskId(command));
-          return _ok(appliedCommandId: commandId);
+          return await _ok(appliedCommandId: commandId);
         case watchFocusStartDefault:
           final activeRun = await _focusRepository.watchActiveRun().first;
           if (activeRun != null && command['replaceActive'] != true) {
-            return _focusConflict();
+            return await _focusConflict();
           }
           final id = await _focusRepository.startRun(
             StartFocusRunInput(
@@ -184,58 +184,58 @@ class WatchCompanionController {
             ),
             now: _commandTime(command),
           );
-          return _ok(extra: {'id': id}, appliedCommandId: commandId);
+          return await _ok(extra: {'id': id}, appliedCommandId: commandId);
         case watchFocusPause:
           if ((await _focusRepository.watchActiveInterval().first)?.status !=
               'running') {
-            return _focusConflict();
+            return await _focusConflict();
           }
           await _focusRepository.pauseActiveInterval(
             now: _commandTime(command),
           );
-          return _ok(appliedCommandId: commandId);
+          return await _ok(appliedCommandId: commandId);
         case watchFocusResume:
           if ((await _focusRepository.watchActiveInterval().first)?.status !=
               'paused') {
-            return _focusConflict();
+            return await _focusConflict();
           }
           await _focusRepository.resumeActiveInterval(
             now: _commandTime(command),
           );
-          return _ok(appliedCommandId: commandId);
+          return await _ok(appliedCommandId: commandId);
         case watchFocusRestartInterval:
           if (await _focusRepository.watchActiveInterval().first == null) {
-            return _focusConflict();
+            return await _focusConflict();
           }
           await _focusRepository.restartActiveInterval(
             now: _commandTime(command),
           );
-          return _ok(appliedCommandId: commandId);
+          return await _ok(appliedCommandId: commandId);
         case watchFocusComplete:
           if (await _focusRepository.watchActiveInterval().first == null) {
-            return _focusConflict();
+            return await _focusConflict();
           }
           await _focusRepository.completeActiveInterval(
             now: _commandTime(command),
           );
-          return _ok(appliedCommandId: commandId);
+          return await _ok(appliedCommandId: commandId);
         case watchFocusSkip:
           if (await _focusRepository.watchActiveInterval().first == null) {
-            return _focusConflict();
+            return await _focusConflict();
           }
           await _focusRepository.skipActiveInterval(now: _commandTime(command));
-          return _ok(appliedCommandId: commandId);
+          return await _ok(appliedCommandId: commandId);
         case watchFocusStop:
           if (await _focusRepository.watchActiveRun().first == null) {
-            return _focusConflict();
+            return await _focusConflict();
           }
           await _focusRepository.stopActiveRun(
             reason: StopFocusReason.stopped,
             now: _commandTime(command),
           );
-          return _ok(appliedCommandId: commandId);
+          return await _ok(appliedCommandId: commandId);
         case watchSnapshotRequest:
-          return _ok();
+          return await _ok();
         default:
           throw ArgumentError.value(type, 'type', 'Unsupported watch command');
       }

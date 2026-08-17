@@ -16,6 +16,7 @@
 <p align="center">
   <a href="https://pomodoist.com">Website</a> ·
   <a href="https://app.pomodoist.com">Try Web</a> ·
+  <a href="https://pomodoist.com/privacy/">Privacy</a> ·
   <a href="https://github.com/Kabanya/Pomodoist/issues/new">Report a bug</a> ·
   <a href="CONTRIBUTING.md">Contribute</a>
 </p>
@@ -88,6 +89,32 @@ Run the same validation used for contributions:
 make check
 ```
 
+### Windows
+
+Windows development requires Flutter 3.47.0, Visual Studio with Desktop
+development with C++, and Windows SDK 10.0.19041.0 or newer.
+
+```powershell
+flutter pub get
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File .\tool\windows\run.ps1
+```
+
+Build a clean release with public production configuration copied from
+`tool/windows/production-defines.example.json`:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File .\tool\windows\build.ps1 -Configuration Release -Clean `
+  -ConfigFile C:\secure\pomodoist-windows-production.json
+```
+
+If Visual Studio was upgraded or switched, use `-Clean` once so CMake does not
+reuse a generator from the previous installation. Packaging and trusted
+signing are performed by the tag-triggered GitHub workflow; public releases
+contain `Pomodoist.msixbundle` and `Pomodoist.appinstaller` for Windows 10
+2004+ and Windows 11 on x64/ARM64.
+
 <details>
 <summary>Develop the shared client packages locally</summary>
 
@@ -116,9 +143,18 @@ substantial change, read the [contribution guide](CONTRIBUTING.md), and run
 
 Copyright © 2026 FinchForge LLC.
 
-Pomodoist source code is licensed under the
+Pomodoist client source and official client binaries are licensed under the
 [GNU Affero General Public License v3.0 only](LICENSE) (`AGPL-3.0-only`). See
-the [licensing model](LICENSING.md) for official distribution and commercial
-licensing terms. The name, logo, and app icon follow the
+the [licensing model](LICENSING.md) and
+[Code Signing Policy](CODE_SIGNING_POLICY.md). Paid subscriptions cover hosted
+services and account entitlements, not a proprietary client license. The name,
+logo, and app icon follow the
 [trademark policy](TRADEMARKS.md), and contributions require the
 [Contributor License Agreement](CLA.md).
+
+## Code signing policy
+
+Free code signing provided by SignPath.io, certificate by SignPath Foundation.
+See the public [Code Signing Policy](CODE_SIGNING_POLICY.md), including team
+roles, release controls, incident response, and the
+[Privacy Policy](https://pomodoist.com/privacy/).

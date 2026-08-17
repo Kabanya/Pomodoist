@@ -43,6 +43,17 @@ pubspec_overrides.yaml
 /build/
 /coverage/
 /.worktrees/
+/android/.gradle/
+/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+/android/local.properties
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/ephemeral/
+/ios/Flutter/flutter_export_environment.sh
+/ios/Runner/GeneratedPluginRegistrant.h
+/ios/Runner/GeneratedPluginRegistrant.m
+/linux/flutter/ephemeral/
+/macos/Flutter/ephemeral/
+/windows/flutter/ephemeral/
 
 # Generated sidecar files for the checked-in Drift web worker asset.
 /web/drift_worker.js.deps

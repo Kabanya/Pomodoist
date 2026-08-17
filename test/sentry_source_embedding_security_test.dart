@@ -78,6 +78,8 @@ void main() {
     });
 
     test('rejects an in-repository first-party symlink', () async {
+      if (Platform.isWindows) return;
+
       final repository = await _repositoryFixture(testRoot);
       final realMain = File('${repository.path}/lib/real_main.dart');
       await realMain.writeAsString('Future<void> main() async {}');

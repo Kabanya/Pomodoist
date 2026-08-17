@@ -11,8 +11,10 @@ you agree that:
 2. You grant FinchForge LLC a perpetual, worldwide, non-exclusive,
    royalty-free, irrevocable copyright license to use, reproduce, modify,
    prepare derivative works of, publicly display, publicly perform,
-   sublicense, relicense, and distribute your Contribution and derivative
-   works under open-source, commercial, or other license terms.
+   and distribute your Contribution and derivative works as part of the
+   client software under `AGPL-3.0-only`. This Agreement does not grant a
+   right to offer the Contribution under a proprietary or commercial client
+   software license.
 3. You grant FinchForge LLC and recipients of the software a perpetual,
    worldwide, non-exclusive, royalty-free patent license to make, use, sell,
    offer for sale, import, and otherwise transfer your Contribution, limited

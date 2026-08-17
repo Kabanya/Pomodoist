@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: subosito/flutter-action@1508160852fb97248640997f7cfb38da241df0ba # v2.9.1
         with:
-          flutter-version: '3.41.9'
+          flutter-version: '3.47.0'
       - run: sh tool/test_public_boundary.sh
       - run: flutter pub get
       - run: flutter analyze
