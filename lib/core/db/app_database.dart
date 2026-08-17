@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
+import 'database_directory.dart';
+
 part 'app_database.g.dart';
 
 const localUserId = 'local-user';
@@ -457,7 +459,10 @@ class AppDatabase extends _$AppDatabase {
         executor ??
             driftDatabase(
               name: 'pomodoist',
-              native: const DriftNativeOptions(shareAcrossIsolates: true),
+              native: const DriftNativeOptions(
+                shareAcrossIsolates: true,
+                databaseDirectory: pomodoistDatabaseDirectory,
+              ),
               web: DriftWebOptions(
                 sqlite3Wasm: Uri.parse('/assets/web/sqlite3.wasm'),
                 driftWorker: Uri.parse('/assets/web/drift_worker.js'),

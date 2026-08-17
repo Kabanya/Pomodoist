@@ -1,0 +1,262 @@
+name: Linux AppImage release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*'
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-test-publish:
+    name: Build, test, and publish x86_64 AppImage
+    runs-on: ubuntu-24.04
+    container:
+      image: ubuntu:22.04@sha256:3b06811b2afd352be909dd088a004166d665dc76d38b13eada33522a9d915c6f
+    environment: windows-production
+    defaults:
+      run:
+        shell: bash
+    env:
+      TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+      SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+      GOOGLE_DESKTOP_CLIENT_ID: ${{ vars.GOOGLE_DESKTOP_CLIENT_ID }}
+      GOOGLE_DESKTOP_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_CLIENT_SECRET }}
+      GH_TOKEN: ${{ github.token }}
+      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+    steps:
+      - name: Install Linux build dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
+            appstream \
+            bash \
+            ca-certificates \
+            clang \
+            cmake \
+            curl \
+            dbus-x11 \
+            desktop-file-utils \
+            file \
+            git \
+            gh \
+            gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good \
+            gstreamer1.0-pulseaudio \
+            gstreamer1.0-tools \
+            libcurl4-openssl-dev \
+            libgstreamer-plugins-base1.0-dev \
+            libgstreamer1.0-dev \
+            libgtk-3-dev \
+            liblzma-dev \
+            libsecret-1-dev \
+            jq \
+            make \
+            ninja-build \
+            openjdk-17-jdk \
+            pkg-config \
+            unzip \
+            xauth \
+            xvfb \
+            xz-utils
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@1508160852fb97248640997f7cfb38da241df0ba # v2.9.1
+        with:
+          flutter-version: '3.47.0'
+      - name: Resolve Flutter dependencies
+        run: |
+          for attempt in 1 2 3; do
+            if flutter pub get; then
+              break
+            fi
+            if [[ "$attempt" -eq 3 ]]; then
+              echo 'flutter pub get failed after three attempts.' >&2
+              exit 1
+            fi
+            sleep 10
+          done
+      - name: Validate and create production configuration
+        run: |
+          test -n "$TURNSTILE_SITE_KEY" || {
+            echo 'TURNSTILE_SITE_KEY is required.' >&2
+            exit 1
+          }
+          case "$GOOGLE_DESKTOP_CLIENT_ID" in
+            *.apps.googleusercontent.com) ;;
+            *)
+              echo 'GOOGLE_DESKTOP_CLIENT_ID is required.' >&2
+              exit 1
+              ;;
+          esac
+
+          pubspec_version=$(awk '/^version:[[:space:]]*/ {
+            sub(/^[^:]*:[[:space:]]*/, "")
+            sub(/\+.*/, "")
+            print
+            exit
+          }' pubspec.yaml)
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            release_version="${GITHUB_REF_NAME#v}"
+            test "$release_version" = "$pubspec_version" || {
+              echo "Tag $GITHUB_REF_NAME does not match pubspec version $pubspec_version." >&2
+              exit 1
+            }
+          else
+            release_version="$pubspec_version"
+          fi
+          echo "POMODOIST_VERSION=$release_version" >> "$GITHUB_ENV"
+
+          jq --null-input \
+            --arg turnstile "$TURNSTILE_SITE_KEY" \
+            --arg sentry "$SENTRY_DSN" \
+            --arg google_id "$GOOGLE_DESKTOP_CLIENT_ID" \
+            --arg google_secret "$GOOGLE_DESKTOP_CLIENT_SECRET" \
+            '{
+              POMODOIST_ENVIRONMENT: "production",
+              WEB_APP_URL: "https://app.pomodoist.com",
+              POMODOIST_REGISTRATION_URL: "https://app.pomodoist.com/auth/challenge",
+              TURNSTILE_SITE_KEY: $turnstile,
+              SENTRY_DSN: $sentry,
+              GOOGLE_DESKTOP_CLIENT_ID: $google_id,
+              GOOGLE_DESKTOP_CLIENT_SECRET: $google_secret
+            }' > "$RUNNER_TEMP/linux-production.json"
+      - name: Test Linux packaging contracts
+        run: make test-linux-packaging
+      - name: Build production AppImage
+        run: |
+          flutter build linux --release --no-pub \
+            --dart-define-from-file="$RUNNER_TEMP/linux-production.json" \
+            --dart-define=POMODOIST_RELEASE="$GITHUB_SHA" \
+            --dart-define=POMODOIST_BILLING_CHANNEL=stripe
+          POMODOIST_VERSION="$POMODOIST_VERSION" \
+            tool/linux/build_appimage.sh
+      - name: Verify checksum, bundled audio, and deep-link forwarding
+        run: |
+          cd build/linux/appimage
+          sha256sum --check Pomodoist-x86_64.AppImage.sha256
+
+          extract_root="$RUNNER_TEMP/pomodoist-appimage-extract"
+          mkdir -p "$extract_root"
+          (
+            cd "$extract_root"
+            "$GITHUB_WORKSPACE/build/linux/appimage/Pomodoist-x86_64.AppImage" \
+              --appimage-extract > /dev/null
+          )
+          appdir="$extract_root/squashfs-root"
+          sound_file="$appdir/usr/lib/pomodoist/data/flutter_assets/assets/sounds/focus_start.wav"
+          test -f "$sound_file"
+          env \
+            LD_LIBRARY_PATH="$appdir/usr/lib/pomodoist/lib:$appdir/usr/lib" \
+            GST_PLUGIN_SYSTEM_PATH_1_0="$appdir/usr/lib/gstreamer-1.0" \
+            GST_PLUGIN_SCANNER="$appdir/usr/lib/gstreamer-1.0/gst-plugin-scanner" \
+            GST_REGISTRY="$RUNNER_TEMP/pomodoist-gstreamer-registry.bin" \
+            gst-launch-1.0 -q \
+              filesrc location="$sound_file" ! wavparse ! audioconvert ! \
+              audioresample ! fakesink
+
+          APP_RUN="$appdir/AppRun" \
+          dbus-run-session -- xvfb-run --auto-servernum \
+            bash -euo pipefail <<'SMOKE'
+          primary_log="$RUNNER_TEMP/appimage-primary.log"
+          secondary_log="$RUNNER_TEMP/appimage-secondary.log"
+          cold_start_log="$RUNNER_TEMP/appimage-cold-start.log"
+          primary_pid=''
+          cleanup() {
+            if [[ -n "$primary_pid" ]] && kill -0 "$primary_pid" 2>/dev/null; then
+              kill "$primary_pid" 2>/dev/null || true
+              wait "$primary_pid" 2>/dev/null || true
+            fi
+          }
+          trap cleanup EXIT
+
+          "$APP_RUN" 'pomodoist://focus' > "$cold_start_log" 2>&1 &
+          primary_pid=$!
+          for _ in $(seq 1 40); do
+            kill -0 "$primary_pid"
+            grep -Fq 'POMODOIST_NATIVE_LINK_HANDLED' "$cold_start_log" && break
+            sleep 0.25
+          done
+          grep -Fq 'POMODOIST_NATIVE_LINK_HANDLED' "$cold_start_log"
+          ! grep -E 'Dart Error|Unhandled Exception|Couldn.t resolve native function|error while loading shared libraries|MissingPluginException' \
+            "$cold_start_log"
+          kill "$primary_pid"
+          wait "$primary_pid" 2>/dev/null || true
+          primary_pid=''
+
+          "$APP_RUN" > "$primary_log" 2>&1 &
+          primary_pid=$!
+          for _ in $(seq 1 20); do
+            kill -0 "$primary_pid"
+            sleep 0.25
+          done
+
+          set +e
+          timeout 10s "$APP_RUN" 'pomodoist://focus' \
+            > "$secondary_log" 2>&1
+          secondary_status=$?
+          set -e
+          cat "$cold_start_log" "$primary_log" "$secondary_log"
+          test "$secondary_status" -eq 0
+          kill -0 "$primary_pid"
+          ! grep -E 'Dart Error|Unhandled Exception|Couldn.t resolve native function|error while loading shared libraries|MissingPluginException' \
+            "$primary_log" "$secondary_log"
+          for _ in $(seq 1 20); do
+            grep -Fq 'POMODOIST_NATIVE_LINK_HANDLED' "$primary_log" && break
+            sleep 0.25
+          done
+          grep -Fq 'POMODOIST_NATIVE_LINK_HANDLED' "$primary_log"
+          SMOKE
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: pomodoist-linux-appimage-x86_64
+          path: |
+            build/linux/appimage/Pomodoist-x86_64.AppImage
+            build/linux/appimage/Pomodoist-x86_64.AppImage.sha256
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload AppImage and publish complete desktop release
+        if: github.ref_type == 'tag'
+        run: |
+          release_notes='Official Pomodoist desktop release. Linux is distributed as a portable x86_64 AppImage with an adjacent SHA-256 checksum. Windows assets are Authenticode-signed according to the code signing policy: https://github.com/Kabanya/Pomodoist/blob/main/CODE_SIGNING_POLICY.md'
+          if ! gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" \
+              --draft \
+              --target "$GITHUB_SHA" \
+              --title "Pomodoist $GITHUB_REF_NAME" \
+              --notes "$release_notes" || \
+              gh release view "$GITHUB_REF_NAME" > /dev/null
+          fi
+          gh release upload "$GITHUB_REF_NAME" \
+            build/linux/appimage/Pomodoist-x86_64.AppImage \
+            build/linux/appimage/Pomodoist-x86_64.AppImage.sha256 \
+            --clobber
+          release_id=$(gh api \
+            "repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME" \
+            --jq .id)
+          required_assets=(
+            Pomodoist-x86_64.AppImage
+            Pomodoist-x86_64.AppImage.sha256
+            Pomodoist.msixbundle
+            Pomodoist.appinstaller
+          )
+          asset_names=$(gh api \
+            "repos/$GITHUB_REPOSITORY/releases/$release_id/assets" \
+            --jq '.[].name')
+          for required_asset in "${required_assets[@]}"; do
+            if ! grep -Fqx -- "$required_asset" <<< "$asset_names"; then
+              echo 'Release remains draft until all desktop assets are present.'
+              exit 0
+            fi
+          done
+          gh api --method PATCH \
+            "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+            --field draft=false \
+            --silent

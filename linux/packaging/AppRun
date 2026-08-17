@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+
+set -eu
+
+if [ -z "${APPDIR:-}" ]; then
+  APPDIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+fi
+export APPDIR
+
+export PATH="$APPDIR/usr/bin${PATH:+:$PATH}"
+export LD_LIBRARY_PATH="$APPDIR/usr/lib/pomodoist/lib:$APPDIR/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export XDG_DATA_DIRS="$APPDIR/usr/share${XDG_DATA_DIRS:+:$XDG_DATA_DIRS}"
+export GST_PLUGIN_SYSTEM_PATH_1_0="$APPDIR/usr/lib/gstreamer-1.0"
+export GST_PLUGIN_SCANNER="$APPDIR/usr/lib/gstreamer-1.0/gst-plugin-scanner"
+export GST_PLUGIN_SCANNER_1_0="$GST_PLUGIN_SCANNER"
+
+if [ -d "$APPDIR/usr/lib/gio/modules" ]; then
+  export GIO_EXTRA_MODULES="$APPDIR/usr/lib/gio/modules${GIO_EXTRA_MODULES:+:$GIO_EXTRA_MODULES}"
+fi
+
+if [ -d "$APPDIR/usr/share/glib-2.0/schemas" ]; then
+  export GSETTINGS_SCHEMA_DIR="$APPDIR/usr/share/glib-2.0/schemas"
+fi
+
+exec "$APPDIR/usr/lib/pomodoist/pomodoist" "$@"

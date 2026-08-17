@@ -5,6 +5,7 @@ import 'package:yaml/yaml.dart';
 
 void main() {
   for (final path in [
+    '.github/workflows/linux-appimage-release.yml',
     '.github/workflows/validate.yml',
     '.github/workflows/windows-exe-preview.yml',
     '.github/workflows/windows-release.yml',
@@ -16,6 +17,54 @@ void main() {
       expect((document as YamlMap)['jobs'], isA<YamlMap>());
     });
   }
+
+  test('desktop release stays draft until Linux and Windows assets exist', () {
+    for (final path in [
+      '.github/workflows/linux-appimage-release.yml',
+      '.github/workflows/windows-release.yml',
+    ]) {
+      final workflow = File(path).readAsStringSync();
+      expect(
+        workflow,
+        contains(r'group: desktop-release-${{ github.ref }}'),
+        reason: path,
+      );
+      expect(workflow, contains('--draft'), reason: path);
+      expect(workflow, contains('required_assets=('), reason: path);
+      expect(workflow, contains('Pomodoist-x86_64.AppImage'), reason: path);
+      expect(
+        workflow,
+        contains('Pomodoist-x86_64.AppImage.sha256'),
+        reason: path,
+      );
+      expect(workflow, contains('Pomodoist.msixbundle'), reason: path);
+      expect(workflow, contains('Pomodoist.appinstaller'), reason: path);
+      expect(
+        workflow,
+        contains('Release remains draft until all desktop assets are present.'),
+        reason: path,
+      );
+    }
+  });
+
+  test(
+    'Linux release probes bundled audio and remote deep-link forwarding',
+    () {
+      final workflow = File(
+        '.github/workflows/linux-appimage-release.yml',
+      ).readAsStringSync();
+
+      expect(workflow, contains('gst-launch-1.0'));
+      expect(workflow, contains('focus_start.wav'));
+    expect(workflow, contains('APP_RUN="\$appdir/AppRun"'));
+    expect(workflow, contains('cold_start_log'));
+    expect(workflow, contains('secondary_status'));
+      expect(workflow, contains('Unhandled Exception'));
+      expect(workflow, contains('POMODOIST_NATIVE_LINK_HANDLED'));
+      expect(workflow, contains('test "\$secondary_status" -eq 0'));
+      expect(workflow, contains('kill -0 "\$primary_pid"'));
+    },
+  );
 
   test('Windows EXE preview isolates production build from publishing', () {
     final document =

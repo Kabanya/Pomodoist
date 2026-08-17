@@ -86,3 +86,6 @@ docs/
 output/
 tmp/
 supabase/.temp/
+
+# FVM Version Cache
+.fvm/

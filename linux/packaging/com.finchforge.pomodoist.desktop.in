@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Pomodoist
+Comment=Task manager with Pomodoro focus sessions
+Exec="@EXECUTABLE@" %u
+Icon=com.finchforge.pomodoist
+Terminal=false
+Categories=Office;ProjectManagement;
+Keywords=tasks;todo;pomodoro;focus;productivity;
+StartupNotify=true
+StartupWMClass=com.finchforge.pomodoist
+MimeType=x-scheme-handler/pomodoist;

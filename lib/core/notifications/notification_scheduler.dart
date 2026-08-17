@@ -19,6 +19,7 @@ class NotificationScheduler {
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
         iOS: DarwinInitializationSettings(),
         macOS: DarwinInitializationSettings(),
+        linux: LinuxInitializationSettings(defaultActionName: 'Open Pomodoist'),
         windows: WindowsInitializationSettings(
           appName: 'Pomodoist',
           appUserModelId: 'com.finchforge.pomodoist',

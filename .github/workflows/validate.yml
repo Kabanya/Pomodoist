@@ -13,7 +13,13 @@ jobs:
       - uses: subosito/flutter-action@1508160852fb97248640997f7cfb38da241df0ba # v2.9.1
         with:
           flutter-version: '3.47.0'
+      - name: Install Linux packaging validators
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            appstream desktop-file-utils
       - run: sh tool/test_public_boundary.sh
+      - run: make test-linux-packaging
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test

@@ -16,7 +16,8 @@
 <p align="center">
   <a href="https://pomodoist.com">Website</a> ·
   <a href="https://app.pomodoist.com">Try Web</a> ·
-  <a href="https://github.com/Kabanya/Pomodoist/releases">Windows Preview</a> ·
+  <a href="https://github.com/Kabanya/Pomodoist/releases/latest/download/Pomodoist-x86_64.AppImage">Linux AppImage</a> ·
+  <a href="https://github.com/Kabanya/Pomodoist/releases">Desktop Releases</a> ·
   <a href="https://pomodoist.com/privacy/">Privacy</a> ·
   <a href="https://github.com/Kabanya/Pomodoist/issues/new">Report a bug</a> ·
   <a href="CONTRIBUTING.md">Contribute</a>
@@ -25,6 +26,28 @@
 Pomodoist brings task planning, protected focus time, and progress tracking
 into one Flutter app. Use it on the web or build it for macOS, iOS and iPadOS,
 Android, Linux, Windows, and the web.
+
+## Linux AppImage
+
+The x86_64 AppImage is the primary direct Linux download. It is built on
+Ubuntu 22.04 for compatibility across current distributions, includes the
+Flutter runtime and the GStreamer components used by timer sounds, and does
+not require root access or installation:
+
+```sh
+curl -LO https://github.com/Kabanya/Pomodoist/releases/latest/download/Pomodoist-x86_64.AppImage
+curl -LO https://github.com/Kabanya/Pomodoist/releases/latest/download/Pomodoist-x86_64.AppImage.sha256
+sha256sum --check Pomodoist-x86_64.AppImage.sha256
+chmod +x Pomodoist-x86_64.AppImage
+./Pomodoist-x86_64.AppImage
+```
+
+If FUSE is unavailable, run it with
+`APPIMAGE_EXTRACT_AND_RUN=1 ./Pomodoist-x86_64.AppImage`. Voice entry is an
+optional integration and also needs `parecord` plus `ffmpeg` from the host
+distribution. The current Linux notification backend cannot keep scheduled
+system notifications alive after Pomodoist exits; focus sounds and in-app
+completion feedback work while the app is running.
 
 ## Pomodoist at a glance
 
@@ -89,6 +112,39 @@ Run the same validation used for contributions:
 ```sh
 make check
 ```
+
+### Arch Linux
+
+Pomodoist pins Flutter 3.47.0 through FVM so Arch's rolling packages do not
+silently change the project toolchain. Install
+[`fvm`](https://aur.archlinux.org/packages/fvm) from the AUR, then prepare and
+run the native desktop app:
+
+```sh
+make setup-linux
+make run-linux
+```
+
+To build a local AppImage against the libraries on the current Arch system:
+
+```sh
+make build-linux-appimage
+```
+
+The AppImage and its SHA-256 sidecar are written to
+`build/linux/appimage/`. Official cross-distribution release artifacts are
+built by CI on the pinned Ubuntu 22.04 base. To instead install the raw
+developer bundle for the current user (no root required):
+
+```sh
+make install-linux
+```
+
+This installs the app under `$XDG_DATA_HOME/pomodoist` (normally
+`~/.local/share/pomodoist`), creates `~/.local/bin/pomodoist`, and registers a
+desktop launcher and the `pomodoist://` URL scheme. Build dependencies are
+checked with `pacman`; if any are missing, `make setup-linux` prints the exact
+installation command.
 
 ### Windows
 

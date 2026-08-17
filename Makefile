@@ -1,8 +1,9 @@
 # Pomodoist development commands
 .DEFAULT_GOAL := help
 
-# Tools
-FLUTTER ?= flutter
+# Tools. Prefer the project-pinned FVM SDK when it has been bootstrapped.
+FVM_FLUTTER := .fvm/flutter_sdk/bin/flutter
+FLUTTER ?= $(if $(wildcard $(FVM_FLUTTER)),$(FVM_FLUTTER),flutter)
 
 # Runtime
 POMODOIST_BILLING_CHANNEL ?= stripe
@@ -23,7 +24,7 @@ GOOGLE_DESKTOP_CLIENT_ID ?= $(strip $(shell awk -F= '/^[[:space:]]*GOOGLE_DESKTO
 GOOGLE_DESKTOP_CLIENT_SECRET ?= $(strip $(shell awk -F= '/^[[:space:]]*GOOGLE_DESKTOP_CLIENT_SECRET[[:space:]]*=/{sub(/^[^=]*=[[:space:]]*/, ""); sub(/[[:space:]]*$$/, ""); print; exit}' "$(MACOS_GOOGLE_OAUTH_CONFIG)" 2>/dev/null))
 export GOOGLE_DESKTOP_CLIENT_ID GOOGLE_DESKTOP_CLIENT_SECRET
 
-.PHONY: help setup run web analyze test check format build-web build-macos-debug build-macos-release testflight-preflight ios-oauth-check macos-oauth-check testflight devices clean
+.PHONY: help setup setup-linux run run-linux web analyze test test-linux-installer test-linux-appimage test-linux-packaging check format build-web build-linux-release build-linux-appimage install-linux build-macos-debug build-macos-release testflight-preflight ios-oauth-check macos-oauth-check testflight devices clean
 
 help:
 	@if [ -t 1 ] && [ -z "$${NO_COLOR:-}" ]; then \
@@ -44,15 +45,21 @@ help:
 	printf '\n%sUsage:%s make <target> [VARIABLE=value]\n' "$${bold}" "$${reset}"; \
 	printf '\n%s%sGetting started%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup' "$${reset}" 'Resolve Flutter dependencies'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup-linux' "$${reset}" 'Prepare an Arch Linux workstation'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make run' "$${reset}" 'Run Pomodoist on a connected device'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make run-linux' "$${reset}" 'Run the native Linux desktop app'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make web' "$${reset}" 'Run Pomodoist in Chrome'; \
 	printf '\n%s%sQuality%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make analyze' "$${reset}" 'Analyze Dart code'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make test' "$${reset}" 'Run Flutter tests'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make test-linux-packaging' "$${reset}" 'Test Linux installers and AppImage layout'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make check' "$${reset}" 'Run analysis and tests'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make format' "$${reset}" 'Format source files'; \
 	printf '\n%s%sBuild & release%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make build-web' "$${reset}" 'Build the release web app'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make build-linux-appimage' "$${reset}" 'Build the distributable Linux AppImage'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make build-linux-release' "$${reset}" 'Build the raw Linux developer bundle'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make install-linux' "$${reset}" 'Install Pomodoist for the current user'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make build-macos-debug' "$${reset}" 'Build the debug macOS app'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make build-macos-release' "$${reset}" 'Build the release macOS app'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make testflight' "$${reset}" 'Build and upload the iOS app'; \
@@ -64,8 +71,14 @@ help:
 setup:
 	$(FLUTTER) pub get
 
+setup-linux:
+	./tool/linux/setup_arch.sh
+
 run:
 	$(FLUTTER) run --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
+
+run-linux:
+	$(FLUTTER) run -d linux --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
 
 web:
 	$(FLUTTER) run -d chrome --dart-define=POMODOIST_BILLING_CHANNEL=stripe
@@ -76,6 +89,14 @@ analyze:
 test:
 	$(FLUTTER) test
 
+test-linux-installer:
+	./tool/linux/test_install.sh
+
+test-linux-appimage:
+	./tool/linux/test_appimage.sh
+
+test-linux-packaging: test-linux-installer test-linux-appimage
+
 check: analyze test
 
 format:
@@ -83,6 +104,15 @@ format:
 
 build-web:
 	$(FLUTTER) build web --release --dart-define=POMODOIST_BILLING_CHANNEL=stripe
+
+build-linux-release:
+	$(FLUTTER) build linux --release --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
+
+build-linux-appimage: build-linux-release
+	./tool/linux/build_appimage.sh
+
+install-linux: build-linux-release
+	./tool/linux/install.sh
 
 build-macos-debug:
 	$(FLUTTER) build macos --debug --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)

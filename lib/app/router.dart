@@ -224,7 +224,10 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
   ref.listen(accountAuthStateProvider, (_, _) => router.refresh());
   ref.listen(accountClientProvider, (_, _) => router.refresh());
-  final detachNativeRoutes = nativeLinkCoordinator?.attachRouteSink(router.go);
+  final detachNativeRoutes = nativeLinkCoordinator?.attachRouteSink((location) {
+    router.go(location);
+    debugPrint('POMODOIST_NATIVE_LINK_HANDLED');
+  });
   ref.onDispose(() {
     detachNativeRoutes?.call();
     router.dispose();
