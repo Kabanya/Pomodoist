@@ -62,6 +62,7 @@ jobs:
           $config = [ordered]@{
             POMODOIST_ENVIRONMENT = 'production'
             WEB_APP_URL = 'https://app.pomodoist.com'
+            POMODOIST_REGISTRATION_URL = 'https://app.pomodoist.com/auth/challenge'
             TURNSTILE_SITE_KEY = $env:TURNSTILE_SITE_KEY
             SENTRY_DSN = $env:SENTRY_DSN
             GOOGLE_DESKTOP_CLIENT_ID = $env:GOOGLE_DESKTOP_CLIENT_ID

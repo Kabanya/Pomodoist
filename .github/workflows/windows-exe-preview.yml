@@ -1,0 +1,180 @@
+name: Windows EXE preview
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: windows-exe-preview
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  validate-ref:
+    name: Require main branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Reject non-main dispatch
+        run: |
+          if [ "$GITHUB_REF" != 'refs/heads/main' ]; then
+            echo 'Windows previews can only be published from main.' >&2
+            exit 64
+          fi
+
+  build-test:
+    name: Build and smoke test unsigned preview
+    needs: validate-ref
+    runs-on: windows-2022
+    environment: windows-production
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.production-config.outputs.version }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: subosito/flutter-action@1508160852fb97248640997f7cfb38da241df0ba # v2.9.1
+        with:
+          flutter-version: '3.47.0'
+      - run: flutter pub get
+      - name: Test installer packaging boundary
+        run: >-
+          powershell.exe -NoProfile -ExecutionPolicy Bypass
+          -File .\tool\windows\installer\test.ps1
+      - name: Install Inno Setup 6.7.1
+        run: |
+          choco install innosetup --version=6.7.1 --yes --no-progress
+          if (@(0, 1641, 3010) -notcontains $LASTEXITCODE) {
+            throw "Chocolatey failed with exit code $LASTEXITCODE."
+          }
+          $compiler = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path -LiteralPath $compiler -PathType Leaf)) {
+            throw "Pinned Inno Setup compiler was not found: $compiler"
+          }
+          $expectedCompilerHash = 'EB6F4410C8DB367A5F74127E8025AD2CCACC0AFABBE783959D237DF3050F97FB'
+          $actualCompilerHash = (
+            Get-FileHash -LiteralPath $compiler -Algorithm SHA256
+          ).Hash
+          if ($actualCompilerHash -cne $expectedCompilerHash) {
+            throw "Inno Setup compiler hash mismatch: $actualCompilerHash"
+          }
+      - name: Validate and write production configuration
+        id: production-config
+        env:
+          WEB_APP_URL: ${{ vars.WEB_APP_URL }}
+          TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+          SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+          GOOGLE_DESKTOP_CLIENT_ID: ${{ vars.GOOGLE_DESKTOP_CLIENT_ID }}
+          GOOGLE_DESKTOP_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_CLIENT_SECRET }}
+        run: |
+          $required = @('WEB_APP_URL', 'TURNSTILE_SITE_KEY', 'GOOGLE_DESKTOP_CLIENT_ID')
+          foreach ($name in $required) {
+            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
+              throw "$name is required in the windows-production environment."
+            }
+          }
+          $config = [ordered]@{
+            POMODOIST_ENVIRONMENT = 'production'
+            WEB_APP_URL = $env:WEB_APP_URL
+            POMODOIST_REGISTRATION_URL = 'https://app.pomodoist.com/auth/challenge'
+            TURNSTILE_SITE_KEY = $env:TURNSTILE_SITE_KEY
+            SENTRY_DSN = $env:SENTRY_DSN
+            GOOGLE_DESKTOP_CLIENT_ID = $env:GOOGLE_DESKTOP_CLIENT_ID
+            GOOGLE_DESKTOP_CLIENT_SECRET = $env:GOOGLE_DESKTOP_CLIENT_SECRET
+          }
+          $config | ConvertTo-Json | Set-Content `
+            -LiteralPath "$env:RUNNER_TEMP\windows-production.json" `
+            -Encoding utf8
+          $version = ([regex]::Match(
+            (Get-Content -Raw pubspec.yaml),
+            '(?m)^version:\s*(\d+\.\d+\.\d+)\+\d+\s*$'
+          )).Groups[1].Value
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            throw 'Could not read the application version.'
+          }
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+      - name: Build Flutter release
+        run: >-
+          powershell.exe -NoProfile -ExecutionPolicy Bypass
+          -File .\tool\windows\build.ps1
+          -Configuration Release
+          -ConfigFile "$env:RUNNER_TEMP\windows-production.json"
+          -ReleaseSha $env:GITHUB_SHA
+      - name: Remove production configuration
+        if: always()
+        run: >-
+          Remove-Item
+          -LiteralPath "$env:RUNNER_TEMP\windows-production.json"
+          -Force
+          -ErrorAction SilentlyContinue
+      - name: Compile installer and checksum with pinned compiler
+        run: |
+          $compiler = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          powershell.exe -NoProfile -ExecutionPolicy Bypass `
+            -File .\tool\windows\installer\build.ps1 `
+            -BuildDirectory build\windows\x64\runner\Release `
+            -CompilerPath $compiler
+      - name: Verify unsigned boundary and smoke test
+        run: |
+          $installer = Resolve-Path build\windows\installer\Pomodoist-Setup.exe
+          $signature = Get-AuthenticodeSignature -LiteralPath $installer
+          if ($signature.Status -ne 'NotSigned') {
+            throw "Preview installer must remain unsigned; status was $($signature.Status)."
+          }
+          $expectedHash = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash
+          $checksum = (Get-Content -Raw "$installer.sha256").Trim()
+          if ($checksum -cne "$expectedHash *Pomodoist-Setup.exe") {
+            throw 'Installer checksum file does not match the release artifact.'
+          }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass `
+            -File .\tool\windows\installer\smoke.ps1 `
+            -Installer $installer `
+            -Interactive
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: pomodoist-windows-exe-preview
+          path: |
+            build/windows/installer/Pomodoist-Setup.exe
+            build/windows/installer/Pomodoist-Setup.exe.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish unsigned GitHub pre-release
+    needs: build-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: pomodoist-windows-exe-preview
+          path: release
+      - name: Publish GitHub pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build-test.outputs.version }}
+        run: |
+          tag="windows-preview-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          notes=$(cat <<EOF
+          Unsigned Windows preview. Microsoft Defender SmartScreen may warn about an unknown publisher.
+
+          Download \`Pomodoist-Setup.exe\`, open it, and Pomodoist will install for the current user and start automatically. This x64 preview runs on x64 Windows 10/11 and through x64 compatibility on Windows 11 Arm64.
+
+          Free code signing provided by SignPath.io, certificate by SignPath Foundation.
+
+          Source commit: ${GITHUB_SHA}
+          EOF
+          )
+          gh release create "$tag" \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "Pomodoist $VERSION Windows preview" \
+            --notes "$notes" \
+            release/Pomodoist-Setup.exe \
+            release/Pomodoist-Setup.exe.sha256

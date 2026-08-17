@@ -3,7 +3,8 @@
 ## Scope
 
 This policy covers official Pomodoist Windows MSIX bundles published by
-FinchForge LLC from Git tags in `Kabanya/Pomodoist`. The client and official
+FinchForge LLC from Git tags in `Kabanya/Pomodoist`. It also distinguishes the
+temporary unsigned EXE previews from signed releases. The client and all
 client binaries are distributed under `AGPL-3.0-only`.
 
 Free code signing provided by SignPath.io, certificate by SignPath Foundation.
@@ -46,8 +47,11 @@ the corresponding functionality.
 
 Only `Pomodoist.msixbundle` artifacts with package identity
 `com.finchforge.pomodoist`, produced from a `vX.Y.Z` tag by the protected
-workflow, may receive the public release signature. Unsigned artifacts are not
-published as Pomodoist releases.
+workflow, may receive the public release signature. While trusted signing is
+being established, `Pomodoist-Setup.exe` may be published only as an explicitly
+unsigned GitHub pre-release with a SHA-256 checksum and unknown-publisher
+warning. EXE previews are never eligible for the SignPath production signature,
+never contain certificate material, and never replace stable MSIX assets.
 
 ## Incident response
 

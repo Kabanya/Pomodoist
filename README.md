@@ -16,6 +16,7 @@
 <p align="center">
   <a href="https://pomodoist.com">Website</a> ·
   <a href="https://app.pomodoist.com">Try Web</a> ·
+  <a href="https://github.com/Kabanya/Pomodoist/releases">Windows Preview</a> ·
   <a href="https://pomodoist.com/privacy/">Privacy</a> ·
   <a href="https://github.com/Kabanya/Pomodoist/issues/new">Report a bug</a> ·
   <a href="CONTRIBUTING.md">Contribute</a>
@@ -91,6 +92,13 @@ make check
 
 ### Windows
 
+For the simplest temporary installation, open the latest GitHub pre-release,
+download the single `Pomodoist-Setup.exe` file, and run it. The preview installs
+for the current user without administrator access and starts Pomodoist
+automatically. Until trusted code signing is enabled, Microsoft Defender
+SmartScreen may warn that the publisher is unknown. Verify the adjacent
+`Pomodoist-Setup.exe.sha256` file if you want to confirm the download.
+
 Windows development requires Flutter 3.47.0, Visual Studio with Desktop
 development with C++, and Windows SDK 10.0.19041.0 or newer.
 
@@ -113,7 +121,8 @@ If Visual Studio was upgraded or switched, use `-Clean` once so CMake does not
 reuse a generator from the previous installation. Packaging and trusted
 signing are performed by the tag-triggered GitHub workflow; public releases
 contain `Pomodoist.msixbundle` and `Pomodoist.appinstaller` for Windows 10
-2004+ and Windows 11 on x64/ARM64.
+2004+ and Windows 11 on x64/ARM64. The unsigned EXE is always marked as a
+pre-release and never replaces these stable assets.
 
 <details>
 <summary>Develop the shared client packages locally</summary>
