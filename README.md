@@ -156,7 +156,8 @@ SmartScreen may warn that the publisher is unknown. Verify the adjacent
 `Pomodoist-Setup.exe.sha256` file if you want to confirm the download.
 
 Windows development requires Flutter 3.47.0, Visual Studio with Desktop
-development with C++, and Windows SDK 10.0.19041.0 or newer.
+development with C++, and Windows SDK 10.0.19041.0 or newer. Building the EXE
+installer also requires GNU Make and Inno Setup 6.4 or newer.
 
 ```powershell
 flutter pub get
@@ -168,13 +169,20 @@ Build a clean release with public production configuration copied from
 `tool/windows/production-defines.example.json`:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass `
-  -File .\tool\windows\build.ps1 -Configuration Release -Clean `
-  -ConfigFile C:\secure\pomodoist-windows-production.json
+make windows-installer
 ```
 
-If Visual Studio was upgraded or switched, use `-Clean` once so CMake does not
-reuse a generator from the previous installation. Packaging and trusted
+By default the command reads
+`C:/secure/pomodoist-windows-production.json`, builds a clean production
+Release, and creates `build/windows/installer/Pomodoist-Setup.exe` plus its
+SHA-256 file. Override the path when needed:
+
+```powershell
+make windows-installer WINDOWS_CONFIG=C:/path/to/production-defines.json
+```
+
+The installer target always performs a clean build so CMake does not reuse a
+generator from a previous Visual Studio installation. Packaging and trusted
 signing are performed by the tag-triggered GitHub workflow; public releases
 contain `Pomodoist.msixbundle` and `Pomodoist.appinstaller` for Windows 10
 2004+ and Windows 11 on x64/ARM64. The unsigned EXE is always marked as a
