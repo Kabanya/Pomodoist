@@ -13,18 +13,18 @@ typedef NativeLinkExpirySchedule =
 final class NativeLinkCoordinator {
   NativeLinkCoordinator({
     required Future<Uri?> Function() loadInitialLink,
-    required Stream<Uri> linkStream,
+    required Stream<Uri> Function() loadLinkStream,
     NativeLinkClock? now,
     NativeLinkExpirySchedule? scheduleFingerprintExpiry,
     this.duplicateWindow = const Duration(seconds: 2),
   }) : _loadInitialLink = loadInitialLink,
-       _linkStream = linkStream,
+       _loadLinkStream = loadLinkStream,
        _now = now ?? DateTime.now,
        _scheduleFingerprintExpiry =
            scheduleFingerprintExpiry ?? _scheduleNativeLinkExpiry;
 
   final Future<Uri?> Function() _loadInitialLink;
-  final Stream<Uri> _linkStream;
+  final Stream<Uri> Function() _loadLinkStream;
   final NativeLinkClock _now;
   final NativeLinkExpirySchedule _scheduleFingerprintExpiry;
   final Duration duplicateWindow;
@@ -60,11 +60,12 @@ final class NativeLinkCoordinator {
     if (!_prepared) {
       throw StateError('NativeLinkCoordinator.prepare must run first');
     }
-    _started = true;
-    _subscription = _linkStream.listen(
+    final subscription = _loadLinkStream().listen(
       _dispatch,
       onError: (Object error, StackTrace stackTrace) {},
     );
+    _subscription = subscription;
+    _started = true;
   }
 
   void Function() attachRouteSink(NativeRouteSink sink) {

@@ -6,6 +6,6 @@ NativeLinkCoordinator createNativeLinkCoordinator() {
   final appLinks = AppLinks();
   return NativeLinkCoordinator(
     loadInitialLink: appLinks.getInitialLink,
-    linkStream: appLinks.uriLinkStream,
+    loadLinkStream: () => appLinks.uriLinkStream,
   );
 }

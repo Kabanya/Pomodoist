@@ -31,7 +31,7 @@ void main() {
     final links = StreamController<Uri>.broadcast();
     final coordinator = NativeLinkCoordinator(
       loadInitialLink: () async => Uri.parse('pomodoist://focus'),
-      linkStream: links.stream,
+      loadLinkStream: () => links.stream,
     );
 
     await coordinator.prepare();
@@ -70,7 +70,7 @@ void main() {
       );
       final coordinator = NativeLinkCoordinator(
         loadInitialLink: () async => callback,
-        linkStream: links.stream,
+        loadLinkStream: () => links.stream,
       );
       final callbacks = <Uri>[];
       final subscription = coordinator.captchaCallbacks.listen(callbacks.add);
@@ -101,7 +101,7 @@ void main() {
       final links = StreamController<Uri>.broadcast();
       final coordinator = NativeLinkCoordinator(
         loadInitialLink: () async => null,
-        linkStream: links.stream,
+        loadLinkStream: () => links.stream,
       );
       final rawLinks = <Uri>[];
       final rawSubscription = links.stream.listen(rawLinks.add);
@@ -134,7 +134,7 @@ void main() {
       final links = StreamController<Uri>.broadcast();
       final coordinator = NativeLinkCoordinator(
         loadInitialLink: () async => Uri.parse('pomodoist://focus'),
-        linkStream: links.stream,
+        loadLinkStream: () => links.stream,
         now: () => clock,
         duplicateWindow: const Duration(seconds: 2),
       );
@@ -168,7 +168,7 @@ void main() {
       final cancelled = <int>[];
       final coordinator = NativeLinkCoordinator(
         loadInitialLink: () async => null,
-        linkStream: links.stream,
+        loadLinkStream: () => links.stream,
         duplicateWindow: const Duration(seconds: 2),
         scheduleFingerprintExpiry: (duration, callback) {
           expect(duration, const Duration(seconds: 2));
@@ -218,7 +218,7 @@ void main() {
     final links = StreamController<Uri>.broadcast();
     final coordinator = NativeLinkCoordinator(
       loadInitialLink: () async => null,
-      linkStream: links.stream,
+      loadLinkStream: () => links.stream,
     );
     final routes = <String>[];
     final callbacks = <Uri>[];

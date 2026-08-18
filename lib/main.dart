@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'app/account_providers.dart';
 import 'app/app_l10n.dart';
 import 'app/app.dart';
+import 'app/native_account_startup.dart';
 import 'app/native_link_coordinator.dart';
 import 'app/runtime_public_config.dart';
 import 'app/runtime_public_config_loader.dart';
@@ -25,15 +26,21 @@ Future<void> main() async {
       WidgetsFlutterBinding.ensureInitialized();
       usePathUrlStrategy();
       final nativeLinkCoordinator = createNativeLinkCoordinator();
-      await nativeLinkCoordinator.prepare();
       try {
         updateWebBootstrapStage('session');
-        await nativeLinkCoordinator.start();
+        final nativeAccountStartup = await prepareNativeAccountStartup(
+          links: nativeLinkCoordinator,
+          initializeAccount: () =>
+              initializePomodoistAccountIfConfigured(runtimeConfig),
+        );
         updateWebBootstrapStage('app');
         runApp(
           ProviderScope(
             overrides: [
               runtimePublicConfigProvider.overrideWithValue(runtimeConfig),
+              accountBootstrapInitializerProvider.overrideWithValue(
+                nativeAccountStartup.initializeAccount,
+              ),
               nativeLinkCoordinatorProvider.overrideWithValue(
                 nativeLinkCoordinator,
               ),
@@ -177,13 +184,13 @@ Future<void> main() async {
             child: const PomodoistApp(),
           ),
         );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          hideWebBootstrapLoader();
+        });
       } on Object {
         await nativeLinkCoordinator.dispose();
         rethrow;
       }
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        hideWebBootstrapLoader();
-      });
     },
   );
 }

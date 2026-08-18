@@ -171,8 +171,7 @@ void main() {
         matches(RegExp(r'<key>FlutterDeepLinkingEnabled</key>\s*<false\s*/>')),
       );
       expect(main, contains('createNativeLinkCoordinator'));
-      expect(main.indexOf('.prepare()'), lessThan(main.indexOf('.start()')));
-      expect(main.indexOf('.start()'), lessThan(main.indexOf('runApp(')));
+      expect(main, contains('prepareNativeAccountStartup('));
       expect(
         accountProviders,
         contains('initializePomodoistAccountIfConfigured(config)'),

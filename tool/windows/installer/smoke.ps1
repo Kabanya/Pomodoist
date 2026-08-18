@@ -177,6 +177,9 @@ try {
         throw 'Installer upgrade removed existing application data.'
     }
 
+    & (Join-Path $PSScriptRoot '..\test_deep_link_forwarding.ps1') `
+        -Executable $installedExecutable
+
     $existingProcessIds = @(Get-InstalledProcesses | ForEach-Object Id)
     Start-Process 'pomodoist://focus'
     $process = Wait-ForInstalledProcess -ExcludedProcessIds $existingProcessIds
