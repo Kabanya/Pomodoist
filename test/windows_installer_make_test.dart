@@ -16,7 +16,6 @@ void main() {
     expect(result.exitCode, 0, reason: result.stderr.toString());
     final commands = result.stdout
         .toString()
-        .replaceAll('\\', '/')
         .split(RegExp(r'\r?\n'))
         .where((line) => line.trim().isNotEmpty)
         .toList();
@@ -36,6 +35,18 @@ void main() {
       '-BuildDirectory "C:/release output/Pomodoist"',
     );
     expect(commands.join('\n'), isNot(contains('-Configuration Debug')));
+  });
+
+  test('make help runs from a Windows PowerShell environment', () {
+    if (!Platform.isWindows) return;
+
+    final result = Process.runSync(_makeExecutable(), const [
+      '--no-print-directory',
+      'help',
+    ], workingDirectory: Directory.current.path);
+
+    expect(result.exitCode, 0, reason: result.stderr.toString());
+    expect(result.stdout.toString(), contains('make windows-installer'));
   });
 }
 

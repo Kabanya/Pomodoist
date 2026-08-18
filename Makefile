@@ -1,6 +1,12 @@
 # Pomodoist development commands
 .DEFAULT_GOAL := help
 
+# GNU Make launched from PowerShell otherwise uses cmd.exe, while this file
+# intentionally uses POSIX recipes. Git for Windows provides the shell.
+ifeq ($(OS),Windows_NT)
+SHELL := C:/Program Files/Git/bin/bash.exe
+endif
+
 # Tools. Prefer the project-pinned FVM SDK when it has been bootstrapped.
 FVM_FLUTTER := .fvm/flutter_sdk/bin/flutter
 FLUTTER ?= $(if $(wildcard $(FVM_FLUTTER)),$(FVM_FLUTTER),flutter)
@@ -120,8 +126,8 @@ install-linux: build-linux-release
 	./tool/linux/install.sh
 
 windows-installer:
-	powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tool\windows\build.ps1 -Configuration Release -Clean -ConfigFile "$(WINDOWS_CONFIG)" -ReleaseSha "$(POMODOIST_RELEASE)"
-	powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tool\windows\installer\build.ps1 -BuildDirectory "$(WINDOWS_RELEASE_DIR)"
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Release -Clean -ConfigFile "$(WINDOWS_CONFIG)" -ReleaseSha "$(POMODOIST_RELEASE)"
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/installer/build.ps1 -BuildDirectory "$(WINDOWS_RELEASE_DIR)"
 
 build-macos-debug:
 	$(FLUTTER) build macos --debug --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
