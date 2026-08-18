@@ -485,6 +485,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsTitle => 'Ajustes';
 
   @override
+  String get settingsAboutTitle => 'Acerca de';
+
+  @override
+  String get settingsVersionLabel => 'Versión';
+
+  @override
+  String get settingsPlanLabel => 'Plan';
+
+  @override
+  String get settingsPlanFree => 'Gratis';
+
+  @override
+  String get settingsPlanPro => 'Pomodoist Pro';
+
+  @override
   String get settingsShortcutsTitle => 'Atajos de teclado';
 
   @override

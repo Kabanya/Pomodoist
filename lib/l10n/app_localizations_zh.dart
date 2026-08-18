@@ -463,6 +463,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsTitle => '设置';
 
   @override
+  String get settingsAboutTitle => '关于';
+
+  @override
+  String get settingsVersionLabel => '版本';
+
+  @override
+  String get settingsPlanLabel => '方案';
+
+  @override
+  String get settingsPlanFree => '免费';
+
+  @override
+  String get settingsPlanPro => 'Pomodoist Pro';
+
+  @override
   String get settingsShortcutsTitle => '键盘快捷键';
 
   @override

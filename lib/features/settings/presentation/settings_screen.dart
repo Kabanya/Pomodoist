@@ -23,6 +23,7 @@ import '../../focus/presentation/focus_view_mode.dart';
 import '../../integrations/google_calendar/presentation/google_calendar_settings_screen.dart';
 import '../../onboarding/onboarding_gate.dart';
 import 'account_sign_out_button.dart';
+import 'app_info_card.dart';
 import 'csv_task_import_card.dart';
 import 'pomodoist_account_actions.dart';
 
@@ -780,6 +781,8 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () => context.push('/settings/shortcuts'),
             ),
           ),
+          const SizedBox(height: 12),
+          const SettingsAppInfoCard(key: Key('settings-app-info-section')),
           if (signedInAccount != null) ...[
             const SizedBox(height: 12),
             Align(

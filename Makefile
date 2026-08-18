@@ -14,6 +14,11 @@ FLUTTER ?= $(if $(wildcard $(FVM_FLUTTER)),$(FVM_FLUTTER),flutter)
 # Runtime
 POMODOIST_BILLING_CHANNEL ?= stripe
 
+# Linux release downloads use direct HTTPS. This prevents stale localhost
+# proxy variables from breaking reproducible local builds.
+LINUX_BUILD_ENV ?= env -u http_proxy -u https_proxy -u all_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY
+POMODOIST_APPIMAGE_BUILDER ?= ./tool/linux/build_appimage.sh
+
 # Windows
 WINDOWS_CONFIG ?= C:/secure/pomodoist-windows-production.json
 WINDOWS_RELEASE_DIR ?= build/windows/x64/runner/Release
@@ -34,7 +39,7 @@ GOOGLE_DESKTOP_CLIENT_ID ?= $(strip $(shell awk -F= '/^[[:space:]]*GOOGLE_DESKTO
 GOOGLE_DESKTOP_CLIENT_SECRET ?= $(strip $(shell awk -F= '/^[[:space:]]*GOOGLE_DESKTOP_CLIENT_SECRET[[:space:]]*=/{sub(/^[^=]*=[[:space:]]*/, ""); sub(/[[:space:]]*$$/, ""); print; exit}' "$(MACOS_GOOGLE_OAUTH_CONFIG)" 2>/dev/null))
 export GOOGLE_DESKTOP_CLIENT_ID GOOGLE_DESKTOP_CLIENT_SECRET
 
-.PHONY: help setup setup-linux run run-linux web analyze test test-linux-installer test-linux-appimage test-linux-packaging check format build-web build-linux-release build-linux-appimage install-linux windows-installer build-macos-debug build-macos-release testflight-preflight ios-oauth-check macos-oauth-check testflight devices clean
+.PHONY: help setup setup-linux run run-linux web analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-packaging check format build-web build-linux-release build-linux-appimage install-linux windows-installer build-macos-debug build-macos-release testflight-preflight ios-oauth-check macos-oauth-check testflight devices clean
 
 help:
 	@if [ -t 1 ] && [ -z "$${NO_COLOR:-}" ]; then \
@@ -106,7 +111,10 @@ test-linux-installer:
 test-linux-appimage:
 	./tool/linux/test_appimage.sh
 
-test-linux-packaging: test-linux-installer test-linux-appimage
+test-linux-build-network:
+	./tool/linux/test_make_build.sh
+
+test-linux-packaging: test-linux-installer test-linux-appimage test-linux-build-network
 
 check: analyze test
 
@@ -117,10 +125,10 @@ build-web:
 	$(FLUTTER) build web --release --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
 build-linux-release:
-	$(FLUTTER) build linux --release --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
+	$(LINUX_BUILD_ENV) $(FLUTTER) build linux --release --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
 
 build-linux-appimage: build-linux-release
-	./tool/linux/build_appimage.sh
+	$(LINUX_BUILD_ENV) $(POMODOIST_APPIMAGE_BUILDER)
 
 install-linux: build-linux-release
 	./tool/linux/install.sh

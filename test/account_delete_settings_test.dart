@@ -11,6 +11,7 @@ import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/features/billing/billing.dart';
 import 'package:pomodoist/features/integrations/google_calendar/data/auth/google_calendar_auth_contract.dart';
+import 'package:pomodoist/features/settings/presentation/app_info_card.dart';
 import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,7 +44,7 @@ void main() {
     expect(keyedChildren.last.key, const Key('account-delete-section'));
     expect(
       keyedChildren[keyedChildren.length - 2].key,
-      const Key('settings-shortcuts-button'),
+      const Key('settings-app-info-section'),
     );
 
     final firstConfirmation = find.byKey(const Key('account-delete-button'));
@@ -450,6 +451,7 @@ Future<void> _pumpSettings(
         }),
         accountRequestTimeoutProvider.overrideWithValue(requestTimeout),
         applePurchasesSupportedProvider.overrideWithValue(false),
+        appVersionProvider.overrideWith((ref) async => '2.4.1 (37)'),
         pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
         googleCalendarAuthServiceProvider.overrideWithValue(
           const _NoopGoogleCalendarAuthService(),

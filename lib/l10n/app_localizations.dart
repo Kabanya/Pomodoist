@@ -942,6 +942,36 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settingsTitle;
 
+  /// No description provided for @settingsAboutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAboutTitle;
+
+  /// No description provided for @settingsVersionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get settingsVersionLabel;
+
+  /// No description provided for @settingsPlanLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get settingsPlanLabel;
+
+  /// No description provided for @settingsPlanFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get settingsPlanFree;
+
+  /// No description provided for @settingsPlanPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomodoist Pro'**
+  String get settingsPlanPro;
+
   /// No description provided for @settingsShortcutsTitle.
   ///
   /// In en, this message translates to:

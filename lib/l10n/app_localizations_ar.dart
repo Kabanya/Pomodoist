@@ -479,6 +479,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsTitle => 'الإعدادات';
 
   @override
+  String get settingsAboutTitle => 'حول التطبيق';
+
+  @override
+  String get settingsVersionLabel => 'الإصدار';
+
+  @override
+  String get settingsPlanLabel => 'الخطة';
+
+  @override
+  String get settingsPlanFree => 'مجاني';
+
+  @override
+  String get settingsPlanPro => 'Pomodoist Pro';
+
+  @override
   String get settingsShortcutsTitle => 'اختصارات لوحة المفاتيح';
 
   @override

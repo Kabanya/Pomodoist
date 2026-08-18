@@ -467,6 +467,8 @@ final billingStripePollIntervalProvider = Provider<Duration>(
 final billingControllerProvider =
     NotifierProvider<BillingController, BillingState>(BillingController.new);
 
+enum BillingAccessTier { free, monthly, annual, lifetime, pro }
+
 class BillingState {
   const BillingState({
     this.loading = true,
@@ -565,6 +567,42 @@ class BillingState {
       error: identical(error, _unset) ? this.error : error as String?,
     );
   }
+}
+
+BillingAccessTier billingAccessTier(BillingState state) {
+  if (!state.hasActiveEntitlement) {
+    return BillingAccessTier.free;
+  }
+
+  final accountEntitlement = state.activeAccountEntitlement;
+  final accountTier = _billingAccessTierForProduct(
+    accountEntitlement?.productId,
+  );
+  if (accountTier != null) {
+    return accountTier;
+  }
+
+  if (state.hasLocalStoreKitEntitlement) {
+    final localTier = _billingAccessTierForProduct(state.activeProductId);
+    if (localTier != null) {
+      return localTier;
+    }
+  }
+
+  if (accountEntitlement?.lifetime ?? false) {
+    return BillingAccessTier.lifetime;
+  }
+  return BillingAccessTier.pro;
+}
+
+BillingAccessTier? _billingAccessTierForProduct(String? productId) {
+  return switch (productId) {
+    pomodoistMonthlyProductId => BillingAccessTier.monthly,
+    pomodoistAnnualProductId => BillingAccessTier.annual,
+    pomodoistLifetimeProductId ||
+    pomodoistLifetimeLaunchProductId => BillingAccessTier.lifetime,
+    _ => null,
+  };
 }
 
 const _unset = Object();

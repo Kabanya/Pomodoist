@@ -483,6 +483,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsTitle => 'Настройки';
 
   @override
+  String get settingsAboutTitle => 'О приложении';
+
+  @override
+  String get settingsVersionLabel => 'Версия';
+
+  @override
+  String get settingsPlanLabel => 'Тариф';
+
+  @override
+  String get settingsPlanFree => 'Бесплатный';
+
+  @override
+  String get settingsPlanPro => 'Pomodoist Pro';
+
+  @override
   String get settingsShortcutsTitle => 'Быстрые команды';
 
   @override
