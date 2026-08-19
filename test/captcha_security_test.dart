@@ -17,7 +17,10 @@ void main() {
 
         final first = controller.beginRequest();
         expect(first, 'valid-turnstile-token-1234');
-        expect(controller.beginRequest, throwsStateError);
+        expect(
+          controller.beginRequest,
+          _throwsNativeCaptcha(NativeCaptchaFailureCode.unavailable),
+        );
 
         controller.finishRequest();
         expect(controller.canSubmit, isFalse);
@@ -37,16 +40,13 @@ void main() {
       controller.finishRequest(error: const FormatException('secret-value'));
 
       expect(controller.status, CaptchaStatus.awaiting);
-      expect(controller.message, isNull);
       expect(controller.generation, generation + 1);
 
       controller.expire(controller.generation);
       expect(controller.status, CaptchaStatus.expired);
-      expect(controller.message, 'Verification expired. Please try again.');
 
       controller.reportError(controller.generation);
       expect(controller.status, CaptchaStatus.error);
-      expect(controller.message, 'Verification failed. Please try again.');
     });
 
     test('rejects stale and malformed browser callbacks', () {
@@ -236,6 +236,52 @@ void main() {
       expect(request.hasPort, isFalse);
     });
 
+    test('binds a desktop loopback callback to its exact port and path', () {
+      final callbackTarget = Uri.parse(
+        'http://127.0.0.1:49152/captcha-callback',
+      );
+      final session = NativeCaptchaSession(
+        registrationUrl: Uri.parse('https://app.pomodoist.com/auth/challenge'),
+        callbackTarget: callbackTarget,
+        now: () => now,
+        stateFactory: () => 'L' * 43,
+      );
+
+      final challenge = session.begin();
+      expect(challenge.queryParameters['returnTo'], callbackTarget.toString());
+      expect(
+        session.consumeCallback(
+          callbackTarget.replace(
+            queryParameters: {
+              'state': 'L' * 43,
+              'token': 'valid-turnstile-token-1234',
+            },
+          ),
+        ),
+        'valid-turnstile-token-1234',
+      );
+
+      for (final target in [
+        'http://localhost:49152/captcha-callback',
+        'http://[::1]:49152/captcha-callback',
+        'http://127.0.0.1/captcha-callback',
+        'http://127.0.0.1:80/captcha-callback',
+        'http://127.0.0.1:49152/other',
+        'https://127.0.0.1:49152/captcha-callback',
+      ]) {
+        expect(
+          () => NativeCaptchaSession(
+            registrationUrl: Uri.parse(
+              'https://app.pomodoist.com/auth/challenge',
+            ),
+            callbackTarget: Uri.parse(target),
+          ),
+          throwsFormatException,
+          reason: target,
+        );
+      }
+    });
+
     test(
       'accepts exact callback once and rejects replay, mismatch, expiry',
       () {
@@ -254,7 +300,10 @@ void main() {
         );
 
         expect(session.consumeCallback(callback), 'valid-turnstile-token-1234');
-        expect(() => session.consumeCallback(callback), throwsStateError);
+        expect(
+          () => session.consumeCallback(callback),
+          _throwsNativeCaptcha(NativeCaptchaFailureCode.invalidCallback),
+        );
 
         session.begin();
         expect(
@@ -264,19 +313,26 @@ void main() {
               '&token=valid-turnstile-token-1234',
             ),
           ),
-          throwsFormatException,
+          _throwsNativeCaptcha(NativeCaptchaFailureCode.invalidCallback),
         );
 
         session.cancel();
         session.begin();
         clock = now.add(const Duration(minutes: 6));
-        expect(() => session.consumeCallback(callback), throwsStateError);
+        expect(
+          () => session.consumeCallback(callback),
+          _throwsNativeCaptcha(NativeCaptchaFailureCode.expired),
+        );
       },
     );
 
     test('rejects malicious return targets and callback shapes', () {
       const exact = 'pomodoist://captcha-callback';
       expect(isExactCaptchaReturnTarget(exact), isTrue);
+      expect(
+        isExactCaptchaReturnTarget('http://127.0.0.1:49152/captcha-callback'),
+        isTrue,
+      );
       for (final target in [
         'Pomodoist://captcha-callback',
         'pomodoist://CAPTCHA-callback',
@@ -286,6 +342,8 @@ void main() {
         'pomodoist://captcha-callback?next=https://evil.test',
         'pomodoist://captcha-callback#fragment',
         'https://app.pomodoist.com',
+        'http://localhost:49152/captcha-callback',
+        'http://127.0.0.1:49152/captcha-callback?extra=x',
       ]) {
         expect(isExactCaptchaReturnTarget(target), isFalse, reason: target);
       }
@@ -305,7 +363,7 @@ void main() {
       ]) {
         expect(
           () => session.consumeCallback(Uri.parse(callback)),
-          throwsFormatException,
+          _throwsNativeCaptcha(NativeCaptchaFailureCode.invalidCallback),
           reason: callback,
         );
       }
@@ -324,6 +382,19 @@ void main() {
         '&token=valid-turnstile-token-1234',
       );
 
+      final loopbackRequest = CaptchaChallengeRequest.parse(
+        Uri.parse(
+          '/auth/challenge?returnTo='
+          'http%3A%2F%2F127.0.0.1%3A49152%2Fcaptcha-callback'
+          '#state=${'F' * 43}',
+        ),
+      );
+      expect(
+        loopbackRequest.handoffUri('desktop-token').toString(),
+        'http://127.0.0.1:49152/captcha-callback?state=${'F' * 43}'
+        '&token=desktop-token',
+      );
+
       for (final uri in [
         '/auth/challenge?returnTo=https%3A%2F%2Fevil.test#state=${'E' * 43}',
         '/auth/challenge?returnTo=pomodoist%3A%2F%2Fcaptcha-callback#state=short',
@@ -332,6 +403,7 @@ void main() {
         '/other?returnTo=pomodoist%3A%2F%2Fcaptcha-callback#state=${'E' * 43}',
         'https://evil.test/auth/challenge?returnTo=pomodoist%3A%2F%2Fcaptcha-callback#state=${'E' * 43}',
         'http://app-test.pomodoist.com/auth/challenge?returnTo=pomodoist%3A%2F%2Fcaptcha-callback#state=${'E' * 43}',
+        '/auth/challenge?returnTo=http%3A%2F%2Flocalhost%3A49152%2Fcaptcha-callback#state=${'E' * 43}',
       ]) {
         expect(
           () => CaptchaChallengeRequest.parse(Uri.parse(uri)),
@@ -370,3 +442,7 @@ void main() {
     },
   );
 }
+
+Matcher _throwsNativeCaptcha(NativeCaptchaFailureCode code) => throwsA(
+  isA<NativeCaptchaException>().having((error) => error.code, 'code', code),
+);

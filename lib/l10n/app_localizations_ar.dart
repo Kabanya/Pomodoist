@@ -324,6 +324,145 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get authEmailSignInTitle => 'تسجيل الدخول بالبريد الإلكتروني';
+
+  @override
+  String get authSignInAction => 'تسجيل الدخول';
+
+  @override
+  String get authSendLink => 'إرسال الرابط';
+
+  @override
+  String get authMagicLinkSent =>
+      'تم إرسال رابط تسجيل الدخول. تحقق من صندوق الوارد ومجلد الرسائل غير المرغوب فيها.';
+
+  @override
+  String get authAccountCreated => 'تم إنشاء الحساب.';
+
+  @override
+  String get authSignedIn => 'تم تسجيل الدخول.';
+
+  @override
+  String get authEmailRequired => 'أدخل بريدك الإلكتروني.';
+
+  @override
+  String get authEmailInvalid =>
+      'تحقق من عنوان البريد الإلكتروني، مثل name@example.com.';
+
+  @override
+  String get authPasswordRequired => 'أدخل كلمة المرور.';
+
+  @override
+  String get authInvalidCredentials =>
+      'البريد الإلكتروني أو كلمة المرور غير صحيحين. تحقّق منهما وحاول مجددًا.';
+
+  @override
+  String get authEmailUnconfirmed =>
+      'أكد بريدك الإلكتروني عبر الرابط الذي أرسلناه، ثم سجّل الدخول مجددًا.';
+
+  @override
+  String get authWeakPassword =>
+      'يسهل تخمين كلمة المرور هذه. استخدم كلمة مرور أطول وأقل قابلية للتوقع.';
+
+  @override
+  String get authAccountMayExist =>
+      'تعذر إنشاء الحساب. إذا سبق أن سجلت بهذا البريد الإلكتروني، فسجّل الدخول بدلاً من ذلك.';
+
+  @override
+  String get authRateLimited =>
+      'محاولات كثيرة جدًا. انتظر بضع دقائق وحاول مجددًا.';
+
+  @override
+  String get authEmailRateLimited =>
+      'طُلبت رسائل كثيرة جدًا. انتظر بضع دقائق قبل طلب رسالة أخرى.';
+
+  @override
+  String get authOffline =>
+      'تعذر الوصول إلى خدمة الحسابات. تحقق من اتصال الإنترنت وحاول مجددًا.';
+
+  @override
+  String get authTimeout =>
+      'تستغرق خدمة الحسابات وقتًا طويلاً للرد. حاول مجددًا.';
+
+  @override
+  String get authServiceUnavailable =>
+      'خدمة الحسابات غير متاحة مؤقتًا. حاول لاحقًا.';
+
+  @override
+  String get authCaptchaRequired => 'أكمل التحقق الأمني للمتابعة.';
+
+  @override
+  String get authCaptchaExpired => 'انتهت صلاحية التحقق الأمني. أكمله مجددًا.';
+
+  @override
+  String get authCaptchaFailed => 'فشل التحقق الأمني. حاول التحقق مجددًا.';
+
+  @override
+  String get authCaptchaCancelled =>
+      'تم إلغاء التحقق الأمني. ابدأه مجددًا للمتابعة.';
+
+  @override
+  String get authCaptchaUnavailable =>
+      'التحقق الأمني غير متاح الآن. تحقق من اتصالك وحاول مجددًا.';
+
+  @override
+  String get authCaptchaOpenFailed =>
+      'تعذر على Pomodoist فتح التحقق الأمني في المتصفح. تحقق من المتصفح الافتراضي وحاول مجددًا.';
+
+  @override
+  String get authProviderFallback => 'مقدم الخدمة هذا';
+
+  @override
+  String authProviderUnavailable(String provider) {
+    return 'تسجيل الدخول باستخدام $provider غير متاح الآن. حاول مجددًا أو استخدم طريقة أخرى.';
+  }
+
+  @override
+  String get authSignUpDisabled =>
+      'إنشاء الحساب بالبريد الإلكتروني غير متاح مؤقتًا. استخدم طريقة تسجيل دخول أخرى.';
+
+  @override
+  String get authAccountRestricted =>
+      'لا يمكن تسجيل الدخول إلى هذا الحساب الآن. تواصل مع الدعم إذا كنت تعتقد أن هذا خطأ.';
+
+  @override
+  String get authLinkExpired =>
+      'رابط تسجيل الدخول هذا غير صالح أو منتهي الصلاحية. اطلب رابطًا جديدًا.';
+
+  @override
+  String get authUnexpectedSignIn => 'تعذر تسجيل الدخول. حاول مجددًا.';
+
+  @override
+  String get authUnexpectedSignUp => 'تعذر إنشاء الحساب. حاول مجددًا.';
+
+  @override
+  String get authUnexpectedMagicLink =>
+      'تعذر إرسال رابط تسجيل الدخول. حاول مجددًا.';
+
+  @override
+  String get authRetryVerification => 'إعادة محاولة التحقق';
+
+  @override
+  String get captchaSecurityLabel => 'التحقق الأمني';
+
+  @override
+  String get captchaChallengeTitle => 'تحقق أمان Pomodoist';
+
+  @override
+  String get captchaChallengePrompt => 'أكد أنك إنسان للمتابعة في Pomodoist.';
+
+  @override
+  String get captchaChallengeInvalid =>
+      'رابط التحقق الأمني غير صالح. عُد إلى Pomodoist وحاول مجددًا.';
+
+  @override
+  String get captchaChallengeHandoffHelp =>
+      'إذا لم يفتح Pomodoist، فاستخدم الزر أدناه. إذا لم يكن التطبيق مثبتًا، فأغلق هذه الصفحة وعُد إلى الجهاز الذي بدأت منه.';
+
+  @override
+  String get captchaReturnToApp => 'العودة إلى Pomodoist';
+
+  @override
   String get navSearch => 'بحث';
 
   @override

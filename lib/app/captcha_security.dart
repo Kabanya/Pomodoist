@@ -5,6 +5,23 @@ import 'dart:typed_data';
 
 enum CaptchaStatus { awaiting, ready, submitting, expired, error }
 
+enum NativeCaptchaFailureCode {
+  cancelled,
+  expired,
+  unavailable,
+  openFailed,
+  invalidCallback,
+}
+
+final class NativeCaptchaException implements Exception {
+  const NativeCaptchaException(this.code);
+
+  final NativeCaptchaFailureCode code;
+
+  @override
+  String toString() => 'NativeCaptchaException(${code.name})';
+}
+
 typedef CaptchaTimeoutCancel = void Function();
 typedef CaptchaTimeoutSchedule =
     CaptchaTimeoutCancel Function(Duration timeout, void Function() callback);
@@ -49,11 +66,9 @@ final class CaptchaTokenController {
   final bool required;
   CaptchaStatus _status = CaptchaStatus.awaiting;
   String? _token;
-  String? _message;
   int _generation = 0;
 
   CaptchaStatus get status => required ? _status : CaptchaStatus.ready;
-  String? get message => _message;
   int get generation => _generation;
   bool get canSubmit => !required || _status == CaptchaStatus.ready;
   bool get submitting => _status == CaptchaStatus.submitting;
@@ -66,7 +81,6 @@ final class CaptchaTokenController {
       return false;
     }
     _token = token;
-    _message = null;
     _status = CaptchaStatus.ready;
     return true;
   }
@@ -76,7 +90,6 @@ final class CaptchaTokenController {
     _generation += 1;
     _token = null;
     _status = CaptchaStatus.expired;
-    _message = 'Verification expired. Please try again.';
   }
 
   void reportError(int generation) {
@@ -84,17 +97,19 @@ final class CaptchaTokenController {
     _generation += 1;
     _token = null;
     _status = CaptchaStatus.error;
-    _message = 'Verification failed. Please try again.';
   }
 
   String? beginRequest() {
-    if (submitting) throw StateError('A CAPTCHA-protected request is active');
+    if (submitting) {
+      throw const NativeCaptchaException(NativeCaptchaFailureCode.unavailable);
+    }
     if (required && (_status != CaptchaStatus.ready || _token == null)) {
-      throw StateError('Complete verification before continuing');
+      throw const NativeCaptchaException(
+        NativeCaptchaFailureCode.invalidCallback,
+      );
     }
     final token = _token;
     _token = null;
-    _message = null;
     _status = CaptchaStatus.submitting;
     return token;
   }
@@ -103,14 +118,12 @@ final class CaptchaTokenController {
     if (!submitting) return;
     _generation += 1;
     _token = null;
-    _message = null;
     _status = CaptchaStatus.awaiting;
   }
 
   void reset() {
     _generation += 1;
     _token = null;
-    _message = null;
     _status = CaptchaStatus.awaiting;
   }
 }
@@ -161,16 +174,47 @@ bool isValidCaptchaState(String value) =>
     value.length <= 128 &&
     RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(value);
 
-bool isExactCaptchaReturnTarget(String value) =>
-    value == 'pomodoist://captcha-callback';
+bool isExactCaptchaReturnTarget(String value) {
+  final uri = Uri.tryParse(value);
+  return uri != null &&
+      uri.toString() == value &&
+      _isCaptchaReturnTargetUri(uri);
+}
 
-bool isExactCaptchaCallbackUri(Uri uri) {
-  final keys = uri.queryParametersAll.keys.toSet();
-  return uri.scheme == 'pomodoist' &&
+bool _isCaptchaReturnTargetUri(Uri uri) {
+  final customProtocol =
+      uri.scheme == 'pomodoist' &&
       uri.host == 'captcha-callback' &&
       uri.path.isEmpty &&
+      !uri.hasPort;
+  final desktopLoopback =
+      uri.scheme == 'http' &&
+      uri.host == '127.0.0.1' &&
+      uri.hasPort &&
+      uri.port >= 1024 &&
+      uri.port <= 65535 &&
+      uri.path == '/captcha-callback';
+  return (customProtocol || desktopLoopback) &&
       uri.userInfo.isEmpty &&
-      !uri.hasPort &&
+      !uri.hasQuery &&
+      !uri.hasFragment;
+}
+
+bool isExactCaptchaCallbackUri(Uri uri) {
+  return _isCaptchaCallbackForTarget(
+    uri,
+    Uri.parse('pomodoist://captcha-callback'),
+  );
+}
+
+bool _isCaptchaCallbackForTarget(Uri uri, Uri target) {
+  final keys = uri.queryParametersAll.keys.toSet();
+  return _isCaptchaReturnTargetUri(target) &&
+      uri.scheme == target.scheme &&
+      uri.host == target.host &&
+      uri.port == target.port &&
+      uri.path == target.path &&
+      uri.userInfo.isEmpty &&
       !uri.hasFragment &&
       keys.length == 2 &&
       keys.containsAll(const {'state', 'token'}) &&
@@ -180,9 +224,10 @@ bool isExactCaptchaCallbackUri(Uri uri) {
 }
 
 final class CaptchaChallengeRequest {
-  const CaptchaChallengeRequest._(this.state);
+  const CaptchaChallengeRequest._(this.state, this.returnTarget);
 
   final String state;
+  final Uri returnTarget;
 
   factory CaptchaChallengeRequest.parse(Uri uri) {
     final parameters = uri.queryParametersAll;
@@ -209,16 +254,17 @@ final class CaptchaChallengeRequest {
         !isValidCaptchaState(fragmentParameters['state']?.single ?? '')) {
       throw const FormatException('Invalid CAPTCHA challenge request');
     }
-    return CaptchaChallengeRequest._(fragmentParameters['state']!.single);
+    return CaptchaChallengeRequest._(
+      fragmentParameters['state']!.single,
+      Uri.parse(uri.queryParameters['returnTo']!),
+    );
   }
 
   Uri handoffUri(String token) {
     if (!isValidCaptchaToken(token)) {
       throw const FormatException('Invalid CAPTCHA token');
     }
-    return Uri(
-      scheme: 'pomodoist',
-      host: 'captcha-callback',
+    return returnTarget.replace(
       queryParameters: {'state': state, 'token': token},
     );
   }
@@ -312,15 +358,22 @@ final class NativeCaptchaBuildConfig {
 final class NativeCaptchaSession {
   NativeCaptchaSession({
     required this.registrationUrl,
+    Uri? callbackTarget,
     CaptchaClock? now,
     CaptchaStateFactory? stateFactory,
     this.ttl = const Duration(minutes: 5),
-  }) : _now = now ?? DateTime.now,
+  }) : callbackTarget =
+           callbackTarget ?? Uri.parse('pomodoist://captcha-callback'),
+       _now = now ?? DateTime.now,
        _stateFactory = stateFactory ?? generateCaptchaState {
     _validateRegistrationUrl(registrationUrl);
+    if (!_isCaptchaReturnTargetUri(this.callbackTarget)) {
+      throw const FormatException('Unsupported CAPTCHA return target');
+    }
   }
 
   final Uri registrationUrl;
+  final Uri callbackTarget;
   final Duration ttl;
   final CaptchaClock _now;
   final CaptchaStateFactory _stateFactory;
@@ -332,12 +385,12 @@ final class NativeCaptchaSession {
   Uri begin() {
     final state = _stateFactory();
     if (!isValidCaptchaState(state)) {
-      throw StateError('CAPTCHA state generator returned an invalid value');
+      throw const NativeCaptchaException(NativeCaptchaFailureCode.unavailable);
     }
     _pendingState = state;
     _createdAt = _now();
     return registrationUrl.replace(
-      queryParameters: {'returnTo': 'pomodoist://captcha-callback'},
+      queryParameters: {'returnTo': callbackTarget.toString()},
       fragment: Uri(queryParameters: {'state': state}).query,
     );
   }
@@ -346,17 +399,21 @@ final class NativeCaptchaSession {
     final pending = _pendingState;
     final createdAt = _createdAt;
     if (pending == null || createdAt == null) {
-      throw StateError('No CAPTCHA challenge is pending');
+      throw const NativeCaptchaException(
+        NativeCaptchaFailureCode.invalidCallback,
+      );
     }
     if (_now().difference(createdAt) > ttl) {
       cancel();
-      throw StateError('CAPTCHA challenge expired');
+      throw const NativeCaptchaException(NativeCaptchaFailureCode.expired);
     }
-    _validateCallbackShape(callback);
+    _validateCallbackShape(callback, callbackTarget);
     final state = callback.queryParameters['state']!;
     final token = callback.queryParameters['token']!;
     if (state != pending) {
-      throw const FormatException('CAPTCHA callback state mismatch');
+      throw const NativeCaptchaException(
+        NativeCaptchaFailureCode.invalidCallback,
+      );
     }
     cancel();
     return token;
@@ -365,7 +422,7 @@ final class NativeCaptchaSession {
   bool isCallbackForPendingRequest(Uri callback) {
     final pending = _pendingState;
     if (pending == null) return false;
-    _validateCallbackShape(callback);
+    _validateCallbackShape(callback, callbackTarget);
     return callback.queryParameters['state'] == pending;
   }
 
@@ -399,8 +456,10 @@ void _validateRegistrationUrl(Uri uri) {
   }
 }
 
-void _validateCallbackShape(Uri uri) {
-  if (!isExactCaptchaCallbackUri(uri)) {
-    throw const FormatException('Invalid CAPTCHA callback');
+void _validateCallbackShape(Uri uri, Uri target) {
+  if (!_isCaptchaCallbackForTarget(uri, target)) {
+    throw const NativeCaptchaException(
+      NativeCaptchaFailureCode.invalidCallback,
+    );
   }
 }

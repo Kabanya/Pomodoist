@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 
+import 'account_auth_feedback.dart';
 import 'captcha_security.dart';
 
 typedef NativeLinkClock = DateTime Function();
@@ -167,9 +168,10 @@ String? nativeRouteForLink(Uri uri) {
   final returnTo = returnToValues?.length == 1
       ? _safeNativeReturnTo(returnToValues!.single)
       : '/settings';
+  final authFailure = safeAccountAuthCallbackFailureValue(uri);
   return Uri(
     path: '/login-callback',
-    queryParameters: {'returnTo': returnTo},
+    queryParameters: {'returnTo': returnTo, 'authFailure': ?authFailure},
   ).toString();
 }
 

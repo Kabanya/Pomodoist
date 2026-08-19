@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/captcha_security.dart';
 import 'package:pomodoist/app/captcha_verification.dart';
+import 'package:pomodoist/l10n/app_localizations.dart';
 
 void main() {
   testWidgets(
@@ -43,7 +45,7 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(changes, 1);
       expect(controller.status, CaptchaStatus.error);
-      expect(find.text('Retry verification'), findsOneWidget);
+      expect(find.text('Try verification again'), findsOneWidget);
     },
   );
 
@@ -89,7 +91,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Retry verification'), findsOneWidget);
+    expect(find.text('Try verification again'), findsOneWidget);
     expect(controller.status, CaptchaStatus.error);
 
     await tester.tap(find.byKey(const Key('captcha-verification-retry')));
@@ -97,6 +99,40 @@ void main() {
 
     expect(changes, 1);
     expect(controller.status, CaptchaStatus.awaiting);
-    expect(find.text('Retry verification'), findsNothing);
+    expect(find.text('Try verification again'), findsNothing);
+  });
+
+  testWidgets('Arabic verification feedback is localized and RTL', (
+    tester,
+  ) async {
+    final controller = CaptchaTokenController(required: true);
+    controller.reportError(controller.generation);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ar'),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: CaptchaVerification(
+            siteKey: 'test-site-key',
+            controller: controller,
+            onChanged: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('فشل التحقق الأمني. حاول التحقق مجددًا.'), findsOneWidget);
+    expect(find.text('إعادة محاولة التحقق'), findsOneWidget);
+    expect(
+      Directionality.of(tester.element(find.byType(Scaffold))),
+      TextDirection.rtl,
+    );
   });
 }

@@ -326,6 +326,150 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get authEmailSignInTitle => 'Вход по email';
+
+  @override
+  String get authSignInAction => 'Войти';
+
+  @override
+  String get authSendLink => 'Отправить ссылку';
+
+  @override
+  String get authMagicLinkSent =>
+      'Ссылка для входа отправлена. Проверьте входящие и папку «Спам».';
+
+  @override
+  String get authAccountCreated => 'Аккаунт создан.';
+
+  @override
+  String get authSignedIn => 'Вход выполнен.';
+
+  @override
+  String get authEmailRequired => 'Введите email.';
+
+  @override
+  String get authEmailInvalid =>
+      'Проверьте адрес email, например name@example.com.';
+
+  @override
+  String get authPasswordRequired => 'Введите пароль.';
+
+  @override
+  String get authInvalidCredentials =>
+      'Неверный email или пароль. Проверьте данные и попробуйте снова.';
+
+  @override
+  String get authEmailUnconfirmed =>
+      'Подтвердите email по ссылке из письма, затем войдите снова.';
+
+  @override
+  String get authWeakPassword =>
+      'Этот пароль слишком легко угадать. Используйте более длинный и менее предсказуемый пароль.';
+
+  @override
+  String get authAccountMayExist =>
+      'Не удалось создать аккаунт. Если вы уже регистрировались с этим email, войдите.';
+
+  @override
+  String get authRateLimited =>
+      'Слишком много попыток. Подождите несколько минут и повторите.';
+
+  @override
+  String get authEmailRateLimited =>
+      'Запрошено слишком много писем. Подождите несколько минут перед новым запросом.';
+
+  @override
+  String get authOffline =>
+      'Не удалось подключиться к сервису аккаунтов. Проверьте интернет и повторите.';
+
+  @override
+  String get authTimeout =>
+      'Сервис аккаунтов отвечает слишком долго. Повторите попытку.';
+
+  @override
+  String get authServiceUnavailable =>
+      'Сервис аккаунтов временно недоступен. Попробуйте позже.';
+
+  @override
+  String get authCaptchaRequired =>
+      'Пройдите проверку безопасности, чтобы продолжить.';
+
+  @override
+  String get authCaptchaExpired =>
+      'Время проверки безопасности истекло. Пройдите её снова.';
+
+  @override
+  String get authCaptchaFailed =>
+      'Не удалось пройти проверку безопасности. Повторите проверку.';
+
+  @override
+  String get authCaptchaCancelled =>
+      'Проверка безопасности отменена. Запустите её снова, чтобы продолжить.';
+
+  @override
+  String get authCaptchaUnavailable =>
+      'Проверка безопасности сейчас недоступна. Проверьте интернет и повторите.';
+
+  @override
+  String get authCaptchaOpenFailed =>
+      'Pomodoist не смог открыть проверку безопасности в браузере. Проверьте браузер по умолчанию и повторите.';
+
+  @override
+  String get authProviderFallback => 'этого сервиса';
+
+  @override
+  String authProviderUnavailable(String provider) {
+    return 'Вход через $provider сейчас недоступен. Повторите или выберите другой способ.';
+  }
+
+  @override
+  String get authSignUpDisabled =>
+      'Регистрация по email временно недоступна. Выберите другой способ входа.';
+
+  @override
+  String get authAccountRestricted =>
+      'Сейчас войти в этот аккаунт нельзя. Обратитесь в поддержку, если считаете это ошибкой.';
+
+  @override
+  String get authLinkExpired =>
+      'Ссылка для входа недействительна или устарела. Запросите новую.';
+
+  @override
+  String get authUnexpectedSignIn => 'Не удалось войти. Попробуйте снова.';
+
+  @override
+  String get authUnexpectedSignUp =>
+      'Не удалось создать аккаунт. Попробуйте снова.';
+
+  @override
+  String get authUnexpectedMagicLink =>
+      'Не удалось отправить ссылку для входа. Попробуйте снова.';
+
+  @override
+  String get authRetryVerification => 'Повторить проверку';
+
+  @override
+  String get captchaSecurityLabel => 'Проверка безопасности';
+
+  @override
+  String get captchaChallengeTitle => 'Проверка безопасности Pomodoist';
+
+  @override
+  String get captchaChallengePrompt =>
+      'Подтвердите, что вы человек, чтобы продолжить в Pomodoist.';
+
+  @override
+  String get captchaChallengeInvalid =>
+      'Ссылка проверки безопасности недействительна. Вернитесь в Pomodoist и попробуйте снова.';
+
+  @override
+  String get captchaChallengeHandoffHelp =>
+      'Если Pomodoist не открылся, нажмите кнопку ниже. Если приложение не установлено, закройте страницу и вернитесь к устройству, где начали вход.';
+
+  @override
+  String get captchaReturnToApp => 'Вернуться в Pomodoist';
+
+  @override
   String get navSearch => 'Поиск';
 
   @override

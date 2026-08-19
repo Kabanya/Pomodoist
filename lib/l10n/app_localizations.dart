@@ -672,6 +672,240 @@ abstract class AppLocalizations {
   /// **'Could not create account: {error}'**
   String registerError(Object error);
 
+  /// No description provided for @authEmailSignInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with email'**
+  String get authEmailSignInTitle;
+
+  /// No description provided for @authSignInAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get authSignInAction;
+
+  /// No description provided for @authSendLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send link'**
+  String get authSendLink;
+
+  /// No description provided for @authMagicLinkSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in link sent. Check your inbox and spam folder.'**
+  String get authMagicLinkSent;
+
+  /// No description provided for @authAccountCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created.'**
+  String get authAccountCreated;
+
+  /// No description provided for @authSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in.'**
+  String get authSignedIn;
+
+  /// No description provided for @authEmailRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email.'**
+  String get authEmailRequired;
+
+  /// No description provided for @authEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the email address, for example name@example.com.'**
+  String get authEmailInvalid;
+
+  /// No description provided for @authPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password.'**
+  String get authPasswordRequired;
+
+  /// No description provided for @authInvalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'The email or password is incorrect. Check both and try again.'**
+  String get authInvalidCredentials;
+
+  /// No description provided for @authEmailUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your email using the link we sent, then sign in again.'**
+  String get authEmailUnconfirmed;
+
+  /// No description provided for @authWeakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'This password is too easy to guess. Use a longer, less predictable password.'**
+  String get authWeakPassword;
+
+  /// No description provided for @authAccountMayExist.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the account. If you registered with this email before, sign in instead.'**
+  String get authAccountMayExist;
+
+  /// No description provided for @authRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Wait a few minutes and try again.'**
+  String get authRateLimited;
+
+  /// No description provided for @authEmailRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many emails were requested. Wait a few minutes before requesting another.'**
+  String get authEmailRateLimited;
+
+  /// No description provided for @authOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the account service. Check your internet connection and try again.'**
+  String get authOffline;
+
+  /// No description provided for @authTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The account service is taking too long to respond. Try again.'**
+  String get authTimeout;
+
+  /// No description provided for @authServiceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The account service is temporarily unavailable. Try again later.'**
+  String get authServiceUnavailable;
+
+  /// No description provided for @authCaptchaRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the security check to continue.'**
+  String get authCaptchaRequired;
+
+  /// No description provided for @authCaptchaExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'The security check expired. Complete it again.'**
+  String get authCaptchaExpired;
+
+  /// No description provided for @authCaptchaFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The security check failed. Try the verification again.'**
+  String get authCaptchaFailed;
+
+  /// No description provided for @authCaptchaCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'The security check was cancelled. Start it again to continue.'**
+  String get authCaptchaCancelled;
+
+  /// No description provided for @authCaptchaUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The security check is unavailable right now. Check your connection and try again.'**
+  String get authCaptchaUnavailable;
+
+  /// No description provided for @authCaptchaOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomodoist could not open the security check in your browser. Check your default browser and try again.'**
+  String get authCaptchaOpenFailed;
+
+  /// No description provided for @authProviderFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'this provider'**
+  String get authProviderFallback;
+
+  /// No description provided for @authProviderUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in with {provider} is unavailable right now. Try again or use another method.'**
+  String authProviderUnavailable(String provider);
+
+  /// No description provided for @authSignUpDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Account creation with email is temporarily unavailable. Try another sign-in method.'**
+  String get authSignUpDisabled;
+
+  /// No description provided for @authAccountRestricted.
+  ///
+  /// In en, this message translates to:
+  /// **'This account cannot sign in right now. Contact support if you think this is a mistake.'**
+  String get authAccountRestricted;
+
+  /// No description provided for @authLinkExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in link is invalid or expired. Request a new link.'**
+  String get authLinkExpired;
+
+  /// No description provided for @authUnexpectedSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not sign in. Try again.'**
+  String get authUnexpectedSignIn;
+
+  /// No description provided for @authUnexpectedSignUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the account. Try again.'**
+  String get authUnexpectedSignUp;
+
+  /// No description provided for @authUnexpectedMagicLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send the sign-in link. Try again.'**
+  String get authUnexpectedMagicLink;
+
+  /// No description provided for @authRetryVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Try verification again'**
+  String get authRetryVerification;
+
+  /// No description provided for @captchaSecurityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Security verification'**
+  String get captchaSecurityLabel;
+
+  /// No description provided for @captchaChallengeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomodoist security check'**
+  String get captchaChallengeTitle;
+
+  /// No description provided for @captchaChallengePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm you are human to continue in Pomodoist.'**
+  String get captchaChallengePrompt;
+
+  /// No description provided for @captchaChallengeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This security verification link is invalid. Return to Pomodoist and try again.'**
+  String get captchaChallengeInvalid;
+
+  /// No description provided for @captchaChallengeHandoffHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'If Pomodoist did not open, use the button below. If the app is not installed, close this page and return to the device where you started.'**
+  String get captchaChallengeHandoffHelp;
+
+  /// No description provided for @captchaReturnToApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to Pomodoist'**
+  String get captchaReturnToApp;
+
   /// No description provided for @navSearch.
   ///
   /// In en, this message translates to:

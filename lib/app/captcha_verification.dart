@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_l10n.dart';
 import 'captcha_security.dart';
 import 'turnstile_widget.dart';
 
@@ -21,9 +22,9 @@ class CaptchaVerification extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final status = controller.status;
     final retryRequired =
-        controller.status == CaptchaStatus.error ||
-        controller.status == CaptchaStatus.expired;
+        status == CaptchaStatus.error || status == CaptchaStatus.expired;
     if (!retryRequired) {
       return TurnstileWidget(
         key: ValueKey(controller.generation),
@@ -37,24 +38,24 @@ class CaptchaVerification extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (controller.message case final message?) ...[
-          Semantics(
-            liveRegion: true,
-            child: Text(
-              message,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-              textAlign: TextAlign.center,
-            ),
+        Semantics(
+          liveRegion: true,
+          child: Text(
+            status == CaptchaStatus.expired
+                ? context.l10n.authCaptchaExpired
+                : context.l10n.authCaptchaFailed,
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
-        ],
+        ),
+        const SizedBox(height: 8),
         OutlinedButton(
           key: const Key('captcha-verification-retry'),
           onPressed: () {
             controller.reset();
             onChanged();
           },
-          child: const Text('Retry verification'),
+          child: Text(context.l10n.authRetryVerification),
         ),
       ],
     );

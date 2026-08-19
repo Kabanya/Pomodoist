@@ -127,6 +127,23 @@ void main() {
     },
   );
 
+  test('routes only an allow-listed login callback failure category', () {
+    final route = nativeRouteForLink(
+      Uri.parse(
+        'pomodoist://login-callback?error_code=otp_expired'
+        '&error_description=SECRET_DESCRIPTION&token=SECRET_TOKEN'
+        '&returnTo=%2Fprojects',
+      ),
+    );
+
+    expect(
+      route,
+      '/login-callback?returnTo=%2Fprojects&authFailure=linkExpired',
+    );
+    expect(route, isNot(contains('SECRET')));
+    expect(route, isNot(contains('otp_expired')));
+  });
+
   test(
     'handles streamed focus links, duplicates, and disposal safely',
     () async {

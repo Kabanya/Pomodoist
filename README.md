@@ -166,7 +166,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ```
 
 Build a clean release with public production configuration copied from
-`tool/windows/production-defines.example.json`:
+`tool/desktop-production-defines.example.json`:
 
 ```powershell
 make windows-installer
@@ -180,6 +180,19 @@ SHA-256 file. Override the path when needed:
 ```powershell
 make windows-installer WINDOWS_CONFIG=C:/path/to/production-defines.json
 ```
+
+Linux release bundles and AppImages require the same public production
+configuration. Copy the example to the ignored local default, replace the
+placeholders, and build:
+
+```bash
+cp tool/desktop-production-defines.example.json .env.linux-production.json
+make build-linux-appimage
+```
+
+Override the path with `LINUX_CONFIG=/path/to/production-defines.json` when
+needed. Both desktop build paths validate the file before compiling and reject
+Cloudflare test keys and privileged Supabase keys.
 
 The installer target always performs a clean build so CMake does not reuse a
 generator from a previous Visual Studio installation. Packaging and trusted

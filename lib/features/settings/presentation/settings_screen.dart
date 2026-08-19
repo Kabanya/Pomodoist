@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/account_auth_feedback.dart';
 import '../../../app/account_providers.dart';
 import '../../../app/captcha_security.dart';
 import '../../../app/captcha_verification.dart';
@@ -28,17 +29,85 @@ import 'csv_task_import_card.dart';
 import 'pomodoist_account_actions.dart';
 
 class LoginScreen extends ConsumerWidget {
-  const LoginScreen({this.returnTo = '/today', super.key});
+  const LoginScreen({this.returnTo = '/today', this.initialFailure, super.key});
 
   final String returnTo;
+  final AccountAuthFailure? initialFailure;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     ref.watch(accountAuthStateProvider);
     final accountOverview = ref.watch(accountOverviewProvider);
+    final accountBootstrap = ref.watch(accountBootstrapProvider);
+    final account = ref.watch(accountClientProvider);
     final accountConfigured = ref.watch(accountConfiguredProvider);
     final redirectTo = _loginRedirectFor(returnTo);
+    final authPanel = account == null && accountBootstrap.isLoading
+        ? const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                key: Key('login-account-loading'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [LinearProgressIndicator()],
+              ),
+            ),
+          )
+        : account == null && accountBootstrap.hasError
+        ? _AccountErrorCard(
+            key: const Key('login-account-error'),
+            error: accountBootstrap.error!,
+            retryKey: const Key('login-account-retry'),
+            onRetry: () =>
+                unawaited(ref.read(accountBootstrapProvider.notifier).retry()),
+          )
+        : account == null || !accountConfigured
+        ? _AuthUnavailableCard(
+            retryKey: const Key('login-account-retry'),
+            onRetry: () =>
+                unawaited(ref.read(accountBootstrapProvider.notifier).retry()),
+          )
+        : accountOverview.when(
+            data: (overview) => AccountOverviewPanel(
+              overview: overview,
+              configured: true,
+              onRefresh: () => ref.invalidate(accountOverviewProvider),
+              actions: pomodoistAccountSignInActions(
+                context: context,
+                account: account,
+                redirectTo: redirectTo,
+                config: ref.read(runtimePublicConfigProvider),
+                nativeCaptchaCallbacks: ref
+                    .read(nativeLinkCoordinatorProvider)
+                    ?.captchaCallbacks,
+                onSignedIn: () => context.go(returnTo),
+                appleLabel: l10n.accountApple,
+                googleLabel: l10n.accountGoogle,
+                emailLabel: l10n.accountEmail,
+              ),
+            ),
+            loading: () => Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  key: const Key('login-account-loading'),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(l10n.accountChecking, textAlign: TextAlign.center),
+                    const SizedBox(height: 12),
+                    const LinearProgressIndicator(),
+                  ],
+                ),
+              ),
+            ),
+            error: (error, _) => _AccountErrorCard(
+              key: const Key('login-account-error'),
+              error: error,
+              retryKey: const Key('login-account-retry'),
+              onRetry: () => ref.invalidate(accountOverviewProvider),
+            ),
+          );
 
     return _StandaloneAuthScaffold(
       title: l10n.loginTitle,
@@ -49,45 +118,29 @@ class LoginScreen extends ConsumerWidget {
         route: _authRoute('/register', returnTo),
         buttonKey: const Key('login-register-link'),
       ),
-      child: accountOverview.when(
-        data: (overview) => AccountOverviewPanel(
-          overview: overview,
-          configured: accountConfigured,
-          onRefresh: () => ref.invalidate(accountOverviewProvider),
-          actions: pomodoistAccountSignInActions(
-            context: context,
-            account: ref.read(accountClientProvider),
-            redirectTo: redirectTo,
-            config: ref.read(runtimePublicConfigProvider),
-            nativeCaptchaCallbacks: ref
-                .read(nativeLinkCoordinatorProvider)
-                ?.captchaCallbacks,
-            onSignedIn: () => context.go(returnTo),
-            appleLabel: l10n.accountApple,
-            googleLabel: l10n.accountGoogle,
-            emailLabel: l10n.accountEmail,
-          ),
-        ),
-        loading: () => Card(
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              key: const Key('login-account-loading'),
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(l10n.accountChecking, textAlign: TextAlign.center),
-                const SizedBox(height: 12),
-                const LinearProgressIndicator(),
-              ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (initialFailure case final failure? when !failure.isCancelled) ...[
+            _AuthFailureNoticeCard(
+              failure: failure,
+              onSendNewLink: account == null
+                  ? null
+                  : () => showPomodoistEmailAuthDialog(
+                      context: context,
+                      account: account,
+                      redirectTo: redirectTo,
+                      config: ref.read(runtimePublicConfigProvider),
+                      nativeCaptchaCallbacks: ref
+                          .read(nativeLinkCoordinatorProvider)
+                          ?.captchaCallbacks,
+                      onSignedIn: () => context.go(returnTo),
+                    ),
             ),
-          ),
-        ),
-        error: (error, _) => _AccountErrorCard(
-          key: const Key('login-account-error'),
-          error: error,
-          retryKey: const Key('login-account-retry'),
-          onRetry: () => ref.invalidate(accountOverviewProvider),
-        ),
+            const SizedBox(height: 12),
+          ],
+          authPanel,
+        ],
       ),
     );
   }
@@ -102,6 +155,7 @@ class RegisterScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final account = ref.watch(accountClientProvider);
+    final accountBootstrap = ref.watch(accountBootstrapProvider);
     final redirectTo = _loginRedirectFor(returnTo);
 
     return _StandaloneAuthScaffold(
@@ -113,11 +167,45 @@ class RegisterScreen extends ConsumerWidget {
         route: _authRoute('/login', returnTo),
         buttonKey: const Key('register-login-link'),
       ),
-      child: _RegisterForm(
-        account: account,
-        redirectTo: redirectTo,
-        returnTo: returnTo,
-      ),
+      child: account == null && accountBootstrap.isLoading
+          ? const Card(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: LinearProgressIndicator(),
+              ),
+            )
+          : account == null && accountBootstrap.hasError
+          ? _AccountErrorCard(
+              key: const Key('register-account-error'),
+              error: accountBootstrap.error!,
+              retryKey: const Key('register-account-retry'),
+              onRetry: () => unawaited(
+                ref.read(accountBootstrapProvider.notifier).retry(),
+              ),
+            )
+          : account == null
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _AuthUnavailableCard(
+                  retryKey: const Key('register-account-retry'),
+                  onRetry: () => unawaited(
+                    ref.read(accountBootstrapProvider.notifier).retry(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _RegisterForm(
+                  account: null,
+                  redirectTo: redirectTo,
+                  returnTo: returnTo,
+                ),
+              ],
+            )
+          : _RegisterForm(
+              account: account,
+              redirectTo: redirectTo,
+              returnTo: returnTo,
+            ),
     );
   }
 }
@@ -220,9 +308,11 @@ class _RegisterForm extends ConsumerStatefulWidget {
 class _RegisterFormState extends ConsumerState<_RegisterForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
   bool _submitting = false;
   bool _emailSent = false;
-  Object? _error;
+  AccountAuthFeedback? _feedback;
   late final RuntimePublicConfig _config;
   late final CaptchaTokenController _captcha;
   NativeCaptchaBroker? _nativeBroker;
@@ -231,12 +321,7 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
 
   static const _slowThreshold = Duration(seconds: 30);
 
-  bool get _canSubmit =>
-      widget.account != null &&
-      !_submitting &&
-      _emailController.text.trim().isNotEmpty &&
-      _passwordController.text.isNotEmpty &&
-      (!kIsWeb || _captcha.canSubmit);
+  bool get _canSubmit => widget.account != null && !_submitting;
 
   @override
   void initState() {
@@ -253,20 +338,29 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
         _nativeBroker = NativeCaptchaBroker(uriStream: callbacks);
       }
     }
-    _emailController.addListener(_changed);
-    _passwordController.addListener(_changed);
+    _emailController.addListener(_emailChanged);
+    _passwordController.addListener(_passwordChanged);
   }
 
   @override
   void dispose() {
     _slowTimer?.cancel();
     _nativeBroker?.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _changed() {
+  void _emailChanged() {
+    if (_feedback?.field == AccountAuthField.email) _feedback = null;
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  void _passwordChanged() {
+    if (_feedback?.field == AccountAuthField.password) _feedback = null;
     if (!mounted) return;
     setState(() {});
   }
@@ -275,7 +369,7 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final account = widget.account;
-    final error = _error;
+    final feedback = _feedback;
 
     if (_emailSent) {
       return Card(
@@ -306,57 +400,105 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              OutlinedButton.icon(
-                onPressed: account == null
-                    ? null
-                    : () => account.signInWithApple(
-                        redirectTo: widget.redirectTo,
-                      ),
-                icon: const Icon(Icons.apple),
-                label: Text(l10n.accountApple),
-              ),
+              if (account != null)
+                PomodoistSocialSignInButton(
+                  account: account,
+                  provider: PomodoistSocialProvider.apple,
+                  redirectTo: widget.redirectTo,
+                  label: l10n.accountApple,
+                  onSignedIn: () => context.go(widget.returnTo),
+                ),
               const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: account == null
-                    ? null
-                    : () => account.signInWithGoogle(
-                        redirectTo: widget.redirectTo,
-                      ),
-                icon: const Icon(Icons.account_circle_outlined),
-                label: Text(l10n.accountGoogle),
-              ),
+              if (account != null)
+                PomodoistSocialSignInButton(
+                  account: account,
+                  provider: PomodoistSocialProvider.google,
+                  redirectTo: widget.redirectTo,
+                  label: l10n.accountGoogle,
+                  onSignedIn: () => context.go(widget.returnTo),
+                ),
               const SizedBox(height: 16),
-              TextField(
-                key: const Key('register-email-field'),
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                autofillHints: const [
-                  AutofillHints.username,
-                  AutofillHints.email,
-                ],
-                decoration: InputDecoration(labelText: l10n.accountEmail),
+              Semantics(
+                liveRegion: feedback?.field == AccountAuthField.email,
+                child: TextField(
+                  key: const Key('register-email-field'),
+                  controller: _emailController,
+                  focusNode: _emailFocus,
+                  keyboardType: TextInputType.emailAddress,
+                  autofillHints: const [
+                    AutofillHints.username,
+                    AutofillHints.email,
+                  ],
+                  decoration: InputDecoration(
+                    labelText: l10n.accountEmail,
+                    errorText: feedback?.field == AccountAuthField.email
+                        ? feedback?.message
+                        : null,
+                  ),
+                ),
               ),
               const SizedBox(height: 10),
-              TextField(
-                key: const Key('register-password-field'),
-                controller: _passwordController,
-                autofillHints: const [AutofillHints.newPassword],
-                decoration: InputDecoration(labelText: l10n.registerPassword),
-                obscureText: true,
+              Semantics(
+                liveRegion: feedback?.field == AccountAuthField.password,
+                child: TextField(
+                  key: const Key('register-password-field'),
+                  controller: _passwordController,
+                  focusNode: _passwordFocus,
+                  autofillHints: const [AutofillHints.newPassword],
+                  decoration: InputDecoration(
+                    labelText: l10n.registerPassword,
+                    errorText: feedback?.field == AccountAuthField.password
+                        ? feedback?.message
+                        : null,
+                  ),
+                  obscureText: true,
+                ),
               ),
               if (kIsWeb && _config.turnstileSiteKey.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 CaptchaVerification(
                   siteKey: _config.turnstileSiteKey,
                   controller: _captcha,
-                  onChanged: _changed,
+                  onChanged: () {
+                    if (_feedback?.field == AccountAuthField.captcha) {
+                      _feedback = null;
+                    }
+                    if (mounted) setState(() {});
+                  },
                 ),
               ],
-              if (error != null) ...[
+              if (feedback != null &&
+                  (feedback.field == AccountAuthField.form ||
+                      feedback.field == AccountAuthField.captcha)) ...[
                 const SizedBox(height: 10),
-                Text(
-                  l10n.registerError(error),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    feedback.message,
+                    key: const Key('register-auth-error'),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+              ],
+              if (feedback != null &&
+                  feedback.recovery != AccountAuthRecovery.none &&
+                  feedback.recovery != AccountAuthRecovery.editEmail &&
+                  feedback.recovery != AccountAuthRecovery.editPassword &&
+                  feedback.recovery !=
+                      AccountAuthRecovery.chooseAnotherProvider) ...[
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton(
+                    key: const Key('register-auth-recovery'),
+                    onPressed: _submitting
+                        ? null
+                        : () => _recover(feedback.recovery),
+                    child: Text(
+                      accountAuthRecoveryLabel(l10n, feedback.recovery),
+                    ),
+                  ),
                 ),
               ],
               if (_takingLonger) ...[
@@ -398,10 +540,26 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
     if (account == null) {
       return;
     }
+    final emailFailure = validateAccountEmail(_emailController.text);
+    final passwordFailure = validateAccountPassword(_passwordController.text);
+    if (emailFailure != null || passwordFailure != null) {
+      _showFailure(emailFailure ?? passwordFailure!);
+      return;
+    }
+    if (kIsWeb && _config.turnstileSiteKey.isNotEmpty && !_captcha.canSubmit) {
+      _showFailure(
+        const AccountAuthFailure(
+          AccountAuthFailureKind.captchaRequired,
+          field: AccountAuthField.captcha,
+          recovery: AccountAuthRecovery.retryCaptcha,
+        ),
+      );
+      return;
+    }
     setState(() {
       _submitting = true;
       _takingLonger = false;
-      _error = null;
+      _feedback = null;
     });
     _slowTimer?.cancel();
     _slowTimer = Timer(_slowThreshold, () {
@@ -416,7 +574,9 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
       } else if (_config.turnstileSiteKey.isNotEmpty) {
         final broker = _nativeBroker;
         if (broker == null) {
-          throw StateError('Security verification is unavailable');
+          throw const NativeCaptchaException(
+            NativeCaptchaFailureCode.unavailable,
+          );
         }
         token = await broker.requestToken();
       } else {
@@ -437,9 +597,14 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
         return;
       }
       setState(() => _emailSent = true);
-    } on Object {
+    } on Object catch (error) {
       if (mounted) {
-        setState(() => _error = 'Please check your details and try again.');
+        _showFailure(
+          classifyAccountAuthFailure(
+            error,
+            operation: AccountAuthOperation.signUp,
+          ),
+        );
       }
     } finally {
       _slowTimer?.cancel();
@@ -450,6 +615,68 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
           _takingLonger = false;
         });
       }
+    }
+  }
+
+  void _showFailure(AccountAuthFailure failure) {
+    if (!mounted || failure.isCancelled) return;
+    final feedback = presentAccountAuthFailure(
+      context.l10n,
+      failure,
+      operation: AccountAuthOperation.signUp,
+    );
+    setState(() => _feedback = feedback);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      switch (feedback.field) {
+        case AccountAuthField.email:
+          _emailFocus.requestFocus();
+        case AccountAuthField.password:
+          _passwordFocus.requestFocus();
+        case AccountAuthField.captcha:
+        case AccountAuthField.form:
+          break;
+      }
+    });
+  }
+
+  void _recover(AccountAuthRecovery recovery) {
+    switch (recovery) {
+      case AccountAuthRecovery.retry:
+        unawaited(_submit());
+      case AccountAuthRecovery.retryCaptcha:
+        if (kIsWeb) {
+          _captcha.reset();
+          setState(() => _feedback = null);
+        } else {
+          unawaited(_submit());
+        }
+      case AccountAuthRecovery.switchToSignIn:
+      case AccountAuthRecovery.sendNewLink:
+        final account = widget.account;
+        if (account == null) return;
+        _passwordController.clear();
+        setState(() => _feedback = null);
+        unawaited(
+          showPomodoistEmailAuthDialog(
+            context: context,
+            account: account,
+            redirectTo: widget.redirectTo,
+            config: _config,
+            nativeCaptchaCallbacks: ref
+                .read(nativeLinkCoordinatorProvider)
+                ?.captchaCallbacks,
+            initialEmail: _emailController.text,
+            onSignedIn: () => context.go(widget.returnTo),
+          ),
+        );
+      case AccountAuthRecovery.editEmail:
+        _emailFocus.requestFocus();
+      case AccountAuthRecovery.editPassword:
+        _passwordFocus.requestFocus();
+      case AccountAuthRecovery.none:
+      case AccountAuthRecovery.chooseAnotherProvider:
+        break;
     }
   }
 }
@@ -520,34 +747,47 @@ class SettingsScreen extends ConsumerWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                accountOverview.when(
-                  data: (overview) => AccountOverviewPanel(
-                    overview: overview,
-                    configured: accountConfigured,
-                    onRefresh: () => ref.invalidate(accountOverviewProvider),
-                    actions: pomodoistAccountSignInActions(
-                      context: context,
-                      account: account,
-                      redirectTo: pomodoistLoginRedirect,
-                      config: ref.read(runtimePublicConfigProvider),
-                      nativeCaptchaCallbacks: ref
-                          .read(nativeLinkCoordinatorProvider)
-                          ?.captchaCallbacks,
+                if (!accountConfigured)
+                  _AuthUnavailableCard(
+                    retryKey: const Key('account-unavailable-retry'),
+                    onRetry: () => unawaited(
+                      ref
+                          .read(accountBootstrapProvider.notifier)
+                          .retry()
+                          .whenComplete(
+                            () => ref.invalidate(accountOverviewProvider),
+                          ),
+                    ),
+                  )
+                else
+                  accountOverview.when(
+                    data: (overview) => AccountOverviewPanel(
+                      overview: overview,
+                      configured: true,
+                      onRefresh: () => ref.invalidate(accountOverviewProvider),
+                      actions: pomodoistAccountSignInActions(
+                        context: context,
+                        account: account,
+                        redirectTo: pomodoistLoginRedirect,
+                        config: ref.read(runtimePublicConfigProvider),
+                        nativeCaptchaCallbacks: ref
+                            .read(nativeLinkCoordinatorProvider)
+                            ?.captchaCallbacks,
+                      ),
+                    ),
+                    loading: () => const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: LinearProgressIndicator(),
+                      ),
+                    ),
+                    error: (error, _) => _AccountErrorCard(
+                      key: const Key('account-overview-error'),
+                      error: error,
+                      retryKey: const Key('account-overview-retry'),
+                      onRetry: () => ref.invalidate(accountOverviewProvider),
                     ),
                   ),
-                  loading: () => const Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: LinearProgressIndicator(),
-                    ),
-                  ),
-                  error: (error, _) => _AccountErrorCard(
-                    key: const Key('account-overview-error'),
-                    error: error,
-                    retryKey: const Key('account-overview-retry'),
-                    onRetry: () => ref.invalidate(accountOverviewProvider),
-                  ),
-                ),
                 if (hasAccountOverview || signedInAccount != null)
                   Wrap(
                     alignment: WrapAlignment.end,
@@ -1289,13 +1529,21 @@ class _AccountErrorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final feedback = presentAccountAuthFailure(
+      l10n,
+      classifyAccountAuthFailure(
+        error,
+        operation: AccountAuthOperation.bootstrap,
+      ),
+      operation: AccountAuthOperation.bootstrap,
+    );
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.accountUnavailable(error)),
+            Semantics(liveRegion: true, child: Text(feedback.message)),
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,
@@ -1306,6 +1554,96 @@ class _AccountErrorCard extends StatelessWidget {
                 label: Text(l10n.commonRetry),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthUnavailableCard extends StatelessWidget {
+  const _AuthUnavailableCard({required this.retryKey, required this.onRetry});
+
+  final Key retryKey;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                context.l10n.authServiceUnavailable,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: TextButton.icon(
+                key: retryKey,
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: Text(context.l10n.commonRetry),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthFailureNoticeCard extends StatelessWidget {
+  const _AuthFailureNoticeCard({
+    required this.failure,
+    required this.onSendNewLink,
+  });
+
+  final AccountAuthFailure failure;
+  final VoidCallback? onSendNewLink;
+
+  @override
+  Widget build(BuildContext context) {
+    final feedback = presentAccountAuthFailure(
+      context.l10n,
+      failure,
+      operation: AccountAuthOperation.callback,
+    );
+    return Card(
+      color: Theme.of(context).colorScheme.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Semantics(
+              key: const Key('login-auth-callback-error'),
+              liveRegion: true,
+              child: Text(
+                feedback.message,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onErrorContainer,
+                ),
+              ),
+            ),
+            if (feedback.recovery == AccountAuthRecovery.sendNewLink &&
+                onSendNewLink != null) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: TextButton(
+                  key: const Key('login-auth-send-new-link'),
+                  onPressed: onSendNewLink,
+                  child: Text(context.l10n.authSendLink),
+                ),
+              ),
+            ],
           ],
         ),
       ),

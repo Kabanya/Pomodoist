@@ -514,6 +514,7 @@ void main() {
         matching: find.text('Create account'),
       ),
     );
+    await tester.pump();
     await tester.enterText(
       find.byKey(const Key('account-email-field')),
       'user@example.com',
@@ -523,9 +524,32 @@ void main() {
       'password',
     );
     await tester.pump();
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('account-email-field')))
+          .controller
+          ?.text,
+      'user@example.com',
+    );
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('account-password-field')))
+          .controller
+          ?.text,
+      'password',
+    );
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Create account'),
+          )
+          .onPressed,
+      isNotNull,
+    );
     await tester.tap(find.widgetWithText(FilledButton, 'Create account'));
     await tester.pumpAndSettle();
 
+    expect(find.byKey(const Key('account-auth-error')), findsNothing);
     expect(account.signUpRedirects, [loginRedirect]);
   });
 }

@@ -8,10 +8,11 @@ class NativeCaptchaBroker {
     NativeCaptchaBuildConfig? config,
     Future<bool> Function(Uri uri)? launch,
     CaptchaTimeoutSchedule? scheduleTimeout,
+    bool? useLoopback,
   });
 
   Future<String> requestToken() {
-    throw UnsupportedError('Native CAPTCHA is unavailable on this platform');
+    throw const NativeCaptchaException(NativeCaptchaFailureCode.unavailable);
   }
 
   void cancel() {}

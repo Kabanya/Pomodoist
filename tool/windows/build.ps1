@@ -23,6 +23,10 @@ try {
             throw 'Release builds require -ConfigFile with production dart-defines.'
         }
         $resolvedConfig = (Resolve-Path $ConfigFile).Path
+        & dart run tool/desktop_release_config.dart --config $resolvedConfig
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Desktop production configuration validation failed.'
+        }
         if ([string]::IsNullOrWhiteSpace($ReleaseSha)) {
             $ReleaseSha = (& git rev-parse HEAD).Trim()
         }

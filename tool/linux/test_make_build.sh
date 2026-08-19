@@ -8,6 +8,7 @@ test_root="$(mktemp -d)"
 trap 'find "$test_root" -depth -delete' EXIT
 
 fake_flutter="$test_root/flutter"
+fake_dart="$test_root/dart"
 fake_appimage_builder="$test_root/build-appimage"
 command_log="$test_root/commands.log"
 
@@ -27,6 +28,7 @@ write_fake_command() {
 }
 
 write_fake_command "$fake_flutter"
+write_fake_command "$fake_dart"
 write_fake_command "$fake_appimage_builder"
 
 http_proxy=http://127.0.0.1:47922 \
@@ -38,10 +40,14 @@ ALL_PROXY=socks5://127.0.0.1:47922 \
 POMODOIST_NETWORK_TEST_LOG="$command_log" \
   make --silent --no-print-directory -C "$project_root" \
     build-linux-appimage \
+    DART="$fake_dart" \
     FLUTTER="$fake_flutter" \
+    LINUX_CONFIG="$test_root/production.json" \
+    POMODOIST_RELEASE=0123456789abcdef0123456789abcdef01234567 \
     POMODOIST_APPIMAGE_BUILDER="$fake_appimage_builder"
 
-test "$(wc -l < "$command_log")" -eq 2
+test "$(wc -l < "$command_log")" -eq 3
+grep -Fqx 'dart' "$command_log"
 grep -Fqx 'flutter' "$command_log"
 grep -Fqx 'build-appimage' "$command_log"
 

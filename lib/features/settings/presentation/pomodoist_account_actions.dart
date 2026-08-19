@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../app/account_auth_feedback.dart';
 import '../../../app/app_l10n.dart';
 import '../../../app/captcha_security.dart';
 import '../../../app/captcha_verification.dart';
@@ -24,41 +25,28 @@ List<Widget> pomodoistAccountSignInActions({
 }) {
   if (account == null || account.currentUserId != null) return const [];
   return [
-    OutlinedButton.icon(
-      onPressed: () => unawaited(
-        _runSocialSignIn(
-          context: context,
-          account: account,
-          signIn: () => account.signInWithApple(redirectTo: redirectTo),
-          onSignedIn: onSignedIn,
-        ),
-      ),
-      icon: const Icon(Icons.apple),
-      label: Text(appleLabel),
+    PomodoistSocialSignInButton(
+      account: account,
+      provider: PomodoistSocialProvider.apple,
+      redirectTo: redirectTo,
+      onSignedIn: onSignedIn,
+      label: appleLabel,
+    ),
+    PomodoistSocialSignInButton(
+      account: account,
+      provider: PomodoistSocialProvider.google,
+      redirectTo: redirectTo,
+      onSignedIn: onSignedIn,
+      label: googleLabel,
     ),
     OutlinedButton.icon(
-      onPressed: () => unawaited(
-        _runSocialSignIn(
-          context: context,
-          account: account,
-          signIn: () => account.signInWithGoogle(redirectTo: redirectTo),
-          onSignedIn: onSignedIn,
-        ),
-      ),
-      icon: const Icon(Icons.account_circle_outlined),
-      label: Text(googleLabel),
-    ),
-    OutlinedButton.icon(
-      onPressed: () => showDialog<void>(
+      onPressed: () => showPomodoistEmailAuthDialog(
         context: context,
-        barrierDismissible: false,
-        builder: (_) => _PomodoistEmailAuthDialog(
-          account: account,
-          redirectTo: redirectTo,
-          onSignedIn: onSignedIn,
-          config: config,
-          nativeCaptchaCallbacks: nativeCaptchaCallbacks,
-        ),
+        account: account,
+        redirectTo: redirectTo,
+        onSignedIn: onSignedIn,
+        config: config,
+        nativeCaptchaCallbacks: nativeCaptchaCallbacks,
       ),
       icon: const Icon(Icons.email_outlined),
       label: Text(emailLabel),
@@ -66,21 +54,126 @@ List<Widget> pomodoistAccountSignInActions({
   ];
 }
 
-Future<void> _runSocialSignIn({
+String pomodoistAccountFailureMessage(BuildContext context, Object error) {
+  return presentAccountAuthFailure(
+    context.l10n,
+    classifyAccountAuthFailure(
+      error,
+      operation: AccountAuthOperation.bootstrap,
+    ),
+    operation: AccountAuthOperation.bootstrap,
+  ).message;
+}
+
+Future<void> showPomodoistEmailAuthDialog({
   required BuildContext context,
   required AccountClient account,
-  required Future<void> Function() signIn,
+  required String redirectTo,
+  required RuntimePublicConfig config,
+  required Stream<Uri>? nativeCaptchaCallbacks,
+  String initialEmail = '',
   VoidCallback? onSignedIn,
-}) async {
-  try {
-    await signIn();
-    if (context.mounted && account.currentUserId != null) {
-      onSignedIn?.call();
+}) {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => _PomodoistEmailAuthDialog(
+      account: account,
+      redirectTo: redirectTo,
+      onSignedIn: onSignedIn,
+      config: config,
+      nativeCaptchaCallbacks: nativeCaptchaCallbacks,
+      initialEmail: initialEmail,
+    ),
+  );
+}
+
+enum PomodoistSocialProvider { apple, google }
+
+class PomodoistSocialSignInButton extends StatefulWidget {
+  const PomodoistSocialSignInButton({
+    required this.account,
+    required this.provider,
+    required this.redirectTo,
+    required this.label,
+    this.onSignedIn,
+    super.key,
+  });
+
+  final AccountClient account;
+  final PomodoistSocialProvider provider;
+  final String redirectTo;
+  final String label;
+  final VoidCallback? onSignedIn;
+
+  @override
+  State<PomodoistSocialSignInButton> createState() =>
+      _PomodoistSocialSignInButtonState();
+}
+
+class _PomodoistSocialSignInButtonState
+    extends State<PomodoistSocialSignInButton> {
+  bool _submitting = false;
+
+  AccountAuthOperation get _operation => switch (widget.provider) {
+    PomodoistSocialProvider.apple => AccountAuthOperation.apple,
+    PomodoistSocialProvider.google => AccountAuthOperation.google,
+  };
+
+  Future<void> _submit() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+    try {
+      switch (widget.provider) {
+        case PomodoistSocialProvider.apple:
+          await widget.account.signInWithApple(redirectTo: widget.redirectTo);
+        case PomodoistSocialProvider.google:
+          await widget.account.signInWithGoogle(redirectTo: widget.redirectTo);
+      }
+      if (mounted && widget.account.currentUserId != null) {
+        widget.onSignedIn?.call();
+      }
+    } on Object catch (error) {
+      if (!mounted) return;
+      final failure = classifyAccountAuthFailure(error, operation: _operation);
+      if (failure.isCancelled) return;
+      final feedback = presentAccountAuthFailure(
+        context.l10n,
+        failure,
+        operation: _operation,
+        provider: widget.label,
+      );
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          content: Text(feedback.message),
+          action: feedback.recovery == AccountAuthRecovery.retry
+              ? SnackBarAction(
+                  label: context.l10n.commonRetry,
+                  onPressed: () => unawaited(_submit()),
+                )
+              : null,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _submitting = false);
     }
-  } on Object {
-    if (!context.mounted) return;
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      const SnackBar(content: Text('Authentication failed. Please try again.')),
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = switch (widget.provider) {
+      PomodoistSocialProvider.apple => Icons.apple,
+      PomodoistSocialProvider.google => Icons.account_circle_outlined,
+    };
+    return OutlinedButton.icon(
+      onPressed: _submitting ? null : _submit,
+      icon: _submitting
+          ? const SizedBox.square(
+              dimension: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(icon),
+      label: Text(widget.label),
     );
   }
 }
@@ -96,6 +189,7 @@ class _PomodoistEmailAuthDialog extends StatefulWidget {
     required this.onSignedIn,
     required this.config,
     required this.nativeCaptchaCallbacks,
+    required this.initialEmail,
   });
 
   final AccountClient account;
@@ -103,6 +197,7 @@ class _PomodoistEmailAuthDialog extends StatefulWidget {
   final VoidCallback? onSignedIn;
   final RuntimePublicConfig config;
   final Stream<Uri>? nativeCaptchaCallbacks;
+  final String initialEmail;
 
   @override
   State<_PomodoistEmailAuthDialog> createState() =>
@@ -112,6 +207,8 @@ class _PomodoistEmailAuthDialog extends StatefulWidget {
 class _PomodoistEmailAuthDialogState extends State<_PomodoistEmailAuthDialog> {
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
   _EmailAction _mode = _EmailAction.signIn;
   late final CaptchaTokenController _captcha = CaptchaTokenController(
     required: kIsWeb && widget.config.turnstileSiteKey.isNotEmpty,
@@ -120,18 +217,17 @@ class _PomodoistEmailAuthDialogState extends State<_PomodoistEmailAuthDialog> {
   Timer? _slowTimer;
   bool _submitting = false;
   bool _takingLonger = false;
-  String? _error;
+  AccountAuthFeedback? _feedback;
+  _EmailAction? _lastAction;
 
-  bool get _canSubmit =>
-      !_submitting &&
-      _email.text.trim().isNotEmpty &&
-      (!kIsWeb || _captcha.canSubmit);
+  bool get _canSubmit => !_submitting;
 
   @override
   void initState() {
     super.initState();
-    _email.addListener(_changed);
-    _password.addListener(_changed);
+    _email.text = widget.initialEmail.trim();
+    _email.addListener(_emailChanged);
+    _password.addListener(_passwordChanged);
     if (!kIsWeb && widget.config.turnstileSiteKey.isNotEmpty) {
       final callbacks = widget.nativeCaptchaCallbacks;
       if (callbacks != null) {
@@ -144,22 +240,34 @@ class _PomodoistEmailAuthDialogState extends State<_PomodoistEmailAuthDialog> {
   void dispose() {
     _slowTimer?.cancel();
     _nativeBroker?.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
     _email.dispose();
     _password.dispose();
     super.dispose();
   }
 
-  void _changed() {
+  void _emailChanged() {
+    if (_feedback?.field == AccountAuthField.email) _feedback = null;
+    if (mounted) setState(() {});
+  }
+
+  void _passwordChanged() {
+    if (_feedback?.field == AccountAuthField.password) _feedback = null;
     if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final feedback = _feedback;
     return AlertDialog(
       constraints: const BoxConstraints(minWidth: 360),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       title: Text(
-        _mode == _EmailAction.signIn ? 'Email sign in' : 'Create account',
+        _mode == _EmailAction.signIn
+            ? l10n.authEmailSignInTitle
+            : l10n.registerTitle,
       ),
       content: SingleChildScrollView(
         child: AutofillGroup(
@@ -170,14 +278,14 @@ class _PomodoistEmailAuthDialogState extends State<_PomodoistEmailAuthDialog> {
             children: [
               SegmentedButton<_EmailAction>(
                 key: const Key('account-auth-mode'),
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: _EmailAction.signIn,
-                    label: Text('Sign in'),
+                    label: Text(l10n.authSignInAction),
                   ),
                   ButtonSegment(
                     value: _EmailAction.signUp,
-                    label: Text('Create account'),
+                    label: Text(l10n.registerSubmit),
                   ),
                 ],
                 selected: {_mode},
@@ -189,47 +297,93 @@ class _PomodoistEmailAuthDialogState extends State<_PomodoistEmailAuthDialog> {
                         _password.clear();
                         setState(() {
                           _mode = mode;
-                          _error = null;
+                          _feedback = null;
                         });
+                        _passwordFocus.requestFocus();
                       },
               ),
-              TextField(
-                key: const Key('account-email-field'),
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
-                autofillHints: const [
-                  AutofillHints.username,
-                  AutofillHints.email,
-                ],
-                autofocus: true,
-                decoration: const InputDecoration(labelText: 'Email'),
+              Semantics(
+                liveRegion: feedback?.field == AccountAuthField.email,
+                child: TextField(
+                  key: const Key('account-email-field'),
+                  controller: _email,
+                  focusNode: _emailFocus,
+                  keyboardType: TextInputType.emailAddress,
+                  autofillHints: const [
+                    AutofillHints.username,
+                    AutofillHints.email,
+                  ],
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    labelText: l10n.accountEmail,
+                    errorText: feedback?.field == AccountAuthField.email
+                        ? feedback?.message
+                        : null,
+                  ),
+                ),
               ),
-              TextField(
-                key: const Key('account-password-field'),
-                controller: _password,
-                autofillHints: _mode == _EmailAction.signIn
-                    ? const [AutofillHints.password]
-                    : const [AutofillHints.newPassword],
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Password'),
+              Semantics(
+                liveRegion: feedback?.field == AccountAuthField.password,
+                child: TextField(
+                  key: const Key('account-password-field'),
+                  controller: _password,
+                  focusNode: _passwordFocus,
+                  autofillHints: _mode == _EmailAction.signIn
+                      ? const [AutofillHints.password]
+                      : const [AutofillHints.newPassword],
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: l10n.registerPassword,
+                    errorText: feedback?.field == AccountAuthField.password
+                        ? feedback?.message
+                        : null,
+                  ),
+                ),
               ),
               if (kIsWeb && widget.config.turnstileSiteKey.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 CaptchaVerification(
                   siteKey: widget.config.turnstileSiteKey,
                   controller: _captcha,
-                  onChanged: _changed,
+                  onChanged: () {
+                    if (_feedback?.field == AccountAuthField.captcha) {
+                      _feedback = null;
+                    }
+                    if (mounted) setState(() {});
+                  },
                 ),
               ],
-              if (_error case final error?) ...[
+              if (feedback != null &&
+                  (feedback.field == AccountAuthField.form ||
+                      feedback.field == AccountAuthField.captcha)) ...[
                 const SizedBox(height: 8),
                 Semantics(
                   liveRegion: true,
                   child: Text(
-                    error,
+                    feedback.message,
                     key: const Key('account-auth-error'),
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+              ],
+              if (feedback != null &&
+                  feedback.recovery != AccountAuthRecovery.none &&
+                  feedback.recovery != AccountAuthRecovery.editEmail &&
+                  feedback.recovery != AccountAuthRecovery.editPassword &&
+                  feedback.recovery !=
+                      AccountAuthRecovery.chooseAnotherProvider) ...[
+                const SizedBox(height: 4),
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton(
+                    key: const Key('account-auth-recovery'),
+                    onPressed: _submitting
+                        ? null
+                        : () => _recover(feedback.recovery),
+                    child: Text(
+                      accountAuthRecoveryLabel(l10n, feedback.recovery),
                     ),
                   ),
                 ),
@@ -255,19 +409,17 @@ class _PomodoistEmailAuthDialogState extends State<_PomodoistEmailAuthDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
         if (_mode == _EmailAction.signIn)
           TextButton(
             onPressed: _canSubmit
                 ? () => _submit(_EmailAction.magicLink)
                 : null,
-            child: const Text('Send link'),
+            child: Text(l10n.authSendLink),
           ),
         FilledButton(
-          onPressed: _canSubmit && _password.text.isNotEmpty
-              ? () => _submit(_mode)
-              : null,
+          onPressed: _canSubmit ? () => _submit(_mode) : null,
           child: _submitting
               ? _takingLonger
                     ? const Icon(Icons.hourglass_top, size: 18)
@@ -276,7 +428,9 @@ class _PomodoistEmailAuthDialogState extends State<_PomodoistEmailAuthDialog> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
               : Text(
-                  _mode == _EmailAction.signIn ? 'Sign in' : 'Create account',
+                  _mode == _EmailAction.signIn
+                      ? l10n.authSignInAction
+                      : l10n.registerSubmit,
                 ),
         ),
       ],
@@ -285,10 +439,35 @@ class _PomodoistEmailAuthDialogState extends State<_PomodoistEmailAuthDialog> {
 
   Future<void> _submit(_EmailAction action) async {
     if (!_canSubmit) return;
+    final emailFailure = validateAccountEmail(_email.text);
+    final passwordFailure = action == _EmailAction.magicLink
+        ? null
+        : validateAccountPassword(_password.text);
+    if (emailFailure != null || passwordFailure != null) {
+      _showFailure(
+        emailFailure ?? passwordFailure!,
+        operation: _operationFor(action),
+      );
+      return;
+    }
+    if (kIsWeb &&
+        widget.config.turnstileSiteKey.isNotEmpty &&
+        !_captcha.canSubmit) {
+      _showFailure(
+        const AccountAuthFailure(
+          AccountAuthFailureKind.captchaRequired,
+          field: AccountAuthField.captcha,
+          recovery: AccountAuthRecovery.retryCaptcha,
+        ),
+        operation: AccountAuthOperation.captcha,
+      );
+      return;
+    }
     setState(() {
       _submitting = true;
       _takingLonger = false;
-      _error = null;
+      _feedback = null;
+      _lastAction = action;
     });
     _slowTimer?.cancel();
     _slowTimer = Timer(_accountOperationSlowThreshold, () {
@@ -303,7 +482,9 @@ class _PomodoistEmailAuthDialogState extends State<_PomodoistEmailAuthDialog> {
       } else if (widget.config.turnstileSiteKey.isNotEmpty) {
         final broker = _nativeBroker;
         if (broker == null) {
-          throw StateError('Security verification is unavailable');
+          throw const NativeCaptchaException(
+            NativeCaptchaFailureCode.unavailable,
+          );
         }
         token = await broker.requestToken();
       } else {
@@ -335,27 +516,35 @@ class _PomodoistEmailAuthDialogState extends State<_PomodoistEmailAuthDialog> {
       }
       if (!mounted) return;
       final signedIn = widget.account.currentUserId != null;
+      if (action == _EmailAction.signIn && !signedIn) {
+        _showFailure(
+          const AccountAuthFailure(
+            AccountAuthFailureKind.unexpected,
+            field: AccountAuthField.form,
+            recovery: AccountAuthRecovery.retry,
+          ),
+          operation: AccountAuthOperation.passwordSignIn,
+        );
+        return;
+      }
+      final successMessage = switch (action) {
+        _EmailAction.magicLink => context.l10n.authMagicLinkSent,
+        _EmailAction.signIn => context.l10n.authSignedIn,
+        _EmailAction.signUp =>
+          signedIn
+              ? context.l10n.authAccountCreated
+              : context.l10n.registerCheckEmailMessage,
+      };
       final messenger = ScaffoldMessenger.maybeOf(context);
       Navigator.of(context).pop();
       if (signedIn) widget.onSignedIn?.call();
-      messenger?.showSnackBar(
-        SnackBar(
-          content: Text(
-            action == _EmailAction.magicLink
-                ? 'Magic link sent.'
-                : action == _EmailAction.signUp
-                ? 'Account created.'
-                : 'Signed in.',
-          ),
-        ),
-      );
+      messenger?.showSnackBar(SnackBar(content: Text(successMessage)));
     } on Object catch (error) {
       if (mounted) {
-        setState(() {
-          _error = isEmailConfirmationRequired(error)
-              ? 'Please confirm your email using the link we sent you, then sign in again.'
-              : 'Authentication failed. Check your details and try again.';
-        });
+        _showFailure(
+          classifyAccountAuthFailure(error, operation: _operationFor(action)),
+          operation: _operationFor(action),
+        );
       }
     } finally {
       _slowTimer?.cancel();
@@ -366,6 +555,71 @@ class _PomodoistEmailAuthDialogState extends State<_PomodoistEmailAuthDialog> {
           _takingLonger = false;
         });
       }
+    }
+  }
+
+  AccountAuthOperation _operationFor(_EmailAction action) => switch (action) {
+    _EmailAction.magicLink => AccountAuthOperation.magicLink,
+    _EmailAction.signIn => AccountAuthOperation.passwordSignIn,
+    _EmailAction.signUp => AccountAuthOperation.signUp,
+  };
+
+  void _showFailure(
+    AccountAuthFailure failure, {
+    required AccountAuthOperation operation,
+  }) {
+    if (!mounted || failure.isCancelled) return;
+    final feedback = presentAccountAuthFailure(
+      context.l10n,
+      failure,
+      operation: operation,
+    );
+    setState(() => _feedback = feedback);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      switch (feedback.field) {
+        case AccountAuthField.email:
+          _emailFocus.requestFocus();
+        case AccountAuthField.password:
+          _passwordFocus.requestFocus();
+        case AccountAuthField.captcha:
+        case AccountAuthField.form:
+          break;
+      }
+    });
+  }
+
+  void _recover(AccountAuthRecovery recovery) {
+    switch (recovery) {
+      case AccountAuthRecovery.retry:
+        unawaited(_submit(_lastAction ?? _mode));
+      case AccountAuthRecovery.retryCaptcha:
+        if (kIsWeb) {
+          _captcha.reset();
+          setState(() => _feedback = null);
+        } else {
+          unawaited(_submit(_lastAction ?? _mode));
+        }
+      case AccountAuthRecovery.switchToSignIn:
+        _password.clear();
+        setState(() {
+          _mode = _EmailAction.signIn;
+          _feedback = null;
+        });
+        _passwordFocus.requestFocus();
+      case AccountAuthRecovery.sendNewLink:
+        setState(() {
+          _mode = _EmailAction.signIn;
+          _feedback = null;
+        });
+        unawaited(_submit(_EmailAction.magicLink));
+      case AccountAuthRecovery.editEmail:
+        _emailFocus.requestFocus();
+      case AccountAuthRecovery.editPassword:
+        _passwordFocus.requestFocus();
+      case AccountAuthRecovery.none:
+      case AccountAuthRecovery.chooseAnotherProvider:
+        break;
     }
   }
 }

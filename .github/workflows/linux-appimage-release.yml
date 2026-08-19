@@ -132,12 +132,9 @@ jobs:
         run: make test-linux-packaging
       - name: Build production AppImage
         run: |
-          flutter build linux --release --no-pub \
-            --dart-define-from-file="$RUNNER_TEMP/linux-production.json" \
-            --dart-define=POMODOIST_RELEASE="$GITHUB_SHA" \
-            --dart-define=POMODOIST_BILLING_CHANNEL=stripe
-          POMODOIST_VERSION="$POMODOIST_VERSION" \
-            tool/linux/build_appimage.sh
+          make build-linux-appimage \
+            LINUX_CONFIG="$RUNNER_TEMP/linux-production.json" \
+            POMODOIST_RELEASE="$GITHUB_SHA"
       - name: Verify checksum, bundled audio, and deep-link forwarding
         run: |
           cd build/linux/appimage

@@ -56,15 +56,39 @@ void main() {
 
       expect(workflow, contains('gst-launch-1.0'));
       expect(workflow, contains('focus_start.wav'));
-    expect(workflow, contains('APP_RUN="\$appdir/AppRun"'));
-    expect(workflow, contains('cold_start_log'));
-    expect(workflow, contains('secondary_status'));
+      expect(workflow, contains('APP_RUN="\$appdir/AppRun"'));
+      expect(workflow, contains('cold_start_log'));
+      expect(workflow, contains('secondary_status'));
       expect(workflow, contains('Unhandled Exception'));
       expect(workflow, contains('POMODOIST_NATIVE_LINK_HANDLED'));
       expect(workflow, contains('test "\$secondary_status" -eq 0'));
       expect(workflow, contains('kill -0 "\$primary_pid"'));
     },
   );
+
+  test('Linux CI uses the validated local AppImage build contract', () {
+    final document =
+        loadYaml(
+              File(
+                '.github/workflows/linux-appimage-release.yml',
+              ).readAsStringSync(),
+            )
+            as YamlMap;
+    final jobs = document['jobs'] as YamlMap;
+    final build = jobs['build-test-publish'] as YamlMap;
+    final steps = build['steps'] as YamlList;
+    final buildStep = steps.cast<YamlMap>().singleWhere(
+      (step) => step['name'] == 'Build production AppImage',
+    );
+    final command = buildStep['run'] as String;
+
+    expect(command, contains('make build-linux-appimage'));
+    expect(
+      command,
+      contains('LINUX_CONFIG="\$RUNNER_TEMP/linux-production.json"'),
+    );
+    expect(command, contains('POMODOIST_RELEASE="\$GITHUB_SHA"'));
+  });
 
   test('Windows EXE preview isolates production build from publishing', () {
     final document =

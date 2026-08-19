@@ -4,6 +4,7 @@ import 'dart:js_interop';
 import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web;
 
+import 'app_l10n.dart';
 import 'captcha_security.dart';
 
 @JS('turnstile.render')
@@ -100,22 +101,23 @@ class _TurnstileWidgetState extends State<TurnstileWidget> {
   @override
   Widget build(BuildContext context) {
     if (widget.siteKey.isEmpty) return const SizedBox.shrink();
+    final semanticLabel = context.l10n.captchaSecurityLabel;
     return Semantics(
-      label: 'Security verification',
+      label: semanticLabel,
       liveRegion: true,
       child: SizedBox(
         height: 72,
         child: HtmlElementView.fromTagName(
           tagName: 'div',
-          onElementCreated: _createWidget,
+          onElementCreated: (element) => _createWidget(element, semanticLabel),
         ),
       ),
     );
   }
 
-  Future<void> _createWidget(Object element) async {
+  Future<void> _createWidget(Object element, String semanticLabel) async {
     final container = element as web.HTMLDivElement;
-    container.setAttribute('aria-label', 'Security verification');
+    container.setAttribute('aria-label', semanticLabel);
     try {
       await _ensureTurnstileReady(widget.loadTimeout);
     } on Object {

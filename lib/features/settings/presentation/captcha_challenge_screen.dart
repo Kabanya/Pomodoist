@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/app_l10n.dart';
 import '../../../app/captcha_handoff.dart';
 import '../../../app/captcha_security.dart';
 import '../../../app/captcha_verification.dart';
@@ -45,10 +46,10 @@ class _CaptchaChallengeScreenState
   Widget build(BuildContext context) {
     final request = _request;
     if (request == null) {
-      return const _ChallengeScaffold(
+      return _ChallengeScaffold(
         child: Text(
-          'This security verification link is invalid. Return to Pomodoist and try again.',
-          key: Key('captcha-challenge-invalid'),
+          context.l10n.captchaChallengeInvalid,
+          key: const Key('captcha-challenge-invalid'),
           textAlign: TextAlign.center,
         ),
       );
@@ -59,15 +60,15 @@ class _CaptchaChallengeScreenState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'If Pomodoist did not open, use the button below. If the app is not installed, close this page and return to the device where you started.',
+            Text(
+              context.l10n.captchaChallengeHandoffHelp,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
             FilledButton(
               key: const Key('captcha-handoff-retry'),
               onPressed: () => _handoffController.retry(widget.onHandoff),
-              child: const Text('Return to Pomodoist'),
+              child: Text(context.l10n.captchaReturnToApp),
             ),
           ],
         ),
@@ -78,8 +79,8 @@ class _CaptchaChallengeScreenState
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Confirm you are human to continue in Pomodoist.',
+          Text(
+            context.l10n.captchaChallengePrompt,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
@@ -126,7 +127,7 @@ class _ChallengeScaffold extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Pomodoist security check',
+                        context.l10n.captchaChallengeTitle,
                         style: Theme.of(context).textTheme.headlineSmall,
                         textAlign: TextAlign.center,
                       ),

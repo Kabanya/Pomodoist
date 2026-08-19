@@ -395,13 +395,44 @@ class _AccountStep extends ConsumerWidget {
     final accountConfigured = ref.watch(accountConfiguredProvider);
     ref.watch(accountAuthStateProvider);
     return accountOverview.when(
-      data: (overview) => AccountOverviewPanel(
-        overview: overview,
-        configured: accountConfigured,
-        actions: _accountActions(context, ref),
-      ),
+      data: (overview) => accountConfigured
+          ? AccountOverviewPanel(
+              overview: overview,
+              configured: true,
+              actions: _accountActions(context, ref),
+            )
+          : Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        l10n.authServiceUnavailable,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: TextButton.icon(
+                        onPressed: () => unawaited(
+                          ref.read(accountBootstrapProvider.notifier).retry(),
+                        ),
+                        icon: const Icon(Icons.refresh),
+                        label: Text(l10n.commonRetry),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
       loading: () => const LinearProgressIndicator(minHeight: 2),
-      error: (error, _) => Text(l10n.accountUnavailable(error)),
+      error: (error, _) => Semantics(
+        liveRegion: true,
+        child: Text(pomodoistAccountFailureMessage(context, error)),
+      ),
     );
   }
 

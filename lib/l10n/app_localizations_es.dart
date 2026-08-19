@@ -328,6 +328,151 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get authEmailSignInTitle => 'Iniciar sesión con email';
+
+  @override
+  String get authSignInAction => 'Iniciar sesión';
+
+  @override
+  String get authSendLink => 'Enviar enlace';
+
+  @override
+  String get authMagicLinkSent =>
+      'Enlace de acceso enviado. Revisa la bandeja de entrada y la carpeta de spam.';
+
+  @override
+  String get authAccountCreated => 'Cuenta creada.';
+
+  @override
+  String get authSignedIn => 'Sesión iniciada.';
+
+  @override
+  String get authEmailRequired => 'Introduce tu email.';
+
+  @override
+  String get authEmailInvalid =>
+      'Revisa la dirección de email, por ejemplo name@example.com.';
+
+  @override
+  String get authPasswordRequired => 'Introduce tu contraseña.';
+
+  @override
+  String get authInvalidCredentials =>
+      'El email o la contraseña no son correctos. Revísalos e inténtalo de nuevo.';
+
+  @override
+  String get authEmailUnconfirmed =>
+      'Confirma tu email con el enlace que enviamos y vuelve a iniciar sesión.';
+
+  @override
+  String get authWeakPassword =>
+      'Esta contraseña es demasiado fácil de adivinar. Usa una contraseña más larga y menos predecible.';
+
+  @override
+  String get authAccountMayExist =>
+      'No se pudo crear la cuenta. Si ya te registraste con este email, inicia sesión.';
+
+  @override
+  String get authRateLimited =>
+      'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
+
+  @override
+  String get authEmailRateLimited =>
+      'Se solicitaron demasiados emails. Espera unos minutos antes de pedir otro.';
+
+  @override
+  String get authOffline =>
+      'No se pudo conectar con el servicio de cuentas. Revisa Internet e inténtalo de nuevo.';
+
+  @override
+  String get authTimeout =>
+      'El servicio de cuentas está tardando demasiado. Inténtalo de nuevo.';
+
+  @override
+  String get authServiceUnavailable =>
+      'El servicio de cuentas no está disponible temporalmente. Inténtalo más tarde.';
+
+  @override
+  String get authCaptchaRequired =>
+      'Completa la verificación de seguridad para continuar.';
+
+  @override
+  String get authCaptchaExpired =>
+      'La verificación de seguridad ha caducado. Complétala de nuevo.';
+
+  @override
+  String get authCaptchaFailed =>
+      'La verificación de seguridad falló. Inténtalo de nuevo.';
+
+  @override
+  String get authCaptchaCancelled =>
+      'La verificación de seguridad se canceló. Iníciala de nuevo para continuar.';
+
+  @override
+  String get authCaptchaUnavailable =>
+      'La verificación de seguridad no está disponible ahora. Revisa tu conexión e inténtalo de nuevo.';
+
+  @override
+  String get authCaptchaOpenFailed =>
+      'Pomodoist no pudo abrir la verificación de seguridad en el navegador. Revisa el navegador predeterminado e inténtalo de nuevo.';
+
+  @override
+  String get authProviderFallback => 'este proveedor';
+
+  @override
+  String authProviderUnavailable(String provider) {
+    return 'El acceso con $provider no está disponible ahora. Inténtalo de nuevo o usa otro método.';
+  }
+
+  @override
+  String get authSignUpDisabled =>
+      'La creación de cuentas por email no está disponible temporalmente. Usa otro método de acceso.';
+
+  @override
+  String get authAccountRestricted =>
+      'No se puede iniciar sesión en esta cuenta ahora. Contacta con soporte si crees que es un error.';
+
+  @override
+  String get authLinkExpired =>
+      'Este enlace de acceso no es válido o ha caducado. Solicita uno nuevo.';
+
+  @override
+  String get authUnexpectedSignIn =>
+      'No se pudo iniciar sesión. Inténtalo de nuevo.';
+
+  @override
+  String get authUnexpectedSignUp =>
+      'No se pudo crear la cuenta. Inténtalo de nuevo.';
+
+  @override
+  String get authUnexpectedMagicLink =>
+      'No se pudo enviar el enlace de acceso. Inténtalo de nuevo.';
+
+  @override
+  String get authRetryVerification => 'Reintentar verificación';
+
+  @override
+  String get captchaSecurityLabel => 'Verificación de seguridad';
+
+  @override
+  String get captchaChallengeTitle => 'Verificación de seguridad de Pomodoist';
+
+  @override
+  String get captchaChallengePrompt =>
+      'Confirma que eres una persona para continuar en Pomodoist.';
+
+  @override
+  String get captchaChallengeInvalid =>
+      'Este enlace de verificación no es válido. Vuelve a Pomodoist e inténtalo de nuevo.';
+
+  @override
+  String get captchaChallengeHandoffHelp =>
+      'Si Pomodoist no se abrió, usa el botón de abajo. Si la aplicación no está instalada, cierra esta página y vuelve al dispositivo donde empezaste.';
+
+  @override
+  String get captchaReturnToApp => 'Volver a Pomodoist';
+
+  @override
   String get navSearch => 'Buscar';
 
   @override

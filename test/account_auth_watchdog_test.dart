@@ -13,7 +13,8 @@ import 'package:pomodoist/app/captcha_verification.dart';
 import 'package:pomodoist/app/runtime_public_config.dart';
 import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show AuthApiException;
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show AuthApiException, AuthRetryableFetchException;
 
 void main() {
   testWidgets('email auth dialog stays wide on compact screens', (
@@ -165,7 +166,7 @@ void main() {
 
     expect(
       find.text(
-        'Please confirm your email using the link we sent you, then sign in again.',
+        'Confirm your email using the link we sent, then sign in again.',
       ),
       findsOneWidget,
     );
@@ -174,6 +175,167 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets('registration validates email and password before calling auth', (
+    tester,
+  ) async {
+    final account = _SuccessfulAccountClient();
+    final router = _authRouter('/register');
+    addTearDown(router.dispose);
+    await _pumpAuthRouter(tester, account, router);
+
+    await tester.tap(find.byKey(const Key('register-submit-button')));
+    await tester.pump();
+    expect(find.text('Enter your email.'), findsOneWidget);
+    expect(account.signUpCalls, 0);
+
+    await tester.enterText(
+      find.byKey(const Key('register-email-field')),
+      'not-an-email',
+    );
+    await tester.tap(find.byKey(const Key('register-submit-button')));
+    await tester.pump();
+    expect(find.textContaining('name@example.com'), findsOneWidget);
+    expect(account.signUpCalls, 0);
+
+    await tester.enterText(
+      find.byKey(const Key('register-email-field')),
+      'user@example.com',
+    );
+    await tester.tap(find.byKey(const Key('register-submit-button')));
+    await tester.pump();
+    expect(find.text('Enter your password.'), findsOneWidget);
+    expect(account.signUpCalls, 0);
+  });
+
+  testWidgets('invalid credentials never reveal whether the account exists', (
+    tester,
+  ) async {
+    await _pumpAuthScreen(
+      tester,
+      _FailingEmailAccountClient(
+        const AuthApiException(
+          'SECRET server detail',
+          code: 'invalid_credentials',
+        ),
+      ),
+      const LoginScreen(),
+    );
+
+    await tester.tap(find.text('Email'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('account-email-field')),
+      'user@example.com',
+    );
+    await tester.enterText(
+      find.byKey(const Key('account-password-field')),
+      'wrong-password',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
+    await tester.pump();
+
+    expect(
+      find.text(
+        'The email or password is incorrect. Check both and try again.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('SECRET'), findsNothing);
+    expect(find.textContaining('not found'), findsNothing);
+  });
+
+  testWidgets('existing email uses privacy-safe copy and preserves returnTo', (
+    tester,
+  ) async {
+    final router = _authRouter('/register?returnTo=/projects');
+    addTearDown(router.dispose);
+    await _pumpAuthRouter(
+      tester,
+      _FailingEmailAccountClient(
+        const AuthApiException('already exists', code: 'email_exists'),
+      ),
+      router,
+    );
+
+    await tester.enterText(
+      find.byKey(const Key('register-email-field')),
+      'user@example.com',
+    );
+    await tester.enterText(
+      find.byKey(const Key('register-password-field')),
+      'password',
+    );
+    await tester.tap(find.byKey(const Key('register-submit-button')));
+    await tester.pump();
+
+    expect(
+      find.text(
+        'Could not create the account. If you registered with this email before, sign in instead.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('already exists'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('register-auth-recovery')));
+    await tester.pumpAndSettle();
+    expect(find.text('Sign in with email'), findsOneWidget);
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('account-email-field')))
+          .controller
+          ?.text,
+      'user@example.com',
+    );
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('account-password-field')))
+          .controller
+          ?.text,
+      isEmpty,
+    );
+    expect(
+      router.routeInformationProvider.value.uri.toString(),
+      '/register?returnTo=/projects',
+    );
+  });
+
+  for (final scenario in <(Object, String)>[
+    (
+      AuthRetryableFetchException(message: 'SECRET offline detail'),
+      'Could not reach the account service. Check your internet connection and try again.',
+    ),
+    (
+      const AuthApiException(
+        'SECRET rate detail',
+        code: 'over_request_rate_limit',
+      ),
+      'Too many attempts. Wait a few minutes and try again.',
+    ),
+  ]) {
+    testWidgets('email sign-in presents ${scenario.$2}', (tester) async {
+      await _pumpAuthScreen(
+        tester,
+        _FailingEmailAccountClient(scenario.$1),
+        const LoginScreen(),
+      );
+      await tester.tap(find.text('Email'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('account-email-field')),
+        'user@example.com',
+      );
+      await tester.enterText(
+        find.byKey(const Key('account-password-field')),
+        'password',
+      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
+      await tester.pump();
+
+      expect(find.text(scenario.$2), findsOneWidget);
+      expect(find.textContaining('SECRET'), findsNothing);
+    });
+  }
 
   testWidgets('successful email sign-in commits the autofill context', (
     tester,
@@ -399,7 +561,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(
-      find.text('Authentication failed. Please try again.'),
+      find.text(
+        'Sign-in with Apple is unavailable right now. Try again or use another method.',
+      ),
       findsOneWidget,
     );
   });
@@ -416,9 +580,44 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(
-      find.text('Authentication failed. Please try again.'),
+      find.text(
+        'Sign-in with Google is unavailable right now. Try again or use another method.',
+      ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('social sign-in is single-flight and can retry', (tester) async {
+    final account = _PendingSocialAccountClient();
+    await _pumpAuthScreen(tester, account, const LoginScreen());
+
+    await tester.tap(find.text('Apple'));
+    await tester.pump();
+    await tester.tap(find.text('Apple'));
+    await tester.pump();
+    expect(account.appleCalls, 1);
+
+    account.attempts.single.completeError(StateError('SECRET provider detail'));
+    await tester.pumpAndSettle();
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.textContaining('SECRET'), findsNothing);
+
+    await tester.tap(find.text('Retry'));
+    await tester.pump();
+    expect(account.appleCalls, 2);
+  });
+
+  testWidgets('social cancellation does not show an error', (tester) async {
+    await _pumpAuthScreen(
+      tester,
+      _CancelledSocialAccountClient(),
+      const LoginScreen(),
+    );
+
+    await tester.tap(find.text('Apple'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SnackBar), findsNothing);
   });
 
   testWidgets('slow email sign-in stays single-flight and can be dismissed', (
@@ -704,6 +903,72 @@ class _UnconfirmedEmailAccountClient implements AccountClient {
       statusCode: '400',
       code: 'email_not_confirmed',
     );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FailingEmailAccountClient implements AccountClient {
+  _FailingEmailAccountClient(this.error);
+
+  final Object error;
+
+  @override
+  String? get currentUserId => null;
+
+  @override
+  Future<void> signInWithEmail(
+    String email, {
+    String? redirectTo,
+    String? captchaToken,
+  }) => Future<void>.error(error);
+
+  @override
+  Future<void> signInWithPassword({
+    required String email,
+    required String password,
+    String? captchaToken,
+  }) => Future<void>.error(error);
+
+  @override
+  Future<void> signUpWithPassword({
+    required String email,
+    required String password,
+    String? redirectTo,
+    String? captchaToken,
+  }) => Future<void>.error(error);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _PendingSocialAccountClient implements AccountClient {
+  final attempts = <Completer<void>>[];
+  var appleCalls = 0;
+
+  @override
+  String? get currentUserId => null;
+
+  @override
+  Future<void> signInWithApple({String? redirectTo}) {
+    appleCalls += 1;
+    final attempt = Completer<void>();
+    attempts.add(attempt);
+    return attempt.future;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _CancelledSocialAccountClient implements AccountClient {
+  @override
+  String? get currentUserId => null;
+
+  @override
+  Future<void> signInWithApple({String? redirectTo}) {
+    return Future<void>.error(PlatformException(code: 'userCancelled'));
   }
 
   @override

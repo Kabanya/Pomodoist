@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/captcha_security.dart';
@@ -18,6 +20,7 @@ void main() {
         launched.complete(uri);
         return true;
       },
+      useLoopback: false,
     );
 
     final tokenFuture = broker.requestToken();
@@ -41,7 +44,7 @@ void main() {
     );
     await Future<void>.delayed(Duration.zero);
     final second = broker.requestToken();
-    final cancelled = expectLater(second, throwsStateError);
+    final cancelled = expectLater(second, _throwsCancelledCaptcha);
     broker.cancel();
     await cancelled;
     await links.close();
@@ -59,6 +62,7 @@ void main() {
           registrationUrl: 'https://app.pomodoist.com/auth/challenge',
         ),
         launch: (_) async => true,
+        useLoopback: false,
       );
 
       final tokenFuture = broker.requestToken();
@@ -81,7 +85,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(completed, isFalse);
 
-      final cancelled = expectLater(tokenFuture, throwsStateError);
+      final cancelled = expectLater(tokenFuture, _throwsCancelledCaptcha);
       broker.cancel();
       await cancelled;
       await links.close();
@@ -114,12 +118,13 @@ void main() {
             expiries.add(callback);
             return () => cancelledExpiries.add(index);
           },
+          useLoopback: false,
         );
 
         final first = broker.requestToken();
         expect(launches, hasLength(1));
         final firstState = _challengeState(launches[0].uri);
-        final firstCancelled = expectLater(first, throwsStateError);
+        final firstCancelled = expectLater(first, _throwsCancelledCaptcha);
         broker.cancel();
         await firstCancelled;
 
@@ -146,6 +151,55 @@ void main() {
       },
     );
   }
+
+  test('desktop broker receives a long token through loopback HTTP', () async {
+    final launched = Completer<Uri>();
+    final broker = NativeCaptchaBroker(
+      uriStream: const Stream<Uri>.empty(),
+      config: NativeCaptchaBuildConfig.fromValues(
+        environment: 'production',
+        registrationUrl: 'https://app.pomodoist.com/auth/challenge',
+      ),
+      launch: (uri) async {
+        launched.complete(uri);
+        return true;
+      },
+      useLoopback: true,
+    );
+    final tokenFuture = broker.requestToken();
+    final challenge = await launched.future;
+    final state = _challengeState(challenge);
+    final returnTarget = Uri.parse(challenge.queryParameters['returnTo']!);
+    expect(returnTarget.scheme, 'http');
+    expect(returnTarget.host, '127.0.0.1');
+    expect(returnTarget.hasPort, isTrue);
+    expect(returnTarget.path, '/captcha-callback');
+
+    final client = HttpClient();
+    final wrongStateResponse = await (await client.getUrl(
+      returnTarget.replace(
+        queryParameters: {'state': 'X' * 43, 'token': 'wrong-state'},
+      ),
+    )).close();
+    expect(wrongStateResponse.statusCode, HttpStatus.badRequest);
+    await wrongStateResponse.drain<void>();
+
+    final token = 'opaque-token-${'z' * 1800}';
+    final successRequest = await client.getUrl(
+      returnTarget.replace(queryParameters: {'state': state, 'token': token}),
+    );
+    successRequest.headers.set(HttpHeaders.acceptLanguageHeader, 'ru-RU, en');
+    final response = await successRequest.close();
+    expect(response.statusCode, HttpStatus.ok);
+    final body = await utf8.decoder.bind(response).join();
+    expect(body, contains('Проверка завершена'));
+    expect(body, contains('lang="ru"'));
+    expect(body, isNot(contains(token)));
+    await expectLater(tokenFuture, completion(token));
+
+    client.close(force: true);
+    broker.dispose();
+  });
 }
 
 final class _DeferredLaunch {
@@ -166,3 +220,11 @@ Uri _callback(String state, String token) {
     queryParameters: {'state': state, 'token': token},
   );
 }
+
+final Matcher _throwsCancelledCaptcha = throwsA(
+  isA<NativeCaptchaException>().having(
+    (error) => error.code,
+    'code',
+    NativeCaptchaFailureCode.cancelled,
+  ),
+);

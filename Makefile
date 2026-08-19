@@ -10,6 +10,8 @@ endif
 # Tools. Prefer the project-pinned FVM SDK when it has been bootstrapped.
 FVM_FLUTTER := .fvm/flutter_sdk/bin/flutter
 FLUTTER ?= $(if $(wildcard $(FVM_FLUTTER)),$(FVM_FLUTTER),flutter)
+FVM_DART := .fvm/flutter_sdk/bin/dart
+DART ?= $(if $(wildcard $(FVM_DART)),$(FVM_DART),dart)
 
 # Runtime
 POMODOIST_BILLING_CHANNEL ?= stripe
@@ -18,6 +20,7 @@ POMODOIST_BILLING_CHANNEL ?= stripe
 # proxy variables from breaking reproducible local builds.
 LINUX_BUILD_ENV ?= env -u http_proxy -u https_proxy -u all_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY
 POMODOIST_APPIMAGE_BUILDER ?= ./tool/linux/build_appimage.sh
+LINUX_CONFIG ?= $(CURDIR)/.env.linux-production.json
 
 # Windows
 WINDOWS_CONFIG ?= C:/secure/pomodoist-windows-production.json
@@ -125,7 +128,8 @@ build-web:
 	$(FLUTTER) build web --release --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
 build-linux-release:
-	$(LINUX_BUILD_ENV) $(FLUTTER) build linux --release --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
+	$(LINUX_BUILD_ENV) $(DART) run tool/desktop_release_config.dart --config "$(LINUX_CONFIG)"
+	$(LINUX_BUILD_ENV) $(FLUTTER) build linux --release --dart-define-from-file="$(LINUX_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
 
 build-linux-appimage: build-linux-release
 	$(LINUX_BUILD_ENV) $(POMODOIST_APPIMAGE_BUILDER)
@@ -134,6 +138,7 @@ install-linux: build-linux-release
 	./tool/linux/install.sh
 
 windows-installer:
+	$(DART) run tool/desktop_release_config.dart --config "$(WINDOWS_CONFIG)"
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Release -Clean -ConfigFile "$(WINDOWS_CONFIG)" -ReleaseSha "$(POMODOIST_RELEASE)"
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/installer/build.ps1 -BuildDirectory "$(WINDOWS_RELEASE_DIR)"
 

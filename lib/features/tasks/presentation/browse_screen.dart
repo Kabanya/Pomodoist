@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_account/app_account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -52,20 +54,45 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
           ),
           const SizedBox(height: 16),
           accountOverview.when(
-            data: (overview) => AccountOverviewPanel(
-              overview: overview,
-              configured: accountConfigured,
-              onRefresh: () => ref.invalidate(accountOverviewProvider),
-              actions: pomodoistAccountSignInActions(
-                context: context,
-                account: ref.read(accountClientProvider),
-                redirectTo: pomodoistLoginRedirect,
-                config: ref.read(runtimePublicConfigProvider),
-                nativeCaptchaCallbacks: ref
-                    .read(nativeLinkCoordinatorProvider)
-                    ?.captchaCallbacks,
-              ),
-            ),
+            data: (overview) => accountConfigured
+                ? AccountOverviewPanel(
+                    overview: overview,
+                    configured: true,
+                    onRefresh: () => ref.invalidate(accountOverviewProvider),
+                    actions: pomodoistAccountSignInActions(
+                      context: context,
+                      account: ref.read(accountClientProvider),
+                      redirectTo: pomodoistLoginRedirect,
+                      config: ref.read(runtimePublicConfigProvider),
+                      nativeCaptchaCallbacks: ref
+                          .read(nativeLinkCoordinatorProvider)
+                          ?.captchaCallbacks,
+                    ),
+                  )
+                : _Panel(
+                    title: l10n.unifiedAccount,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Semantics(
+                          liveRegion: true,
+                          child: Text(l10n.authServiceUnavailable),
+                        ),
+                        Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: TextButton.icon(
+                            onPressed: () => unawaited(
+                              ref
+                                  .read(accountBootstrapProvider.notifier)
+                                  .retry(),
+                            ),
+                            icon: const Icon(Icons.refresh),
+                            label: Text(l10n.commonRetry),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
             loading: () => const Card(
               child: Padding(
                 padding: EdgeInsets.all(16),
@@ -74,7 +101,23 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
             ),
             error: (error, _) => _Panel(
               title: l10n.unifiedAccount,
-              child: Text(l10n.accountUnavailable(error)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Semantics(
+                    liveRegion: true,
+                    child: Text(pomodoistAccountFailureMessage(context, error)),
+                  ),
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: TextButton.icon(
+                      onPressed: () => ref.invalidate(accountOverviewProvider),
+                      icon: const Icon(Icons.refresh),
+                      label: Text(l10n.commonRetry),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 16),

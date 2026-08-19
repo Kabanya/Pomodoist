@@ -107,6 +107,23 @@ void main() {
     );
   });
 
+  test('web startup sanitizes auth callback errors and secrets', () {
+    final callback = Uri.parse(
+      'https://app-test.pomodoist.com/login-callback?returnTo=%2Fprojects'
+      '&code=SECRET_CODE#error=access_denied'
+      '&error_description=SECRET_DESCRIPTION&access_token=SECRET_TOKEN',
+    );
+
+    final location = initialAppLocationFor(isWeb: true, baseUri: callback);
+
+    expect(
+      location,
+      '/login-callback?returnTo=%2Fprojects&authFailure=cancelled',
+    );
+    expect(location, isNot(contains('SECRET')));
+    expect(location, isNot(contains('access_denied')));
+  });
+
   testWidgets('task row opens detail and Back returns to the source list', (
     tester,
   ) async {
@@ -172,6 +189,29 @@ void main() {
     router.go('/login-callback?code=abc&returnTo=https://example.test');
     await _pumpFrames(tester);
     expect(_routerUri(router), '/settings');
+  });
+
+  testWidgets('auth callback failure returns to login without raw details', (
+    tester,
+  ) async {
+    late GoRouter router;
+    await _pumpApp(tester, onRouter: (value) => router = value);
+
+    router.go(
+      '/login-callback?returnTo=%2Fprojects&error_code=otp_expired'
+      '&error_description=SECRET_DESCRIPTION&token=SECRET_TOKEN',
+    );
+    await _pumpFrames(tester);
+
+    final uri = router.routeInformationProvider.value.uri;
+    expect(uri.path, '/login');
+    expect(uri.queryParameters['returnTo'], '/projects');
+    expect(uri.queryParameters['authFailure'], 'linkExpired');
+    expect(uri.toString(), isNot(contains('SECRET')));
+    expect(
+      find.text('This sign-in link is invalid or expired. Request a new link.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('focus widget deep link opens the focus screen', (tester) async {

@@ -49,68 +49,63 @@ void main() {
     },
   );
 
-  test(
-    'web loads only the official explicit Turnstile endpoint under CSP',
-    () async {
-      final index = await File('web/index.html').readAsString();
-      final challenge = await File('web/auth/challenge.html').readAsString();
-      final csp = await File(
-        'deploy/web/security-headers.conf.template',
-      ).readAsString();
+  test('web loads only the official explicit Turnstile endpoint under CSP', () async {
+    final index = await File('web/index.html').readAsString();
+    final challenge = await File('web/auth/challenge.html').readAsString();
+    final csp = await File(
+      'deploy/web/security-headers.conf.template',
+    ).readAsString();
 
-      expect(
-        index,
-        isNot(
-          contains(
-            'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
-          ),
-        ),
-        reason: 'local empty-key startup must not contact Cloudflare',
-      );
-      expect(csp, contains('script-src'));
-      expect(csp, contains('frame-src https://challenges.cloudflare.com'));
-      expect(csp, isNot(contains('*.cloudflare.com')));
-      final widget = await File(
-        'lib/app/turnstile_widget_web.dart',
-      ).readAsString();
-      expect(
-        widget,
+    expect(
+      index,
+      isNot(
         contains(
           'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
         ),
-      );
-      expect(challenge, contains('<script src="/config.js"></script>'));
-      expect(
-        challenge,
-        contains(
-          'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
-        ),
-      );
-      expect(challenge, isNot(contains('flutter_bootstrap.js')));
-      expect(challenge, isNot(contains('main.dart.js')));
-      expect(challenge, isNot(contains('.wasm')));
-      expect(
-        challenge,
-        contains('callbackUrl.searchParams.set("state", state)'),
-      );
-      expect(challenge, contains('script.onerror'));
-      expect(challenge, contains('"expired-callback"'));
-      expect(challenge, contains('retry.addEventListener("click"'));
-      expect(widget, contains("@JS('turnstile.remove')"));
-      expect(widget, contains('CaptchaLoadTimeoutGuard'));
-      expect(widget, contains('_turnstileReady = null'));
-      expect(widget, contains('script.remove()'));
-      expect(widget, contains('loadTimeout'));
-      expect(widget, contains('renderTurnstileSafely<JSAny>'));
-      expect(widget, isNot(contains('Future.delayed')));
+      ),
+      reason: 'local empty-key startup must not contact Cloudflare',
+    );
+    expect(csp, contains('script-src'));
+    expect(csp, contains('frame-src https://challenges.cloudflare.com'));
+    expect(csp, isNot(contains('*.cloudflare.com')));
+    final widget = await File(
+      'lib/app/turnstile_widget_web.dart',
+    ).readAsString();
+    expect(
+      widget,
+      contains(
+        'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
+      ),
+    );
+    expect(challenge, contains('<script src="/config.js"></script>'));
+    expect(
+      challenge,
+      contains(
+        'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
+      ),
+    );
+    expect(challenge, isNot(contains('flutter_bootstrap.js')));
+    expect(challenge, isNot(contains('main.dart.js')));
+    expect(challenge, isNot(contains('.wasm')));
+    expect(challenge, contains('callbackUrl.searchParams.set("state", state)'));
+    expect(challenge, contains('script.onerror'));
+    expect(challenge, contains('"expired-callback"'));
+    expect(challenge, contains('retry.addEventListener("click"'));
+    expect(challenge, contains('returnTarget.href === returnTo'));
+    expect(challenge, contains('returnTarget.hostname === "127.0.0.1"'));
+    expect(challenge, contains('loopbackPort >= 1024'));
+    expect(widget, contains("@JS('turnstile.remove')"));
+    expect(widget, contains('CaptchaLoadTimeoutGuard'));
+    expect(widget, contains('_turnstileReady = null'));
+    expect(widget, contains('script.remove()'));
+    expect(widget, contains('loadTimeout'));
+    expect(widget, contains('renderTurnstileSafely<JSAny>'));
+    expect(widget, isNot(contains('Future.delayed')));
 
-      final browserSmoke = await File(
-        'tool/test_web_browser.mjs',
-      ).readAsString();
-      expect(browserSmoke, contains('sanitizeDiagnostic'));
-      expect(browserSmoke, contains('/([?&#](?:state|token)=)[^&#\\s)]+/giu'));
-    },
-  );
+    final browserSmoke = await File('tool/test_web_browser.mjs').readAsString();
+    expect(browserSmoke, contains('sanitizeDiagnostic'));
+    expect(browserSmoke, contains('/([?&#](?:state|token)=)[^&#\\s)]+/giu'));
+  });
 
   test('email auth dialog mounts and forwards Cloudflare CAPTCHA', () async {
     final source = await File(
@@ -135,11 +130,24 @@ void main() {
     final shared = await File(
       'lib/app/captcha_verification.dart',
     ).readAsString();
-    expect(shared, contains('Retry verification'));
+    expect(shared, contains('authRetryVerification'));
     expect(shared, contains('controller.reset()'));
   });
 
-  test('native challenge keeps the callback protocol in the client', () async {
+  test(
+    'static CAPTCHA challenge supports every app locale and Arabic RTL',
+    () async {
+      final source = await File('web/auth/challenge.html').readAsString();
+
+      for (final locale in const ['ar', 'de', 'en', 'es', 'fr', 'ru', 'zh']) {
+        expect(source, contains('$locale: {'), reason: locale);
+      }
+      expect(source, contains('document.documentElement.lang = language'));
+      expect(source, contains('language === "ar" ? "rtl" : "ltr"'));
+    },
+  );
+
+  test('native challenge keeps callback transports in the client', () async {
     final broker = await File(
       'lib/app/native_captcha_broker_io.dart',
     ).readAsString();
@@ -147,6 +155,8 @@ void main() {
 
     expect(broker, contains("uri.scheme != 'pomodoist'"));
     expect(broker, contains("uri.host != 'captcha-callback'"));
+    expect(broker, contains('InternetAddress.loopbackIPv4'));
+    expect(broker, contains("host: '127.0.0.1'"));
     expect(config, contains('POMODOIST_REGISTRATION_URL'));
   });
 

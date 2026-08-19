@@ -25,6 +25,7 @@ import '../features/tasks/presentation/search_screen.dart';
 import '../features/tasks/presentation/task_detail_screen.dart';
 import '../features/tasks/presentation/timeline_screen.dart';
 import '../features/tasks/presentation/upcoming_screen.dart';
+import 'account_auth_feedback.dart';
 import 'account_providers.dart';
 import 'app_startup_gate.dart';
 import 'runtime_public_config.dart';
@@ -60,7 +61,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/login',
         redirect: (_, state) => signedIn() ? _authReturnTo(state.uri) : null,
         pageBuilder: (context, state) => NoTransitionPage(
-          child: LoginScreen(returnTo: _authReturnTo(state.uri)),
+          child: LoginScreen(
+            returnTo: _authReturnTo(state.uri),
+            initialFailure: accountAuthCallbackFailureFromValue(
+              state.uri.queryParameters['authFailure'],
+            ),
+          ),
         ),
       ),
       GoRoute(
@@ -256,6 +262,22 @@ String initialAppLocationFor({required bool isWeb, required Uri baseUri}) {
   if (!isWeb || !baseUri.path.startsWith('/')) {
     return '/today';
   }
+  if (baseUri.path == '/login-callback') {
+    final returnToValues = baseUri.queryParametersAll['returnTo'];
+    final returnTo = returnToValues?.length == 1
+        ? _localReturnPath(
+            returnToValues!.single,
+            fallback: '/settings',
+            blockedPath: '/login-callback',
+          )
+        : null;
+    final authFailure = safeAccountAuthCallbackFailureValue(baseUri);
+    if (returnTo == null && authFailure == null) return '/login-callback';
+    return Uri(
+      path: '/login-callback',
+      queryParameters: {'returnTo': ?returnTo, 'authFailure': ?authFailure},
+    ).toString();
+  }
   return Uri(
     path: baseUri.path.isEmpty ? '/' : baseUri.path,
     query: baseUri.hasQuery ? baseUri.query : null,
@@ -274,11 +296,23 @@ String _purchaseSuccessReturnTo(String? value) {
 }
 
 String _loginCallbackReturnTo(Uri uri) {
-  return _localReturnPath(
+  final returnTo = _localReturnPath(
     uri.queryParameters['returnTo'],
     fallback: '/settings',
     blockedPath: '/login-callback',
   );
+  final rawFailure =
+      uri.queryParameters['authFailure'] ??
+      safeAccountAuthCallbackFailureValue(uri);
+  final failure = accountAuthCallbackFailureFromValue(rawFailure);
+  if (failure == null) return returnTo;
+  return Uri(
+    path: '/login',
+    queryParameters: {
+      if (returnTo != '/today') 'returnTo': returnTo,
+      if (!failure.isCancelled) 'authFailure': failure.kind.name,
+    },
+  ).toString();
 }
 
 String _authReturnTo(Uri uri) {

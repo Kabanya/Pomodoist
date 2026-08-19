@@ -308,6 +308,126 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get authEmailSignInTitle => '使用邮箱登录';
+
+  @override
+  String get authSignInAction => '登录';
+
+  @override
+  String get authSendLink => '发送链接';
+
+  @override
+  String get authMagicLinkSent => '登录链接已发送。请检查收件箱和垃圾邮件文件夹。';
+
+  @override
+  String get authAccountCreated => '账户已创建。';
+
+  @override
+  String get authSignedIn => '已登录。';
+
+  @override
+  String get authEmailRequired => '请输入邮箱。';
+
+  @override
+  String get authEmailInvalid => '请检查邮箱地址，例如 name@example.com。';
+
+  @override
+  String get authPasswordRequired => '请输入密码。';
+
+  @override
+  String get authInvalidCredentials => '邮箱或密码不正确。请检查后重试。';
+
+  @override
+  String get authEmailUnconfirmed => '请使用我们发送的链接确认邮箱，然后重新登录。';
+
+  @override
+  String get authWeakPassword => '此密码太容易被猜到。请使用更长、更难预测的密码。';
+
+  @override
+  String get authAccountMayExist => '无法创建账户。如果你曾用此邮箱注册，请改为登录。';
+
+  @override
+  String get authRateLimited => '尝试次数过多。请等待几分钟后重试。';
+
+  @override
+  String get authEmailRateLimited => '请求邮件次数过多。请等待几分钟后再请求。';
+
+  @override
+  String get authOffline => '无法连接账户服务。请检查网络连接后重试。';
+
+  @override
+  String get authTimeout => '账户服务响应时间过长。请重试。';
+
+  @override
+  String get authServiceUnavailable => '账户服务暂时不可用。请稍后重试。';
+
+  @override
+  String get authCaptchaRequired => '请完成安全验证以继续。';
+
+  @override
+  String get authCaptchaExpired => '安全验证已过期。请重新完成验证。';
+
+  @override
+  String get authCaptchaFailed => '安全验证失败。请重新验证。';
+
+  @override
+  String get authCaptchaCancelled => '安全验证已取消。请重新开始以继续。';
+
+  @override
+  String get authCaptchaUnavailable => '安全验证暂时不可用。请检查网络后重试。';
+
+  @override
+  String get authCaptchaOpenFailed => 'Pomodoist 无法在浏览器中打开安全验证。请检查默认浏览器后重试。';
+
+  @override
+  String get authProviderFallback => '此服务商';
+
+  @override
+  String authProviderUnavailable(String provider) {
+    return '暂时无法使用 $provider 登录。请重试或使用其他方式。';
+  }
+
+  @override
+  String get authSignUpDisabled => '暂时无法使用邮箱创建账户。请使用其他登录方式。';
+
+  @override
+  String get authAccountRestricted => '此账户目前无法登录。如果你认为这是错误，请联系支持。';
+
+  @override
+  String get authLinkExpired => '此登录链接无效或已过期。请申请新链接。';
+
+  @override
+  String get authUnexpectedSignIn => '无法登录。请重试。';
+
+  @override
+  String get authUnexpectedSignUp => '无法创建账户。请重试。';
+
+  @override
+  String get authUnexpectedMagicLink => '无法发送登录链接。请重试。';
+
+  @override
+  String get authRetryVerification => '重新验证';
+
+  @override
+  String get captchaSecurityLabel => '安全验证';
+
+  @override
+  String get captchaChallengeTitle => 'Pomodoist 安全验证';
+
+  @override
+  String get captchaChallengePrompt => '请确认你是真人，以继续使用 Pomodoist。';
+
+  @override
+  String get captchaChallengeInvalid => '此安全验证链接无效。请返回 Pomodoist 后重试。';
+
+  @override
+  String get captchaChallengeHandoffHelp =>
+      '如果 Pomodoist 未打开，请使用下方按钮。如果尚未安装应用，请关闭此页面并返回开始操作的设备。';
+
+  @override
+  String get captchaReturnToApp => '返回 Pomodoist';
+
+  @override
   String get navSearch => '搜索';
 
   @override

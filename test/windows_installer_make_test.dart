@@ -11,6 +11,7 @@ void main() {
       'WINDOWS_CONFIG=C:/secure config/pomodoist-windows-production.json',
       'WINDOWS_RELEASE_DIR=C:/release output/Pomodoist',
       'POMODOIST_RELEASE=0123456789abcdef0123456789abcdef01234567',
+      'DART=dart-under-test',
     ], workingDirectory: Directory.current.path);
 
     expect(result.exitCode, 0, reason: result.stderr.toString());
@@ -20,16 +21,21 @@ void main() {
         .where((line) => line.trim().isNotEmpty)
         .toList();
 
-    expect(commands, hasLength(2));
+    expect(commands, hasLength(3));
     expect(
       commands[0],
+      'dart-under-test run tool/desktop_release_config.dart '
+      '--config "C:/secure config/pomodoist-windows-production.json"',
+    );
+    expect(
+      commands[1],
       'powershell.exe -NoProfile -ExecutionPolicy Bypass '
       '-File ./tool/windows/build.ps1 -Configuration Release -Clean '
       '-ConfigFile "C:/secure config/pomodoist-windows-production.json" '
       '-ReleaseSha "0123456789abcdef0123456789abcdef01234567"',
     );
     expect(
-      commands[1],
+      commands[2],
       'powershell.exe -NoProfile -ExecutionPolicy Bypass '
       '-File ./tool/windows/installer/build.ps1 '
       '-BuildDirectory "C:/release output/Pomodoist"',
