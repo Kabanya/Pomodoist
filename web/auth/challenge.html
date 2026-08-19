@@ -93,28 +93,91 @@
       (() => {
         "use strict";
 
-        const ru = navigator.language.toLowerCase().startsWith("ru");
-        const copy = ru ? {
-          title: "Проверка безопасности Pomodoist",
-          loading: "Загружаем проверку…",
-          prompt: "Подтвердите, что вы человек, чтобы продолжить вход.",
-          invalid: "Ссылка проверки недействительна. Вернитесь в Pomodoist и попробуйте войти ещё раз.",
-          error: "Не удалось загрузить проверку. Проверьте интернет-соединение и повторите попытку.",
-          expired: "Время проверки истекло. Повторите попытку.",
-          returning: "Проверка завершена. Возвращаемся в Pomodoist…",
-          retry: "Повторить проверку",
-          back: "Вернуться в Pomodoist",
-        } : {
-          title: "Pomodoist security check",
-          loading: "Loading verification…",
-          prompt: "Confirm you are human to continue signing in.",
-          invalid: "This verification link is invalid. Return to Pomodoist and try signing in again.",
-          error: "The verification could not load. Check your connection and try again.",
-          expired: "The verification expired. Please try again.",
-          returning: "Verification complete. Returning to Pomodoist…",
-          retry: "Try verification again",
-          back: "Return to Pomodoist",
+        const copies = {
+          en: {
+            title: "Pomodoist security check",
+            loading: "Loading verification…",
+            prompt: "Confirm you are human to continue signing in.",
+            invalid: "This verification link is invalid. Return to Pomodoist and try signing in again.",
+            error: "The verification could not load. Check your connection and try again.",
+            expired: "The verification expired. Please try again.",
+            returning: "Verification complete. Returning to Pomodoist…",
+            retry: "Try verification again",
+            back: "Return to Pomodoist",
+          },
+          ru: {
+            title: "Проверка безопасности Pomodoist",
+            loading: "Загружаем проверку…",
+            prompt: "Подтвердите, что вы человек, чтобы продолжить вход.",
+            invalid: "Ссылка проверки недействительна. Вернитесь в Pomodoist и попробуйте войти ещё раз.",
+            error: "Не удалось загрузить проверку. Проверьте интернет-соединение и повторите попытку.",
+            expired: "Время проверки истекло. Повторите попытку.",
+            returning: "Проверка завершена. Возвращаемся в Pomodoist…",
+            retry: "Повторить проверку",
+            back: "Вернуться в Pomodoist",
+          },
+          de: {
+            title: "Pomodoist-Sicherheitsprüfung",
+            loading: "Prüfung wird geladen…",
+            prompt: "Bestätige, dass du ein Mensch bist, um fortzufahren.",
+            invalid: "Dieser Prüfungslink ist ungültig. Kehre zu Pomodoist zurück und versuche es erneut.",
+            error: "Die Prüfung konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.",
+            expired: "Die Prüfung ist abgelaufen. Versuche es erneut.",
+            returning: "Prüfung abgeschlossen. Zurück zu Pomodoist…",
+            retry: "Prüfung erneut versuchen",
+            back: "Zurück zu Pomodoist",
+          },
+          es: {
+            title: "Verificación de seguridad de Pomodoist",
+            loading: "Cargando la verificación…",
+            prompt: "Confirma que eres una persona para continuar.",
+            invalid: "Este enlace de verificación no es válido. Vuelve a Pomodoist e inténtalo de nuevo.",
+            error: "No se pudo cargar la verificación. Revisa tu conexión e inténtalo de nuevo.",
+            expired: "La verificación ha caducado. Inténtalo de nuevo.",
+            returning: "Verificación completada. Volviendo a Pomodoist…",
+            retry: "Reintentar verificación",
+            back: "Volver a Pomodoist",
+          },
+          fr: {
+            title: "Vérification de sécurité Pomodoist",
+            loading: "Chargement de la vérification…",
+            prompt: "Confirmez que vous êtes une personne pour continuer.",
+            invalid: "Ce lien de vérification est invalide. Revenez dans Pomodoist et réessayez.",
+            error: "Impossible de charger la vérification. Vérifiez votre connexion et réessayez.",
+            expired: "La vérification a expiré. Réessayez.",
+            returning: "Vérification terminée. Retour dans Pomodoist…",
+            retry: "Réessayer la vérification",
+            back: "Revenir à Pomodoist",
+          },
+          ar: {
+            title: "تحقق أمان Pomodoist",
+            loading: "جارٍ تحميل التحقق…",
+            prompt: "أكد أنك إنسان للمتابعة.",
+            invalid: "رابط التحقق غير صالح. عُد إلى Pomodoist وحاول مجددًا.",
+            error: "تعذر تحميل التحقق. تحقق من اتصالك وحاول مجددًا.",
+            expired: "انتهت صلاحية التحقق. حاول مجددًا.",
+            returning: "اكتمل التحقق. جارٍ الرجوع إلى Pomodoist…",
+            retry: "إعادة محاولة التحقق",
+            back: "العودة إلى Pomodoist",
+          },
+          zh: {
+            title: "Pomodoist 安全验证",
+            loading: "正在加载验证…",
+            prompt: "请确认你是真人以继续。",
+            invalid: "此验证链接无效。请返回 Pomodoist 后重试。",
+            error: "无法加载验证。请检查网络后重试。",
+            expired: "验证已过期。请重试。",
+            returning: "验证完成。正在返回 Pomodoist…",
+            retry: "重新验证",
+            back: "返回 Pomodoist",
+          },
         };
+        const language = (navigator.languages || [navigator.language])
+          .map((value) => String(value).toLowerCase().split("-")[0])
+          .find((value) => Object.hasOwn(copies, value)) || "en";
+        const copy = copies[language];
+        document.documentElement.lang = language;
+        document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
         const title = document.getElementById("title");
         const status = document.getElementById("status");
         const widget = document.getElementById("turnstile-widget");
@@ -125,10 +188,33 @@
         const queryKeys = [...query.keys()];
         const fragmentKeys = [...fragment.keys()];
         const state = fragment.get("state") || "";
+        const returnTo = query.get("returnTo") || "";
+        let returnTarget;
+        try {
+          returnTarget = new URL(returnTo);
+        } catch (_) {
+          returnTarget = null;
+        }
+        const customProtocolTarget = returnTarget !== null &&
+          returnTarget.protocol === "pomodoist:" &&
+          returnTarget.hostname === "captcha-callback" &&
+          returnTarget.pathname === "" && returnTarget.port === "";
+        const loopbackPort = Number(returnTarget?.port || "0");
+        const desktopLoopbackTarget = returnTarget !== null &&
+          returnTarget.protocol === "http:" &&
+          returnTarget.hostname === "127.0.0.1" &&
+          returnTarget.pathname === "/captcha-callback" &&
+          Number.isInteger(loopbackPort) &&
+          loopbackPort >= 1024 && loopbackPort <= 65535;
+        const validReturnTarget = returnTarget !== null &&
+          returnTarget.href === returnTo &&
+          (customProtocolTarget || desktopLoopbackTarget) &&
+          returnTarget.username === "" && returnTarget.password === "" &&
+          returnTarget.search === "" && returnTarget.hash === "";
         const validRequest = location.pathname === "/auth/challenge" &&
           queryKeys.length === 1 && queryKeys[0] === "returnTo" &&
           query.getAll("returnTo").length === 1 &&
-          query.get("returnTo") === "pomodoist://captcha-callback" &&
+          validReturnTarget &&
           fragmentKeys.length === 1 && fragmentKeys[0] === "state" &&
           fragment.getAll("state").length === 1 &&
           state.length >= 32 && state.length <= 128 &&
@@ -165,7 +251,7 @@
             if (!callbackUrl) showError(copy.error);
             return;
           }
-          callbackUrl = new URL("pomodoist://captcha-callback");
+          callbackUrl = new URL(returnTarget.href);
           callbackUrl.searchParams.set("state", state);
           callbackUrl.searchParams.set("token", token);
           setStatus("success", copy.returning);
