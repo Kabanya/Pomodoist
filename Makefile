@@ -149,7 +149,9 @@ build-macos-release: testflight-preflight macos-oauth-check
 	$(FLUTTER) build macos --release \
 		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
-		--dart-define=POMODOIST_BILLING_CHANNEL=storekit
+		--dart-define=POMODOIST_BILLING_CHANNEL=storekit \
+		--dart-define=GOOGLE_DESKTOP_CLIENT_ID="$(GOOGLE_DESKTOP_CLIENT_ID)" \
+		--dart-define=GOOGLE_DESKTOP_CLIENT_SECRET="$(GOOGLE_DESKTOP_CLIENT_SECRET)"
 
 testflight-preflight:
 	python3 tool/check_testflight_env.py "$(TESTFLIGHT_CONFIG)"

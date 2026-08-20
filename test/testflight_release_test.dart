@@ -110,5 +110,15 @@ SENTRY_DSN=
       output,
       contains('--dart-define=POMODOIST_BILLING_CHANNEL=storekit'),
     );
+    expect(
+      output,
+      contains(
+        '--dart-define=GOOGLE_DESKTOP_CLIENT_ID="desktop.apps.googleusercontent.com"',
+      ),
+    );
+    expect(
+      output,
+      contains('--dart-define=GOOGLE_DESKTOP_CLIENT_SECRET="desktop-secret"'),
+    );
   });
 }
