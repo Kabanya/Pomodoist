@@ -634,6 +634,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsAboutTitle => 'Über die App';
 
   @override
+  String get settingsFocusCompletionCelebrationTitle =>
+      'Feier zum Fokusabschluss';
+
+  @override
+  String get settingsFocusCompletionCelebrationSubtitle =>
+      'Nach der letzten Pause eine Vollbild-Feier anzeigen.';
+
+  @override
   String get settingsVersionLabel => 'Version';
 
   @override
@@ -1659,6 +1667,35 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get focusStopped => 'Fokus gestoppt';
+
+  @override
+  String get focusCompletionTitle => 'Großartige Arbeit!';
+
+  @override
+  String get focusCompletionLinkedSubtitle =>
+      'Alle geplanten Fokusintervalle für diese Aufgabe sind abgeschlossen.';
+
+  @override
+  String get focusCompletionStandaloneSubtitle =>
+      'Dein Fokuszyklus ist abgeschlossen.';
+
+  @override
+  String get focusCompletionQuestion =>
+      'Möchtest du diese Aufgabe abschließen?';
+
+  @override
+  String get focusCompletionCompleteTask => 'Aufgabe abschließen';
+
+  @override
+  String get focusCompletionKeepOpen => 'Aufgabe offen lassen';
+
+  @override
+  String get focusCompletionDone => 'Fertig';
+
+  @override
+  String focusCompletionTaskError(Object error) {
+    return 'Aufgabe konnte nicht abgeschlossen werden: $error';
+  }
 
   @override
   String get completeInterval => 'Intervall abschließen';

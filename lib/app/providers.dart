@@ -14,6 +14,7 @@ import '../core/time/clock.dart';
 import '../core/time/timer_engine.dart';
 import '../features/focus/data/focus_repository_impl.dart';
 import '../features/focus/domain/focus_models.dart';
+import '../features/focus/presentation/focus_completion_celebration_controller.dart';
 import '../features/focus/presentation/focus_view_mode.dart';
 import '../features/billing/billing.dart';
 import '../features/integrations/google_calendar/data/auth/google_calendar_auth_service.dart';
@@ -569,12 +570,18 @@ final labelRepositoryProvider = Provider<LabelRepository>((ref) {
 });
 
 final focusRepositoryProvider = Provider<FocusRepository>((ref) {
+  ref.read(focusCompletionCelebrationEnabledProvider);
   return DriftFocusRepository(
     ref.watch(appDatabaseProvider),
     ref.watch(syncQueueRepositoryProvider),
     ref.watch(notificationSchedulerProvider),
     soundPlayer: ref.watch(focusSoundPlayerProvider),
     kanbanTransitions: ref.watch(kanbanTransitionCoordinatorProvider),
+    onRunCompleted: (event) {
+      if (ref.read(focusCompletionCelebrationEnabledProvider)) {
+        ref.read(focusRunCompletionControllerProvider.notifier).present(event);
+      }
+    },
   );
 });
 

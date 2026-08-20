@@ -183,7 +183,7 @@ make windows-installer WINDOWS_CONFIG=C:/path/to/production-defines.json
 
 Linux release bundles and AppImages require the same public production
 configuration. Copy the example to the ignored local default, replace the
-placeholders, and build:
+remaining placeholders, and build:
 
 ```bash
 cp tool/desktop-production-defines.example.json .env.linux-production.json

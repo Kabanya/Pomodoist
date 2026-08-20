@@ -586,6 +586,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAboutTitle => '关于';
 
   @override
+  String get settingsFocusCompletionCelebrationTitle => '专注完成庆祝';
+
+  @override
+  String get settingsFocusCompletionCelebrationSubtitle => '在最后一次休息后显示全屏庆祝画面。';
+
+  @override
   String get settingsVersionLabel => '版本';
 
   @override
@@ -1583,6 +1589,32 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get focusStopped => '专注已停止';
+
+  @override
+  String get focusCompletionTitle => '做得漂亮！';
+
+  @override
+  String get focusCompletionLinkedSubtitle => '此任务计划的所有专注时段均已完成。';
+
+  @override
+  String get focusCompletionStandaloneSubtitle => '你的专注周期已完成。';
+
+  @override
+  String get focusCompletionQuestion => '要完成此任务吗？';
+
+  @override
+  String get focusCompletionCompleteTask => '完成任务';
+
+  @override
+  String get focusCompletionKeepOpen => '保持任务未完成';
+
+  @override
+  String get focusCompletionDone => '完成';
+
+  @override
+  String focusCompletionTaskError(Object error) {
+    return '无法完成任务：$error';
+  }
 
   @override
   String get completeInterval => '完成间隔';

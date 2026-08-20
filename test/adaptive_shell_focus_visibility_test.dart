@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/app/theme/app_theme.dart';
 import 'package:pomodoist/app/widgets/adaptive_shell.dart';
 import 'package:pomodoist/features/focus/domain/focus_models.dart';
+import 'package:pomodoist/features/focus/presentation/focus_completion_celebration_controller.dart';
 import 'package:pomodoist/features/productivity/domain/achievement_models.dart';
+import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -56,6 +60,62 @@ void main() {
       expect(find.byTooltip('Pause'), findsOneWidget);
     },
   );
+
+  testWidgets('completion overlays a non-Focus shell route', (tester) async {
+    await _pumpShell(
+      tester,
+      size: const Size(600, 800),
+      initialLocation: '/today',
+    );
+    final context = tester.element(find.byType(AdaptiveShell));
+    ProviderScope.containerOf(context)
+        .read(focusRunCompletionControllerProvider.notifier)
+        .present(
+          FocusRunCompletionEvent(
+            runId: 'completed-run',
+            completedWorkIntervals: 4,
+            targetWorkIntervals: 4,
+            completedAt: DateTime.utc(2026, 8, 19, 12),
+          ),
+        );
+
+    await tester.pump();
+
+    expect(find.byKey(const Key('focus-completion-overlay')), findsOneWidget);
+    expect(find.byKey(const Key('go-today')).hitTestable(), findsNothing);
+  });
+
+  testWidgets('global completion keeps task undo feedback visible', (
+    tester,
+  ) async {
+    final taskRepository = _TaskRepository(_task());
+    await _pumpShell(
+      tester,
+      size: const Size(600, 800),
+      initialLocation: '/today',
+      taskRepository: taskRepository,
+    );
+    final context = tester.element(find.byType(AdaptiveShell));
+    ProviderScope.containerOf(context)
+        .read(focusRunCompletionControllerProvider.notifier)
+        .present(
+          FocusRunCompletionEvent(
+            runId: 'linked-run',
+            taskId: 'task-1',
+            taskTitle: 'Ship celebration',
+            completedWorkIntervals: 4,
+            targetWorkIntervals: 4,
+            completedAt: DateTime.utc(2026, 8, 19, 12),
+          ),
+        );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('focus-completion-complete-task')));
+    await tester.pumpAndSettle();
+
+    expect(taskRepository.completeCount, 1);
+    expect(find.text('Task completed'), findsOneWidget);
+  });
 }
 
 Finder get _miniPlayerSurface =>
@@ -65,6 +125,7 @@ Future<void> _pumpShell(
   WidgetTester tester, {
   required Size size,
   String initialLocation = '/today',
+  TaskRepository? taskRepository,
 }) async {
   final previousSize = tester.view.physicalSize;
   final previousDevicePixelRatio = tester.view.devicePixelRatio;
@@ -94,9 +155,18 @@ Future<void> _pumpShell(
         achievementsProvider.overrideWith(
           (ref) => Stream.value(const <AchievementItem>[]),
         ),
+        if (taskRepository != null)
+          taskRepositoryProvider.overrideWithValue(taskRepository),
       ],
       child: MaterialApp(
         theme: AppTheme.light(),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
         home: _AdaptiveShellRouteHarness(initialLocation: initialLocation),
       ),
     ),
@@ -213,4 +283,43 @@ class _NoopAchievementRepository implements AchievementRepository {
   Future<List<AchievementItem>> takePendingAnnouncements(
     List<AchievementItem> items,
   ) async => const [];
+}
+
+TaskItem _task() {
+  final now = DateTime.utc(2026, 8, 19, 12);
+  return TaskItem(
+    id: 'task-1',
+    userId: 'local',
+    content: 'Ship celebration',
+    projectId: 'project-1',
+    priority: 1,
+    status: 'open',
+    completedFocusIntervals: 4,
+    totalFocusSeconds: 6000,
+    orderKey: '1',
+    isDeleted: false,
+    createdAt: now,
+    updatedAt: now,
+  );
+}
+
+class _TaskRepository implements TaskRepository {
+  _TaskRepository(this.task);
+
+  final TaskItem task;
+  int completeCount = 0;
+
+  @override
+  Stream<TaskItem?> watchTask(String id) => Stream.value(task);
+
+  @override
+  Future<void> completeTask(String id) async {
+    completeCount++;
+  }
+
+  @override
+  Future<void> uncompleteTask(String id) async {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

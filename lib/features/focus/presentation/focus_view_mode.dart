@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 const focusViewModePreferenceKey = 'focus.viewMode';
 const focusTimerVisualStylePreferenceKey = 'focus.timerVisualStyle';
 const lastFocusPresetIdPreferenceKey = 'focus.lastPresetId';
+const focusCompletionCelebrationEnabledPreferenceKey =
+    'focus.completionCelebration.enabled';
 
 enum FocusViewMode {
   full('full'),
@@ -67,6 +69,44 @@ final lastFocusPresetIdProvider =
     NotifierProvider<LastFocusPresetIdController, String?>(
       LastFocusPresetIdController.new,
     );
+
+final focusCompletionCelebrationEnabledProvider =
+    NotifierProvider<FocusCompletionCelebrationEnabledController, bool>(
+      FocusCompletionCelebrationEnabledController.new,
+    );
+
+class FocusCompletionCelebrationEnabledController extends Notifier<bool> {
+  bool _loaded = false;
+  bool _hasLocalSelection = false;
+
+  @override
+  bool build() {
+    if (!_loaded) {
+      _loaded = true;
+      unawaited(_loadStoredValue());
+    }
+    return true;
+  }
+
+  Future<void> setEnabled(bool enabled) async {
+    _hasLocalSelection = true;
+    state = enabled;
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs?.setBool(
+      focusCompletionCelebrationEnabledPreferenceKey,
+      enabled,
+    );
+  }
+
+  Future<void> _loadStoredValue() async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    final stored =
+        prefs?.getBool(focusCompletionCelebrationEnabledPreferenceKey) ?? true;
+    if (ref.mounted && !_hasLocalSelection) {
+      state = stored;
+    }
+  }
+}
 
 class FocusViewModeController extends Notifier<FocusViewMode> {
   bool _loaded = false;

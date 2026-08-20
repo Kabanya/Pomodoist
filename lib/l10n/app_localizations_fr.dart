@@ -633,6 +633,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsAboutTitle => 'À propos';
 
   @override
+  String get settingsFocusCompletionCelebrationTitle =>
+      'Célébration de fin de concentration';
+
+  @override
+  String get settingsFocusCompletionCelebrationSubtitle =>
+      'Afficher une célébration en plein écran après la dernière pause.';
+
+  @override
   String get settingsVersionLabel => 'Version';
 
   @override
@@ -1660,6 +1668,34 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get focusStopped => 'Focus arrêté';
+
+  @override
+  String get focusCompletionTitle => 'Excellent travail !';
+
+  @override
+  String get focusCompletionLinkedSubtitle =>
+      'Tous les intervalles de concentration prévus pour cette tâche sont terminés.';
+
+  @override
+  String get focusCompletionStandaloneSubtitle =>
+      'Votre cycle de concentration est terminé.';
+
+  @override
+  String get focusCompletionQuestion => 'Voulez-vous terminer cette tâche ?';
+
+  @override
+  String get focusCompletionCompleteTask => 'Terminer la tâche';
+
+  @override
+  String get focusCompletionKeepOpen => 'Garder la tâche ouverte';
+
+  @override
+  String get focusCompletionDone => 'Terminé';
+
+  @override
+  String focusCompletionTaskError(Object error) {
+    return 'Impossible de terminer la tâche : $error';
+  }
 
   @override
   String get completeInterval => 'Terminer l\'intervalle';

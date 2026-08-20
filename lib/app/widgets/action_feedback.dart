@@ -21,9 +21,6 @@ void showActionFeedback(
   ActionFeedbackSound sound = ActionFeedbackSound.click,
   AppHapticCue haptic = AppHapticCue.light,
 }) {
-  if (Scaffold.maybeOf(context) == null) {
-    return;
-  }
   final messenger = ScaffoldMessenger.maybeOf(context);
   if (messenger == null) {
     return;

@@ -30,6 +30,24 @@ class FocusRunItem {
   final DateTime updatedAt;
 }
 
+class FocusRunCompletionEvent {
+  const FocusRunCompletionEvent({
+    required this.runId,
+    required this.completedWorkIntervals,
+    required this.targetWorkIntervals,
+    required this.completedAt,
+    this.taskId,
+    this.taskTitle,
+  });
+
+  final String runId;
+  final String? taskId;
+  final String? taskTitle;
+  final int completedWorkIntervals;
+  final int targetWorkIntervals;
+  final DateTime completedAt;
+}
+
 class FocusIntervalItem {
   const FocusIntervalItem({
     required this.id,

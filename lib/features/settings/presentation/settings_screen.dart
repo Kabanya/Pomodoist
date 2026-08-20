@@ -716,6 +716,9 @@ class SettingsScreen extends ConsumerWidget {
     final reengagementEnabled = ref.watch(
       reengagementNotificationsEnabledProvider,
     );
+    final focusCompletionCelebrationEnabled = ref.watch(
+      focusCompletionCelebrationEnabledProvider,
+    );
     final colors = context.appColors;
     return SafeArea(
       child: ListView(
@@ -1019,6 +1022,25 @@ class SettingsScreen extends ConsumerWidget {
               subtitle: Text(l10n.settingsShortcutsSubtitle),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/settings/shortcuts'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: SwitchListTile(
+              key: const Key('settings-focus-completion-celebration-switch'),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+              secondary: const Icon(Icons.celebration_outlined),
+              title: Text(l10n.settingsFocusCompletionCelebrationTitle),
+              subtitle: Text(l10n.settingsFocusCompletionCelebrationSubtitle),
+              value: focusCompletionCelebrationEnabled,
+              onChanged: (value) {
+                ref
+                    .read(focusCompletionCelebrationEnabledProvider.notifier)
+                    .setEnabled(value);
+              },
             ),
           ),
           const SizedBox(height: 12),

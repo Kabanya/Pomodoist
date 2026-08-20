@@ -654,6 +654,80 @@ void main() {
     expect(scheduler.cancelReengagementCount, 1);
   });
 
+  testWidgets('SettingsScreen places completion celebration before About', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
+          googleCalendarAuthServiceProvider.overrideWithValue(
+            const _NoopGoogleCalendarAuthService(),
+          ),
+          googleCalendarConnectionProvider.overrideWith(
+            (ref) => Stream.value(null),
+          ),
+        ],
+        child: const MaterialApp(home: SettingsScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final about = find.byKey(const Key('settings-app-info-section'));
+    await tester.scrollUntilVisible(
+      about,
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    final celebration = find.byKey(
+      const Key('settings-focus-completion-celebration-switch'),
+    );
+
+    expect(celebration, findsOneWidget);
+    expect(
+      tester.getTopLeft(celebration).dy,
+      lessThan(tester.getTopLeft(about).dy),
+    );
+  });
+
+  testWidgets('SettingsScreen persists disabled completion celebration', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
+          googleCalendarAuthServiceProvider.overrideWithValue(
+            const _NoopGoogleCalendarAuthService(),
+          ),
+          googleCalendarConnectionProvider.overrideWith(
+            (ref) => Stream.value(null),
+          ),
+        ],
+        child: const MaterialApp(home: SettingsScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final about = find.byKey(const Key('settings-app-info-section'));
+    await tester.scrollUntilVisible(
+      about,
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    final celebration = find.byKey(
+      const Key('settings-focus-completion-celebration-switch'),
+    );
+    expect(celebration, findsOneWidget);
+    await tester.tap(celebration);
+    await tester.pump();
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('focus.completionCelebration.enabled'), isFalse);
+  });
+
   test(
     'AppThemeModeController persists mode across provider rebuilds',
     () async {

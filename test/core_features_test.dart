@@ -2407,6 +2407,68 @@ void main() {
     );
 
     test(
+      'final completed break publishes linked run completion details',
+      () async {
+        final completions = <FocusRunCompletionEvent>[];
+        final repository = DriftFocusRepository(
+          db,
+          syncQueue,
+          _NoopNotificationScheduler(),
+          kanbanTransitions: kanbanTransitions,
+          onRunCompleted: completions.add,
+        );
+        final taskId = await taskRepository.createTask(
+          const CreateTaskInput(content: 'Ship celebration'),
+        );
+        final completedAt = DateTime.utc(2026, 8, 19, 12);
+        final runId = await repository.startRun(
+          StartFocusRunInput(
+            taskId: taskId,
+            presetId: defaultPresetId,
+            targetWorkIntervals: 1,
+          ),
+        );
+
+        await repository.completeActiveInterval();
+        expect(completions, isEmpty);
+
+        await repository.startReadyInterval();
+        await repository.completeActiveInterval(now: completedAt);
+        await repository.completeActiveInterval(now: completedAt);
+
+        expect(completions, hasLength(1));
+        expect(completions.single.runId, runId);
+        expect(completions.single.taskId, taskId);
+        expect(completions.single.taskTitle, 'Ship celebration');
+        expect(completions.single.completedWorkIntervals, 1);
+        expect(completions.single.targetWorkIntervals, 1);
+        expect(completions.single.completedAt, completedAt);
+      },
+    );
+
+    test('completion callback failures do not fail a committed run', () async {
+      final repository = DriftFocusRepository(
+        db,
+        syncQueue,
+        _NoopNotificationScheduler(),
+        onRunCompleted: (_) => throw StateError('presentation failed'),
+      );
+      await repository.startRun(
+        const StartFocusRunInput(
+          presetId: defaultPresetId,
+          targetWorkIntervals: 1,
+        ),
+      );
+      await repository.completeActiveInterval();
+      await repository.startReadyInterval();
+
+      await repository.completeActiveInterval();
+
+      expect(await repository.watchActiveRun().first, isNull);
+      expect(await repository.watchActiveInterval().first, isNull);
+    });
+
+    test(
       'focus sync queue stays empty until the whole run completes',
       () async {
         final runId = await focusRepository.startRun(
@@ -2451,6 +2513,25 @@ void main() {
           .toList();
       expect(focusCommands.map((command) => command.type), ['focus.run.stop']);
       expect(focusCommands.single.clientId, runId);
+    });
+
+    test('stopping or interrupting never publishes completion', () async {
+      final completions = <FocusRunCompletionEvent>[];
+      final repository = DriftFocusRepository(
+        db,
+        syncQueue,
+        _NoopNotificationScheduler(),
+        onRunCompleted: completions.add,
+      );
+
+      for (final reason in StopFocusReason.values) {
+        await repository.startRun(
+          const StartFocusRunInput(targetWorkIntervals: 1),
+        );
+        await repository.stopActiveRun(reason: reason);
+      }
+
+      expect(completions, isEmpty);
     });
 
     test(
@@ -2796,7 +2877,68 @@ void main() {
       ]);
     });
 
+    test('skipping the final break publishes run completion', () async {
+      final completions = <FocusRunCompletionEvent>[];
+      final repository = DriftFocusRepository(
+        db,
+        syncQueue,
+        _NoopNotificationScheduler(),
+        onRunCompleted: completions.add,
+      );
+      final completedAt = DateTime.utc(2026, 8, 19, 13);
+      final runId = await repository.startRun(
+        const StartFocusRunInput(
+          presetId: defaultPresetId,
+          targetWorkIntervals: 1,
+        ),
+      );
+      await repository.completeActiveInterval();
+
+      await repository.skipActiveInterval(now: completedAt);
+      await repository.skipActiveInterval(now: completedAt);
+
+      expect(completions, hasLength(1));
+      expect(completions.single.runId, runId);
+      expect(completions.single.taskId, isNull);
+      expect(completions.single.taskTitle, isNull);
+      expect(completions.single.completedWorkIntervals, 1);
+      expect(completions.single.targetWorkIntervals, 1);
+      expect(completions.single.completedAt, completedAt);
+    });
+
+    test('skipping the final break plays the completion sound', () async {
+      final sounds = _RecordingFocusSoundPlayer();
+      final repository = DriftFocusRepository(
+        db,
+        syncQueue,
+        _NoopNotificationScheduler(),
+        soundPlayer: sounds,
+      );
+      await repository.startRun(
+        const StartFocusRunInput(
+          presetId: defaultPresetId,
+          targetWorkIntervals: 1,
+        ),
+      );
+      await repository.completeActiveInterval();
+
+      await repository.skipActiveInterval();
+
+      expect(sounds.cues, [
+        FocusSoundCue.start,
+        FocusSoundCue.complete,
+        FocusSoundCue.complete,
+      ]);
+    });
+
     test('strict mode blocks skip and early completion', () async {
+      final completions = <FocusRunCompletionEvent>[];
+      final repository = DriftFocusRepository(
+        db,
+        syncQueue,
+        _NoopNotificationScheduler(),
+        onRunCompleted: completions.add,
+      );
       final presetId = await focusRepository.createPreset(
         const CreateFocusPresetInput(
           name: 'Strict',
@@ -2808,24 +2950,22 @@ void main() {
         ),
       );
 
-      final runId = await focusRepository.startRun(
+      final runId = await repository.startRun(
         StartFocusRunInput(presetId: presetId, targetWorkIntervals: 2),
       );
-      await focusRepository.skipActiveInterval();
+      await repository.skipActiveInterval();
 
-      var interval = await focusRepository.watchActiveInterval().first;
+      var interval = await repository.watchActiveInterval().first;
       expect(interval!.status, 'running');
       expect(interval.type, 'work');
-      expect(
-        await focusRepository.watchIntervalsForRun(runId).first,
-        hasLength(1),
-      );
+      expect(await repository.watchIntervalsForRun(runId).first, hasLength(1));
 
-      await focusRepository.completeActiveInterval();
+      await repository.completeActiveInterval();
 
-      interval = await focusRepository.watchActiveInterval().first;
+      interval = await repository.watchActiveInterval().first;
       expect(interval!.status, 'running');
       expect(interval.type, 'work');
+      expect(completions, isEmpty);
     });
 
     test('demo seed data is idempotent and avoids sync commands', () async {

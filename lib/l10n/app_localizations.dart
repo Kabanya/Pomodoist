@@ -1182,6 +1182,18 @@ abstract class AppLocalizations {
   /// **'About'**
   String get settingsAboutTitle;
 
+  /// No description provided for @settingsFocusCompletionCelebrationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus completion celebration'**
+  String get settingsFocusCompletionCelebrationTitle;
+
+  /// No description provided for @settingsFocusCompletionCelebrationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show a full-screen celebration after the final break.'**
+  String get settingsFocusCompletionCelebrationSubtitle;
+
   /// No description provided for @settingsVersionLabel.
   ///
   /// In en, this message translates to:
@@ -2915,6 +2927,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Focus stopped'**
   String get focusStopped;
+
+  /// No description provided for @focusCompletionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Beautiful work!'**
+  String get focusCompletionTitle;
+
+  /// No description provided for @focusCompletionLinkedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All planned focus intervals for this task are complete.'**
+  String get focusCompletionLinkedSubtitle;
+
+  /// No description provided for @focusCompletionStandaloneSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your focus cycle is complete.'**
+  String get focusCompletionStandaloneSubtitle;
+
+  /// No description provided for @focusCompletionQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to complete this task?'**
+  String get focusCompletionQuestion;
+
+  /// No description provided for @focusCompletionCompleteTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete task'**
+  String get focusCompletionCompleteTask;
+
+  /// No description provided for @focusCompletionKeepOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep task open'**
+  String get focusCompletionKeepOpen;
+
+  /// No description provided for @focusCompletionDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get focusCompletionDone;
+
+  /// No description provided for @focusCompletionTaskError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not complete task: {error}'**
+  String focusCompletionTaskError(Object error);
 
   /// No description provided for @completeInterval.
   ///

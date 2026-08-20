@@ -20,7 +20,9 @@ class DriftFocusRepository implements FocusRepository {
     FocusSoundPlayer? soundPlayer,
     Uuid? uuid,
     KanbanTransitionCoordinator? kanbanTransitions,
+    void Function(FocusRunCompletionEvent event)? onRunCompleted,
   }) : _soundPlayer = soundPlayer,
+       _onRunCompleted = onRunCompleted,
        _kanbanTransitions =
            kanbanTransitions ??
            KanbanTransitionCoordinator(_db, _syncQueue, uuid: uuid),
@@ -30,8 +32,10 @@ class DriftFocusRepository implements FocusRepository {
   final SyncQueueRepository _syncQueue;
   final NotificationScheduler _notifications;
   final FocusSoundPlayer? _soundPlayer;
+  final void Function(FocusRunCompletionEvent event)? _onRunCompleted;
   final KanbanTransitionCoordinator _kanbanTransitions;
   final Uuid _uuid;
+  final Set<String> _publishedCompletionRunIds = <String>{};
 
   @override
   Stream<List<FocusPresetItem>> watchPresets() {
@@ -674,6 +678,13 @@ class DriftFocusRepository implements FocusRepository {
       );
     }
     _playSound(FocusSoundCue.complete);
+    if (completesRun) {
+      await _publishRunCompletion(
+        run: run,
+        completedWorkIntervals: completedWorkIntervals,
+        completedAt: timestamp,
+      );
+    }
   }
 
   @override
@@ -784,6 +795,14 @@ class DriftFocusRepository implements FocusRepository {
         pausedTotalSeconds: nextInterval.pausedTotalSeconds,
       );
     }
+    if (completesRun) {
+      _playSound(FocusSoundCue.complete);
+      await _publishRunCompletion(
+        run: run,
+        completedWorkIntervals: run.completedWorkIntervals,
+        completedAt: timestamp,
+      );
+    }
   }
 
   @override
@@ -841,6 +860,36 @@ class DriftFocusRepository implements FocusRepository {
   Future<void> logDistraction({required String runId, String? note}) async {
     final now = DateTime.now().toUtc();
     await _insertEvent(runId, null, 'distractionLogged', now, {'note': note});
+  }
+
+  Future<void> _publishRunCompletion({
+    required FocusRunRow run,
+    required int completedWorkIntervals,
+    required DateTime completedAt,
+  }) async {
+    final callback = _onRunCompleted;
+    if (callback == null || !_publishedCompletionRunIds.add(run.id)) {
+      return;
+    }
+    final task = run.taskId == null
+        ? null
+        : await (_db.select(
+            _db.tasks,
+          )..where((row) => row.id.equals(run.taskId!))).getSingleOrNull();
+    try {
+      callback(
+        FocusRunCompletionEvent(
+          runId: run.id,
+          taskId: run.taskId,
+          taskTitle: task?.content,
+          completedWorkIntervals: completedWorkIntervals,
+          targetWorkIntervals: run.targetWorkIntervals,
+          completedAt: completedAt,
+        ),
+      );
+    } catch (_) {
+      // Completion is committed; presentation callbacks are best-effort.
+    }
   }
 
   Future<void> _stopExistingActiveRunIfAny({DateTime? now}) async {

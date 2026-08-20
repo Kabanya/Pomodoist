@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/db/app_database.dart';
 import '../../features/productivity/domain/achievement_models.dart';
 import '../../features/productivity/presentation/achievement_announcements.dart';
+import '../../features/focus/presentation/focus_completion_celebration.dart';
 import '../../features/tasks/domain/project_colors.dart';
 import '../../features/tasks/domain/task_models.dart';
 import '../../features/tasks/presentation/widgets/create_project_dialog.dart';
@@ -167,7 +168,10 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
       );
     }
 
-    return scaffold;
+    return Stack(
+      fit: StackFit.expand,
+      children: [scaffold, const FocusRunCompletionCelebrationSlot()],
+    );
   }
 
   bool _handleKeyEvent(KeyEvent event) {

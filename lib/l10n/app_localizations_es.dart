@@ -633,6 +633,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsAboutTitle => 'Acerca de';
 
   @override
+  String get settingsFocusCompletionCelebrationTitle =>
+      'Celebración al completar el enfoque';
+
+  @override
+  String get settingsFocusCompletionCelebrationSubtitle =>
+      'Mostrar una celebración a pantalla completa después del último descanso.';
+
+  @override
   String get settingsVersionLabel => 'Versión';
 
   @override
@@ -1656,6 +1664,34 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get focusStopped => 'Enfoque detenido';
+
+  @override
+  String get focusCompletionTitle => '¡Excelente trabajo!';
+
+  @override
+  String get focusCompletionLinkedSubtitle =>
+      'Todos los intervalos de enfoque previstos para esta tarea están completos.';
+
+  @override
+  String get focusCompletionStandaloneSubtitle =>
+      'Tu ciclo de enfoque está completo.';
+
+  @override
+  String get focusCompletionQuestion => '¿Quieres completar esta tarea?';
+
+  @override
+  String get focusCompletionCompleteTask => 'Completar tarea';
+
+  @override
+  String get focusCompletionKeepOpen => 'Mantener tarea abierta';
+
+  @override
+  String get focusCompletionDone => 'Listo';
+
+  @override
+  String focusCompletionTaskError(Object error) {
+    return 'No se pudo completar la tarea: $error';
+  }
 
   @override
   String get completeInterval => 'Completar intervalo';

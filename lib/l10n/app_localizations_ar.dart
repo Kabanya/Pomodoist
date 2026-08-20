@@ -621,6 +621,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsAboutTitle => 'حول التطبيق';
 
   @override
+  String get settingsFocusCompletionCelebrationTitle => 'احتفال بإكمال التركيز';
+
+  @override
+  String get settingsFocusCompletionCelebrationSubtitle =>
+      'عرض احتفال بملء الشاشة بعد الاستراحة الأخيرة.';
+
+  @override
   String get settingsVersionLabel => 'الإصدار';
 
   @override
@@ -1640,6 +1647,33 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get focusStopped => 'توقف التركيز';
+
+  @override
+  String get focusCompletionTitle => 'عمل رائع!';
+
+  @override
+  String get focusCompletionLinkedSubtitle =>
+      'اكتملت جميع فترات التركيز المخططة لهذه المهمة.';
+
+  @override
+  String get focusCompletionStandaloneSubtitle => 'اكتملت دورة التركيز.';
+
+  @override
+  String get focusCompletionQuestion => 'هل تريد إكمال هذه المهمة؟';
+
+  @override
+  String get focusCompletionCompleteTask => 'إكمال المهمة';
+
+  @override
+  String get focusCompletionKeepOpen => 'إبقاء المهمة مفتوحة';
+
+  @override
+  String get focusCompletionDone => 'تم';
+
+  @override
+  String focusCompletionTaskError(Object error) {
+    return 'تعذر إكمال المهمة: $error';
+  }
 
   @override
   String get completeInterval => 'إكمال الفترة';

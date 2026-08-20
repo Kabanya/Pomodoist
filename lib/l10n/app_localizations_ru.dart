@@ -630,6 +630,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsAboutTitle => 'О приложении';
 
   @override
+  String get settingsFocusCompletionCelebrationTitle =>
+      'Праздничное завершение фокуса';
+
+  @override
+  String get settingsFocusCompletionCelebrationSubtitle =>
+      'Показывать полноэкранное поздравление после последнего отдыха.';
+
+  @override
   String get settingsVersionLabel => 'Версия';
 
   @override
@@ -1666,6 +1674,33 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get focusStopped => 'Фокус остановлен';
+
+  @override
+  String get focusCompletionTitle => 'Отличная работа!';
+
+  @override
+  String get focusCompletionLinkedSubtitle =>
+      'Все запланированные фокус-интервалы для этой задачи завершены.';
+
+  @override
+  String get focusCompletionStandaloneSubtitle => 'Ваш цикл фокуса завершён.';
+
+  @override
+  String get focusCompletionQuestion => 'Готовы завершить задачу?';
+
+  @override
+  String get focusCompletionCompleteTask => 'Завершить задачу';
+
+  @override
+  String get focusCompletionKeepOpen => 'Оставить открытой';
+
+  @override
+  String get focusCompletionDone => 'Готово';
+
+  @override
+  String focusCompletionTaskError(Object error) {
+    return 'Не удалось завершить задачу: $error';
+  }
 
   @override
   String get completeInterval => 'Завершить интервал';

@@ -4,6 +4,8 @@ import 'dart:io';
 const _productionWebUrl = 'https://app.pomodoist.com';
 const _productionCaptchaUrl = 'https://app.pomodoist.com/auth/challenge';
 const _productionSupabaseUrl = 'https://ewauihswbwduvklrozke.supabase.co';
+const _productionGoogleDesktopClientId =
+    '794610194912-uph4dnt4029sntlmgpnulervr1gld8v5.apps.googleusercontent.com';
 const _forbiddenSupabaseKeys = {
   'SERVICE_ROLE_KEY',
   'SUPABASE_SECRET_KEY',
@@ -51,6 +53,12 @@ void validateDesktopReleaseConfig(Map<String, Object?> config) {
       ).hasMatch(googleClientId)) {
     throw const FormatException(
       'GOOGLE_DESKTOP_CLIENT_ID must be a desktop OAuth client ID.',
+    );
+  }
+  if (googleClientId != _productionGoogleDesktopClientId) {
+    throw const FormatException(
+      'GOOGLE_DESKTOP_CLIENT_ID must use the Pomodoist production desktop '
+      'OAuth client.',
     );
   }
 

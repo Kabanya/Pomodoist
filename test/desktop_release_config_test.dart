@@ -36,6 +36,12 @@ void main() {
       config: _validConfig()..['GOOGLE_DESKTOP_CLIENT_ID'] = 'not-a-client-id',
     ),
     (
+      name: 'unexpected Google desktop client ID',
+      config: _validConfig()
+        ..['GOOGLE_DESKTOP_CLIENT_ID'] =
+            '0987654321-otherdesktopclient.apps.googleusercontent.com',
+    ),
+    (
       name: 'Supabase secret key in a public desktop artifact',
       config: _validConfig()
         ..['SUPABASE_SECRET_KEY'] = 'sb_secret_must-never-ship',
@@ -76,7 +82,7 @@ Map<String, Object?> _validConfig() => {
   'TURNSTILE_SITE_KEY': '0x4AAAAAAAabcdefghijklmnopqrstuv',
   'SENTRY_DSN': '',
   'GOOGLE_DESKTOP_CLIENT_ID':
-      '1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com',
+      '794610194912-uph4dnt4029sntlmgpnulervr1gld8v5.apps.googleusercontent.com',
   'GOOGLE_DESKTOP_CLIENT_SECRET': '',
 };
 
