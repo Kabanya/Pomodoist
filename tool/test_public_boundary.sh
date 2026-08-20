@@ -9,7 +9,7 @@ fail() {
   exit 1
 }
 
-sha=5efbfb13477dc82d952055eb65fcdbde9c15b0f2
+sha=eaa2502d203b41d0008f2a1705df5dd17e61d934
 url=https://github.com/Kabanya/app-client-platform.git
 
 for package in app_account app_voice; do
