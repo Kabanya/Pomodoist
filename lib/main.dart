@@ -49,6 +49,11 @@ Future<void> main() async {
                   ref.watch(accountOverviewProvider).value,
                 );
               }),
+              billingAccountEntitlementProvider.overrideWith((ref) {
+                return hasActivePomodoistPaidEntitlement(
+                  ref.watch(accountOverviewProvider).value,
+                );
+              }),
               billingSignedInProvider.overrideWith((ref) {
                 final account = ref.watch(accountClientProvider);
                 return ref.watch(accountAuthStateProvider).value?.signedIn ??
@@ -177,7 +182,7 @@ Future<void> main() async {
                   final overview = await ref.read(
                     accountOverviewProvider.future,
                   );
-                  return activePomodoistPaidEntitlement(overview) != null;
+                  return hasActivePomodoistPaidEntitlement(overview);
                 };
               }),
             ],

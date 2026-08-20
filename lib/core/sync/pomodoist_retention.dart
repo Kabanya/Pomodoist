@@ -10,7 +10,7 @@ bool hasActivePomodoistPaidEntitlement(
   if (hasLocalPaidEntitlement) {
     return true;
   }
-  return activePomodoistPaidEntitlement(overview, now: now) != null;
+  return overview?.profile.pomodoistIsPro ?? false;
 }
 
 AccountEntitlement? activePomodoistPaidEntitlement(

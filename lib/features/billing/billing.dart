@@ -574,19 +574,19 @@ BillingAccessTier billingAccessTier(BillingState state) {
     return BillingAccessTier.free;
   }
 
+  if (state.hasLocalStoreKitEntitlement) {
+    final localTier = _billingAccessTierForProduct(state.activeProductId);
+    if (localTier != null) {
+      return localTier;
+    }
+  }
+
   final accountEntitlement = state.activeAccountEntitlement;
   final accountTier = _billingAccessTierForProduct(
     accountEntitlement?.productId,
   );
   if (accountTier != null) {
     return accountTier;
-  }
-
-  if (state.hasLocalStoreKitEntitlement) {
-    final localTier = _billingAccessTierForProduct(state.activeProductId);
-    if (localTier != null) {
-      return localTier;
-    }
   }
 
   if (accountEntitlement?.lifetime ?? false) {

@@ -743,7 +743,7 @@ void main() {
   });
 
   group('pomodoist task retention', () {
-    test('local or Supabase paid entitlement disables task history cutoff', () {
+    test('local or account Pro disables task history cutoff', () {
       final now = DateTime.utc(2026, 7, 7);
       final freeOverview = AccountOverview(
         profile: const AccountProfile(id: 'free'),
@@ -756,7 +756,7 @@ void main() {
         generatedAt: now,
       );
       final paidOverview = AccountOverview(
-        profile: const AccountProfile(id: 'paid'),
+        profile: const AccountProfile(id: 'paid', pomodoistIsPro: true),
         apps: const [
           AccountAppSummary(
             id: AccountAppId.pomodoist,
@@ -794,7 +794,7 @@ void main() {
       );
     });
 
-    test('only active Pomodoist paid entitlements grant retention', () {
+    test('only active Pomodoist paid entitlements provide metadata', () {
       final now = DateTime.utc(2026, 7, 7);
       for (final fixture in [
         (
@@ -854,10 +854,48 @@ void main() {
           generatedAt: now,
         );
         expect(
-          hasActivePomodoistPaidEntitlement(overview, now: now),
+          activePomodoistPaidEntitlement(overview, now: now) != null,
           fixture.expected,
         );
       }
+    });
+
+    test('profile Pro is the canonical account fallback', () {
+      final now = DateTime.utc(2026, 7, 7);
+      final profilePro = AccountOverview(
+        profile: const AccountProfile(id: 'pro', pomodoistIsPro: true),
+        apps: const [],
+        generatedAt: now,
+      );
+      final legacyEntitlementOnly = AccountOverview(
+        profile: const AccountProfile(id: 'legacy'),
+        apps: const [
+          AccountAppSummary(
+            id: AccountAppId.pomodoist,
+            displayName: 'Pomodoist',
+            entitlements: [
+              AccountEntitlement(
+                appId: AccountAppId.pomodoist,
+                entitlementId: 'legacy',
+                status: 'active',
+                purchaseType: 'lifetime',
+                source: 'app_store',
+              ),
+            ],
+          ),
+        ],
+        generatedAt: now,
+      );
+
+      expect(hasActivePomodoistPaidEntitlement(profilePro, now: now), isTrue);
+      expect(
+        hasActivePomodoistPaidEntitlement(legacyEntitlementOnly, now: now),
+        isFalse,
+      );
+      expect(
+        activePomodoistPaidEntitlement(legacyEntitlementOnly, now: now),
+        isNotNull,
+      );
     });
   });
 

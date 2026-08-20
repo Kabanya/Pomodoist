@@ -466,6 +466,62 @@ void main() {
     );
   });
 
+  test('verified StoreKit tier wins over account metadata', () {
+    expect(
+      billingAccessTier(
+        const BillingState(
+          loading: false,
+          activeStoreKitProductIds: {pomodoistAnnualProductId},
+          activeProductId: pomodoistAnnualProductId,
+          accountEntitlementActive: true,
+          activeAccountEntitlement: AccountEntitlement(
+            appId: AccountAppId.pomodoist,
+            entitlementId: 'stripe:lifetime',
+            status: 'active',
+            purchaseType: 'lifetime',
+            source: 'stripe',
+            productId: pomodoistLifetimeProductId,
+          ),
+        ),
+      ),
+      BillingAccessTier.annual,
+    );
+  });
+
+  test(
+    'sign-out clears account fallback but keeps verified StoreKit Pro',
+    () async {
+      final account = _FakeEntitlementController();
+      final store = _FakeBillingStore();
+      final container = ProviderContainer(
+        overrides: [
+          billingStoreProvider.overrideWithValue(store),
+          applePurchasesSupportedProvider.overrideWithValue(true),
+          _fakeAccountEntitlementProvider.overrideWith(() => account),
+          billingAccountEntitlementProvider.overrideWith(
+            (ref) => ref.watch(_fakeAccountEntitlementProvider),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(billingControllerProvider);
+      await _settle();
+
+      account.setActive(true);
+      store.emit([
+        _purchase(pomodoistAnnualProductId, PurchaseStatus.restored),
+      ]);
+      await _settle();
+      account.setActive(false);
+      await _settle();
+
+      final state = container.read(billingControllerProvider);
+      expect(state.accountEntitlementActive, isFalse);
+      expect(state.activeStoreKitProductIds, {pomodoistAnnualProductId});
+      expect(state.hasActiveEntitlement, isTrue);
+    },
+  );
+
   test('billing validates current StoreKit transaction state', () {
     final now = DateTime.utc(2026, 7, 27);
     expect(

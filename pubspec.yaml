@@ -71,12 +71,12 @@ dependencies:
   app_account:
     git:
       url: https://github.com/Kabanya/app-client-platform.git
-      ref: e55fdb01db9049839da4479f66ab7beb85ba679e
+      ref: 5efbfb13477dc82d952055eb65fcdbde9c15b0f2
       path: app_account
   app_voice:
     git:
       url: https://github.com/Kabanya/app-client-platform.git
-      ref: e55fdb01db9049839da4479f66ab7beb85ba679e
+      ref: 5efbfb13477dc82d952055eb65fcdbde9c15b0f2
       path: app_voice
   in_app_purchase: ^3.3.0
   in_app_purchase_storekit: ^0.4.10+1
