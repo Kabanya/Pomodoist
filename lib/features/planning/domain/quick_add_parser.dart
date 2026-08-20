@@ -27,6 +27,16 @@ const _tomorrowWords = {
   '明天',
 };
 
+final _priorityTokenPattern = RegExp(
+  r'^(?:p|!!)([1-4])$',
+  caseSensitive: false,
+);
+
+int? _priorityFromToken(String token) {
+  final match = _priorityTokenPattern.firstMatch(token);
+  return match == null ? null : int.parse(match.group(1)!);
+}
+
 class ParsedQuickAdd {
   const ParsedQuickAdd({
     required this.content,
@@ -134,12 +144,9 @@ class QuickAddParser {
         section = token.substring(1);
         continue;
       }
-      final priorityMatch = RegExp(
-        r'^p([1-4])$',
-        caseSensitive: false,
-      ).firstMatch(token);
-      if (priorityMatch != null) {
-        priority = int.parse(priorityMatch.group(1)!);
+      final parsedPriority = _priorityFromToken(token);
+      if (parsedPriority != null) {
+        priority = parsedPriority;
         continue;
       }
       final estimateMatch = RegExp(
@@ -270,7 +277,7 @@ class QuickAddParser {
         kind = QuickAddTokenKind.label;
       } else if (value.startsWith('/') && value.length > 1) {
         kind = QuickAddTokenKind.section;
-      } else if (RegExp(r'^p[1-4]$', caseSensitive: false).hasMatch(value)) {
+      } else if (_priorityFromToken(value) != null) {
         kind = QuickAddTokenKind.priority;
       } else if (RegExp(r'^\d+(p|п)$', caseSensitive: false).hasMatch(value)) {
         kind = QuickAddTokenKind.focusEstimate;

@@ -366,9 +366,12 @@ void main() {
     expect(prefs.getString(lastFocusPresetIdPreferenceKey), deepWorkPresetId);
   });
 
-  testWidgets('FocusScreen minimal idle mode keeps launch controls compact', (
+  testWidgets('FocusScreen minimal idle selects presets from the title menu', (
     tester,
   ) async {
+    SharedPreferences.setMockInitialValues({
+      focusViewModePreferenceKey: FocusViewMode.minimal.storageValue,
+    });
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -380,16 +383,89 @@ void main() {
     await tester.pump();
 
     expect(find.text('No active session'), findsNothing);
-    expect(find.byKey(const Key('minimal-preset-select')), findsOneWidget);
-    expect(find.text('Classic'), findsAtLeastNWidgets(1));
+    expect(find.byKey(const Key('minimal-preset-menu')), findsOneWidget);
+    expect(find.byKey(const Key('minimal-preset-select')), findsNothing);
+    expect(find.byKey(const Key('minimal-idle-more-menu')), findsNothing);
+    expect(find.text('Classic'), findsOneWidget);
+    expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
+    expect(find.text('25m work'), findsOneWidget);
     expect(find.text('Start focus'), findsOneWidget);
     expect(find.text('Customize'), findsNothing);
 
-    await tester.tap(find.byKey(const Key('minimal-idle-more-menu')));
+    await tester.tap(find.byKey(const Key('minimal-preset-menu')));
     await tester.pumpAndSettle();
 
+    final classicChoice = find.byKey(
+      ValueKey('minimal-preset-choice-$defaultPresetId'),
+    );
+    expect(classicChoice, findsOneWidget);
+    expect(
+      find.descendant(
+        of: classicChoice,
+        matching: find.byIcon(Icons.check_rounded),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Customize'), findsOneWidget);
     expect(find.text('New preset'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(ValueKey('minimal-preset-choice-$deepWorkPresetId')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Classic'), findsNothing);
+    expect(find.text('Deep Work'), findsOneWidget);
+    expect(find.text('25m work'), findsNothing);
+    expect(find.text('50m work'), findsOneWidget);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString(lastFocusPresetIdPreferenceKey), deepWorkPresetId);
+
+    await tester.tap(find.byKey(const Key('minimal-preset-menu')));
+    await tester.pumpAndSettle();
+
+    final deepWorkChoice = find.byKey(
+      ValueKey('minimal-preset-choice-$deepWorkPresetId'),
+    );
+    expect(
+      find.descendant(
+        of: deepWorkChoice,
+        matching: find.byIcon(Icons.check_rounded),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: classicChoice,
+        matching: find.byIcon(Icons.check_rounded),
+      ),
+      findsNothing,
+    );
+  });
+
+  testWidgets('FocusScreen minimal preset menu opens customization', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      focusViewModePreferenceKey: FocusViewMode.minimal.storageValue,
+    });
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          focusRepositoryProvider.overrideWithValue(_FakeFocusRepository()),
+        ],
+        child: const MaterialApp(home: FocusScreen()),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('minimal-preset-menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('minimal-preset-customize')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Customize preset'), findsOneWidget);
+    expect(find.byKey(const Key('preset-name-field')), findsOneWidget);
   });
 
   testWidgets('FocusScreen shows focus provider errors', (tester) async {
@@ -414,6 +490,9 @@ void main() {
   testWidgets('FocusScreen empty presets do not look like loading', (
     tester,
   ) async {
+    SharedPreferences.setMockInitialValues({
+      focusViewModePreferenceKey: FocusViewMode.minimal.storageValue,
+    });
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -428,12 +507,31 @@ void main() {
 
     expect(find.byKey(const Key('focus-loading')), findsNothing);
     expect(find.byType(LinearProgressIndicator), findsNothing);
-    expect(find.byKey(const Key('minimal-idle-more-menu')), findsOneWidget);
+    expect(find.text('No preset'), findsOneWidget);
+    expect(find.byKey(const Key('minimal-preset-menu')), findsOneWidget);
+    expect(find.byKey(const Key('minimal-preset-select')), findsNothing);
+    expect(find.byKey(const Key('minimal-idle-more-menu')), findsNothing);
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('focus-primary-action')))
+          .onPressed,
+      isNull,
+    );
 
-    await tester.tap(find.byKey(const Key('minimal-idle-more-menu')));
+    await tester.tap(find.byKey(const Key('minimal-preset-menu')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('minimal-preset-customize')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Customize preset'), findsNothing);
+    expect(find.text('New preset'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('minimal-preset-create')));
     await tester.pumpAndSettle();
 
     expect(find.text('New preset'), findsOneWidget);
+    expect(find.byKey(const Key('preset-name-field')), findsOneWidget);
   });
 
   test(

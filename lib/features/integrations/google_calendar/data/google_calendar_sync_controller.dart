@@ -45,11 +45,24 @@ class GoogleCalendarSyncController {
         _interactiveAuthTimeout,
       );
       final calendarId = existing.calendarId;
-      final calendar = calendarId == null
-          ? await _remote(
-              _apiClient.createCalendar(GoogleCalendarConfig.calendarName),
-            )
-          : await _remote(_apiClient.getCalendar(calendarId));
+      late GoogleCalendarApiCalendar calendar;
+      if (calendarId == null) {
+        calendar = await _remote(
+          _apiClient.createCalendar(GoogleCalendarConfig.calendarName),
+        );
+      } else {
+        try {
+          calendar = await _remote(_apiClient.getCalendar(calendarId));
+        } catch (error) {
+          if (!isGoogleCalendarNotFoundError(error)) {
+            rethrow;
+          }
+          calendar = await _remote(
+            _apiClient.createCalendar(GoogleCalendarConfig.calendarName),
+          );
+          await _integrationRepository.disconnect();
+        }
+      }
       await _integrationRepository.saveConnected(
         accountEmail: account.email,
         calendarId: calendar.id,

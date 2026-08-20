@@ -47,6 +47,24 @@ void main() {
     );
   });
 
+  test('reports the full bang priority alias range', () {
+    const input = 'Plan !!3';
+
+    final analysis = parser.analyze(input, now: now);
+
+    expect(analysis.matches, hasLength(1));
+    expect(analysis.matches.single.kind, QuickAddTokenKind.priority);
+    expect(
+      input.substring(
+        analysis.matches.single.start,
+        analysis.matches.single.end,
+      ),
+      '!!3',
+    );
+    expect(analysis.parsed.content, 'Plan');
+    expect(analysis.parsed.priority, 3);
+  });
+
   test('reports localized date and time ranges for every app language', () {
     final cases = <({String input, List<String> expected})>[
       (input: 'Call 4 may 2027 at 5 PM', expected: ['4 may 2027', 'at 5 PM']),

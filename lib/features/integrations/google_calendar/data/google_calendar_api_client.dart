@@ -225,6 +225,10 @@ class GoogleCalendarApiException implements Exception {
   String toString() => message;
 }
 
+bool isGoogleCalendarNotFoundError(Object error) {
+  return error is DioException && error.response?.statusCode == 404;
+}
+
 String googleCalendarApiErrorMessage(Object? data, int? statusCode) {
   if (data is Map) {
     final error = data['error'];

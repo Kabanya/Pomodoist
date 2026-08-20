@@ -4,6 +4,6 @@
   "POMODOIST_REGISTRATION_URL": "https://app.pomodoist.com/auth/challenge",
   "TURNSTILE_SITE_KEY": "replace-with-public-site-key",
   "SENTRY_DSN": "",
-  "GOOGLE_DESKTOP_CLIENT_ID": "794610194912-uph4dnt4029sntlmgpnulervr1gld8v5.apps.googleusercontent.com",
-  "GOOGLE_DESKTOP_CLIENT_SECRET": ""
+  "GOOGLE_DESKTOP_CLIENT_ID": "833439675371-3dkqfci15nds8tl87ik99qirpt5o3l1h.apps.googleusercontent.com",
+  "GOOGLE_DESKTOP_CLIENT_SECRET": "replace-with-desktop-client-secret"
 }

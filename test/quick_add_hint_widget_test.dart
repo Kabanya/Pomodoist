@@ -44,7 +44,7 @@ void main() {
     tester,
   ) async {
     final controller = QuickAddTextController(
-      text: 'Plan @work #family 7 PM 8 march p1 invalid',
+      text: 'Plan @work #family 7 PM 8 march !!3 invalid',
       now: () => DateTime(2026, 7, 10, 12),
     );
     addTearDown(controller.dispose);
@@ -70,7 +70,7 @@ void main() {
         .where((child) => child.style?.fontWeight == FontWeight.w600)
         .map((child) => child.text)
         .toList();
-    expect(highlighted, ['@work', '#family', '7 PM', '8 march', 'p1']);
+    expect(highlighted, ['@work', '#family', '7 PM', '8 march', '!!3']);
     expect(leaves.last.text, ' invalid');
     expect(leaves.last.style?.fontWeight, isNot(FontWeight.w600));
   });

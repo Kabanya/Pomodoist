@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/core/db/app_database.dart';
@@ -216,6 +217,32 @@ void main() {
       expect(connection?.ownerDeviceId, 'device-1');
       expect(api.seenSyncTokens, [null]);
     });
+
+    test(
+      'connect replaces a missing saved calendar and resets its sync state',
+      () async {
+        await integrationRepository.markSyncFinished(
+          syncToken: 'stale-sync-token',
+        );
+        await integrationRepository.upsertLink(
+          taskId: 'stale-task',
+          calendarId: 'calendar-1',
+          eventId: 'stale-event',
+        );
+        api
+          ..missingCalendarIds.add('calendar-1')
+          ..createdCalendarId = 'calendar-2';
+
+        await controller.connect();
+
+        final connection = await integrationRepository.getConnection();
+        expect(connection?.calendarId, 'calendar-2');
+        expect(connection?.status, 'connected');
+        expect(connection?.lastError, isNull);
+        expect(api.seenSyncTokens, [null]);
+        expect(await integrationRepository.linkForTask('stale-task'), isNull);
+      },
+    );
 
     test('non-interactive auth error does not enqueue sync storm', () async {
       final syncQueue = DriftSyncQueueRepository(db);
@@ -709,15 +736,17 @@ class _FakeGoogleCalendarApiClient implements GoogleCalendarApiClient {
   final patchedEvents = <String>[];
   final patchFailures = <String, Exception>{};
   final seenSyncTokens = <String?>[];
+  final missingCalendarIds = <String>{};
   bool throwExpiredTokenOnce = false;
   String? nextPageToken;
   Future<GoogleCalendarListResult>? pendingList;
   int listCalls = 0;
   int _id = 0;
+  String createdCalendarId = 'calendar-1';
 
   @override
   Future<GoogleCalendarApiCalendar> createCalendar(String name) async {
-    return GoogleCalendarApiCalendar(id: 'calendar-1', summary: name);
+    return GoogleCalendarApiCalendar(id: createdCalendarId, summary: name);
   }
 
   @override
@@ -730,6 +759,14 @@ class _FakeGoogleCalendarApiClient implements GoogleCalendarApiClient {
 
   @override
   Future<GoogleCalendarApiCalendar> getCalendar(String calendarId) async {
+    if (missingCalendarIds.contains(calendarId)) {
+      final request = RequestOptions(path: '/calendars/$calendarId');
+      throw DioException.badResponse(
+        statusCode: 404,
+        requestOptions: request,
+        response: Response<Object?>(requestOptions: request, statusCode: 404),
+      );
+    }
     return const GoogleCalendarApiCalendar(
       id: 'calendar-1',
       summary: 'Pomodoist',

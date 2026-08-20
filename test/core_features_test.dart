@@ -300,6 +300,31 @@ void main() {
       }
     });
 
+    test('parses all bang priority aliases', () {
+      for (final priority in [1, 2, 3, 4]) {
+        final parsed = const QuickAddParser().parse('task !!$priority');
+
+        expect(parsed.content, 'task');
+        expect(parsed.priority, priority);
+      }
+    });
+
+    test('uses the last valid priority token across both syntaxes', () {
+      final parsed = const QuickAddParser().parse('task p1 !!3');
+
+      expect(parsed.content, 'task');
+      expect(parsed.priority, 3);
+    });
+
+    test('keeps invalid and attached bang priority forms as content', () {
+      for (final input in ['task !!', 'task !!0', 'task !!5', 'task!!3']) {
+        final parsed = const QuickAddParser().parse(input);
+
+        expect(parsed.content, input, reason: input);
+        expect(parsed.priority, isNull, reason: input);
+      }
+    });
+
     test('parses English voice-style timed block', () {
       final parsed = const QuickAddParser().parse(
         'review roadmap today 10:30 45m',
@@ -1332,6 +1357,10 @@ void main() {
           'Explicit matrix task p1',
           priority: 3,
         );
+        final aliasPriorityId = await service.createTask(
+          'Alias matrix task !!3',
+          priority: 2,
+        );
 
         final defaultPriority = await taskRepository
             .watchTask(defaultPriorityId)
@@ -1339,9 +1368,14 @@ void main() {
         final explicitPriority = await taskRepository
             .watchTask(explicitPriorityId)
             .first;
+        final aliasPriority = await taskRepository
+            .watchTask(aliasPriorityId)
+            .first;
 
         expect(defaultPriority!.priority, 2);
         expect(explicitPriority!.priority, 1);
+        expect(aliasPriority!.content, 'Alias matrix task');
+        expect(aliasPriority.priority, 3);
       },
     );
 

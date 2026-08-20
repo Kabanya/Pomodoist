@@ -5,7 +5,7 @@ const _productionWebUrl = 'https://app.pomodoist.com';
 const _productionCaptchaUrl = 'https://app.pomodoist.com/auth/challenge';
 const _productionSupabaseUrl = 'https://ewauihswbwduvklrozke.supabase.co';
 const _productionGoogleDesktopClientId =
-    '794610194912-uph4dnt4029sntlmgpnulervr1gld8v5.apps.googleusercontent.com';
+    '833439675371-3dkqfci15nds8tl87ik99qirpt5o3l1h.apps.googleusercontent.com';
 const _forbiddenSupabaseKeys = {
   'SERVICE_ROLE_KEY',
   'SUPABASE_SECRET_KEY',
@@ -63,7 +63,7 @@ void validateDesktopReleaseConfig(Map<String, Object?> config) {
   }
 
   _optionalString(config, 'SENTRY_DSN');
-  _optionalString(config, 'GOOGLE_DESKTOP_CLIENT_SECRET');
+  _requiredString(config, 'GOOGLE_DESKTOP_CLIENT_SECRET');
 
   final supabaseUrl = _nonEmptyOptionalString(config, 'SUPABASE_URL');
   final supabaseKey = _nonEmptyOptionalString(config, 'SUPABASE_ANON_KEY');

@@ -191,10 +191,12 @@ class FocusMinimalIdleStage extends StatelessWidget {
               children: [
                 Icon(Icons.timer_outlined, size: 32, color: colors.mutedText),
                 const SizedBox(height: 14),
-                Text(
-                  preset?.name ?? l10n.noPreset,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge,
+                _MinimalPresetMenu(
+                  presets: presets,
+                  selectedPreset: preset,
+                  onSelected: onPresetSelected,
+                  onCustomize: onCustomize,
+                  onCreate: onCreate,
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -219,46 +221,6 @@ class FocusMinimalIdleStage extends StatelessWidget {
                 label: Text(l10n.startFocus),
               ),
             ),
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                Expanded(
-                  child: _MinimalPresetSelector(
-                    presets: presets,
-                    selectedPreset: preset,
-                    onSelected: onPresetSelected,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                SizedBox.square(
-                  dimension: 48,
-                  child: PopupMenuButton<_MinimalIdleAction>(
-                    key: const Key('minimal-idle-more-menu'),
-                    tooltip: l10n.moreFocusOptions,
-                    icon: const Icon(Icons.more_horiz),
-                    onSelected: (action) {
-                      switch (action) {
-                        case _MinimalIdleAction.customize:
-                          onCustomize?.call();
-                        case _MinimalIdleAction.create:
-                          onCreate();
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: _MinimalIdleAction.customize,
-                        enabled: onCustomize != null,
-                        child: Text(l10n.customize),
-                      ),
-                      PopupMenuItem(
-                        value: _MinimalIdleAction.create,
-                        child: Text(l10n.newPreset),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),
@@ -266,52 +228,115 @@ class FocusMinimalIdleStage extends StatelessWidget {
   }
 }
 
-class _MinimalPresetSelector extends StatelessWidget {
-  const _MinimalPresetSelector({
+class _MinimalPresetMenu extends StatelessWidget {
+  const _MinimalPresetMenu({
     required this.presets,
     required this.selectedPreset,
     required this.onSelected,
+    required this.onCustomize,
+    required this.onCreate,
   });
 
   final List<FocusPresetItem> presets;
   final FocusPresetItem? selectedPreset;
   final ValueChanged<String> onSelected;
+  final VoidCallback? onCustomize;
+  final VoidCallback onCreate;
 
   @override
   Widget build(BuildContext context) {
-    if (presets.isEmpty) {
-      return InputDecorator(
-        key: const Key('minimal-preset-select'),
-        decoration: InputDecoration(
-          isDense: true,
-          prefixIcon: const Icon(Icons.tune),
-          labelText: context.l10n.preset,
+    final l10n = context.l10n;
+    final colors = context.appColors;
+    final title = selectedPreset?.name ?? l10n.noPreset;
+
+    return MenuAnchor(
+      style: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(colors.surface),
+        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        child: Text(context.l10n.noPreset),
-      );
-    }
-    return DropdownButtonFormField<String>(
-      key: const Key('minimal-preset-select'),
-      initialValue: selectedPreset?.id,
-      decoration: InputDecoration(
-        isDense: true,
-        prefixIcon: const Icon(Icons.tune),
-        labelText: context.l10n.preset,
       ),
-      items: [
+      menuChildren: [
         for (final preset in presets)
-          DropdownMenuItem(value: preset.id, child: Text(preset.name)),
+          MenuItemButton(
+            key: ValueKey('minimal-preset-choice-${preset.id}'),
+            leadingIcon: SizedBox.square(
+              dimension: 20,
+              child: preset.id == selectedPreset?.id
+                  ? Icon(Icons.check_rounded, size: 18, color: colors.accent)
+                  : null,
+            ),
+            onPressed: () {
+              if (preset.id != selectedPreset?.id) {
+                onSelected(preset.id);
+              }
+            },
+            child: Text(preset.name),
+          ),
+        if (presets.isNotEmpty) const Divider(height: 1),
+        MenuItemButton(
+          key: const Key('minimal-preset-customize'),
+          leadingIcon: const Icon(Icons.tune, size: 20),
+          onPressed: onCustomize,
+          child: Text(l10n.customize),
+        ),
+        MenuItemButton(
+          key: const Key('minimal-preset-create'),
+          leadingIcon: const Icon(Icons.add, size: 20),
+          onPressed: onCreate,
+          child: Text(l10n.newPreset),
+        ),
       ],
-      onChanged: (id) {
-        if (id != null && id != selectedPreset?.id) {
-          onSelected(id);
-        }
+      builder: (context, controller, child) {
+        return Tooltip(
+          message: l10n.preset,
+          child: TextButton(
+            key: const Key('minimal-preset-menu'),
+            onPressed: controller.isOpen ? controller.close : controller.open,
+            style: ButtonStyle(
+              minimumSize: const WidgetStatePropertyAll(Size(48, 48)),
+              padding: const WidgetStatePropertyAll(
+                EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              ),
+              foregroundColor: WidgetStatePropertyAll(colors.primaryText),
+              backgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.hovered) ||
+                    states.contains(WidgetState.focused) ||
+                    states.contains(WidgetState.pressed)) {
+                  return colors.surfaceHover;
+                }
+                return Colors.transparent;
+              }),
+              overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+              shape: WidgetStatePropertyAll(
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    title,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 20,
+                  color: colors.mutedText,
+                ),
+              ],
+            ),
+          ),
+        );
       },
     );
   }
 }
-
-enum _MinimalIdleAction { customize, create }
 
 class FocusActiveStage extends StatelessWidget {
   const FocusActiveStage({

@@ -39,7 +39,11 @@ void main() {
       name: 'unexpected Google desktop client ID',
       config: _validConfig()
         ..['GOOGLE_DESKTOP_CLIENT_ID'] =
-            '0987654321-otherdesktopclient.apps.googleusercontent.com',
+            '794610194912-uph4dnt4029sntlmgpnulervr1gld8v5.apps.googleusercontent.com',
+    ),
+    (
+      name: 'missing Google desktop client secret',
+      config: _validConfig()..['GOOGLE_DESKTOP_CLIENT_SECRET'] = '',
     ),
     (
       name: 'Supabase secret key in a public desktop artifact',
@@ -82,8 +86,8 @@ Map<String, Object?> _validConfig() => {
   'TURNSTILE_SITE_KEY': '0x4AAAAAAAabcdefghijklmnopqrstuv',
   'SENTRY_DSN': '',
   'GOOGLE_DESKTOP_CLIENT_ID':
-      '794610194912-uph4dnt4029sntlmgpnulervr1gld8v5.apps.googleusercontent.com',
-  'GOOGLE_DESKTOP_CLIENT_SECRET': '',
+      '833439675371-3dkqfci15nds8tl87ik99qirpt5o3l1h.apps.googleusercontent.com',
+  'GOOGLE_DESKTOP_CLIENT_SECRET': 'desktop-client-secret',
 };
 
 ProcessResult _validateConfig(Map<String, Object?> config) {

@@ -76,9 +76,11 @@ void main() {
     expect(find.byKey(const Key('focus-state-idle')), findsOneWidget);
     expect(find.byKey(const Key('focus-primary-stage')), findsOneWidget);
     expect(find.byKey(const Key('focus-primary-action')), findsOneWidget);
-    expect(find.byKey(const Key('minimal-preset-select')), findsOneWidget);
-    expect(find.byKey(const Key('minimal-idle-more-menu')), findsOneWidget);
-    expect(find.text('Classic'), findsAtLeastNWidgets(1));
+    expect(find.byKey(const Key('minimal-preset-menu')), findsOneWidget);
+    expect(find.byKey(const Key('minimal-preset-select')), findsNothing);
+    expect(find.byKey(const Key('minimal-idle-more-menu')), findsNothing);
+    expect(find.text('Classic'), findsOneWidget);
+    expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
     expect(find.text('25m work'), findsOneWidget);
     expect(find.text('Start focus'), findsOneWidget);
     expect(find.byKey(const Key('focus-rhythm-rail')), findsNothing);
