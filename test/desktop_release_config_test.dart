@@ -48,7 +48,7 @@ void main() {
     (
       name: 'Supabase secret key in a public desktop artifact',
       config: _validConfig()
-        ..['SUPABASE_SECRET_KEY'] = 'sb_secret_must-never-ship',
+        ..['SUPABASE_SECRET_KEY'] = 'fixture-secret-must-never-ship',
     ),
     (
       name: 'case-changed legacy Supabase service role key',
@@ -69,7 +69,7 @@ void main() {
       expect(result.stderr.toString(), isNot(contains('evil.example')));
       expect(result.stderr.toString(), isNot(contains('1x000000')));
       expect(result.stderr.toString(), isNot(contains('not-a-client-id')));
-      expect(result.stderr.toString(), isNot(contains('sb_secret_')));
+      expect(result.stderr.toString(), isNot(contains('fixture-secret')));
       expect(result.stderr.toString(), isNot(contains('legacy-sensitive')));
       expect(
         result.stderr.toString(),
