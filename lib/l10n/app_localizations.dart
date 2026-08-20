@@ -2970,6 +2970,12 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get focusCompletionDone;
 
+  /// No description provided for @focusCompletionNextTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Next scheduled task'**
+  String get focusCompletionNextTask;
+
   /// No description provided for @focusCompletionTaskError.
   ///
   /// In en, this message translates to:

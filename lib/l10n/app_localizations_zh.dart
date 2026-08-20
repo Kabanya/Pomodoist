@@ -1612,6 +1612,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get focusCompletionDone => '完成';
 
   @override
+  String get focusCompletionNextTask => '下一个计划任务';
+
+  @override
   String focusCompletionTaskError(Object error) {
     return '无法完成任务：$error';
   }

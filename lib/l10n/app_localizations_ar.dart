@@ -1671,6 +1671,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get focusCompletionDone => 'تم';
 
   @override
+  String get focusCompletionNextTask => 'المهمة المجدولة التالية';
+
+  @override
   String focusCompletionTaskError(Object error) {
     return 'تعذر إكمال المهمة: $error';
   }

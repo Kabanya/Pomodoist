@@ -487,6 +487,7 @@
   "focusCompletionCompleteTask": "إكمال المهمة",
   "focusCompletionKeepOpen": "إبقاء المهمة مفتوحة",
   "focusCompletionDone": "تم",
+  "focusCompletionNextTask": "المهمة المجدولة التالية",
   "focusCompletionTaskError": "تعذر إكمال المهمة: {error}",
   "@focusCompletionTaskError": {"placeholders": {"error": {"type": "Object"}}},
   "completeInterval": "إكمال الفترة",

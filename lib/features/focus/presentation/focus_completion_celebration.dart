@@ -4,12 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/app_l10n.dart';
+import '../../../app/formatters.dart';
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/widgets/action_feedback.dart';
+import '../../tasks/domain/task_focus_estimate.dart';
+import '../../tasks/domain/task_models.dart';
 import '../../tasks/presentation/task_completion_feedback.dart';
 import '../domain/focus_models.dart';
 import 'focus_completion_celebration_controller.dart';
+import 'focus_view_mode.dart';
 
 const _celebrationDuration = Duration(milliseconds: 1600);
 
@@ -101,6 +105,15 @@ class _FocusRunCompletionCelebrationState
     final resolvingTask = taskValue?.isLoading ?? false;
     final canCompleteTask =
         task != null && !task.isDeleted && !task.isCompleted;
+    final nextTask = _nextScheduledTask(
+      ref.watch(tasksByQueryProvider(const TaskQuery.all())).value ?? const [],
+      completion,
+      task,
+    );
+    final nextTaskPreset = selectedFocusPresetOrDefault(
+      ref.watch(focusPresetsProvider).value ?? const [],
+      ref.watch(lastFocusPresetIdProvider),
+    );
     final taskTitle = completion.taskTitle?.trim();
     final subtitle = taskId == null
         ? l10n.focusCompletionStandaloneSubtitle
@@ -163,6 +176,14 @@ class _FocusRunCompletionCelebrationState
                               onCompleteTask: taskId == null
                                   ? null
                                   : () => _completeTask(taskId),
+                              nextTask: nextTask,
+                              onStartNextTask: nextTask == null
+                                  ? null
+                                  : () => _startNextTask(
+                                      nextTask,
+                                      nextTaskPreset,
+                                      canCompleteTask ? taskId : null,
+                                    ),
                               onDismiss: _dismiss,
                             ),
                           ),
@@ -192,6 +213,54 @@ class _FocusRunCompletionCelebrationState
       showActionFeedback(
         context,
         message: context.l10n.focusCompletionTaskError(error),
+        icon: Icons.error_outline,
+        sound: ActionFeedbackSound.none,
+      );
+    }
+  }
+
+  Future<void> _startNextTask(
+    TaskItem task,
+    FocusPresetItem? preset,
+    String? currentTaskId,
+  ) async {
+    final taskRepository = ref.read(taskRepositoryProvider);
+    var completedCurrentTask = false;
+    try {
+      if (currentTaskId != null) {
+        await taskRepository.completeTask(currentTaskId);
+        completedCurrentTask = true;
+      }
+      final estimate = targetFocusIntervalsForTask(task, preset);
+      await ref
+          .read(focusRepositoryProvider)
+          .startRun(
+            StartFocusRunInput(
+              taskId: task.id,
+              projectId: task.projectId,
+              presetId: preset?.id,
+              targetWorkIntervals: estimate == null
+                  ? null
+                  : estimate < 1
+                  ? 1
+                  : estimate,
+            ),
+          );
+      if (mounted) {
+        _dismiss();
+      }
+    } catch (error) {
+      if (completedCurrentTask) {
+        try {
+          await taskRepository.uncompleteTask(currentTaskId!);
+        } catch (_) {}
+      }
+      if (!mounted) {
+        return;
+      }
+      showActionFeedback(
+        context,
+        message: context.l10n.kanbanCouldNotStartFocus(error),
         icon: Icons.error_outline,
         sound: ActionFeedbackSound.none,
       );
@@ -263,6 +332,8 @@ class _CompletionContent extends StatelessWidget {
     required this.resolvingTask,
     required this.canCompleteTask,
     required this.onCompleteTask,
+    required this.nextTask,
+    required this.onStartNextTask,
     required this.onDismiss,
   });
 
@@ -272,6 +343,8 @@ class _CompletionContent extends StatelessWidget {
   final bool resolvingTask;
   final bool canCompleteTask;
   final Future<void> Function()? onCompleteTask;
+  final TaskItem? nextTask;
+  final Future<void> Function()? onStartNextTask;
   final VoidCallback onDismiss;
 
   @override
@@ -375,9 +448,111 @@ class _CompletionContent extends StatelessWidget {
             icon: const Icon(Icons.check),
             label: Text(l10n.focusCompletionDone),
           ),
+        if (nextTask case final task?) ...[
+          const SizedBox(height: 24),
+          Container(
+            key: const Key('focus-completion-next-task'),
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: colors.surface.withValues(alpha: 0.86),
+              border: Border.all(color: colors.border),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.focusCompletionNextTask,
+                  textAlign: TextAlign.center,
+                  style: textTheme.labelLarge?.copyWith(
+                    color: colors.secondaryText,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  task.content,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.titleMedium?.copyWith(
+                    color: colors.primaryText,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  formatTaskListSchedule(
+                    context,
+                    task.schedule!,
+                    now: completion.completedAt,
+                  ),
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colors.secondaryText,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                FilledButton.tonalIcon(
+                  key: const Key('focus-completion-start-next-task'),
+                  onPressed: onStartNextTask,
+                  icon: const Icon(Icons.play_arrow),
+                  label: Text(l10n.startFocus),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }
+}
+
+TaskItem? _nextScheduledTask(
+  Iterable<TaskItem> tasks,
+  FocusRunCompletionEvent completion,
+  TaskItem? currentTask,
+) {
+  final currentSchedule = currentTask?.schedule;
+  final hasTimedCurrentTask = currentSchedule?.isTimed ?? false;
+  TaskItem? next;
+  for (final task in tasks) {
+    final schedule = task.schedule;
+    if (task.id == completion.taskId ||
+        task.isCompleted ||
+        task.isDeleted ||
+        schedule == null ||
+        !schedule.isTimed) {
+      continue;
+    }
+    if (hasTimedCurrentTask) {
+      if (_compareScheduledTasks(task, currentTask!) <= 0) {
+        continue;
+      }
+    } else if (!schedule.start!.isAfter(completion.completedAt)) {
+      continue;
+    }
+    if (next == null || _compareScheduledTasks(task, next) < 0) {
+      next = task;
+    }
+  }
+  return next;
+}
+
+int _compareScheduledTasks(TaskItem left, TaskItem right) {
+  final start = left.schedule!.start!.compareTo(right.schedule!.start!);
+  if (start != 0) {
+    return start;
+  }
+  final dayOrder = (left.dayOrder ?? 999999).compareTo(
+    right.dayOrder ?? 999999,
+  );
+  if (dayOrder != 0) {
+    return dayOrder;
+  }
+  final orderKey = left.orderKey.compareTo(right.orderKey);
+  return orderKey != 0 ? orderKey : left.id.compareTo(right.id);
 }
 
 class _CompletionMarkPainter extends CustomPainter {

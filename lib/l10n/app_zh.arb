@@ -487,6 +487,7 @@
   "focusCompletionCompleteTask": "完成任务",
   "focusCompletionKeepOpen": "保持任务未完成",
   "focusCompletionDone": "完成",
+  "focusCompletionNextTask": "下一个计划任务",
   "focusCompletionTaskError": "无法完成任务：{error}",
   "@focusCompletionTaskError": {"placeholders": {"error": {"type": "Object"}}},
   "completeInterval": "完成间隔",

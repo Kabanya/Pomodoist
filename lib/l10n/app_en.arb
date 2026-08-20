@@ -537,6 +537,7 @@
   "focusCompletionCompleteTask": "Complete task",
   "focusCompletionKeepOpen": "Keep task open",
   "focusCompletionDone": "Done",
+  "focusCompletionNextTask": "Next scheduled task",
   "focusCompletionTaskError": "Could not complete task: {error}",
   "@focusCompletionTaskError": {"placeholders": {"error": {"type": "Object"}}},
   "completeInterval": "Complete interval",

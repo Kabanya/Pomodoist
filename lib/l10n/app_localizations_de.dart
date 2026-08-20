@@ -1693,6 +1693,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get focusCompletionDone => 'Fertig';
 
   @override
+  String get focusCompletionNextTask => 'Nächste geplante Aufgabe';
+
+  @override
   String focusCompletionTaskError(Object error) {
     return 'Aufgabe konnte nicht abgeschlossen werden: $error';
   }

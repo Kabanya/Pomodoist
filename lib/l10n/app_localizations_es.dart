@@ -1689,6 +1689,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get focusCompletionDone => 'Listo';
 
   @override
+  String get focusCompletionNextTask => 'Próxima tarea programada';
+
+  @override
   String focusCompletionTaskError(Object error) {
     return 'No se pudo completar la tarea: $error';
   }

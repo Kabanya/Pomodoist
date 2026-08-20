@@ -487,6 +487,7 @@
   "focusCompletionCompleteTask": "Завершить задачу",
   "focusCompletionKeepOpen": "Оставить открытой",
   "focusCompletionDone": "Готово",
+  "focusCompletionNextTask": "Следующая запланированная задача",
   "focusCompletionTaskError": "Не удалось завершить задачу: {error}",
   "@focusCompletionTaskError": {"placeholders": {"error": {"type": "Object"}}},
   "completeInterval": "Завершить интервал",

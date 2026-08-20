@@ -487,6 +487,7 @@
   "focusCompletionCompleteTask": "Aufgabe abschließen",
   "focusCompletionKeepOpen": "Aufgabe offen lassen",
   "focusCompletionDone": "Fertig",
+  "focusCompletionNextTask": "Nächste geplante Aufgabe",
   "focusCompletionTaskError": "Aufgabe konnte nicht abgeschlossen werden: {error}",
   "@focusCompletionTaskError": {"placeholders": {"error": {"type": "Object"}}},
   "completeInterval": "Intervall abschließen",

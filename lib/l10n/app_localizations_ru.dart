@@ -1698,6 +1698,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get focusCompletionDone => 'Готово';
 
   @override
+  String get focusCompletionNextTask => 'Следующая запланированная задача';
+
+  @override
   String focusCompletionTaskError(Object error) {
     return 'Не удалось завершить задачу: $error';
   }
