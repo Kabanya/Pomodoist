@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+25
+version: 1.0.0+26
 
 environment:
   sdk: ^3.11.5
@@ -71,12 +71,12 @@ dependencies:
   app_account:
     git:
       url: https://github.com/Kabanya/app-client-platform.git
-      ref: eaa2502d203b41d0008f2a1705df5dd17e61d934
+      ref: 76662c25ca0acf16606810e1e12982d41a074473
       path: app_account
   app_voice:
     git:
       url: https://github.com/Kabanya/app-client-platform.git
-      ref: eaa2502d203b41d0008f2a1705df5dd17e61d934
+      ref: 76662c25ca0acf16606810e1e12982d41a074473
       path: app_voice
   in_app_purchase: ^3.3.0
   in_app_purchase_storekit: ^0.4.10+1
