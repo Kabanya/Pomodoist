@@ -899,6 +899,108 @@ void main() {
     expect(harness.taskRepository.movedProjectIds.last, inboxProjectId);
   });
 
+  testWidgets('mobile drag to empty list space makes a subtask a root task', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      final today = _todaySchedule();
+      final harness = await _pumpApp(
+        tester,
+        tasks: [
+          _task('parent-1', 'Parent task', schedule: today, orderKey: '1'),
+          _task(
+            'child-1',
+            'Child task',
+            schedule: today,
+            parentId: 'parent-1',
+            orderKey: '2',
+          ),
+        ],
+      );
+
+      await _dragTaskToRootDropZone(tester, 'Child task');
+
+      final movedTask = await harness.taskRepository.watchTask('child-1').first;
+      expect(movedTask?.parentId, isNull);
+      expect(movedTask?.orderKey, isNot('2'));
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('mobile root drop ignores a task that is already a root', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    try {
+      final harness = await _pumpApp(
+        tester,
+        tasks: [
+          _task(
+            'root-1',
+            'Root task',
+            schedule: _todaySchedule(),
+            orderKey: '1',
+          ),
+        ],
+      );
+
+      await _dragTaskToRootDropZone(tester, 'Root task');
+
+      expect(harness.taskRepository.movedParentIds, isEmpty);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('empty list drop zone is limited to mobile platforms', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pumpApp(
+        tester,
+        tasks: [
+          _task('mobile-root', 'Mobile root', schedule: _todaySchedule()),
+        ],
+      );
+      expect(find.byKey(const Key('task-root-drop-zone')), findsOneWidget);
+
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      await _pumpApp(
+        tester,
+        tasks: [
+          _task('desktop-root', 'Desktop root', schedule: _todaySchedule()),
+        ],
+      );
+      expect(find.byKey(const Key('task-root-drop-zone')), findsNothing);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('mobile root drop reports move errors', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      final today = _todaySchedule();
+      await _pumpApp(
+        tester,
+        taskMoveError: StateError('move failed'),
+        tasks: [
+          _task('parent-1', 'Parent task', schedule: today),
+          _task('child-1', 'Child task', schedule: today, parentId: 'parent-1'),
+        ],
+      );
+
+      await _dragTaskToRootDropZone(tester, 'Child task');
+
+      expect(find.textContaining('Could not move task'), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
   testWidgets('macOS mouse drag on task text makes it a subtask', (
     tester,
   ) async {
@@ -2609,6 +2711,7 @@ Future<_AppHarness> _pumpApp(
   FocusIntervalItem? activeInterval,
   DateTime? focusNow,
   bool accountSignedIn = false,
+  Object? taskMoveError,
   Completer<void>? startupCompleter,
   Size size = const Size(390, 844),
   Locale? locale,
@@ -2620,7 +2723,10 @@ Future<_AppHarness> _pumpApp(
     tester.view.resetDevicePixelRatio();
   });
 
-  final taskRepository = _FakeTaskRepository(tasks ?? _testTasks());
+  final taskRepository = _FakeTaskRepository(
+    tasks ?? _testTasks(),
+    moveError: taskMoveError,
+  );
   final focusRepository = _FakeFocusRepository(
     activeRun: activeRun,
     activeInterval: activeInterval,
@@ -2796,6 +2902,20 @@ Future<void> _dragTaskOnto(
   final target = tester.getCenter(find.text(targetTitle).first);
   final gesture = await tester.startGesture(source, kind: kind);
   await tester.pump(holdDuration);
+  await gesture.moveTo(target);
+  await tester.pump();
+  await gesture.up();
+  await tester.pumpAndSettle();
+}
+
+Future<void> _dragTaskToRootDropZone(
+  WidgetTester tester,
+  String draggedTitle,
+) async {
+  final source = tester.getCenter(find.text(draggedTitle).first);
+  final target = tester.getCenter(find.byKey(const Key('task-root-drop-zone')));
+  final gesture = await tester.startGesture(source);
+  await tester.pump(const Duration(milliseconds: 600));
   await gesture.moveTo(target);
   await tester.pump();
   await gesture.up();
@@ -3093,10 +3213,11 @@ const _summary = ProductivitySummary(
 );
 
 class _FakeTaskRepository implements TaskRepository {
-  _FakeTaskRepository(List<TaskItem> tasks)
+  _FakeTaskRepository(List<TaskItem> tasks, {this.moveError})
     : _tasks = {for (final task in tasks) task.id: task};
 
   final Map<String, TaskItem> _tasks;
+  final Object? moveError;
   final completedTaskIds = <String>[];
   final uncompletedTaskIds = <String>[];
   final deletedTaskIds = <String>[];
@@ -3194,6 +3315,9 @@ class _FakeTaskRepository implements TaskRepository {
     bool clearParentId = false,
     String? orderKey,
   }) async {
+    if (moveError != null) {
+      throw moveError!;
+    }
     movedProjectIds.add(projectId);
     movedParentIds.add(clearParentId ? null : parentId);
     final task = _tasks[id];

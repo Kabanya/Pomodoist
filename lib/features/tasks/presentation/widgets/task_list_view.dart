@@ -1,8 +1,12 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/app_l10n.dart';
 import '../../../../app/providers.dart';
+import '../../../../app/widgets/action_feedback.dart';
 import '../../domain/task_models.dart';
 import 'quick_add_bar.dart';
 import 'task_list_item.dart';
@@ -37,6 +41,21 @@ class TaskListView extends ConsumerWidget {
     final completedTasks = ref.watch(
       tasksByQueryProvider(const TaskQuery.completed()),
     );
+    final visibleItems = switch (tasks.value) {
+      null => const <TaskItem>[],
+      final items when taskFilter == null => items,
+      final items => items.where(taskFilter!).toList(),
+    };
+    final subtaskIds = {
+      for (final task in visibleItems)
+        if (task.parentId != null) task.id,
+    };
+    final supportsRootDrop =
+        !kIsWeb &&
+        switch (defaultTargetPlatform) {
+          TargetPlatform.android || TargetPlatform.iOS => true,
+          _ => false,
+        };
     return SafeArea(
       bottom: false,
       child: CustomScrollView(
@@ -73,10 +92,7 @@ class TaskListView extends ConsumerWidget {
             ),
           ),
           tasks.when(
-            data: (items) {
-              final visibleItems = taskFilter == null
-                  ? items
-                  : items.where(taskFilter!).toList();
+            data: (_) {
               if (visibleItems.isEmpty) {
                 return SliverFillRemaining(
                   hasScrollBody: false,
@@ -122,9 +138,69 @@ class TaskListView extends ConsumerWidget {
               child: Center(child: Text(l10n.failedToLoadTasks(error))),
             ),
           ),
+          if (supportsRootDrop && visibleItems.isNotEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: DragTarget<String>(
+                key: const Key('task-root-drop-zone'),
+                onWillAcceptWithDetails: (details) =>
+                    subtaskIds.contains(details.data),
+                onAcceptWithDetails: (details) =>
+                    unawaited(_makeRootTask(context, ref, details.data)),
+                builder: (context, candidateData, rejectedData) {
+                  final accepting = candidateData.isNotEmpty;
+                  final colorScheme = Theme.of(context).colorScheme;
+                  return ColoredBox(
+                    color: accepting
+                        ? colorScheme.primaryContainer
+                        : Colors.transparent,
+                    child: Center(
+                      child: accepting
+                          ? Text(
+                              l10n.makeParentTask,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: colorScheme.onPrimaryContainer,
+                                  ),
+                            )
+                          : null,
+                    ),
+                  );
+                },
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  Future<void> _makeRootTask(
+    BuildContext context,
+    WidgetRef ref,
+    String taskId,
+  ) async {
+    try {
+      await ref
+          .read(taskRepositoryProvider)
+          .moveTask(
+            taskId,
+            clearParentId: true,
+            orderKey: DateTime.now()
+                .toUtc()
+                .microsecondsSinceEpoch
+                .toString()
+                .padLeft(20, '0'),
+          );
+    } catch (error) {
+      if (!context.mounted) {
+        return;
+      }
+      showActionFeedback(
+        context,
+        message: context.l10n.couldNotMoveTask(error),
+        icon: Icons.error_outline,
+      );
+    }
   }
 }
 
