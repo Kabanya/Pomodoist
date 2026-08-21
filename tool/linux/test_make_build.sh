@@ -23,7 +23,15 @@ write_fake_command() {
   printf '%s\n' '    exit 1' >> "$destination"
   printf '%s\n' '  fi' >> "$destination"
   printf '%s\n' 'done' >> "$destination"
-  printf '%s\n' 'basename -- "$0" >> "$POMODOIST_NETWORK_TEST_LOG"' >> "$destination"
+  printf '%s\n' 'printf "%s" "$(basename -- "$0")" >> "$POMODOIST_NETWORK_TEST_LOG"' >> "$destination"
+  printf '%s\n' 'printf " %s" "$@" >> "$POMODOIST_NETWORK_TEST_LOG"' >> "$destination"
+  printf '%s\n' 'printf "\n" >> "$POMODOIST_NETWORK_TEST_LOG"' >> "$destination"
+  printf '%s\n' 'if [[ "$(basename -- "$0")" == flutter && "${1:-}" == pub && "${2:-}" == get ]]; then' >> "$destination"
+  printf '%s\n' '  attempt="$(grep -Fxc "flutter pub get" "$POMODOIST_NETWORK_TEST_LOG")"' >> "$destination"
+  printf '%s\n' '  if (( attempt <= ${POMODOIST_NETWORK_TEST_PUB_GET_FAILURES:-0} )); then' >> "$destination"
+  printf '%s\n' '    exit 69' >> "$destination"
+  printf '%s\n' '  fi' >> "$destination"
+  printf '%s\n' 'fi' >> "$destination"
   chmod 755 "$destination"
 }
 
@@ -38,6 +46,8 @@ HTTP_PROXY=http://127.0.0.1:47922 \
 HTTPS_PROXY=http://127.0.0.1:47922 \
 ALL_PROXY=socks5://127.0.0.1:47922 \
 POMODOIST_NETWORK_TEST_LOG="$command_log" \
+POMODOIST_NETWORK_TEST_PUB_GET_FAILURES=2 \
+POMODOIST_PUB_GET_RETRY_DELAY_SECONDS=0 \
   make --silent --no-print-directory -C "$project_root" \
     build-linux-appimage \
     DART="$fake_dart" \
@@ -46,9 +56,13 @@ POMODOIST_NETWORK_TEST_LOG="$command_log" \
     POMODOIST_RELEASE=0123456789abcdef0123456789abcdef01234567 \
     POMODOIST_APPIMAGE_BUILDER="$fake_appimage_builder"
 
-test "$(wc -l < "$command_log")" -eq 3
-grep -Fqx 'dart' "$command_log"
-grep -Fqx 'flutter' "$command_log"
-grep -Fqx 'build-appimage' "$command_log"
+test "$(wc -l < "$command_log")" -eq 6
+test "$(sed -n '1p' "$command_log")" = 'flutter pub get'
+test "$(sed -n '2p' "$command_log")" = 'flutter pub get'
+test "$(sed -n '3p' "$command_log")" = 'flutter pub get'
+grep -Eq '^dart run tool/desktop_release_config\.dart --config .+/production\.json$' "$command_log"
+grep -Eq '^flutter build linux --release ' "$command_log"
+! grep -Eq '^flutter build linux .*--no-pub' "$command_log"
+test "$(sed -n '6p' "$command_log")" = 'build-appimage '
 
 echo 'Linux make build network contract passed.'

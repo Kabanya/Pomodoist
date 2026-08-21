@@ -42,7 +42,7 @@ GOOGLE_DESKTOP_CLIENT_ID ?= $(strip $(shell awk -F= '/^[[:space:]]*GOOGLE_DESKTO
 GOOGLE_DESKTOP_CLIENT_SECRET ?= $(strip $(shell awk -F= '/^[[:space:]]*GOOGLE_DESKTOP_CLIENT_SECRET[[:space:]]*=/{sub(/^[^=]*=[[:space:]]*/, ""); sub(/[[:space:]]*$$/, ""); print; exit}' "$(MACOS_GOOGLE_OAUTH_CONFIG)" 2>/dev/null))
 export GOOGLE_DESKTOP_CLIENT_ID GOOGLE_DESKTOP_CLIENT_SECRET
 
-.PHONY: help setup setup-linux run run-linux web analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-packaging check format build-web build-linux-release build-linux-appimage install-linux windows-installer build-macos-debug build-macos-release testflight-preflight ios-oauth-check macos-oauth-check testflight devices clean
+.PHONY: help setup setup-linux run run-linux web analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-packaging check format build-web linux-pub-get build-linux-release build-linux-appimage install-linux windows-installer build-macos-debug build-macos-release testflight-preflight ios-oauth-check macos-oauth-check testflight devices clean
 
 help:
 	@if [ -t 1 ] && [ -z "$${NO_COLOR:-}" ]; then \
@@ -127,7 +127,10 @@ format:
 build-web:
 	$(FLUTTER) build web --release --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
-build-linux-release:
+linux-pub-get:
+	$(LINUX_BUILD_ENV) bash ./tool/linux/pub_get_with_retry.sh "$(FLUTTER)"
+
+build-linux-release: linux-pub-get
 	$(LINUX_BUILD_ENV) $(DART) run tool/desktop_release_config.dart --config "$(LINUX_CONFIG)"
 	$(LINUX_BUILD_ENV) $(FLUTTER) build linux --release --dart-define-from-file="$(LINUX_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
 
