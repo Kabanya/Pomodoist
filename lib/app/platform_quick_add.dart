@@ -182,12 +182,13 @@ class PlatformQuickAddController extends ChangeNotifier {
     this._ref, {
     MethodChannel channel = const MethodChannel(quickAddChannelName),
     TargetPlatform? platform,
+    LinuxGlobalShortcutsPortal? linuxPortal,
   }) : _channel = channel,
        _platform = platform ?? defaultTargetPlatform,
        _linuxPortal =
            !kIsWeb &&
                (platform ?? defaultTargetPlatform) == TargetPlatform.linux
-           ? LinuxGlobalShortcutsPortal()
+           ? linuxPortal ?? LinuxGlobalShortcutsPortal()
            : null,
        state = GlobalQuickAddState(
          enabled: true,
@@ -366,6 +367,8 @@ class PlatformQuickAddController extends ChangeNotifier {
             preferredTrigger: binding.portalTrigger,
             onActivated: globalQuickAddWindowManager.show,
           );
+        } else {
+          await _linuxPortal!.disable();
         }
       } else {
         if (!enabled) {

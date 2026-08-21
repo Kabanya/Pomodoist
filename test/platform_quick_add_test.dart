@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pomodoist/app/linux_global_shortcuts.dart';
 import 'package:pomodoist/app/platform_quick_add.dart';
 import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/core/db/app_database.dart';
@@ -291,6 +292,43 @@ void main() {
     expect(controller.state.binding.keyLabel, 'Space');
     expect(controller.state.registrationError, isA<PlatformException>());
   });
+
+  test(
+    'disabled Linux startup removes a stale managed portal binding',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        globalQuickAddEnabledPreferenceKey: false,
+      });
+      final portal = _FakeLinuxPortal();
+      final db = AppDatabase(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          notificationSchedulerProvider.overrideWithValue(
+            _NoopNotificationScheduler(),
+          ),
+          platformQuickAddControllerProvider.overrideWith((ref) {
+            final controller = PlatformQuickAddController(
+              ref,
+              platform: TargetPlatform.linux,
+              linuxPortal: portal,
+            );
+            controller.initialize();
+            ref.onDispose(controller.dispose);
+            return controller;
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      addTearDown(db.close);
+
+      final controller = container.read(platformQuickAddControllerProvider);
+      await controller.ready;
+
+      expect(controller.state.enabled, isFalse);
+      expect(portal.disableCalls, 1);
+    },
+  );
 }
 
 ProviderContainer _container(AppDatabase db) {
@@ -321,4 +359,21 @@ class _NoopNotificationScheduler extends NotificationScheduler {
 
   @override
   Future<void> cancelTaskStart(String taskId) async {}
+}
+
+class _FakeLinuxPortal extends LinuxGlobalShortcutsPortal {
+  _FakeLinuxPortal() : super();
+
+  int disableCalls = 0;
+
+  @override
+  Future<bool> isAvailable() async => true;
+
+  @override
+  Future<void> disable() async {
+    disableCalls++;
+  }
+
+  @override
+  Future<void> dispose() async {}
 }
