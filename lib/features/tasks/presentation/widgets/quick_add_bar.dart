@@ -406,6 +406,137 @@ String _quickAddTokenValue(String name) {
   return RegExp(r'\s').hasMatch(name) ? '"$name"' : name;
 }
 
+class QuickAddComposer extends ConsumerStatefulWidget {
+  const QuickAddComposer({
+    required this.onCompleted,
+    required this.onCancel,
+    this.onVoiceModeChanged,
+    super.key,
+  });
+
+  final VoidCallback onCompleted;
+  final VoidCallback onCancel;
+  final ValueChanged<bool>? onVoiceModeChanged;
+
+  @override
+  ConsumerState<QuickAddComposer> createState() => _QuickAddComposerState();
+}
+
+class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
+  final _controller = QuickAddTextController();
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return CallbackShortcuts(
+      bindings: {const SingleActivator(LogicalKeyboardKey.escape): _cancel},
+      child: Focus(
+        autofocus: true,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            QuickAddInput(
+              textFieldKey: const Key('sidebar-quick-add-input'),
+              controller: _controller,
+              autofocus: true,
+              textInputAction: TextInputAction.done,
+              decoration: InputDecoration(
+                hintText: l10n.quickAddHint,
+                prefixIcon: const Icon(Icons.add_task),
+                suffixIcon: IconButton(
+                  key: const Key('sidebar-quick-add-voice'),
+                  tooltip: l10n.voiceQuickAdd,
+                  onPressed: _busy ? null : _openVoiceSheet,
+                  icon: const Icon(Icons.mic_none),
+                ),
+              ),
+              onSubmitted: (_) => _submit(),
+            ),
+            const SizedBox(height: 20),
+            OverflowBar(
+              alignment: MainAxisAlignment.end,
+              spacing: 8,
+              children: [
+                TextButton(
+                  onPressed: _busy ? null : _cancel,
+                  child: Text(l10n.commonCancel),
+                ),
+                FilledButton.icon(
+                  key: const Key('sidebar-quick-add-submit'),
+                  onPressed: _busy ? null : _submit,
+                  icon: _busy
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.add),
+                  label: Text(l10n.commonAdd),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _cancel() {
+    if (!_busy) widget.onCancel();
+  }
+
+  Future<void> _submit() async {
+    final input = _controller.text.trim();
+    if (input.isEmpty || _busy) return;
+    setState(() => _busy = true);
+    try {
+      await ref.read(quickAddServiceProvider).createTask(input);
+      if (mounted) widget.onCompleted();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.couldNotAddTask(error))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _openVoiceSheet() async {
+    widget.onVoiceModeChanged?.call(true);
+    final tasks = await showVoiceQuickAddSheet(context, ref);
+    widget.onVoiceModeChanged?.call(false);
+    if (!mounted || tasks == null || tasks.isEmpty) return;
+    setState(() => _busy = true);
+    try {
+      final created = await createVoiceQuickAddTasks(ref, tasks);
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      final createdLabel = context.l10n.tasksCreated(created);
+      widget.onCompleted();
+      if (created > 0) {
+        messenger.showSnackBar(SnackBar(content: Text(createdLabel)));
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.couldNotAddTask(error))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+}
+
 class QuickAddBar extends ConsumerStatefulWidget {
   const QuickAddBar({
     this.defaultPriority,

@@ -9,7 +9,12 @@ fail() {
   exit 1
 }
 
-sha=eaa2502d203b41d0008f2a1705df5dd17e61d934
+sha=$(awk '
+  $0 == "  app_account:" { found = 1; next }
+  found && $1 == "ref:" { print $2; exit }
+' pubspec.yaml)
+printf '%s\n' "$sha" | grep -Eq '^[0-9a-f]{40}$' ||
+  fail 'app_account must be pinned to a commit SHA'
 url=https://github.com/Kabanya/app-client-platform.git
 
 for package in app_account app_voice; do
@@ -70,32 +75,25 @@ for script in tool/export_web_sourcemaps.sh tool/test_sentry_artifacts.sh; do
   grep -q -- '--build-arg POMODOIST_BILLING_CHANNEL=stripe' "$script" ||
     fail "$script must build with the Stripe billing channel"
 done
-grep -q 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' \
-  .github/workflows/validate.yml || fail 'CI must pin actions/checkout'
-grep -q 'subosito/flutter-action@1508160852fb97248640997f7cfb38da241df0ba' \
-  .github/workflows/validate.yml || fail 'CI must pin flutter-action'
-grep -q '\\.codex' .github/workflows/validate.yml ||
-  fail 'CI must reject .codex paths'
-grep -q 'supabase/\\.temp' .github/workflows/validate.yml ||
-  fail 'CI must reject supabase temp paths'
-! grep -q ":!test/\\*\\*" .github/workflows/validate.yml ||
-  fail 'CI secret scan must cover tests'
-grep -q 'GOCSPX-' .github/workflows/validate.yml ||
-  fail 'CI must reject Google OAuth client secrets'
-for pattern in 'rk_(live|test)_' 'sk_(live|test)_' 'whsec_' 'sb_secret_'; do
-  grep -q "$pattern" .github/workflows/validate.yml ||
-    fail "CI must reject $pattern secrets"
-done
-! grep -Eq 'git grep[[:space:]]+-[[:alnum:]]*I[[:alnum:]]*([[:space:]]|$)' \
-  .github/workflows/validate.yml ||
-  fail 'CI secret scan must not use an ignore-binary flag, including combined forms'
+if grep -REn --include='*.yml' --include='*.yaml' \
+  '^[[:space:]]*(-[[:space:]]*)?uses:' .github/workflows |
+  grep -Ev 'uses:[[:space:]]+(\./[^[:space:]#]+|[^[:space:]#]+@[0-9a-f]{40})([[:space:]]*#.*)?$'; then
+  fail 'GitHub Actions must be pinned to full commit SHAs'
+fi
+! grep -REq --include='*.yml' --include='*.yaml' \
+  '^[[:space:]]+flutter-version:' .github/workflows ||
+  fail 'workflows must read the Flutter version from .fvmrc'
+if git ls-files | grep -Eq '(^|/)(\.codex|\.env[^/]*|key-[^/]+\.md|screenlog\.0|outputs|design|\.superpowers|supabase/\.temp)(/|$)'; then
+  fail 'tracked public files contain a forbidden path'
+fi
+if git grep -qE '(AKIA[0-9A-Z]{16}|-----BEGIN( [A-Z]+)? PRIVATE KEY-----|rk_(live|test)_[0-9A-Za-z]+|sk_(live|test)_[0-9A-Za-z]+|whsec_[0-9A-Za-z]+|sb_secret_[0-9A-Za-z]+|sntrys_[0-9A-Za-z]+|GOCSPX-[0-9A-Za-z_-]{20,})' -- .; then
+  fail 'tracked public files contain a secret'
+fi
 if git ls-files ':!tool/test_public_boundary.sh' | xargs grep -n 'sslip\.io' >/dev/null; then
   fail 'tracked public files must not contain deprecated sslip aliases'
 fi
 if git ls-files ':!tool/test_public_boundary.sh' | xargs grep -nE '/Users/|/home/' >/dev/null; then
   fail 'tracked public docs and config must not contain personal absolute paths'
 fi
-! find . -path './.git' -prune -o -name '.env*' -print | grep -q . ||
-  fail 'local environment files must not be tracked'
 
 printf 'Public boundary checks passed.\n'

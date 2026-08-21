@@ -77,16 +77,17 @@ class _ResizableDialogState extends State<ResizableDialog> {
                       child: SingleChildScrollView(child: widget.content),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 24, 20),
-                    child: OverflowBar(
-                      alignment: MainAxisAlignment.end,
-                      overflowAlignment: OverflowBarAlignment.end,
-                      spacing: 8,
-                      overflowSpacing: 8,
-                      children: widget.actions,
+                  if (widget.actions.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 24, 20),
+                      child: OverflowBar(
+                        alignment: MainAxisAlignment.end,
+                        overflowAlignment: OverflowBarAlignment.end,
+                        spacing: 8,
+                        overflowSpacing: 8,
+                        children: widget.actions,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),

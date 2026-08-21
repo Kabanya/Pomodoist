@@ -4,12 +4,12 @@ import FlutterMacOS
 
 enum QuickAddChannel {
   static let name = "pomodoist/quick_add"
-  static let createTaskMethod = "createTask"
-  static let getHintMethod = "getQuickAddHint"
+  static let showQuickAddMethod = "showQuickAdd"
   static let getGlobalShortcutMethod = "getGlobalShortcut"
   static let captureGlobalShortcutMethod = "captureGlobalShortcut"
   static let cancelGlobalShortcutCaptureMethod = "cancelGlobalShortcutCapture"
   static let setGlobalShortcutMethod = "setGlobalShortcut"
+  static let setGlobalShortcutEnabledMethod = "setGlobalShortcutEnabled"
 }
 
 private let quickAddHotKeySignature = OSType(0x504D5141) // PMQA
@@ -102,20 +102,15 @@ struct QuickAddGlobalShortcut: Equatable {
   }
 }
 
-final class QuickAddHotKeyController: NSObject, NSWindowDelegate {
+final class QuickAddHotKeyController: NSObject {
   private let channel: FlutterMethodChannel
   private let defaults: UserDefaults
   private var hotKeyRef: EventHotKeyRef?
   private var eventHandlerRef: EventHandlerRef?
   private var captureMonitor: Any?
   private var pendingCaptureResult: FlutterResult?
-  private var panel: NSPanel?
-  private weak var textField: NSTextField?
-  private weak var errorLabel: NSTextField?
-  private weak var addButton: NSButton?
-  private weak var cancelButton: NSButton?
-  private var isSubmitting = false
   private(set) var currentShortcut: QuickAddGlobalShortcut
+  private(set) var isEnabled = true
 
   init(channel: FlutterMethodChannel, defaults: UserDefaults = .standard) {
     self.channel = channel
@@ -155,11 +150,45 @@ final class QuickAddHotKeyController: NSObject, NSWindowDelegate {
   }
 
   @discardableResult
+  func applyEnabled(
+    _ enabled: Bool,
+    unregister unregisterOverride: (() -> OSStatus)? = nil
+  ) -> OSStatus {
+    if !enabled {
+      let status: OSStatus
+      if let unregisterOverride {
+        status = unregisterOverride()
+      } else if let hotKeyRef {
+        status = UnregisterEventHotKey(hotKeyRef)
+        self.hotKeyRef = nil
+      } else {
+        status = noErr
+      }
+      if status == noErr { isEnabled = false }
+      return status
+    }
+
+    if hotKeyRef != nil {
+      isEnabled = true
+      return noErr
+    }
+
+    let status = register(currentShortcut)
+    if status == noErr { isEnabled = true }
+    return status
+  }
+
+  @discardableResult
   func applyShortcut(
     _ shortcut: QuickAddGlobalShortcut,
     register registerOverride: ((QuickAddGlobalShortcut) -> OSStatus)? = nil
   ) -> OSStatus {
     guard shortcut.isValid else { return OSStatus(paramErr) }
+    if !isEnabled {
+      currentShortcut = shortcut
+      shortcut.save(to: defaults)
+      return noErr
+    }
     let previous = currentShortcut
     if let hotKeyRef {
       UnregisterEventHotKey(hotKeyRef)
@@ -239,7 +268,10 @@ final class QuickAddHotKeyController: NSObject, NSWindowDelegate {
           .fromOpaque(userData)
           .takeUnretainedValue()
         DispatchQueue.main.async {
-          controller.showQuickAddPanel()
+          controller.channel.invokeMethod(
+            QuickAddChannel.showQuickAddMethod,
+            arguments: nil
+          )
         }
         return noErr
       },
@@ -269,6 +301,29 @@ final class QuickAddHotKeyController: NSObject, NSWindowDelegate {
       beginShortcutCapture(result: result)
     case QuickAddChannel.cancelGlobalShortcutCaptureMethod:
       cancelShortcutCapture()
+      result(nil)
+    case QuickAddChannel.setGlobalShortcutEnabledMethod:
+      guard let enabled = call.arguments as? Bool else {
+        result(
+          FlutterError(
+            code: "invalid_arguments",
+            message: "Expected a boolean enabled value.",
+            details: nil
+          )
+        )
+        return
+      }
+      let status = applyEnabled(enabled)
+      guard status == noErr else {
+        result(
+          FlutterError(
+            code: "shortcut_unavailable",
+            message: "The global keyboard shortcut is unavailable.",
+            details: status
+          )
+        )
+        return
+      }
       result(nil)
     case QuickAddChannel.setGlobalShortcutMethod:
       guard let arguments = call.arguments as? [String: Any],
@@ -408,197 +463,4 @@ final class QuickAddHotKeyController: NSObject, NSWindowDelegate {
     }
   }
 
-  private func showQuickAddPanel() {
-    let panel: NSPanel
-    if let existingPanel = self.panel {
-      panel = existingPanel
-    } else {
-      panel = makePanel()
-      panel.center()
-      self.panel = panel
-    }
-
-    errorLabel?.stringValue = ""
-    refreshHint()
-    NSApp.unhide(nil)
-    NSApp.activate(ignoringOtherApps: true)
-    panel.makeKeyAndOrderFront(nil)
-    panel.orderFrontRegardless()
-    focusInput(in: panel)
-  }
-
-  private func refreshHint() {
-    channel.invokeMethod(QuickAddChannel.getHintMethod, arguments: nil) { [weak self] result in
-      DispatchQueue.main.async {
-        guard let hint = result as? String, !hint.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-          return
-        }
-        self?.textField?.placeholderString = hint
-      }
-    }
-  }
-
-  private func makePanel() -> NSPanel {
-    let panel = NSPanel(
-      contentRect: NSRect(x: 0, y: 0, width: 520, height: 172),
-      styleMask: [.titled, .closable, .utilityWindow],
-      backing: .buffered,
-      defer: false
-    )
-    panel.title = "Добавить задачу"
-    panel.isFloatingPanel = true
-    panel.level = .floating
-    panel.hidesOnDeactivate = false
-    panel.isReleasedWhenClosed = false
-    panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-    panel.delegate = self
-
-    let contentView = NSView()
-    contentView.translatesAutoresizingMaskIntoConstraints = false
-    panel.contentView = contentView
-
-    let titleLabel = NSTextField(labelWithString: "Добавить задачу")
-    titleLabel.translatesAutoresizingMaskIntoConstraints = false
-    titleLabel.font = .boldSystemFont(ofSize: 17)
-
-    let textField = NSTextField(string: "")
-    textField.translatesAutoresizingMaskIntoConstraints = false
-    textField.placeholderString = "Написать sync engine завтра p1 #App @coding 4p"
-    textField.font = .systemFont(ofSize: 16)
-    textField.usesSingleLineMode = true
-    textField.lineBreakMode = .byTruncatingTail
-    textField.target = self
-    textField.action = #selector(submitQuickAdd)
-
-    let errorLabel = NSTextField(labelWithString: "")
-    errorLabel.translatesAutoresizingMaskIntoConstraints = false
-    errorLabel.font = .systemFont(ofSize: 12)
-    errorLabel.textColor = .systemRed
-    errorLabel.lineBreakMode = .byTruncatingTail
-
-    let cancelButton = NSButton(
-      title: "Отмена",
-      target: self,
-      action: #selector(cancelQuickAdd)
-    )
-    cancelButton.translatesAutoresizingMaskIntoConstraints = false
-    cancelButton.bezelStyle = .rounded
-    cancelButton.keyEquivalent = "\u{1b}"
-
-    let addButton = NSButton(
-      title: "Добавить",
-      target: self,
-      action: #selector(submitQuickAdd)
-    )
-    addButton.translatesAutoresizingMaskIntoConstraints = false
-    addButton.bezelStyle = .rounded
-    addButton.keyEquivalent = "\r"
-
-    let buttonStack = NSStackView(views: [cancelButton, addButton])
-    buttonStack.translatesAutoresizingMaskIntoConstraints = false
-    buttonStack.orientation = .horizontal
-    buttonStack.alignment = .centerY
-    buttonStack.distribution = .gravityAreas
-    buttonStack.spacing = 8
-
-    contentView.addSubview(titleLabel)
-    contentView.addSubview(textField)
-    contentView.addSubview(errorLabel)
-    contentView.addSubview(buttonStack)
-
-    NSLayoutConstraint.activate([
-      titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 18),
-      titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-      titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-
-      textField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 14),
-      textField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-      textField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-      textField.heightAnchor.constraint(equalToConstant: 32),
-
-      errorLabel.topAnchor.constraint(equalTo: textField.bottomAnchor, constant: 6),
-      errorLabel.leadingAnchor.constraint(equalTo: textField.leadingAnchor),
-      errorLabel.trailingAnchor.constraint(equalTo: textField.trailingAnchor),
-
-      buttonStack.topAnchor.constraint(equalTo: errorLabel.bottomAnchor, constant: 14),
-      buttonStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-      buttonStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -18),
-    ])
-
-    panel.initialFirstResponder = textField
-    panel.defaultButtonCell = addButton.cell as? NSButtonCell
-
-    self.textField = textField
-    self.errorLabel = errorLabel
-    self.addButton = addButton
-    self.cancelButton = cancelButton
-    return panel
-  }
-
-  private func focusInput(in panel: NSPanel) {
-    guard let textField else {
-      return
-    }
-    panel.makeFirstResponder(textField)
-    textField.currentEditor()?.selectAll(nil)
-  }
-
-  @objc private func submitQuickAdd() {
-    guard !isSubmitting else {
-      return
-    }
-    let input = textField?.stringValue.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-    guard !input.isEmpty else {
-      showError("Введите текст задачи.")
-      return
-    }
-
-    setSubmitting(true)
-    channel.invokeMethod(QuickAddChannel.createTaskMethod, arguments: input) { [weak self] result in
-      DispatchQueue.main.async {
-        guard let self else {
-          return
-        }
-        self.setSubmitting(false)
-
-        if let error = result as? FlutterError {
-          self.showError(error.message ?? "Не удалось добавить задачу.")
-          return
-        }
-        if let resultObject = result as? NSObject,
-           resultObject == FlutterMethodNotImplemented {
-          self.showError("Быстрое добавление недоступно.")
-          return
-        }
-
-        self.textField?.stringValue = ""
-        self.errorLabel?.stringValue = ""
-        self.panel?.orderOut(nil)
-      }
-    }
-  }
-
-  @objc private func cancelQuickAdd() {
-    guard !isSubmitting else {
-      return
-    }
-    textField?.stringValue = ""
-    errorLabel?.stringValue = ""
-    panel?.orderOut(nil)
-  }
-
-  private func showError(_ message: String) {
-    errorLabel?.stringValue = message
-    if let panel {
-      focusInput(in: panel)
-    }
-  }
-
-  private func setSubmitting(_ submitting: Bool) {
-    isSubmitting = submitting
-    textField?.isEnabled = !submitting
-    cancelButton?.isEnabled = !submitting
-    addButton?.isEnabled = !submitting
-    addButton?.title = submitting ? "Добавление..." : "Добавить"
-  }
 }

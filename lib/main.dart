@@ -1,11 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:multiview_desktop/multiview_desktop.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'app/account_providers.dart';
 import 'app/app_l10n.dart';
 import 'app/app.dart';
+import 'app/global_quick_add_window.dart';
 import 'app/native_account_startup.dart';
 import 'app/native_link_coordinator.dart';
 import 'app/runtime_public_config.dart';
@@ -34,8 +37,8 @@ Future<void> main() async {
               initializePomodoistAccountIfConfigured(runtimeConfig),
         );
         updateWebBootstrapStage('app');
-        runApp(
-          ProviderScope(
+        Widget appScope(Widget child) {
+          return ProviderScope(
             overrides: [
               runtimePublicConfigProvider.overrideWithValue(runtimeConfig),
               accountBootstrapInitializerProvider.overrideWithValue(
@@ -186,9 +189,25 @@ Future<void> main() async {
                 };
               }),
             ],
-            child: const PomodoistApp(),
-          ),
-        );
+            child: child,
+          );
+        }
+
+        if (_supportsDesktopMultiView) {
+          runMultiApp(
+            home: (context, id) => const PomodoistApp(),
+            globalScope: appScope,
+            config: MultiAppConfig(
+              macosParams: const MacosPlatformParams(
+                closeAppAfterLastWindowClosed: false,
+                saveLastWindowToReopen: true,
+              ),
+              observers: [globalQuickAddWindowManager],
+            ),
+          );
+        } else {
+          runApp(appScope(const PomodoistApp()));
+        }
         WidgetsBinding.instance.addPostFrameCallback((_) {
           hideWebBootstrapLoader();
         });
@@ -199,6 +218,14 @@ Future<void> main() async {
     },
   );
 }
+
+bool get _supportsDesktopMultiView =>
+    !kIsWeb &&
+    const {
+      TargetPlatform.macOS,
+      TargetPlatform.windows,
+      TargetPlatform.linux,
+    }.contains(defaultTargetPlatform);
 
 String _stripeBillingError(Object? value) {
   if (value is Map && value['code'] is String) {

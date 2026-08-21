@@ -21,8 +21,8 @@ packages:
     dependency: "direct main"
     description:
       path: app_account
-      ref: 76662c25ca0acf16606810e1e12982d41a074473
-      resolved-ref: 76662c25ca0acf16606810e1e12982d41a074473
+      ref: "76662c25ca0acf16606810e1e12982d41a074473"
+      resolved-ref: "76662c25ca0acf16606810e1e12982d41a074473"
       url: "https://github.com/Kabanya/app-client-platform.git"
     source: git
     version: "0.1.0"
@@ -62,8 +62,8 @@ packages:
     dependency: "direct main"
     description:
       path: app_voice
-      ref: 76662c25ca0acf16606810e1e12982d41a074473
-      resolved-ref: 76662c25ca0acf16606810e1e12982d41a074473
+      ref: "76662c25ca0acf16606810e1e12982d41a074473"
+      resolved-ref: "76662c25ca0acf16606810e1e12982d41a074473"
       url: "https://github.com/Kabanya/app-client-platform.git"
     source: git
     version: "0.1.0"
@@ -340,7 +340,7 @@ packages:
     source: hosted
     version: "3.1.7"
   dbus:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: dbus
       sha256: d0c98dcd4f5169878b6cf8f6e0a52403a9dff371a3e2f019697accbf6f44a270
@@ -943,6 +943,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.18.0"
+  multiview_desktop:
+    dependency: "direct main"
+    description:
+      name: multiview_desktop
+      sha256: bd672ff9933726d017eea764e7479861f76df8461254d667059765bf5d46066c
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.1"
   native_toolchain_c:
     dependency: transitive
     description:

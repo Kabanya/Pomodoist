@@ -78,11 +78,56 @@ void main() {
       );
       expect(row, findsOneWidget);
     }
-    expect(
-      find.byKey(const Key('shortcut-row-global')),
-      kIsWeb ? findsNothing : findsOneWidget,
-    );
+    final globalRow = find.byKey(const Key('shortcut-row-global'));
+    expect(globalRow, kIsWeb ? findsNothing : findsOneWidget);
+    if (!kIsWeb) {
+      await tester.scrollUntilVisible(
+        globalRow,
+        240,
+        scrollable: find.byType(Scrollable).first,
+      );
+    }
     expect(find.text('⌥Space'), kIsWeb ? findsNothing : findsOneWidget);
+  });
+
+  testWidgets('global quick add can be disabled from desktop settings', (
+    tester,
+  ) async {
+    await _pumpScreen(tester);
+
+    if (!kIsWeb) {
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('shortcut-row-global')),
+        240,
+        scrollable: find.byType(Scrollable).first,
+      );
+    }
+    final toggle = find.byKey(const Key('global-quick-add-enabled'));
+    expect(toggle, kIsWeb ? findsNothing : findsOneWidget);
+    if (kIsWeb) return;
+
+    await tester.scrollUntilVisible(
+      toggle,
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getBool(globalQuickAddEnabledPreferenceKey), isFalse);
+    expect(tester.widget<Switch>(toggle).value, isFalse);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('shortcuts-reset-all')),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const Key('shortcuts-reset-all')));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<Switch>(toggle).value, isFalse);
+    expect(preferences.getBool(globalQuickAddEnabledPreferenceKey), isFalse);
   });
 
   testWidgets('recorder saves a valid shortcut and Escape cancels', (
@@ -119,6 +164,28 @@ void main() {
 
     expect(find.byKey(const Key('shortcut-recorder-dialog')), findsNothing);
     expect(find.text('⌘J'), findsOneWidget);
+  });
+
+  testWidgets('Windows global shortcut uses the Flutter recorder', (
+    tester,
+  ) async {
+    await _pumpScreen(tester, platform: TargetPlatform.windows);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('shortcut-row-global')),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    await tester.tap(find.byKey(const Key('shortcut-binding-global')));
+    await tester.pumpAndSettle();
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyJ);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ctrl+Alt+J'), findsOneWidget);
   });
 
   testWidgets(
@@ -166,12 +233,13 @@ void main() {
   );
 }
 
-Future<void> _pumpScreen(WidgetTester tester) async {
+Future<void> _pumpScreen(
+  WidgetTester tester, {
+  TargetPlatform platform = TargetPlatform.macOS,
+}) async {
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [
-        shortcutTargetPlatformProvider.overrideWithValue(TargetPlatform.macOS),
-      ],
+      overrides: [shortcutTargetPlatformProvider.overrideWithValue(platform)],
       child: MaterialApp(
         localizationsDelegates: const [
           AppLocalizations.delegate,

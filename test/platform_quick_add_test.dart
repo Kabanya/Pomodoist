@@ -77,6 +77,220 @@ void main() {
 
     expect(result, 'Plan the next review');
   });
+
+  test('global quick add defaults use native desktop labels', () {
+    expect(
+      GlobalQuickAddBinding.defaultFor(
+        TargetPlatform.macOS,
+      ).labelFor(TargetPlatform.macOS),
+      '⌥Space',
+    );
+    expect(
+      GlobalQuickAddBinding.defaultFor(
+        TargetPlatform.windows,
+      ).labelFor(TargetPlatform.windows),
+      'Ctrl+Alt+Space',
+    );
+    expect(
+      GlobalQuickAddBinding.defaultFor(
+        TargetPlatform.linux,
+      ).labelFor(TargetPlatform.linux),
+      'Ctrl+Alt+Space',
+    );
+    expect(
+      GlobalQuickAddBinding.defaultFor(TargetPlatform.linux).portalTrigger,
+      'CTRL+ALT+space',
+    );
+  });
+
+  test(
+    'disabling global quick add persists and unregisters the hotkey',
+    () async {
+      final calls = <MethodCall>[];
+      const channel = MethodChannel(quickAddChannelName);
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            calls.add(call);
+            return switch (call.method) {
+              quickAddGetGlobalShortcutMethod => {
+                'keyCode': 49,
+                'keyLabel': 'Space',
+                'meta': false,
+                'control': false,
+                'alt': true,
+                'shift': false,
+              },
+              quickAddSetGlobalShortcutEnabledMethod => null,
+              _ => null,
+            };
+          });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null),
+      );
+
+      final db = AppDatabase(NativeDatabase.memory());
+      final container = _container(db);
+      addTearDown(container.dispose);
+      addTearDown(db.close);
+      final controller = container.read(platformQuickAddControllerProvider);
+      await controller.ready;
+
+      await controller.setGlobalQuickAddEnabled(false);
+
+      expect(controller.state.enabled, isFalse);
+      expect(
+        (await SharedPreferences.getInstance()).getBool(
+          globalQuickAddEnabledPreferenceKey,
+        ),
+        isFalse,
+      );
+      expect(
+        calls.where(
+          (call) =>
+              call.method == quickAddSetGlobalShortcutEnabledMethod &&
+              call.arguments == false,
+        ),
+        hasLength(1),
+      );
+    },
+  );
+
+  test('changing the global shortcut persists the accepted binding', () async {
+    const channel = MethodChannel(quickAddChannelName);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          return switch (call.method) {
+            quickAddGetGlobalShortcutMethod => {
+              'keyCode': 49,
+              'keyLabel': 'Space',
+              'meta': false,
+              'control': false,
+              'alt': true,
+              'shift': false,
+            },
+            _ => null,
+          };
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null),
+    );
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = _container(db);
+    addTearDown(container.dispose);
+    addTearDown(db.close);
+    final controller = container.read(platformQuickAddControllerProvider);
+    await controller.ready;
+    const binding = GlobalQuickAddBinding(
+      keyCode: 13,
+      keyLabel: 'J',
+      control: true,
+      alt: true,
+    );
+
+    await controller.setGlobalShortcut(binding);
+
+    final stored = (await SharedPreferences.getInstance()).getString(
+      globalQuickAddBindingPreferenceKey,
+    );
+    expect(stored, contains('"keyLabel":"J"'));
+    expect(stored, contains('"control":true'));
+  });
+
+  test('a disabled shortcut is applied only when re-enabled', () async {
+    final calls = <MethodCall>[];
+    const channel = MethodChannel(quickAddChannelName);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          calls.add(call);
+          return switch (call.method) {
+            quickAddGetGlobalShortcutMethod => {
+              'keyCode': 49,
+              'keyLabel': 'Space',
+              'meta': false,
+              'control': false,
+              'alt': true,
+              'shift': false,
+            },
+            _ => null,
+          };
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null),
+    );
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = _container(db);
+    addTearDown(container.dispose);
+    addTearDown(db.close);
+    final controller = container.read(platformQuickAddControllerProvider);
+    await controller.ready;
+    await controller.setGlobalQuickAddEnabled(false);
+    calls.clear();
+
+    await controller.setGlobalShortcut(
+      const GlobalQuickAddBinding(
+        keyCode: 13,
+        keyLabel: 'J',
+        control: true,
+        alt: true,
+      ),
+    );
+
+    expect(calls, isEmpty);
+    await controller.setGlobalQuickAddEnabled(true);
+    expect(calls.map((call) => call.method), [
+      quickAddSetGlobalShortcutMethod,
+      quickAddSetGlobalShortcutEnabledMethod,
+    ]);
+  });
+
+  test('registration conflict keeps the previous working binding', () async {
+    const channel = MethodChannel(quickAddChannelName);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          if (call.method == quickAddGetGlobalShortcutMethod) {
+            return {
+              'keyCode': 49,
+              'keyLabel': 'Space',
+              'meta': false,
+              'control': false,
+              'alt': true,
+              'shift': false,
+            };
+          }
+          if (call.method == quickAddSetGlobalShortcutMethod) {
+            throw PlatformException(code: 'shortcut_unavailable');
+          }
+          return null;
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null),
+    );
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = _container(db);
+    addTearDown(container.dispose);
+    addTearDown(db.close);
+    final controller = container.read(platformQuickAddControllerProvider);
+    await controller.ready;
+
+    await expectLater(
+      controller.setGlobalShortcut(
+        const GlobalQuickAddBinding(
+          keyCode: 13,
+          keyLabel: 'J',
+          control: true,
+          alt: true,
+        ),
+      ),
+      throwsA(isA<PlatformException>()),
+    );
+
+    expect(controller.state.binding.keyLabel, 'Space');
+    expect(controller.state.registrationError, isA<PlatformException>());
+  });
 }
 
 ProviderContainer _container(AppDatabase db) {

@@ -5,14 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'account_providers.dart';
 import 'app_l10n.dart';
-import 'platform_quick_add.dart';
 import 'providers.dart';
 import 'watch_companion.dart';
 
 final appStartupLifecycleProvider = Provider<void>((ref) {
   ref.watch(accountSyncLifecycleProvider);
   ref.watch(googleCalendarSyncLifecycleProvider);
-  ref.watch(platformQuickAddControllerProvider);
   ref.watch(recurringTaskMaterializationProvider);
   ref.watch(taskStartNotificationCoordinatorProvider);
   ref.watch(reengagementNotificationCoordinatorProvider);

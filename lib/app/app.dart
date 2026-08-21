@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 
 import 'app_language.dart';
+import 'platform_quick_add.dart';
 import 'app_theme_mode.dart';
 import 'router.dart';
 import 'theme/app_theme.dart';
@@ -13,6 +14,7 @@ class PomodoistApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(platformQuickAddControllerProvider);
     final router = ref.watch(routerProvider);
     final language = ref.watch(appLanguageProvider);
     final themeMode = ref.watch(appThemeModeProvider);

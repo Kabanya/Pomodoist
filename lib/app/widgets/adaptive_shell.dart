@@ -17,7 +17,6 @@ import '../../features/tasks/domain/task_models.dart';
 import '../../features/tasks/presentation/widgets/create_project_dialog.dart';
 import '../../features/tasks/presentation/widgets/project_color_picker.dart';
 import '../../features/tasks/presentation/widgets/quick_add_bar.dart';
-import '../../features/tasks/presentation/widgets/quick_add_text_controller.dart';
 import '../account_providers.dart';
 import '../app_l10n.dart';
 import '../keyboard_shortcuts.dart';
@@ -1403,24 +1402,8 @@ class _SidebarProjectTile extends StatelessWidget {
   }
 }
 
-class _SidebarQuickAddDialog extends ConsumerStatefulWidget {
+class _SidebarQuickAddDialog extends StatelessWidget {
   const _SidebarQuickAddDialog();
-
-  @override
-  ConsumerState<_SidebarQuickAddDialog> createState() =>
-      _SidebarQuickAddDialogState();
-}
-
-class _SidebarQuickAddDialogState
-    extends ConsumerState<_SidebarQuickAddDialog> {
-  final _controller = QuickAddTextController();
-  bool _busy = false;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1429,95 +1412,12 @@ class _SidebarQuickAddDialogState
       title: Text(l10n.addTask),
       initialSize: const Size(560, 260),
       minSize: const Size(320, 220),
-      content: QuickAddInput(
-        textFieldKey: const Key('sidebar-quick-add-input'),
-        controller: _controller,
-        autofocus: true,
-        textInputAction: TextInputAction.done,
-        decoration: InputDecoration(
-          hintText: l10n.quickAddHint,
-          prefixIcon: const Icon(Icons.add_task),
-          suffixIcon: IconButton(
-            key: const Key('sidebar-quick-add-voice'),
-            tooltip: l10n.voiceQuickAdd,
-            onPressed: _busy ? null : _openVoiceSheet,
-            icon: const Icon(Icons.mic_none),
-          ),
-        ),
-        onSubmitted: (_) => _submit(),
+      content: QuickAddComposer(
+        onCompleted: () => Navigator.of(context).pop(),
+        onCancel: () => Navigator.of(context).pop(),
       ),
-      actions: [
-        TextButton(
-          onPressed: _busy ? null : () => Navigator.of(context).pop(),
-          child: Text(l10n.commonCancel),
-        ),
-        FilledButton.icon(
-          key: const Key('sidebar-quick-add-submit'),
-          onPressed: _busy ? null : _submit,
-          icon: _busy
-              ? const SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.add),
-          label: Text(l10n.commonAdd),
-        ),
-      ],
+      actions: const [],
     );
-  }
-
-  Future<void> _submit() async {
-    final input = _controller.text.trim();
-    if (input.isEmpty || _busy) {
-      return;
-    }
-    setState(() => _busy = true);
-    try {
-      await ref.read(quickAddServiceProvider).createTask(input);
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
-    } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.couldNotAddTask(error))),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _busy = false);
-      }
-    }
-  }
-
-  Future<void> _openVoiceSheet() async {
-    final tasks = await showVoiceQuickAddSheet(context, ref);
-    if (!mounted || tasks == null || tasks.isEmpty) {
-      return;
-    }
-    setState(() => _busy = true);
-    try {
-      final created = await createVoiceQuickAddTasks(ref, tasks);
-      if (!mounted) {
-        return;
-      }
-      final messenger = ScaffoldMessenger.of(context);
-      final createdLabel = context.l10n.tasksCreated(created);
-      Navigator.of(context).pop();
-      if (created > 0) {
-        messenger.showSnackBar(SnackBar(content: Text(createdLabel)));
-      }
-    } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.couldNotAddTask(error))),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _busy = false);
-      }
-    }
   }
 }
 

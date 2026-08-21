@@ -62,6 +62,27 @@ class RunnerTests: XCTestCase {
     XCTAssertEqual(QuickAddGlobalShortcut.load(from: defaults), candidate)
   }
 
+  func testDisablingQuickAddUnregistersTheHotKey() {
+    let defaults = UserDefaults(suiteName: UUID().uuidString)!
+    let viewController = FlutterViewController()
+    let channel = FlutterMethodChannel(
+      name: UUID().uuidString,
+      binaryMessenger: viewController.engine.binaryMessenger
+    )
+    let controller = QuickAddHotKeyController(channel: channel, defaults: defaults)
+    var unregisterCount = 0
+
+    XCTAssertEqual(
+      controller.applyEnabled(false) {
+        unregisterCount += 1
+        return noErr
+      },
+      noErr
+    )
+    XCTAssertFalse(controller.isEnabled)
+    XCTAssertEqual(unregisterCount, 1)
+  }
+
   func testResolvesFlutterControllerFromApplicationWindows() {
     let expected = FlutterViewController()
     let window = NSWindow()

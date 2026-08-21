@@ -9,10 +9,10 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: subosito/flutter-action@1508160852fb97248640997f7cfb38da241df0ba # v2.9.1
         with:
-          flutter-version: '3.47.0'
+          flutter-version-file: .fvmrc
       - name: Install Linux packaging validators
         run: |
           sudo apt-get update
@@ -20,9 +20,6 @@ jobs:
             appstream desktop-file-utils
       - run: sh tool/test_public_boundary.sh
       - run: make test-linux-packaging
-      - run: flutter pub get
+      - run: flutter pub get --enforce-lockfile
       - run: flutter analyze
       - run: flutter test
-      - run: |
-          ! git ls-files | grep -E '(^|/)(account-sync-platform|\.gitmodules|\.codex|\.env|key-[^/]+\.md|screenlog\.0|outputs|design|\.superpowers|supabase/\.temp)(/|$)'
-          ! git grep -nE '(AKIA[0-9A-Z]{16}|-----BEGIN( [A-Z]+)? PRIVATE KEY-----|rk_(live|test)_[0-9A-Za-z]+|sk_(live|test)_[0-9A-Za-z]+|whsec_[0-9A-Za-z]+|sb_secret_[0-9A-Za-z]+|sntrys_[0-9A-Za-z]+|GOCSPX-[0-9A-Za-z_-]{20,})' -- .

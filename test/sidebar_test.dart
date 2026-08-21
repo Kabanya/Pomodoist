@@ -36,6 +36,7 @@ import 'package:pomodoist/features/tasks/presentation/priority_matrix_screen.dar
 import 'package:pomodoist/features/tasks/presentation/search_screen.dart';
 import 'package:pomodoist/features/tasks/presentation/timeline_screen.dart';
 import 'package:pomodoist/features/tasks/presentation/upcoming_screen.dart';
+import 'package:pomodoist/features/tasks/presentation/widgets/quick_add_bar.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -592,6 +593,7 @@ void main() {
     await tester.tap(find.byKey(const Key('sidebar-add-task')));
     await _pumpFrames(tester);
     expect(find.byKey(ResizableDialog.containerKey), findsOneWidget);
+    expect(find.byType(QuickAddComposer), findsOneWidget);
     expect(find.byKey(const Key('sidebar-quick-add-voice')), findsOneWidget);
     await tester.enterText(
       find.byKey(const Key('sidebar-quick-add-input')),

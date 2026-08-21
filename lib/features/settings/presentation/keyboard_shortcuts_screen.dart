@@ -23,17 +23,40 @@ class KeyboardShortcutsScreen extends ConsumerStatefulWidget {
 
 class _KeyboardShortcutsScreenState
     extends ConsumerState<KeyboardShortcutsScreen> {
-  MacOSGlobalShortcut? _globalShortcut;
+  late final TargetPlatform _targetPlatform;
+  PlatformQuickAddController? _globalQuickAddController;
+  GlobalQuickAddBinding? _globalShortcut;
+  bool _globalQuickAddEnabled = true;
+  Object? _globalQuickAddError;
   bool _loadingGlobalShortcut = false;
 
-  TargetPlatform get _platform => ref.read(shortcutTargetPlatformProvider);
+  TargetPlatform get _platform => _targetPlatform;
   bool get _supportsGlobalShortcut =>
-      !kIsWeb && _platform == TargetPlatform.macOS;
+      !kIsWeb &&
+      const {
+        TargetPlatform.macOS,
+        TargetPlatform.windows,
+        TargetPlatform.linux,
+      }.contains(_platform);
 
   @override
   void initState() {
     super.initState();
-    if (_supportsGlobalShortcut) unawaited(_loadGlobalShortcut());
+    _targetPlatform = ref.read(shortcutTargetPlatformProvider);
+    if (_supportsGlobalShortcut) {
+      final controller = ref.read(platformQuickAddControllerProvider);
+      _globalQuickAddController = controller;
+      _globalShortcut = controller.state.binding;
+      _globalQuickAddEnabled = controller.state.enabled;
+      controller.addListener(_syncGlobalQuickAddState);
+      unawaited(_loadGlobalShortcut());
+    }
+  }
+
+  @override
+  void dispose() {
+    _globalQuickAddController?.removeListener(_syncGlobalQuickAddState);
+    super.dispose();
   }
 
   @override
@@ -88,11 +111,22 @@ class _KeyboardShortcutsScreenState
             _ShortcutRow(
               key: const Key('shortcut-row-global'),
               title: l10n.settingsShortcutsGlobalQuickAdd,
-              subtitle: l10n.settingsShortcutsGlobalQuickAddSubtitle,
-              shortcut: _globalShortcut?.label,
+              subtitle: _globalQuickAddError == null
+                  ? l10n.settingsShortcutsGlobalQuickAddSubtitle
+                  : l10n.settingsShortcutsGlobalError,
+              shortcut: _globalShortcut?.labelFor(_platform),
               loading: _loadingGlobalShortcut,
               buttonKey: const Key('shortcut-binding-global'),
-              onTap: _globalShortcut == null ? null : _recordGlobalShortcut,
+              leading: Switch(
+                key: const Key('global-quick-add-enabled'),
+                value: _globalQuickAddEnabled,
+                onChanged: _loadingGlobalShortcut
+                    ? null
+                    : _setGlobalQuickAddEnabled,
+              ),
+              onTap: !_globalQuickAddEnabled || _globalShortcut == null
+                  ? null
+                  : _recordGlobalShortcut,
             ),
             const SizedBox(height: 8),
           ],
@@ -132,14 +166,37 @@ class _KeyboardShortcutsScreenState
   Future<void> _loadGlobalShortcut() async {
     setState(() => _loadingGlobalShortcut = true);
     try {
-      final shortcut = await ref
-          .read(platformQuickAddControllerProvider)
-          .getGlobalShortcut();
-      if (mounted) setState(() => _globalShortcut = shortcut);
+      final controller = _globalQuickAddController!;
+      await controller.ready;
+      if (mounted) _syncGlobalQuickAddState();
     } on Object {
       // A missing native host leaves the macOS-only row unavailable.
     } finally {
       if (mounted) setState(() => _loadingGlobalShortcut = false);
+    }
+  }
+
+  void _syncGlobalQuickAddState() {
+    if (!mounted) return;
+    final state = _globalQuickAddController!.state;
+    setState(() {
+      _globalShortcut = state.binding;
+      _globalQuickAddEnabled = state.enabled;
+      _globalQuickAddError = state.registrationError;
+    });
+  }
+
+  Future<void> _setGlobalQuickAddEnabled(bool enabled) async {
+    try {
+      await ref
+          .read(platformQuickAddControllerProvider)
+          .setGlobalQuickAddEnabled(enabled);
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.settingsShortcutsGlobalError)),
+        );
+      }
     }
   }
 
@@ -163,6 +220,43 @@ class _KeyboardShortcutsScreenState
   }
 
   Future<void> _recordGlobalShortcut() {
+    if (_platform != TargetPlatform.macOS) {
+      return showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => _ShortcutRecorderDialog(
+          onSubmit: (binding) async {
+            final candidate = GlobalQuickAddBinding(
+              keyCode: binding.physicalKeyId,
+              keyLabel: binding.keyLabel,
+              meta: binding.meta,
+              control: binding.control,
+              alt: binding.alt,
+              shift: binding.shift,
+            );
+            if (ref
+                .read(keyboardShortcutsProvider)
+                .values
+                .any(
+                  (binding) =>
+                      binding.displaySignature == candidate.displaySignature,
+                )) {
+              return context.l10n.settingsShortcutsConflict;
+            }
+            final globalError = context.l10n.settingsShortcutsGlobalError;
+            try {
+              await ref
+                  .read(platformQuickAddControllerProvider)
+                  .setGlobalShortcut(candidate);
+              if (mounted) setState(() => _globalShortcut = candidate);
+              return null;
+            } on Object {
+              return globalError;
+            }
+          },
+        ),
+      );
+    }
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -188,9 +282,11 @@ class _KeyboardShortcutsScreenState
       try {
         await ref
             .read(platformQuickAddControllerProvider)
-            .setGlobalShortcut(macOSDefaultGlobalShortcut);
+            .setGlobalShortcut(GlobalQuickAddBinding.defaultFor(_platform));
         if (mounted) {
-          setState(() => _globalShortcut = macOSDefaultGlobalShortcut);
+          setState(
+            () => _globalShortcut = GlobalQuickAddBinding.defaultFor(_platform),
+          );
         }
       } on Object {
         if (mounted) {
@@ -221,6 +317,7 @@ class _ShortcutRow extends StatelessWidget {
     required this.buttonKey,
     required this.onTap,
     this.subtitle,
+    this.leading,
     this.loading = false,
     super.key,
   });
@@ -228,6 +325,7 @@ class _ShortcutRow extends StatelessWidget {
   final String title;
   final String? subtitle;
   final String? shortcut;
+  final Widget? leading;
   final Key buttonKey;
   final VoidCallback? onTap;
   final bool loading;
@@ -236,6 +334,7 @@ class _ShortcutRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
+        leading: leading,
         title: Text(title),
         subtitle: subtitle == null ? null : Text(subtitle!),
         trailing: loading
