@@ -15,6 +15,10 @@ try {
     if ($Clean) {
         & flutter clean
         if ($LASTEXITCODE -ne 0) { throw 'flutter clean failed' }
+        $buildDirectory = Join-Path $repoRoot 'build'
+        if (Test-Path -LiteralPath $buildDirectory) {
+            throw "flutter clean did not remove $buildDirectory. Close processes using the build directory and retry."
+        }
     }
 
     $flutterArgs = @('build', 'windows', "--$($Configuration.ToLowerInvariant())")

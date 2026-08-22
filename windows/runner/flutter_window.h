@@ -4,6 +4,7 @@
 #include <flutter/dart_project.h>
 #include <flutter/encodable_value.h>
 #include <flutter/method_channel.h>
+#include <flutter_windows.h>
 
 #include <memory>
 
