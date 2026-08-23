@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -611,6 +611,7 @@ class _TimelineGrid extends ConsumerStatefulWidget {
 
 class _TimelineGridState extends ConsumerState<_TimelineGrid> {
   final _gridKey = GlobalKey();
+  final _gridFocusNode = FocusNode(debugLabel: 'Timeline grid');
   final _horizontalScrollController = ScrollController();
   final _touchZoomPointers = <int, Offset>{};
   int? _addingAtMinutes;
@@ -640,6 +641,7 @@ class _TimelineGridState extends ConsumerState<_TimelineGrid> {
   @override
   void dispose() {
     _clockTimer?.cancel();
+    _gridFocusNode.dispose();
     _horizontalScrollController.dispose();
     super.dispose();
   }
@@ -708,83 +710,144 @@ class _TimelineGridState extends ConsumerState<_TimelineGrid> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final projectColumnWidth = constraints.maxWidth < 600 ? 112.0 : 200.0;
-        return DecoratedBox(
-          key: const Key('timeline-grid-frame'),
-          decoration: BoxDecoration(
-            color: context.appColors.surface,
-            border: Border.all(color: context.appColors.border),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  key: const Key('timeline-project-column'),
-                  width: projectColumnWidth,
-                  height: totalHeight,
-                  child: Column(
-                    children: [
-                      _ProjectColumnHeader(
-                        projects: widget.projects,
-                        visibleProjectIds: widget.projectRows
-                            .map((row) => row.project.id)
-                            .toSet(),
-                      ),
-                      for (final layout in projectLayouts)
-                        _TimelineProjectHeader(
-                          layout: layout,
-                          onColor: () =>
-                              _changeProjectColor(context, layout.row.project),
+        return AnimatedBuilder(
+          animation: _gridFocusNode,
+          builder: (context, _) => DecoratedBox(
+            key: const Key('timeline-grid-frame'),
+            decoration: BoxDecoration(
+              color: context.appColors.surface,
+              border: Border.all(
+                color: _gridFocusNode.hasPrimaryFocus
+                    ? context.appColors.accent
+                    : context.appColors.border,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    key: const Key('timeline-project-column'),
+                    width: projectColumnWidth,
+                    height: totalHeight,
+                    child: Column(
+                      children: [
+                        _ProjectColumnHeader(
+                          projects: widget.projects,
+                          visibleProjectIds: widget.projectRows
+                              .map((row) => row.project.id)
+                              .toSet(),
                         ),
-                    ],
+                        for (final layout in projectLayouts)
+                          _TimelineProjectHeader(
+                            layout: layout,
+                            onColor: () => _changeProjectColor(
+                              context,
+                              layout.row.project,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Listener(
-                    behavior: HitTestBehavior.translucent,
-                    onPointerDown: _handleTouchZoomDown,
-                    onPointerMove: _handleTouchZoomMove,
-                    onPointerUp: _handleTouchZoomEnd,
-                    onPointerCancel: _handleTouchZoomEnd,
-                    onPointerPanZoomStart: (event) {
-                      _trackpadZoomStartHourWidth = widget.hourWidth;
-                    },
-                    onPointerPanZoomUpdate: (event) {
-                      final startWidth = _trackpadZoomStartHourWidth;
-                      if (startWidth != null && event.scale != 1) {
-                        _applyGestureZoom(
-                          startWidth,
-                          event.scale,
-                          event.localPosition.dx,
-                        );
-                      }
-                    },
-                    onPointerPanZoomEnd: (_) {
-                      _trackpadZoomStartHourWidth = null;
-                    },
-                    child: SingleChildScrollView(
-                      key: const Key('timeline-horizontal-scroll'),
-                      controller: _horizontalScrollController,
-                      scrollDirection: Axis.horizontal,
-                      child: _timelineSurface(
-                        context,
-                        start,
-                        end,
-                        trackWidth,
-                        totalHeight,
-                        projectLayouts,
+                  Expanded(
+                    child: Listener(
+                      behavior: HitTestBehavior.translucent,
+                      onPointerDown: (event) {
+                        _gridFocusNode.requestFocus();
+                        _handleTouchZoomDown(event);
+                      },
+                      onPointerMove: _handleTouchZoomMove,
+                      onPointerUp: _handleTouchZoomEnd,
+                      onPointerCancel: _handleTouchZoomEnd,
+                      onPointerSignal: _handlePointerSignal,
+                      onPointerPanZoomStart: (event) {
+                        _trackpadZoomStartHourWidth = widget.hourWidth;
+                      },
+                      onPointerPanZoomUpdate: (event) {
+                        final startWidth = _trackpadZoomStartHourWidth;
+                        if (startWidth != null && event.scale != 1) {
+                          _applyGestureZoom(
+                            startWidth,
+                            event.scale,
+                            event.localPosition.dx,
+                          );
+                        }
+                      },
+                      onPointerPanZoomEnd: (_) {
+                        _trackpadZoomStartHourWidth = null;
+                      },
+                      child: SingleChildScrollView(
+                        key: const Key('timeline-horizontal-scroll'),
+                        controller: _horizontalScrollController,
+                        scrollDirection: Axis.horizontal,
+                        child: Focus(
+                          focusNode: _gridFocusNode,
+                          onKeyEvent: _handleGridKeyEvent,
+                          child: _timelineSurface(
+                            context,
+                            start,
+                            end,
+                            trackWidth,
+                            totalHeight,
+                            projectLayouts,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
       },
     );
+  }
+
+  void _handlePointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent ||
+        event.kind != PointerDeviceKind.mouse ||
+        event.scrollDelta.dy == 0 ||
+        event.scrollDelta.dx != 0 ||
+        !_horizontalScrollController.hasClients) {
+      return;
+    }
+    final position = _horizontalScrollController.position;
+    final delta = axisDirectionIsReversed(position.axisDirection)
+        ? -event.scrollDelta.dy
+        : event.scrollDelta.dy;
+    final target = (position.pixels + delta).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    if (target == position.pixels) {
+      return;
+    }
+    GestureBinding.instance.pointerSignalResolver.register(event, (
+      resolvedEvent,
+    ) {
+      position.pointerScroll(delta);
+      resolvedEvent.respond(allowPlatformDefault: false);
+    });
+  }
+
+  KeyEventResult _handleGridKeyEvent(FocusNode node, KeyEvent event) {
+    if (!node.hasPrimaryFocus ||
+        (event is! KeyDownEvent && event is! KeyRepeatEvent)) {
+      return KeyEventResult.ignored;
+    }
+    final direction = switch (event.logicalKey) {
+      LogicalKeyboardKey.arrowLeft => AxisDirection.left,
+      LogicalKeyboardKey.arrowRight => AxisDirection.right,
+      _ => null,
+    };
+    if (direction == null || node.context == null) {
+      return KeyEventResult.ignored;
+    }
+    ScrollAction().invoke(ScrollIntent(direction: direction), node.context!);
+    return KeyEventResult.handled;
   }
 
   void _handleTouchZoomDown(PointerDownEvent event) {

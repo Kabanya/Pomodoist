@@ -929,6 +929,99 @@ void main() {
     }
   });
 
+  testWidgets(
+    'mobile drag to task gap makes a subtask root in normal list order',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      try {
+        final today = _todaySchedule();
+        final harness = await _pumpApp(
+          tester,
+          tasks: [
+            _task(
+              'parent-1',
+              'Parent task',
+              schedule: today,
+              orderKey: '00000000000000000001',
+            ),
+            _task(
+              'child-1',
+              'Child task',
+              schedule: today,
+              parentId: 'parent-1',
+              orderKey: '00000000000000000002',
+            ),
+            _task(
+              'later-root',
+              'Later root',
+              schedule: today,
+              orderKey: '00000000000000000003',
+            ),
+          ],
+        );
+        final gap = find.byKey(const Key('task-root-gap-0'));
+
+        expect(gap, findsOneWidget);
+        expect(tester.getSize(gap).height, 12);
+
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.text('Child task')),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+        await gesture.moveTo(tester.getCenter(gap));
+        await tester.pump();
+
+        expect(tester.getSize(gap).height, 32);
+        expect(find.text('Make parent task'), findsOneWidget);
+
+        await gesture.up();
+        await tester.pumpAndSettle();
+
+        final movedTask = await harness.taskRepository
+            .watchTask('child-1')
+            .first;
+        expect(movedTask?.parentId, isNull);
+        expect(
+          movedTask!.orderKey.compareTo('00000000000000000003'),
+          greaterThan(0),
+        );
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    },
+  );
+
+  testWidgets('mobile task gap ignores a task that is already a root', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    try {
+      final harness = await _pumpApp(
+        tester,
+        tasks: [
+          _task(
+            'root-1',
+            'First root',
+            schedule: _todaySchedule(),
+            orderKey: '1',
+          ),
+          _task(
+            'root-2',
+            'Second root',
+            schedule: _todaySchedule(),
+            orderKey: '2',
+          ),
+        ],
+      );
+
+      await _dragTaskToRootGap(tester, 'First root');
+
+      expect(harness.taskRepository.movedParentIds, isEmpty);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
   testWidgets('mobile root drop ignores a task that is already a root', (
     tester,
   ) async {
@@ -963,18 +1056,22 @@ void main() {
         tester,
         tasks: [
           _task('mobile-root', 'Mobile root', schedule: _todaySchedule()),
+          _task('mobile-root-2', 'Mobile root 2', schedule: _todaySchedule()),
         ],
       );
       expect(find.byKey(const Key('task-root-drop-zone')), findsOneWidget);
+      expect(find.byKey(const Key('task-root-gap-0')), findsOneWidget);
 
       debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
       await _pumpApp(
         tester,
         tasks: [
           _task('desktop-root', 'Desktop root', schedule: _todaySchedule()),
+          _task('desktop-root-2', 'Desktop root 2', schedule: _todaySchedule()),
         ],
       );
       expect(find.byKey(const Key('task-root-drop-zone')), findsNothing);
+      expect(find.byKey(const Key('task-root-gap-0')), findsNothing);
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
@@ -994,6 +1091,27 @@ void main() {
       );
 
       await _dragTaskToRootDropZone(tester, 'Child task');
+
+      expect(find.textContaining('Could not move task'), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('mobile task gap reports move errors', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      final today = _todaySchedule();
+      await _pumpApp(
+        tester,
+        taskMoveError: StateError('move failed'),
+        tasks: [
+          _task('parent-1', 'Parent task', schedule: today),
+          _task('child-1', 'Child task', schedule: today, parentId: 'parent-1'),
+        ],
+      );
+
+      await _dragTaskToRootGap(tester, 'Child task');
 
       expect(find.textContaining('Could not move task'), findsOneWidget);
     } finally {
@@ -1429,6 +1547,177 @@ void main() {
     expect(find.byKey(const Key('timeline-zoom-out')), findsOneWidget);
     expect(find.byKey(const Key('timeline-zoom-in')), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'timeline mouse wheel scrolls horizontally and releases at edge',
+    (tester) async {
+      _setTimelineVisibleHourPrefs();
+      late GoRouter router;
+      final day = _testToday();
+      await _pumpApp(
+        tester,
+        onRouter: (value) => router = value,
+        size: const Size(800, 500),
+        projects: [
+          _project(inboxProjectId, 'Inbox', orderKey: '0'),
+          for (var index = 1; index <= 6; index++)
+            _project(
+              'favorite-$index',
+              'Favorite $index',
+              orderKey: '$index',
+              isFavorite: true,
+            ),
+        ],
+        tasks: const <TaskItem>[],
+      );
+
+      router.go('/timeline?date=${_routeDate(day)}');
+      await _pumpFrames(tester);
+
+      final scrollFinder = find.byKey(const Key('timeline-horizontal-scroll'));
+      await tester.ensureVisible(scrollFinder);
+      await tester.pump();
+      final horizontal = tester
+          .widget<SingleChildScrollView>(scrollFinder)
+          .controller!;
+      final vertical = tester
+          .stateList<ScrollableState>(
+            find.descendant(
+              of: find.byType(CustomScrollView),
+              matching: find.byType(Scrollable),
+            ),
+          )
+          .firstWhere(
+            (state) =>
+                axisDirectionToAxis(state.position.axisDirection) ==
+                Axis.vertical,
+          )
+          .position;
+      final visibleGrid = tester
+          .getRect(scrollFinder)
+          .intersect(Offset.zero & tester.view.physicalSize);
+      final mouse = TestPointer(44, PointerDeviceKind.mouse)
+        ..hover(visibleGrid.center);
+
+      horizontal.jumpTo(200);
+      final verticalBeforeWheel = vertical.pixels;
+      await tester.sendEventToBinding(mouse.scroll(const Offset(0, 120)));
+      await tester.pump();
+
+      expect(horizontal.offset, 320);
+      expect(vertical.pixels, verticalBeforeWheel);
+
+      horizontal.jumpTo(horizontal.position.maxScrollExtent);
+      final verticalBeforeEdge = vertical.pixels;
+      expect(verticalBeforeEdge, lessThan(vertical.maxScrollExtent));
+      await tester.sendEventToBinding(mouse.scroll(const Offset(0, 120)));
+      await tester.pump();
+
+      expect(horizontal.offset, horizontal.position.maxScrollExtent);
+      expect(vertical.pixels, greaterThan(verticalBeforeEdge));
+    },
+  );
+
+  testWidgets('timeline arrows scroll only while the grid has focus', (
+    tester,
+  ) async {
+    _setTimelineVisibleHourPrefs();
+    late GoRouter router;
+    final day = _testToday();
+    await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      size: const Size(1200, 900),
+      tasks: const <TaskItem>[],
+    );
+
+    router.go('/timeline?date=${_routeDate(day)}');
+    await _pumpFrames(tester);
+
+    final frameFinder = find.byKey(const Key('timeline-grid-frame'));
+    final scrollFinder = find.byKey(const Key('timeline-horizontal-scroll'));
+    final controller = tester
+        .widget<SingleChildScrollView>(scrollFinder)
+        .controller!;
+    controller.jumpTo(300);
+    await tester.pump();
+    final borderBeforeFocus =
+        (tester.widget<DecoratedBox>(frameFinder).decoration as BoxDecoration)
+            .border;
+    final scrollRect = tester.getRect(scrollFinder);
+    await tester.tapAt(Offset(scrollRect.center.dx, scrollRect.top + 12));
+    await tester.pump();
+    final borderWithFocus =
+        (tester.widget<DecoratedBox>(frameFinder).decoration as BoxDecoration)
+            .border;
+
+    expect(borderWithFocus, isNot(borderBeforeFocus));
+    final keyHandled = await tester.sendKeyDownEvent(
+      LogicalKeyboardKey.arrowRight,
+    );
+    expect(keyHandled, isTrue);
+    await tester.pumpAndSettle();
+    final afterKeyDown = controller.offset;
+    expect(afterKeyDown, greaterThan(300));
+    await tester.sendKeyRepeatEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pumpAndSettle();
+    expect(controller.offset, greaterThan(afterKeyDown));
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowRight);
+
+    controller.jumpTo(300);
+    await tester.tap(find.byKey(const Key('timeline-slot-inbox-600')));
+    await tester.pump();
+    final inlineAdd = find.byKey(const Key('timeline-inline-add-timed'));
+    expect(inlineAdd, findsOneWidget);
+    await tester.tap(
+      find.descendant(of: inlineAdd, matching: find.byType(TextField)),
+    );
+    await tester.pump();
+    final editable = find.descendant(
+      of: inlineAdd,
+      matching: find.byType(EditableText),
+    );
+    expect(tester.widget<EditableText>(editable).focusNode.hasFocus, isTrue);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pumpAndSettle();
+
+    expect(controller.offset, 300);
+  });
+
+  testWidgets('timeline arrows follow RTL visual direction', (tester) async {
+    _setTimelineVisibleHourPrefs();
+    late GoRouter router;
+    final day = _testToday();
+    await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      size: const Size(1200, 900),
+      locale: const Locale('ar'),
+      tasks: const <TaskItem>[],
+    );
+
+    router.go('/timeline?date=${_routeDate(day)}');
+    await _pumpFrames(tester);
+
+    final scrollFinder = find.byKey(const Key('timeline-horizontal-scroll'));
+    final controller = tester
+        .widget<SingleChildScrollView>(scrollFinder)
+        .controller!;
+    controller.jumpTo(300);
+    await tester.pump();
+    final scrollRect = tester.getRect(scrollFinder);
+    await tester.tapAt(Offset(scrollRect.center.dx, scrollRect.top + 12));
+    await tester.pump();
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pumpAndSettle();
+    expect(controller.offset, lessThan(300));
+
+    final afterRight = controller.offset;
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+    await tester.pumpAndSettle();
+    expect(controller.offset, greaterThan(afterRight));
   });
 
   testWidgets('timeline zoom resizes slots and preserves the viewed time', (
@@ -2914,6 +3203,21 @@ Future<void> _dragTaskToRootDropZone(
 ) async {
   final source = tester.getCenter(find.text(draggedTitle).first);
   final target = tester.getCenter(find.byKey(const Key('task-root-drop-zone')));
+  final gesture = await tester.startGesture(source);
+  await tester.pump(const Duration(milliseconds: 600));
+  await gesture.moveTo(target);
+  await tester.pump();
+  await gesture.up();
+  await tester.pumpAndSettle();
+}
+
+Future<void> _dragTaskToRootGap(
+  WidgetTester tester,
+  String draggedTitle, {
+  int gapIndex = 0,
+}) async {
+  final source = tester.getCenter(find.text(draggedTitle).first);
+  final target = tester.getCenter(find.byKey(Key('task-root-gap-$gapIndex')));
   final gesture = await tester.startGesture(source);
   await tester.pump(const Duration(milliseconds: 600));
   await gesture.moveTo(target);

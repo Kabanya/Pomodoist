@@ -123,11 +123,48 @@ class TaskListView extends ConsumerWidget {
                       subtaskProgress: progressById[row.task.id],
                     );
                   },
-                  separatorBuilder: (context, index) => Divider(
-                    height: 1,
-                    indent: 38,
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
+                  separatorBuilder: (context, index) {
+                    final colorScheme = Theme.of(context).colorScheme;
+                    if (!supportsRootDrop) {
+                      return Divider(
+                        height: 1,
+                        indent: 38,
+                        color: colorScheme.outlineVariant,
+                      );
+                    }
+                    return DragTarget<String>(
+                      key: ValueKey('task-root-gap-$index'),
+                      onWillAcceptWithDetails: (details) =>
+                          subtaskIds.contains(details.data),
+                      onAcceptWithDetails: (details) =>
+                          unawaited(_makeRootTask(context, ref, details.data)),
+                      builder: (context, candidateData, rejectedData) {
+                        final accepting = candidateData.isNotEmpty;
+                        if (!accepting) {
+                          return Divider(
+                            height: 12,
+                            indent: 38,
+                            color: colorScheme.outlineVariant,
+                          );
+                        }
+                        return ColoredBox(
+                          color: colorScheme.primaryContainer,
+                          child: SizedBox(
+                            height: 32,
+                            child: Center(
+                              child: Text(
+                                l10n.makeParentTask,
+                                style: Theme.of(context).textTheme.labelMedium
+                                    ?.copyWith(
+                                      color: colorScheme.onPrimaryContainer,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
               );
             },
