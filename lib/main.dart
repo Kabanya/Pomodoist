@@ -198,6 +198,10 @@ Future<void> main() async {
             home: (context, id) => const PomodoistApp(),
             globalScope: appScope,
             config: MultiAppConfig(
+              globalWindowOptions: const WindowOptions(
+                titleBarStyle: TitleBarStyle.normal,
+                windowButtonVisibility: true,
+              ),
               macosParams: const MacosPlatformParams(
                 closeAppAfterLastWindowClosed: false,
                 saveLastWindowToReopen: true,

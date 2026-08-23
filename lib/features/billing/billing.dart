@@ -1099,10 +1099,9 @@ class BillingController extends Notifier<BillingState> {
             ref.read(billingStoreProvider).completePurchase(purchase),
             ref.read(billingStoreTimeoutProvider),
           );
-        } catch (error) {
-          if (ref.mounted) {
-            state = state.copyWith(error: '$error');
-          }
+        } on Object {
+          // StoreKit has already delivered the verified purchase. Finishing is
+          // retried by StoreKit and must not turn success into a user error.
         }
       }
     }
@@ -1118,10 +1117,9 @@ class BillingController extends Notifier<BillingState> {
       try {
         await linker(unattemptedJws);
         _skipNextAccountRefresh = true;
-      } catch (error) {
-        if (ref.mounted) {
-          state = state.copyWith(error: '$error');
-        }
+      } on Object {
+        // Account synchronization is best-effort after local StoreKit access
+        // is active and must not be presented as a failed purchase.
       }
     }
   }

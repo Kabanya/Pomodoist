@@ -627,6 +627,34 @@ void main() {
     },
   );
 
+  test(
+    'finish failure does not turn a successful purchase into an error',
+    () async {
+      final store = _FakeBillingStore(
+        completeError: StateError('finish unavailable'),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          billingStoreProvider.overrideWithValue(store),
+          applePurchasesSupportedProvider.overrideWithValue(true),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(billingControllerProvider);
+      await _settle();
+
+      await container
+          .read(billingControllerProvider.notifier)
+          .purchase(pomodoistAnnualProductId);
+      await _settle();
+
+      final state = container.read(billingControllerProvider);
+      expect(state.activeStoreKitProductIds, {pomodoistAnnualProductId});
+      expect(state.purchaseSuccessProductId, pomodoistAnnualProductId);
+      expect(state.error, isNull);
+    },
+  );
+
   test('explicit restore keeps feedback and links the restored JWS', () async {
     final store = _FakeBillingStore(
       restoredProductId: pomodoistLifetimeLaunchProductId,
@@ -737,7 +765,7 @@ void main() {
     },
   );
 
-  test('link failure never removes verified local Pro', () async {
+  test('link failure keeps local Pro without purchase error', () async {
     final store = _FakeBillingStore();
     final container = ProviderContainer(
       overrides: [
@@ -761,7 +789,7 @@ void main() {
     final state = container.read(billingControllerProvider);
     expect(state.hasLocalStoreKitEntitlement, isTrue);
     expect(state.hasActiveEntitlement, isTrue);
-    expect(state.error, contains('purchase_already_linked'));
+    expect(state.error, isNull);
   });
 
   test(
@@ -2363,6 +2391,7 @@ class _FakeBillingStore extends BillingStore {
     this.eligibilityErrorProductIds = const {},
     this.productDetailsById = const {},
     this.refreshedProductIds = const {},
+    this.completeError,
   }) : super();
 
   final _controller = StreamController<List<PurchaseDetails>>.broadcast();
@@ -2374,6 +2403,7 @@ class _FakeBillingStore extends BillingStore {
   final Set<String> eligibilityErrorProductIds;
   final Map<String, ProductDetails> productDetailsById;
   final Set<String> refreshedProductIds;
+  final Object? completeError;
   final eligibilityChecks = <String>{};
   var refreshCount = 0;
   var restoreCount = 0;
@@ -2455,6 +2485,8 @@ class _FakeBillingStore extends BillingStore {
 
   @override
   Future<void> completePurchase(PurchaseDetails purchase) async {
+    final error = completeError;
+    if (error != null) throw error;
     completedProductIds.add(purchase.productID);
   }
 }
