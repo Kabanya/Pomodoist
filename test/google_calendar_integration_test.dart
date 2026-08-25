@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/core/db/app_database.dart';
@@ -620,6 +621,117 @@ void main() {
       expect(updated!.content, 'New title');
       expect(updated.dueDate, DateTime(2026, 5, 3));
     });
+
+    test(
+      'stale private task id reuses the oldest event link without new tasks',
+      () async {
+        final firstTaskId = await taskRepository.createTask(
+          CreateTaskInput(
+            content: 'Canonical task',
+            schedule: TaskSchedule.allDay(DateTime(2030, 5, 1)),
+          ),
+        );
+        final secondTaskId = await taskRepository.createTask(
+          CreateTaskInput(
+            content: 'Existing duplicate',
+            schedule: TaskSchedule.allDay(DateTime(2030, 5, 1)),
+          ),
+        );
+        final firstTask = await taskRepository.watchTask(firstTaskId).first;
+        final secondTask = await taskRepository.watchTask(secondTaskId).first;
+        await db
+            .into(db.googleCalendarEventLinks)
+            .insert(
+              GoogleCalendarEventLinksCompanion.insert(
+                taskId: firstTaskId,
+                calendarId: 'calendar-1',
+                eventId: 'event-linked-twice',
+                lastSyncedLocalUpdatedAt: Value(firstTask!.updatedAt),
+                createdAt: DateTime.utc(2026, 1, 1),
+                updatedAt: DateTime.utc(2026, 1, 1),
+              ),
+            );
+        await db
+            .into(db.googleCalendarEventLinks)
+            .insert(
+              GoogleCalendarEventLinksCompanion.insert(
+                taskId: secondTaskId,
+                calendarId: 'calendar-1',
+                eventId: 'event-linked-twice',
+                lastSyncedLocalUpdatedAt: Value(secondTask!.updatedAt),
+                createdAt: DateTime.utc(2026, 1, 2),
+                updatedAt: DateTime.utc(2026, 1, 2),
+              ),
+            );
+        api.events['event-linked-twice'] = GoogleCalendarEvent(
+          id: 'event-linked-twice',
+          status: 'confirmed',
+          summary: 'Canonical task',
+          start: GoogleCalendarEventTime.allDay(DateTime(2030, 5, 1)),
+          end: GoogleCalendarEventTime.allDay(DateTime(2030, 5, 2)),
+          updated: DateTime.utc(2030, 4, 30),
+          privateExtendedProperties: const {
+            'pomodoistTaskId': 'stale-foreign-task',
+          },
+        );
+
+        await controller.syncNow(interactive: true);
+        await controller.syncNow(interactive: true);
+
+        expect(await db.select(db.tasks).get(), hasLength(2));
+        expect(
+          (await integrationRepository.linkForEvent(
+            'event-linked-twice',
+          ))?.taskId,
+          firstTaskId,
+        );
+        expect(api.events['event-linked-twice']?.pomodoistTaskId, firstTaskId);
+      },
+    );
+
+    test(
+      'link upsert preserves createdAt and skips identical queue entries',
+      () async {
+        final queue = DriftSyncQueueRepository(db);
+        final repository = DriftCalendarIntegrationRepository(
+          db,
+          syncQueue: queue,
+        );
+        await db.delete(db.syncCommands).go();
+
+        await repository.upsertLink(
+          taskId: 'stable-task',
+          calendarId: 'calendar-1',
+          eventId: 'stable-event',
+          etag: 'etag-1',
+        );
+        final createdAt = (await repository.linkForTask(
+          'stable-task',
+        ))!.createdAt;
+        await repository.upsertLink(
+          taskId: 'stable-task',
+          calendarId: 'calendar-1',
+          eventId: 'stable-event',
+          etag: 'etag-2',
+        );
+        await repository.upsertLink(
+          taskId: 'stable-task',
+          calendarId: 'calendar-1',
+          eventId: 'stable-event',
+          etag: 'etag-2',
+        );
+
+        final link = await repository.linkForTask('stable-task');
+        final commands = await db.select(db.syncCommands).get();
+        expect(link!.createdAt, createdAt);
+        expect(
+          commands.where(
+            (command) => command.type == 'google_calendar.link.upsert',
+          ),
+          hasLength(2),
+        );
+      },
+    );
 
     test('expired sync token falls back to a full sync', () async {
       await integrationRepository.markSyncFinished(syncToken: 'expired');

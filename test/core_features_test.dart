@@ -27,6 +27,7 @@ import 'package:pomodoist/features/productivity/data/productivity_repository_imp
 import 'package:pomodoist/features/productivity/domain/productivity_models.dart';
 import 'package:pomodoist/features/tasks/data/task_repository_impl.dart';
 import 'package:pomodoist/features/tasks/data/kanban_transition_coordinator.dart';
+import 'package:pomodoist/features/tasks/domain/task_focus_estimate.dart';
 import 'package:pomodoist/features/tasks/domain/project_colors.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -512,6 +513,43 @@ void main() {
           preset: preset,
         ),
         0,
+      );
+    });
+
+    test('timed schedule overrides stale stored estimates and duration', () {
+      expect(
+        estimateFocusIntervalsForTaskDuration(
+          schedule: TaskSchedule.timed(
+            start: DateTime.utc(2026, 5, 1, 10),
+            end: DateTime.utc(2026, 5, 1, 11, 30),
+          ),
+          durationSeconds: 30 * 60,
+          explicitEstimate: 1,
+          preset: _testPreset(
+            id: defaultPresetId,
+            workMinutes: 25,
+            shortBreakMinutes: 5,
+            longBreakMinutes: 15,
+          ),
+        ),
+        3,
+      );
+      expect(
+        estimateFocusIntervalsForTaskDuration(
+          schedule: TaskSchedule.timed(
+            start: DateTime.utc(2026, 5, 1, 10),
+            end: DateTime.utc(2026, 5, 1, 12),
+          ),
+          durationSeconds: 30 * 60,
+          explicitEstimate: 1,
+          preset: _testPreset(
+            id: deepWorkPresetId,
+            workMinutes: 50,
+            shortBreakMinutes: 10,
+            longBreakMinutes: 25,
+          ),
+        ),
+        2,
       );
     });
   });
@@ -1625,6 +1663,37 @@ void main() {
 
       expect(task!.durationSeconds, 45 * 60);
     });
+
+    test(
+      'changing a timed schedule updates stored and queued duration',
+      () async {
+        final taskId = await taskRepository.createTask(
+          CreateTaskInput(
+            content: 'Resize block',
+            schedule: TaskSchedule.timed(
+              start: DateTime.utc(2026, 5, 1, 10),
+              end: DateTime.utc(2026, 5, 1, 10, 30),
+            ),
+          ),
+        );
+
+        await taskRepository.updateTask(
+          taskId,
+          UpdateTaskPatch(
+            schedule: TaskSchedule.timed(
+              start: DateTime.utc(2026, 5, 1, 10),
+              end: DateTime.utc(2026, 5, 1, 11, 30),
+            ),
+          ),
+        );
+
+        final task = await taskRepository.watchTask(taskId).first;
+        final commands = await syncQueue.watchPending().first;
+        final payload = _payloadFor(commands, 'task.update', taskId);
+        expect(task!.durationSeconds, 90 * 60);
+        expect(payload['durationSeconds'], 90 * 60);
+      },
+    );
 
     test(
       'quick add can create subtasks with inherited project and section',

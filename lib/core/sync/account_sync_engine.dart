@@ -44,14 +44,14 @@ class AccountSyncEngine {
 
   Future<String> deviceId() => _ensureDeviceId();
 
-  Future<void> syncNow() async {
+  Future<Set<String>> syncNow() async {
     await prepareLocalAccountData();
     final imported = await importLocalSnapshotIfNeeded();
     if (imported) {
       await _broadcastSyncHint();
     }
     await pushPending();
-    await pullLatest();
+    return pullLatest();
   }
 
   Future<void> prepareLocalAccountData() async {
@@ -293,11 +293,11 @@ class AccountSyncEngine {
     });
   }
 
-  Future<AccountSyncPullResult?> pullLatest() async {
+  Future<Set<String>> pullLatest() async {
     final deviceId = await _ensureDeviceId();
     final state = await _syncState();
     var sinceRevision = int.tryParse(state?.cursor ?? '') ?? 0;
-    AccountSyncPullResult? latest;
+    final entityTypes = <String>{};
     while (true) {
       final result = await _account
           .pullChanges(
@@ -306,6 +306,7 @@ class AccountSyncEngine {
             sinceRevision: sinceRevision,
           )
           .timeout(_requestTimeout);
+      entityTypes.addAll(result.changes.map((change) => change.entityType));
       if (result.nextCursor < sinceRevision) {
         await _saveCursor(result.nextCursor);
         await _resetImportState();
@@ -314,14 +315,13 @@ class AccountSyncEngine {
           await _broadcastSyncHint();
         }
         await _repairKanbanAfterFinalPull();
-        return result;
+        return entityTypes;
       }
       await _applyPullResult(result);
       await _saveCursor(result.nextCursor);
-      latest = result;
       if (!result.hasMore || result.nextCursor <= sinceRevision) {
         await _repairKanbanAfterFinalPull();
-        return latest;
+        return entityTypes;
       }
       sinceRevision = result.nextCursor;
     }

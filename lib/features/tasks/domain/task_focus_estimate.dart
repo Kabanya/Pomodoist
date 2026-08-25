@@ -7,12 +7,19 @@ int? estimateFocusIntervalsForTaskDuration({
   required int? explicitEstimate,
   required FocusPresetItem? preset,
 }) {
+  final scheduledDuration = schedule?.duration;
+  if (scheduledDuration != null && preset != null) {
+    return estimateFocusIntervalsForDuration(
+      duration: scheduledDuration,
+      preset: preset,
+    );
+  }
   if (explicitEstimate != null) {
     return explicitEstimate;
   }
-  final duration =
-      schedule?.duration ??
-      (durationSeconds == null ? null : Duration(seconds: durationSeconds));
+  final duration = durationSeconds == null
+      ? null
+      : Duration(seconds: durationSeconds);
   if (duration == null || preset == null) {
     return null;
   }

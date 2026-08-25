@@ -216,6 +216,10 @@ class DriftCalendarIntegrationRepository
   Future<GoogleCalendarEventLinkRow?> linkForEvent(String eventId) {
     final query = _db.select(_db.googleCalendarEventLinks)
       ..where((row) => row.eventId.equals(eventId))
+      ..orderBy([
+        (row) => OrderingTerm.asc(row.createdAt),
+        (row) => OrderingTerm.asc(row.taskId),
+      ])
       ..limit(1);
     return query.getSingleOrNull();
   }
@@ -235,6 +239,18 @@ class DriftCalendarIntegrationRepository
     DateTime? lastSyncedLocalUpdatedAt,
     String? unsupportedReason,
   }) async {
+    final existing = await linkForTask(taskId);
+    final normalizedGoogleUpdatedAt = googleUpdatedAt?.toUtc();
+    final normalizedLocalUpdatedAt = lastSyncedLocalUpdatedAt?.toUtc();
+    if (existing != null &&
+        existing.calendarId == calendarId &&
+        existing.eventId == eventId &&
+        existing.etag == etag &&
+        existing.googleUpdatedAt == normalizedGoogleUpdatedAt &&
+        existing.lastSyncedLocalUpdatedAt == normalizedLocalUpdatedAt &&
+        existing.unsupportedReason == unsupportedReason) {
+      return;
+    }
     final now = DateTime.now().toUtc();
     await _db
         .into(_db.googleCalendarEventLinks)
@@ -244,10 +260,10 @@ class DriftCalendarIntegrationRepository
             calendarId: calendarId,
             eventId: eventId,
             etag: Value(etag),
-            googleUpdatedAt: Value(googleUpdatedAt?.toUtc()),
-            lastSyncedLocalUpdatedAt: Value(lastSyncedLocalUpdatedAt?.toUtc()),
+            googleUpdatedAt: Value(normalizedGoogleUpdatedAt),
+            lastSyncedLocalUpdatedAt: Value(normalizedLocalUpdatedAt),
             unsupportedReason: Value(unsupportedReason),
-            createdAt: now,
+            createdAt: existing?.createdAt ?? now,
             updatedAt: now,
           ),
         );

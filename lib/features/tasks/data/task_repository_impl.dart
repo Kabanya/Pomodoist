@@ -142,6 +142,9 @@ class DriftTaskRepository implements TaskRepository {
               : schedule == null
               ? const Value.absent()
               : Value(_scheduleJson(schedule)),
+          durationSeconds: schedule?.duration == null
+              ? const Value.absent()
+              : Value(schedule!.duration!.inSeconds),
           estimatedFocusIntervals: patch.estimatedFocusIntervals == null
               ? const Value.absent()
               : Value(patch.estimatedFocusIntervals),
@@ -166,6 +169,8 @@ class DriftTaskRepository implements TaskRepository {
             'due': null
           else if (schedule != null)
             'due': schedule.toJsonString(),
+          if (schedule?.duration != null)
+            'durationSeconds': schedule!.duration!.inSeconds,
           if (patch.estimatedFocusIntervals != null)
             'estimatedFocusIntervals': patch.estimatedFocusIntervals,
           if (patch.isCollapsed != null) 'isCollapsed': patch.isCollapsed,
@@ -327,6 +332,9 @@ class DriftTaskRepository implements TaskRepository {
             dueJson: isRoot
                 ? Value(_scheduleJson(schedule))
                 : const Value.absent(),
+            durationSeconds: isRoot && schedule.duration != null
+                ? Value(schedule.duration!.inSeconds)
+                : const Value.absent(),
             updatedAt: Value(now),
           ),
         );
@@ -347,7 +355,12 @@ class DriftTaskRepository implements TaskRepository {
       await _syncQueue.enqueue(
         type: 'task.update',
         clientId: id,
-        payload: {'id': id, 'due': schedule.toJsonString()},
+        payload: {
+          'id': id,
+          'due': schedule.toJsonString(),
+          if (schedule.duration != null)
+            'durationSeconds': schedule.duration!.inSeconds,
+        },
       );
     });
   }
@@ -489,6 +502,7 @@ class DriftTaskRepository implements TaskRepository {
               projectId: inboxProjectId,
               priority: const Value(4),
               dueJson: Value(_scheduleJson(input.schedule)),
+              durationSeconds: Value(input.schedule.duration?.inSeconds),
               status: const Value('open'),
               orderKey: _orderKey(now),
               createdAt: now,
@@ -546,6 +560,9 @@ class DriftTaskRepository implements TaskRepository {
         dueJson: schedule == null
             ? const Value.absent()
             : Value(_scheduleJson(schedule)),
+        durationSeconds: schedule?.duration == null
+            ? const Value.absent()
+            : Value(schedule!.duration!.inSeconds),
         isDeleted: patch.isDeleted == null
             ? const Value.absent()
             : Value(patch.isDeleted!),

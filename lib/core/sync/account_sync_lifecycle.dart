@@ -27,7 +27,7 @@ class AccountSyncLifecycle with WidgetsBindingObserver {
     required AccountClient account,
     required AccountSyncEngine engine,
     required SyncQueueRepository syncQueueRepository,
-    Future<void> Function()? onSynced,
+    Future<void> Function(Set<String>)? onSynced,
     Duration? pollInterval,
     Duration? queueDebounce,
     Duration? hintResubscribeDelay,
@@ -44,11 +44,11 @@ class AccountSyncLifecycle with WidgetsBindingObserver {
        _retryDelays = retryDelays ?? defaultRetryDelays;
 
   AccountSyncLifecycle.forTesting({
-    required Future<void> Function() syncNow,
+    required Future<Set<String>> Function() syncNow,
     required Future<String> Function() deviceId,
     required Stream<AccountSyncHint> Function() syncHints,
     required SyncQueueRepository syncQueueRepository,
-    Future<void> Function()? onSynced,
+    Future<void> Function(Set<String>)? onSynced,
     Duration pollInterval = defaultPollInterval,
     Duration queueDebounce = const Duration(milliseconds: 800),
     Duration hintResubscribeDelay = const Duration(seconds: 5),
@@ -63,11 +63,11 @@ class AccountSyncLifecycle with WidgetsBindingObserver {
        _hintResubscribeDelay = hintResubscribeDelay,
        _retryDelays = retryDelays;
 
-  final Future<void> Function() _syncNowCallback;
+  final Future<Set<String>> Function() _syncNowCallback;
   final Future<String> Function() _deviceId;
   final Stream<AccountSyncHint> Function() _syncHints;
   final SyncQueueRepository _syncQueueRepository;
-  final Future<void> Function()? _onSynced;
+  final Future<void> Function(Set<String>)? _onSynced;
   final Duration _pollInterval;
   final Duration _queueDebounce;
   final Duration _hintResubscribeDelay;
@@ -181,10 +181,9 @@ class AccountSyncLifecycle with WidgetsBindingObserver {
       return;
     }
     _syncing = true;
-    var synced = false;
+    Set<String>? entityTypes;
     try {
-      await _syncNowCallback();
-      synced = true;
+      entityTypes = await _syncNowCallback();
       _retryAttempt = 0;
       _retryTimer?.cancel();
       _retryTimer = null;
@@ -197,9 +196,9 @@ class AccountSyncLifecycle with WidgetsBindingObserver {
       _syncAgain = false;
       _scheduleSync(Duration.zero);
     }
-    if (synced) {
+    if (entityTypes != null) {
       try {
-        await _onSynced?.call();
+        await _onSynced?.call(entityTypes);
       } catch (_) {
         // Account sync succeeded; integrations retry through their own flows.
       }

@@ -202,9 +202,54 @@ class GoogleCalendarSyncController {
       return null;
     }
     final linkedTaskId = event.pomodoistTaskId;
-    final link = linkedTaskId == null
-        ? await _integrationRepository.linkForEvent(eventId)
-        : await _integrationRepository.linkForTask(linkedTaskId);
+    var link = await _integrationRepository.linkForEvent(eventId);
+    if (link == null && linkedTaskId != null) {
+      link = await _integrationRepository.linkForTask(linkedTaskId);
+      if (link == null && await _taskById(linkedTaskId) != null) {
+        await _integrationRepository.upsertLink(
+          taskId: linkedTaskId,
+          calendarId: calendarId,
+          eventId: eventId,
+          etag: event.etag,
+          googleUpdatedAt: event.updated,
+        );
+        link = await _integrationRepository.linkForTask(linkedTaskId);
+      }
+    }
+    var eventEtag = event.etag;
+    var googleUpdatedAt = event.updated;
+    if (link != null && linkedTaskId != link.taskId && event.schedule != null) {
+      try {
+        final patched = await _remote(
+          _apiClient.patchEvent(
+            calendarId: calendarId,
+            eventId: eventId,
+            event: GoogleCalendarEvent(
+              privateExtendedProperties: {
+                'pomodoistSource': 'pomodoist',
+                'pomodoistTaskId': link.taskId,
+              },
+            ),
+          ),
+        );
+        eventEtag = patched.etag ?? eventEtag;
+        googleUpdatedAt = patched.updated ?? googleUpdatedAt;
+        await _integrationRepository.upsertLink(
+          taskId: link.taskId,
+          calendarId: calendarId,
+          eventId: eventId,
+          etag: eventEtag,
+          googleUpdatedAt: googleUpdatedAt,
+          lastSyncedLocalUpdatedAt: link.lastSyncedLocalUpdatedAt,
+          unsupportedReason: link.unsupportedReason,
+        );
+        link = await _integrationRepository.linkForTask(link.taskId);
+      } on GoogleCalendarApiException catch (error) {
+        if (!_shouldRecreateLinkedEvent(error)) {
+          rethrow;
+        }
+      }
+    }
 
     if (event.isRecurring) {
       final taskId = link?.taskId ?? linkedTaskId;
@@ -213,8 +258,8 @@ class GoogleCalendarSyncController {
           taskId: taskId,
           calendarId: calendarId,
           eventId: eventId,
-          etag: event.etag,
-          googleUpdatedAt: event.updated,
+          etag: eventEtag,
+          googleUpdatedAt: googleUpdatedAt,
           lastSyncedLocalUpdatedAt: link?.lastSyncedLocalUpdatedAt,
           unsupportedReason: 'Recurring Google events are not supported in v1.',
         );
@@ -310,8 +355,8 @@ class GoogleCalendarSyncController {
       taskId: task.id,
       calendarId: calendarId,
       eventId: eventId,
-      etag: event.etag,
-      googleUpdatedAt: event.updated,
+      etag: eventEtag,
+      googleUpdatedAt: googleUpdatedAt,
       lastSyncedLocalUpdatedAt: remoteUpdated,
     );
     return null;
