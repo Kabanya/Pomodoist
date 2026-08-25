@@ -505,17 +505,31 @@ class _CompletionContent extends ConsumerWidget {
                   label: taskTimeState == null
                       ? null
                       : taskTimeStatusLabel(context.l10n, taskTimeState),
-                  child: Text(
-                    formatTaskListSchedule(
-                      context,
-                      task.schedule!,
-                      now: completion.completedAt,
-                      displayMode: timeDisplayMode,
-                      defaultTimedBlockMinutes: defaultTimedBlockMinutes,
-                    ),
-                    key: const Key('focus-completion-next-task-time'),
-                    textAlign: TextAlign.center,
-                    style: textTheme.bodyMedium?.copyWith(color: taskTimeColor),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        key: const Key('focus-completion-next-task-time-icon'),
+                        size: 16,
+                        color: taskTimeColor,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        formatTaskListSchedule(
+                          context,
+                          task.schedule!,
+                          now: completion.completedAt,
+                          displayMode: timeDisplayMode,
+                          defaultTimedBlockMinutes: defaultTimedBlockMinutes,
+                        ),
+                        key: const Key('focus-completion-next-task-time'),
+                        textAlign: TextAlign.center,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: taskTimeColor,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 14),

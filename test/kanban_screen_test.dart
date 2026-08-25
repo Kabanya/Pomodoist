@@ -14,6 +14,7 @@ import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/features/tasks/presentation/kanban/kanban_board_controller.dart';
 import 'package:pomodoist/features/tasks/presentation/kanban/kanban_screen.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   testWidgets('820 uses independent fixed-width desktop columns', (
@@ -217,6 +218,44 @@ void main() {
     );
     semantics.dispose();
   });
+
+  testWidgets(
+    'timed card parent semantics match non-default display settings and status',
+    (tester) async {
+      final now = DateTime.utc(2026, 7, 10, 10);
+      SharedPreferences.setMockInitialValues({
+        taskTimeDisplayModePreferenceKey: 'range',
+        quickAddDefaultTimedBlockMinutesPreferenceKey: 45,
+      });
+      addTearDown(() => SharedPreferences.setMockInitialValues({}));
+      final semantics = tester.ensureSemantics();
+
+      await _pumpKanban(
+        tester,
+        width: 1200,
+        taskSchedule: TaskSchedule.timed(
+          start: now,
+          end: now.add(const Duration(minutes: 30)),
+        ),
+        now: now,
+      );
+
+      final card = find.byKey(
+        const ValueKey('kanban-card-semantics-task-focus'),
+      );
+      expect(card, findsOneWidget);
+      final visibleSchedule = tester
+          .widget<Text>(
+            find.byKey(const ValueKey('kanban-task-time-label-task-focus')),
+          )
+          .data!;
+      expect(visibleSchedule, contains('-'));
+      final label = tester.getSemantics(card).label;
+      expect(label, contains(visibleSchedule));
+      expect(label, contains('In progress'));
+      semantics.dispose();
+    },
+  );
 
   test(
     'an older failed move cannot roll back a newer optimistic move',

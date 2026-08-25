@@ -972,6 +972,20 @@ class _KanbanTaskCard extends ConsumerWidget {
     final defaultTimedBlockMinutes = ref.watch(
       quickAddDefaultTimedBlockMinutesProvider,
     );
+    final taskTimeLabel = task.schedule == null
+        ? null
+        : formatTaskListSchedule(
+            context,
+            task.schedule!,
+            displayMode: timeDisplayMode,
+            defaultTimedBlockMinutes: defaultTimedBlockMinutes,
+          );
+    final taskTimeStatus = taskTimeState == null
+        ? null
+        : taskTimeStatusLabel(context.l10n, taskTimeState);
+    final taskTimeColor = taskTimeState == null
+        ? null
+        : colors.taskTimeColor(taskTimeState);
     final payload = KanbanDragPayload(
       taskId: task.id,
       sourceStatusId: status.id,
@@ -979,8 +993,13 @@ class _KanbanTaskCard extends ConsumerWidget {
       token: DateTime.now().microsecondsSinceEpoch,
     );
     final content = Semantics(
+      key: Key('kanban-card-semantics-${task.id}'),
       container: true,
-      label: _semanticLabel(context),
+      label: _semanticLabel(
+        context,
+        taskTimeLabel: taskTimeLabel,
+        taskTimeStatus: taskTimeStatus,
+      ),
       child: Material(
         key: Key('kanban-card-${task.id}'),
         color: colors.surface,
@@ -1077,24 +1096,12 @@ class _KanbanTaskCard extends ConsumerWidget {
                     spacing: 12,
                     runSpacing: 6,
                     children: [
-                      if (task.schedule != null)
+                      if (taskTimeLabel != null)
                         _MetaLabel(
                           icon: Icons.calendar_today_outlined,
-                          text: formatTaskListSchedule(
-                            context,
-                            task.schedule!,
-                            displayMode: timeDisplayMode,
-                            defaultTimedBlockMinutes: defaultTimedBlockMinutes,
-                          ),
-                          color: taskTimeState == null
-                              ? null
-                              : colors.taskTimeColor(taskTimeState),
-                          semanticLabel: taskTimeState == null
-                              ? null
-                              : taskTimeStatusLabel(
-                                  context.l10n,
-                                  taskTimeState,
-                                ),
+                          text: taskTimeLabel,
+                          color: taskTimeColor,
+                          semanticLabel: taskTimeStatus,
                           taskId: task.id,
                         ),
                       if (card.totalSubtasks > 0)
@@ -1140,7 +1147,11 @@ class _KanbanTaskCard extends ConsumerWidget {
     );
   }
 
-  String _semanticLabel(BuildContext context) {
+  String _semanticLabel(
+    BuildContext context, {
+    String? taskTimeLabel,
+    String? taskTimeStatus,
+  }) {
     final task = card.task;
     final parts = <String>[
       task.content,
@@ -1148,8 +1159,11 @@ class _KanbanTaskCard extends ConsumerWidget {
       card.project.name,
       context.l10n.kanbanPriority(task.priority),
     ];
-    if (task.schedule != null) {
-      parts.add(formatTaskListSchedule(context, task.schedule!));
+    if (taskTimeLabel != null) {
+      parts.add(taskTimeLabel);
+    }
+    if (taskTimeStatus != null) {
+      parts.add(taskTimeStatus);
     }
     if (card.totalSubtasks > 0) {
       parts.add(

@@ -291,9 +291,7 @@ void main() {
     expect(find.byKey(const Key('focus-completion-overlay')), findsNothing);
   });
 
-  testWidgets('next task colors its timed schedule and announces status', (
-    tester,
-  ) async {
+  testWidgets('next task schedule icon uses status color', (tester) async {
     final now = DateTime.utc(2026, 8, 19, 12);
     final semantics = tester.ensureSemantics();
     final next = _task(
@@ -320,6 +318,12 @@ void main() {
     final label = find.byKey(const Key('focus-completion-next-task-time'));
     expect(
       tester.widget<Text>(label).style?.color,
+      AppTheme.light().extension<AppThemePalette>()!.info,
+    );
+    final icon = find.byKey(const Key('focus-completion-next-task-time-icon'));
+    expect(icon, findsOneWidget);
+    expect(
+      tester.widget<Icon>(icon).color,
       AppTheme.light().extension<AppThemePalette>()!.info,
     );
     expect(
