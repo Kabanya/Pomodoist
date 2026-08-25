@@ -195,14 +195,7 @@ class _TaskMetadataChips extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final colors = context.appColors;
-    final now =
-        ref.watch(taskTimeTickerProvider).value ??
-        ref.read(clockProvider).now();
-    final taskTimeState = taskTimeStateForTask(
-      task: task,
-      now: now,
-      activeFocusTaskId: ref.watch(activeFocusRunProvider).value?.taskId,
-    );
+    final taskTimeState = ref.watch(taskTimeStateProvider(task));
     final taskTimeColor = taskTimeState == null
         ? null
         : colors.taskTimeColor(taskTimeState);

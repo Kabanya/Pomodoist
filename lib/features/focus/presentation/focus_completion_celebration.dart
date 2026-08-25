@@ -353,16 +353,9 @@ class _CompletionContent extends ConsumerWidget {
     final l10n = context.l10n;
     final colors = context.appColors;
     final textTheme = Theme.of(context).textTheme;
-    final now =
-        ref.watch(taskTimeTickerProvider).value ??
-        ref.read(clockProvider).now();
     final taskTimeState = nextTask == null
         ? null
-        : taskTimeStateForTask(
-            task: nextTask!,
-            now: now,
-            activeFocusTaskId: ref.watch(activeFocusRunProvider).value?.taskId,
-          );
+        : ref.watch(taskTimeStateProvider(nextTask!));
     final taskTimeColor = taskTimeState == null
         ? colors.secondaryText
         : colors.taskTimeColor(taskTimeState);

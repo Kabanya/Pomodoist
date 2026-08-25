@@ -960,14 +960,7 @@ class _KanbanTaskCard extends ConsumerWidget {
     final task = card.task;
     final activeFocusTaskId = ref.watch(activeFocusRunProvider).value?.taskId;
     final active = activeFocusTaskId == task.id;
-    final now =
-        ref.watch(taskTimeTickerProvider).value ??
-        ref.read(clockProvider).now();
-    final taskTimeState = taskTimeStateForTask(
-      task: task,
-      now: now,
-      activeFocusTaskId: activeFocusTaskId,
-    );
+    final taskTimeState = ref.watch(taskTimeStateProvider(task));
     final timeDisplayMode = ref.watch(taskTimeDisplayModeProvider);
     final defaultTimedBlockMinutes = ref.watch(
       quickAddDefaultTimedBlockMinutesProvider,

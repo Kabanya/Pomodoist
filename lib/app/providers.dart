@@ -818,22 +818,6 @@ final focusIntervalsForRunProvider =
     });
 
 final focusTickerProvider = StreamProvider<DateTime>((ref) {
-  late final StreamController<DateTime> controller;
-  Timer? timer;
-  controller = StreamController<DateTime>(
-    onListen: () {
-      controller.add(DateTime.now().toUtc());
-      timer = Timer.periodic(
-        const Duration(seconds: 1),
-        (_) => controller.add(DateTime.now().toUtc()),
-      );
-    },
-    onCancel: () => timer?.cancel(),
-  );
-  return controller.stream;
-});
-
-final taskTimeTickerProvider = StreamProvider<DateTime>((ref) {
   final clock = ref.watch(clockProvider);
   late final StreamController<DateTime> controller;
   Timer? timer;
@@ -853,6 +837,31 @@ final taskTimeTickerProvider = StreamProvider<DateTime>((ref) {
   });
   return controller.stream;
 });
+
+final taskTimeTickerProvider = focusTickerProvider;
+
+final taskTimeStateProvider = Provider.autoDispose
+    .family<TaskTimeState?, TaskItem>((ref, task) {
+      final schedule = task.schedule;
+      if (schedule == null || !schedule.isTimed || task.isCompleted) {
+        return task.isCompleted && schedule?.isTimed == true
+            ? TaskTimeState.completed
+            : null;
+      }
+      final activeFocusTaskId = ref.watch(
+        activeFocusRunProvider.select((run) => run.value?.taskId),
+      );
+      final clock = ref.read(clockProvider);
+      return ref.watch(
+        taskTimeTickerProvider.select(
+          (ticker) => taskTimeStateForTask(
+            task: task,
+            now: ticker.value ?? clock.now(),
+            activeFocusTaskId: activeFocusTaskId,
+          ),
+        ),
+      );
+    });
 
 final activeFocusRemainingProvider = Provider<Duration?>((ref) {
   final interval = ref.watch(activeFocusIntervalProvider).value;

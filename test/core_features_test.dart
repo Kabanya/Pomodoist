@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:app_account/app_account.dart';
@@ -1156,7 +1157,9 @@ void main() {
       },
     );
 
-    test('task time ticker refreshes from the configured clock', () async {
+    test('task time consumers share the focus ticker', () async {
+      expect(taskTimeTickerProvider, same(focusTickerProvider));
+
       final clock = FixedClock(DateTime.utc(2026, 7, 5, 14));
       final container = ProviderContainer(
         overrides: [clockProvider.overrideWithValue(clock)],
@@ -1177,6 +1180,85 @@ void main() {
 
       expect(values, contains(DateTime.utc(2026, 7, 5, 14)));
       expect(values, contains(DateTime.utc(2026, 7, 5, 14, 30)));
+    });
+
+    test('all-day task time state does not start the ticker', () async {
+      var tickerListeners = 0;
+      final ticker = StreamController<DateTime>(
+        onListen: () => tickerListeners++,
+      );
+      addTearDown(() {
+        ticker.close();
+      });
+      final container = ProviderContainer(
+        overrides: [
+          taskTimeTickerProvider.overrideWith((ref) => ticker.stream),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      expect(
+        container.read(
+          taskTimeStateProvider(
+            _notificationTask(
+              id: 'all-day',
+              content: 'All-day task',
+              schedule: TaskSchedule.allDay(DateTime.utc(2026, 7, 5)),
+            ),
+          ),
+        ),
+        isNull,
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(tickerListeners, 0);
+    });
+
+    test('task time state only notifies when its state changes', () async {
+      var tickerListeners = 0;
+      final ticker = StreamController<DateTime>(
+        onListen: () => tickerListeners++,
+      );
+      addTearDown(() {
+        ticker.close();
+      });
+      final container = ProviderContainer(
+        overrides: [
+          clockProvider.overrideWithValue(
+            FixedClock(DateTime.utc(2026, 7, 5, 13)),
+          ),
+          taskTimeTickerProvider.overrideWith((ref) => ticker.stream),
+          activeFocusRunProvider.overrideWith((ref) => Stream.value(null)),
+        ],
+      );
+      addTearDown(container.dispose);
+      final states = <TaskTimeState?>[];
+      final task = _notificationTask(
+        id: 'timed',
+        content: 'Timed task',
+        schedule: TaskSchedule.timed(
+          start: DateTime.utc(2026, 7, 5, 14),
+          end: DateTime.utc(2026, 7, 5, 14, 30),
+        ),
+      );
+      final subscription = container.listen(
+        taskTimeStateProvider(task),
+        (_, next) => states.add(next),
+        fireImmediately: true,
+      );
+      addTearDown(subscription.close);
+
+      await Future<void>.delayed(Duration.zero);
+      await container.pump();
+      expect(tickerListeners, 1);
+      ticker.add(DateTime.utc(2026, 7, 5, 13, 10));
+      await Future<void>.delayed(Duration.zero);
+      await container.pump();
+      ticker.add(DateTime.utc(2026, 7, 5, 14));
+      await Future<void>.delayed(Duration.zero);
+      await container.pump();
+
+      expect(states, [TaskTimeState.future, TaskTimeState.current]);
     });
   });
 

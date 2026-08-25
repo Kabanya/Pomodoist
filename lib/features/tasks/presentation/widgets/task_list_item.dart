@@ -171,14 +171,7 @@ class TaskListItem extends ConsumerWidget {
     final focusEstimate = targetFocusIntervalsForTask(task, selectedPreset);
     final colorScheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
-    final now =
-        ref.watch(taskTimeTickerProvider).value ??
-        ref.read(clockProvider).now();
-    final taskTimeState = taskTimeStateForTask(
-      task: task,
-      now: now,
-      activeFocusTaskId: ref.watch(activeFocusRunProvider).value?.taskId,
-    );
+    final taskTimeState = ref.watch(taskTimeStateProvider(task));
     final timeDisplayMode = ref.watch(taskTimeDisplayModeProvider);
     final defaultTimedBlockMinutes = ref.watch(
       quickAddDefaultTimedBlockMinutesProvider,
