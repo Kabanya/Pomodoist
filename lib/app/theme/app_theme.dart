@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../task_time.dart';
+
 class AppThemePalette extends ThemeExtension<AppThemePalette> {
   const AppThemePalette({
     required this.canvas,
@@ -15,6 +17,7 @@ class AppThemePalette extends ThemeExtension<AppThemePalette> {
     required this.accentTint,
     required this.warning,
     required this.info,
+    required this.success,
   });
 
   final Color canvas;
@@ -30,6 +33,7 @@ class AppThemePalette extends ThemeExtension<AppThemePalette> {
   final Color accentTint;
   final Color warning;
   final Color info;
+  final Color success;
 
   @override
   AppThemePalette copyWith({
@@ -46,6 +50,7 @@ class AppThemePalette extends ThemeExtension<AppThemePalette> {
     Color? accentTint,
     Color? warning,
     Color? info,
+    Color? success,
   }) {
     return AppThemePalette(
       canvas: canvas ?? this.canvas,
@@ -61,6 +66,7 @@ class AppThemePalette extends ThemeExtension<AppThemePalette> {
       accentTint: accentTint ?? this.accentTint,
       warning: warning ?? this.warning,
       info: info ?? this.info,
+      success: success ?? this.success,
     );
   }
 
@@ -83,7 +89,20 @@ class AppThemePalette extends ThemeExtension<AppThemePalette> {
       accentTint: Color.lerp(accentTint, other.accentTint, t)!,
       warning: Color.lerp(warning, other.warning, t)!,
       info: Color.lerp(info, other.info, t)!,
+      success: Color.lerp(success, other.success, t)!,
     );
+  }
+}
+
+extension AppThemePaletteTaskTime on AppThemePalette {
+  Color taskTimeColor(TaskTimeState state) {
+    return switch (state) {
+      TaskTimeState.future => info,
+      TaskTimeState.focused => success,
+      TaskTimeState.current => warning,
+      TaskTimeState.overdue => accent,
+      TaskTimeState.completed => mutedText,
+    };
   }
 }
 
@@ -112,6 +131,7 @@ class AppTheme {
     accentTint: Color(0xFFFDECEA),
     warning: Color(0xFFB76A00),
     info: Color(0xFF3B6EA8),
+    success: Color(0xFF2E7D32),
   );
 
   static const _dark = AppThemePalette(
@@ -128,6 +148,7 @@ class AppTheme {
     accentTint: Color(0xFF42191D),
     warning: Color(0xFFE0A449),
     info: Color(0xFF6EA6D8),
+    success: Color(0xFF6FCF97),
   );
 
   static ThemeData light() => _build(_light, Brightness.light);

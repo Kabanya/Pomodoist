@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/app_l10n.dart';
 import '../../../../app/formatters.dart';
 import '../../../../app/providers.dart';
+import '../../../../app/task_time.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../focus/domain/focus_models.dart';
 import '../../domain/project_colors.dart';
@@ -957,7 +958,27 @@ class _KanbanTaskCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
     final task = card.task;
-    final active = ref.watch(activeFocusRunProvider).value?.taskId == task.id;
+    final activeFocusTaskId = ref.watch(activeFocusRunProvider).value?.taskId;
+    final active = activeFocusTaskId == task.id;
+    final taskTimeState = ref.watch(taskTimeStateProvider(task));
+    final timeDisplayMode = ref.watch(taskTimeDisplayModeProvider);
+    final defaultTimedBlockMinutes = ref.watch(
+      quickAddDefaultTimedBlockMinutesProvider,
+    );
+    final taskTimeLabel = task.schedule == null
+        ? null
+        : formatTaskListSchedule(
+            context,
+            task.schedule!,
+            displayMode: timeDisplayMode,
+            defaultTimedBlockMinutes: defaultTimedBlockMinutes,
+          );
+    final taskTimeStatus = taskTimeState == null
+        ? null
+        : taskTimeStatusLabel(context.l10n, taskTimeState);
+    final taskTimeColor = taskTimeState == null
+        ? null
+        : colors.taskTimeColor(taskTimeState);
     final payload = KanbanDragPayload(
       taskId: task.id,
       sourceStatusId: status.id,
@@ -965,8 +986,13 @@ class _KanbanTaskCard extends ConsumerWidget {
       token: DateTime.now().microsecondsSinceEpoch,
     );
     final content = Semantics(
+      key: Key('kanban-card-semantics-${task.id}'),
       container: true,
-      label: _semanticLabel(context),
+      label: _semanticLabel(
+        context,
+        taskTimeLabel: taskTimeLabel,
+        taskTimeStatus: taskTimeStatus,
+      ),
       child: Material(
         key: Key('kanban-card-${task.id}'),
         color: colors.surface,
@@ -1063,10 +1089,13 @@ class _KanbanTaskCard extends ConsumerWidget {
                     spacing: 12,
                     runSpacing: 6,
                     children: [
-                      if (task.schedule != null)
+                      if (taskTimeLabel != null)
                         _MetaLabel(
                           icon: Icons.calendar_today_outlined,
-                          text: formatTaskListSchedule(context, task.schedule!),
+                          text: taskTimeLabel,
+                          color: taskTimeColor,
+                          semanticLabel: taskTimeStatus,
+                          taskId: task.id,
                         ),
                       if (card.totalSubtasks > 0)
                         _MetaLabel(
@@ -1111,7 +1140,11 @@ class _KanbanTaskCard extends ConsumerWidget {
     );
   }
 
-  String _semanticLabel(BuildContext context) {
+  String _semanticLabel(
+    BuildContext context, {
+    String? taskTimeLabel,
+    String? taskTimeStatus,
+  }) {
     final task = card.task;
     final parts = <String>[
       task.content,
@@ -1119,8 +1152,11 @@ class _KanbanTaskCard extends ConsumerWidget {
       card.project.name,
       context.l10n.kanbanPriority(task.priority),
     ];
-    if (task.schedule != null) {
-      parts.add(formatTaskListSchedule(context, task.schedule!));
+    if (taskTimeLabel != null) {
+      parts.add(taskTimeLabel);
+    }
+    if (taskTimeStatus != null) {
+      parts.add(taskTimeStatus);
     }
     if (card.totalSubtasks > 0) {
       parts.add(
@@ -1288,26 +1324,44 @@ class _PriorityFlag extends StatelessWidget {
 }
 
 class _MetaLabel extends StatelessWidget {
-  const _MetaLabel({required this.icon, required this.text});
+  const _MetaLabel({
+    required this.icon,
+    required this.text,
+    this.color,
+    this.semanticLabel,
+    this.taskId,
+  });
 
   final IconData icon;
   final String text;
+  final Color? color;
+  final String? semanticLabel;
+  final String? taskId;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final labelColor = color ?? context.appColors.secondaryText;
+    final content = Row(
+      key: taskId == null ? null : ValueKey('kanban-task-time-meta-$taskId'),
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: context.appColors.secondaryText),
+        Icon(icon, size: 16, color: labelColor),
         const SizedBox(width: 5),
         Text(
           text,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: context.appColors.secondaryText,
-          ),
+          key: taskId == null
+              ? null
+              : ValueKey('kanban-task-time-label-$taskId'),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: labelColor),
         ),
       ],
     );
+    final status = semanticLabel;
+    return status == null
+        ? content
+        : Semantics(label: '$text, $status', child: content);
   }
 }
 

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/app/theme/app_theme.dart';
+import 'package:pomodoist/core/time/clock.dart';
 import 'package:pomodoist/core/db/app_database.dart' hide KanbanSettings;
 import 'package:pomodoist/features/focus/domain/focus_models.dart';
 import 'package:pomodoist/features/planning/data/quick_add_service.dart';
@@ -13,6 +14,7 @@ import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/features/tasks/presentation/kanban/kanban_board_controller.dart';
 import 'package:pomodoist/features/tasks/presentation/kanban/kanban_screen.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   testWidgets('820 uses independent fixed-width desktop columns', (
@@ -183,6 +185,78 @@ void main() {
     expect(find.text('20:00 / 25:00'), findsOneWidget);
   });
 
+  testWidgets('timed card colors its schedule and announces its status', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 7, 10, 10);
+    final semantics = tester.ensureSemantics();
+    await _pumpKanban(
+      tester,
+      width: 1200,
+      taskSchedule: TaskSchedule.timed(
+        start: now,
+        end: now.add(const Duration(minutes: 30)),
+      ),
+      now: now,
+      activeFocus: true,
+    );
+
+    final label = find.byKey(
+      const ValueKey('kanban-task-time-label-task-focus'),
+    );
+    expect(
+      tester.widget<Text>(label).style?.color,
+      AppTheme.light().extension<AppThemePalette>()!.success,
+    );
+    expect(
+      tester
+          .getSemantics(
+            find.byKey(const ValueKey('kanban-task-time-meta-task-focus')),
+          )
+          .label,
+      contains('In focus'),
+    );
+    semantics.dispose();
+  });
+
+  testWidgets(
+    'timed card parent semantics match non-default display settings and status',
+    (tester) async {
+      final now = DateTime.utc(2026, 7, 10, 10);
+      SharedPreferences.setMockInitialValues({
+        taskTimeDisplayModePreferenceKey: 'range',
+        quickAddDefaultTimedBlockMinutesPreferenceKey: 45,
+      });
+      addTearDown(() => SharedPreferences.setMockInitialValues({}));
+      final semantics = tester.ensureSemantics();
+
+      await _pumpKanban(
+        tester,
+        width: 1200,
+        taskSchedule: TaskSchedule.timed(
+          start: now,
+          end: now.add(const Duration(minutes: 30)),
+        ),
+        now: now,
+      );
+
+      final card = find.byKey(
+        const ValueKey('kanban-card-semantics-task-focus'),
+      );
+      expect(card, findsOneWidget);
+      final visibleSchedule = tester
+          .widget<Text>(
+            find.byKey(const ValueKey('kanban-task-time-label-task-focus')),
+          )
+          .data!;
+      expect(visibleSchedule, contains('-'));
+      final label = tester.getSemantics(card).label;
+      expect(label, contains(visibleSchedule));
+      expect(label, contains('In progress'));
+      semantics.dispose();
+    },
+  );
+
   test(
     'an older failed move cannot roll back a newer optimistic move',
     () async {
@@ -213,6 +287,8 @@ Future<_KanbanHarness> _pumpKanban(
   double textScale = 1,
   bool activeFocus = false,
   KanbanBoardSnapshot? snapshot,
+  TaskSchedule? taskSchedule,
+  DateTime? now,
 }) async {
   tester.view.physicalSize = Size(width, 900);
   tester.view.devicePixelRatio = 1;
@@ -220,7 +296,8 @@ Future<_KanbanHarness> _pumpKanban(
     tester.view.resetPhysicalSize();
     tester.view.resetDevicePixelRatio();
   });
-  final board = snapshot ?? _snapshot();
+  final board = snapshot ?? _snapshot(taskSchedule: taskSchedule);
+  final taskNow = now ?? DateTime.utc(2026, 7, 10, 10);
   final kanban = _FakeKanbanRepository(board);
   final tasks = _FakeTaskRepository();
   final projects = _FakeProjectRepository(board.availableProjects);
@@ -247,6 +324,8 @@ Future<_KanbanHarness> _pumpKanban(
         activeFocusRemainingProvider.overrideWith(
           (ref) => activeFocus ? const Duration(minutes: 20) : null,
         ),
+        clockProvider.overrideWithValue(FixedClock(taskNow)),
+        taskTimeTickerProvider.overrideWith((ref) => Stream.value(taskNow)),
       ],
       child: MaterialApp(
         theme: AppTheme.light(),
@@ -305,6 +384,7 @@ FocusIntervalItem _activeInterval() {
 KanbanBoardSnapshot _snapshot({
   List<ProjectItem>? availableProjects,
   List<String>? selectedProjectIds,
+  TaskSchedule? taskSchedule,
 }) {
   final now = DateTime.utc(2026, 7, 10);
   final inbox = _project(inboxProjectId, 'Inbox');
@@ -333,6 +413,7 @@ KanbanBoardSnapshot _snapshot({
     content: 'Polish Today screen',
     projectId: inboxProjectId,
     priority: 1,
+    dueJson: taskSchedule?.toJsonString(),
     status: 'open',
     estimatedFocusIntervals: 3,
     completedFocusIntervals: 1,

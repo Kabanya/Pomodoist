@@ -1596,6 +1596,66 @@ abstract class AppLocalizations {
   /// **'Enter 1 to 480 minutes.'**
   String get settingsDefaultTimedBlockError;
 
+  /// No description provided for @settingsTaskTimeDisplayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Task time display'**
+  String get settingsTaskTimeDisplayTitle;
+
+  /// No description provided for @settingsTaskTimeDisplaySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how timed task schedules are shown.'**
+  String get settingsTaskTimeDisplaySubtitle;
+
+  /// No description provided for @settingsTaskTimeDisplaySmart.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart'**
+  String get settingsTaskTimeDisplaySmart;
+
+  /// No description provided for @settingsTaskTimeDisplayRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Start and end time'**
+  String get settingsTaskTimeDisplayRange;
+
+  /// No description provided for @settingsTaskTimeDisplayStartOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Start time only'**
+  String get settingsTaskTimeDisplayStartOnly;
+
+  /// No description provided for @taskTimeStatusFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get taskTimeStatusFuture;
+
+  /// No description provided for @taskTimeStatusFocused.
+  ///
+  /// In en, this message translates to:
+  /// **'In focus'**
+  String get taskTimeStatusFocused;
+
+  /// No description provided for @taskTimeStatusCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get taskTimeStatusCurrent;
+
+  /// No description provided for @taskTimeStatusOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get taskTimeStatusOverdue;
+
+  /// No description provided for @taskTimeStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get taskTimeStatusCompleted;
+
   /// No description provided for @menuTooltip.
   ///
   /// In en, this message translates to:

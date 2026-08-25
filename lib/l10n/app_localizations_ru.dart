@@ -858,6 +858,37 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsDefaultTimedBlockError => 'Введите от 1 до 480 минут.';
 
   @override
+  String get settingsTaskTimeDisplayTitle => 'Отображение времени задач';
+
+  @override
+  String get settingsTaskTimeDisplaySubtitle =>
+      'Выберите, как показывать расписание задач со временем.';
+
+  @override
+  String get settingsTaskTimeDisplaySmart => 'Умное';
+
+  @override
+  String get settingsTaskTimeDisplayRange => 'Время начала и окончания';
+
+  @override
+  String get settingsTaskTimeDisplayStartOnly => 'Только время начала';
+
+  @override
+  String get taskTimeStatusFuture => 'Предстоит';
+
+  @override
+  String get taskTimeStatusFocused => 'В фокусе';
+
+  @override
+  String get taskTimeStatusCurrent => 'Сейчас выполняется';
+
+  @override
+  String get taskTimeStatusOverdue => 'Просрочено';
+
+  @override
+  String get taskTimeStatusCompleted => 'Завершено';
+
+  @override
   String get menuTooltip => 'Меню';
 
   @override

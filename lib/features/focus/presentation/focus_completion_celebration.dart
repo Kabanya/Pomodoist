@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/app_l10n.dart';
 import '../../../app/formatters.dart';
 import '../../../app/providers.dart';
+import '../../../app/task_time.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/widgets/action_feedback.dart';
 import '../../tasks/domain/task_focus_estimate.dart';
@@ -324,7 +325,7 @@ class _CelebrationArtwork extends StatelessWidget {
   }
 }
 
-class _CompletionContent extends StatelessWidget {
+class _CompletionContent extends ConsumerWidget {
   const _CompletionContent({
     required this.completion,
     required this.taskTitle,
@@ -348,10 +349,20 @@ class _CompletionContent extends StatelessWidget {
   final VoidCallback onDismiss;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final colors = context.appColors;
     final textTheme = Theme.of(context).textTheme;
+    final taskTimeState = nextTask == null
+        ? null
+        : ref.watch(taskTimeStateProvider(nextTask!));
+    final taskTimeColor = taskTimeState == null
+        ? colors.secondaryText
+        : colors.taskTimeColor(taskTimeState);
+    final timeDisplayMode = ref.watch(taskTimeDisplayModeProvider);
+    final defaultTimedBlockMinutes = ref.watch(
+      quickAddDefaultTimedBlockMinutesProvider,
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -482,15 +493,36 @@ class _CompletionContent extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  formatTaskListSchedule(
-                    context,
-                    task.schedule!,
-                    now: completion.completedAt,
-                  ),
-                  textAlign: TextAlign.center,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: colors.secondaryText,
+                Semantics(
+                  key: const Key('focus-completion-next-task-time-meta'),
+                  label: taskTimeState == null
+                      ? null
+                      : taskTimeStatusLabel(context.l10n, taskTimeState),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        key: const Key('focus-completion-next-task-time-icon'),
+                        size: 16,
+                        color: taskTimeColor,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        formatTaskListSchedule(
+                          context,
+                          task.schedule!,
+                          now: completion.completedAt,
+                          displayMode: timeDisplayMode,
+                          defaultTimedBlockMinutes: defaultTimedBlockMinutes,
+                        ),
+                        key: const Key('focus-completion-next-task-time'),
+                        textAlign: TextAlign.center,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: taskTimeColor,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 14),

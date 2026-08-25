@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:app_account/app_account.dart';
@@ -7,12 +8,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/app_language.dart';
 import 'package:pomodoist/app/providers.dart';
+import 'package:pomodoist/app/task_time.dart';
 import 'package:pomodoist/core/audio/focus_sound_player.dart';
 import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/demo/demo_seed_data.dart';
 import 'package:pomodoist/core/notifications/notification_scheduler.dart';
 import 'package:pomodoist/core/sync/pomodoist_retention.dart';
 import 'package:pomodoist/core/sync/sync_queue_repository.dart';
+import 'package:pomodoist/core/time/clock.dart';
 import 'package:pomodoist/core/time/timer_engine.dart';
 import 'package:pomodoist/features/filters/domain/filter_parser.dart';
 import 'package:pomodoist/features/focus/data/focus_repository_impl.dart';
@@ -1106,6 +1109,156 @@ void main() {
         container.read(quickAddDefaultTimedBlockMinutesProvider),
         defaultQuickAddTimedBlockMinutes,
       );
+    });
+  });
+
+  group('task time display settings', () {
+    test(
+      'stored mode loads, persists, and unknown storage falls back',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          taskTimeDisplayModePreferenceKey: 'range',
+        });
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+
+        expect(
+          container.read(taskTimeDisplayModeProvider),
+          TaskTimeDisplayMode.smart,
+        );
+
+        await container.read(sharedPreferencesProvider.future);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(
+          container.read(taskTimeDisplayModeProvider),
+          TaskTimeDisplayMode.range,
+        );
+
+        await container
+            .read(taskTimeDisplayModeProvider.notifier)
+            .setMode(TaskTimeDisplayMode.startOnly);
+        final prefs = await SharedPreferences.getInstance();
+
+        expect(prefs.getString(taskTimeDisplayModePreferenceKey), 'startOnly');
+
+        SharedPreferences.setMockInitialValues({
+          taskTimeDisplayModePreferenceKey: 'invalid',
+        });
+        final fallbackContainer = ProviderContainer();
+        addTearDown(fallbackContainer.dispose);
+        await fallbackContainer.read(sharedPreferencesProvider.future);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(
+          fallbackContainer.read(taskTimeDisplayModeProvider),
+          TaskTimeDisplayMode.smart,
+        );
+      },
+    );
+
+    test('task time consumers share the focus ticker', () async {
+      expect(taskTimeTickerProvider, same(focusTickerProvider));
+
+      final clock = FixedClock(DateTime.utc(2026, 7, 5, 14));
+      final container = ProviderContainer(
+        overrides: [clockProvider.overrideWithValue(clock)],
+      );
+      addTearDown(container.dispose);
+      final values = <DateTime>[];
+      final subscription = container.listen(taskTimeTickerProvider, (_, next) {
+        final value = next.value;
+        if (value != null) {
+          values.add(value);
+        }
+      });
+      addTearDown(subscription.close);
+
+      await Future<void>.delayed(Duration.zero);
+      clock.value = DateTime.utc(2026, 7, 5, 14, 30);
+      await Future<void>.delayed(const Duration(seconds: 1, milliseconds: 50));
+
+      expect(values, contains(DateTime.utc(2026, 7, 5, 14)));
+      expect(values, contains(DateTime.utc(2026, 7, 5, 14, 30)));
+    });
+
+    test('all-day task time state does not start the ticker', () async {
+      var tickerListeners = 0;
+      final ticker = StreamController<DateTime>(
+        onListen: () => tickerListeners++,
+      );
+      addTearDown(() {
+        ticker.close();
+      });
+      final container = ProviderContainer(
+        overrides: [
+          taskTimeTickerProvider.overrideWith((ref) => ticker.stream),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      expect(
+        container.read(
+          taskTimeStateProvider(
+            _notificationTask(
+              id: 'all-day',
+              content: 'All-day task',
+              schedule: TaskSchedule.allDay(DateTime.utc(2026, 7, 5)),
+            ),
+          ),
+        ),
+        isNull,
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(tickerListeners, 0);
+    });
+
+    test('task time state only notifies when its state changes', () async {
+      var tickerListeners = 0;
+      final ticker = StreamController<DateTime>(
+        onListen: () => tickerListeners++,
+      );
+      addTearDown(() {
+        ticker.close();
+      });
+      final container = ProviderContainer(
+        overrides: [
+          clockProvider.overrideWithValue(
+            FixedClock(DateTime.utc(2026, 7, 5, 13)),
+          ),
+          taskTimeTickerProvider.overrideWith((ref) => ticker.stream),
+          activeFocusRunProvider.overrideWith((ref) => Stream.value(null)),
+        ],
+      );
+      addTearDown(container.dispose);
+      final states = <TaskTimeState?>[];
+      final task = _notificationTask(
+        id: 'timed',
+        content: 'Timed task',
+        schedule: TaskSchedule.timed(
+          start: DateTime.utc(2026, 7, 5, 14),
+          end: DateTime.utc(2026, 7, 5, 14, 30),
+        ),
+      );
+      final subscription = container.listen(
+        taskTimeStateProvider(task),
+        (_, next) => states.add(next),
+        fireImmediately: true,
+      );
+      addTearDown(subscription.close);
+
+      await Future<void>.delayed(Duration.zero);
+      await container.pump();
+      expect(tickerListeners, 1);
+      ticker.add(DateTime.utc(2026, 7, 5, 13, 10));
+      await Future<void>.delayed(Duration.zero);
+      await container.pump();
+      ticker.add(DateTime.utc(2026, 7, 5, 14));
+      await Future<void>.delayed(Duration.zero);
+      await container.pump();
+
+      expect(states, [TaskTimeState.future, TaskTimeState.current]);
     });
   });
 

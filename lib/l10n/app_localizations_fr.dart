@@ -864,6 +864,37 @@ class AppLocalizationsFr extends AppLocalizations {
       'Saisissez entre 1 et 480 minutes.';
 
   @override
+  String get settingsTaskTimeDisplayTitle => 'Affichage de l\'heure des tâches';
+
+  @override
+  String get settingsTaskTimeDisplaySubtitle =>
+      'Choisissez comment afficher les tâches planifiées.';
+
+  @override
+  String get settingsTaskTimeDisplaySmart => 'Intelligent';
+
+  @override
+  String get settingsTaskTimeDisplayRange => 'Heure de début et de fin';
+
+  @override
+  String get settingsTaskTimeDisplayStartOnly => 'Heure de début uniquement';
+
+  @override
+  String get taskTimeStatusFuture => 'À venir';
+
+  @override
+  String get taskTimeStatusFocused => 'En focus';
+
+  @override
+  String get taskTimeStatusCurrent => 'En cours';
+
+  @override
+  String get taskTimeStatusOverdue => 'En retard';
+
+  @override
+  String get taskTimeStatusCompleted => 'Terminée';
+
+  @override
   String get menuTooltip => 'Menu';
 
   @override

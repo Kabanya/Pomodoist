@@ -688,6 +688,48 @@ void main() {
     expect(find.text('Enter 1 to 480 minutes.'), findsOneWidget);
   });
 
+  testWidgets('SettingsScreen persists the task time display choice', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
+          googleCalendarAuthServiceProvider.overrideWithValue(
+            const _NoopGoogleCalendarAuthService(),
+          ),
+          googleCalendarConnectionProvider.overrideWith(
+            (ref) => Stream.value(null),
+          ),
+        ],
+        child: const MaterialApp(home: SettingsScreen()),
+      ),
+    );
+    await tester.pump();
+
+    final smart = find.byKey(
+      const ValueKey('settings-task-time-display-smart'),
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('settings-default-timed-block-minutes-input')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(smart, findsOneWidget);
+    expect(tester.widget<ChoiceChip>(smart).selected, isTrue);
+
+    final startOnly = find.byKey(
+      const ValueKey('settings-task-time-display-start-only'),
+    );
+    await tester.ensureVisible(startOnly);
+    await tester.tap(startOnly);
+    await tester.pumpAndSettle();
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString(taskTimeDisplayModePreferenceKey), 'startOnly');
+  });
+
   testWidgets('SettingsScreen shows return reminders enabled by default', (
     tester,
   ) async {
