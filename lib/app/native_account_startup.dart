@@ -48,7 +48,7 @@ Future<NativeAccountStartup<T>> prepareNativeAccountStartup<T>({
   required NativeLinkCoordinator links,
   required Future<T> Function() initializeAccount,
 }) async {
-  await links.prepare();
+  unawaited(links.prepare());
   return NativeAccountStartup._(
     links: links,
     initializeAccount: initializeAccount,

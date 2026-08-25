@@ -5,6 +5,34 @@ import 'package:pomodoist/app/native_account_startup.dart';
 import 'package:pomodoist/app/native_link_coordinator_core.dart';
 
 void main() {
+  test(
+    'pending initial link does not block startup and routes when ready',
+    () async {
+      final initialLink = Completer<Uri?>();
+      final routes = <String>[];
+      final coordinator = NativeLinkCoordinator(
+        loadInitialLink: () => initialLink.future,
+        loadLinkStream: () => const Stream<Uri>.empty(),
+      );
+      addTearDown(() async {
+        if (!initialLink.isCompleted) initialLink.complete(null);
+        await coordinator.dispose();
+      });
+
+      final startup = await prepareNativeAccountStartup(
+        links: coordinator,
+        initializeAccount: () async => 'configured-account',
+      ).timeout(Duration.zero);
+
+      expect(await startup.initializeAccount(), 'configured-account');
+      coordinator.attachRouteSink(routes.add);
+      initialLink.complete(Uri.parse('pomodoist://focus'));
+      await pumpEventQueue();
+
+      expect(routes, ['/focus']);
+    },
+  );
+
   test('account auth owns the initial native callback stream', () async {
     final events = <String>[];
     final authCallbacks = <Uri>[];
