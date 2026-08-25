@@ -16,6 +16,7 @@ import '../../../app/runtime_public_config.dart';
 import '../../../app/app_language.dart';
 import '../../../app/app_l10n.dart';
 import '../../../app/formatters.dart';
+import '../../../app/task_time.dart';
 import '../../../app/legal_urls.dart';
 import '../../../app/providers.dart';
 import '../../../app/app_theme_mode.dart';
@@ -1713,6 +1714,7 @@ class _DefaultTimedBlockDurationSettingsState
       (_, next) => _showMinutes(next),
     );
     final minutes = ref.watch(quickAddDefaultTimedBlockMinutesProvider);
+    final timeDisplayMode = ref.watch(taskTimeDisplayModeProvider);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1759,6 +1761,46 @@ class _DefaultTimedBlockDurationSettingsState
               ),
               onChanged: _saveCustomMinutes,
             ),
+            const SizedBox(height: 18),
+            Text(
+              l10n.settingsTaskTimeDisplayTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.settingsTaskTimeDisplaySubtitle,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: colors.secondaryText),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ChoiceChip(
+                  key: const ValueKey('settings-task-time-display-smart'),
+                  label: Text(l10n.settingsTaskTimeDisplaySmart),
+                  selected: timeDisplayMode == TaskTimeDisplayMode.smart,
+                  onSelected: (_) =>
+                      _setTimeDisplayMode(TaskTimeDisplayMode.smart),
+                ),
+                ChoiceChip(
+                  key: const ValueKey('settings-task-time-display-range'),
+                  label: Text(l10n.settingsTaskTimeDisplayRange),
+                  selected: timeDisplayMode == TaskTimeDisplayMode.range,
+                  onSelected: (_) =>
+                      _setTimeDisplayMode(TaskTimeDisplayMode.range),
+                ),
+                ChoiceChip(
+                  key: const ValueKey('settings-task-time-display-start-only'),
+                  label: Text(l10n.settingsTaskTimeDisplayStartOnly),
+                  selected: timeDisplayMode == TaskTimeDisplayMode.startOnly,
+                  onSelected: (_) =>
+                      _setTimeDisplayMode(TaskTimeDisplayMode.startOnly),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -1804,5 +1846,9 @@ class _DefaultTimedBlockDurationSettingsState
     ref
         .read(quickAddDefaultTimedBlockMinutesProvider.notifier)
         .setMinutes(minutes);
+  }
+
+  void _setTimeDisplayMode(TaskTimeDisplayMode mode) {
+    ref.read(taskTimeDisplayModeProvider.notifier).setMode(mode);
   }
 }

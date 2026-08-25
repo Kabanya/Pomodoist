@@ -845,6 +845,37 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsDefaultTimedBlockError => 'أدخل من 1 إلى 480 دقيقة.';
 
   @override
+  String get settingsTaskTimeDisplayTitle => 'عرض وقت المهمة';
+
+  @override
+  String get settingsTaskTimeDisplaySubtitle =>
+      'اختر كيفية عرض المهام المجدولة بوقت.';
+
+  @override
+  String get settingsTaskTimeDisplaySmart => 'ذكي';
+
+  @override
+  String get settingsTaskTimeDisplayRange => 'وقت البدء والانتهاء';
+
+  @override
+  String get settingsTaskTimeDisplayStartOnly => 'وقت البدء فقط';
+
+  @override
+  String get taskTimeStatusFuture => 'قادم';
+
+  @override
+  String get taskTimeStatusFocused => 'قيد التركيز';
+
+  @override
+  String get taskTimeStatusCurrent => 'قيد التنفيذ';
+
+  @override
+  String get taskTimeStatusOverdue => 'متأخرة';
+
+  @override
+  String get taskTimeStatusCompleted => 'مكتملة';
+
+  @override
   String get menuTooltip => 'القائمة';
 
   @override

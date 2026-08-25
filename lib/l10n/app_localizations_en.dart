@@ -856,6 +856,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDefaultTimedBlockError => 'Enter 1 to 480 minutes.';
 
   @override
+  String get settingsTaskTimeDisplayTitle => 'Task time display';
+
+  @override
+  String get settingsTaskTimeDisplaySubtitle =>
+      'Choose how timed task schedules are shown.';
+
+  @override
+  String get settingsTaskTimeDisplaySmart => 'Smart';
+
+  @override
+  String get settingsTaskTimeDisplayRange => 'Start and end time';
+
+  @override
+  String get settingsTaskTimeDisplayStartOnly => 'Start time only';
+
+  @override
+  String get taskTimeStatusFuture => 'Upcoming';
+
+  @override
+  String get taskTimeStatusFocused => 'In focus';
+
+  @override
+  String get taskTimeStatusCurrent => 'In progress';
+
+  @override
+  String get taskTimeStatusOverdue => 'Overdue';
+
+  @override
+  String get taskTimeStatusCompleted => 'Completed';
+
+  @override
   String get menuTooltip => 'Menu';
 
   @override

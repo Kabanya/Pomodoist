@@ -799,6 +799,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDefaultTimedBlockError => '请输入 1 到 480 分钟。';
 
   @override
+  String get settingsTaskTimeDisplayTitle => '任务时间显示';
+
+  @override
+  String get settingsTaskTimeDisplaySubtitle => '选择如何显示有时间安排的任务。';
+
+  @override
+  String get settingsTaskTimeDisplaySmart => '智能';
+
+  @override
+  String get settingsTaskTimeDisplayRange => '开始和结束时间';
+
+  @override
+  String get settingsTaskTimeDisplayStartOnly => '仅开始时间';
+
+  @override
+  String get taskTimeStatusFuture => '即将开始';
+
+  @override
+  String get taskTimeStatusFocused => '正在专注';
+
+  @override
+  String get taskTimeStatusCurrent => '进行中';
+
+  @override
+  String get taskTimeStatusOverdue => '已逾期';
+
+  @override
+  String get taskTimeStatusCompleted => '已完成';
+
+  @override
   String get menuTooltip => '菜单';
 
   @override

@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/app_l10n.dart';
 import '../../../app/formatters.dart';
 import '../../../app/providers.dart';
+import '../../../app/task_time.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/widgets/action_feedback.dart';
 import '../../focus/domain/focus_models.dart';
@@ -194,6 +195,30 @@ class _TaskMetadataChips extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final colors = context.appColors;
+    final now =
+        ref.watch(taskTimeTickerProvider).value ??
+        ref.read(clockProvider).now();
+    final taskTimeState = taskTimeStateForTask(
+      task: task,
+      now: now,
+      activeFocusTaskId: ref.watch(activeFocusRunProvider).value?.taskId,
+    );
+    final taskTimeColor = taskTimeState == null
+        ? null
+        : colors.taskTimeColor(taskTimeState);
+    final timeDisplayMode = ref.watch(taskTimeDisplayModeProvider);
+    final defaultTimedBlockMinutes = ref.watch(
+      quickAddDefaultTimedBlockMinutesProvider,
+    );
+    final scheduleLabel = formatTaskSchedule(
+      context,
+      task.schedule,
+      displayMode: timeDisplayMode,
+      defaultTimedBlockMinutes: defaultTimedBlockMinutes,
+    );
+    final scheduleSemanticLabel = taskTimeState == null
+        ? scheduleLabel
+        : '$scheduleLabel, ${taskTimeStatusLabel(l10n, taskTimeState)}';
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -253,9 +278,21 @@ class _TaskMetadataChips extends ConsumerWidget {
               ),
             ],
           ],
-          child: Chip(
-            label: Text(formatTaskSchedule(context, task.schedule)),
-            avatar: const Icon(Icons.event),
+          child: Semantics(
+            key: const Key('task-detail-time-meta'),
+            label: scheduleSemanticLabel,
+            child: Chip(
+              label: Text(
+                scheduleLabel,
+                key: const Key('task-detail-time-label'),
+                style: TextStyle(color: taskTimeColor),
+              ),
+              avatar: Icon(
+                Icons.event,
+                key: const Key('task-detail-time-icon'),
+                color: taskTimeColor,
+              ),
+            ),
           ),
         ),
         Chip(

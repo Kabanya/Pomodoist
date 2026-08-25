@@ -1,4 +1,5 @@
 import '../features/tasks/domain/task_models.dart';
+import '../l10n/app_localizations.dart';
 
 enum TaskTimeState { completed, focused, future, current, overdue }
 
@@ -53,5 +54,33 @@ bool shouldShowTaskTimeRange(
     TaskTimeDisplayMode.startOnly => false,
     TaskTimeDisplayMode.smart =>
       schedule.duration != Duration(minutes: defaultTimedBlockMinutes),
+  };
+}
+
+TaskTimeState? taskTimeStateForTask({
+  required TaskItem task,
+  required DateTime now,
+  String? activeFocusTaskId,
+}) {
+  final schedule = task.schedule;
+  if (schedule == null || !schedule.isTimed) {
+    return null;
+  }
+  return classifyTaskTimeState(
+    isCompleted: task.isCompleted,
+    taskId: task.id,
+    schedule: schedule,
+    now: now,
+    activeFocusTaskId: activeFocusTaskId,
+  );
+}
+
+String taskTimeStatusLabel(AppLocalizations l10n, TaskTimeState state) {
+  return switch (state) {
+    TaskTimeState.future => l10n.taskTimeStatusFuture,
+    TaskTimeState.focused => l10n.taskTimeStatusFocused,
+    TaskTimeState.current => l10n.taskTimeStatusCurrent,
+    TaskTimeState.overdue => l10n.taskTimeStatusOverdue,
+    TaskTimeState.completed => l10n.taskTimeStatusCompleted,
   };
 }

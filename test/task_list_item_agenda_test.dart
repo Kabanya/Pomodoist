@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/app/theme/app_theme.dart';
+import 'package:pomodoist/core/time/clock.dart';
 import 'package:pomodoist/features/focus/domain/focus_models.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/features/tasks/presentation/widgets/task_list_item.dart';
@@ -168,6 +170,113 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets('timed rows color states and expose semantic status', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final schedule = TaskSchedule.timed(
+      start: DateTime.utc(2026, 7, 10, 10),
+      end: DateTime.utc(2026, 7, 10, 10, 30),
+    );
+    final cases = [
+      (
+        id: 'future',
+        now: DateTime.utc(2026, 7, 10, 9, 59),
+        expectedColor: AppTheme.light().extension<AppThemePalette>()!.info,
+        expectedStatus: 'Upcoming',
+        activeFocusTaskId: null,
+        presentation: TaskListItemPresentation.standard,
+      ),
+      (
+        id: 'current',
+        now: DateTime.utc(2026, 7, 10, 10),
+        expectedColor: AppTheme.light().extension<AppThemePalette>()!.warning,
+        expectedStatus: 'In progress',
+        activeFocusTaskId: null,
+        presentation: TaskListItemPresentation.standard,
+      ),
+      (
+        id: 'overdue',
+        now: DateTime.utc(2026, 7, 10, 10, 30),
+        expectedColor: AppTheme.light().extension<AppThemePalette>()!.accent,
+        expectedStatus: 'Overdue',
+        activeFocusTaskId: null,
+        presentation: TaskListItemPresentation.standard,
+      ),
+      (
+        id: 'completed',
+        now: DateTime.utc(2026, 7, 10, 9, 59),
+        expectedColor: AppTheme.light().extension<AppThemePalette>()!.mutedText,
+        expectedStatus: 'Completed',
+        activeFocusTaskId: null,
+        presentation: TaskListItemPresentation.standard,
+      ),
+    ];
+
+    for (final item in cases) {
+      await _pumpRow(
+        tester,
+        task: _task(
+          id: item.id,
+          schedule: schedule,
+          completed: item.id == 'completed',
+        ),
+        project: _project(),
+        presentation: item.presentation,
+        size: const Size(1000, 240),
+        now: item.now,
+        activeFocusTaskId: item.activeFocusTaskId,
+      );
+
+      final label = find.byKey(ValueKey('task-time-label-${item.id}'));
+      expect(tester.widget<Text>(label).style?.color, item.expectedColor);
+      expect(
+        tester
+            .getSemantics(find.byKey(ValueKey('task-time-meta-${item.id}')))
+            .label,
+        contains(item.expectedStatus),
+      );
+    }
+    semantics.dispose();
+  });
+
+  testWidgets('timed row refreshes at the schedule boundary', (tester) async {
+    final ticker = StreamController<DateTime>.broadcast();
+    addTearDown(ticker.close);
+    final schedule = TaskSchedule.timed(
+      start: DateTime.utc(2026, 7, 10, 10),
+      end: DateTime.utc(2026, 7, 10, 10, 30),
+    );
+    await _pumpRow(
+      tester,
+      task: _task(id: 'boundary', schedule: schedule),
+      project: _project(),
+      size: const Size(1000, 240),
+      now: DateTime.utc(2026, 7, 10, 9, 59),
+      ticker: ticker.stream,
+    );
+
+    ticker.add(DateTime.utc(2026, 7, 10, 9, 59));
+    await tester.pump();
+    expect(
+      tester
+          .widget<Text>(find.byKey(const ValueKey('task-time-label-boundary')))
+          .style
+          ?.color,
+      AppTheme.light().extension<AppThemePalette>()!.info,
+    );
+
+    ticker.add(DateTime.utc(2026, 7, 10, 10));
+    await tester.pump();
+    expect(
+      tester
+          .widget<Text>(find.byKey(const ValueKey('task-time-label-boundary')))
+          .style
+          ?.color,
+      AppTheme.light().extension<AppThemePalette>()!.warning,
+    );
+  });
 }
 
 Future<void> _pumpRow(
@@ -176,17 +285,32 @@ Future<void> _pumpRow(
   required ProjectItem project,
   required Size size,
   TaskListItemPresentation presentation = TaskListItemPresentation.standard,
+  DateTime? now,
+  String? activeFocusTaskId,
+  Stream<DateTime>? ticker,
 }) async {
   await tester.binding.setSurfaceSize(size);
   addTearDown(() => tester.binding.setSurfaceSize(null));
 
   await tester.pumpWidget(
     ProviderScope(
+      key: ValueKey('task-list-row-scope-${task.id}'),
       overrides: [
         taskRepositoryProvider.overrideWithValue(_StubTaskRepository()),
         focusRepositoryProvider.overrideWithValue(_StubFocusRepository()),
         focusPresetsProvider.overrideWith(
           (ref) => Stream.value(const <FocusPresetItem>[]),
+        ),
+        clockProvider.overrideWithValue(FixedClock(now ?? DateTime.utc(2026))),
+        taskTimeTickerProvider.overrideWith(
+          (ref) => ticker ?? Stream.value(now ?? DateTime.utc(2026)),
+        ),
+        activeFocusRunProvider.overrideWith(
+          (ref) => Stream.value(
+            activeFocusTaskId == null
+                ? null
+                : _activeFocusRun(activeFocusTaskId),
+          ),
         ),
       ],
       child: MaterialApp(
@@ -211,13 +335,14 @@ Future<void> _pumpRow(
       ),
     ),
   );
-  await tester.pump();
+  await tester.pumpAndSettle();
 }
 
 TaskItem _task({
   String id = 'task',
   TaskSchedule? schedule,
   String? description,
+  bool completed = false,
 }) {
   final now = DateTime.utc(2026);
   return TaskItem(
@@ -228,11 +353,28 @@ TaskItem _task({
     projectId: 'work',
     priority: 4,
     dueJson: schedule?.toJsonString(),
-    status: 'open',
+    status: completed ? 'completed' : 'open',
     completedFocusIntervals: 0,
     totalFocusSeconds: 0,
     orderKey: id,
     isDeleted: false,
+    createdAt: now,
+    updatedAt: now,
+  );
+}
+
+FocusRunItem _activeFocusRun(String taskId) {
+  final now = DateTime.utc(2026, 7, 10, 10);
+  return FocusRunItem(
+    id: 'run-$taskId',
+    userId: 'user',
+    taskId: taskId,
+    projectId: 'work',
+    presetId: 'preset',
+    status: 'paused',
+    startedAt: now,
+    targetWorkIntervals: 1,
+    completedWorkIntervals: 0,
     createdAt: now,
     updatedAt: now,
   );

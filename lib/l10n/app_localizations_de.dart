@@ -866,6 +866,37 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsDefaultTimedBlockError => 'Gib 1 bis 480 Minuten ein.';
 
   @override
+  String get settingsTaskTimeDisplayTitle => 'Anzeige der Aufgabenzeit';
+
+  @override
+  String get settingsTaskTimeDisplaySubtitle =>
+      'Lege fest, wie zeitgebundene Aufgaben angezeigt werden.';
+
+  @override
+  String get settingsTaskTimeDisplaySmart => 'Intelligent';
+
+  @override
+  String get settingsTaskTimeDisplayRange => 'Start- und Endzeit';
+
+  @override
+  String get settingsTaskTimeDisplayStartOnly => 'Nur Startzeit';
+
+  @override
+  String get taskTimeStatusFuture => 'Bevorstehend';
+
+  @override
+  String get taskTimeStatusFocused => 'Im Fokus';
+
+  @override
+  String get taskTimeStatusCurrent => 'In Bearbeitung';
+
+  @override
+  String get taskTimeStatusOverdue => 'Überfällig';
+
+  @override
+  String get taskTimeStatusCompleted => 'Abgeschlossen';
+
+  @override
   String get menuTooltip => 'Menü';
 
   @override

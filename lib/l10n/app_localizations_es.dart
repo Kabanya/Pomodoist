@@ -863,6 +863,37 @@ class AppLocalizationsEs extends AppLocalizations {
       'Introduce entre 1 y 480 minutos.';
 
   @override
+  String get settingsTaskTimeDisplayTitle => 'Visualización de hora de tarea';
+
+  @override
+  String get settingsTaskTimeDisplaySubtitle =>
+      'Elige cómo se muestran las tareas con horario.';
+
+  @override
+  String get settingsTaskTimeDisplaySmart => 'Inteligente';
+
+  @override
+  String get settingsTaskTimeDisplayRange => 'Hora de inicio y fin';
+
+  @override
+  String get settingsTaskTimeDisplayStartOnly => 'Solo hora de inicio';
+
+  @override
+  String get taskTimeStatusFuture => 'Próxima';
+
+  @override
+  String get taskTimeStatusFocused => 'En enfoque';
+
+  @override
+  String get taskTimeStatusCurrent => 'En curso';
+
+  @override
+  String get taskTimeStatusOverdue => 'Vencida';
+
+  @override
+  String get taskTimeStatusCompleted => 'Completada';
+
+  @override
   String get menuTooltip => 'Menú';
 
   @override

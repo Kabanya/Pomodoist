@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/app/theme/app_theme.dart';
+import 'package:pomodoist/core/time/clock.dart';
 import 'package:pomodoist/features/focus/domain/focus_models.dart';
 import 'package:pomodoist/features/focus/presentation/focus_completion_celebration.dart';
 import 'package:pomodoist/features/focus/presentation/focus_completion_celebration_controller.dart';
@@ -290,6 +291,48 @@ void main() {
     expect(find.byKey(const Key('focus-completion-overlay')), findsNothing);
   });
 
+  testWidgets('next task colors its timed schedule and announces status', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 8, 19, 12);
+    final semantics = tester.ensureSemantics();
+    final next = _task(
+      id: 'next',
+      content: 'Next task',
+      schedule: TaskSchedule.timed(
+        start: now.add(const Duration(hours: 1)),
+        end: now.add(const Duration(hours: 1, minutes: 30)),
+      ),
+    );
+    final container = _container(tasks: [next], now: now);
+    addTearDown(container.dispose);
+    container
+        .read(focusRunCompletionControllerProvider.notifier)
+        .present(_completion(completedAt: now));
+
+    await _pumpCelebration(
+      tester,
+      container: container,
+      disableAnimations: true,
+    );
+    await tester.pump(const Duration(milliseconds: 50));
+
+    final label = find.byKey(const Key('focus-completion-next-task-time'));
+    expect(
+      tester.widget<Text>(label).style?.color,
+      AppTheme.light().extension<AppThemePalette>()!.info,
+    );
+    expect(
+      tester
+          .getSemantics(
+            find.byKey(const Key('focus-completion-next-task-time-meta')),
+          )
+          .label,
+      contains('Upcoming'),
+    );
+    semantics.dispose();
+  });
+
   testWidgets('suggested task start failure keeps celebration open', (
     tester,
   ) async {
@@ -500,7 +543,9 @@ ProviderContainer _container({
   List<TaskItem> tasks = const [],
   FocusRepository? focusRepository,
   List<FocusPresetItem> presets = const [],
+  DateTime? now,
 }) {
+  final taskNow = now ?? DateTime.utc(2026, 8, 19, 12);
   return ProviderContainer(
     overrides: [
       taskRepositoryProvider.overrideWithValue(
@@ -508,6 +553,9 @@ ProviderContainer _container({
       ),
       tasksByQueryProvider.overrideWith((ref, query) => Stream.value(tasks)),
       focusPresetsProvider.overrideWith((ref) => Stream.value(presets)),
+      activeFocusRunProvider.overrideWith((ref) => Stream.value(null)),
+      clockProvider.overrideWithValue(FixedClock(taskNow)),
+      taskTimeTickerProvider.overrideWith((ref) => Stream.value(taskNow)),
       if (focusRepository != null)
         focusRepositoryProvider.overrideWithValue(focusRepository),
     ],

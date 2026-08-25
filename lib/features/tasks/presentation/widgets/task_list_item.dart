@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/app_l10n.dart';
 import '../../../../app/formatters.dart';
 import '../../../../app/providers.dart';
+import '../../../../app/task_time.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../../app/widgets/action_feedback.dart';
 import '../../../focus/domain/focus_models.dart';
@@ -170,6 +171,18 @@ class TaskListItem extends ConsumerWidget {
     final focusEstimate = targetFocusIntervalsForTask(task, selectedPreset);
     final colorScheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
+    final now =
+        ref.watch(taskTimeTickerProvider).value ??
+        ref.read(clockProvider).now();
+    final taskTimeState = taskTimeStateForTask(
+      task: task,
+      now: now,
+      activeFocusTaskId: ref.watch(activeFocusRunProvider).value?.taskId,
+    );
+    final timeDisplayMode = ref.watch(taskTimeDisplayModeProvider);
+    final defaultTimedBlockMinutes = ref.watch(
+      quickAddDefaultTimedBlockMinutesProvider,
+    );
     final description = task.description?.trim();
     final hasDescription = description != null && description.isNotEmpty;
     final hasMeta = _hasListMeta(task, focusEstimate, subtaskProgress);
@@ -322,6 +335,9 @@ class TaskListItem extends ConsumerWidget {
                             focusEstimate: focusEstimate,
                             subtaskProgress: subtaskProgress,
                             allowMetadataWrap: !agendaDesktop,
+                            taskTimeState: taskTimeState,
+                            timeDisplayMode: timeDisplayMode,
+                            defaultTimedBlockMinutes: defaultTimedBlockMinutes,
                           )
                         : _TaskContent(
                             task: task,
@@ -330,6 +346,9 @@ class TaskListItem extends ConsumerWidget {
                             hasMeta: hasMeta,
                             focusEstimate: focusEstimate,
                             subtaskProgress: subtaskProgress,
+                            taskTimeState: taskTimeState,
+                            timeDisplayMode: timeDisplayMode,
+                            defaultTimedBlockMinutes: defaultTimedBlockMinutes,
                           ),
                   ),
                 ),
@@ -715,6 +734,9 @@ class _AgendaTaskContent extends StatelessWidget {
     required this.focusEstimate,
     required this.subtaskProgress,
     required this.allowMetadataWrap,
+    required this.taskTimeState,
+    required this.timeDisplayMode,
+    required this.defaultTimedBlockMinutes,
   });
 
   final TaskItem task;
@@ -722,6 +744,9 @@ class _AgendaTaskContent extends StatelessWidget {
   final int? focusEstimate;
   final TaskSubtaskProgress? subtaskProgress;
   final bool allowMetadataWrap;
+  final TaskTimeState? taskTimeState;
+  final TaskTimeDisplayMode timeDisplayMode;
+  final int defaultTimedBlockMinutes;
 
   @override
   Widget build(BuildContext context) {
@@ -730,7 +755,12 @@ class _AgendaTaskContent extends StatelessWidget {
     final schedule = task.schedule;
     final scheduleLabel = schedule == null
         ? null
-        : formatTaskListScheduleWithinDate(context, schedule);
+        : formatTaskListScheduleWithinDate(
+            context,
+            schedule,
+            displayMode: timeDisplayMode,
+            defaultTimedBlockMinutes: defaultTimedBlockMinutes,
+          );
     final metadata = <Widget>[
       if (progress != null && progress.total > 0)
         _FixedMetaText(
@@ -747,14 +777,15 @@ class _AgendaTaskContent extends StatelessWidget {
       if (scheduleLabel != null)
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 180),
-          child: Text(
-            scheduleLabel,
+          child: _TaskTimeMetaText(
+            taskId: task.id,
+            label: scheduleLabel,
+            state: taskTimeState,
+            color: taskTimeState == null
+                ? colors.mutedText
+                : colors.taskTimeColor(taskTimeState!),
+            textStyle: Theme.of(context).textTheme.labelMedium,
             key: const Key('agenda-schedule-label'),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium?.copyWith(color: colors.mutedText),
           ),
         ),
     ];
@@ -852,6 +883,9 @@ class _TaskContent extends StatelessWidget {
     required this.hasMeta,
     required this.focusEstimate,
     required this.subtaskProgress,
+    required this.taskTimeState,
+    required this.timeDisplayMode,
+    required this.defaultTimedBlockMinutes,
   });
 
   final TaskItem task;
@@ -860,6 +894,9 @@ class _TaskContent extends StatelessWidget {
   final bool hasMeta;
   final int? focusEstimate;
   final TaskSubtaskProgress? subtaskProgress;
+  final TaskTimeState? taskTimeState;
+  final TaskTimeDisplayMode timeDisplayMode;
+  final int defaultTimedBlockMinutes;
 
   @override
   Widget build(BuildContext context) {
@@ -875,9 +912,20 @@ class _TaskContent extends StatelessWidget {
         ),
       if (task.schedule != null)
         Flexible(
-          child: _FlexibleMetaText(
-            icon: Icons.event_outlined,
-            label: formatTaskListSchedule(context, task.schedule!),
+          child: _TaskTimeMetaText(
+            taskId: task.id,
+            label: formatTaskListSchedule(
+              context,
+              task.schedule!,
+              displayMode: timeDisplayMode,
+              defaultTimedBlockMinutes: defaultTimedBlockMinutes,
+            ),
+            state: taskTimeState,
+            color: taskTimeState == null
+                ? Theme.of(context).colorScheme.onSurfaceVariant
+                : colors.taskTimeColor(taskTimeState!),
+            textStyle: Theme.of(context).textTheme.labelSmall,
+            expanded: true,
           ),
         ),
       if (focusEstimate != null)
@@ -969,30 +1017,51 @@ class _TaskDragFeedback extends StatelessWidget {
   }
 }
 
-class _FlexibleMetaText extends StatelessWidget {
-  const _FlexibleMetaText({required this.icon, required this.label});
+class _TaskTimeMetaText extends StatelessWidget {
+  const _TaskTimeMetaText({
+    required this.taskId,
+    required this.label,
+    required this.state,
+    required this.color,
+    required this.textStyle,
+    this.expanded = false,
+    super.key,
+  });
 
-  final IconData icon;
+  final String taskId;
   final String label;
+  final TaskTimeState? state;
+  final Color color;
+  final TextStyle? textStyle;
+  final bool expanded;
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.onSurfaceVariant;
-    return Row(
+    final status = state == null
+        ? null
+        : taskTimeStatusLabel(context.l10n, state!);
+    final content = Row(
+      key: ValueKey('task-time-meta-$taskId'),
+      mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: color),
+        Icon(Icons.event_outlined, size: 14, color: color),
         const SizedBox(width: 4),
-        Expanded(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: color),
-          ),
-        ),
+        if (expanded) Expanded(child: _label()) else Flexible(child: _label()),
       ],
+    );
+    return Semantics(
+      label: status == null ? label : '$label, $status',
+      child: content,
+    );
+  }
+
+  Widget _label() {
+    return Text(
+      label,
+      key: ValueKey('task-time-label-$taskId'),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: textStyle?.copyWith(color: color),
     );
   }
 }
