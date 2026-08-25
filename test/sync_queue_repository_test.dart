@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/core/db/app_database.dart';
@@ -91,4 +92,75 @@ void main() {
       expect(rows[1].createdAt.toUtc(), second.add(const Duration(seconds: 1)));
     },
   );
+
+  test('connection upserts keep only the latest pending snapshot', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    await db.ensureSeedData();
+    final queue = DriftSyncQueueRepository(db);
+
+    await queue.enqueue(
+      type: 'task.update',
+      clientId: 'task-1',
+      payload: const {'id': 'task-1'},
+    );
+    for (var index = 0; index < 10000; index++) {
+      await queue.enqueue(
+        type: 'google_calendar.connection.upsert',
+        clientId: 'primary',
+        payload: {'id': 'primary', 'revision': index},
+      );
+    }
+
+    final pending = await queue.watchPending().first;
+    final connectionCommands = pending
+        .where(
+          (command) =>
+              command.type == 'google_calendar.connection.upsert' &&
+              command.clientId == 'primary',
+        )
+        .toList();
+    expect(
+      pending.where((command) => command.type == 'task.update'),
+      hasLength(1),
+    );
+    expect(connectionCommands, hasLength(1));
+    expect(jsonDecode(connectionCommands.single.payloadJson), {
+      'id': 'primary',
+      'revision': 9999,
+    });
+  });
+
+  test('stale connection completion cannot remove its replacement', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    await db.ensureSeedData();
+    final queue = DriftSyncQueueRepository(db);
+
+    await queue.enqueue(
+      type: 'google_calendar.connection.upsert',
+      clientId: 'primary',
+      payload: const {'id': 'primary', 'status': 'syncing'},
+    );
+    final stale = (await queue.watchPending().first).single;
+    await (db.update(db.syncCommands)..where((row) => row.id.equals(stale.id)))
+        .write(const SyncCommandsCompanion(attempts: Value(1)));
+
+    await queue.enqueue(
+      type: 'google_calendar.connection.upsert',
+      clientId: 'primary',
+      payload: const {'id': 'primary', 'status': 'connected'},
+    );
+
+    var pending = await queue.watchPending().first;
+    expect(pending, hasLength(1));
+    expect(jsonDecode(pending.single.payloadJson)['status'], 'connected');
+
+    await (db.update(db.syncCommands)..where((row) => row.id.equals(stale.id)))
+        .write(const SyncCommandsCompanion(status: Value('synced')));
+
+    pending = await queue.watchPending().first;
+    expect(pending, hasLength(1));
+    expect(jsonDecode(pending.single.payloadJson)['status'], 'connected');
+  });
 }

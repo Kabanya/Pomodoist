@@ -1027,7 +1027,6 @@ final googleCalendarSyncLifecycleProvider =
     Provider<GoogleCalendarSyncLifecycle>((ref) {
       final lifecycle = GoogleCalendarSyncLifecycle(
         integrationRepository: ref.watch(calendarIntegrationRepositoryProvider),
-        syncQueueRepository: ref.watch(syncQueueRepositoryProvider),
         syncController: ref.watch(googleCalendarSyncControllerProvider),
       )..start();
       ref.onDispose(lifecycle.dispose);

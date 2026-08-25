@@ -63,27 +63,49 @@ class DriftSyncQueueRepository implements SyncQueueRepository {
       (mutationTime.millisecondsSinceEpoch ~/ 1000) * 1000,
       isUtc: true,
     );
-    final latest =
-        await (_db.select(_db.syncCommands)
-              ..orderBy([(row) => OrderingTerm.desc(row.createdAt)])
-              ..limit(1))
-            .getSingleOrNull();
-    final start = latest != null && !latest.createdAt.isBefore(requestedStart)
-        ? latest.createdAt.add(const Duration(seconds: 1))
-        : requestedStart;
-    await _db.batch((batch) {
-      batch.insertAll(_db.syncCommands, [
-        for (var index = 0; index < commands.length; index++)
-          SyncCommandsCompanion.insert(
-            id: _uuid.v4(),
-            uuid: _uuid.v4(),
-            type: commands[index].type,
-            clientId: Value(commands[index].clientId),
-            payloadJson: jsonEncode(commands[index].payload),
-            createdAt: start.add(Duration(seconds: index)),
-            updatedAt: mutationTime,
-          ),
-      ]);
+    final latestConnectionClients = <String>{};
+    final retainedCommands = commands.reversed
+        .where((command) {
+          final clientId = command.clientId;
+          return command.type != 'google_calendar.connection.upsert' ||
+              clientId == null ||
+              latestConnectionClients.add(clientId);
+        })
+        .toList()
+        .reversed
+        .toList();
+    await _db.transaction(() async {
+      for (final clientId in latestConnectionClients) {
+        await (_db.delete(_db.syncCommands)..where(
+              (row) =>
+                  row.type.equals('google_calendar.connection.upsert') &
+                  row.clientId.equals(clientId) &
+                  row.status.equals('pending'),
+            ))
+            .go();
+      }
+      final latest =
+          await (_db.select(_db.syncCommands)
+                ..orderBy([(row) => OrderingTerm.desc(row.createdAt)])
+                ..limit(1))
+              .getSingleOrNull();
+      final start = latest != null && !latest.createdAt.isBefore(requestedStart)
+          ? latest.createdAt.add(const Duration(seconds: 1))
+          : requestedStart;
+      await _db.batch((batch) {
+        batch.insertAll(_db.syncCommands, [
+          for (var index = 0; index < retainedCommands.length; index++)
+            SyncCommandsCompanion.insert(
+              id: _uuid.v4(),
+              uuid: _uuid.v4(),
+              type: retainedCommands[index].type,
+              clientId: Value(retainedCommands[index].clientId),
+              payloadJson: jsonEncode(retainedCommands[index].payload),
+              createdAt: start.add(Duration(seconds: index)),
+              updatedAt: mutationTime,
+            ),
+        ]);
+      });
     });
   }
 

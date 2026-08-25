@@ -278,6 +278,32 @@ void main() {
       expect(connection?.status, 'error');
     });
 
+    test('only stable connection state enters the account queue', () async {
+      final syncQueue = DriftSyncQueueRepository(db);
+      final repository = DriftCalendarIntegrationRepository(
+        db,
+        syncQueue: syncQueue,
+      );
+      await repository.saveConnected(
+        calendarId: 'calendar-1',
+        calendarName: 'Pomodoist',
+        ownerDeviceId: 'device-1',
+      );
+      await db.delete(db.syncCommands).go();
+
+      await repository.markSyncStarted();
+
+      expect(await syncQueue.watchPending().first, isEmpty);
+
+      await repository.markSyncFinished(syncToken: 'next-token');
+
+      final pending = await syncQueue.watchPending().first;
+      expect(pending, hasLength(1));
+      expect(pending.single.type, 'google_calendar.connection.upsert');
+      expect(pending.single.payloadJson, contains('connected'));
+      expect(pending.single.payloadJson, contains('next-token'));
+    });
+
     test('auth timeout records error and releases syncing for retry', () async {
       final auth = _ControllableGoogleCalendarAuthService()..hang = true;
       final timeoutController = GoogleCalendarSyncController(

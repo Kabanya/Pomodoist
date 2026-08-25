@@ -139,7 +139,6 @@ class DriftCalendarIntegrationRepository
         updatedAt: Value(now),
       ),
     );
-    await _enqueueConnection();
   }
 
   @override

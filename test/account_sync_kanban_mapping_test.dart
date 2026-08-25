@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'dart:convert';
 
 import 'package:app_account/app_account.dart';
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/core/db/app_database.dart';
@@ -226,9 +226,55 @@ void main() {
         '200',
       );
       final stored = await db.select(db.syncCommands).get();
-      expect(stored.where((row) => row.status == 'compacted'), hasLength(2));
-      expect(stored.where((row) => row.status == 'synced'), hasLength(2));
+      expect(stored, isEmpty);
     });
+
+    test(
+      'syncNow reports locally pushed task entities and prunes finished commands',
+      () async {
+        await engine.prepareLocalAccountData();
+        await engine.importLocalSnapshotIfNeeded();
+        account.pushed.clear();
+
+        await queue.enqueue(
+          type: 'google_calendar.connection.upsert',
+          clientId: 'old-synced',
+          payload: const {'id': 'old-synced'},
+        );
+        await (db.update(db.syncCommands)
+              ..where((row) => row.clientId.equals('old-synced')))
+            .write(const SyncCommandsCompanion(status: Value('synced')));
+        await queue.enqueue(
+          type: 'google_calendar.connection.upsert',
+          clientId: 'old-compacted',
+          payload: const {'id': 'old-compacted'},
+        );
+        await (db.update(db.syncCommands)
+              ..where((row) => row.clientId.equals('old-compacted')))
+            .write(const SyncCommandsCompanion(status: Value('compacted')));
+        final taskId = await tasks.createTask(
+          const CreateTaskInput(content: 'Sync me once'),
+        );
+
+        final entityTypes = await engine.syncNow();
+
+        expect(entityTypes, contains('task'));
+        expect(
+          account.pushed.where(
+            (operation) =>
+                operation.entityType == 'task' && operation.entityId == taskId,
+          ),
+          hasLength(1),
+        );
+        expect(await db.select(db.syncCommands).get(), isEmpty);
+        expect(
+          await (db.select(
+            db.tasks,
+          )..where((row) => row.id.equals(taskId))).getSingleOrNull(),
+          isNotNull,
+        );
+      },
+    );
 
     test('elides a never-attempted task create followed by delete', () async {
       final taskId = await tasks.createTask(
@@ -460,6 +506,9 @@ String _snapshotJson(String statusId) =>
 class _RecordingAccountClient implements AccountClient {
   final pushed = <AccountSyncOperation>[];
   final pullResults = Queue<AccountSyncPullResult>();
+
+  @override
+  String? get currentUserId => 'account-user';
 
   @override
   Future<AccountSyncPushResult> pushChanges({

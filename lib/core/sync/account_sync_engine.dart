@@ -50,8 +50,7 @@ class AccountSyncEngine {
     if (imported) {
       await _broadcastSyncHint();
     }
-    await pushPending();
-    return pullLatest();
+    return <String>{...await pushPending(), ...await pullLatest()};
   }
 
   Future<void> prepareLocalAccountData() async {
@@ -115,6 +114,7 @@ class AccountSyncEngine {
   }
 
   Future<Set<String>> pushPending() async {
+    await _deleteFinishedCommands();
     final deviceId = await _ensureDeviceId();
     final taskHistoryCutoff = await _taskHistoryCutoff();
     final pending =
@@ -159,11 +159,21 @@ class AccountSyncEngine {
         );
       }
     });
-    final commandTypes = pending.map((command) => command.type).toSet();
+    final entityTypes = operations
+        .map((operation) => operation.entityType)
+        .toSet();
+    await _deleteFinishedCommands();
     if (operations.isNotEmpty) {
       await _broadcastSyncHint();
     }
-    return commandTypes;
+    return entityTypes;
+  }
+
+  Future<void> _deleteFinishedCommands() async {
+    await (_db.delete(_db.syncCommands)..where(
+          (row) => row.status.equals('synced') | row.status.equals('compacted'),
+        ))
+        .go();
   }
 
   Future<List<SyncCommandRow>> _compactPendingTaskCommands(
