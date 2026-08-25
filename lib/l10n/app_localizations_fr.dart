@@ -2007,4 +2007,86 @@ class AppLocalizationsFr extends AppLocalizations {
   String couldNotUpdateProject(Object error) {
     return 'Impossible de mettre à jour le projet : $error';
   }
+
+  @override
+  String get commonDone => 'Terminé';
+
+  @override
+  String get taskSelect => 'Sélectionner';
+
+  @override
+  String taskSelectedCount(int count) {
+    return '$count sélectionnées';
+  }
+
+  @override
+  String get taskSelectAll => 'Tout sélectionner';
+
+  @override
+  String get taskDeselectAll => 'Tout désélectionner';
+
+  @override
+  String get taskDue => 'Échéance';
+
+  @override
+  String get taskProject => 'Projet';
+
+  @override
+  String get taskLabels => 'Étiquettes';
+
+  @override
+  String get taskPriority => 'Priorité';
+
+  @override
+  String get taskMore => 'Plus';
+
+  @override
+  String get taskSchedule => 'Planifier';
+
+  @override
+  String get taskMove => 'Déplacer';
+
+  @override
+  String get taskDuplicate => 'Dupliquer';
+
+  @override
+  String get taskDuplicateTitle => 'Dupliquer les tâches';
+
+  @override
+  String get taskDuplicateSelectedOnly => 'Sélectionnées uniquement';
+
+  @override
+  String get taskDuplicateWithSubtasks => 'Avec les sous-tâches';
+
+  @override
+  String get taskWeekend => 'Ce week-end';
+
+  @override
+  String get taskNextWeek => 'La semaine prochaine';
+
+  @override
+  String get taskEnterDue => 'Saisir une échéance ou une heure';
+
+  @override
+  String get taskInvalidDue => 'Saisissez une date ou une heure valide';
+
+  @override
+  String get taskClearDue => 'Effacer l’échéance';
+
+  @override
+  String get taskDeleteSelectedTitle => 'Supprimer les tâches sélectionnées ?';
+
+  @override
+  String get taskDeleteSelectedMessage => 'Cette action est irréversible.';
+
+  @override
+  String get taskCompleteSelected => 'Terminer la sélection';
+
+  @override
+  String get taskReopenSelected => 'Rouvrir la sélection';
+
+  @override
+  String taskActionFailedCount(int count) {
+    return '$count tâches n’ont pas pu être modifiées';
+  }
 }

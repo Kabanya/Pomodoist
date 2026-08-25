@@ -11,6 +11,7 @@ import '../../../app/theme/app_theme.dart';
 import '../domain/task_models.dart';
 import 'widgets/quick_add_bar.dart';
 import 'widgets/task_list_item.dart';
+import 'widgets/task_selection_region.dart';
 import 'widgets/upcoming_calendar.dart';
 import 'widgets/upcoming_day_groups.dart';
 
@@ -67,71 +68,83 @@ class _UpcomingScreenState extends ConsumerState<UpcomingScreen> {
     );
     final scheduledTasks = _scheduledTasks(allItems);
     final scheduledCounts = _scheduledTaskCounts(scheduledTasks);
+    final groups = buildUpcomingDayGroups(
+      scheduledTasks,
+      selectedDate: selectedDay,
+      visibleFromDate: selectedDay ?? today,
+    );
+    final visibleTasks = [
+      for (final group in groups)
+        for (final row in group.rows) row.task,
+    ];
 
     return SafeArea(
       bottom: false,
-      child: SingleChildScrollView(
-        key: const ValueKey('upcoming-scroll-view'),
-        controller: _scrollController,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final horizontalPadding = _responsiveHorizontalPadding(
-                  constraints.maxWidth,
-                );
-                return Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    20,
-                    horizontalPadding,
-                    32,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.l10n.navUpcoming,
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      UpcomingCalendar(
-                        today: today,
-                        selectedDate: selectedDay,
-                        scheduledCounts: scheduledCounts,
-                        loading: loading,
-                        onDateSelected: (date) =>
-                            _selectDate(context, selectedDay, date),
-                        onTodaySelected: () => _selectToday(context, today),
-                        onClearSelection: () => _clearSelection(context),
-                      ),
-                      const SizedBox(height: 16),
-                      QuickAddBar(defaultDate: selectedDay ?? today),
-                      const SizedBox(height: 20),
-                      if (loadError != null)
-                        _UpcomingMessage(
-                          key: const ValueKey('upcoming-error'),
-                          message: context.l10n.failedToLoadTasks(loadError),
-                        )
-                      else if (loading)
-                        const _UpcomingMessage(
-                          key: ValueKey('upcoming-loading'),
-                          child: CircularProgressIndicator(),
-                        )
-                      else
-                        _buildAgenda(
-                          context,
-                          scheduledTasks: scheduledTasks,
-                          allItems: allItems,
-                          today: today,
-                          selectedDay: selectedDay,
-                          projects: projects.value ?? const <ProjectItem>[],
+      child: TaskSelectionRegion(
+        visibleTasks: visibleTasks,
+        scopeKey: selectedDay,
+        child: SingleChildScrollView(
+          key: const ValueKey('upcoming-scroll-view'),
+          controller: _scrollController,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1200),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final horizontalPadding = _responsiveHorizontalPadding(
+                    constraints.maxWidth,
+                  );
+                  return Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      20,
+                      horizontalPadding,
+                      32,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.navUpcoming,
+                          style: Theme.of(context).textTheme.headlineMedium,
                         ),
-                    ],
-                  ),
-                );
-              },
+                        const SizedBox(height: 16),
+                        UpcomingCalendar(
+                          today: today,
+                          selectedDate: selectedDay,
+                          scheduledCounts: scheduledCounts,
+                          loading: loading,
+                          onDateSelected: (date) =>
+                              _selectDate(context, selectedDay, date),
+                          onTodaySelected: () => _selectToday(context, today),
+                          onClearSelection: () => _clearSelection(context),
+                        ),
+                        const SizedBox(height: 16),
+                        QuickAddBar(defaultDate: selectedDay ?? today),
+                        const SizedBox(height: 20),
+                        if (loadError != null)
+                          _UpcomingMessage(
+                            key: const ValueKey('upcoming-error'),
+                            message: context.l10n.failedToLoadTasks(loadError),
+                          )
+                        else if (loading)
+                          const _UpcomingMessage(
+                            key: ValueKey('upcoming-loading'),
+                            child: CircularProgressIndicator(),
+                          )
+                        else
+                          _buildAgenda(
+                            context,
+                            groups: groups,
+                            allItems: allItems,
+                            today: today,
+                            projects: projects.value ?? const <ProjectItem>[],
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -141,17 +154,11 @@ class _UpcomingScreenState extends ConsumerState<UpcomingScreen> {
 
   Widget _buildAgenda(
     BuildContext context, {
-    required List<TaskItem> scheduledTasks,
+    required List<UpcomingDayGroup> groups,
     required List<TaskItem> allItems,
     required DateTime today,
-    required DateTime? selectedDay,
     required List<ProjectItem> projects,
   }) {
-    final groups = buildUpcomingDayGroups(
-      scheduledTasks,
-      selectedDate: selectedDay,
-      visibleFromDate: selectedDay ?? today,
-    );
     if (groups.isEmpty) {
       return _UpcomingMessage(
         key: const ValueKey('upcoming-empty'),

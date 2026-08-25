@@ -2007,4 +2007,87 @@ class AppLocalizationsDe extends AppLocalizations {
   String couldNotUpdateProject(Object error) {
     return 'Projekt konnte nicht aktualisiert werden: $error';
   }
+
+  @override
+  String get commonDone => 'Fertig';
+
+  @override
+  String get taskSelect => 'Auswählen';
+
+  @override
+  String taskSelectedCount(int count) {
+    return '$count ausgewählt';
+  }
+
+  @override
+  String get taskSelectAll => 'Alle auswählen';
+
+  @override
+  String get taskDeselectAll => 'Auswahl aufheben';
+
+  @override
+  String get taskDue => 'Fällig';
+
+  @override
+  String get taskProject => 'Projekt';
+
+  @override
+  String get taskLabels => 'Labels';
+
+  @override
+  String get taskPriority => 'Priorität';
+
+  @override
+  String get taskMore => 'Mehr';
+
+  @override
+  String get taskSchedule => 'Planen';
+
+  @override
+  String get taskMove => 'Verschieben';
+
+  @override
+  String get taskDuplicate => 'Duplizieren';
+
+  @override
+  String get taskDuplicateTitle => 'Aufgaben duplizieren';
+
+  @override
+  String get taskDuplicateSelectedOnly => 'Nur ausgewählte';
+
+  @override
+  String get taskDuplicateWithSubtasks => 'Mit Unteraufgaben';
+
+  @override
+  String get taskWeekend => 'Am Wochenende';
+
+  @override
+  String get taskNextWeek => 'Nächste Woche';
+
+  @override
+  String get taskEnterDue => 'Fälligkeit oder Uhrzeit eingeben';
+
+  @override
+  String get taskInvalidDue => 'Gültiges Datum oder Uhrzeit eingeben';
+
+  @override
+  String get taskClearDue => 'Fälligkeit löschen';
+
+  @override
+  String get taskDeleteSelectedTitle => 'Ausgewählte Aufgaben löschen?';
+
+  @override
+  String get taskDeleteSelectedMessage =>
+      'Diese Aktion kann nicht rückgängig gemacht werden.';
+
+  @override
+  String get taskCompleteSelected => 'Ausgewählte erledigen';
+
+  @override
+  String get taskReopenSelected => 'Ausgewählte wieder öffnen';
+
+  @override
+  String taskActionFailedCount(int count) {
+    return '$count Aufgaben konnten nicht aktualisiert werden';
+  }
 }

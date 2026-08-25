@@ -27,6 +27,7 @@ import 'package:pomodoist/features/onboarding/onboarding_gate.dart';
 import 'package:pomodoist/features/tasks/domain/project_colors.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/features/tasks/presentation/browse_screen.dart';
+import 'package:pomodoist/features/tasks/presentation/widgets/task_selection_region.dart';
 import 'package:pomodoist/features/integrations/google_calendar/data/google_calendar_repository.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -756,15 +757,21 @@ void main() {
     expect(harness.taskRepository.updatePatches.last.clearSchedule, isTrue);
   });
 
-  testWidgets('task row secondary click opens quick actions', (tester) async {
+  testWidgets('task row secondary click completes through multi-select', (
+    tester,
+  ) async {
     final harness = await _pumpApp(tester);
 
     await _openTaskContextMenu(tester, 'Today task');
 
-    expect(find.text('Mark complete'), findsOneWidget);
+    expect(find.text('Select'), findsOneWidget);
     expect(find.text('Focus history'), findsNothing);
 
-    await tester.tap(find.text('Mark complete').last);
+    await tester.tap(find.text('Select').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('More'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Complete selected'));
     await tester.pumpAndSettle();
 
     expect(harness.taskRepository.completedTaskIds, ['task-1']);
@@ -777,10 +784,401 @@ void main() {
     expect(harness.taskRepository.uncompletedTaskIds, ['task-1']);
   });
 
+  testWidgets('task menu enters multi-selection and toggles visible rows', (
+    tester,
+  ) async {
+    final today = _todaySchedule();
+    await _pumpApp(
+      tester,
+      tasks: [
+        _task('select-1', 'First selectable task', schedule: today),
+        _task('select-2', 'Second selectable task', schedule: today),
+      ],
+    );
+
+    await _openTaskContextMenu(tester, 'First selectable task');
+    await tester.tap(find.text('Select').last);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('task-selection-header')), findsOneWidget);
+    expect(find.text('1 selected'), findsOneWidget);
+    expect(find.text('Due'), findsOneWidget);
+    expect(find.text('More'), findsOneWidget);
+
+    await tester.tap(find.text('Second selectable task'));
+    await tester.pump();
+    expect(find.text('2 selected'), findsOneWidget);
+
+    await tester.tap(find.text('Deselect all'));
+    await tester.pump();
+    expect(find.text('0 selected'), findsOneWidget);
+  });
+
+  testWidgets('bulk due preset keeps a typed time range and selection', (
+    tester,
+  ) async {
+    final today = _todaySchedule();
+    final harness = await _pumpApp(
+      tester,
+      tasks: [
+        _task('due-1', 'First due task', schedule: today),
+        _task('due-2', 'Second due task', schedule: today),
+      ],
+    );
+
+    await _openTaskContextMenu(tester, 'First due task');
+    await tester.tap(find.text('Select').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Second due task'));
+    await tester.tap(find.text('Due'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('task-due-input')),
+      '20:00-21:00',
+    );
+    await tester.tap(find.text('Tomorrow').last);
+    await _pumpFrames(tester);
+
+    expect(harness.taskRepository.updatePatches, hasLength(2));
+    for (final patch in harness.taskRepository.updatePatches) {
+      final schedule = patch.schedule!;
+      expect(schedule.start!.toLocal(), DateTime(2026, 1, 3, 20));
+      expect(schedule.end!.toLocal(), DateTime(2026, 1, 3, 21));
+    }
+    expect(find.text('2 selected'), findsOneWidget);
+  });
+
+  testWidgets('due panel validates text, uses calendar, and clears due', (
+    tester,
+  ) async {
+    final harness = await _pumpApp(tester);
+    await _openTaskContextMenu(tester, 'Today task');
+    await tester.tap(find.text('Select').last);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Due'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('task-due-input')),
+      '25.08 18:00',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await _pumpFrames(tester);
+    expect(
+      harness.taskRepository.updatePatches.single.schedule!.start!.toLocal(),
+      DateTime(2026, 8, 25, 18),
+    );
+
+    await tester.tap(find.text('Due'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('task-due-input')),
+      '31.02 99:99',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+    expect(find.text('Enter a valid date or time'), findsOneWidget);
+    expect(harness.taskRepository.updatePatches, hasLength(1));
+
+    await tester.enterText(find.byKey(const Key('task-due-input')), '');
+    final day = find.descendant(
+      of: find.byType(CalendarDatePicker),
+      matching: find.text('15'),
+    );
+    await tester.ensureVisible(day);
+    await tester.tap(day);
+    await tester.tap(find.byKey(const Key('task-due-done')));
+    await _pumpFrames(tester);
+    expect(harness.taskRepository.updatePatches, hasLength(2));
+    expect(
+      harness.taskRepository.updatePatches.last.schedule!.displayDate,
+      DateTime(2026, 1, 15),
+    );
+
+    await tester.tap(find.text('Due'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Clear due'));
+    await _pumpFrames(tester);
+    expect(harness.taskRepository.updatePatches.last.clearSchedule, isTrue);
+  });
+
+  testWidgets('bulk project labels priority and duplicate keep selection', (
+    tester,
+  ) async {
+    final today = _todaySchedule();
+    final harness = await _pumpApp(
+      tester,
+      tasks: [
+        _task('action-1', 'First action task', schedule: today),
+        _task('action-2', 'Second action task', schedule: today),
+      ],
+    );
+    await _openTaskContextMenu(tester, 'First action task');
+    await tester.tap(find.text('Select').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Second action task'));
+
+    await tester.tap(find.text('Project'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Work'));
+    await tester.pumpAndSettle();
+    expect(harness.taskRepository.movedProjectIds, ['project-1', 'project-1']);
+    expect(find.text('2 selected'), findsOneWidget);
+
+    await tester.tap(find.text('Labels'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('coding'));
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    expect(
+      harness.taskRepository.updatePatches
+          .where((patch) => patch.labelNames != null)
+          .map((patch) => patch.labelNames),
+      everyElement(['coding']),
+    );
+    expect(find.text('2 selected'), findsOneWidget);
+
+    await tester.tap(find.text('Priority'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Priority 1'));
+    await tester.pumpAndSettle();
+    expect(
+      harness.taskRepository.updatePatches
+          .where((patch) => patch.priority != null)
+          .map((patch) => patch.priority),
+      [1, 1],
+    );
+
+    await tester.tap(find.text('More'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Duplicate'));
+    await tester.pumpAndSettle();
+    expect(find.text('Selected only'), findsOneWidget);
+    expect(find.text('With subtasks'), findsOneWidget);
+    await tester.tap(find.text('With subtasks'));
+    await tester.pumpAndSettle();
+    expect(harness.taskRepository.duplicatedTaskIds.single, {
+      'action-1',
+      'action-2',
+    });
+    expect(harness.taskRepository.duplicateIncludeSubtasks.single, isTrue);
+    expect(find.text('2 selected'), findsOneWidget);
+  });
+
+  testWidgets('completed multi-select reopens tasks and offers one Undo', (
+    tester,
+  ) async {
+    late GoRouter router;
+    final harness = await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      tasks: [
+        _task(
+          'reopen-1',
+          'Reopen selected task',
+          status: 'completed',
+          completedAt: DateTime.now().toUtc(),
+        ),
+      ],
+    );
+    router.go('/browse/completed');
+    await _pumpFrames(tester);
+    await _openTaskContextMenu(tester, 'Reopen selected task');
+    await tester.tap(find.text('Select').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('More'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Reopen selected'));
+    await tester.pumpAndSettle();
+
+    expect(harness.taskRepository.uncompletedTaskIds, ['reopen-1']);
+    expect(find.byKey(const Key('task-selection-header')), findsNothing);
+    expect(find.text('Undo'), findsOneWidget);
+  });
+
+  testWidgets('bulk partial errors leave only failed tasks selected', (
+    tester,
+  ) async {
+    final today = _todaySchedule();
+    await _pumpApp(
+      tester,
+      updateErrorTaskIds: {'failure-2'},
+      tasks: [
+        _task('success-1', 'Successful task', schedule: today),
+        _task('failure-2', 'Failed task', schedule: today),
+      ],
+    );
+    await _openTaskContextMenu(tester, 'Successful task');
+    await tester.tap(find.text('Select').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Failed task'));
+    await tester.tap(find.text('Priority'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Priority 1'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 selected'), findsOneWidget);
+    expect(find.text('1 task could not be updated'), findsOneWidget);
+    expect(_taskCheckboxValue(tester, 'Successful task'), isFalse);
+    expect(_taskCheckboxValue(tester, 'Failed task'), isTrue);
+  });
+
+  testWidgets('touch long press opens task actions and drag uses its handle', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pumpApp(tester);
+
+      expect(
+        find.byKey(const ValueKey('task-drag-handle-task-1')),
+        findsOneWidget,
+      );
+      await tester.longPress(find.text('Today task'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Select'), findsOneWidget);
+      expect(find.text('Schedule'), findsOneWidget);
+      await tester.tap(find.text('Select'));
+      await tester.pumpAndSettle();
+      expect(find.text('1 selected'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('task-drag-handle-task-1')),
+        findsNothing,
+      );
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('Escape and route changes close task selection', (tester) async {
+    late GoRouter router;
+    await _pumpApp(tester, onRouter: (value) => router = value);
+
+    await _openTaskContextMenu(tester, 'Today task');
+    await tester.tap(find.text('Select').last);
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pump();
+    expect(find.byKey(const Key('task-selection-header')), findsNothing);
+
+    await _openTaskContextMenu(tester, 'Today task');
+    await tester.tap(find.text('Select').last);
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    expect(_routerUri(router), '/today');
+    expect(find.byKey(const Key('task-selection-header')), findsNothing);
+
+    await _openTaskContextMenu(tester, 'Today task');
+    await tester.tap(find.text('Select').last);
+    await tester.pumpAndSettle();
+    router.go('/inbox');
+    await _pumpFrames(tester);
+    expect(find.byKey(const Key('task-selection-header')), findsNothing);
+  });
+
+  testWidgets('selection is available on every scoped task screen', (
+    tester,
+  ) async {
+    late GoRouter router;
+    final today = _todaySchedule();
+    await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      tasks: [
+        _task('today-scope', 'Today scoped', schedule: today),
+        _task('inbox-scope', 'Inbox scoped'),
+        _task('project-scope', 'Project scoped', projectId: 'project-1'),
+        _task(
+          'done-scope',
+          'Completed scoped',
+          status: 'completed',
+          schedule: today,
+          completedAt: DateTime.now().toUtc(),
+        ),
+        _task(
+          'upcoming-scope',
+          'Upcoming scoped',
+          schedule: TaskSchedule.allDay(
+            today.displayDate.add(const Duration(days: 1)),
+          ),
+        ),
+      ],
+    );
+
+    for (final target in [
+      ('/today', 'Today scoped'),
+      ('/inbox', 'Inbox scoped'),
+      ('/project/project-1', 'Project scoped'),
+      ('/browse/completed', 'Completed scoped'),
+      ('/upcoming', 'Upcoming scoped'),
+      ('/priority-matrix', 'Today scoped'),
+    ]) {
+      router.go(target.$1);
+      await _pumpFrames(tester);
+      expect(find.text(target.$2), findsOneWidget, reason: target.$1);
+      await _openTaskContextMenu(tester, target.$2);
+      expect(find.text('Select'), findsOneWidget, reason: target.$1);
+      await tester.tap(find.text('Select').last);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('task-selection-header')),
+        findsOneWidget,
+        reason: target.$1,
+      );
+      router.go('/settings');
+      await _pumpFrames(tester);
+    }
+
+    router.go('/search');
+    await _pumpFrames(tester);
+    await tester.enterText(find.byType(TextField).first, 'Today');
+    await _pumpFrames(tester);
+    await _openTaskContextMenu(tester, 'Today scoped');
+    await tester.tap(find.text('Select').last);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('task-selection-header')), findsOneWidget);
+  });
+
+  test('selection closes only when selected visible rows disappear', () async {
+    Future<void> noop(BuildContext _) async {}
+    final controller = TaskSelectionController(
+      showDue: noop,
+      showProject: noop,
+      showLabels: noop,
+      showPriority: noop,
+      showMore: noop,
+      duplicate: noop,
+      delete: noop,
+    );
+    addTearDown(controller.dispose);
+    final task = _task('selection-controller', 'Selection controller');
+
+    controller.updateVisible([task]);
+    controller.begin(task.id);
+    controller.toggle(task.id);
+    expect(controller.active, isTrue);
+    expect(controller.selectedCount, 0);
+
+    controller.toggle(task.id);
+    controller.updateVisible(const <TaskItem>[]);
+    expect(controller.active, isFalse);
+  });
+
+  test('due presets use current Saturday and strictly future Monday', () {
+    expect(taskWeekendPresetDate(DateTime(2026, 1, 2)), DateTime(2026, 1, 3));
+    expect(taskWeekendPresetDate(DateTime(2026, 1, 3)), DateTime(2026, 1, 3));
+    expect(taskNextWeekPresetDate(DateTime(2026, 1, 5)), DateTime(2026, 1, 12));
+  });
+
   testWidgets('task quick actions update priority', (tester) async {
     final harness = await _pumpApp(tester);
 
     await _openTaskContextMenu(tester, 'Today task');
+    await tester.tap(find.text('Priority').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Priority 1').last);
     await tester.pumpAndSettle();
 
@@ -809,8 +1207,8 @@ void main() {
     await tester.tap(find.text('Delete').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Delete recurring task?'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('delete-recurring-this-button')));
+    expect(find.text('Delete selected tasks?'), findsOneWidget);
+    await tester.tap(find.text('Delete this task'));
     await _pumpFrames(tester);
 
     expect(harness.taskRepository.recurringDeleteTaskIds, ['repeat-1']);
@@ -965,7 +1363,7 @@ void main() {
         expect(tester.getSize(gap).height, 12);
 
         final gesture = await tester.startGesture(
-          tester.getCenter(find.text('Child task')),
+          tester.getCenter(_taskDragSource('Child task')),
         );
         await tester.pump(const Duration(milliseconds: 600));
         await gesture.moveTo(tester.getCenter(gap));
@@ -3001,6 +3399,7 @@ Future<_AppHarness> _pumpApp(
   DateTime? focusNow,
   bool accountSignedIn = false,
   Object? taskMoveError,
+  Set<String> updateErrorTaskIds = const {},
   Completer<void>? startupCompleter,
   Size size = const Size(390, 844),
   Locale? locale,
@@ -3015,6 +3414,7 @@ Future<_AppHarness> _pumpApp(
   final taskRepository = _FakeTaskRepository(
     tasks ?? _testTasks(),
     moveError: taskMoveError,
+    updateErrorTaskIds: updateErrorTaskIds,
   );
   final focusRepository = _FakeFocusRepository(
     activeRun: activeRun,
@@ -3168,6 +3568,8 @@ Future<void> _openTaskContextMenu(WidgetTester tester, String taskTitle) async {
 }
 
 Future<void> _openTextContextMenu(WidgetTester tester, String text) async {
+  await tester.ensureVisible(find.text(text).first);
+  await tester.pump();
   await tester.tapAt(
     tester.getCenter(find.text(text).first),
     buttons: kSecondaryMouseButton,
@@ -3187,7 +3589,7 @@ Future<void> _dragTaskOnto(
   Duration holdDuration = const Duration(milliseconds: 600),
   PointerDeviceKind kind = PointerDeviceKind.touch,
 }) async {
-  final source = tester.getCenter(find.text(draggedTitle).first);
+  final source = tester.getCenter(_taskDragSource(draggedTitle));
   final target = tester.getCenter(find.text(targetTitle).first);
   final gesture = await tester.startGesture(source, kind: kind);
   await tester.pump(holdDuration);
@@ -3201,7 +3603,7 @@ Future<void> _dragTaskToRootDropZone(
   WidgetTester tester,
   String draggedTitle,
 ) async {
-  final source = tester.getCenter(find.text(draggedTitle).first);
+  final source = tester.getCenter(_taskDragSource(draggedTitle));
   final target = tester.getCenter(find.byKey(const Key('task-root-drop-zone')));
   final gesture = await tester.startGesture(source);
   await tester.pump(const Duration(milliseconds: 600));
@@ -3216,7 +3618,7 @@ Future<void> _dragTaskToRootGap(
   String draggedTitle, {
   int gapIndex = 0,
 }) async {
-  final source = tester.getCenter(find.text(draggedTitle).first);
+  final source = tester.getCenter(_taskDragSource(draggedTitle));
   final target = tester.getCenter(find.byKey(Key('task-root-gap-$gapIndex')));
   final gesture = await tester.startGesture(source);
   await tester.pump(const Duration(milliseconds: 600));
@@ -3231,7 +3633,7 @@ Future<void> _dragTaskToPriority(
   String draggedTitle,
   int priority,
 ) async {
-  final source = tester.getCenter(find.text(draggedTitle).first);
+  final source = tester.getCenter(_taskDragSource(draggedTitle));
   final target = tester.getCenter(
     find.byKey(Key('priority-matrix-quadrant-p$priority')),
   );
@@ -3241,6 +3643,30 @@ Future<void> _dragTaskToPriority(
   await tester.pump();
   await gesture.up();
   await tester.pumpAndSettle();
+}
+
+Finder _taskDragSource(String title) {
+  final row = find.ancestor(
+    of: find.text(title).first,
+    matching: find.byType(InkWell),
+  );
+  final handle = find.descendant(
+    of: row.first,
+    matching: find.byIcon(Icons.drag_indicator),
+  );
+  return handle.evaluate().isEmpty ? find.text(title).first : handle.first;
+}
+
+bool? _taskCheckboxValue(WidgetTester tester, String title) {
+  final row = find.ancestor(
+    of: find.text(title).first,
+    matching: find.byType(InkWell),
+  );
+  return tester
+      .widget<Checkbox>(
+        find.descendant(of: row.first, matching: find.byType(Checkbox)).first,
+      )
+      .value;
 }
 
 Future<void> _dragTimelineTaskToSlot(
@@ -3517,11 +3943,15 @@ const _summary = ProductivitySummary(
 );
 
 class _FakeTaskRepository implements TaskRepository {
-  _FakeTaskRepository(List<TaskItem> tasks, {this.moveError})
-    : _tasks = {for (final task in tasks) task.id: task};
+  _FakeTaskRepository(
+    List<TaskItem> tasks, {
+    this.moveError,
+    this.updateErrorTaskIds = const {},
+  }) : _tasks = {for (final task in tasks) task.id: task};
 
   final Map<String, TaskItem> _tasks;
   final Object? moveError;
+  final Set<String> updateErrorTaskIds;
   final completedTaskIds = <String>[];
   final uncompletedTaskIds = <String>[];
   final deletedTaskIds = <String>[];
@@ -3534,6 +3964,8 @@ class _FakeTaskRepository implements TaskRepository {
   final placedTaskIds = <String>[];
   final placedSchedules = <TaskSchedule>[];
   final placedProjectIds = <String>[];
+  final duplicatedTaskIds = <Set<String>>[];
+  final duplicateIncludeSubtasks = <bool>[];
 
   @override
   Stream<List<TaskItem>> watchTasks(TaskQuery query) {
@@ -3583,7 +4015,20 @@ class _FakeTaskRepository implements TaskRepository {
   }
 
   @override
+  Future<List<String>> duplicateTasks(
+    Set<String> taskIds, {
+    required bool includeSubtasks,
+  }) async {
+    duplicatedTaskIds.add(taskIds);
+    duplicateIncludeSubtasks.add(includeSubtasks);
+    return [for (final id in taskIds) 'copy-$id'];
+  }
+
+  @override
   Future<void> updateTask(String id, UpdateTaskPatch patch) async {
+    if (updateErrorTaskIds.contains(id)) {
+      throw StateError('update failed');
+    }
     updatePatches.add(patch);
     final task = _tasks[id];
     if (task == null) {

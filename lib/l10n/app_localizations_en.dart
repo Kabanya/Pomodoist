@@ -1994,4 +1994,99 @@ class AppLocalizationsEn extends AppLocalizations {
   String couldNotUpdateProject(Object error) {
     return 'Could not update project: $error';
   }
+
+  @override
+  String get commonDone => 'Done';
+
+  @override
+  String get taskSelect => 'Select';
+
+  @override
+  String taskSelectedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count selected',
+      one: '1 selected',
+      zero: '0 selected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get taskSelectAll => 'Select all';
+
+  @override
+  String get taskDeselectAll => 'Deselect all';
+
+  @override
+  String get taskDue => 'Due';
+
+  @override
+  String get taskProject => 'Project';
+
+  @override
+  String get taskLabels => 'Labels';
+
+  @override
+  String get taskPriority => 'Priority';
+
+  @override
+  String get taskMore => 'More';
+
+  @override
+  String get taskSchedule => 'Schedule';
+
+  @override
+  String get taskMove => 'Move';
+
+  @override
+  String get taskDuplicate => 'Duplicate';
+
+  @override
+  String get taskDuplicateTitle => 'Duplicate tasks';
+
+  @override
+  String get taskDuplicateSelectedOnly => 'Selected only';
+
+  @override
+  String get taskDuplicateWithSubtasks => 'With subtasks';
+
+  @override
+  String get taskWeekend => 'This weekend';
+
+  @override
+  String get taskNextWeek => 'Next week';
+
+  @override
+  String get taskEnterDue => 'Enter due date or time';
+
+  @override
+  String get taskInvalidDue => 'Enter a valid date or time';
+
+  @override
+  String get taskClearDue => 'Clear due';
+
+  @override
+  String get taskDeleteSelectedTitle => 'Delete selected tasks?';
+
+  @override
+  String get taskDeleteSelectedMessage => 'This action cannot be undone.';
+
+  @override
+  String get taskCompleteSelected => 'Complete selected';
+
+  @override
+  String get taskReopenSelected => 'Reopen selected';
+
+  @override
+  String taskActionFailedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks could not be updated',
+      one: '1 task could not be updated',
+    );
+    return '$_temp0';
+  }
 }

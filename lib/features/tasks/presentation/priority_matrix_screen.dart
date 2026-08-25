@@ -9,6 +9,7 @@ import '../../../app/theme/app_theme.dart';
 import '../domain/task_models.dart';
 import 'widgets/quick_add_bar.dart';
 import 'widgets/task_list_item.dart';
+import 'widgets/task_selection_region.dart';
 
 class PriorityMatrixScreen extends ConsumerWidget {
   const PriorityMatrixScreen({super.key});
@@ -17,44 +18,52 @@ class PriorityMatrixScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final tasks = ref.watch(tasksByQueryProvider(const TaskQuery.all()));
+    final visibleTasks = (tasks.value ?? const <TaskItem>[])
+        .where((task) => !task.isCompleted)
+        .toList();
     return SafeArea(
       bottom: false,
-      child: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-            sliver: SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.navPriorityMatrix,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.priorityMatrixSubtitle,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      child: TaskSelectionRegion(
+        visibleTasks: visibleTasks,
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.navPriorityMatrix,
+                      style: Theme.of(context).textTheme.headlineMedium,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.priorityMatrixSubtitle,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          tasks.when(
-            data: (items) => SliverPadding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
-              sliver: SliverToBoxAdapter(child: _PriorityMatrix(items: items)),
+            tasks.when(
+              data: (items) => SliverPadding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+                sliver: SliverToBoxAdapter(
+                  child: _PriorityMatrix(items: items),
+                ),
+              ),
+              loading: () => const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (error, stackTrace) => SliverFillRemaining(
+                child: Center(child: Text(l10n.failedToLoadTasks(error))),
+              ),
             ),
-            loading: () => const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (error, stackTrace) => SliverFillRemaining(
-              child: Center(child: Text(l10n.failedToLoadTasks(error))),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

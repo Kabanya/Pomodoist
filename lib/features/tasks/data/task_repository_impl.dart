@@ -120,6 +120,121 @@ class DriftTaskRepository implements TaskRepository {
   }
 
   @override
+  Future<List<String>> duplicateTasks(
+    Set<String> taskIds, {
+    required bool includeSubtasks,
+  }) async {
+    if (taskIds.isEmpty) {
+      return const [];
+    }
+    final duplicateIds = <String>[];
+    await _db.transaction(() async {
+      final rows = await (_db.select(
+        _db.tasks,
+      )..where((task) => task.isDeleted.equals(false))).get();
+      final rowById = _rowById(rows);
+      final selectedIds = taskIds.where(rowById.containsKey).toSet();
+      if (includeSubtasks) {
+        final childrenByParent = _childrenByParent(rows);
+        for (final id in taskIds) {
+          final root = rowById[id];
+          if (root != null) {
+            selectedIds.addAll(
+              _subtreeRowsFrom(root, childrenByParent).map((row) => row.id),
+            );
+          }
+        }
+      }
+      final sources =
+          [
+            for (final row in rows)
+              if (selectedIds.contains(row.id)) row,
+          ]..sort((left, right) {
+            final order = left.orderKey.compareTo(right.orderKey);
+            return order == 0 ? left.id.compareTo(right.id) : order;
+          });
+      final idBySource = {for (final row in sources) row.id: _uuid.v4()};
+      final seriesIdBySource = <String, String>{};
+      final now = DateTime.now().toUtc();
+
+      for (var index = 0; index < sources.length; index++) {
+        final source = sources[index];
+        final duplicateId = idBySource[source.id]!;
+        final schedule = _duplicateSchedule(
+          TaskSchedule.fromJsonString(source.dueJson),
+          seriesIdBySource,
+        );
+        final parentId = idBySource[source.parentId] ?? source.parentId;
+        final orderKey = (now.microsecondsSinceEpoch + index)
+            .toString()
+            .padLeft(20, '0');
+        await _db
+            .into(_db.tasks)
+            .insert(
+              TasksCompanion.insert(
+                id: duplicateId,
+                userId: source.userId,
+                content: source.content,
+                description: Value(source.description),
+                projectId: source.projectId,
+                sectionId: Value(source.sectionId),
+                parentId: Value(parentId),
+                priority: Value(source.priority),
+                dueJson: Value(_scheduleJson(schedule)),
+                deadlineJson: Value(source.deadlineJson),
+                durationSeconds: Value(source.durationSeconds),
+                estimatedFocusIntervals: Value(source.estimatedFocusIntervals),
+                orderKey: orderKey,
+                dayOrder: Value(source.dayOrder),
+                isCollapsed: Value(source.isCollapsed),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+        await _kanbanTransitions.copyRecurringStatusInTransaction(
+          sourceTaskId: source.id,
+          newTaskId: duplicateId,
+          timestamp: now,
+          precedingCommands: [
+            SyncQueueCommand(
+              type: 'task.create',
+              clientId: duplicateId,
+              payload: {
+                'id': duplicateId,
+                'content': source.content,
+                if (source.description != null)
+                  'description': source.description,
+                'projectId': source.projectId,
+                'priority': source.priority,
+                'due': schedule?.toJsonString(),
+                'estimatedFocusIntervals': source.estimatedFocusIntervals,
+              },
+            ),
+          ],
+        );
+        await _syncQueue.enqueue(
+          type: 'task.move',
+          clientId: duplicateId,
+          payload: {
+            'id': duplicateId,
+            'projectId': source.projectId,
+            'sectionId': source.sectionId,
+            'parentId': parentId,
+            'orderKey': orderKey,
+          },
+        );
+        duplicateIds.add(duplicateId);
+      }
+      await _copyLabels(
+        sourceTaskIds: idBySource.keys,
+        idBySource: idBySource,
+        now: now,
+      );
+    });
+    return duplicateIds;
+  }
+
+  @override
   Future<void> updateTask(String id, UpdateTaskPatch patch) async {
     final now = DateTime.now().toUtc();
     final schedule =
@@ -806,6 +921,31 @@ class DriftTaskRepository implements TaskRepository {
         payload: {'taskId': nextTaskId, 'labelId': row.labelId},
       );
     }
+  }
+
+  TaskSchedule? _duplicateSchedule(
+    TaskSchedule? schedule,
+    Map<String, String> seriesIdBySource,
+  ) {
+    if (schedule == null) {
+      return null;
+    }
+    final sourceSeriesId = schedule.recurrenceSeriesKey;
+    if (sourceSeriesId == null) {
+      return schedule;
+    }
+    final seriesId = seriesIdBySource.putIfAbsent(sourceSeriesId, _uuid.v4);
+    final recurrence = schedule.recurrence;
+    if (recurrence == null) {
+      return schedule.withRecurrenceSeriesId(seriesId);
+    }
+    return schedule.withRecurrence(
+      TaskRecurrence(
+        interval: recurrence.interval,
+        unit: recurrence.unit,
+        seriesId: seriesId,
+      ),
+    );
   }
 
   TaskSchedule? _shiftSchedule(TaskSchedule? schedule, Duration delta) {

@@ -17,6 +17,7 @@ import '../../domain/task_focus_estimate.dart';
 import '../../domain/task_models.dart';
 import '../task_completion_feedback.dart';
 import 'project_color_picker.dart';
+import 'task_selection_region.dart';
 
 enum TaskListItemPresentation { standard, agenda }
 
@@ -160,6 +161,7 @@ class TaskListItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final selection = TaskSelectionScope.maybeOf(context);
     final taskRepository = ref.watch(taskRepositoryProvider);
     final focusRepository = ref.watch(focusRepositoryProvider);
     final presets = ref.watch(focusPresetsProvider).value ?? const [];
@@ -179,7 +181,7 @@ class TaskListItem extends ConsumerWidget {
       return IconButton(
         key: key,
         tooltip: l10n.startFocus,
-        onPressed: task.isCompleted
+        onPressed: task.isCompleted || (selection?.active ?? false)
             ? null
             : () async {
                 final router = GoRouter.of(context);
@@ -255,87 +257,131 @@ class TaskListItem extends ConsumerWidget {
         TaskListItemPresentation.agenda => overflowAction(),
       };
       return Material(
-        color: accepting ? colors.accentTint : Colors.transparent,
-        child: InkWell(
-          key: ValueKey('task-list-item-row-${task.id}'),
-          hoverColor: colors.surfaceTint,
-          onTap: () => context.push('/task/${task.id}'),
-          onSecondaryTapDown: (details) => unawaited(
-            _showQuickActions(context, ref, details.globalPosition),
-          ),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              depth * 18,
-              isAgenda ? 4 : 10,
-              4,
-              isAgenda ? 4 : 10,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 34,
-                  child: Checkbox(
-                    value: task.isCompleted,
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: const CircleBorder(),
-                    side: BorderSide(
-                      color: task.isCompleted
-                          ? colors.accent
-                          : _priorityColor(task.priority, colorScheme, colors),
-                      width: 1.4,
-                    ),
-                    fillColor: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) {
-                        return colors.accentFill;
-                      }
-                      return Colors.transparent;
-                    }),
-                    checkColor: Colors.white,
-                    onChanged: (_) async {
-                      if (task.isCompleted) {
-                        await taskRepository.uncompleteTask(task.id);
-                        if (!context.mounted) {
+        color: accepting || (selection?.isSelected(task.id) ?? false)
+            ? colors.accentTint
+            : Colors.transparent,
+        child: Semantics(
+          selected: selection?.active ?? false
+              ? selection!.isSelected(task.id)
+              : null,
+          child: InkWell(
+            key: ValueKey('task-list-item-row-${task.id}'),
+            hoverColor: colors.surfaceTint,
+            onTap: () {
+              if (selection?.active ?? false) {
+                selection!.toggle(task.id);
+              } else {
+                context.push('/task/${task.id}');
+              }
+            },
+            onSecondaryTapDown: (details) {
+              if (!(selection?.active ?? false)) {
+                unawaited(
+                  _showQuickActions(context, ref, details.globalPosition),
+                );
+              }
+            },
+            onLongPress: !_usesTouchTaskInteraction
+                ? null
+                : () {
+                    if (selection?.active ?? false) {
+                      selection!.toggle(task.id);
+                    } else {
+                      unawaited(_showTouchActions(context, ref));
+                    }
+                  },
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                depth * 18,
+                isAgenda ? 4 : 10,
+                4,
+                isAgenda ? 4 : 10,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 34,
+                    child: Checkbox(
+                      value: selection?.active ?? false
+                          ? selection!.isSelected(task.id)
+                          : task.isCompleted,
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: const CircleBorder(),
+                      side: BorderSide(
+                        color: task.isCompleted
+                            ? colors.accent
+                            : _priorityColor(
+                                task.priority,
+                                colorScheme,
+                                colors,
+                              ),
+                        width: 1.4,
+                      ),
+                      fillColor: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return colors.accentFill;
+                        }
+                        return Colors.transparent;
+                      }),
+                      checkColor: Colors.white,
+                      onChanged: (_) async {
+                        if (selection?.active ?? false) {
+                          selection!.toggle(task.id);
                           return;
                         }
-                        showActionFeedback(
-                          context,
-                          message: l10n.taskReopened,
-                          icon: Icons.undo,
-                        );
-                        return;
-                      }
+                        if (task.isCompleted) {
+                          await taskRepository.uncompleteTask(task.id);
+                          if (!context.mounted) {
+                            return;
+                          }
+                          showActionFeedback(
+                            context,
+                            message: l10n.taskReopened,
+                            icon: Icons.undo,
+                          );
+                          return;
+                        }
 
-                      await completeTaskWithUndoFeedback(context, ref, task.id);
-                    },
+                        await completeTaskWithUndoFeedback(
+                          context,
+                          ref,
+                          task.id,
+                        );
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: _TaskTextDragSource(
-                    task: task,
-                    child: isAgenda
-                        ? _AgendaTaskContent(
-                            task: task,
-                            project: project,
-                            focusEstimate: focusEstimate,
-                            subtaskProgress: subtaskProgress,
-                            allowMetadataWrap: !agendaDesktop,
-                          )
-                        : _TaskContent(
-                            task: task,
-                            description: description,
-                            hasDescription: hasDescription,
-                            hasMeta: hasMeta,
-                            focusEstimate: focusEstimate,
-                            subtaskProgress: subtaskProgress,
-                          ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: _TaskTextDragSource(
+                      task: task,
+                      enabled: !(selection?.active ?? false),
+                      child: isAgenda
+                          ? _AgendaTaskContent(
+                              task: task,
+                              project: project,
+                              focusEstimate: focusEstimate,
+                              subtaskProgress: subtaskProgress,
+                              allowMetadataWrap: !agendaDesktop,
+                            )
+                          : _TaskContent(
+                              task: task,
+                              description: description,
+                              hasDescription: hasDescription,
+                              hasMeta: hasMeta,
+                              focusEstimate: focusEstimate,
+                              subtaskProgress: subtaskProgress,
+                            ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                trailingAction,
-              ],
+                  if (_usesTouchTaskInteraction &&
+                      !(selection?.active ?? false))
+                    _TaskDragHandle(task: task),
+                  const SizedBox(width: 8),
+                  trailingAction,
+                ],
+              ),
             ),
           ),
         ),
@@ -417,77 +463,182 @@ class TaskListItem extends ConsumerWidget {
   ) async {
     final l10n = context.l10n;
     final colors = context.appColors;
+    final selection = TaskSelectionScope.maybeOf(context);
     final action = await showMenu<_TaskQuickAction>(
       context: context,
       position: _menuPosition(context, position),
       items: [
-        PopupMenuItem(
-          value: _TaskQuickAction.startFocus,
-          enabled: !task.isCompleted,
-          child: _TaskMenuRow(icon: Icons.play_arrow, label: l10n.startFocus),
-        ),
-        PopupMenuItem(
-          value: _TaskQuickAction.toggleComplete,
-          child: _TaskMenuRow(
-            icon: task.isCompleted ? Icons.undo : Icons.check,
-            label: task.isCompleted ? l10n.markOpen : l10n.markComplete,
-          ),
-        ),
-        if (task.parentId != null)
+        if (selection != null) ...[
           PopupMenuItem(
-            value: _TaskQuickAction.makeParent,
+            value: _TaskQuickAction.select,
             child: _TaskMenuRow(
-              icon: Icons.format_indent_decrease,
-              label: l10n.makeParentTask,
+              icon: Icons.checklist_outlined,
+              label: l10n.taskSelect,
             ),
           ),
-        const PopupMenuDivider(),
-        PopupMenuItem(
-          value: _TaskQuickAction.today,
-          child: _TaskMenuRow(icon: Icons.today_outlined, label: l10n.today),
-        ),
-        PopupMenuItem(
-          value: _TaskQuickAction.tomorrow,
-          child: _TaskMenuRow(icon: Icons.event_outlined, label: l10n.tomorrow),
-        ),
-        if (task.schedule != null)
           PopupMenuItem(
-            value: _TaskQuickAction.clearDate,
+            value: _TaskQuickAction.schedule,
             child: _TaskMenuRow(
-              icon: Icons.event_busy_outlined,
-              label: l10n.clearDate,
+              icon: Icons.event_outlined,
+              label: l10n.taskSchedule,
             ),
           ),
-        const PopupMenuDivider(),
-        for (final priority in [1, 2, 3, 4])
           PopupMenuItem(
-            value: _priorityAction(priority),
+            value: _TaskQuickAction.move,
+            child: _TaskMenuRow(
+              icon: Icons.drive_file_move_outline,
+              label: l10n.taskMove,
+            ),
+          ),
+          PopupMenuItem(
+            value: _TaskQuickAction.choosePriority,
             child: _TaskMenuRow(
               icon: Icons.flag_outlined,
-              label: l10n.priority(priority),
-              selected: task.priority == priority,
-              color: _priorityColor(
-                priority,
-                Theme.of(context).colorScheme,
-                colors,
-              ),
+              label: l10n.taskPriority,
             ),
           ),
-        const PopupMenuDivider(),
-        PopupMenuItem(
-          value: _TaskQuickAction.delete,
-          child: _TaskMenuRow(
-            icon: Icons.delete_outline,
-            label: l10n.commonDelete,
-            color: colors.accent,
+          PopupMenuItem(
+            value: _TaskQuickAction.duplicate,
+            child: _TaskMenuRow(
+              icon: Icons.copy_outlined,
+              label: l10n.taskDuplicate,
+            ),
           ),
-        ),
+          PopupMenuItem(
+            value: _TaskQuickAction.deleteSelection,
+            child: _TaskMenuRow(
+              icon: Icons.delete_outline,
+              label: l10n.commonDelete,
+              color: colors.accent,
+            ),
+          ),
+        ] else ...[
+          PopupMenuItem(
+            value: _TaskQuickAction.startFocus,
+            enabled: !task.isCompleted,
+            child: _TaskMenuRow(icon: Icons.play_arrow, label: l10n.startFocus),
+          ),
+          PopupMenuItem(
+            value: _TaskQuickAction.toggleComplete,
+            child: _TaskMenuRow(
+              icon: task.isCompleted ? Icons.undo : Icons.check,
+              label: task.isCompleted ? l10n.markOpen : l10n.markComplete,
+            ),
+          ),
+          if (task.parentId != null)
+            PopupMenuItem(
+              value: _TaskQuickAction.makeParent,
+              child: _TaskMenuRow(
+                icon: Icons.format_indent_decrease,
+                label: l10n.makeParentTask,
+              ),
+            ),
+          const PopupMenuDivider(),
+          PopupMenuItem(
+            value: _TaskQuickAction.today,
+            child: _TaskMenuRow(icon: Icons.today_outlined, label: l10n.today),
+          ),
+          PopupMenuItem(
+            value: _TaskQuickAction.tomorrow,
+            child: _TaskMenuRow(
+              icon: Icons.event_outlined,
+              label: l10n.tomorrow,
+            ),
+          ),
+          if (task.schedule != null)
+            PopupMenuItem(
+              value: _TaskQuickAction.clearDate,
+              child: _TaskMenuRow(
+                icon: Icons.event_busy_outlined,
+                label: l10n.clearDate,
+              ),
+            ),
+          const PopupMenuDivider(),
+          for (final priority in [1, 2, 3, 4])
+            PopupMenuItem(
+              value: _priorityAction(priority),
+              child: _TaskMenuRow(
+                icon: Icons.flag_outlined,
+                label: l10n.priority(priority),
+                selected: task.priority == priority,
+                color: _priorityColor(
+                  priority,
+                  Theme.of(context).colorScheme,
+                  colors,
+                ),
+              ),
+            ),
+          const PopupMenuDivider(),
+          PopupMenuItem(
+            value: _TaskQuickAction.delete,
+            child: _TaskMenuRow(
+              icon: Icons.delete_outline,
+              label: l10n.commonDelete,
+              color: colors.accent,
+            ),
+          ),
+        ],
       ],
     );
     if (action == null || !context.mounted) {
       return;
     }
     await _runQuickAction(context, ref, action);
+  }
+
+  Future<void> _showTouchActions(BuildContext context, WidgetRef ref) async {
+    final selection = TaskSelectionScope.maybeOf(context);
+    if (selection == null) return;
+    final l10n = context.l10n;
+    final action = await showAdaptiveTaskPanel<_TaskQuickAction>(
+      context,
+      builder: (panelContext) => ListView(
+        shrinkWrap: true,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        children: [
+          for (final item in [
+            (
+              _TaskQuickAction.select,
+              Icons.checklist_outlined,
+              l10n.taskSelect,
+            ),
+            (
+              _TaskQuickAction.schedule,
+              Icons.event_outlined,
+              l10n.taskSchedule,
+            ),
+            (
+              _TaskQuickAction.move,
+              Icons.drive_file_move_outline,
+              l10n.taskMove,
+            ),
+            (
+              _TaskQuickAction.choosePriority,
+              Icons.flag_outlined,
+              l10n.taskPriority,
+            ),
+            (
+              _TaskQuickAction.duplicate,
+              Icons.copy_outlined,
+              l10n.taskDuplicate,
+            ),
+            (
+              _TaskQuickAction.deleteSelection,
+              Icons.delete_outline,
+              l10n.commonDelete,
+            ),
+          ])
+            ListTile(
+              leading: Icon(item.$2),
+              title: Text(item.$3),
+              onTap: () => Navigator.of(panelContext).pop(item.$1),
+            ),
+        ],
+      ),
+    );
+    if (action != null && context.mounted) {
+      await _runQuickAction(context, ref, action);
+    }
   }
 
   RelativeRect _menuPosition(BuildContext context, Offset globalPosition) {
@@ -507,6 +658,29 @@ class TaskListItem extends ConsumerWidget {
   ) {
     final taskRepository = ref.read(taskRepositoryProvider);
     switch (action) {
+      case _TaskQuickAction.select:
+        TaskSelectionScope.maybeOf(context)?.begin(task.id);
+        return Future.value();
+      case _TaskQuickAction.schedule:
+        final selection = TaskSelectionScope.maybeOf(context);
+        selection?.begin(task.id);
+        return selection?.showDue(context) ?? Future.value();
+      case _TaskQuickAction.move:
+        final selection = TaskSelectionScope.maybeOf(context);
+        selection?.begin(task.id);
+        return selection?.showProject(context) ?? Future.value();
+      case _TaskQuickAction.choosePriority:
+        final selection = TaskSelectionScope.maybeOf(context);
+        selection?.begin(task.id);
+        return selection?.showPriority(context) ?? Future.value();
+      case _TaskQuickAction.duplicate:
+        final selection = TaskSelectionScope.maybeOf(context);
+        selection?.begin(task.id);
+        return selection?.duplicate(context) ?? Future.value();
+      case _TaskQuickAction.deleteSelection:
+        final selection = TaskSelectionScope.maybeOf(context);
+        selection?.begin(task.id);
+        return selection?.delete(context) ?? Future.value();
       case _TaskQuickAction.startFocus:
         if (task.isCompleted) {
           return Future.value();
@@ -1033,6 +1207,12 @@ class _FixedMetaText extends StatelessWidget {
 }
 
 enum _TaskQuickAction {
+  select,
+  schedule,
+  move,
+  choosePriority,
+  duplicate,
+  deleteSelection,
   startFocus,
   toggleComplete,
   makeParent,
@@ -1047,13 +1227,19 @@ enum _TaskQuickAction {
 }
 
 class _TaskTextDragSource extends StatelessWidget {
-  const _TaskTextDragSource({required this.task, required this.child});
+  const _TaskTextDragSource({
+    required this.task,
+    required this.child,
+    this.enabled = true,
+  });
 
   final TaskItem task;
   final Widget child;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
+    if (!enabled) return child;
     final childWhenDragging = Opacity(opacity: 0.35, child: child);
     final feedback = _TaskDragFeedback(task: task);
     if (_usesImmediateTaskDrag(defaultTargetPlatform)) {
@@ -1064,14 +1250,39 @@ class _TaskTextDragSource extends StatelessWidget {
         child: child,
       );
     }
+    return child;
+  }
+}
+
+class _TaskDragHandle extends StatelessWidget {
+  const _TaskDragHandle({required this.task});
+
+  final TaskItem task;
+
+  @override
+  Widget build(BuildContext context) {
     return LongPressDraggable<String>(
       data: task.id,
-      feedback: feedback,
-      childWhenDragging: childWhenDragging,
-      child: child,
+      feedback: _TaskDragFeedback(task: task),
+      childWhenDragging: const SizedBox(width: 28),
+      child: Semantics(
+        button: true,
+        label: context.l10n.taskMove,
+        child: SizedBox(
+          key: ValueKey('task-drag-handle-${task.id}'),
+          width: 28,
+          height: 44,
+          child: const Icon(Icons.drag_indicator, size: 18),
+        ),
+      ),
     );
   }
 }
+
+bool get _usesTouchTaskInteraction =>
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS);
 
 bool _usesImmediateTaskDrag(TargetPlatform platform) {
   return switch (platform) {

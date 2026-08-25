@@ -2003,4 +2003,86 @@ class AppLocalizationsEs extends AppLocalizations {
   String couldNotUpdateProject(Object error) {
     return 'No se pudo actualizar el proyecto: $error';
   }
+
+  @override
+  String get commonDone => 'Listo';
+
+  @override
+  String get taskSelect => 'Seleccionar';
+
+  @override
+  String taskSelectedCount(int count) {
+    return '$count seleccionadas';
+  }
+
+  @override
+  String get taskSelectAll => 'Seleccionar todo';
+
+  @override
+  String get taskDeselectAll => 'Deseleccionar todo';
+
+  @override
+  String get taskDue => 'Fecha';
+
+  @override
+  String get taskProject => 'Proyecto';
+
+  @override
+  String get taskLabels => 'Etiquetas';
+
+  @override
+  String get taskPriority => 'Prioridad';
+
+  @override
+  String get taskMore => 'Más';
+
+  @override
+  String get taskSchedule => 'Programar';
+
+  @override
+  String get taskMove => 'Mover';
+
+  @override
+  String get taskDuplicate => 'Duplicar';
+
+  @override
+  String get taskDuplicateTitle => 'Duplicar tareas';
+
+  @override
+  String get taskDuplicateSelectedOnly => 'Solo seleccionadas';
+
+  @override
+  String get taskDuplicateWithSubtasks => 'Con subtareas';
+
+  @override
+  String get taskWeekend => 'Este fin de semana';
+
+  @override
+  String get taskNextWeek => 'La próxima semana';
+
+  @override
+  String get taskEnterDue => 'Introduce fecha u hora';
+
+  @override
+  String get taskInvalidDue => 'Introduce una fecha u hora válida';
+
+  @override
+  String get taskClearDue => 'Quitar fecha';
+
+  @override
+  String get taskDeleteSelectedTitle => '¿Eliminar las tareas seleccionadas?';
+
+  @override
+  String get taskDeleteSelectedMessage => 'Esta acción no se puede deshacer.';
+
+  @override
+  String get taskCompleteSelected => 'Completar seleccionadas';
+
+  @override
+  String get taskReopenSelected => 'Reabrir seleccionadas';
+
+  @override
+  String taskActionFailedCount(int count) {
+    return 'No se pudieron actualizar $count tareas';
+  }
 }

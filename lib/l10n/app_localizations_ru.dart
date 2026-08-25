@@ -2011,4 +2011,86 @@ class AppLocalizationsRu extends AppLocalizations {
   String couldNotUpdateProject(Object error) {
     return 'Не удалось обновить проект: $error';
   }
+
+  @override
+  String get commonDone => 'Готово';
+
+  @override
+  String get taskSelect => 'Выбрать';
+
+  @override
+  String taskSelectedCount(int count) {
+    return 'Выбрано: $count';
+  }
+
+  @override
+  String get taskSelectAll => 'Выбрать все';
+
+  @override
+  String get taskDeselectAll => 'Снять выделение';
+
+  @override
+  String get taskDue => 'Срок';
+
+  @override
+  String get taskProject => 'Проект';
+
+  @override
+  String get taskLabels => 'Метки';
+
+  @override
+  String get taskPriority => 'Приоритет';
+
+  @override
+  String get taskMore => 'Ещё';
+
+  @override
+  String get taskSchedule => 'Запланировать';
+
+  @override
+  String get taskMove => 'Перенести';
+
+  @override
+  String get taskDuplicate => 'Дублировать';
+
+  @override
+  String get taskDuplicateTitle => 'Дублировать задачи';
+
+  @override
+  String get taskDuplicateSelectedOnly => 'Только выбранные';
+
+  @override
+  String get taskDuplicateWithSubtasks => 'С подзадачами';
+
+  @override
+  String get taskWeekend => 'На выходных';
+
+  @override
+  String get taskNextWeek => 'На следующей неделе';
+
+  @override
+  String get taskEnterDue => 'Введите срок или время';
+
+  @override
+  String get taskInvalidDue => 'Введите корректную дату или время';
+
+  @override
+  String get taskClearDue => 'Очистить срок';
+
+  @override
+  String get taskDeleteSelectedTitle => 'Удалить выбранные задачи?';
+
+  @override
+  String get taskDeleteSelectedMessage => 'Это действие нельзя отменить.';
+
+  @override
+  String get taskCompleteSelected => 'Выполнить выбранные';
+
+  @override
+  String get taskReopenSelected => 'Вернуть в открытые';
+
+  @override
+  String taskActionFailedCount(int count) {
+    return 'Не удалось обновить задач: $count';
+  }
 }

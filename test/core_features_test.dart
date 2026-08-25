@@ -1194,6 +1194,106 @@ void main() {
       },
     );
 
+    test('duplicates a selected branch once with fresh open state', () async {
+      final schedule = TaskSchedule.allDay(
+        DateTime(2026, 8, 25),
+        recurrence: const TaskRecurrence(
+          interval: 1,
+          unit: TaskRecurrenceUnit.week,
+          seriesId: 'source-series',
+        ),
+      );
+      final rootId = await taskRepository.createTask(
+        CreateTaskInput(
+          content: 'Duplicate root',
+          description: 'Copied description',
+          sectionId: 'section-1',
+          priority: 1,
+          schedule: schedule,
+          deadline: DateTime(2026, 8, 30),
+          durationSeconds: 3600,
+          estimatedFocusIntervals: 3,
+          labelNames: const ['copied'],
+          kanbanStatusId: kanbanStatusTodoId,
+        ),
+      );
+      final childId = await taskRepository.createTask(
+        CreateTaskInput(content: 'Duplicate child', parentId: rootId),
+      );
+      await taskRepository.completeTask(rootId);
+
+      final duplicateIds = await taskRepository.duplicateTasks({
+        rootId,
+        childId,
+      }, includeSubtasks: true);
+
+      expect(duplicateIds, hasLength(2));
+      final copies = [
+        for (final id in duplicateIds)
+          (await taskRepository.watchTask(id).first)!,
+      ];
+      final rootCopy = copies.singleWhere(
+        (task) => task.content == 'Duplicate root',
+      );
+      final childCopy = copies.singleWhere(
+        (task) => task.content == 'Duplicate child',
+      );
+      expect(rootCopy.description, 'Copied description');
+      expect(rootCopy.priority, 1);
+      expect(rootCopy.sectionId, 'section-1');
+      expect(rootCopy.deadlineJson, isNotNull);
+      expect(rootCopy.durationSeconds, 3600);
+      expect(rootCopy.estimatedFocusIntervals, 3);
+      expect(rootCopy.isCompleted, isFalse);
+      expect(rootCopy.completedFocusIntervals, 0);
+      expect(rootCopy.totalFocusSeconds, 0);
+      expect(rootCopy.schedule!.recurrence!.seriesId, isNot('source-series'));
+      expect(childCopy.parentId, rootCopy.id);
+      expect(rootCopy.orderKey.compareTo(childCopy.orderKey), lessThan(0));
+
+      final copiedRelations = await (db.select(
+        db.taskLabels,
+      )..where((row) => row.taskId.equals(rootCopy.id))).get();
+      expect(
+        copiedRelations.where((row) => row.kind == labelKindUser),
+        hasLength(1),
+      );
+      expect(
+        copiedRelations
+            .singleWhere((row) => row.kind == labelKindKanbanStatus)
+            .labelId,
+        kanbanStatusTodoId,
+      );
+    });
+
+    test(
+      'duplicates only explicitly selected tasks without descendants',
+      () async {
+        final rootId = await taskRepository.createTask(
+          const CreateTaskInput(content: 'Selected root'),
+        );
+        await taskRepository.createTask(
+          CreateTaskInput(content: 'Unselected child', parentId: rootId),
+        );
+
+        final duplicateIds = await taskRepository.duplicateTasks({
+          rootId,
+        }, includeSubtasks: false);
+
+        expect(duplicateIds, hasLength(1));
+        final copy = await taskRepository.watchTask(duplicateIds.single).first;
+        expect(copy!.content, 'Selected root');
+        expect(copy.parentId, isNull);
+        final allTasks = await taskRepository
+            .watchTasks(const TaskQuery.all())
+            .first;
+        expect(
+          allTasks.where((task) => task.content == 'Unselected child'),
+          hasLength(1),
+        );
+      },
+    );
+
     test('projects assign update and sync palette colors', () async {
       final automaticId = await projectRepository.createProject('Automatic');
       final explicitId = await projectRepository.createProject(

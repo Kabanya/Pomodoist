@@ -727,6 +727,10 @@ abstract interface class TaskRepository {
   Stream<List<TaskItem>> watchTasks(TaskQuery query);
   Stream<TaskItem?> watchTask(String id);
   Future<String> createTask(CreateTaskInput input);
+  Future<List<String>> duplicateTasks(
+    Set<String> taskIds, {
+    required bool includeSubtasks,
+  });
   Future<void> updateTask(String id, UpdateTaskPatch patch);
   Future<void> materializeDueRecurringTasks({DateTime? now});
   Future<void> moveTask(

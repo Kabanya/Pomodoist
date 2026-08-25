@@ -3489,6 +3489,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not update project: {error}'**
   String couldNotUpdateProject(Object error);
+
+  /// No description provided for @commonDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get commonDone;
+
+  /// No description provided for @taskSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get taskSelect;
+
+  /// No description provided for @taskSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 selected} =1{1 selected} other{{count} selected}}'**
+  String taskSelectedCount(int count);
+
+  /// No description provided for @taskSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get taskSelectAll;
+
+  /// No description provided for @taskDeselectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect all'**
+  String get taskDeselectAll;
+
+  /// No description provided for @taskDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Due'**
+  String get taskDue;
+
+  /// No description provided for @taskProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Project'**
+  String get taskProject;
+
+  /// No description provided for @taskLabels.
+  ///
+  /// In en, this message translates to:
+  /// **'Labels'**
+  String get taskLabels;
+
+  /// No description provided for @taskPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get taskPriority;
+
+  /// No description provided for @taskMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get taskMore;
+
+  /// No description provided for @taskSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get taskSchedule;
+
+  /// No description provided for @taskMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get taskMove;
+
+  /// No description provided for @taskDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get taskDuplicate;
+
+  /// No description provided for @taskDuplicateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate tasks'**
+  String get taskDuplicateTitle;
+
+  /// No description provided for @taskDuplicateSelectedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected only'**
+  String get taskDuplicateSelectedOnly;
+
+  /// No description provided for @taskDuplicateWithSubtasks.
+  ///
+  /// In en, this message translates to:
+  /// **'With subtasks'**
+  String get taskDuplicateWithSubtasks;
+
+  /// No description provided for @taskWeekend.
+  ///
+  /// In en, this message translates to:
+  /// **'This weekend'**
+  String get taskWeekend;
+
+  /// No description provided for @taskNextWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Next week'**
+  String get taskNextWeek;
+
+  /// No description provided for @taskEnterDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter due date or time'**
+  String get taskEnterDue;
+
+  /// No description provided for @taskInvalidDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid date or time'**
+  String get taskInvalidDue;
+
+  /// No description provided for @taskClearDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear due'**
+  String get taskClearDue;
+
+  /// No description provided for @taskDeleteSelectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete selected tasks?'**
+  String get taskDeleteSelectedTitle;
+
+  /// No description provided for @taskDeleteSelectedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone.'**
+  String get taskDeleteSelectedMessage;
+
+  /// No description provided for @taskCompleteSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete selected'**
+  String get taskCompleteSelected;
+
+  /// No description provided for @taskReopenSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen selected'**
+  String get taskReopenSelected;
+
+  /// No description provided for @taskActionFailedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 task could not be updated} other{{count} tasks could not be updated}}'**
+  String taskActionFailedCount(int count);
 }
 
 class _AppLocalizationsDelegate

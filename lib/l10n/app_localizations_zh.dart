@@ -1921,4 +1921,86 @@ class AppLocalizationsZh extends AppLocalizations {
   String couldNotUpdateProject(Object error) {
     return '无法更新项目：$error';
   }
+
+  @override
+  String get commonDone => '完成';
+
+  @override
+  String get taskSelect => '选择';
+
+  @override
+  String taskSelectedCount(int count) {
+    return '已选择 $count 项';
+  }
+
+  @override
+  String get taskSelectAll => '全选';
+
+  @override
+  String get taskDeselectAll => '取消全选';
+
+  @override
+  String get taskDue => '截止日期';
+
+  @override
+  String get taskProject => '项目';
+
+  @override
+  String get taskLabels => '标签';
+
+  @override
+  String get taskPriority => '优先级';
+
+  @override
+  String get taskMore => '更多';
+
+  @override
+  String get taskSchedule => '安排';
+
+  @override
+  String get taskMove => '移动';
+
+  @override
+  String get taskDuplicate => '复制';
+
+  @override
+  String get taskDuplicateTitle => '复制任务';
+
+  @override
+  String get taskDuplicateSelectedOnly => '仅所选任务';
+
+  @override
+  String get taskDuplicateWithSubtasks => '包含子任务';
+
+  @override
+  String get taskWeekend => '本周末';
+
+  @override
+  String get taskNextWeek => '下周';
+
+  @override
+  String get taskEnterDue => '输入截止日期或时间';
+
+  @override
+  String get taskInvalidDue => '请输入有效的日期或时间';
+
+  @override
+  String get taskClearDue => '清除截止日期';
+
+  @override
+  String get taskDeleteSelectedTitle => '删除所选任务？';
+
+  @override
+  String get taskDeleteSelectedMessage => '此操作无法撤销。';
+
+  @override
+  String get taskCompleteSelected => '完成所选任务';
+
+  @override
+  String get taskReopenSelected => '重新打开所选任务';
+
+  @override
+  String taskActionFailedCount(int count) {
+    return '有 $count 项任务无法更新';
+  }
 }

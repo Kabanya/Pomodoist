@@ -1985,4 +1985,86 @@ class AppLocalizationsAr extends AppLocalizations {
   String couldNotUpdateProject(Object error) {
     return 'تعذر تحديث المشروع: $error';
   }
+
+  @override
+  String get commonDone => 'تم';
+
+  @override
+  String get taskSelect => 'تحديد';
+
+  @override
+  String taskSelectedCount(int count) {
+    return 'تم تحديد $count';
+  }
+
+  @override
+  String get taskSelectAll => 'تحديد الكل';
+
+  @override
+  String get taskDeselectAll => 'إلغاء تحديد الكل';
+
+  @override
+  String get taskDue => 'الموعد';
+
+  @override
+  String get taskProject => 'المشروع';
+
+  @override
+  String get taskLabels => 'التسميات';
+
+  @override
+  String get taskPriority => 'الأولوية';
+
+  @override
+  String get taskMore => 'المزيد';
+
+  @override
+  String get taskSchedule => 'جدولة';
+
+  @override
+  String get taskMove => 'نقل';
+
+  @override
+  String get taskDuplicate => 'تكرار';
+
+  @override
+  String get taskDuplicateTitle => 'تكرار المهام';
+
+  @override
+  String get taskDuplicateSelectedOnly => 'المحددة فقط';
+
+  @override
+  String get taskDuplicateWithSubtasks => 'مع المهام الفرعية';
+
+  @override
+  String get taskWeekend => 'نهاية هذا الأسبوع';
+
+  @override
+  String get taskNextWeek => 'الأسبوع القادم';
+
+  @override
+  String get taskEnterDue => 'أدخل موعداً أو وقتاً';
+
+  @override
+  String get taskInvalidDue => 'أدخل تاريخاً أو وقتاً صالحاً';
+
+  @override
+  String get taskClearDue => 'مسح الموعد';
+
+  @override
+  String get taskDeleteSelectedTitle => 'حذف المهام المحددة؟';
+
+  @override
+  String get taskDeleteSelectedMessage => 'لا يمكن التراجع عن هذا الإجراء.';
+
+  @override
+  String get taskCompleteSelected => 'إكمال المحددة';
+
+  @override
+  String get taskReopenSelected => 'إعادة فتح المحددة';
+
+  @override
+  String taskActionFailedCount(int count) {
+    return 'تعذر تحديث $count من المهام';
+  }
 }
