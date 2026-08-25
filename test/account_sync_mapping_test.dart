@@ -51,7 +51,9 @@ void main() {
       uuid: const Uuid(),
     );
 
-    await engine.pullLatest();
+    final entityTypes = await engine.pullLatest();
+
+    expect(entityTypes, {'label', 'task_label'});
 
     final label = await (db.select(
       db.labels,

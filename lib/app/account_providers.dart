@@ -234,7 +234,10 @@ final accountSyncLifecycleProvider = Provider<AccountSyncLifecycle?>((ref) {
     account: account,
     engine: engine,
     syncQueueRepository: ref.watch(syncQueueRepositoryProvider),
-    onSynced: () async {
+    onSynced: (entityTypes) async {
+      if (!entityTypes.contains('task')) {
+        return;
+      }
       await ref.read(taskRepositoryProvider).materializeDueRecurringTasks();
       await ref.read(googleCalendarSyncControllerProvider).syncNow();
     },

@@ -331,6 +331,53 @@ void main() {
     expect(_verticalOffset(tester), 0);
   });
 
+  testWidgets('schedule stream update moves a task to tomorrow immediately', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final controller = StreamController<List<TaskItem>>();
+    addTearDown(controller.close);
+    controller.add([_task('moving-task', today, content: 'Moving task')]);
+    await _pumpUpcoming(
+      tester,
+      today: today,
+      tasks: const [],
+      allStream: controller.stream,
+    );
+
+    expect(
+      tester
+          .getSemantics(
+            find.byKey(const ValueKey('upcoming-calendar-day-2030-01-10')),
+          )
+          .label,
+      contains('1 task'),
+    );
+
+    controller.add([
+      _task('moving-task', DateTime(2030, 1, 11), content: 'Moving task'),
+    ]);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .getSemantics(
+            find.byKey(const ValueKey('upcoming-calendar-day-2030-01-10')),
+          )
+          .label,
+      contains('No tasks'),
+    );
+    expect(
+      tester
+          .getSemantics(
+            find.byKey(const ValueKey('upcoming-calendar-day-2030-01-11')),
+          )
+          .label,
+      contains('1 task'),
+    );
+    semantics.dispose();
+  });
+
   testWidgets('today route filters the agenda from today onward', (
     tester,
   ) async {

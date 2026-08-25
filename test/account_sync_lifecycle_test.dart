@@ -115,18 +115,43 @@ void main() {
 
     expect(syncs, greaterThan(beforeHint));
   });
+
+  test('successful sync forwards received entity types', () async {
+    final queue = _FakeSyncQueueRepository();
+    Set<String>? received;
+    final lifecycle = _lifecycle(
+      queue: queue,
+      syncNow: () async {},
+      entityTypes: const {'task'},
+      onSynced: (types) async => received = types,
+    )..start();
+    addTearDown(() async {
+      lifecycle.dispose();
+      await queue.dispose();
+    });
+
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    expect(received, {'task'});
+  });
 }
 
 AccountSyncLifecycle _lifecycle({
   required _FakeSyncQueueRepository queue,
   required Future<void> Function() syncNow,
   Stream<AccountSyncHint> Function()? syncHints,
+  Set<String> entityTypes = const {},
+  Future<void> Function(Set<String>)? onSynced,
 }) {
   return AccountSyncLifecycle.forTesting(
-    syncNow: syncNow,
+    syncNow: () async {
+      await syncNow();
+      return entityTypes;
+    },
     deviceId: () async => 'device-1',
     syncHints: syncHints ?? () => const Stream<AccountSyncHint>.empty(),
     syncQueueRepository: queue,
+    onSynced: onSynced,
     pollInterval: const Duration(hours: 1),
     queueDebounce: const Duration(milliseconds: 10),
     hintResubscribeDelay: const Duration(milliseconds: 10),
