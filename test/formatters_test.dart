@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/formatters.dart';
+import 'package:pomodoist/app/task_time.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 
@@ -168,6 +169,55 @@ void main() {
       '14:00',
     );
   });
+
+  testWidgets('task schedules honor smart, range, and start-only modes', (
+    tester,
+  ) async {
+    final standardBlock = _timed(2026, 7, 5);
+    final customBlock = _timed(2026, 7, 5, endMinute: 45);
+
+    expect(
+      await _formatWithMode(tester, standardBlock, TaskTimeDisplayMode.smart),
+      'Today 14:00',
+    );
+    expect(
+      await _formatWithMode(tester, customBlock, TaskTimeDisplayMode.smart),
+      'Today 14:00-14:45',
+    );
+    expect(
+      await _formatWithMode(tester, standardBlock, TaskTimeDisplayMode.range),
+      'Today 14:00-14:30',
+    );
+    expect(
+      await _formatWithMode(tester, customBlock, TaskTimeDisplayMode.startOnly),
+      'Today 14:00',
+    );
+  });
+
+  testWidgets(
+    'range mode preserves cross-day dates, recurrence, and 12-hour time',
+    (tester) async {
+      final schedule = TaskSchedule.timed(
+        start: DateTime(2026, 7, 5, 23, 30),
+        end: DateTime(2026, 7, 6, 0, 15),
+        recurrence: const TaskRecurrence(
+          interval: 2,
+          unit: TaskRecurrenceUnit.week,
+          seriesId: 'series',
+        ),
+      );
+
+      expect(
+        await _formatWithinDateWithMode(
+          tester,
+          schedule,
+          TaskTimeDisplayMode.range,
+          alwaysUse24HourFormat: false,
+        ),
+        '11:30 PM-Mon, Jul 6 12:15 AM, every 2 weeks',
+      );
+    },
+  );
 }
 
 TaskSchedule _timed(
@@ -175,12 +225,75 @@ TaskSchedule _timed(
   int month,
   int day, {
   TaskRecurrence? recurrence,
+  int endMinute = 30,
 }) {
   return TaskSchedule.timed(
     start: DateTime(year, month, day, 14),
-    end: DateTime(year, month, day, 14, 30),
+    end: DateTime(year, month, day, 14, endMinute),
     recurrence: recurrence,
   );
+}
+
+Future<String> _formatWithMode(
+  WidgetTester tester,
+  TaskSchedule schedule,
+  TaskTimeDisplayMode displayMode,
+) async {
+  var value = '';
+  await tester.pumpWidget(
+    MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: MediaQuery(
+        data: const MediaQueryData(alwaysUse24HourFormat: true),
+        child: Builder(
+          builder: (context) {
+            value = formatTaskListSchedule(
+              context,
+              schedule,
+              now: DateTime(2026, 7, 5, 12),
+              displayMode: displayMode,
+              defaultTimedBlockMinutes: 30,
+            );
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  return value;
+}
+
+Future<String?> _formatWithinDateWithMode(
+  WidgetTester tester,
+  TaskSchedule schedule,
+  TaskTimeDisplayMode displayMode, {
+  required bool alwaysUse24HourFormat,
+}) async {
+  String? value;
+  await tester.pumpWidget(
+    MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: MediaQuery(
+        data: MediaQueryData(alwaysUse24HourFormat: alwaysUse24HourFormat),
+        child: Builder(
+          builder: (context) {
+            value = formatTaskListScheduleWithinDate(
+              context,
+              schedule,
+              displayMode: displayMode,
+              defaultTimedBlockMinutes: 30,
+            );
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  return value;
 }
 
 Future<String> _format(

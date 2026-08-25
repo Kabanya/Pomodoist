@@ -7,12 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/app_language.dart';
 import 'package:pomodoist/app/providers.dart';
+import 'package:pomodoist/app/task_time.dart';
 import 'package:pomodoist/core/audio/focus_sound_player.dart';
 import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/demo/demo_seed_data.dart';
 import 'package:pomodoist/core/notifications/notification_scheduler.dart';
 import 'package:pomodoist/core/sync/pomodoist_retention.dart';
 import 'package:pomodoist/core/sync/sync_queue_repository.dart';
+import 'package:pomodoist/core/time/clock.dart';
 import 'package:pomodoist/core/time/timer_engine.dart';
 import 'package:pomodoist/features/filters/domain/filter_parser.dart';
 import 'package:pomodoist/features/focus/data/focus_repository_impl.dart';
@@ -1106,6 +1108,75 @@ void main() {
         container.read(quickAddDefaultTimedBlockMinutesProvider),
         defaultQuickAddTimedBlockMinutes,
       );
+    });
+  });
+
+  group('task time display settings', () {
+    test(
+      'stored mode loads, persists, and unknown storage falls back',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          taskTimeDisplayModePreferenceKey: 'range',
+        });
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+
+        expect(
+          container.read(taskTimeDisplayModeProvider),
+          TaskTimeDisplayMode.smart,
+        );
+
+        await container.read(sharedPreferencesProvider.future);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(
+          container.read(taskTimeDisplayModeProvider),
+          TaskTimeDisplayMode.range,
+        );
+
+        await container
+            .read(taskTimeDisplayModeProvider.notifier)
+            .setMode(TaskTimeDisplayMode.startOnly);
+        final prefs = await SharedPreferences.getInstance();
+
+        expect(prefs.getString(taskTimeDisplayModePreferenceKey), 'startOnly');
+
+        SharedPreferences.setMockInitialValues({
+          taskTimeDisplayModePreferenceKey: 'invalid',
+        });
+        final fallbackContainer = ProviderContainer();
+        addTearDown(fallbackContainer.dispose);
+        await fallbackContainer.read(sharedPreferencesProvider.future);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(
+          fallbackContainer.read(taskTimeDisplayModeProvider),
+          TaskTimeDisplayMode.smart,
+        );
+      },
+    );
+
+    test('task time ticker refreshes from the configured clock', () async {
+      final clock = FixedClock(DateTime.utc(2026, 7, 5, 14));
+      final container = ProviderContainer(
+        overrides: [clockProvider.overrideWithValue(clock)],
+      );
+      addTearDown(container.dispose);
+      final values = <DateTime>[];
+      final subscription = container.listen(taskTimeTickerProvider, (_, next) {
+        final value = next.value;
+        if (value != null) {
+          values.add(value);
+        }
+      });
+      addTearDown(subscription.close);
+
+      await Future<void>.delayed(Duration.zero);
+      clock.value = DateTime.utc(2026, 7, 5, 14, 30);
+      await Future<void>.delayed(const Duration(seconds: 1, milliseconds: 50));
+
+      expect(values, contains(DateTime.utc(2026, 7, 5, 14)));
+      expect(values, contains(DateTime.utc(2026, 7, 5, 14, 30)));
     });
   });
 

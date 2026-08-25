@@ -4,6 +4,7 @@ import 'package:pomodoist/l10n/app_localizations.dart';
 
 import '../features/tasks/domain/task_models.dart';
 import 'app_l10n.dart';
+import 'task_time.dart';
 
 String formatDurationCompact(Duration duration) {
   final totalSeconds = duration.inSeconds.clamp(0, 999999);
@@ -36,7 +37,12 @@ String formatDueDate(BuildContext context, DateTime? date) {
 String formatLocalDate(BuildContext context, DateTime date) =>
     _formatDate(context, date);
 
-String formatTaskSchedule(BuildContext context, TaskSchedule? schedule) {
+String formatTaskSchedule(
+  BuildContext context,
+  TaskSchedule? schedule, {
+  TaskTimeDisplayMode displayMode = TaskTimeDisplayMode.smart,
+  int defaultTimedBlockMinutes = 30,
+}) {
   final l10n = context.l10n;
   if (schedule == null) {
     return l10n.noDate;
@@ -58,6 +64,13 @@ String formatTaskSchedule(BuildContext context, TaskSchedule? schedule) {
   final date = _formatDate(context, start);
   final startTime = _formatTime(context, start);
   final endTime = _formatTime(context, end);
+  if (!shouldShowTaskTimeRange(
+    schedule,
+    displayMode,
+    defaultTimedBlockMinutes: defaultTimedBlockMinutes,
+  )) {
+    return withRecurrence('$date, $startTime');
+  }
   if (sameDay) {
     return withRecurrence('$date, $startTime-$endTime');
   }
@@ -70,29 +83,62 @@ String formatTaskListSchedule(
   BuildContext context,
   TaskSchedule schedule, {
   DateTime? now,
+  TaskTimeDisplayMode displayMode = TaskTimeDisplayMode.smart,
+  int defaultTimedBlockMinutes = 30,
 }) {
   final date = schedule.displayDate;
   final dateLabel = _formatTaskListDate(context, date, now: now);
   if (schedule.isAllDay) {
     return _withRecurrence(context, dateLabel, schedule.recurrence);
   }
+  final start = schedule.start!.toLocal();
+  final end = schedule.end!.toLocal();
+  final startTime = _formatTime(context, start);
+  if (!shouldShowTaskTimeRange(
+    schedule,
+    displayMode,
+    defaultTimedBlockMinutes: defaultTimedBlockMinutes,
+  )) {
+    return _withRecurrence(
+      context,
+      '$dateLabel $startTime',
+      schedule.recurrence,
+    );
+  }
+  final sameDay = _isSameDay(start, end);
   return _withRecurrence(
     context,
-    '$dateLabel ${_formatTime(context, schedule.start!.toLocal())}',
+    sameDay
+        ? '$dateLabel $startTime-${_formatTime(context, end)}'
+        : '$dateLabel $startTime-${_formatTaskListDate(context, end, now: now)} ${_formatTime(context, end)}',
     schedule.recurrence,
   );
 }
 
 String? formatTaskListScheduleWithinDate(
   BuildContext context,
-  TaskSchedule schedule,
-) {
+  TaskSchedule schedule, {
+  TaskTimeDisplayMode displayMode = TaskTimeDisplayMode.smart,
+  int defaultTimedBlockMinutes = 30,
+}) {
   if (schedule.isAllDay) {
     return _formatRecurrence(context, schedule.recurrence);
   }
+  final start = schedule.start!.toLocal();
+  final end = schedule.end!.toLocal();
+  final startTime = _formatTime(context, start);
+  if (!shouldShowTaskTimeRange(
+    schedule,
+    displayMode,
+    defaultTimedBlockMinutes: defaultTimedBlockMinutes,
+  )) {
+    return _withRecurrence(context, startTime, schedule.recurrence);
+  }
   return _withRecurrence(
     context,
-    _formatTime(context, schedule.start!.toLocal()),
+    _isSameDay(start, end)
+        ? '$startTime-${_formatTime(context, end)}'
+        : '$startTime-${_formatDate(context, end)} ${_formatTime(context, end)}',
     schedule.recurrence,
   );
 }
@@ -139,6 +185,11 @@ String _formatTaskListDate(
 }
 
 DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
+
+bool _isSameDay(DateTime first, DateTime second) =>
+    first.year == second.year &&
+    first.month == second.month &&
+    first.day == second.day;
 
 String _formatTime(BuildContext context, DateTime date) {
   return MaterialLocalizations.of(context).formatTimeOfDay(

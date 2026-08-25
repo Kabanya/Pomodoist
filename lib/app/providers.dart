@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app_language.dart';
+import 'task_time.dart';
 import '../l10n/app_localizations.dart';
 import '../core/audio/focus_sound_player.dart';
 import '../core/db/app_database.dart';
@@ -82,6 +83,7 @@ const reengagementNotificationsEnabledPreferenceKey =
     'notifications.reengagement.enabled';
 const quickAddDefaultTimedBlockMinutesPreferenceKey =
     'quickAdd.defaultTimedBlockMinutes';
+const taskTimeDisplayModePreferenceKey = 'tasks.timeDisplayMode';
 const timelineVisibleStartMinutesPreferenceKey = 'timeline.visibleStartMinutes';
 const timelineVisibleEndMinutesPreferenceKey = 'timeline.visibleEndMinutes';
 const timelineHourWidthPreferenceKey = 'timeline.hourWidth';
@@ -105,6 +107,11 @@ final reengagementNotificationsEnabledProvider =
 final quickAddDefaultTimedBlockMinutesProvider =
     NotifierProvider<QuickAddDefaultTimedBlockMinutesController, int>(
       QuickAddDefaultTimedBlockMinutesController.new,
+    );
+
+final taskTimeDisplayModeProvider =
+    NotifierProvider<TaskTimeDisplayModeController, TaskTimeDisplayMode>(
+      TaskTimeDisplayModeController.new,
     );
 
 final timelineVisibleHoursProvider =
@@ -223,6 +230,37 @@ class QuickAddDefaultTimedBlockMinutesController extends Notifier<int> {
       return null;
     }
     return value;
+  }
+}
+
+class TaskTimeDisplayModeController extends Notifier<TaskTimeDisplayMode> {
+  bool _loaded = false;
+  bool _hasLocalSelection = false;
+
+  @override
+  TaskTimeDisplayMode build() {
+    if (!_loaded) {
+      _loaded = true;
+      unawaited(_loadStoredMode());
+    }
+    return TaskTimeDisplayMode.smart;
+  }
+
+  Future<void> setMode(TaskTimeDisplayMode mode) async {
+    _hasLocalSelection = true;
+    state = mode;
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs?.setString(taskTimeDisplayModePreferenceKey, mode.storageValue);
+  }
+
+  Future<void> _loadStoredMode() async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    final mode = TaskTimeDisplayMode.fromStorageValue(
+      prefs?.getString(taskTimeDisplayModePreferenceKey),
+    );
+    if (ref.mounted && !_hasLocalSelection) {
+      state = mode;
+    }
   }
 }
 
@@ -792,6 +830,27 @@ final focusTickerProvider = StreamProvider<DateTime>((ref) {
     },
     onCancel: () => timer?.cancel(),
   );
+  return controller.stream;
+});
+
+final taskTimeTickerProvider = StreamProvider<DateTime>((ref) {
+  final clock = ref.watch(clockProvider);
+  late final StreamController<DateTime> controller;
+  Timer? timer;
+  controller = StreamController<DateTime>(
+    onListen: () {
+      controller.add(clock.now());
+      timer = Timer.periodic(
+        const Duration(seconds: 1),
+        (_) => controller.add(clock.now()),
+      );
+    },
+    onCancel: () => timer?.cancel(),
+  );
+  ref.onDispose(() {
+    timer?.cancel();
+    unawaited(controller.close());
+  });
   return controller.stream;
 });
 
