@@ -77,6 +77,25 @@ void main() {
     );
   });
 
+  test(
+    'smart mode shows a range when duration exceeds the default by seconds',
+    () {
+      final scheduleWithExtraSecond = TaskSchedule.timed(
+        start: DateTime.utc(2026, 7, 5, 14),
+        end: DateTime.utc(2026, 7, 5, 14, 30, 1),
+      );
+
+      expect(
+        shouldShowTaskTimeRange(
+          scheduleWithExtraSecond,
+          TaskTimeDisplayMode.smart,
+          defaultTimedBlockMinutes: 30,
+        ),
+        isTrue,
+      );
+    },
+  );
+
   test('palette maps each time state to its semantic color', () {
     final colors = AppTheme.light().extension<AppThemePalette>()!;
 

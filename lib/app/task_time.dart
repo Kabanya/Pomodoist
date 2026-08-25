@@ -52,6 +52,6 @@ bool shouldShowTaskTimeRange(
     TaskTimeDisplayMode.range => true,
     TaskTimeDisplayMode.startOnly => false,
     TaskTimeDisplayMode.smart =>
-      schedule.duration!.inMinutes != defaultTimedBlockMinutes,
+      schedule.duration != Duration(minutes: defaultTimedBlockMinutes),
   };
 }
