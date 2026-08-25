@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -20,6 +21,7 @@ import '../../features/tasks/presentation/widgets/quick_add_bar.dart';
 import '../account_providers.dart';
 import '../app_l10n.dart';
 import '../keyboard_shortcuts.dart';
+import '../macos_app_menu.dart';
 import '../providers.dart';
 import '../theme/app_theme.dart';
 import 'mini_focus_player.dart';
@@ -56,10 +58,15 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   double _lastExpandedSidebarWidth = _wideSidebarDefaultWidth;
   bool _quickAddShortcutDialogOpen = false;
   int? _rawHandledPhysicalKeyId;
+  late final MacOSAppMenuController? _appMenuController;
 
   @override
   void initState() {
     super.initState();
+    final platform = ref.read(shortcutTargetPlatformProvider);
+    _appMenuController = !kIsWeb && platform == TargetPlatform.macOS
+        ? MacOSAppMenuController(platform: platform, onSelected: _runShortcut)
+        : null;
     HardwareKeyboard.instance.addHandler(_handleKeyEvent);
     RawKeyboard.instance.addListener(_handleRawKeyEvent);
   }
@@ -68,6 +75,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
     RawKeyboard.instance.removeListener(_handleRawKeyEvent);
+    _appMenuController?.dispose();
     super.dispose();
   }
 
@@ -94,8 +102,20 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(keyboardShortcutsProvider);
+    final shortcuts = ref.watch(keyboardShortcutsProvider);
     ref.watch(keyboardShortcutsLoadedProvider);
+    final menuController = _appMenuController;
+    if (menuController != null) {
+      unawaited(
+        menuController.sync(
+          labels: {
+            for (final command in AppShortcutCommand.values)
+              command: appShortcutLabel(context.l10n, command),
+          },
+          bindings: shortcuts,
+        ),
+      );
+    }
     final wide = MediaQuery.sizeOf(context).width >= _wideLayoutBreakpoint;
     final focusLocation = _isFocusLocation(widget.location);
     final mobileDestinations = _mobileDestinations(context);

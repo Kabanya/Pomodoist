@@ -12,6 +12,7 @@ import 'package:pomodoist/app/app_language.dart';
 import 'package:pomodoist/app/app_startup_gate.dart';
 import 'package:pomodoist/app/app_theme_mode.dart';
 import 'package:pomodoist/app/keyboard_shortcuts.dart';
+import 'package:pomodoist/app/macos_app_menu.dart';
 import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/app/router.dart';
 import 'package:pomodoist/app/theme/app_theme.dart';
@@ -300,6 +301,50 @@ void main() {
       LogicalKeyboardKey.keyJ,
     );
     expect(find.text('Add task'), findsNothing);
+    await _disposeApp(tester);
+  });
+
+  testWidgets('macOS app menu syncs commands and reuses shortcut actions', (
+    tester,
+  ) async {
+    const channel = MethodChannel(macOSAppMenuChannelName);
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    final calls = <MethodCall>[];
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call);
+      return null;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+    await _pumpWideApp(tester);
+
+    final syncCall = calls.lastWhere(
+      (call) => call.method == macOSAppMenuSetCommandsMethod,
+    );
+    final commands = Map<String, Object?>.from(syncCall.arguments as Map);
+    expect(commands.keys, {
+      for (final command in AppShortcutCommand.values) command.name,
+    });
+    expect(commands[AppShortcutCommand.quickAdd.name], {
+      'label': 'Add task',
+      'keyLabel': 'N',
+      'meta': true,
+      'control': false,
+      'alt': false,
+      'shift': false,
+    });
+
+    await messenger.handlePlatformMessage(
+      macOSAppMenuChannelName,
+      const StandardMethodCodec().encodeMethodCall(
+        const MethodCall(macOSAppMenuSelectedMethod, 'quickAdd'),
+      ),
+      (_) {},
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('sidebar-quick-add-input')), findsOneWidget);
     await _disposeApp(tester);
   });
 

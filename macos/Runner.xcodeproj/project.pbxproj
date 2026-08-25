@@ -30,6 +30,8 @@
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
 		4C5155414448444B45594246 /* QuickAddHotKeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5155414448444B45594346 /* QuickAddHotKeyController.swift */; };
 		4C5155424448444B45594246 /* QuickAddHotKeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5155414448444B45594346 /* QuickAddHotKeyController.swift */; };
+		A90000010000000000000001 /* AppMenuController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90000030000000000000003 /* AppMenuController.swift */; };
+		A90000020000000000000002 /* AppMenuController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90000030000000000000003 /* AppMenuController.swift */; };
 		58BF906B2D72405D8ECF8EEE /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8EF1A173A80BA5C89A55829D /* Pods_RunnerTests.framework */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
 		7D0000010000000000000001 /* PomodoistFocusShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0000110000000000000001 /* PomodoistFocusShared.swift */; };
@@ -111,6 +113,7 @@
 		33E5194F232828860026EE4D /* AppInfo.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AppInfo.xcconfig; sourceTree = "<group>"; };
 		3930D032DBA85E33CA922949 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		4C5155414448444B45594346 /* QuickAddHotKeyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddHotKeyController.swift; sourceTree = "<group>"; };
+		A90000030000000000000003 /* AppMenuController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMenuController.swift; sourceTree = "<group>"; };
 		5405EB2BDC5D7015F9DD9585 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		670F2C86743B77ACF09771DF /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
@@ -231,6 +234,7 @@
 				7D0000100000000000000010 /* FlutterControllerResolver.swift */,
 				33CC11122044BFA00003C045 /* MainFlutterWindow.swift */,
 				4C5155414448444B45594346 /* QuickAddHotKeyController.swift */,
+				A90000030000000000000003 /* AppMenuController.swift */,
 				7D0000120000000000000002 /* FocusStatusItemController.swift */,
 				33E51913231747F40026EE4D /* DebugProfile.entitlements */,
 				33E51914231749380026EE4D /* Release.entitlements */,
@@ -544,6 +548,7 @@
 				7D0000080000000000000008 /* FlutterControllerResolver.swift in Sources */,
 				7D0000020000000000000002 /* PomodoistFocusShared.swift in Sources */,
 				4C5155424448444B45594246 /* QuickAddHotKeyController.swift in Sources */,
+				A90000020000000000000002 /* AppMenuController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -555,6 +560,7 @@
 				33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */,
 				7D0000070000000000000007 /* FlutterControllerResolver.swift in Sources */,
 				4C5155414448444B45594246 /* QuickAddHotKeyController.swift in Sources */,
+				A90000010000000000000001 /* AppMenuController.swift in Sources */,
 				7D0000040000000000000004 /* FocusStatusItemController.swift in Sources */,
 				7D0000010000000000000001 /* PomodoistFocusShared.swift in Sources */,
 				335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */,

@@ -100,7 +100,7 @@ class _KeyboardShortcutsScreenState
           for (final command in AppShortcutCommand.values) ...[
             _ShortcutRow(
               key: Key('shortcut-row-${command.storageKey}'),
-              title: _commandLabel(command),
+              title: appShortcutLabel(l10n, command),
               shortcut: bindings[command]!.labelFor(_platform),
               buttonKey: Key('shortcut-binding-${command.storageKey}'),
               onTap: () => _recordAppShortcut(command),
@@ -142,25 +142,6 @@ class _KeyboardShortcutsScreenState
         ],
       ),
     );
-  }
-
-  String _commandLabel(AppShortcutCommand command) {
-    final l10n = context.l10n;
-    return switch (command) {
-      AppShortcutCommand.toggleSidebar => l10n.settingsShortcutsToggleSidebar,
-      AppShortcutCommand.quickAdd => l10n.addTask,
-      AppShortcutCommand.browse => l10n.navBrowse,
-      AppShortcutCommand.search => l10n.navSearch,
-      AppShortcutCommand.today => l10n.navToday,
-      AppShortcutCommand.upcoming => l10n.navUpcoming,
-      AppShortcutCommand.focus => l10n.navFocus,
-      AppShortcutCommand.inbox => l10n.navInbox,
-      AppShortcutCommand.priorityMatrix => l10n.navPriorityMatrix,
-      AppShortcutCommand.timeline => l10n.navTimeline,
-      AppShortcutCommand.kanban => l10n.navKanban,
-      AppShortcutCommand.reports => l10n.navReports,
-      AppShortcutCommand.settings => l10n.navSettings,
-    };
   }
 
   Future<void> _loadGlobalShortcut() async {

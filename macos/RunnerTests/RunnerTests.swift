@@ -62,6 +62,63 @@ class RunnerTests: XCTestCase {
     XCTAssertEqual(QuickAddGlobalShortcut.load(from: defaults), candidate)
   }
 
+  func testAppMenuInstallsAndUpdatesMainActionsWithoutDuplicates() {
+    let viewController = FlutterViewController()
+    let channel = FlutterMethodChannel(
+      name: UUID().uuidString,
+      binaryMessenger: viewController.engine.binaryMessenger
+    )
+    let mainMenu = appMenuFixture()
+    let controller = AppMenuController(channel: channel, mainMenu: mainMenu)
+
+    controller.applyCommands(appMenuCommands())
+
+    XCTAssertEqual(
+      mainMenu.items.map(\.title),
+      ["pomodoist", "File", "Edit", "View", "Go", "Window", "Help"]
+    )
+    XCTAssertEqual(mainMenu.item(withTitle: "File")?.submenu?.items.map(\.title), ["Add task…"])
+    XCTAssertEqual(
+      mainMenu.item(withTitle: "Go")?.submenu?.items.filter { !$0.isSeparatorItem }.map(\.title),
+      [
+        "Browse", "Search", "Today", "Upcoming", "Focus", "Inbox",
+        "Priority Matrix", "Timeline", "Kanban", "Reports",
+      ]
+    )
+    XCTAssertEqual(mainMenu.item(withTitle: "View")?.submenu?.items.first?.title, "Toggle sidebar")
+    XCTAssertEqual(mainMenu.items.first?.submenu?.item(withTitle: "Settings…")?.keyEquivalent, "1")
+
+    controller.applyCommands(appMenuCommands(quickAddKey: "J", quickAddShift: true))
+
+    XCTAssertEqual(mainMenu.items.filter { $0.title == "File" }.count, 1)
+    XCTAssertEqual(mainMenu.items.filter { $0.title == "Go" }.count, 1)
+    let quickAdd = mainMenu.item(withTitle: "File")?.submenu?.items.first
+    XCTAssertEqual(quickAdd?.keyEquivalent, "j")
+    XCTAssertEqual(quickAdd?.keyEquivalentModifierMask, [.command, .shift])
+  }
+
+  func testAppMenuMapsStandardSpecialShortcutKeys() {
+    let viewController = FlutterViewController()
+    let channel = FlutterMethodChannel(
+      name: UUID().uuidString,
+      binaryMessenger: viewController.engine.binaryMessenger
+    )
+    let mainMenu = appMenuFixture()
+    let controller = AppMenuController(channel: channel, mainMenu: mainMenu)
+
+    controller.applyCommands(appMenuCommands(quickAddKey: "Arrow Up"))
+    XCTAssertEqual(
+      mainMenu.item(withTitle: "File")?.submenu?.items.first?.keyEquivalent,
+      String(Character(UnicodeScalar(NSUpArrowFunctionKey)!))
+    )
+
+    controller.applyCommands(appMenuCommands(quickAddKey: "F5"))
+    XCTAssertEqual(
+      mainMenu.item(withTitle: "File")?.submenu?.items.first?.keyEquivalent,
+      String(Character(UnicodeScalar(NSF5FunctionKey)!))
+    )
+  }
+
   func testDisablingQuickAddUnregistersTheHotKey() {
     let defaults = UserDefaults(suiteName: UUID().uuidString)!
     let viewController = FlutterViewController()
@@ -318,6 +375,67 @@ class RunnerTests: XCTestCase {
       run: nil,
       interval: nil
     )
+  }
+
+  private func appMenuFixture() -> NSMenu {
+    let mainMenu = NSMenu(title: "Main Menu")
+    let application = NSMenuItem(title: "pomodoist", action: nil, keyEquivalent: "")
+    let applicationMenu = NSMenu(title: "pomodoist")
+    applicationMenu.addItem(NSMenuItem(title: "About pomodoist", action: nil, keyEquivalent: ""))
+    applicationMenu.addItem(.separator())
+    applicationMenu.addItem(NSMenuItem(title: "Preferences…", action: nil, keyEquivalent: ","))
+    application.submenu = applicationMenu
+    mainMenu.addItem(application)
+    mainMenu.addItem(topLevelMenu(title: "Edit"))
+    mainMenu.addItem(
+      topLevelMenu(
+        title: "View",
+        items: [NSMenuItem(title: "Enter Full Screen", action: nil, keyEquivalent: "f")]
+      )
+    )
+    mainMenu.addItem(topLevelMenu(title: "Window"))
+    mainMenu.addItem(topLevelMenu(title: "Help"))
+    return mainMenu
+  }
+
+  private func topLevelMenu(title: String, items: [NSMenuItem] = []) -> NSMenuItem {
+    let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+    let submenu = NSMenu(title: title)
+    items.forEach(submenu.addItem)
+    item.submenu = submenu
+    return item
+  }
+
+  private func appMenuCommands(
+    quickAddKey: String = "N",
+    quickAddShift: Bool = false
+  ) -> [String: Any] {
+    func command(_ label: String, _ key: String, shift: Bool = false) -> [String: Any] {
+      [
+        "label": label,
+        "keyLabel": key,
+        "meta": true,
+        "control": false,
+        "alt": false,
+        "shift": shift,
+      ]
+    }
+
+    return [
+      "toggleSidebar": command("Toggle sidebar", "B"),
+      "quickAdd": command("Add task", quickAddKey, shift: quickAddShift),
+      "browse": command("Browse", "1"),
+      "search": command("Search", "2"),
+      "today": command("Today", "3"),
+      "upcoming": command("Upcoming", "4"),
+      "focus": command("Focus", "5"),
+      "inbox": command("Inbox", "6"),
+      "priorityMatrix": command("Priority Matrix", "7"),
+      "timeline": command("Timeline", "8"),
+      "kanban": command("Kanban", "9"),
+      "reports": command("Reports", "0"),
+      "settings": command("Settings", "1", shift: true),
+    ]
   }
 
   private func activeFocus(interval: PomodoistFocusInterval) -> PomodoistFocusSnapshot {

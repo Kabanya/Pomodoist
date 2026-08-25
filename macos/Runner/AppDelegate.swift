@@ -6,6 +6,7 @@ import multiview_desktop
 @main
 class AppDelegate: FlutterAppDelegate {
   private var quickAddHotKeyController: QuickAddHotKeyController?
+  private var appMenuController: AppMenuController?
   private var focusStatusItemController: FocusStatusItemController?
   private var systemSpeechHost: SystemSpeechHost?
 
@@ -21,6 +22,7 @@ class AppDelegate: FlutterAppDelegate {
     with providedFlutterViewController: FlutterViewController? = nil
   ) {
     guard quickAddHotKeyController == nil ||
+            appMenuController == nil ||
             focusStatusItemController == nil ||
             systemSpeechHost == nil
     else {
@@ -43,6 +45,14 @@ class AppDelegate: FlutterAppDelegate {
         binaryMessenger: flutterViewController.engine.binaryMessenger
       )
       quickAddHotKeyController = QuickAddHotKeyController(channel: channel)
+    }
+
+    if appMenuController == nil, let mainMenu = NSApp.mainMenu {
+      let menuChannel = FlutterMethodChannel(
+        name: AppMenuController.channelName,
+        binaryMessenger: flutterViewController.engine.binaryMessenger
+      )
+      appMenuController = AppMenuController(channel: menuChannel, mainMenu: mainMenu)
     }
 
     if focusStatusItemController == nil {
