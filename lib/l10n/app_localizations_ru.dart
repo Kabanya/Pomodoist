@@ -1001,6 +1001,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Pomodoist не смог обработать речь, оставил черновик для ручной правки.';
 
   @override
+  String get voiceMicrophoneUnavailable =>
+      'Микрофон сейчас недоступен. Завершите активный звонок или голосовой чат и повторите попытку.';
+
+  @override
   String get voiceSmartMode => 'Умный режим';
 
   @override

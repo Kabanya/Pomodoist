@@ -299,6 +299,7 @@
   "voiceStepReview": "Vérifier",
   "voiceAnalyzing": "Pomodoist découpe la parole en tâches",
   "voiceFallbackError": "Pomodoist n'a pas pu traiter la parole; un brouillon a été conservé pour modification.",
+  "voiceMicrophoneUnavailable": "Le microphone est indisponible. Terminez l’appel ou le chat vocal en cours, puis réessayez.",
   "voiceSmartMode": "Mode intelligent",
   "voiceRetryAnalysis": "Relancer l’analyse",
   "screenInboxSubtitle": "Capturez les tâches avant de les organiser.",

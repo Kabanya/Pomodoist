@@ -299,6 +299,7 @@
   "voiceStepReview": "检查",
   "voiceAnalyzing": "Pomodoist 正在将语音拆分为任务",
   "voiceFallbackError": "Pomodoist 无法处理语音，已保留草稿供手动编辑。",
+  "voiceMicrophoneUnavailable": "麦克风当前不可用。请结束正在进行的通话或语音聊天，然后重试。",
   "voiceSmartMode": "智能模式",
   "voiceRetryAnalysis": "重试分析",
   "screenInboxSubtitle": "先收集任务，再进行整理。",

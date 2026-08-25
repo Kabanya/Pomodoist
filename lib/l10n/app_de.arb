@@ -299,6 +299,7 @@
   "voiceStepReview": "Prüfung",
   "voiceAnalyzing": "Pomodoist teilt Sprache in Aufgaben auf",
   "voiceFallbackError": "Pomodoist konnte die Sprache nicht verarbeiten, Entwurf bleibt zur manuellen Bearbeitung.",
+  "voiceMicrophoneUnavailable": "Das Mikrofon ist derzeit nicht verfügbar. Beende den aktiven Anruf oder Sprachchat und versuche es erneut.",
   "voiceSmartMode": "Intelligenter Modus",
   "voiceRetryAnalysis": "Analyse wiederholen",
   "screenInboxSubtitle": "Aufgaben sammeln, bevor du sie organisierst.",

@@ -1005,6 +1005,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Pomodoist n\'a pas pu traiter la parole; un brouillon a été conservé pour modification.';
 
   @override
+  String get voiceMicrophoneUnavailable =>
+      'Le microphone est indisponible. Terminez l’appel ou le chat vocal en cours, puis réessayez.';
+
+  @override
   String get voiceSmartMode => 'Mode intelligent';
 
   @override

@@ -937,6 +937,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceFallbackError => 'Pomodoist 无法处理语音，已保留草稿供手动编辑。';
 
   @override
+  String get voiceMicrophoneUnavailable => '麦克风当前不可用。请结束正在进行的通话或语音聊天，然后重试。';
+
+  @override
   String get voiceSmartMode => '智能模式';
 
   @override

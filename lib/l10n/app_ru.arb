@@ -299,6 +299,7 @@
   "voiceStepReview": "Проверка",
   "voiceAnalyzing": "Pomodoist раскладывает речь на задачи",
   "voiceFallbackError": "Pomodoist не смог обработать речь, оставил черновик для ручной правки.",
+  "voiceMicrophoneUnavailable": "Микрофон сейчас недоступен. Завершите активный звонок или голосовой чат и повторите попытку.",
   "voiceSmartMode": "Умный режим",
   "voiceRetryAnalysis": "Повторить разбор",
   "screenInboxSubtitle": "Собирайте задачи перед сортировкой.",

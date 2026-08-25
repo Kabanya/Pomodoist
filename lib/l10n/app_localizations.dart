@@ -1842,6 +1842,12 @@ abstract class AppLocalizations {
   /// **'Pomodoist could not process speech; kept a draft for manual editing.'**
   String get voiceFallbackError;
 
+  /// No description provided for @voiceMicrophoneUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The microphone is currently unavailable. End any active call or voice chat, then try again.'**
+  String get voiceMicrophoneUnavailable;
+
   /// No description provided for @voiceSmartMode.
   ///
   /// In en, this message translates to:

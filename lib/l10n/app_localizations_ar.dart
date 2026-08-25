@@ -986,6 +986,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذر على Pomodoist معالجة الكلام، تم الاحتفاظ بمسودة للتعديل اليدوي.';
 
   @override
+  String get voiceMicrophoneUnavailable =>
+      'الميكروفون غير متاح حاليًا. أنهِ المكالمة أو الدردشة الصوتية النشطة ثم حاول مرة أخرى.';
+
+  @override
   String get voiceSmartMode => 'الوضع الذكي';
 
   @override

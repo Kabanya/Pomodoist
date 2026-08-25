@@ -1152,7 +1152,7 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
       _setSheetState(() {
         _captureActive = false;
         _status = VoiceRecognitionStatus.error;
-        _error = error.toString();
+        _error = _voiceErrorMessage(error.toString());
       });
     }
   }
@@ -1180,7 +1180,9 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
         case VoiceRecognitionStatus.error:
         case VoiceRecognitionStatus.unsupportedPlatform:
           _captureActive = false;
-          _error = event.error?.message;
+          _error = event.error == null
+              ? null
+              : _voiceErrorMessage(event.error!.message);
         case VoiceRecognitionStatus.idle:
         case VoiceRecognitionStatus.requestingPermission:
         case VoiceRecognitionStatus.recording:
@@ -1203,6 +1205,11 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
       unawaited(_decomposeTranscript(_transcript));
     }
   }
+
+  String _voiceErrorMessage(String message) =>
+      message.contains('setActive: Session activation failed')
+      ? context.l10n.voiceMicrophoneUnavailable
+      : message;
 
   Future<void> _decomposeTranscript(String transcript) async {
     _setSheetState(() {

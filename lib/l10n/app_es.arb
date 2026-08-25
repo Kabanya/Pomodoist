@@ -299,6 +299,7 @@
   "voiceStepReview": "Revisión",
   "voiceAnalyzing": "Pomodoist divide la voz en tareas",
   "voiceFallbackError": "Pomodoist no pudo procesar la voz; se dejó un borrador para editarlo.",
+  "voiceMicrophoneUnavailable": "El micrófono no está disponible. Finaliza la llamada o el chat de voz activo e inténtalo de nuevo.",
   "voiceSmartMode": "Modo inteligente",
   "voiceRetryAnalysis": "Reintentar análisis",
   "screenInboxSubtitle": "Captura tareas antes de organizarlas.",

@@ -1007,6 +1007,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Pomodoist konnte die Sprache nicht verarbeiten, Entwurf bleibt zur manuellen Bearbeitung.';
 
   @override
+  String get voiceMicrophoneUnavailable =>
+      'Das Mikrofon ist derzeit nicht verfügbar. Beende den aktiven Anruf oder Sprachchat und versuche es erneut.';
+
+  @override
   String get voiceSmartMode => 'Intelligenter Modus';
 
   @override

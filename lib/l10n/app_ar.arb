@@ -299,6 +299,7 @@
   "voiceStepReview": "مراجعة",
   "voiceAnalyzing": "يقسم Pomodoist الكلام إلى مهام",
   "voiceFallbackError": "تعذر على Pomodoist معالجة الكلام، تم الاحتفاظ بمسودة للتعديل اليدوي.",
+  "voiceMicrophoneUnavailable": "الميكروفون غير متاح حاليًا. أنهِ المكالمة أو الدردشة الصوتية النشطة ثم حاول مرة أخرى.",
   "voiceSmartMode": "الوضع الذكي",
   "voiceRetryAnalysis": "إعادة التحليل",
   "screenInboxSubtitle": "التقط المهام قبل تنظيمها.",

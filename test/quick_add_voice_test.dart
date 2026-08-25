@@ -70,6 +70,52 @@ void main() {
     },
   );
 
+  testWidgets('busy iOS microphone shows an actionable localized error', (
+    tester,
+  ) async {
+    final controller = VoiceRecognitionController(
+      recordedRecognizer: _FakeRecordedRecognizer(
+        transcript: const VoiceRecognitionTranscript(text: ''),
+        startError: PlatformException(
+          code: 'record',
+          message: 'Failed to start recording',
+          details: 'setActive: Session activation failed',
+        ),
+      ),
+      platformSupport: const VoicePlatformSupport(supportsRecordedSystem: true),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          ...proVoiceOverrides,
+          applePurchasesSupportedProvider.overrideWithValue(false),
+          voiceRecognitionControllerProvider.overrideWithValue(controller),
+        ],
+        child: const MaterialApp(
+          locale: Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: QuickAddBar()),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byTooltip('Голосовое добавление'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Записать'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Микрофон сейчас недоступен. Завершите активный звонок или '
+        'голосовой чат и повторите попытку.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('PlatformException'), findsNothing);
+  });
+
   test('logged-out Pro sends StoreKit proof for analysis', () async {
     final httpClient = _FunctionHttpClient();
 
@@ -1278,11 +1324,13 @@ class _FakeRecordedRecognizer
   _FakeRecordedRecognizer({
     required this.transcript,
     this.amplitudeDbfs = const Stream<double>.empty(),
+    this.startError,
   });
 
   final VoiceRecognitionTranscript transcript;
   @override
   final Stream<double> amplitudeDbfs;
+  final Object? startError;
   var startCalls = 0;
   var stopCalls = 0;
   var cancelCalls = 0;
@@ -1290,6 +1338,9 @@ class _FakeRecordedRecognizer
   @override
   Future<void> start(VoiceRecognitionConfig config) async {
     startCalls += 1;
+    if (startError != null) {
+      throw startError!;
+    }
   }
 
   @override

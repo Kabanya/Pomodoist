@@ -997,6 +997,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pomodoist could not process speech; kept a draft for manual editing.';
 
   @override
+  String get voiceMicrophoneUnavailable =>
+      'The microphone is currently unavailable. End any active call or voice chat, then try again.';
+
+  @override
   String get voiceSmartMode => 'Smart mode';
 
   @override

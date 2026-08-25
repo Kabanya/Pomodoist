@@ -315,6 +315,7 @@
   "voiceStepReview": "Review",
   "voiceAnalyzing": "Pomodoist is splitting speech into tasks",
   "voiceFallbackError": "Pomodoist could not process speech; kept a draft for manual editing.",
+  "voiceMicrophoneUnavailable": "The microphone is currently unavailable. End any active call or voice chat, then try again.",
   "voiceSmartMode": "Smart mode",
   "voiceRetryAnalysis": "Retry analysis",
   "screenInboxSubtitle": "Capture tasks before organizing them.",
