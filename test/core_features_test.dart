@@ -1236,6 +1236,24 @@ void main() {
       );
     });
 
+    test('project creation reuses Cyrillic names case-insensitively', () async {
+      final projectId = await projectRepository.createProject('Работа');
+
+      expect(await projectRepository.createProject('Работа'), projectId);
+      expect(await projectRepository.createProject('работа'), projectId);
+
+      final projects = await projectRepository.watchProjects().first;
+      expect(
+        projects.where((project) => project.id != inboxProjectId),
+        hasLength(1),
+      );
+      final commands = await syncQueue.watchPending().first;
+      expect(
+        commands.where((command) => command.type == 'project.create'),
+        hasLength(1),
+      );
+    });
+
     test('project rename trims the name and syncs it', () async {
       final projectId = await projectRepository.createProject('Original');
 

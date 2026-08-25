@@ -45,6 +45,7 @@
   "billingRestore": "恢复购买",
   "privacyPolicy": "隐私政策",
   "termsOfUse": "使用条款",
+  "support": "支持",
   "billingManageLink": "通过 Link 管理",
   "billingExternalBrowserTitle": "付款将在浏览器中打开",
   "billingExternalBrowserMessage": "Pomodoist 将在 Safari 或默认浏览器中打开 Stripe Checkout。请允许打开浏览器窗口以继续。",

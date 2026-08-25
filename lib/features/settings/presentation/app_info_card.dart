@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../app/app_l10n.dart';
+import '../../../app/legal_urls.dart';
 import '../../billing/billing.dart';
 
 final appVersionProvider = FutureProvider<String>((ref) async {
@@ -68,6 +71,37 @@ class SettingsAppInfoCard extends ConsumerWidget {
                 key: const Key('settings-app-plan-value'),
                 textAlign: TextAlign.end,
               ),
+            ),
+            ListTile(
+              key: const Key('settings-privacy-policy-link'),
+              contentPadding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              leading: const Icon(Icons.privacy_tip_outlined),
+              title: Text(l10n.privacyPolicy),
+              trailing: const Icon(Icons.open_in_new),
+              onTap: () => unawaited(
+                launchPomodoistExternalUrl(pomodoistPrivacyPolicyUrl),
+              ),
+            ),
+            ListTile(
+              key: const Key('settings-terms-of-use-link'),
+              contentPadding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              leading: const Icon(Icons.description_outlined),
+              title: Text(l10n.termsOfUse),
+              trailing: const Icon(Icons.open_in_new),
+              onTap: () =>
+                  unawaited(launchPomodoistExternalUrl(pomodoistTermsOfUseUrl)),
+            ),
+            ListTile(
+              key: const Key('settings-support-link'),
+              contentPadding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              leading: const Icon(Icons.support_agent_outlined),
+              title: Text(l10n.support),
+              trailing: const Icon(Icons.open_in_new),
+              onTap: () =>
+                  unawaited(launchPomodoistExternalUrl(pomodoistSupportUrl)),
             ),
           ],
         ),

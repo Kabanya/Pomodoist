@@ -158,6 +158,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get termsOfUse => 'شروط الاستخدام';
 
   @override
+  String get support => 'الدعم';
+
+  @override
   String get billingManageLink => 'الإدارة عبر Link';
 
   @override

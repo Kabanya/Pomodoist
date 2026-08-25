@@ -1,17 +1,37 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pomodoist/app/legal_urls.dart';
 import 'package:pomodoist/features/billing/billing.dart';
 import 'package:pomodoist/features/settings/presentation/app_info_card.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  const urlLauncherChannel = MethodChannel('plugins.flutter.io/url_launcher');
+  final launchedUrls = <String>[];
+
   setUp(() {
     SharedPreferences.setMockInitialValues(const {});
+    launchedUrls.clear();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(urlLauncherChannel, (call) async {
+          if (call.method == 'launch') {
+            launchedUrls.add(
+              (call.arguments as Map<Object?, Object?>)['url']! as String,
+            );
+          }
+          return true;
+        });
+  });
+
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(urlLauncherChannel, null);
   });
 
   testWidgets('shows the installed version and free plan on a narrow screen', (
@@ -82,6 +102,41 @@ void main() {
           .data,
       '—',
     );
+  });
+
+  testWidgets('launches permanent privacy, terms, and support links', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appVersionProvider.overrideWith((ref) async => '1.0.0 (29)'),
+          applePurchasesSupportedProvider.overrideWithValue(false),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: SettingsAppInfoCard()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    const links = {
+      'settings-privacy-policy-link': pomodoistPrivacyPolicyUrl,
+      'settings-terms-of-use-link': pomodoistTermsOfUseUrl,
+      'settings-support-link': 'mailto:pomodoist@placeq.com',
+    };
+    for (final entry in links.entries) {
+      await tester.tap(find.byKey(Key(entry.key)));
+      await tester.pump();
+      expect(launchedUrls.removeLast(), entry.value);
+    }
   });
 
   testWidgets('shows a dash while the installed version is loading', (

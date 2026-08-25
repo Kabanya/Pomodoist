@@ -158,6 +158,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get termsOfUse => 'Términos de uso';
 
   @override
+  String get support => 'Soporte';
+
+  @override
   String get billingManageLink => 'Gestionar mediante Link';
 
   @override

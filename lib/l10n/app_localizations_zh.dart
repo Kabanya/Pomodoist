@@ -152,6 +152,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get termsOfUse => '使用条款';
 
   @override
+  String get support => '支持';
+
+  @override
   String get billingManageLink => '通过 Link 管理';
 
   @override

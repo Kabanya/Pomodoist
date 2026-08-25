@@ -378,6 +378,12 @@ abstract class AppLocalizations {
   /// **'Terms of Use'**
   String get termsOfUse;
 
+  /// No description provided for @support.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get support;
+
   /// No description provided for @billingManageLink.
   ///
   /// In en, this message translates to:

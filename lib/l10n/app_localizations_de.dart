@@ -158,6 +158,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get termsOfUse => 'Nutzungsbedingungen';
 
   @override
+  String get support => 'Support';
+
+  @override
   String get billingManageLink => 'Über Link verwalten';
 
   @override

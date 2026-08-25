@@ -158,6 +158,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get termsOfUse => 'Условия использования';
 
   @override
+  String get support => 'Поддержка';
+
+  @override
   String get billingManageLink => 'Управлять через Link';
 
   @override

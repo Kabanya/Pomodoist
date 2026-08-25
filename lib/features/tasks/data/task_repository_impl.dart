@@ -1023,15 +1023,14 @@ class DriftProjectRepository implements ProjectRepository {
 
   @override
   Future<ProjectItem?> findByName(String name) async {
+    final normalizedName = name.trim().toLowerCase();
     final row =
-        await (_db.select(_db.projects)
-              ..where(
-                (project) =>
-                    project.name.lower().equals(name.trim().toLowerCase()) &
-                    project.isDeleted.equals(false),
-              )
-              ..limit(1))
-            .getSingleOrNull();
+        (await (_db.select(
+              _db.projects,
+            )..where((project) => project.isDeleted.equals(false))).get())
+            .firstWhereOrNull(
+              (project) => project.name.trim().toLowerCase() == normalizedName,
+            );
     return row == null ? null : _mapProject(row);
   }
 

@@ -45,6 +45,7 @@
   "billingRestore": "Восстановить покупки",
   "privacyPolicy": "Политика конфиденциальности",
   "termsOfUse": "Условия использования",
+  "support": "Поддержка",
   "billingManageLink": "Управлять через Link",
   "billingExternalBrowserTitle": "Оплата откроется в браузере",
   "billingExternalBrowserMessage": "Pomodoist откроет Stripe Checkout в Safari или браузере по умолчанию. Разрешите открытие окна, чтобы продолжить.",
