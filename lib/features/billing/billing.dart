@@ -395,13 +395,37 @@ class BillingStore {
     if (!applePurchasesSupported) {
       return const [];
     }
-    return [
-      for (final transaction in await SK2Transaction.transactions())
-        BillingTransactionProof(
-          productId: transaction.productId,
-          jws: transaction.receiptData ?? '',
-        ),
-    ];
+    final result = Completer<List<BillingTransactionProof>>();
+    final subscription = purchaseStream.listen(
+      (purchases) {
+        final transactions = [
+          for (final purchase in purchases)
+            if (billingProductIds.contains(purchase.productID) &&
+                purchase.verificationData.serverVerificationData.isNotEmpty)
+              BillingTransactionProof(
+                productId: purchase.productID,
+                jws: purchase.verificationData.serverVerificationData,
+              ),
+        ];
+        if (transactions.isNotEmpty && !result.isCompleted) {
+          result.complete(transactions);
+        }
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        if (!result.isCompleted) {
+          result.completeError(error, stackTrace);
+        }
+      },
+    );
+    try {
+      await restorePurchases();
+      return await result.future.timeout(
+        const Duration(seconds: 3),
+        onTimeout: () => const [],
+      );
+    } finally {
+      await subscription.cancel();
+    }
   }
 }
 

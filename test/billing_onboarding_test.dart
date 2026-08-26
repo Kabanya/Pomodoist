@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_account/app_account.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -877,6 +878,16 @@ void main() {
     );
 
     expect(await store.pomodoistTransactionJws(), ['signed-pomodoist']);
+  });
+
+  test('billing store restores a signed current entitlement proof', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    final store = _FakeBillingStore();
+
+    expect(await store.pomodoistTransactionJws(), [
+      'server-$pomodoistAnnualProductId',
+    ]);
   });
 
   test(
