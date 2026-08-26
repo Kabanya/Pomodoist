@@ -420,6 +420,42 @@ abstract class AppLocalizations {
   /// **'Purchase error: {error}'**
   String billingPurchaseError(String error);
 
+  /// No description provided for @billingStripeAuthenticationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to Pomodoist and try again.'**
+  String get billingStripeAuthenticationRequired;
+
+  /// No description provided for @billingStripeDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments are not available yet. Try again later.'**
+  String get billingStripeDisabled;
+
+  /// No description provided for @billingStripeAlreadyEntitled.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomodoist Pro is already active. Refresh your account status.'**
+  String get billingStripeAlreadyEntitled;
+
+  /// No description provided for @billingStripeOfferExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This offer has expired. Choose another available plan.'**
+  String get billingStripeOfferExpired;
+
+  /// No description provided for @billingStripeManagedPaymentsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe payments are temporarily unavailable. Try again later or contact support.'**
+  String get billingStripeManagedPaymentsUnavailable;
+
+  /// No description provided for @billingStripeCheckoutFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start payment. Check your connection and try again.'**
+  String get billingStripeCheckoutFailed;
+
   /// No description provided for @purchaseSuccessTitle.
   ///
   /// In en, this message translates to:

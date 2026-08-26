@@ -176,6 +176,25 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get billingStripeAuthenticationRequired => '请登录 Pomodoist 后重试。';
+
+  @override
+  String get billingStripeDisabled => '付款功能尚未开放。请稍后重试。';
+
+  @override
+  String get billingStripeAlreadyEntitled => 'Pomodoist Pro 已激活。请刷新帐户状态。';
+
+  @override
+  String get billingStripeOfferExpired => '此优惠已过期。请选择其他可用方案。';
+
+  @override
+  String get billingStripeManagedPaymentsUnavailable =>
+      'Stripe 付款暂时不可用。请稍后重试或联系支持。';
+
+  @override
+  String get billingStripeCheckoutFailed => '无法开始付款。请检查网络连接后重试。';
+
+  @override
   String get purchaseSuccessTitle => 'Pro 已激活';
 
   @override

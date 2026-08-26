@@ -78,11 +78,11 @@ void main() {
     );
     expect(
       billingPlanForProduct(pomodoistLifetimeProductId)?.fallbackPrice,
-      r'$99',
+      r'$99.99',
     );
     expect(
       billingPlanForProduct(pomodoistLifetimeLaunchProductId)?.fallbackPrice,
-      r'$89',
+      r'$89.99',
     );
   });
 
@@ -110,11 +110,18 @@ void main() {
     final catalog = StripeBillingCatalog.fromJson({
       'enabled': true,
       'introEligible': false,
+      'prices': {
+        pomodoistMonthlyProductId: r'$5.99',
+        pomodoistAnnualProductId: r'$39',
+        pomodoistLifetimeProductId: r'$99.99',
+        pomodoistLifetimeLaunchProductId: r'$89.99',
+      },
       'launchOffer': {'eligible': true, 'endsAt': '2026-08-03T18:00:00Z'},
     });
 
     expect(catalog.enabled, isTrue);
     expect(catalog.introEligible, isFalse);
+    expect(catalog.prices[pomodoistLifetimeProductId], r'$99.99');
     expect(catalog.launchOfferEligible, isTrue);
     expect(catalog.launchOfferEndsAt, DateTime.utc(2026, 8, 3, 18));
     expect(
@@ -153,6 +160,7 @@ void main() {
         loadCatalog: () async => StripeBillingCatalog(
           enabled: true,
           introEligible: true,
+          prices: const {pomodoistAnnualProductId: r'$39'},
           launchOfferEligible: true,
           launchOfferEndsAt: DateTime.utc(2026, 8, 3, 18),
         ),
@@ -184,6 +192,10 @@ void main() {
         pomodoistAnnualProductId,
       });
       expect(catalog.stripeLaunchOfferEligible, isTrue);
+      expect(
+        catalog.productDetailsById[pomodoistAnnualProductId]?.price,
+        r'$39',
+      );
 
       await container
           .read(billingControllerProvider.notifier)
@@ -311,7 +323,54 @@ void main() {
       find.text('The App Store is not available right now.'),
       findsNothing,
     );
-    expect(find.textContaining('Stripe catalog failed.'), findsOneWidget);
+    expect(
+      find.text(
+        'Purchase error: Could not start payment. Check your connection and '
+        'try again.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Stripe catalog failed.'), findsNothing);
+  });
+
+  testWidgets('Stripe Managed Payments error has a localized next action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          billingChannelProvider.overrideWithValue(BillingChannel.stripe),
+          billingSignedInProvider.overrideWithValue(true),
+          billingStripeGatewayProvider.overrideWithValue(
+            BillingStripeGateway(
+              loadCatalog: () => throw const StripeBillingException(
+                'managed_payments_unavailable',
+              ),
+              createCheckout: (_, _) => throw UnimplementedError(),
+              openCheckout: (_) async => false,
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: SingleChildScrollView(child: BillingPaywall()),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Purchase error: Stripe payments are temporarily unavailable. Try '
+        'again later or contact support.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('managed_payments_unavailable'), findsNothing);
   });
 
   testWidgets('disabled web checkout shows an availability notice', (
@@ -348,7 +407,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Покупки доступны через App Store.'), findsOneWidget);
+    expect(
+      find.text('Платежи пока недоступны. Попробуйте позже.'),
+      findsOneWidget,
+    );
     expect(find.textContaining('Stripe checkout is disabled.'), findsNothing);
   });
 
@@ -1257,7 +1319,7 @@ void main() {
             .read(billingControllerProvider)
             .productDetailsById[pomodoistLifetimeLaunchProductId]
             ?.price,
-        r'$89',
+        r'$89.99',
       );
 
       await container
@@ -1707,11 +1769,11 @@ void main() {
       TextDecoration.lineThrough,
     );
     expect(
-      find.descendant(of: launchPlan, matching: find.text(r'$99')),
+      find.descendant(of: launchPlan, matching: find.text(r'$99.99')),
       findsOneWidget,
     );
     expect(
-      find.descendant(of: launchPlan, matching: find.text(r'$89')),
+      find.descendant(of: launchPlan, matching: find.text(r'$89.99')),
       findsOneWidget,
     );
     final annualComparePrice = find.descendant(

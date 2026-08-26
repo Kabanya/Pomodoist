@@ -182,6 +182,30 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get billingStripeAuthenticationRequired =>
+      'سجّل الدخول إلى Pomodoist ثم حاول مرة أخرى.';
+
+  @override
+  String get billingStripeDisabled =>
+      'المدفوعات غير متاحة بعد. حاول مرة أخرى لاحقًا.';
+
+  @override
+  String get billingStripeAlreadyEntitled =>
+      'Pomodoist Pro مفعّل بالفعل. حدّث حالة حسابك.';
+
+  @override
+  String get billingStripeOfferExpired =>
+      'انتهى هذا العرض. اختر خطة أخرى متاحة.';
+
+  @override
+  String get billingStripeManagedPaymentsUnavailable =>
+      'مدفوعات Stripe غير متاحة مؤقتًا. حاول لاحقًا أو تواصل مع الدعم.';
+
+  @override
+  String get billingStripeCheckoutFailed =>
+      'تعذّر بدء الدفع. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.';
+
+  @override
   String get purchaseSuccessTitle => 'Pro مفعل';
 
   @override

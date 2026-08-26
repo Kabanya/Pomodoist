@@ -117,7 +117,9 @@ Future<void> main() async {
                       body: {'action': 'catalog'},
                     );
                     if (response.status < 200 || response.status >= 300) {
-                      throw Exception(_stripeBillingError(response.data));
+                      throw StripeBillingException(
+                        _stripeBillingError(response.data),
+                      );
                     }
                     return StripeBillingCatalog.fromJson(response.data);
                   },
@@ -131,7 +133,9 @@ Future<void> main() async {
                       },
                     );
                     if (response.status < 200 || response.status >= 300) {
-                      throw Exception(_stripeBillingError(response.data));
+                      throw StripeBillingException(
+                        _stripeBillingError(response.data),
+                      );
                     }
                     return stripeCheckoutUrlFromJson(response.data);
                   },

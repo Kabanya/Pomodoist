@@ -76,12 +76,14 @@ class StripeBillingCatalog {
   const StripeBillingCatalog({
     required this.enabled,
     required this.introEligible,
+    this.prices = const {},
     required this.launchOfferEligible,
     required this.launchOfferEndsAt,
   });
 
   final bool enabled;
   final bool introEligible;
+  final Map<String, String> prices;
   final bool launchOfferEligible;
   final DateTime? launchOfferEndsAt;
 
@@ -95,6 +97,7 @@ class StripeBillingCatalog {
     final launch = Map<String, Object?>.from(launchValue);
     final enabled = json['enabled'];
     final introEligible = json['introEligible'];
+    final pricesValue = json['prices'] ?? const {};
     final launchEligible = launch['eligible'];
     final endsAtValue = launch['endsAt'];
     final endsAt = endsAtValue is String
@@ -102,6 +105,13 @@ class StripeBillingCatalog {
         : null;
     if (enabled is! bool ||
         introEligible is! bool ||
+        pricesValue is! Map ||
+        pricesValue.entries.any(
+          (entry) =>
+              entry.key is! String ||
+              entry.value is! String ||
+              (entry.value as String).isEmpty,
+        ) ||
         launchEligible is! bool ||
         (launchEligible && endsAt == null)) {
       throw const FormatException('Invalid Stripe catalog.');
@@ -109,6 +119,10 @@ class StripeBillingCatalog {
     return StripeBillingCatalog(
       enabled: enabled,
       introEligible: introEligible,
+      prices: {
+        for (final entry in pricesValue.entries)
+          entry.key as String: entry.value as String,
+      },
       launchOfferEligible: launchEligible,
       launchOfferEndsAt: endsAt?.toUtc(),
     );
@@ -149,6 +163,27 @@ class BillingStripeGateway {
   final Future<bool> Function(Uri url) openCheckout;
 }
 
+class StripeBillingException implements Exception {
+  const StripeBillingException(this.code);
+
+  final String code;
+
+  @override
+  String toString() => code;
+}
+
+String stripeBillingErrorMessage(AppLocalizations l10n, String code) {
+  return switch (code) {
+    'authentication_required' => l10n.billingStripeAuthenticationRequired,
+    'billing_disabled' => l10n.billingStripeDisabled,
+    'already_entitled' => l10n.billingStripeAlreadyEntitled,
+    'offer_expired' => l10n.billingStripeOfferExpired,
+    'managed_payments_unavailable' =>
+      l10n.billingStripeManagedPaymentsUnavailable,
+    _ => l10n.billingStripeCheckoutFailed,
+  };
+}
+
 enum BillingPlanKind { subscription, lifetime }
 
 class BillingPlan {
@@ -185,13 +220,13 @@ const billingPlans = [
   BillingPlan(
     productId: pomodoistLifetimeProductId,
     kind: BillingPlanKind.lifetime,
-    fallbackPrice: r'$99',
+    fallbackPrice: r'$99.99',
     highlighted: false,
   ),
   BillingPlan(
     productId: pomodoistLifetimeLaunchProductId,
     kind: BillingPlanKind.lifetime,
-    fallbackPrice: r'$89',
+    fallbackPrice: r'$89.99',
     highlighted: false,
   ),
 ];
@@ -978,6 +1013,19 @@ class BillingController extends Notifier<BillingState> {
         loading: false,
         platformSupported: true,
         storeAvailable: catalog.enabled,
+        productDetailsById: {
+          for (final entry in catalog.prices.entries)
+            if (billingProductIds.contains(entry.key))
+              entry.key: ProductDetails(
+                id: entry.key,
+                title: entry.key,
+                description: entry.key,
+                price: entry.value,
+                rawPrice: 0,
+                currencyCode: 'USD',
+                currencySymbol: r'$',
+              ),
+        },
         activeProductId: activeProductId,
         activeStoreKitProductIds: activeStoreKitProductIds,
         purchasedProductIds: purchasedProductIds,
@@ -1429,15 +1477,24 @@ class BillingPaywall extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
           ],
-          if (!state.platformSupported ||
-              (channel == BillingChannel.stripe &&
-                  !state.storeAvailable &&
-                  !state.loading &&
-                  state.error == null))
+          if (!state.platformSupported)
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(
                 l10n.billingAppleOnly,
+                style: textTheme.bodySmall?.copyWith(
+                  color: colors.secondaryText,
+                ),
+              ),
+            )
+          else if (channel == BillingChannel.stripe &&
+              !state.storeAvailable &&
+              !state.loading &&
+              state.error == null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                l10n.billingStripeDisabled,
                 style: textTheme.bodySmall?.copyWith(
                   color: colors.secondaryText,
                 ),
@@ -1458,7 +1515,11 @@ class BillingPaywall extends ConsumerWidget {
           if (state.error != null) ...[
             const SizedBox(height: 8),
             Text(
-              l10n.billingPurchaseError(state.error!),
+              l10n.billingPurchaseError(
+                channel == BillingChannel.stripe
+                    ? stripeBillingErrorMessage(l10n, state.error!)
+                    : state.error!,
+              ),
               style: textTheme.bodySmall?.copyWith(color: colors.accent),
             ),
           ],
