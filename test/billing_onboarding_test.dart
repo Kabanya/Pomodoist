@@ -1039,7 +1039,7 @@ void main() {
     );
   });
 
-  testWidgets(r'24-hour offer shows the annual $19 price everywhere', (
+  testWidgets(r'24-hour offer shows subscription promo prices everywhere', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -1073,6 +1073,17 @@ void main() {
     );
     expect(
       find.descendant(of: annual, matching: find.text(r'$39/year')),
+      findsOneWidget,
+    );
+    final monthly = find.byKey(
+      const ValueKey('billing-plan-pomodoist.pro.monthly'),
+    );
+    expect(
+      find.descendant(of: monthly, matching: find.text(r'$2.99/month')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: monthly, matching: find.text(r'$5.99/month')),
       findsOneWidget,
     );
   });

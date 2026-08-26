@@ -1391,7 +1391,9 @@ class BillingPaywall extends ConsumerWidget {
               plan: plan,
               state: state,
               forceIntroductoryPrice:
-                  launchOfferMode && plan.productId == pomodoistAnnualProductId,
+                  launchOfferMode &&
+                  (plan.productId == pomodoistAnnualProductId ||
+                      plan.productId == pomodoistMonthlyProductId),
               compareAtPrice: switch (plan.productId) {
                 pomodoistLifetimeLaunchProductId => lifetimeCompareAtPrice,
                 _ => null,
