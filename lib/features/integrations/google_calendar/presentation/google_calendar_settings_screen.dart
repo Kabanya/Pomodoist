@@ -1,18 +1,11 @@
-import 'dart:async';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/services.dart';
 
 import '../../../../app/app_l10n.dart';
 import '../../../../app/account_providers.dart';
 import '../../../../app/formatters.dart';
 import '../../../../app/providers.dart';
 import '../../../../app/theme/app_theme.dart';
-import '../data/google_calendar_api_client.dart';
-import '../data/google_calendar_config.dart';
-import 'google_calendar_web_sign_in_button.dart';
 
 class GoogleCalendarSettingsScreen extends ConsumerStatefulWidget {
   const GoogleCalendarSettingsScreen({this.embedded = false, super.key});
@@ -29,30 +22,14 @@ class _GoogleCalendarSettingsScreenState
   bool _busy = false;
 
   @override
-  void initState() {
-    super.initState();
-    unawaited(
-      ref.read(googleCalendarAuthServiceProvider).initialize().catchError((_) {
-        // The connect/sync action reports configuration errors in the UI.
-      }),
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.appColors;
     final connection = ref.watch(googleCalendarConnectionProvider);
-    final localDeviceId = ref.watch(pomodoistDeviceIdProvider).value;
     final child = connection.when(
       data: (row) {
         final connected =
             row?.calendarId != null && row?.status != 'disconnected';
-        final connectedElsewhere =
-            connected &&
-            row?.ownerDeviceId != null &&
-            localDeviceId != null &&
-            row!.ownerDeviceId != localDeviceId;
         final children = [
           Text(
             l10n.googleCalendarTitle,
@@ -62,9 +39,7 @@ class _GoogleCalendarSettingsScreenState
           ),
           const SizedBox(height: 4),
           Text(
-            connectedElsewhere
-                ? l10n.googleCalendarConnectedOnAnotherDeviceSubtitle
-                : connected
+            connected
                 ? l10n.googleCalendarConnectedSubtitle
                 : l10n.googleCalendarDisconnectedSubtitle,
             style: Theme.of(
@@ -72,19 +47,13 @@ class _GoogleCalendarSettingsScreenState
             ).textTheme.bodyMedium?.copyWith(color: colors.secondaryText),
           ),
           const SizedBox(height: 20),
-          if (!connected && kIsWeb) ...[
-            const GoogleCalendarWebSignInButton(),
-            const SizedBox(height: 12),
-          ],
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
               FilledButton.icon(
-                onPressed: _busy || (connected && localDeviceId == null)
+                onPressed: _busy
                     ? null
-                    : connectedElsewhere
-                    ? () => _connect()
                     : connected
                     ? () => _sync()
                     : () => _connect(),
@@ -93,22 +62,10 @@ class _GoogleCalendarSettingsScreenState
                         dimension: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Icon(
-                        connectedElsewhere
-                            ? Icons.phonelink_setup
-                            : connected
-                            ? Icons.sync
-                            : Icons.link,
-                      ),
-                label: Text(
-                  connectedElsewhere
-                      ? l10n.useThisDevice
-                      : connected
-                      ? l10n.syncNow
-                      : l10n.connect,
-                ),
+                    : Icon(connected ? Icons.sync : Icons.link),
+                label: Text(connected ? l10n.syncNow : l10n.connect),
               ),
-              if (connected && !connectedElsewhere)
+              if (connected)
                 OutlinedButton.icon(
                   onPressed: _busy ? null : () => _disconnect(),
                   icon: const Icon(Icons.link_off),
@@ -176,7 +133,7 @@ class _GoogleCalendarSettingsScreenState
           SnackBar(
             content: Text(
               context.l10n.googleCalendarFailed(
-                _googleCalendarErrorMessage(context, error),
+                _googleCalendarErrorMessage(error),
               ),
             ),
           ),
@@ -190,33 +147,7 @@ class _GoogleCalendarSettingsScreenState
   }
 }
 
-String _googleCalendarErrorMessage(BuildContext context, Object error) {
-  final l10n = context.l10n;
-  if (error is GoogleCalendarConfigException) {
-    return error.message;
-  }
-  if (error is GoogleCalendarAuthRequiredException) {
-    return l10n.googleAuthRequired;
-  }
-  if (error is PlatformException &&
-      error.code == 'google_sign_in' &&
-      (error.message?.contains('No active configuration') ?? false)) {
-    return l10n.googleSignInNotConfigured;
-  }
-  if (error is PlatformException &&
-      error.code == 'google_sign_in' &&
-      ((error.message?.contains('URL scheme') ?? false) ||
-          (error.message?.contains('CFBundleURLSchemes') ?? false))) {
-    return l10n.googleCallbackNotConfigured;
-  }
-  final text = error.toString();
-  if (text.contains('official Google web sign-in button')) {
-    return l10n.googleWebButtonFirst;
-  }
-  if (text.contains('access_denied') ||
-      text.contains('not completed the Google verification process')) {
-    return l10n.googleAccessDenied;
-  }
+String _googleCalendarErrorMessage(Object error) {
   return error.toString();
 }
 

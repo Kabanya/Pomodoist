@@ -14,7 +14,6 @@ class RuntimePublicConfig {
     required this.webAppUrl,
     required this.supabaseUrl,
     required this.supabaseAnonKey,
-    required this.googleWebClientId,
     required this.turnstileSiteKey,
     required this.sentryDsn,
   });
@@ -25,7 +24,6 @@ class RuntimePublicConfig {
     'webAppUrl',
     'supabaseUrl',
     'supabaseAnonKey',
-    'googleWebClientId',
     'turnstileSiteKey',
     'sentryDsn',
   };
@@ -35,7 +33,6 @@ class RuntimePublicConfig {
   final Uri webAppUrl;
   final Uri? supabaseUrl;
   final String supabaseAnonKey;
-  final String googleWebClientId;
   final String turnstileSiteKey;
   final Uri? sentryDsn;
 
@@ -56,7 +53,6 @@ class RuntimePublicConfig {
       webAppUrl: _requiredString(json, 'webAppUrl'),
       supabaseUrl: _requiredString(json, 'supabaseUrl'),
       supabaseAnonKey: _requiredString(json, 'supabaseAnonKey'),
-      googleWebClientId: _string(json, 'googleWebClientId'),
       turnstileSiteKey: _string(json, 'turnstileSiteKey'),
       sentryDsn: _string(json, 'sentryDsn'),
       allowLocal: false,
@@ -79,7 +75,6 @@ class RuntimePublicConfig {
       ),
       supabaseUrl: const String.fromEnvironment('SUPABASE_URL'),
       supabaseAnonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
-      googleWebClientId: const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID'),
       turnstileSiteKey: const String.fromEnvironment('TURNSTILE_SITE_KEY'),
       sentryDsn: const String.fromEnvironment('SENTRY_DSN'),
       nativeRelease: kReleaseMode && !kIsWeb,
@@ -92,7 +87,6 @@ class RuntimePublicConfig {
     required String webAppUrl,
     required String supabaseUrl,
     required String supabaseAnonKey,
-    required String googleWebClientId,
     required String turnstileSiteKey,
     required String sentryDsn,
     bool nativeRelease = false,
@@ -107,7 +101,6 @@ class RuntimePublicConfig {
       supabaseAnonKey: useSupabaseFallback
           ? _productionSupabasePublishableKey
           : supabaseAnonKey,
-      googleWebClientId: googleWebClientId,
       turnstileSiteKey: turnstileSiteKey,
       sentryDsn: sentryDsn,
       allowLocal: true,
@@ -120,7 +113,6 @@ class RuntimePublicConfig {
     required String webAppUrl,
     required String supabaseUrl,
     required String supabaseAnonKey,
-    required String googleWebClientId,
     required String turnstileSiteKey,
     required String sentryDsn,
     required bool allowLocal,
@@ -176,7 +168,6 @@ class RuntimePublicConfig {
       webAppUrl: parsedWebAppUrl,
       supabaseUrl: parsedSupabaseUrl,
       supabaseAnonKey: supabaseAnonKey,
-      googleWebClientId: googleWebClientId,
       turnstileSiteKey: turnstileSiteKey,
       sentryDsn: parsedSentryDsn,
     );
@@ -188,7 +179,6 @@ class RuntimePublicConfig {
     'webAppUrl': webAppUrl.toString(),
     'supabaseUrl': supabaseUrl?.toString() ?? '',
     'supabaseAnonKey': supabaseAnonKey,
-    'googleWebClientId': googleWebClientId,
     'turnstileSiteKey': turnstileSiteKey,
     'sentryDsn': sentryDsn?.toString() ?? '',
   };

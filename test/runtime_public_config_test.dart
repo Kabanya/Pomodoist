@@ -16,7 +16,6 @@ void main() {
         Uri.parse('https://supabase-test.pomodoist.com'),
       );
       expect(config.supabaseAnonKey, 'staging-anon-key');
-      expect(config.googleWebClientId, 'web-client.apps.googleusercontent.com');
       expect(config.turnstileSiteKey, 'turnstile-public-key');
       expect(
         config.sentryDsn,
@@ -28,7 +27,6 @@ void main() {
         'webAppUrl',
         'supabaseUrl',
         'supabaseAnonKey',
-        'googleWebClientId',
         'turnstileSiteKey',
         'sentryDsn',
       });
@@ -214,7 +212,6 @@ void main() {
         webAppUrl: 'http://127.0.0.1:7358',
         supabaseUrl: '',
         supabaseAnonKey: '',
-        googleWebClientId: '',
         turnstileSiteKey: '',
         sentryDsn: '',
       );
@@ -231,7 +228,6 @@ void main() {
         webAppUrl: 'http://127.0.0.1:7358',
         supabaseUrl: '',
         supabaseAnonKey: '',
-        googleWebClientId: '',
         turnstileSiteKey: '',
         sentryDsn: '',
         nativeRelease: true,
@@ -252,7 +248,6 @@ Map<String, Object?> _stagingConfig() => {
   'webAppUrl': 'https://app-test.pomodoist.com',
   'supabaseUrl': 'https://supabase-test.pomodoist.com',
   'supabaseAnonKey': 'staging-anon-key',
-  'googleWebClientId': 'web-client.apps.googleusercontent.com',
   'turnstileSiteKey': 'turnstile-public-key',
   'sentryDsn': 'https://public@o12345.ingest.sentry.io/42',
 };

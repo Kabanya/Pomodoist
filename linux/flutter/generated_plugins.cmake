@@ -5,7 +5,6 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_linux
   file_selector_linux
-  flutter_secure_storage_linux
   flutter_timezone
   gtk
   multiview_desktop

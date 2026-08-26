@@ -19,7 +19,6 @@ import 'package:pomodoist/core/time/clock.dart';
 import 'package:pomodoist/features/billing/billing.dart';
 import 'package:pomodoist/features/billing/purchase_success_screen.dart';
 import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
-import 'package:pomodoist/features/integrations/google_calendar/data/auth/google_calendar_auth_contract.dart';
 import 'package:pomodoist/features/onboarding/onboarding_gate.dart';
 import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
@@ -1976,9 +1975,6 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(true),
           clockProvider.overrideWithValue(clock),
           pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
-          googleCalendarAuthServiceProvider.overrideWithValue(
-            const _NoopGoogleCalendarAuthService(),
-          ),
           googleCalendarConnectionProvider.overrideWith(
             (ref) => Stream.value(null),
           ),
@@ -2047,9 +2043,6 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(true),
           billingAccountEntitlementProvider.overrideWithValue(true),
           pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
-          googleCalendarAuthServiceProvider.overrideWithValue(
-            const _NoopGoogleCalendarAuthService(),
-          ),
           googleCalendarConnectionProvider.overrideWith(
             (ref) => Stream.value(null),
           ),
@@ -2154,9 +2147,6 @@ void main() {
           accountOverviewProvider.overrideWith(
             (ref) async => AccountOverview.empty('user-1'),
           ),
-          googleCalendarAuthServiceProvider.overrideWithValue(
-            const _NoopGoogleCalendarAuthService(),
-          ),
           googleCalendarConnectionProvider.overrideWith(
             (ref) => Stream.value(null),
           ),
@@ -2251,9 +2241,6 @@ void main() {
           billingStoreProvider.overrideWithValue(_FakeBillingStore()),
           applePurchasesSupportedProvider.overrideWithValue(true),
           pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
-          googleCalendarAuthServiceProvider.overrideWithValue(
-            const _NoopGoogleCalendarAuthService(),
-          ),
           googleCalendarConnectionProvider.overrideWith(
             (ref) => Stream.value(null),
           ),
@@ -2803,22 +2790,4 @@ class _OnboardingRouterHarness extends StatelessWidget {
 
 String _routerUri(GoRouter router) {
   return router.routeInformationProvider.value.uri.toString();
-}
-
-class _NoopGoogleCalendarAuthService implements GoogleCalendarAuthService {
-  const _NoopGoogleCalendarAuthService();
-
-  @override
-  Future<String?> accessToken({bool interactive = false}) async => null;
-
-  @override
-  Future<void> disconnect() async {}
-
-  @override
-  Future<void> initialize() async {}
-
-  @override
-  Future<GoogleCalendarAuthAccount> signIn() async {
-    return const GoogleCalendarAuthAccount(email: 'user@example.test');
-  }
 }

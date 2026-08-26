@@ -9,7 +9,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/account_providers.dart';
 import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/features/billing/billing.dart';
-import 'package:pomodoist/features/integrations/google_calendar/data/auth/google_calendar_auth_contract.dart';
 import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -280,9 +279,6 @@ Future<void> _updateSettingsAccount(
     ),
     applePurchasesSupportedProvider.overrideWithValue(false),
     pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
-    googleCalendarAuthServiceProvider.overrideWithValue(
-      const _NoopGoogleCalendarAuthService(),
-    ),
     googleCalendarConnectionProvider.overrideWith((ref) => Stream.value(null)),
   ]);
   await tester.pumpAndSettle();
@@ -344,9 +340,6 @@ Future<void> _pumpSettings(
         ),
         applePurchasesSupportedProvider.overrideWithValue(false),
         pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
-        googleCalendarAuthServiceProvider.overrideWithValue(
-          const _NoopGoogleCalendarAuthService(),
-        ),
         googleCalendarConnectionProvider.overrideWith(
           (ref) => Stream.value(null),
         ),
@@ -410,22 +403,4 @@ class _OAuthGrantsAccount implements AccountClient {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-class _NoopGoogleCalendarAuthService implements GoogleCalendarAuthService {
-  const _NoopGoogleCalendarAuthService();
-
-  @override
-  Future<String?> accessToken({bool interactive = false}) async => null;
-
-  @override
-  Future<void> disconnect() async {}
-
-  @override
-  Future<void> initialize() async {}
-
-  @override
-  Future<GoogleCalendarAuthAccount> signIn() async {
-    return const GoogleCalendarAuthAccount();
-  }
 }

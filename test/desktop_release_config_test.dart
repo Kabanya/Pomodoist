@@ -32,20 +32,6 @@ void main() {
         ..['TURNSTILE_SITE_KEY'] = '1x00000000000000000000AA',
     ),
     (
-      name: 'invalid Google desktop client ID',
-      config: _validConfig()..['GOOGLE_DESKTOP_CLIENT_ID'] = 'not-a-client-id',
-    ),
-    (
-      name: 'unexpected Google desktop client ID',
-      config: _validConfig()
-        ..['GOOGLE_DESKTOP_CLIENT_ID'] =
-            '794610194912-uph4dnt4029sntlmgpnulervr1gld8v5.apps.googleusercontent.com',
-    ),
-    (
-      name: 'missing Google desktop client secret',
-      config: _validConfig()..['GOOGLE_DESKTOP_CLIENT_SECRET'] = '',
-    ),
-    (
       name: 'Supabase secret key in a public desktop artifact',
       config: _validConfig()
         ..['SUPABASE_SECRET_KEY'] = 'fixture-secret-must-never-ship',
@@ -68,7 +54,6 @@ void main() {
       expect(result.exitCode, 64);
       expect(result.stderr.toString(), isNot(contains('evil.example')));
       expect(result.stderr.toString(), isNot(contains('1x000000')));
-      expect(result.stderr.toString(), isNot(contains('not-a-client-id')));
       expect(result.stderr.toString(), isNot(contains('fixture-secret')));
       expect(result.stderr.toString(), isNot(contains('legacy-sensitive')));
       expect(
@@ -85,9 +70,6 @@ Map<String, Object?> _validConfig() => {
   'POMODOIST_REGISTRATION_URL': 'https://app.pomodoist.com/auth/challenge',
   'TURNSTILE_SITE_KEY': '0x4AAAAAAAabcdefghijklmnopqrstuv',
   'SENTRY_DSN': '',
-  'GOOGLE_DESKTOP_CLIENT_ID':
-      '833439675371-3dkqfci15nds8tl87ik99qirpt5o3l1h.apps.googleusercontent.com',
-  'GOOGLE_DESKTOP_CLIENT_SECRET': 'desktop-client-secret',
 };
 
 ProcessResult _validateConfig(Map<String, Object?> config) {

@@ -60,7 +60,6 @@ void main() {
       webAppUrl: 'https://app.pomodoist.com',
       supabaseUrl: 'https://ewauihswbwduvklrozke.supabase.co',
       supabaseAnonKey: 'production-anon-key',
-      googleWebClientId: 'web-client.apps.googleusercontent.com',
       turnstileSiteKey: 'turnstile-public-key',
       sentryDsn: 'https://public@o12345.ingest.sentry.io/42',
     );
@@ -81,10 +80,6 @@ void main() {
     expect(payload['supabaseUrl'], 'https://ewauihswbwduvklrozke.supabase.co');
     expect(payload['supabaseAnonKey'], 'production-anon-key');
     expect(payload['anonKey'], 'production-anon-key');
-    expect(
-      payload['googleWebClientId'],
-      'web-client.apps.googleusercontent.com',
-    );
     expect(payload['turnstileSiteKey'], 'turnstile-public-key');
     expect(payload['sentryDsn'], 'https://public@o12345.ingest.sentry.io/42');
   });

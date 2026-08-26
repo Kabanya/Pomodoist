@@ -61,6 +61,19 @@ void main() {
     );
   });
 
+  test('routes the exact Google Calendar OAuth return', () {
+    expect(
+      nativeRouteForLink(Uri.parse('pomodoist://google-calendar-connected')),
+      '/integrations/google-calendar',
+    );
+    expect(
+      nativeRouteForLink(
+        Uri.parse('pomodoist://google-calendar-connected?next=evil'),
+      ),
+      isNull,
+    );
+  });
+
   test(
     'dispatches exact CAPTCHA callbacks to the shared stream once',
     () async {

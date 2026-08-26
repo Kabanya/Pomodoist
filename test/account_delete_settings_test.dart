@@ -10,7 +10,6 @@ import 'package:pomodoist/app/account_providers.dart';
 import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/features/billing/billing.dart';
-import 'package:pomodoist/features/integrations/google_calendar/data/auth/google_calendar_auth_contract.dart';
 import 'package:pomodoist/features/settings/presentation/app_info_card.dart';
 import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
@@ -453,9 +452,6 @@ Future<void> _pumpSettings(
         applePurchasesSupportedProvider.overrideWithValue(false),
         appVersionProvider.overrideWith((ref) async => '2.4.1 (37)'),
         pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
-        googleCalendarAuthServiceProvider.overrideWithValue(
-          const _NoopGoogleCalendarAuthService(),
-        ),
         googleCalendarConnectionProvider.overrideWith(
           (ref) => Stream.value(null),
         ),
@@ -533,24 +529,6 @@ class _Invocation {
 bool _mapsEqual(Map<String, Object?> left, Map<String, Object?> right) {
   if (left.length != right.length) return false;
   return left.entries.every((entry) => right[entry.key] == entry.value);
-}
-
-class _NoopGoogleCalendarAuthService implements GoogleCalendarAuthService {
-  const _NoopGoogleCalendarAuthService();
-
-  @override
-  Future<String?> accessToken({bool interactive = false}) async => null;
-
-  @override
-  Future<void> disconnect() async {}
-
-  @override
-  Future<void> initialize() async {}
-
-  @override
-  Future<GoogleCalendarAuthAccount> signIn() async {
-    return const GoogleCalendarAuthAccount(email: 'user@example.test');
-  }
 }
 
 class _FailingResetDatabase extends AppDatabase {

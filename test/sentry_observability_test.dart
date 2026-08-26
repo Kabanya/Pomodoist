@@ -269,7 +269,6 @@ RuntimePublicConfig _config({
         ? 'https://ewauihswbwduvklrozke.supabase.co'
         : 'https://supabase-test.pomodoist.com',
     supabaseAnonKey: local ? '' : 'public-anon-key',
-    googleWebClientId: '',
     turnstileSiteKey: local ? '' : 'test-turnstile-site-key',
     sentryDsn: sentryDsn,
   );

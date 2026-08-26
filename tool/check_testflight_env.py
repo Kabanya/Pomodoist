@@ -39,7 +39,7 @@ for name, value in expected.items():
     if values.get(name) != value:
         fail(f"{name} must be {value}")
 
-for name in ("SUPABASE_ANON_KEY", "GOOGLE_WEB_CLIENT_ID", "TURNSTILE_SITE_KEY"):
+for name in ("SUPABASE_ANON_KEY", "TURNSTILE_SITE_KEY"):
     if not values.get(name):
         fail(f"{name} must not be empty")
 if "SENTRY_DSN" not in values:

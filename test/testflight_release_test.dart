@@ -25,7 +25,6 @@ WEB_APP_URL=https://app.pomodoist.com
 POMODOIST_REGISTRATION_URL=https://app.pomodoist.com/auth/challenge
 SUPABASE_URL=https://ewauihswbwduvklrozke.supabase.co
 SUPABASE_ANON_KEY=header.$payload.signature
-GOOGLE_WEB_CLIENT_ID=client.apps.googleusercontent.com
 TURNSTILE_SITE_KEY=public-site-key
 SENTRY_DSN=
 ''');
@@ -50,8 +49,6 @@ SENTRY_DSN=
       'ASC_ISSUER_ID=test',
       'ASC_KEY_PATH=pubspec.yaml',
       'TESTFLIGHT_CONFIG=pubspec.yaml',
-      'GOOGLE_CLIENT_ID=ios.apps.googleusercontent.com',
-      'GOOGLE_REVERSED_CLIENT_ID=com.googleusercontent.apps.ios',
     ]);
     expect(result.exitCode, 0, reason: result.stderr.toString());
 
@@ -63,31 +60,12 @@ SENTRY_DSN=
       output,
       contains('--dart-define=POMODOIST_BILLING_CHANNEL=storekit'),
     );
-    expect(
-      output,
-      contains(
-        '--dart-define=GOOGLE_CLIENT_ID="ios.apps.googleusercontent.com"',
-      ),
-    );
+    expect(output, isNot(contains('GOOGLE_CLIENT_ID')));
     expect(output, isNot(contains('flutter build ios')));
     expect(
       output.indexOf('altool --upload-app'),
       greaterThan(output.indexOf('altool --validate-app')),
     );
-  });
-
-  test('macOS OAuth preflight rejects a missing client secret', () async {
-    if (Platform.isWindows) return;
-
-    Future<ProcessResult> check(String secret) => Process.run('make', [
-      '-s',
-      'macos-oauth-check',
-      'GOOGLE_DESKTOP_CLIENT_ID=desktop.apps.googleusercontent.com',
-      'GOOGLE_DESKTOP_CLIENT_SECRET=$secret',
-    ]);
-
-    expect((await check('')).exitCode, isNot(0));
-    expect((await check('desktop-secret')).exitCode, 0);
   });
 
   test('macOS release build uses the production runtime config', () async {
@@ -97,8 +75,6 @@ SENTRY_DSN=
       '-n',
       'build-macos-release',
       'TESTFLIGHT_CONFIG=pubspec.yaml',
-      'GOOGLE_DESKTOP_CLIENT_ID=desktop.apps.googleusercontent.com',
-      'GOOGLE_DESKTOP_CLIENT_SECRET=desktop-secret',
     ]);
     expect(result.exitCode, 0, reason: result.stderr.toString());
 
@@ -110,15 +86,6 @@ SENTRY_DSN=
       output,
       contains('--dart-define=POMODOIST_BILLING_CHANNEL=storekit'),
     );
-    expect(
-      output,
-      contains(
-        '--dart-define=GOOGLE_DESKTOP_CLIENT_ID="desktop.apps.googleusercontent.com"',
-      ),
-    );
-    expect(
-      output,
-      contains('--dart-define=GOOGLE_DESKTOP_CLIENT_SECRET="desktop-secret"'),
-    );
+    expect(output, isNot(contains('GOOGLE_DESKTOP_CLIENT')));
   });
 }

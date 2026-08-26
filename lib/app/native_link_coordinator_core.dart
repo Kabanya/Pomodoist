@@ -160,6 +160,9 @@ CaptchaTimeoutCancel _scheduleNativeLinkExpiry(
 
 String? nativeRouteForLink(Uri uri) {
   if (_isExactFocusLink(uri)) return '/focus';
+  if (_isExactGoogleCalendarConnectedLink(uri)) {
+    return '/integrations/google-calendar';
+  }
   if (_isExactPurchaseSuccessLink(uri)) {
     return '/purchase-success?source=stripe';
   }
@@ -173,6 +176,16 @@ String? nativeRouteForLink(Uri uri) {
     path: '/login-callback',
     queryParameters: {'returnTo': returnTo, 'authFailure': ?authFailure},
   ).toString();
+}
+
+bool _isExactGoogleCalendarConnectedLink(Uri uri) {
+  return uri.scheme == 'pomodoist' &&
+      uri.host == 'google-calendar-connected' &&
+      uri.path.isEmpty &&
+      uri.userInfo.isEmpty &&
+      !uri.hasPort &&
+      !uri.hasQuery &&
+      !uri.hasFragment;
 }
 
 bool _isExactPurchaseSuccessLink(Uri uri) {

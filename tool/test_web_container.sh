@@ -62,7 +62,7 @@ run_remote() {
   environment=$2
   web_url=$3
   supabase_url=$4
-  google_client=$5
+  turnstile_site_key=$5
 
   containers="$containers $name"
   docker run --detach --rm --name "$name" --publish 127.0.0.1::8080 \
@@ -71,8 +71,7 @@ run_remote() {
     --env "POMODOIST_WEB_URL=$web_url" \
     --env "SUPABASE_URL=$supabase_url" \
     --env 'SUPABASE_ANON_KEY=public-anon-key' \
-    --env "GOOGLE_WEB_CLIENT_ID=$google_client" \
-    --env 'TURNSTILE_SITE_KEY=1x00000000000000000000AA' \
+    --env "TURNSTILE_SITE_KEY=$turnstile_site_key" \
     --env 'SENTRY_DSN=https://public@o12345.ingest.sentry.io/42' \
     "$image" >/dev/null
 }
@@ -134,7 +133,7 @@ docker run --rm \
   "$image" nginx -t >/dev/null
 
 unicode_separators=$(printf '\342\200\250\342\200\251')
-malicious_google_client="client\"</script>\nline${unicode_separators}tail"
+malicious_turnstile_key="client\"</script>\nline${unicode_separators}tail"
 
 staging_name="pomodoist-web-staging-$$"
 run_remote \
@@ -142,7 +141,7 @@ run_remote \
   staging \
   https://app-test.pomodoist.com \
   https://supabase-test.pomodoist.com \
-  "$malicious_google_client"
+  "$malicious_turnstile_key"
 staging_url=$(container_url "$staging_name")
 wait_for_http "$staging_url/healthz"
 
@@ -197,7 +196,7 @@ staging_version="$test_root/staging-version.json"
 curl --fail --silent --show-error "$staging_url/config.js" >"$staging_config"
 curl --fail --silent --show-error "$staging_url/version.json" >"$staging_version"
 
-python3 - "$staging_config" "$staging_version" "$malicious_google_client" <<'PY'
+python3 - "$staging_config" "$staging_version" "$malicious_turnstile_key" <<'PY'
 import json
 import pathlib
 import sys
@@ -208,10 +207,10 @@ assert config_text.startswith(prefix) and config_text.endswith(";\n")
 config = json.loads(config_text[len(prefix):-2])
 assert set(config) == {
     "environment", "release", "webAppUrl", "supabaseUrl",
-    "supabaseAnonKey", "googleWebClientId", "turnstileSiteKey", "sentryDsn",
+    "supabaseAnonKey", "turnstileSiteKey", "sentryDsn",
 }
 assert config["environment"] == "staging"
-assert config["googleWebClientId"] == sys.argv[3]
+assert config["turnstileSiteKey"] == sys.argv[3]
 assert "</script>" not in config_text
 assert "\u2028" not in config_text and "\u2029" not in config_text
 assert "\\u2028" in config_text and "\\u2029" in config_text

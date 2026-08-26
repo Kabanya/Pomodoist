@@ -15,7 +15,6 @@ import 'package:pomodoist/core/notifications/notification_scheduler.dart';
 import 'package:pomodoist/features/focus/domain/focus_models.dart';
 import 'package:pomodoist/features/focus/presentation/focus_screen.dart';
 import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
-import 'package:pomodoist/features/integrations/google_calendar/data/auth/google_calendar_auth_contract.dart';
 import 'package:pomodoist/features/productivity/domain/achievement_models.dart';
 import 'package:pomodoist/features/productivity/presentation/achievement_announcements.dart';
 import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
@@ -595,9 +594,6 @@ void main() {
       ProviderScope(
         overrides: [
           pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
-          googleCalendarAuthServiceProvider.overrideWithValue(
-            const _NoopGoogleCalendarAuthService(),
-          ),
           googleCalendarConnectionProvider.overrideWith(
             (ref) => Stream.value(null),
           ),
@@ -640,9 +636,6 @@ void main() {
       ProviderScope(
         overrides: [
           pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
-          googleCalendarAuthServiceProvider.overrideWithValue(
-            const _NoopGoogleCalendarAuthService(),
-          ),
           googleCalendarConnectionProvider.overrideWith(
             (ref) => Stream.value(null),
           ),
@@ -695,9 +688,6 @@ void main() {
       ProviderScope(
         overrides: [
           pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
-          googleCalendarAuthServiceProvider.overrideWithValue(
-            const _NoopGoogleCalendarAuthService(),
-          ),
           googleCalendarConnectionProvider.overrideWith(
             (ref) => Stream.value(null),
           ),
@@ -740,9 +730,6 @@ void main() {
           notificationSchedulerProvider.overrideWithValue(
             _FakeNotificationScheduler(),
           ),
-          googleCalendarAuthServiceProvider.overrideWithValue(
-            const _NoopGoogleCalendarAuthService(),
-          ),
           googleCalendarConnectionProvider.overrideWith(
             (ref) => Stream.value(null),
           ),
@@ -767,9 +754,6 @@ void main() {
         overrides: [
           pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
           notificationSchedulerProvider.overrideWithValue(scheduler),
-          googleCalendarAuthServiceProvider.overrideWithValue(
-            const _NoopGoogleCalendarAuthService(),
-          ),
           googleCalendarConnectionProvider.overrideWith(
             (ref) => Stream.value(null),
           ),
@@ -801,9 +785,6 @@ void main() {
       ProviderScope(
         overrides: [
           pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
-          googleCalendarAuthServiceProvider.overrideWithValue(
-            const _NoopGoogleCalendarAuthService(),
-          ),
           googleCalendarConnectionProvider.overrideWith(
             (ref) => Stream.value(null),
           ),
@@ -838,9 +819,6 @@ void main() {
       ProviderScope(
         overrides: [
           pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
-          googleCalendarAuthServiceProvider.overrideWithValue(
-            const _NoopGoogleCalendarAuthService(),
-          ),
           googleCalendarConnectionProvider.overrideWith(
             (ref) => Stream.value(null),
           ),
@@ -1739,24 +1717,6 @@ class _FakeFocusRepository implements FocusRepository {
 
   @override
   Future<void> logDistraction({required String runId, String? note}) async {}
-}
-
-class _NoopGoogleCalendarAuthService implements GoogleCalendarAuthService {
-  const _NoopGoogleCalendarAuthService();
-
-  @override
-  Future<String?> accessToken({bool interactive = false}) async => null;
-
-  @override
-  Future<void> disconnect() async {}
-
-  @override
-  Future<void> initialize() async {}
-
-  @override
-  Future<GoogleCalendarAuthAccount> signIn() async {
-    return const GoogleCalendarAuthAccount();
-  }
 }
 
 final _defaultPresets = [

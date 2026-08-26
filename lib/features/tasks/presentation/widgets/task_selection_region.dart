@@ -306,7 +306,6 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
     if (result == null || !mounted) return;
     final tasks = _controller.selectedTasks.toList();
     final failed = <String>[];
-    var successCount = 0;
     for (final task in tasks) {
       try {
         await ref
@@ -322,18 +321,9 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
                       ),
                     ),
             );
-        successCount++;
       } catch (_) {
         failed.add(task.id);
       }
-    }
-    if (successCount > 0) {
-      unawaited(
-        ref
-            .read(googleCalendarSyncControllerProvider)
-            .syncNow()
-            .catchError((_) {}),
-      );
     }
     _finishNonDestructive(failed);
   }

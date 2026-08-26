@@ -10,7 +10,6 @@ import 'watch_companion.dart';
 
 final appStartupLifecycleProvider = Provider<void>((ref) {
   ref.watch(accountSyncLifecycleProvider);
-  ref.watch(googleCalendarSyncLifecycleProvider);
   ref.watch(recurringTaskMaterializationProvider);
   ref.watch(taskStartNotificationCoordinatorProvider);
   ref.watch(reengagementNotificationCoordinatorProvider);

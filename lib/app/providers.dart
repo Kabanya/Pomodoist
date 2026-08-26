@@ -9,7 +9,6 @@ import '../l10n/app_localizations.dart';
 import '../core/audio/focus_sound_player.dart';
 import '../core/db/app_database.dart';
 import '../core/notifications/notification_scheduler.dart';
-import '../core/sync/device_identity.dart';
 import '../core/sync/sync_queue_repository.dart';
 import '../core/time/clock.dart';
 import '../core/time/timer_engine.dart';
@@ -18,11 +17,7 @@ import '../features/focus/domain/focus_models.dart';
 import '../features/focus/presentation/focus_completion_celebration_controller.dart';
 import '../features/focus/presentation/focus_view_mode.dart';
 import '../features/billing/billing.dart';
-import '../features/integrations/google_calendar/data/auth/google_calendar_auth_service.dart';
-import '../features/integrations/google_calendar/data/google_calendar_api_client.dart';
 import '../features/integrations/google_calendar/data/google_calendar_repository.dart';
-import '../features/integrations/google_calendar/data/google_calendar_sync_controller.dart';
-import '../features/integrations/google_calendar/data/google_calendar_sync_lifecycle.dart';
 import '../features/planning/data/quick_add_service.dart';
 import '../features/planning/data/quick_add_hint.dart';
 import '../features/planning/domain/quick_add_parser.dart';
@@ -989,48 +984,9 @@ final pendingSyncCommandsProvider = StreamProvider<List<SyncCommandRow>>((ref) {
   return ref.watch(syncQueueRepositoryProvider).watchPending();
 });
 
-final googleCalendarAuthServiceProvider = Provider((ref) {
-  return createGoogleCalendarAuthService();
-});
-
-final googleCalendarApiClientProvider = Provider<GoogleCalendarApiClient>((
-  ref,
-) {
-  final auth = ref.watch(googleCalendarAuthServiceProvider);
-  return DioGoogleCalendarApiClient(
-    accessTokenProvider: ({bool interactive = false}) =>
-        auth.accessToken(interactive: interactive),
-  );
-});
-
 final calendarIntegrationRepositoryProvider =
     Provider<CalendarIntegrationRepository>((ref) {
-      return DriftCalendarIntegrationRepository(
-        ref.watch(appDatabaseProvider),
-        syncQueue: ref.watch(syncQueueRepositoryProvider),
-      );
-    });
-
-final googleCalendarSyncControllerProvider =
-    Provider<GoogleCalendarSyncController>((ref) {
-      return GoogleCalendarSyncController(
-        db: ref.watch(appDatabaseProvider),
-        taskRepository: ref.watch(driftTaskRepositoryProvider),
-        integrationRepository: ref.watch(calendarIntegrationRepositoryProvider),
-        authService: ref.watch(googleCalendarAuthServiceProvider),
-        apiClient: ref.watch(googleCalendarApiClientProvider),
-        deviceId: () => pomodoistDeviceId(ref.read(appDatabaseProvider)),
-      );
-    });
-
-final googleCalendarSyncLifecycleProvider =
-    Provider<GoogleCalendarSyncLifecycle>((ref) {
-      final lifecycle = GoogleCalendarSyncLifecycle(
-        integrationRepository: ref.watch(calendarIntegrationRepositoryProvider),
-        syncController: ref.watch(googleCalendarSyncControllerProvider),
-      )..start();
-      ref.onDispose(lifecycle.dispose);
-      return lifecycle;
+      return DriftCalendarIntegrationRepository(ref.watch(appDatabaseProvider));
     });
 
 final googleCalendarConnectionProvider =

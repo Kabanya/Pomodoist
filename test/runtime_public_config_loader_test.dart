@@ -12,7 +12,6 @@ void main() {
       'webAppUrl': 'https://app-test.pomodoist.com',
       'supabaseUrl': 'https://supabase-test.pomodoist.com',
       'supabaseAnonKey': 'staging-anon-key',
-      'googleWebClientId': '',
       'turnstileSiteKey': 'test-turnstile-site-key',
       'sentryDsn': '',
     });

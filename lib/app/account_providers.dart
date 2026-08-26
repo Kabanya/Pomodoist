@@ -10,6 +10,7 @@ import '../core/sync/account_sync_engine.dart';
 import '../core/sync/account_sync_lifecycle.dart';
 import '../core/sync/device_identity.dart';
 import '../features/billing/billing.dart';
+import '../features/integrations/google_calendar/data/google_calendar_sync_controller.dart';
 import '../features/planning/data/task_decomposer.dart';
 import 'native_captcha_startup.dart';
 import 'native_link_coordinator.dart';
@@ -72,6 +73,24 @@ final accountBootstrapProvider =
 final accountClientProvider = Provider<AccountClient?>((ref) {
   return ref.watch(accountBootstrapProvider).value;
 });
+
+final googleCalendarSyncControllerProvider =
+    Provider<GoogleCalendarSyncController>((ref) {
+      return GoogleCalendarSyncController(
+        invoke: (body) {
+          final account = ref.read(accountClientProvider);
+          if (account?.currentUserId == null) {
+            throw const GoogleCalendarServerException(
+              'Sign in to connect Google Calendar.',
+            );
+          }
+          return account!.invokeFunction(
+            'pomodoist-google-calendar',
+            body: body,
+          );
+        },
+      );
+    });
 
 class AccountBootstrapController extends AsyncNotifier<AccountClient?> {
   var _generation = 0;
@@ -239,7 +258,6 @@ final accountSyncLifecycleProvider = Provider<AccountSyncLifecycle?>((ref) {
         return;
       }
       await ref.read(taskRepositoryProvider).materializeDueRecurringTasks();
-      await ref.read(googleCalendarSyncControllerProvider).syncNow();
     },
   )..start();
   ref.onDispose(lifecycle.dispose);

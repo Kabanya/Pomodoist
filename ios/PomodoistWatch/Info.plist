@@ -22,8 +22,6 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>PomodoistEnvironment</key>
 	<string>$(POMODOIST_ENVIRONMENT)</string>
-	<key>PomodoistGoogleWebClientID</key>
-	<string>$(GOOGLE_WEB_CLIENT_ID)</string>
 	<key>PomodoistRelease</key>
 	<string>$(POMODOIST_RELEASE)</string>
 	<key>PomodoistSentryDSN</key>

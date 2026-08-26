@@ -1036,22 +1036,12 @@ Future<void> _setTaskSchedule(
   await ref
       .read(taskRepositoryProvider)
       .updateTask(task.id, UpdateTaskPatch(schedule: nextSchedule));
-  unawaited(_syncSchedule(ref));
 }
 
 Future<void> _clearTaskSchedule(WidgetRef ref, TaskItem task) async {
   await ref
       .read(taskRepositoryProvider)
       .updateTask(task.id, const UpdateTaskPatch(clearSchedule: true));
-  unawaited(_syncSchedule(ref));
-}
-
-Future<void> _syncSchedule(WidgetRef ref) async {
-  try {
-    await ref.read(googleCalendarSyncControllerProvider).syncNow();
-  } catch (_) {
-    // The settings screen exposes the stored sync error.
-  }
 }
 
 DateTime _today() {

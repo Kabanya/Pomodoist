@@ -73,7 +73,6 @@ Map<String, Object?> watchAccountSessionPayload(
     'supabaseUrl': runtimeConfig.supabaseUrl.toString(),
     'supabaseAnonKey': runtimeConfig.supabaseAnonKey,
     'anonKey': runtimeConfig.supabaseAnonKey,
-    'googleWebClientId': runtimeConfig.googleWebClientId,
     'turnstileSiteKey': runtimeConfig.turnstileSiteKey,
     'sentryDsn': runtimeConfig.sentryDsn?.toString() ?? '',
     'userId': session.userId,

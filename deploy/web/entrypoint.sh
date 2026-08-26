@@ -65,12 +65,10 @@ version_tmp=/usr/share/nginx/html/.version.json.tmp
   --arg webAppUrl "$POMODOIST_WEB_URL" \
   --arg supabaseUrl "$SUPABASE_URL" \
   --arg supabaseAnonKey "$SUPABASE_ANON_KEY" \
-  --arg googleWebClientId "${GOOGLE_WEB_CLIENT_ID:-}" \
   --arg turnstileSiteKey "${TURNSTILE_SITE_KEY:-}" \
   --arg sentryDsn "${SENTRY_DSN:-}" \
   '{environment: $environment, release: $release, webAppUrl: $webAppUrl,
     supabaseUrl: $supabaseUrl, supabaseAnonKey: $supabaseAnonKey,
-    googleWebClientId: $googleWebClientId,
     turnstileSiteKey: $turnstileSiteKey, sentryDsn: $sentryDsn}' |
   /usr/local/bin/jq -Rr \
     'gsub("<"; "\\u003c") | gsub("\u2028"; "\\u2028") | gsub("\u2029"; "\\u2029") |
