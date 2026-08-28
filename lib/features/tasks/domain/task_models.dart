@@ -723,6 +723,13 @@ class RemoteCalendarTaskPatch {
   final DateTime updatedAt;
 }
 
+class DeletedTaskBatch {
+  const DeletedTaskBatch({required this.taskIds, required this.undoUntil});
+
+  final Set<String> taskIds;
+  final DateTime undoUntil;
+}
+
 abstract interface class TaskRepository {
   Stream<List<TaskItem>> watchTasks(TaskQuery query);
   Stream<TaskItem?> watchTask(String id);
@@ -749,11 +756,13 @@ abstract interface class TaskRepository {
   });
   Future<void> completeTask(String id);
   Future<void> uncompleteTask(String id);
-  Future<void> deleteTask(String id);
-  Future<void> deleteRecurringOccurrence(
+  Future<DeletedTaskBatch> deleteTask(String id);
+  Future<DeletedTaskBatch> deleteTasks(Set<String> ids);
+  Future<DeletedTaskBatch> deleteRecurringOccurrence(
     String id, {
     required bool includeFollowing,
   });
+  Future<bool> restoreDeletedTasks(DeletedTaskBatch batch);
   Future<void> updateFocusAggregates(String id);
   Future<String> createTaskFromCalendar(RemoteCalendarTaskInput input);
   Future<void> applyRemoteCalendarPatch(

@@ -10,11 +10,13 @@ class SyncQueueCommand {
     required this.type,
     required this.payload,
     this.clientId,
+    this.availableAt,
   });
 
   final String type;
   final Map<String, Object?> payload;
   final String? clientId;
+  final DateTime? availableAt;
 }
 
 abstract interface class SyncQueueRepository {
@@ -22,6 +24,7 @@ abstract interface class SyncQueueRepository {
     required String type,
     required Map<String, Object?> payload,
     String? clientId,
+    DateTime? availableAt,
   });
 
   Future<void> enqueueBatch(
@@ -44,9 +47,15 @@ class DriftSyncQueueRepository implements SyncQueueRepository {
     required String type,
     required Map<String, Object?> payload,
     String? clientId,
+    DateTime? availableAt,
   }) async {
     await enqueueBatch([
-      SyncQueueCommand(type: type, payload: payload, clientId: clientId),
+      SyncQueueCommand(
+        type: type,
+        payload: payload,
+        clientId: clientId,
+        availableAt: availableAt,
+      ),
     ]);
   }
 
@@ -103,6 +112,7 @@ class DriftSyncQueueRepository implements SyncQueueRepository {
               payloadJson: jsonEncode(retainedCommands[index].payload),
               createdAt: start.add(Duration(seconds: index)),
               updatedAt: mutationTime,
+              availableAt: Value(retainedCommands[index].availableAt?.toUtc()),
             ),
         ]);
       });

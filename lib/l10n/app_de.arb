@@ -279,6 +279,7 @@
   "addTask": "Aufgabe hinzufügen",
   "quickAddHint": "Schreibe sync engine morgen p1 #App @coding 4p",
   "couldNotAddTask": "Aufgabe konnte nicht hinzugefügt werden: {error}",
+  "taskCreateFailed": "Die Aufgabe konnte nicht erstellt werden. Versuche es erneut.",
   "couldNotAddProject": "Projekt konnte nicht hinzugefügt werden: {error}",
   "tasksCreated": "{count, plural, =1{1 Aufgabe hinzugefügt} other{{count} Aufgaben hinzugefügt}}",
   "voiceQuickAdd": "Spracheingabe",
@@ -612,7 +613,7 @@
   "taskInvalidDue": "Gültiges Datum oder Uhrzeit eingeben",
   "taskClearDue": "Fälligkeit löschen",
   "taskDeleteSelectedTitle": "Ausgewählte Aufgaben löschen?",
-  "taskDeleteSelectedMessage": "Diese Aktion kann nicht rückgängig gemacht werden.",
+  "taskDeleteSelectedMessage": "Du kannst diese Aktion 7 Sekunden lang rückgängig machen.",
   "taskCompleteSelected": "Ausgewählte erledigen",
   "taskReopenSelected": "Ausgewählte wieder öffnen",
   "taskActionFailedCount": "{count} Aufgaben konnten nicht aktualisiert werden"

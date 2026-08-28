@@ -122,10 +122,7 @@ void main() {
 
     expect(taskRepository.completeCount, 1);
     expect(find.byKey(const Key('focus-completion-overlay')), findsOneWidget);
-    expect(
-      find.text('Could not complete task: Bad state: write failed'),
-      findsOneWidget,
-    );
+    expect(find.text('1 task could not be updated'), findsOneWidget);
   });
 
   testWidgets('unavailable linked tasks fall back to Done', (tester) async {

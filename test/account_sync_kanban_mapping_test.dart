@@ -281,6 +281,15 @@ void main() {
         const CreateTaskInput(content: 'Never uploaded'),
       );
       await tasks.deleteTask(taskId);
+      await (db.update(
+        db.syncCommands,
+      )..where((row) => row.type.equals('task.delete'))).write(
+        SyncCommandsCompanion(
+          availableAt: Value(
+            DateTime.now().toUtc().subtract(const Duration(seconds: 1)),
+          ),
+        ),
+      );
 
       await engine.pushPending();
 
@@ -296,6 +305,15 @@ void main() {
             ..where((row) => row.clientId.equals(taskId)))
           .write(const SyncCommandsCompanion(attempts: Value(1)));
       await tasks.deleteTask(taskId);
+      await (db.update(
+        db.syncCommands,
+      )..where((row) => row.type.equals('task.delete'))).write(
+        SyncCommandsCompanion(
+          availableAt: Value(
+            DateTime.now().toUtc().subtract(const Duration(seconds: 1)),
+          ),
+        ),
+      );
 
       await engine.pushPending();
 
@@ -306,6 +324,107 @@ void main() {
         ),
         hasLength(1),
       );
+    });
+
+    test('pushes ready commands while a delete is deferred', () async {
+      final availableAt = DateTime.now().toUtc().add(const Duration(hours: 1));
+      await queue.enqueue(
+        type: 'task.delete',
+        clientId: 'deferred-task',
+        payload: const {'id': 'deferred-task'},
+        availableAt: availableAt,
+      );
+      await queue.enqueue(
+        type: 'task.update',
+        clientId: 'ready-task',
+        payload: const {'id': 'ready-task'},
+      );
+
+      await engine.pushPending();
+
+      expect(
+        account.pushed.map((operation) => operation.entityId),
+        contains('ready-task'),
+      );
+      expect(
+        account.pushed.map((operation) => operation.entityId),
+        isNot(contains('deferred-task')),
+      );
+      final pending = await queue.watchPending().first;
+      expect(pending.single.clientId, 'deferred-task');
+      expect(
+        pending.single.availableAt?.toUtc(),
+        DateTime.fromMillisecondsSinceEpoch(
+          (availableAt.millisecondsSinceEpoch ~/ 1000) * 1000,
+          isUtc: true,
+        ),
+      );
+    });
+
+    test('remote upsert preserves a pending local delete', () async {
+      final taskId = await tasks.createTask(
+        const CreateTaskInput(content: 'Delete locally'),
+      );
+      await db.delete(db.syncCommands).go();
+      final batch = await tasks.deleteTask(taskId);
+      final stored = await (db.select(
+        db.tasks,
+      )..where((row) => row.id.equals(taskId))).getSingle();
+      final remoteData = stored.toJson()
+        ..['content'] = 'Updated remotely'
+        ..['isDeleted'] = false
+        ..['updatedAt'] = DateTime.now().toUtc().toIso8601String();
+      account.pullResults.add(
+        AccountSyncPullResult(
+          nextCursor: 1,
+          hasMore: false,
+          changes: [
+            AccountSyncEntity(
+              entityType: 'task',
+              entityId: taskId,
+              serverRevision: 1,
+              data: remoteData,
+            ),
+          ],
+        ),
+      );
+
+      await engine.pullLatest();
+
+      final updated = await (db.select(
+        db.tasks,
+      )..where((row) => row.id.equals(taskId))).getSingle();
+      expect(updated.content, 'Updated remotely');
+      expect(updated.isDeleted, isTrue);
+      expect(await tasks.restoreDeletedTasks(batch), isTrue);
+    });
+
+    test('remote delete cancels local Undo', () async {
+      final taskId = await tasks.createTask(
+        const CreateTaskInput(content: 'Deleted everywhere'),
+      );
+      await db.delete(db.syncCommands).go();
+      final batch = await tasks.deleteTask(taskId);
+      account.pullResults.add(
+        AccountSyncPullResult(
+          nextCursor: 1,
+          hasMore: false,
+          changes: [
+            AccountSyncEntity(
+              entityType: 'task',
+              entityId: taskId,
+              serverRevision: 1,
+              data: const {},
+              deletedAt: DateTime.now().toUtc(),
+            ),
+          ],
+        ),
+      );
+
+      await engine.pullLatest();
+
+      expect(await queue.watchPending().first, isEmpty);
+      expect(await tasks.restoreDeletedTasks(batch), isFalse);
     });
 
     test(

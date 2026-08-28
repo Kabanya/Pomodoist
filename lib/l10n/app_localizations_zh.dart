@@ -865,6 +865,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get taskCreateFailed => '无法创建任务。请重试。';
+
+  @override
   String couldNotAddProject(Object error) {
     return '无法添加项目：$error';
   }
@@ -2043,7 +2046,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get taskDeleteSelectedTitle => '删除所选任务？';
 
   @override
-  String get taskDeleteSelectedMessage => '此操作无法撤销。';
+  String get taskDeleteSelectedMessage => '你可以在 7 秒内撤销此操作。';
 
   @override
   String get taskCompleteSelected => '完成所选任务';

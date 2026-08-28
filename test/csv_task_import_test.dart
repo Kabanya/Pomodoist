@@ -330,9 +330,15 @@ class _FailingSyncQueue implements SyncQueueRepository {
     required String type,
     required Map<String, Object?> payload,
     String? clientId,
+    DateTime? availableAt,
   }) {
     _check();
-    return delegate.enqueue(type: type, payload: payload, clientId: clientId);
+    return delegate.enqueue(
+      type: type,
+      payload: payload,
+      clientId: clientId,
+      availableAt: availableAt,
+    );
   }
 
   @override

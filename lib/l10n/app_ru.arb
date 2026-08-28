@@ -279,6 +279,7 @@
   "addTask": "Добавить задачу",
   "quickAddHint": "Написать sync engine завтра p1 #App @coding 4p",
   "couldNotAddTask": "Не удалось добавить задачу: {error}",
+  "taskCreateFailed": "Не удалось создать задачу. Попробуйте ещё раз.",
   "couldNotAddProject": "Не удалось добавить проект: {error}",
   "tasksCreated": "{count, plural, =1{Добавлена 1 задача} few{Добавлено {count} задачи} many{Добавлено {count} задач} other{Добавлено {count} задачи}}",
   "voiceQuickAdd": "Голосовое добавление",
@@ -612,7 +613,7 @@
   "taskInvalidDue": "Введите корректную дату или время",
   "taskClearDue": "Очистить срок",
   "taskDeleteSelectedTitle": "Удалить выбранные задачи?",
-  "taskDeleteSelectedMessage": "Это действие нельзя отменить.",
+  "taskDeleteSelectedMessage": "Это действие можно отменить в течение 7 секунд.",
   "taskCompleteSelected": "Выполнить выбранные",
   "taskReopenSelected": "Вернуть в открытые",
   "taskActionFailedCount": "Не удалось обновить задач: {count}"

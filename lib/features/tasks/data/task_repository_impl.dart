@@ -12,6 +12,8 @@ import '../domain/task_models.dart';
 import 'kanban_transition_coordinator.dart';
 
 class DriftTaskRepository implements TaskRepository {
+  static const _deleteUndoWindow = Duration(seconds: 7);
+
   DriftTaskRepository(
     this._db,
     this._syncQueue, {
@@ -497,27 +499,48 @@ class DriftTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<void> deleteTask(String id) async {
+  Future<DeletedTaskBatch> deleteTask(String id) => deleteTasks({id});
+
+  @override
+  Future<DeletedTaskBatch> deleteTasks(Set<String> ids) async {
     final now = DateTime.now().toUtc();
+    final undoUntil = DateTime.fromMillisecondsSinceEpoch(
+      (now.add(_deleteUndoWindow).millisecondsSinceEpoch ~/ 1000) * 1000,
+      isUtc: true,
+    );
+    final deletedIds = <String>{};
     await _db.transaction(() async {
       final rows = await (_db.select(
         _db.tasks,
       )..where((task) => task.isDeleted.equals(false))).get();
       final childrenByParent = _childrenByParent(rows);
-      final row = _rowById(rows)[id];
-      if (row != null) {
-        await _deleteSubtree(row, childrenByParent, now);
+      final rowById = _rowById(rows);
+      final targets = <TaskRow>[];
+      for (final id in ids) {
+        final row = rowById[id];
+        if (row != null) {
+          targets.addAll(_subtreeRowsFrom(row, childrenByParent));
+        }
       }
+      deletedIds.addAll(
+        await _deleteRows(targets, now, availableAt: undoUntil),
+      );
     });
+    return DeletedTaskBatch(taskIds: deletedIds, undoUntil: undoUntil);
   }
 
   @override
-  Future<void> deleteRecurringOccurrence(
+  Future<DeletedTaskBatch> deleteRecurringOccurrence(
     String id, {
     required bool includeFollowing,
   }) async {
     final now = DateTime.now().toUtc();
     final localNow = now.toLocal();
+    final undoUntil = DateTime.fromMillisecondsSinceEpoch(
+      (now.add(_deleteUndoWindow).millisecondsSinceEpoch ~/ 1000) * 1000,
+      isUtc: true,
+    );
+    final deletedIds = <String>{};
     await _db.transaction(() async {
       final rows = await (_db.select(
         _db.tasks,
@@ -531,7 +554,13 @@ class DriftTaskRepository implements TaskRepository {
       final selectedSchedule = TaskSchedule.fromJsonString(selected.dueJson);
       final seriesId = selectedSchedule?.recurrenceSeriesKey;
       if (selectedSchedule == null || seriesId == null) {
-        await _deleteSubtree(selected, childrenByParent, now);
+        deletedIds.addAll(
+          await _deleteRows(
+            _subtreeRowsFrom(selected, childrenByParent),
+            now,
+            availableAt: undoUntil,
+          ),
+        );
         return;
       }
 
@@ -549,7 +578,13 @@ class DriftTaskRepository implements TaskRepository {
             advanceFirst: true,
           );
         }
-        await _deleteSubtree(selected, childrenByParent, now);
+        deletedIds.addAll(
+          await _deleteRows(
+            _subtreeRowsFrom(selected, childrenByParent),
+            now,
+            availableAt: undoUntil,
+          ),
+        );
         return;
       }
 
@@ -569,9 +604,120 @@ class DriftTaskRepository implements TaskRepository {
                 ),
           );
       for (final row in targets) {
-        await _deleteSubtree(row, childrenByParent, now);
+        deletedIds.addAll(
+          await _deleteRows(
+            _subtreeRowsFrom(row, childrenByParent),
+            now,
+            availableAt: undoUntil,
+          ),
+        );
       }
     });
+    return DeletedTaskBatch(taskIds: deletedIds, undoUntil: undoUntil);
+  }
+
+  @override
+  Future<bool> restoreDeletedTasks(DeletedTaskBatch batch) async {
+    if (batch.taskIds.isEmpty ||
+        DateTime.now().toUtc().isAfter(batch.undoUntil)) {
+      return false;
+    }
+    return _db.transaction(() async {
+      final deletedRows =
+          await (_db.select(_db.tasks)..where(
+                (row) =>
+                    row.id.isIn(batch.taskIds) & row.isDeleted.equals(true),
+              ))
+              .get();
+      final commands =
+          await (_db.select(_db.syncCommands)..where(
+                (row) =>
+                    row.type.equals('task.delete') &
+                    row.status.equals('pending') &
+                    row.attempts.equals(0) &
+                    row.clientId.isIn(batch.taskIds) &
+                    row.availableAt.equals(batch.undoUntil),
+              ))
+              .get();
+      final commandTaskIds = commands
+          .map((command) => command.clientId)
+          .whereType<String>()
+          .toSet();
+      if (commandTaskIds.length != batch.taskIds.length) {
+        return false;
+      }
+      await _removeRecurringCopiesCreatedForDelete(deletedRows, batch);
+      await (_db.delete(
+            _db.syncCommands,
+          )..where((row) => row.id.isIn(commands.map((command) => command.id))))
+          .go();
+      await (_db.update(_db.tasks)..where(
+            (row) => row.id.isIn(batch.taskIds) & row.isDeleted.equals(true),
+          ))
+          .write(
+            TasksCompanion(
+              isDeleted: const Value(false),
+              updatedAt: Value(DateTime.now().toUtc()),
+            ),
+          );
+      return true;
+    });
+  }
+
+  Future<void> _removeRecurringCopiesCreatedForDelete(
+    List<TaskRow> deletedRows,
+    DeletedTaskBatch batch,
+  ) async {
+    final windowStart = batch.undoUntil.subtract(_deleteUndoWindow);
+    for (final row in deletedRows) {
+      final schedule = TaskSchedule.fromJsonString(row.dueJson);
+      final recurrence = schedule?.recurrence;
+      if (schedule == null || recurrence == null) {
+        continue;
+      }
+      final nextSchedule = schedule.nextOccurrenceAfter(
+        DateTime.now(),
+        advanceFirst: true,
+      );
+      final nextRootId = _recurringTaskId(
+        recurrence,
+        _occurrenceKey(nextSchedule),
+        row.id,
+      );
+      final createdHere =
+          await (_db.select(_db.syncCommands)..where(
+                (command) =>
+                    command.type.equals('task.create') &
+                    command.clientId.equals(nextRootId) &
+                    command.status.equals('pending') &
+                    command.attempts.equals(0) &
+                    command.updatedAt.isBiggerOrEqualValue(windowStart),
+              ))
+              .getSingleOrNull();
+      if (createdHere == null) {
+        continue;
+      }
+      final activeRows = await (_db.select(
+        _db.tasks,
+      )..where((task) => task.isDeleted.equals(false))).get();
+      final nextRoot = _rowById(activeRows)[nextRootId];
+      if (nextRoot == null) {
+        continue;
+      }
+      final copyIds = _subtreeRowsFrom(
+        nextRoot,
+        _childrenByParent(activeRows),
+      ).map((task) => task.id).toSet();
+      await (_db.delete(
+        _db.syncCommands,
+      )..where((command) => command.clientId.isIn(copyIds))).go();
+      await (_db.delete(
+        _db.taskLabels,
+      )..where((label) => label.taskId.isIn(copyIds))).go();
+      await (_db.delete(
+        _db.tasks,
+      )..where((task) => task.id.isIn(copyIds))).go();
+    }
   }
 
   @override
@@ -875,16 +1021,13 @@ class DriftTaskRepository implements TaskRepository {
     );
   }
 
-  Future<void> _deleteSubtree(
-    TaskRow root,
-    Map<String, List<TaskRow>> childrenByParent,
-    DateTime now,
-  ) async {
-    await _deleteRows(_subtreeRowsFrom(root, childrenByParent), now);
-  }
-
-  Future<void> _deleteRows(Iterable<TaskRow> rows, DateTime now) async {
-    for (final row in rows) {
+  Future<Set<String>> _deleteRows(
+    Iterable<TaskRow> rows,
+    DateTime now, {
+    DateTime? availableAt,
+  }) async {
+    final uniqueRows = {for (final row in rows) row.id: row}.values;
+    for (final row in uniqueRows) {
       await (_db.update(
         _db.tasks,
       )..where((task) => task.id.equals(row.id))).write(
@@ -894,8 +1037,10 @@ class DriftTaskRepository implements TaskRepository {
         type: 'task.delete',
         clientId: row.id,
         payload: {'id': row.id},
+        availableAt: availableAt,
       );
     }
+    return uniqueRows.map((row) => row.id).toSet();
   }
 
   Future<bool> _taskExists(String id) async {

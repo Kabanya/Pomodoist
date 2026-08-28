@@ -10008,6 +10008,17 @@ class $SyncCommandsTable extends SyncCommands
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _availableAtMeta = const VerificationMeta(
+    'availableAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> availableAt = GeneratedColumn<DateTime>(
+    'available_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _lastErrorMeta = const VerificationMeta(
     'lastError',
   );
@@ -10030,6 +10041,7 @@ class $SyncCommandsTable extends SyncCommands
     attempts,
     createdAt,
     updatedAt,
+    availableAt,
     lastError,
   ];
   @override
@@ -10110,6 +10122,15 @@ class $SyncCommandsTable extends SyncCommands
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('available_at')) {
+      context.handle(
+        _availableAtMeta,
+        availableAt.isAcceptableOrUnknown(
+          data['available_at']!,
+          _availableAtMeta,
+        ),
+      );
+    }
     if (data.containsKey('last_error')) {
       context.handle(
         _lastErrorMeta,
@@ -10161,6 +10182,10 @@ class $SyncCommandsTable extends SyncCommands
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      availableAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}available_at'],
+      ),
       lastError: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}last_error'],
@@ -10184,6 +10209,7 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
   final int attempts;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime? availableAt;
   final String? lastError;
   const SyncCommandRow({
     required this.id,
@@ -10195,6 +10221,7 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
     required this.attempts,
     required this.createdAt,
     required this.updatedAt,
+    this.availableAt,
     this.lastError,
   });
   @override
@@ -10211,6 +10238,9 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
     map['attempts'] = Variable<int>(attempts);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || availableAt != null) {
+      map['available_at'] = Variable<DateTime>(availableAt);
+    }
     if (!nullToAbsent || lastError != null) {
       map['last_error'] = Variable<String>(lastError);
     }
@@ -10230,6 +10260,9 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
       attempts: Value(attempts),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      availableAt: availableAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(availableAt),
       lastError: lastError == null && nullToAbsent
           ? const Value.absent()
           : Value(lastError),
@@ -10251,6 +10284,7 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
       attempts: serializer.fromJson<int>(json['attempts']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      availableAt: serializer.fromJson<DateTime?>(json['availableAt']),
       lastError: serializer.fromJson<String?>(json['lastError']),
     );
   }
@@ -10267,6 +10301,7 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
       'attempts': serializer.toJson<int>(attempts),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'availableAt': serializer.toJson<DateTime?>(availableAt),
       'lastError': serializer.toJson<String?>(lastError),
     };
   }
@@ -10281,6 +10316,7 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
     int? attempts,
     DateTime? createdAt,
     DateTime? updatedAt,
+    Value<DateTime?> availableAt = const Value.absent(),
     Value<String?> lastError = const Value.absent(),
   }) => SyncCommandRow(
     id: id ?? this.id,
@@ -10292,6 +10328,7 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
     attempts: attempts ?? this.attempts,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    availableAt: availableAt.present ? availableAt.value : this.availableAt,
     lastError: lastError.present ? lastError.value : this.lastError,
   );
   SyncCommandRow copyWithCompanion(SyncCommandsCompanion data) {
@@ -10307,6 +10344,9 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
       attempts: data.attempts.present ? data.attempts.value : this.attempts,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      availableAt: data.availableAt.present
+          ? data.availableAt.value
+          : this.availableAt,
       lastError: data.lastError.present ? data.lastError.value : this.lastError,
     );
   }
@@ -10323,6 +10363,7 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
           ..write('attempts: $attempts, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('availableAt: $availableAt, ')
           ..write('lastError: $lastError')
           ..write(')'))
         .toString();
@@ -10339,6 +10380,7 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
     attempts,
     createdAt,
     updatedAt,
+    availableAt,
     lastError,
   );
   @override
@@ -10354,6 +10396,7 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
           other.attempts == this.attempts &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
+          other.availableAt == this.availableAt &&
           other.lastError == this.lastError);
 }
 
@@ -10367,6 +10410,7 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
   final Value<int> attempts;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<DateTime?> availableAt;
   final Value<String?> lastError;
   final Value<int> rowid;
   const SyncCommandsCompanion({
@@ -10379,6 +10423,7 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
     this.attempts = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.availableAt = const Value.absent(),
     this.lastError = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -10392,6 +10437,7 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
     this.attempts = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
+    this.availableAt = const Value.absent(),
     this.lastError = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -10410,6 +10456,7 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
     Expression<int>? attempts,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<DateTime>? availableAt,
     Expression<String>? lastError,
     Expression<int>? rowid,
   }) {
@@ -10423,6 +10470,7 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
       if (attempts != null) 'attempts': attempts,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (availableAt != null) 'available_at': availableAt,
       if (lastError != null) 'last_error': lastError,
       if (rowid != null) 'rowid': rowid,
     });
@@ -10438,6 +10486,7 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
     Value<int>? attempts,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
+    Value<DateTime?>? availableAt,
     Value<String?>? lastError,
     Value<int>? rowid,
   }) {
@@ -10451,6 +10500,7 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
       attempts: attempts ?? this.attempts,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      availableAt: availableAt ?? this.availableAt,
       lastError: lastError ?? this.lastError,
       rowid: rowid ?? this.rowid,
     );
@@ -10486,6 +10536,9 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (availableAt.present) {
+      map['available_at'] = Variable<DateTime>(availableAt.value);
+    }
     if (lastError.present) {
       map['last_error'] = Variable<String>(lastError.value);
     }
@@ -10507,6 +10560,7 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
           ..write('attempts: $attempts, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('availableAt: $availableAt, ')
           ..write('lastError: $lastError, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -17615,6 +17669,7 @@ typedef $$SyncCommandsTableCreateCompanionBuilder =
       Value<int> attempts,
       required DateTime createdAt,
       required DateTime updatedAt,
+      Value<DateTime?> availableAt,
       Value<String?> lastError,
       Value<int> rowid,
     });
@@ -17629,6 +17684,7 @@ typedef $$SyncCommandsTableUpdateCompanionBuilder =
       Value<int> attempts,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<DateTime?> availableAt,
       Value<String?> lastError,
       Value<int> rowid,
     });
@@ -17684,6 +17740,11 @@ class $$SyncCommandsTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get availableAt => $composableBuilder(
+    column: $table.availableAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -17747,6 +17808,11 @@ class $$SyncCommandsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get availableAt => $composableBuilder(
+    column: $table.availableAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get lastError => $composableBuilder(
     column: $table.lastError,
     builder: (column) => ColumnOrderings(column),
@@ -17790,6 +17856,11 @@ class $$SyncCommandsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get availableAt => $composableBuilder(
+    column: $table.availableAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get lastError =>
       $composableBuilder(column: $table.lastError, builder: (column) => column);
@@ -17835,6 +17906,7 @@ class $$SyncCommandsTableTableManager
                 Value<int> attempts = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> availableAt = const Value.absent(),
                 Value<String?> lastError = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SyncCommandsCompanion(
@@ -17847,6 +17919,7 @@ class $$SyncCommandsTableTableManager
                 attempts: attempts,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                availableAt: availableAt,
                 lastError: lastError,
                 rowid: rowid,
               ),
@@ -17861,6 +17934,7 @@ class $$SyncCommandsTableTableManager
                 Value<int> attempts = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
+                Value<DateTime?> availableAt = const Value.absent(),
                 Value<String?> lastError = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SyncCommandsCompanion.insert(
@@ -17873,6 +17947,7 @@ class $$SyncCommandsTableTableManager
                 attempts: attempts,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                availableAt: availableAt,
                 lastError: lastError,
                 rowid: rowid,
               ),

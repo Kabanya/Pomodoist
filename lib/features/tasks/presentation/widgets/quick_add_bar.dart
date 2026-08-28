@@ -64,7 +64,7 @@ Future<List<DecomposedTaskDraft>?> showVoiceQuickAddSheet(
   );
 }
 
-Future<int> createVoiceQuickAddTasks(
+Future<List<String>> createVoiceQuickAddTasks(
   WidgetRef ref,
   Iterable<DecomposedTaskDraft> tasks, {
   int? defaultPriority,
@@ -74,13 +74,13 @@ Future<int> createVoiceQuickAddTasks(
 }) async {
   final quickAdd = ref.read(quickAddServiceProvider);
 
-  Future<int> createAll(
+  Future<List<String>> createAll(
     Iterable<DecomposedTaskDraft> drafts, {
     String? parentId,
     String? projectId,
     String? sectionId,
   }) async {
-    var created = 0;
+    final createdIds = <String>[];
     for (final draft in drafts) {
       final input = draft.quickAdd.trim();
       if (input.isEmpty) {
@@ -96,15 +96,17 @@ Future<int> createVoiceQuickAddTasks(
         defaultDate: defaultDate,
         kanbanStatusId: kanbanStatusId,
       );
-      created++;
-      created += await createAll(
-        draft.subtasks,
-        parentId: task.id,
-        projectId: task.projectId ?? projectId,
-        sectionId: task.sectionId ?? sectionId,
+      createdIds.add(task.id);
+      createdIds.addAll(
+        await createAll(
+          draft.subtasks,
+          parentId: task.id,
+          projectId: task.projectId ?? projectId,
+          sectionId: task.sectionId ?? sectionId,
+        ),
       );
     }
-    return created;
+    return createdIds;
   }
 
   return createAll(tasks, projectId: projectId);
@@ -499,11 +501,11 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
     try {
       await ref.read(quickAddServiceProvider).createTask(input);
       if (mounted) widget.onCompleted();
-    } catch (error) {
+    } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.couldNotAddTask(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.taskCreateFailed)));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -520,16 +522,16 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
       final created = await createVoiceQuickAddTasks(ref, tasks);
       if (!mounted) return;
       final messenger = ScaffoldMessenger.of(context);
-      final createdLabel = context.l10n.tasksCreated(created);
+      final createdLabel = context.l10n.tasksCreated(created.length);
       widget.onCompleted();
-      if (created > 0) {
+      if (created.isNotEmpty) {
         messenger.showSnackBar(SnackBar(content: Text(createdLabel)));
       }
-    } catch (error) {
+    } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.couldNotAddTask(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.taskCreateFailed)));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -557,7 +559,7 @@ class QuickAddBar extends ConsumerStatefulWidget {
   final Key? inputKey;
   final Key? voiceButtonKey;
   final Key? submitButtonKey;
-  final VoidCallback? onTaskCreated;
+  final ValueChanged<List<String>>? onTaskCreated;
 
   @override
   ConsumerState<QuickAddBar> createState() => _QuickAddBarState();
@@ -643,7 +645,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
     }
     setState(() => _busy = true);
     try {
-      await ref
+      final task = await ref
           .read(quickAddServiceProvider)
           .createTask(
             input,
@@ -653,12 +655,12 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
             kanbanStatusId: widget.kanbanStatusId,
           );
       _controller.clear();
-      widget.onTaskCreated?.call();
-    } catch (error) {
+      widget.onTaskCreated?.call([task]);
+    } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.couldNotAddTask(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.taskCreateFailed)));
       }
     } finally {
       if (mounted) {
@@ -681,17 +683,17 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
         projectId: widget.projectId,
         kanbanStatusId: widget.kanbanStatusId,
       );
-      if (mounted && created > 0) {
+      if (mounted && created.isNotEmpty) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(_createdLabel(created))));
-        widget.onTaskCreated?.call();
+        ).showSnackBar(SnackBar(content: Text(_createdLabel(created.length))));
+        widget.onTaskCreated?.call(created);
       }
-    } catch (error) {
+    } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.couldNotAddTask(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.taskCreateFailed)));
       }
     } finally {
       if (mounted) {
@@ -1209,7 +1211,7 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
   String _voiceErrorMessage(String message) =>
       message.contains('setActive: Session activation failed')
       ? context.l10n.voiceMicrophoneUnavailable
-      : message;
+      : context.l10n.voiceStatusError;
 
   Future<void> _decomposeTranscript(String transcript) async {
     _setSheetState(() {

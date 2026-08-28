@@ -107,7 +107,7 @@ void main() {
       findsOneWidget,
     );
 
-    await mouse.moveTo(const Offset(999, 239));
+    await mouse.moveTo(const Offset(1100, 300));
     await tester.pump();
     expect(
       find.byKey(const ValueKey('agenda-focus-action-$taskId')),

@@ -935,6 +935,10 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get taskCreateFailed =>
+      'No se pudo crear la tarea. Inténtalo de nuevo.';
+
+  @override
   String couldNotAddProject(Object error) {
     return 'No se pudo añadir el proyecto: $error';
   }
@@ -2132,7 +2136,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get taskDeleteSelectedTitle => '¿Eliminar las tareas seleccionadas?';
 
   @override
-  String get taskDeleteSelectedMessage => 'Esta acción no se puede deshacer.';
+  String get taskDeleteSelectedMessage =>
+      'Puedes deshacer esta acción durante 7 segundos.';
 
   @override
   String get taskCompleteSelected => 'Completar seleccionadas';

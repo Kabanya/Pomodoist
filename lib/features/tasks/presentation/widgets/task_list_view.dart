@@ -10,6 +10,7 @@ import '../../../../app/widgets/action_feedback.dart';
 import '../../domain/task_models.dart';
 import 'quick_add_bar.dart';
 import 'task_list_item.dart';
+import 'task_motion.dart';
 import 'task_selection_region.dart';
 
 class TaskListView extends ConsumerWidget {
@@ -42,14 +43,10 @@ class TaskListView extends ConsumerWidget {
     final completedTasks = ref.watch(
       tasksByQueryProvider(const TaskQuery.completed()),
     );
-    final visibleItems = switch (tasks.value) {
+    final sourceItems = switch (tasks.value) {
       null => const <TaskItem>[],
       final items when taskFilter == null => items,
       final items => items.where(taskFilter!).toList(),
-    };
-    final subtaskIds = {
-      for (final task in visibleItems)
-        if (task.parentId != null) task.id,
     };
     final supportsRootDrop =
         !kIsWeb &&
@@ -57,163 +54,200 @@ class TaskListView extends ConsumerWidget {
           TargetPlatform.android || TargetPlatform.iOS => true,
           _ => false,
         };
-    return SafeArea(
-      bottom: false,
-      child: TaskSelectionRegion(
-        visibleTasks: visibleItems,
-        scopeKey: query,
-        child: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle!,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+    return TaskMotionScope(
+      key: ValueKey(query),
+      builder: (context, motion) {
+        final visibleById = {for (final task in sourceItems) task.id: task};
+        for (final task in motion.retainedTasks) {
+          visibleById[task.id] = task;
+        }
+        final visibleItems = visibleById.values.toList()
+          ..sort((a, b) {
+            final dayOrder = (a.dayOrder ?? 999999).compareTo(
+              b.dayOrder ?? 999999,
+            );
+            return dayOrder != 0 ? dayOrder : a.orderKey.compareTo(b.orderKey);
+          });
+        final subtaskIds = {
+          for (final task in visibleItems)
+            if (task.parentId != null) task.id,
+        };
+        return SafeArea(
+          bottom: false,
+          child: TaskSelectionRegion(
+            visibleTasks: visibleItems,
+            scopeKey: query,
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: Theme.of(context).textTheme.headlineMedium,
                         ),
-                      ),
-                    ],
-                    if (headerAddon != null) ...[
-                      const SizedBox(height: 16),
-                      headerAddon!,
-                    ],
-                    if (showQuickAdd) ...[
-                      const SizedBox(height: 16),
-                      QuickAddBar(projectId: quickAddProjectId),
-                    ],
-                  ],
+                        if (subtitle != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            subtitle!,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                        ],
+                        if (headerAddon != null) ...[
+                          const SizedBox(height: 16),
+                          headerAddon!,
+                        ],
+                        if (showQuickAdd) ...[
+                          const SizedBox(height: 16),
+                          QuickAddBar(
+                            projectId: quickAddProjectId,
+                            onTaskCreated: (taskIds) {
+                              motion.created(taskIds.toSet());
+                              unawaited(playHaptic(AppHapticCue.light));
+                            },
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            tasks.when(
-              data: (_) {
-                if (visibleItems.isEmpty) {
-                  return SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: Text(
-                        emptyMessage ?? l10n.noTasksHere,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ),
-                  );
-                }
-                final allItems = [
-                  ...?allOpenTasks.value,
-                  ...?completedTasks.value,
-                  ...visibleItems,
-                ];
-                final progressById = taskSubtaskProgressById(allItems);
-                final rows = _visibleTaskRows(allItems, visibleItems);
-                return SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                  sliver: SliverList.separated(
-                    itemCount: rows.length,
-                    itemBuilder: (context, index) {
-                      final row = rows[index];
-                      return TaskListItem(
-                        task: row.task,
-                        depth: row.depth,
-                        subtaskProgress: progressById[row.task.id],
-                      );
-                    },
-                    separatorBuilder: (context, index) {
-                      final colorScheme = Theme.of(context).colorScheme;
-                      if (!supportsRootDrop) {
-                        return Divider(
-                          height: 1,
-                          indent: 38,
-                          color: colorScheme.outlineVariant,
-                        );
-                      }
-                      return DragTarget<String>(
-                        key: ValueKey('task-root-gap-$index'),
-                        onWillAcceptWithDetails: (details) =>
-                            subtaskIds.contains(details.data),
-                        onAcceptWithDetails: (details) => unawaited(
-                          _makeRootTask(context, ref, details.data),
+                tasks.when(
+                  data: (_) {
+                    if (visibleItems.isEmpty) {
+                      return SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(
+                          child: Text(
+                            emptyMessage ?? l10n.noTasksHere,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
                         ),
-                        builder: (context, candidateData, rejectedData) {
-                          final accepting = candidateData.isNotEmpty;
-                          if (!accepting) {
+                      );
+                    }
+                    final allItems = [
+                      ...?allOpenTasks.value,
+                      ...?completedTasks.value,
+                      ...visibleItems,
+                    ];
+                    final progressById = taskSubtaskProgressById(allItems);
+                    final rows = _visibleTaskRows(allItems, visibleItems);
+                    return SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                      sliver: SliverList.separated(
+                        itemCount: rows.length,
+                        itemBuilder: (context, index) {
+                          final row = rows[index];
+                          return TaskListItem(
+                            task: row.task,
+                            depth: row.depth,
+                            subtaskProgress: progressById[row.task.id],
+                          );
+                        },
+                        separatorBuilder: (context, index) {
+                          final colorScheme = Theme.of(context).colorScheme;
+                          if (!supportsRootDrop) {
                             return Divider(
-                              height: 12,
+                              height: 1,
                               indent: 38,
                               color: colorScheme.outlineVariant,
                             );
                           }
-                          return ColoredBox(
-                            color: colorScheme.primaryContainer,
-                            child: SizedBox(
-                              height: 32,
-                              child: Center(
-                                child: Text(
-                                  l10n.makeParentTask,
-                                  style: Theme.of(context).textTheme.labelMedium
-                                      ?.copyWith(
-                                        color: colorScheme.onPrimaryContainer,
-                                      ),
-                                ),
-                              ),
+                          return DragTarget<String>(
+                            key: ValueKey('task-root-gap-$index'),
+                            onWillAcceptWithDetails: (details) =>
+                                subtaskIds.contains(details.data),
+                            onAcceptWithDetails: (details) => unawaited(
+                              _makeRootTask(context, ref, details.data),
                             ),
+                            builder: (context, candidateData, rejectedData) {
+                              final accepting = candidateData.isNotEmpty;
+                              return AnimatedContainer(
+                                duration:
+                                    MediaQuery.disableAnimationsOf(context)
+                                    ? Duration.zero
+                                    : const Duration(milliseconds: 160),
+                                height: accepting ? 32 : 12,
+                                color: accepting
+                                    ? colorScheme.primaryContainer
+                                    : Colors.transparent,
+                                child: Center(
+                                  child: accepting
+                                      ? Text(
+                                          l10n.makeParentTask,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelMedium
+                                              ?.copyWith(
+                                                color: colorScheme
+                                                    .onPrimaryContainer,
+                                              ),
+                                        )
+                                      : Divider(
+                                          height: 1,
+                                          indent: 38,
+                                          color: colorScheme.outlineVariant,
+                                        ),
+                                ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                  ),
-                );
-              },
-              loading: () => const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (error, stackTrace) => SliverFillRemaining(
-                child: Center(child: Text(l10n.failedToLoadTasks(error))),
-              ),
-            ),
-            if (supportsRootDrop && visibleItems.isNotEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: DragTarget<String>(
-                  key: const Key('task-root-drop-zone'),
-                  onWillAcceptWithDetails: (details) =>
-                      subtaskIds.contains(details.data),
-                  onAcceptWithDetails: (details) =>
-                      unawaited(_makeRootTask(context, ref, details.data)),
-                  builder: (context, candidateData, rejectedData) {
-                    final accepting = candidateData.isNotEmpty;
-                    final colorScheme = Theme.of(context).colorScheme;
-                    return ColoredBox(
-                      color: accepting
-                          ? colorScheme.primaryContainer
-                          : Colors.transparent,
-                      child: Center(
-                        child: accepting
-                            ? Text(
-                                l10n.makeParentTask,
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
-                                      color: colorScheme.onPrimaryContainer,
-                                    ),
-                              )
-                            : null,
                       ),
                     );
                   },
+                  loading: () => const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (error, stackTrace) => SliverFillRemaining(
+                    child: Center(child: Text(l10n.failedToLoadTasks(error))),
+                  ),
                 ),
-              ),
-          ],
-        ),
-      ),
+                if (supportsRootDrop && visibleItems.isNotEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: DragTarget<String>(
+                      key: const Key('task-root-drop-zone'),
+                      onWillAcceptWithDetails: (details) =>
+                          subtaskIds.contains(details.data),
+                      onAcceptWithDetails: (details) =>
+                          unawaited(_makeRootTask(context, ref, details.data)),
+                      builder: (context, candidateData, rejectedData) {
+                        final accepting = candidateData.isNotEmpty;
+                        final colorScheme = Theme.of(context).colorScheme;
+                        return ColoredBox(
+                          color: accepting
+                              ? colorScheme.primaryContainer
+                              : Colors.transparent,
+                          child: Center(
+                            child: accepting
+                                ? Text(
+                                    l10n.makeParentTask,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          color: colorScheme.onPrimaryContainer,
+                                        ),
+                                  )
+                                : null,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -234,14 +268,20 @@ class TaskListView extends ConsumerWidget {
                 .toString()
                 .padLeft(20, '0'),
           );
-    } catch (error) {
+      if (context.mounted) {
+        TaskMotionScope.maybeOf(context)?.landed({taskId});
+        await playHaptic(AppHapticCue.light);
+      }
+    } catch (_) {
       if (!context.mounted) {
         return;
       }
       showActionFeedback(
         context,
-        message: context.l10n.couldNotMoveTask(error),
+        message: context.l10n.taskActionFailedCount(1),
         icon: Icons.error_outline,
+        sound: ActionFeedbackSound.none,
+        haptic: AppHapticCue.none,
       );
     }
   }

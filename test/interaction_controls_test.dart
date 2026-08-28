@@ -374,19 +374,32 @@ void main() {
   testWidgets('task list checkbox and focus icon do not open detail', (
     tester,
   ) async {
+    final platformCalls = <MethodCall>[];
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      platformCalls.add(call);
+      return null;
+    });
+    addTearDown(
+      () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
+    );
     final harness = await _pumpApp(tester);
+    platformCalls.clear();
 
-    await tester.tap(find.byType(Checkbox).first);
+    await tester.tap(find.byKey(const Key('task-completion-control-task-1')));
     await _pumpFrames(tester);
 
     expect(harness.taskRepository.completedTaskIds, contains('task-1'));
     expect(find.text('Task completed'), findsOneWidget);
     _expectTaskCompletionSnackBar(tester);
     expect(find.text('Focus history'), findsNothing);
+    expect(_hapticCalls(platformCalls), hasLength(1));
 
     await tester.tap(find.text('Undo'));
     await _pumpFrames(tester);
     expect(harness.taskRepository.uncompletedTaskIds, contains('task-1'));
+    expect(_hapticCalls(platformCalls), hasLength(2));
 
     await tester.tap(find.byTooltip('Start focus').first);
     await _pumpFrames(tester);
@@ -487,6 +500,9 @@ void main() {
       expect(find.text('Task deleted'), findsOneWidget);
       expect(find.text('Today'), findsAtLeastNWidgets(1));
       expect(find.text('Focus history'), findsNothing);
+      await tester.tap(find.text('Undo'));
+      await _pumpFrames(tester);
+      expect(harness.taskRepository.restoredBatches.single.taskIds, {'task-1'});
 
       router.go('/task/done-1');
       await _pumpFrames(tester);
@@ -1369,6 +1385,10 @@ void main() {
         await gesture.moveTo(tester.getCenter(gap));
         await tester.pump();
 
+        expect(tester.getSize(gap).height, 12);
+        await tester.pump(const Duration(milliseconds: 80));
+        expect(tester.getSize(gap).height, inExclusiveRange(12, 32));
+        await tester.pump(const Duration(milliseconds: 80));
         expect(tester.getSize(gap).height, 32);
         expect(find.text('Make parent task'), findsOneWidget);
 
@@ -1490,7 +1510,7 @@ void main() {
 
       await _dragTaskToRootDropZone(tester, 'Child task');
 
-      expect(find.textContaining('Could not move task'), findsOneWidget);
+      expect(find.text('1 task could not be updated'), findsOneWidget);
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
@@ -1511,7 +1531,7 @@ void main() {
 
       await _dragTaskToRootGap(tester, 'Child task');
 
-      expect(find.textContaining('Could not move task'), findsOneWidget);
+      expect(find.text('1 task could not be updated'), findsOneWidget);
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
@@ -2757,7 +2777,7 @@ void main() {
       ],
     );
 
-    await tester.tap(find.byType(Checkbox).first);
+    await tester.tap(find.byKey(const Key('task-completion-control-parent-1')));
     await _pumpFrames(tester);
 
     expect(
@@ -3957,6 +3977,7 @@ class _FakeTaskRepository implements TaskRepository {
   final deletedTaskIds = <String>[];
   final recurringDeleteTaskIds = <String>[];
   final recurringDeleteIncludeFollowing = <bool>[];
+  final restoredBatches = <DeletedTaskBatch>[];
   final createdInputs = <CreateTaskInput>[];
   final updatePatches = <UpdateTaskPatch>[];
   final movedProjectIds = <String?>[];
@@ -4132,24 +4153,47 @@ class _FakeTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<void> deleteTask(String id) async {
-    for (final taskId in _subtreeIds(id)) {
+  Future<DeletedTaskBatch> deleteTask(String id) => deleteTasks({id});
+
+  @override
+  Future<DeletedTaskBatch> deleteTasks(Set<String> ids) async {
+    final deletedIds = <String>{};
+    for (final id in ids) {
+      deletedIds.addAll(_subtreeIds(id));
+    }
+    for (final taskId in deletedIds) {
       deletedTaskIds.add(taskId);
       final task = _tasks[taskId];
       if (task != null) {
         _tasks[taskId] = _copyTask(task, isDeleted: true);
       }
     }
+    return DeletedTaskBatch(
+      taskIds: deletedIds,
+      undoUntil: DateTime.now().toUtc().add(const Duration(seconds: 7)),
+    );
   }
 
   @override
-  Future<void> deleteRecurringOccurrence(
+  Future<DeletedTaskBatch> deleteRecurringOccurrence(
     String id, {
     required bool includeFollowing,
   }) async {
     recurringDeleteTaskIds.add(id);
     recurringDeleteIncludeFollowing.add(includeFollowing);
-    await deleteTask(id);
+    return deleteTask(id);
+  }
+
+  @override
+  Future<bool> restoreDeletedTasks(DeletedTaskBatch batch) async {
+    restoredBatches.add(batch);
+    for (final id in batch.taskIds) {
+      final task = _tasks[id];
+      if (task != null) {
+        _tasks[id] = _copyTask(task, isDeleted: false);
+      }
+    }
+    return true;
   }
 
   @override
@@ -4185,6 +4229,9 @@ class _FakeTaskRepository implements TaskRepository {
     return result;
   }
 }
+
+Iterable<MethodCall> _hapticCalls(Iterable<MethodCall> calls) =>
+    calls.where((call) => call.method == 'HapticFeedback.vibrate');
 
 class _FakeFocusRepository implements FocusRepository {
   _FakeFocusRepository({this.activeRun, this.activeInterval});

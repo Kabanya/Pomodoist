@@ -203,17 +203,21 @@ class _FocusRunCompletionCelebrationState
 
   Future<void> _completeTask(String taskId) async {
     try {
-      await completeTaskWithUndoFeedback(context, ref, taskId);
-      if (mounted) {
+      final completed = await completeTaskWithUndoFeedback(
+        context,
+        ref,
+        taskId,
+      );
+      if (completed && mounted) {
         _dismiss();
       }
-    } catch (error) {
+    } catch (_) {
       if (!mounted) {
         return;
       }
       showActionFeedback(
         context,
-        message: context.l10n.focusCompletionTaskError(error),
+        message: context.l10n.taskActionFailedCount(1),
         icon: Icons.error_outline,
         sound: ActionFeedbackSound.none,
       );

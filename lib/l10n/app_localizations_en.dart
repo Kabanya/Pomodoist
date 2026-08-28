@@ -928,6 +928,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get taskCreateFailed => 'Could not create the task. Try again.';
+
+  @override
   String couldNotAddProject(Object error) {
     return 'Could not add project: $error';
   }
@@ -2130,7 +2133,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get taskDeleteSelectedTitle => 'Delete selected tasks?';
 
   @override
-  String get taskDeleteSelectedMessage => 'This action cannot be undone.';
+  String get taskDeleteSelectedMessage =>
+      'You can undo this action for 7 seconds.';
 
   @override
   String get taskCompleteSelected => 'Complete selected';

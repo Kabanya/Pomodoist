@@ -18,6 +18,7 @@ import '../../domain/task_focus_estimate.dart';
 import '../../domain/task_models.dart';
 import '../task_completion_feedback.dart';
 import 'project_color_picker.dart';
+import 'task_motion.dart';
 import 'task_selection_region.dart';
 
 enum TaskListItemPresentation { standard, agenda }
@@ -122,21 +123,82 @@ Future<void> deleteTaskWithRecurringPrompt(
   }
 
   final repository = ref.read(taskRepositoryProvider);
-  if (schedule?.isRecurringOccurrence ?? false) {
-    await repository.deleteRecurringOccurrence(
-      task.id,
-      includeFollowing: includeFollowing,
-    );
-  } else {
-    await repository.deleteTask(task.id);
+  late final DeletedTaskBatch batch;
+  try {
+    if (schedule?.isRecurringOccurrence ?? false) {
+      batch = await repository.deleteRecurringOccurrence(
+        task.id,
+        includeFollowing: includeFollowing,
+      );
+    } else {
+      batch = await repository.deleteTask(task.id);
+    }
+  } catch (_) {
+    if (context.mounted) {
+      showActionFeedback(
+        context,
+        message: context.l10n.taskActionFailedCount(1),
+        icon: Icons.error_outline,
+        sound: ActionFeedbackSound.none,
+        haptic: AppHapticCue.none,
+      );
+    }
+    return;
   }
   if (!context.mounted) {
     return;
   }
+  final motion = TaskMotionScope.maybeOf(context);
+  final visibleTasks = TaskSelectionScope.maybeOf(context)?.visibleTasks;
+  motion?.deleted(
+    visibleTasks == null
+        ? [task]
+        : visibleTasks.where((item) => batch.taskIds.contains(item.id)),
+  );
   showActionFeedback(
     context,
     message: context.l10n.taskDeleted,
     icon: Icons.delete_outline,
+    duration: const Duration(seconds: 7),
+    showCloseIcon: true,
+    compact: true,
+    action: SnackBarAction(
+      label: context.l10n.commonUndo,
+      onPressed: () => unawaited(() async {
+        final bool restored;
+        try {
+          restored = await repository.restoreDeletedTasks(batch);
+        } catch (_) {
+          if (context.mounted) {
+            showActionFeedback(
+              context,
+              message: context.l10n.taskActionFailedCount(batch.taskIds.length),
+              icon: Icons.error_outline,
+              sound: ActionFeedbackSound.none,
+              haptic: AppHapticCue.none,
+            );
+          }
+          return;
+        }
+        if (restored) {
+          await playHaptic(AppHapticCue.light);
+          if (context.mounted) {
+            motion?.created(batch.taskIds);
+          }
+          return;
+        }
+        if (!context.mounted) {
+          return;
+        }
+        showActionFeedback(
+          context,
+          message: context.l10n.taskActionFailedCount(batch.taskIds.length),
+          icon: Icons.error_outline,
+          sound: ActionFeedbackSound.none,
+          haptic: AppHapticCue.none,
+        );
+      }()),
+    ),
   );
   onDeleted?.call();
 }
@@ -245,6 +307,42 @@ class TaskListItem extends ConsumerWidget {
       );
     }
 
+    Future<void> toggleCompletion() async {
+      if (task.isCompleted) {
+        try {
+          await taskRepository.uncompleteTask(task.id);
+        } catch (_) {
+          if (context.mounted) {
+            showActionFeedback(
+              context,
+              message: l10n.taskActionFailedCount(1),
+              icon: Icons.error_outline,
+              sound: ActionFeedbackSound.none,
+              haptic: AppHapticCue.none,
+            );
+          }
+          return;
+        }
+        if (!context.mounted) {
+          return;
+        }
+        final reopened = await taskRepository.watchTask(task.id).first;
+        if (!context.mounted) {
+          return;
+        }
+        if (reopened != null) {
+          TaskMotionScope.maybeOf(context)?.reopened([reopened]);
+        }
+        showActionFeedback(
+          context,
+          message: l10n.taskReopened,
+          icon: Icons.undo,
+        );
+        return;
+      }
+      await completeTaskWithUndoFeedback(context, ref, task.id);
+    }
+
     Widget row(
       bool accepting, {
       required bool agendaDesktop,
@@ -262,7 +360,7 @@ class TaskListItem extends ConsumerWidget {
         ),
         TaskListItemPresentation.agenda => overflowAction(),
       };
-      return Material(
+      final content = Material(
         color: accepting || (selection?.isSelected(task.id) ?? false)
             ? colors.accentTint
             : Colors.transparent,
@@ -308,55 +406,33 @@ class TaskListItem extends ConsumerWidget {
                 children: [
                   SizedBox(
                     width: 34,
-                    child: Checkbox(
-                      value: selection?.active ?? false
-                          ? selection!.isSelected(task.id)
-                          : task.isCompleted,
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: const CircleBorder(),
-                      side: BorderSide(
-                        color: task.isCompleted
-                            ? colors.accent
-                            : _priorityColor(
-                                task.priority,
-                                colorScheme,
-                                colors,
-                              ),
-                        width: 1.4,
-                      ),
-                      fillColor: WidgetStateProperty.resolveWith((states) {
-                        if (states.contains(WidgetState.selected)) {
-                          return colors.accentFill;
-                        }
-                        return Colors.transparent;
-                      }),
-                      checkColor: Colors.white,
-                      onChanged: (_) async {
-                        if (selection?.active ?? false) {
-                          selection!.toggle(task.id);
-                          return;
-                        }
-                        if (task.isCompleted) {
-                          await taskRepository.uncompleteTask(task.id);
-                          if (!context.mounted) {
-                            return;
-                          }
-                          showActionFeedback(
-                            context,
-                            message: l10n.taskReopened,
-                            icon: Icons.undo,
-                          );
-                          return;
-                        }
-
-                        await completeTaskWithUndoFeedback(
-                          context,
-                          ref,
-                          task.id,
-                        );
-                      },
-                    ),
+                    child: selection?.active ?? false
+                        ? Checkbox(
+                            value: selection!.isSelected(task.id),
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            shape: const CircleBorder(),
+                            onChanged: (_) => selection.toggle(task.id),
+                          )
+                        : Center(
+                            child: TaskCompletionControl(
+                              taskId: task.id,
+                              isCompleted: task.isCompleted,
+                              color: task.isCompleted
+                                  ? colors.accent
+                                  : _priorityColor(
+                                      task.priority,
+                                      colorScheme,
+                                      colors,
+                                    ),
+                              fillColor: colors.accentFill,
+                              tooltip: task.isCompleted
+                                  ? l10n.markOpen
+                                  : l10n.markComplete,
+                              onPressed: toggleCompletion,
+                            ),
+                          ),
                   ),
                   const SizedBox(width: 4),
                   Expanded(
@@ -400,6 +476,17 @@ class TaskListItem extends ConsumerWidget {
           ),
         ),
       );
+      if (!enableSubtaskDrop) {
+        return content;
+      }
+      return AnimatedPadding(
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 160),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.symmetric(vertical: accepting ? 4 : 0),
+        child: content,
+      );
     }
 
     Widget rowWithDropTarget({
@@ -427,23 +514,29 @@ class TaskListItem extends ConsumerWidget {
     }
 
     if (!isAgenda) {
-      return rowWithDropTarget(
-        agendaDesktop: false,
-        showAgendaFocusAction: true,
+      return TaskMotionItem(
+        taskId: task.id,
+        child: rowWithDropTarget(
+          agendaDesktop: false,
+          showAgendaFocusAction: true,
+        ),
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= 760;
-        return _AgendaInteractionRegion(
-          taskId: task.id,
-          builder: (context, isActive) => rowWithDropTarget(
-            agendaDesktop: isDesktop,
-            showAgendaFocusAction: isDesktop && isActive,
-          ),
-        );
-      },
+    return TaskMotionItem(
+      taskId: task.id,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isDesktop = constraints.maxWidth >= 760;
+          return _AgendaInteractionRegion(
+            taskId: task.id,
+            builder: (context, isActive) => rowWithDropTarget(
+              agendaDesktop: isDesktop,
+              showAgendaFocusAction: isDesktop && isActive,
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -714,7 +807,11 @@ class TaskListItem extends ConsumerWidget {
       case _TaskQuickAction.toggleComplete:
         return task.isCompleted
             ? taskRepository.uncompleteTask(task.id)
-            : completeTaskWithUndoFeedback(context, ref, task.id);
+            : completeTaskWithUndoFeedback(
+                context,
+                ref,
+                task.id,
+              ).then<void>((_) {});
       case _TaskQuickAction.today:
         return taskRepository.updateTask(
           task.id,
@@ -817,14 +914,20 @@ class TaskListItem extends ConsumerWidget {
             parentId: task.id,
             orderKey: _newOrderKey(),
           );
-    } catch (error) {
+      if (context.mounted) {
+        TaskMotionScope.maybeOf(context)?.landed({draggedTaskId});
+        await playHaptic(AppHapticCue.light);
+      }
+    } catch (_) {
       if (!context.mounted) {
         return;
       }
       showActionFeedback(
         context,
-        message: context.l10n.couldNotMoveTask(error),
+        message: context.l10n.taskActionFailedCount(1),
         icon: Icons.error_outline,
+        sound: ActionFeedbackSound.none,
+        haptic: AppHapticCue.none,
       );
     }
   }
@@ -958,15 +1061,16 @@ class _AgendaTaskContent extends StatelessWidget {
           ),
         ),
     ];
-    final title = Text(
-      task.content,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+    final title = AnimatedDefaultTextStyle(
+      duration: MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 340),
+      style: Theme.of(context).textTheme.titleMedium!.copyWith(
         color: task.isCompleted ? colors.mutedText : colors.primaryText,
         decoration: task.isCompleted ? TextDecoration.lineThrough : null,
         decorationColor: colors.mutedText,
       ),
+      child: Text(task.content, maxLines: 1, overflow: TextOverflow.ellipsis),
     );
 
     if (metadata.isEmpty) {
@@ -1107,14 +1211,19 @@ class _TaskContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          task.content,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        AnimatedDefaultTextStyle(
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 340),
+          style: Theme.of(context).textTheme.titleMedium!.copyWith(
             color: task.isCompleted ? colors.mutedText : colors.primaryText,
             decoration: task.isCompleted ? TextDecoration.lineThrough : null,
             decorationColor: colors.mutedText,
+          ),
+          child: Text(
+            task.content,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         if (hasDescription) ...[
@@ -1152,32 +1261,35 @@ class _TaskDragFeedback extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    return Material(
-      color: Colors.transparent,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: colors.surface,
-          border: Border.all(color: colors.border),
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: colors.primaryText.withValues(alpha: 0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 280),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Text(
-              task.content,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: colors.primaryText),
+    return Transform.scale(
+      scale: 1.025,
+      child: Material(
+        color: Colors.transparent,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            border: Border.all(color: colors.border),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: colors.primaryText.withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 280),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text(
+                task.content,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: colors.primaryText),
+              ),
             ),
           ),
         ),

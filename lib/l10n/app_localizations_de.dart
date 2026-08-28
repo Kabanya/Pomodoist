@@ -938,6 +938,10 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get taskCreateFailed =>
+      'Die Aufgabe konnte nicht erstellt werden. Versuche es erneut.';
+
+  @override
   String couldNotAddProject(Object error) {
     return 'Projekt konnte nicht hinzugefügt werden: $error';
   }
@@ -2137,7 +2141,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get taskDeleteSelectedMessage =>
-      'Diese Aktion kann nicht rückgängig gemacht werden.';
+      'Du kannst diese Aktion 7 Sekunden lang rückgängig machen.';
 
   @override
   String get taskCompleteSelected => 'Ausgewählte erledigen';

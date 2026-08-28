@@ -360,6 +360,7 @@ class SyncCommands extends Table {
   IntColumn get attempts => integer().withDefault(const Constant(0))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get availableAt => dateTime().nullable()();
   TextColumn get lastError => text().nullable()();
 
   @override
@@ -471,7 +472,7 @@ class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -529,6 +530,12 @@ class AppDatabase extends _$AppDatabase {
           'CREATE INDEX IF NOT EXISTS tasks_active_children_by_parent '
           'ON tasks (parent_id, status, id) '
           'WHERE parent_id IS NOT NULL AND is_deleted = 0',
+        );
+      }
+      if (from < 5) {
+        await _runResumableMigrationStep(
+          () => m.addColumn(syncCommands, syncCommands.availableAt),
+          alreadyAppliedMessage: 'duplicate column name: available_at',
         );
       }
     },

@@ -116,6 +116,30 @@ void main() {
     expect(harness.kanban.moves.single.statusId, kanbanStatusDoneId);
   });
 
+  testWidgets('completion lands the card in Done with a brief highlight', (
+    tester,
+  ) async {
+    final harness = await _pumpKanban(tester, width: 1200);
+
+    await tester.tap(find.byKey(const Key('kanban-card-menu-task-focus')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mark complete'));
+    await tester.pump();
+
+    expect(harness.kanban.moves.single.statusId, kanbanStatusDoneId);
+    expect(
+      find.descendant(
+        of: find.byKey(Key('kanban-column-$kanbanStatusDoneId')),
+        matching: find.byKey(const Key('kanban-card-task-focus')),
+      ),
+      findsOneWidget,
+    );
+    expect(_motionHighlight(tester, 'task-focus').a, greaterThan(0));
+
+    await tester.pump(const Duration(milliseconds: 160));
+    expect(_motionHighlight(tester, 'task-focus').a, 0);
+  });
+
   testWidgets('desktop project selector shows all available projects', (
     tester,
   ) async {
@@ -278,6 +302,17 @@ void main() {
       await second;
     },
   );
+}
+
+Color _motionHighlight(WidgetTester tester, String taskId) {
+  final decoration =
+      tester
+              .widget<DecoratedBox>(
+                find.byKey(Key('task-motion-highlight-$taskId')),
+              )
+              .decoration
+          as BoxDecoration;
+  return decoration.color!;
 }
 
 Future<_KanbanHarness> _pumpKanban(

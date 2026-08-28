@@ -5,6 +5,7 @@ import '../../../app/app_l10n.dart';
 import '../../../app/providers.dart';
 import '../domain/task_models.dart';
 import 'widgets/task_list_item.dart';
+import 'widgets/task_motion.dart';
 import 'widgets/task_selection_region.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
@@ -84,48 +85,56 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ),
               )
             else
-              tasks.when(
-                data: (items) {
-                  if (items.isEmpty) {
-                    return SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(
-                        child: Text(
-                          l10n.searchNoMatches,
-                          style: Theme.of(context).textTheme.titleMedium,
+              TaskMotionScope(
+                key: ValueKey(trimmedQuery),
+                builder: (context, motion) => tasks.when(
+                  data: (items) {
+                    final visibleById = <String, TaskItem>{
+                      for (final task in items) task.id: task,
+                      for (final task in motion.retainedTasks) task.id: task,
+                    };
+                    final visibleItems = visibleById.values.toList();
+                    if (visibleItems.isEmpty) {
+                      return SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(
+                          child: Text(
+                            l10n.searchNoMatches,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                      );
+                    }
+                    final progressById = taskSubtaskProgressById([
+                      ...?allOpenTasks.value,
+                      ...?completedTasks.value,
+                      ...visibleItems,
+                    ]);
+                    return SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                      sliver: SliverList.separated(
+                        itemCount: visibleItems.length,
+                        itemBuilder: (context, index) {
+                          final task = visibleItems[index];
+                          return TaskListItem(
+                            task: task,
+                            subtaskProgress: progressById[task.id],
+                          );
+                        },
+                        separatorBuilder: (context, index) => Divider(
+                          height: 1,
+                          indent: 38,
+                          color: Theme.of(context).colorScheme.outlineVariant,
                         ),
                       ),
                     );
-                  }
-                  final progressById = taskSubtaskProgressById([
-                    ...?allOpenTasks.value,
-                    ...?completedTasks.value,
-                    ...items,
-                  ]);
-                  return SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                    sliver: SliverList.separated(
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        final task = items[index];
-                        return TaskListItem(
-                          task: task,
-                          subtaskProgress: progressById[task.id],
-                        );
-                      },
-                      separatorBuilder: (context, index) => Divider(
-                        height: 1,
-                        indent: 38,
-                        color: Theme.of(context).colorScheme.outlineVariant,
-                      ),
-                    ),
-                  );
-                },
-                loading: () => const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (error, stackTrace) => SliverFillRemaining(
-                  child: Center(child: Text(l10n.failedToSearchTasks(error))),
+                  },
+                  loading: () => const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (error, stackTrace) => SliverFillRemaining(
+                    child: Center(child: Text(l10n.failedToSearchTasks(error))),
+                  ),
                 ),
               ),
           ],

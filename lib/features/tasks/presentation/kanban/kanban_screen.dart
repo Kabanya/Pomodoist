@@ -10,11 +10,13 @@ import '../../../../app/formatters.dart';
 import '../../../../app/providers.dart';
 import '../../../../app/task_time.dart';
 import '../../../../app/theme/app_theme.dart';
+import '../../../../app/widgets/action_feedback.dart';
 import '../../../focus/domain/focus_models.dart';
 import '../../domain/project_colors.dart';
 import '../../domain/task_models.dart';
 import '../widgets/project_color_picker.dart';
 import '../widgets/quick_add_bar.dart';
+import '../widgets/task_motion.dart';
 import 'kanban_board_controller.dart';
 
 const _kanbanWideBreakpoint = 820.0;
@@ -52,6 +54,7 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
   bool _searchVisible = false;
   bool _hideDone = false;
   KanbanBoardSnapshot? _latestBoard;
+  TaskMotionController? _motion;
 
   @override
   void initState() {
@@ -104,72 +107,79 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
       }
     });
 
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        final cardsByStatus = _filteredCards(
-          _controller.visibleCards(board),
-          _query,
-        );
-        final wide = MediaQuery.sizeOf(context).width >= _kanbanWideBreakpoint;
-        return ColoredBox(
-          color: context.appColors.canvas,
-          child: SafeArea(
-            top: false,
-            bottom: false,
-            child: Column(
-              children: [
-                _KanbanHeader(
-                  board: board,
-                  wide: wide,
-                  showMobileTitle: widget.showMobileTitle,
-                  searchVisible: _searchVisible,
-                  searchController: _searchController,
-                  hideDone: _hideDone,
-                  onToggleSearch: () =>
-                      setState(() => _searchVisible = !_searchVisible),
-                  onQueryChanged: (value) => setState(() => _query = value),
-                  onToggleDone: () => setState(() => _hideDone = !_hideDone),
-                  onSelectProjects: () => _selectProjects(board),
-                  onAdd: () =>
-                      _openAddDialog(board, statusId: _backlogId(board)),
+    return TaskMotionScope(
+      builder: (context, motion) {
+        _motion = motion;
+        return AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            final cardsByStatus = _filteredCards(
+              _controller.visibleCards(board),
+              _query,
+            );
+            final wide =
+                MediaQuery.sizeOf(context).width >= _kanbanWideBreakpoint;
+            return ColoredBox(
+              color: context.appColors.canvas,
+              child: SafeArea(
+                top: false,
+                bottom: false,
+                child: Column(
+                  children: [
+                    _KanbanHeader(
+                      board: board,
+                      wide: wide,
+                      showMobileTitle: widget.showMobileTitle,
+                      searchVisible: _searchVisible,
+                      searchController: _searchController,
+                      hideDone: _hideDone,
+                      onToggleSearch: () =>
+                          setState(() => _searchVisible = !_searchVisible),
+                      onQueryChanged: (value) => setState(() => _query = value),
+                      onToggleDone: () =>
+                          setState(() => _hideDone = !_hideDone),
+                      onSelectProjects: () => _selectProjects(board),
+                      onAdd: () =>
+                          _openAddDialog(board, statusId: _backlogId(board)),
+                    ),
+                    if (boardValue.isLoading)
+                      const LinearProgressIndicator(
+                        key: Key('kanban-stale-loading'),
+                        minHeight: 2,
+                      ),
+                    Expanded(
+                      child: wide
+                          ? _DesktopKanbanBoard(
+                              statuses: statuses,
+                              allStatuses: board.statuses,
+                              focusStatusId: focusStatusId,
+                              cardsByStatus: cardsByStatus,
+                              onMove: _moveTask,
+                              onOpen: _openTask,
+                              onStartFocus: _startFocus,
+                              onAdd: (status) =>
+                                  _openAddDialog(board, statusId: status.id),
+                            )
+                          : _MobileKanbanBoard(
+                              statuses: statuses,
+                              allStatuses: board.statuses,
+                              focusStatusId: focusStatusId,
+                              expandedStatusId: expandedStatusId,
+                              cardsByStatus: cardsByStatus,
+                              onExpanded: (statusId) =>
+                                  setState(() => _expandedStatusId = statusId),
+                              onMove: _moveTask,
+                              onOpen: _openTask,
+                              onStartFocus: _startFocus,
+                              onAdd: (status) =>
+                                  _openAddDialog(board, statusId: status.id),
+                            ),
+                    ),
+                  ],
                 ),
-                if (boardValue.isLoading)
-                  const LinearProgressIndicator(
-                    key: Key('kanban-stale-loading'),
-                    minHeight: 2,
-                  ),
-                Expanded(
-                  child: wide
-                      ? _DesktopKanbanBoard(
-                          statuses: statuses,
-                          allStatuses: board.statuses,
-                          focusStatusId: focusStatusId,
-                          cardsByStatus: cardsByStatus,
-                          onMove: _moveTask,
-                          onOpen: _openTask,
-                          onStartFocus: _startFocus,
-                          onAdd: (status) =>
-                              _openAddDialog(board, statusId: status.id),
-                        )
-                      : _MobileKanbanBoard(
-                          statuses: statuses,
-                          allStatuses: board.statuses,
-                          focusStatusId: focusStatusId,
-                          expandedStatusId: expandedStatusId,
-                          cardsByStatus: cardsByStatus,
-                          onExpanded: (statusId) =>
-                              setState(() => _expandedStatusId = statusId),
-                          onMove: _moveTask,
-                          onOpen: _openTask,
-                          onStartFocus: _startFocus,
-                          onAdd: (status) =>
-                              _openAddDialog(board, statusId: status.id),
-                        ),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
@@ -211,6 +221,8 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
         targetIndex: targetIndex,
       );
       if (mounted) {
+        _motion?.landed({taskId});
+        unawaited(playHaptic(AppHapticCue.light));
         KanbanStatus? status;
         for (final candidate in _latestBoard?.statuses ?? const []) {
           if (candidate.id == statusId) {
@@ -226,12 +238,12 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
           );
         }
       }
-    } catch (error) {
+    } catch (_) {
       if (!mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.couldNotMoveTask(error))),
+        SnackBar(content: Text(context.l10n.taskActionFailedCount(1))),
       );
     }
   }
@@ -301,10 +313,14 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
     if (status.isDone) {
       return;
     }
-    await showDialog<void>(
+    final createdIds = await showDialog<List<String>>(
       context: context,
       builder: (context) => _KanbanAddDialog(board: board, status: status),
     );
+    if (createdIds != null && createdIds.isNotEmpty) {
+      _motion?.created(createdIds.toSet());
+      await playHaptic(AppHapticCue.light);
+    }
   }
 }
 
@@ -918,15 +934,24 @@ class _KanbanDropTarget extends StatelessWidget {
       onWillAcceptWithDetails: (_) => true,
       onAcceptWithDetails: (details) => unawaited(onAccept(details.data)),
       builder: (context, candidates, rejected) {
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
-          decoration: candidates.isEmpty
-              ? null
-              : BoxDecoration(
-                  border: Border.all(color: context.appColors.accent),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-          child: child,
+        final duration = MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 120);
+        return AnimatedPadding(
+          duration: duration,
+          padding: candidates.isEmpty
+              ? EdgeInsets.zero
+              : const EdgeInsets.symmetric(vertical: 6),
+          child: AnimatedContainer(
+            duration: duration,
+            decoration: candidates.isEmpty
+                ? null
+                : BoxDecoration(
+                    border: Border.all(color: context.appColors.accent),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+            child: child,
+          ),
         );
       },
     );
@@ -1036,14 +1061,17 @@ class _KanbanTaskCard extends ConsumerWidget {
                         message: context.l10n.kanbanDragTask,
                         child: Draggable<KanbanDragPayload>(
                           data: payload,
-                          feedback: Material(
-                            elevation: 6,
-                            borderRadius: BorderRadius.circular(12),
-                            child: SizedBox(
-                              width: 260,
-                              child: Padding(
-                                padding: const EdgeInsets.all(14),
-                                child: Text(task.content),
+                          feedback: Transform.scale(
+                            scale: 1.025,
+                            child: Material(
+                              elevation: 6,
+                              borderRadius: BorderRadius.circular(12),
+                              child: SizedBox(
+                                width: 260,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(14),
+                                  child: Text(task.content),
+                                ),
                               ),
                             ),
                           ),
@@ -1118,26 +1146,29 @@ class _KanbanTaskCard extends ConsumerWidget {
         ),
       ),
     );
-    if (desktop) {
-      return content;
-    }
-    return LongPressDraggable<KanbanDragPayload>(
-      key: Key('kanban-long-press-${task.id}'),
-      data: payload,
-      feedback: Material(
-        elevation: 6,
-        borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          width: MediaQuery.sizeOf(context).width - 64,
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Text(task.content),
-          ),
-        ),
-      ),
-      childWhenDragging: Opacity(opacity: 0.35, child: content),
-      child: content,
-    );
+    final draggable = desktop
+        ? content
+        : LongPressDraggable<KanbanDragPayload>(
+            key: Key('kanban-long-press-${task.id}'),
+            data: payload,
+            feedback: Transform.scale(
+              scale: 1.025,
+              child: Material(
+                elevation: 6,
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: MediaQuery.sizeOf(context).width - 64,
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Text(task.content),
+                  ),
+                ),
+              ),
+            ),
+            childWhenDragging: Opacity(opacity: 0.35, child: content),
+            child: content,
+          );
+    return TaskMotionItem(taskId: task.id, child: draggable);
   }
 
   String _semanticLabel(
@@ -1588,7 +1619,7 @@ class _KanbanAddDialogState extends ConsumerState<_KanbanAddDialog> {
                 submitButtonKey: const Key('kanban-add-submit'),
                 projectId: _projectId,
                 kanbanStatusId: widget.status.id,
-                onTaskCreated: () => Navigator.of(context).pop(),
+                onTaskCreated: (taskIds) => Navigator.of(context).pop(taskIds),
               ),
           ],
         ),

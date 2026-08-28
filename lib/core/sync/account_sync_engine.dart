@@ -117,9 +117,29 @@ class AccountSyncEngine {
     await _deleteFinishedCommands();
     final deviceId = await _ensureDeviceId();
     final taskHistoryCutoff = await _taskHistoryCutoff();
+    final readyAt = DateTime.now().toUtc();
+    final deferredTaskIds =
+        (await (_db.select(_db.syncCommands)..where(
+                  (row) =>
+                      row.status.equals('pending') &
+                      row.type.equals('task.delete') &
+                      row.availableAt.isBiggerThanValue(readyAt),
+                ))
+                .get())
+            .map((command) => command.clientId)
+            .whereType<String>()
+            .toSet();
     final pending =
         await (_db.select(_db.syncCommands)
-              ..where((row) => row.status.equals('pending'))
+              ..where(
+                (row) =>
+                    row.status.equals('pending') &
+                    (row.availableAt.isNull() |
+                        row.availableAt.isSmallerOrEqualValue(readyAt)) &
+                    (deferredTaskIds.isEmpty
+                        ? const Constant(true)
+                        : row.clientId.isNotIn(deferredTaskIds)),
+              )
               ..orderBy([(row) => OrderingTerm.asc(row.createdAt)])
               ..limit(100))
             .get();
@@ -980,6 +1000,13 @@ class AccountSyncEngine {
         );
         return;
       case 'task':
+        await (_db.delete(_db.syncCommands)..where(
+              (row) =>
+                  row.type.equals('task.delete') &
+                  row.clientId.equals(entity.entityId) &
+                  row.status.equals('pending'),
+            ))
+            .go();
         await (_db.update(
           _db.tasks,
         )..where((row) => row.id.equals(entity.entityId))).write(
@@ -1168,6 +1195,18 @@ class AccountSyncEngine {
       _db.tasks,
     )..where((row) => row.id.equals(id))).getSingleOrNull();
     final merged = _mergeRow(existing?.toJson(), data);
+    final hasPendingDelete =
+        await (_db.select(_db.syncCommands)..where(
+              (row) =>
+                  row.type.equals('task.delete') &
+                  row.clientId.equals(id) &
+                  row.status.equals('pending'),
+            ))
+            .getSingleOrNull() !=
+        null;
+    if (hasPendingDelete) {
+      merged['isDeleted'] = true;
+    }
     if (!_hasRequired(merged, [
       'id',
       'userId',

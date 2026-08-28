@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/core/db/app_database.dart';
@@ -90,6 +90,35 @@ void main() {
       expect(rows.map((row) => row.type), ['first', 'second']);
       expect(rows[0].createdAt.toUtc(), second);
       expect(rows[1].createdAt.toUtc(), second.add(const Duration(seconds: 1)));
+    },
+  );
+
+  test(
+    'stores deferred availability without delaying ordinary commands',
+    () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      await db.ensureSeedData();
+      final queue = DriftSyncQueueRepository(db);
+      final availableAt = DateTime.utc(2026, 7, 10, 9, 0, 7);
+
+      await queue.enqueueBatch([
+        SyncQueueCommand(
+          type: 'task.delete',
+          clientId: 'task-1',
+          payload: const {'id': 'task-1'},
+          availableAt: availableAt,
+        ),
+        const SyncQueueCommand(
+          type: 'task.update',
+          clientId: 'task-2',
+          payload: {'id': 'task-2'},
+        ),
+      ]);
+
+      final rows = await queue.watchPending().first;
+      expect(rows[0].availableAt?.toUtc(), availableAt);
+      expect(rows[1].availableAt, isNull);
     },
   );
 

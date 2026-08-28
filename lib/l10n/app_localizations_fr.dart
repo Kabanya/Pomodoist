@@ -936,6 +936,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get taskCreateFailed => 'Impossible de créer la tâche. Réessayez.';
+
+  @override
   String couldNotAddProject(Object error) {
     return 'Impossible d\'ajouter le projet : $error';
   }
@@ -2136,7 +2139,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get taskDeleteSelectedTitle => 'Supprimer les tâches sélectionnées ?';
 
   @override
-  String get taskDeleteSelectedMessage => 'Cette action est irréversible.';
+  String get taskDeleteSelectedMessage =>
+      'Vous pouvez annuler cette action pendant 7 secondes.';
 
   @override
   String get taskCompleteSelected => 'Terminer la sélection';

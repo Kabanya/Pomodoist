@@ -78,14 +78,15 @@ app.*.map.json
 !web/icons/*.png
 pomodoist_app_icon_no_background.png
 !ios/Runner/pomodoist_app_icon_no_background.png
+.codex**
 key-**.md
 key-**.p8
-outputs/pricing-report-2026-07-24/Pomodoist_pricing_comparison_2026-07-24.xlsx
 .gitignore
-docs/
-output/
-tmp/
 supabase/.temp/
+design/
+output/
+docs/
+tmp/
 
 # FVM Version Cache
 .fvm/

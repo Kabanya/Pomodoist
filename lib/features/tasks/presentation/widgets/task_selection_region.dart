@@ -12,6 +12,7 @@ import '../../../../app/widgets/action_feedback.dart';
 import '../../../planning/domain/quick_add_parser.dart';
 import '../../domain/task_models.dart';
 import '../task_completion_feedback.dart';
+import 'task_motion.dart';
 
 class TaskSelectionController extends ChangeNotifier {
   TaskSelectionController({
@@ -45,6 +46,7 @@ class TaskSelectionController extends ChangeNotifier {
   Set<String> get selectedIds => Set.unmodifiable(_selectedIds);
   int get selectedCount => _selectedIds.length;
   bool get hasSelection => _selectedIds.isNotEmpty;
+  Iterable<TaskItem> get visibleTasks => _visibleTasks.values;
   bool get allVisibleSelected =>
       _visibleTasks.isNotEmpty &&
       _visibleTasks.keys.every(_selectedIds.contains);
@@ -416,6 +418,8 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
   }
 
   Future<void> _completeOrReopen({required bool reopen}) async {
+    final l10n = context.l10n;
+    final motion = TaskMotionScope.maybeOf(context);
     final ids = _controller.selectedIds.toList();
     final succeeded = <String>[];
     final failed = <String>[];
@@ -432,6 +436,19 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
       }
     }
     if (!mounted) return;
+    final changedTasks = <TaskItem>[];
+    for (final id in succeeded) {
+      final task = await ref.read(taskRepositoryProvider).watchTask(id).first;
+      if (task != null) {
+        changedTasks.add(task);
+      }
+    }
+    if (!mounted) return;
+    if (reopen) {
+      motion?.reopened(changedTasks);
+    } else {
+      motion?.completed(changedTasks);
+    }
     if (failed.isEmpty) {
       _controller.close();
     } else {
@@ -441,22 +458,48 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
     if (succeeded.isEmpty) return;
     showActionFeedback(
       context,
-      message: reopen ? context.l10n.taskReopened : context.l10n.taskCompleted,
+      message: reopen ? l10n.taskReopened : l10n.taskCompleted,
       icon: reopen ? Icons.undo : Icons.check_circle_outline,
       duration: taskCompletionUndoFeedbackDuration,
       showCloseIcon: true,
       compact: true,
       action: SnackBarAction(
-        label: context.l10n.commonUndo,
-        onPressed: () {
+        label: l10n.commonUndo,
+        onPressed: () => unawaited(() async {
+          final undone = <TaskItem>[];
+          var undoFailures = 0;
           for (final id in succeeded) {
-            unawaited(
-              reopen
-                  ? ref.read(taskRepositoryProvider).completeTask(id)
-                  : ref.read(taskRepositoryProvider).uncompleteTask(id),
-            );
+            try {
+              if (reopen) {
+                await ref.read(taskRepositoryProvider).completeTask(id);
+              } else {
+                await ref.read(taskRepositoryProvider).uncompleteTask(id);
+              }
+              final task = await ref
+                  .read(taskRepositoryProvider)
+                  .watchTask(id)
+                  .first;
+              if (task != null) {
+                undone.add(task);
+              }
+            } catch (_) {
+              undoFailures += 1;
+            }
           }
-        },
+          if (mounted) {
+            if (reopen) {
+              motion?.completed(undone);
+            } else {
+              motion?.reopened(undone);
+            }
+          }
+          if (undone.isNotEmpty) {
+            await playHaptic(AppHapticCue.light);
+          }
+          if (mounted && undoFailures > 0) {
+            _showFailures(undoFailures);
+          }
+        }()),
       ),
     );
   }
@@ -473,12 +516,15 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
     );
     if (includeSubtasks == null || !mounted) return;
     try {
-      await ref
+      final createdIds = await ref
           .read(taskRepositoryProvider)
           .duplicateTasks(
             _controller.selectedIds,
             includeSubtasks: includeSubtasks,
           );
+      if (!mounted) return;
+      TaskMotionScope.maybeOf(this.context)?.created(createdIds.toSet());
+      await playHaptic(AppHapticCue.light);
     } catch (_) {
       _showFailures(_controller.selectedCount);
     }
@@ -491,30 +537,92 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
     );
     final includeFollowing = await _confirmDelete(context, hasRecurring);
     if (includeFollowing == null || !mounted) return;
+    final selectedTasks = _controller.selectedTasks.toList();
     final failed = <String>[];
-    for (final task in _controller.selectedTasks.toList()) {
+    final batches = <DeletedTaskBatch>[];
+    final ordinary = selectedTasks
+        .where((task) => !(task.schedule?.isRecurringOccurrence ?? false))
+        .toList();
+    if (ordinary.isNotEmpty) {
       try {
-        if (task.schedule?.isRecurringOccurrence ?? false) {
+        batches.add(
+          await ref
+              .read(taskRepositoryProvider)
+              .deleteTasks(ordinary.map((task) => task.id).toSet()),
+        );
+      } catch (_) {
+        failed.addAll(ordinary.map((task) => task.id));
+      }
+    }
+    for (final task in selectedTasks.where(
+      (task) => task.schedule?.isRecurringOccurrence ?? false,
+    )) {
+      try {
+        batches.add(
           await ref
               .read(taskRepositoryProvider)
               .deleteRecurringOccurrence(
                 task.id,
                 includeFollowing: includeFollowing,
-              );
-        } else {
-          await ref.read(taskRepositoryProvider).deleteTask(task.id);
-        }
+              ),
+        );
       } catch (_) {
         failed.add(task.id);
       }
     }
     if (!mounted) return;
+    final motion = TaskMotionScope.maybeOf(this.context);
+    final deletedIds = batches.expand((batch) => batch.taskIds).toSet();
+    final deletedTasks = _controller.visibleTasks
+        .where((task) => deletedIds.contains(task.id))
+        .toList();
+    motion?.deleted(deletedTasks);
     if (failed.isEmpty) {
       _controller.close();
     } else {
       _controller.retainOnly(failed);
       _showFailures(failed.length);
     }
+    if (batches.isEmpty) {
+      return;
+    }
+    showActionFeedback(
+      this.context,
+      message: this.context.l10n.taskDeleted,
+      icon: Icons.delete_outline,
+      duration: const Duration(seconds: 7),
+      showCloseIcon: true,
+      compact: true,
+      action: SnackBarAction(
+        label: this.context.l10n.commonUndo,
+        onPressed: () => unawaited(() async {
+          final restoredIds = <String>{};
+          var restoreFailures = 0;
+          for (final batch in batches) {
+            try {
+              if (await ref
+                  .read(taskRepositoryProvider)
+                  .restoreDeletedTasks(batch)) {
+                restoredIds.addAll(batch.taskIds);
+              } else {
+                restoreFailures += batch.taskIds.length;
+              }
+            } catch (_) {
+              restoreFailures += batch.taskIds.length;
+            }
+          }
+          if (restoredIds.isNotEmpty) {
+            await playHaptic(AppHapticCue.light);
+            if (mounted) {
+              motion?.created(restoredIds);
+            }
+          }
+          if (mounted && restoreFailures > 0) {
+            _showFailures(restoreFailures);
+          }
+        }()),
+      ),
+    );
   }
 
   Future<void> _runUpdates(Future<void> Function(String id) update) async {

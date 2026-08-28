@@ -53,6 +53,37 @@ void main() {
     expect(syncs, greaterThan(initialSyncs));
   });
 
+  test('deferred command schedules sync when it becomes available', () async {
+    final queue = _FakeSyncQueueRepository();
+    final hints = StreamController<AccountSyncHint>();
+    var syncs = 0;
+    final lifecycle = _lifecycle(
+      queue: queue,
+      syncNow: () async => syncs += 1,
+      syncHints: () => hints.stream,
+    )..start();
+    addTearDown(() async {
+      lifecycle.dispose();
+      await hints.close();
+      await queue.dispose();
+    });
+
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    final initialSyncs = syncs;
+    queue.emit([
+      _command(
+        availableAt: DateTime.now().toUtc().add(
+          const Duration(milliseconds: 500),
+        ),
+      ),
+    ]);
+
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(syncs, initialSyncs);
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    expect(syncs, greaterThan(initialSyncs));
+  });
+
   test('sync failure schedules retry', () async {
     final queue = _FakeSyncQueueRepository();
     var syncs = 0;
@@ -159,7 +190,7 @@ AccountSyncLifecycle _lifecycle({
   );
 }
 
-SyncCommandRow _command() {
+SyncCommandRow _command({DateTime? availableAt}) {
   final now = DateTime.now().toUtc();
   return SyncCommandRow(
     id: 'id',
@@ -171,6 +202,7 @@ SyncCommandRow _command() {
     attempts: 0,
     createdAt: now,
     updatedAt: now,
+    availableAt: availableAt,
   );
 }
 
@@ -182,6 +214,7 @@ class _FakeSyncQueueRepository implements SyncQueueRepository {
     required String type,
     required Map<String, Object?> payload,
     String? clientId,
+    DateTime? availableAt,
   }) async {}
 
   @override

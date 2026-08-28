@@ -20,6 +20,7 @@ import 'task_completion_feedback.dart';
 import 'widgets/quick_add_bar.dart';
 import 'widgets/quick_add_text_controller.dart';
 import 'widgets/task_list_item.dart';
+import 'widgets/task_motion.dart';
 
 class TaskDetailScreen extends ConsumerWidget {
   const TaskDetailScreen({required this.taskId, super.key});
@@ -32,141 +33,186 @@ class TaskDetailScreen extends ConsumerWidget {
     final task = ref.watch(taskProvider(taskId));
     final taskRepository = ref.watch(taskRepositoryProvider);
     final focusRepository = ref.watch(focusRepositoryProvider);
-    return SafeArea(
-      child: task.when(
-        data: (item) {
-          if (item == null) {
-            return Center(child: Text(l10n.taskNotFound));
-          }
-          final calendarLink = ref.watch(googleCalendarLinkProvider(item.id));
-          final presets = ref.watch(focusPresetsProvider).value ?? const [];
-          final selectedPreset = selectedFocusPresetOrDefault(
-            presets,
-            ref.watch(lastFocusPresetIdProvider),
-          );
-          final focusEstimate = targetFocusIntervalsForTask(
-            item,
-            selectedPreset,
-          );
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    tooltip: l10n.commonBack,
-                    onPressed: () => _goBack(context),
-                    icon: const Icon(Icons.arrow_back),
-                  ),
-                ),
-                _EditableTaskTitle(task: item),
-                const SizedBox(height: 12),
-                _EditableTaskDescription(task: item),
-                const SizedBox(height: 16),
-                _TaskMetadataChips(
-                  task: item,
-                  calendarLinked: calendarLink.value != null,
-                  focusEstimate: focusEstimate,
-                ),
-                const SizedBox(height: 20),
-                _ScheduleActions(task: item),
-                const SizedBox(height: 20),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+    return TaskMotionScope(
+      key: ValueKey(taskId),
+      builder: (context, motion) => SafeArea(
+        child: task.when(
+          data: (item) {
+            if (item == null) {
+              return Center(child: Text(l10n.taskNotFound));
+            }
+            final calendarLink = ref.watch(googleCalendarLinkProvider(item.id));
+            final presets = ref.watch(focusPresetsProvider).value ?? const [];
+            final selectedPreset = selectedFocusPresetOrDefault(
+              presets,
+              ref.watch(lastFocusPresetIdProvider),
+            );
+            final focusEstimate = targetFocusIntervalsForTask(
+              item,
+              selectedPreset,
+            );
+            return TaskMotionItem(
+              taskId: item.id,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    FilledButton.icon(
-                      onPressed: item.isCompleted
-                          ? null
-                          : () async {
-                              final router = GoRouter.of(context);
-                              await focusRepository.startRun(
-                                StartFocusRunInput(
-                                  taskId: item.id,
-                                  projectId: item.projectId,
-                                  presetId: selectedPreset?.id,
-                                  targetWorkIntervals: _targetForStart(
-                                    focusEstimate,
-                                  ),
-                                ),
-                              );
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        tooltip: l10n.commonBack,
+                        onPressed: () => _goBack(context),
+                        icon: const Icon(Icons.arrow_back),
+                      ),
+                    ),
+                    _EditableTaskTitle(task: item),
+                    const SizedBox(height: 12),
+                    _EditableTaskDescription(task: item),
+                    const SizedBox(height: 16),
+                    _TaskMetadataChips(
+                      task: item,
+                      calendarLinked: calendarLink.value != null,
+                      focusEstimate: focusEstimate,
+                    ),
+                    const SizedBox(height: 20),
+                    _ScheduleActions(task: item),
+                    const SizedBox(height: 20),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        FilledButton.icon(
+                          onPressed: item.isCompleted
+                              ? null
+                              : () async {
+                                  final router = GoRouter.of(context);
+                                  await focusRepository.startRun(
+                                    StartFocusRunInput(
+                                      taskId: item.id,
+                                      projectId: item.projectId,
+                                      presetId: selectedPreset?.id,
+                                      targetWorkIntervals: _targetForStart(
+                                        focusEstimate,
+                                      ),
+                                    ),
+                                  );
+                                  if (!context.mounted) {
+                                    return;
+                                  }
+                                  showActionFeedback(
+                                    context,
+                                    message: l10n.focusStarted,
+                                    icon: Icons.play_circle_outline,
+                                    haptic: AppHapticCue.none,
+                                    action: SnackBarAction(
+                                      label: l10n.commonOpen,
+                                      onPressed: () => router.go('/focus'),
+                                    ),
+                                  );
+                                },
+                          icon: const Icon(Icons.play_arrow),
+                          label: Text(l10n.startFocus),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            if (item.isCompleted) {
+                              try {
+                                await taskRepository.uncompleteTask(item.id);
+                              } catch (_) {
+                                if (context.mounted) {
+                                  showActionFeedback(
+                                    context,
+                                    message: l10n.taskActionFailedCount(1),
+                                    icon: Icons.error_outline,
+                                    sound: ActionFeedbackSound.none,
+                                    haptic: AppHapticCue.none,
+                                  );
+                                }
+                                return;
+                              }
                               if (!context.mounted) {
                                 return;
                               }
+                              final reopened = await taskRepository
+                                  .watchTask(item.id)
+                                  .first;
+                              if (!context.mounted) {
+                                return;
+                              }
+                              if (reopened != null) {
+                                motion.reopened([reopened]);
+                              }
                               showActionFeedback(
                                 context,
-                                message: l10n.focusStarted,
-                                icon: Icons.play_circle_outline,
-                                haptic: AppHapticCue.none,
-                                action: SnackBarAction(
-                                  label: l10n.commonOpen,
-                                  onPressed: () => router.go('/focus'),
-                                ),
+                                message: l10n.taskReopened,
+                                icon: Icons.undo,
                               );
-                            },
-                      icon: const Icon(Icons.play_arrow),
-                      label: Text(l10n.startFocus),
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: () async {
-                        if (item.isCompleted) {
-                          await taskRepository.uncompleteTask(item.id);
-                          if (!context.mounted) {
-                            return;
-                          }
-                          showActionFeedback(
-                            context,
-                            message: l10n.taskReopened,
-                            icon: Icons.undo,
-                          );
-                          return;
-                        }
+                              return;
+                            }
 
-                        await completeTaskWithUndoFeedback(
-                          context,
-                          ref,
-                          item.id,
-                        );
-                      },
-                      icon: Icon(item.isCompleted ? Icons.undo : Icons.check),
-                      label: Text(
-                        item.isCompleted ? l10n.markOpen : l10n.markComplete,
-                      ),
+                            await completeTaskWithUndoFeedback(
+                              context,
+                              ref,
+                              item.id,
+                            );
+                          },
+                          icon: TaskCompletionControl(
+                            taskId: item.id,
+                            isCompleted: item.isCompleted,
+                            color: context.appColors.accent,
+                            fillColor: context.appColors.accentFill,
+                            onPressed: null,
+                          ),
+                          label: Text(
+                            item.isCompleted
+                                ? l10n.markOpen
+                                : l10n.markComplete,
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () async {
+                            await deleteTaskWithRecurringPrompt(
+                              context,
+                              ref,
+                              item,
+                              onDeleted: () => Future<void>.delayed(
+                                MediaQuery.disableAnimationsOf(context)
+                                    ? Duration.zero
+                                    : const Duration(milliseconds: 220),
+                                () {
+                                  if (context.mounted) {
+                                    _goBack(context);
+                                  }
+                                },
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.delete_outline),
+                          label: Text(l10n.commonDelete),
+                        ),
+                      ],
                     ),
-                    TextButton.icon(
-                      onPressed: () async {
-                        await deleteTaskWithRecurringPrompt(
-                          context,
-                          ref,
-                          item,
-                          onDeleted: () => _goBack(context),
-                        );
-                      },
-                      icon: const Icon(Icons.delete_outline),
-                      label: Text(l10n.commonDelete),
+                    const SizedBox(height: 20),
+                    _RecurrenceActions(task: item),
+                    const SizedBox(height: 24),
+                    _SubtasksSection(task: item),
+                    const SizedBox(height: 24),
+                    Text(
+                      l10n.focusHistory,
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
+                    const SizedBox(height: 8),
+                    _FocusHistory(taskId: item.id),
                   ],
                 ),
-                const SizedBox(height: 20),
-                _RecurrenceActions(task: item),
-                const SizedBox(height: 24),
-                _SubtasksSection(task: item),
-                const SizedBox(height: 24),
-                Text(
-                  l10n.focusHistory,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                _FocusHistory(taskId: item.id),
-              ],
-            ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) =>
-            Center(child: Text(l10n.failedToLoadTask(error))),
+              ),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stackTrace) =>
+              Center(child: Text(l10n.failedToLoadTask(error))),
+        ),
       ),
     );
   }
@@ -714,11 +760,11 @@ class _SubtasksSectionState extends ConsumerState<_SubtasksSection> {
             ),
           );
       _controller.clear();
-    } catch (error) {
+    } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.couldNotAddTask(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.taskCreateFailed)));
       }
     } finally {
       if (mounted) {

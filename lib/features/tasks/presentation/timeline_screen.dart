@@ -12,12 +12,14 @@ import '../../../app/app_l10n.dart';
 import '../../../app/formatters.dart';
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
+import '../../../app/widgets/action_feedback.dart';
 import '../../../core/db/app_database.dart';
 import '../domain/project_colors.dart';
 import '../domain/task_models.dart';
 import 'task_completion_feedback.dart';
 import 'timeline_project_layout.dart';
 import 'widgets/project_color_picker.dart';
+import 'widgets/task_motion.dart';
 
 const _defaultTimedTaskDuration = Duration(minutes: 30);
 const _minTimedTaskDuration = Duration(minutes: timelineSnapMinutes);
@@ -41,63 +43,72 @@ class TimelineScreen extends ConsumerWidget {
     final projects = ref.watch(projectsProvider);
     final visibleHours = ref.watch(timelineVisibleHoursProvider);
 
-    return SafeArea(
-      bottom: false,
-      child: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-            sliver: SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.navTimeline,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.timelineSubtitle,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+    return TaskMotionScope(
+      key: ValueKey(day),
+      builder: (context, motion) => SafeArea(
+        bottom: false,
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.navTimeline,
+                      style: Theme.of(context).textTheme.headlineMedium,
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  _TimelineHeader(day: day, today: today),
-                  const SizedBox(height: 12),
-                  _VisibleHoursControls(visibleHours: visibleHours),
-                ],
-              ),
-            ),
-          ),
-          tasks.when(
-            data: (items) => projects.when(
-              data: (projectItems) => SliverPadding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
-                sliver: SliverToBoxAdapter(
-                  child: _TimelineDay(
-                    day: day,
-                    tasks: items,
-                    projects: projectItems,
-                    visibleHours: visibleHours,
-                  ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.timelineSubtitle,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _TimelineHeader(day: day, today: today),
+                    const SizedBox(height: 12),
+                    _VisibleHoursControls(visibleHours: visibleHours),
+                  ],
                 ),
               ),
+            ),
+            tasks.when(
+              data: (items) {
+                final visibleById = {for (final item in items) item.id: item};
+                for (final item in motion.retainedTasks) {
+                  visibleById[item.id] = item;
+                }
+                return projects.when(
+                  data: (projectItems) => SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+                    sliver: SliverToBoxAdapter(
+                      child: _TimelineDay(
+                        day: day,
+                        tasks: visibleById.values.toList(),
+                        projects: projectItems,
+                        visibleHours: visibleHours,
+                      ),
+                    ),
+                  ),
+                  loading: () => const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (error, stackTrace) => SliverFillRemaining(
+                    child: Center(child: Text(l10n.projectsUnavailable(error))),
+                  ),
+                );
+              },
               loading: () => const SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator()),
               ),
               error: (error, stackTrace) => SliverFillRemaining(
-                child: Center(child: Text(l10n.projectsUnavailable(error))),
+                child: Center(child: Text(l10n.failedToLoadTasks(error))),
               ),
             ),
-            loading: () => const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (error, stackTrace) => SliverFillRemaining(
-              child: Center(child: Text(l10n.failedToLoadTasks(error))),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -480,13 +491,17 @@ class _AllDaySectionState extends ConsumerState<_AllDaySection> {
                     hintText: context.l10n.timelineAddAllDayHint,
                     onCancel: () => setState(() => _adding = false),
                     onSubmit: (input) async {
-                      await ref
+                      final taskId = await ref
                           .read(quickAddServiceProvider)
                           .createTask(
                             input,
                             defaultSchedule: TaskSchedule.allDay(widget.day),
                           );
                       if (mounted) {
+                        TaskMotionScope.maybeOf(
+                          this.context,
+                        )?.created({taskId});
+                        await playHaptic(AppHapticCue.light);
                         setState(() => _adding = false);
                       }
                     },
@@ -1159,7 +1174,7 @@ class _TimelineGridState extends ConsumerState<_TimelineGrid> {
             _addingAtMinutes!,
             _defaultTimedTaskDuration,
           );
-          await ref
+          final taskId = await ref
               .read(quickAddServiceProvider)
               .createTask(
                 input,
@@ -1167,6 +1182,8 @@ class _TimelineGridState extends ConsumerState<_TimelineGrid> {
                 defaultSchedule: schedule,
               );
           if (mounted) {
+            TaskMotionScope.maybeOf(this.context)?.created({taskId});
+            await playHaptic(AppHapticCue.light);
             setState(() {
               _addingAtMinutes = null;
               _addingProjectId = null;
@@ -1285,10 +1302,14 @@ class _TimelineGridState extends ConsumerState<_TimelineGrid> {
             schedule: nextSchedule,
             projectId: targetProjectId,
           );
-    } catch (error) {
+      if (context.mounted) {
+        TaskMotionScope.maybeOf(context)?.landed({task.id});
+        await playHaptic(AppHapticCue.light);
+      }
+    } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.couldNotMoveTask(error))),
+          SnackBar(content: Text(context.l10n.taskActionFailedCount(1))),
         );
       }
     }
@@ -1690,22 +1711,35 @@ class _TimelineCompactTaskBlock extends ConsumerWidget {
                     if (constraints.maxWidth >= 72) ...[
                       SizedBox.square(
                         dimension: 28,
-                        child: Checkbox(
-                          value: task.isCompleted,
-                          onChanged: (_) {
+                        child: TaskCompletionControl(
+                          taskId: task.id,
+                          isCompleted: task.isCompleted,
+                          color: priorityColor,
+                          fillColor: colors.accentFill,
+                          onPressed: () {
                             if (task.isCompleted) {
-                              unawaited(
-                                ref
+                              unawaited(() async {
+                                await ref
                                     .read(taskRepositoryProvider)
-                                    .uncompleteTask(task.id),
-                              );
+                                    .uncompleteTask(task.id);
+                                final reopened = await ref
+                                    .read(taskRepositoryProvider)
+                                    .watchTask(task.id)
+                                    .first;
+                                if (context.mounted && reopened != null) {
+                                  TaskMotionScope.maybeOf(
+                                    context,
+                                  )?.reopened([reopened]);
+                                  await playHaptic(AppHapticCue.light);
+                                }
+                              }());
                             } else {
                               unawaited(
                                 completeTaskWithUndoFeedback(
                                   context,
                                   ref,
                                   task.id,
-                                ),
+                                ).then<void>((_) {}),
                               );
                             }
                           },
@@ -1775,7 +1809,10 @@ class _TimelineCompactTaskBlock extends ConsumerWidget {
       ),
     );
 
-    return _TimelineDragSource(task: task, child: block);
+    return TaskMotionItem(
+      taskId: task.id,
+      child: _TimelineDragSource(task: task, child: block),
+    );
   }
 }
 
@@ -1787,9 +1824,12 @@ class _TimelineDragSource extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final feedback = Material(
-      color: Colors.transparent,
-      child: SizedBox(width: 260, height: 64, child: child),
+    final feedback = Transform.scale(
+      scale: 1.025,
+      child: Material(
+        color: Colors.transparent,
+        child: SizedBox(width: 260, height: 64, child: child),
+      ),
     );
     final childWhenDragging = Opacity(opacity: 0.35, child: child);
     if (_usesImmediateTaskDrag(defaultTargetPlatform)) {
@@ -1898,13 +1938,13 @@ class _InlineAddFieldState extends State<_InlineAddField> {
     setState(() => _busy = true);
     try {
       await widget.onSubmit(input);
-    } catch (error) {
+    } catch (_) {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.couldNotAddTask(error))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.taskCreateFailed)));
       setState(() => _busy = false);
     }
   }
@@ -1974,12 +2014,16 @@ Future<void> _updateSchedule(
     await ref
         .read(taskRepositoryProvider)
         .updateTask(task.id, UpdateTaskPatch(schedule: nextSchedule));
-  } catch (error) {
+    if (context.mounted) {
+      TaskMotionScope.maybeOf(context)?.landed({task.id});
+      await playHaptic(AppHapticCue.light);
+    }
+  } catch (_) {
     if (!context.mounted) {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.couldNotMoveTask(error))),
+      SnackBar(content: Text(context.l10n.taskActionFailedCount(1))),
     );
   }
 }

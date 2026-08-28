@@ -8,9 +8,11 @@ import 'package:intl/intl.dart' as intl;
 import '../../../app/app_l10n.dart';
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
+import '../../../app/widgets/action_feedback.dart';
 import '../domain/task_models.dart';
 import 'widgets/quick_add_bar.dart';
 import 'widgets/task_list_item.dart';
+import 'widgets/task_motion.dart';
 import 'widgets/task_selection_region.dart';
 import 'widgets/upcoming_calendar.dart';
 import 'widgets/upcoming_day_groups.dart';
@@ -62,93 +64,112 @@ class _UpcomingScreenState extends ConsumerState<UpcomingScreen> {
         : null;
     final loading =
         loadError == null && (!openTasks.hasValue || !completedTasks.hasValue);
-    final allItems = _mergeTasks(
+    final loadedItems = _mergeTasks(
       openTasks.value ?? const <TaskItem>[],
       completedTasks.value ?? const <TaskItem>[],
     );
-    final scheduledTasks = _scheduledTasks(allItems);
-    final scheduledCounts = _scheduledTaskCounts(scheduledTasks);
-    final groups = buildUpcomingDayGroups(
-      scheduledTasks,
-      selectedDate: selectedDay,
-      visibleFromDate: selectedDay ?? today,
-    );
-    final visibleTasks = [
-      for (final group in groups)
-        for (final row in group.rows) row.task,
-    ];
-
-    return SafeArea(
-      bottom: false,
-      child: TaskSelectionRegion(
-        visibleTasks: visibleTasks,
-        scopeKey: selectedDay,
-        child: SingleChildScrollView(
-          key: const ValueKey('upcoming-scroll-view'),
-          controller: _scrollController,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1200),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final horizontalPadding = _responsiveHorizontalPadding(
-                    constraints.maxWidth,
-                  );
-                  return Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      20,
-                      horizontalPadding,
-                      32,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.l10n.navUpcoming,
-                          style: Theme.of(context).textTheme.headlineMedium,
+    return TaskMotionScope(
+      key: ValueKey(selectedDay),
+      builder: (context, motion) {
+        final itemsById = {for (final task in loadedItems) task.id: task};
+        for (final task in motion.retainedTasks) {
+          itemsById[task.id] = task;
+        }
+        final allItems = List<TaskItem>.unmodifiable(itemsById.values);
+        final scheduledTasks = _scheduledTasks(allItems);
+        final scheduledCounts = _scheduledTaskCounts(scheduledTasks);
+        final groups = buildUpcomingDayGroups(
+          scheduledTasks,
+          selectedDate: selectedDay,
+          visibleFromDate: selectedDay ?? today,
+        );
+        final visibleTasks = [
+          for (final group in groups)
+            for (final row in group.rows) row.task,
+        ];
+        return SafeArea(
+          bottom: false,
+          child: TaskSelectionRegion(
+            visibleTasks: visibleTasks,
+            scopeKey: selectedDay,
+            child: SingleChildScrollView(
+              key: const ValueKey('upcoming-scroll-view'),
+              controller: _scrollController,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1200),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final horizontalPadding = _responsiveHorizontalPadding(
+                        constraints.maxWidth,
+                      );
+                      return Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          20,
+                          horizontalPadding,
+                          32,
                         ),
-                        const SizedBox(height: 16),
-                        UpcomingCalendar(
-                          today: today,
-                          selectedDate: selectedDay,
-                          scheduledCounts: scheduledCounts,
-                          loading: loading,
-                          onDateSelected: (date) =>
-                              _selectDate(context, selectedDay, date),
-                          onTodaySelected: () => _selectToday(context, today),
-                          onClearSelection: () => _clearSelection(context),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.navUpcoming,
+                              style: Theme.of(context).textTheme.headlineMedium,
+                            ),
+                            const SizedBox(height: 16),
+                            UpcomingCalendar(
+                              today: today,
+                              selectedDate: selectedDay,
+                              scheduledCounts: scheduledCounts,
+                              loading: loading,
+                              onDateSelected: (date) =>
+                                  _selectDate(context, selectedDay, date),
+                              onTodaySelected: () =>
+                                  _selectToday(context, today),
+                              onClearSelection: () => _clearSelection(context),
+                            ),
+                            const SizedBox(height: 16),
+                            QuickAddBar(
+                              defaultDate: selectedDay ?? today,
+                              onTaskCreated: (taskIds) {
+                                motion.created(taskIds.toSet());
+                                unawaited(playHaptic(AppHapticCue.light));
+                              },
+                            ),
+                            const SizedBox(height: 20),
+                            if (loadError != null)
+                              _UpcomingMessage(
+                                key: const ValueKey('upcoming-error'),
+                                message: context.l10n.failedToLoadTasks(
+                                  loadError,
+                                ),
+                              )
+                            else if (loading)
+                              const _UpcomingMessage(
+                                key: ValueKey('upcoming-loading'),
+                                child: CircularProgressIndicator(),
+                              )
+                            else
+                              _buildAgenda(
+                                context,
+                                groups: groups,
+                                allItems: allItems,
+                                today: today,
+                                projects:
+                                    projects.value ?? const <ProjectItem>[],
+                              ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        QuickAddBar(defaultDate: selectedDay ?? today),
-                        const SizedBox(height: 20),
-                        if (loadError != null)
-                          _UpcomingMessage(
-                            key: const ValueKey('upcoming-error'),
-                            message: context.l10n.failedToLoadTasks(loadError),
-                          )
-                        else if (loading)
-                          const _UpcomingMessage(
-                            key: ValueKey('upcoming-loading'),
-                            child: CircularProgressIndicator(),
-                          )
-                        else
-                          _buildAgenda(
-                            context,
-                            groups: groups,
-                            allItems: allItems,
-                            today: today,
-                            projects: projects.value ?? const <ProjectItem>[],
-                          ),
-                      ],
-                    ),
-                  );
-                },
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

@@ -279,6 +279,7 @@
   "addTask": "Ajouter une tâche",
   "quickAddHint": "Écrire sync engine demain p1 #App @coding 4p",
   "couldNotAddTask": "Impossible d'ajouter la tâche : {error}",
+  "taskCreateFailed": "Impossible de créer la tâche. Réessayez.",
   "couldNotAddProject": "Impossible d'ajouter le projet : {error}",
   "tasksCreated": "{count, plural, =1{1 tâche ajoutée} other{{count} tâches ajoutées}}",
   "voiceQuickAdd": "Ajout vocal",
@@ -612,7 +613,7 @@
   "taskInvalidDue": "Saisissez une date ou une heure valide",
   "taskClearDue": "Effacer l’échéance",
   "taskDeleteSelectedTitle": "Supprimer les tâches sélectionnées ?",
-  "taskDeleteSelectedMessage": "Cette action est irréversible.",
+  "taskDeleteSelectedMessage": "Vous pouvez annuler cette action pendant 7 secondes.",
   "taskCompleteSelected": "Terminer la sélection",
   "taskReopenSelected": "Rouvrir la sélection",
   "taskActionFailedCount": "{count} tâches n’ont pas pu être modifiées"

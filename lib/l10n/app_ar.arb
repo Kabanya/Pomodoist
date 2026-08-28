@@ -279,6 +279,7 @@
   "addTask": "إضافة مهمة",
   "quickAddHint": "اكتب sync engine غدا p1 #App @coding 4p",
   "couldNotAddTask": "تعذرت إضافة المهمة: {error}",
+  "taskCreateFailed": "تعذر إنشاء المهمة. حاول مرة أخرى.",
   "couldNotAddProject": "تعذرت إضافة المشروع: {error}",
   "tasksCreated": "{count, plural, =1{تمت إضافة مهمة واحدة} other{تمت إضافة {count} مهام}}",
   "voiceQuickAdd": "إضافة بالصوت",
@@ -612,7 +613,7 @@
   "taskInvalidDue": "أدخل تاريخاً أو وقتاً صالحاً",
   "taskClearDue": "مسح الموعد",
   "taskDeleteSelectedTitle": "حذف المهام المحددة؟",
-  "taskDeleteSelectedMessage": "لا يمكن التراجع عن هذا الإجراء.",
+  "taskDeleteSelectedMessage": "يمكنك التراجع عن هذا الإجراء خلال 7 ثوانٍ.",
   "taskCompleteSelected": "إكمال المحددة",
   "taskReopenSelected": "إعادة فتح المحددة",
   "taskActionFailedCount": "تعذر تحديث {count} من المهام"

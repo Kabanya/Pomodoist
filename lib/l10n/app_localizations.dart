@@ -1722,6 +1722,12 @@ abstract class AppLocalizations {
   /// **'Could not add task: {error}'**
   String couldNotAddTask(Object error);
 
+  /// No description provided for @taskCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the task. Try again.'**
+  String get taskCreateFailed;
+
   /// No description provided for @couldNotAddProject.
   ///
   /// In en, this message translates to:
@@ -3727,7 +3733,7 @@ abstract class AppLocalizations {
   /// No description provided for @taskDeleteSelectedMessage.
   ///
   /// In en, this message translates to:
-  /// **'This action cannot be undone.'**
+  /// **'You can undo this action for 7 seconds.'**
   String get taskDeleteSelectedMessage;
 
   /// No description provided for @taskCompleteSelected.

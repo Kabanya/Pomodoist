@@ -279,6 +279,7 @@
   "addTask": "添加任务",
   "quickAddHint": "写 sync engine 明天 p1 #App @coding 4p",
   "couldNotAddTask": "无法添加任务：{error}",
+  "taskCreateFailed": "无法创建任务。请重试。",
   "couldNotAddProject": "无法添加项目：{error}",
   "tasksCreated": "{count, plural, other{已添加 {count} 个任务}}",
   "voiceQuickAdd": "语音快速添加",
@@ -612,7 +613,7 @@
   "taskInvalidDue": "请输入有效的日期或时间",
   "taskClearDue": "清除截止日期",
   "taskDeleteSelectedTitle": "删除所选任务？",
-  "taskDeleteSelectedMessage": "此操作无法撤销。",
+  "taskDeleteSelectedMessage": "你可以在 7 秒内撤销此操作。",
   "taskCompleteSelected": "完成所选任务",
   "taskReopenSelected": "重新打开所选任务",
   "taskActionFailedCount": "有 {count} 项任务无法更新"

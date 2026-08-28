@@ -96,7 +96,7 @@ class AccountSyncLifecycle with WidgetsBindingObserver {
       if (commands.isEmpty) {
         return;
       }
-      _scheduleSync();
+      _scheduleCommands(commands);
     });
     _startHintSubscription();
     unawaited(_syncNow());
@@ -132,6 +132,24 @@ class AccountSyncLifecycle with WidgetsBindingObserver {
     }
     _debounce?.cancel();
     _debounce = Timer(delay ?? _queueDebounce, () => unawaited(_syncNow()));
+  }
+
+  void _scheduleCommands(List<SyncCommandRow> commands) {
+    final now = DateTime.now().toUtc();
+    DateTime? earliest;
+    for (final command in commands) {
+      final availableAt = command.availableAt?.toUtc();
+      if (availableAt == null || !availableAt.isAfter(now)) {
+        _scheduleSync();
+        return;
+      }
+      if (earliest == null || availableAt.isBefore(earliest)) {
+        earliest = availableAt;
+      }
+    }
+    if (earliest != null) {
+      _scheduleSync(earliest.difference(now));
+    }
   }
 
   void _scheduleHintResubscribe() {

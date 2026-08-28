@@ -917,6 +917,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get taskCreateFailed => 'تعذر إنشاء المهمة. حاول مرة أخرى.';
+
+  @override
   String couldNotAddProject(Object error) {
     return 'تعذرت إضافة المشروع: $error';
   }
@@ -2114,7 +2117,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get taskDeleteSelectedTitle => 'حذف المهام المحددة؟';
 
   @override
-  String get taskDeleteSelectedMessage => 'لا يمكن التراجع عن هذا الإجراء.';
+  String get taskDeleteSelectedMessage =>
+      'يمكنك التراجع عن هذا الإجراء خلال 7 ثوانٍ.';
 
   @override
   String get taskCompleteSelected => 'إكمال المحددة';

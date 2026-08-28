@@ -930,6 +930,10 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get taskCreateFailed =>
+      'Не удалось создать задачу. Попробуйте ещё раз.';
+
+  @override
   String couldNotAddProject(Object error) {
     return 'Не удалось добавить проект: $error';
   }
@@ -2140,7 +2144,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get taskDeleteSelectedTitle => 'Удалить выбранные задачи?';
 
   @override
-  String get taskDeleteSelectedMessage => 'Это действие нельзя отменить.';
+  String get taskDeleteSelectedMessage =>
+      'Это действие можно отменить в течение 7 секунд.';
 
   @override
   String get taskCompleteSelected => 'Выполнить выбранные';

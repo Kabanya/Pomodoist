@@ -2136,6 +2136,59 @@ void main() {
       expect(openIds, isNot(contains(grandchildId)));
     });
 
+    test('delete returns the exact subtree and Undo restores it', () async {
+      final parentId = await taskRepository.createTask(
+        const CreateTaskInput(content: 'Undo parent'),
+      );
+      final childId = await taskRepository.createTask(
+        CreateTaskInput(content: 'Undo child', parentId: parentId),
+      );
+      await db.delete(db.syncCommands).go();
+
+      final batch = await taskRepository.deleteTask(parentId);
+
+      expect(batch.taskIds, {parentId, childId});
+      expect(batch.undoUntil.isAfter(DateTime.now().toUtc()), isTrue);
+      final deletes = await syncQueue.watchPending().first;
+      expect(deletes.map((command) => command.clientId).toSet(), batch.taskIds);
+      expect(
+        deletes.map((command) => command.availableAt?.toUtc()),
+        everyElement(batch.undoUntil),
+      );
+
+      expect(await taskRepository.restoreDeletedTasks(batch), isTrue);
+      expect(
+        (await taskRepository.watchTask(parentId).first)!.isDeleted,
+        false,
+      );
+      expect((await taskRepository.watchTask(childId).first)!.isDeleted, false);
+      expect(await syncQueue.watchPending().first, isEmpty);
+    });
+
+    test('Undo survives repository restart and expires honestly', () async {
+      final taskId = await taskRepository.createTask(
+        const CreateTaskInput(content: 'Persistent Undo'),
+      );
+      await db.delete(db.syncCommands).go();
+      final batch = await taskRepository.deleteTask(taskId);
+      final restartedRepository = DriftTaskRepository(db, syncQueue);
+
+      expect(await restartedRepository.restoreDeletedTasks(batch), isTrue);
+
+      final secondBatch = await restartedRepository.deleteTask(taskId);
+      expect(
+        await restartedRepository.restoreDeletedTasks(
+          DeletedTaskBatch(
+            taskIds: secondBatch.taskIds,
+            undoUntil: DateTime.now().toUtc().subtract(
+              const Duration(seconds: 1),
+            ),
+          ),
+        ),
+        isFalse,
+      );
+    });
+
     test('day query returns only open tasks scheduled for that date', () async {
       final selectedDay = DateTime(2026, 5, 4);
       final allDayId = await taskRepository.createTask(
@@ -2328,6 +2381,37 @@ void main() {
       expect(next.id, isNot(taskId));
       expect(next.schedule!.displayDate, DateTime(2030, 1, 2));
       expect(next.schedule!.recurrence, isNotNull);
+    });
+
+    test('Undo recurring deletion removes its speculative next copy', () async {
+      final taskId = await taskRepository.createTask(
+        CreateTaskInput(
+          content: 'Undo recurring',
+          schedule: TaskSchedule.allDay(
+            DateTime(2030, 1, 1),
+            recurrence: const TaskRecurrence(
+              interval: 1,
+              unit: TaskRecurrenceUnit.day,
+              seriesId: 'undo-recurring-series',
+            ),
+          ),
+        ),
+      );
+      await db.delete(db.syncCommands).go();
+
+      final batch = await taskRepository.deleteRecurringOccurrence(
+        taskId,
+        includeFollowing: false,
+      );
+      expect(await taskRepository.restoreDeletedTasks(batch), isTrue);
+
+      final matches =
+          (await taskRepository.watchTasks(const TaskQuery.all()).first)
+              .where((task) => task.content == 'Undo recurring')
+              .toList();
+      expect(matches.map((task) => task.id), [taskId]);
+      expect(matches.single.schedule!.recurrence, isNotNull);
+      expect(await syncQueue.watchPending().first, isEmpty);
     });
 
     test('delete following recurring occurrences keeps earlier ones', () async {
