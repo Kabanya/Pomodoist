@@ -1607,6 +1607,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get focusViewMinimal => '极简';
 
   @override
+  String get focusSwitchToFullView => '切换到完整模式';
+
+  @override
+  String get focusSwitchToMinimalView => '切换到极简模式';
+
+  @override
+  String get focusActionFailed => '无法更新专注。请重试。';
+
+  @override
   String get noActiveSession => '没有活动会话';
 
   @override

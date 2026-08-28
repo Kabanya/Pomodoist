@@ -96,7 +96,10 @@ class _FocusActiveActions extends StatelessWidget {
     required this.presets,
     required this.selectedPreset,
     required this.compact,
+    required this.minimal,
+    required this.viewMode,
     required this.repository,
+    required this.onViewModeChanged,
     required this.onPresetChanged,
     required this.onCustomizePreset,
   });
@@ -107,7 +110,10 @@ class _FocusActiveActions extends StatelessWidget {
   final List<FocusPresetItem> presets;
   final FocusPresetItem? selectedPreset;
   final bool compact;
+  final bool minimal;
+  final FocusViewMode viewMode;
   final FocusRepository repository;
+  final ValueChanged<FocusViewMode> onViewModeChanged;
   final ValueChanged<String> onPresetChanged;
   final ValueChanged<FocusPresetItem> onCustomizePreset;
 
@@ -119,21 +125,35 @@ class _FocusActiveActions extends StatelessWidget {
     final strict = selectedPreset?.strictMode ?? false;
     final allowPause = selectedPreset?.allowPause ?? true;
     final blocksEarlyCompletion = strict && remaining > Duration.zero;
-    final primaryButton = FilledButton.icon(
-      key: const Key('focus-primary-action'),
-      style: FilledButton.styleFrom(minimumSize: Size(compact ? 176 : 176, 48)),
-      onPressed: ready
-          ? () => unawaited(_startReady(context))
-          : paused || allowPause
-          ? () => unawaited(_togglePause(context, paused))
-          : null,
-      icon: Icon(ready || paused ? Icons.play_arrow : Icons.pause),
-      label: Text(
-        ready
-            ? l10n.startInterval
-            : paused
-            ? l10n.resume
-            : l10n.pause,
+    final primaryOnPressed = ready
+        ? () => unawaited(_startReady(context))
+        : paused || allowPause
+        ? () => unawaited(_togglePause(context, paused))
+        : null;
+    final primaryButton = _ElasticFocusButton(
+      enabled: primaryOnPressed != null,
+      child: FilledButton(
+        key: const Key('focus-primary-action'),
+        style: FilledButton.styleFrom(minimumSize: const Size(176, 48)),
+        onPressed: primaryOnPressed,
+        child: AnimatedSwitcher(
+          duration: _motionDuration(context, 180),
+          child: Row(
+            key: ValueKey('focus-primary-label-${interval.status}'),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(ready || paused ? Icons.play_arrow : Icons.pause),
+              const SizedBox(width: 8),
+              Text(
+                ready
+                    ? l10n.startInterval
+                    : paused
+                    ? l10n.resume
+                    : l10n.pause,
+              ),
+            ],
+          ),
+        ),
       ),
     );
     final primary = _withPauseAvailabilitySemantics(
@@ -148,33 +168,35 @@ class _FocusActiveActions extends StatelessWidget {
       constraints: const BoxConstraints(minWidth: 220),
       onSelected: (action) => _handleMore(context, action),
       itemBuilder: (context) => [
-        if (compact)
+        if (!minimal && compact)
           PopupMenuItem(
             value: const _FocusMoreAction(_FocusMoreActionKind.complete),
             enabled: !ready && !blocksEarlyCompletion,
             child: Text(l10n.completeInterval),
           ),
-        PopupMenuItem(
-          value: const _FocusMoreAction(_FocusMoreActionKind.skip),
-          enabled: !strict,
-          child: Text(l10n.skip),
-        ),
-        PopupMenuItem(
-          value: const _FocusMoreAction(_FocusMoreActionKind.stop),
-          child: Text(l10n.commonStop),
-        ),
-        if (compact)
+        if (!minimal)
+          PopupMenuItem(
+            value: const _FocusMoreAction(_FocusMoreActionKind.skip),
+            enabled: !strict,
+            child: Text(l10n.skip),
+          ),
+        if (!minimal)
+          PopupMenuItem(
+            value: const _FocusMoreAction(_FocusMoreActionKind.stop),
+            child: Text(l10n.commonStop),
+          ),
+        if (!minimal && compact)
           PopupMenuItem(
             value: const _FocusMoreAction(_FocusMoreActionKind.logDistraction),
             child: Text(l10n.logDistraction),
           ),
-        if (selectedPreset != null) const PopupMenuDivider(),
-        if (selectedPreset != null)
+        if (!minimal && selectedPreset != null) const PopupMenuDivider(),
+        if (!minimal && selectedPreset != null)
           PopupMenuItem(
             value: const _FocusMoreAction(_FocusMoreActionKind.customize),
             child: Text(l10n.customizePreset),
           ),
-        for (final preset in presets)
+        for (final preset in minimal ? const <FocusPresetItem>[] : presets)
           PopupMenuItem(
             value: _FocusMoreAction(
               _FocusMoreActionKind.changePreset,
@@ -183,6 +205,16 @@ class _FocusActiveActions extends StatelessWidget {
             enabled: preset.id != selectedPreset?.id,
             child: Text(l10n.usePreset(preset.name)),
           ),
+        if (!minimal) const PopupMenuDivider(),
+        PopupMenuItem(
+          key: const Key('focus-switch-view-mode'),
+          value: const _FocusMoreAction(_FocusMoreActionKind.toggleViewMode),
+          child: Text(
+            viewMode == FocusViewMode.full
+                ? l10n.focusSwitchToMinimalView
+                : l10n.focusSwitchToFullView,
+          ),
+        ),
       ],
     );
 
@@ -194,7 +226,7 @@ class _FocusActiveActions extends StatelessWidget {
           runSpacing: 10,
           children: [
             primary,
-            if (!compact)
+            if (!minimal && !compact)
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(200, 48),
@@ -208,11 +240,12 @@ class _FocusActiveActions extends StatelessWidget {
             SizedBox.square(dimension: 48, child: menu),
           ],
         ),
-        if (!compact) ...[
+        if (!minimal && !compact) ...[
           const SizedBox(height: 14),
           TextButton.icon(
-            onPressed: () =>
-                unawaited(repository.logDistraction(runId: run.id)),
+            onPressed: () => unawaited(
+              _perform(context, () => repository.logDistraction(runId: run.id)),
+            ),
             icon: const Icon(Icons.info_outline),
             label: Text(l10n.logDistraction),
           ),
@@ -226,11 +259,13 @@ class _FocusActiveActions extends StatelessWidget {
       case _FocusMoreActionKind.complete:
         unawaited(_complete(context));
       case _FocusMoreActionKind.skip:
-        unawaited(repository.skipActiveInterval());
+        unawaited(_perform(context, () => repository.skipActiveInterval()));
       case _FocusMoreActionKind.stop:
         unawaited(_stop(context));
       case _FocusMoreActionKind.logDistraction:
-        unawaited(repository.logDistraction(runId: run.id));
+        unawaited(
+          _perform(context, () => repository.logDistraction(runId: run.id)),
+        );
       case _FocusMoreActionKind.customize:
         final preset = selectedPreset;
         if (preset != null) {
@@ -241,14 +276,19 @@ class _FocusActiveActions extends StatelessWidget {
         if (presetId != null) {
           onPresetChanged(presetId);
         }
+      case _FocusMoreActionKind.toggleViewMode:
+        onViewModeChanged(
+          viewMode == FocusViewMode.full
+              ? FocusViewMode.minimal
+              : FocusViewMode.full,
+        );
     }
   }
 
   Future<void> _startReady(BuildContext context) async {
-    await repository.startReadyInterval();
-    if (!context.mounted) return;
-    showActionFeedback(
+    await _perform(
       context,
+      () => repository.startReadyInterval(),
       message: context.l10n.intervalStarted,
       icon: Icons.play_circle_outline,
       haptic: AppHapticCue.none,
@@ -256,14 +296,11 @@ class _FocusActiveActions extends StatelessWidget {
   }
 
   Future<void> _togglePause(BuildContext context, bool paused) async {
-    if (paused) {
-      await repository.resumeActiveInterval();
-    } else {
-      await repository.pauseActiveInterval();
-    }
-    if (!context.mounted) return;
-    showActionFeedback(
+    await _perform(
       context,
+      () => paused
+          ? repository.resumeActiveInterval()
+          : repository.pauseActiveInterval(),
       message: paused ? context.l10n.resume : context.l10n.pause,
       icon: paused ? Icons.play_circle_outline : Icons.pause_circle_outline,
       haptic: AppHapticCue.none,
@@ -271,10 +308,9 @@ class _FocusActiveActions extends StatelessWidget {
   }
 
   Future<void> _complete(BuildContext context) async {
-    await repository.completeActiveInterval();
-    if (!context.mounted) return;
-    showActionFeedback(
+    await _perform(
       context,
+      () => repository.completeActiveInterval(),
       message: context.l10n.intervalCompleted,
       icon: Icons.check_circle_outline,
       haptic: AppHapticCue.none,
@@ -282,13 +318,39 @@ class _FocusActiveActions extends StatelessWidget {
   }
 
   Future<void> _stop(BuildContext context) async {
-    await repository.stopActiveRun(reason: StopFocusReason.stopped);
-    if (!context.mounted) return;
-    showActionFeedback(
+    await _perform(
       context,
+      () => repository.stopActiveRun(reason: StopFocusReason.stopped),
       message: context.l10n.focusStopped,
       icon: Icons.stop_circle_outlined,
+      haptic: AppHapticCue.light,
     );
+  }
+
+  Future<void> _perform(
+    BuildContext context,
+    Future<void> Function() action, {
+    String? message,
+    IconData icon = Icons.check_circle_outline,
+    AppHapticCue haptic = AppHapticCue.none,
+  }) async {
+    try {
+      await action();
+    } catch (_) {
+      if (context.mounted) {
+        showActionFeedback(
+          context,
+          message: context.l10n.focusActionFailed,
+          icon: Icons.error_outline,
+          sound: ActionFeedbackSound.none,
+          haptic: AppHapticCue.none,
+        );
+      }
+      return;
+    }
+    if (context.mounted && message != null) {
+      showActionFeedback(context, message: message, icon: icon, haptic: haptic);
+    }
   }
 }
 
@@ -299,6 +361,7 @@ enum _FocusMoreActionKind {
   logDistraction,
   customize,
   changePreset,
+  toggleViewMode,
 }
 
 class _FocusMoreAction {

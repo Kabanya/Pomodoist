@@ -1699,6 +1699,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get focusViewMinimal => 'Минимальный';
 
   @override
+  String get focusSwitchToFullView => 'Перейти в Full';
+
+  @override
+  String get focusSwitchToMinimalView => 'Перейти в Minimal';
+
+  @override
+  String get focusActionFailed =>
+      'Не удалось обновить фокус. Попробуйте ещё раз.';
+
+  @override
   String get noActiveSession => 'Нет активной сессии';
 
   @override

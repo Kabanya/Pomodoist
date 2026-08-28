@@ -1671,6 +1671,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get focusViewMinimal => 'مصغر';
 
   @override
+  String get focusSwitchToFullView => 'التبديل إلى العرض الكامل';
+
+  @override
+  String get focusSwitchToMinimalView => 'التبديل إلى العرض المصغر';
+
+  @override
+  String get focusActionFailed => 'تعذر تحديث التركيز. حاول مرة أخرى.';
+
+  @override
   String get noActiveSession => 'لا توجد جلسة نشطة';
 
   @override

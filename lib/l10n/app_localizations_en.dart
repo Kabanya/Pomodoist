@@ -1680,6 +1680,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get focusViewMinimal => 'Minimal';
 
   @override
+  String get focusSwitchToFullView => 'Switch to Full';
+
+  @override
+  String get focusSwitchToMinimalView => 'Switch to Minimal';
+
+  @override
+  String get focusActionFailed => 'Unable to update focus. Please try again.';
+
+  @override
   String get noActiveSession => 'No active session';
 
   @override

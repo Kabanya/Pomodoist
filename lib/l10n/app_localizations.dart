@@ -2958,6 +2958,24 @@ abstract class AppLocalizations {
   /// **'Minimal'**
   String get focusViewMinimal;
 
+  /// No description provided for @focusSwitchToFullView.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Full'**
+  String get focusSwitchToFullView;
+
+  /// No description provided for @focusSwitchToMinimalView.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Minimal'**
+  String get focusSwitchToMinimalView;
+
+  /// No description provided for @focusActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to update focus. Please try again.'**
+  String get focusActionFailed;
+
   /// No description provided for @noActiveSession.
   ///
   /// In en, this message translates to:

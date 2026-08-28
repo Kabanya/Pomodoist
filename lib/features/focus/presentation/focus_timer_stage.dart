@@ -1,6 +1,6 @@
 part of 'focus_stage.dart';
 
-class _FocusTimerStage extends StatelessWidget {
+class _FocusTimerStage extends StatefulWidget {
   const _FocusTimerStage({
     required this.interval,
     required this.remaining,
@@ -15,7 +15,63 @@ class _FocusTimerStage extends StatelessWidget {
   final bool compact;
 
   @override
+  State<_FocusTimerStage> createState() => _FocusTimerStageState();
+}
+
+class _FocusTimerStageState extends State<_FocusTimerStage>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _elasticController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 260),
+  );
+  bool _motionInitialized = false;
+
+  String get _motionSignature =>
+      '${widget.interval.id}:${widget.interval.type}:${widget.interval.status}';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _elasticController
+        ..stop()
+        ..value = 1;
+    } else if (!_motionInitialized) {
+      unawaited(_elasticController.forward(from: 0));
+    }
+    _motionInitialized = true;
+  }
+
+  @override
+  void didUpdateWidget(covariant _FocusTimerStage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldSignature =
+        '${oldWidget.interval.id}:${oldWidget.interval.type}:'
+        '${oldWidget.interval.status}';
+    if (oldSignature == _motionSignature) {
+      return;
+    }
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _elasticController
+        ..stop()
+        ..value = 1;
+    } else {
+      unawaited(_elasticController.forward(from: 0));
+    }
+  }
+
+  @override
+  void dispose() {
+    _elasticController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final interval = widget.interval;
+    final remaining = widget.remaining;
+    final style = widget.style;
+    final compact = widget.compact;
     final colors = context.appColors;
     final phaseLabel = _phaseLabel(context, interval);
     final remainingLabel = formatDurationCompact(remaining);
@@ -35,141 +91,187 @@ class _FocusTimerStage extends StatelessWidget {
         ? Icons.schedule
         : Icons.coffee_outlined;
 
-    return Semantics(
-      key: const Key('focus-timer-semantics'),
-      label: context.l10n.focusTimerSummary(
-        phaseLabel,
-        _activeStatusLabel(context, interval.status),
-        remainingLabel,
-        plannedLabel,
-      ),
-      container: true,
-      child: ExcludeSemantics(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            if (style == FocusTimerVisualStyle.bar) {
-              return Column(
-                children: [
-                  _PhaseLabel(
-                    icon: phaseIcon,
-                    label: phaseLabel,
-                    color: stateColor,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    remainingLabel,
-                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      color: colors.primaryText,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    totalLabel,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 20),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 560),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(99),
-                      child: LinearProgressIndicator(
-                        key: const Key('focus-linear-timer'),
-                        minHeight: compact ? 8 : 10,
-                        value: progress,
-                        color: stateColor,
-                        backgroundColor: colors.surfaceHover,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }
-
-            final circleSize = compact
-                ? math.min(300.0, math.max(200.0, constraints.maxWidth - 24))
-                : 320.0;
-            return Center(
-              child: SizedBox.square(
-                key: const Key('focus-circular-timer'),
-                dimension: circleSize,
-                child: CustomPaint(
-                  painter: _FocusTimerPainter(
-                    progress: progress,
-                    trackColor: colors.surfaceHover,
-                    fillColor: stateColor,
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(compact ? 28 : 36),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _PhaseLabel(
-                            icon: phaseIcon,
-                            label: phaseLabel,
-                            color: stateColor,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            remainingLabel,
-                            style: Theme.of(context).textTheme.displayLarge
-                                ?.copyWith(
-                                  color: colors.primaryText,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: compact ? 62 : 70,
+    return TweenAnimationBuilder<Color?>(
+      duration: _motionDuration(context, 200),
+      tween: ColorTween(begin: stateColor, end: stateColor),
+      builder: (context, animatedColor, child) {
+        final color = animatedColor ?? stateColor;
+        return AnimatedBuilder(
+          animation: _elasticController,
+          builder: (context, child) => Transform.scale(
+            key: const Key('focus-timer-elastic'),
+            scale: MediaQuery.disableAnimationsOf(context)
+                ? 1
+                : _elasticTimerScale(_elasticController.value),
+            child: RepaintBoundary(
+              key: const Key('focus-timer-repaint-boundary'),
+              child: Semantics(
+                key: const Key('focus-timer-semantics'),
+                label: context.l10n.focusTimerSummary(
+                  phaseLabel,
+                  _activeStatusLabel(context, interval.status),
+                  remainingLabel,
+                  plannedLabel,
+                ),
+                container: true,
+                child: ExcludeSemantics(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (style == FocusTimerVisualStyle.bar) {
+                        return Column(
+                          children: [
+                            _PhaseLabel(
+                              motionKey: '${interval.type}:${interval.status}',
+                              icon: phaseIcon,
+                              label: phaseLabel,
+                              color: color,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              remainingLabel,
+                              style: Theme.of(context).textTheme.displayLarge
+                                  ?.copyWith(
+                                    color: colors.primaryText,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              totalLabel,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            const SizedBox(height: 20),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 560),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(99),
+                                child: LinearProgressIndicator(
+                                  key: const Key('focus-linear-timer'),
+                                  minHeight: compact ? 8 : 10,
+                                  value: progress,
+                                  color: color,
+                                  backgroundColor: colors.surfaceHover,
                                 ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+
+                      final circleSize = compact
+                          ? math.min(
+                              300.0,
+                              math.max(200.0, constraints.maxWidth - 24),
+                            )
+                          : 320.0;
+                      return Center(
+                        child: SizedBox.square(
+                          key: const Key('focus-circular-timer'),
+                          dimension: circleSize,
+                          child: CustomPaint(
+                            painter: _FocusTimerPainter(
+                              progress: progress,
+                              trackColor: colors.surfaceHover,
+                              fillColor: color,
+                            ),
+                            child: RepaintBoundary(
+                              child: Padding(
+                                padding: EdgeInsets.all(compact ? 28 : 36),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _PhaseLabel(
+                                        motionKey:
+                                            '${interval.type}:${interval.status}',
+                                        icon: phaseIcon,
+                                        label: phaseLabel,
+                                        color: color,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        remainingLabel,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .displayLarge
+                                            ?.copyWith(
+                                              color: colors.primaryText,
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: compact ? 62 : 70,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        totalLabel,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyMedium,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            totalLabel,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
 class _PhaseLabel extends StatelessWidget {
   const _PhaseLabel({
+    required this.motionKey,
     required this.icon,
     required this.label,
     required this.color,
   });
 
+  final String motionKey;
   final IconData icon;
   final String label;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 22, color: color),
-        const SizedBox(height: 5),
-        Text(
-          key: const Key('focus-phase-label'),
-          label,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: color,
-            fontWeight: FontWeight.w700,
+    return AnimatedSwitcher(
+      duration: _motionDuration(context, 180),
+      child: Column(
+        key: ValueKey(motionKey),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 22, color: color),
+          const SizedBox(height: 5),
+          Text(
+            key: const Key('focus-phase-label'),
+            label,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+}
+
+double _elasticTimerScale(double value) {
+  const peakAt = 180 / 260;
+  if (value <= peakAt) {
+    return 0.92 + (1.06 - 0.92) * value / peakAt;
+  }
+  return 1.06 + (1 - 1.06) * (value - peakAt) / (1 - peakAt);
 }
 
 class _FocusTimerPainter extends CustomPainter {

@@ -12,6 +12,7 @@ import 'package:pomodoist/features/focus/domain/focus_models.dart';
 import 'package:pomodoist/features/focus/presentation/focus_screen.dart';
 import 'package:pomodoist/features/focus/presentation/focus_rhythm.dart';
 import 'package:pomodoist/features/focus/presentation/focus_rhythm_rail.dart';
+import 'package:pomodoist/features/focus/presentation/focus_stage.dart';
 import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
@@ -37,7 +38,7 @@ void main() {
 
     expect(find.byKey(const Key('focus-layout-compact')), findsOneWidget);
     expect(find.byKey(const Key('focus-layout-desktop')), findsNothing);
-    expect(find.byKey(const Key('focus-content-full')), findsOneWidget);
+    expect(find.byKey(const Key('focus-view-mode-toggle')), findsNothing);
     expect(find.byKey(const Key('focus-state-idle')), findsOneWidget);
     expect(find.byKey(const Key('focus-primary-stage')), findsOneWidget);
     expect(find.byKey(const Key('focus-rhythm-rail')), findsOneWidget);
@@ -72,19 +73,26 @@ void main() {
       size: const Size(390, 844),
     );
 
-    expect(find.byKey(const Key('focus-content-minimal')), findsOneWidget);
     expect(find.byKey(const Key('focus-state-idle')), findsOneWidget);
     expect(find.byKey(const Key('focus-primary-stage')), findsOneWidget);
     expect(find.byKey(const Key('focus-primary-action')), findsOneWidget);
     expect(find.byKey(const Key('minimal-preset-menu')), findsOneWidget);
     expect(find.byKey(const Key('minimal-preset-select')), findsNothing);
-    expect(find.byKey(const Key('minimal-idle-more-menu')), findsNothing);
+    final more = find.byKey(const Key('focus-details-menu'));
+    expect(more, findsOneWidget);
+    expect(tester.getSize(more), const Size(48, 48));
     expect(find.text('Classic'), findsOneWidget);
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
     expect(find.text('25m work'), findsOneWidget);
     expect(find.text('Start focus'), findsOneWidget);
     expect(find.byKey(const Key('focus-rhythm-rail')), findsNothing);
     expect(find.byType(Card), findsNothing);
+
+    await tester.tap(
+      find.descendant(of: more, matching: find.byIcon(Icons.more_horiz)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Switch to Full'), findsOneWidget);
   });
 
   testWidgets('full and minimal idle timer icons use neutral color', (
@@ -145,6 +153,7 @@ void main() {
               semanticsLabel: 'Cycle',
               compact: false,
               activeSequence: 1,
+              activeProgress: 0,
             ),
           ),
         ),
@@ -181,7 +190,7 @@ void main() {
     expect(find.byKey(const Key('focus-state-transition')), findsOneWidget);
     expect(find.byKey(const Key('focus-state-idle')), findsNothing);
     expect(find.text('No active session'), findsNothing);
-    expect(find.byKey(const Key('focus-view-mode-toggle')), findsOneWidget);
+    expect(find.byKey(const Key('focus-view-mode-toggle')), findsNothing);
   });
 
   testWidgets('full active uses rhythm timer and desktop action hierarchy', (
@@ -220,6 +229,72 @@ void main() {
     expect(find.byKey(const Key('focus-details-menu')), findsOneWidget);
     expect(find.widgetWithText(TextButton, 'Log distraction'), findsOneWidget);
     expect(find.byType(Card), findsNothing);
+  });
+
+  testWidgets('full active derives rhythm progress from remaining time', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 7, 10, 9);
+    final interval = _interval(
+      now,
+      status: 'running',
+      startedAt: now.subtract(const Duration(minutes: 18, seconds: 45)),
+    );
+
+    await _pumpFocusScreen(
+      tester,
+      repository: _FocusRepository(
+        activeRun: _run(now),
+        activeInterval: interval,
+        intervals: [interval],
+      ),
+      size: const Size(1200, 900),
+      now: now,
+    );
+
+    final trailing = tester.widget<FractionallySizedBox>(
+      find.byKey(const ValueKey('focus-rhythm-trailing-progress-1')),
+    );
+    final leading = tester.widget<FractionallySizedBox>(
+      find.byKey(const ValueKey('focus-rhythm-leading-progress-2')),
+    );
+    expect(trailing.widthFactor, 1);
+    expect(leading.widthFactor, 0.5);
+  });
+
+  testWidgets('paused rhythm stays frozen and resumes from the next second', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 7, 10, 9);
+    final interval = ValueNotifier(
+      _interval(now, status: 'paused', pausedAt: now),
+    );
+    final remaining = ValueNotifier(const Duration(minutes: 20));
+    addTearDown(interval.dispose);
+    addTearDown(remaining.dispose);
+
+    await tester.pumpWidget(
+      _focusActiveStageHarness(
+        now: now,
+        interval: interval,
+        remaining: remaining,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    double trailingProgress() => tester
+        .widget<FractionallySizedBox>(
+          find.byKey(const ValueKey('focus-rhythm-trailing-progress-1')),
+        )
+        .widthFactor!;
+    expect(trailingProgress(), closeTo(0.4, 0.0001));
+    await tester.pump(const Duration(seconds: 1));
+    expect(trailingProgress(), closeTo(0.4, 0.0001));
+
+    interval.value = _interval(now, status: 'running');
+    remaining.value = const Duration(minutes: 19, seconds: 59);
+    await tester.pump();
+    expect(trailingProgress(), greaterThan(0.4));
   });
 
   testWidgets('full ready keeps Complete interval visible but unavailable', (
@@ -353,7 +428,6 @@ void main() {
       now: now,
     );
 
-    expect(find.byKey(const Key('focus-content-minimal')), findsOneWidget);
     expect(find.byKey(const Key('focus-state-active')), findsOneWidget);
     expect(find.byKey(const Key('focus-primary-stage')), findsOneWidget);
     expect(find.byKey(const Key('focus-circular-timer')), findsOneWidget);
@@ -361,7 +435,9 @@ void main() {
     expect(find.widgetWithText(FilledButton, 'Pause'), findsOneWidget);
     expect(find.byKey(const Key('focus-rhythm-rail')), findsNothing);
     expect(find.byKey(const Key('focus-task-context')), findsNothing);
-    expect(find.byKey(const Key('focus-details-menu')), findsNothing);
+    final more = find.byKey(const Key('focus-details-menu'));
+    expect(more, findsOneWidget);
+    expect(tester.getSize(more), const Size(48, 48));
     expect(find.byKey(const Key('minimal-active-more-menu')), findsNothing);
     expect(find.text('Classic'), findsNothing);
     expect(find.text('Complete interval'), findsNothing);
@@ -399,7 +475,7 @@ void main() {
     expect(find.text('Pause unavailable for this preset'), findsNothing);
   });
 
-  testWidgets('mode toggle swaps active hierarchy and persists Minimal', (
+  testWidgets('context menu swaps active details and keeps timer anchored', (
     tester,
   ) async {
     final now = DateTime.utc(2026, 7, 10, 9);
@@ -415,15 +491,26 @@ void main() {
       now: now,
     );
 
-    expect(find.byKey(const Key('focus-content-full')), findsOneWidget);
     expect(find.byKey(const Key('focus-rhythm-rail')), findsOneWidget);
-    final toggle = find.byKey(const Key('focus-view-mode-toggle'));
+    expect(find.byKey(const Key('focus-view-mode-toggle')), findsNothing);
+    final timerElement = tester.element(
+      find.byKey(const Key('focus-primary-stage')),
+    );
+    final menu = find.byKey(const Key('focus-details-menu'));
     await tester.tap(
-      find.descendant(of: toggle, matching: find.text('Minimal')),
+      find.descendant(of: menu, matching: find.byIcon(Icons.more_horiz)),
     );
     await tester.pumpAndSettle();
+    final switchMode = find.byKey(const Key('focus-switch-view-mode'));
+    expect(find.text('Switch to Minimal'), findsOneWidget);
+    await tester.tap(switchMode);
+    await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.byKey(const Key('focus-content-minimal')), findsOneWidget);
+    expect(
+      tester.element(find.byKey(const Key('focus-primary-stage'))),
+      same(timerElement),
+    );
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('focus-rhythm-rail')), findsNothing);
     final preferences = await SharedPreferences.getInstance();
     expect(
@@ -704,6 +791,281 @@ void main() {
     );
   });
 
+  testWidgets('circle and bar share the one-shot elastic timer launch', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 7, 10, 9);
+    final interval = _interval(now, status: 'running');
+
+    for (final style in FocusTimerVisualStyle.values) {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(
+        _focusActiveStageHarness(now: now, interval: interval, style: style),
+      );
+
+      double scale() => tester
+          .widget<Transform>(find.byKey(const Key('focus-timer-elastic')))
+          .transform
+          .storage[0];
+
+      expect(scale(), moreOrLessEquals(0.92, epsilon: 0.001));
+      await tester.pump(const Duration(milliseconds: 180));
+      expect(scale(), moreOrLessEquals(1.06, epsilon: 0.01));
+      await tester.pump(const Duration(milliseconds: 80));
+      expect(scale(), moreOrLessEquals(1, epsilon: 0.001));
+      await tester.pumpAndSettle();
+      expect(tester.binding.transientCallbackCount, 0);
+    }
+  });
+
+  testWidgets('timer launch does not restart on the next second', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 7, 10, 9);
+    final remaining = ValueNotifier(const Duration(minutes: 24));
+    addTearDown(remaining.dispose);
+
+    await tester.pumpWidget(
+      _focusActiveStageHarness(
+        now: now,
+        interval: _interval(now, status: 'running'),
+        remaining: remaining,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    remaining.value = const Duration(minutes: 23, seconds: 59);
+    await tester.pump();
+
+    final transform = tester.widget<Transform>(
+      find.byKey(const Key('focus-timer-elastic')),
+    );
+    expect(transform.transform.storage[0], 1);
+    expect(tester.binding.transientCallbackCount, 0);
+  });
+
+  testWidgets('primary press compresses for 80ms and releases once', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 7, 10, 9);
+    final repository = _FocusRepository();
+    await tester.pumpWidget(
+      _focusActiveStageHarness(
+        now: now,
+        interval: _interval(now, status: 'running'),
+        repository: repository,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(const Key('focus-primary-action'))),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 80));
+    final pressed = tester.widget<Transform>(
+      find.byKey(const Key('focus-primary-action-elastic')),
+    );
+    expect(pressed.transform.storage[0], 0.96);
+
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 180));
+    final released = tester.widget<Transform>(
+      find.byKey(const Key('focus-primary-action-elastic')),
+    );
+    expect(released.transform.storage[0], 1);
+    expect(repository.pauseCount, 1);
+  });
+
+  testWidgets('failed focus action keeps state and shows localized message', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 7, 10, 9);
+    final repository = _FocusRepository(failPause: true);
+    await tester.pumpWidget(
+      _focusActiveStageHarness(
+        now: now,
+        interval: _interval(now, status: 'running'),
+        repository: repository,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('focus-primary-action')));
+    await tester.pump();
+
+    expect(
+      find.text('Unable to update focus. Please try again.'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('database down'), findsNothing);
+    expect(find.text('Pause'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('pause handoff crossfades the action and timer color', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 7, 10, 9);
+    final interval = ValueNotifier(_interval(now, status: 'running'));
+    addTearDown(interval.dispose);
+
+    await tester.pumpWidget(
+      _focusActiveStageHarness(
+        now: now,
+        interval: interval,
+        style: FocusTimerVisualStyle.bar,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    interval.value = _interval(now, status: 'paused', pausedAt: now);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 90));
+    expect(find.text('Pause'), findsOneWidget);
+    expect(find.text('Resume'), findsOneWidget);
+    final colors = tester
+        .element(find.byKey(const Key('focus-state-active')))
+        .appColors;
+    final halfway = tester.widget<LinearProgressIndicator>(
+      find.byKey(const Key('focus-linear-timer')),
+    );
+    expect(halfway.color, isNot(colors.accent));
+    expect(halfway.color, isNot(colors.warning));
+
+    await tester.pump(const Duration(milliseconds: 130));
+    await tester.pumpAndSettle();
+    expect(find.text('Pause'), findsNothing);
+    expect(find.text('Resume'), findsOneWidget);
+    final phase = tester.widget<Text>(
+      find.byKey(const Key('focus-phase-label')),
+    );
+    expect(
+      phase.style?.color,
+      tester
+          .element(find.byKey(const Key('focus-state-active')))
+          .appColors
+          .warning,
+    );
+
+    interval.value = _interval(now, status: 'running');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 90));
+    expect(find.text('Resume'), findsOneWidget);
+    expect(find.text('Pause'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('Resume'), findsNothing);
+    expect(
+      tester
+          .widget<LinearProgressIndicator>(
+            find.byKey(const Key('focus-linear-timer')),
+          )
+          .color,
+      colors.accent,
+    );
+    expect(tester.binding.transientCallbackCount, 0);
+  });
+
+  testWidgets('work to break hands off phase color and timer shell once', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 7, 10, 9);
+    final interval = ValueNotifier(_interval(now, status: 'running'));
+    addTearDown(interval.dispose);
+
+    await tester.pumpWidget(
+      _focusActiveStageHarness(now: now, interval: interval),
+    );
+    await tester.pumpAndSettle();
+
+    interval.value = _interval(
+      now,
+      status: 'running',
+      type: 'shortBreak',
+      sequence: 2,
+    );
+    await tester.pump();
+    final launched = tester.widget<Transform>(
+      find.byKey(const Key('focus-timer-elastic')),
+    );
+    expect(launched.transform.storage[0], 0.92);
+
+    await tester.pump(const Duration(milliseconds: 90));
+    expect(find.text('Work interval'), findsOneWidget);
+    expect(find.text('Short break'), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 90));
+    final peak = tester.widget<Transform>(
+      find.byKey(const Key('focus-timer-elastic')),
+    );
+    expect(peak.transform.storage[0], moreOrLessEquals(1.06, epsilon: 0.01));
+
+    await tester.pump(const Duration(milliseconds: 80));
+    await tester.pumpAndSettle();
+    expect(find.text('Work interval'), findsNothing);
+    final phase = tester.widget<Text>(
+      find.byKey(const Key('focus-phase-label')),
+    );
+    expect(
+      phase.style?.color,
+      tester
+          .element(find.byKey(const Key('focus-state-active')))
+          .appColors
+          .info,
+    );
+    expect(tester.binding.transientCallbackCount, 0);
+  });
+
+  testWidgets('reduce motion makes timer transitions immediate', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 7, 10, 9);
+    await tester.pumpWidget(
+      _focusActiveStageHarness(
+        now: now,
+        interval: _interval(now, status: 'running'),
+        disableAnimations: true,
+      ),
+    );
+    await tester.pump();
+
+    final transform = tester.widget<Transform>(
+      find.byKey(const Key('focus-timer-elastic')),
+    );
+    expect(transform.transform.storage[0], 1);
+    expect(tester.binding.transientCallbackCount, 0);
+  });
+
+  testWidgets('reduce motion switches Full and Minimal immediately', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 7, 10, 9);
+    final viewMode = ValueNotifier(FocusViewMode.full);
+    addTearDown(viewMode.dispose);
+    await tester.pumpWidget(
+      _focusActiveStageHarness(
+        now: now,
+        interval: _interval(now, status: 'running'),
+        viewMode: viewMode,
+        disableAnimations: true,
+      ),
+    );
+    await tester.pump();
+
+    final menu = find.byKey(const Key('focus-details-menu'));
+    await tester.tap(
+      find.descendant(of: menu, matching: find.byIcon(Icons.more_horiz)),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('focus-switch-view-mode')));
+    await tester.pump();
+
+    expect(find.byKey(const Key('focus-rhythm-rail')), findsNothing);
+    await tester.pumpAndSettle();
+    expect(tester.binding.transientCallbackCount, 0);
+  });
+
   testWidgets('lagged history merges the authoritative active interval', (
     tester,
   ) async {
@@ -767,6 +1129,7 @@ void main() {
                     semanticsLabel: 'Cycle preview',
                     compact: false,
                     activeSequence: rhythm.steps.last.sequence,
+                    activeProgress: 0,
                   ),
                 ),
                 const SizedBox(height: 700),
@@ -809,6 +1172,7 @@ void main() {
                     semanticsLabel: 'Cycle preview',
                     compact: true,
                     activeSequence: activeSequence,
+                    activeProgress: 0,
                   ),
                 ),
                 const SizedBox(height: 700),
@@ -858,6 +1222,7 @@ void main() {
                   semanticsLabel: 'Cycle preview',
                   compact: true,
                   activeSequence: activeSequence,
+                  activeProgress: 0,
                   recenterToken: token,
                 ),
               ),
@@ -889,11 +1254,130 @@ void main() {
 
     runToken.value = 'run-2';
     await tester.pump();
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(
       tester.getCenter(activeStep).dx,
       moreOrLessEquals(tester.getCenter(host).dx, epsilon: 2),
     );
+  });
+
+  testWidgets('rail animates centering when the active phase changes', (
+    tester,
+  ) async {
+    final rhythm = buildFocusRhythm(
+      preset: _classicPreset,
+      targetWorkIntervals: 12,
+    );
+    final activeSequence = ValueNotifier<int>(1);
+    addTearDown(activeSequence.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              key: const Key('animated-recenter-host'),
+              width: 260,
+              child: ValueListenableBuilder<int>(
+                valueListenable: activeSequence,
+                builder: (context, sequence, child) => FocusRhythmRail(
+                  rhythm: rhythm,
+                  semanticsLabel: 'Cycle preview',
+                  compact: true,
+                  activeSequence: sequence,
+                  activeProgress: 0,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    activeSequence.value = 13;
+    await tester.pump();
+    await tester.pump();
+    final target = find.byKey(const ValueKey('focus-rhythm-step-13'));
+    final host = find.byKey(const Key('animated-recenter-host'));
+    final initialDistance =
+        (tester.getCenter(target).dx - tester.getCenter(host).dx).abs();
+    expect(initialDistance, greaterThan(20));
+
+    await tester.pump(const Duration(milliseconds: 110));
+    final intermediateDistance =
+        (tester.getCenter(target).dx - tester.getCenter(host).dx).abs();
+    expect(intermediateDistance, lessThan(initialDistance));
+    expect(intermediateDistance, greaterThan(2));
+
+    await tester.pump(const Duration(milliseconds: 110));
+    await tester.pump();
+    expect(
+      tester.getCenter(target).dx,
+      moreOrLessEquals(tester.getCenter(host).dx, epsilon: 2),
+    );
+  });
+
+  testWidgets('reduce motion lands and recenters the rhythm immediately', (
+    tester,
+  ) async {
+    final rhythm = buildFocusRhythm(
+      preset: _classicPreset,
+      targetWorkIntervals: 12,
+    );
+    final activeSequence = ValueNotifier<int>(1);
+    addTearDown(activeSequence.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: Center(
+            child: MediaQuery(
+              data: const MediaQueryData(disableAnimations: true),
+              child: SizedBox(
+                key: const Key('reduce-motion-host'),
+                width: 300,
+                child: ValueListenableBuilder<int>(
+                  valueListenable: activeSequence,
+                  builder: (context, sequence, child) => FocusRhythmRail(
+                    rhythm: rhythm,
+                    semanticsLabel: 'Cycle preview',
+                    compact: true,
+                    activeSequence: sequence,
+                    activeProgress: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    double scale(int sequence) => tester
+        .widget<Transform>(
+          find.byKey(ValueKey('focus-rhythm-node-landing-$sequence')),
+        )
+        .transform
+        .storage[0];
+    expect(scale(1), 1);
+
+    activeSequence.value = 13;
+    await tester.pump();
+    await tester.pump();
+
+    expect(scale(13), 1);
+    expect(
+      tester.getCenter(find.byKey(const ValueKey('focus-rhythm-step-13'))).dx,
+      moreOrLessEquals(
+        tester.getCenter(find.byKey(const Key('reduce-motion-host'))).dx,
+        epsilon: 2,
+      ),
+    );
+    expect(tester.binding.transientCallbackCount, 0);
   });
 
   testWidgets('RTL leading connector points toward the preceding step', (
@@ -916,6 +1400,7 @@ void main() {
                 rhythm: rhythm,
                 semanticsLabel: 'Cycle preview',
                 compact: false,
+                activeProgress: 0,
               ),
             ),
           ),
@@ -930,8 +1415,12 @@ void main() {
     final secondCenter = tester.getCenter(
       find.byKey(const ValueKey('focus-rhythm-step-2')),
     );
-    final connector = find.byKey(const ValueKey('focus-rhythm-connector-2'));
-    expect(connector, findsOneWidget);
+    final connector = find
+        .descendant(
+          of: find.byKey(const ValueKey('focus-rhythm-connector-2')),
+          matching: find.byType(Divider),
+        )
+        .first;
     final connectorCenter = tester.getCenter(connector);
     expect(firstCenter.dx, greaterThan(secondCenter.dx));
     expect(connectorCenter.dx, greaterThan(secondCenter.dx));
@@ -957,6 +1446,7 @@ void main() {
               semanticsLabel: 'Cycle preview',
               compact: false,
               activeSequence: 3,
+              activeProgress: 0.5,
             ),
           ),
         ),
@@ -964,24 +1454,242 @@ void main() {
     );
     await tester.pump();
 
-    final context = tester.element(find.byType(FocusRhythmRail));
-    final leading = tester.widget<Divider>(
-      find.descendant(
-        of: find.byKey(const ValueKey('focus-rhythm-connector-3')),
-        matching: find.byType(Divider),
+    final leading = tester.widget<FractionallySizedBox>(
+      find.byKey(const ValueKey('focus-rhythm-leading-progress-3')),
+    );
+    final trailing = tester.widget<FractionallySizedBox>(
+      find.byKey(const ValueKey('focus-rhythm-trailing-progress-3')),
+    );
+
+    expect(leading.widthFactor, 0);
+    expect(trailing.widthFactor, 1);
+  });
+
+  testWidgets('active rhythm fills only the elapsed connector fraction', (
+    tester,
+  ) async {
+    final rhythm = buildFocusRhythm(
+      preset: _classicPreset,
+      targetWorkIntervals: 2,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: SizedBox(
+            width: 600,
+            child: FocusRhythmRail(
+              rhythm: rhythm,
+              semanticsLabel: 'Cycle preview',
+              compact: false,
+              activeSequence: 1,
+              activeProgress: 0.75,
+            ),
+          ),
+        ),
       ),
     );
-    final trailing = tester.widget<Divider>(
-      find.descendant(
-        of: find.byKey(const ValueKey('focus-rhythm-trailing-connector-3')),
-        matching: find.byType(Divider),
+    await tester.pump();
+
+    final trailing = tester.widget<FractionallySizedBox>(
+      find.byKey(const ValueKey('focus-rhythm-trailing-progress-1')),
+    );
+    final leading = tester.widget<FractionallySizedBox>(
+      find.byKey(const ValueKey('focus-rhythm-leading-progress-2')),
+    );
+    expect(trailing.widthFactor, 1);
+    expect(leading.widthFactor, 0.5);
+  });
+
+  testWidgets('last active rhythm step fills its own outline', (tester) async {
+    final rhythm = FocusRhythm([
+      const FocusRhythmStep(
+        phase: FocusRhythmPhase.work,
+        state: FocusRhythmState.running,
+        sequence: 7,
+        workOrdinal: 4,
+        plannedSeconds: 1500,
+        source: FocusRhythmSource.actual,
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: SizedBox(
+            width: 200,
+            child: FocusRhythmRail(
+              rhythm: rhythm,
+              semanticsLabel: 'Final work',
+              compact: false,
+              activeSequence: 7,
+              activeProgress: 0.4,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final progress = tester.widget<CircularProgressIndicator>(
+      find.byKey(const ValueKey('focus-rhythm-node-progress-7')),
+    );
+    expect(progress.value, 0.4);
+  });
+
+  testWidgets('active rhythm node lands with a one-shot overshoot', (
+    tester,
+  ) async {
+    final rhythm = buildFocusRhythm(
+      preset: _classicPreset,
+      targetWorkIntervals: 1,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: SizedBox(
+            width: 600,
+            child: FocusRhythmRail(
+              rhythm: rhythm,
+              semanticsLabel: 'Cycle preview',
+              compact: false,
+              activeSequence: 1,
+              activeProgress: 0,
+            ),
+          ),
+        ),
       ),
     );
 
-    expect(leading.color, context.appColors.border);
-    expect(leading.thickness, 1);
-    expect(trailing.color, context.appColors.accent);
-    expect(trailing.thickness, 2);
+    double scale() => tester
+        .widget<Transform>(
+          find.byKey(const ValueKey('focus-rhythm-node-landing-1')),
+        )
+        .transform
+        .storage[0];
+
+    expect(scale(), moreOrLessEquals(0.92, epsilon: 0.001));
+    await tester.pump(const Duration(milliseconds: 169));
+    expect(scale(), moreOrLessEquals(1.06, epsilon: 0.01));
+    await tester.pump(const Duration(milliseconds: 91));
+    expect(scale(), moreOrLessEquals(1, epsilon: 0.001));
+    await tester.pumpAndSettle();
+    expect(tester.binding.transientCallbackCount, 0);
+  });
+
+  testWidgets('completed rhythm mark crossfades into its check', (
+    tester,
+  ) async {
+    final completed = ValueNotifier<bool>(false);
+    addTearDown(completed.dispose);
+    final now = DateTime.utc(2026, 7, 10, 9);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: SizedBox(
+            width: 600,
+            child: ValueListenableBuilder<bool>(
+              valueListenable: completed,
+              builder: (context, isCompleted, child) {
+                final work = _interval(
+                  now,
+                  status: isCompleted ? 'completed' : 'running',
+                );
+                final breakInterval = _interval(
+                  now,
+                  status: 'running',
+                  type: 'shortBreak',
+                  sequence: 2,
+                );
+                return FocusRhythmRail(
+                  rhythm: buildFocusRhythm(
+                    preset: _classicPreset,
+                    targetWorkIntervals: 2,
+                    intervals: [work, if (isCompleted) breakInterval],
+                  ),
+                  semanticsLabel: 'Cycle preview',
+                  compact: false,
+                  activeSequence: isCompleted ? 2 : 1,
+                  activeProgress: 0,
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    completed.value = true;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 90));
+    final firstStep = find.byKey(const ValueKey('focus-rhythm-step-1'));
+    expect(find.descendant(of: firstStep, matching: find.text('1')), findsOne);
+    expect(
+      find.descendant(of: firstStep, matching: find.byIcon(Icons.check)),
+      findsOne,
+    );
+    await tester.pump(const Duration(milliseconds: 90));
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(of: firstStep, matching: find.text('1')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: firstStep, matching: find.byIcon(Icons.check)),
+      findsOne,
+    );
+  });
+
+  testWidgets('rhythm progress starts at the active node in LTR and RTL', (
+    tester,
+  ) async {
+    final rhythm = buildFocusRhythm(
+      preset: _classicPreset,
+      targetWorkIntervals: 1,
+    );
+
+    for (final direction in TextDirection.values) {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: Directionality(
+              textDirection: direction,
+              child: SizedBox(
+                width: 600,
+                child: FocusRhythmRail(
+                  rhythm: rhythm,
+                  semanticsLabel: 'Cycle preview',
+                  compact: false,
+                  activeSequence: 1,
+                  activeProgress: 0.25,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final nodeCenter = tester.getCenter(
+        find.byKey(const ValueKey('focus-rhythm-node-1')),
+      );
+      final progressRect = tester.getRect(
+        find.byKey(const ValueKey('focus-rhythm-trailing-progress-1')),
+      );
+      if (direction == TextDirection.ltr) {
+        expect(progressRect.left, moreOrLessEquals(nodeCenter.dx, epsilon: 1));
+      } else {
+        expect(progressRect.right, moreOrLessEquals(nodeCenter.dx, epsilon: 1));
+      }
+    }
   });
 
   testWidgets('active phase colors the full connector to the next step', (
@@ -1004,6 +1712,7 @@ void main() {
                 semanticsLabel: 'Cycle preview',
                 compact: false,
                 activeSequence: activeSequence,
+                activeProgress: 1,
               ),
             ),
           ),
@@ -1018,7 +1727,7 @@ void main() {
       final trailing = tester.widget<Divider>(
         find.descendant(
           of: find.byKey(
-            ValueKey('focus-rhythm-trailing-connector-$activeSequence'),
+            ValueKey('focus-rhythm-trailing-progress-$activeSequence'),
           ),
           matching: find.byType(Divider),
         ),
@@ -1026,7 +1735,7 @@ void main() {
       final leading = tester.widget<Divider>(
         find.descendant(
           of: find.byKey(
-            ValueKey('focus-rhythm-connector-${activeSequence + 1}'),
+            ValueKey('focus-rhythm-leading-progress-${activeSequence + 1}'),
           ),
           matching: find.byType(Divider),
         ),
@@ -1060,6 +1769,7 @@ void main() {
                   rhythm: rhythm,
                   semanticsLabel: 'Cycle preview',
                   compact: false,
+                  activeProgress: 0,
                 ),
               ),
             ),
@@ -1200,7 +1910,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Фокус'), findsOneWidget);
-    expect(find.byKey(const Key('focus-view-mode-toggle')), findsOneWidget);
+    expect(find.byKey(const Key('focus-view-mode-toggle')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -1277,7 +1987,7 @@ void main() {
     expect(find.textContaining('boom'), findsOneWidget);
   });
 
-  testWidgets('loading and error keep the Focus header and mode toggle', (
+  testWidgets('loading and error keep the Focus header without mode toggle', (
     tester,
   ) async {
     final loadingPresets = StreamController<List<FocusPresetItem>>();
@@ -1300,7 +2010,7 @@ void main() {
 
     expect(find.byKey(const Key('focus-loading')), findsOneWidget);
     expect(find.byKey(const Key('focus-heading')), findsOneWidget);
-    expect(find.byKey(const Key('focus-view-mode-toggle')), findsOneWidget);
+    expect(find.byKey(const Key('focus-view-mode-toggle')), findsNothing);
 
     await tester.pumpWidget(
       ProviderScope(
@@ -1321,7 +2031,7 @@ void main() {
 
     expect(find.byKey(const Key('focus-load-error')), findsOneWidget);
     expect(find.byKey(const Key('focus-heading')), findsOneWidget);
-    expect(find.byKey(const Key('focus-view-mode-toggle')), findsOneWidget);
+    expect(find.byKey(const Key('focus-view-mode-toggle')), findsNothing);
   });
 
   testWidgets('heading timer and rail expose concise semantic summaries', (
@@ -1379,10 +2089,7 @@ void main() {
     );
 
     expect(find.byKey(const Key('focus-stage-scroll')), findsOneWidget);
-    expect(
-      tester.getSize(find.byKey(const Key('focus-view-mode-toggle'))).height,
-      greaterThanOrEqualTo(48),
-    );
+    expect(find.byKey(const Key('focus-view-mode-toggle')), findsNothing);
     final primary = find.byKey(const Key('focus-primary-action'));
     final more = find.byKey(const Key('focus-details-menu'));
     expect(tester.getSize(primary).height, greaterThanOrEqualTo(48));
@@ -1395,6 +2102,77 @@ void main() {
     expect(primaryRect.bottom, lessThanOrEqualTo(568));
     expect(tester.takeException(), isNull);
   });
+}
+
+Widget _focusActiveStageHarness({
+  required DateTime now,
+  required Object interval,
+  Object remaining = const Duration(minutes: 24),
+  FocusTimerVisualStyle style = FocusTimerVisualStyle.circle,
+  ValueNotifier<FocusViewMode>? viewMode,
+  _FocusRepository? repository,
+  bool disableAnimations = false,
+}) {
+  final focusRepository = repository ?? _FocusRepository();
+
+  Widget buildStage(FocusIntervalItem current, Duration currentRemaining) {
+    Widget stage(FocusViewMode mode) => FocusActiveStage(
+      run: _run(now),
+      interval: current,
+      intervals: [current],
+      remaining: currentRemaining,
+      presets: [_classicPreset],
+      selectedPreset: _classicPreset,
+      timerVisualStyle: style,
+      compact: false,
+      viewMode: mode,
+      repository: focusRepository,
+      onViewModeChanged: (mode) {
+        viewMode?.value = mode;
+      },
+      onPresetChanged: (_) {},
+      onCustomizePreset: (_) {},
+    );
+    return viewMode == null
+        ? stage(FocusViewMode.full)
+        : ValueListenableBuilder<FocusViewMode>(
+            valueListenable: viewMode,
+            builder: (context, mode, child) => stage(mode),
+          );
+  }
+
+  Widget buildRemaining(FocusIntervalItem current) {
+    if (remaining case final ValueNotifier<Duration> listenable) {
+      return ValueListenableBuilder<Duration>(
+        valueListenable: listenable,
+        builder: (context, value, child) => buildStage(current, value),
+      );
+    }
+    return buildStage(current, remaining as Duration);
+  }
+
+  final stage = interval is ValueNotifier<FocusIntervalItem>
+      ? ValueListenableBuilder<FocusIntervalItem>(
+          valueListenable: interval,
+          builder: (context, value, child) => buildRemaining(value),
+        )
+      : buildRemaining(interval as FocusIntervalItem);
+
+  return MaterialApp(
+    theme: AppTheme.light(),
+    home: Builder(
+      builder: (context) => MediaQuery(
+        data: MediaQuery.of(
+          context,
+        ).copyWith(disableAnimations: disableAnimations),
+        child: Scaffold(
+          body: SingleChildScrollView(
+            child: SizedBox(width: 1200, child: stage),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 Future<void> _pumpFocusScreen(
@@ -1477,12 +2255,14 @@ class _FocusRepository implements FocusRepository {
     this.activeInterval,
     this.intervals = const [],
     List<FocusPresetItem>? presets,
+    this.failPause = false,
   }) : presets = presets ?? [_classicPreset];
 
   final FocusRunItem? activeRun;
   final FocusIntervalItem? activeInterval;
   final List<FocusIntervalItem> intervals;
   final List<FocusPresetItem> presets;
+  final bool failPause;
   int pauseCount = 0;
   int resumeCount = 0;
 
@@ -1506,6 +2286,9 @@ class _FocusRepository implements FocusRepository {
 
   @override
   Future<void> pauseActiveInterval({DateTime? now}) async {
+    if (failPause) {
+      throw StateError('database down');
+    }
     pauseCount++;
   }
 

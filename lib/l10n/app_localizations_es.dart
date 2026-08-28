@@ -1689,6 +1689,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get focusViewMinimal => 'Mínimo';
 
   @override
+  String get focusSwitchToFullView => 'Cambiar a Completo';
+
+  @override
+  String get focusSwitchToMinimalView => 'Cambiar a Mínimo';
+
+  @override
+  String get focusActionFailed =>
+      'No se pudo actualizar el enfoque. Inténtalo de nuevo.';
+
+  @override
   String get noActiveSession => 'No hay sesión activa';
 
   @override

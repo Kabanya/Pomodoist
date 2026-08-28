@@ -96,96 +96,57 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _FocusHeader(
-                            viewMode: viewMode,
-                            compact: !desktop,
-                            onChanged: (mode) => unawaited(
-                              ref
-                                  .read(focusViewModeProvider.notifier)
-                                  .setMode(mode),
-                            ),
-                          ),
+                          const _FocusHeader(),
                           SizedBox(height: desktop ? 24 : 20),
-                          KeyedSubtree(
-                            key: Key(
-                              viewMode == FocusViewMode.full
-                                  ? 'focus-content-full'
-                                  : 'focus-content-minimal',
-                            ),
-                            child: loadError != null
-                                ? _FocusLoadError(error: loadError)
-                                : loading
-                                ? const _FocusLoading()
-                                : run == null && interval == null
-                                ? viewMode == FocusViewMode.full
-                                      ? FocusIdleStage(
-                                          presets: presets,
-                                          selectedPreset: effectivePreset,
-                                          compact: !desktop,
-                                          onPresetSelected: _selectPreset,
-                                          onStart: effectivePreset == null
-                                              ? null
-                                              : () => _startFocus(
-                                                  focusRepository,
-                                                  effectivePreset,
-                                                ),
-                                          onCustomize: effectivePreset == null
-                                              ? null
-                                              : () => _showPresetDialog(
-                                                  effectivePreset,
-                                                  presets,
-                                                ),
-                                          onCreate: () =>
-                                              _showPresetDialog(null, presets),
-                                        )
-                                      : FocusMinimalIdleStage(
-                                          presets: presets,
-                                          selectedPreset: effectivePreset,
-                                          onPresetSelected: _selectPreset,
-                                          onStart: effectivePreset == null
-                                              ? null
-                                              : () => _startFocus(
-                                                  focusRepository,
-                                                  effectivePreset,
-                                                ),
-                                          onCustomize: effectivePreset == null
-                                              ? null
-                                              : () => _showPresetDialog(
-                                                  effectivePreset,
-                                                  presets,
-                                                ),
-                                          onCreate: () =>
-                                              _showPresetDialog(null, presets),
-                                        )
-                                : run == null ||
-                                      interval == null ||
-                                      interval.runId != run.id ||
-                                      remaining == null
-                                ? const _FocusTransition()
-                                : viewMode == FocusViewMode.full
-                                ? FocusActiveStage(
-                                    run: run,
-                                    interval: interval,
-                                    intervals: intervals,
-                                    remaining: remaining,
-                                    presets: presets,
-                                    selectedPreset: activePreset,
-                                    timerVisualStyle: timerVisualStyle,
-                                    compact: !desktop,
-                                    repository: focusRepository,
-                                    onPresetChanged: (presetId) =>
-                                        _changeActiveRunPreset(run, presetId),
-                                    onCustomizePreset: (preset) =>
-                                        _showPresetDialog(preset, presets),
-                                  )
-                                : FocusMinimalActiveStage(
-                                    interval: interval,
-                                    remaining: remaining,
-                                    selectedPreset: activePreset,
-                                    timerVisualStyle: timerVisualStyle,
-                                    repository: focusRepository,
-                                  ),
-                          ),
+                          loadError != null
+                              ? _FocusLoadError(error: loadError)
+                              : loading
+                              ? const _FocusLoading()
+                              : run == null && interval == null
+                              ? FocusIdleStage(
+                                  presets: presets,
+                                  selectedPreset: effectivePreset,
+                                  compact: !desktop,
+                                  viewMode: viewMode,
+                                  onViewModeChanged: _setViewMode,
+                                  onPresetSelected: _selectPreset,
+                                  onStart: effectivePreset == null
+                                      ? null
+                                      : () => _startFocus(
+                                          focusRepository,
+                                          effectivePreset,
+                                        ),
+                                  onCustomize: effectivePreset == null
+                                      ? null
+                                      : () => _showPresetDialog(
+                                          effectivePreset,
+                                          presets,
+                                        ),
+                                  onCreate: () =>
+                                      _showPresetDialog(null, presets),
+                                )
+                              : run == null ||
+                                    interval == null ||
+                                    interval.runId != run.id ||
+                                    remaining == null
+                              ? const _FocusTransition()
+                              : FocusActiveStage(
+                                  run: run,
+                                  interval: interval,
+                                  intervals: intervals,
+                                  remaining: remaining,
+                                  presets: presets,
+                                  selectedPreset: activePreset,
+                                  timerVisualStyle: timerVisualStyle,
+                                  compact: !desktop,
+                                  viewMode: viewMode,
+                                  repository: focusRepository,
+                                  onViewModeChanged: _setViewMode,
+                                  onPresetChanged: (presetId) =>
+                                      _changeActiveRunPreset(run, presetId),
+                                  onCustomizePreset: (preset) =>
+                                      _showPresetDialog(preset, presets),
+                                ),
                         ],
                       ),
                     ),
@@ -252,7 +213,20 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     unawaited(
       ref.read(lastFocusPresetIdProvider.notifier).setPresetId(preset.id),
     );
-    await repository.startRun(StartFocusRunInput(presetId: preset.id));
+    try {
+      await repository.startRun(StartFocusRunInput(presetId: preset.id));
+    } catch (_) {
+      if (mounted) {
+        showActionFeedback(
+          context,
+          message: context.l10n.focusActionFailed,
+          icon: Icons.error_outline,
+          sound: ActionFeedbackSound.none,
+          haptic: AppHapticCue.none,
+        );
+      }
+      return;
+    }
     if (!mounted) {
       return;
     }
@@ -270,6 +244,10 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     }
     setState(() => _selectedPresetId = id);
     unawaited(ref.read(lastFocusPresetIdProvider.notifier).setPresetId(id));
+  }
+
+  void _setViewMode(FocusViewMode mode) {
+    unawaited(ref.read(focusViewModeProvider.notifier).setMode(mode));
   }
 
   FocusPresetItem? _findPreset(List<FocusPresetItem> presets, String? id) {
@@ -395,64 +373,17 @@ class _FocusTransition extends StatelessWidget {
 }
 
 class _FocusHeader extends StatelessWidget {
-  const _FocusHeader({
-    required this.viewMode,
-    required this.compact,
-    required this.onChanged,
-  });
-
-  final FocusViewMode viewMode;
-  final bool compact;
-  final ValueChanged<FocusViewMode> onChanged;
+  const _FocusHeader();
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final heading = Semantics(
+    return Semantics(
       key: const Key('focus-heading'),
       header: true,
       child: Text(
-        l10n.focusTitle,
+        context.l10n.focusTitle,
         style: Theme.of(context).textTheme.headlineMedium,
       ),
-    );
-    final stacked = compact && MediaQuery.textScalerOf(context).scale(1) > 1.3;
-    final toggle = SegmentedButton<FocusViewMode>(
-      key: const Key('focus-view-mode-toggle'),
-      direction: stacked ? Axis.vertical : Axis.horizontal,
-      style: const ButtonStyle(
-        minimumSize: WidgetStatePropertyAll(Size(0, 48)),
-      ),
-      showSelectedIcon: false,
-      segments: [
-        ButtonSegment(
-          value: FocusViewMode.full,
-          label: Text(l10n.focusViewFull),
-        ),
-        ButtonSegment(
-          value: FocusViewMode.minimal,
-          label: Text(l10n.focusViewMinimal),
-        ),
-      ],
-      selected: {viewMode},
-      onSelectionChanged: (selection) => onChanged(selection.single),
-    );
-
-    if (stacked) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Align(alignment: AlignmentDirectional.centerStart, child: heading),
-          const SizedBox(height: 12),
-          toggle,
-        ],
-      );
-    }
-    return Row(
-      children: [
-        Expanded(child: heading),
-        toggle,
-      ],
     );
   }
 }

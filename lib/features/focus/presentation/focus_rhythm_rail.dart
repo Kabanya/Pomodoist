@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
@@ -10,6 +12,7 @@ class FocusRhythmRail extends StatefulWidget {
     required this.rhythm,
     required this.semanticsLabel,
     required this.compact,
+    required this.activeProgress,
     this.activeSequence,
     this.recenterToken,
     super.key,
@@ -19,6 +22,7 @@ class FocusRhythmRail extends StatefulWidget {
   final String semanticsLabel;
   final bool compact;
   final int? activeSequence;
+  final double activeProgress;
   final Object? recenterToken;
 
   @override
@@ -48,6 +52,7 @@ class _FocusRhythmRailState extends State<FocusRhythmRail> {
           '${widget.rhythm.steps.length}:${widget.compact}:'
           '${Directionality.of(context)}:${widget.recenterToken}',
           scrolls: scrolls,
+          reduceMotion: MediaQuery.disableAnimationsOf(context),
         );
 
         final rail = SizedBox(
@@ -62,17 +67,16 @@ class _FocusRhythmRailState extends State<FocusRhythmRail> {
                     active:
                         widget.rhythm.steps[index].sequence ==
                         widget.activeSequence,
+                    activeProgress: widget.activeProgress.clamp(0.0, 1.0),
                     activeStepKey:
                         widget.rhythm.steps[index].sequence ==
                             widget.activeSequence
                         ? _activeStepKey
                         : null,
-                    leadingConnectorSource:
-                        index > 0 &&
-                            widget.rhythm.steps[index - 1].sequence ==
-                                widget.activeSequence
+                    leadingConnectorSource: index > 0
                         ? widget.rhythm.steps[index - 1]
                         : null,
+                    activeSequence: widget.activeSequence,
                     showLeadingConnector: index > 0,
                     showTrailingConnector:
                         index < widget.rhythm.steps.length - 1,
@@ -87,26 +91,34 @@ class _FocusRhythmRailState extends State<FocusRhythmRail> {
           label: widget.semanticsLabel,
           container: true,
           explicitChildNodes: false,
-          child: ExcludeSemantics(
-            child: scrolls
-                ? SingleChildScrollView(
-                    controller: _scrollController,
-                    scrollDirection: Axis.horizontal,
-                    child: rail,
-                  )
-                : Align(child: rail),
+          child: RepaintBoundary(
+            key: const Key('focus-rhythm-repaint-boundary'),
+            child: ExcludeSemantics(
+              child: scrolls
+                  ? SingleChildScrollView(
+                      controller: _scrollController,
+                      scrollDirection: Axis.horizontal,
+                      child: rail,
+                    )
+                  : Align(child: rail),
+            ),
           ),
         );
       },
     );
   }
 
-  void _scheduleActiveCenter(String signature, {required bool scrolls}) {
+  void _scheduleActiveCenter(
+    String signature, {
+    required bool scrolls,
+    required bool reduceMotion,
+  }) {
     if (!scrolls ||
         widget.activeSequence == null ||
         _lastCenterSignature == signature) {
       return;
     }
+    final animate = _lastCenterSignature != null && !reduceMotion;
     _lastCenterSignature = signature;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final activeContext = _activeStepKey.currentContext;
@@ -127,7 +139,17 @@ class _FocusRhythmRailState extends State<FocusRhythmRail> {
           )
           .toDouble();
       if ((_scrollController.offset - target).abs() > 0.5) {
-        _scrollController.jumpTo(target);
+        if (animate) {
+          unawaited(
+            _scrollController.animateTo(
+              target,
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+            ),
+          );
+        } else {
+          _scrollController.jumpTo(target);
+        }
       }
     });
   }
@@ -138,8 +160,10 @@ class _RhythmStepSlot extends StatelessWidget {
     required this.step,
     required this.compact,
     required this.active,
+    required this.activeProgress,
     required this.activeStepKey,
     required this.leadingConnectorSource,
+    required this.activeSequence,
     required this.showLeadingConnector,
     required this.showTrailingConnector,
   });
@@ -147,8 +171,10 @@ class _RhythmStepSlot extends StatelessWidget {
   final FocusRhythmStep step;
   final bool compact;
   final bool active;
+  final double activeProgress;
   final GlobalKey? activeStepKey;
   final FocusRhythmStep? leadingConnectorSource;
+  final int? activeSequence;
   final bool showLeadingConnector;
   final bool showTrailingConnector;
 
@@ -156,11 +182,22 @@ class _RhythmStepSlot extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final activeColor = _activeColor(colors, step);
-    final leadingColor = leadingConnectorSource == null
-        ? colors.border
-        : _activeColor(colors, leadingConnectorSource!);
+    final leadingSource = leadingConnectorSource;
+    final leadingProgress = leadingSource == null
+        ? 0.0
+        : leadingSource.sequence == activeSequence
+        ? (activeProgress * 2 - 1).clamp(0.0, 1.0)
+        : _isFinished(leadingSource)
+        ? 1.0
+        : 0.0;
+    final trailingProgress = active
+        ? (activeProgress * 2).clamp(0.0, 1.0)
+        : _isFinished(step)
+        ? 1.0
+        : 0.0;
     final activeForeground = _highContrastForeground(activeColor);
     final foreground = active ? activeColor : colors.secondaryText;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final nodeSize = compact
         ? (step.phase == FocusRhythmPhase.work ? 34.0 : 30.0)
         : (step.phase == FocusRhythmPhase.work ? 46.0 : 40.0);
@@ -172,54 +209,97 @@ class _RhythmStepSlot extends StatelessWidget {
         alignment: Alignment.topCenter,
         children: [
           if (showLeadingConnector)
-            ExcludeSemantics(
-              child: Align(
-                alignment: const AlignmentDirectional(-1, -0.58),
-                child: FractionallySizedBox(
-                  key: ValueKey('focus-rhythm-connector-${step.sequence}'),
-                  widthFactor: 0.5,
-                  child: Divider(
-                    color: leadingColor,
-                    thickness: leadingConnectorSource == null ? 1 : 2,
-                  ),
-                ),
+            _RhythmConnectorHalf(
+              key: ValueKey('focus-rhythm-connector-${step.sequence}'),
+              progressKey: ValueKey(
+                'focus-rhythm-leading-progress-${step.sequence}',
               ),
+              alignment: const AlignmentDirectional(-1, -0.58),
+              progress: leadingProgress,
+              color: leadingSource == null
+                  ? colors.border
+                  : _activeColor(colors, leadingSource),
+              trackColor: colors.border,
             ),
           if (showTrailingConnector)
-            ExcludeSemantics(
-              child: Align(
-                alignment: const AlignmentDirectional(1, -0.58),
-                child: FractionallySizedBox(
-                  key: ValueKey(
-                    'focus-rhythm-trailing-connector-${step.sequence}',
-                  ),
-                  widthFactor: 0.5,
-                  child: Divider(
-                    color: active ? activeColor : colors.border,
-                    thickness: active ? 2 : 1,
-                  ),
-                ),
+            _RhythmConnectorHalf(
+              key: ValueKey('focus-rhythm-trailing-connector-${step.sequence}'),
+              progressKey: ValueKey(
+                'focus-rhythm-trailing-progress-${step.sequence}',
               ),
+              alignment: const AlignmentDirectional(1, -0.58),
+              progress: trailingProgress,
+              color: activeColor,
+              trackColor: colors.border,
             ),
-          KeyedSubtree(
-            key: activeStepKey,
-            child: Container(
-              key: ValueKey('focus-rhythm-node-${step.sequence}'),
-              width: nodeSize,
-              height: nodeSize,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: active ? activeColor : colors.surfaceHover,
-                border: Border.all(
-                  color: active ? activeColor : colors.border,
-                  width: active ? 2 : 1,
-                ),
-              ),
-              child: _RhythmStepMark(
-                step: step,
-                color: active ? activeForeground : foreground,
-                compact: compact,
+          if (activeStepKey != null)
+            SizedBox.square(key: activeStepKey, dimension: nodeSize),
+          TweenAnimationBuilder<double>(
+            key: ValueKey('focus-rhythm-node-motion-${step.sequence}'),
+            duration: reduceMotion || !active
+                ? Duration.zero
+                : const Duration(milliseconds: 260),
+            tween: Tween(begin: 0, end: active ? 1 : 0),
+            builder: (context, value, child) => Transform.scale(
+              key: ValueKey('focus-rhythm-node-landing-${step.sequence}'),
+              scale: active ? _landingScale(value) : 1,
+              child: child,
+            ),
+            child: SizedBox.square(
+              dimension: nodeSize,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    key: ValueKey('focus-rhythm-node-${step.sequence}'),
+                    width: nodeSize,
+                    height: nodeSize,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: active ? activeColor : colors.surfaceHover,
+                      border: Border.all(
+                        color: active ? activeColor : colors.border,
+                        width: active ? 2 : 1,
+                      ),
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: reduceMotion
+                          ? Duration.zero
+                          : const Duration(milliseconds: 180),
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(
+                          scale: Tween(begin: 0.9, end: 1.0).animate(animation),
+                          child: child,
+                        ),
+                      ),
+                      child: _RhythmStepMark(
+                        key: ValueKey(
+                          'focus-rhythm-mark-${step.sequence}-${step.state}',
+                        ),
+                        step: step,
+                        color: active ? activeForeground : foreground,
+                        compact: compact,
+                      ),
+                    ),
+                  ),
+                  if (active && !showTrailingConnector)
+                    RepaintBoundary(
+                      child: SizedBox.square(
+                        dimension: nodeSize,
+                        child: CircularProgressIndicator(
+                          key: ValueKey(
+                            'focus-rhythm-node-progress-${step.sequence}',
+                          ),
+                          value: activeProgress,
+                          strokeWidth: 3,
+                          color: activeForeground,
+                          backgroundColor: Colors.transparent,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -253,6 +333,57 @@ class _RhythmStepSlot extends StatelessWidget {
   }
 }
 
+class _RhythmConnectorHalf extends StatelessWidget {
+  const _RhythmConnectorHalf({
+    required this.progressKey,
+    required this.alignment,
+    required this.progress,
+    required this.color,
+    required this.trackColor,
+    super.key,
+  });
+
+  final Key progressKey;
+  final AlignmentDirectional alignment;
+  final double progress;
+  final Color color;
+  final Color trackColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: Align(
+        alignment: alignment,
+        child: FractionallySizedBox(
+          widthFactor: 0.5,
+          child: Stack(
+            alignment: AlignmentDirectional.centerStart,
+            children: [
+              Divider(color: trackColor, thickness: 1),
+              FractionallySizedBox(
+                key: progressKey,
+                widthFactor: progress,
+                child: Divider(color: color, thickness: 2),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+bool _isFinished(FocusRhythmStep step) =>
+    step.state == FocusRhythmState.completed ||
+    step.state == FocusRhythmState.skipped;
+
+double _landingScale(double value) {
+  if (value <= 0.65) {
+    return 0.92 + (1.06 - 0.92) * value / 0.65;
+  }
+  return 1.06 + (1 - 1.06) * (value - 0.65) / 0.35;
+}
+
 Color _activeColor(AppThemePalette colors, FocusRhythmStep step) {
   if (step.state == FocusRhythmState.paused) {
     return colors.warning;
@@ -272,6 +403,7 @@ class _RhythmStepMark extends StatelessWidget {
     required this.step,
     required this.color,
     required this.compact,
+    super.key,
   });
 
   final FocusRhythmStep step;

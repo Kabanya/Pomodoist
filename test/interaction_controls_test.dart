@@ -2990,7 +2990,7 @@ void main() {
     expect(focusRepository.distractionRunIds, ['run-1']);
   });
 
-  testWidgets('focus minimal active controls keep only the primary action', (
+  testWidgets('focus minimal active controls keep primary and mode action', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({
@@ -3011,7 +3011,16 @@ void main() {
     expect(find.widgetWithText(OutlinedButton, 'Skip'), findsNothing);
     expect(find.widgetWithText(TextButton, 'Stop'), findsNothing);
     expect(find.byKey(const Key('minimal-active-more-menu')), findsNothing);
-    expect(find.byKey(const Key('focus-details-menu')), findsNothing);
+    final menu = find.byKey(const Key('focus-details-menu'));
+    expect(menu, findsOneWidget);
+    await tester.tap(
+      find.descendant(of: menu, matching: find.byIcon(Icons.more_horiz)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Switch to Full'), findsOneWidget);
+    expect(find.text('Skip'), findsNothing);
+    await tester.tapAt(Offset.zero);
+    await tester.pumpAndSettle();
 
     await tester.tap(find.widgetWithText(FilledButton, 'Pause'));
     await tester.pump();

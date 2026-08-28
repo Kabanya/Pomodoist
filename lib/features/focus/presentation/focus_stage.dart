@@ -26,7 +26,9 @@ class FocusIdleStage extends StatelessWidget {
     required this.presets,
     required this.selectedPreset,
     required this.compact,
+    required this.viewMode,
     required this.onPresetSelected,
+    required this.onViewModeChanged,
     required this.onStart,
     required this.onCustomize,
     required this.onCreate,
@@ -36,7 +38,9 @@ class FocusIdleStage extends StatelessWidget {
   final List<FocusPresetItem> presets;
   final FocusPresetItem? selectedPreset;
   final bool compact;
+  final FocusViewMode viewMode;
   final ValueChanged<String> onPresetSelected;
+  final ValueChanged<FocusViewMode> onViewModeChanged;
   final Future<void> Function()? onStart;
   final VoidCallback? onCustomize;
   final VoidCallback onCreate;
@@ -46,6 +50,7 @@ class FocusIdleStage extends StatelessWidget {
     final l10n = context.l10n;
     final colors = context.appColors;
     final preset = selectedPreset;
+    final full = viewMode == FocusViewMode.full;
     final cadence = preset == null
         ? 0
         : preset.intervalsBeforeLongBreak.clamp(1, 12);
@@ -57,21 +62,32 @@ class FocusIdleStage extends StatelessWidget {
       key: const Key('focus-state-idle'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (rhythm != null) ...[
-          Text(
-            l10n.focusSessionProgress(1, cadence),
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: colors.secondaryText),
-          ),
-          SizedBox(height: compact ? 12 : 16),
-          FocusRhythmRail(
-            rhythm: rhythm,
-            semanticsLabel: l10n.focusRhythmPreviewSummary(rhythm.steps.length),
-            compact: compact,
-          ),
-        ],
-        SizedBox(height: compact ? 28 : 42),
+        _FocusModeDetails(
+          visible: full && rhythm != null,
+          child: rhythm == null
+              ? const SizedBox.shrink()
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.focusSessionProgress(1, cadence),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colors.secondaryText,
+                      ),
+                    ),
+                    SizedBox(height: compact ? 12 : 16),
+                    FocusRhythmRail(
+                      rhythm: rhythm,
+                      semanticsLabel: l10n.focusRhythmPreviewSummary(
+                        rhythm.steps.length,
+                      ),
+                      compact: compact,
+                      activeProgress: 0,
+                    ),
+                  ],
+                ),
+        ),
+        SizedBox(height: full ? (compact ? 28 : 42) : 8),
         Column(
           key: const Key('focus-primary-stage'),
           children: [
@@ -81,16 +97,33 @@ class FocusIdleStage extends StatelessWidget {
               color: colors.mutedText,
             ),
             const SizedBox(height: 10),
-            Text(
-              l10n.noActiveSession,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              preset?.name ?? l10n.noPreset,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
+            AnimatedSwitcher(
+              duration: _motionDuration(context, 200),
+              child: full
+                  ? Column(
+                      key: const Key('focus-idle-full-copy'),
+                      children: [
+                        Text(
+                          l10n.noActiveSession,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          preset?.name ?? l10n.noPreset,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    )
+                  : _MinimalPresetMenu(
+                      key: const Key('focus-idle-minimal-copy'),
+                      presets: presets,
+                      selectedPreset: preset,
+                      onSelected: onPresetSelected,
+                      onCustomize: onCustomize,
+                      onCreate: onCreate,
+                    ),
             ),
             if (preset != null) ...[
               const SizedBox(height: 8),
@@ -106,124 +139,65 @@ class FocusIdleStage extends StatelessWidget {
           ],
         ),
         SizedBox(height: compact ? 28 : 34),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final candidate in presets)
-              ChoiceChip(
-                key: ValueKey('preset-choice-${candidate.id}'),
-                selected: candidate.id == preset?.id,
-                onSelected: (_) => onPresetSelected(candidate.id),
-                label: Text(candidate.name),
-                avatar: Icon(
-                  candidate.id == preset?.id
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
-                  size: 16,
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 22),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            FilledButton.icon(
-              key: const Key('focus-primary-action'),
-              onPressed: onStart,
-              icon: const Icon(Icons.play_arrow),
-              label: Text(l10n.startFocus),
-            ),
-            OutlinedButton.icon(
-              onPressed: onCustomize,
-              icon: const Icon(Icons.tune),
-              label: Text(l10n.customize),
-            ),
-            TextButton.icon(
-              onPressed: onCreate,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.newPreset),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class FocusMinimalIdleStage extends StatelessWidget {
-  const FocusMinimalIdleStage({
-    required this.presets,
-    required this.selectedPreset,
-    required this.onPresetSelected,
-    required this.onStart,
-    required this.onCustomize,
-    required this.onCreate,
-    super.key,
-  });
-
-  final List<FocusPresetItem> presets;
-  final FocusPresetItem? selectedPreset;
-  final ValueChanged<String> onPresetSelected;
-  final Future<void> Function()? onStart;
-  final VoidCallback? onCustomize;
-  final VoidCallback onCreate;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final colors = context.appColors;
-    final preset = selectedPreset;
-
-    return Align(
-      key: const Key('focus-state-idle'),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Column(
-              key: const Key('focus-primary-stage'),
+        _FocusModeDetails(
+          visible: full,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 22),
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                Icon(Icons.timer_outlined, size: 32, color: colors.mutedText),
-                const SizedBox(height: 14),
-                _MinimalPresetMenu(
-                  presets: presets,
-                  selectedPreset: preset,
-                  onSelected: onPresetSelected,
-                  onCustomize: onCustomize,
-                  onCreate: onCreate,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  preset == null
-                      ? l10n.preparingFocus
-                      : l10n.minutesWork((preset.workSeconds / 60).round()),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: colors.primaryText,
-                    fontWeight: FontWeight.w700,
+                for (final candidate in presets)
+                  ChoiceChip(
+                    key: ValueKey('preset-choice-${candidate.id}'),
+                    selected: candidate.id == preset?.id,
+                    onSelected: (_) => onPresetSelected(candidate.id),
+                    label: Text(candidate.name),
+                    avatar: Icon(
+                      candidate.id == preset?.id
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_unchecked,
+                      size: 16,
+                    ),
                   ),
-                ),
               ],
             ),
-            const SizedBox(height: 28),
-            Align(
+          ),
+        ),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _ElasticFocusButton(
+              enabled: onStart != null,
               child: FilledButton.icon(
                 key: const Key('focus-primary-action'),
-                style: FilledButton.styleFrom(minimumSize: const Size(176, 48)),
                 onPressed: onStart,
                 icon: const Icon(Icons.play_arrow),
                 label: Text(l10n.startFocus),
               ),
             ),
+            if (full)
+              OutlinedButton.icon(
+                onPressed: onCustomize,
+                icon: const Icon(Icons.tune),
+                label: Text(l10n.customize),
+              ),
+            if (full)
+              TextButton.icon(
+                onPressed: onCreate,
+                icon: const Icon(Icons.add),
+                label: Text(l10n.newPreset),
+              ),
+            _FocusViewModeMenu(
+              viewMode: viewMode,
+              onChanged: onViewModeChanged,
+            ),
           ],
         ),
-      ),
+      ],
     );
   }
 }
@@ -235,6 +209,7 @@ class _MinimalPresetMenu extends StatelessWidget {
     required this.onSelected,
     required this.onCustomize,
     required this.onCreate,
+    super.key,
   });
 
   final List<FocusPresetItem> presets;
@@ -338,6 +313,40 @@ class _MinimalPresetMenu extends StatelessWidget {
   }
 }
 
+class _FocusViewModeMenu extends StatelessWidget {
+  const _FocusViewModeMenu({required this.viewMode, required this.onChanged});
+
+  final FocusViewMode viewMode;
+  final ValueChanged<FocusViewMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final target = viewMode == FocusViewMode.full
+        ? FocusViewMode.minimal
+        : FocusViewMode.full;
+    return SizedBox.square(
+      dimension: 48,
+      child: PopupMenuButton<FocusViewMode>(
+        key: const Key('focus-details-menu'),
+        tooltip: context.l10n.moreFocusActions,
+        icon: const Icon(Icons.more_horiz),
+        onSelected: onChanged,
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            key: const Key('focus-switch-view-mode'),
+            value: target,
+            child: Text(
+              target == FocusViewMode.full
+                  ? context.l10n.focusSwitchToFullView
+                  : context.l10n.focusSwitchToMinimalView,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class FocusActiveStage extends StatelessWidget {
   const FocusActiveStage({
     required this.run,
@@ -348,7 +357,9 @@ class FocusActiveStage extends StatelessWidget {
     required this.selectedPreset,
     required this.timerVisualStyle,
     required this.compact,
+    required this.viewMode,
     required this.repository,
+    required this.onViewModeChanged,
     required this.onPresetChanged,
     required this.onCustomizePreset,
     super.key,
@@ -362,7 +373,9 @@ class FocusActiveStage extends StatelessWidget {
   final FocusPresetItem? selectedPreset;
   final FocusTimerVisualStyle timerVisualStyle;
   final bool compact;
+  final FocusViewMode viewMode;
   final FocusRepository repository;
+  final ValueChanged<FocusViewMode> onViewModeChanged;
   final ValueChanged<String> onPresetChanged;
   final ValueChanged<FocusPresetItem> onCustomizePreset;
 
@@ -370,6 +383,7 @@ class FocusActiveStage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final preset = selectedPreset;
+    final full = viewMode == FocusViewMode.full;
     final rhythm = preset == null
         ? null
         : buildFocusRhythm(
@@ -396,28 +410,40 @@ class FocusActiveStage extends StatelessWidget {
       key: const Key('focus-state-active'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (rhythm != null) ...[
-          Text(
-            l10n.focusSessionProgress(sessionNumber, run.targetWorkIntervals),
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          SizedBox(height: compact ? 12 : 16),
-          FocusRhythmRail(
-            rhythm: rhythm,
-            activeSequence: interval.sequenceNumber,
-            recenterToken:
-                '${run.id}:${interval.id}:${interval.status}:'
-                '${interval.sequenceNumber}',
-            semanticsLabel: l10n.focusRhythmSummary(
-              activeStepNumber,
-              rhythm.steps.length,
-              phaseLabel,
-              _activeStatusLabel(context, interval.status),
-            ),
-            compact: compact,
-          ),
-          SizedBox(height: compact ? 32 : 44),
-        ],
+        _FocusModeDetails(
+          visible: full && rhythm != null,
+          child: rhythm == null
+              ? const SizedBox.shrink()
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.focusSessionProgress(
+                        sessionNumber,
+                        run.targetWorkIntervals,
+                      ),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    SizedBox(height: compact ? 12 : 16),
+                    FocusRhythmRail(
+                      rhythm: rhythm,
+                      activeSequence: interval.sequenceNumber,
+                      activeProgress: _progress(interval, remaining),
+                      recenterToken:
+                          '${run.id}:${interval.id}:${interval.status}:'
+                          '${interval.sequenceNumber}',
+                      semanticsLabel: l10n.focusRhythmSummary(
+                        activeStepNumber,
+                        rhythm.steps.length,
+                        phaseLabel,
+                        _activeStatusLabel(context, interval.status),
+                      ),
+                      compact: compact,
+                    ),
+                    SizedBox(height: compact ? 32 : 44),
+                  ],
+                ),
+        ),
         _FocusTimerStage(
           key: const Key('focus-primary-stage'),
           interval: interval,
@@ -425,14 +451,17 @@ class FocusActiveStage extends StatelessWidget {
           style: timerVisualStyle,
           compact: compact,
         ),
-        if (run.taskId case final taskId?)
-          _FocusLinkedTaskContext(
-            taskId: taskId,
-            projectId: run.projectId,
-            compact: compact,
-          )
-        else
-          SizedBox(height: compact ? 28 : 36),
+        _FocusModeDetails(
+          visible: full,
+          child: run.taskId == null
+              ? SizedBox(height: compact ? 28 : 36)
+              : _FocusLinkedTaskContext(
+                  taskId: run.taskId!,
+                  projectId: run.projectId,
+                  compact: compact,
+                ),
+        ),
+        if (!full) const SizedBox(height: 32),
         _FocusActiveActions(
           run: run,
           interval: interval,
@@ -440,7 +469,10 @@ class FocusActiveStage extends StatelessWidget {
           presets: presets,
           selectedPreset: preset,
           compact: compact,
+          minimal: !full,
+          viewMode: viewMode,
           repository: repository,
+          onViewModeChanged: onViewModeChanged,
           onPresetChanged: onPresetChanged,
           onCustomizePreset: onCustomizePreset,
         ),
@@ -449,89 +481,73 @@ class FocusActiveStage extends StatelessWidget {
   }
 }
 
-class FocusMinimalActiveStage extends StatelessWidget {
-  const FocusMinimalActiveStage({
-    required this.interval,
-    required this.remaining,
-    required this.selectedPreset,
-    required this.timerVisualStyle,
-    required this.repository,
-    super.key,
-  });
+class _FocusModeDetails extends StatelessWidget {
+  const _FocusModeDetails({required this.visible, required this.child});
 
-  final FocusIntervalItem interval;
-  final Duration remaining;
-  final FocusPresetItem? selectedPreset;
-  final FocusTimerVisualStyle timerVisualStyle;
-  final FocusRepository repository;
+  final bool visible;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final ready = interval.status == 'ready';
-    final paused = interval.status == 'paused';
-    final allowPause = selectedPreset?.allowPause ?? true;
-
-    return Column(
-      key: const Key('focus-state-active'),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _FocusTimerStage(
-          key: const Key('focus-primary-stage'),
-          interval: interval,
-          remaining: remaining,
-          style: timerVisualStyle,
-          compact: true,
+    return AnimatedSwitcher(
+      duration: _motionDuration(context, 200),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SizeTransition(
+          sizeFactor: animation,
+          alignment: Alignment.topCenter,
+          child: child,
         ),
-        const SizedBox(height: 32),
-        _withPauseAvailabilitySemantics(
-          context,
-          unavailable: !ready && !paused && !allowPause,
-          child: FilledButton.icon(
-            key: const Key('focus-primary-action'),
-            style: FilledButton.styleFrom(minimumSize: const Size(176, 48)),
-            onPressed: ready
-                ? () => unawaited(_startReady(context))
-                : paused || allowPause
-                ? () => unawaited(_togglePause(context, paused))
-                : null,
-            icon: Icon(ready || paused ? Icons.play_arrow : Icons.pause),
-            label: Text(
-              ready
-                  ? l10n.startInterval
-                  : paused
-                  ? l10n.resume
-                  : l10n.pause,
-            ),
-          ),
-        ),
-      ],
+      ),
+      child: visible
+          ? KeyedSubtree(key: const Key('focus-full-details'), child: child)
+          : const SizedBox.shrink(key: Key('focus-minimal-details')),
     );
   }
+}
 
-  Future<void> _startReady(BuildContext context) async {
-    await repository.startReadyInterval();
-    if (!context.mounted) return;
-    showActionFeedback(
-      context,
-      message: context.l10n.intervalStarted,
-      icon: Icons.play_circle_outline,
-      haptic: AppHapticCue.none,
-    );
-  }
+Duration _motionDuration(BuildContext context, int milliseconds) =>
+    MediaQuery.disableAnimationsOf(context)
+    ? Duration.zero
+    : Duration(milliseconds: milliseconds);
 
-  Future<void> _togglePause(BuildContext context, bool paused) async {
-    if (paused) {
-      await repository.resumeActiveInterval();
-    } else {
-      await repository.pauseActiveInterval();
+class _ElasticFocusButton extends StatefulWidget {
+  const _ElasticFocusButton({required this.enabled, required this.child});
+
+  final bool enabled;
+  final Widget child;
+
+  @override
+  State<_ElasticFocusButton> createState() => _ElasticFocusButtonState();
+}
+
+class _ElasticFocusButtonState extends State<_ElasticFocusButton> {
+  bool _pressed = false;
+
+  void _setPressed(bool pressed) {
+    if (!widget.enabled || _pressed == pressed) {
+      return;
     }
-    if (!context.mounted) return;
-    showActionFeedback(
-      context,
-      message: paused ? context.l10n.resume : context.l10n.pause,
-      icon: paused ? Icons.play_circle_outline : Icons.pause_circle_outline,
-      haptic: AppHapticCue.none,
+    setState(() => _pressed = pressed);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      duration: _motionDuration(context, _pressed ? 80 : 180),
+      curve: Curves.easeOutCubic,
+      tween: Tween(begin: 1, end: _pressed ? 0.96 : 1),
+      builder: (context, scale, child) => Transform.scale(
+        key: const Key('focus-primary-action-elastic'),
+        scale: scale,
+        child: child,
+      ),
+      child: Listener(
+        onPointerDown: (_) => _setPressed(true),
+        onPointerUp: (_) => _setPressed(false),
+        onPointerCancel: (_) => _setPressed(false),
+        child: widget.child,
+      ),
     );
   }
 }
