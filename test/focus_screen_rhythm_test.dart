@@ -63,6 +63,7 @@ void main() {
   testWidgets('minimal idle keeps compact launch controls on base surface', (
     tester,
   ) async {
+    final semantics = tester.ensureSemantics();
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.minimal.storageValue,
       focusTimerVisualStylePreferenceKey:
@@ -97,15 +98,17 @@ void main() {
     final circleRect = tester.getRect(circle);
     final primaryRect = tester.getRect(primary);
     final moreRect = tester.getRect(more);
-    expect(circleRect.contains(primaryRect.center), isTrue);
-    expect(moreRect.left, greaterThan(circleRect.right));
+    expect(primaryRect.top, greaterThan(circleRect.bottom));
+    expect(moreRect.left, greaterThan(primaryRect.right));
     expect(moreRect.center.dy, moreOrLessEquals(primaryRect.center.dy));
+    expect(tester.getSemantics(more).label, 'More focus actions');
 
     await tester.tap(
       find.descendant(of: more, matching: find.byIcon(Icons.more_horiz)),
     );
     await tester.pumpAndSettle();
     expect(find.text('Switch to Full'), findsOneWidget);
+    semantics.dispose();
   });
 
   testWidgets('minimal idle without a preset keeps a disabled circle action', (
@@ -438,7 +441,7 @@ void main() {
     expect(find.text('Pause unavailable for this preset'), findsNothing);
   });
 
-  testWidgets('minimal active renders only phase timer and primary action', (
+  testWidgets('minimal active keeps circle above the shared action row', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({
@@ -474,8 +477,8 @@ void main() {
     );
     final primaryRect = tester.getRect(primary);
     final moreRect = tester.getRect(more);
-    expect(circleRect.contains(primaryRect.center), isTrue);
-    expect(moreRect.left, greaterThan(circleRect.right));
+    expect(primaryRect.top, greaterThan(circleRect.bottom));
+    expect(moreRect.left, greaterThan(primaryRect.right));
     expect(moreRect.center.dy, moreOrLessEquals(primaryRect.center.dy));
     expect(find.byKey(const Key('minimal-active-more-menu')), findsNothing);
     expect(find.text('Classic'), findsNothing);
@@ -2220,8 +2223,8 @@ void main() {
     final moreRect = tester.getRect(more);
     expect(primaryRect.top, greaterThanOrEqualTo(0));
     expect(primaryRect.bottom, lessThanOrEqualTo(568));
-    expect(circleRect.contains(primaryRect.center), isTrue);
-    expect(moreRect.left, greaterThan(circleRect.right));
+    expect(primaryRect.top, greaterThan(circleRect.bottom));
+    expect(moreRect.left, greaterThan(primaryRect.right));
     expect(moreRect.right, lessThanOrEqualTo(320));
     expect(tester.takeException(), isNull);
   });

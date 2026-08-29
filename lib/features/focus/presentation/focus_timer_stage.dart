@@ -6,8 +6,6 @@ class _FocusTimerStage extends StatefulWidget {
     required this.remaining,
     required this.style,
     required this.compact,
-    this.primaryAction,
-    this.moreAction,
     super.key,
   });
 
@@ -15,8 +13,6 @@ class _FocusTimerStage extends StatefulWidget {
   final Duration remaining;
   final FocusTimerVisualStyle style;
   final bool compact;
-  final Widget? primaryAction;
-  final Widget? moreAction;
 
   @override
   State<_FocusTimerStage> createState() => _FocusTimerStageState();
@@ -118,12 +114,11 @@ class _FocusTimerStageState extends State<_FocusTimerStage>
                   plannedLabel,
                 ),
                 container: true,
-                explicitChildNodes: widget.primaryAction != null,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    if (style == FocusTimerVisualStyle.bar) {
-                      return ExcludeSemantics(
-                        child: Column(
+                child: ExcludeSemantics(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (style == FocusTimerVisualStyle.bar) {
+                        return Column(
                           children: [
                             _PhaseLabel(
                               motionKey: '${interval.type}:${interval.status}',
@@ -160,138 +155,71 @@ class _FocusTimerStageState extends State<_FocusTimerStage>
                               ),
                             ),
                           ],
-                        ),
-                      );
-                    }
+                        );
+                      }
 
-                    Widget circle(double circleSize) => ExcludeSemantics(
-                      child: SizedBox.square(
-                        key: const Key('focus-circular-timer'),
-                        dimension: circleSize,
-                        child: CustomPaint(
-                          painter: _FocusTimerPainter(
-                            progress: progress,
-                            trackColor: colors.surfaceHover,
-                            fillColor: color,
-                          ),
-                          child: RepaintBoundary(
-                            child: Padding(
-                              padding: widget.primaryAction == null
-                                  ? EdgeInsets.all(compact ? 28 : 36)
-                                  : EdgeInsets.fromLTRB(
-                                      compact ? 20 : 28,
-                                      compact ? 20 : 28,
-                                      compact ? 20 : 28,
-                                      compact ? 72 : 80,
-                                    ),
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _PhaseLabel(
-                                      motionKey:
-                                          '${interval.type}:${interval.status}',
-                                      icon: phaseIcon,
-                                      label: phaseLabel,
-                                      color: color,
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      remainingLabel,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .displayLarge
-                                          ?.copyWith(
-                                            color: colors.primaryText,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: compact ? 62 : 70,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      totalLabel,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium,
-                                    ),
-                                  ],
+                      final circleSize = compact
+                          ? math.min(
+                              300.0,
+                              math.max(200.0, constraints.maxWidth - 24),
+                            )
+                          : 320.0;
+                      return Center(
+                        child: SizedBox.square(
+                          key: const Key('focus-circular-timer'),
+                          dimension: circleSize,
+                          child: CustomPaint(
+                            painter: _FocusTimerPainter(
+                              progress: progress,
+                              trackColor: colors.surfaceHover,
+                              fillColor: color,
+                            ),
+                            child: RepaintBoundary(
+                              child: Padding(
+                                padding: EdgeInsets.all(compact ? 28 : 36),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _PhaseLabel(
+                                        motionKey:
+                                            '${interval.type}:${interval.status}',
+                                        icon: phaseIcon,
+                                        label: phaseLabel,
+                                        color: color,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        remainingLabel,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .displayLarge
+                                            ?.copyWith(
+                                              color: colors.primaryText,
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: compact ? 62 : 70,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        totalLabel,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyMedium,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-
-                    final primaryAction = widget.primaryAction;
-                    final moreAction = widget.moreAction;
-                    if (primaryAction != null && moreAction != null) {
-                      return _FocusCircleControlLayout(
-                        compact: compact,
-                        primaryAction: primaryAction,
-                        moreAction: moreAction,
-                        circleBuilder: circle,
                       );
-                    }
-
-                    final circleSize = compact
-                        ? math.min(
-                            300.0,
-                            math.max(200.0, constraints.maxWidth - 24),
-                          )
-                        : 320.0;
-                    return Center(child: circle(circleSize));
-                  },
+                    },
+                  ),
                 ),
               ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _FocusCircleControlLayout extends StatelessWidget {
-  const _FocusCircleControlLayout({
-    required this.compact,
-    required this.primaryAction,
-    required this.moreAction,
-    required this.circleBuilder,
-  });
-
-  final bool compact;
-  final Widget primaryAction;
-  final Widget moreAction;
-  final Widget Function(double circleSize) circleBuilder;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final maxCircleSize = compact ? 300.0 : 320.0;
-        final circleSize = math.min(
-          maxCircleSize,
-          math.max(176.0, constraints.maxWidth - 56),
-        );
-        final bottom = compact ? 24.0 : 32.0;
-        return Center(
-          child: SizedBox(
-            width: circleSize + 56,
-            height: circleSize,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                circleBuilder(circleSize),
-                Positioned(
-                  left: 0,
-                  bottom: bottom,
-                  width: circleSize,
-                  child: Center(child: primaryAction),
-                ),
-                Positioned(right: 0, bottom: bottom, child: moreAction),
-              ],
             ),
           ),
         );

@@ -257,6 +257,7 @@ Widget _buildFocusMoreActionsMenu(
     child: Semantics(
       key: const Key('focus-details-menu'),
       label: l10n.moreFocusActions,
+      container: true,
       button: true,
       child: PopupMenuButton<_FocusMoreAction>(
         tooltip: l10n.moreFocusActions,

@@ -151,39 +151,43 @@ class FocusIdleStage extends StatelessWidget {
             ),
             if (inlineCircle) ...[
               const SizedBox(height: 14),
-              _FocusCircleControlLayout(
-                compact: compact,
-                primaryAction: primary,
-                moreAction: menu,
-                circleBuilder: (circleSize) => SizedBox.square(
-                  key: const Key('focus-idle-circular-timer'),
-                  dimension: circleSize,
-                  child: CustomPaint(
-                    painter: _FocusTimerPainter(
-                      progress: 0,
-                      trackColor: colors.surfaceHover,
-                      fillColor: colors.mutedText,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 72),
-                      child: Center(
-                        child: Text(
-                          preset == null
-                              ? '--:--'
-                              : formatDurationCompact(
-                                  Duration(seconds: preset.workSeconds),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final circleSize = compact
+                      ? math.min(
+                          300.0,
+                          math.max(200.0, constraints.maxWidth - 24),
+                        )
+                      : 320.0;
+                  return Center(
+                    child: SizedBox.square(
+                      key: const Key('focus-idle-circular-timer'),
+                      dimension: circleSize,
+                      child: CustomPaint(
+                        painter: _FocusTimerPainter(
+                          progress: 0,
+                          trackColor: colors.surfaceHover,
+                          fillColor: colors.mutedText,
+                        ),
+                        child: Center(
+                          child: Text(
+                            preset == null
+                                ? '--:--'
+                                : formatDurationCompact(
+                                    Duration(seconds: preset.workSeconds),
+                                  ),
+                            style: Theme.of(context).textTheme.displayLarge
+                                ?.copyWith(
+                                  color: colors.primaryText,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: compact ? 54 : 62,
                                 ),
-                          style: Theme.of(context).textTheme.displayLarge
-                              ?.copyWith(
-                                color: colors.primaryText,
-                                fontWeight: FontWeight.w700,
-                                fontSize: compact ? 54 : 62,
-                              ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ] else if (preset != null) ...[
               const SizedBox(height: 8),
@@ -198,7 +202,7 @@ class FocusIdleStage extends StatelessWidget {
             ],
           ],
         ),
-        if (!inlineCircle) SizedBox(height: compact ? 28 : 34),
+        SizedBox(height: compact ? 28 : 34),
         _FocusModeDetails(
           visible: full,
           child: Padding(
@@ -225,28 +229,27 @@ class FocusIdleStage extends StatelessWidget {
             ),
           ),
         ),
-        if (!inlineCircle)
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              primary,
-              if (full)
-                OutlinedButton.icon(
-                  onPressed: onCustomize,
-                  icon: const Icon(Icons.tune),
-                  label: Text(l10n.customize),
-                ),
-              if (full)
-                TextButton.icon(
-                  onPressed: onCreate,
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.newPreset),
-                ),
-              menu,
-            ],
-          ),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            primary,
+            if (full)
+              OutlinedButton.icon(
+                onPressed: onCustomize,
+                icon: const Icon(Icons.tune),
+                label: Text(l10n.customize),
+              ),
+            if (full)
+              TextButton.icon(
+                onPressed: onCreate,
+                icon: const Icon(Icons.add),
+                label: Text(l10n.newPreset),
+              ),
+            menu,
+          ],
+        ),
       ],
     );
   }
@@ -379,6 +382,7 @@ class _FocusViewModeMenu extends StatelessWidget {
       child: Semantics(
         key: const Key('focus-details-menu'),
         label: context.l10n.moreFocusActions,
+        container: true,
         button: true,
         child: PopupMenuButton<FocusViewMode>(
           tooltip: context.l10n.moreFocusActions,
@@ -438,8 +442,6 @@ class FocusActiveStage extends StatelessWidget {
     final l10n = context.l10n;
     final preset = selectedPreset;
     final full = viewMode == FocusViewMode.full;
-    final inlineCircle =
-        !full && timerVisualStyle == FocusTimerVisualStyle.circle;
     final primary = _buildFocusPrimaryAction(
       context,
       interval: interval,
@@ -527,8 +529,6 @@ class FocusActiveStage extends StatelessWidget {
           remaining: remaining,
           style: timerVisualStyle,
           compact: compact,
-          primaryAction: inlineCircle ? primary : null,
-          moreAction: inlineCircle ? menu : null,
         ),
         _FocusModeDetails(
           visible: full,
@@ -540,19 +540,18 @@ class FocusActiveStage extends StatelessWidget {
                   compact: compact,
                 ),
         ),
-        if (!full && !inlineCircle) const SizedBox(height: 32),
-        if (!inlineCircle)
-          _FocusActiveActions(
-            run: run,
-            interval: interval,
-            remaining: remaining,
-            selectedPreset: preset,
-            compact: compact,
-            minimal: !full,
-            repository: repository,
-            primary: primary,
-            menu: menu,
-          ),
+        if (!full) const SizedBox(height: 32),
+        _FocusActiveActions(
+          run: run,
+          interval: interval,
+          remaining: remaining,
+          selectedPreset: preset,
+          compact: compact,
+          minimal: !full,
+          repository: repository,
+          primary: primary,
+          menu: menu,
+        ),
       ],
     );
   }
