@@ -73,7 +73,7 @@ SENTRY_DSN=
 
     final result = await Process.run('make', [
       '-n',
-      'build-macos-release',
+      'macos-release',
       'TESTFLIGHT_CONFIG=pubspec.yaml',
     ]);
     expect(result.exitCode, 0, reason: result.stderr.toString());

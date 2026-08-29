@@ -128,7 +128,7 @@ make run-linux
 To build a local AppImage against the libraries on the current Arch system:
 
 ```sh
-make build-linux-appimage
+make linux-appimage
 ```
 
 The AppImage and its SHA-256 sidecar are written to
@@ -137,7 +137,7 @@ built by CI on the pinned Ubuntu 22.04 base. To instead install the raw
 developer bundle for the current user (no root required):
 
 ```sh
-make install-linux
+make linux-install
 ```
 
 This installs the app under `$XDG_DATA_HOME/pomodoist` (normally
@@ -187,7 +187,7 @@ remaining placeholders, and build:
 
 ```bash
 cp tool/desktop-production-defines.example.json .env.linux-production.json
-make build-linux-appimage
+make linux-appimage
 ```
 
 Override the path with `LINUX_CONFIG=/path/to/production-defines.json` when

@@ -7,7 +7,7 @@ void main() {
     final result = Process.runSync(_makeExecutable(), const [
       '--no-print-directory',
       '--dry-run',
-      'build-linux-appimage',
+      'linux-appimage',
       'DART=dart-under-test',
       'FLUTTER=flutter-under-test',
       'LINUX_CONFIG=/secure config/pomodoist-linux-production.json',

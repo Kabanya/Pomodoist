@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('Debug', 'Release')]
+    [ValidateSet('Debug', 'Profile', 'Release')]
     [string]$Configuration = 'Debug',
     [string]$ConfigFile,
     [string]$ReleaseSha,

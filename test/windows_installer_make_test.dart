@@ -3,6 +3,53 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('platform mode targets invoke their matching build modes', () {
+    const expectedCommands = <String, String>{
+      'web-debug': 'flutter-under-test build web --debug',
+      'web-profile': 'flutter-under-test build web --profile',
+      'web-release': 'flutter-under-test build web --release',
+      'linux-debug': 'flutter-under-test build linux --debug',
+      'linux-profile': 'flutter-under-test build linux --profile',
+      'linux-release': 'flutter-under-test build linux --release',
+      'windows-debug':
+          'powershell.exe -NoProfile -ExecutionPolicy Bypass '
+          '-File ./tool/windows/build.ps1 -Configuration Debug',
+      'windows-profile':
+          'powershell.exe -NoProfile -ExecutionPolicy Bypass '
+          '-File ./tool/windows/build.ps1 -Configuration Profile',
+      'windows-release':
+          'powershell.exe -NoProfile -ExecutionPolicy Bypass '
+          '-File ./tool/windows/build.ps1 -Configuration Release',
+      'macos-debug': 'flutter-under-test build macos --debug',
+      'macos-profile': 'flutter-under-test build macos --profile',
+      'macos-release': 'flutter-under-test build macos --release',
+      'ios-debug': 'flutter-under-test build ios --debug',
+      'ios-profile': 'flutter-under-test build ios --profile',
+      'ios-release': 'flutter-under-test build ios --release',
+    };
+
+    for (final entry in expectedCommands.entries) {
+      final result = Process.runSync(_makeExecutable(), [
+        '--no-print-directory',
+        '--dry-run',
+        entry.key,
+        'DART=dart-under-test',
+        'FLUTTER=flutter-under-test',
+        'LINUX_CONFIG=pubspec.yaml',
+        'WINDOWS_CONFIG=pubspec.yaml',
+        'TESTFLIGHT_CONFIG=pubspec.yaml',
+        'POMODOIST_RELEASE=0123456789abcdef0123456789abcdef01234567',
+      ], workingDirectory: Directory.current.path);
+
+      expect(result.exitCode, 0, reason: '${entry.key}: ${result.stderr}');
+      expect(
+        result.stdout.toString(),
+        contains(entry.value),
+        reason: entry.key,
+      );
+    }
+  });
+
   test('windows-installer builds a configured release before packaging', () {
     final result = Process.runSync(_makeExecutable(), const [
       '--no-print-directory',

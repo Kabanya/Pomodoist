@@ -82,7 +82,7 @@ void main() {
     );
     final command = buildStep['run'] as String;
 
-    expect(command, contains('make build-linux-appimage'));
+    expect(command, contains('make linux-appimage'));
     expect(
       command,
       contains('LINUX_CONFIG="\$RUNNER_TEMP/linux-production.json"'),

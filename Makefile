@@ -35,7 +35,14 @@ IOS_IPA_PATH ?= build/ios/ipa/Pomodoist.ipa
 TESTFLIGHT_CONFIG ?= .env.testflight
 POMODOIST_RELEASE ?= $(shell git rev-parse HEAD)
 
-.PHONY: help setup setup-linux run run-linux web analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-packaging check format build-web linux-pub-get build-linux-release build-linux-appimage install-linux windows-installer build-macos-debug build-macos-release testflight-preflight testflight devices clean
+.PHONY: setup setup-linux run run-linux web
+.PHONY: analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-packaging check format
+.PHONY: web-debug web-profile web-release
+.PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
+.PHONY: windows-debug windows-profile windows-release windows-installer
+.PHONY: macos-debug macos-profile macos-release
+.PHONY: ios-debug ios-profile ios-release testflight-preflight testflight
+.PHONY: help devices clean
 
 help:
 	@if [ -t 1 ] && [ -z "$${NO_COLOR:-}" ]; then \
@@ -54,7 +61,7 @@ help:
 	printf '%s\n' "$${red}$${bold}╚═╝      ╚═════╝ ╚═╝     ╚═╝ ╚═════╝ ╚═════╝  ╚═════╝ ╚═╝╚══════╝   ╚═╝$${reset}"; \
 	printf '%s%s%s\n' "$${dim}" 'Tasks • Focus • Reports' "$${reset}"; \
 	printf '\n%sUsage:%s make <target> [VARIABLE=value]\n' "$${bold}" "$${reset}"; \
-	printf '\n%s%sGetting started%s\n' "$${red}" "$${bold}" "$${reset}"; \
+	printf '\n%s%sSetup & run%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup' "$${reset}" 'Resolve Flutter dependencies'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup-linux' "$${reset}" 'Prepare an Arch Linux workstation'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make run' "$${reset}" 'Run Pomodoist on a connected device'; \
@@ -66,15 +73,31 @@ help:
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make test-linux-packaging' "$${reset}" 'Test Linux installers and AppImage layout'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make check' "$${reset}" 'Run analysis and tests'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make format' "$${reset}" 'Format source files'; \
-	printf '\n%s%sBuild & release%s\n' "$${red}" "$${bold}" "$${reset}"; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make build-web' "$${reset}" 'Build the release web app'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make build-linux-appimage' "$${reset}" 'Build the distributable Linux AppImage'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make build-linux-release' "$${reset}" 'Build the raw Linux developer bundle'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make install-linux' "$${reset}" 'Install Pomodoist for the current user'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make windows-installer' "$${reset}" 'Build the Windows EXE installer'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make build-macos-debug' "$${reset}" 'Build the debug macOS app'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make build-macos-release' "$${reset}" 'Build the release macOS app'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make testflight' "$${reset}" 'Build and upload the iOS app'; \
+	printf '\n%s%sRelease & distribution%s\n' "$${red}" "$${bold}" "$${reset}"; \
+	printf '  %s%-9s %-26s %s%s\n' "$${dim}" 'Platform' 'Command' 'Action' "$${reset}"; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-debug' "$${reset}" 'Debug app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-profile' "$${reset}" 'Profile app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-release' "$${reset}" 'Release app'; \
+	printf '\n'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-debug' "$${reset}" 'Debug app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-profile' "$${reset}" 'Profile app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-release' "$${reset}" 'Raw developer bundle'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-appimage' "$${reset}" 'Distributable AppImage'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-install' "$${reset}" 'Install for current user'; \
+	printf '\n'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-debug' "$${reset}" 'Debug app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-profile' "$${reset}" 'Profile app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-release' "$${reset}" 'Release app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-installer' "$${reset}" 'EXE installer'; \
+	printf '\n'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug' "$${reset}" 'Debug app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile' "$${reset}" 'Profile app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release' "$${reset}" 'Release app'; \
+	printf '\n'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iOS' "$${reset}" "$${bold}" 'make ios-debug' "$${reset}" 'Debug app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iOS' "$${reset}" "$${bold}" 'make ios-profile' "$${reset}" 'Profile app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iOS' "$${reset}" "$${bold}" 'make ios-release' "$${reset}" 'Release app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iOS' "$${reset}" "$${bold}" 'make testflight' "$${reset}" 'Upload to TestFlight'; \
 	printf '\n%s%sUtilities%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make help' "$${reset}" 'Show this command reference'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make devices' "$${reset}" 'List available Flutter devices'; \
@@ -87,10 +110,10 @@ setup-linux:
 	./tool/linux/setup_arch.sh
 
 run:
-	$(FLUTTER) run --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
+	$(FLUTTER) run --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 run-linux:
-	$(FLUTTER) run -d linux --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
+	$(FLUTTER) run -d linux --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 web:
 	$(FLUTTER) run -d chrome --dart-define=POMODOIST_BILLING_CHANNEL=stripe
@@ -115,33 +138,56 @@ test-linux-packaging: test-linux-installer test-linux-appimage test-linux-build-
 check: analyze test
 
 format:
-	dart format lib test tool
+	$(DART) format lib test tool
 
-build-web:
+web-debug:
+	$(FLUTTER) build web --debug --dart-define=POMODOIST_BILLING_CHANNEL=stripe
+
+web-profile:
+	$(FLUTTER) build web --profile --dart-define=POMODOIST_BILLING_CHANNEL=stripe
+
+web-release:
 	$(FLUTTER) build web --release --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
 linux-pub-get:
 	$(LINUX_BUILD_ENV) bash ./tool/linux/pub_get_with_retry.sh "$(FLUTTER)"
 
-build-linux-release: linux-pub-get
+linux-debug: linux-pub-get
+	$(LINUX_BUILD_ENV) $(FLUTTER) build linux --debug --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+
+linux-profile: linux-pub-get
+	$(LINUX_BUILD_ENV) $(FLUTTER) build linux --profile --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+
+linux-release: linux-pub-get
 	$(LINUX_BUILD_ENV) $(DART) run tool/desktop_release_config.dart --config "$(LINUX_CONFIG)"
 	$(LINUX_BUILD_ENV) $(FLUTTER) build linux --release --dart-define-from-file="$(LINUX_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
 
-build-linux-appimage: build-linux-release
+linux-appimage: linux-release
 	$(LINUX_BUILD_ENV) $(POMODOIST_APPIMAGE_BUILDER)
 
-install-linux: build-linux-release
+linux-install: linux-release
 	./tool/linux/install.sh
 
-windows-installer:
+windows-debug:
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Debug
+
+windows-profile:
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Profile
+
+windows-release:
 	$(DART) run tool/desktop_release_config.dart --config "$(WINDOWS_CONFIG)"
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Release -Clean -ConfigFile "$(WINDOWS_CONFIG)" -ReleaseSha "$(POMODOIST_RELEASE)"
+
+windows-installer: windows-release
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/installer/build.ps1 -BuildDirectory "$(WINDOWS_RELEASE_DIR)"
 
-build-macos-debug:
-	$(FLUTTER) build macos --debug --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
+macos-debug:
+	$(FLUTTER) build macos --debug --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
-build-macos-release: testflight-preflight
+macos-profile:
+	$(FLUTTER) build macos --profile --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+
+macos-release: testflight-preflight
 	$(FLUTTER) build macos --release \
 		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
@@ -149,6 +195,18 @@ build-macos-release: testflight-preflight
 
 testflight-preflight:
 	python3 tool/check_testflight_env.py "$(TESTFLIGHT_CONFIG)"
+
+ios-debug:
+	$(FLUTTER) build ios --debug --dart-define=POMODOIST_BILLING_CHANNEL=storekit
+
+ios-profile:
+	$(FLUTTER) build ios --profile --dart-define=POMODOIST_BILLING_CHANNEL=storekit
+
+ios-release: testflight-preflight
+	$(FLUTTER) build ios --release \
+		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
+		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
+		--dart-define=POMODOIST_BILLING_CHANNEL=storekit
 
 testflight: testflight-preflight
 	@test -n "$(ASC_KEY_ID)" || (echo "Set ASC_KEY_ID=<App Store Connect key ID>" >&2; exit 1)

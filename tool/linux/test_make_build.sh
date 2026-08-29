@@ -49,7 +49,7 @@ POMODOIST_NETWORK_TEST_LOG="$command_log" \
 POMODOIST_NETWORK_TEST_PUB_GET_FAILURES=2 \
 POMODOIST_PUB_GET_RETRY_DELAY_SECONDS=0 \
   make --silent --no-print-directory -C "$project_root" \
-    build-linux-appimage \
+    linux-appimage \
     DART="$fake_dart" \
     FLUTTER="$fake_flutter" \
     LINUX_CONFIG="$test_root/production.json" \

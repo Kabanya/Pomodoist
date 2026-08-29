@@ -16,7 +16,7 @@ install_marker='.pomodoist-install'
 
 if [[ ! -x "$bundle/pomodoist" || ! -d "$bundle/data" || ! -d "$bundle/lib" ]]; then
   echo "Invalid Pomodoist Linux bundle: $bundle" >&2
-  echo 'Build it first with: make build-linux-release' >&2
+  echo 'Build it first with: make linux-release' >&2
   exit 66
 fi
 

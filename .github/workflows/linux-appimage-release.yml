@@ -132,7 +132,7 @@ jobs:
         run: make test-linux-packaging
       - name: Build production AppImage
         run: |
-          make build-linux-appimage \
+          make linux-appimage \
             LINUX_CONFIG="$RUNNER_TEMP/linux-production.json" \
             POMODOIST_RELEASE="$GITHUB_SHA"
       - name: Verify checksum, bundled audio, and deep-link forwarding
