@@ -17,6 +17,7 @@ import 'package:pomodoist/core/time/clock.dart';
 import 'package:pomodoist/features/billing/billing.dart';
 import 'package:pomodoist/features/onboarding/onboarding_gate.dart';
 import 'package:pomodoist/features/planning/data/task_decomposer.dart';
+import 'package:pomodoist/features/planning/data/quick_add_service.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/features/tasks/presentation/widgets/quick_add_bar.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
@@ -300,6 +301,141 @@ void main() {
             ))
             .getSingle();
     expect(assignment.labelId, kanbanStatusTodoId);
+  });
+
+  testWidgets('quick add confirms success and keeps input focused', (
+    tester,
+  ) async {
+    final creation = Completer<String>();
+    final service = _QuickAddMotionService(() => creation.future);
+    final createdIds = <String>[];
+    await tester.pumpWidget(
+      _quickAddMotionApp(service, onTaskCreated: createdIds.addAll),
+    );
+
+    final field = find.byType(TextField);
+    await tester.enterText(field, 'Animated task');
+    await tester.tap(find.byTooltip('Add'));
+    await tester.pump();
+    expect(find.byKey(const Key('quick-add-submit-progress')), findsOneWidget);
+
+    creation.complete('task-1');
+    for (var attempt = 0; attempt < 20 && createdIds.isEmpty; attempt++) {
+      await tester.pump();
+    }
+    expect(createdIds, hasLength(1));
+    expect(find.byKey(const Key('quick-add-submit-success')), findsOneWidget);
+    expect(tester.widget<TextField>(field).controller!.text, isEmpty);
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).focusNode.hasFocus,
+      isTrue,
+    );
+
+    await tester.pump(const Duration(milliseconds: 120));
+    expect(find.byKey(const Key('quick-add-submit-progress')), findsNothing);
+    expect(find.byKey(const Key('quick-add-submit-success')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 239));
+    expect(find.byKey(const Key('quick-add-submit-success')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(find.byKey(const Key('quick-add-submit-idle')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 120));
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(find.byKey(const Key('quick-add-submit-success')), findsNothing);
+  });
+
+  testWidgets('a repeated submit replaces pending success feedback', (
+    tester,
+  ) async {
+    final creations = [Completer<String>(), Completer<String>()];
+    var nextCreation = 0;
+    final service = _QuickAddMotionService(
+      () => creations[nextCreation++].future,
+    );
+    final createdIds = <String>[];
+    await tester.pumpWidget(
+      _quickAddMotionApp(service, onTaskCreated: createdIds.addAll),
+    );
+
+    final field = find.byType(TextField);
+    await tester.enterText(field, 'First task');
+    await tester.tap(find.byTooltip('Add'));
+    await tester.pump();
+    creations[0].complete('task-1');
+    for (var attempt = 0; attempt < 20 && createdIds.isEmpty; attempt++) {
+      await tester.pump();
+    }
+    await tester.pump(const Duration(milliseconds: 120));
+    expect(find.byKey(const Key('quick-add-submit-success')), findsOneWidget);
+
+    await tester.enterText(field, 'Second task');
+    await tester.tap(find.byTooltip('Add'));
+    await tester.pump();
+    expect(find.byKey(const Key('quick-add-submit-progress')), findsOneWidget);
+    creations[1].complete('task-2');
+    for (var attempt = 0; attempt < 20 && createdIds.length < 2; attempt++) {
+      await tester.pump();
+    }
+    await tester.pump(const Duration(milliseconds: 359));
+    expect(find.byKey(const Key('quick-add-submit-success')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 121));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('quick-add-submit-idle')), findsOneWidget);
+    expect(find.byKey(const Key('quick-add-submit-success')), findsNothing);
+  });
+
+  testWidgets('quick add failure retains input without success feedback', (
+    tester,
+  ) async {
+    final service = _QuickAddMotionService(
+      () => Future<String>.error(StateError('create failed')),
+    );
+    await tester.pumpWidget(_quickAddMotionApp(service));
+
+    final field = find.byType(TextField);
+    await tester.enterText(field, 'Keep this task');
+    await tester.tap(find.byTooltip('Add'));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<TextField>(field).controller!.text, 'Keep this task');
+    expect(find.byKey(const Key('quick-add-submit-success')), findsNothing);
+    expect(find.byKey(const Key('quick-add-submit-idle')), findsOneWidget);
+    expect(find.text('Could not create the task. Try again.'), findsOneWidget);
+  });
+
+  testWidgets('Reduce Motion skips transient quick add success feedback', (
+    tester,
+  ) async {
+    final service = _QuickAddMotionService(() async => 'task-1');
+    final createdIds = <String>[];
+    await tester.pumpWidget(
+      _quickAddMotionApp(
+        service,
+        disableAnimations: true,
+        onTaskCreated: createdIds.addAll,
+      ),
+    );
+
+    await tester.enterText(find.byType(TextField), 'Reduced task');
+    await tester.tap(find.byTooltip('Add'));
+    for (var attempt = 0; attempt < 20 && createdIds.isEmpty; attempt++) {
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+
+    expect(createdIds, hasLength(1));
+    expect(find.byKey(const Key('quick-add-submit-idle')), findsOneWidget);
+    expect(find.byKey(const Key('quick-add-submit-success')), findsNothing);
+    expect(
+      tester
+          .widget<AnimatedSwitcher>(
+            find.descendant(
+              of: find.byKey(const Key('quick-add-motion-submit')),
+              matching: find.byType(AnimatedSwitcher),
+            ),
+          )
+          .duration,
+      Duration.zero,
+    );
   });
 
   testWidgets('quick add bar uses project context unless # overrides it', (
@@ -1222,6 +1358,59 @@ void main() {
         everyElement(kanbanStatusTodoId),
       );
     },
+  );
+}
+
+class _QuickAddMotionService implements QuickAddService {
+  const _QuickAddMotionService(this.create);
+
+  final Future<String> Function() create;
+
+  @override
+  Future<String> createTask(
+    String input, {
+    String? description,
+    String? parentId,
+    String? projectId,
+    String? sectionId,
+    int? priority,
+    DateTime? defaultDate,
+    TaskSchedule? defaultSchedule,
+    String? kanbanStatusId,
+  }) => create();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+Widget _quickAddMotionApp(
+  QuickAddService service, {
+  bool disableAnimations = false,
+  ValueChanged<List<String>>? onTaskCreated,
+}) {
+  return ProviderScope(
+    overrides: [
+      projectsProvider.overrideWith((ref) => Stream.value(const [])),
+      labelsProvider.overrideWith((ref) => Stream.value(const [])),
+      quickAddHintTextProvider.overrideWithValue(null),
+      quickAddServiceProvider.overrideWithValue(service),
+    ],
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(
+          context,
+        ).copyWith(disableAnimations: disableAnimations),
+        child: child!,
+      ),
+      home: Scaffold(
+        body: QuickAddBar(
+          submitButtonKey: const Key('quick-add-motion-submit'),
+          onTaskCreated: onTaskCreated,
+        ),
+      ),
+    ),
   );
 }
 

@@ -21,6 +21,8 @@ import 'quick_add_text_controller.dart';
 const _voiceSheetBorderRadius = BorderRadius.vertical(top: Radius.circular(28));
 const _voiceSmartModePreferenceKey = 'voice.smartMode';
 const _voiceMaxDuration = Duration(seconds: 59);
+const _quickAddIconTransitionDuration = Duration(milliseconds: 120);
+const _quickAddSuccessHoldDuration = Duration(milliseconds: 240);
 
 Future<List<DecomposedTaskDraft>?> showVoiceQuickAddSheet(
   BuildContext context,
@@ -567,10 +569,13 @@ class QuickAddBar extends ConsumerStatefulWidget {
 
 class _QuickAddBarState extends ConsumerState<QuickAddBar> {
   final _controller = QuickAddTextController();
+  Timer? _successTimer;
   bool _busy = false;
+  bool _showSuccess = false;
 
   @override
   void dispose() {
+    _successTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -617,12 +622,25 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
               key: widget.submitButtonKey,
               tooltip: l10n.commonAdd,
               onPressed: _busy ? null : _submit,
-              icon: _busy
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.add),
+              icon: AnimatedSwitcher(
+                duration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : _quickAddIconTransitionDuration,
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                child: _busy
+                    ? const SizedBox.square(
+                        key: Key('quick-add-submit-progress'),
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : _showSuccess
+                    ? const Icon(
+                        Icons.check,
+                        key: Key('quick-add-submit-success'),
+                      )
+                    : const Icon(Icons.add, key: Key('quick-add-submit-idle')),
+              ),
             ),
           ],
         ),
@@ -643,7 +661,8 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
     if (input.isEmpty || _busy) {
       return;
     }
-    setState(() => _busy = true);
+    _beginCreation();
+    var succeeded = false;
     try {
       final task = await ref
           .read(quickAddServiceProvider)
@@ -656,6 +675,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
           );
       _controller.clear();
       widget.onTaskCreated?.call([task]);
+      succeeded = true;
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -664,7 +684,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
       }
     } finally {
       if (mounted) {
-        setState(() => _busy = false);
+        _finishCreation(succeeded);
       }
     }
   }
@@ -673,7 +693,8 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
     if (_busy) {
       return;
     }
-    setState(() => _busy = true);
+    _beginCreation();
+    var succeeded = false;
     try {
       final created = await createVoiceQuickAddTasks(
         ref,
@@ -688,6 +709,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
           context,
         ).showSnackBar(SnackBar(content: Text(_createdLabel(created.length))));
         widget.onTaskCreated?.call(created);
+        succeeded = true;
       }
     } catch (_) {
       if (mounted) {
@@ -697,9 +719,36 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
       }
     } finally {
       if (mounted) {
-        setState(() => _busy = false);
+        _finishCreation(succeeded);
       }
     }
+  }
+
+  void _beginCreation() {
+    _successTimer?.cancel();
+    setState(() {
+      _busy = true;
+      _showSuccess = false;
+    });
+  }
+
+  void _finishCreation(bool succeeded) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    setState(() {
+      _busy = false;
+      _showSuccess = succeeded && !reduceMotion;
+    });
+    if (!_showSuccess) {
+      return;
+    }
+    _successTimer = Timer(
+      _quickAddIconTransitionDuration + _quickAddSuccessHoldDuration,
+      () {
+        if (mounted) {
+          setState(() => _showSuccess = false);
+        }
+      },
+    );
   }
 
   String _createdLabel(int count) {
