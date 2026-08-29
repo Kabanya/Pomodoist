@@ -14,7 +14,6 @@ import 'package:pomodoist/app/app_startup_gate.dart';
 import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/app/router.dart';
 import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/app/widgets/adaptive_shell.dart';
 import 'package:pomodoist/core/db/app_database.dart' hide FocusDailyStats;
 import 'package:pomodoist/core/time/clock.dart';
 import 'package:pomodoist/features/focus/domain/focus_models.dart';
@@ -28,8 +27,6 @@ import 'package:pomodoist/features/onboarding/onboarding_gate.dart';
 import 'package:pomodoist/features/tasks/domain/project_colors.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/features/tasks/presentation/browse_screen.dart';
-import 'package:pomodoist/features/tasks/presentation/task_detail_screen.dart';
-import 'package:pomodoist/features/tasks/presentation/upcoming_screen.dart';
 import 'package:pomodoist/features/tasks/presentation/widgets/task_selection_region.dart';
 import 'package:pomodoist/features/integrations/google_calendar/data/google_calendar_repository.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
@@ -140,12 +137,11 @@ void main() {
     await tester.pump();
 
     expect(find.text('Focus history'), findsOneWidget);
-    expect(find.textContaining('Focus load:'), findsOneWidget);
+    expect(find.textContaining('Focus load:'), findsNothing);
 
     await _pumpFrames(tester);
 
     expect(find.text('Focus history'), findsOneWidget);
-    expect(find.textContaining('Focus load:'), findsNothing);
     expect(find.text('Today task'), findsAtLeastNWidgets(1));
 
     await tester.tap(find.byTooltip('Back'));
@@ -154,136 +150,6 @@ void main() {
     expect(find.text('Today'), findsAtLeastNWidgets(1));
     expect(find.text('Focus history'), findsNothing);
     expect(find.text('Today task'), findsOneWidget);
-  });
-
-  testWidgets('section motion fallback is immediate without replacing shell', (
-    tester,
-  ) async {
-    late GoRouter router;
-    await _pumpApp(
-      tester,
-      onRouter: (value) => router = value,
-      size: const Size(1200, 900),
-    );
-    final shellState = tester.state(find.byType(AdaptiveShell));
-
-    router.go('/upcoming');
-    await tester.pump();
-    await tester.pump();
-    final target = find.byType(UpcomingScreen);
-    expect(target, findsOneWidget);
-    expect(find.byKey(const ValueKey('route-motion-section')), findsNothing);
-    expect(tester.state(find.byType(AdaptiveShell)), same(shellState));
-  });
-
-  testWidgets('detail route slides from trailing edge and reverses in 180 ms', (
-    tester,
-  ) async {
-    late GoRouter router;
-    await _pumpApp(
-      tester,
-      onRouter: (value) => router = value,
-      size: const Size(1200, 900),
-    );
-
-    router.push('/task/task-1');
-    await tester.pump();
-    await tester.pump();
-    final target = find.byType(TaskDetailScreen);
-    final startX = tester.getTopLeft(target).dx;
-    expect(_routeOpacity(tester, target), closeTo(0, 0.01));
-
-    await tester.pump(const Duration(milliseconds: 110));
-    final middleX = tester.getTopLeft(target).dx;
-    expect(_routeOpacity(tester, target), closeTo(0.875, 0.01));
-
-    await tester.pump(const Duration(milliseconds: 110));
-    final endX = tester.getTopLeft(target).dx;
-    expect(startX - endX, closeTo(24, 0.01));
-    expect(middleX, inInclusiveRange(endX, startX));
-
-    router.pop();
-    await tester.pump();
-    await tester.pump();
-    expect(tester.getTopLeft(target).dx, closeTo(endX, 0.01));
-    await tester.pump(const Duration(milliseconds: 90));
-    expect(tester.getTopLeft(target).dx, inInclusiveRange(endX, startX));
-    expect(_routeOpacity(tester, target), closeTo(0.125, 0.03));
-    await tester.pump(const Duration(milliseconds: 90));
-    await tester.pump(const Duration(milliseconds: 1));
-    expect(target, findsNothing);
-  });
-
-  testWidgets('detail route mirrors its slide in RTL', (tester) async {
-    late GoRouter router;
-    await _pumpApp(
-      tester,
-      onRouter: (value) => router = value,
-      size: const Size(1200, 900),
-      locale: const Locale('ar'),
-    );
-
-    router.push('/task/task-1');
-    await tester.pump();
-    await tester.pump();
-    final target = find.byType(TaskDetailScreen);
-    final startX = tester.getTopLeft(target).dx;
-    await tester.pump(const Duration(milliseconds: 220));
-    final endX = tester.getTopLeft(target).dx;
-
-    expect(startX - endX, closeTo(-24, 0.01));
-  });
-
-  testWidgets('Reduce Motion makes route changes immediate', (tester) async {
-    late GoRouter router;
-    await _pumpApp(
-      tester,
-      onRouter: (value) => router = value,
-      disableAnimations: true,
-    );
-
-    router.push('/task/task-1');
-    await tester.pump();
-    await tester.pump();
-    await tester.pump();
-
-    expect(find.byType(TaskDetailScreen), findsOneWidget);
-    expect(
-      find.ancestor(
-        of: find.byType(TaskDetailScreen),
-        matching: find.byKey(const ValueKey('route-motion-detail')),
-      ),
-      findsNothing,
-    );
-  });
-
-  testWidgets('query-only route update keeps the current page', (tester) async {
-    late GoRouter router;
-    await _pumpApp(tester, onRouter: (value) => router = value);
-    router.go('/upcoming');
-    await tester.pumpAndSettle();
-    final page = tester.element(find.byType(UpcomingScreen));
-
-    router.go('/upcoming?date=2026-01-03');
-    await tester.pump();
-
-    expect(tester.element(find.byType(UpcomingScreen)), same(page));
-    expect(find.byKey(const ValueKey('route-motion-section')), findsNothing);
-  });
-
-  testWidgets('rapid section changes settle on the latest route', (
-    tester,
-  ) async {
-    late GoRouter router;
-    await _pumpApp(tester, onRouter: (value) => router = value);
-
-    router.go('/upcoming');
-    await tester.pump(const Duration(milliseconds: 80));
-    router.go('/kanban');
-    await _pumpFrames(tester);
-
-    expect(_routerUri(router), '/kanban');
-    expect(find.byType(UpcomingScreen), findsNothing);
   });
 
   testWidgets('direct task route Back falls back to Today', (tester) async {
@@ -299,39 +165,6 @@ void main() {
 
     expect(find.text('Today'), findsAtLeastNWidgets(1));
     expect(find.text('Focus history'), findsNothing);
-  });
-
-  testWidgets('timeline task Back returns to the selected timeline day', (
-    tester,
-  ) async {
-    _setTimelineVisibleHourPrefs();
-    late GoRouter router;
-    final day = _testToday();
-    await _pumpApp(
-      tester,
-      onRouter: (value) => router = value,
-      size: const Size(1200, 900),
-      tasks: [
-        _task(
-          'timeline-open',
-          'Timeline open',
-          schedule: TaskSchedule.allDay(day),
-        ),
-      ],
-    );
-    final timelineLocation = '/timeline?date=${_routeDate(day)}';
-    router.go(timelineLocation);
-    await _pumpFrames(tester);
-
-    await tester.tap(find.byKey(const Key('timeline-task-timeline-open')));
-    await _pumpFrames(tester);
-    expect(find.byType(TaskDetailScreen), findsOneWidget);
-    expect(router.canPop(), isTrue);
-
-    await tester.tap(find.byTooltip('Back'));
-    await _pumpFrames(tester);
-
-    expect(_routerUri(router), timelineLocation);
   });
 
   testWidgets('auth callback deep link returns to settings', (tester) async {
@@ -663,7 +496,6 @@ void main() {
 
       await tester.tap(find.widgetWithText(TextButton, 'Delete'));
       await _pumpFrames(tester);
-      await _pumpFrames(tester);
       expect(harness.taskRepository.deletedTaskIds, contains('task-1'));
       expect(find.text('Task deleted'), findsOneWidget);
       expect(find.text('Today'), findsAtLeastNWidgets(1));
@@ -716,7 +548,6 @@ void main() {
     await tester.tap(
       find.byKey(const Key('delete-recurring-following-button')),
     );
-    await _pumpFrames(tester);
     await _pumpFrames(tester);
 
     expect(harness.taskRepository.recurringDeleteTaskIds, ['repeat-1']);
@@ -3505,11 +3336,10 @@ void main() {
 }
 
 class _TestApp extends ConsumerWidget {
-  const _TestApp({this.onRouter, this.locale, this.disableAnimations = false});
+  const _TestApp({this.onRouter, this.locale});
 
   final ValueChanged<GoRouter>? onRouter;
   final Locale? locale;
-  final bool disableAnimations;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -3521,12 +3351,6 @@ class _TestApp extends ConsumerWidget {
       darkTheme: AppTheme.dark(),
       routerConfig: router,
       locale: locale,
-      builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(
-          context,
-        ).copyWith(disableAnimations: disableAnimations),
-        child: child!,
-      ),
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -3608,7 +3432,6 @@ Future<_AppHarness> _pumpApp(
   Completer<void>? startupCompleter,
   Size size = const Size(390, 844),
   Locale? locale,
-  bool disableAnimations = false,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -3684,11 +3507,7 @@ Future<_AppHarness> _pumpApp(
           _FakeCalendarIntegrationRepository(),
         ),
       ],
-      child: _TestApp(
-        onRouter: onRouter,
-        locale: locale,
-        disableAnimations: disableAnimations,
-      ),
+      child: _TestApp(onRouter: onRouter, locale: locale),
     ),
   );
   await _pumpFrames(tester);
@@ -3724,10 +3543,8 @@ Future<void> _pumpFocusScreen(
 
 Future<void> _pumpFrames(WidgetTester tester) async {
   await tester.pump();
-  await tester.pump();
-  await tester.pump();
   await tester.pump(const Duration(milliseconds: 500));
-  await tester.pump(const Duration(milliseconds: 1));
+  await tester.pump();
 }
 
 DateTime _testToday() {
@@ -3964,19 +3781,6 @@ DateTime _dateAt(DateTime day, int hour, [int minute = 0]) {
 
 String _routerUri(GoRouter router) {
   return router.routeInformationProvider.value.uri.toString();
-}
-
-double _routeOpacity(WidgetTester tester, Finder target) {
-  return tester
-      .widgetList<FadeTransition>(
-        find.ancestor(
-          of: target,
-          matching: find.byKey(const ValueKey('route-motion-detail')),
-        ),
-      )
-      .last
-      .opacity
-      .value;
 }
 
 String _routeDate(DateTime date) {

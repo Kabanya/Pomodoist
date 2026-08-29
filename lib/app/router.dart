@@ -31,57 +31,6 @@ import 'app_startup_gate.dart';
 import 'runtime_public_config.dart';
 import 'widgets/adaptive_shell.dart';
 
-enum _RouteMotionKind { section, detail }
-
-const _routeMotionBaseline = bool.fromEnvironment('NAVIGATION_MOTION_BASELINE');
-
-Page<void> _motionPage(
-  BuildContext context,
-  GoRouterState state,
-  Widget child,
-  _RouteMotionKind kind,
-) {
-  final detail = kind == _RouteMotionKind.detail;
-  if (!detail || _routeMotionBaseline) {
-    return NoTransitionPage<void>(key: state.pageKey, child: child);
-  }
-  final reduceMotion = MediaQuery.disableAnimationsOf(context);
-  return CustomTransitionPage<void>(
-    key: state.pageKey,
-    transitionDuration: reduceMotion
-        ? Duration.zero
-        : const Duration(milliseconds: 220),
-    reverseTransitionDuration: reduceMotion
-        ? Duration.zero
-        : const Duration(milliseconds: 180),
-    child: child,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      if (reduceMotion) return child;
-      final curved = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeInCubic,
-      );
-      return FadeTransition(
-        key: const ValueKey('route-motion-detail'),
-        opacity: curved,
-        child: AnimatedBuilder(
-          animation: curved,
-          child: child,
-          builder: (context, child) => Transform.translate(
-            offset: Offset(
-              (Directionality.of(context) == TextDirection.rtl ? -24 : 24) *
-                  (1 - curved.value),
-              0,
-            ),
-            child: child,
-          ),
-        ),
-      );
-    },
-  );
-}
-
 final routerProvider = Provider<GoRouter>((ref) {
   bool signedIn() {
     final authState = ref.read(accountAuthStateProvider).value;
@@ -174,146 +123,89 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/search',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              const SearchScreen(),
-              _RouteMotionKind.section,
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SearchScreen()),
           ),
           GoRoute(
             path: '/today',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              const TodayScreen(),
-              _RouteMotionKind.section,
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: TodayScreen()),
           ),
           GoRoute(
             path: '/upcoming',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              UpcomingScreen(
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: UpcomingScreen(
                 selectedDate: _parseRouteDate(
                   state.uri.queryParameters['date'],
                 ),
               ),
-              _RouteMotionKind.section,
             ),
           ),
           GoRoute(
             path: '/inbox',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              const InboxScreen(),
-              _RouteMotionKind.section,
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: InboxScreen()),
           ),
           GoRoute(
             path: '/priority-matrix',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              const PriorityMatrixScreen(),
-              _RouteMotionKind.section,
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: PriorityMatrixScreen()),
           ),
           GoRoute(
             path: '/timeline',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              TimelineScreen(
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: TimelineScreen(
                 selectedDate: _parseRouteDate(
                   state.uri.queryParameters['date'],
                 ),
               ),
-              _RouteMotionKind.section,
             ),
           ),
           GoRoute(
             path: '/kanban',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              const KanbanScreen(showMobileTitle: false),
-              _RouteMotionKind.section,
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: KanbanScreen(showMobileTitle: false),
             ),
           ),
           GoRoute(
             path: '/focus',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              const FocusScreen(),
-              _RouteMotionKind.section,
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: FocusScreen()),
           ),
           GoRoute(
             path: '/browse',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              const BrowseScreen(),
-              _RouteMotionKind.section,
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: BrowseScreen()),
           ),
           GoRoute(
             path: '/browse/completed',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              const CompletedTasksScreen(),
-              _RouteMotionKind.section,
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: CompletedTasksScreen()),
           ),
           GoRoute(
             path: '/projects',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              const ProjectsScreen(),
-              _RouteMotionKind.section,
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ProjectsScreen()),
           ),
           GoRoute(
             path: '/reports',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              const ReportsScreen(),
-              _RouteMotionKind.section,
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ReportsScreen()),
           ),
           GoRoute(
             path: '/reports/achievements',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              const AchievementsScreen(),
-              _RouteMotionKind.detail,
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: AchievementsScreen()),
           ),
           GoRoute(
             path: '/settings',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              const SettingsScreen(),
-              _RouteMotionKind.section,
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SettingsScreen()),
           ),
           GoRoute(
             path: '/settings/shortcuts',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              const KeyboardShortcutsScreen(),
-              _RouteMotionKind.detail,
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: KeyboardShortcutsScreen()),
           ),
           GoRoute(
             path: '/integrations/google-calendar',
@@ -322,20 +214,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/project/:id',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              ProjectScreen(projectId: state.pathParameters['id']!),
-              _RouteMotionKind.section,
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ProjectScreen(projectId: state.pathParameters['id']!),
             ),
           ),
           GoRoute(
             path: '/task/:id',
-            pageBuilder: (context, state) => _motionPage(
-              context,
-              state,
-              TaskDetailScreen(taskId: state.pathParameters['id']!),
-              _RouteMotionKind.detail,
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: TaskDetailScreen(taskId: state.pathParameters['id']!),
             ),
           ),
         ],

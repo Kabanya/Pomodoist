@@ -1676,7 +1676,7 @@ class _TimelineCompactTaskBlock extends ConsumerWidget {
       color: Colors.transparent,
       child: InkWell(
         key: Key('timeline-task-${task.id}'),
-        onTap: () => context.push('/task/${task.id}'),
+        onTap: () => context.go('/task/${task.id}'),
         borderRadius: BorderRadius.circular(8),
         child: Container(
           constraints: fillHeight
