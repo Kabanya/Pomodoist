@@ -106,6 +106,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                               ? FocusIdleStage(
                                   presets: presets,
                                   selectedPreset: effectivePreset,
+                                  timerVisualStyle: timerVisualStyle,
                                   compact: !desktop,
                                   viewMode: viewMode,
                                   onViewModeChanged: _setViewMode,

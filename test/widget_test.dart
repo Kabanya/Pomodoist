@@ -387,7 +387,7 @@ void main() {
     expect(find.byKey(const Key('minimal-idle-more-menu')), findsNothing);
     expect(find.text('Classic'), findsOneWidget);
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
-    expect(find.text('25m work'), findsOneWidget);
+    expect(find.text('25:00'), findsOneWidget);
     expect(find.text('Start focus'), findsOneWidget);
     expect(find.text('Customize'), findsNothing);
 
@@ -415,8 +415,8 @@ void main() {
 
     expect(find.text('Classic'), findsNothing);
     expect(find.text('Deep Work'), findsOneWidget);
-    expect(find.text('25m work'), findsNothing);
-    expect(find.text('50m work'), findsOneWidget);
+    expect(find.text('25:00'), findsNothing);
+    expect(find.text('50:00'), findsOneWidget);
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString(lastFocusPresetIdPreferenceKey), deepWorkPresetId);
 

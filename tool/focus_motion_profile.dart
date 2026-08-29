@@ -71,6 +71,7 @@ class _FocusMotionProfileState extends State<_FocusMotionProfile> {
         : FocusIdleStage(
             presets: [_preset],
             selectedPreset: _preset,
+            timerVisualStyle: FocusTimerVisualStyle.circle,
             compact: false,
             viewMode: _full ? FocusViewMode.full : FocusViewMode.minimal,
             onPresetSelected: (_) {},

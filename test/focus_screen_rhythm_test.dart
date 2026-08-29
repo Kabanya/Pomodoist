@@ -65,6 +65,8 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.minimal.storageValue,
+      focusTimerVisualStylePreferenceKey:
+          FocusTimerVisualStyle.circle.storageValue,
     });
 
     await _pumpFocusScreen(
@@ -75,7 +77,10 @@ void main() {
 
     expect(find.byKey(const Key('focus-state-idle')), findsOneWidget);
     expect(find.byKey(const Key('focus-primary-stage')), findsOneWidget);
-    expect(find.byKey(const Key('focus-primary-action')), findsOneWidget);
+    final circle = find.byKey(const Key('focus-idle-circular-timer'));
+    final primary = find.byKey(const Key('focus-primary-action'));
+    expect(circle, findsOneWidget);
+    expect(primary, findsOneWidget);
     expect(find.byKey(const Key('minimal-preset-menu')), findsOneWidget);
     expect(find.byKey(const Key('minimal-preset-select')), findsNothing);
     final more = find.byKey(const Key('focus-details-menu'));
@@ -83,10 +88,18 @@ void main() {
     expect(tester.getSize(more), const Size(48, 48));
     expect(find.text('Classic'), findsOneWidget);
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
-    expect(find.text('25m work'), findsOneWidget);
+    expect(find.text('25:00'), findsOneWidget);
+    expect(find.text('25m work'), findsNothing);
     expect(find.text('Start focus'), findsOneWidget);
     expect(find.byKey(const Key('focus-rhythm-rail')), findsNothing);
     expect(find.byType(Card), findsNothing);
+
+    final circleRect = tester.getRect(circle);
+    final primaryRect = tester.getRect(primary);
+    final moreRect = tester.getRect(more);
+    expect(circleRect.contains(primaryRect.center), isTrue);
+    expect(moreRect.left, greaterThan(circleRect.right));
+    expect(moreRect.center.dy, moreOrLessEquals(primaryRect.center.dy));
 
     await tester.tap(
       find.descendant(of: more, matching: find.byIcon(Icons.more_horiz)),
@@ -95,27 +108,44 @@ void main() {
     expect(find.text('Switch to Full'), findsOneWidget);
   });
 
-  testWidgets('full and minimal idle timer icons use neutral color', (
+  testWidgets('minimal idle without a preset keeps a disabled circle action', (
     tester,
   ) async {
-    for (final mode in FocusViewMode.values) {
-      await tester.pumpWidget(const SizedBox.shrink());
-      SharedPreferences.setMockInitialValues({
-        focusViewModePreferenceKey: mode.storageValue,
-      });
-      await _pumpFocusScreen(
-        tester,
-        repository: _FocusRepository(),
-        size: const Size(390, 844),
-      );
+    SharedPreferences.setMockInitialValues({
+      focusViewModePreferenceKey: FocusViewMode.minimal.storageValue,
+      focusTimerVisualStylePreferenceKey:
+          FocusTimerVisualStyle.circle.storageValue,
+    });
 
-      final stage = find.byKey(const Key('focus-primary-stage'));
-      final idleIcon = tester.widget<Icon>(
-        find.descendant(of: stage, matching: find.byIcon(Icons.timer_outlined)),
-      );
-      final context = tester.element(find.byType(FocusScreen));
-      expect(idleIcon.color, context.appColors.mutedText);
-    }
+    await _pumpFocusScreen(
+      tester,
+      repository: _FocusRepository(presets: const []),
+      size: const Size(390, 844),
+    );
+
+    expect(find.byKey(const Key('focus-idle-circular-timer')), findsOneWidget);
+    expect(find.text('--:--'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('focus-primary-action')))
+          .onPressed,
+      isNull,
+    );
+  });
+
+  testWidgets('full idle timer icon uses neutral color', (tester) async {
+    await _pumpFocusScreen(
+      tester,
+      repository: _FocusRepository(),
+      size: const Size(390, 844),
+    );
+
+    final stage = find.byKey(const Key('focus-primary-stage'));
+    final idleIcon = tester.widget<Icon>(
+      find.descendant(of: stage, matching: find.byIcon(Icons.timer_outlined)),
+    );
+    final context = tester.element(find.byType(FocusScreen));
+    expect(idleIcon.color, context.appColors.mutedText);
   });
 
   testWidgets('idle rhythm preview keeps every step neutral', (tester) async {
@@ -432,16 +462,57 @@ void main() {
     expect(find.byKey(const Key('focus-primary-stage')), findsOneWidget);
     expect(find.byKey(const Key('focus-circular-timer')), findsOneWidget);
     expect(find.text('Work interval'), findsOneWidget);
-    expect(find.widgetWithText(FilledButton, 'Pause'), findsOneWidget);
+    final primary = find.widgetWithText(FilledButton, 'Pause');
+    expect(primary, findsOneWidget);
     expect(find.byKey(const Key('focus-rhythm-rail')), findsNothing);
     expect(find.byKey(const Key('focus-task-context')), findsNothing);
     final more = find.byKey(const Key('focus-details-menu'));
     expect(more, findsOneWidget);
     expect(tester.getSize(more), const Size(48, 48));
+    final circleRect = tester.getRect(
+      find.byKey(const Key('focus-circular-timer')),
+    );
+    final primaryRect = tester.getRect(primary);
+    final moreRect = tester.getRect(more);
+    expect(circleRect.contains(primaryRect.center), isTrue);
+    expect(moreRect.left, greaterThan(circleRect.right));
+    expect(moreRect.center.dy, moreOrLessEquals(primaryRect.center.dy));
     expect(find.byKey(const Key('minimal-active-more-menu')), findsNothing);
     expect(find.text('Classic'), findsNothing);
     expect(find.text('Complete interval'), findsNothing);
     expect(find.byType(Card), findsNothing);
+  });
+
+  testWidgets('minimal bar keeps its primary action below the timer', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      focusViewModePreferenceKey: FocusViewMode.minimal.storageValue,
+      focusTimerVisualStylePreferenceKey:
+          FocusTimerVisualStyle.bar.storageValue,
+    });
+    final now = DateTime.utc(2026, 7, 10, 9);
+    final interval = _interval(now, status: 'running');
+
+    await _pumpFocusScreen(
+      tester,
+      repository: _FocusRepository(
+        activeRun: _run(now),
+        activeInterval: interval,
+        intervals: [interval],
+      ),
+      size: const Size(390, 844),
+      now: now,
+    );
+
+    final timer = find.byKey(const Key('focus-linear-timer'));
+    final primary = find.byKey(const Key('focus-primary-action'));
+    expect(timer, findsOneWidget);
+    expect(find.byKey(const Key('focus-circular-timer')), findsNothing);
+    expect(
+      tester.getRect(primary).top,
+      greaterThan(tester.getRect(timer).bottom),
+    );
   });
 
   testWidgets('minimal paused session can resume with a no-pause preset', (
@@ -2071,9 +2142,54 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('minimal circle exposes timer action and menu separately', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      focusViewModePreferenceKey: FocusViewMode.minimal.storageValue,
+      focusTimerVisualStylePreferenceKey:
+          FocusTimerVisualStyle.circle.storageValue,
+    });
+    final semantics = tester.ensureSemantics();
+    final now = DateTime.utc(2026, 7, 10, 9);
+    final interval = _interval(now, status: 'running');
+
+    await _pumpFocusScreen(
+      tester,
+      repository: _FocusRepository(
+        activeRun: _run(now),
+        activeInterval: interval,
+        intervals: [interval],
+      ),
+      size: const Size(390, 844),
+      now: now,
+    );
+
+    expect(
+      tester.getSemantics(find.byKey(const Key('focus-timer-semantics'))).label,
+      'Work interval, Running, 25:00 remaining, 25:00 total',
+    );
+    final primary = tester.getSemantics(
+      find.byKey(const Key('focus-primary-action')),
+    );
+    expect(primary.flagsCollection.isButton, isTrue);
+    expect(primary.label, 'Pause');
+    final menu = tester.getSemantics(
+      find.byKey(const Key('focus-details-menu')),
+    );
+    expect(menu.flagsCollection.isButton, isTrue);
+    expect(menu.label, 'More focus actions');
+    semantics.dispose();
+  });
+
   testWidgets('320x568 keeps primary and overflow actions reachable', (
     tester,
   ) async {
+    SharedPreferences.setMockInitialValues({
+      focusViewModePreferenceKey: FocusViewMode.minimal.storageValue,
+      focusTimerVisualStylePreferenceKey:
+          FocusTimerVisualStyle.circle.storageValue,
+    });
     final now = DateTime.utc(2026, 7, 10, 9);
     final interval = _interval(now, status: 'running');
 
@@ -2098,8 +2214,15 @@ void main() {
     await tester.ensureVisible(primary);
     await tester.pump();
     final primaryRect = tester.getRect(primary);
+    final circleRect = tester.getRect(
+      find.byKey(const Key('focus-circular-timer')),
+    );
+    final moreRect = tester.getRect(more);
     expect(primaryRect.top, greaterThanOrEqualTo(0));
     expect(primaryRect.bottom, lessThanOrEqualTo(568));
+    expect(circleRect.contains(primaryRect.center), isTrue);
+    expect(moreRect.left, greaterThan(circleRect.right));
+    expect(moreRect.right, lessThanOrEqualTo(320));
     expect(tester.takeException(), isNull);
   });
 }
