@@ -1378,14 +1378,18 @@ class _MetaLabel extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: labelColor),
         const SizedBox(width: 5),
-        Text(
-          text,
-          key: taskId == null
-              ? null
-              : ValueKey('kanban-task-time-label-$taskId'),
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: labelColor),
+        Flexible(
+          child: Text(
+            text,
+            key: taskId == null
+                ? null
+                : ValueKey('kanban-task-time-label-$taskId'),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: labelColor),
+          ),
         ),
       ],
     );

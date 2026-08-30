@@ -257,6 +257,7 @@ void main() {
       await _pumpKanban(
         tester,
         width: 1200,
+        textScale: 1.1,
         taskSchedule: TaskSchedule.timed(
           start: now,
           end: now.add(const Duration(minutes: 30)),
