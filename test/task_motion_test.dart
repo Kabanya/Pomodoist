@@ -4,7 +4,9 @@ import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/features/tasks/presentation/widgets/task_motion.dart';
 
 void main() {
-  testWidgets('local creation fades and rises for 160ms', (tester) async {
+  testWidgets('local creation fades, rises, and highlights for 550ms', (
+    tester,
+  ) async {
     late TaskMotionController motion;
     await tester.pumpWidget(
       MaterialApp(
@@ -24,14 +26,17 @@ void main() {
     await tester.pump();
     expect(_opacity(tester, 'task-1'), 0);
     expect(_offset(tester, 'task-1').dy, 6);
+    expect(_motionColor(tester, 'task-1').a, greaterThan(0));
 
-    await tester.pump(const Duration(milliseconds: 80));
+    await tester.pump(const Duration(milliseconds: 400));
     expect(_opacity(tester, 'task-1'), inExclusiveRange(0, 1));
     expect(_offset(tester, 'task-1').dy, inExclusiveRange(0, 6));
+    expect(_motionColor(tester, 'task-1').a, greaterThan(0));
 
-    await tester.pump(const Duration(milliseconds: 80));
+    await tester.pump(const Duration(milliseconds: 150));
     expect(_opacity(tester, 'task-1'), 1);
     expect(_offset(tester, 'task-1').dy, 0);
+    expect(_motionColor(tester, 'task-1').a, 0);
   });
 
   testWidgets('confirmed deletion fades and collapses for 220ms', (

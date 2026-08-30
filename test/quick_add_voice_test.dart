@@ -334,12 +334,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 120));
     expect(find.byKey(const Key('quick-add-submit-progress')), findsNothing);
     expect(find.byKey(const Key('quick-add-submit-success')), findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 239));
+    await tester.pump(const Duration(milliseconds: 799));
     expect(find.byKey(const Key('quick-add-submit-success')), findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 1));
+    expect(find.byKey(const Key('quick-add-submit-idle')), findsNothing);
+    await tester.pump(const Duration(milliseconds: 2));
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('quick-add-submit-idle')), findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 120));
-    await tester.pump(const Duration(milliseconds: 1));
     expect(find.byKey(const Key('quick-add-submit-success')), findsNothing);
   });
 
@@ -375,8 +375,9 @@ void main() {
     for (var attempt = 0; attempt < 20 && createdIds.length < 2; attempt++) {
       await tester.pump();
     }
-    await tester.pump(const Duration(milliseconds: 359));
+    await tester.pump(const Duration(milliseconds: 919));
     expect(find.byKey(const Key('quick-add-submit-success')), findsOneWidget);
+    expect(find.byKey(const Key('quick-add-submit-idle')), findsNothing);
     await tester.pump(const Duration(milliseconds: 121));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('quick-add-submit-idle')), findsOneWidget);

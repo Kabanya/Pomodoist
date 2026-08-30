@@ -865,7 +865,7 @@ void main() {
     );
   });
 
-  testWidgets('circle and bar share the one-shot elastic timer launch', (
+  testWidgets('circle and bar stay still when the Focus stage mounts', (
     tester,
   ) async {
     final now = DateTime.utc(2026, 7, 10, 9);
@@ -882,13 +882,7 @@ void main() {
           .transform
           .storage[0];
 
-      expect(scale(), moreOrLessEquals(0.92, epsilon: 0.001));
-      await tester.pump(const Duration(milliseconds: 180));
-      expect(scale(), moreOrLessEquals(1.06, epsilon: 0.01));
-      await tester.pump(const Duration(milliseconds: 80));
       expect(scale(), moreOrLessEquals(1, epsilon: 0.001));
-      await tester.pumpAndSettle();
-      expect(tester.binding.transientCallbackCount, 0);
     }
   });
 

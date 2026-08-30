@@ -107,7 +107,7 @@ class _MotionProfileState extends State<_MotionProfile> {
         completed ? _motion!.completed([task]) : _motion!.reopened([task]);
       }
     });
-    await _measure('creation', const Duration(milliseconds: 180), (_) {
+    await _measure('creation', const Duration(milliseconds: 570), (_) {
       if (_baseline) {
         setState(() => _revision++);
       } else {

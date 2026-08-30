@@ -137,7 +137,7 @@ class TaskMotionItem extends StatelessWidget {
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : switch (kind) {
-            TaskMotionKind.created ||
+            TaskMotionKind.created => const Duration(milliseconds: 550),
             TaskMotionKind.landed => const Duration(milliseconds: 160),
             TaskMotionKind.deleted => const Duration(milliseconds: 220),
             _ => Duration.zero,
@@ -153,11 +153,11 @@ class TaskMotionItem extends StatelessWidget {
           ? () => motion.finishDelete(taskId, event.revision)
           : null,
       builder: (context, value, child) {
-        final landed = kind == TaskMotionKind.landed;
+        final highlighted = creating || kind == TaskMotionKind.landed;
         return DecoratedBox(
           key: Key('task-motion-highlight-$taskId'),
           decoration: BoxDecoration(
-            color: landed
+            color: highlighted
                 ? Theme.of(
                     context,
                   ).colorScheme.primary.withValues(alpha: 0.12 * (1 - value))

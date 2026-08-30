@@ -23,8 +23,8 @@ class _FocusTimerStageState extends State<_FocusTimerStage>
   late final AnimationController _elasticController = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 260),
+    value: 1,
   );
-  bool _motionInitialized = false;
 
   String get _motionSignature =>
       '${widget.interval.id}:${widget.interval.type}:${widget.interval.status}';
@@ -36,10 +36,7 @@ class _FocusTimerStageState extends State<_FocusTimerStage>
       _elasticController
         ..stop()
         ..value = 1;
-    } else if (!_motionInitialized) {
-      unawaited(_elasticController.forward(from: 0));
     }
-    _motionInitialized = true;
   }
 
   @override

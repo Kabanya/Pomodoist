@@ -44,6 +44,43 @@ void main() {
         expect(_miniPlayerSurface, findsOneWidget);
       },
     );
+
+    for (final announcement in const [
+      (
+        name: 'global',
+        item: _globalAchievement,
+        visibleKey: Key('achievement-global-banner'),
+        absentKey: Key('achievement-bottom-plaque'),
+      ),
+      (
+        name: 'bottom',
+        item: _bottomAchievement,
+        visibleKey: Key('achievement-bottom-plaque'),
+        absentKey: Key('achievement-global-banner'),
+      ),
+    ]) {
+      testWidgets(
+        '${announcement.name} achievement overlays ${layout.key} content without shifting it',
+        (tester) async {
+          await _pumpShell(tester, size: layout.value);
+
+          final contentAnchor = find.byKey(const Key('go-today'));
+          final baselineCenter = tester.getCenter(contentAnchor);
+          final container = ProviderScope.containerOf(
+            tester.element(find.byType(AdaptiveShell)),
+          );
+
+          container
+              .read(achievementAnnouncementControllerProvider.notifier)
+              .enqueue([announcement.item]);
+          await tester.pump();
+
+          expect(find.byKey(announcement.visibleKey), findsOneWidget);
+          expect(find.byKey(announcement.absentKey), findsNothing);
+          expect(tester.getCenter(contentAnchor), baselineCenter);
+        },
+      );
+    }
   }
 
   testWidgets(
@@ -284,6 +321,30 @@ class _NoopAchievementRepository implements AchievementRepository {
     List<AchievementItem> items,
   ) async => const [];
 }
+
+const _globalAchievement = AchievementItem(
+  id: 'focus-overlay',
+  group: AchievementGroup.focus,
+  presentation: AchievementPresentation.globalBanner,
+  titleRu: 'Фокус',
+  titleEn: 'Focus',
+  subtitleRu: 'Верхнее достижение',
+  subtitleEn: 'Top achievement',
+  progress: 1,
+  target: 1,
+);
+
+const _bottomAchievement = AchievementItem(
+  id: 'combo-overlay',
+  group: AchievementGroup.combo,
+  presentation: AchievementPresentation.bottomPlaque,
+  titleRu: 'Комбо',
+  titleEn: 'Combo',
+  subtitleRu: 'Нижнее достижение',
+  subtitleEn: 'Bottom achievement',
+  progress: 1,
+  target: 1,
+);
 
 TaskItem _task() {
   final now = DateTime.utc(2026, 8, 19, 12);

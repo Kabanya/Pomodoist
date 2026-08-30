@@ -22,7 +22,7 @@ const _voiceSheetBorderRadius = BorderRadius.vertical(top: Radius.circular(28));
 const _voiceSmartModePreferenceKey = 'voice.smartMode';
 const _voiceMaxDuration = Duration(seconds: 59);
 const _quickAddIconTransitionDuration = Duration(milliseconds: 120);
-const _quickAddSuccessHoldDuration = Duration(milliseconds: 240);
+const _quickAddSuccessHoldDuration = Duration(milliseconds: 800);
 
 Future<List<DecomposedTaskDraft>?> showVoiceQuickAddSheet(
   BuildContext context,

@@ -126,23 +126,36 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
       children: [
         const AchievementAnnouncementBridge(),
         _ShellTopBar(location: widget.location, onMenuPressed: _toggleSidebar),
-        const AchievementAnnouncementSlot(
-          presentation: AchievementPresentation.globalBanner,
-        ),
         Expanded(
-          child: MediaQuery.removePadding(
-            context: context,
-            removeTop: true,
-            removeBottom: !wide,
-            child: widget.child,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              MediaQuery.removePadding(
+                context: context,
+                removeTop: true,
+                removeBottom: !wide,
+                child: widget.child,
+              ),
+              const Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: AchievementAnnouncementSlot(
+                  presentation: AchievementPresentation.globalBanner,
+                ),
+              ),
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: AchievementAnnouncementSlot(
+                  presentation: AchievementPresentation.bottomPlaque,
+                ),
+              ),
+            ],
           ),
         ),
-        if (wide) ...[
-          const AchievementAnnouncementSlot(
-            presentation: AchievementPresentation.bottomPlaque,
-          ),
-          if (showMiniFocusPlayer) const MiniFocusPlayer(),
-        ],
+        if (wide && showMiniFocusPlayer) const MiniFocusPlayer(),
       ],
     );
 
@@ -617,9 +630,6 @@ class _ShellBottomChrome extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const AchievementAnnouncementSlot(
-          presentation: AchievementPresentation.bottomPlaque,
-        ),
         if (showMiniFocusPlayer)
           MediaQuery.removePadding(
             context: context,
