@@ -5,7 +5,7 @@
 <h1 align="center">Pomodoist</h1>
 
 <p align="center">
-  <strong>An open-source task manager with Pomodoro focus sessions and productivity reports.</strong>
+  <strong>Plan tasks. Protect focus time. See your progress.</strong>
 </p>
 
 <p align="center">
@@ -14,42 +14,21 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/Kabanya/Pomodoist/releases"><img src="https://img.shields.io/badge/Download_for_desktop-EF4444?style=for-the-badge" alt="Download for desktop"></a>
+  <a href="https://app.pomodoist.com"><img src="https://img.shields.io/badge/Try_Web-18181B?style=for-the-badge" alt="Try Web"></a>
+</p>
+
+<p align="center">
   <a href="https://pomodoist.com">Website</a> ·
-  <a href="https://app.pomodoist.com">Try Web</a> ·
-  <a href="https://github.com/Kabanya/Pomodoist/releases/latest/download/Pomodoist-x86_64.AppImage">Linux AppImage</a> ·
-  <a href="https://github.com/Kabanya/Pomodoist/releases">Desktop Releases</a> ·
   <a href="https://pomodoist.com/privacy/">Privacy</a> ·
   <a href="https://github.com/Kabanya/Pomodoist/issues/new">Report a bug</a> ·
   <a href="CONTRIBUTING.md">Contribute</a>
 </p>
 
-Pomodoist brings task planning, protected focus time, and progress tracking
-into one Flutter app. Use it on the web or build it for macOS, iOS and iPadOS,
+Pomodoist is an open-source productivity app for macOS, iOS and iPadOS,
 Android, Linux, Windows, and the web.
 
-## Linux AppImage
-
-The x86_64 AppImage is the primary direct Linux download. It is built on
-Ubuntu 22.04 for compatibility across current distributions, includes the
-Flutter runtime and the GStreamer components used by timer sounds, and does
-not require root access or installation:
-
-```sh
-curl -LO https://github.com/Kabanya/Pomodoist/releases/latest/download/Pomodoist-x86_64.AppImage
-curl -LO https://github.com/Kabanya/Pomodoist/releases/latest/download/Pomodoist-x86_64.AppImage.sha256
-sha256sum --check Pomodoist-x86_64.AppImage.sha256
-chmod +x Pomodoist-x86_64.AppImage
-./Pomodoist-x86_64.AppImage
-```
-
-If FUSE is unavailable, run it with
-`APPIMAGE_EXTRACT_AND_RUN=1 ./Pomodoist-x86_64.AppImage`. Voice entry is an
-optional integration and also needs `parecord` plus `ffmpeg` from the host
-distribution. The current Linux notification backend cannot keep scheduled
-system notifications alive after Pomodoist exits; focus sounds and in-app
-completion feedback work while the app is running.
-
-## Pomodoist at a glance
+## From plan to progress
 
 <p align="center">
   <img src=".github/assets/screenshots/macos-upcoming-planner.webp" alt="Upcoming planner on macOS in light and dark mode" width="90%">
@@ -61,8 +40,6 @@ completion feedback work while the app is running.
   configurable breaks
 - **Review your progress** — understand weekly productivity and focus-time
   trends through built-in reports
-- **Work across platforms** — use the same Flutter client on mobile, desktop,
-  and web, with optional account, calendar, and voice integrations
 
 ## Screenshots
 
@@ -113,6 +90,9 @@ Run the same validation used for contributions:
 make check
 ```
 
+<details>
+<summary><strong>Linux development and AppImage builds</strong></summary>
+
 ### Arch Linux
 
 Pomodoist pins Flutter 3.47.0 through FVM so Arch's rolling packages do not
@@ -146,7 +126,21 @@ desktop launcher and the `pomodoist://` URL scheme. Build dependencies are
 checked with `pacman`; if any are missing, `make setup-linux` prints the exact
 installation command.
 
-### Windows
+Linux release bundles and AppImages require public production configuration.
+Copy the example to the ignored local default, replace the remaining
+placeholders, and build:
+
+```bash
+cp tool/desktop-production-defines.example.json .env.linux-production.json
+make linux-appimage
+```
+
+Override the path with
+`LINUX_CONFIG=/path/to/production-defines.json` when needed.
+</details>
+
+<details>
+<summary><strong>Windows development and installers</strong></summary>
 
 Open the latest GitHub release, download the single `Pomodoist-Setup.exe`
 file, and run it. The installer works for the current user without
@@ -181,23 +175,14 @@ SHA-256 file. Override the path when needed:
 make windows-installer WINDOWS_CONFIG=C:/path/to/production-defines.json
 ```
 
-Linux release bundles and AppImages require the same public production
-configuration. Copy the example to the ignored local default, replace the
-remaining placeholders, and build:
-
-```bash
-cp tool/desktop-production-defines.example.json .env.linux-production.json
-make linux-appimage
-```
-
-Override the path with `LINUX_CONFIG=/path/to/production-defines.json` when
-needed. Both desktop build paths validate the file before compiling and reject
-Cloudflare test keys and privileged Supabase keys.
-
 The installer target always performs a clean build so CMake does not reuse a
 generator from a previous Visual Studio installation. A `vX.Y.Z` tag publishes
 the unsigned Windows installer and Linux AppImage in one GitHub release. Manual
 Windows workflow runs remain separate pre-releases.
+</details>
+
+Both desktop build paths validate the production configuration before
+compiling and reject Cloudflare test keys and privileged Supabase keys.
 
 <details>
 <summary>Develop the shared client packages locally</summary>
