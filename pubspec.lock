@@ -67,14 +67,6 @@ packages:
       url: "https://github.com/Kabanya/app-client-platform.git"
     source: git
     version: "0.1.0"
-  archive:
-    dependency: transitive
-    description:
-      name: archive
-      sha256: a96e8b390886ee8abb49b7bd3ac8df6f451c621619f52a26e815fdcf568959ff
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.0.9"
   args:
     dependency: transitive
     description:
@@ -267,14 +259,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
-  console:
-    dependency: transitive
-    description:
-      name: console
-      sha256: e04e7824384c5b39389acdd6dc7d33f3efe6b232f6f16d7626f194f6a01ad69a
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.1.0"
   convert:
     dependency: transitive
     description:
@@ -599,14 +583,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.6.4"
-  get_it:
-    dependency: transitive
-    description:
-      name: get_it
-      sha256: "568d62f0e68666fb5d95519743b3c24a34c7f19d834b0658c46e26d778461f66"
-      url: "https://pub.dev"
-    source: hosted
-    version: "9.2.1"
   glob:
     dependency: transitive
     description:
@@ -679,14 +655,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.2"
-  image:
-    dependency: transitive
-    description:
-      name: image
-      sha256: f9881ff4998044947ec38d098bc7c8316ae1186fa786eddffdb867b9bc94dfce
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.8.0"
   in_app_purchase:
     dependency: "direct main"
     description:
@@ -839,14 +807,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-  msix:
-    dependency: "direct dev"
-    description:
-      name: msix
-      sha256: "61415c352e8aea084332b8a5514e6408c961c8cdeca202804fff1040eb555ac7"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.18.0"
   multiview_desktop:
     dependency: "direct main"
     description:
@@ -1007,14 +967,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.2"
-  posix:
-    dependency: transitive
-    description:
-      name: posix
-      sha256: bc1bad54ad2b735816e31f8d4600cfde6c7839975085ddfbca48b6c9f7c4044e
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.5.2"
   postgrest:
     dependency: transitive
     description:

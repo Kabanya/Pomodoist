@@ -4,10 +4,8 @@ Date: 2026-08-17
 
 ## Goal
 
-Provide a temporary unsigned Windows distribution that a user can download as
-one `Pomodoist-Setup.exe` file, open, and immediately use. The signed MSIX
-bundle remains the stable distribution target and its fail-closed SignPath
-workflow is unchanged.
+Provide an unsigned Windows distribution that a user can download as one
+`Pomodoist-Setup.exe` file, open, and immediately use.
 
 ## Selected approach
 
@@ -28,17 +26,15 @@ The installer:
 - produces `build\windows\installer\Pomodoist-Setup.exe` and its SHA-256
   checksum.
 
-The initial preview contains the x64 Flutter build. It runs natively on x64
-Windows 10/11 and through Windows 11's x64 compatibility on Arm64. The native
-Arm64 artifact continues to be produced by the signed MSIX release pipeline.
+The installer contains the x64 Flutter build. It runs natively on x64 Windows
+10/11 and through Windows 11's x64 compatibility on Arm64.
 
 ## Release separation
 
-Unsigned EXE publication uses a separate manually triggered GitHub Actions
-workflow and a GitHub pre-release. It must never publish or replace the stable
-`Pomodoist.msixbundle` or `Pomodoist.appinstaller` assets. The release notes
-must state that the EXE is unsigned and may trigger Microsoft Defender
-SmartScreen.
+Tag-triggered publication uploads the EXE and Linux AppImage to the same draft
+GitHub release and publishes it only after both platforms and checksums exist.
+Manual Windows workflow runs remain separate pre-releases. Release notes state
+that the EXE is unsigned and may trigger Microsoft Defender SmartScreen.
 
 Production Dart defines come only from the protected `windows-production`
 GitHub Environment. Local release builds continue to require an explicit JSON
@@ -60,7 +56,7 @@ silent pages, post-install launch, and checksum generation. CI builds the
 Flutter release, compiles the installer, checks its Authenticode state and
 hash, installs it silently, validates files and protocol registration, launches
 the installed runner, uninstalls it, and uploads only the installer and
-checksum to a pre-release.
+checksum.
 
 Local verification builds the current x64 release, compiles the installer,
 opens it normally, waits for the installed `pomodoist.exe` process, and leaves
@@ -68,8 +64,7 @@ the application running for manual inspection.
 
 ## Known limitation
 
-Until the executable is signed, SmartScreen may show an unknown-publisher
-warning. An unpackaged Flutter application can display and schedule Windows
-notifications, but Windows does not give it package identity; APIs that cancel
-already displayed notifications or enumerate active notifications remain
-limited. The signed MSIX distribution removes this limitation.
+SmartScreen may show an unknown-publisher warning. An unpackaged Flutter
+application can display and schedule Windows notifications, but Windows does
+not give it package identity; APIs that cancel already displayed notifications
+or enumerate active notifications remain limited.

@@ -52,19 +52,9 @@ grep -Fq 'FinchForge LLC' LICENSING.md ||
   fail 'LICENSING.md must identify the official distributor'
 grep -Fq '[licensing model](LICENSING.md)' README.md ||
   fail 'README must link to LICENSING.md'
-grep -Fq 'Free code signing provided by SignPath.io, certificate by SignPath Foundation.' \
-  CODE_SIGNING_POLICY.md || fail 'Code signing policy must include SignPath attribution'
-grep -Fq 'Free code signing provided by SignPath.io, certificate by SignPath Foundation.' \
-  README.md || fail 'README must include SignPath attribution'
-grep -Fq 'https://pomodoist.com/privacy/' CODE_SIGNING_POLICY.md ||
-  fail 'Code signing policy must link to the privacy policy'
-grep -Fq 'Committers and reviewers:' CODE_SIGNING_POLICY.md ||
-  fail 'Code signing policy must identify committers and reviewers'
-grep -Fq 'Approver:' CODE_SIGNING_POLICY.md ||
-  fail 'Code signing policy must identify signing approvers'
-grep -Fq 'Code signing policy: https://github.com/Kabanya/Pomodoist/blob/main/CODE_SIGNING_POLICY.md' \
-  .github/workflows/windows-release.yml ||
-  fail 'Windows release page must link to the code signing policy'
+! git grep -ni 'signpath' -- \
+  ':!tool/test_public_boundary.sh' ':!test/workflow_yaml_test.dart' >/dev/null ||
+  fail 'tracked public files must not require SignPath'
 if grep -Eiq 'Alternative commercial licenses are available|distributed under separate terms|sublicense, relicense|open-source, commercial, or other license terms|Apple Standard EULA' \
   README.md LICENSING.md CLA.md CONTRIBUTING.md; then
   fail 'client licensing documents must not offer proprietary/commercial terms'

@@ -8,7 +8,6 @@ void main() {
     '.github/workflows/linux-appimage-release.yml',
     '.github/workflows/validate.yml',
     '.github/workflows/windows-exe-preview.yml',
-    '.github/workflows/windows-release.yml',
   ]) {
     test('$path is valid YAML', () {
       final document = loadYaml(File(path).readAsStringSync());
@@ -18,12 +17,13 @@ void main() {
     });
   }
 
-  test('desktop release stays draft until Linux and Windows assets exist', () {
+  test('one tag release waits for Linux AppImage and Windows EXE assets', () {
     for (final path in [
       '.github/workflows/linux-appimage-release.yml',
-      '.github/workflows/windows-release.yml',
+      '.github/workflows/windows-exe-preview.yml',
     ]) {
       final workflow = File(path).readAsStringSync();
+      expect(workflow, contains("- 'v*.*.*'"), reason: path);
       expect(
         workflow,
         contains(r'group: desktop-release-${{ github.ref }}'),
@@ -37,11 +37,24 @@ void main() {
         contains('Pomodoist-x86_64.AppImage.sha256'),
         reason: path,
       );
-      expect(workflow, contains('Pomodoist.msixbundle'), reason: path);
-      expect(workflow, contains('Pomodoist.appinstaller'), reason: path);
+      expect(workflow, contains('Pomodoist-Setup.exe'), reason: path);
+      expect(workflow, contains('Pomodoist-Setup.exe.sha256'), reason: path);
       expect(
         workflow,
         contains('Release remains draft until all desktop assets are present.'),
+        reason: path,
+      );
+    }
+  });
+
+  test('desktop release workflows do not depend on SignPath', () {
+    for (final path in [
+      '.github/workflows/linux-appimage-release.yml',
+      '.github/workflows/windows-exe-preview.yml',
+    ]) {
+      expect(
+        File(path).readAsStringSync().toLowerCase(),
+        isNot(contains('signpath')),
         reason: path,
       );
     }
@@ -90,7 +103,7 @@ void main() {
     expect(command, contains('POMODOIST_RELEASE="\$GITHUB_SHA"'));
   });
 
-  test('Windows EXE preview isolates production build from publishing', () {
+  test('Windows EXE build isolates production build from publishing', () {
     final document =
         loadYaml(
               File(
@@ -135,10 +148,7 @@ void main() {
   });
 
   test('Windows production builds configure native CAPTCHA', () {
-    for (final path in [
-      '.github/workflows/windows-exe-preview.yml',
-      '.github/workflows/windows-release.yml',
-    ]) {
+    for (final path in ['.github/workflows/windows-exe-preview.yml']) {
       final workflow = File(path).readAsStringSync();
       expect(
         workflow,

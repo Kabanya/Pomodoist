@@ -148,12 +148,12 @@ installation command.
 
 ### Windows
 
-For the simplest temporary installation, open the latest GitHub pre-release,
-download the single `Pomodoist-Setup.exe` file, and run it. The preview installs
-for the current user without administrator access and starts Pomodoist
-automatically. Until trusted code signing is enabled, Microsoft Defender
-SmartScreen may warn that the publisher is unknown. Verify the adjacent
-`Pomodoist-Setup.exe.sha256` file if you want to confirm the download.
+Open the latest GitHub release, download the single `Pomodoist-Setup.exe`
+file, and run it. The installer works for the current user without
+administrator access and starts Pomodoist automatically. It is unsigned, so
+Microsoft Defender SmartScreen may warn that the publisher is unknown. Verify
+the adjacent `Pomodoist-Setup.exe.sha256` file if you want to confirm the
+download.
 
 Windows development requires Flutter 3.47.0, Visual Studio with Desktop
 development with C++, and Windows SDK 10.0.19041.0 or newer. Building the EXE
@@ -195,11 +195,9 @@ needed. Both desktop build paths validate the file before compiling and reject
 Cloudflare test keys and privileged Supabase keys.
 
 The installer target always performs a clean build so CMake does not reuse a
-generator from a previous Visual Studio installation. Packaging and trusted
-signing are performed by the tag-triggered GitHub workflow; public releases
-contain `Pomodoist.msixbundle` and `Pomodoist.appinstaller` for Windows 10
-2004+ and Windows 11 on x64/ARM64. The unsigned EXE is always marked as a
-pre-release and never replaces these stable assets.
+generator from a previous Visual Studio installation. A `vX.Y.Z` tag publishes
+the unsigned Windows installer and Linux AppImage in one GitHub release. Manual
+Windows workflow runs remain separate pre-releases.
 
 <details>
 <summary>Develop the shared client packages locally</summary>
@@ -231,16 +229,8 @@ Copyright © 2026 FinchForge LLC.
 
 Pomodoist client source and official client binaries are licensed under the
 [GNU Affero General Public License v3.0 only](LICENSE) (`AGPL-3.0-only`). See
-the [licensing model](LICENSING.md) and
-[Code Signing Policy](CODE_SIGNING_POLICY.md). Paid subscriptions cover hosted
-services and account entitlements, not a proprietary client license. The name,
-logo, and app icon follow the
+the [licensing model](LICENSING.md). Paid subscriptions cover hosted services
+and account entitlements, not a proprietary client license. The name, logo,
+and app icon follow the
 [trademark policy](TRADEMARKS.md), and contributions require the
 [Contributor License Agreement](CLA.md).
-
-## Code signing policy
-
-Free code signing provided by SignPath.io, certificate by SignPath Foundation.
-See the public [Code Signing Policy](CODE_SIGNING_POLICY.md), including team
-roles, release controls, incident response, and the
-[Privacy Policy](https://pomodoist.com/privacy/).

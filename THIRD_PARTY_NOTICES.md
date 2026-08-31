@@ -18,10 +18,8 @@ Notable native components in the Windows build include:
 - `app_account` and `app_voice` from `Kabanya/app-client-platform` —
   AGPL-3.0-only client components.
 
-The `msix` package and SignPath GitHub action are build-time tools and are not
-linked into the Pomodoist client. Microsoft Windows SDK tools package and
-verify the release but are not redistributed with it.
+The Inno Setup compiler packages the unsigned Windows installer and is not
+redistributed with it.
 
 Before each public Windows release, maintainers must review the resolved
-`pubspec.lock`, Flutter `NOTICES.Z`, and native artifacts. A proprietary client
-component blocks signing under the Pomodoist policy.
+`pubspec.lock`, Flutter `NOTICES.Z`, and native artifacts.

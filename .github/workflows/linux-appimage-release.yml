@@ -222,7 +222,7 @@ jobs:
       - name: Upload AppImage and publish complete desktop release
         if: github.ref_type == 'tag'
         run: |
-          release_notes='Official Pomodoist desktop release. Linux is distributed as a portable x86_64 AppImage with an adjacent SHA-256 checksum. Windows assets are Authenticode-signed according to the code signing policy: https://github.com/Kabanya/Pomodoist/blob/main/CODE_SIGNING_POLICY.md'
+          release_notes='Official Pomodoist desktop release. Linux is distributed as a portable x86_64 AppImage. The Windows installer is unsigned, so Microsoft Defender SmartScreen may warn about an unknown publisher.'
           if ! gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
             gh release create "$GITHUB_REF_NAME" \
               --draft \
@@ -241,8 +241,8 @@ jobs:
           required_assets=(
             Pomodoist-x86_64.AppImage
             Pomodoist-x86_64.AppImage.sha256
-            Pomodoist.msixbundle
-            Pomodoist.appinstaller
+            Pomodoist-Setup.exe
+            Pomodoist-Setup.exe.sha256
           )
           asset_names=$(gh api \
             "repos/$GITHUB_REPOSITORY/releases/$release_id/assets" \

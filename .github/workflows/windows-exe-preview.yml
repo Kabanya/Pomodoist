@@ -1,10 +1,13 @@
-name: Windows EXE preview
+name: Windows EXE
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*'
 
 concurrency:
-  group: windows-exe-preview
+  group: desktop-release-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -12,20 +15,23 @@ permissions:
 
 jobs:
   validate-ref:
-    name: Require main branch
+    name: Require main branch or release tag
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - name: Reject non-main dispatch
+      - name: Reject unsupported ref
         run: |
-          if [ "$GITHUB_REF" != 'refs/heads/main' ]; then
-            echo 'Windows previews can only be published from main.' >&2
-            exit 64
-          fi
+          case "$GITHUB_REF" in
+            refs/heads/main|refs/tags/v*.*.*) ;;
+            *)
+              echo 'Windows builds require main or a vX.Y.Z tag.' >&2
+              exit 64
+              ;;
+          esac
 
   build-test:
-    name: Build and smoke test unsigned preview
+    name: Build and smoke test unsigned EXE
     needs: validate-ref
     runs-on: windows-2022
     environment: windows-production
@@ -137,7 +143,7 @@ jobs:
             -Interactive
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: pomodoist-windows-exe-preview
+          name: pomodoist-windows-exe
           path: |
             build/windows/installer/Pomodoist-Setup.exe
             build/windows/installer/Pomodoist-Setup.exe.sha256
@@ -145,7 +151,7 @@ jobs:
           retention-days: 14
 
   publish:
-    name: Publish unsigned GitHub pre-release
+    name: Publish Windows EXE
     needs: build-test
     runs-on: ubuntu-latest
     permissions:
@@ -153,9 +159,50 @@ jobs:
     steps:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: pomodoist-windows-exe-preview
+          name: pomodoist-windows-exe
           path: release
-      - name: Publish GitHub pre-release
+      - name: Upload EXE and publish complete desktop release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          release_notes='Official Pomodoist desktop release. Linux is distributed as a portable x86_64 AppImage. The Windows installer is unsigned, so Microsoft Defender SmartScreen may warn about an unknown publisher.'
+          if ! gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" \
+              --draft \
+              --target "$GITHUB_SHA" \
+              --title "Pomodoist $GITHUB_REF_NAME" \
+              --notes "$release_notes" || \
+              gh release view "$GITHUB_REF_NAME" > /dev/null
+          fi
+          gh release upload "$GITHUB_REF_NAME" \
+            release/Pomodoist-Setup.exe \
+            release/Pomodoist-Setup.exe.sha256 \
+            --clobber
+          release_id=$(gh api \
+            "repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME" \
+            --jq .id)
+          required_assets=(
+            Pomodoist-x86_64.AppImage
+            Pomodoist-x86_64.AppImage.sha256
+            Pomodoist-Setup.exe
+            Pomodoist-Setup.exe.sha256
+          )
+          asset_names=$(gh api \
+            "repos/$GITHUB_REPOSITORY/releases/$release_id/assets" \
+            --jq '.[].name')
+          for required_asset in "${required_assets[@]}"; do
+            if ! grep -Fqx -- "$required_asset" <<< "$asset_names"; then
+              echo 'Release remains draft until all desktop assets are present.'
+              exit 0
+            fi
+          done
+          gh api --method PATCH \
+            "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+            --field draft=false \
+            --silent
+      - name: Publish manual GitHub pre-release
+        if: github.ref_type != 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.build-test.outputs.version }}
@@ -165,8 +212,6 @@ jobs:
           Unsigned Windows preview. Microsoft Defender SmartScreen may warn about an unknown publisher.
 
           Download \`Pomodoist-Setup.exe\`, open it, and Pomodoist will install for the current user and start automatically. This x64 preview runs on x64 Windows 10/11 and through x64 compatibility on Windows 11 Arm64.
-
-          Free code signing provided by SignPath.io, certificate by SignPath Foundation.
 
           Source commit: ${GITHUB_SHA}
           EOF
