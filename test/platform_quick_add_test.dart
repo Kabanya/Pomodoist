@@ -1,4 +1,5 @@
 import 'package:drift/native.dart';
+import 'package:dbus/dbus.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -362,7 +363,15 @@ class _NoopNotificationScheduler extends NotificationScheduler {
 }
 
 class _FakeLinuxPortal extends LinuxGlobalShortcutsPortal {
-  _FakeLinuxPortal() : super();
+  _FakeLinuxPortal()
+    : super(
+        client: DBusClient(
+          DBusAddress('unix:path=/tmp/pomodoist-unused-dbus'),
+          authClient: DBusAuthClient(uid: '1000'),
+        ),
+        sandboxed: false,
+        manageHyprlandShortcut: false,
+      );
 
   int disableCalls = 0;
 

@@ -66,8 +66,14 @@ class _PortalHarness {
     final address = await server.listenAddress(
       DBusAddress.unix(dir: Directory.systemTemp),
     );
-    final appClient = DBusClient(address);
-    final serviceClient = DBusClient(address);
+    final appClient = DBusClient(
+      address,
+      authClient: DBusAuthClient(uid: '1000'),
+    );
+    final serviceClient = DBusClient(
+      address,
+      authClient: DBusAuthClient(uid: '1000'),
+    );
     final portal = _PortalObject();
     await serviceClient.requestName('org.freedesktop.portal.Desktop');
     await serviceClient.registerObject(portal);

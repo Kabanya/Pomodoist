@@ -11,6 +11,7 @@ import '../core/sync/account_sync_lifecycle.dart';
 import '../core/sync/device_identity.dart';
 import '../features/billing/billing.dart';
 import '../features/integrations/google_calendar/data/google_calendar_sync_controller.dart';
+import '../features/integrations/google_calendar/data/google_calendar_sync_lifecycle.dart';
 import '../features/planning/data/task_decomposer.dart';
 import 'native_captcha_startup.dart';
 import 'native_link_coordinator.dart';
@@ -90,6 +91,21 @@ final googleCalendarSyncControllerProvider =
           );
         },
       );
+    });
+
+final googleCalendarSyncLifecycleProvider =
+    Provider<GoogleCalendarSyncLifecycle?>((ref) {
+      if (ref.watch(accountAuthStateProvider).value?.signedIn != true) {
+        return null;
+      }
+      final lifecycle = GoogleCalendarSyncLifecycle(
+        connections: ref
+            .watch(calendarIntegrationRepositoryProvider)
+            .watchConnection(),
+        syncController: ref.watch(googleCalendarSyncControllerProvider),
+      )..start();
+      ref.onDispose(lifecycle.dispose);
+      return lifecycle;
     });
 
 class AccountBootstrapController extends AsyncNotifier<AccountClient?> {

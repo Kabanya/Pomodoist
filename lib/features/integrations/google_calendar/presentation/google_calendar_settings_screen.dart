@@ -6,6 +6,7 @@ import '../../../../app/account_providers.dart';
 import '../../../../app/formatters.dart';
 import '../../../../app/providers.dart';
 import '../../../../app/theme/app_theme.dart';
+import '../data/google_calendar_sync_controller.dart';
 
 class GoogleCalendarSettingsScreen extends ConsumerStatefulWidget {
   const GoogleCalendarSettingsScreen({this.embedded = false, super.key});
@@ -133,7 +134,7 @@ class _GoogleCalendarSettingsScreenState
           SnackBar(
             content: Text(
               context.l10n.googleCalendarFailed(
-                _googleCalendarErrorMessage(error),
+                _googleCalendarErrorMessage(context, error),
               ),
             ),
           ),
@@ -147,8 +148,9 @@ class _GoogleCalendarSettingsScreenState
   }
 }
 
-String _googleCalendarErrorMessage(Object error) {
-  return error.toString();
+String _googleCalendarErrorMessage(BuildContext context, Object error) {
+  if (error is GoogleCalendarServerException) return error.message;
+  return context.l10n.authServiceUnavailable;
 }
 
 class _StatusRows extends StatelessWidget {

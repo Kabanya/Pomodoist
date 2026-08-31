@@ -51,7 +51,9 @@ void main() {
             ),
           ),
         ],
-        child: const MaterialApp(home: GoogleCalendarSettingsScreen()),
+        child: const MaterialApp(
+          home: Scaffold(body: GoogleCalendarSettingsScreen()),
+        ),
       ),
     );
     await tester.pump();
@@ -66,5 +68,50 @@ void main() {
     await tester.pump();
 
     expect(actions, ['sync', 'disconnect']);
+  });
+
+  testWidgets('settings hides transport exception details', (tester) async {
+    final now = DateTime.utc(2026, 8, 31);
+    final controller = GoogleCalendarSyncController(
+      invoke: (_) => throw Exception('DioException private transport details'),
+      openUrl: (_) async => true,
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          googleCalendarSyncControllerProvider.overrideWithValue(controller),
+          googleCalendarConnectionProvider.overrideWith(
+            (ref) => Stream.value(
+              GoogleCalendarConnectionRow(
+                id: 'primary',
+                accountEmail: 'user@example.com',
+                calendarId: 'calendar-1',
+                ownerDeviceId: 'google-calendar-server',
+                calendarName: 'Pomodoist',
+                syncToken: null,
+                status: 'connected',
+                lastError: null,
+                warning: null,
+                lastSyncStartedAt: now,
+                lastSyncFinishedAt: now,
+                createdAt: now,
+                updatedAt: now,
+              ),
+            ),
+          ),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(body: GoogleCalendarSettingsScreen()),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Sync now'));
+    await tester.pump();
+
+    expect(find.textContaining('DioException'), findsNothing);
+    expect(find.textContaining('temporarily unavailable'), findsOneWidget);
   });
 }
