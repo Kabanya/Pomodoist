@@ -13,6 +13,9 @@ void main() {
     );
 
     expect(association, isA<Map<String, dynamic>>());
+    expect(dockerfile, contains('COPY .fvmrc ./'));
+    expect(dockerfile, contains(r'jq -r .flutter .fvmrc'));
+    expect(dockerfile, contains(r'origin "refs/tags/$flutter_version"'));
     expect(dockerfile, contains('POMODOIST_BILLING_CHANNEL must be stripe'));
     expect(dockerfile, isNot(contains('account-sync-platform')));
     expect(entrypoint, contains('SUPABASE_ANON_KEY'));

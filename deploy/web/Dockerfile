@@ -4,6 +4,10 @@ FROM ghcr.io/cirruslabs/flutter:3.41.9@sha256:c6fed8fee02ca8fdb1b8dc128df99f6e29
 
 USER root
 WORKDIR /src
+COPY .fvmrc ./
+RUN flutter_version="$(jq -r .flutter .fvmrc)" \
+    && git -C "$FLUTTER_HOME" fetch --depth 1 origin "refs/tags/$flutter_version" \
+    && git -C "$FLUTTER_HOME" checkout --detach FETCH_HEAD
 ARG POMODOIST_BILLING_CHANNEL
 RUN [ "$POMODOIST_BILLING_CHANNEL" = stripe ] \
     || (echo 'POMODOIST_BILLING_CHANNEL must be stripe' >&2; exit 1)
