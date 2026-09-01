@@ -22,6 +22,7 @@ import '../../../app/providers.dart';
 import '../../../app/app_theme_mode.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../focus/presentation/focus_view_mode.dart';
+import '../../focus/presentation/focus_screen.dart';
 import '../../integrations/google_calendar/presentation/google_calendar_settings_screen.dart';
 import '../../onboarding/onboarding_gate.dart';
 import 'account_sign_out_button.dart';
@@ -30,10 +31,16 @@ import 'csv_task_import_card.dart';
 import 'pomodoist_account_actions.dart';
 
 class LoginScreen extends ConsumerWidget {
-  const LoginScreen({this.returnTo = '/today', this.initialFailure, super.key});
+  const LoginScreen({
+    this.returnTo = '/today',
+    this.initialFailure,
+    bool? showGuestTimer,
+    super.key,
+  }) : showGuestTimer = showGuestTimer ?? kIsWeb;
 
   final String returnTo;
   final AccountAuthFailure? initialFailure;
+  final bool showGuestTimer;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -110,37 +117,134 @@ class LoginScreen extends ConsumerWidget {
             ),
           );
 
-    return _StandaloneAuthScaffold(
-      title: l10n.loginTitle,
-      subtitle: l10n.onboardingAccountSubtitle,
-      footer: _AuthRouteLink(
-        prompt: l10n.loginCreateAccountPrompt,
-        action: l10n.loginCreateAccountAction,
-        route: _authRoute('/register', returnTo),
-        buttonKey: const Key('login-register-link'),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (initialFailure case final failure? when !failure.isCancelled) ...[
-            _AuthFailureNoticeCard(
-              failure: failure,
-              onSendNewLink: account == null
-                  ? null
-                  : () => showPomodoistEmailAuthDialog(
-                      context: context,
-                      account: account,
-                      redirectTo: redirectTo,
-                      config: ref.read(runtimePublicConfigProvider),
-                      nativeCaptchaCallbacks: ref
-                          .read(nativeLinkCoordinatorProvider)
-                          ?.captchaCallbacks,
-                      onSignedIn: () => context.go(returnTo),
+    final footer = _AuthRouteLink(
+      prompt: l10n.loginCreateAccountPrompt,
+      action: l10n.loginCreateAccountAction,
+      route: _authRoute('/register', returnTo),
+      buttonKey: const Key('login-register-link'),
+    );
+    final authContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (initialFailure case final failure? when !failure.isCancelled) ...[
+          _AuthFailureNoticeCard(
+            failure: failure,
+            onSendNewLink: account == null
+                ? null
+                : () => showPomodoistEmailAuthDialog(
+                    context: context,
+                    account: account,
+                    redirectTo: redirectTo,
+                    config: ref.read(runtimePublicConfigProvider),
+                    nativeCaptchaCallbacks: ref
+                        .read(nativeLinkCoordinatorProvider)
+                        ?.captchaCallbacks,
+                    onSignedIn: () => context.go(returnTo),
+                  ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        authPanel,
+      ],
+    );
+    if (!showGuestTimer) {
+      return _StandaloneAuthScaffold(
+        title: l10n.loginTitle,
+        subtitle: l10n.onboardingAccountSubtitle,
+        footer: footer,
+        child: authContent,
+      );
+    }
+    final guestStartup = ref.watch(guestDataStartupProvider);
+    return Scaffold(
+      body: SafeArea(
+        child: ListView(
+          key: const Key('guest-login-scroll'),
+          padding: const EdgeInsets.all(24),
+          children: [
+            Align(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.loginTitle,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                      textAlign: TextAlign.center,
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.onboardingAccountSubtitle,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    authContent,
+                    const SizedBox(height: 12),
+                    footer,
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
+            guestStartup.when(
+              data: (_) => const FocusScreen(
+                embedded: true,
+                fixedViewMode: FocusViewMode.full,
+              ),
+              loading: () => const _GuestTimerLoading(),
+              error: (error, _) => _GuestTimerError(
+                error: error,
+                onRetry: () => ref.invalidate(guestDataStartupProvider),
+              ),
+            ),
           ],
-          authPanel,
+        ),
+      ),
+    );
+  }
+}
+
+class _GuestTimerLoading extends StatelessWidget {
+  const _GuestTimerLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.all(24),
+      child: Center(
+        child: SizedBox.square(
+          key: Key('guest-timer-loading'),
+          dimension: 28,
+          child: CircularProgressIndicator(strokeWidth: 2.5),
+        ),
+      ),
+    );
+  }
+}
+
+class _GuestTimerError extends StatelessWidget {
+  const _GuestTimerError({required this.error, required this.onRetry});
+
+  final Object error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        key: const Key('guest-timer-error'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('$error', textAlign: TextAlign.center),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            key: const Key('guest-timer-retry'),
+            onPressed: onRetry,
+            child: Text(context.l10n.commonRetry),
+          ),
         ],
       ),
     );

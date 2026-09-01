@@ -291,7 +291,7 @@ final accountSyncStartupProvider = FutureProvider<void>((ref) async {
   }
 });
 
-final guestDataStartupProvider = FutureProvider<void>((ref) async {
+final guestDataStartupProvider = FutureProvider.autoDispose<void>((ref) async {
   await ref.watch(appStartupProvider.future);
   final reset = await AccountSyncEngine.prepareGuestLocalData(
     db: ref.watch(appDatabaseProvider),

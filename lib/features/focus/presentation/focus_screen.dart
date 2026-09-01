@@ -14,7 +14,10 @@ import 'focus_stage.dart';
 import 'focus_view_mode.dart';
 
 class FocusScreen extends ConsumerStatefulWidget {
-  const FocusScreen({super.key});
+  const FocusScreen({this.embedded = false, this.fixedViewMode, super.key});
+
+  final bool embedded;
+  final FocusViewMode? fixedViewMode;
 
   @override
   ConsumerState<FocusScreen> createState() => _FocusScreenState();
@@ -31,7 +34,8 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     final intervalValue = ref.watch(activeFocusIntervalProvider);
     final presetsValue = ref.watch(focusPresetsProvider);
     final remaining = ref.watch(activeFocusRemainingProvider);
-    final viewMode = ref.watch(focusViewModeProvider);
+    final FocusViewMode viewMode =
+        widget.fixedViewMode ?? ref.watch(focusViewModeProvider);
     final timerVisualStyle = ref.watch(focusTimerVisualStyleProvider);
     final lastPresetId = ref.watch(lastFocusPresetIdProvider);
     final focusRepository = ref.watch(focusRepositoryProvider);
@@ -71,93 +75,102 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         ? null
         : _findPreset(presets, _activePresetId(run)) ?? _defaultPreset(presets);
 
+    final content = LayoutBuilder(
+      builder: (context, constraints) {
+        final desktop = constraints.maxWidth >= 720;
+        final stage = Align(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 920),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const _FocusHeader(),
+                SizedBox(height: desktop ? 24 : 20),
+                loadError != null
+                    ? _FocusLoadError(error: loadError)
+                    : loading
+                    ? const _FocusLoading()
+                    : run == null && interval == null
+                    ? FocusIdleStage(
+                        presets: presets,
+                        selectedPreset: effectivePreset,
+                        timerVisualStyle: timerVisualStyle,
+                        compact: !desktop,
+                        viewMode: viewMode,
+                        showViewModeMenu: widget.fixedViewMode == null,
+                        onViewModeChanged: _setViewMode,
+                        onPresetSelected: _selectPreset,
+                        onStart: effectivePreset == null
+                            ? null
+                            : () =>
+                                  _startFocus(focusRepository, effectivePreset),
+                        onCustomize: effectivePreset == null
+                            ? null
+                            : () => _showPresetDialog(effectivePreset, presets),
+                        onCreate: () => _showPresetDialog(null, presets),
+                      )
+                    : run == null ||
+                          interval == null ||
+                          interval.runId != run.id ||
+                          remaining == null
+                    ? const _FocusTransition()
+                    : FocusActiveStage(
+                        run: run,
+                        interval: interval,
+                        intervals: intervals,
+                        remaining: remaining,
+                        presets: presets,
+                        selectedPreset: activePreset,
+                        timerVisualStyle: timerVisualStyle,
+                        compact: !desktop,
+                        viewMode: viewMode,
+                        showViewModeMenu: widget.fixedViewMode == null,
+                        repository: focusRepository,
+                        onViewModeChanged: _setViewMode,
+                        onPresetChanged: (presetId) =>
+                            _changeActiveRunPreset(run, presetId),
+                        onCustomizePreset: (preset) =>
+                            _showPresetDialog(preset, presets),
+                      ),
+              ],
+            ),
+          ),
+        );
+        if (widget.embedded) {
+          return KeyedSubtree(
+            key: Key(desktop ? 'focus-layout-desktop' : 'focus-layout-compact'),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                desktop ? 32 : 16,
+                desktop ? 28 : 18,
+                desktop ? 32 : 16,
+                32,
+              ),
+              child: stage,
+            ),
+          );
+        }
+        return KeyedSubtree(
+          key: Key(desktop ? 'focus-layout-desktop' : 'focus-layout-compact'),
+          child: ListView(
+            key: const Key('focus-stage-scroll'),
+            padding: EdgeInsets.fromLTRB(
+              desktop ? 32 : 16,
+              desktop ? 28 : 18,
+              desktop ? 32 : 16,
+              32,
+            ),
+            children: [stage],
+          ),
+        );
+      },
+    );
+    if (widget.embedded) {
+      return content;
+    }
     return Material(
       color: context.appColors.canvas,
-      child: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final desktop = constraints.maxWidth >= 720;
-            return KeyedSubtree(
-              key: Key(
-                desktop ? 'focus-layout-desktop' : 'focus-layout-compact',
-              ),
-              child: ListView(
-                key: const Key('focus-stage-scroll'),
-                padding: EdgeInsets.fromLTRB(
-                  desktop ? 32 : 16,
-                  desktop ? 28 : 18,
-                  desktop ? 32 : 16,
-                  32,
-                ),
-                children: [
-                  Align(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 920),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const _FocusHeader(),
-                          SizedBox(height: desktop ? 24 : 20),
-                          loadError != null
-                              ? _FocusLoadError(error: loadError)
-                              : loading
-                              ? const _FocusLoading()
-                              : run == null && interval == null
-                              ? FocusIdleStage(
-                                  presets: presets,
-                                  selectedPreset: effectivePreset,
-                                  timerVisualStyle: timerVisualStyle,
-                                  compact: !desktop,
-                                  viewMode: viewMode,
-                                  onViewModeChanged: _setViewMode,
-                                  onPresetSelected: _selectPreset,
-                                  onStart: effectivePreset == null
-                                      ? null
-                                      : () => _startFocus(
-                                          focusRepository,
-                                          effectivePreset,
-                                        ),
-                                  onCustomize: effectivePreset == null
-                                      ? null
-                                      : () => _showPresetDialog(
-                                          effectivePreset,
-                                          presets,
-                                        ),
-                                  onCreate: () =>
-                                      _showPresetDialog(null, presets),
-                                )
-                              : run == null ||
-                                    interval == null ||
-                                    interval.runId != run.id ||
-                                    remaining == null
-                              ? const _FocusTransition()
-                              : FocusActiveStage(
-                                  run: run,
-                                  interval: interval,
-                                  intervals: intervals,
-                                  remaining: remaining,
-                                  presets: presets,
-                                  selectedPreset: activePreset,
-                                  timerVisualStyle: timerVisualStyle,
-                                  compact: !desktop,
-                                  viewMode: viewMode,
-                                  repository: focusRepository,
-                                  onViewModeChanged: _setViewMode,
-                                  onPresetChanged: (presetId) =>
-                                      _changeActiveRunPreset(run, presetId),
-                                  onCustomizePreset: (preset) =>
-                                      _showPresetDialog(preset, presets),
-                                ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
+      child: SafeArea(child: content),
     );
   }
 

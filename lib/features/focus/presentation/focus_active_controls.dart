@@ -242,6 +242,7 @@ Widget _buildFocusMoreActionsMenu(
   required bool compact,
   required bool minimal,
   required FocusViewMode viewMode,
+  required bool showViewModeMenu,
   required FocusRepository repository,
   required ValueChanged<FocusViewMode> onViewModeChanged,
   required ValueChanged<String> onPresetChanged,
@@ -350,16 +351,19 @@ Widget _buildFocusMoreActionsMenu(
               enabled: preset.id != selectedPreset?.id,
               child: Text(l10n.usePreset(preset.name)),
             ),
-          if (!minimal) const PopupMenuDivider(),
-          PopupMenuItem(
-            key: const Key('focus-switch-view-mode'),
-            value: const _FocusMoreAction(_FocusMoreActionKind.toggleViewMode),
-            child: Text(
-              viewMode == FocusViewMode.full
-                  ? l10n.focusSwitchToMinimalView
-                  : l10n.focusSwitchToFullView,
+          if (showViewModeMenu && !minimal) const PopupMenuDivider(),
+          if (showViewModeMenu)
+            PopupMenuItem(
+              key: const Key('focus-switch-view-mode'),
+              value: const _FocusMoreAction(
+                _FocusMoreActionKind.toggleViewMode,
+              ),
+              child: Text(
+                viewMode == FocusViewMode.full
+                    ? l10n.focusSwitchToMinimalView
+                    : l10n.focusSwitchToFullView,
+              ),
             ),
-          ),
         ],
       ),
     ),

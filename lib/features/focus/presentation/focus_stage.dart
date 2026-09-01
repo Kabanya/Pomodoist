@@ -28,6 +28,7 @@ class FocusIdleStage extends StatelessWidget {
     required this.timerVisualStyle,
     required this.compact,
     required this.viewMode,
+    this.showViewModeMenu = true,
     required this.onPresetSelected,
     required this.onViewModeChanged,
     required this.onStart,
@@ -41,6 +42,7 @@ class FocusIdleStage extends StatelessWidget {
   final FocusTimerVisualStyle timerVisualStyle;
   final bool compact;
   final FocusViewMode viewMode;
+  final bool showViewModeMenu;
   final ValueChanged<String> onPresetSelected;
   final ValueChanged<FocusViewMode> onViewModeChanged;
   final Future<void> Function()? onStart;
@@ -74,10 +76,6 @@ class FocusIdleStage extends StatelessWidget {
           children: [const Icon(Icons.play_arrow), Text(l10n.startFocus)],
         ),
       ),
-    );
-    final menu = _FocusViewModeMenu(
-      viewMode: viewMode,
-      onChanged: onViewModeChanged,
     );
 
     return Column(
@@ -247,7 +245,11 @@ class FocusIdleStage extends StatelessWidget {
                 icon: const Icon(Icons.add),
                 label: Text(l10n.newPreset),
               ),
-            menu,
+            if (showViewModeMenu)
+              _FocusViewModeMenu(
+                viewMode: viewMode,
+                onChanged: onViewModeChanged,
+              ),
           ],
         ),
       ],
@@ -416,6 +418,7 @@ class FocusActiveStage extends StatelessWidget {
     required this.timerVisualStyle,
     required this.compact,
     required this.viewMode,
+    this.showViewModeMenu = true,
     required this.repository,
     required this.onViewModeChanged,
     required this.onPresetChanged,
@@ -432,6 +435,7 @@ class FocusActiveStage extends StatelessWidget {
   final FocusTimerVisualStyle timerVisualStyle;
   final bool compact;
   final FocusViewMode viewMode;
+  final bool showViewModeMenu;
   final FocusRepository repository;
   final ValueChanged<FocusViewMode> onViewModeChanged;
   final ValueChanged<String> onPresetChanged;
@@ -458,6 +462,7 @@ class FocusActiveStage extends StatelessWidget {
       compact: compact,
       minimal: !full,
       viewMode: viewMode,
+      showViewModeMenu: showViewModeMenu,
       repository: repository,
       onViewModeChanged: onViewModeChanged,
       onPresetChanged: onPresetChanged,
