@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_account/app_account.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/account_providers.dart';
@@ -83,6 +84,47 @@ void main() {
     },
   );
 
+  test(
+    'guest startup waits for pending bootstrap that resolves signed in',
+    () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      await db.ensureSeedData();
+      await _engine(
+        db,
+        _RecordingAccountClient(userId: 'persisted-user-id', nextCursor: 0),
+      ).prepareLocalAccountData();
+      await _insertFocusPreset(db, id: 'unsynced-account-preset');
+      final bootstrap = Completer<AccountClient?>();
+      final account = _MutableAuthAccountClient(userId: 'persisted-user-id');
+      addTearDown(account.close);
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          appStartupProvider.overrideWith((ref) async {}),
+          accountBootstrapInitializerProvider.overrideWithValue(
+            () => bootstrap.future,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final listener = container.listen(
+        guestDataStartupProvider,
+        (_, _) {},
+        fireImmediately: true,
+      );
+      addTearDown(listener.close);
+
+      final guest = container.read(guestDataStartupProvider.future);
+      await pumpEventQueue();
+      bootstrap.complete(account);
+      await guest;
+
+      expect((await _owner(db))?.cursor, 'persisted-user-id');
+      expect(await _focusPreset(db, 'unsynced-account-preset'), isNotNull);
+    },
+  );
+
   test('account preparation wins when sign-in races a guest reset', () async {
     final db = _BlockingResetDatabase();
     addTearDown(db.close);
@@ -106,37 +148,78 @@ void main() {
     expect((await _owner(db))?.cursor, 'account-user-id');
   });
 
-  test('sign-in finishes after a disposed guest startup reset', () async {
-    final db = _BlockingResetDatabase();
-    addTearDown(db.close);
-    await db.ensureSeedData();
-    await _engine(
-      db,
-      _RecordingAccountClient(userId: 'old-user-id', nextCursor: 0),
-    ).prepareLocalAccountData();
-    final container = ProviderContainer(
-      overrides: [
-        appDatabaseProvider.overrideWithValue(db),
-        appStartupProvider.overrideWith((ref) async {}),
-        accountClientProvider.overrideWithValue(null),
-        accountAuthStateProvider.overrideWithValue(
-          const AsyncData(AccountAuthState(signedIn: false)),
+  testWidgets(
+    'blocked guest reset clears preferences after auth removes its listener',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        focusViewModePreferenceKey: 'full',
+        focusTimerVisualStylePreferenceKey: 'bar',
+        lastFocusPresetIdPreferenceKey: 'account-preset',
+        focusCompletionCelebrationEnabledPreferenceKey: false,
+      });
+      final db = _BlockingResetDatabase();
+      addTearDown(db.close);
+      await db.ensureSeedData();
+      await _engine(
+        db,
+        _RecordingAccountClient(userId: 'old-user-id', nextCursor: 0),
+      ).prepareLocalAccountData();
+      final account = _MutableAuthAccountClient();
+      addTearDown(account.close);
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          appStartupProvider.overrideWith((ref) async {}),
+          accountBootstrapInitializerProvider.overrideWithValue(
+            () async => null,
+          ),
+          accountClientProvider.overrideWithValue(account),
+          accountAuthStateProvider.overrideWith((ref) async* {
+            yield const AccountAuthState(signedIn: false);
+            yield* account.accountAuthStateChanges();
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: Consumer(
+            builder: (context, ref, child) {
+              ref.watch(guestDataStartupProvider);
+              return const SizedBox.shrink();
+            },
+          ),
         ),
-      ],
-    );
-    final guest = container.read(guestDataStartupProvider.future);
-    await db.resetStarted.future;
+      );
+      final guest = container.read(guestDataStartupProvider.future);
+      await db.resetStarted.future;
 
-    container.dispose();
-    final account = _engine(
-      db,
-      _RecordingAccountClient(userId: 'new-user-id', nextCursor: 0),
-    ).prepareLocalAccountData();
-    db.releaseReset.complete();
-    await Future.wait([guest, account]);
+      account.signIn('new-user-id');
+      await tester.pump();
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      final accountStartup = _engine(
+        db,
+        _RecordingAccountClient(userId: 'new-user-id', nextCursor: 0),
+      ).prepareLocalAccountData();
+      db.releaseReset.complete();
+      await Future.wait([guest, accountStartup]);
 
-    expect((await _owner(db))?.cursor, 'new-user-id');
-  });
+      expect((await _owner(db))?.cursor, 'new-user-id');
+      final preferences = await SharedPreferences.getInstance();
+      expect(preferences.containsKey(focusViewModePreferenceKey), isFalse);
+      expect(
+        preferences.containsKey(focusTimerVisualStylePreferenceKey),
+        isFalse,
+      );
+      expect(preferences.containsKey(lastFocusPresetIdPreferenceKey), isFalse);
+      expect(
+        preferences.containsKey(focusCompletionCelebrationEnabledPreferenceKey),
+        isFalse,
+      );
+    },
+  );
 
   test('queued guest preparation aborts after sign-in', () async {
     final db = _BlockingResetDatabase();
@@ -164,6 +247,53 @@ void main() {
     expect((await _owner(db))?.cursor, 'account-user-id');
   });
 
+  test('guest transition waits for a blocked account pull', () async {
+    final db = _BlockingResetDatabase();
+    addTearDown(db.close);
+    await db.ensureSeedData();
+    final account = _RecordingAccountClient(
+      userId: 'account-user-id',
+      nextCursor: 0,
+    );
+    final pull = Completer<AccountSyncPullResult>();
+    account.pendingPull = pull.future;
+    final engine = _engine(db, account);
+    await engine.prepareLocalAccountData();
+
+    final sync = engine.syncNow();
+    await account.pullStarted.future;
+    final guest = AccountSyncEngine.prepareGuestLocalData(
+      db: db,
+      uuid: const Uuid(),
+    );
+    await pumpEventQueue(times: 50);
+    final guestResetStartedBeforePull = db.resetStarted.isCompleted;
+    final result = AccountSyncPullResult(
+      nextCursor: 1,
+      hasMore: false,
+      changes: [_focusPresetEntity('remote-account-preset')],
+    );
+
+    if (guestResetStartedBeforePull) {
+      db.releaseReset.complete();
+      await guest;
+      pull.complete(result);
+    } else {
+      pull.complete(result);
+    }
+    await sync;
+    if (!db.releaseReset.isCompleted) {
+      await db.resetStarted.future;
+      db.releaseReset.complete();
+    }
+    await guest;
+
+    expect(guestResetStartedBeforePull, isFalse);
+    expect((await _owner(db))?.cursor, 'guest');
+    expect(await _focusPreset(db, 'remote-account-preset'), isNull);
+    expect(await _syncCursor(db), isNull);
+  });
+
   test(
     'guest startup clears Focus preferences at an account boundary',
     () async {
@@ -181,6 +311,12 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
+      final listener = container.listen(
+        guestDataStartupProvider,
+        (_, _) {},
+        fireImmediately: true,
+      );
+      addTearDown(listener.close);
       await _loadFocusPreferences(container);
 
       await container.read(guestDataStartupProvider.future);
@@ -228,6 +364,12 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
+    final listener = container.listen(
+      guestDataStartupProvider,
+      (_, _) {},
+      fireImmediately: true,
+    );
+    addTearDown(listener.close);
 
     final firstStartup = container.read(guestDataStartupProvider.future);
     await Future<void>.delayed(Duration.zero);
@@ -413,6 +555,38 @@ Future<SyncStateRow?> _owner(AppDatabase db) {
       .getSingleOrNull();
 }
 
+Future<SyncStateRow?> _syncCursor(AppDatabase db) {
+  return (db.select(
+    db.syncState,
+  )..where((row) => row.id.equals('pomodoist'))).getSingleOrNull();
+}
+
+AccountSyncEntity _focusPresetEntity(String id) {
+  final now = DateTime.utc(2026, 9, 1, 12);
+  return AccountSyncEntity(
+    entityType: 'focus_preset',
+    entityId: id,
+    serverRevision: 1,
+    data: {
+      'id': id,
+      'userId': localUserId,
+      'name': 'Remote account preset',
+      'workSeconds': 1200,
+      'shortBreakSeconds': 300,
+      'longBreakSeconds': 900,
+      'intervalsBeforeLongBreak': 4,
+      'autoStartBreaks': false,
+      'autoStartWork': false,
+      'allowPause': true,
+      'strictMode': false,
+      'isDefault': false,
+      'isDeleted': false,
+      'createdAt': now.toIso8601String(),
+      'updatedAt': now.toIso8601String(),
+    },
+  );
+}
+
 Future<void> _loadFocusPreferences(ProviderContainer container) async {
   await container.read(sharedPreferencesProvider.future);
   await container
@@ -474,6 +648,8 @@ class _RecordingAccountClient implements AccountClient {
   final int nextCursor;
   final bool throwOnPull;
   final List<AccountSyncOperation> pushed = [];
+  final pullStarted = Completer<void>();
+  Future<AccountSyncPullResult>? pendingPull;
   var pullCalls = 0;
 
   @override
@@ -497,8 +673,15 @@ class _RecordingAccountClient implements AccountClient {
     int limit = 500,
   }) async {
     pullCalls += 1;
+    if (!pullStarted.isCompleted) {
+      pullStarted.complete();
+    }
     if (throwOnPull) {
       throw StateError('network unavailable');
+    }
+    final pending = pendingPull;
+    if (pending != null) {
+      return pending;
     }
     return AccountSyncPullResult(
       nextCursor: nextCursor,
@@ -512,6 +695,34 @@ class _RecordingAccountClient implements AccountClient {
     required String appId,
     required String deviceId,
   }) async {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _MutableAuthAccountClient implements AccountClient {
+  _MutableAuthAccountClient({this.userId});
+
+  String? userId;
+  final _authStates = StreamController<AccountAuthState>.broadcast();
+
+  @override
+  String? get currentUserId => userId;
+
+  @override
+  AccountSession? get currentSession => userId == null
+      ? null
+      : AccountSession(userId: userId!, accessToken: 'test-token');
+
+  @override
+  Stream<AccountAuthState> accountAuthStateChanges() => _authStates.stream;
+
+  void signIn(String id) {
+    userId = id;
+    _authStates.add(AccountAuthState(signedIn: true, session: currentSession));
+  }
+
+  Future<void> close() => _authStates.close();
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

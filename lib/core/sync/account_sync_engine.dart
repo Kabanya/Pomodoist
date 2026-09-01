@@ -48,19 +48,22 @@ class AccountSyncEngine {
 
   Future<String> deviceId() => _ensureDeviceId();
 
-  Future<Set<String>> syncNow() async {
-    await prepareLocalAccountData();
-    final imported = await importLocalSnapshotIfNeeded();
-    if (imported) {
-      await _broadcastSyncHint();
-    }
-    return <String>{...await pushPending(), ...await pullLatest()};
+  Future<Set<String>> syncNow() {
+    return _ownerTransitionQueueFor(_db).run(() async {
+      await _prepareLocalAccountData();
+      final imported = await importLocalSnapshotIfNeeded();
+      if (imported) {
+        await _broadcastSyncHint();
+      }
+      return <String>{...await pushPending(), ...await pullLatest()};
+    });
   }
 
   static Future<bool> prepareGuestLocalData({
     required AppDatabase db,
     required Uuid uuid,
     bool Function()? shouldPrepare,
+    Future<void> Function()? onReset,
   }) {
     return _ownerTransitionQueueFor(db).run(() async {
       if (shouldPrepare != null && !shouldPrepare()) {
@@ -74,6 +77,7 @@ class AccountSyncEngine {
       }
       final reset = owner != null;
       if (reset) {
+        await onReset?.call();
         await db.resetAccountData();
       }
       final now = DateTime.now().toUtc();
@@ -92,40 +96,47 @@ class AccountSyncEngine {
     });
   }
 
-  Future<bool> prepareLocalAccountData() {
-    return _ownerTransitionQueueFor(_db).run(() async {
-      final userId = _account.currentUserId;
-      if (userId == null || userId.isEmpty) {
-        throw StateError('Account sync requires an authenticated user.');
-      }
-      final owner = await (_db.select(
-        _db.syncState,
-      )..where((row) => row.id.equals(_accountOwnerStateId))).getSingleOrNull();
-      if (owner?.cursor == userId) {
-        return false;
-      }
-      final importState = await (_db.select(
-        _db.syncState,
-      )..where((row) => row.id.equals(_importStateId))).getSingleOrNull();
-      final syncState = await _syncState();
-      final reset = owner != null || importState != null || syncState != null;
-      if (reset) {
-        await _db.resetAccountData();
-      }
-      final now = DateTime.now().toUtc();
-      await _db
-          .into(_db.syncState)
-          .insertOnConflictUpdate(
-            SyncStateCompanion.insert(
-              id: _accountOwnerStateId,
-              deviceId: _uuid.v4(),
-              cursor: Value(userId),
-              createdAt: now,
-              updatedAt: now,
-            ),
-          );
-      return reset;
-    });
+  Future<bool> prepareLocalAccountData({Future<void> Function()? onReset}) {
+    return _ownerTransitionQueueFor(
+      _db,
+    ).run(() => _prepareLocalAccountData(onReset: onReset));
+  }
+
+  Future<bool> _prepareLocalAccountData({
+    Future<void> Function()? onReset,
+  }) async {
+    final userId = _account.currentUserId;
+    if (userId == null || userId.isEmpty) {
+      throw StateError('Account sync requires an authenticated user.');
+    }
+    final owner = await (_db.select(
+      _db.syncState,
+    )..where((row) => row.id.equals(_accountOwnerStateId))).getSingleOrNull();
+    if (owner?.cursor == userId) {
+      return false;
+    }
+    final importState = await (_db.select(
+      _db.syncState,
+    )..where((row) => row.id.equals(_importStateId))).getSingleOrNull();
+    final syncState = await _syncState();
+    final reset = owner != null || importState != null || syncState != null;
+    if (reset) {
+      await onReset?.call();
+      await _db.resetAccountData();
+    }
+    final now = DateTime.now().toUtc();
+    await _db
+        .into(_db.syncState)
+        .insertOnConflictUpdate(
+          SyncStateCompanion.insert(
+            id: _accountOwnerStateId,
+            deviceId: _uuid.v4(),
+            cursor: Value(userId),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    return reset;
   }
 
   static _OwnerTransitionQueue _ownerTransitionQueueFor(AppDatabase db) {

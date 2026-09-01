@@ -281,41 +281,51 @@ final accountSyncLifecycleProvider = Provider<AccountSyncLifecycle?>((ref) {
   return lifecycle;
 });
 
+final _focusPreferenceCleanupProvider = Provider<Future<void> Function()>((
+  ref,
+) {
+  return () => clearFocusPreferences(ref);
+});
+
 final accountSyncStartupProvider = FutureProvider<void>((ref) async {
   final engine = ref.watch(accountSyncEngineProvider);
   if (engine == null) {
     return;
   }
-  if (await engine.prepareLocalAccountData()) {
-    await clearFocusPreferences(ref);
-  }
+  await engine.prepareLocalAccountData(
+    onReset: ref.read(_focusPreferenceCleanupProvider),
+  );
 });
 
 final guestDataStartupProvider = FutureProvider.autoDispose<void>((ref) async {
-  final keepAlive = ref.keepAlive();
   final appStartup = ref.watch(appStartupProvider.future);
+  final accountBootstrap = ref.watch(accountBootstrapProvider.future);
   final db = ref.watch(appDatabaseProvider);
-  ref.watch(accountAuthStateProvider);
+  final clearFocusPreferences = ref.read(_focusPreferenceCleanupProvider);
   var disposed = false;
+  var signedInObserved = false;
   ref.onDispose(() => disposed = true);
-  try {
-    await appStartup;
-    final reset = await AccountSyncEngine.prepareGuestLocalData(
-      db: db,
-      uuid: const Uuid(),
-      shouldPrepare: () {
-        if (disposed) {
-          return false;
-        }
-        final account = ref.read(accountClientProvider);
-        final authState = ref.read(accountAuthStateProvider).value;
-        return !(authState?.signedIn ?? (account?.currentUserId != null));
-      },
-    );
-    if (reset && !disposed) {
-      await clearFocusPreferences(ref);
+  ref.listen(accountAuthStateProvider, (_, next) {
+    if (next.value?.signedIn == true) {
+      signedInObserved = true;
     }
-  } finally {
-    keepAlive.close();
+  }, fireImmediately: true);
+
+  await appStartup;
+  final account = await accountBootstrap;
+  if (disposed) {
+    return;
   }
+  final authState = await ref.read(accountAuthStateProvider.future);
+  signedInObserved =
+      signedInObserved || authState.signedIn || account?.currentUserId != null;
+  if (disposed || signedInObserved) {
+    return;
+  }
+  await AccountSyncEngine.prepareGuestLocalData(
+    db: db,
+    uuid: const Uuid(),
+    shouldPrepare: () => !disposed && !signedInObserved,
+    onReset: clearFocusPreferences,
+  );
 });
