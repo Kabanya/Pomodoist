@@ -34,6 +34,9 @@ class AccountSyncEngine {
   static const _importStateCursor = 'done-v3';
   static const _guestOwnerCursor = 'guest';
   static final _seedSnapshotClock = DateTime.utc(2000);
+  static final _ownerTransitionQueues = Expando<_OwnerTransitionQueue>(
+    'account-owner-transition',
+  );
 
   final AppDatabase _db;
   final AccountClient _account;
@@ -57,64 +60,82 @@ class AccountSyncEngine {
   static Future<bool> prepareGuestLocalData({
     required AppDatabase db,
     required Uuid uuid,
-  }) async {
-    final owner = await (db.select(
-      db.syncState,
-    )..where((row) => row.id.equals(_accountOwnerStateId))).getSingleOrNull();
-    if (owner?.cursor == _guestOwnerCursor) {
-      return false;
-    }
-    final reset = owner != null;
-    if (reset) {
-      await db.resetAccountData();
-    }
-    final now = DateTime.now().toUtc();
-    await db
-        .into(db.syncState)
-        .insertOnConflictUpdate(
-          SyncStateCompanion.insert(
-            id: _accountOwnerStateId,
-            deviceId: uuid.v4(),
-            cursor: const Value(_guestOwnerCursor),
-            createdAt: now,
-            updatedAt: now,
-          ),
-        );
-    return reset;
+    bool Function()? shouldPrepare,
+  }) {
+    return _ownerTransitionQueueFor(db).run(() async {
+      if (shouldPrepare != null && !shouldPrepare()) {
+        return false;
+      }
+      final owner = await (db.select(
+        db.syncState,
+      )..where((row) => row.id.equals(_accountOwnerStateId))).getSingleOrNull();
+      if (owner?.cursor == _guestOwnerCursor) {
+        return false;
+      }
+      final reset = owner != null;
+      if (reset) {
+        await db.resetAccountData();
+      }
+      final now = DateTime.now().toUtc();
+      await db
+          .into(db.syncState)
+          .insertOnConflictUpdate(
+            SyncStateCompanion.insert(
+              id: _accountOwnerStateId,
+              deviceId: uuid.v4(),
+              cursor: const Value(_guestOwnerCursor),
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+      return reset;
+    });
   }
 
-  Future<bool> prepareLocalAccountData() async {
-    final userId = _account.currentUserId;
-    if (userId == null || userId.isEmpty) {
-      throw StateError('Account sync requires an authenticated user.');
+  Future<bool> prepareLocalAccountData() {
+    return _ownerTransitionQueueFor(_db).run(() async {
+      final userId = _account.currentUserId;
+      if (userId == null || userId.isEmpty) {
+        throw StateError('Account sync requires an authenticated user.');
+      }
+      final owner = await (_db.select(
+        _db.syncState,
+      )..where((row) => row.id.equals(_accountOwnerStateId))).getSingleOrNull();
+      if (owner?.cursor == userId) {
+        return false;
+      }
+      final importState = await (_db.select(
+        _db.syncState,
+      )..where((row) => row.id.equals(_importStateId))).getSingleOrNull();
+      final syncState = await _syncState();
+      final reset = owner != null || importState != null || syncState != null;
+      if (reset) {
+        await _db.resetAccountData();
+      }
+      final now = DateTime.now().toUtc();
+      await _db
+          .into(_db.syncState)
+          .insertOnConflictUpdate(
+            SyncStateCompanion.insert(
+              id: _accountOwnerStateId,
+              deviceId: _uuid.v4(),
+              cursor: Value(userId),
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+      return reset;
+    });
+  }
+
+  static _OwnerTransitionQueue _ownerTransitionQueueFor(AppDatabase db) {
+    final existing = _ownerTransitionQueues[db];
+    if (existing != null) {
+      return existing;
     }
-    final owner = await (_db.select(
-      _db.syncState,
-    )..where((row) => row.id.equals(_accountOwnerStateId))).getSingleOrNull();
-    if (owner?.cursor == userId) {
-      return false;
-    }
-    final importState = await (_db.select(
-      _db.syncState,
-    )..where((row) => row.id.equals(_importStateId))).getSingleOrNull();
-    final syncState = await _syncState();
-    final reset = owner != null || importState != null || syncState != null;
-    if (reset) {
-      await _db.resetAccountData();
-    }
-    final now = DateTime.now().toUtc();
-    await _db
-        .into(_db.syncState)
-        .insertOnConflictUpdate(
-          SyncStateCompanion.insert(
-            id: _accountOwnerStateId,
-            deviceId: _uuid.v4(),
-            cursor: Value(userId),
-            createdAt: now,
-            updatedAt: now,
-          ),
-        );
-    return reset;
+    final created = _OwnerTransitionQueue();
+    _ownerTransitionQueues[db] = created;
+    return created;
   }
 
   Future<bool> importLocalSnapshotIfNeeded() async {
@@ -1860,6 +1881,16 @@ class AccountSyncEngine {
     } on Object {
       // Realtime hints only accelerate the next pull; persisted sync succeeded.
     }
+  }
+}
+
+class _OwnerTransitionQueue {
+  Future<void> _tail = Future<void>.value();
+
+  Future<T> run<T>(Future<T> Function() action) {
+    final result = _tail.then((_) => action());
+    _tail = result.then<void>((_) {}, onError: (Object _, StackTrace _) {});
+    return result;
   }
 }
 

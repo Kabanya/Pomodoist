@@ -83,6 +83,87 @@ void main() {
     },
   );
 
+  test('account preparation wins when sign-in races a guest reset', () async {
+    final db = _BlockingResetDatabase();
+    addTearDown(db.close);
+    await db.ensureSeedData();
+    final account = _RecordingAccountClient(
+      userId: 'account-user-id',
+      nextCursor: 0,
+    );
+    await _engine(db, account).prepareLocalAccountData();
+
+    final guest = AccountSyncEngine.prepareGuestLocalData(
+      db: db,
+      uuid: const Uuid(),
+    );
+    await db.resetStarted.future;
+    final accountStartup = _engine(db, account).prepareLocalAccountData();
+
+    db.releaseReset.complete();
+    await Future.wait([guest, accountStartup]);
+
+    expect((await _owner(db))?.cursor, 'account-user-id');
+  });
+
+  test('sign-in finishes after a disposed guest startup reset', () async {
+    final db = _BlockingResetDatabase();
+    addTearDown(db.close);
+    await db.ensureSeedData();
+    await _engine(
+      db,
+      _RecordingAccountClient(userId: 'old-user-id', nextCursor: 0),
+    ).prepareLocalAccountData();
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        appStartupProvider.overrideWith((ref) async {}),
+        accountClientProvider.overrideWithValue(null),
+        accountAuthStateProvider.overrideWithValue(
+          const AsyncData(AccountAuthState(signedIn: false)),
+        ),
+      ],
+    );
+    final guest = container.read(guestDataStartupProvider.future);
+    await db.resetStarted.future;
+
+    container.dispose();
+    final account = _engine(
+      db,
+      _RecordingAccountClient(userId: 'new-user-id', nextCursor: 0),
+    ).prepareLocalAccountData();
+    db.releaseReset.complete();
+    await Future.wait([guest, account]);
+
+    expect((await _owner(db))?.cursor, 'new-user-id');
+  });
+
+  test('queued guest preparation aborts after sign-in', () async {
+    final db = _BlockingResetDatabase();
+    addTearDown(db.close);
+    await db.ensureSeedData();
+    await AccountSyncEngine.prepareGuestLocalData(db: db, uuid: const Uuid());
+    final account = _RecordingAccountClient(
+      userId: 'account-user-id',
+      nextCursor: 0,
+    );
+    final accountStartup = _engine(db, account).prepareLocalAccountData();
+    await db.resetStarted.future;
+    var signedIn = false;
+    final guest = AccountSyncEngine.prepareGuestLocalData(
+      db: db,
+      uuid: const Uuid(),
+      shouldPrepare: () => !signedIn,
+    );
+
+    signedIn = true;
+    db.releaseReset.complete();
+    expect(await guest, isFalse);
+    await accountStartup;
+
+    expect((await _owner(db))?.cursor, 'account-user-id');
+  });
+
   test(
     'guest startup clears Focus preferences at an account boundary',
     () async {
@@ -434,4 +515,22 @@ class _RecordingAccountClient implements AccountClient {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _BlockingResetDatabase extends AppDatabase {
+  _BlockingResetDatabase() : super(NativeDatabase.memory());
+
+  final resetStarted = Completer<void>();
+  final releaseReset = Completer<void>();
+  var _blocksNextReset = true;
+
+  @override
+  Future<void> resetAccountData() async {
+    if (_blocksNextReset) {
+      _blocksNextReset = false;
+      resetStarted.complete();
+      await releaseReset.future;
+    }
+    await super.resetAccountData();
+  }
 }

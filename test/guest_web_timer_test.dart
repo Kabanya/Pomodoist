@@ -30,6 +30,10 @@ void main() {
     expect(find.text('Email'), findsOneWidget);
     expect(find.byKey(const Key('guest-timer-loading')), findsOneWidget);
     expect(find.byType(FocusScreen), findsNothing);
+
+    await tester.tap(find.text('Email'));
+    await tester.pump();
+    expect(find.byKey(const Key('account-auth-mode')), findsOneWidget);
   });
 
   testWidgets('ready guest login puts auth above a Full embedded timer', (
@@ -138,12 +142,23 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.text('Sign in to Pomodoist'), findsOneWidget);
-      await tester.drag(
-        find.byKey(const Key('guest-login-scroll')),
-        const Offset(0, -1000),
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('focus-heading')),
+        100,
+        scrollable: find.descendant(
+          of: find.byKey(const Key('guest-login-scroll')),
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is Scrollable &&
+                widget.axisDirection == AxisDirection.down,
+          ),
+        ),
       );
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('focus-heading')), findsOneWidget);
+      final heading = tester.getRect(find.byKey(const Key('focus-heading')));
+      expect(heading.top, greaterThanOrEqualTo(0));
+      expect(heading.bottom, lessThanOrEqualTo(size.height));
       expect(tester.takeException(), isNull);
     });
   }

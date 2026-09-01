@@ -292,12 +292,30 @@ final accountSyncStartupProvider = FutureProvider<void>((ref) async {
 });
 
 final guestDataStartupProvider = FutureProvider.autoDispose<void>((ref) async {
-  await ref.watch(appStartupProvider.future);
-  final reset = await AccountSyncEngine.prepareGuestLocalData(
-    db: ref.watch(appDatabaseProvider),
-    uuid: const Uuid(),
-  );
-  if (reset) {
-    await clearFocusPreferences(ref);
+  final keepAlive = ref.keepAlive();
+  final appStartup = ref.watch(appStartupProvider.future);
+  final db = ref.watch(appDatabaseProvider);
+  ref.watch(accountAuthStateProvider);
+  var disposed = false;
+  ref.onDispose(() => disposed = true);
+  try {
+    await appStartup;
+    final reset = await AccountSyncEngine.prepareGuestLocalData(
+      db: db,
+      uuid: const Uuid(),
+      shouldPrepare: () {
+        if (disposed) {
+          return false;
+        }
+        final account = ref.read(accountClientProvider);
+        final authState = ref.read(accountAuthStateProvider).value;
+        return !(authState?.signedIn ?? (account?.currentUserId != null));
+      },
+    );
+    if (reset && !disposed) {
+      await clearFocusPreferences(ref);
+    }
+  } finally {
+    keepAlive.close();
   }
 });
