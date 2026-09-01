@@ -90,3 +90,4 @@ tmp/
 
 # FVM Version Cache
 .fvm/
+/GNUmakefile

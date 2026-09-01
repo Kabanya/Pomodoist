@@ -1171,14 +1171,9 @@ class AccountSyncEngine {
         )..where((row) => row.id.equals(entity.entityId))).go();
         return;
       case 'google_calendar_connection':
-        await (_db.update(
+        await (_db.delete(
           _db.googleCalendarConnections,
-        )..where((row) => row.id.equals(entity.entityId))).write(
-          GoogleCalendarConnectionsCompanion(
-            status: const Value('disconnected'),
-            updatedAt: Value(now),
-          ),
-        );
+        )..where((row) => row.id.equals(entity.entityId))).go();
         return;
       case 'google_calendar_event_link':
         await (_db.delete(

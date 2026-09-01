@@ -1827,6 +1827,7 @@ void main() {
       return;
     }
     expect(find.byKey(const Key('launch-offer-mini-window')), findsOneWidget);
+    expect(find.text('24:00:00 left on Lifetime offer'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('launch-offer-mini-window')));
     await tester.pumpAndSettle();

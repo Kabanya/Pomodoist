@@ -64,7 +64,7 @@
   "purchaseProcessingTitle": "Платёж обрабатывается",
   "purchaseProcessingMessage": "Подтверждаем платёж. Если Pro не появится вскоре, попробуйте обновить позже.",
   "purchaseOpenApp": "Открыть Pomodoist",
-  "launchOfferEndsIn": "Акция Lifetime закончится через {time}",
+  "launchOfferEndsIn": "{time} до конца акции Lifetime",
   "accountApple": "Apple",
   "accountGoogle": "Google",
   "accountEmail": "Email",

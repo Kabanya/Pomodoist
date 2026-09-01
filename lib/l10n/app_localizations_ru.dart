@@ -227,7 +227,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String launchOfferEndsIn(String time) {
-    return 'Акция Lifetime закончится через $time';
+    return '$time до конца акции Lifetime';
   }
 
   @override

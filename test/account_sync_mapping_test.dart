@@ -7,6 +7,58 @@ import 'package:pomodoist/core/sync/account_sync_engine.dart';
 import 'package:uuid/uuid.dart';
 
 void main() {
+  test('remote Google Calendar deletion removes the stale local row', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    await db.ensureSeedData();
+    final now = DateTime.utc(2026, 9, 1, 12);
+    await db
+        .into(db.googleCalendarConnections)
+        .insert(
+          GoogleCalendarConnectionRow(
+            id: 'primary',
+            accountEmail: 'user@example.com',
+            calendarId: 'legacy-calendar',
+            ownerDeviceId: 'legacy-device',
+            calendarName: 'Pomodoist',
+            syncToken: null,
+            status: 'error',
+            lastError: 'DioException: 404',
+            warning: null,
+            lastSyncStartedAt: now,
+            lastSyncFinishedAt: now,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    final engine = AccountSyncEngine(
+      db: db,
+      account: _PullOnlyAccountClient(
+        AccountSyncPullResult(
+          nextCursor: 1,
+          hasMore: false,
+          changes: [
+            AccountSyncEntity(
+              entityType: 'google_calendar_connection',
+              entityId: 'primary',
+              serverRevision: 1,
+              deletedAt: now.add(const Duration(minutes: 1)),
+              data: const {},
+            ),
+          ],
+        ),
+      ),
+      uuid: const Uuid(),
+    );
+
+    await engine.pullLatest();
+
+    expect(
+      await db.select(db.googleCalendarConnections).getSingleOrNull(),
+      isNull,
+    );
+  });
+
   test('legacy label payloads default missing kinds to user', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);

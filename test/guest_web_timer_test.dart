@@ -17,41 +17,79 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues(const {}));
 
-  testWidgets('guest login keeps auth usable while timer startup is pending', (
+  testWidgets('guest timer stays dormant while the login screen is open', (
     tester,
   ) async {
-    final startup = Completer<void>();
-    final container = _guestContainer(() => startup.future);
+    var attempts = 0;
+    final container = _guestContainer(() async => attempts += 1);
     addTearDown(container.dispose);
 
     await _pumpGuestLogin(tester, container);
 
     expect(find.text('Sign in to Pomodoist'), findsOneWidget);
     expect(find.text('Email'), findsOneWidget);
-    expect(find.byKey(const Key('guest-timer-loading')), findsOneWidget);
+    expect(find.byKey(const Key('guest-timer-open')), findsOneWidget);
+    expect(find.byKey(const Key('guest-timer-loading')), findsNothing);
     expect(find.byType(FocusScreen), findsNothing);
+    expect(attempts, 0);
 
     await tester.tap(find.text('Email'));
     await tester.pump();
     expect(find.byKey(const Key('account-auth-mode')), findsOneWidget);
   });
 
-  testWidgets('ready guest login puts auth above a Full embedded timer', (
+  testWidgets('guest timer invitation sits above the open control', (
     tester,
   ) async {
     final container = _guestContainer(() async {});
     addTearDown(container.dispose);
 
     await _pumpGuestLogin(tester, container);
+
+    final invitation = find.text('Pomodoro here');
+    final openButton = find.byKey(const Key('guest-timer-open'));
+    expect(invitation, findsOneWidget);
+    expect(
+      tester.getBottomLeft(invitation).dy,
+      lessThan(tester.getTopLeft(openButton).dy),
+    );
+  });
+
+  testWidgets('guest timer opens as a separate Full screen and closes', (
+    tester,
+  ) async {
+    final startup = Completer<void>();
+    var attempts = 0;
+    final container = _guestContainer(() {
+      attempts += 1;
+      return startup.future;
+    });
+    addTearDown(container.dispose);
+
+    await _pumpGuestLogin(tester, container);
+    await tester.tap(find.byKey(const Key('guest-timer-open')));
+    await tester.pump();
+
+    expect(attempts, 1);
+    expect(find.byKey(const Key('guest-timer-loading')), findsOneWidget);
+    expect(find.text('Sign in to Pomodoist'), findsOneWidget);
+
+    startup.complete();
     await tester.pumpAndSettle();
 
-    final auth = tester.getTopLeft(find.text('Sign in to Pomodoist'));
-    final timer = tester.getTopLeft(find.byKey(const Key('focus-heading')));
-    expect(auth.dy, lessThan(timer.dy));
+    expect(find.text('Sign in to Pomodoist'), findsNothing);
+    expect(find.byKey(const Key('guest-timer-close')), findsOneWidget);
+    expect(find.byType(FocusScreen), findsOneWidget);
     expect(find.text('No active session'), findsOneWidget);
     expect(find.byKey(const Key('focus-details-menu')), findsNothing);
     expect(find.byType(AdaptiveShell), findsNothing);
     expect(find.byType(Scaffold), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('guest-timer-close')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sign in to Pomodoist'), findsOneWidget);
+    expect(find.byType(FocusScreen), findsNothing);
   });
 
   testWidgets('guest startup error stays inline and retries', (tester) async {
@@ -65,9 +103,10 @@ void main() {
     addTearDown(container.dispose);
 
     await _pumpGuestLogin(tester, container);
+    await tester.tap(find.byKey(const Key('guest-timer-open')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Sign in to Pomodoist'), findsOneWidget);
+    expect(find.text('Sign in to Pomodoist'), findsNothing);
     expect(find.byKey(const Key('guest-timer-error')), findsOneWidget);
     expect(find.byKey(const Key('guest-timer-retry')), findsOneWidget);
 
@@ -91,9 +130,12 @@ void main() {
     addTearDown(container.dispose);
 
     await _pumpGuestLogin(tester, container);
-    expect(attempts, 1);
+    expect(attempts, 0);
     expect(find.byType(FocusScreen), findsNothing);
 
+    await tester.tap(find.byKey(const Key('guest-timer-open')));
+    await tester.pump();
+    expect(attempts, 1);
     first.complete();
     await tester.pumpAndSettle();
     expect(find.byType(FocusScreen), findsOneWidget);
@@ -108,9 +150,12 @@ void main() {
     await tester.pump();
 
     await _pumpGuestLogin(tester, container);
-    expect(attempts, 2);
+    expect(attempts, 1);
     expect(find.byType(FocusScreen), findsNothing);
 
+    await tester.tap(find.byKey(const Key('guest-timer-open')));
+    await tester.pump();
+    expect(attempts, 2);
     second.complete();
     await tester.pumpAndSettle();
     expect(find.byType(FocusScreen), findsOneWidget);
@@ -121,7 +166,7 @@ void main() {
     const Size(675, 450),
     const Size(1280, 800),
   ]) {
-    testWidgets('guest login scrolls without overflow at $size', (
+    testWidgets('guest login and timer fit without overflow at $size', (
       tester,
     ) async {
       final previousSize = tester.view.physicalSize;
@@ -142,11 +187,19 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.text('Sign in to Pomodoist'), findsOneWidget);
+      expect(find.byKey(const Key('guest-timer-open')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('guest-timer-open')));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Sign in to Pomodoist'), findsNothing);
+      expect(find.byKey(const Key('guest-timer-close')), findsOneWidget);
       await tester.scrollUntilVisible(
-        find.byKey(const Key('focus-heading')),
+        find.text('No active session'),
         100,
         scrollable: find.descendant(
-          of: find.byKey(const Key('guest-login-scroll')),
+          of: find.byKey(const Key('guest-timer-scroll')),
           matching: find.byWidgetPredicate(
             (widget) =>
                 widget is Scrollable &&
@@ -155,10 +208,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('focus-heading')), findsOneWidget);
-      final heading = tester.getRect(find.byKey(const Key('focus-heading')));
-      expect(heading.top, greaterThanOrEqualTo(0));
-      expect(heading.bottom, lessThanOrEqualTo(size.height));
+      final status = tester.getRect(find.text('No active session'));
+      expect(status.top, greaterThanOrEqualTo(0));
+      expect(status.bottom, lessThanOrEqualTo(size.height));
       expect(tester.takeException(), isNull);
     });
   }

@@ -64,7 +64,7 @@
   "purchaseProcessingTitle": "تتم معالجة الدفع",
   "purchaseProcessingMessage": "جارٍ تأكيد الدفع. إذا لم يظهر Pro قريبًا، فحاول التحديث لاحقًا.",
   "purchaseOpenApp": "فتح Pomodoist",
-  "launchOfferEndsIn": "ينتهي عرض مدى الحياة خلال {time}",
+  "launchOfferEndsIn": "{time} متبقية حتى انتهاء عرض مدى الحياة",
   "accountApple": "Apple",
   "accountGoogle": "Google",
   "accountEmail": "البريد الإلكتروني",

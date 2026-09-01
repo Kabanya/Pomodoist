@@ -227,7 +227,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String launchOfferEndsIn(String time) {
-    return 'ينتهي عرض مدى الحياة خلال $time';
+    return '$time متبقية حتى انتهاء عرض مدى الحياة';
   }
 
   @override

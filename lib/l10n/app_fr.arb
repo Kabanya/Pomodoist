@@ -64,7 +64,7 @@
   "purchaseProcessingTitle": "Paiement en cours",
   "purchaseProcessingMessage": "Le paiement est en cours de confirmation. Si Pro n’apparaît pas bientôt, actualisez plus tard.",
   "purchaseOpenApp": "Ouvrir Pomodoist",
-  "launchOfferEndsIn": "L’offre à vie se termine dans {time}",
+  "launchOfferEndsIn": "{time} avant la fin de l’offre à vie",
   "accountApple": "Apple",
   "accountGoogle": "Google",
   "accountEmail": "Email",

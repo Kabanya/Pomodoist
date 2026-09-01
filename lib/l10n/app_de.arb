@@ -64,7 +64,7 @@
   "purchaseProcessingTitle": "Zahlung wird verarbeitet",
   "purchaseProcessingMessage": "Die Zahlung wird bestätigt. Falls Pro nicht bald erscheint, aktualisiere später erneut.",
   "purchaseOpenApp": "Pomodoist öffnen",
-  "launchOfferEndsIn": "Lifetime-Angebot endet in {time}",
+  "launchOfferEndsIn": "{time} bis zum Ende des Lifetime-Angebots",
   "accountApple": "Apple",
   "accountGoogle": "Google",
   "accountEmail": "E-Mail",

@@ -155,48 +155,153 @@ class LoginScreen extends ConsumerWidget {
         child: authContent,
       );
     }
+    return _GuestLoginSwitcher(
+      title: l10n.loginTitle,
+      subtitle: l10n.onboardingAccountSubtitle,
+      footer: footer,
+      child: authContent,
+    );
+  }
+}
+
+class _GuestLoginSwitcher extends StatefulWidget {
+  const _GuestLoginSwitcher({
+    required this.title,
+    required this.subtitle,
+    required this.child,
+    required this.footer,
+  });
+
+  final String title;
+  final String subtitle;
+  final Widget child;
+  final Widget footer;
+
+  @override
+  State<_GuestLoginSwitcher> createState() => _GuestLoginSwitcherState();
+}
+
+class _GuestLoginSwitcherState extends State<_GuestLoginSwitcher> {
+  static const _duration = Duration(milliseconds: 520);
+  var _timerOpen = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final duration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : _duration;
+    final child = _timerOpen
+        ? _GuestTimerScaffold(onClose: () => _setTimerOpen(false))
+        : Stack(
+            children: [
+              Positioned.fill(
+                child: _StandaloneAuthScaffold(
+                  title: widget.title,
+                  subtitle: widget.subtitle,
+                  footer: widget.footer,
+                  child: widget.child,
+                ),
+              ),
+              SafeArea(
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Pomodoro here',
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.6,
+                              ),
+                        ),
+                        const SizedBox(height: 6),
+                        IconButton.filledTonal(
+                          key: const Key('guest-timer-open'),
+                          tooltip: context.l10n.focusTitle,
+                          onPressed: () => _setTimerOpen(true),
+                          icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+    return ClipRect(
+      child: AnimatedSwitcher(
+        duration: duration,
+        reverseDuration: duration,
+        switchInCurve: Curves.easeInOutCubic,
+        switchOutCurve: Curves.easeInOutCubic,
+        transitionBuilder: (child, animation) {
+          final timer = child.key == const ValueKey(true);
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: Offset(0, timer ? 1 : -1),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          );
+        },
+        child: KeyedSubtree(key: ValueKey(_timerOpen), child: child),
+      ),
+    );
+  }
+
+  void _setTimerOpen(bool value) {
+    if (_timerOpen == value) return;
+    setState(() => _timerOpen = value);
+  }
+}
+
+class _GuestTimerScaffold extends ConsumerWidget {
+  const _GuestTimerScaffold({required this.onClose});
+
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final guestStartup = ref.watch(guestDataStartupProvider);
     return Scaffold(
+      backgroundColor: context.appColors.canvas,
       body: SafeArea(
-        child: ListView(
-          key: const Key('guest-login-scroll'),
-          padding: const EdgeInsets.all(24),
+        child: Stack(
           children: [
-            Align(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 440),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      l10n.loginTitle,
-                      style: Theme.of(context).textTheme.headlineMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.onboardingAccountSubtitle,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    authContent,
-                    const SizedBox(height: 12),
-                    footer,
-                  ],
+            Positioned.fill(
+              child: guestStartup.when(
+                data: (_) => const SingleChildScrollView(
+                  key: Key('guest-timer-scroll'),
+                  padding: EdgeInsets.only(top: 52),
+                  child: FocusScreen(
+                    embedded: true,
+                    fixedViewMode: FocusViewMode.full,
+                  ),
+                ),
+                loading: () => const _GuestTimerLoading(),
+                error: (error, _) => Center(
+                  child: _GuestTimerError(
+                    error: error,
+                    onRetry: () => ref.invalidate(guestDataStartupProvider),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-            guestStartup.when(
-              data: (_) => const FocusScreen(
-                embedded: true,
-                fixedViewMode: FocusViewMode.full,
-              ),
-              loading: () => const _GuestTimerLoading(),
-              error: (error, _) => _GuestTimerError(
-                error: error,
-                onRetry: () => ref.invalidate(guestDataStartupProvider),
+            Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: IconButton.filledTonal(
+                  key: const Key('guest-timer-close'),
+                  tooltip: context.l10n.loginTitle,
+                  onPressed: onClose,
+                  icon: const Icon(Icons.keyboard_arrow_up_rounded),
+                ),
               ),
             ),
           ],
@@ -383,6 +488,7 @@ class _AuthRouteLink extends StatelessWidget {
     return Wrap(
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 12,
       children: [
         Text(prompt),
         OutlinedButton(

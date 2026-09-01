@@ -230,7 +230,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String launchOfferEndsIn(String time) {
-    return 'L’offre à vie se termine dans $time';
+    return '$time avant la fin de l’offre à vie';
   }
 
   @override

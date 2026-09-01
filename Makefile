@@ -15,6 +15,11 @@ DART ?= $(if $(wildcard $(FVM_DART)),$(FVM_DART),dart)
 
 # Runtime
 POMODOIST_BILLING_CHANNEL ?= stripe
+IOS_SIMULATOR ?= iPhone 17 Pro
+IPAD_SIMULATOR ?= iPad Pro 13-inch (M5)
+WATCH_SIMULATOR ?= Apple Watch Series 11 (46mm)
+WATCH_BUILD_DIR ?= build/watch-simulator
+WATCH_BUILD_PATH = $(abspath $(WATCH_BUILD_DIR))
 
 # Linux release downloads use direct HTTPS. This prevents stale localhost
 # proxy variables from breaking reproducible local builds.
@@ -41,7 +46,7 @@ POMODOIST_RELEASE ?= $(shell git rev-parse HEAD)
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
 .PHONY: windows-debug windows-profile windows-release windows-installer
 .PHONY: macos-debug macos-profile macos-release
-.PHONY: ios-debug ios-profile ios-release testflight-preflight testflight
+.PHONY: ios-debug ios-profile ipad-debug ipad-profile watch-debug watch-profile testflight-preflight testflight
 .PHONY: help devices clean
 
 help:
@@ -94,9 +99,12 @@ help:
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile' "$${reset}" 'Profile app'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release' "$${reset}" 'Release app'; \
 	printf '\n'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iOS' "$${reset}" "$${bold}" 'make ios-debug' "$${reset}" 'Debug app'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iOS' "$${reset}" "$${bold}" 'make ios-profile' "$${reset}" 'Profile app'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iOS' "$${reset}" "$${bold}" 'make ios-release' "$${reset}" 'Release app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iPhone' "$${reset}" "$${bold}" 'make ios-debug' "$${reset}" 'Run Simulator (debug)'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iPhone' "$${reset}" "$${bold}" 'make ios-profile' "$${reset}" 'Run Simulator (debug)'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iPad' "$${reset}" "$${bold}" 'make ipad-debug' "$${reset}" 'Run Simulator (debug)'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iPad' "$${reset}" "$${bold}" 'make ipad-profile' "$${reset}" 'Run Simulator (debug)'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Watch' "$${reset}" "$${bold}" 'make watch-debug' "$${reset}" 'Run Simulator (debug)'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Watch' "$${reset}" "$${bold}" 'make watch-profile' "$${reset}" 'Run Simulator (profile)'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iOS' "$${reset}" "$${bold}" 'make testflight' "$${reset}" 'Upload to TestFlight'; \
 	printf '\n%s%sUtilities%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make help' "$${reset}" 'Show this command reference'; \
@@ -196,17 +204,22 @@ macos-release: testflight-preflight
 testflight-preflight:
 	python3 tool/check_testflight_env.py "$(TESTFLIGHT_CONFIG)"
 
-ios-debug:
-	$(FLUTTER) build ios --debug --dart-define=POMODOIST_BILLING_CHANNEL=storekit
+# Flutter profile mode is unavailable on iOS Simulator, so local runs use debug.
+ios-debug ios-profile: RUN_SIMULATOR = $(IOS_SIMULATOR)
+ipad-debug ipad-profile: RUN_SIMULATOR = $(IPAD_SIMULATOR)
+ios-debug ios-profile ipad-debug ipad-profile:
+	xcrun simctl bootstatus "$(RUN_SIMULATOR)" -b
+	open -a Simulator
+	$(FLUTTER) run -d "$(RUN_SIMULATOR)" --debug --dart-define=POMODOIST_BILLING_CHANNEL=storekit
 
-ios-profile:
-	$(FLUTTER) build ios --profile --dart-define=POMODOIST_BILLING_CHANNEL=storekit
-
-ios-release: testflight-preflight
-	$(FLUTTER) build ios --release \
-		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
-		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
-		--dart-define=POMODOIST_BILLING_CHANNEL=storekit
+watch-debug: WATCH_CONFIGURATION = Debug
+watch-profile: WATCH_CONFIGURATION = Profile
+watch-debug watch-profile:
+	xcrun simctl bootstatus "$(WATCH_SIMULATOR)" -b
+	open -a Simulator
+	xcodebuild -quiet -project ios/Runner.xcodeproj -target PomodoistWatch -configuration "$(WATCH_CONFIGURATION)" -sdk watchsimulator SYMROOT="$(WATCH_BUILD_PATH)" OBJROOT="$(WATCH_BUILD_PATH)/obj" build
+	xcrun simctl install "$(WATCH_SIMULATOR)" "$(WATCH_BUILD_PATH)/$(WATCH_CONFIGURATION)-watchsimulator/PomodoistWatch.app"
+	xcrun simctl launch "$(WATCH_SIMULATOR)" com.finchforge.pomodoist.watchkitapp
 
 testflight: testflight-preflight
 	@test -n "$(ASC_KEY_ID)" || (echo "Set ASC_KEY_ID=<App Store Connect key ID>" >&2; exit 1)

@@ -64,7 +64,7 @@
   "purchaseProcessingTitle": "付款处理中",
   "purchaseProcessingMessage": "正在确认付款。如果 Pro 未很快出现，请稍后再次刷新。",
   "purchaseOpenApp": "打开 Pomodoist",
-  "launchOfferEndsIn": "终身优惠将在 {time} 后结束",
+  "launchOfferEndsIn": "{time} 后终身优惠结束",
   "accountApple": "Apple",
   "accountGoogle": "Google",
   "accountEmail": "邮箱",

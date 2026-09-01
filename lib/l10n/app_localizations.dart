@@ -495,7 +495,7 @@ abstract class AppLocalizations {
   /// No description provided for @launchOfferEndsIn.
   ///
   /// In en, this message translates to:
-  /// **'Lifetime offer ends in {time}'**
+  /// **'{time} left on Lifetime offer'**
   String launchOfferEndsIn(String time);
 
   /// No description provided for @accountApple.

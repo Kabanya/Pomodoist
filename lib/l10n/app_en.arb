@@ -69,7 +69,7 @@
   "purchaseProcessingTitle": "Payment is processing",
   "purchaseProcessingMessage": "Your payment is being confirmed. If Pro does not appear shortly, refresh again later.",
   "purchaseOpenApp": "Open Pomodoist",
-  "launchOfferEndsIn": "Lifetime offer ends in {time}",
+  "launchOfferEndsIn": "{time} left on Lifetime offer",
   "@launchOfferEndsIn": {"placeholders": {"time": {"type": "String"}}},
   "accountApple": "Apple",
   "accountGoogle": "Google",

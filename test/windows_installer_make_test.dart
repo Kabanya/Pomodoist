@@ -23,9 +23,6 @@ void main() {
       'macos-debug': 'flutter-under-test build macos --debug',
       'macos-profile': 'flutter-under-test build macos --profile',
       'macos-release': 'flutter-under-test build macos --release',
-      'ios-debug': 'flutter-under-test build ios --debug',
-      'ios-profile': 'flutter-under-test build ios --profile',
-      'ios-release': 'flutter-under-test build ios --release',
     };
 
     for (final entry in expectedCommands.entries) {
@@ -45,6 +42,81 @@ void main() {
       expect(
         result.stdout.toString(),
         contains(entry.value),
+        reason: entry.key,
+      );
+    }
+  });
+
+  test('iPhone and iPad mode targets run their selected simulators', () {
+    const simulators = <String, String>{
+      'ios-debug': 'iPhone Test',
+      'ios-profile': 'iPhone Test',
+      'ipad-debug': 'iPad Test',
+      'ipad-profile': 'iPad Test',
+    };
+
+    for (final entry in simulators.entries) {
+      final result = Process.runSync(_makeExecutable(), [
+        '--no-print-directory',
+        '--dry-run',
+        entry.key,
+        'IOS_SIMULATOR=iPhone Test',
+        'IPAD_SIMULATOR=iPad Test',
+        'FLUTTER=flutter-under-test',
+      ], workingDirectory: Directory.current.path);
+
+      expect(result.exitCode, 0, reason: '${entry.key}: ${result.stderr}');
+      expect(
+        result.stdout
+            .toString()
+            .split(RegExp(r'\r?\n'))
+            .where((line) => line.isNotEmpty),
+        [
+          'xcrun simctl bootstatus "${entry.value}" -b',
+          'open -a Simulator',
+          'flutter-under-test run -d "${entry.value}" --debug '
+              '--dart-define=POMODOIST_BILLING_CHANNEL=storekit',
+        ],
+        reason: entry.key,
+      );
+    }
+  });
+
+  test('Watch mode targets build and launch their selected configuration', () {
+    const configurations = <String, String>{
+      'watch-debug': 'Debug',
+      'watch-profile': 'Profile',
+    };
+    final watchBuildDir = '${Directory.current.path}/build/watch-test';
+
+    for (final entry in configurations.entries) {
+      final result = Process.runSync(_makeExecutable(), [
+        '--no-print-directory',
+        '--dry-run',
+        entry.key,
+        'WATCH_SIMULATOR=Watch Test',
+        'WATCH_BUILD_DIR=build/watch-test',
+      ], workingDirectory: Directory.current.path);
+
+      expect(result.exitCode, 0, reason: '${entry.key}: ${result.stderr}');
+      expect(
+        result.stdout
+            .toString()
+            .split(RegExp(r'\r?\n'))
+            .where((line) => line.isNotEmpty),
+        [
+          'xcrun simctl bootstatus "Watch Test" -b',
+          'open -a Simulator',
+          'xcodebuild -quiet -project ios/Runner.xcodeproj '
+              '-target PomodoistWatch -configuration "${entry.value}" '
+              '-sdk watchsimulator SYMROOT="$watchBuildDir" '
+              'OBJROOT="$watchBuildDir/obj" build',
+          'xcrun simctl install "Watch Test" '
+              '"$watchBuildDir/${entry.value}-watchsimulator/'
+              'PomodoistWatch.app"',
+          'xcrun simctl launch "Watch Test" '
+              'com.finchforge.pomodoist.watchkitapp',
+        ],
         reason: entry.key,
       );
     }

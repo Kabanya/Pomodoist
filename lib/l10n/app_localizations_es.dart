@@ -229,7 +229,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String launchOfferEndsIn(String time) {
-    return 'La oferta de por vida termina en $time';
+    return '$time para que termine la oferta de por vida';
   }
 
   @override

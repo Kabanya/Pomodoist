@@ -214,7 +214,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String launchOfferEndsIn(String time) {
-    return '终身优惠将在 $time 后结束';
+    return '$time 后终身优惠结束';
   }
 
   @override
