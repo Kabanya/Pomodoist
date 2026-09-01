@@ -75,6 +75,18 @@ final focusCompletionCelebrationEnabledProvider =
       FocusCompletionCelebrationEnabledController.new,
     );
 
+Future<void> clearFocusPreferences(Ref ref) async {
+  final prefs = await ref.read(sharedPreferencesProvider.future);
+  await prefs?.remove(focusViewModePreferenceKey);
+  await prefs?.remove(focusTimerVisualStylePreferenceKey);
+  await prefs?.remove(lastFocusPresetIdPreferenceKey);
+  await prefs?.remove(focusCompletionCelebrationEnabledPreferenceKey);
+  ref.invalidate(focusViewModeProvider);
+  ref.invalidate(focusTimerVisualStyleProvider);
+  ref.invalidate(lastFocusPresetIdProvider);
+  ref.invalidate(focusCompletionCelebrationEnabledProvider);
+}
+
 class FocusCompletionCelebrationEnabledController extends Notifier<bool> {
   bool _loaded = false;
   bool _hasLocalSelection = false;

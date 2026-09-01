@@ -32,6 +32,7 @@ class AccountSyncEngine {
   static const _importStateId = 'pomodoist-import';
   static const _accountOwnerStateId = 'pomodoist-account-owner-v1';
   static const _importStateCursor = 'done-v3';
+  static const _guestOwnerCursor = 'guest';
   static final _seedSnapshotClock = DateTime.utc(2000);
 
   final AppDatabase _db;
@@ -53,7 +54,36 @@ class AccountSyncEngine {
     return <String>{...await pushPending(), ...await pullLatest()};
   }
 
-  Future<void> prepareLocalAccountData() async {
+  static Future<bool> prepareGuestLocalData({
+    required AppDatabase db,
+    required Uuid uuid,
+  }) async {
+    final owner = await (db.select(
+      db.syncState,
+    )..where((row) => row.id.equals(_accountOwnerStateId))).getSingleOrNull();
+    if (owner?.cursor == _guestOwnerCursor) {
+      return false;
+    }
+    final reset = owner != null;
+    if (reset) {
+      await db.resetAccountData();
+    }
+    final now = DateTime.now().toUtc();
+    await db
+        .into(db.syncState)
+        .insertOnConflictUpdate(
+          SyncStateCompanion.insert(
+            id: _accountOwnerStateId,
+            deviceId: uuid.v4(),
+            cursor: const Value(_guestOwnerCursor),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    return reset;
+  }
+
+  Future<bool> prepareLocalAccountData() async {
     final userId = _account.currentUserId;
     if (userId == null || userId.isEmpty) {
       throw StateError('Account sync requires an authenticated user.');
@@ -62,13 +92,14 @@ class AccountSyncEngine {
       _db.syncState,
     )..where((row) => row.id.equals(_accountOwnerStateId))).getSingleOrNull();
     if (owner?.cursor == userId) {
-      return;
+      return false;
     }
     final importState = await (_db.select(
       _db.syncState,
     )..where((row) => row.id.equals(_importStateId))).getSingleOrNull();
     final syncState = await _syncState();
-    if (owner != null || importState != null || syncState != null) {
+    final reset = owner != null || importState != null || syncState != null;
+    if (reset) {
       await _db.resetAccountData();
     }
     final now = DateTime.now().toUtc();
@@ -83,6 +114,7 @@ class AccountSyncEngine {
             updatedAt: now,
           ),
         );
+    return reset;
   }
 
   Future<bool> importLocalSnapshotIfNeeded() async {

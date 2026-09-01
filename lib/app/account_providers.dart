@@ -10,6 +10,7 @@ import '../core/sync/account_sync_engine.dart';
 import '../core/sync/account_sync_lifecycle.dart';
 import '../core/sync/device_identity.dart';
 import '../features/billing/billing.dart';
+import '../features/focus/presentation/focus_view_mode.dart';
 import '../features/integrations/google_calendar/data/google_calendar_sync_controller.dart';
 import '../features/integrations/google_calendar/data/google_calendar_sync_lifecycle.dart';
 import '../features/planning/data/task_decomposer.dart';
@@ -285,5 +286,18 @@ final accountSyncStartupProvider = FutureProvider<void>((ref) async {
   if (engine == null) {
     return;
   }
-  await engine.prepareLocalAccountData();
+  if (await engine.prepareLocalAccountData()) {
+    await clearFocusPreferences(ref);
+  }
+});
+
+final guestDataStartupProvider = FutureProvider<void>((ref) async {
+  await ref.watch(appStartupProvider.future);
+  final reset = await AccountSyncEngine.prepareGuestLocalData(
+    db: ref.watch(appDatabaseProvider),
+    uuid: const Uuid(),
+  );
+  if (reset) {
+    await clearFocusPreferences(ref);
+  }
 });
