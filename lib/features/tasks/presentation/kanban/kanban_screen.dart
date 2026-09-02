@@ -20,8 +20,6 @@ import '../widgets/task_motion.dart';
 import 'kanban_board_controller.dart';
 
 const _kanbanWideBreakpoint = 820.0;
-const _regularColumnWidth = 288.0;
-const _focusColumnWidth = 360.0;
 const _columnGap = 12.0;
 
 String _statusDisplayName(BuildContext context, KanbanStatus status) {
@@ -543,25 +541,29 @@ class _DesktopKanbanBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
+    return Padding(
       key: const Key('kanban-desktop-board'),
-      scrollDirection: Axis.horizontal,
       padding: const EdgeInsetsDirectional.fromSTEB(24, 8, 24, 20),
-      itemCount: statuses.length,
-      separatorBuilder: (_, _) => const SizedBox(width: _columnGap),
-      itemBuilder: (context, index) {
-        final status = statuses[index];
-        return _KanbanStatusColumn(
-          status: status,
-          statuses: allStatuses,
-          cards: cardsByStatus[status.id] ?? const [],
-          focused: status.id == focusStatusId,
-          onMove: onMove,
-          onOpen: onOpen,
-          onStartFocus: onStartFocus,
-          onAdd: status.isDone ? null : () => onAdd(status),
-        );
-      },
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var index = 0; index < statuses.length; index++) ...[
+            if (index > 0) const SizedBox(width: _columnGap),
+            Expanded(
+              child: _KanbanStatusColumn(
+                status: statuses[index],
+                statuses: allStatuses,
+                cards: cardsByStatus[statuses[index].id] ?? const [],
+                focused: statuses[index].id == focusStatusId,
+                onMove: onMove,
+                onOpen: onOpen,
+                onStartFocus: onStartFocus,
+                onAdd: statuses[index].isDone ? null : () => onAdd(statuses[index]),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -596,92 +598,89 @@ class _KanbanStatusColumn extends StatelessWidget {
             colors.surface,
           )
         : colors.surfaceTint;
-    return SizedBox(
+    return DecoratedBox(
       key: Key('kanban-column-${status.id}'),
-      width: focused ? _focusColumnWidth : _regularColumnWidth,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: background,
-          border: Border.all(
-            color: focused
-                ? colors.accent.withValues(alpha: 0.2)
-                : colors.border,
-          ),
-          borderRadius: BorderRadius.circular(14),
+      decoration: BoxDecoration(
+        color: background,
+        border: Border.all(
+          color: focused
+              ? colors.accent.withValues(alpha: 0.2)
+              : colors.border,
         ),
-        child: Column(
-          children: [
-            _StatusHeader(
-              status: status,
-              count: cards.length,
-              focused: focused,
-            ),
-            Expanded(
-              child: ListView.builder(
-                key: Key('kanban-column-scroll-${status.id}'),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                itemCount: cards.length + 1,
-                itemBuilder: (context, index) {
-                  if (index == cards.length) {
-                    return _KanbanDropTarget(
-                      key: Key('kanban-drop-end-${status.id}'),
-                      onAccept: (payload) => onMove(
-                        payload.taskId,
-                        status.id,
-                        targetIndex: status.isDone ? null : cards.length,
-                      ),
-                      child: SizedBox(
-                        height: cards.isEmpty ? 96 : 24,
-                        child: cards.isEmpty
-                            ? Center(child: Text(context.l10n.kanbanNoTasks))
-                            : null,
-                      ),
-                    );
-                  }
-                  final card = cards[index];
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          _StatusHeader(
+            status: status,
+            count: cards.length,
+            focused: focused,
+          ),
+          Expanded(
+            child: ListView.builder(
+              key: Key('kanban-column-scroll-${status.id}'),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 4,
+              ),
+              itemCount: cards.length + 1,
+              itemBuilder: (context, index) {
+                if (index == cards.length) {
                   return _KanbanDropTarget(
-                    key: Key('kanban-drop-${status.id}-$index'),
+                    key: Key('kanban-drop-end-${status.id}'),
                     onAccept: (payload) => onMove(
                       payload.taskId,
                       status.id,
-                      targetIndex: status.isDone ? null : index,
+                      targetIndex: status.isDone ? null : cards.length,
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _KanbanTaskCard(
-                        card: card,
-                        status: status,
-                        statuses: statuses,
-                        desktop: true,
-                        sourceIndex: index,
-                        onMove: onMove,
-                        onOpen: onOpen,
-                        onStartFocus: onStartFocus,
-                      ),
+                    child: SizedBox(
+                      height: cards.isEmpty ? 96 : 24,
+                      child: cards.isEmpty
+                          ? Center(child: Text(context.l10n.kanbanNoTasks))
+                          : null,
                     ),
                   );
-                },
+                }
+                final card = cards[index];
+                return _KanbanDropTarget(
+                  key: Key('kanban-drop-${status.id}-$index'),
+                  onAccept: (payload) => onMove(
+                    payload.taskId,
+                    status.id,
+                    targetIndex: status.isDone ? null : index,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _KanbanTaskCard(
+                      card: card,
+                      status: status,
+                      statuses: statuses,
+                      desktop: true,
+                      sourceIndex: index,
+                      onMove: onMove,
+                      onOpen: onOpen,
+                      onStartFocus: onStartFocus,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          if (onAdd != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+              child: TextButton.icon(
+                key: Key('kanban-add-${status.id}'),
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                  alignment: AlignmentDirectional.centerStart,
+                ),
+                onPressed: onAdd,
+                icon: const Icon(Icons.add),
+                label: Text(context.l10n.addTask),
               ),
             ),
-            if (onAdd != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                child: TextButton.icon(
-                  key: Key('kanban-add-${status.id}'),
-                  style: TextButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 48),
-                    alignment: AlignmentDirectional.centerStart,
-                  ),
-                  onPressed: onAdd,
-                  icon: const Icon(Icons.add),
-                  label: Text(context.l10n.addTask),
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }

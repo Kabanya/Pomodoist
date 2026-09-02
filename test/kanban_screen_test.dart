@@ -17,7 +17,7 @@ import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('820 uses independent fixed-width desktop columns', (
+  testWidgets('820 desktop columns adaptively span the full board width', (
     tester,
   ) async {
     final harness = await _pumpKanban(tester, width: 820);
@@ -28,7 +28,7 @@ void main() {
       tester
           .getSize(find.byKey(const Key('kanban-column-kanban-status-todo-v1')))
           .width,
-      288,
+      184,
     );
     expect(
       tester
@@ -36,7 +36,7 @@ void main() {
             find.byKey(const Key('kanban-column-kanban-status-in-progress-v1')),
           )
           .width,
-      360,
+      184,
     );
     expect(
       find.byKey(const Key('kanban-drag-handle-task-focus')),
@@ -105,6 +105,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(Key('kanban-column-$kanbanStatusDoneId')), findsNothing);
+    expect(
+      tester
+          .getSize(find.byKey(const Key('kanban-column-kanban-status-todo-v1')))
+          .width,
+      376,
+    );
     expect(find.byKey(const Key('kanban-card-task-focus')), findsOneWidget);
     expect(tester.takeException(), isNull);
 
