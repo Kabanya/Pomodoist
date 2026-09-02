@@ -727,13 +727,16 @@ class _TimelineGridState extends ConsumerState<_TimelineGrid> {
         final projectColumnWidth = constraints.maxWidth < 600 ? 112.0 : 200.0;
         return AnimatedBuilder(
           animation: _gridFocusNode,
-          builder: (context, _) => DecoratedBox(
+          builder: (context, _) => Container(
             key: const Key('timeline-grid-frame'),
             decoration: BoxDecoration(
               color: context.appColors.surface,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            foregroundDecoration: BoxDecoration(
               border: Border.all(
                 color: _gridFocusNode.hasPrimaryFocus
-                    ? context.appColors.accent
+                    ? context.appColors.accent.withValues(alpha: 0.35)
                     : context.appColors.border,
               ),
               borderRadius: BorderRadius.circular(8),

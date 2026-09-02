@@ -2163,22 +2163,29 @@ void main() {
 
     final frameFinder = find.byKey(const Key('timeline-grid-frame'));
     final scrollFinder = find.byKey(const Key('timeline-horizontal-scroll'));
+    final frame = tester.widget<Container>(frameFinder);
+    expect((frame.decoration as BoxDecoration).color, Colors.white);
+    final foregroundDecoration =
+        frame.foregroundDecoration as BoxDecoration;
+    expect(foregroundDecoration.color, isNull);
     final controller = tester
         .widget<SingleChildScrollView>(scrollFinder)
         .controller!;
     controller.jumpTo(300);
     await tester.pump();
-    final borderBeforeFocus =
-        (tester.widget<DecoratedBox>(frameFinder).decoration as BoxDecoration)
-            .border;
+    final borderBeforeFocus = foregroundDecoration.border!;
+    expect(borderBeforeFocus.top.color, const Color(0x1A25221E));
+    expect(borderBeforeFocus.top.width, 1);
     final scrollRect = tester.getRect(scrollFinder);
     await tester.tapAt(Offset(scrollRect.center.dx, scrollRect.top + 12));
     await tester.pump();
     final borderWithFocus =
-        (tester.widget<DecoratedBox>(frameFinder).decoration as BoxDecoration)
-            .border;
+        (tester.widget<Container>(frameFinder).foregroundDecoration
+                as BoxDecoration)
+            .border!;
 
-    expect(borderWithFocus, isNot(borderBeforeFocus));
+    expect(borderWithFocus.top.color.toARGB32(), 0x59E44332);
+    expect(borderWithFocus.top.width, 1);
     final keyHandled = await tester.sendKeyDownEvent(
       LogicalKeyboardKey.arrowRight,
     );
