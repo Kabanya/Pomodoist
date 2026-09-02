@@ -181,9 +181,33 @@ class _GuestLoginSwitcher extends StatefulWidget {
   State<_GuestLoginSwitcher> createState() => _GuestLoginSwitcherState();
 }
 
-class _GuestLoginSwitcherState extends State<_GuestLoginSwitcher> {
+class _GuestLoginSwitcherState extends State<_GuestLoginSwitcher>
+    with SingleTickerProviderStateMixin {
   static const _duration = Duration(milliseconds: 520);
+  static const _ctaMotionDuration = Duration(milliseconds: 1200);
   var _timerOpen = false;
+  late final AnimationController _ctaMotionController;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctaMotionController = AnimationController(
+      vsync: this,
+      duration: _ctaMotionDuration,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncCtaMotion();
+  }
+
+  @override
+  void dispose() {
+    _ctaMotionController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -192,9 +216,9 @@ class _GuestLoginSwitcherState extends State<_GuestLoginSwitcher> {
         : _duration;
     final child = _timerOpen
         ? _GuestTimerScaffold(onClose: () => _setTimerOpen(false))
-        : Stack(
+        : Column(
             children: [
-              Positioned.fill(
+              Expanded(
                 child: _StandaloneAuthScaffold(
                   title: widget.title,
                   subtitle: widget.subtitle,
@@ -206,27 +230,41 @@ class _GuestLoginSwitcherState extends State<_GuestLoginSwitcher> {
                 child: Align(
                   alignment: Alignment.bottomCenter,
                   child: Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Pomodoro here',
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.6,
+                    padding: const EdgeInsets.only(top: 12, bottom: 12),
+                    child: AnimatedBuilder(
+                      key: const Key('guest-timer-cta'),
+                      animation: _ctaMotionController,
+                      builder: (context, child) => Transform.translate(
+                        offset: Offset(
+                          0,
+                          -6 *
+                              Curves.easeInOutSine.transform(
+                                _ctaMotionController.value,
                               ),
                         ),
-                        const SizedBox(height: 6),
-                        IconButton.filledTonal(
-                          key: const Key('guest-timer-open'),
-                          tooltip: context.l10n.focusTitle,
-                          onPressed: () => _setTimerOpen(true),
-                          icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                        ),
-                      ],
+                        child: child,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Pomodoro here',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.6,
+                                ),
+                          ),
+                          const SizedBox(height: 6),
+                          IconButton.filledTonal(
+                            key: const Key('guest-timer-open'),
+                            tooltip: context.l10n.focusTitle,
+                            onPressed: () => _setTimerOpen(true),
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -257,6 +295,17 @@ class _GuestLoginSwitcherState extends State<_GuestLoginSwitcher> {
   void _setTimerOpen(bool value) {
     if (_timerOpen == value) return;
     setState(() => _timerOpen = value);
+    _syncCtaMotion();
+  }
+
+  void _syncCtaMotion() {
+    if (!mounted || _timerOpen || MediaQuery.disableAnimationsOf(context)) {
+      _ctaMotionController
+        ..stop()
+        ..value = 0;
+      return;
+    }
+    _ctaMotionController.repeat(reverse: true);
   }
 }
 

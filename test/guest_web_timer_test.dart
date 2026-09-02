@@ -55,6 +55,75 @@ void main() {
     );
   });
 
+  testWidgets('guest timer invitation uses the larger title style', (
+    tester,
+  ) async {
+    final container = _guestContainer(() async {});
+    addTearDown(container.dispose);
+
+    await _pumpGuestLogin(tester, container);
+
+    final text = tester.widget<Text>(find.text('Pomodoro here'));
+    final expected = Theme.of(
+      tester.element(find.byType(LoginScreen)),
+    ).textTheme.titleMedium!;
+    expect(text.style?.fontSize, expected.fontSize);
+    expect(text.style?.fontWeight, FontWeight.w600);
+    expect(text.style?.letterSpacing, 0.6);
+  });
+
+  testWidgets('guest timer invitation moves vertically over time', (
+    tester,
+  ) async {
+    final container = _guestContainer(() async {});
+    addTearDown(container.dispose);
+
+    await _pumpGuestLogin(tester, container);
+    final invitation = find.text('Pomodoro here');
+    final openButton = find.byKey(const Key('guest-timer-open'));
+    final initialInvitation = tester.getTopLeft(invitation).dy;
+    final initialButton = tester.getTopLeft(openButton).dy;
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final invitationDelta =
+        tester.getTopLeft(invitation).dy - initialInvitation;
+    final buttonDelta = tester.getTopLeft(openButton).dy - initialButton;
+    expect(invitationDelta, closeTo(-0.88, 0.2));
+    expect(buttonDelta, closeTo(invitationDelta, 0.01));
+  });
+
+  testWidgets('guest timer invitation stays still with Reduce Motion', (
+    tester,
+  ) async {
+    final container = _guestContainer(() async {});
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: LoginScreen(showGuestTimer: true),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    final invitation = find.text('Pomodoro here');
+    final initial = tester.getTopLeft(invitation).dy;
+    await tester.pump(const Duration(milliseconds: 800));
+
+    expect(tester.getTopLeft(invitation).dy, initial);
+  });
+
   testWidgets('guest timer opens as a separate Full screen and closes', (
     tester,
   ) async {
@@ -86,7 +155,8 @@ void main() {
     expect(find.byType(Scaffold), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('guest-timer-close')));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 800));
+    await tester.pump(const Duration(milliseconds: 800));
 
     expect(find.text('Sign in to Pomodoist'), findsOneWidget);
     expect(find.byType(FocusScreen), findsNothing);
@@ -183,11 +253,19 @@ void main() {
       addTearDown(container.dispose);
 
       await _pumpGuestLogin(tester, container);
-      await tester.pumpAndSettle();
+      final registerLink = find.byKey(const Key('login-register-link'));
+      await tester.ensureVisible(registerLink);
+      await tester.pump(const Duration(milliseconds: 1200));
 
       expect(tester.takeException(), isNull);
       expect(find.text('Sign in to Pomodoist'), findsOneWidget);
       expect(find.byKey(const Key('guest-timer-open')), findsOneWidget);
+      expect(
+        tester.getBottomRight(registerLink).dy,
+        lessThanOrEqualTo(
+          tester.getTopLeft(find.byKey(const Key('guest-timer-cta'))).dy,
+        ),
+      );
 
       await tester.tap(find.byKey(const Key('guest-timer-open')));
       await tester.pumpAndSettle();
