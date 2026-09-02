@@ -26,12 +26,15 @@ protected:
 
 private:
   void ConfigureQuickAddChannel(FlutterDesktopEngineRef engine);
+  void ConfigureNativeLinkChannel(FlutterDesktopEngineRef engine);
   bool SetQuickAddEnabled(bool enabled);
 
   // The project to run.
   flutter::DartProject project_;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
       quick_add_channel_;
+  std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
+      native_link_channel_;
   bool quick_add_enabled_ = false;
   UINT quick_add_modifiers_ = MOD_CONTROL | MOD_ALT;
   UINT quick_add_virtual_key_ = VK_SPACE;

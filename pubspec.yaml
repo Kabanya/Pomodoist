@@ -39,7 +39,9 @@ dependencies:
   audioplayers: ^6.7.1
   drift: ^2.32.1
   drift_flutter: ^0.3.0
-  sqlite3_flutter_libs: ^0.6.0+eol
+  # 3.3.4 fixes the native-asset cache key so one release build does not
+  # repeatedly download the same SQLite binary.
+  sqlite3: 3.3.4
   path_provider: ^2.1.5
   package_info_plus: ^9.0.1
   path: ^1.9.1

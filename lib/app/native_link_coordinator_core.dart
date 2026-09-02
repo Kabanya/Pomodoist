@@ -15,17 +15,20 @@ final class NativeLinkCoordinator {
   NativeLinkCoordinator({
     required Future<Uri?> Function() loadInitialLink,
     required Stream<Uri> Function() loadLinkStream,
+    FutureOr<void> Function()? disposeLinkSource,
     NativeLinkClock? now,
     NativeLinkExpirySchedule? scheduleFingerprintExpiry,
     this.duplicateWindow = const Duration(seconds: 2),
   }) : _loadInitialLink = loadInitialLink,
        _loadLinkStream = loadLinkStream,
+       _disposeLinkSource = disposeLinkSource,
        _now = now ?? DateTime.now,
        _scheduleFingerprintExpiry =
            scheduleFingerprintExpiry ?? _scheduleNativeLinkExpiry;
 
   final Future<Uri?> Function() _loadInitialLink;
   final Stream<Uri> Function() _loadLinkStream;
+  final FutureOr<void> Function()? _disposeLinkSource;
   final NativeLinkClock _now;
   final NativeLinkExpirySchedule _scheduleFingerprintExpiry;
   final Duration duplicateWindow;
@@ -142,6 +145,7 @@ final class NativeLinkCoordinator {
     _clearFingerprint();
     await _subscription?.cancel();
     _subscription = null;
+    await _disposeLinkSource?.call();
     await _captchaController.close();
   }
 }
@@ -211,7 +215,7 @@ bool _isExactFocusLink(Uri uri) {
 bool _isLoginCallbackLink(Uri uri) {
   return uri.scheme == 'pomodoist' &&
       uri.host == 'login-callback' &&
-      uri.path.isEmpty &&
+      (uri.path.isEmpty || uri.path == '/') &&
       uri.userInfo.isEmpty &&
       !uri.hasPort;
 }

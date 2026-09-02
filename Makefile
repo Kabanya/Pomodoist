@@ -183,7 +183,6 @@ windows-profile:
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Profile
 
 windows-release:
-	$(DART) run tool/desktop_release_config.dart --config "$(WINDOWS_CONFIG)"
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Release -Clean -ConfigFile "$(WINDOWS_CONFIG)" -ReleaseSha "$(POMODOIST_RELEASE)"
 
 windows-installer: windows-release

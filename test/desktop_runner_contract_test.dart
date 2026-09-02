@@ -24,6 +24,18 @@ void main() {
     expect(actual, expected);
   });
 
+  test('Windows host forwards warm app links to Dart', () {
+    final runner = File('windows/runner/flutter_window.cpp').readAsStringSync();
+
+    expect(runner, contains('message == WM_COPYDATA'));
+    expect(runner, contains('native_link_channel_->InvokeMethod('));
+    expect(
+      runner,
+      isNot(contains('FlutterDesktopEngineProcessExternalWindowMessage(')),
+      reason: 'That API handles lifecycle messages, not plugin delegates.',
+    );
+  });
+
   test('Linux runner exposes the X11 global hotkey fallback', () {
     final runner = File('linux/runner/my_application.cc').readAsStringSync();
 

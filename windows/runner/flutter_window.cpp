@@ -1,6 +1,7 @@
 #include "flutter_window.h"
 
 #include <cctype>
+#include <cstring>
 
 #include <app_links/app_links_plugin_c_api.h>
 #include <audioplayers_windows/audioplayers_windows_plugin.h>
@@ -19,6 +20,9 @@ namespace {
 
 constexpr int kQuickAddHotKeyId = 1;
 constexpr char kQuickAddChannel[] = "pomodoist/quick_add";
+constexpr char kNativeLinksChannel[] = "pomodoist/native_links";
+constexpr ULONG_PTR kAppLinkMessageId = WM_USER + 2;
+constexpr DWORD kMaxAppLinkBytes = 32 * 1024;
 
 const flutter::EncodableValue *FindValue(const flutter::EncodableMap &map,
                                          const char *key) {
@@ -120,6 +124,7 @@ bool FlutterWindow::OnCreate() {
   }
   RegisterPomodoistPlugins(engine);
   ConfigureQuickAddChannel(engine);
+  ConfigureNativeLinkChannel(engine);
   const HWND flutter_hwnd =
       MultiViewDesktopGetFlutterHwnd(MultiViewDesktopGetMainViewId());
   if (flutter_hwnd != nullptr) {
@@ -134,6 +139,7 @@ void FlutterWindow::OnDestroy() {
     UnregisterHotKey(GetHandle(), kQuickAddHotKeyId);
   }
   quick_add_channel_.reset();
+  native_link_channel_.reset();
   Win32Window::OnDestroy();
 }
 
@@ -148,8 +154,25 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
         "showQuickAdd", std::make_unique<flutter::EncodableValue>());
     return 0;
   }
-  if (message == WM_FONTCHANGE) {
-    FlutterDesktopEngineReloadSystemFonts(MultiViewDesktopGetEngineRef());
+  if (message == WM_COPYDATA && native_link_channel_) {
+    const auto *copy_data = reinterpret_cast<const COPYDATASTRUCT *>(lparam);
+    if (copy_data != nullptr && copy_data->dwData == kAppLinkMessageId &&
+        copy_data->lpData != nullptr && copy_data->cbData > 0 &&
+        copy_data->cbData <= kMaxAppLinkBytes) {
+      const auto *bytes = static_cast<const char *>(copy_data->lpData);
+      const auto *terminator = static_cast<const char *>(
+          std::memchr(bytes, '\0', copy_data->cbData));
+      if (terminator != nullptr && terminator != bytes) {
+        std::string link(bytes, terminator);
+        native_link_channel_->InvokeMethod(
+            "link", std::make_unique<flutter::EncodableValue>(link));
+        return TRUE;
+      }
+    }
+  }
+  FlutterDesktopEngineRef engine = MultiViewDesktopGetEngineRef();
+  if (message == WM_FONTCHANGE && engine != nullptr) {
+    FlutterDesktopEngineReloadSystemFonts(engine);
   }
   if (MultiViewDesktopHandleWindowProc(hwnd, message, wparam, lparam,
                                        &result)) {
@@ -157,6 +180,18 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   }
 
   return Win32Window::MessageHandler(hwnd, message, wparam, lparam);
+}
+
+void FlutterWindow::ConfigureNativeLinkChannel(
+    FlutterDesktopEngineRef engine) {
+  auto registrar = flutter::PluginRegistrarManager::GetInstance()
+                       ->GetRegistrar<flutter::PluginRegistrarWindows>(
+                           FlutterDesktopEngineGetPluginRegistrar(
+                               engine, "PomodoistNativeLinksHost"));
+  native_link_channel_ =
+      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+          registrar->messenger(), kNativeLinksChannel,
+          &flutter::StandardMethodCodec::GetInstance());
 }
 
 void FlutterWindow::ConfigureQuickAddChannel(FlutterDesktopEngineRef engine) {

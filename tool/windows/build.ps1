@@ -10,6 +10,28 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 
+function Invoke-DesktopReleaseConfigValidation {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $maximumAttempts = 3
+    for ($attempt = 1; $attempt -le $maximumAttempts; $attempt++) {
+        & dart run tool/desktop_release_config.dart --config $Path
+        $validationExitCode = $LASTEXITCODE
+        if ($validationExitCode -eq 0) {
+            return
+        }
+        if ($validationExitCode -ne 255 -or $attempt -eq $maximumAttempts) {
+            throw 'Desktop production configuration validation failed.'
+        }
+
+        Write-Warning (
+            "Desktop build hook failed with exit code 255. " +
+            "Retrying ($attempt/$maximumAttempts)..."
+        )
+        Start-Sleep -Seconds $attempt
+    }
+}
+
 Push-Location $repoRoot
 try {
     if ($Clean) {
@@ -27,10 +49,7 @@ try {
             throw 'Release builds require -ConfigFile with production dart-defines.'
         }
         $resolvedConfig = (Resolve-Path $ConfigFile).Path
-        & dart run tool/desktop_release_config.dart --config $resolvedConfig
-        if ($LASTEXITCODE -ne 0) {
-            throw 'Desktop production configuration validation failed.'
-        }
+        Invoke-DesktopReleaseConfigValidation -Path $resolvedConfig
         if ([string]::IsNullOrWhiteSpace($ReleaseSha)) {
             $ReleaseSha = (& git rev-parse HEAD).Trim()
         }
