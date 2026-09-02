@@ -1808,6 +1808,114 @@ void main() {
     expect(find.text('Timeline other day'), findsNothing);
   });
 
+  testWidgets('timeline task blocks follow the soft-fill visual contract', (
+    tester,
+  ) async {
+    _setTimelineVisibleHourPrefs();
+    late GoRouter router;
+    final day = _testToday();
+    await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      size: const Size(1200, 900),
+      projects: [
+        _project(inboxProjectId, 'Inbox', orderKey: '0'),
+        _project(
+          'violet',
+          'Violet',
+          orderKey: '1',
+          color: '#8B5CF6',
+          isFavorite: true,
+        ),
+        _project(
+          'green',
+          'Green',
+          orderKey: '2',
+          color: '#36A269',
+          isFavorite: true,
+        ),
+      ],
+      tasks: [
+        _task(
+          'violet-task',
+          'Violet task',
+          projectId: 'violet',
+          priority: 1,
+          schedule: _scheduleAt(day, 10),
+        ),
+        _task(
+          'green-task',
+          'Green task',
+          projectId: 'green',
+          priority: 1,
+          schedule: _scheduleAt(day, 12),
+        ),
+      ],
+    );
+
+    router.go('/timeline?date=${_routeDate(day)}');
+    await _pumpFrames(tester);
+
+    BoxDecoration decorationFor(String taskId) {
+      final block = find.byKey(Key('timeline-task-$taskId'));
+      final surface = find
+          .descendant(
+            of: block,
+            matching: find.byWidgetPredicate(
+              (widget) =>
+                  widget is Container && widget.decoration is BoxDecoration,
+            ),
+          )
+          .first;
+      return tester.widget<Container>(surface).decoration! as BoxDecoration;
+    }
+
+    final violet = decorationFor('violet-task');
+    final green = decorationFor('green-task');
+    final colors = tester
+        .element(find.byKey(const Key('timeline-task-violet-task')))
+        .appColors;
+
+    expect(violet.color, isNot(colors.surface));
+    expect(green.color, isNot(colors.surface));
+    expect(violet.color, isNot(green.color));
+    expect((violet.border! as Border).top.color, colors.border);
+    expect((green.border! as Border).top.color, colors.border);
+
+    final violetBlock = find.byKey(const Key('timeline-task-violet-task'));
+    final projectRail = find
+        .descendant(
+          of: violetBlock,
+          matching: find.byWidgetPredicate((widget) {
+            if (widget is! DecoratedBox ||
+                widget.decoration is! BoxDecoration) {
+              return false;
+            }
+            return (widget.decoration as BoxDecoration).borderRadius ==
+                const BorderRadius.horizontal(left: Radius.circular(8));
+          }),
+        )
+        .first;
+    final completion = find.byKey(
+      const Key('task-completion-paint-violet-task'),
+    );
+    expect(
+      tester.getTopLeft(projectRail).dx,
+      lessThanOrEqualTo(tester.getTopLeft(violetBlock).dx + 3),
+    );
+    expect(
+      tester.getTopRight(projectRail).dx,
+      lessThanOrEqualTo(tester.getTopLeft(completion).dx),
+    );
+
+    final resizeHandle = find.byKey(const Key('timeline-resize-violet-task'));
+    expect(resizeHandle, findsOneWidget);
+    expect(
+      find.descendant(of: resizeHandle, matching: find.byType(DecoratedBox)),
+      findsNothing,
+    );
+  });
+
   testWidgets(
     'timeline orders favorite and busy project zones with hierarchy',
     (tester) async {

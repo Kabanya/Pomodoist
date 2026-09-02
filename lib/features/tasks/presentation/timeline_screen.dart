@@ -1663,6 +1663,10 @@ class _TimelineCompactTaskBlock extends ConsumerWidget {
         ? inboxProjectColorHex
         : effectiveProjectColor(project!);
     final projectColor = projectColorValue(projectHex);
+    final surfaceColor = Color.alphaBlend(
+      projectColor.withValues(alpha: 0.08),
+      colors.surface,
+    );
     final schedule = task.schedule;
     final rawTimeLabel = schedule == null
         ? null
@@ -1682,10 +1686,9 @@ class _TimelineCompactTaskBlock extends ConsumerWidget {
           constraints: fillHeight
               ? const BoxConstraints.expand()
               : const BoxConstraints(minHeight: 44),
-          padding: const EdgeInsets.fromLTRB(11, 6, 8, 6),
           decoration: BoxDecoration(
-            color: colors.surface,
-            border: Border.all(color: priorityColor.withValues(alpha: 0.7)),
+            color: surfaceColor,
+            border: Border.all(color: colors.border),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Stack(
@@ -1704,78 +1707,108 @@ class _TimelineCompactTaskBlock extends ConsumerWidget {
                   ),
                 ),
               ),
-              LayoutBuilder(
-                builder: (context, constraints) => Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (constraints.maxWidth >= 72) ...[
-                      SizedBox.square(
-                        dimension: 28,
-                        child: TaskCompletionControl(
-                          taskId: task.id,
-                          isCompleted: task.isCompleted,
-                          color: priorityColor,
-                          fillColor: colors.accentFill,
-                          onPressed: () {
-                            if (task.isCompleted) {
-                              unawaited(() async {
-                                await ref
-                                    .read(taskRepositoryProvider)
-                                    .uncompleteTask(task.id);
-                                final reopened = await ref
-                                    .read(taskRepositoryProvider)
-                                    .watchTask(task.id)
-                                    .first;
-                                if (context.mounted && reopened != null) {
-                                  TaskMotionScope.maybeOf(
+              Padding(
+                padding: const EdgeInsets.fromLTRB(11, 6, 8, 6),
+                child: LayoutBuilder(
+                  builder: (context, constraints) => Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (constraints.maxWidth >= 72) ...[
+                        SizedBox.square(
+                          dimension: 28,
+                          child: TaskCompletionControl(
+                            taskId: task.id,
+                            isCompleted: task.isCompleted,
+                            color: priorityColor,
+                            fillColor: colors.accentFill,
+                            onPressed: () {
+                              if (task.isCompleted) {
+                                unawaited(() async {
+                                  await ref
+                                      .read(taskRepositoryProvider)
+                                      .uncompleteTask(task.id);
+                                  final reopened = await ref
+                                      .read(taskRepositoryProvider)
+                                      .watchTask(task.id)
+                                      .first;
+                                  if (context.mounted && reopened != null) {
+                                    TaskMotionScope.maybeOf(
+                                      context,
+                                    )?.reopened([reopened]);
+                                    await playHaptic(AppHapticCue.light);
+                                  }
+                                }());
+                              } else {
+                                unawaited(
+                                  completeTaskWithUndoFeedback(
                                     context,
-                                  )?.reopened([reopened]);
-                                  await playHaptic(AppHapticCue.light);
-                                }
-                              }());
-                            } else {
-                              unawaited(
-                                completeTaskWithUndoFeedback(
-                                  context,
-                                  ref,
-                                  task.id,
-                                ).then<void>((_) {}),
-                              );
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                    ],
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            task.content,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: colors.primaryText,
-                                ),
+                                    ref,
+                                    task.id,
+                                  ).then<void>((_) {}),
+                                );
+                              }
+                            },
                           ),
-                          if (timeLabel != null) ...[
-                            const SizedBox(height: 2),
+                        ),
+                        const SizedBox(width: 6),
+                      ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
                             Text(
-                              timeLabel,
+                              task.content,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(color: colors.mutedText),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: colors.primaryText,
+                                  ),
                             ),
+                            if (timeLabel != null &&
+                                (!schedule!.isTimed ||
+                                    constraints.maxWidth >= 104)) ...[
+                              const SizedBox(height: 2),
+                              if (schedule.isTimed)
+                                DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: colors.surface.withValues(
+                                      alpha: 0.72,
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 1,
+                                    ),
+                                    child: Text(
+                                      timeLabel,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(color: colors.mutedText),
+                                    ),
+                                  ),
+                                )
+                              else
+                                Text(
+                                  timeLabel,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(color: colors.mutedText),
+                                ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               if (allowResize && onResizeStart != null && onResizeEnd != null)
@@ -1791,16 +1824,7 @@ class _TimelineCompactTaskBlock extends ConsumerWidget {
                     onHorizontalDragUpdate: (details) =>
                         onResizeUpdate?.call(details.delta.dx),
                     onHorizontalDragEnd: (_) => onResizeEnd?.call(),
-                    child: Center(
-                      child: Container(
-                        width: 3,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: priorityColor.withValues(alpha: 0.7),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
+                    child: const SizedBox.expand(),
                   ),
                 ),
             ],
