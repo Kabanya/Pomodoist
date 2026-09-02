@@ -368,12 +368,18 @@ Future<void> _runScheduleQuickAction(
 ) {
   switch (action) {
     case _ScheduleQuickAction.today:
-      return _setTaskSchedule(ref, task, TaskSchedule.allDay(_today()));
-    case _ScheduleQuickAction.tomorrow:
+      final today = _today();
       return _setTaskSchedule(
         ref,
         task,
-        TaskSchedule.allDay(_today().add(const Duration(days: 1))),
+        task.schedule?.moveToDate(today) ?? TaskSchedule.allDay(today),
+      );
+    case _ScheduleQuickAction.tomorrow:
+      final tomorrow = _today().add(const Duration(days: 1));
+      return _setTaskSchedule(
+        ref,
+        task,
+        task.schedule?.moveToDate(tomorrow) ?? TaskSchedule.allDay(tomorrow),
       );
     case _ScheduleQuickAction.allDay:
       return _pickAllDaySchedule(context, ref, task);
@@ -473,15 +479,18 @@ class _EditableTaskTitleState extends ConsumerState<_EditableTaskTitle> {
         .read(quickAddParserProvider)
         .parse(next, defaultDate: widget.task.schedule?.displayDate);
     final content = _parsedTitleContent(parsed);
-    final schedule = parsed.dueDate != null || parsed.schedule?.isTimed == true
+    var schedule = parsed.dueDate != null || parsed.schedule?.isTimed == true
         ? parsed.schedule
         : null;
+    if (parsed.dueDate != null && schedule?.isAllDay == true) {
+      schedule = widget.task.schedule?.moveToDate(parsed.dueDate!) ?? schedule;
+    }
     final focusPreset = selectedFocusPresetOrDefault(
       ref.read(focusPresetsProvider).value ?? const [],
       ref.read(lastFocusPresetIdProvider),
     );
     final estimatedFocusIntervals = estimateFocusIntervalsForTaskDuration(
-      schedule: schedule,
+      schedule: parsed.schedule,
       durationSeconds: null,
       explicitEstimate: parsed.estimatedFocusIntervals,
       preset: focusPreset,

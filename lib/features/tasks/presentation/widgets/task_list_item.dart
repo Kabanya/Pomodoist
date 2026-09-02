@@ -813,25 +813,22 @@ class TaskListItem extends ConsumerWidget {
                 task.id,
               ).then<void>((_) {});
       case _TaskQuickAction.today:
+        final today = _today();
         return taskRepository.updateTask(
           task.id,
           UpdateTaskPatch(
-            schedule: TaskSchedule.allDay(
-              _today(),
-              recurrence: task.schedule?.recurrence,
-              recurrenceSeriesId: task.schedule?.recurrenceSeriesId,
-            ),
+            schedule:
+                task.schedule?.moveToDate(today) ?? TaskSchedule.allDay(today),
           ),
         );
       case _TaskQuickAction.tomorrow:
+        final tomorrow = _today().add(const Duration(days: 1));
         return taskRepository.updateTask(
           task.id,
           UpdateTaskPatch(
-            schedule: TaskSchedule.allDay(
-              _today().add(const Duration(days: 1)),
-              recurrence: task.schedule?.recurrence,
-              recurrenceSeriesId: task.schedule?.recurrenceSeriesId,
-            ),
+            schedule:
+                task.schedule?.moveToDate(tomorrow) ??
+                TaskSchedule.allDay(tomorrow),
           ),
         );
       case _TaskQuickAction.clearDate:

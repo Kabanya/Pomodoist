@@ -588,6 +588,45 @@ void main() {
     expect(find.byKey(const Key('task-title-editor')), findsNothing);
   });
 
+  testWidgets('date-only title edit keeps the existing time range', (
+    tester,
+  ) async {
+    late GoRouter router;
+    final harness = await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      tasks: [
+        _task(
+          'timed-title',
+          'Scheduled task',
+          schedule: _scheduleAt(
+            DateTime(2026, 9, 3),
+            18,
+            30,
+            const Duration(minutes: 45),
+          ),
+        ),
+      ],
+    );
+
+    router.go('/task/timed-title');
+    await _pumpFrames(tester);
+    await tester.tap(find.byKey(const Key('task-title-display')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('task-title-editor')),
+      'Renamed 2026-09-04',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await _pumpFrames(tester);
+
+    final patch = harness.taskRepository.updatePatches.single;
+    expect(patch.content, 'Renamed');
+    expect(patch.schedule!.start!.toLocal(), DateTime(2026, 9, 4, 18, 30));
+    expect(patch.schedule!.end!.toLocal(), DateTime(2026, 9, 4, 19, 15));
+    expect(patch.estimatedFocusIntervals, isNull);
+  });
+
   testWidgets('task detail title edit applies quick-add metadata', (
     tester,
   ) async {
@@ -747,9 +786,21 @@ void main() {
     tester,
   ) async {
     late GoRouter router;
-    final harness = await _pumpApp(tester, onRouter: (value) => router = value);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final harness = await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      tasks: [
+        _task(
+          'timed-task',
+          'Timed task',
+          schedule: _scheduleAt(today, 18, 30, const Duration(minutes: 45)),
+        ),
+      ],
+    );
 
-    router.go('/task/task-1');
+    router.go('/task/timed-task');
     await _pumpFrames(tester);
 
     await tester.tap(find.byKey(const Key('task-detail-schedule-chip')));
@@ -759,11 +810,22 @@ void main() {
 
     final tomorrowSchedule =
         harness.taskRepository.updatePatches.single.schedule!;
-    final tomorrow = DateTime.now().add(const Duration(days: 1));
-    expect(tomorrowSchedule.isAllDay, isTrue);
-    expect(tomorrowSchedule.displayDate.year, tomorrow.year);
-    expect(tomorrowSchedule.displayDate.month, tomorrow.month);
-    expect(tomorrowSchedule.displayDate.day, tomorrow.day);
+    final tomorrow = today.add(const Duration(days: 1));
+    expect(tomorrowSchedule.isTimed, isTrue);
+    expect(tomorrowSchedule.start!.toLocal(), _dateAt(tomorrow, 18, 30));
+    expect(tomorrowSchedule.end!.toLocal(), _dateAt(tomorrow, 19, 15));
+
+    await tester.tap(find.byKey(const Key('task-detail-schedule-chip')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('All-day').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OK').last);
+    await tester.pumpAndSettle();
+
+    expect(
+      harness.taskRepository.updatePatches.last.schedule!.isAllDay,
+      isTrue,
+    );
 
     await tester.tap(find.byKey(const Key('task-detail-schedule-chip')));
     await tester.pumpAndSettle();
@@ -863,6 +925,44 @@ void main() {
       expect(schedule.end!.toLocal(), DateTime(2026, 1, 3, 21));
     }
     expect(find.text('2 selected'), findsOneWidget);
+  });
+
+  testWidgets('Schedule date preset keeps each selected task time range', (
+    tester,
+  ) async {
+    final today = DateTime(2026, 1, 2);
+    final harness = await _pumpApp(
+      tester,
+      tasks: [
+        _task(
+          'due-1',
+          'First timed task',
+          schedule: _scheduleAt(today, 18, 30, const Duration(minutes: 45)),
+        ),
+        _task(
+          'due-2',
+          'Second timed task',
+          schedule: _scheduleAt(today, 20, 15, const Duration(hours: 1)),
+        ),
+      ],
+    );
+
+    await _openTaskContextMenu(tester, 'First timed task');
+    await tester.tap(find.text('Select').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Second timed task'));
+    await tester.tap(find.text('Due'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tomorrow').last);
+    await _pumpFrames(tester);
+
+    expect(harness.taskRepository.updatePatches, hasLength(2));
+    final first = harness.taskRepository.updatePatches[0].schedule!;
+    final second = harness.taskRepository.updatePatches[1].schedule!;
+    expect(first.start!.toLocal(), DateTime(2026, 1, 3, 18, 30));
+    expect(first.end!.toLocal(), DateTime(2026, 1, 3, 19, 15));
+    expect(second.start!.toLocal(), DateTime(2026, 1, 3, 20, 15));
+    expect(second.end!.toLocal(), DateTime(2026, 1, 3, 21, 15));
   });
 
   testWidgets('due panel validates text, uses calendar, and clears due', (
@@ -1258,6 +1358,38 @@ void main() {
     expect(input.priority, 1);
     expect(input.labelNames, ['writing']);
     expect(input.estimatedFocusIntervals, 2);
+  });
+
+  testWidgets('subtask quick Tomorrow keeps its existing time range', (
+    tester,
+  ) async {
+    late GoRouter router;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final harness = await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      tasks: [
+        _task('parent-1', 'Parent task'),
+        _task(
+          'child-1',
+          'Timed child',
+          parentId: 'parent-1',
+          schedule: _scheduleAt(today, 18, 30, const Duration(minutes: 45)),
+        ),
+      ],
+    );
+
+    router.go('/task/parent-1');
+    await _pumpFrames(tester);
+    await _openTaskContextMenu(tester, 'Timed child');
+    await tester.tap(find.text('Tomorrow').last);
+    await _pumpFrames(tester);
+
+    final schedule = harness.taskRepository.updatePatches.single.schedule!;
+    final tomorrow = today.add(const Duration(days: 1));
+    expect(schedule.start!.toLocal(), _dateAt(tomorrow, 18, 30));
+    expect(schedule.end!.toLocal(), _dateAt(tomorrow, 19, 15));
   });
 
   testWidgets(

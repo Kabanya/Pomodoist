@@ -31,9 +31,10 @@ LINUX_CONFIG ?= $(CURDIR)/.env.linux-production.json
 WINDOWS_CONFIG ?= C:/secure/pomodoist-windows-production.json
 WINDOWS_RELEASE_DIR ?= build/windows/x64/runner/Release
 
-# TestFlight
-ASC_KEY_ID ?=
-ASC_ISSUER_ID ?=
+# TestFlight. Key ID is derived from key-<ID>.p8, issuer from key-Apple-Issuer-ID.md.
+# Both are gitignored, so CI and docs can pass them explicitly when absent.
+ASC_KEY_ID ?= $(shell basename key-*.p8 .p8 2>/dev/null | sed 's/^key-//')
+ASC_ISSUER_ID ?= $(shell tr -d ' \t\r\n' < key-Apple-Issuer-ID.md 2>/dev/null)
 ASC_KEY_PATH ?= key-$(ASC_KEY_ID).p8
 IOS_EXPORT_OPTIONS ?= ios/ExportOptions.plist
 IOS_IPA_PATH ?= build/ios/ipa/Pomodoist.ipa
@@ -46,7 +47,7 @@ POMODOIST_RELEASE ?= $(shell git rev-parse HEAD)
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
 .PHONY: windows-debug windows-profile windows-release windows-installer
 .PHONY: macos-debug macos-profile macos-release
-.PHONY: ios-debug ios-profile ipad-debug ipad-profile watch-debug watch-profile testflight-preflight testflight
+.PHONY: ios-debug ios-profile ipad-debug ipad-profile watch-debug watch-profile testflight-preflight testflight-auth testflight-ios testflight-macos testflight
 .PHONY: help devices clean
 
 help:
@@ -105,7 +106,10 @@ help:
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iPad' "$${reset}" "$${bold}" 'make ipad-profile' "$${reset}" 'Run Simulator (debug)'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Watch' "$${reset}" "$${bold}" 'make watch-debug' "$${reset}" 'Run Simulator (debug)'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Watch' "$${reset}" "$${bold}" 'make watch-profile' "$${reset}" 'Run Simulator (profile)'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iOS' "$${reset}" "$${bold}" 'make testflight' "$${reset}" 'Upload to TestFlight'; \
+	printf '\n'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iOS' "$${reset}" "$${bold}" 'make testflight-ios' "$${reset}" 'Upload iOS to TestFlight'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make testflight-macos' "$${reset}" 'Upload macOS to TestFlight'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'All' "$${reset}" "$${bold}" 'make testflight' "$${reset}" 'Upload iOS + macOS to TestFlight'; \
 	printf '\n%s%sUtilities%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make help' "$${reset}" 'Show this command reference'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make devices' "$${reset}" 'List available Flutter devices'; \
@@ -189,19 +193,22 @@ windows-installer: windows-release
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/installer/build.ps1 -BuildDirectory "$(WINDOWS_RELEASE_DIR)"
 
 macos-debug:
-	$(FLUTTER) build macos --debug --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+	$(FLUTTER) build macos --debug \
+		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
+		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
+		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 macos-profile:
-	$(FLUTTER) build macos --profile --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+	$(FLUTTER) build macos --profile \
+		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
+		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
+		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 macos-release: testflight-preflight
 	$(FLUTTER) build macos --release \
 		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
 		--dart-define=POMODOIST_BILLING_CHANNEL=storekit
-
-testflight-preflight:
-	python3 tool/check_testflight_env.py "$(TESTFLIGHT_CONFIG)"
 
 # Flutter profile mode is unavailable on iOS Simulator, so local runs use debug.
 ios-debug ios-profile: RUN_SIMULATOR = $(IOS_SIMULATOR)
@@ -220,10 +227,17 @@ watch-debug watch-profile:
 	xcrun simctl install "$(WATCH_SIMULATOR)" "$(WATCH_BUILD_PATH)/$(WATCH_CONFIGURATION)-watchsimulator/PomodoistWatch.app"
 	xcrun simctl launch "$(WATCH_SIMULATOR)" com.finchforge.pomodoist.watchkitapp
 
-testflight: testflight-preflight
-	@test -n "$(ASC_KEY_ID)" || (echo "Set ASC_KEY_ID=<App Store Connect key ID>" >&2; exit 1)
-	@test -n "$(ASC_ISSUER_ID)" || (echo "Set ASC_ISSUER_ID=<App Store Connect issuer ID>" >&2; exit 1)
+testflight: testflight-ios testflight-macos
+
+testflight-preflight:
+	python3 tool/check_testflight_env.py "$(TESTFLIGHT_CONFIG)"
+
+testflight-auth:
+	@test -n "$(ASC_KEY_ID)" || (echo "Set ASC_KEY_ID=<App Store Connect key ID> or add key-<ID>.p8" >&2; exit 1)
+	@test -n "$(ASC_ISSUER_ID)" || (echo "Set ASC_ISSUER_ID=<App Store Connect issuer ID> or add key-Apple-Issuer-ID.md" >&2; exit 1)
 	@test -f "$(ASC_KEY_PATH)" || (echo "Missing App Store Connect key: $(ASC_KEY_PATH)" >&2; exit 1)
+
+testflight-ios: testflight-preflight testflight-auth
 	$(FLUTTER) build ipa --release \
 		--export-options-plist="$(IOS_EXPORT_OPTIONS)" \
 		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
@@ -235,6 +249,43 @@ testflight: testflight-preflight
 		--api-issuer "$(ASC_ISSUER_ID)" \
 		--p8-file-path "$(ASC_KEY_PATH)"
 	xcrun altool --upload-app -f "$(IOS_IPA_PATH)" \
+		--api-key "$(ASC_KEY_ID)" \
+		--api-issuer "$(ASC_ISSUER_ID)" \
+		--p8-file-path "$(ASC_KEY_PATH)"
+
+MACOS_ARCHIVE_PATH = $(abspath build/TestFlight/Pomodoist-macOS.xcarchive)
+MACOS_EXPORT_PATH = $(abspath build/TestFlight/macos)
+MACOS_PACKAGE_PATH = $(MACOS_EXPORT_PATH)/pomodoist.pkg
+
+testflight-macos: testflight-preflight testflight-auth
+	$(FLUTTER) build macos --release \
+		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
+		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
+		--dart-define=POMODOIST_BILLING_CHANNEL=storekit
+	@rm -rf "$(MACOS_ARCHIVE_PATH)" "$(MACOS_EXPORT_PATH)"
+	xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner \
+		-configuration Release -archivePath "$(MACOS_ARCHIVE_PATH)" archive \
+		-hideShellScriptEnvironment \
+		-allowProvisioningUpdates \
+		-authenticationKeyPath "$(abspath $(ASC_KEY_PATH))" \
+		-authenticationKeyID "$(ASC_KEY_ID)" \
+		-authenticationKeyIssuerID "$(ASC_ISSUER_ID)"
+	xcodebuild -exportArchive \
+		-archivePath "$(MACOS_ARCHIVE_PATH)" \
+		-exportPath "$(MACOS_EXPORT_PATH)" \
+		-exportOptionsPlist "$(IOS_EXPORT_OPTIONS)" \
+		-allowProvisioningUpdates \
+		-authenticationKeyPath "$(abspath $(ASC_KEY_PATH))" \
+		-authenticationKeyID "$(ASC_KEY_ID)" \
+		-authenticationKeyIssuerID "$(ASC_ISSUER_ID)"
+	@test -f "$(MACOS_PACKAGE_PATH)" || (echo "Missing $(MACOS_PACKAGE_PATH)" >&2; exit 1)
+	xcrun altool --validate-app "$(MACOS_PACKAGE_PATH)" \
+		--type macos \
+		--api-key "$(ASC_KEY_ID)" \
+		--api-issuer "$(ASC_ISSUER_ID)" \
+		--p8-file-path "$(ASC_KEY_PATH)"
+	xcrun altool --upload-app -f "$(MACOS_PACKAGE_PATH)" \
+		--type macos \
 		--api-key "$(ASC_KEY_ID)" \
 		--api-issuer "$(ASC_ISSUER_ID)" \
 		--p8-file-path "$(ASC_KEY_PATH)"

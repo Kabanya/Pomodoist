@@ -310,6 +310,11 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
     final failed = <String>[];
     for (final task in tasks) {
       try {
+        final requestedSchedule = result.schedule;
+        final schedule = requestedSchedule?.isAllDay ?? false
+            ? task.schedule?.moveToDate(requestedSchedule!.date!) ??
+                  requestedSchedule
+            : requestedSchedule;
         await ref
             .read(taskRepositoryProvider)
             .updateTask(
@@ -317,10 +322,7 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
               result.clear
                   ? const UpdateTaskPatch(clearSchedule: true)
                   : UpdateTaskPatch(
-                      schedule: _preserveRecurrence(
-                        result.schedule!,
-                        task.schedule,
-                      ),
+                      schedule: _preserveRecurrence(schedule!, task.schedule),
                     ),
             );
       } catch (_) {

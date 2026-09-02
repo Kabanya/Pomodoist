@@ -68,6 +68,41 @@ void main() {
     });
   });
 
+  group('task schedule', () {
+    test('moves a timed schedule without changing its local interval', () {
+      const recurrence = TaskRecurrence(
+        interval: 1,
+        unit: TaskRecurrenceUnit.week,
+        seriesId: 'weekly-review',
+      );
+      final schedule = TaskSchedule.timed(
+        start: DateTime(2026, 9, 3, 18, 30),
+        end: DateTime(2026, 9, 3, 19, 15),
+        timeZone: 'Europe/Moscow',
+        recurrence: recurrence,
+      );
+
+      final moved = schedule.moveToDate(DateTime(2026, 9, 4));
+
+      expect(moved.start!.toLocal(), DateTime(2026, 9, 4, 18, 30));
+      expect(moved.end!.toLocal(), DateTime(2026, 9, 4, 19, 15));
+      expect(moved.duration, const Duration(minutes: 45));
+      expect(moved.timeZone, 'Europe/Moscow');
+      expect(moved.recurrence, recurrence);
+    });
+
+    test('moves an all-day schedule without making it timed', () {
+      final moved = TaskSchedule.allDay(
+        DateTime(2026, 9, 3),
+        recurrenceSeriesId: 'detached-series',
+      ).moveToDate(DateTime(2026, 9, 4, 18, 30));
+
+      expect(moved.isAllDay, isTrue);
+      expect(moved.date, DateTime(2026, 9, 4));
+      expect(moved.recurrenceSeriesId, 'detached-series');
+    });
+  });
+
   group('quick add parser', () {
     test('extracts RU/EN task metadata and focus estimates', () {
       final parsed = const QuickAddParser().parse(

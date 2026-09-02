@@ -44,7 +44,7 @@ SENTRY_DSN=
 
     final result = await Process.run('make', [
       '-n',
-      'testflight',
+      'testflight-ios',
       'ASC_KEY_ID=test',
       'ASC_ISSUER_ID=test',
       'ASC_KEY_PATH=pubspec.yaml',
@@ -54,6 +54,7 @@ SENTRY_DSN=
 
     final output = result.stdout.toString();
     expect(output, contains('flutter build ipa --release'));
+    expect(output, isNot(contains('--build-number=')));
     expect(output, contains('--dart-define-from-file="pubspec.yaml"'));
     expect(output, contains('--dart-define=POMODOIST_RELEASE='));
     expect(
@@ -87,5 +88,64 @@ SENTRY_DSN=
       contains('--dart-define=POMODOIST_BILLING_CHANNEL=storekit'),
     );
     expect(output, isNot(contains('GOOGLE_DESKTOP_CLIENT')));
+  });
+
+  test('TestFlight macOS exports and uploads a distribution package', () async {
+    if (Platform.isWindows) return;
+
+    final result = await Process.run('make', [
+      '-n',
+      'testflight-macos',
+      'ASC_KEY_ID=test',
+      'ASC_ISSUER_ID=test',
+      'ASC_KEY_PATH=pubspec.yaml',
+      'TESTFLIGHT_CONFIG=pubspec.yaml',
+    ]);
+    expect(result.exitCode, 0, reason: result.stderr.toString());
+
+    final output = result.stdout.toString();
+    expect(output, contains('flutter build macos --release'));
+    expect(output, isNot(contains('--build-number=')));
+    expect(output, contains('--dart-define-from-file="pubspec.yaml"'));
+    expect(output, contains('--dart-define=POMODOIST_RELEASE='));
+    expect(output, contains('xcodebuild -workspace'));
+    expect(output, contains(' archive \\'));
+    expect(output, contains('xcodebuild -exportArchive'));
+    expect(output, contains('-hideShellScriptEnvironment'));
+    expect(output, contains('-allowProvisioningUpdates'));
+    expect(
+      output,
+      contains('-authenticationKeyPath "${Directory.current.path}/pubspec.yaml"'),
+    );
+    expect(output, contains('altool --validate-app'));
+    expect(output, contains('altool --upload-app'));
+    expect(output, contains('pomodoist.pkg'));
+    expect(output, isNot(contains('ditto -c -k --keepParent')));
+    expect(output, contains('--type macos'));
+    expect(
+      output.indexOf('altool --upload-app'),
+      greaterThan(output.indexOf('xcodebuild -exportArchive')),
+    );
+  });
+
+  test('TestFlight meta-target runs the iOS and macOS uploads', () async {
+    if (Platform.isWindows) return;
+
+    final result = await Process.run('make', [
+      '-n',
+      'testflight',
+      'ASC_KEY_ID=test',
+      'ASC_ISSUER_ID=test',
+      'ASC_KEY_PATH=pubspec.yaml',
+      'TESTFLIGHT_CONFIG=pubspec.yaml',
+    ]);
+    expect(result.exitCode, 0, reason: result.stderr.toString());
+
+    final output = result.stdout.toString();
+    expect(output, contains('flutter build ipa --release'));
+    expect(output, contains('flutter build macos --release'));
+    expect(output, isNot(contains('--build-number=')));
+    expect(output, contains('altool --upload-app'));
+    expect(output, contains('--type macos'));
   });
 }

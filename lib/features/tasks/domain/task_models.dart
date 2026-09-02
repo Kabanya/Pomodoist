@@ -76,6 +76,34 @@ class TaskSchedule {
     return end!.difference(start!);
   }
 
+  TaskSchedule moveToDate(DateTime value) {
+    if (isAllDay) {
+      return TaskSchedule.allDay(
+        value,
+        recurrence: recurrence,
+        recurrenceSeriesId: recurrenceSeriesId,
+      );
+    }
+    final localStart = start!.toLocal();
+    final movedStart = DateTime(
+      value.year,
+      value.month,
+      value.day,
+      localStart.hour,
+      localStart.minute,
+      localStart.second,
+      localStart.millisecond,
+      localStart.microsecond,
+    );
+    return TaskSchedule.timed(
+      start: movedStart,
+      end: movedStart.add(duration!),
+      timeZone: timeZone,
+      recurrence: recurrence,
+      recurrenceSeriesId: recurrenceSeriesId,
+    );
+  }
+
   DateTime get occurrenceStartLocal {
     return switch (kind) {
       TaskScheduleKind.allDay => date!,
