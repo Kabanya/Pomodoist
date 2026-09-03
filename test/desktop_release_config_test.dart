@@ -11,6 +11,16 @@ void main() {
     expect(result.stdout.toString(), contains('valid'));
   });
 
+  test('accepts dotenv production configuration', () {
+    final config = _validConfig().entries
+        .map((entry) => '${entry.key}=${entry.value}')
+        .join('\n');
+
+    final result = _validateRaw(config, extension: 'env');
+
+    expect(result.exitCode, 0, reason: result.stderr.toString());
+  });
+
   for (final scenario in <({String name, Map<String, Object?> config})>[
     (
       name: 'non-production environment',
@@ -73,14 +83,17 @@ Map<String, Object?> _validConfig() => {
 };
 
 ProcessResult _validateConfig(Map<String, Object?> config) {
+  return _validateRaw(jsonEncode(config), extension: 'json');
+}
+
+ProcessResult _validateRaw(String config, {required String extension}) {
   final directory = Directory.systemTemp.createTempSync(
     'pomodoist-desktop-config-',
   );
   try {
-    final configFile = File('${directory.path}/production.json')
-      ..writeAsStringSync(jsonEncode(config));
+    final configFile = File('${directory.path}/production.$extension')
+      ..writeAsStringSync(config);
     return Process.runSync(_dartExecutable(), [
-      'run',
       'tool/desktop_release_config.dart',
       '--config',
       configFile.path,

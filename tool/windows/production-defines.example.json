@@ -1,7 +1,0 @@
-{
-  "POMODOIST_ENVIRONMENT": "production",
-  "WEB_APP_URL": "https://app.pomodoist.com",
-  "POMODOIST_REGISTRATION_URL": "https://app.pomodoist.com/auth/challenge",
-  "TURNSTILE_SITE_KEY": "replace-with-public-site-key",
-  "SENTRY_DSN": ""
-}

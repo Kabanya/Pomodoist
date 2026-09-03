@@ -32,7 +32,7 @@ void main() {
       commands[1],
       'env -u http_proxy -u https_proxy -u all_proxy '
       '-u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY '
-      'dart-under-test run tool/desktop_release_config.dart '
+      'dart-under-test tool/desktop_release_config.dart '
       '--config "/secure config/pomodoist-linux-production.json"',
     );
     expect(

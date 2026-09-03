@@ -32,6 +32,7 @@ void main() {
         entry.key,
         'DART=dart-under-test',
         'FLUTTER=flutter-under-test',
+        'LOCAL_CONFIG=local.env',
         'LINUX_CONFIG=pubspec.yaml',
         'WINDOWS_CONFIG=pubspec.yaml',
         'TESTFLIGHT_CONFIG=pubspec.yaml',
@@ -45,6 +46,61 @@ void main() {
         reason: entry.key,
       );
     }
+  });
+
+  test('platform targets consume their generated environment files', () {
+    const expectedConfigs = <String, String>{
+      'run': '--dart-define-from-file="local.env"',
+      'run-linux': '--dart-define-from-file="local.env"',
+      'web': '--dart-define-from-file="local.env"',
+      'web-release': '--dart-define-from-file="local.env"',
+      'linux-debug': '--dart-define-from-file="linux.env"',
+      'linux-release': '--dart-define-from-file="linux.env"',
+      'windows-debug': '-ConfigFile "C:/windows.env"',
+      'windows-release': '-ConfigFile "C:/windows.env"',
+      'macos-debug': '--dart-define-from-file="local.env"',
+      'macos-release': '--dart-define-from-file="testflight.env"',
+    };
+
+    for (final entry in expectedConfigs.entries) {
+      final result = Process.runSync(_makeExecutable(), [
+        '--no-print-directory',
+        '--dry-run',
+        entry.key,
+        'DART=dart-under-test',
+        'FLUTTER=flutter-under-test',
+        'LOCAL_CONFIG=local.env',
+        'LINUX_CONFIG=linux.env',
+        'WINDOWS_CONFIG=C:/windows.env',
+        'TESTFLIGHT_CONFIG=testflight.env',
+        'POMODOIST_RELEASE=0123456789abcdef0123456789abcdef01234567',
+      ], workingDirectory: Directory.current.path);
+
+      expect(result.exitCode, 0, reason: '${entry.key}: ${result.stderr}');
+      expect(
+        result.stdout.toString(),
+        contains(entry.value),
+        reason: entry.key,
+      );
+    }
+  });
+
+  test('setup prepares environments before resolving packages', () {
+    final result = Process.runSync(_makeExecutable(), const [
+      '--no-print-directory',
+      '--dry-run',
+      'setup-flutter',
+      'DART=dart-under-test',
+      'FLUTTER=flutter-under-test',
+    ], workingDirectory: Directory.current.path);
+
+    expect(result.exitCode, 0, reason: result.stderr.toString());
+    final output = result.stdout.toString();
+    expect(output, contains('dart-under-test tool/env_setup.dart setup'));
+    expect(
+      output.indexOf('dart-under-test tool/env_setup.dart setup'),
+      lessThan(output.indexOf('flutter-under-test pub get')),
+    );
   });
 
   test('iPhone and iPad mode targets run their selected simulators', () {
@@ -63,6 +119,8 @@ void main() {
         'IOS_SIMULATOR=iPhone Test',
         'IPAD_SIMULATOR=iPad Test',
         'FLUTTER=flutter-under-test',
+        'LOCAL_CONFIG=pubspec.yaml',
+        'POMODOIST_RELEASE=0123456789abcdef0123456789abcdef01234567',
       ], workingDirectory: Directory.current.path);
 
       expect(result.exitCode, 0, reason: '${entry.key}: ${result.stderr}');
@@ -75,6 +133,9 @@ void main() {
           'xcrun simctl bootstatus "${entry.value}" -b',
           'open -a Simulator',
           'flutter-under-test run -d "${entry.value}" --debug '
+              '--dart-define-from-file="pubspec.yaml" '
+              '--dart-define=POMODOIST_RELEASE='
+              '"0123456789abcdef0123456789abcdef01234567" '
               '--dart-define=POMODOIST_BILLING_CHANNEL=storekit',
         ],
         reason: entry.key,

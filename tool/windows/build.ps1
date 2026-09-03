@@ -15,7 +15,7 @@ function Invoke-DesktopReleaseConfigValidation {
 
     $maximumAttempts = 3
     for ($attempt = 1; $attempt -le $maximumAttempts; $attempt++) {
-        & dart run tool/desktop_release_config.dart --config $Path
+        & dart tool/desktop_release_config.dart --config $Path
         $validationExitCode = $LASTEXITCODE
         if ($validationExitCode -eq 0) {
             return
@@ -43,21 +43,27 @@ try {
         }
     }
 
+    $resolvedConfig = $null
+    if (-not [string]::IsNullOrWhiteSpace($ConfigFile)) {
+        $resolvedConfig = (Resolve-Path $ConfigFile).Path
+    }
+
     $flutterArgs = @('build', 'windows', "--$($Configuration.ToLowerInvariant())")
+    if ($null -ne $resolvedConfig) {
+        $flutterArgs += "--dart-define-from-file=$resolvedConfig"
+    }
+    if ([string]::IsNullOrWhiteSpace($ReleaseSha)) {
+        $ReleaseSha = (& git rev-parse HEAD).Trim()
+    }
+    if ($ReleaseSha -notmatch '^[0-9a-fA-F]{40}$') {
+        throw '-ReleaseSha must be a full 40-character Git commit SHA.'
+    }
+    $flutterArgs += "--dart-define=POMODOIST_RELEASE=$ReleaseSha"
     if ($Configuration -eq 'Release') {
-        if ([string]::IsNullOrWhiteSpace($ConfigFile)) {
+        if ($null -eq $resolvedConfig) {
             throw 'Release builds require -ConfigFile with production dart-defines.'
         }
-        $resolvedConfig = (Resolve-Path $ConfigFile).Path
         Invoke-DesktopReleaseConfigValidation -Path $resolvedConfig
-        if ([string]::IsNullOrWhiteSpace($ReleaseSha)) {
-            $ReleaseSha = (& git rev-parse HEAD).Trim()
-        }
-        if ($ReleaseSha -notmatch '^[0-9a-fA-F]{40}$') {
-            throw '-ReleaseSha must be a full 40-character Git commit SHA.'
-        }
-        $flutterArgs += "--dart-define-from-file=$resolvedConfig"
-        $flutterArgs += "--dart-define=POMODOIST_RELEASE=$ReleaseSha"
         $flutterArgs += '--dart-define=POMODOIST_BILLING_CHANNEL=stripe'
     }
 

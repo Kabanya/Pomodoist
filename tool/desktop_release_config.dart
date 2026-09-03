@@ -91,12 +91,10 @@ Future<void> main(List<String> arguments) async {
       throw const FormatException('Expected --config <path>.');
     }
     final file = File(arguments[1]);
-    final Object? decoded;
-    try {
-      decoded = jsonDecode(await file.readAsString());
-    } on FormatException {
-      throw const FormatException('Desktop configuration must be valid JSON.');
-    }
+    final contents = await file.readAsString();
+    final Object? decoded = file.path.toLowerCase().endsWith('.json')
+        ? _decodeJson(contents)
+        : _decodeDotEnv(contents);
     if (decoded is! Map<String, Object?>) {
       throw const FormatException(
         'Desktop configuration must be a JSON object.',
@@ -111,4 +109,39 @@ Future<void> main(List<String> arguments) async {
     stderr.writeln('Desktop production configuration could not be read.');
     exitCode = 66;
   }
+}
+
+Object? _decodeJson(String contents) {
+  try {
+    return jsonDecode(contents);
+  } on FormatException {
+    throw const FormatException('Desktop configuration must be valid JSON.');
+  }
+}
+
+Map<String, Object?> _decodeDotEnv(String contents) {
+  final values = <String, Object?>{};
+  final lines = const LineSplitter().convert(contents);
+  for (var index = 0; index < lines.length; index++) {
+    final line = lines[index];
+    final trimmed = line.trim();
+    if (trimmed.isEmpty || trimmed.startsWith('#')) continue;
+    final separator = line.indexOf('=');
+    if (separator < 1) {
+      throw FormatException(
+        'Desktop configuration has an invalid assignment at line ${index + 1}.',
+      );
+    }
+    final name = line.substring(0, separator).trim();
+    if (!RegExp(r'^[A-Z][A-Z0-9_]*$').hasMatch(name)) {
+      throw FormatException(
+        'Desktop configuration has an invalid key at line ${index + 1}.',
+      );
+    }
+    if (values.containsKey(name)) {
+      throw FormatException('Desktop configuration contains duplicate $name.');
+    }
+    values[name] = line.substring(separator + 1);
+  }
+  return values;
 }

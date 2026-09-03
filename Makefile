@@ -25,23 +25,23 @@ WATCH_BUILD_PATH = $(abspath $(WATCH_BUILD_DIR))
 # proxy variables from breaking reproducible local builds.
 LINUX_BUILD_ENV ?= env -u http_proxy -u https_proxy -u all_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY
 POMODOIST_APPIMAGE_BUILDER ?= ./tool/linux/build_appimage.sh
-LINUX_CONFIG ?= $(CURDIR)/.env.linux-production.json
+LOCAL_CONFIG ?= .env.local
+LINUX_CONFIG ?= .env.linux
 
 # Windows
-WINDOWS_CONFIG ?= C:/secure/pomodoist-windows-production.json
+WINDOWS_CONFIG ?= .env.windows
 WINDOWS_RELEASE_DIR ?= build/windows/x64/runner/Release
 
-# TestFlight. Key ID is derived from key-<ID>.p8, issuer from key-Apple-Issuer-ID.md.
-# Both are gitignored, so CI and docs can pass them explicitly when absent.
-ASC_KEY_ID ?= $(shell basename key-*.p8 .p8 2>/dev/null | sed 's/^key-//')
-ASC_ISSUER_ID ?= $(shell tr -d ' \t\r\n' < key-Apple-Issuer-ID.md 2>/dev/null)
-ASC_KEY_PATH ?= key-$(ASC_KEY_ID).p8
+# TestFlight credentials stay in the private env and are never Dart defines.
+PRIVATE_CONFIG ?= .env.private
+ASC_KEY_ID ?= $(shell $(DART) tool/env_setup.dart value --env "$(PRIVATE_CONFIG)" --key ASC_KEY_ID 2>/dev/null)
+ASC_ISSUER_ID ?= $(shell $(DART) tool/env_setup.dart value --env "$(PRIVATE_CONFIG)" --key ASC_ISSUER_ID 2>/dev/null)
 IOS_EXPORT_OPTIONS ?= ios/ExportOptions.plist
 IOS_IPA_PATH ?= build/ios/ipa/Pomodoist.ipa
 TESTFLIGHT_CONFIG ?= .env.testflight
 POMODOIST_RELEASE ?= $(shell git rev-parse HEAD)
 
-.PHONY: setup setup-linux run run-linux web
+.PHONY: setup-env setup-flutter setup-linux run run-linux web
 .PHONY: analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-packaging check format
 .PHONY: web-debug web-profile web-release
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
@@ -68,7 +68,7 @@ help:
 	printf '%s%s%s\n' "$${dim}" 'Tasks • Focus • Reports' "$${reset}"; \
 	printf '\n%sUsage:%s make <target> [VARIABLE=value]\n' "$${bold}" "$${reset}"; \
 	printf '\n%s%sSetup & run%s\n' "$${red}" "$${bold}" "$${reset}"; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup' "$${reset}" 'Resolve Flutter dependencies'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup-flutter' "$${reset}" 'Create env files and resolve Flutter dependencies'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup-linux' "$${reset}" 'Prepare an Arch Linux workstation'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make run' "$${reset}" 'Run Pomodoist on a connected device'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make run-linux' "$${reset}" 'Run the native Linux desktop app'; \
@@ -115,20 +115,23 @@ help:
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make devices' "$${reset}" 'List available Flutter devices'; \
 	printf '  %s%-26s%s %s\n\n' "$${bold}" 'make clean' "$${reset}" 'Remove Flutter build outputs'
 
-setup:
+setup-flutter: setup-env
 	$(FLUTTER) pub get
 
-setup-linux:
+setup-linux: setup-env
 	./tool/linux/setup_arch.sh
 
+setup-env:
+	$(DART) tool/env_setup.dart setup
+
 run:
-	$(FLUTTER) run --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+	$(FLUTTER) run --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 run-linux:
-	$(FLUTTER) run -d linux --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+	$(FLUTTER) run -d linux --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 web:
-	$(FLUTTER) run -d chrome --dart-define=POMODOIST_BILLING_CHANNEL=stripe
+	$(FLUTTER) run -d chrome --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
 analyze:
 	$(FLUTTER) analyze
@@ -153,25 +156,25 @@ format:
 	$(DART) format lib test tool
 
 web-debug:
-	$(FLUTTER) build web --debug --dart-define=POMODOIST_BILLING_CHANNEL=stripe
+	$(FLUTTER) build web --debug --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
 web-profile:
-	$(FLUTTER) build web --profile --dart-define=POMODOIST_BILLING_CHANNEL=stripe
+	$(FLUTTER) build web --profile --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
 web-release:
-	$(FLUTTER) build web --release --dart-define=POMODOIST_BILLING_CHANNEL=stripe
+	$(FLUTTER) build web --release --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
 linux-pub-get:
 	$(LINUX_BUILD_ENV) bash ./tool/linux/pub_get_with_retry.sh "$(FLUTTER)"
 
 linux-debug: linux-pub-get
-	$(LINUX_BUILD_ENV) $(FLUTTER) build linux --debug --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+	$(LINUX_BUILD_ENV) $(FLUTTER) build linux --debug --dart-define-from-file="$(LINUX_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 linux-profile: linux-pub-get
-	$(LINUX_BUILD_ENV) $(FLUTTER) build linux --profile --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+	$(LINUX_BUILD_ENV) $(FLUTTER) build linux --profile --dart-define-from-file="$(LINUX_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 linux-release: linux-pub-get
-	$(LINUX_BUILD_ENV) $(DART) run tool/desktop_release_config.dart --config "$(LINUX_CONFIG)"
+	$(LINUX_BUILD_ENV) $(DART) tool/desktop_release_config.dart --config "$(LINUX_CONFIG)"
 	$(LINUX_BUILD_ENV) $(FLUTTER) build linux --release --dart-define-from-file="$(LINUX_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
 
 linux-appimage: linux-release
@@ -181,10 +184,10 @@ linux-install: linux-release
 	./tool/linux/install.sh
 
 windows-debug:
-	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Debug
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Debug -ConfigFile "$(WINDOWS_CONFIG)"
 
 windows-profile:
-	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Profile
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Profile -ConfigFile "$(WINDOWS_CONFIG)"
 
 windows-release:
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Release -Clean -ConfigFile "$(WINDOWS_CONFIG)" -ReleaseSha "$(POMODOIST_RELEASE)"
@@ -194,13 +197,13 @@ windows-installer: windows-release
 
 macos-debug:
 	$(FLUTTER) build macos --debug \
-		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
+		--dart-define-from-file="$(LOCAL_CONFIG)" \
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
 		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 macos-profile:
 	$(FLUTTER) build macos --profile \
-		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
+		--dart-define-from-file="$(LOCAL_CONFIG)" \
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
 		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
@@ -216,7 +219,7 @@ ipad-debug ipad-profile: RUN_SIMULATOR = $(IPAD_SIMULATOR)
 ios-debug ios-profile ipad-debug ipad-profile:
 	xcrun simctl bootstatus "$(RUN_SIMULATOR)" -b
 	open -a Simulator
-	$(FLUTTER) run -d "$(RUN_SIMULATOR)" --debug --dart-define=POMODOIST_BILLING_CHANNEL=storekit
+	$(FLUTTER) run -d "$(RUN_SIMULATOR)" --debug --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=storekit
 
 watch-debug: WATCH_CONFIGURATION = Debug
 watch-profile: WATCH_CONFIGURATION = Profile
@@ -233,62 +236,73 @@ testflight-preflight:
 	python3 tool/check_testflight_env.py "$(TESTFLIGHT_CONFIG)"
 
 testflight-auth:
-	@test -n "$(ASC_KEY_ID)" || (echo "Set ASC_KEY_ID=<App Store Connect key ID> or add key-<ID>.p8" >&2; exit 1)
-	@test -n "$(ASC_ISSUER_ID)" || (echo "Set ASC_ISSUER_ID=<App Store Connect issuer ID> or add key-Apple-Issuer-ID.md" >&2; exit 1)
-	@test -f "$(ASC_KEY_PATH)" || (echo "Missing App Store Connect key: $(ASC_KEY_PATH)" >&2; exit 1)
+	@test -f "$(PRIVATE_CONFIG)" || (echo "Missing $(PRIVATE_CONFIG); run make setup-flutter" >&2; exit 1)
+	@test -n "$(ASC_KEY_ID)" || (echo "ASC_KEY_ID is missing in $(PRIVATE_CONFIG)" >&2; exit 1)
+	@test -n "$(ASC_ISSUER_ID)" || (echo "ASC_ISSUER_ID is missing in $(PRIVATE_CONFIG)" >&2; exit 1)
+	@$(DART) tool/env_setup.dart value --env "$(PRIVATE_CONFIG)" --key ASC_PRIVATE_KEY_BASE64 >/dev/null
 
 testflight-ios: testflight-preflight testflight-auth
-	$(FLUTTER) build ipa --release \
-		--export-options-plist="$(IOS_EXPORT_OPTIONS)" \
-		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
-		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
-		--dart-define=POMODOIST_BILLING_CHANNEL=storekit
-	@test -f "$(IOS_IPA_PATH)" || (echo "Missing $(IOS_IPA_PATH)" >&2; exit 1)
-	xcrun altool --validate-app "$(IOS_IPA_PATH)" \
-		--api-key "$(ASC_KEY_ID)" \
-		--api-issuer "$(ASC_ISSUER_ID)" \
-		--p8-file-path "$(ASC_KEY_PATH)"
-	xcrun altool --upload-app -f "$(IOS_IPA_PATH)" \
-		--api-key "$(ASC_KEY_ID)" \
-		--api-issuer "$(ASC_ISSUER_ID)" \
-		--p8-file-path "$(ASC_KEY_PATH)"
+	@set -eu; \
+		key_dir="$$(mktemp -d "$${TMPDIR:-/tmp}/pomodoist-testflight.XXXXXX")"; \
+		trap 'test -n "$$key_dir" && rm -rf -- "$$key_dir"' EXIT HUP INT TERM; \
+		key_path="$$key_dir/AuthKey_$(ASC_KEY_ID).p8"; \
+		$(DART) tool/env_setup.dart write-asc-key --env "$(PRIVATE_CONFIG)" --output "$$key_path"; \
+		$(FLUTTER) build ipa --release \
+			--export-options-plist="$(IOS_EXPORT_OPTIONS)" \
+			--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
+			--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
+			--dart-define=POMODOIST_BILLING_CHANNEL=storekit; \
+		test -f "$(IOS_IPA_PATH)" || (echo "Missing $(IOS_IPA_PATH)" >&2; exit 1); \
+		xcrun altool --validate-app "$(IOS_IPA_PATH)" \
+			--api-key "$(ASC_KEY_ID)" \
+			--api-issuer "$(ASC_ISSUER_ID)" \
+			--p8-file-path "$$key_path"; \
+		xcrun altool --upload-app -f "$(IOS_IPA_PATH)" \
+			--api-key "$(ASC_KEY_ID)" \
+			--api-issuer "$(ASC_ISSUER_ID)" \
+			--p8-file-path "$$key_path"
 
 MACOS_ARCHIVE_PATH = $(abspath build/TestFlight/Pomodoist-macOS.xcarchive)
 MACOS_EXPORT_PATH = $(abspath build/TestFlight/macos)
 MACOS_PACKAGE_PATH = $(MACOS_EXPORT_PATH)/pomodoist.pkg
 
 testflight-macos: testflight-preflight testflight-auth
-	$(FLUTTER) build macos --release \
-		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
-		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
-		--dart-define=POMODOIST_BILLING_CHANNEL=storekit
-	@rm -rf "$(MACOS_ARCHIVE_PATH)" "$(MACOS_EXPORT_PATH)"
-	xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner \
-		-configuration Release -archivePath "$(MACOS_ARCHIVE_PATH)" archive \
-		-hideShellScriptEnvironment \
-		-allowProvisioningUpdates \
-		-authenticationKeyPath "$(abspath $(ASC_KEY_PATH))" \
-		-authenticationKeyID "$(ASC_KEY_ID)" \
-		-authenticationKeyIssuerID "$(ASC_ISSUER_ID)"
-	xcodebuild -exportArchive \
-		-archivePath "$(MACOS_ARCHIVE_PATH)" \
-		-exportPath "$(MACOS_EXPORT_PATH)" \
-		-exportOptionsPlist "$(IOS_EXPORT_OPTIONS)" \
-		-allowProvisioningUpdates \
-		-authenticationKeyPath "$(abspath $(ASC_KEY_PATH))" \
-		-authenticationKeyID "$(ASC_KEY_ID)" \
-		-authenticationKeyIssuerID "$(ASC_ISSUER_ID)"
-	@test -f "$(MACOS_PACKAGE_PATH)" || (echo "Missing $(MACOS_PACKAGE_PATH)" >&2; exit 1)
-	xcrun altool --validate-app "$(MACOS_PACKAGE_PATH)" \
-		--type macos \
-		--api-key "$(ASC_KEY_ID)" \
-		--api-issuer "$(ASC_ISSUER_ID)" \
-		--p8-file-path "$(ASC_KEY_PATH)"
-	xcrun altool --upload-app -f "$(MACOS_PACKAGE_PATH)" \
-		--type macos \
-		--api-key "$(ASC_KEY_ID)" \
-		--api-issuer "$(ASC_ISSUER_ID)" \
-		--p8-file-path "$(ASC_KEY_PATH)"
+	@set -eu; \
+		key_dir="$$(mktemp -d "$${TMPDIR:-/tmp}/pomodoist-testflight.XXXXXX")"; \
+		trap 'test -n "$$key_dir" && rm -rf -- "$$key_dir"' EXIT HUP INT TERM; \
+		key_path="$$key_dir/AuthKey_$(ASC_KEY_ID).p8"; \
+		$(DART) tool/env_setup.dart write-asc-key --env "$(PRIVATE_CONFIG)" --output "$$key_path"; \
+		$(FLUTTER) build macos --release \
+			--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
+			--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
+			--dart-define=POMODOIST_BILLING_CHANNEL=storekit; \
+		rm -rf "$(MACOS_ARCHIVE_PATH)" "$(MACOS_EXPORT_PATH)"; \
+		xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner \
+			-configuration Release -archivePath "$(MACOS_ARCHIVE_PATH)" archive \
+			-hideShellScriptEnvironment \
+			-allowProvisioningUpdates \
+			-authenticationKeyPath "$$key_path" \
+			-authenticationKeyID "$(ASC_KEY_ID)" \
+			-authenticationKeyIssuerID "$(ASC_ISSUER_ID)"; \
+		xcodebuild -exportArchive \
+			-archivePath "$(MACOS_ARCHIVE_PATH)" \
+			-exportPath "$(MACOS_EXPORT_PATH)" \
+			-exportOptionsPlist "$(IOS_EXPORT_OPTIONS)" \
+			-allowProvisioningUpdates \
+			-authenticationKeyPath "$$key_path" \
+			-authenticationKeyID "$(ASC_KEY_ID)" \
+			-authenticationKeyIssuerID "$(ASC_ISSUER_ID)"; \
+		test -f "$(MACOS_PACKAGE_PATH)" || (echo "Missing $(MACOS_PACKAGE_PATH)" >&2; exit 1); \
+		xcrun altool --validate-app "$(MACOS_PACKAGE_PATH)" \
+			--type macos \
+			--api-key "$(ASC_KEY_ID)" \
+			--api-issuer "$(ASC_ISSUER_ID)" \
+			--p8-file-path "$$key_path"; \
+		xcrun altool --upload-app -f "$(MACOS_PACKAGE_PATH)" \
+			--type macos \
+			--api-key "$(ASC_KEY_ID)" \
+			--api-issuer "$(ASC_ISSUER_ID)" \
+			--p8-file-path "$$key_path"
 
 devices:
 	$(FLUTTER) devices

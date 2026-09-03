@@ -60,7 +60,7 @@ test "$(wc -l < "$command_log")" -eq 6
 test "$(sed -n '1p' "$command_log")" = 'flutter pub get'
 test "$(sed -n '2p' "$command_log")" = 'flutter pub get'
 test "$(sed -n '3p' "$command_log")" = 'flutter pub get'
-grep -Eq '^dart run tool/desktop_release_config\.dart --config .+/production\.json$' "$command_log"
+grep -Eq '^dart tool/desktop_release_config\.dart --config .+/production\.json$' "$command_log"
 grep -Eq '^flutter build linux --release ' "$command_log"
 ! grep -Eq '^flutter build linux .*--no-pub' "$command_log"
 test "$(sed -n '6p' "$command_log")" = 'build-appimage '

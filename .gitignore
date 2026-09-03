@@ -26,11 +26,8 @@ migrate_working_dir/
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id
-ios/Flutter/GoogleOAuth.xcconfig
-macos/Runner/Configs/GoogleOAuth.xcconfig
-web/GoogleOAuth.env
-.env
 .env.*
+.env
 !.env.example
 AuthKey_*.p8
 private_keys/
@@ -80,7 +77,6 @@ pomodoist_app_icon_no_background.png
 !ios/Runner/pomodoist_app_icon_no_background.png
 .codex**
 key-**.md
-key-**.p8
 .gitignore
 supabase/.temp/
 design/

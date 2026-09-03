@@ -73,17 +73,41 @@ fi
 ! grep -REq --include='*.yml' --include='*.yaml' \
   '^[[:space:]]+flutter-version:' .github/workflows ||
   fail 'workflows must read the Flutter version from .fvmrc'
-if git ls-files | grep -Eq '(^|/)(\.codex|\.env[^/]*|key-[^/]+\.md|screenlog\.0|outputs|design|\.superpowers|supabase/\.temp)(/|$)'; then
+tracked_env=$(git ls-files | grep -E '(^|/)\.env[^/]*$' | grep -vFx '.env.example' || true)
+[ -z "$tracked_env" ] || fail 'only .env.example may be tracked'
+[ -f .env.example ] || fail '.env.example must exist'
+if awk '
+  /^PRIVATE__/ && $0 !~ /^PRIVATE__APPLE_SECRET_VALID_DAYS=/ {
+    value = substr($0, index($0, "=") + 1)
+    if (length(value) > 0) exit 1
+  }
+  /__(SUPABASE_ANON_KEY|TURNSTILE_SITE_KEY|DEEPSEEK_API_KEY|GOOGLE_DESKTOP_CLIENT_SECRET)=/ {
+    value = substr($0, index($0, "=") + 1)
+    if (length(value) > 0) exit 1
+  }
+' .env.example; then :; else
+  fail '.env.example contains a secret value'
+fi
+for prefix in LOCAL STAGING TESTFLIGHT WINDOWS LINUX PRIVATE; do
+  grep -q "^${prefix}__" .env.example || fail ".env.example is missing ${prefix}__ variables"
+done
+if git ls-files | grep -Eq '(^|/)(\.codex|key-[^/]+|screenlog\.0|outputs|design|\.superpowers|supabase/\.temp)(/|$)'; then
   fail 'tracked public files contain a forbidden path'
 fi
-if git grep -qE '(AKIA[0-9A-Z]{16}|-----BEGIN( [A-Z]+)? PRIVATE KEY-----|rk_(live|test)_[0-9A-Za-z]+|sk_(live|test)_[0-9A-Za-z]+|whsec_[0-9A-Za-z]+|sb_secret_[0-9A-Za-z]+|sntrys_[0-9A-Za-z]+|GOCSPX-[0-9A-Za-z_-]{20,})' -- .; then
+if git grep -qE '(AKIA[0-9A-Z]{16}|rk_(live|test)_[0-9A-Za-z]+|sk_(live|test)_[0-9A-Za-z]+|whsec_[0-9A-Za-z]+|sb_secret_[0-9A-Za-z]+|sntrys_[0-9A-Za-z]+|GOCSPX-[0-9A-Za-z_-]{20,})' -- .; then
   fail 'tracked public files contain a secret'
 fi
-if git ls-files ':!tool/test_public_boundary.sh' | xargs grep -n 'sslip\.io' >/dev/null; then
+if git grep -qE '^[[:space:]]*-----BEGIN( [A-Z]+)? PRIVATE KEY-----[[:space:]]*$' -- .; then
+  fail 'tracked public files contain a private key'
+fi
+if git grep -n 'sslip\.io' -- ':!tool/test_public_boundary.sh' >/dev/null; then
   fail 'tracked public files must not contain deprecated sslip aliases'
 fi
-if git ls-files ':!tool/test_public_boundary.sh' | xargs grep -nE '/Users/|/home/' >/dev/null; then
+if git grep -nE '/Users/|/home/' -- ':!tool/test_public_boundary.sh' >/dev/null; then
   fail 'tracked public docs and config must not contain personal absolute paths'
+fi
+if grep -Eq '^[A-Z0-9_]+=https?://' .env.example; then
+  fail '.env.example must not contain URL values'
 fi
 
 printf 'Public boundary checks passed.\n'

@@ -47,13 +47,14 @@ SENTRY_DSN=
       'testflight-ios',
       'ASC_KEY_ID=test',
       'ASC_ISSUER_ID=test',
-      'ASC_KEY_PATH=pubspec.yaml',
+      'PRIVATE_CONFIG=pubspec.yaml',
       'TESTFLIGHT_CONFIG=pubspec.yaml',
     ]);
     expect(result.exitCode, 0, reason: result.stderr.toString());
 
     final output = result.stdout.toString();
     expect(output, contains('flutter build ipa --release'));
+    expect(output, contains('write-asc-key'));
     expect(output, isNot(contains('--build-number=')));
     expect(output, contains('--dart-define-from-file="pubspec.yaml"'));
     expect(output, contains('--dart-define=POMODOIST_RELEASE='));
@@ -62,6 +63,7 @@ SENTRY_DSN=
       contains('--dart-define=POMODOIST_BILLING_CHANNEL=storekit'),
     );
     expect(output, isNot(contains('GOOGLE_CLIENT_ID')));
+    expect(output, isNot(contains('key-*.p8')));
     expect(output, isNot(contains('flutter build ios')));
     expect(
       output.indexOf('altool --upload-app'),
@@ -98,13 +100,14 @@ SENTRY_DSN=
       'testflight-macos',
       'ASC_KEY_ID=test',
       'ASC_ISSUER_ID=test',
-      'ASC_KEY_PATH=pubspec.yaml',
+      'PRIVATE_CONFIG=pubspec.yaml',
       'TESTFLIGHT_CONFIG=pubspec.yaml',
     ]);
     expect(result.exitCode, 0, reason: result.stderr.toString());
 
     final output = result.stdout.toString();
     expect(output, contains('flutter build macos --release'));
+    expect(output, contains('write-asc-key'));
     expect(output, isNot(contains('--build-number=')));
     expect(output, contains('--dart-define-from-file="pubspec.yaml"'));
     expect(output, contains('--dart-define=POMODOIST_RELEASE='));
@@ -113,10 +116,8 @@ SENTRY_DSN=
     expect(output, contains('xcodebuild -exportArchive'));
     expect(output, contains('-hideShellScriptEnvironment'));
     expect(output, contains('-allowProvisioningUpdates'));
-    expect(
-      output,
-      contains('-authenticationKeyPath "${Directory.current.path}/pubspec.yaml"'),
-    );
+    expect(output, contains("trap 'test -n \"\$key_dir\" && rm -rf"));
+    expect(output, contains('-authenticationKeyPath "\$key_path"'));
     expect(output, contains('altool --validate-app'));
     expect(output, contains('altool --upload-app'));
     expect(output, contains('pomodoist.pkg'));
@@ -136,7 +137,7 @@ SENTRY_DSN=
       'testflight',
       'ASC_KEY_ID=test',
       'ASC_ISSUER_ID=test',
-      'ASC_KEY_PATH=pubspec.yaml',
+      'PRIVATE_CONFIG=pubspec.yaml',
       'TESTFLIGHT_CONFIG=pubspec.yaml',
     ]);
     expect(result.exitCode, 0, reason: result.stderr.toString());
