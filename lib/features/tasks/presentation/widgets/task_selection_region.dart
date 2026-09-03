@@ -526,6 +526,7 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
           );
       if (!mounted) return;
       TaskMotionScope.maybeOf(this.context)?.created(createdIds.toSet());
+      _controller.close();
       await playHaptic(AppHapticCue.light);
     } catch (_) {
       _showFailures(_controller.selectedCount);
@@ -640,7 +641,10 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
   }
 
   void _finishNonDestructive(List<String> failed) {
-    if (failed.isEmpty) return;
+    if (failed.isEmpty) {
+      _controller.close();
+      return;
+    }
     _controller.retainOnly(failed);
     _showFailures(failed.length);
   }

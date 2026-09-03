@@ -1361,6 +1361,39 @@ void main() {
     expect(fake.changedPresetId, deepWorkPresetId);
     expect(find.text('50m'), findsAtLeastNWidgets(1));
   });
+
+  testWidgets('FocusScreen creates a preset for next active intervals', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+    });
+    final now = DateTime.utc(2026, 4, 27, 10);
+    final fake = _FakeFocusRepository(
+      activeRun: _focusRun(now),
+      activeInterval: _focusInterval(now, status: 'running'),
+    );
+    await _pumpActiveFocusScreen(tester, now, repository: fake);
+
+    final menu = find.byKey(const Key('focus-details-menu'));
+    await tester.ensureVisible(menu);
+    await tester.pump();
+    await tester.tap(
+      find.descendant(of: menu, matching: find.byIcon(Icons.more_horiz)),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('New preset'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('preset-name-field')),
+      'Custom',
+    );
+    await tester.tap(find.byKey(const Key('preset-save-button')));
+    await tester.pumpAndSettle();
+
+    expect(fake.createdPreset?.name, 'Custom');
+    expect(fake.changedPresetId, 'created');
+  });
 }
 
 Future<void> _pumpActiveFocusScreen(
@@ -1368,6 +1401,7 @@ Future<void> _pumpActiveFocusScreen(
   DateTime now, {
   TargetPlatform? platform,
   Size? size,
+  _FakeFocusRepository? repository,
 }) async {
   final previousSize = tester.view.physicalSize;
   final previousDevicePixelRatio = tester.view.devicePixelRatio;
@@ -1385,10 +1419,11 @@ Future<void> _pumpActiveFocusScreen(
     ProviderScope(
       overrides: [
         focusRepositoryProvider.overrideWithValue(
-          _FakeFocusRepository(
-            activeRun: _focusRun(now),
-            activeInterval: _focusInterval(now, status: 'running'),
-          ),
+          repository ??
+              _FakeFocusRepository(
+                activeRun: _focusRun(now),
+                activeInterval: _focusInterval(now, status: 'running'),
+              ),
         ),
         focusTickerProvider.overrideWith((ref) => Stream.value(now)),
       ],
@@ -1621,6 +1656,7 @@ class _FakeFocusRepository implements FocusRepository {
   final FocusRunItem? _activeRun;
   final FocusIntervalItem? _activeInterval;
   final List<FocusPresetItem> _presets;
+  CreateFocusPresetInput? createdPreset;
   String? changedPresetId;
   final stopReasons = <StopFocusReason>[];
   int startReadyCount = 0;
@@ -1663,7 +1699,10 @@ class _FakeFocusRepository implements FocusRepository {
   }
 
   @override
-  Future<String> createPreset(CreateFocusPresetInput input) async => 'created';
+  Future<String> createPreset(CreateFocusPresetInput input) async {
+    createdPreset = input;
+    return 'created';
+  }
 
   @override
   Future<void> updatePreset(String id, UpdateFocusPresetInput input) async {}

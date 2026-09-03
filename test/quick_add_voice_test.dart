@@ -20,6 +20,7 @@ import 'package:pomodoist/features/planning/data/task_decomposer.dart';
 import 'package:pomodoist/features/planning/data/quick_add_service.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/features/tasks/presentation/widgets/quick_add_bar.dart';
+import 'package:pomodoist/features/tasks/presentation/widgets/task_list_view.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -795,6 +796,43 @@ void main() {
       db.tasks,
     )..where((task) => task.content.equals('Buy milk'))).getSingle();
     expect(created.priority, 2);
+  });
+
+  testWidgets('Today task list defaults quick add to its date', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    await db.ensureSeedData();
+    final today = DateTime(2026, 5, 5);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          ...emptySuggestionOverrides,
+          appDatabaseProvider.overrideWithValue(db),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: TaskListView(
+              title: 'Today',
+              query: TaskQuery(kind: TaskQueryKind.today, now: today),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextField), 'Buy milk');
+    await tester.tap(find.byTooltip('Add'));
+    await tester.pumpAndSettle();
+
+    final created = await (db.select(
+      db.tasks,
+    )..where((task) => task.content.equals('Buy milk'))).getSingle();
+    expect(TaskSchedule.fromJsonString(created.dueJson)?.displayDate, today);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
   });
 
   testWidgets(

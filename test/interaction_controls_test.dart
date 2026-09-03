@@ -892,7 +892,7 @@ void main() {
     expect(find.text('0 selected'), findsOneWidget);
   });
 
-  testWidgets('bulk due preset keeps a typed time range and selection', (
+  testWidgets('bulk due preset keeps a typed time range and closes selection', (
     tester,
   ) async {
     final today = _todaySchedule();
@@ -924,7 +924,8 @@ void main() {
       expect(schedule.start!.toLocal(), DateTime(2026, 1, 3, 20));
       expect(schedule.end!.toLocal(), DateTime(2026, 1, 3, 21));
     }
-    expect(find.text('2 selected'), findsOneWidget);
+    expect(find.byKey(const Key('task-selection-header')), findsNothing);
+    expect(find.byKey(const Key('task-selection-bottom-bar')), findsNothing);
   });
 
   testWidgets('Schedule date preset keeps each selected task time range', (
@@ -986,6 +987,9 @@ void main() {
       DateTime(2026, 8, 25, 18),
     );
 
+    await _openTaskContextMenu(tester, 'Today task');
+    await tester.tap(find.text('Select').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Due'));
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -1012,6 +1016,9 @@ void main() {
       DateTime(2026, 1, 15),
     );
 
+    await _openTaskContextMenu(tester, 'Today task');
+    await tester.tap(find.text('Select').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Due'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Clear due'));
@@ -1019,7 +1026,7 @@ void main() {
     expect(harness.taskRepository.updatePatches.last.clearSchedule, isTrue);
   });
 
-  testWidgets('bulk project labels priority and duplicate keep selection', (
+  testWidgets('bulk project labels priority and duplicate close selection', (
     tester,
   ) async {
     final today = _todaySchedule();
@@ -1030,18 +1037,23 @@ void main() {
         _task('action-2', 'Second action task', schedule: today),
       ],
     );
-    await _openTaskContextMenu(tester, 'First action task');
-    await tester.tap(find.text('Select').last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Second action task'));
+    Future<void> selectBoth() async {
+      await _openTaskContextMenu(tester, 'First action task');
+      await tester.tap(find.text('Select').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Second action task'));
+      await tester.pump();
+    }
 
+    await selectBoth();
     await tester.tap(find.text('Project'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Work'));
     await tester.pumpAndSettle();
     expect(harness.taskRepository.movedProjectIds, ['project-1', 'project-1']);
-    expect(find.text('2 selected'), findsOneWidget);
+    expect(find.byKey(const Key('task-selection-header')), findsNothing);
 
+    await selectBoth();
     await tester.tap(find.text('Labels'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('coding'));
@@ -1053,8 +1065,9 @@ void main() {
           .map((patch) => patch.labelNames),
       everyElement(['coding']),
     );
-    expect(find.text('2 selected'), findsOneWidget);
+    expect(find.byKey(const Key('task-selection-header')), findsNothing);
 
+    await selectBoth();
     await tester.tap(find.text('Priority'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Priority 1'));
@@ -1065,7 +1078,9 @@ void main() {
           .map((patch) => patch.priority),
       [1, 1],
     );
+    expect(find.byKey(const Key('task-selection-header')), findsNothing);
 
+    await selectBoth();
     await tester.tap(find.text('More'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Duplicate'));
@@ -1079,7 +1094,8 @@ void main() {
       'action-2',
     });
     expect(harness.taskRepository.duplicateIncludeSubtasks.single, isTrue);
-    expect(find.text('2 selected'), findsOneWidget);
+    expect(find.byKey(const Key('task-selection-header')), findsNothing);
+    expect(find.byKey(const Key('task-selection-bottom-bar')), findsNothing);
   });
 
   testWidgets('completed multi-select reopens tasks and offers one Undo', (

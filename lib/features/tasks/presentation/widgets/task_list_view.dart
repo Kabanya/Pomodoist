@@ -108,6 +108,9 @@ class TaskListView extends ConsumerWidget {
                         if (showQuickAdd) ...[
                           const SizedBox(height: 16),
                           QuickAddBar(
+                            defaultDate: query.kind == TaskQueryKind.today
+                                ? query.now
+                                : null,
                             projectId: quickAddProjectId,
                             onTaskCreated: (taskIds) {
                               motion.created(taskIds.toSet());

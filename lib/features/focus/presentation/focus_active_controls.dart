@@ -247,6 +247,7 @@ Widget _buildFocusMoreActionsMenu(
   required ValueChanged<FocusViewMode> onViewModeChanged,
   required ValueChanged<String> onPresetChanged,
   required ValueChanged<FocusPresetItem> onCustomizePreset,
+  required VoidCallback onCreatePreset,
 }) {
   final l10n = context.l10n;
   final ready = interval.status == 'ready';
@@ -300,6 +301,8 @@ Widget _buildFocusMoreActionsMenu(
             case _FocusMoreActionKind.customize:
               final preset = selectedPreset;
               if (preset != null) onCustomizePreset(preset);
+            case _FocusMoreActionKind.createPreset:
+              onCreatePreset();
             case _FocusMoreActionKind.changePreset:
               final presetId = action.presetId;
               if (presetId != null) onPresetChanged(presetId);
@@ -341,6 +344,11 @@ Widget _buildFocusMoreActionsMenu(
             PopupMenuItem(
               value: const _FocusMoreAction(_FocusMoreActionKind.customize),
               child: Text(l10n.customizePreset),
+            ),
+          if (!minimal)
+            PopupMenuItem(
+              value: const _FocusMoreAction(_FocusMoreActionKind.createPreset),
+              child: Text(l10n.newPreset),
             ),
           for (final preset in minimal ? const <FocusPresetItem>[] : presets)
             PopupMenuItem(
@@ -402,6 +410,7 @@ enum _FocusMoreActionKind {
   stop,
   logDistraction,
   customize,
+  createPreset,
   changePreset,
   toggleViewMode,
 }

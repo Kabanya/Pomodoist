@@ -2252,6 +2252,7 @@ Widget _focusActiveStageHarness({
       },
       onPresetChanged: (_) {},
       onCustomizePreset: (_) {},
+      onCreatePreset: () {},
     );
     return viewMode == null
         ? stage(FocusViewMode.full)

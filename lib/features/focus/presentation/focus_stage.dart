@@ -423,6 +423,7 @@ class FocusActiveStage extends StatelessWidget {
     required this.onViewModeChanged,
     required this.onPresetChanged,
     required this.onCustomizePreset,
+    required this.onCreatePreset,
     super.key,
   });
 
@@ -440,6 +441,7 @@ class FocusActiveStage extends StatelessWidget {
   final ValueChanged<FocusViewMode> onViewModeChanged;
   final ValueChanged<String> onPresetChanged;
   final ValueChanged<FocusPresetItem> onCustomizePreset;
+  final VoidCallback onCreatePreset;
 
   @override
   Widget build(BuildContext context) {
@@ -467,6 +469,7 @@ class FocusActiveStage extends StatelessWidget {
       onViewModeChanged: onViewModeChanged,
       onPresetChanged: onPresetChanged,
       onCustomizePreset: onCustomizePreset,
+      onCreatePreset: onCreatePreset,
     );
     final rhythm = preset == null
         ? null

@@ -131,6 +131,11 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                             _changeActiveRunPreset(run, presetId),
                         onCustomizePreset: (preset) =>
                             _showPresetDialog(preset, presets),
+                        onCreatePreset: () => _showPresetDialog(
+                          null,
+                          presets,
+                          onCreated: (id) => _changeActiveRunPreset(run, id),
+                        ),
                       ),
               ],
             ),
@@ -176,8 +181,9 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
   Future<void> _showPresetDialog(
     FocusPresetItem? preset,
-    List<FocusPresetItem> presets,
-  ) async {
+    List<FocusPresetItem> presets, {
+    ValueChanged<String>? onCreated,
+  }) async {
     final result = await showDialog<_PresetDialogResult>(
       context: context,
       builder: (context) => _PresetFormDialog(preset: preset, presets: presets),
@@ -193,7 +199,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         if (preset == null) {
           final id = await repository.createPreset(data.toCreateInput());
           if (mounted) {
-            _selectPreset(id);
+            (onCreated ?? _selectPreset)(id);
           }
         } else {
           await repository.updatePreset(preset.id, data.toUpdateInput());
