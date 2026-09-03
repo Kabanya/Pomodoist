@@ -18,8 +18,12 @@ Future<void> main(List<String> arguments) async {
     final command = arguments.first;
     final options = _options(arguments.skip(1).toList());
     switch (command) {
-      case 'setup':
-        await _setup(Directory(options['--root'] ?? Directory.current.path));
+      case 'bootstrap':
+        await _bootstrap(
+          Directory(options['--root'] ?? Directory.current.path),
+        );
+      case 'sync':
+        await _sync(Directory(options['--root'] ?? Directory.current.path));
       case 'value':
         final env = _requiredOption(options, '--env');
         final key = _requiredOption(options, '--key');
@@ -52,22 +56,24 @@ Future<void> main(List<String> arguments) async {
   }
 }
 
-Future<void> _setup(Directory root) async {
+Future<void> _bootstrap(Directory root) async {
+  final template = File('${root.path}/.env.example');
+  final master = File('${root.path}/.env.setup');
+  if (await master.exists()) return;
+  await master.writeAsString(await template.readAsString());
+  await _restrict(master);
+  stdout.writeln(
+    'Created .env.setup. Fill it, then run make setup-flutter '
+    'to generate the environment files.',
+  );
+}
+
+Future<void> _sync(Directory root) async {
   final template = File('${root.path}/.env.example');
   final master = File('${root.path}/.env.setup');
   final templateValues = await _parse(template, requireProfilePrefix: true);
-
-  if (!await master.exists()) {
-    await master.writeAsString(await template.readAsString());
-    await _restrict(master);
-    stdout.writeln(
-      'Created .env.setup. Fill it, then run make setup-flutter again.',
-    );
-    exitCode = 2;
-    return;
-  }
-
   final masterValues = await _parse(master, requireProfilePrefix: true);
+
   for (final key in masterValues.keys) {
     if (!templateValues.containsKey(key)) {
       throw _EnvError('unknown key $key in .env.setup');
@@ -100,15 +106,33 @@ Future<void> _setup(Directory root) async {
     final destination = File('${root.path}/${profile.value}');
     if (!await destination.exists()) {
       await destination.writeAsString(
-        '# Generated from .env.setup; existing values are preserved.\n'
+        '# Generated from .env.setup; rerun make setup-flutter to sync non-empty values.\n'
         '${selected.entries.map((entry) => '${entry.key}=${entry.value}').join('\n')}\n',
       );
     } else {
       final existing = await _parse(destination);
-      await _append(
-        destination,
-        selected.entries.where((entry) => !existing.containsKey(entry.key)),
+      final additions = selected.entries.where(
+        (entry) => entry.value.isNotEmpty && !existing.containsKey(entry.key),
       );
+      final updates = <String, String>{
+        for (final entry in selected.entries)
+          if (entry.value.isNotEmpty && existing[entry.key] != entry.value)
+            entry.key: entry.value,
+      };
+      await _append(destination, additions);
+      if (updates.isNotEmpty) {
+        final lines = await destination.readAsLines();
+        final content = lines
+            .map((line) {
+              final separator = line.indexOf('=');
+              if (separator < 1) return line;
+              final name = line.substring(0, separator).trim();
+              final update = updates[name];
+              return update == null ? line : '$name=$update';
+            })
+            .join('\n');
+        await destination.writeAsString('$content\n', flush: true);
+      }
     }
     await _restrict(destination);
   }

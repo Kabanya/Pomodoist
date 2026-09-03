@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('first setup creates only the private master template', () async {
+  test('bootstrap creates only the master template', () async {
     final root = await Directory.systemTemp.createTemp('pomodoist-env-');
     addTearDown(() => root.delete(recursive: true));
     await File('${root.path}/.env.example').writeAsString('''
@@ -12,9 +12,9 @@ LOCAL__POMODOIST_ENVIRONMENT=local
 PRIVATE__ASC_KEY_ID=
 ''');
 
-    final result = await _run('setup', ['--root', root.path]);
+    final result = await _run('bootstrap', ['--root', root.path]);
 
-    expect(result.exitCode, 2);
+    expect(result.exitCode, 0, reason: result.stderr.toString());
     expect(
       File('${root.path}/.env.setup').readAsStringSync(),
       contains('LOCAL__POMODOIST_ENVIRONMENT=local'),
@@ -23,7 +23,56 @@ PRIVATE__ASC_KEY_ID=
     expect(File('${root.path}/.env.private').existsSync(), isFalse);
   });
 
-  test('setup distributes profiles and preserves existing values', () async {
+  test('bootstrap leaves an existing master untouched', () async {
+    final root = await Directory.systemTemp.createTemp('pomodoist-env-');
+    addTearDown(() => root.delete(recursive: true));
+    await File('${root.path}/.env.example').writeAsString('''
+LOCAL__EXISTING=template
+LOCAL__ADDED=default
+''');
+    await File(
+      '${root.path}/.env.setup',
+    ).writeAsString('LOCAL__EXISTING=private-value\n');
+
+    final result = await _run('bootstrap', ['--root', root.path]);
+
+    expect(result.exitCode, 0, reason: result.stderr.toString());
+    expect(_values('${root.path}/.env.setup'), {
+      'LOCAL__EXISTING': 'private-value',
+    });
+  });
+
+  test('filled master values sync into already generated files', () async {
+    final root = await Directory.systemTemp.createTemp('pomodoist-env-');
+    addTearDown(() => root.delete(recursive: true));
+    await File('${root.path}/.env.example').writeAsString('''
+LOCAL__POMODOIST_ENVIRONMENT=local
+LOCAL__SUPABASE_URL=
+''');
+
+    final bootstrapped = await _run('bootstrap', ['--root', root.path]);
+    expect(bootstrapped.exitCode, 0, reason: bootstrapped.stderr.toString());
+    final first = await _run('sync', ['--root', root.path]);
+    expect(first.exitCode, 0, reason: first.stderr.toString());
+    expect(_values('${root.path}/.env.local'), {
+      'POMODOIST_ENVIRONMENT': 'local',
+      'SUPABASE_URL': '',
+    });
+
+    await File('${root.path}/.env.setup').writeAsString('''
+LOCAL__POMODOIST_ENVIRONMENT=
+LOCAL__SUPABASE_URL=https://real.supabase.co
+''');
+
+    final second = await _run('sync', ['--root', root.path]);
+    expect(second.exitCode, 0, reason: second.stderr.toString());
+    expect(_values('${root.path}/.env.local'), {
+      'POMODOIST_ENVIRONMENT': 'local',
+      'SUPABASE_URL': 'https://real.supabase.co',
+    });
+  });
+
+  test('sync distributes profiles and syncs non-empty master values', () async {
     final root = await Directory.systemTemp.createTemp('pomodoist-env-');
     addTearDown(() => root.delete(recursive: true));
     const template = '''
@@ -49,11 +98,11 @@ PRIVATE__ASC_KEY_ID=ABC1234567
       '${root.path}/.env.local',
     ).writeAsString('POMODOIST_ENVIRONMENT=manual-local\n');
 
-    final result = await _run('setup', ['--root', root.path]);
+    final result = await _run('sync', ['--root', root.path]);
 
     expect(result.exitCode, 0, reason: result.stderr.toString());
     expect(_values('${root.path}/.env.local'), {
-      'POMODOIST_ENVIRONMENT': 'manual-local',
+      'POMODOIST_ENVIRONMENT': 'local-from-master',
       'NEW_VALUE': 'added',
     });
     expect(
@@ -75,28 +124,25 @@ PRIVATE__ASC_KEY_ID=ABC1234567
     expect(_values('${root.path}/.env.private')['ASC_KEY_ID'], 'ABC1234567');
   });
 
-  test(
-    'setup adds new master keys without replacing existing values',
-    () async {
-      final root = await Directory.systemTemp.createTemp('pomodoist-env-');
-      addTearDown(() => root.delete(recursive: true));
-      await File('${root.path}/.env.example').writeAsString('''
+  test('sync adds new master keys without replacing existing values', () async {
+    final root = await Directory.systemTemp.createTemp('pomodoist-env-');
+    addTearDown(() => root.delete(recursive: true));
+    await File('${root.path}/.env.example').writeAsString('''
 LOCAL__EXISTING=template
 LOCAL__ADDED=default
 ''');
-      await File(
-        '${root.path}/.env.setup',
-      ).writeAsString('LOCAL__EXISTING=private-value\n');
+    await File(
+      '${root.path}/.env.setup',
+    ).writeAsString('LOCAL__EXISTING=private-value\n');
 
-      final result = await _run('setup', ['--root', root.path]);
+    final result = await _run('sync', ['--root', root.path]);
 
-      expect(result.exitCode, 0, reason: result.stderr.toString());
-      expect(_values('${root.path}/.env.setup'), {
-        'LOCAL__EXISTING': 'private-value',
-        'LOCAL__ADDED': 'default',
-      });
-    },
-  );
+    expect(result.exitCode, 0, reason: result.stderr.toString());
+    expect(_values('${root.path}/.env.setup'), {
+      'LOCAL__EXISTING': 'private-value',
+      'LOCAL__ADDED': 'default',
+    });
+  });
 
   test('malformed input fails without echoing its value', () async {
     final root = await Directory.systemTemp.createTemp('pomodoist-env-');
@@ -107,7 +153,7 @@ LOCAL__TOKEN=first-private-value
 LOCAL__TOKEN=second-private-value
 ''');
 
-    final result = await _run('setup', ['--root', root.path]);
+    final result = await _run('sync', ['--root', root.path]);
     final error = result.stderr.toString();
 
     expect(result.exitCode, 64);

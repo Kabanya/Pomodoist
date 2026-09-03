@@ -96,10 +96,15 @@ void main() {
 
     expect(result.exitCode, 0, reason: result.stderr.toString());
     final output = result.stdout.toString();
-    expect(output, contains('dart-under-test tool/env_setup.dart setup'));
+    expect(output, contains('dart-under-test tool/env_setup.dart bootstrap'));
+    expect(output, contains('dart-under-test tool/env_setup.dart sync'));
+    final syncIndex = output.indexOf(
+      'dart-under-test tool/env_setup.dart sync',
+    );
+    expect(syncIndex, lessThan(output.indexOf('flutter-under-test pub get')));
     expect(
-      output.indexOf('dart-under-test tool/env_setup.dart setup'),
-      lessThan(output.indexOf('flutter-under-test pub get')),
+      output.indexOf('dart-under-test tool/env_setup.dart bootstrap'),
+      lessThan(syncIndex),
     );
   });
 

@@ -41,7 +41,7 @@ IOS_IPA_PATH ?= build/ios/ipa/Pomodoist.ipa
 TESTFLIGHT_CONFIG ?= .env.testflight
 POMODOIST_RELEASE ?= $(shell git rev-parse HEAD)
 
-.PHONY: setup-env setup-flutter setup-linux run run-linux web
+.PHONY: setup setup-env setup-flutter setup-linux run run-linux web
 .PHONY: analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-packaging check format
 .PHONY: web-debug web-profile web-release
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
@@ -68,7 +68,9 @@ help:
 	printf '%s%s%s\n' "$${dim}" 'Tasks • Focus • Reports' "$${reset}"; \
 	printf '\n%sUsage:%s make <target> [VARIABLE=value]\n' "$${bold}" "$${reset}"; \
 	printf '\n%s%sSetup & run%s\n' "$${red}" "$${bold}" "$${reset}"; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup-flutter' "$${reset}" 'Create env files and resolve Flutter dependencies'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup' "$${reset}" 'Full setup: env files + Flutter dependencies'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup-env' "$${reset}" 'Create the .env.setup template'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup-flutter' "$${reset}" 'Generate env files and resolve Flutter dependencies'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup-linux' "$${reset}" 'Prepare an Arch Linux workstation'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make run' "$${reset}" 'Run Pomodoist on a connected device'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make run-linux' "$${reset}" 'Run the native Linux desktop app'; \
@@ -115,14 +117,17 @@ help:
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make devices' "$${reset}" 'List available Flutter devices'; \
 	printf '  %s%-26s%s %s\n\n' "$${bold}" 'make clean' "$${reset}" 'Remove Flutter build outputs'
 
+setup: setup-env setup-flutter
+
+setup-env:
+	$(DART) tool/env_setup.dart bootstrap
+
 setup-flutter: setup-env
+	$(DART) tool/env_setup.dart sync
 	$(FLUTTER) pub get
 
 setup-linux: setup-env
 	./tool/linux/setup_arch.sh
-
-setup-env:
-	$(DART) tool/env_setup.dart setup
 
 run:
 	$(FLUTTER) run --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
