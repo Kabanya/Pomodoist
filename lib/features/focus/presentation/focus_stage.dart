@@ -456,7 +456,6 @@ class FocusActiveStage extends StatelessWidget {
     );
     final menu = _buildFocusMoreActionsMenu(
       context,
-      run: run,
       interval: interval,
       remaining: remaining,
       presets: presets,
@@ -550,7 +549,6 @@ class FocusActiveStage extends StatelessWidget {
         ),
         if (!full) const SizedBox(height: 32),
         _FocusActiveActions(
-          run: run,
           interval: interval,
           remaining: remaining,
           selectedPreset: preset,

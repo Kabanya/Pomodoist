@@ -260,8 +260,35 @@ void main() {
       findsOneWidget,
     );
     expect(find.byKey(const Key('focus-details-menu')), findsOneWidget);
-    expect(find.widgetWithText(TextButton, 'Log distraction'), findsOneWidget);
+    expect(find.text('Log distraction'), findsNothing);
     expect(find.byType(Card), findsNothing);
+  });
+
+  testWidgets('full compact active menu omits distraction action', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 7, 10, 9);
+    final interval = _interval(now, status: 'running');
+    await _pumpFocusScreen(
+      tester,
+      repository: _FocusRepository(
+        activeRun: _run(now),
+        activeInterval: interval,
+        intervals: [interval],
+      ),
+      size: const Size(390, 844),
+      now: now,
+    );
+
+    final menu = find.byKey(const Key('focus-details-menu'));
+    await tester.ensureVisible(menu);
+    await tester.pump();
+    await tester.tap(
+      find.descendant(of: menu, matching: find.byIcon(Icons.more_horiz)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Log distraction'), findsNothing);
   });
 
   testWidgets('full active derives rhythm progress from remaining time', (

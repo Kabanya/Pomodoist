@@ -3234,10 +3234,7 @@ void main() {
 
     await tester.tap(find.widgetWithText(FilledButton, 'Pause'));
     await tester.pump();
-    final distraction = find.widgetWithText(TextButton, 'Log distraction');
-    await tester.ensureVisible(distraction);
-    await tester.pump();
-    await tester.tap(distraction);
+    expect(find.text('Log distraction'), findsNothing);
     await tester.tap(find.widgetWithText(OutlinedButton, 'Complete interval'));
     await tester.pump();
     expect(find.text('Interval completed'), findsOneWidget);
@@ -3250,7 +3247,7 @@ void main() {
     expect(focusRepository.completeCount, 1);
     expect(focusRepository.skipCount, 1);
     expect(focusRepository.stopReasons, [StopFocusReason.stopped]);
-    expect(focusRepository.distractionRunIds, ['run-1']);
+    expect(focusRepository.distractionRunIds, isEmpty);
   });
 
   testWidgets('focus minimal active controls keep primary and mode action', (

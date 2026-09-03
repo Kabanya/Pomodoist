@@ -90,7 +90,6 @@ class _FocusLinkedTaskContext extends ConsumerWidget {
 
 class _FocusActiveActions extends StatelessWidget {
   const _FocusActiveActions({
-    required this.run,
     required this.interval,
     required this.remaining,
     required this.selectedPreset,
@@ -101,7 +100,6 @@ class _FocusActiveActions extends StatelessWidget {
     required this.menu,
   });
 
-  final FocusRunItem run;
   final FocusIntervalItem interval;
   final Duration remaining;
   final FocusPresetItem? selectedPreset;
@@ -147,19 +145,6 @@ class _FocusActiveActions extends StatelessWidget {
             menu,
           ],
         ),
-        if (!minimal && !compact) ...[
-          const SizedBox(height: 14),
-          TextButton.icon(
-            onPressed: () => unawaited(
-              _performFocusAction(
-                context,
-                () => repository.logDistraction(runId: run.id),
-              ),
-            ),
-            icon: const Icon(Icons.info_outline),
-            label: Text(l10n.logDistraction),
-          ),
-        ],
       ],
     );
   }
@@ -234,7 +219,6 @@ Widget _buildFocusPrimaryAction(
 
 Widget _buildFocusMoreActionsMenu(
   BuildContext context, {
-  required FocusRunItem run,
   required FocusIntervalItem interval,
   required Duration remaining,
   required List<FocusPresetItem> presets,
@@ -291,13 +275,6 @@ Widget _buildFocusMoreActionsMenu(
                   haptic: AppHapticCue.light,
                 ),
               );
-            case _FocusMoreActionKind.logDistraction:
-              unawaited(
-                _performFocusAction(
-                  context,
-                  () => repository.logDistraction(runId: run.id),
-                ),
-              );
             case _FocusMoreActionKind.customize:
               final preset = selectedPreset;
               if (preset != null) onCustomizePreset(preset);
@@ -331,13 +308,6 @@ Widget _buildFocusMoreActionsMenu(
             PopupMenuItem(
               value: const _FocusMoreAction(_FocusMoreActionKind.stop),
               child: Text(l10n.commonStop),
-            ),
-          if (!minimal && compact)
-            PopupMenuItem(
-              value: const _FocusMoreAction(
-                _FocusMoreActionKind.logDistraction,
-              ),
-              child: Text(l10n.logDistraction),
             ),
           if (!minimal && selectedPreset != null) const PopupMenuDivider(),
           if (!minimal && selectedPreset != null)
@@ -408,7 +378,6 @@ enum _FocusMoreActionKind {
   complete,
   skip,
   stop,
-  logDistraction,
   customize,
   createPreset,
   changePreset,
