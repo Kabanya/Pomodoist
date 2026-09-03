@@ -57,10 +57,10 @@ class TaskListView extends ConsumerWidget {
     return TaskMotionScope(
       key: ValueKey(query),
       builder: (context, motion) {
-        final visibleById = {for (final task in sourceItems) task.id: task};
-        for (final task in motion.retainedTasks) {
-          visibleById[task.id] = task;
-        }
+        final visibleById = {
+          for (final task in motion.retainedTasks) task.id: task,
+          for (final task in sourceItems) task.id: task,
+        };
         final visibleItems = visibleById.values.toList()
           ..sort((a, b) {
             final dayOrder = (a.dayOrder ?? 999999).compareTo(

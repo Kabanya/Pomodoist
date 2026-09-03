@@ -23,9 +23,9 @@ class PriorityMatrixScreen extends ConsumerWidget {
     return TaskMotionScope(
       builder: (context, motion) {
         final visibleById = <String, TaskItem>{
+          for (final task in motion.retainedTasks) task.id: task,
           for (final task in tasks.value ?? const <TaskItem>[])
             if (!task.isCompleted) task.id: task,
-          for (final task in motion.retainedTasks) task.id: task,
         };
         final visibleTasks = visibleById.values.toList();
         return SafeArea(

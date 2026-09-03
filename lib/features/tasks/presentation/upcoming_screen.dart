@@ -71,10 +71,10 @@ class _UpcomingScreenState extends ConsumerState<UpcomingScreen> {
     return TaskMotionScope(
       key: ValueKey(selectedDay),
       builder: (context, motion) {
-        final itemsById = {for (final task in loadedItems) task.id: task};
-        for (final task in motion.retainedTasks) {
-          itemsById[task.id] = task;
-        }
+        final itemsById = {
+          for (final task in motion.retainedTasks) task.id: task,
+          for (final task in loadedItems) task.id: task,
+        };
         final allItems = List<TaskItem>.unmodifiable(itemsById.values);
         final scheduledTasks = _scheduledTasks(allItems);
         final scheduledCounts = _scheduledTaskCounts(scheduledTasks);

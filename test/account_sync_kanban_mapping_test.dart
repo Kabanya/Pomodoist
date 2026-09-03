@@ -399,6 +399,175 @@ void main() {
       expect(await tasks.restoreDeletedTasks(batch), isTrue);
     });
 
+    test(
+      'stale task pulls cannot roll back repeated local schedules',
+      () async {
+        final day = DateTime.utc(2026, 9, 3);
+        TaskSchedule scheduleAt(int hour) => TaskSchedule.timed(
+          start: day.add(Duration(hours: hour)),
+          end: day.add(Duration(hours: hour + 1)),
+        );
+
+        final taskId = await tasks.createTask(
+          CreateTaskInput(content: 'Keep latest time', schedule: scheduleAt(9)),
+        );
+        await db.delete(db.syncCommands).go();
+
+        final firstLocal = scheduleAt(11);
+        await tasks.updateTask(taskId, UpdateTaskPatch(schedule: firstLocal));
+        final firstLocalUpdatedAt = DateTime.utc(2026, 9, 3, 12);
+        await (db.update(db.tasks)..where((row) => row.id.equals(taskId)))
+            .write(TasksCompanion(updatedAt: Value(firstLocalUpdatedAt)));
+        final firstStaleData =
+            (await (db.select(
+                db.tasks,
+              )..where((row) => row.id.equals(taskId))).getSingle()).toJson()
+              ..['dueJson'] = scheduleAt(9).toJsonString()
+              ..['durationSeconds'] = const Duration(hours: 1).inSeconds
+              ..['updatedAt'] = DateTime.utc(2026, 9, 3, 10).toIso8601String();
+        account.pullResults.add(
+          AccountSyncPullResult(
+            nextCursor: 1,
+            hasMore: false,
+            changes: [
+              AccountSyncEntity(
+                entityType: 'task',
+                entityId: taskId,
+                serverRevision: 1,
+                data: firstStaleData,
+              ),
+            ],
+          ),
+        );
+
+        await engine.pullLatest();
+
+        expect((await tasks.watchTask(taskId).first)!.schedule, firstLocal);
+        expect(
+          (await queue.watchPending().first).map((command) => command.type),
+          contains('task.update'),
+        );
+        await engine.pushPending();
+        expect(
+          TaskSchedule.fromJsonString(
+            account.pushed
+                    .lastWhere((operation) => operation.entityId == taskId)
+                    .payload['dueJson']
+                as String?,
+          ),
+          firstLocal,
+        );
+
+        final secondLocal = scheduleAt(14);
+        await tasks.updateTask(taskId, UpdateTaskPatch(schedule: secondLocal));
+        await (db.update(
+          db.tasks,
+        )..where((row) => row.id.equals(taskId))).write(
+          TasksCompanion(updatedAt: Value(DateTime.utc(2026, 9, 3, 15))),
+        );
+        final secondStaleData =
+            (await (db.select(
+                db.tasks,
+              )..where((row) => row.id.equals(taskId))).getSingle()).toJson()
+              ..['dueJson'] = firstLocal.toJsonString()
+              ..['updatedAt'] = firstLocalUpdatedAt.toIso8601String();
+        account.pullResults.add(
+          AccountSyncPullResult(
+            nextCursor: 2,
+            hasMore: false,
+            changes: [
+              AccountSyncEntity(
+                entityType: 'task',
+                entityId: taskId,
+                serverRevision: 2,
+                data: secondStaleData,
+              ),
+            ],
+          ),
+        );
+
+        await engine.pullLatest();
+
+        expect(account.pullSinceRevisions, [0, 1]);
+        expect((await tasks.watchTask(taskId).first)!.schedule, secondLocal);
+        await engine.pushPending();
+        expect(
+          TaskSchedule.fromJsonString(
+            account.pushed
+                    .lastWhere((operation) => operation.entityId == taskId)
+                    .payload['dueJson']
+                as String?,
+          ),
+          secondLocal,
+        );
+      },
+    );
+
+    test('newer and equal task pulls apply in server revision order', () async {
+      final day = DateTime.utc(2026, 9, 3);
+      TaskSchedule scheduleAt(int hour) => TaskSchedule.timed(
+        start: day.add(Duration(hours: hour)),
+        end: day.add(Duration(hours: hour + 1)),
+      );
+
+      final taskId = await tasks.createTask(
+        CreateTaskInput(content: 'Accept server time', schedule: scheduleAt(9)),
+      );
+      await db.delete(db.syncCommands).go();
+      final localUpdatedAt = DateTime.utc(2026, 9, 3, 10);
+      await (db.update(db.tasks)..where((row) => row.id.equals(taskId))).write(
+        TasksCompanion(updatedAt: Value(localUpdatedAt)),
+      );
+
+      final newerUpdatedAt = DateTime.utc(2026, 9, 3, 12);
+      final newerData =
+          (await (db.select(
+              db.tasks,
+            )..where((row) => row.id.equals(taskId))).getSingle()).toJson()
+            ..['dueJson'] = scheduleAt(11).toJsonString()
+            ..['updatedAt'] = newerUpdatedAt.toIso8601String();
+      account.pullResults.add(
+        AccountSyncPullResult(
+          nextCursor: 1,
+          hasMore: false,
+          changes: [
+            AccountSyncEntity(
+              entityType: 'task',
+              entityId: taskId,
+              serverRevision: 1,
+              data: newerData,
+            ),
+          ],
+        ),
+      );
+      await engine.pullLatest();
+      expect((await tasks.watchTask(taskId).first)!.schedule, scheduleAt(11));
+
+      final equalData =
+          (await (db.select(
+              db.tasks,
+            )..where((row) => row.id.equals(taskId))).getSingle()).toJson()
+            ..['dueJson'] = scheduleAt(13).toJsonString()
+            ..['updatedAt'] = newerUpdatedAt.toIso8601String();
+      account.pullResults.add(
+        AccountSyncPullResult(
+          nextCursor: 2,
+          hasMore: false,
+          changes: [
+            AccountSyncEntity(
+              entityType: 'task',
+              entityId: taskId,
+              serverRevision: 2,
+              data: equalData,
+            ),
+          ],
+        ),
+      );
+      await engine.pullLatest();
+
+      expect((await tasks.watchTask(taskId).first)!.schedule, scheduleAt(13));
+    });
+
     test('remote delete cancels local Undo', () async {
       final taskId = await tasks.createTask(
         const CreateTaskInput(content: 'Deleted everywhere'),
@@ -625,6 +794,7 @@ String _snapshotJson(String statusId) =>
 class _RecordingAccountClient implements AccountClient {
   final pushed = <AccountSyncOperation>[];
   final pullResults = Queue<AccountSyncPullResult>();
+  final pullSinceRevisions = <int>[];
 
   @override
   String? get currentUserId => 'account-user';
@@ -646,6 +816,7 @@ class _RecordingAccountClient implements AccountClient {
     required int sinceRevision,
     int limit = 500,
   }) async {
+    pullSinceRevisions.add(sinceRevision);
     if (pullResults.isNotEmpty) {
       return pullResults.removeFirst();
     }

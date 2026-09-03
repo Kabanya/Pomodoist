@@ -1253,6 +1253,12 @@ class AccountSyncEngine {
     final existing = await (_db.select(
       _db.tasks,
     )..where((row) => row.id.equals(id))).getSingleOrNull();
+    final incomingUpdatedAt = _dateTimeFromSyncValue(data['updatedAt']);
+    if (existing != null &&
+        incomingUpdatedAt != null &&
+        incomingUpdatedAt.isBefore(existing.updatedAt.toUtc())) {
+      return;
+    }
     final merged = _mergeRow(existing?.toJson(), data);
     final hasPendingDelete =
         await (_db.select(_db.syncCommands)..where(

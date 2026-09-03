@@ -90,8 +90,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 builder: (context, motion) => tasks.when(
                   data: (items) {
                     final visibleById = <String, TaskItem>{
-                      for (final task in items) task.id: task,
                       for (final task in motion.retainedTasks) task.id: task,
+                      for (final task in items) task.id: task,
                     };
                     final visibleItems = visibleById.values.toList();
                     if (visibleItems.isEmpty) {

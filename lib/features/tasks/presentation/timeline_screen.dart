@@ -76,10 +76,10 @@ class TimelineScreen extends ConsumerWidget {
             ),
             tasks.when(
               data: (items) {
-                final visibleById = {for (final item in items) item.id: item};
-                for (final item in motion.retainedTasks) {
-                  visibleById[item.id] = item;
-                }
+                final visibleById = {
+                  for (final item in motion.retainedTasks) item.id: item,
+                  for (final item in items) item.id: item,
+                };
                 return projects.when(
                   data: (projectItems) => SliverPadding(
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),

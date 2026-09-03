@@ -27,6 +27,7 @@ import 'package:pomodoist/features/onboarding/onboarding_gate.dart';
 import 'package:pomodoist/features/tasks/domain/project_colors.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/features/tasks/presentation/browse_screen.dart';
+import 'package:pomodoist/features/tasks/presentation/widgets/task_motion.dart';
 import 'package:pomodoist/features/tasks/presentation/widgets/task_selection_region.dart';
 import 'package:pomodoist/features/integrations/google_calendar/data/google_calendar_repository.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
@@ -1956,6 +1957,96 @@ void main() {
     expect(find.text('Timeline other day'), findsNothing);
   });
 
+  testWidgets('timeline live task replaces an older retained snapshot', (
+    tester,
+  ) async {
+    _setTimelineVisibleHourPrefs();
+    late GoRouter router;
+    final day = _testToday();
+    final oldTask = _task(
+      'timeline-live-task',
+      'Timeline live task',
+      schedule: _scheduleAt(day, 9),
+    );
+    final freshTask = _task(
+      oldTask.id,
+      oldTask.content,
+      schedule: _scheduleAt(day, 11),
+    );
+    final updates = StreamController<List<TaskItem>>.broadcast();
+    addTearDown(updates.close);
+    await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      size: const Size(1200, 900),
+      tasks: const [],
+      taskStream: updates.stream,
+    );
+
+    router.go('/timeline?date=${_routeDate(day)}');
+    await _pumpFrames(tester);
+    updates.add([oldTask]);
+    await _pumpFrames(tester);
+    final block = find.byKey(Key('timeline-task-${oldTask.id}'));
+    final motion = TaskMotionScope.maybeOf(tester.element(block))!;
+    motion.reopened([oldTask]);
+    await tester.pump();
+    final oldLeft = tester.getTopLeft(block).dx;
+
+    updates.add([freshTask]);
+    await _pumpFrames(tester);
+
+    expect(find.text('11:00-12:00'), findsOneWidget);
+    expect(find.text('09:00-10:00'), findsNothing);
+    expect(tester.getTopLeft(block).dx, greaterThan(oldLeft));
+  });
+
+  testWidgets('task list live task replaces an older retained snapshot', (
+    tester,
+  ) async {
+    late GoRouter router;
+    final day = _testToday();
+    final oldTask = _task(
+      'list-live-task',
+      'Old list snapshot',
+      schedule: _scheduleAt(day, 9),
+    );
+    final freshTask = _task(
+      oldTask.id,
+      'Fresh list task',
+      schedule: _scheduleAt(day, 11),
+    );
+    final updates = StreamController<List<TaskItem>>.broadcast();
+    addTearDown(updates.close);
+    await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      tasks: const [],
+      taskStream: updates.stream,
+    );
+
+    router.go('/today');
+    await _pumpFrames(tester);
+    updates.add([oldTask]);
+    await _pumpFrames(tester);
+    final row = find.byKey(ValueKey('task-list-item-row-${oldTask.id}'));
+    final motion = TaskMotionScope.maybeOf(tester.element(row))!;
+    motion.reopened([oldTask]);
+    await tester.pump();
+
+    updates.add([freshTask]);
+    await _pumpFrames(tester);
+
+    expect(find.text('Fresh list task'), findsOneWidget);
+    expect(find.text('Old list snapshot'), findsNothing);
+    expect(
+      tester
+          .widget<Text>(find.byKey(ValueKey('task-time-label-${oldTask.id}')))
+          .data,
+      contains('11:00'),
+    );
+  });
+
   testWidgets('timeline task blocks follow the soft-fill visual contract', (
     tester,
   ) async {
@@ -3690,6 +3781,7 @@ Future<_AppHarness> _pumpApp(
   Object? taskMoveError,
   Set<String> updateErrorTaskIds = const {},
   Completer<void>? startupCompleter,
+  Stream<List<TaskItem>>? taskStream,
   Size size = const Size(390, 844),
   Locale? locale,
 }) async {
@@ -3725,6 +3817,8 @@ Future<_AppHarness> _pumpApp(
           FixedClock(DateTime.utc(2026, 1, 2, 11)),
         ),
         taskRepositoryProvider.overrideWithValue(taskRepository),
+        if (taskStream != null)
+          tasksByQueryProvider.overrideWith((ref, query) => taskStream),
         focusRepositoryProvider.overrideWithValue(focusRepository),
         if (focusNow != null)
           focusTickerProvider.overrideWith((ref) => Stream.value(focusNow)),
