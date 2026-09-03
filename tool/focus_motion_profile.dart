@@ -67,6 +67,7 @@ class _FocusMotionProfileState extends State<_FocusMotionProfile> {
             onViewModeChanged: (_) {},
             onPresetChanged: (_) {},
             onCustomizePreset: (_) {},
+            onCreatePreset: () {},
           )
         : FocusIdleStage(
             presets: [_preset],

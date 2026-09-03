@@ -265,7 +265,6 @@ class AccountSyncEngine {
   ) async {
     const safeTypes = {
       'task.create',
-      'task.update',
       'task.reorder',
       'task.delete',
       'task.kanbanStatus.set',
@@ -573,7 +572,7 @@ class AccountSyncEngine {
     var rowPayload = operation == 'delete'
         ? payloadMap
         : _usesCapturedPatch(commandType)
-        ? payloadMap
+        ? _capturedPatchPayload(commandType, payloadMap, command.updatedAt)
         : await _rowPayload(entityType, entityId, payloadMap);
     if (entityType == 'focus_event' && !rowPayload.containsKey('id')) {
       final event = await _latestFocusEvent(
@@ -1289,7 +1288,9 @@ class AccountSyncEngine {
     ])) {
       return;
     }
-    await _db.into(_db.tasks).insertOnConflictUpdate(TaskRow.fromJson(merged));
+    await _db
+        .into(_db.tasks)
+        .insertOnConflictUpdate(TaskRow.fromJson(merged).toCompanion(false));
   }
 
   Future<void> _upsertTaskCompletion(
@@ -1598,7 +1599,9 @@ class AccountSyncEngine {
     }
     await _db
         .into(_db.googleCalendarConnections)
-        .insertOnConflictUpdate(GoogleCalendarConnectionRow.fromJson(merged));
+        .insertOnConflictUpdate(
+          GoogleCalendarConnectionRow.fromJson(merged).toCompanion(false),
+        );
   }
 
   Future<void> _upsertGoogleCalendarEventLink(
@@ -1621,7 +1624,9 @@ class AccountSyncEngine {
     }
     await _db
         .into(_db.googleCalendarEventLinks)
-        .insertOnConflictUpdate(GoogleCalendarEventLinkRow.fromJson(merged));
+        .insertOnConflictUpdate(
+          GoogleCalendarEventLinkRow.fromJson(merged).toCompanion(false),
+        );
   }
 
   Map<String, dynamic> _dataWithoutSyncMetadata(JsonMap data) {
@@ -1764,11 +1769,52 @@ class AccountSyncEngine {
       '$taskId:$labelId';
 
   bool _usesCapturedPatch(String commandType) {
-    return commandType == 'task.kanbanStatus.set' ||
+    return commandType == 'task.update' ||
+        commandType == 'task.move' ||
+        commandType == 'task.complete' ||
+        commandType == 'task.uncomplete' ||
+        commandType == 'task.kanbanStatus.set' ||
         commandType == 'task.reorder' ||
         commandType == 'kanban.status.rename' ||
         commandType == 'kanban.status.reorder' ||
         commandType.startsWith('kanban.settings.');
+  }
+
+  Map<String, Object?> _capturedPatchPayload(
+    String commandType,
+    Map<String, Object?> payload,
+    DateTime updatedAt,
+  ) {
+    final timestamp = updatedAt.toUtc().millisecondsSinceEpoch;
+    if (commandType == 'task.complete') {
+      return {
+        'id': payload['id'],
+        'status': 'completed',
+        'completedAt': payload['completedAt'],
+        'updatedAt': timestamp,
+      };
+    }
+    if (commandType == 'task.uncomplete') {
+      return {
+        'id': payload['id'],
+        'status': 'open',
+        'completedAt': null,
+        'updatedAt': timestamp,
+      };
+    }
+    if (commandType == 'task.update') {
+      final patch = Map<String, Object?>.from(payload);
+      if (patch.containsKey('due')) {
+        patch['dueJson'] = patch.remove('due');
+        patch.putIfAbsent('durationSeconds', () => null);
+      }
+      patch['updatedAt'] = timestamp;
+      return patch;
+    }
+    if (commandType == 'task.move') {
+      return {...payload, 'updatedAt': timestamp};
+    }
+    return payload;
   }
 
   DateTime _snapshotClockForLabel(LabelRow row) {

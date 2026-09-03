@@ -170,63 +170,113 @@ void main() {
       expect(taskOrder.payload, isNot(contains('content')));
     });
 
-    test('compacts never-attempted task edits and reorders', () async {
-      final taskId = await tasks.createTask(
-        const CreateTaskInput(content: 'Initial'),
-      );
-      await db.delete(db.syncCommands).go();
-      await tasks.updateTask(
-        taskId,
-        const UpdateTaskPatch(content: 'First edit'),
-      );
-      await tasks.updateTask(
-        taskId,
-        const UpdateTaskPatch(content: 'Final edit'),
-      );
-      await queue.enqueue(
-        type: 'task.reorder',
-        clientId: taskId,
-        payload: {'id': taskId, 'orderKey': '100'},
-      );
-      await queue.enqueue(
-        type: 'task.reorder',
-        clientId: taskId,
-        payload: {'id': taskId, 'orderKey': '200'},
-      );
-      final pending = await queue.watchPending().first;
-      final retainedIds = {
-        pending.where((row) => row.type == 'task.update').last.uuid,
-        pending.where((row) => row.type == 'task.reorder').last.uuid,
-      };
+    test(
+      'keeps partial task edits ordered while compacting reorders',
+      () async {
+        final taskId = await tasks.createTask(
+          const CreateTaskInput(content: 'Initial'),
+        );
+        await db.delete(db.syncCommands).go();
+        await tasks.updateTask(
+          taskId,
+          const UpdateTaskPatch(content: 'First edit'),
+        );
+        await tasks.updateTask(
+          taskId,
+          UpdateTaskPatch(
+            schedule: TaskSchedule.timed(
+              start: DateTime.utc(2026, 9, 3, 12),
+              end: DateTime.utc(2026, 9, 3, 13),
+            ),
+          ),
+        );
+        await queue.enqueue(
+          type: 'task.reorder',
+          clientId: taskId,
+          payload: {'id': taskId, 'orderKey': '100'},
+        );
+        await queue.enqueue(
+          type: 'task.reorder',
+          clientId: taskId,
+          payload: {'id': taskId, 'orderKey': '200'},
+        );
+        final pending = await queue.watchPending().first;
+        final retainedIds = {
+          ...pending
+              .where((row) => row.type == 'task.update')
+              .map((row) => row.uuid),
+          pending.where((row) => row.type == 'task.reorder').last.uuid,
+        };
 
-      await engine.pushPending();
+        await engine.pushPending();
 
-      final taskOperations = account.pushed
-          .where((operation) => operation.entityId == taskId)
-          .toList();
-      expect(taskOperations, hasLength(2));
-      expect(
-        taskOperations.map((operation) => operation.opId).toSet(),
-        retainedIds,
-      );
-      expect(
-        taskOperations
-            .singleWhere(
+        final taskOperations = account.pushed
+            .where((operation) => operation.entityId == taskId)
+            .toList();
+        expect(taskOperations, hasLength(3));
+        expect(
+          taskOperations.map((operation) => operation.opId).toSet(),
+          retainedIds,
+        );
+        final updates = taskOperations
+            .where(
               (operation) => operation.payload['commandType'] == 'task.update',
             )
-            .payload['content'],
-        'Final edit',
+            .toList();
+        expect(updates, hasLength(2));
+        expect(updates.first.payload['content'], 'First edit');
+        expect(updates.first.payload, isNot(contains('dueJson')));
+        expect(updates.first.payload, isNot(contains('durationSeconds')));
+        expect(updates.last.payload, isNot(contains('content')));
+        expect(
+          TaskSchedule.fromJsonString(
+            updates.last.payload['dueJson'] as String?,
+          ),
+          TaskSchedule.timed(
+            start: DateTime.utc(2026, 9, 3, 12),
+            end: DateTime.utc(2026, 9, 3, 13),
+          ),
+        );
+        expect(updates.last.payload['durationSeconds'], 3600);
+        expect(
+          updates.first.clientUpdatedAt.isAfter(updates.last.clientUpdatedAt),
+          isFalse,
+        );
+        expect(
+          taskOperations
+              .singleWhere(
+                (operation) =>
+                    operation.payload['commandType'] == 'task.reorder',
+              )
+              .payload['orderKey'],
+          '200',
+        );
+        final stored = await db.select(db.syncCommands).get();
+        expect(stored, isEmpty);
+      },
+    );
+
+    test('task completion operations contain only completion fields', () async {
+      final taskId = await tasks.createTask(
+        CreateTaskInput(
+          content: 'Complete without stale schedule',
+          schedule: TaskSchedule.allDay(DateTime.utc(2026, 9, 3)),
+        ),
       );
-      expect(
-        taskOperations
-            .singleWhere(
-              (operation) => operation.payload['commandType'] == 'task.reorder',
-            )
-            .payload['orderKey'],
-        '200',
+      await db.delete(db.syncCommands).go();
+
+      await tasks.completeTask(taskId);
+      await engine.pushPending();
+
+      final operation = account.pushed.singleWhere(
+        (operation) =>
+            operation.entityType == 'task' && operation.entityId == taskId,
       );
-      final stored = await db.select(db.syncCommands).get();
-      expect(stored, isEmpty);
+      expect(operation.payload['status'], 'completed');
+      expect(operation.payload, contains('completedAt'));
+      expect(operation.payload, contains('updatedAt'));
+      expect(operation.payload, isNot(contains('dueJson')));
+      expect(operation.payload, isNot(contains('content')));
     });
 
     test(

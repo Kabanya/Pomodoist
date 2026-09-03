@@ -4,6 +4,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/core/sync/account_sync_engine.dart';
+import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:uuid/uuid.dart';
 
 void main() {
@@ -163,6 +164,145 @@ void main() {
             .get();
     expect(links, isEmpty);
   });
+
+  test(
+    'remote calendar pull clears task schedule and nullable sync state',
+    () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      await db.ensureSeedData();
+      final now = DateTime.utc(2026, 9, 3, 10);
+      final later = now.add(const Duration(minutes: 1));
+      final task = TaskRow(
+        id: 'task-1',
+        userId: localUserId,
+        content: 'Calendar task',
+        description: null,
+        projectId: inboxProjectId,
+        sectionId: null,
+        parentId: null,
+        priority: 1,
+        status: 'open',
+        dueJson: TaskSchedule.timed(
+          start: DateTime.utc(2026, 9, 3, 12),
+          end: DateTime.utc(2026, 9, 3, 13),
+          timeZone: 'Europe/Moscow',
+        ).toJsonString(),
+        durationSeconds: 3600,
+        estimatedFocusIntervals: null,
+        completedFocusIntervals: 0,
+        totalFocusSeconds: 0,
+        completedAt: null,
+        orderKey: 'task-1',
+        isCollapsed: false,
+        isDeleted: false,
+        createdAt: now,
+        updatedAt: now,
+      );
+      await db.into(db.tasks).insert(task);
+      await db
+          .into(db.googleCalendarConnections)
+          .insert(
+            GoogleCalendarConnectionRow(
+              id: 'primary',
+              accountEmail: 'user@example.com',
+              calendarId: 'calendar-1',
+              ownerDeviceId: 'google-calendar-server',
+              calendarName: 'Pomodoist',
+              syncToken: 'stale-token',
+              status: 'error',
+              lastError: 'Invalid start time.',
+              warning: 'stale warning',
+              lastSyncStartedAt: now,
+              lastSyncFinishedAt: now,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+      await db
+          .into(db.googleCalendarEventLinks)
+          .insert(
+            GoogleCalendarEventLinkRow(
+              taskId: task.id,
+              calendarId: 'calendar-1',
+              eventId: 'event-1',
+              etag: 'stale-etag',
+              googleUpdatedAt: now,
+              lastSyncedLocalUpdatedAt: now,
+              unsupportedReason: 'stale warning',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+      final clearedTask = task.toJson()
+        ..['dueJson'] = null
+        ..['durationSeconds'] = null
+        ..['updatedAt'] = later.toIso8601String();
+      final account = _PullOnlyAccountClient(
+        AccountSyncPullResult(
+          nextCursor: 1,
+          hasMore: false,
+          changes: [
+            AccountSyncEntity(
+              entityType: 'task',
+              entityId: task.id,
+              serverRevision: 1,
+              data: clearedTask,
+            ),
+            AccountSyncEntity(
+              entityType: 'google_calendar_connection',
+              entityId: 'primary',
+              serverRevision: 2,
+              data: {
+                'id': 'primary',
+                'lastError': null,
+                'warning': null,
+                'syncToken': null,
+                'updatedAt': later.toIso8601String(),
+              },
+            ),
+            AccountSyncEntity(
+              entityType: 'google_calendar_event_link',
+              entityId: task.id,
+              serverRevision: 3,
+              data: {
+                'taskId': task.id,
+                'etag': null,
+                'googleUpdatedAt': null,
+                'unsupportedReason': null,
+                'updatedAt': later.toIso8601String(),
+              },
+            ),
+          ],
+        ),
+      );
+      final engine = AccountSyncEngine(
+        db: db,
+        account: account,
+        uuid: const Uuid(),
+      );
+      final watched =
+          (db.select(db.tasks)..where((row) => row.id.equals(task.id)))
+              .watchSingle()
+              .firstWhere((row) => row.dueJson == null);
+
+      await engine.pullLatest();
+
+      expect((await watched).durationSeconds, isNull);
+      final connection = await db
+          .select(db.googleCalendarConnections)
+          .getSingle();
+      expect(connection.lastError, isNull);
+      expect(connection.warning, isNull);
+      expect(connection.syncToken, isNull);
+      final eventLink = await db
+          .select(db.googleCalendarEventLinks)
+          .getSingle();
+      expect(eventLink.etag, isNull);
+      expect(eventLink.googleUpdatedAt, isNull);
+      expect(eventLink.unsupportedReason, isNull);
+    },
+  );
 }
 
 class _PullOnlyAccountClient implements AccountClient {

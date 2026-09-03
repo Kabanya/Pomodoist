@@ -259,9 +259,9 @@ class DriftTaskRepository implements TaskRepository {
               : schedule == null
               ? const Value.absent()
               : Value(_scheduleJson(schedule)),
-          durationSeconds: schedule?.duration == null
-              ? const Value.absent()
-              : Value(schedule!.duration!.inSeconds),
+          durationSeconds: patch.clearSchedule || schedule != null
+              ? Value(schedule?.duration?.inSeconds)
+              : const Value.absent(),
           estimatedFocusIntervals: patch.estimatedFocusIntervals == null
               ? const Value.absent()
               : Value(patch.estimatedFocusIntervals),
@@ -286,8 +286,8 @@ class DriftTaskRepository implements TaskRepository {
             'due': null
           else if (schedule != null)
             'due': schedule.toJsonString(),
-          if (schedule?.duration != null)
-            'durationSeconds': schedule!.duration!.inSeconds,
+          if (patch.clearSchedule || schedule != null)
+            'durationSeconds': schedule?.duration?.inSeconds,
           if (patch.estimatedFocusIntervals != null)
             'estimatedFocusIntervals': patch.estimatedFocusIntervals,
           if (patch.isCollapsed != null) 'isCollapsed': patch.isCollapsed,
@@ -401,10 +401,10 @@ class DriftTaskRepository implements TaskRepository {
           clientId: row.id,
           payload: {
             'id': row.id,
-            'projectId': nextProjectId,
-            'sectionId': nextSectionId,
-            'parentId': nextParentId,
-            'orderKey': nextOrderKey,
+            if (nextProjectId != row.projectId) 'projectId': nextProjectId,
+            if (nextSectionId != row.sectionId) 'sectionId': nextSectionId,
+            if (nextParentId != row.parentId) 'parentId': nextParentId,
+            if (nextOrderKey != row.orderKey) 'orderKey': nextOrderKey,
           },
         );
       }
@@ -449,8 +449,8 @@ class DriftTaskRepository implements TaskRepository {
             dueJson: isRoot
                 ? Value(_scheduleJson(schedule))
                 : const Value.absent(),
-            durationSeconds: isRoot && schedule.duration != null
-                ? Value(schedule.duration!.inSeconds)
+            durationSeconds: isRoot
+                ? Value(schedule.duration?.inSeconds)
                 : const Value.absent(),
             updatedAt: Value(now),
           ),
@@ -475,8 +475,7 @@ class DriftTaskRepository implements TaskRepository {
         payload: {
           'id': id,
           'due': schedule.toJsonString(),
-          if (schedule.duration != null)
-            'durationSeconds': schedule.duration!.inSeconds,
+          'durationSeconds': schedule.duration?.inSeconds,
         },
       );
     });
@@ -821,9 +820,9 @@ class DriftTaskRepository implements TaskRepository {
         dueJson: schedule == null
             ? const Value.absent()
             : Value(_scheduleJson(schedule)),
-        durationSeconds: schedule?.duration == null
+        durationSeconds: schedule == null
             ? const Value.absent()
-            : Value(schedule!.duration!.inSeconds),
+            : Value(schedule.duration?.inSeconds),
         isDeleted: patch.isDeleted == null
             ? const Value.absent()
             : Value(patch.isDeleted!),
@@ -861,7 +860,14 @@ class DriftTaskRepository implements TaskRepository {
         await _syncQueue.enqueue(
           type: 'task.update',
           clientId: id,
-          payload: {'id': id},
+          payload: {
+            'id': id,
+            if (patch.content != null) 'content': patch.content,
+            if (patch.updateDescription) 'description': patch.description,
+            if (schedule != null) 'due': schedule.toJsonString(),
+            if (schedule != null)
+              'durationSeconds': schedule.duration?.inSeconds,
+          },
         );
       }
     });
@@ -934,7 +940,11 @@ class DriftTaskRepository implements TaskRepository {
     await _syncQueue.enqueue(
       type: 'task.update',
       clientId: row.id,
-      payload: {'id': row.id, 'due': nextDue},
+      payload: {
+        'id': row.id,
+        'due': nextDue,
+        'durationSeconds': row.durationSeconds,
+      },
     );
   }
 
