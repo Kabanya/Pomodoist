@@ -144,6 +144,61 @@ LOCAL__ADDED=default
     });
   });
 
+  test('sync creates a mode-600 deploy profile with literal values', () async {
+    if (Platform.isWindows) return;
+    final root = await Directory.systemTemp.createTemp('pomodoist-env-');
+    addTearDown(() => root.delete(recursive: true));
+    const token = r'token-$(must-not-run);&`literal`';
+    await File('${root.path}/.env.example').writeAsString('''
+DEPLOY__RUNNER=
+DEPLOY__API_TOKEN=
+''');
+    await File('${root.path}/.env.setup').writeAsString('''
+DEPLOY__RUNNER=/private/pomodoist-deploy
+DEPLOY__API_TOKEN=$token
+''');
+
+    final result = await _run('sync', ['--root', root.path]);
+
+    expect(result.exitCode, 0, reason: result.stderr.toString());
+    final deploy = File('${root.path}/.env.deploy');
+    expect(_values(deploy.path), {
+      'RUNNER': '/private/pomodoist-deploy',
+      'API_TOKEN': token,
+    });
+    expect(deploy.statSync().mode & 0x1ff, 0x180);
+
+    final value = await _run('value', [
+      '--env',
+      deploy.path,
+      '--key',
+      'API_TOKEN',
+    ]);
+    expect(value.exitCode, 0, reason: value.stderr.toString());
+    expect(value.stdout, token);
+  });
+
+  test('set reads a literal value from stdin without printing it', () async {
+    if (Platform.isWindows) return;
+    final root = await Directory.systemTemp.createTemp('pomodoist-env-');
+    addTearDown(() => root.delete(recursive: true));
+    const token = r'token-$(must-not-run);&`literal`';
+    final env = File('${root.path}/.env.setup');
+    await env.writeAsString('DEPLOY__API_TOKEN=old\n');
+
+    final result = await _runWithInput('set', [
+      '--env',
+      env.path,
+      '--key',
+      'DEPLOY__API_TOKEN',
+    ], token);
+
+    expect(result.exitCode, 0, reason: result.stderr);
+    expect(result.stdout, isEmpty);
+    expect(_values(env.path)['DEPLOY__API_TOKEN'], token);
+    expect(env.statSync().mode & 0x1ff, 0x180);
+  });
+
   test('malformed input fails without echoing its value', () async {
     final root = await Directory.systemTemp.createTemp('pomodoist-env-');
     addTearDown(() => root.delete(recursive: true));
@@ -212,6 +267,31 @@ Future<ProcessResult> _run(String command, List<String> arguments) {
     command,
     ...arguments,
   ], workingDirectory: Directory.current.path);
+}
+
+Future<_CommandResult> _runWithInput(
+  String command,
+  List<String> arguments,
+  String input,
+) async {
+  final process = await Process.start(_dartExecutable(), [
+    'tool/env_setup.dart',
+    command,
+    ...arguments,
+  ], workingDirectory: Directory.current.path);
+  process.stdin.write(input);
+  await process.stdin.close();
+  final stdout = await utf8.decodeStream(process.stdout);
+  final stderr = await utf8.decodeStream(process.stderr);
+  return _CommandResult(await process.exitCode, stdout, stderr);
+}
+
+class _CommandResult {
+  const _CommandResult(this.exitCode, this.stdout, this.stderr);
+
+  final int exitCode;
+  final String stdout;
+  final String stderr;
 }
 
 Map<String, String> _values(String path) {

@@ -43,6 +43,13 @@ done
   fail 'Sentry verification must be limited to lib/'
 ! grep -Eiq 'account-sync-platform|coolify|service.?role|deployment webhook' Makefile ||
   fail 'Makefile must be client-only'
+grep -Fq 'DEPLOY_CONFIG ?= .env.deploy' Makefile ||
+  fail 'Makefile must use the ignored deploy environment file'
+for target in deploy-staging deploy-production deploy-all; do
+  grep -Eq "^[^:]*\\b${target}\\b[^:]*:" Makefile || fail "Makefile is missing ${target}"
+done
+grep -Fq 'tool/env_setup.dart value --env "$(DEPLOY_CONFIG)" --key RUNNER' Makefile ||
+  fail 'Makefile must read the private runner path through env_setup.dart'
 [ -f LICENSING.md ] || fail 'LICENSING.md must document the distribution model'
 grep -Fq 'AGPL-3.0-only' LICENSING.md ||
   fail 'LICENSING.md must preserve the public AGPL license'
@@ -88,8 +95,12 @@ if awk '
 ' .env.example; then :; else
   fail '.env.example contains a secret value'
 fi
-for prefix in LOCAL STAGING TESTFLIGHT WINDOWS LINUX PRIVATE; do
+for prefix in LOCAL STAGING TESTFLIGHT WINDOWS LINUX PRIVATE DEPLOY; do
   grep -q "^${prefix}__" .env.example || fail ".env.example is missing ${prefix}__ variables"
+done
+for key in RUNNER BACKEND_DIR API_BASE_URL API_TOKEN WEB_STAGING_TRIGGER_URL WEB_PRODUCTION_TRIGGER_URL WEB_STAGING_URL WEB_PRODUCTION_URL; do
+  grep -qx "DEPLOY__${key}=" .env.example ||
+    fail ".env.example must contain an empty DEPLOY__${key}"
 done
 if git ls-files | grep -Eq '(^|/)(\.codex|key-[^/]+|screenlog\.0|outputs|design|\.superpowers|supabase/\.temp)(/|$)'; then
   fail 'tracked public files contain a forbidden path'

@@ -8,6 +8,7 @@ const _profiles = <String, String>{
   'WINDOWS__': '.env.windows',
   'LINUX__': '.env.linux',
   'PRIVATE__': '.env.private',
+  'DEPLOY__': '.env.deploy',
 };
 
 final _namePattern = RegExp(r'^[A-Z][A-Z0-9_]*$');
@@ -32,6 +33,11 @@ Future<void> main(List<String> arguments) async {
           throw _EnvError('$key is missing or empty');
         }
         stdout.write(value);
+      case 'set':
+        final env = File(_requiredOption(options, '--env'));
+        final key = _requiredOption(options, '--key');
+        final value = await utf8.decoder.bind(stdin).join();
+        await _setValue(env, key, value);
       case 'write-asc-key':
         await _writeAscKey(
           File(_requiredOption(options, '--env')),
@@ -54,6 +60,33 @@ Future<void> main(List<String> arguments) async {
     );
     exitCode = 66;
   }
+}
+
+Future<void> _setValue(File file, String key, String value) async {
+  if (!_namePattern.hasMatch(key)) throw _EnvError('invalid key $key');
+  if (value.isEmpty) throw _EnvError('$key is missing or empty');
+  if (value.contains('\n') || value.contains('\r')) {
+    throw _EnvError('$key must be a single line');
+  }
+
+  if (!await file.exists()) await file.writeAsString('');
+  final values = await _parse(file);
+  if (!values.containsKey(key)) {
+    await _append(file, [MapEntry(key, value)]);
+  } else {
+    final lines = await file.readAsLines();
+    final content = lines
+        .map((line) {
+          final separator = line.indexOf('=');
+          if (separator < 1 || line.substring(0, separator).trim() != key) {
+            return line;
+          }
+          return '$key=$value';
+        })
+        .join('\n');
+    await file.writeAsString('$content\n', flush: true);
+  }
+  await _restrict(file);
 }
 
 Future<void> _bootstrap(Directory root) async {
