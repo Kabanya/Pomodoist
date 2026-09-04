@@ -68,6 +68,16 @@ endif()
 # them to the application.
 include(flutter/generated_plugins.cmake)
 
+# multiview_desktop 1.2.1 drops DartProject's Impeller switch while building
+# FlutterDesktopEngineProperties. Keep the package unchanged and bridge only
+# its engine-create call through the runner-owned compatibility shim.
+if(TARGET multiview_desktop_plugin)
+  target_sources(multiview_desktop_plugin PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/runner/multiview_desktop_impeller_bridge.cpp")
+  target_compile_options(multiview_desktop_plugin PRIVATE
+    "/FI${CMAKE_CURRENT_SOURCE_DIR}/runner/multiview_desktop_impeller_bridge.h")
+endif()
+
 
 # === Installation ===
 # Support files are copied into place next to the executable, so that it can

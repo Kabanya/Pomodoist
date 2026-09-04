@@ -150,6 +150,10 @@ Windows development requires Flutter 3.47.0, Visual Studio with Desktop
 development with C++, and Windows SDK 10.0.19041.0 or newer. Building the EXE
 installer also requires GNU Make and Inno Setup 6.4 or newer.
 
+On Flutter 3.47, Pomodoist temporarily defaults to the Skia renderer on Windows
+for stability. To compare against Impeller diagnostically, run
+`flutter run -d windows --enable-impeller`.
+
 ```powershell
 flutter pub get
 powershell.exe -NoProfile -ExecutionPolicy Bypass `

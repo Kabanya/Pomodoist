@@ -3,6 +3,38 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('Windows runner disables Impeller before constructing FlutterWindow', () {
+    final runner = File('windows/runner/main.cpp').readAsStringSync();
+
+    final impellerOffset =
+        runner.indexOf('project.set_impeller_switch(flutter::ImpellerSwitch::Disabled);');
+    final windowOffset = runner.indexOf('FlutterWindow window(project);');
+
+    expect(impellerOffset, greaterThanOrEqualTo(0));
+    expect(windowOffset, greaterThan(impellerOffset));
+  });
+
+  test('Windows multiview compatibility bridge forwards the Impeller switch', () {
+    final bridge = File(
+      'windows/runner/multiview_desktop_impeller_bridge.h',
+    ).readAsStringSync();
+    final implementation = File(
+      'windows/runner/multiview_desktop_impeller_bridge.cpp',
+    ).readAsStringSync();
+    final cmake = File('windows/CMakeLists.txt').readAsStringSync();
+
+    expect(bridge, contains('#define FlutterDesktopEngineCreate'));
+    expect(implementation, contains('auto configured = *properties;'));
+    expect(
+      implementation,
+      contains('configured.impeller_switch = DisabledImpeller;'),
+    );
+    expect(implementation, contains('FlutterDesktopEngineCreate(&configured)'));
+    expect(cmake, contains('multiview_desktop_impeller_bridge.cpp'));
+    expect(cmake, contains('/FI'));
+    expect(cmake, contains('multiview_desktop_impeller_bridge.h'));
+  });
+
   test('Windows multiview helper registers every generated plugin once', () {
     final generated = File(
       'windows/flutter/generated_plugin_registrant.cc',
