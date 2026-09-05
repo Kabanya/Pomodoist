@@ -393,7 +393,14 @@ gh() {
       ;;
     'api --method') ;;
     api*)
-      if [[ "$2" == */assets ]]; then cat assets; else echo 123; fi
+      # GitHub's by-tag endpoint excludes draft releases.
+      if [[ "$2" == */releases/tags/* ]]; then
+        return 22
+      elif [[ "$2" == */assets ]]; then
+        cat assets
+      else
+        echo 123
+      fi
       ;;
     *) return 64 ;;
   esac

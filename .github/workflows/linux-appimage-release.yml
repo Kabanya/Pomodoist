@@ -256,9 +256,9 @@ jobs:
             build/linux/appimage/Pomodoist-x86_64.AppImage \
             build/linux/appimage/Pomodoist-x86_64.AppImage.sha256 \
             --clobber
-          release_id=$(gh api \
-            "repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME" \
-            --jq .id)
+          release_id=$(gh api --paginate \
+            "repos/$GITHUB_REPOSITORY/releases" \
+            --jq ".[] | select(.tag_name == \"$GITHUB_REF_NAME\") | .id")
           required_assets=(
             Pomodoist-x86_64.AppImage
             Pomodoist-x86_64.AppImage.sha256
