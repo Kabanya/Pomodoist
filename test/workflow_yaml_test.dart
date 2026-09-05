@@ -111,12 +111,18 @@ void main() {
           'GH_REPO': 'example/pomodoist',
           'GITHUB_SHA': '0123456789abcdef0123456789abcdef01234567',
         };
-        final first = _bash('$_fakeGh\n${scripts[0]}', temp, environment);
+        final first = _bash('$_fakeGh\n${scripts[0]}', temp, {
+          ...environment,
+          'LEGACY_GH': 'true',
+        });
         expect(first.exitCode, 0, reason: '${first.stderr}');
         final log = File('${temp.path}/gh.log');
         expect(log.readAsStringSync(), isNot(contains('--method PATCH')));
         final prerelease = tag.contains('-rc.');
-        expect(log.readAsStringSync(), contains('--prerelease=$prerelease'));
+        expect(
+          log.readAsStringSync(),
+          contains('--field prerelease=$prerelease'),
+        );
         final second = _bash('$_fakeGh\n${scripts[1]}', temp, environment);
         expect(second.exitCode, 0, reason: '${second.stderr}');
         final publication = log.readAsLinesSync().singleWhere(
@@ -126,11 +132,16 @@ void main() {
         expect(publication, contains('--raw-field make_latest=${!prerelease}'));
         expect(publication, contains('--field draft=false'));
         expect(publication, contains('--raw-field tag_name=$tag'));
-        final retry = _bash('$_fakeGh\n${scripts[1]}', temp, environment);
+        final retry = _bash('$_fakeGh\n${scripts[0]}', temp, {
+          ...environment,
+          'LEGACY_GH': 'true',
+        });
         expect(retry.exitCode, 0, reason: '${retry.stderr}');
         expect(
           log.readAsLinesSync().where(
-            (line) => line.startsWith('release create '),
+            (line) => line.startsWith(
+              'api --method POST repos/example/pomodoist/releases ',
+            ),
           ),
           hasLength(1),
         );
@@ -155,7 +166,8 @@ void main() {
             as YamlList;
     final trustIndex = steps.indexWhere(
       (step) =>
-          step['name'] == 'Trust Flutter SDK and checkout in the Linux container',
+          step['name'] ==
+          'Trust Flutter SDK and checkout in the Linux container',
     );
     expect(
       trustIndex,
@@ -232,7 +244,11 @@ void main() {
         contains(r'group: desktop-release-${{ github.ref }}'),
         reason: path,
       );
-      expect(workflow, contains('--draft'), reason: path);
+      expect(
+        workflow,
+        anyOf(contains('--draft'), contains('--field draft=true')),
+        reason: path,
+      );
       expect(workflow, contains('required_assets=('), reason: path);
       expect(workflow, contains('Pomodoist-x86_64.AppImage'), reason: path);
       expect(
@@ -388,20 +404,35 @@ gh() {
     'release view') [[ -f release-exists ]] ;;
     'release create') touch release-exists ;;
     'release upload')
+      [[ "${LEGACY_GH:-false}" != true ]] || return 22
       shift 3
       for asset in "$@"; do
         [[ "$asset" == --clobber ]] || basename "$asset" >> assets
       done
       ;;
-    'api --method') ;;
+    'api --method')
+      if [[ "$3" == POST && "$4" == */releases ]]; then
+        touch release-exists
+        echo 123
+      elif [[ "$3" == POST && "$4" == https://uploads.github.com/* ]]; then
+        echo "${4##*name=}" >> assets
+      elif [[ "$3" == DELETE ]]; then
+        sed -i.bak "/^${4##*/}$/d" assets
+      fi
+      ;;
     api*)
       # GitHub's by-tag endpoint excludes draft releases.
       if [[ "$2" == */releases/tags/* ]]; then
         return 22
       elif [[ "$2" == */assets ]]; then
-        cat assets
+        if [[ "$*" == *'| .id'* ]]; then
+          name=$(printf '%s' "${@: -1}" | sed -n 's/.*== "\(.*\)").*/\1/p')
+          [[ ! -f assets ]] || grep -Fx "$name" assets || true
+        else
+          cat assets
+        fi
       else
-        echo 123
+        [[ ! -f release-exists ]] || echo 123
       fi
       ;;
     *) return 64 ;;
