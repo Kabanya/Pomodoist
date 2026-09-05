@@ -205,6 +205,8 @@ The release stays draft until both `Pomodoist-x86_64.AppImage` and the unsigned
 `Pomodoist-Setup.exe`, with their `.sha256` files, are uploaded. A stable tag
 becomes Latest; an RC is marked Prerelease and leaves Latest unchanged. Failed
 workflows can be rerun for the same tag to complete the existing release.
+CI verifies build metadata and SHA-256 checksums without launching the
+application or running the installer.
 Production variables and the Google desktop client secret are read from the
 `windows-production` GitHub environment for both platforms.
 

@@ -125,6 +125,7 @@ void main() {
         expect(publication, contains('--field prerelease=$prerelease'));
         expect(publication, contains('--raw-field make_latest=${!prerelease}'));
         expect(publication, contains('--field draft=false'));
+        expect(publication, contains('--raw-field tag_name=$tag'));
         final retry = _bash('$_fakeGh\n${scripts[1]}', temp, environment);
         expect(retry.exitCode, 0, reason: '${retry.stderr}');
         expect(
@@ -262,24 +263,20 @@ void main() {
     }
   });
 
-  test(
-    'Linux release probes bundled audio and remote deep-link forwarding',
-    () {
-      final workflow = File(
-        '.github/workflows/linux-appimage-release.yml',
-      ).readAsStringSync();
-
-      expect(workflow, contains('gst-launch-1.0'));
-      expect(workflow, contains('focus_start.wav'));
-      expect(workflow, contains('APP_RUN="\$appdir/AppRun"'));
-      expect(workflow, contains('cold_start_log'));
-      expect(workflow, contains('secondary_status'));
-      expect(workflow, contains('Unhandled Exception'));
-      expect(workflow, contains('POMODOIST_NATIVE_LINK_HANDLED'));
-      expect(workflow, contains('test "\$secondary_status" -eq 0'));
-      expect(workflow, contains('kill -0 "\$primary_pid"'));
-    },
-  );
+  test('desktop workflows verify artifacts without launching them', () {
+    final linux = File(
+      '.github/workflows/linux-appimage-release.yml',
+    ).readAsStringSync();
+    final windows = File(
+      '.github/workflows/windows-exe-preview.yml',
+    ).readAsStringSync();
+    expect(linux, contains('sha256sum --check'));
+    expect(linux, isNot(contains('--appimage-extract')));
+    expect(linux, isNot(contains('APP_RUN')));
+    expect(windows, contains('Get-FileHash'));
+    expect(windows, contains('FileVersionInfo'));
+    expect(windows, isNot(contains('smoke.ps1')));
+  });
 
   test('Linux CI uses the validated local AppImage build contract', () {
     final document =

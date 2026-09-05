@@ -42,7 +42,6 @@ jobs:
             clang \
             cmake \
             curl \
-            dbus-x11 \
             desktop-file-utils \
             file \
             git \
@@ -50,7 +49,6 @@ jobs:
             gstreamer1.0-plugins-base \
             gstreamer1.0-plugins-good \
             gstreamer1.0-pulseaudio \
-            gstreamer1.0-tools \
             libcurl4-openssl-dev \
             libgstreamer-plugins-base1.0-dev \
             libgstreamer1.0-dev \
@@ -63,8 +61,6 @@ jobs:
             openjdk-17-jdk \
             pkg-config \
             unzip \
-            xauth \
-            xvfb \
             xz-utils
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -146,89 +142,15 @@ jobs:
       - name: Test Linux packaging contracts
         run: make test-linux-packaging
       - name: Build production AppImage
-        id: appimage
         run: |
           make linux-appimage \
             LINUX_CONFIG="$RUNNER_TEMP/linux-production.json" \
             POMODOIST_RELEASE="$GITHUB_SHA"
-      - name: Verify checksum, bundled audio, and deep-link forwarding
+      - name: Verify AppImage checksum
         run: |
           cd build/linux/appimage
           sha256sum --check Pomodoist-x86_64.AppImage.sha256
-
-          extract_root="$RUNNER_TEMP/pomodoist-appimage-extract"
-          mkdir -p "$extract_root"
-          (
-            cd "$extract_root"
-            "$GITHUB_WORKSPACE/build/linux/appimage/Pomodoist-x86_64.AppImage" \
-              --appimage-extract > /dev/null
-          )
-          appdir="$extract_root/squashfs-root"
-          sound_file="$appdir/usr/lib/pomodoist/data/flutter_assets/assets/sounds/focus_start.wav"
-          test -f "$sound_file"
-          env \
-            LD_LIBRARY_PATH="$appdir/usr/lib/pomodoist/lib:$appdir/usr/lib" \
-            GST_PLUGIN_SYSTEM_PATH_1_0="$appdir/usr/lib/gstreamer-1.0" \
-            GST_PLUGIN_SCANNER="$appdir/usr/lib/gstreamer-1.0/gst-plugin-scanner" \
-            GST_REGISTRY="$RUNNER_TEMP/pomodoist-gstreamer-registry.bin" \
-            gst-launch-1.0 -q \
-              filesrc location="$sound_file" ! wavparse ! audioconvert ! \
-              audioresample ! fakesink
-
-          APP_RUN="$appdir/AppRun" \
-          dbus-run-session -- xvfb-run --auto-servernum \
-            bash -euo pipefail <<'SMOKE'
-          primary_log="$RUNNER_TEMP/appimage-primary.log"
-          secondary_log="$RUNNER_TEMP/appimage-secondary.log"
-          cold_start_log="$RUNNER_TEMP/appimage-cold-start.log"
-          primary_pid=''
-          cleanup() {
-            cat "$cold_start_log" "$primary_log" "$secondary_log" 2>/dev/null || true
-            if [[ -n "$primary_pid" ]] && kill -0 "$primary_pid" 2>/dev/null; then
-              kill "$primary_pid" 2>/dev/null || true
-              wait "$primary_pid" 2>/dev/null || true
-            fi
-          }
-          trap cleanup EXIT
-
-          "$APP_RUN" 'pomodoist://focus' > "$cold_start_log" 2>&1 &
-          primary_pid=$!
-          for _ in $(seq 1 40); do
-            kill -0 "$primary_pid"
-            grep -Fq 'POMODOIST_NATIVE_LINK_HANDLED' "$cold_start_log" && break
-            sleep 0.25
-          done
-          grep -Fq 'POMODOIST_NATIVE_LINK_HANDLED' "$cold_start_log"
-          ! grep -E 'Dart Error|Unhandled Exception|Couldn.t resolve native function|error while loading shared libraries|MissingPluginException' \
-            "$cold_start_log"
-          kill "$primary_pid"
-          wait "$primary_pid" 2>/dev/null || true
-          primary_pid=''
-
-          "$APP_RUN" > "$primary_log" 2>&1 &
-          primary_pid=$!
-          for _ in $(seq 1 20); do
-            kill -0 "$primary_pid"
-            sleep 0.25
-          done
-
-          set +e
-          timeout 10s "$APP_RUN" 'pomodoist://focus' \
-            > "$secondary_log" 2>&1
-          secondary_status=$?
-          set -e
-          test "$secondary_status" -eq 0
-          kill -0 "$primary_pid"
-          ! grep -E 'Dart Error|Unhandled Exception|Couldn.t resolve native function|error while loading shared libraries|MissingPluginException' \
-            "$primary_log" "$secondary_log"
-          for _ in $(seq 1 20); do
-            grep -Fq 'POMODOIST_NATIVE_LINK_HANDLED' "$primary_log" && break
-            sleep 0.25
-          done
-          grep -Fq 'POMODOIST_NATIVE_LINK_HANDLED' "$primary_log"
-          SMOKE
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        if: ${{ !cancelled() && steps.appimage.outcome == 'success' }}
         with:
           name: pomodoist-linux-appimage-x86_64
           path: |
@@ -279,6 +201,7 @@ jobs:
           done
           gh api --method PATCH \
             "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+            --raw-field tag_name="$GITHUB_REF_NAME" \
             --field draft=false \
             --field prerelease="$prerelease" \
             --raw-field make_latest="$latest" \

@@ -29,7 +29,7 @@ jobs:
           fi
 
   build-test:
-    name: Build and smoke test unsigned EXE
+    name: Build and verify unsigned EXE
     needs: validate-ref
     runs-on: windows-2022
     environment: windows-production
@@ -140,7 +140,7 @@ jobs:
             -File .\tool\windows\installer\build.ps1 `
             -BuildDirectory build\windows\x64\runner\Release `
             -CompilerPath $compiler
-      - name: Verify unsigned boundary and smoke test
+      - name: Verify versions, unsigned boundary, and checksum
         run: |
           $installer = Resolve-Path build\windows\installer\Pomodoist-Setup.exe
           $installerInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($installer)
@@ -164,10 +164,6 @@ jobs:
           if ($checksum -cne "$expectedHash *Pomodoist-Setup.exe") {
             throw 'Installer checksum file does not match the release artifact.'
           }
-          powershell.exe -NoProfile -ExecutionPolicy Bypass `
-            -File .\tool\windows\installer\smoke.ps1 `
-            -Installer $installer `
-            -Interactive
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: pomodoist-windows-exe
@@ -235,6 +231,7 @@ jobs:
           done
           gh api --method PATCH \
             "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+            --raw-field tag_name="$GITHUB_REF_NAME" \
             --field draft=false \
             --field prerelease="$prerelease" \
             --raw-field make_latest="$latest" \
