@@ -98,10 +98,11 @@ jobs:
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version-file: .fvmrc
-      - name: Trust Flutter SDK in the Linux container
+      - name: Trust Flutter SDK and checkout in the Linux container
         run: |
           flutter_root="$(dirname "$(dirname "$(readlink -f "$(command -v flutter)")")")"
           git config --global --add safe.directory "$flutter_root"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Resolve Flutter dependencies
         run: |
           for attempt in 1 2 3; do

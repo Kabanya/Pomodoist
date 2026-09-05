@@ -145,7 +145,7 @@ void main() {
     }
   });
 
-  test('Linux trusts only the resolved SDK path before running Flutter', () {
+  test('Linux trusts the resolved SDK and checkout before running Flutter', () {
     final steps =
         _job(
               '.github/workflows/linux-appimage-release.yml',
@@ -153,7 +153,8 @@ void main() {
             )['steps']
             as YamlList;
     final trustIndex = steps.indexWhere(
-      (step) => step['name'] == 'Trust Flutter SDK in the Linux container',
+      (step) =>
+          step['name'] == 'Trust Flutter SDK and checkout in the Linux container',
     );
     expect(
       trustIndex,
@@ -186,6 +187,7 @@ void main() {
       final result = _bash(steps[trustIndex]['run'] as String, temp, {
         'PATH': '${bin.path}:${Platform.environment['PATH']}',
         'GIT_CONFIG_GLOBAL': config,
+        'GITHUB_WORKSPACE': temp.path,
       });
       expect(result.exitCode, 0, reason: '${result.stderr}');
       final trusted = Process.runSync('git', [
@@ -195,7 +197,10 @@ void main() {
         '--get-all',
         'safe.directory',
       ]);
-      expect(trusted.stdout.toString().trim(), sdk.resolveSymbolicLinksSync());
+      expect(trusted.stdout.toString().trim().split('\n'), [
+        sdk.resolveSymbolicLinksSync(),
+        temp.path,
+      ]);
     } finally {
       temp.deleteSync(recursive: true);
     }
