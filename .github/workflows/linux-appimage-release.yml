@@ -168,22 +168,31 @@ jobs:
             prerelease=true
             latest=false
           fi
-          if ! gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
-            gh release create "$GITHUB_REF_NAME" \
-              --draft \
-              --prerelease="$prerelease" \
-              --target "$GITHUB_SHA" \
-              --title "Pomodoist $GITHUB_REF_NAME" \
-              --notes "$release_notes" || \
-              gh release view "$GITHUB_REF_NAME" > /dev/null
-          fi
-          gh release upload "$GITHUB_REF_NAME" \
-            build/linux/appimage/Pomodoist-x86_64.AppImage \
-            build/linux/appimage/Pomodoist-x86_64.AppImage.sha256 \
-            --clobber
           release_id=$(gh api --paginate \
             "repos/$GITHUB_REPOSITORY/releases" \
             --jq ".[] | select(.tag_name == \"$GITHUB_REF_NAME\") | .id")
+          if [[ -z "$release_id" ]]; then
+            release_id=$(gh api --method POST "repos/$GITHUB_REPOSITORY/releases" \
+              --raw-field tag_name="$GITHUB_REF_NAME" \
+              --field draft=true \
+              --field prerelease="$prerelease" \
+              --raw-field target_commitish="$GITHUB_SHA" \
+              --raw-field name="Pomodoist $GITHUB_REF_NAME" \
+              --raw-field body="$release_notes" \
+              --jq '.id')
+          fi
+          for asset in Pomodoist-x86_64.AppImage Pomodoist-x86_64.AppImage.sha256; do
+            asset_id=$(gh api "repos/$GITHUB_REPOSITORY/releases/$release_id/assets" \
+              --jq ".[] | select(.name == \"$asset\") | .id")
+            if [[ -n "$asset_id" ]]; then
+              gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id" --silent
+            fi
+            gh api --method POST \
+              "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$release_id/assets?name=$asset" \
+              --header 'Content-Type: application/octet-stream' \
+              --input "build/linux/appimage/$asset" \
+              --silent
+          done
           required_assets=(
             Pomodoist-x86_64.AppImage
             Pomodoist-x86_64.AppImage.sha256
