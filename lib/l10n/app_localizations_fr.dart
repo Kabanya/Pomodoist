@@ -1039,6 +1039,58 @@ class AppLocalizationsFr extends AppLocalizations {
   String get voiceSmartMode => 'Mode intelligent';
 
   @override
+  String get voiceRetryTranscription => 'Réessayer la transcription';
+
+  @override
+  String get voiceRecordingSaved =>
+      'L’enregistrement est conservé sur cet appareil. Vous pouvez réessayer sans enregistrer à nouveau.';
+
+  @override
+  String get voiceAllowAccess => 'Autoriser l’accès';
+
+  @override
+  String get voiceOpenMicrophoneSettings => 'Ouvrir les réglages du microphone';
+
+  @override
+  String get voiceOpenSpeechSettings =>
+      'Ouvrir les réglages de reconnaissance vocale';
+
+  @override
+  String get voiceEnableDictation => 'Activer Dictée';
+
+  @override
+  String get voiceMicrophoneDenied =>
+      'Autorisez l’accès au microphone dans les réglages système.';
+
+  @override
+  String get voiceSpeechDenied =>
+      'Autorisez la reconnaissance vocale dans les réglages système.';
+
+  @override
+  String get voiceAccessRestricted =>
+      'L’accès est limité par votre administrateur ou Temps d’écran.';
+
+  @override
+  String get voiceDictationDisabled =>
+      'Activez Dictée dans Réglages Système → Clavier → Dictée et choisissez votre langue. Réessayez ensuite.';
+
+  @override
+  String get voiceServiceUnavailable =>
+      'La reconnaissance vocale est indisponible. Vérifiez votre connexion. Sur Mac, vérifiez aussi Réglages Système → Clavier → Dictée et votre langue.';
+
+  @override
+  String get voiceLocaleUnsupported =>
+      'La reconnaissance vocale du système ne prend pas en charge la langue sélectionnée sur cet appareil.';
+
+  @override
+  String get voiceNetworkUnavailable =>
+      'La reconnaissance de cette langue nécessite une connexion internet. Reconnectez-vous et réessayez.';
+
+  @override
+  String get voiceSettingsFailed =>
+      'Impossible d’ouvrir les réglages. Vérifiez manuellement les accès au microphone et à la reconnaissance vocale dans les réglages système. Sur Mac, vérifiez aussi Clavier → Dictée.';
+
+  @override
   String get voiceRetryAnalysis => 'Relancer l’analyse';
 
   @override

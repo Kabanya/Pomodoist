@@ -1020,6 +1020,56 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voiceSmartMode => 'الوضع الذكي';
 
   @override
+  String get voiceRetryTranscription => 'إعادة محاولة التفريغ';
+
+  @override
+  String get voiceRecordingSaved =>
+      'تم حفظ التسجيل على هذا الجهاز. يمكنك إعادة المحاولة دون تسجيل جديد.';
+
+  @override
+  String get voiceAllowAccess => 'السماح بالوصول';
+
+  @override
+  String get voiceOpenMicrophoneSettings => 'فتح إعدادات الميكروفون';
+
+  @override
+  String get voiceOpenSpeechSettings => 'فتح إعدادات التعرف على الكلام';
+
+  @override
+  String get voiceEnableDictation => 'تفعيل الإملاء';
+
+  @override
+  String get voiceMicrophoneDenied =>
+      'اسمح بالوصول إلى الميكروفون في إعدادات النظام.';
+
+  @override
+  String get voiceSpeechDenied => 'اسمح بالتعرف على الكلام في إعدادات النظام.';
+
+  @override
+  String get voiceAccessRestricted =>
+      'الوصول مقيد من المسؤول أو إعدادات مدة استخدام الجهاز.';
+
+  @override
+  String get voiceDictationDisabled =>
+      'فعّل الإملاء من إعدادات النظام ← لوحة المفاتيح ← الإملاء، واختر لغتك ثم أعد المحاولة.';
+
+  @override
+  String get voiceServiceUnavailable =>
+      'التعرف على الكلام غير متاح. تحقق من الاتصال. على Mac، تحقق أيضاً من إعدادات النظام ← لوحة المفاتيح ← الإملاء واللغة.';
+
+  @override
+  String get voiceLocaleUnsupported =>
+      'التعرف على الكلام في النظام لا يدعم اللغة المحددة على هذا الجهاز.';
+
+  @override
+  String get voiceNetworkUnavailable =>
+      'التعرف على هذه اللغة يحتاج إلى اتصال بالإنترنت. اتصل وأعد المحاولة.';
+
+  @override
+  String get voiceSettingsFailed =>
+      'تعذر فتح الإعدادات. افتح إعدادات النظام يدوياً وتحقق من أذونات الميكروفون والتعرف على الكلام. على Mac، تحقق أيضاً من لوحة المفاتيح ← الإملاء.';
+
+  @override
   String get voiceRetryAnalysis => 'إعادة التحليل';
 
   @override

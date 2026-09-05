@@ -1031,6 +1031,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceSmartMode => 'Smart mode';
 
   @override
+  String get voiceRetryTranscription => 'Retry transcription';
+
+  @override
+  String get voiceRecordingSaved =>
+      'Recording saved on this device. You can retry without recording again.';
+
+  @override
+  String get voiceAllowAccess => 'Allow access';
+
+  @override
+  String get voiceOpenMicrophoneSettings => 'Open microphone settings';
+
+  @override
+  String get voiceOpenSpeechSettings => 'Open speech recognition settings';
+
+  @override
+  String get voiceEnableDictation => 'Enable Dictation';
+
+  @override
+  String get voiceMicrophoneDenied =>
+      'Allow microphone access in system settings.';
+
+  @override
+  String get voiceSpeechDenied =>
+      'Allow speech recognition in system settings.';
+
+  @override
+  String get voiceAccessRestricted =>
+      'Access is restricted by your administrator or Screen Time settings.';
+
+  @override
+  String get voiceDictationDisabled =>
+      'Enable Dictation in System Settings → Keyboard → Dictation and select your language. Then retry.';
+
+  @override
+  String get voiceServiceUnavailable =>
+      'Speech recognition is unavailable. Check your connection. On Mac, also check System Settings → Keyboard → Dictation and your language.';
+
+  @override
+  String get voiceLocaleUnsupported =>
+      'System speech recognition does not support the selected language on this device.';
+
+  @override
+  String get voiceNetworkUnavailable =>
+      'Speech recognition needs an internet connection for this language. Reconnect and retry.';
+
+  @override
+  String get voiceSettingsFailed =>
+      'Could not open settings. Open system settings manually and check microphone and speech recognition access. On Mac, check Keyboard → Dictation too.';
+
+  @override
   String get voiceRetryAnalysis => 'Retry analysis';
 
   @override

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:app_voice/app_voice.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 
@@ -790,7 +791,7 @@ class VoiceQuickAddHost extends ConsumerStatefulWidget {
 }
 
 class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late final VoiceRecognitionController _voiceController;
   late final AnimationController _pulseController;
   late final AnimationController _analysisProgressController;
@@ -800,6 +801,11 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
   final _draftControllers = <_VoiceTaskDraftController>[];
   String _transcript = '';
   String? _error;
+  String? _voiceErrorCode;
+  Map<String, Object?> _access = const {};
+  bool _accessBusy = false;
+  bool _restoring = true;
+  int _accessCheck = 0;
   bool _analyzing = false;
   bool _expanded = true;
   bool _saving = false;
@@ -819,6 +825,8 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
   bool get _isTranscribing => _status == VoiceRecognitionStatus.transcribing;
 
   bool get _canStart =>
+      !_restoring &&
+      !_accessBusy &&
       !_captureActive &&
       !_isCapturing &&
       !_isTranscribing &&
@@ -875,6 +883,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
   void initState() {
     super.initState();
     _voiceController = ref.read(voiceRecognitionControllerProvider);
+    WidgetsBinding.instance.addObserver(this);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1300),
@@ -885,6 +894,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
       if (!mounted) return;
       widget.onExpandedChanged?.call(true);
       _installBackHandler();
+      unawaited(_restoreRecording());
     });
   }
 
@@ -896,6 +906,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _expanded = false;
     final back = _backEntry;
     _backEntry = null;
@@ -913,7 +924,9 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
     }
     _pulseController.dispose();
     _analysisProgressController.dispose();
-    if (_captureActive || _isCapturing || _isTranscribing) {
+    if (_stopping || _isTranscribing) {
+      unawaited(_voiceController.abortTranscription());
+    } else if (_captureActive || _isCapturing) {
       unawaited(_voiceController.cancel());
     }
     super.dispose();
@@ -1173,9 +1186,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                   ),
                   IconButton(
                     tooltip: l10n.commonClose,
-                    onPressed: _saving
-                        ? null
-                        : () => widget._session.finish(null),
+                    onPressed: _saving ? null : _closeVoice,
                     icon: const Icon(Icons.close),
                   ),
                 ],
@@ -1215,6 +1226,12 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                   child: _body(colorScheme),
                 ),
               ),
+              if (_voiceController.canRetryTranscription &&
+                  !_captureActive &&
+                  !_isTranscribing) ...[
+                const SizedBox(height: 10),
+                Text(l10n.voiceRecordingSaved),
+              ],
               if (_error != null) ...[
                 const SizedBox(height: 10),
                 Text(
@@ -1233,7 +1250,9 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                     onPressed: _canStart ? _start : null,
                     icon: const Icon(Icons.mic_none),
                     label: Text(
-                      _transcript.isEmpty && _draftControllers.isEmpty
+                      _transcript.isEmpty &&
+                              _draftControllers.isEmpty &&
+                              !_voiceController.canRetryTranscription
                           ? l10n.voiceRecord
                           : l10n.voiceAgain,
                     ),
@@ -1245,6 +1264,23 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                     icon: const Icon(Icons.stop),
                     label: Text(l10n.voiceStop),
                   ),
+                  if (_voiceController.canRetryTranscription &&
+                      !_captureActive &&
+                      !_isTranscribing) ...[
+                    FilledButton.icon(
+                      key: const Key('voice-retry-transcription'),
+                      onPressed: _canStart ? () => _start(retry: true) : null,
+                      icon: const Icon(Icons.refresh),
+                      label: Text(l10n.voiceRetryTranscription),
+                    ),
+                  ],
+                  if (_needsPermissionRequest || _settingsDestination != null)
+                    OutlinedButton.icon(
+                      key: const Key('voice-recover-access'),
+                      onPressed: _canStart ? _recoverAccess : null,
+                      icon: const Icon(Icons.settings_outlined),
+                      label: Text(_recoveryLabel),
+                    ),
                   if (_error != null &&
                       _transcript.trim().isNotEmpty &&
                       !_captureActive &&
@@ -1405,15 +1441,20 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
     }
   }
 
-  Future<void> _start() async {
+  Future<void> _start({bool retry = false}) async {
     if (!_canStart) {
       return;
     }
     final locale = Localizations.localeOf(context).toLanguageTag();
     _setSheetState(() {
       _captureActive = true;
-      _status = VoiceRecognitionStatus.requestingPermission;
+      _status = retry
+          ? VoiceRecognitionStatus.transcribing
+          : VoiceRecognitionStatus.requestingPermission;
       _error = null;
+      _voiceErrorCode = null;
+      _access = const {};
+      ++_accessCheck;
       _transcript = '';
       _analyzing = false;
       _analysisProgressController
@@ -1430,9 +1471,14 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
       return;
     }
     try {
-      final stream = _voiceController.start(
-        VoiceRecognitionConfig(locale: locale, maxDuration: _voiceMaxDuration),
-      );
+      final stream = retry
+          ? _voiceController.retryTranscription()
+          : _voiceController.start(
+              VoiceRecognitionConfig(
+                locale: locale,
+                maxDuration: _voiceMaxDuration,
+              ),
+            );
       _subscription = stream.listen(
         _handleEvent,
         onDone: () {
@@ -1452,6 +1498,9 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
       _setSheetState(() {
         _captureActive = false;
         _status = VoiceRecognitionStatus.error;
+        _voiceErrorCode = error is VoiceRecognitionException
+            ? error.code
+            : null;
         _error = _voiceErrorMessage(error.toString());
       });
     }
@@ -1488,6 +1537,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
         case VoiceRecognitionStatus.error:
         case VoiceRecognitionStatus.unsupportedPlatform:
           _captureActive = false;
+          _voiceErrorCode = event.error?.code;
           _error = event.error == null
               ? null
               : _voiceErrorMessage(event.error!.message);
@@ -1509,15 +1559,172 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
       _stopRecordingCountdown();
       _stopAmplitudeMeter();
     }
+    if (event.status == VoiceRecognitionStatus.error) {
+      unawaited(_refreshAccess());
+    }
     if (shouldDecompose) {
       unawaited(_decomposeTranscript(_transcript));
     }
   }
 
-  String _voiceErrorMessage(String message) =>
-      message.contains('setActive: Session activation failed')
-      ? context.l10n.voiceMicrophoneUnavailable
-      : context.l10n.voiceStatusError;
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _canStart) {
+      unawaited(_refreshAccess());
+    }
+  }
+
+  Future<void> _restoreRecording() async {
+    try {
+      await _voiceController.restorePendingRecording();
+    } catch (_) {
+      if (mounted) _error = context.l10n.voiceStatusError;
+    }
+    if (!mounted) return;
+    _setSheetState(() => _restoring = false);
+    if (_voiceController.canRetryTranscription) await _refreshAccess();
+  }
+
+  Future<void> _closeVoice() async {
+    if (_saving) return;
+    _setSheetState(() {
+      _captureActive = false;
+      _status = VoiceRecognitionStatus.canceled;
+    });
+    try {
+      await _voiceController.cancel();
+      if (mounted) widget._session.finish(null);
+    } catch (_) {
+      if (mounted) _setSheetState(() => _error = context.l10n.voiceStatusError);
+    }
+  }
+
+  bool get _accessRestricted =>
+      _access['microphone'] == 'restricted' ||
+      _access['speech'] == 'restricted' ||
+      (_access.isEmpty &&
+          (_voiceErrorCode == 'microphone_restricted' ||
+              _voiceErrorCode == 'speech_authorization_restricted'));
+
+  bool get _needsPermissionRequest =>
+      !_accessRestricted &&
+      (_access['microphone'] == 'notDetermined' ||
+          _access['speech'] == 'notDetermined');
+
+  VoiceSettingsDestination? get _settingsDestination {
+    if (_accessRestricted) return null;
+    if (_access['microphone'] == 'denied' ||
+        _voiceErrorCode == 'microphone_denied') {
+      return VoiceSettingsDestination.microphone;
+    }
+    if (_access['speech'] == 'denied' ||
+        _voiceErrorCode == 'speech_authorization_denied' ||
+        _voiceErrorCode == 'speech_permission_denied') {
+      return VoiceSettingsDestination.speech;
+    }
+    if (defaultTargetPlatform == TargetPlatform.macOS &&
+        (_voiceErrorCode == 'speech_dictation_disabled' ||
+            _voiceErrorCode == 'speech_unavailable' ||
+            _voiceErrorCode == 'speech_recognition_failed')) {
+      return VoiceSettingsDestination.dictation;
+    }
+    return null;
+  }
+
+  String get _recoveryLabel {
+    final l10n = context.l10n;
+    if (_needsPermissionRequest) return l10n.voiceAllowAccess;
+    return switch (_settingsDestination) {
+      VoiceSettingsDestination.microphone => l10n.voiceOpenMicrophoneSettings,
+      VoiceSettingsDestination.speech => l10n.voiceOpenSpeechSettings,
+      VoiceSettingsDestination.dictation => l10n.voiceEnableDictation,
+      null => l10n.voiceAllowAccess,
+    };
+  }
+
+  Future<void> _refreshAccess({bool request = false}) async {
+    final check = ++_accessCheck;
+    try {
+      final access = await _voiceController.checkAccess(
+        locale: Localizations.localeOf(context).toLanguageTag(),
+        request: request,
+      );
+      if (!mounted || check != _accessCheck) return;
+      _setSheetState(() {
+        _access = access;
+        if (access['microphone'] == 'restricted' ||
+            access['speech'] == 'restricted') {
+          _voiceErrorCode = access['microphone'] == 'restricted'
+              ? 'microphone_restricted'
+              : 'speech_authorization_restricted';
+          _error = context.l10n.voiceAccessRestricted;
+        } else if (access['microphone'] == 'denied') {
+          _voiceErrorCode = 'microphone_denied';
+          _error = context.l10n.voiceMicrophoneDenied;
+        } else if (access['speech'] == 'denied') {
+          _voiceErrorCode = 'speech_authorization_denied';
+          _error = context.l10n.voiceSpeechDenied;
+        } else if (access['microphone'] == 'authorized' &&
+            access['speech'] == 'authorized' &&
+            const [
+              'microphone_denied',
+              'microphone_restricted',
+              'speech_authorization_restricted',
+              'speech_permission_denied',
+              'speech_authorization_denied',
+            ].contains(_voiceErrorCode)) {
+          _voiceErrorCode = null;
+          _error = null;
+        }
+      });
+    } on MissingPluginException {
+      // Platforms without Apple Speech have no permission recovery channel.
+    } catch (_) {
+      // Preserve the actionable recognition error if the status service also fails.
+    }
+  }
+
+  Future<void> _recoverAccess() async {
+    final destination = _settingsDestination;
+    final request = _needsPermissionRequest;
+    _setSheetState(() => _accessBusy = true);
+    try {
+      if (request) {
+        await _refreshAccess(request: true);
+      } else if (destination != null) {
+        final opened = await _voiceController.openSettings(destination);
+        if (!opened && mounted) {
+          _setSheetState(() => _error = context.l10n.voiceSettingsFailed);
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        _setSheetState(() => _error = context.l10n.voiceSettingsFailed);
+      }
+    } finally {
+      if (mounted) _setSheetState(() => _accessBusy = false);
+    }
+  }
+
+  String _voiceErrorMessage(String message) {
+    final l10n = context.l10n;
+    if (message.contains('setActive: Session activation failed')) {
+      return l10n.voiceMicrophoneUnavailable;
+    }
+    return switch (_voiceErrorCode) {
+      'microphone_denied' || 'permission_denied' => l10n.voiceMicrophoneDenied,
+      'speech_authorization_denied' ||
+      'speech_permission_denied' => l10n.voiceSpeechDenied,
+      'microphone_restricted' ||
+      'speech_authorization_restricted' => l10n.voiceAccessRestricted,
+      'speech_dictation_disabled' => l10n.voiceDictationDisabled,
+      'speech_unavailable' ||
+      'speech_recognition_failed' => l10n.voiceServiceUnavailable,
+      'speech_locale_unsupported' => l10n.voiceLocaleUnsupported,
+      'speech_network_unavailable' => l10n.voiceNetworkUnavailable,
+      _ => l10n.voiceStatusError,
+    };
+  }
 
   Future<void> _decomposeTranscript(String transcript) async {
     _setSheetState(() {

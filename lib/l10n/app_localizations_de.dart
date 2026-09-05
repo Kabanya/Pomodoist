@@ -1042,6 +1042,58 @@ class AppLocalizationsDe extends AppLocalizations {
   String get voiceSmartMode => 'Intelligenter Modus';
 
   @override
+  String get voiceRetryTranscription => 'Transkription wiederholen';
+
+  @override
+  String get voiceRecordingSaved =>
+      'Die Aufnahme ist auf diesem Gerät gespeichert. Sie können es ohne neue Aufnahme erneut versuchen.';
+
+  @override
+  String get voiceAllowAccess => 'Zugriff erlauben';
+
+  @override
+  String get voiceOpenMicrophoneSettings => 'Mikrofoneinstellungen öffnen';
+
+  @override
+  String get voiceOpenSpeechSettings =>
+      'Einstellungen zur Spracherkennung öffnen';
+
+  @override
+  String get voiceEnableDictation => 'Diktierfunktion aktivieren';
+
+  @override
+  String get voiceMicrophoneDenied =>
+      'Erlauben Sie den Mikrofonzugriff in den Systemeinstellungen.';
+
+  @override
+  String get voiceSpeechDenied =>
+      'Erlauben Sie die Spracherkennung in den Systemeinstellungen.';
+
+  @override
+  String get voiceAccessRestricted =>
+      'Der Zugriff wird durch die Administration oder Bildschirmzeit eingeschränkt.';
+
+  @override
+  String get voiceDictationDisabled =>
+      'Aktivieren Sie die Diktierfunktion unter Systemeinstellungen → Tastatur → Diktierfunktion und wählen Sie Ihre Sprache. Versuchen Sie es dann erneut.';
+
+  @override
+  String get voiceServiceUnavailable =>
+      'Die Spracherkennung ist nicht verfügbar. Prüfen Sie Ihre Verbindung. Prüfen Sie auf dem Mac auch Systemeinstellungen → Tastatur → Diktierfunktion und Ihre Sprache.';
+
+  @override
+  String get voiceLocaleUnsupported =>
+      'Die systemeigene Spracherkennung unterstützt die gewählte Sprache auf diesem Gerät nicht.';
+
+  @override
+  String get voiceNetworkUnavailable =>
+      'Für diese Sprache benötigt die Spracherkennung eine Internetverbindung. Stellen Sie die Verbindung wieder her und versuchen Sie es erneut.';
+
+  @override
+  String get voiceSettingsFailed =>
+      'Die Einstellungen konnten nicht geöffnet werden. Prüfen Sie Mikrofon und Spracherkennung manuell in den Systemeinstellungen, auf dem Mac auch Tastatur → Diktierfunktion.';
+
+  @override
   String get voiceRetryAnalysis => 'Analyse wiederholen';
 
   @override

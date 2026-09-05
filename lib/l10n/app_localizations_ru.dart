@@ -1036,6 +1036,57 @@ class AppLocalizationsRu extends AppLocalizations {
   String get voiceSmartMode => 'Умный режим';
 
   @override
+  String get voiceRetryTranscription => 'Повторить распознавание';
+
+  @override
+  String get voiceRecordingSaved =>
+      'Запись сохранена на этом устройстве. Можно повторить распознавание без новой диктовки.';
+
+  @override
+  String get voiceAllowAccess => 'Разрешить доступ';
+
+  @override
+  String get voiceOpenMicrophoneSettings => 'Открыть настройки микрофона';
+
+  @override
+  String get voiceOpenSpeechSettings => 'Открыть настройки распознавания';
+
+  @override
+  String get voiceEnableDictation => 'Включить Диктовку';
+
+  @override
+  String get voiceMicrophoneDenied =>
+      'Разрешите доступ к микрофону в системных настройках.';
+
+  @override
+  String get voiceSpeechDenied =>
+      'Разрешите распознавание речи в системных настройках.';
+
+  @override
+  String get voiceAccessRestricted =>
+      'Доступ ограничен администратором или настройками «Экранного времени».';
+
+  @override
+  String get voiceDictationDisabled =>
+      'Включите Диктовку: Системные настройки → Клавиатура → Диктовка. Выберите язык и повторите распознавание.';
+
+  @override
+  String get voiceServiceUnavailable =>
+      'Распознавание недоступно. Проверьте подключение к интернету. На Mac также проверьте язык и Диктовку: Системные настройки → Клавиатура → Диктовка.';
+
+  @override
+  String get voiceLocaleUnsupported =>
+      'Системное распознавание не поддерживает выбранный язык на этом устройстве.';
+
+  @override
+  String get voiceNetworkUnavailable =>
+      'Для распознавания этого языка нужен интернет. Подключитесь и повторите попытку.';
+
+  @override
+  String get voiceSettingsFailed =>
+      'Не удалось открыть настройки. Откройте системные настройки вручную и проверьте доступ к микрофону и распознаванию речи. На Mac также проверьте раздел Клавиатура → Диктовка.';
+
+  @override
   String get voiceRetryAnalysis => 'Повторить разбор';
 
   @override

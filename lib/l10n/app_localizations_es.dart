@@ -1039,6 +1039,58 @@ class AppLocalizationsEs extends AppLocalizations {
   String get voiceSmartMode => 'Modo inteligente';
 
   @override
+  String get voiceRetryTranscription => 'Reintentar transcripción';
+
+  @override
+  String get voiceRecordingSaved =>
+      'La grabación está guardada en este dispositivo. Puedes reintentarlo sin volver a grabar.';
+
+  @override
+  String get voiceAllowAccess => 'Permitir acceso';
+
+  @override
+  String get voiceOpenMicrophoneSettings => 'Abrir ajustes del micrófono';
+
+  @override
+  String get voiceOpenSpeechSettings =>
+      'Abrir ajustes de reconocimiento de voz';
+
+  @override
+  String get voiceEnableDictation => 'Activar Dictado';
+
+  @override
+  String get voiceMicrophoneDenied =>
+      'Permite el acceso al micrófono en los ajustes del sistema.';
+
+  @override
+  String get voiceSpeechDenied =>
+      'Permite el reconocimiento de voz en los ajustes del sistema.';
+
+  @override
+  String get voiceAccessRestricted =>
+      'El administrador o Tiempo de uso restringen el acceso.';
+
+  @override
+  String get voiceDictationDisabled =>
+      'Activa Dictado en Ajustes del Sistema → Teclado → Dictado y selecciona tu idioma. Después, reinténtalo.';
+
+  @override
+  String get voiceServiceUnavailable =>
+      'El reconocimiento de voz no está disponible. Comprueba la conexión. En Mac, revisa también Ajustes del Sistema → Teclado → Dictado y el idioma.';
+
+  @override
+  String get voiceLocaleUnsupported =>
+      'El reconocimiento de voz del sistema no admite el idioma seleccionado en este dispositivo.';
+
+  @override
+  String get voiceNetworkUnavailable =>
+      'El reconocimiento de este idioma necesita conexión a internet. Conéctate y reinténtalo.';
+
+  @override
+  String get voiceSettingsFailed =>
+      'No se pudieron abrir los ajustes. Revisa manualmente el acceso al micrófono y al reconocimiento de voz en los ajustes del sistema. En Mac, revisa también Teclado → Dictado.';
+
+  @override
   String get voiceRetryAnalysis => 'Reintentar análisis';
 
   @override

@@ -1263,7 +1263,7 @@ Future<_SidebarHarness> _pumpApp(
   );
 }
 
-class _SidebarRecordedRecognizer implements RecordedVoiceRecognizer {
+class _SidebarRecordedRecognizer extends RecordedVoiceRecognizer {
   int startCalls = 0;
   int cancelCalls = 0;
 

@@ -965,6 +965,50 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceSmartMode => '智能模式';
 
   @override
+  String get voiceRetryTranscription => '重试转写';
+
+  @override
+  String get voiceRecordingSaved => '录音已保存在此设备上。您可以重试，无需重新录音。';
+
+  @override
+  String get voiceAllowAccess => '允许访问';
+
+  @override
+  String get voiceOpenMicrophoneSettings => '打开麦克风设置';
+
+  @override
+  String get voiceOpenSpeechSettings => '打开语音识别设置';
+
+  @override
+  String get voiceEnableDictation => '启用听写';
+
+  @override
+  String get voiceMicrophoneDenied => '请在系统设置中允许访问麦克风。';
+
+  @override
+  String get voiceSpeechDenied => '请在系统设置中允许语音识别。';
+
+  @override
+  String get voiceAccessRestricted => '管理员或“屏幕使用时间”限制了访问。';
+
+  @override
+  String get voiceDictationDisabled => '请在“系统设置 → 键盘 → 听写”中启用听写并选择语言，然后重试。';
+
+  @override
+  String get voiceServiceUnavailable =>
+      '语音识别暂不可用。请检查网络连接。在 Mac 上，还请检查“系统设置 → 键盘 → 听写”和所选语言。';
+
+  @override
+  String get voiceLocaleUnsupported => '此设备的系统语音识别不支持所选语言。';
+
+  @override
+  String get voiceNetworkUnavailable => '识别此语言需要互联网连接。请联网后重试。';
+
+  @override
+  String get voiceSettingsFailed =>
+      '无法打开设置。请手动打开系统设置，检查麦克风和语音识别权限。在 Mac 上，还请检查“键盘 → 听写”。';
+
+  @override
   String get voiceRetryAnalysis => '重试分析';
 
   @override

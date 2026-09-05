@@ -1896,6 +1896,90 @@ abstract class AppLocalizations {
   /// **'Smart mode'**
   String get voiceSmartMode;
 
+  /// No description provided for @voiceRetryTranscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry transcription'**
+  String get voiceRetryTranscription;
+
+  /// No description provided for @voiceRecordingSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording saved on this device. You can retry without recording again.'**
+  String get voiceRecordingSaved;
+
+  /// No description provided for @voiceAllowAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow access'**
+  String get voiceAllowAccess;
+
+  /// No description provided for @voiceOpenMicrophoneSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open microphone settings'**
+  String get voiceOpenMicrophoneSettings;
+
+  /// No description provided for @voiceOpenSpeechSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open speech recognition settings'**
+  String get voiceOpenSpeechSettings;
+
+  /// No description provided for @voiceEnableDictation.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Dictation'**
+  String get voiceEnableDictation;
+
+  /// No description provided for @voiceMicrophoneDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow microphone access in system settings.'**
+  String get voiceMicrophoneDenied;
+
+  /// No description provided for @voiceSpeechDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow speech recognition in system settings.'**
+  String get voiceSpeechDenied;
+
+  /// No description provided for @voiceAccessRestricted.
+  ///
+  /// In en, this message translates to:
+  /// **'Access is restricted by your administrator or Screen Time settings.'**
+  String get voiceAccessRestricted;
+
+  /// No description provided for @voiceDictationDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Dictation in System Settings → Keyboard → Dictation and select your language. Then retry.'**
+  String get voiceDictationDisabled;
+
+  /// No description provided for @voiceServiceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition is unavailable. Check your connection. On Mac, also check System Settings → Keyboard → Dictation and your language.'**
+  String get voiceServiceUnavailable;
+
+  /// No description provided for @voiceLocaleUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'System speech recognition does not support the selected language on this device.'**
+  String get voiceLocaleUnsupported;
+
+  /// No description provided for @voiceNetworkUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition needs an internet connection for this language. Reconnect and retry.'**
+  String get voiceNetworkUnavailable;
+
+  /// No description provided for @voiceSettingsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open settings. Open system settings manually and check microphone and speech recognition access. On Mac, check Keyboard → Dictation too.'**
+  String get voiceSettingsFailed;
+
   /// No description provided for @voiceRetryAnalysis.
   ///
   /// In en, this message translates to:

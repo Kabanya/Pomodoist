@@ -122,6 +122,124 @@ void main() {
     expect(find.textContaining('PlatformException'), findsNothing);
   });
 
+  testWidgets(
+    'saved voice opens settings and retries without recording again',
+    (tester) async {
+      const channel = MethodChannel(systemSpeechChannelName);
+      final calls = <String>[];
+      var microphoneAllowed = false;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            calls.add(call.method);
+            if (call.method == 'openSettings') {
+              expect(call.arguments, {'destination': 'microphone'});
+              return true;
+            }
+            return {
+              'microphone': microphoneAllowed ? 'authorized' : 'denied',
+              'speech': 'authorized',
+              'available': true,
+            };
+          });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null),
+      );
+      final recognizer = _SavedRecordedRecognizer();
+      final controller = VoiceRecognitionController(
+        recordedRecognizer: recognizer,
+        platformSupport: const VoicePlatformSupport(
+          supportsRecordedSystem: true,
+        ),
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            ...proVoiceOverrides,
+            applePurchasesSupportedProvider.overrideWithValue(false),
+            voiceRecognitionControllerProvider.overrideWithValue(controller),
+            taskDecomposerProvider.overrideWithValue(
+              const _FakeTaskDecomposer([
+                DecomposedTaskDraft(quickAdd: 'All recorded tasks'),
+              ]),
+            ),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: QuickAddBar()),
+          ),
+        ),
+      );
+      await tester.tap(find.byTooltip('Voice quick add'));
+      await tester.pumpAndSettle();
+      expect(find.text('Retry transcription'), findsOneWidget);
+      await tester.tap(find.text('Open microphone settings'));
+      await tester.pumpAndSettle();
+      expect(calls, contains('openSettings'));
+      expect(recognizer.startCalls, 0);
+      microphoneAllowed = true;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Allow microphone access in system settings.'),
+        findsNothing,
+      );
+      expect(find.text('Open microphone settings'), findsNothing);
+      expect(recognizer.startCalls, 0);
+      await tester.tap(find.text('Retry transcription'));
+      await tester.pumpAndSettle();
+      expect(find.text('All recorded tasks'), findsOneWidget);
+      expect(recognizer.startCalls, 0);
+      expect(recognizer.stopCalls, 0);
+      expect(recognizer.retryCalls, 1);
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pumpAndSettle();
+      controller.dispose();
+    },
+  );
+
+  testWidgets('host teardown preserves an in-flight saved recording retry', (
+    tester,
+  ) async {
+    final recognizer = _TeardownRecordedRecognizer();
+    final controller = VoiceRecognitionController(
+      recordedRecognizer: recognizer,
+      platformSupport: const VoicePlatformSupport(supportsRecordedSystem: true),
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          ...proVoiceOverrides,
+          applePurchasesSupportedProvider.overrideWithValue(false),
+          voiceRecognitionControllerProvider.overrideWithValue(controller),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: QuickAddBar()),
+        ),
+      ),
+    );
+    await tester.tap(find.byTooltip('Voice quick add'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Retry transcription'));
+    await tester.pump();
+    expect(recognizer.retryCalls, 1);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    expect(recognizer.cancelCalls, 0);
+    expect(recognizer.abortCalls, 1);
+    expect(controller.canRetryTranscription, isTrue);
+    // Host teardown leaves its shared provider controller usable.
+    recognizer.blockRetry = false;
+    final retried = controller.retryTranscription().toList();
+    await tester.pump();
+    expect((await retried).last.status, VoiceRecognitionStatus.completed);
+    controller.dispose();
+  });
+
   test('logged-out Pro sends StoreKit proof for analysis', () async {
     final httpClient = _FunctionHttpClient();
 
@@ -2217,8 +2335,8 @@ class _FlakyTaskDecomposer implements TaskDecomposer {
   }
 }
 
-class _FakeRecordedRecognizer
-    implements RecordedVoiceRecognizer, RecordedVoiceAmplitudeSource {
+class _FakeRecordedRecognizer extends RecordedVoiceRecognizer
+    implements RecordedVoiceAmplitudeSource {
   _FakeRecordedRecognizer({
     required this.transcript,
     this.amplitudeDbfs = const Stream<double>.empty(),
@@ -2254,4 +2372,64 @@ class _FakeRecordedRecognizer
 
   @override
   void dispose() {}
+}
+
+class _SavedRecordedRecognizer extends _FakeRecordedRecognizer {
+  _SavedRecordedRecognizer()
+    : super(
+        transcript: const VoiceRecognitionTranscript(
+          text: 'first minute and last thirty seconds',
+        ),
+      );
+  bool pending = true;
+  int retryCalls = 0;
+  @override
+  bool get canRetryTranscription => pending;
+  @override
+  Future<bool> restorePendingRecording() async => pending;
+  @override
+  Future<VoiceRecognitionTranscript> retryTranscription() async {
+    retryCalls++;
+    pending = false;
+    return transcript;
+  }
+
+  @override
+  Future<void> cancel() async {
+    pending = false;
+    await super.cancel();
+  }
+}
+
+class _TeardownRecordedRecognizer extends _SavedRecordedRecognizer {
+  final result = Completer<VoiceRecognitionTranscript>();
+  bool blockRetry = true;
+  int abortCalls = 0;
+
+  @override
+  Future<VoiceRecognitionTranscript> retryTranscription() {
+    if (!blockRetry) return super.retryTranscription();
+    retryCalls++;
+    return result.future;
+  }
+
+  @override
+  Future<void> abortTranscription() async {
+    abortCalls++;
+    if (!result.isCompleted) {
+      result.completeError(
+        const VoiceRecognitionException('speech_canceled', 'Canceled.'),
+      );
+    }
+  }
+
+  @override
+  Future<void> cancel() async {
+    await super.cancel();
+    if (!result.isCompleted) {
+      result.completeError(
+        const VoiceRecognitionException('speech_canceled', 'Canceled.'),
+      );
+    }
+  }
 }

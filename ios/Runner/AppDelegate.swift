@@ -1,3 +1,4 @@
+import AVFoundation
 import Flutter
 import Speech
 import UIKit
@@ -44,6 +45,22 @@ private final class SystemSpeechHost {
   private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     let arguments = call.arguments as? [String: Any]
     switch call.method {
+    case "checkAccess":
+      result(SystemSpeechAccess.check(arguments?["locale"] as? String))
+    case "requestAccess":
+      SystemSpeechAccess.request(arguments?["locale"] as? String) { result($0) }
+    case "prepareRecordingStorage":
+      do {
+        try SystemSpeechAccess.prepareStorage(arguments?["path"] as? String ?? "")
+        result(nil)
+      } catch { result(flutterError(error)) }
+    case "openSettings":
+      guard let destination = arguments?["destination"] as? String,
+            ["microphone", "speech", "dictation"].contains(destination) else {
+        result(error("invalid_settings_destination", "Unsupported settings destination."))
+        return
+      }
+      openSettings(destination, result: result)
     case "prepare":
       authorize(localeIdentifier: arguments?["locale"] as? String, result: result)
     case "transcribeFile":
@@ -67,10 +84,14 @@ private final class SystemSpeechHost {
   private func authorize(localeIdentifier: String?, result: @escaping FlutterResult) {
     func finish(_ status: SFSpeechRecognizerAuthorizationStatus) {
       guard status == .authorized else {
-        result(error("speech_permission_denied", "Speech recognition permission was not granted."))
+        result(error(status == .restricted ? "speech_authorization_restricted" : "speech_authorization_denied", "Speech recognition permission was not granted."))
         return
       }
-      guard let recognizer = recognizer(localeIdentifier), recognizer.isAvailable else {
+      guard let recognizer = SystemSpeechAccess.recognizer(localeIdentifier) else {
+        result(error("speech_locale_unsupported", "The requested speech language is unsupported."))
+        return
+      }
+      guard recognizer.isAvailable else {
         result(error("speech_unavailable", "System speech recognition is currently unavailable."))
         return
       }
@@ -92,7 +113,16 @@ private final class SystemSpeechHost {
     localeIdentifier: String?,
     result: @escaping FlutterResult
   ) {
-    guard let recognizer = recognizer(localeIdentifier), recognizer.isAvailable else {
+    let status = SFSpeechRecognizer.authorizationStatus()
+    guard status == .authorized else {
+      result(error(status == .restricted ? "speech_authorization_restricted" : "speech_authorization_denied", "Speech recognition permission was not granted."))
+      return
+    }
+    guard let recognizer = SystemSpeechAccess.recognizer(localeIdentifier) else {
+      result(error("speech_locale_unsupported", "The requested speech language is unsupported."))
+      return
+    }
+    guard recognizer.isAvailable else {
       result(error("speech_unavailable", "System speech recognition is currently unavailable."))
       return
     }
@@ -105,23 +135,23 @@ private final class SystemSpeechHost {
         if let confidence = transcript.confidence { value["confidence"] = confidence }
         result(value)
       case .failure(let failure):
-        result(FlutterError(
-          code: (failure as? SystemSpeechError)?.code ?? "speech_recognition_failed",
-          message: failure.localizedDescription,
-          details: nil
-        ))
+        result(self.flutterError(failure))
       }
     }
   }
 
-  private func recognizer(_ localeIdentifier: String?) -> SFSpeechRecognizer? {
-    guard let localeIdentifier, !localeIdentifier.isEmpty else {
-      return SFSpeechRecognizer()
-    }
-    return SFSpeechRecognizer(locale: Locale(identifier: localeIdentifier))
+  private func flutterError(_ failure: Error) -> FlutterError {
+    let mapped = SystemSpeechError.classify(failure)
+    return FlutterError(code: mapped.code, message: mapped.message, details: mapped.details)
   }
 
   private func error(_ code: String, _ message: String) -> FlutterError {
-    FlutterError(code: code, message: message, details: nil)
+    flutterError(SystemSpeechError(code: code, message: message))
+  }
+
+  private func openSettings(_ destination: String, result: @escaping FlutterResult) {
+    UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!, options: [:]) {
+      opened in result(opened)
+    }
   }
 }
