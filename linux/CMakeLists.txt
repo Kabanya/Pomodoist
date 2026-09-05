@@ -75,6 +75,9 @@ set_target_properties(${BINARY_NAME}
 # them to the application.
 include(flutter/generated_plugins.cmake)
 
+# multiview_desktop uses structured bindings but does not request C++17 itself.
+target_compile_features(multiview_desktop_plugin PRIVATE cxx_std_17)
+
 
 # === Installation ===
 # By default, "installing" just makes a relocatable bundle in the build

@@ -146,9 +146,9 @@ jobs:
           $installerInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($installer)
           $appPath = (Resolve-Path build\windows\x64\runner\Release\pomodoist.exe).Path
           $appInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($appPath)
-          if ($installerInfo.ProductVersion -cne $env:POMODOIST_VERSION -or
+          if ($installerInfo.ProductVersion.Trim() -cne $env:POMODOIST_VERSION -or
               $appInfo.ProductVersion.Split('+')[0] -cne $env:POMODOIST_VERSION) {
-            throw 'Application or installer version does not match the release version.'
+            throw "Expected $env:POMODOIST_VERSION; application: '$($appInfo.ProductVersion)', installer: '$($installerInfo.ProductVersion)'."
           }
           $numericVersion = '{0}.{1}.{2}.{3}' -f $installerInfo.FileMajorPart,
               $installerInfo.FileMinorPart, $installerInfo.FileBuildPart, $installerInfo.FilePrivatePart
