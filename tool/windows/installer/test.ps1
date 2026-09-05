@@ -91,9 +91,48 @@ exit /b 0
 
     $arguments = Get-Content -Raw -LiteralPath $compilerLog
     Assert-Contains $arguments '/DAppVersion=1.2.3' 'Version was not passed to Inno Setup.'
+    Assert-Contains $arguments '/DAppNumericVersion=1.2.3.0' 'Numeric version was not passed to Inno Setup.'
     Assert-Contains $arguments "/DSourceDir=$bundle" 'Bundle path was not passed to Inno Setup.'
     Assert-Contains $arguments "/DOutputDir=$output" 'Output path was not passed to Inno Setup.'
     Assert-Contains $arguments 'Pomodoist.iss' 'Installer source was not compiled.'
+
+    & $buildScript `
+        -BuildDirectory $bundle `
+        -OutputDirectory $output `
+        -CompilerPath $fakeCompiler `
+        -Version '1.2.3-rc.1'
+    $arguments = Get-Content -Raw -LiteralPath $compilerLog
+    Assert-Contains $arguments '/DAppVersion=1.2.3-rc.1' 'RC suffix was lost.'
+    Assert-Contains $arguments '/DAppNumericVersion=1.2.3.0' 'RC numeric version is invalid.'
+
+    $versionRepo = Join-Path $testRoot 'version-repository'
+    $versionTools = Join-Path $versionRepo 'tool\windows\installer'
+    $versionResources = Join-Path $versionRepo 'windows\runner\resources'
+    New-Item -ItemType Directory -Force $versionTools, $versionResources | Out-Null
+    Copy-Item -LiteralPath $buildScript -Destination $versionTools
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Pomodoist.iss') -Destination $versionTools
+    Copy-Item -LiteralPath (Join-Path $repoRoot 'windows\runner\resources\app_icon.ico') -Destination $versionResources
+    Set-Content -LiteralPath (Join-Path $versionRepo 'pubspec.yaml') -Value 'version: 1.2.3-rc.1+91'
+    & (Join-Path $versionTools 'build.ps1') `
+        -BuildDirectory $bundle `
+        -OutputDirectory $output `
+        -CompilerPath $fakeCompiler
+    $arguments = Get-Content -Raw -LiteralPath $compilerLog
+    Assert-Contains $arguments '/DAppVersion=1.2.3-rc.1' 'RC version was not read from pubspec.yaml.'
+    Assert-Contains $arguments '/DAppNumericVersion=1.2.3.0' 'Pubspec numeric version is invalid.'
+
+    foreach ($invalidVersion in @('v1.2.3', '1.2', '1.2.3-beta.1', '1.2.3-rc.01', '1.2.3-RC.1', '01.2.3')) {
+        Assert-ThrowsContaining `
+            -Action {
+                & $buildScript `
+                    -BuildDirectory $bundle `
+                    -OutputDirectory $output `
+                    -CompilerPath $fakeCompiler `
+                    -Version $invalidVersion
+            } `
+            -Expected '-Version must use' `
+            -Message "Invalid version was accepted: $invalidVersion"
+    }
 
     $incompleteBundle = Join-Path $testRoot 'incomplete-bundle'
     New-Item -ItemType Directory -Force -Path (Join-Path $incompleteBundle 'data') |

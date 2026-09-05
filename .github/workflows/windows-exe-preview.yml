@@ -22,13 +22,11 @@ jobs:
     steps:
       - name: Reject unsupported ref
         run: |
-          case "$GITHUB_REF" in
-            refs/heads/main|refs/tags/v*.*.*) ;;
-            *)
-              echo 'Windows builds require main or a vX.Y.Z tag.' >&2
-              exit 64
-              ;;
-          esac
+          number='(0|[1-9][0-9]*)'
+          if [[ "$GITHUB_REF" != refs/heads/main && ! "$GITHUB_REF" =~ ^refs/tags/v$number\.$number\.$number(-rc\.$number)?$ ]]; then
+            echo 'Windows builds require main, vX.Y.Z, or vX.Y.Z-rc.N.' >&2
+            exit 64
+          fi
 
   build-test:
     name: Build and smoke test unsigned EXE
@@ -38,12 +36,38 @@ jobs:
     permissions:
       contents: read
     outputs:
-      version: ${{ steps.production-config.outputs.version }}
+      version: ${{ steps.version.outputs.version }}
     defaults:
       run:
         shell: pwsh
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Prepare application version
+        id: version
+        shell: bash
+        run: |
+          pubspec_version=$(awk '/^version:/ {sub(/\r$/, ""); print $2; exit}' pubspec.yaml)
+          if [[ ! "$pubspec_version" =~ ^.+\+([0-9]+)$ ]]; then
+            echo 'pubspec.yaml must contain a numeric build number after +.' >&2
+            exit 64
+          fi
+          build_number="${BASH_REMATCH[1]}"
+          release_version="${pubspec_version%+*}"
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            number='(0|[1-9][0-9]*)'
+            if [[ ! "$GITHUB_REF_NAME" =~ ^v$number\.$number\.$number(-rc\.$number)?$ ]]; then
+              echo 'Release tags must use vX.Y.Z or vX.Y.Z-rc.N.' >&2
+              exit 64
+            fi
+            release_version="${GITHUB_REF_NAME#v}"
+            awk -v version="$release_version+$build_number" '
+              /^version:/ {$0 = "version: " version}
+              {sub(/\r$/, ""); print}
+            ' pubspec.yaml > pubspec.yaml.tmp
+            mv pubspec.yaml.tmp pubspec.yaml
+          fi
+          echo "POMODOIST_VERSION=$release_version" >> "$GITHUB_ENV"
+          echo "version=$release_version" >> "$GITHUB_OUTPUT"
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version-file: .fvmrc
@@ -70,7 +94,6 @@ jobs:
             throw "Inno Setup compiler hash mismatch: $actualCompilerHash"
           }
       - name: Validate and write production configuration
-        id: production-config
         env:
           WEB_APP_URL: ${{ vars.WEB_APP_URL }}
           TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
@@ -96,14 +119,6 @@ jobs:
           $config | ConvertTo-Json | Set-Content `
             -LiteralPath "$env:RUNNER_TEMP\windows-production.json" `
             -Encoding utf8
-          $version = ([regex]::Match(
-            (Get-Content -Raw pubspec.yaml),
-            '(?m)^version:\s*(\d+\.\d+\.\d+)\+\d+\s*$'
-          )).Groups[1].Value
-          if ([string]::IsNullOrWhiteSpace($version)) {
-            throw 'Could not read the application version.'
-          }
-          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
       - name: Build Flutter release
         run: >-
           powershell.exe -NoProfile -ExecutionPolicy Bypass
@@ -128,6 +143,18 @@ jobs:
       - name: Verify unsigned boundary and smoke test
         run: |
           $installer = Resolve-Path build\windows\installer\Pomodoist-Setup.exe
+          $installerInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($installer)
+          $appPath = (Resolve-Path build\windows\x64\runner\Release\pomodoist.exe).Path
+          $appInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($appPath)
+          if ($installerInfo.ProductVersion -cne $env:POMODOIST_VERSION -or
+              $appInfo.ProductVersion.Split('+')[0] -cne $env:POMODOIST_VERSION) {
+            throw 'Application or installer version does not match the release version.'
+          }
+          $numericVersion = '{0}.{1}.{2}.{3}' -f $installerInfo.FileMajorPart,
+              $installerInfo.FileMinorPart, $installerInfo.FileBuildPart, $installerInfo.FilePrivatePart
+          if ($numericVersion -cne (($env:POMODOIST_VERSION -split '-', 2)[0] + '.0')) {
+            throw 'Installer numeric version does not match the release version.'
+          }
           $signature = Get-AuthenticodeSignature -LiteralPath $installer
           if ($signature.Status -ne 'NotSigned') {
             throw "Preview installer must remain unsigned; status was $($signature.Status)."
@@ -156,6 +183,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      GH_REPO: ${{ github.repository }}
     steps:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
@@ -167,9 +196,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           release_notes='Official Pomodoist desktop release. Linux is distributed as a portable x86_64 AppImage. The Windows installer is unsigned, so Microsoft Defender SmartScreen may warn about an unknown publisher.'
+          prerelease=false
+          latest=true
+          if [[ "$GITHUB_REF_NAME" == *-rc.* ]]; then
+            prerelease=true
+            latest=false
+          fi
           if ! gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
             gh release create "$GITHUB_REF_NAME" \
               --draft \
+              --prerelease="$prerelease" \
               --target "$GITHUB_SHA" \
               --title "Pomodoist $GITHUB_REF_NAME" \
               --notes "$release_notes" || \
@@ -200,6 +236,8 @@ jobs:
           gh api --method PATCH \
             "repos/$GITHUB_REPOSITORY/releases/$release_id" \
             --field draft=false \
+            --field prerelease="$prerelease" \
+            --raw-field make_latest="$latest" \
             --silent
       - name: Publish manual GitHub pre-release
         if: github.ref_type != 'tag'

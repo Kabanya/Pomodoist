@@ -29,6 +29,7 @@ jobs:
       GOOGLE_DESKTOP_CLIENT_ID: ${{ vars.GOOGLE_DESKTOP_CLIENT_ID }}
       GOOGLE_DESKTOP_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_CLIENT_SECRET }}
       GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
     steps:
       - name: Install Linux build dependencies
@@ -68,9 +69,39 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      - name: Prepare application version
+        id: version
+        shell: bash
+        run: |
+          pubspec_version=$(awk '/^version:/ {sub(/\r$/, ""); print $2; exit}' pubspec.yaml)
+          if [[ ! "$pubspec_version" =~ ^.+\+([0-9]+)$ ]]; then
+            echo 'pubspec.yaml must contain a numeric build number after +.' >&2
+            exit 64
+          fi
+          build_number="${BASH_REMATCH[1]}"
+          release_version="${pubspec_version%+*}"
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            number='(0|[1-9][0-9]*)'
+            if [[ ! "$GITHUB_REF_NAME" =~ ^v$number\.$number\.$number(-rc\.$number)?$ ]]; then
+              echo 'Release tags must use vX.Y.Z or vX.Y.Z-rc.N.' >&2
+              exit 64
+            fi
+            release_version="${GITHUB_REF_NAME#v}"
+            awk -v version="$release_version+$build_number" '
+              /^version:/ {$0 = "version: " version}
+              {sub(/\r$/, ""); print}
+            ' pubspec.yaml > pubspec.yaml.tmp
+            mv pubspec.yaml.tmp pubspec.yaml
+          fi
+          echo "POMODOIST_VERSION=$release_version" >> "$GITHUB_ENV"
+          echo "version=$release_version" >> "$GITHUB_OUTPUT"
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version-file: .fvmrc
+      - name: Trust Flutter SDK in the Linux container
+        run: |
+          flutter_root="$(dirname "$(dirname "$(readlink -f "$(command -v flutter)")")")"
+          git config --global --add safe.directory "$flutter_root"
       - name: Resolve Flutter dependencies
         run: |
           for attempt in 1 2 3; do
@@ -96,23 +127,6 @@ jobs:
               exit 1
               ;;
           esac
-
-          pubspec_version=$(awk '/^version:[[:space:]]*/ {
-            sub(/^[^:]*:[[:space:]]*/, "")
-            sub(/\+.*/, "")
-            print
-            exit
-          }' pubspec.yaml)
-          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
-            release_version="${GITHUB_REF_NAME#v}"
-            test "$release_version" = "$pubspec_version" || {
-              echo "Tag $GITHUB_REF_NAME does not match pubspec version $pubspec_version." >&2
-              exit 1
-            }
-          else
-            release_version="$pubspec_version"
-          fi
-          echo "POMODOIST_VERSION=$release_version" >> "$GITHUB_ENV"
 
           jq --null-input \
             --arg turnstile "$TURNSTILE_SITE_KEY" \
@@ -223,9 +237,16 @@ jobs:
         if: github.ref_type == 'tag'
         run: |
           release_notes='Official Pomodoist desktop release. Linux is distributed as a portable x86_64 AppImage. The Windows installer is unsigned, so Microsoft Defender SmartScreen may warn about an unknown publisher.'
+          prerelease=false
+          latest=true
+          if [[ "$GITHUB_REF_NAME" == *-rc.* ]]; then
+            prerelease=true
+            latest=false
+          fi
           if ! gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
             gh release create "$GITHUB_REF_NAME" \
               --draft \
+              --prerelease="$prerelease" \
               --target "$GITHUB_SHA" \
               --title "Pomodoist $GITHUB_REF_NAME" \
               --notes "$release_notes" || \
@@ -256,4 +277,6 @@ jobs:
           gh api --method PATCH \
             "repos/$GITHUB_REPOSITORY/releases/$release_id" \
             --field draft=false \
+            --field prerelease="$prerelease" \
+            --raw-field make_latest="$latest" \
             --silent

@@ -172,13 +172,41 @@ The command builds a clean production Release and creates
 `build/windows/installer/Pomodoist-Setup.exe` plus its SHA-256 file.
 
 The installer target always performs a clean build so CMake does not reuse a
-generator from a previous Visual Studio installation. A `vX.Y.Z` tag publishes
-the unsigned Windows installer and Linux AppImage in one GitHub release. Manual
-Windows workflow runs remain separate pre-releases.
+generator from a previous Visual Studio installation. Manual Windows workflow
+runs remain separate pre-releases.
 </details>
 
 Both desktop build paths validate the production configuration before
 compiling and reject Cloudflare test keys and privileged Supabase keys.
+
+### Desktop releases
+
+Push a `vX.Y.Z` tag for a stable release, or `vX.Y.Z-rc.N` for a release
+candidate. Both workflows must be included in the tagged commit:
+
+```sh
+git tag v1.0.3-rc.1
+git push origin v1.0.3-rc.1
+```
+
+After checking the candidate, tag the commit for the stable release:
+
+```sh
+git tag v1.0.3
+git push origin v1.0.3
+```
+
+CI takes the application version from the tag and updates `pubspec.yaml` only
+inside each runner, preserving the build number after `+`. No version-edit
+commit or manual GitHub Release creation is needed. Only stable and `-rc.N`
+tags are accepted; version components cannot contain leading zeros.
+
+The release stays draft until both `Pomodoist-x86_64.AppImage` and the unsigned
+`Pomodoist-Setup.exe`, with their `.sha256` files, are uploaded. A stable tag
+becomes Latest; an RC is marked Prerelease and leaves Latest unchanged. Failed
+workflows can be rerun for the same tag to complete the existing release.
+Production variables and the Google desktop client secret are read from the
+`windows-production` GitHub environment for both platforms.
 
 <details>
 <summary>Develop the shared client packages locally</summary>

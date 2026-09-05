@@ -72,6 +72,17 @@ grep -Fq '<release version="1.0.0" date="2026-08-17"/>' "$metadata_file"
 desktop-file-validate "$desktop_file"
 appstreamcli validate --no-net "$metadata_file"
 
+POMODOIST_LINUX_BUNDLE="$bundle" \
+POMODOIST_APPDIR="$test_root/RC.AppDir" \
+POMODOIST_VERSION=1.0.3-rc.1 \
+POMODOIST_RELEASE_DATE=2026-08-17 \
+POMODOIST_GSTREAMER_PLUGIN_DIR="$plugin_dir" \
+POMODOIST_GSTREAMER_SCANNER="$scanner_dir/gst-plugin-scanner" \
+  "$script_dir/prepare_appdir.sh"
+rc_metadata="$test_root/RC.AppDir/usr/share/metainfo/com.finchforge.pomodoist.appdata.xml"
+grep -Fq '<release version="1.0.3-rc.1" date="2026-08-17"/>' "$rc_metadata"
+appstreamcli validate --no-net "$rc_metadata"
+
 for plugin in "${gstreamer_plugins[@]}"; do
   test -f "$appdir/usr/lib/gstreamer-1.0/$plugin"
 done

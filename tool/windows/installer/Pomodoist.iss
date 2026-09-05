@@ -1,6 +1,9 @@
 #ifndef AppVersion
   #error AppVersion must be provided by build.ps1
 #endif
+#ifndef AppNumericVersion
+  #error AppNumericVersion must be provided by build.ps1
+#endif
 #ifndef SourceDir
   #error SourceDir must be provided by build.ps1
 #endif
@@ -53,8 +56,10 @@ VersionInfoCompany=FinchForge LLC
 VersionInfoCopyright=Copyright (C) 2026 FinchForge LLC. Licensed under AGPL-3.0-only.
 VersionInfoDescription=Pomodoist installer
 VersionInfoProductName=Pomodoist
-VersionInfoProductVersion={#AppVersion}
-VersionInfoVersion={#AppVersion}
+VersionInfoProductVersion={#AppNumericVersion}
+VersionInfoVersion={#AppNumericVersion}
+VersionInfoProductTextVersion={#AppVersion}
+VersionInfoTextVersion={#AppVersion}
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs

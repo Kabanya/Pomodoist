@@ -51,20 +51,23 @@ foreach ($relativePath in @('pomodoist.exe', 'flutter_windows.dll', 'data')) {
     }
 }
 
+$number = '(?:0|[1-9][0-9]*)'
+$versionPattern = "$number\.$number\.$number(?:-rc\.$number)?"
 if ([string]::IsNullOrWhiteSpace($Version)) {
     $pubspecPath = Join-Path $repoRoot 'pubspec.yaml'
     $versionMatch = [regex]::Match(
         (Get-Content -Raw -LiteralPath $pubspecPath),
-        '(?m)^version:\s*(\d+\.\d+\.\d+)\+\d+\s*$'
+        "(?m)^version:[ \t]*($versionPattern)\+[0-9]+[ \t]*\r?$"
     )
     if (-not $versionMatch.Success) {
-        throw 'pubspec.yaml must contain version: X.Y.Z+N'
+        throw 'pubspec.yaml must contain version: X.Y.Z+N or X.Y.Z-rc.N+N'
     }
     $Version = $versionMatch.Groups[1].Value
 }
-if ($Version -notmatch '^\d+\.\d+\.\d+$') {
-    throw '-Version must use X.Y.Z format.'
+if ($Version -cnotmatch "^$versionPattern\z") {
+    throw '-Version must use X.Y.Z or X.Y.Z-rc.N format without leading zeros.'
 }
+$numericVersion = ($Version -split '-', 2)[0] + '.0'
 
 $outputPath = Resolve-RepositoryPath $OutputDirectory
 New-Item -ItemType Directory -Force -Path $outputPath | Out-Null
@@ -92,6 +95,7 @@ foreach ($requiredPath in @($sourcePath, $iconPath)) {
 
 $compilerArguments = @(
     "/DAppVersion=$Version",
+    "/DAppNumericVersion=$numericVersion",
     "/DSourceDir=$buildPath",
     "/DOutputDir=$outputPath",
     "/DSetupIcon=$iconPath",
