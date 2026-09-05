@@ -146,6 +146,7 @@ jobs:
       - name: Test Linux packaging contracts
         run: make test-linux-packaging
       - name: Build production AppImage
+        id: appimage
         run: |
           make linux-appimage \
             LINUX_CONFIG="$RUNNER_TEMP/linux-production.json" \
@@ -182,6 +183,7 @@ jobs:
           cold_start_log="$RUNNER_TEMP/appimage-cold-start.log"
           primary_pid=''
           cleanup() {
+            cat "$cold_start_log" "$primary_log" "$secondary_log" 2>/dev/null || true
             if [[ -n "$primary_pid" ]] && kill -0 "$primary_pid" 2>/dev/null; then
               kill "$primary_pid" 2>/dev/null || true
               wait "$primary_pid" 2>/dev/null || true
@@ -215,7 +217,6 @@ jobs:
             > "$secondary_log" 2>&1
           secondary_status=$?
           set -e
-          cat "$cold_start_log" "$primary_log" "$secondary_log"
           test "$secondary_status" -eq 0
           kill -0 "$primary_pid"
           ! grep -E 'Dart Error|Unhandled Exception|Couldn.t resolve native function|error while loading shared libraries|MissingPluginException' \
@@ -227,6 +228,7 @@ jobs:
           grep -Fq 'POMODOIST_NATIVE_LINK_HANDLED' "$primary_log"
           SMOKE
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ !cancelled() && steps.appimage.outcome == 'success' }}
         with:
           name: pomodoist-linux-appimage-x86_64
           path: |
