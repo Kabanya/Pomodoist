@@ -2067,4 +2067,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String taskActionFailedCount(int count) {
     return '有 $count 项任务无法更新';
   }
+
+  @override
+  String get voiceCollapse => '收起语音面板';
+
+  @override
+  String get voiceExpand => '展开语音面板';
+
+  @override
+  String get voiceMovePanel => '移动语音面板';
 }

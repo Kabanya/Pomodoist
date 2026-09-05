@@ -2163,4 +2163,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String taskActionFailedCount(int count) {
     return '$count Aufgaben konnten nicht aktualisiert werden';
   }
+
+  @override
+  String get voiceCollapse => 'Sprachbereich einklappen';
+
+  @override
+  String get voiceExpand => 'Sprachbereich ausklappen';
+
+  @override
+  String get voiceMovePanel => 'Sprachbereich verschieben';
 }

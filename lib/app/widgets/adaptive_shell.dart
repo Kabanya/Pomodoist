@@ -18,6 +18,7 @@ import '../../features/tasks/domain/task_models.dart';
 import '../../features/tasks/presentation/widgets/create_project_dialog.dart';
 import '../../features/tasks/presentation/widgets/project_color_picker.dart';
 import '../../features/tasks/presentation/widgets/quick_add_bar.dart';
+import '../../features/tasks/presentation/widgets/voice_panel_clearance.dart';
 import '../account_providers.dart';
 import '../app_l10n.dart';
 import '../keyboard_shortcuts.dart';
@@ -155,7 +156,8 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
             ],
           ),
         ),
-        if (wide && showMiniFocusPlayer) const MiniFocusPlayer(),
+        if (wide && showMiniFocusPlayer)
+          const VoicePanelBottomClearance(child: MiniFocusPlayer()),
       ],
     );
 
@@ -191,11 +193,13 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
           ),
         ),
         body: content,
-        bottomNavigationBar: _ShellBottomChrome(
-          selectedIndex: selected,
-          showMiniFocusPlayer: showMiniFocusPlayer,
-          onDestinationSelected: (index) =>
-              context.go(mobileDestinations[index].path),
+        bottomNavigationBar: VoicePanelBottomClearance(
+          child: _ShellBottomChrome(
+            selectedIndex: selected,
+            showMiniFocusPlayer: showMiniFocusPlayer,
+            onDestinationSelected: (index) =>
+                context.go(mobileDestinations[index].path),
+          ),
         ),
       );
     }
@@ -1432,30 +1436,165 @@ class _SidebarProjectTile extends StatelessWidget {
   }
 }
 
-class _SidebarQuickAddDialog extends StatelessWidget {
-  const _SidebarQuickAddDialog();
+class _SidebarQuickAddDialog extends StatefulWidget {
+  const _SidebarQuickAddDialog({
+    required this.onClose,
+    required this.onDisposed,
+    required this.route,
+    super.key,
+  });
+
+  final VoidCallback onClose;
+  final VoidCallback onDisposed;
+  final ModalRoute<dynamic>? route;
+
+  @override
+  State<_SidebarQuickAddDialog> createState() => _SidebarQuickAddDialogState();
+}
+
+class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
+  bool _voiceActive = false;
+  bool _disposing = false;
+  LocalHistoryEntry? _backEntry;
+  final _focus = FocusScopeNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _installBackHandler();
+    });
+  }
+
+  void _installBackHandler() {
+    if (_backEntry != null || _voiceActive || Router.maybeOf(context) != null) {
+      return;
+    }
+    final route = widget.route;
+    if (route?.navigator == null) return;
+    _backEntry = LocalHistoryEntry(
+      onRemove: () {
+        _backEntry = null;
+        if (!_disposing && !_voiceActive) widget.onClose();
+      },
+    );
+    route!.addLocalHistoryEntry(_backEntry!);
+  }
+
+  void _setVoiceActive(bool active) {
+    setState(() => _voiceActive = active);
+    if (active) {
+      _focus.unfocus();
+      final back = _backEntry;
+      _backEntry = null;
+      back?.remove();
+    } else {
+      _installBackHandler();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_voiceActive) _focus.requestFocus();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposing = true;
+    _backEntry?.remove();
+    _focus.dispose();
+    widget.onDisposed();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return ResizableDialog(
-      title: Text(l10n.addTask),
-      initialSize: const Size(560, 260),
-      minSize: const Size(320, 220),
-      content: QuickAddComposer(
-        onCompleted: () => Navigator.of(context).pop(),
-        onCancel: () => Navigator.of(context).pop(),
+    final dialog = ExcludeFocus(
+      excluding: _voiceActive,
+      child: Offstage(
+        offstage: _voiceActive,
+        child: Stack(
+          children: [
+            ModalBarrier(
+              color: Colors.black54,
+              dismissible: true,
+              onDismiss: widget.onClose,
+            ),
+            FocusScope(
+              node: _focus,
+              child: ResizableDialog(
+                title: Text(context.l10n.addTask),
+                initialSize: const Size(560, 260),
+                minSize: const Size(320, 220),
+                content: QuickAddComposer(
+                  onCompleted: widget.onClose,
+                  onCancel: widget.onClose,
+                  onVoiceSessionChanged: _setVoiceActive,
+                ),
+                actions: const [],
+              ),
+            ),
+          ],
+        ),
       ),
-      actions: const [],
+    );
+    if (Router.maybeOf(context) == null) return dialog;
+    return BackButtonListener(
+      onBackButtonPressed: () async {
+        if (_voiceActive) return false;
+        widget.onClose();
+        return true;
+      },
+      child: dialog,
     );
   }
 }
 
+final _sidebarQuickAdds =
+    Expando<
+      ({
+        OverlayEntry entry,
+        GlobalKey<_SidebarQuickAddDialogState> key,
+        Future<void> closed,
+      })
+    >();
+
 Future<void> _showSidebarQuickAddDialog(BuildContext context) {
-  return showDialog<void>(
-    context: context,
-    builder: (context) => const _SidebarQuickAddDialog(),
+  final overlay = Overlay.of(context, rootOverlay: true);
+  final existing = _sidebarQuickAdds[overlay];
+  if (existing != null) {
+    overlay.rearrange([existing.entry], below: existing.entry);
+    existing.key.currentState?._setVoiceActive(false);
+    return existing.closed;
+  }
+  final completion = Completer<void>();
+  final key = GlobalKey<_SidebarQuickAddDialogState>();
+  late final OverlayEntry entry;
+  void close({bool remove = true}) {
+    if (completion.isCompleted) return;
+    completion.complete();
+    _sidebarQuickAdds[overlay] = null;
+    if (remove) {
+      entry.remove();
+      entry.dispose();
+    }
+  }
+
+  final route = ModalRoute.of(context);
+  entry = OverlayEntry(
+    maintainState: true,
+    builder: (_) => _SidebarQuickAddDialog(
+      key: key,
+      onClose: close,
+      onDisposed: () => close(remove: false),
+      route: route,
+    ),
   );
+  _sidebarQuickAdds[overlay] = (
+    entry: entry,
+    key: key,
+    closed: completion.future,
+  );
+  overlay.insert(entry);
+  return completion.future;
 }
 
 List<_Destination> _mobileDestinations(BuildContext context) {

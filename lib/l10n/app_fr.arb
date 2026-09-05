@@ -619,5 +619,8 @@
   "taskDeleteSelectedMessage": "Vous pouvez annuler cette action pendant 7 secondes.",
   "taskCompleteSelected": "Terminer la sélection",
   "taskReopenSelected": "Rouvrir la sélection",
-  "taskActionFailedCount": "{count} tâches n’ont pas pu être modifiées"
+  "taskActionFailedCount": "{count} tâches n’ont pas pu être modifiées",
+  "voiceCollapse": "Réduire le panneau vocal",
+  "voiceExpand": "Développer le panneau vocal",
+  "voiceMovePanel": "Déplacer le panneau vocal"
 }

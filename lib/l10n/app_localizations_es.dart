@@ -2159,4 +2159,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String taskActionFailedCount(int count) {
     return 'No se pudieron actualizar $count tareas';
   }
+
+  @override
+  String get voiceCollapse => 'Contraer panel de voz';
+
+  @override
+  String get voiceExpand => 'Expandir panel de voz';
+
+  @override
+  String get voiceMovePanel => 'Mover panel de voz';
 }

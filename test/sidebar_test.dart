@@ -2,12 +2,14 @@
 
 import 'dart:convert';
 
+import 'package:app_voice/app_voice.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pomodoist/app/account_providers.dart';
 import 'package:pomodoist/app/app_language.dart';
 import 'package:pomodoist/app/app_startup_gate.dart';
 import 'package:pomodoist/app/app_theme_mode.dart';
@@ -701,6 +703,99 @@ void main() {
     await _disposeApp(tester);
   });
 
+  testWidgets('sidebar composer waits for the existing voice session', (
+    tester,
+  ) async {
+    final recognizer = _SidebarRecordedRecognizer();
+    final controller = VoiceRecognitionController(
+      recordedRecognizer: recognizer,
+      platformSupport: const VoicePlatformSupport(supportsRecordedSystem: true),
+    );
+    addTearDown(controller.dispose);
+    await _pumpWideApp(
+      tester,
+      hasAccountPro: true,
+      voiceController: controller,
+    );
+    await tester.tap(find.byTooltip('Voice quick add'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Record'));
+    await tester.pump();
+    expect(find.byKey(const Key('voice-recording-countdown')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('voice-collapse')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    await tester.tap(find.byKey(const Key('sidebar-add-task')));
+    await _pumpFrames(tester);
+    final input = find.byKey(const Key('sidebar-quick-add-input'));
+    await tester.enterText(input, 'Keep my typed task');
+    final focus = tester.widget<TextField>(input).focusNode!;
+    await tester.tap(find.byKey(const Key('sidebar-quick-add-voice')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(
+      find.byType(VoiceQuickAddHost, skipOffstage: false),
+      findsOneWidget,
+      reason:
+          'Existing recording: starts=${recognizer.startCalls}, '
+          'cancels=${recognizer.cancelCalls}',
+    );
+    expect(find.byType(VoiceQuickAddHost), findsOneWidget);
+    expect(find.byKey(const Key('voice-recording-countdown')), findsOneWidget);
+    expect(input, findsNothing);
+    expect(focus.canRequestFocus, isFalse);
+    focus.requestFocus();
+    await tester.pump();
+    expect(focus.hasFocus, isFalse);
+    expect(recognizer.startCalls, 1);
+    expect(recognizer.cancelCalls, 0);
+
+    await tester.tap(find.byKey(const Key('voice-collapse')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(input, findsNothing);
+    expect(find.byKey(const Key('voice-mini-recording')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('voice-expand')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.byTooltip('Close'));
+    await _pumpFrames(tester);
+
+    expect(find.byType(VoiceQuickAddHost), findsNothing);
+    expect(input, findsOneWidget);
+    expect(
+      tester.widget<TextField>(input).controller!.text,
+      'Keep my typed task',
+    );
+    expect(recognizer.cancelCalls, 1);
+    await _disposeApp(tester);
+  });
+
+  testWidgets('Back closes sidebar composer without leaving the page', (
+    tester,
+  ) async {
+    await _pumpWideApp(tester);
+    await tester.tap(find.byKey(const ValueKey('sidebar-destination-/inbox')));
+    await _pumpFrames(tester);
+    expect(find.byType(InboxScreen), findsOneWidget);
+    await tester.tap(find.byKey(const Key('sidebar-add-task')));
+    await _pumpFrames(tester);
+    await tester.enterText(
+      find.byKey(const Key('sidebar-quick-add-input')),
+      'Dismiss this draft',
+    );
+
+    await tester.binding.handlePopRoute();
+    await _pumpFrames(tester);
+
+    expect(find.byKey(const Key('sidebar-quick-add-input')), findsNothing);
+    expect(find.byType(InboxScreen), findsOneWidget);
+    expect(find.byType(TodayScreen), findsNothing);
+    await _disposeApp(tester);
+  });
+
   testWidgets('sidebar quick add microphone opens voice sheet', (tester) async {
     SharedPreferences.setMockInitialValues({
       onboardingCompletedPreferenceKey: true,
@@ -971,11 +1066,13 @@ class _SidebarHarness {
 Future<_SidebarHarness> _pumpWideApp(
   WidgetTester tester, {
   bool hasAccountPro = false,
+  VoiceRecognitionController? voiceController,
 }) async {
   return _pumpApp(
     tester,
     size: const Size(1200, 800),
     hasAccountPro: hasAccountPro,
+    voiceController: voiceController,
   );
 }
 
@@ -1000,6 +1097,7 @@ Future<_SidebarHarness> _pumpApp(
   FocusRunItem? activeRun,
   FocusIntervalItem? activeInterval,
   bool hasAccountPro = false,
+  VoiceRecognitionController? voiceController,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -1084,6 +1182,8 @@ Future<_SidebarHarness> _pumpApp(
         appDatabaseProvider.overrideWithValue(db),
         applePurchasesSupportedProvider.overrideWithValue(false),
         billingAccountEntitlementProvider.overrideWithValue(hasAccountPro),
+        if (voiceController != null)
+          voiceRecognitionControllerProvider.overrideWithValue(voiceController),
         currentUserProvider.overrideWith(
           (ref) => Stream.value(
             UserRow(
@@ -1161,6 +1261,25 @@ Future<_SidebarHarness> _pumpApp(
     workProjectId: workProjectId,
     archivedProjectId: archivedProjectId,
   );
+}
+
+class _SidebarRecordedRecognizer implements RecordedVoiceRecognizer {
+  int startCalls = 0;
+  int cancelCalls = 0;
+
+  @override
+  Future<void> start(VoiceRecognitionConfig config) async => startCalls++;
+
+  @override
+  Future<VoiceRecognitionTranscript> stop(
+    VoiceRecognitionConfig config,
+  ) async => const VoiceRecognitionTranscript(text: 'Buy milk');
+
+  @override
+  Future<void> cancel() async => cancelCalls++;
+
+  @override
+  void dispose() {}
 }
 
 Future<void> _pressSidebarShortcut(

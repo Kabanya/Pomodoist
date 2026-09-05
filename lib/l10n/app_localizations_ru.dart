@@ -2167,4 +2167,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String taskActionFailedCount(int count) {
     return 'Не удалось обновить задач: $count';
   }
+
+  @override
+  String get voiceCollapse => 'Свернуть голосовую панель';
+
+  @override
+  String get voiceExpand => 'Развернуть голосовую панель';
+
+  @override
+  String get voiceMovePanel => 'Переместить голосовую панель';
 }

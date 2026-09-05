@@ -2161,4 +2161,13 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get voiceCollapse => 'Collapse voice panel';
+
+  @override
+  String get voiceExpand => 'Expand voice panel';
+
+  @override
+  String get voiceMovePanel => 'Move voice panel';
 }

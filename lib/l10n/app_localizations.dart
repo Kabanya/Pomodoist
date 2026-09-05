@@ -3771,6 +3771,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 task could not be updated} other{{count} tasks could not be updated}}'**
   String taskActionFailedCount(int count);
+
+  /// No description provided for @voiceCollapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse voice panel'**
+  String get voiceCollapse;
+
+  /// No description provided for @voiceExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand voice panel'**
+  String get voiceExpand;
+
+  /// No description provided for @voiceMovePanel.
+  ///
+  /// In en, this message translates to:
+  /// **'Move voice panel'**
+  String get voiceMovePanel;
 }
 
 class _AppLocalizationsDelegate

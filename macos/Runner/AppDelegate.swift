@@ -113,8 +113,7 @@ private final class SystemSpeechHost {
   static let channelName = "pomodoist/system_speech"
 
   private let channel: FlutterMethodChannel
-  private var task: SFSpeechRecognitionTask?
-  private var pendingResult: FlutterResult?
+  private let transcriber = SystemSpeechTranscriber()
 
   init(channel: FlutterMethodChannel) {
     self.channel = channel
@@ -139,7 +138,7 @@ private final class SystemSpeechHost {
         result: result
       )
     case "cancel":
-      cancelPending()
+      transcriber.cancel()
       result(nil)
     default:
       result(FlutterMethodNotImplemented)
@@ -174,49 +173,24 @@ private final class SystemSpeechHost {
     localeIdentifier: String?,
     result: @escaping FlutterResult
   ) {
-    guard pendingResult == nil else {
-      result(error("speech_already_active", "System speech recognition is already active."))
-      return
-    }
-    guard FileManager.default.fileExists(atPath: url.path) else {
-      result(error("empty_recording", "Recorded audio file does not exist."))
-      return
-    }
     guard let recognizer = recognizer(localeIdentifier), recognizer.isAvailable else {
       result(error("speech_unavailable", "System speech recognition is currently unavailable."))
       return
     }
-
-    let request = SFSpeechURLRecognitionRequest(url: url)
-    request.shouldReportPartialResults = false
-    request.taskHint = .dictation
-    pendingResult = result
-    task = recognizer.recognitionTask(with: request) { [weak self] recognition, recognitionError in
-      DispatchQueue.main.async {
-        guard let self, self.pendingResult != nil else {
-          return
-        }
-        if let recognition, recognition.isFinal {
-          let text = recognition.bestTranscription.formattedString.trimmingCharacters(
-            in: .whitespacesAndNewlines
-          )
-          guard !text.isEmpty else {
-            self.finish(error: self.error("empty_transcript", "System speech recognition returned no text."))
-            return
-          }
-          let segments = recognition.bestTranscription.segments
-          let confidence = segments.isEmpty
-            ? nil
-            : segments.reduce(0.0) { $0 + Double($1.confidence) } / Double(segments.count)
-          self.finish(value: ["text": text, "confidence": confidence as Any])
-        } else if let recognitionError {
-          self.finish(
-            error: self.error(
-              "speech_recognition_failed",
-              recognitionError.localizedDescription
-            )
-          )
-        }
+    transcriber.transcribe(
+      url: url, locale: localeIdentifier, onDevice: recognizer.supportsOnDeviceRecognition
+    ) { outcome in
+      switch outcome {
+      case .success(let transcript):
+        var value: [String: Any] = ["text": transcript.text]
+        if let confidence = transcript.confidence { value["confidence"] = confidence }
+        result(value)
+      case .failure(let failure):
+        result(FlutterError(
+          code: (failure as? SystemSpeechError)?.code ?? "speech_recognition_failed",
+          message: failure.localizedDescription,
+          details: nil
+        ))
       }
     }
   }
@@ -226,24 +200,6 @@ private final class SystemSpeechHost {
       return SFSpeechRecognizer()
     }
     return SFSpeechRecognizer(locale: Locale(identifier: localeIdentifier))
-  }
-
-  private func cancelPending() {
-    task?.cancel()
-    if pendingResult != nil {
-      finish(error: error("speech_canceled", "System speech recognition was canceled."))
-    }
-  }
-
-  private func finish(value: Any? = nil, error: FlutterError? = nil) {
-    let result = pendingResult
-    pendingResult = nil
-    task = nil
-    if let error {
-      result?(error)
-    } else {
-      result?(value)
-    }
   }
 
   private func error(_ code: String, _ message: String) -> FlutterError {

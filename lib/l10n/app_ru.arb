@@ -619,5 +619,8 @@
   "taskDeleteSelectedMessage": "Это действие можно отменить в течение 7 секунд.",
   "taskCompleteSelected": "Выполнить выбранные",
   "taskReopenSelected": "Вернуть в открытые",
-  "taskActionFailedCount": "Не удалось обновить задач: {count}"
+  "taskActionFailedCount": "Не удалось обновить задач: {count}",
+  "voiceCollapse": "Свернуть голосовую панель",
+  "voiceExpand": "Развернуть голосовую панель",
+  "voiceMovePanel": "Переместить голосовую панель"
 }

@@ -619,5 +619,8 @@
   "taskDeleteSelectedMessage": "你可以在 7 秒内撤销此操作。",
   "taskCompleteSelected": "完成所选任务",
   "taskReopenSelected": "重新打开所选任务",
-  "taskActionFailedCount": "有 {count} 项任务无法更新"
+  "taskActionFailedCount": "有 {count} 项任务无法更新",
+  "voiceCollapse": "收起语音面板",
+  "voiceExpand": "展开语音面板",
+  "voiceMovePanel": "移动语音面板"
 }

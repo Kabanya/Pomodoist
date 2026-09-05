@@ -43,6 +43,7 @@
 		7D0000060000000000000006 /* PomodoistFocusWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 7D0000160000000000000006 /* PomodoistFocusWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7D0000070000000000000007 /* FlutterControllerResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0000100000000000000010 /* FlutterControllerResolver.swift */; };
 		7D0000080000000000000008 /* FlutterControllerResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0000100000000000000010 /* FlutterControllerResolver.swift */; };
+		B50000000000000000000001 /* SystemSpeechTranscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50000000000000000000002 /* SystemSpeechTranscriber.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -133,6 +134,7 @@
 		D185C0D94897815FD91D3D31 /* Pods-RunnerTests.debug-runnerstorekitlocal.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug-runnerstorekitlocal.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug-runnerstorekitlocal.xcconfig"; sourceTree = "<group>"; };
 		D64A082489555864E503D0F6 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		FD7EFF1335BF8EBD1C6B9A9C /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
+		B50000000000000000000002 /* SystemSpeechTranscriber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SystemSpeechTranscriber.swift; path = ../apple/SystemSpeechTranscriber.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -251,6 +253,7 @@
 			isa = PBXGroup;
 			children = (
 				7D0000110000000000000001 /* PomodoistFocusShared.swift */,
+				B50000000000000000000002 /* SystemSpeechTranscriber.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -562,6 +565,7 @@
 			files = (
 				33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */,
 				33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */,
+				B50000000000000000000001 /* SystemSpeechTranscriber.swift in Sources */,
 				7D0000070000000000000007 /* FlutterControllerResolver.swift in Sources */,
 				4C5155414448444B45594246 /* QuickAddHotKeyController.swift in Sources */,
 				A90000010000000000000001 /* AppMenuController.swift in Sources */,

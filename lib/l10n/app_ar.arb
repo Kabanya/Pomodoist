@@ -619,5 +619,8 @@
   "taskDeleteSelectedMessage": "يمكنك التراجع عن هذا الإجراء خلال 7 ثوانٍ.",
   "taskCompleteSelected": "إكمال المحددة",
   "taskReopenSelected": "إعادة فتح المحددة",
-  "taskActionFailedCount": "تعذر تحديث {count} من المهام"
+  "taskActionFailedCount": "تعذر تحديث {count} من المهام",
+  "voiceCollapse": "طي لوحة الصوت",
+  "voiceExpand": "توسيع لوحة الصوت",
+  "voiceMovePanel": "نقل لوحة الصوت"
 }

@@ -691,5 +691,8 @@
   "taskCompleteSelected": "Complete selected",
   "taskReopenSelected": "Reopen selected",
   "taskActionFailedCount": "{count, plural, =1{1 task could not be updated} other{{count} tasks could not be updated}}",
-  "@taskActionFailedCount": {"placeholders": {"count": {"type": "int"}}}
+  "@taskActionFailedCount": {"placeholders": {"count": {"type": "int"}}},
+  "voiceCollapse": "Collapse voice panel",
+  "voiceExpand": "Expand voice panel",
+  "voiceMovePanel": "Move voice panel"
 }

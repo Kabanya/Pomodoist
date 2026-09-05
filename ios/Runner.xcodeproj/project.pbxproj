@@ -35,6 +35,7 @@
 		C30000000000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C30000000000000000000011 /* PrivacyInfo.xcprivacy */; };
 		C30000000000000000000002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C30000000000000000000012 /* PrivacyInfo.xcprivacy */; };
 		C30000000000000000000003 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C30000000000000000000013 /* PrivacyInfo.xcprivacy */; };
+		B50000000000000000000001 /* SystemSpeechTranscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50000000000000000000002 /* SystemSpeechTranscriber.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -142,6 +143,7 @@
 		C30000000000000000000011 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		C30000000000000000000012 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		C30000000000000000000013 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = PomodoistFocusWidget/PrivacyInfo.xcprivacy; sourceTree = SOURCE_ROOT; };
+		B50000000000000000000002 /* SystemSpeechTranscriber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SystemSpeechTranscriber.swift; path = ../apple/SystemSpeechTranscriber.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -286,6 +288,7 @@
 			isa = PBXGroup;
 			children = (
 				B20000000000000000000002 /* PomodoistFocusShared.swift */,
+				B50000000000000000000002 /* SystemSpeechTranscriber.swift */,
 				B20000000000000000000005 /* PomodoistFocusWidget.swift */,
 				B20000000000000000000007 /* Info.plist */,
 				B20000000000000000000008 /* PomodoistFocusWidget.entitlements */,
@@ -575,6 +578,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
+				B50000000000000000000001 /* SystemSpeechTranscriber.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
 				A10000000000000000000001 /* WatchCompanionHost.swift in Sources */,

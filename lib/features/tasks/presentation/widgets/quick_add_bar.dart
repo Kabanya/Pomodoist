@@ -17,27 +17,64 @@ import '../../../onboarding/onboarding_gate.dart';
 import '../../../planning/data/task_decomposer.dart';
 import '../../domain/task_models.dart';
 import 'quick_add_text_controller.dart';
+import 'voice_panel_motion.dart';
+import 'voice_panel_clearance.dart';
 
-const _voiceSheetBorderRadius = BorderRadius.vertical(top: Radius.circular(28));
+const _voiceSheetBorderRadius = BorderRadius.all(Radius.circular(28));
 const _voiceSmartModePreferenceKey = 'voice.smartMode';
-const _voiceMaxDuration = Duration(seconds: 59);
+const _voiceMaxDuration = Duration(minutes: 5);
 const _quickAddIconTransitionDuration = Duration(milliseconds: 120);
 const _quickAddSuccessHoldDuration = Duration(milliseconds: 800);
 
-Future<List<DecomposedTaskDraft>?> showVoiceQuickAddSheet(
+final _voiceSessions = Expando<_VoiceHostSession>();
+
+class _VoiceHostSession {
+  _VoiceHostSession(this.overlay, this.route);
+
+  final OverlayState overlay;
+  final ModalRoute<dynamic>? route;
+  final key = GlobalKey<_VoiceQuickAddHostState>();
+  final result = Completer<List<String>?>();
+  late final OverlayEntry entry;
+
+  void finish(List<String>? ids, {bool remove = true}) {
+    if (result.isCompleted) return;
+    if (identical(_voiceSessions[overlay], this)) {
+      _voiceSessions[overlay] = null;
+    }
+    result.complete(ids);
+    if (remove) {
+      entry.remove();
+      entry.dispose();
+    }
+  }
+}
+
+Future<List<String>?> showVoiceQuickAddSheet(
   BuildContext context,
-  WidgetRef ref,
-) async {
+  WidgetRef ref, {
+  int? defaultPriority,
+  DateTime? defaultDate,
+  String? projectId,
+  String? kanbanStatusId,
+  ValueChanged<bool>? onExpandedChanged,
+}) async {
+  final overlay = Overlay.of(context, rootOverlay: true);
+  final existing = _voiceSessions[overlay];
+  if (existing != null) {
+    overlay.rearrange([existing.entry], below: existing.entry);
+    existing.key.currentState?._setExpanded(true);
+    await existing.result.future;
+    return null;
+  }
   var billing = ref.read(billingControllerProvider);
   if (billing.loading) {
     await ref.read(billingControllerProvider.notifier).reload();
     billing = ref.read(billingControllerProvider);
   }
-  if (!context.mounted) {
-    return null;
-  }
+  if (!context.mounted || !overlay.mounted) return null;
   if (!billing.hasActiveEntitlement) {
-    return showModalBottomSheet<List<DecomposedTaskDraft>>(
+    return showModalBottomSheet<List<String>>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -56,14 +93,31 @@ Future<List<DecomposedTaskDraft>?> showVoiceQuickAddSheet(
       ),
     );
   }
-  return showModalBottomSheet<List<DecomposedTaskDraft>>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    useRootNavigator: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => const _VoiceQuickAddSheet(),
+  // A second opener may have completed the entitlement check first.
+  final pending = _voiceSessions[overlay];
+  if (pending != null) {
+    overlay.rearrange([pending.entry], below: pending.entry);
+    pending.key.currentState?._setExpanded(true);
+    await pending.result.future;
+    return null;
+  }
+  FocusManager.instance.primaryFocus?.unfocus();
+  final session = _VoiceHostSession(overlay, ModalRoute.of(context));
+  _voiceSessions[overlay] = session;
+  session.entry = OverlayEntry(
+    maintainState: true,
+    builder: (_) => VoiceQuickAddHost._(
+      key: session.key,
+      session: session,
+      defaultPriority: defaultPriority,
+      defaultDate: defaultDate,
+      projectId: projectId,
+      kanbanStatusId: kanbanStatusId,
+      onExpandedChanged: onExpandedChanged,
+    ),
   );
+  overlay.insert(session.entry);
+  return session.result.future;
 }
 
 Future<List<String>> createVoiceQuickAddTasks(
@@ -415,12 +469,14 @@ class QuickAddComposer extends ConsumerStatefulWidget {
     required this.onCompleted,
     required this.onCancel,
     this.onVoiceModeChanged,
+    this.onVoiceSessionChanged,
     super.key,
   });
 
   final VoidCallback onCompleted;
   final VoidCallback onCancel;
   final ValueChanged<bool>? onVoiceModeChanged;
+  final ValueChanged<bool>? onVoiceSessionChanged;
 
   @override
   ConsumerState<QuickAddComposer> createState() => _QuickAddComposerState();
@@ -515,29 +571,17 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
   }
 
   Future<void> _openVoiceSheet() async {
-    widget.onVoiceModeChanged?.call(true);
-    final tasks = await showVoiceQuickAddSheet(context, ref);
-    widget.onVoiceModeChanged?.call(false);
-    if (!mounted || tasks == null || tasks.isEmpty) return;
-    setState(() => _busy = true);
-    try {
-      final created = await createVoiceQuickAddTasks(ref, tasks);
-      if (!mounted) return;
-      final messenger = ScaffoldMessenger.of(context);
-      final createdLabel = context.l10n.tasksCreated(created.length);
-      widget.onCompleted();
-      if (created.isNotEmpty) {
-        messenger.showSnackBar(SnackBar(content: Text(createdLabel)));
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.taskCreateFailed)));
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+    widget.onVoiceSessionChanged?.call(true);
+    final created = await showVoiceQuickAddSheet(
+      context,
+      ref,
+      onExpandedChanged: (expanded) {
+        if (mounted) widget.onVoiceModeChanged?.call(expanded);
+      },
+    );
+    if (!mounted) return;
+    widget.onVoiceSessionChanged?.call(false);
+    if (created != null && created.isNotEmpty) widget.onCompleted();
   }
 }
 
@@ -649,11 +693,17 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
   }
 
   Future<void> _openVoiceSheet() async {
-    final tasks = await showVoiceQuickAddSheet(context, ref);
-    if (!mounted || tasks == null || tasks.isEmpty) {
-      return;
-    }
-    await _createVoiceTasks(tasks);
+    final created = await showVoiceQuickAddSheet(
+      context,
+      ref,
+      defaultPriority: widget.defaultPriority,
+      defaultDate: widget.defaultDate,
+      projectId: widget.projectId,
+      kanbanStatusId: widget.kanbanStatusId,
+    );
+    if (!mounted || created == null || created.isEmpty) return;
+    widget.onTaskCreated?.call(created);
+    _finishCreation(true);
   }
 
   Future<void> _submit() async {
@@ -676,41 +726,6 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
       _controller.clear();
       widget.onTaskCreated?.call([task]);
       succeeded = true;
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.taskCreateFailed)));
-      }
-    } finally {
-      if (mounted) {
-        _finishCreation(succeeded);
-      }
-    }
-  }
-
-  Future<void> _createVoiceTasks(List<DecomposedTaskDraft> tasks) async {
-    if (_busy) {
-      return;
-    }
-    _beginCreation();
-    var succeeded = false;
-    try {
-      final created = await createVoiceQuickAddTasks(
-        ref,
-        tasks,
-        defaultPriority: widget.defaultPriority,
-        defaultDate: widget.defaultDate,
-        projectId: widget.projectId,
-        kanbanStatusId: widget.kanbanStatusId,
-      );
-      if (mounted && created.isNotEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(_createdLabel(created.length))));
-        widget.onTaskCreated?.call(created);
-        succeeded = true;
-      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -750,21 +765,31 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
       },
     );
   }
-
-  String _createdLabel(int count) {
-    return context.l10n.tasksCreated(count);
-  }
 }
 
-class _VoiceQuickAddSheet extends ConsumerStatefulWidget {
-  const _VoiceQuickAddSheet();
+class VoiceQuickAddHost extends ConsumerStatefulWidget {
+  const VoiceQuickAddHost._({
+    required _VoiceHostSession session,
+    this.defaultPriority,
+    this.defaultDate,
+    this.projectId,
+    this.kanbanStatusId,
+    this.onExpandedChanged,
+    super.key,
+  }) : _session = session;
+
+  final _VoiceHostSession _session;
+  final int? defaultPriority;
+  final DateTime? defaultDate;
+  final String? projectId;
+  final String? kanbanStatusId;
+  final ValueChanged<bool>? onExpandedChanged;
 
   @override
-  ConsumerState<_VoiceQuickAddSheet> createState() =>
-      _VoiceQuickAddSheetState();
+  ConsumerState<VoiceQuickAddHost> createState() => _VoiceQuickAddHostState();
 }
 
-class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
+class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
     with TickerProviderStateMixin {
   late final VoiceRecognitionController _voiceController;
   late final AnimationController _pulseController;
@@ -776,6 +801,10 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
   String _transcript = '';
   String? _error;
   bool _analyzing = false;
+  bool _expanded = true;
+  bool _saving = false;
+  bool _stopping = false;
+  LocalHistoryEntry? _backEntry;
   bool _captureActive = false;
   bool _smartMode = false;
   bool _smartModeChanged = false;
@@ -790,7 +819,11 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
   bool get _isTranscribing => _status == VoiceRecognitionStatus.transcribing;
 
   bool get _canStart =>
-      !_captureActive && !_isCapturing && !_isTranscribing && !_analyzing;
+      !_captureActive &&
+      !_isCapturing &&
+      !_isTranscribing &&
+      !_analyzing &&
+      !_saving;
 
   bool get _motionActive =>
       _captureActive || _isCapturing || _isTranscribing || _analyzing;
@@ -848,10 +881,30 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
     );
     _analysisProgressController = AnimationController(vsync: this);
     unawaited(_loadSmartMode());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.onExpandedChanged?.call(true);
+      _installBackHandler();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncPulse();
   }
 
   @override
   void dispose() {
+    _expanded = false;
+    final back = _backEntry;
+    _backEntry = null;
+    back?.remove();
+    widget._session.finish(null, remove: false);
+    // The opener may have been disposed along with its route.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onExpandedChanged?.call(false);
+    });
     _subscription?.cancel();
     _amplitudeSubscription?.cancel();
     _recordingTimer?.cancel();
@@ -866,8 +919,196 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
     super.dispose();
   }
 
+  void _installBackHandler() {
+    if (_backEntry != null || !_expanded) return;
+    if (Router.maybeOf(context) != null) return;
+    final route = widget._session.route;
+    if (route?.navigator == null) return;
+    final entry = LocalHistoryEntry(
+      onRemove: () {
+        _backEntry = null;
+        if (mounted && _expanded) _setExpanded(false);
+      },
+    );
+    _backEntry = entry;
+    route!.addLocalHistoryEntry(entry);
+  }
+
+  void _setExpanded(bool expanded) {
+    if (_expanded == expanded) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => _expanded = expanded);
+    if (expanded) {
+      _installBackHandler();
+    } else {
+      final back = _backEntry;
+      _backEntry = null;
+      back?.remove();
+    }
+    widget.onExpandedChanged?.call(expanded);
+  }
+
+  Future<void> _save() async {
+    if (_saving || !_canStart || _acceptedTasks.isEmpty) return;
+    setState(() => _saving = true);
+    try {
+      final created = await ref
+          .read(appDatabaseProvider)
+          .transaction(
+            () => createVoiceQuickAddTasks(
+              ref,
+              _acceptedTasks,
+              defaultPriority: widget.defaultPriority,
+              defaultDate: widget.defaultDate,
+              projectId: widget.projectId,
+              kanbanStatusId: widget.kanbanStatusId,
+            ),
+          );
+      if (!mounted) return;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(content: Text(context.l10n.tasksCreated(created.length))),
+      );
+      widget._session.finish(created);
+    } catch (_) {
+      if (mounted) setState(() => _error = context.l10n.taskCreateFailed);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final processing = _isTranscribing || _analyzing || _saving;
+    final recording = _status == VoiceRecognitionStatus.recording;
+    final failed =
+        _error != null ||
+        _status == VoiceRecognitionStatus.error ||
+        _status == VoiceRecognitionStatus.unsupportedPlatform;
+    final ready = !processing && !recording && _draftControllers.isNotEmpty;
+    final state = failed
+        ? 'error'
+        : processing
+        ? 'processing'
+        : recording
+        ? 'recording'
+        : ready
+        ? 'ready'
+        : 'idle';
+    final color = failed
+        ? colors.error
+        : ready
+        ? context.appColors.success
+        : colors.primary;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final panel = ValueListenableBuilder<double>(
+      valueListenable: voicePanelBottomClearanceOf(context),
+      builder: (context, bottom, _) => VoicePanelMotion(
+        reservedInsets: EdgeInsets.only(bottom: bottom),
+        expanded: _expanded,
+        onCollapse: () => _setExpanded(false),
+        onExpand: () => _setExpanded(true),
+        panel: _expandedPanel(context),
+        indicator: Semantics(
+          liveRegion: true,
+          label: failed ? context.l10n.voiceStatusError : _statusLabel(context),
+          child: ExcludeSemantics(
+            child: SizedBox.square(
+              key: Key('voice-mini-$state'),
+              dimension: 48,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: color.withValues(alpha: .08),
+                        border: Border.all(color: color.withValues(alpha: .18)),
+                      ),
+                    ),
+                  ),
+                  if (processing)
+                    Positioned.fill(
+                      child: CircularProgressIndicator(
+                        value: reduceMotion ? .75 : null,
+                        strokeWidth: 2,
+                        color: color,
+                      ),
+                    ),
+                  if (recording)
+                    Positioned.fill(
+                      child: CircularProgressIndicator(
+                        value:
+                            _recordingSecondsRemaining /
+                            _voiceMaxDuration.inSeconds,
+                        strokeWidth: 2,
+                        color: color,
+                      ),
+                    ),
+                  if (recording && !failed)
+                    _VoiceAmplitudeBars(level: _amplitudeLevel)
+                  else
+                    Icon(
+                      failed
+                          ? Icons.error_outline
+                          : ready
+                          ? Icons.check
+                          : processing
+                          ? Icons.graphic_eq
+                          : Icons.mic_none,
+                      color: color,
+                      size: 22,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        stopButton: IconButton(
+          key: const Key('voice-mini-stop'),
+          tooltip: context.l10n.voiceStop,
+          onPressed: _captureActive && _isCapturing && !_stopping
+              ? _stop
+              : null,
+          icon: const Icon(Icons.stop_rounded),
+          color: colors.primary,
+          constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+        ),
+        expandButton: IconButton(
+          key: const Key('voice-expand'),
+          tooltip: context.l10n.voiceExpand,
+          onPressed: () => _setExpanded(true),
+          icon: const Icon(Icons.keyboard_arrow_up),
+          constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+        ),
+      ),
+    );
+    if (Router.maybeOf(context) == null) return panel;
+    return BackButtonListener(
+      onBackButtonPressed: () async {
+        if (!_expanded) return false;
+        _setExpanded(false);
+        return true;
+      },
+      child: panel,
+    );
+  }
+
+  Widget _expandedPanel(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: math.max(380, constraints.maxHeight),
+          ),
+          child: _expandedPanelContent(context),
+        ),
+      ),
+    );
+  }
+
+  Widget _expandedPanelContent(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final acceptedTasks = _acceptedTasks;
@@ -881,15 +1122,10 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 16,
-          bottom: MediaQuery.viewInsetsOf(context).bottom + 20,
-        ),
+        padding: EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 20),
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(context).height * .86,
+            maxHeight: math.max(380, MediaQuery.sizeOf(context).height * .86),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -900,7 +1136,9 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
                 children: [
                   _VoicePulse(
                     animation: _pulseController,
-                    active: _motionActive,
+                    active:
+                        _motionActive &&
+                        !MediaQuery.disableAnimationsOf(context),
                     listeningLevel: _status == VoiceRecognitionStatus.recording
                         ? _amplitudeLevel
                         : null,
@@ -928,8 +1166,16 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
                     ),
                   ),
                   IconButton(
+                    key: const Key('voice-collapse'),
+                    tooltip: l10n.voiceCollapse,
+                    onPressed: () => _setExpanded(false),
+                    icon: const Icon(Icons.keyboard_arrow_down),
+                  ),
+                  IconButton(
                     tooltip: l10n.commonClose,
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: _saving
+                        ? null
+                        : () => widget._session.finish(null),
                     icon: const Icon(Icons.close),
                   ),
                 ],
@@ -993,7 +1239,9 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
                     ),
                   ),
                   OutlinedButton.icon(
-                    onPressed: _captureActive && _isCapturing ? _stop : null,
+                    onPressed: _captureActive && _isCapturing && !_stopping
+                        ? _stop
+                        : null,
                     icon: const Icon(Icons.stop),
                     label: Text(l10n.voiceStop),
                   ),
@@ -1009,13 +1257,14 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
                     ),
                   FilledButton.icon(
                     onPressed:
-                        acceptedTaskCount == 0 ||
+                        _saving ||
+                            acceptedTaskCount == 0 ||
                             _captureActive ||
                             _isCapturing ||
                             _isTranscribing ||
                             _analyzing
                         ? null
-                        : () => Navigator.of(context).pop(acceptedTasks),
+                        : _save,
                     icon: const Icon(Icons.check),
                     label: Text(l10n.voiceAddCount(acceptedTaskCount)),
                   ),
@@ -1209,7 +1458,15 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
   }
 
   Future<void> _stop() async {
-    await _voiceController.stop();
+    if (_stopping) return;
+    setState(() => _stopping = true);
+    try {
+      await _voiceController.stop();
+    } catch (_) {
+      if (mounted) _setSheetState(() => _error = context.l10n.voiceStatusError);
+    } finally {
+      if (mounted) setState(() => _stopping = false);
+    }
   }
 
   void _handleEvent(VoiceRecognitionEvent event) {
@@ -1305,6 +1562,10 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
   }
 
   void _startAnalysisProgress() {
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _analysisProgressController.value = .08;
+      return;
+    }
     _analysisProgressController
       ..stop()
       ..value = .08;
@@ -1318,6 +1579,10 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
   }
 
   Future<void> _finishAnalysisProgress() async {
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _analysisProgressController.value = 1;
+      return;
+    }
     try {
       await _analysisProgressController
           .animateTo(
@@ -1366,7 +1631,7 @@ class _VoiceQuickAddSheetState extends ConsumerState<_VoiceQuickAddSheet>
   }
 
   void _syncPulse() {
-    if (_motionActive) {
+    if (_motionActive && !MediaQuery.disableAnimationsOf(context)) {
       if (!_pulseController.isAnimating) {
         _pulseController.repeat(reverse: true);
       }

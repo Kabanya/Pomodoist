@@ -619,5 +619,8 @@
   "taskDeleteSelectedMessage": "Du kannst diese Aktion 7 Sekunden lang rückgängig machen.",
   "taskCompleteSelected": "Ausgewählte erledigen",
   "taskReopenSelected": "Ausgewählte wieder öffnen",
-  "taskActionFailedCount": "{count} Aufgaben konnten nicht aktualisiert werden"
+  "taskActionFailedCount": "{count} Aufgaben konnten nicht aktualisiert werden",
+  "voiceCollapse": "Sprachbereich einklappen",
+  "voiceExpand": "Sprachbereich ausklappen",
+  "voiceMovePanel": "Sprachbereich verschieben"
 }

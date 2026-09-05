@@ -2162,4 +2162,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String taskActionFailedCount(int count) {
     return '$count tâches n’ont pas pu être modifiées';
   }
+
+  @override
+  String get voiceCollapse => 'Réduire le panneau vocal';
+
+  @override
+  String get voiceExpand => 'Développer le panneau vocal';
+
+  @override
+  String get voiceMovePanel => 'Déplacer le panneau vocal';
 }

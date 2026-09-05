@@ -619,5 +619,8 @@
   "taskDeleteSelectedMessage": "Puedes deshacer esta acción durante 7 segundos.",
   "taskCompleteSelected": "Completar seleccionadas",
   "taskReopenSelected": "Reabrir seleccionadas",
-  "taskActionFailedCount": "No se pudieron actualizar {count} tareas"
+  "taskActionFailedCount": "No se pudieron actualizar {count} tareas",
+  "voiceCollapse": "Contraer panel de voz",
+  "voiceExpand": "Expandir panel de voz",
+  "voiceMovePanel": "Mover panel de voz"
 }

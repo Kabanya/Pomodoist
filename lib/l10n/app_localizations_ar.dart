@@ -2139,4 +2139,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String taskActionFailedCount(int count) {
     return 'تعذر تحديث $count من المهام';
   }
+
+  @override
+  String get voiceCollapse => 'طي لوحة الصوت';
+
+  @override
+  String get voiceExpand => 'توسيع لوحة الصوت';
+
+  @override
+  String get voiceMovePanel => 'نقل لوحة الصوت';
 }
