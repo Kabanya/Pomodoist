@@ -1,9 +1,9 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-
 import { createClient } from "npm:@supabase/supabase-js@2";
-
 import { handlePomodoistTelegram } from "./pomodoist_telegram.ts";
 import { createTelegramStore } from "./store.ts";
+import * as telegramRuntime from "../pomodoist-watch/pomodoist_watch.ts";
+import { createTelegramApi, handleTelegramWebhook } from "./bot.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
 const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -14,12 +14,14 @@ const webAppUrl = Deno.env.get("POMODOIST_WEB_URL") ??
     : "https://app-test.pomodoist.com");
 const admin = createClient(supabaseUrl, serviceRoleKey, {
   auth: { persistSession: false, autoRefreshToken: false },
+  global: { fetch: (input, init) => fetch(input, { ...init, signal: init?.signal ?? AbortSignal.timeout(10000) }) },
 });
-
-Deno.serve((request) =>
-  handlePomodoistTelegram(request, {
-    botToken,
-    allowedOrigin: webAppUrl,
-    store: createTelegramStore(admin, webAppUrl),
+const store = createTelegramStore(admin, webAppUrl, telegramRuntime);
+const call = createTelegramApi(botToken);
+Deno.serve(request => new URL(request.url).pathname.endsWith("/webhook")
+  ? handleTelegramWebhook(request, {
+    secret: Deno.env.get("POMODOIST_TELEGRAM_WEBHOOK_SECRET") ?? "",
+    timeZone: Deno.env.get("POMODOIST_TELEGRAM_TIME_ZONE") ?? "UTC",
+    botToken, webAppUrl, store, call,
   })
-);
+  : handlePomodoistTelegram(request, { botToken, allowedOrigin: webAppUrl, store }));

@@ -1,0 +1,7 @@
+# Opt-in overlay; the base stack and its existing deployments remain unchanged.
+# Run from server/: docker compose -f compose.yaml -f compose.telegram.yaml up -d functions
+services:
+  functions:
+    environment:
+      POMODOIST_TELEGRAM_WEBHOOK_SECRET: ${POMODOIST_TELEGRAM_WEBHOOK_SECRET:?set a random webhook secret first}
+      POMODOIST_TELEGRAM_TIME_ZONE: ${POMODOIST_TELEGRAM_TIME_ZONE:-UTC}
