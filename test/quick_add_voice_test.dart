@@ -48,8 +48,17 @@ void main() {
     'account bootstrap changes do not recreate the voice controller',
     () async {
       const recordChannel = MethodChannel('com.llfbandit.record/messages');
+      final recorderDisposed = Completer<void>();
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(recordChannel, (_) async => null);
+          .setMockMethodCallHandler(recordChannel, (call) async {
+            if (call.method == 'create') {
+              // Native recorder creation can outlive the provider's test body.
+              await Future<void>.delayed(const Duration(milliseconds: 50));
+            } else if (call.method == 'dispose') {
+              recorderDisposed.complete();
+            }
+            return null;
+          });
       final container = ProviderContainer(
         overrides: [accountClientProvider.overrideWithValue(null)],
       );
@@ -69,7 +78,7 @@ void main() {
         );
       } finally {
         container.dispose();
-        await pumpEventQueue();
+        await recorderDisposed.future;
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockMethodCallHandler(recordChannel, null);
       }

@@ -29,7 +29,7 @@ services:
 
   auth:
     container_name: pomodoist-selfhost-auth
-    image: public.ecr.aws/supabase/gotrue:v2.195.0
+    image: docker.io/supabase/gotrue:v2.195.0@sha256:362659ca70eaa75ba05bbaf963caa84c1c5afe5e8fbf0777e17b830dd5f0f60a
     restart: unless-stopped
     depends_on:
       db:
@@ -80,7 +80,7 @@ services:
 
   rest:
     container_name: pomodoist-selfhost-rest
-    image: public.ecr.aws/supabase/postgrest:v14.12
+    image: docker.io/postgrest/postgrest:v14.12@sha256:54000f24847d01a2c2302e0041cf0618b875c57fb48507d743cfa9aaa50bf43c
     restart: unless-stopped
     depends_on:
       migrate:
@@ -105,7 +105,7 @@ services:
 
   realtime:
     container_name: pomodoist-selfhost-realtime
-    image: public.ecr.aws/supabase/realtime:v2.112.6
+    image: docker.io/supabase/realtime:v2.112.6@sha256:7b56da34216fd568042be043900d15cdd33c2c48c2116c9a333f9465255da80d
     restart: unless-stopped
     depends_on:
       db:
@@ -139,7 +139,7 @@ services:
 
   migrate:
     container_name: pomodoist-selfhost-migrate
-    image: public.ecr.aws/supabase/postgres:17.6.1.127
+    image: docker.io/supabase/postgres:17.6.1.127@sha256:be60aee15997daca475b710b734bc6bfe52cd544dcd7e9fd2ff58210b6747d83
     restart: "no"
     depends_on:
       auth:
