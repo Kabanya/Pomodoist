@@ -90,7 +90,7 @@ refresh_output=$(PATH="$fixture/bin:$PATH" sh "$fixture_server/scripts/refresh-r
 [ "$(sed -n 's/^POMODOIST_RELEASE=//p' "$fixture_server/.env")" = "$expected_release" ]
 sed '/^POMODOIST_RELEASE=/d' "$fixture_server/.env" > "$fixture/env-after-release-refresh"
 cmp -s "$fixture/env-before-release-refresh" "$fixture/env-after-release-refresh"
-mode=$(stat -f %Lp "$fixture_server/.env" 2>/dev/null || stat -c %a "$fixture_server/.env")
+mode=$(stat -c %a "$fixture_server/.env" 2>/dev/null || stat -f %Lp "$fixture_server/.env")
 [ "$mode" = 600 ]
 rm -f "$fixture_repository/.git"
 awk -v release="$archive_release" '
