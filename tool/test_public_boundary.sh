@@ -9,6 +9,9 @@ fail() {
   exit 1
 }
 
+! grep -Eq '^[[:space:]]+source: path$' pubspec.lock ||
+  fail 'pubspec.lock contains local path dependencies; disable local overrides and run flutter pub get before committing'
+
 version=$(awk '
   $0 == "  app_account:" { found = 1; next }
   found && $1 == "ref:" { print $2; exit }

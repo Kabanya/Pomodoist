@@ -84,7 +84,12 @@ void main() {
   }
 
   test('tag publication waits for both platforms and preserves RC status', () {
-    for (final tag in ['v1.0.3', 'v1.0.3-rc.1']) {
+    for (final (tag, linuxFirst) in [
+      ('v1.0.3', true),
+      ('v1.0.3-rc.1', true),
+      ('v1.0.3', false),
+      ('v1.0.3-rc.1', false),
+    ]) {
       final temp = Directory.systemTemp.createTempSync('desktop-publish-');
       try {
         final scripts = <String>[];
@@ -105,6 +110,7 @@ void main() {
           );
           scripts.add(step['run'] as String);
         }
+        if (!linuxFirst) scripts.setAll(0, scripts.reversed.toList());
         final environment = {
           'GITHUB_REF_NAME': tag,
           'GITHUB_REPOSITORY': 'example/pomodoist',
@@ -113,7 +119,7 @@ void main() {
         };
         final first = _bash('$_fakeGh\n${scripts[0]}', temp, {
           ...environment,
-          'LEGACY_GH': 'true',
+          'LEGACY_GH': linuxFirst ? 'true' : 'false',
         });
         expect(first.exitCode, 0, reason: '${first.stderr}');
         final log = File('${temp.path}/gh.log');
@@ -121,7 +127,10 @@ void main() {
         final prerelease = tag.contains('-rc.');
         expect(
           log.readAsStringSync(),
-          contains('--field prerelease=$prerelease'),
+          anyOf(
+            contains('--field prerelease=$prerelease'),
+            contains('--prerelease=$prerelease'),
+          ),
         );
         final second = _bash('$_fakeGh\n${scripts[1]}', temp, environment);
         expect(second.exitCode, 0, reason: '${second.stderr}');
@@ -134,15 +143,21 @@ void main() {
         expect(publication, contains('--raw-field tag_name=$tag'));
         final retry = _bash('$_fakeGh\n${scripts[0]}', temp, {
           ...environment,
-          'LEGACY_GH': 'true',
+          'LEGACY_GH': linuxFirst ? 'true' : 'false',
         });
         expect(retry.exitCode, 0, reason: '${retry.stderr}');
         expect(
           log.readAsLinesSync().where(
-            (line) => line.startsWith(
-              'api --method POST repos/example/pomodoist/releases ',
-            ),
+            (line) =>
+                line.startsWith('release create ') ||
+                line.startsWith(
+                  'api --method POST repos/example/pomodoist/releases ',
+                ),
           ),
+          hasLength(1),
+        );
+        expect(
+          log.readAsLinesSync().where((line) => line == 'generate-notes'),
           hasLength(1),
         );
         expect(File('${temp.path}/assets').readAsLinesSync().toSet(), {
@@ -358,7 +373,7 @@ void main() {
 
     final publish = jobs['publish'] as YamlMap;
     expect(publish['needs'], 'build-test');
-    expect(publish.containsKey('environment'), isFalse);
+    expect(publish['environment'], 'windows-production');
     expect((publish['permissions'] as YamlMap)['contents'], 'write');
   });
 
@@ -395,8 +410,12 @@ ProcessResult _bash(
   },
 );
 
-// Replace only the GitHub network boundary; execute the real workflow scripts.
+// Execute the real publication scripts; generation is tested in Python.
 const _fakeGh = r'''
+python3() {
+  echo generate-notes >> gh.log
+  echo 'Generated release notes'
+}
 gh() {
   [[ "$GH_REPO" == example/pomodoist ]] || return 128
   printf '%s\n' "$*" >> gh.log

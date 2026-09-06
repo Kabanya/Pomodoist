@@ -21,5 +21,6 @@ jobs:
       - run: sh tool/test_public_boundary.sh
       - run: make test-linux-packaging
       - run: flutter pub get --enforce-lockfile
+      - run: python3 -m unittest discover -s tool -p test_release_notes.py
       - run: flutter analyze
       - run: flutter test

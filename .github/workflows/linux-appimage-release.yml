@@ -60,6 +60,7 @@ jobs:
             ninja-build \
             openjdk-17-jdk \
             pkg-config \
+            python3 \
             unzip \
             xz-utils
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -160,6 +161,8 @@ jobs:
           retention-days: 14
       - name: Upload AppImage and publish complete desktop release
         if: github.ref_type == 'tag'
+        env:
+          RELEASE_NOTES_API_KEY: ${{ secrets.RELEASE_NOTES_API_KEY }}
         run: |
           release_notes='Official Pomodoist desktop release. Linux is distributed as a portable x86_64 AppImage. The Windows installer is unsigned, so Microsoft Defender SmartScreen may warn about an unknown publisher.'
           prerelease=false
@@ -172,6 +175,9 @@ jobs:
             "repos/$GITHUB_REPOSITORY/releases" \
             --jq ".[] | select(.tag_name == \"$GITHUB_REF_NAME\") | .id")
           if [[ -z "$release_id" ]]; then
+            if generated_notes=$(python3 tool/release_notes.py); then
+              release_notes="$generated_notes"
+            fi
             release_id=$(gh api --method POST "repos/$GITHUB_REPOSITORY/releases" \
               --raw-field tag_name="$GITHUB_REF_NAME" \
               --field draft=true \

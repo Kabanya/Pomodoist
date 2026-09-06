@@ -175,6 +175,7 @@ jobs:
 
   publish:
     name: Publish Windows EXE
+    environment: windows-production
     needs: build-test
     runs-on: ubuntu-latest
     permissions:
@@ -182,6 +183,10 @@ jobs:
     env:
       GH_REPO: ${{ github.repository }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: github.ref_type == 'tag'
+        with:
+          fetch-depth: 0
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: pomodoist-windows-exe
@@ -190,6 +195,7 @@ jobs:
         if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_NOTES_API_KEY: ${{ secrets.RELEASE_NOTES_API_KEY }}
         run: |
           release_notes='Official Pomodoist desktop release. Linux is distributed as a portable x86_64 AppImage. The Windows installer is unsigned, so Microsoft Defender SmartScreen may warn about an unknown publisher.'
           prerelease=false
@@ -199,6 +205,9 @@ jobs:
             latest=false
           fi
           if ! gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            if generated_notes=$(python3 tool/release_notes.py); then
+              release_notes="$generated_notes"
+            fi
             gh release create "$GITHUB_REF_NAME" \
               --draft \
               --prerelease="$prerelease" \
