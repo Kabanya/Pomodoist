@@ -1,0 +1,9 @@
+Supabase self-hosting templates
+Copyright 2024 Supabase
+Source: https://github.com/supabase/supabase/tree/master/docker
+Licensed under the Apache License, Version 2.0; see LICENSE.supabase.
+
+The gateway configuration, database initialization snippets, and Edge Runtime
+router in this directory are adapted from Supabase self-hosting templates.
+Modified by FinchForge LLC in 2026 for the independent Pomodoist services,
+endpoint routing, and configuration.

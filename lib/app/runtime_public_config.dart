@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum RuntimeEnvironment { local, staging, production }
+enum RuntimeEnvironment { local, selfhosted, staging, production }
 
 const _productionSupabaseUrl = 'https://ewauihswbwduvklrozke.supabase.co';
 const _productionSupabasePublishableKey =
@@ -35,6 +35,9 @@ class RuntimePublicConfig {
   final String supabaseAnonKey;
   final String turnstileSiteKey;
   final Uri? sentryDsn;
+
+  bool get selfHostedFeaturesUnlocked =>
+      environment == RuntimeEnvironment.selfhosted;
 
   factory RuntimePublicConfig.fromRuntimeJson(Map<String, Object?> json) {
     final actualFields = json.keys.toSet();
@@ -92,7 +95,10 @@ class RuntimePublicConfig {
     bool nativeRelease = false,
   }) {
     final useSupabaseFallback =
-        nativeRelease && supabaseUrl.isEmpty && supabaseAnonKey.isEmpty;
+        nativeRelease &&
+        environment == 'production' &&
+        supabaseUrl.isEmpty &&
+        supabaseAnonKey.isEmpty;
     return RuntimePublicConfig._validated(
       environment: environment,
       release: release,
@@ -119,11 +125,13 @@ class RuntimePublicConfig {
   }) {
     final parsedEnvironment = switch (environment) {
       'local' when allowLocal => RuntimeEnvironment.local,
+      'selfhosted' => RuntimeEnvironment.selfhosted,
       'staging' => RuntimeEnvironment.staging,
       'production' => RuntimeEnvironment.production,
       _ => throw FormatException('Unexpected environment: $environment'),
     };
     final remote = parsedEnvironment != RuntimeEnvironment.local;
+    final selfHosted = parsedEnvironment == RuntimeEnvironment.selfhosted;
     if (remote && !RegExp(r'^[0-9a-f]{40}$').hasMatch(release)) {
       throw const FormatException('release must be a full Git commit SHA');
     }
@@ -135,18 +143,22 @@ class RuntimePublicConfig {
       webAppUrl,
       field: 'webAppUrl',
       httpsRequired: remote,
+      allowLoopbackHttp: selfHosted,
+      originOnly: selfHosted,
       required: true,
     )!;
     final parsedSupabaseUrl = _uri(
       supabaseUrl,
       field: 'supabaseUrl',
       httpsRequired: remote,
+      allowLoopbackHttp: selfHosted,
+      originOnly: selfHosted,
       required: remote,
     );
     if (remote && supabaseAnonKey.isEmpty) {
       throw const FormatException('supabaseAnonKey is required');
     }
-    if (remote && turnstileSiteKey.isEmpty) {
+    if (remote && !selfHosted && turnstileSiteKey.isEmpty) {
       throw const FormatException('turnstileSiteKey is required');
     }
     if (!remote && (parsedSupabaseUrl == null) != supabaseAnonKey.isEmpty) {
@@ -154,7 +166,7 @@ class RuntimePublicConfig {
         'Local supabaseUrl and supabaseAnonKey must be configured together',
       );
     }
-    final parsedSentryDsn = _sentryDsn(sentryDsn);
+    final parsedSentryDsn = _sentryDsn(sentryDsn, allowSelfHosted: selfHosted);
 
     _validateEnvironmentDomains(
       environment: parsedEnvironment,
@@ -204,6 +216,8 @@ Uri? _uri(
   String value, {
   required String field,
   required bool httpsRequired,
+  bool allowLoopbackHttp = false,
+  bool originOnly = false,
   required bool required,
 }) {
   if (value.isEmpty) {
@@ -214,7 +228,13 @@ Uri? _uri(
   if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
     throw FormatException('$field must be an absolute URL');
   }
-  if (httpsRequired && uri.scheme != 'https') {
+  if (originOnly &&
+      (uri.userInfo.isNotEmpty || uri.hasQuery || uri.hasFragment)) {
+    throw FormatException('$field must be a safe origin URL');
+  }
+  if (httpsRequired &&
+      uri.scheme != 'https' &&
+      !(allowLoopbackHttp && uri.scheme == 'http' && _isLoopback(uri.host))) {
     throw FormatException('$field must use HTTPS');
   }
   if (!httpsRequired && uri.scheme != 'https' && uri.scheme != 'http') {
@@ -223,24 +243,35 @@ Uri? _uri(
   return uri;
 }
 
-Uri? _sentryDsn(String value) {
+Uri? _sentryDsn(String value, {required bool allowSelfHosted}) {
   if (value.isEmpty) return null;
   final uri = Uri.tryParse(value);
   final publicKey = uri?.userInfo ?? '';
   final projectSegments = uri?.pathSegments ?? const <String>[];
-  if (uri == null ||
-      uri.scheme != 'https' ||
-      uri.hasPort ||
+  final allowedEndpoint =
+      uri != null &&
+      (uri.scheme == 'https' ||
+          allowSelfHosted && uri.scheme == 'http' && _isLoopback(uri.host));
+  final validProjectPath = allowSelfHosted
+      ? projectSegments.isNotEmpty &&
+            RegExp(r'^[0-9]+$').hasMatch(projectSegments.last)
+      : projectSegments.length == 1 &&
+            RegExp(r'^[0-9]+$').hasMatch(projectSegments.single);
+  if (!allowedEndpoint ||
+      !allowSelfHosted && uri.hasPort ||
       !RegExp(r'^[A-Za-z0-9]+$').hasMatch(publicKey) ||
-      !RegExp(r'^o[0-9]+\.ingest\.sentry\.io$').hasMatch(uri.host) ||
-      projectSegments.length != 1 ||
-      !RegExp(r'^[0-9]+$').hasMatch(projectSegments.single) ||
+      !allowSelfHosted &&
+          !RegExp(r'^o[0-9]+\.ingest\.sentry\.io$').hasMatch(uri.host) ||
+      !validProjectPath ||
       uri.hasQuery ||
       uri.hasFragment) {
     throw const FormatException('sentryDsn must be a public Sentry Cloud DSN');
   }
   return uri;
 }
+
+bool _isLoopback(String host) =>
+    host == 'localhost' || host == '127.0.0.1' || host == '::1';
 
 void _validateEnvironmentDomains({
   required RuntimeEnvironment environment,
@@ -249,6 +280,7 @@ void _validateEnvironmentDomains({
 }) {
   switch (environment) {
     case RuntimeEnvironment.local:
+    case RuntimeEnvironment.selfhosted:
       return;
     case RuntimeEnvironment.staging:
       if (!const {'app-test.pomodoist.com'}.contains(webAppUrl.host) ||

@@ -1,0 +1,268 @@
+name: pomodoist-selfhost
+
+services:
+  db:
+    container_name: pomodoist-selfhost-db
+    build:
+      context: .
+      dockerfile: docker/db/Dockerfile
+    restart: unless-stopped
+    volumes:
+      - pomodoist-selfhost-db:/var/lib/postgresql/data
+      - pomodoist-selfhost-db-config:/etc/postgresql-custom
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h localhost && psql -U postgres -h localhost -d postgres -Atqc \"select 1 from pg_roles where rolname = 'supabase_auth_admin' and rolpassword is not null\" | grep -qx 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: ${POSTGRES_PASSWORD:?run make setup first}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run make setup first}
+      POSTGRES_DB: postgres
+      PGDATABASE: postgres
+      JWT_SECRET: ${JWT_SECRET:?run make setup first}
+      JWT_EXP: ${JWT_EXPIRY:-3600}
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf", "-c", "log_min_messages=warning"]
+
+  auth:
+    container_name: pomodoist-selfhost-auth
+    image: public.ecr.aws/supabase/gotrue:v2.195.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL:?API_EXTERNAL_URL is required}
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD:?run make setup first}@db:5432/postgres
+      GOTRUE_SITE_URL: ${SITE_URL:?SITE_URL is required}
+      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:?ADDITIONAL_REDIRECT_URLS is required}
+      GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: ${JWT_EXPIRY:-3600}
+      GOTRUE_JWT_SECRET: ${JWT_SECRET:?run make setup first}
+      GOTRUE_JWT_KEYS: ${JWT_KEYS:?run make setup first}
+      GOTRUE_JWT_ISSUER: ${API_EXTERNAL_URL:?API_EXTERNAL_URL is required}
+      GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_ENABLED: "true"
+      GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_URI: pg-functions://postgres/private/pomodoist_mcp_access_token_hook
+      GOTRUE_OAUTH_SERVER_ENABLED: "true"
+      GOTRUE_OAUTH_SERVER_ALLOW_DYNAMIC_REGISTRATION: "true"
+      GOTRUE_OAUTH_SERVER_AUTHORIZATION_PATH: /oauth/consent
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: ${ENABLE_EMAIL_SIGNUP:-true}
+      GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM:-true}
+      GOTRUE_EXTERNAL_GOOGLE_ENABLED: ${GOOGLE_AUTH_ENABLED:-false}
+      GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOOGLE_AUTH_CLIENT_ID:-}
+      GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOOGLE_AUTH_CLIENT_SECRET:-}
+      GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${API_EXTERNAL_URL:?API_EXTERNAL_URL is required}/callback
+      GOTRUE_SECURITY_CAPTCHA_ENABLED: ${CAPTCHA_ENABLED:-false}
+      GOTRUE_SECURITY_CAPTCHA_PROVIDER: ${CAPTCHA_PROVIDER:-turnstile}
+      GOTRUE_SECURITY_CAPTCHA_SECRET: ${CAPTCHA_SECRET:-}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-no-reply@localhost}
+      GOTRUE_SMTP_HOST: ${SMTP_HOST:-localhost}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT:-2500}
+      GOTRUE_SMTP_USER: ${SMTP_USER:-}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS:-}
+      GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME:-Pomodoist}
+      GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
+      GOTRUE_SMS_AUTOCONFIRM: "false"
+
+  rest:
+    container_name: pomodoist-selfhost-rest
+    image: public.ecr.aws/supabase/postgrest:v14.12
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "postgrest", "--ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD:?run make setup first}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_EXTRA_SEARCH_PATH: public,extensions
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_DB_MAX_ROWS: 1000
+      PGRST_ADMIN_SERVER_PORT: 3001
+      PGRST_ADMIN_SERVER_HOST: localhost
+      PGRST_JWT_SECRET: ${JWT_JWKS:?run make setup first}
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET:?run make setup first}
+      PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY:-3600}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+
+  realtime:
+    container_name: pomodoist-selfhost-realtime
+    image: public.ecr.aws/supabase/realtime:v2.112.6
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sSfL --head -o /dev/null -H \"Authorization: Bearer ${ANON_KEY}\" http://localhost:4000/api/tenants/realtime-dev/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    environment:
+      PORT: 4000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: supabase_admin
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?run make setup first}
+      DB_NAME: postgres
+      DB_AFTER_CONNECT_QUERY: SET search_path TO _realtime
+      DB_ENC_KEY: ${REALTIME_DB_ENC_KEY:?run make setup first}
+      API_JWT_SECRET: ${JWT_SECRET:?run make setup first}
+      API_JWT_JWKS: ${JWT_JWKS:?run make setup first}
+      METRICS_JWT_SECRET: ${JWT_SECRET:?run make setup first}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:?run make setup first}
+      ERL_AFLAGS: -proto_dist inet_tcp
+      DNS_NODES: "''"
+      RLIMIT_NOFILE: "10000"
+      APP_NAME: realtime
+      SEED_SELF_HOST: "true"
+      RUN_JANITOR: "true"
+      DISABLE_HEALTHCHECK_LOGGING: "true"
+
+  migrate:
+    container_name: pomodoist-selfhost-migrate
+    image: public.ecr.aws/supabase/postgres:17.6.1.127
+    restart: "no"
+    depends_on:
+      auth:
+        condition: service_healthy
+      realtime:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:?run make setup first}
+    volumes:
+      - ./scripts/migrate.sh:/opt/pomodoist/migrate.sh:ro
+      - ./supabase/migrations:/opt/pomodoist/migrations:ro
+      - ./database/enable-selfhost.sql:/opt/pomodoist/enable-selfhost.sql:ro
+    entrypoint: ["/bin/sh", "/opt/pomodoist/migrate.sh"]
+
+  gateway:
+    container_name: pomodoist-selfhost-gateway
+    build:
+      context: .
+      dockerfile: docker/gateway/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      auth:
+        condition: service_healthy
+      rest:
+        condition: service_healthy
+      realtime:
+        condition: service_healthy
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${API_PORT:-55421}:8000"
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/kong.yml
+      KONG_ROUTER_FLAVOR: expressions
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,request-termination
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      SUPABASE_ANON_KEY: ${ANON_KEY:?run make setup first}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY:?run make setup first}
+
+  functions:
+    container_name: pomodoist-selfhost-functions
+    build:
+      context: .
+      dockerfile: docker/functions/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      gateway:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/127.0.0.1/9000'"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?run make setup first}
+      SUPABASE_JWKS: ${JWT_JWKS:?run make setup first}
+      VERIFY_JWT: "false"
+      SUPABASE_URL: http://gateway:8000
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:?SUPABASE_PUBLIC_URL is required}
+      SUPABASE_ANON_KEY: ${ANON_KEY:?run make setup first}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY:?run make setup first}
+      SUPABASE_DB_URL: postgresql://postgres:${POSTGRES_PASSWORD:?run make setup first}@db:5432/postgres
+      ACCOUNT_STORAGE_BUCKETS: ""
+      POMODOIST_WEB_URL: ${SITE_URL:?SITE_URL is required}
+      POMODOIST_MCP_ISSUER: ${API_EXTERNAL_URL:?API_EXTERNAL_URL is required}
+      POMODOIST_MCP_RESOURCE_URL: ${SUPABASE_PUBLIC_URL:?SUPABASE_PUBLIC_URL is required}/functions/v1/pomodoist-mcp
+      POMODOIST_MCP_ALLOWED_ORIGINS: ${POMODOIST_MCP_ALLOWED_ORIGINS:-http://localhost:58080}
+      CEREBRAS_API_KEY: ${CEREBRAS_API_KEY:-}
+      POMODOIST_OPENROUTER_API_KEY: ${POMODOIST_OPENROUTER_API_KEY:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      POMODOIST_TELEGRAM_BOT_TOKEN: ${POMODOIST_TELEGRAM_BOT_TOKEN:-}
+      GOOGLE_CALENDAR_CLIENT_ID: ${GOOGLE_CALENDAR_CLIENT_ID:-}
+      GOOGLE_CALENDAR_CLIENT_SECRET: ${GOOGLE_CALENDAR_CLIENT_SECRET:-}
+      GOOGLE_CALENDAR_FUNCTION_URL: ${SUPABASE_PUBLIC_URL:?SUPABASE_PUBLIC_URL is required}/functions/v1/pomodoist-google-calendar
+      GOOGLE_CALENDAR_WEBHOOK_URL: ${SUPABASE_PUBLIC_URL:?SUPABASE_PUBLIC_URL is required}/functions/v1/pomodoist-google-calendar
+      GOOGLE_CALENDAR_APP_REDIRECT_URI: pomodoist://google-calendar-connected
+      GOOGLE_CALENDAR_WORKER_SECRET: ${GOOGLE_CALENDAR_WORKER_SECRET:-}
+      STRIPE_CHECKOUT_ENABLED: ${STRIPE_CHECKOUT_ENABLED:-false}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_MONTHLY: ${STRIPE_PRICE_MONTHLY:-}
+      STRIPE_PRICE_ANNUAL: ${STRIPE_PRICE_ANNUAL:-}
+      STRIPE_PRICE_LIFETIME: ${STRIPE_PRICE_LIFETIME:-}
+      STRIPE_PRICE_LIFETIME_LAUNCH: ${STRIPE_PRICE_LIFETIME_LAUNCH:-}
+      STRIPE_COUPON_MONTHLY_INTRO: ${STRIPE_COUPON_MONTHLY_INTRO:-}
+      STRIPE_COUPON_ANNUAL_INTRO: ${STRIPE_COUPON_ANNUAL_INTRO:-}
+      STRIPE_SUCCESS_URL: ${SITE_URL:?SITE_URL is required}/purchase-success?source=stripe
+      STRIPE_CANCEL_URL: ${SITE_URL:?SITE_URL is required}/settings
+    command: ["start", "--main-service", "/home/deno/functions/main"]
+
+  web:
+    container_name: pomodoist-selfhost-web
+    build:
+      context: ..
+      dockerfile: deploy/web/Dockerfile
+      args:
+        POMODOIST_BILLING_CHANNEL: stripe
+        RELEASE_SHA: ${POMODOIST_RELEASE:?run make setup first}
+    restart: unless-stopped
+    depends_on:
+      functions:
+        condition: service_healthy
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-58080}:8080"
+    environment:
+      POMODOIST_ENVIRONMENT: selfhosted
+      POMODOIST_RELEASE: ${POMODOIST_RELEASE:?run make setup first}
+      POMODOIST_WEB_URL: ${SITE_URL:?SITE_URL is required}
+      SUPABASE_URL: ${SUPABASE_PUBLIC_URL:?SUPABASE_PUBLIC_URL is required}
+      SUPABASE_ANON_KEY: ${ANON_KEY:?run make setup first}
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+
+volumes:
+  pomodoist-selfhost-db:
+    name: pomodoist-selfhost-db
+  pomodoist-selfhost-db-config:
+    name: pomodoist-selfhost-db-config

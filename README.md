@@ -74,16 +74,35 @@ Android, Linux, Windows, and the web.
 
 ## Build from source
 
-Pomodoist is the complete app client, not a stripped-down demo. To run the web
-app locally:
+The client and server core are maintained in this repository. To run an independent
+instance with its own accounts and database:
 
 ```sh
 git clone https://github.com/Kabanya/Pomodoist.git
 cd Pomodoist
-make setup-flutter
-# Fill the newly created .env.setup, then run make setup-flutter again.
-make web
+make -C server setup
+make -C server up
 ```
+
+Open `http://localhost:58080`. Docker builds the web client and starts the API
+at `http://localhost:55421`. No private repository or official service account
+is required. See the [self-hosting guide](server/README.md) for HTTPS, email,
+optional integrations, backups, and updates.
+
+For Flutter development, install FVM, then use the version in `.fvmrc`:
+
+```sh
+fvm install
+make setup-flutter
+# For your own backend, fill SELFHOSTED__SUPABASE_ANON_KEY in .env.setup
+# using ANON_KEY from server/.env, then regenerate the client profiles:
+make setup-flutter
+make web LOCAL_CONFIG=.env.selfhosted
+```
+
+`make web` uses the local profile, which can run without a backend. The
+self-hosted profile requires your API URL and public anonymous key. Never put
+`SERVICE_ROLE_KEY`, provider secrets, or database passwords in client files.
 
 Run the same validation used for contributions:
 
@@ -213,7 +232,7 @@ Production variables and the Google desktop client secret are read from the
 <details>
 <summary>Develop the shared client packages locally</summary>
 
-The public account and voice packages are pinned to a release commit in
+The public account and voice packages are pinned to a versioned release tag in
 [`Kabanya/app-client-platform`](https://github.com/Kabanya/app-client-platform).
 To develop both repositories together, create an ignored
 `pubspec_overrides.yaml`:
@@ -238,7 +257,7 @@ substantial change, read the [contribution guide](CONTRIBUTING.md), and run
 
 Copyright © 2026 FinchForge LLC.
 
-Pomodoist client source and official client binaries are licensed under the
+Pomodoist source, including `server/`, and official client binaries are licensed under the
 [GNU Affero General Public License v3.0 only](LICENSE) (`AGPL-3.0-only`). See
 the [licensing model](LICENSING.md). Paid subscriptions cover hosted services
 and account entitlements, not a proprietary client license. The name, logo,

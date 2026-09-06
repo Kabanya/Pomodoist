@@ -21,11 +21,18 @@ void validateDesktopReleaseConfig(Map<String, Object?> config) {
     }
   }
 
-  if (_requiredString(config, 'POMODOIST_ENVIRONMENT') != 'production') {
+  final environment = _requiredString(config, 'POMODOIST_ENVIRONMENT');
+  if (environment != 'production' && environment != 'selfhosted') {
     throw const FormatException(
-      'POMODOIST_ENVIRONMENT must select production.',
+      'POMODOIST_ENVIRONMENT must select production or selfhosted.',
     );
   }
+
+  if (environment == 'selfhosted') {
+    _validateSelfHostedConfig(config);
+    return;
+  }
+
   if (_requiredString(config, 'WEB_APP_URL') != _productionWebUrl) {
     throw const FormatException('WEB_APP_URL must use the production host.');
   }
@@ -58,6 +65,63 @@ void validateDesktopReleaseConfig(Map<String, Object?> config) {
       'SUPABASE_URL must use the production project.',
     );
   }
+}
+
+void _validateSelfHostedConfig(Map<String, Object?> config) {
+  final webAppUrl = _selfHostedUrl(
+    _requiredString(config, 'WEB_APP_URL'),
+    'WEB_APP_URL',
+  );
+  _selfHostedUrl(_requiredString(config, 'SUPABASE_URL'), 'SUPABASE_URL');
+  _requiredString(config, 'SUPABASE_ANON_KEY');
+
+  final turnstile = _nonEmptyOptionalString(config, 'TURNSTILE_SITE_KEY');
+  final registration = _nonEmptyOptionalString(
+    config,
+    'POMODOIST_REGISTRATION_URL',
+  );
+  if (turnstile != null && registration == null) {
+    throw const FormatException(
+      'POMODOIST_REGISTRATION_URL is required when Turnstile is enabled.',
+    );
+  }
+  if (registration != null) {
+    final registrationUrl = _selfHostedUrl(
+      registration,
+      'POMODOIST_REGISTRATION_URL',
+    );
+    if (registrationUrl.path != '/auth/challenge' ||
+        registrationUrl.origin != webAppUrl.origin) {
+      throw const FormatException(
+        'POMODOIST_REGISTRATION_URL must use the selfhosted web origin.',
+      );
+    }
+  }
+
+  final sentry = _nonEmptyOptionalString(config, 'SENTRY_DSN');
+  if (sentry != null) {
+    final uri = _selfHostedUrl(sentry, 'SENTRY_DSN');
+    if (!RegExp(r'^[A-Za-z0-9]+$').hasMatch(uri.userInfo) ||
+        uri.pathSegments.isEmpty ||
+        !RegExp(r'^[0-9]+$').hasMatch(uri.pathSegments.last)) {
+      throw const FormatException('SENTRY_DSN must be a public Sentry DSN.');
+    }
+  }
+}
+
+Uri _selfHostedUrl(String value, String field) {
+  final uri = Uri.tryParse(value);
+  final loopback =
+      uri != null && const {'localhost', '127.0.0.1', '::1'}.contains(uri.host);
+  if (uri == null ||
+      uri.host.isEmpty ||
+      uri.userInfo.isNotEmpty && field != 'SENTRY_DSN' ||
+      uri.hasQuery ||
+      uri.hasFragment ||
+      uri.scheme != 'https' && !(uri.scheme == 'http' && loopback)) {
+    throw FormatException('$field must use HTTPS or loopback HTTP.');
+  }
+  return uri;
 }
 
 String _requiredString(Map<String, Object?> config, String field) {

@@ -27,6 +27,21 @@ void main() {
     );
   });
 
+  test('parses a preloaded selfhosted window config', () {
+    final config = parsePreloadedRuntimePublicConfig({
+      'environment': 'selfhosted',
+      'release': '0123456789abcdef0123456789abcdef01234567',
+      'webAppUrl': 'http://localhost:58080',
+      'supabaseUrl': 'http://localhost:55421',
+      'supabaseAnonKey': 'public-anon-key',
+      'turnstileSiteKey': '',
+      'sentryDsn': '',
+    });
+
+    expect(config.environment, RuntimeEnvironment.selfhosted);
+    expect(config.supabaseUrl?.port, 55421);
+  });
+
   test('preloads config.js before the Flutter bootstrap', () async {
     final index = await File('web/index.html').readAsString();
 

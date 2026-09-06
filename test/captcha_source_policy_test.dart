@@ -55,6 +55,7 @@ void main() {
     final csp = await File(
       'deploy/web/security-headers.conf.template',
     ).readAsString();
+    final entrypoint = await File('deploy/web/entrypoint.sh').readAsString();
 
     expect(
       index,
@@ -66,8 +67,12 @@ void main() {
       reason: 'local empty-key startup must not contact Cloudflare',
     );
     expect(csp, contains('script-src'));
-    expect(csp, contains('frame-src https://challenges.cloudflare.com'));
+    expect(csp, contains('frame-src __TURNSTILE_ORIGIN__'));
     expect(csp, isNot(contains('*.cloudflare.com')));
+    expect(
+      entrypoint,
+      contains('turnstile_origin=https://challenges.cloudflare.com'),
+    );
     final widget = await File(
       'lib/app/turnstile_widget_web.dart',
     ).readAsString();

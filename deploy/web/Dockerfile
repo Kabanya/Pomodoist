@@ -1,25 +1,41 @@
 FROM getsentry/sentry-cli:2.57.0@sha256:f2c99e93ccdaf7b934ba804946ea90405eb2b1b9fdb3aa42bcbb501641c6f01f AS sentry-cli
 
-FROM ghcr.io/cirruslabs/flutter:3.41.9@sha256:c6fed8fee02ca8fdb1b8dc128df99f6e29b7305847b80f4b0c1e3f638e7637a8 AS builder
+FROM ghcr.io/cirruslabs/flutter:3.41.9@sha256:c6fed8fee02ca8fdb1b8dc128df99f6e29b7305847b80f4b0c1e3f638e7637a8 AS flutter-toolchain
 
 USER root
 WORKDIR /src
 COPY .fvmrc ./
 RUN flutter_version="$(jq -r .flutter .fvmrc)" \
-    && git -C "$FLUTTER_HOME" fetch --depth 1 origin "refs/tags/$flutter_version" \
-    && git -C "$FLUTTER_HOME" checkout --detach FETCH_HEAD
+    && git -C "$FLUTTER_HOME" fetch --depth 1 origin \
+      "+refs/tags/$flutter_version:refs/tags/$flutter_version" \
+    && git -C "$FLUTTER_HOME" checkout --detach "refs/tags/$flutter_version" \
+    && rm -f \
+      "$FLUTTER_HOME/bin/cache/flutter.version.json" \
+      "$FLUTTER_HOME/version"
+RUN flutter --version --machine >/dev/null
+RUN flutter_version="$(jq -r .flutter .fvmrc)" \
+    && expected_revision="$(git -C "$FLUTTER_HOME" rev-parse HEAD)" \
+    && version_json="$(flutter --version --machine | sed -n '/^{/,$p')" \
+    && printf '%s\n' "$version_json" \
+    && printf '%s' "$version_json" | jq -e \
+      --arg version "$flutter_version" \
+      --arg revision "$expected_revision" \
+      '.frameworkVersion == $version and .frameworkRevision == $revision'
+
+FROM flutter-toolchain AS builder
+
 ARG POMODOIST_BILLING_CHANNEL
 RUN [ "$POMODOIST_BILLING_CHANNEL" = stripe ] \
     || (echo 'POMODOIST_BILLING_CHANNEL must be stripe' >&2; exit 1)
 COPY pubspec.yaml pubspec.lock l10n.yaml ./
 COPY lib/l10n/ ./lib/l10n/
-RUN --mount=type=cache,target=/root/.pub-cache \
-    flutter pub get
+RUN --mount=type=cache,target=/root/.pub-cache,sharing=locked \
+    flutter pub get --enforce-lockfile
 COPY lib/ ./lib/
 COPY web/ ./web/
 COPY assets/ ./assets/
 COPY tool/prepare_sentry_sourcemaps.dart ./tool/prepare_sentry_sourcemaps.dart
-RUN --mount=type=cache,target=/root/.pub-cache \
+RUN --mount=type=cache,target=/root/.pub-cache,sharing=locked \
     flutter build web --release --source-maps --pwa-strategy=none \
       --dart-define=POMODOIST_BILLING_CHANNEL="$POMODOIST_BILLING_CHANNEL" \
     && dart run tool/prepare_sentry_sourcemaps.dart build/web/main.dart.js.map /src \

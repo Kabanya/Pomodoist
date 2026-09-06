@@ -494,6 +494,7 @@ final billingActiveAccountEntitlementProvider = Provider<AccountEntitlement?>(
 final billingAccountEntitlementProvider = Provider<bool>(
   (ref) => ref.watch(billingActiveAccountEntitlementProvider) != null,
 );
+final billingEnvironmentEntitlementProvider = Provider<bool>((ref) => false);
 
 typedef BillingAppAccountTokenLoader = Future<String?> Function();
 typedef BillingPurchaseLinker =
@@ -539,6 +540,7 @@ class BillingState {
     this.purchasedProductIds = const {},
     this.activeStoreKitProductIds = const {},
     this.accountEntitlementActive = false,
+    this.environmentEntitlementActive = false,
     this.activeAccountEntitlement,
     this.stripeLaunchOfferEligible = false,
     this.stripeLaunchOfferEndsAt,
@@ -557,6 +559,7 @@ class BillingState {
   final Set<String> purchasedProductIds;
   final Set<String> activeStoreKitProductIds;
   final bool accountEntitlementActive;
+  final bool environmentEntitlementActive;
   final AccountEntitlement? activeAccountEntitlement;
   final bool stripeLaunchOfferEligible;
   final DateTime? stripeLaunchOfferEndsAt;
@@ -568,7 +571,9 @@ class BillingState {
   bool get hasLocalStoreKitEntitlement =>
       pomodoistDevUnlock || activeStoreKitProductIds.isNotEmpty;
   bool get hasActiveEntitlement =>
-      hasLocalStoreKitEntitlement || accountEntitlementActive;
+      hasLocalStoreKitEntitlement ||
+      accountEntitlementActive ||
+      environmentEntitlementActive;
   bool get canPurchase =>
       platformSupported &&
       storeAvailable &&
@@ -585,6 +590,7 @@ class BillingState {
     Set<String>? purchasedProductIds,
     Set<String>? activeStoreKitProductIds,
     bool? accountEntitlementActive,
+    bool? environmentEntitlementActive,
     Object? activeAccountEntitlement = _unset,
     bool? stripeLaunchOfferEligible,
     Object? stripeLaunchOfferEndsAt = _unset,
@@ -606,6 +612,8 @@ class BillingState {
           activeStoreKitProductIds ?? this.activeStoreKitProductIds,
       accountEntitlementActive:
           accountEntitlementActive ?? this.accountEntitlementActive,
+      environmentEntitlementActive:
+          environmentEntitlementActive ?? this.environmentEntitlementActive,
       activeAccountEntitlement: identical(activeAccountEntitlement, _unset)
           ? this.activeAccountEntitlement
           : activeAccountEntitlement as AccountEntitlement?,
@@ -685,6 +693,9 @@ class BillingController extends Notifier<BillingState> {
     final activeAccountEntitlement = ref.read(
       billingActiveAccountEntitlementProvider,
     );
+    final environmentEntitlementActive = ref.read(
+      billingEnvironmentEntitlementProvider,
+    );
     ref.listen<bool>(billingAccountEntitlementProvider, (_, next) {
       if (ref.mounted) {
         state = state.copyWith(accountEntitlementActive: next);
@@ -737,6 +748,7 @@ class BillingController extends Notifier<BillingState> {
     return BillingState(
       activeProductId: pomodoistEffectiveActiveProductId(null),
       accountEntitlementActive: accountEntitlementActive,
+      environmentEntitlementActive: environmentEntitlementActive,
       activeAccountEntitlement: activeAccountEntitlement,
     );
   }

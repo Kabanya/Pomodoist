@@ -9,19 +9,19 @@ fail() {
   exit 1
 }
 
-sha=$(awk '
+version=$(awk '
   $0 == "  app_account:" { found = 1; next }
   found && $1 == "ref:" { print $2; exit }
 ' pubspec.yaml)
-printf '%s\n' "$sha" | grep -Eq '^[0-9a-f]{40}$' ||
-  fail 'app_account must be pinned to a commit SHA'
+printf '%s\n' "$version" | grep -Eq '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' ||
+  fail 'app_account must use a versioned public release tag'
 url=https://github.com/Kabanya/app-client-platform.git
 
 for package in app_account app_voice; do
-  awk -v package="$package" -v sha="$sha" -v url="$url" '
+  awk -v package="$package" -v version="$version" -v url="$url" '
     $0 == "  " package ":" { found = 1; next }
     found && $0 == "      url: " url { has_url = 1 }
-    found && $0 == "      ref: " sha { has_ref = 1 }
+    found && $0 == "      ref: " version { has_ref = 1 }
     found && $0 == "      path: " package { has_path = 1 }
     found && /^  [^[:space:]]+:/ { exit(has_url && has_ref && has_path ? 0 : 1) }
     END { exit(has_url && has_ref && has_path ? 0 : 1) }
@@ -80,8 +80,8 @@ fi
 ! grep -REq --include='*.yml' --include='*.yaml' \
   '^[[:space:]]+flutter-version:' .github/workflows ||
   fail 'workflows must read the Flutter version from .fvmrc'
-tracked_env=$(git ls-files | grep -E '(^|/)\.env[^/]*$' | grep -vFx '.env.example' || true)
-[ -z "$tracked_env" ] || fail 'only .env.example may be tracked'
+tracked_env=$(git ls-files | grep -E '(^|/)\.env[^/]*$' | grep -vFx -e '.env.example' -e 'server/.env.example' || true)
+[ -z "$tracked_env" ] || fail 'only the root and server .env.example templates may be tracked'
 [ -f .env.example ] || fail '.env.example must exist'
 if awk '
   /^PRIVATE__/ && $0 !~ /^PRIVATE__APPLE_SECRET_VALID_DAYS=/ {
@@ -95,7 +95,7 @@ if awk '
 ' .env.example; then :; else
   fail '.env.example contains a secret value'
 fi
-for prefix in LOCAL STAGING TESTFLIGHT WINDOWS LINUX PRIVATE DEPLOY; do
+for prefix in LOCAL SELFHOSTED STAGING TESTFLIGHT WINDOWS LINUX PRIVATE DEPLOY; do
   grep -q "^${prefix}__" .env.example || fail ".env.example is missing ${prefix}__ variables"
 done
 for key in RUNNER BACKEND_DIR API_BASE_URL API_TOKEN WEB_STAGING_TRIGGER_URL WEB_PRODUCTION_TRIGGER_URL WEB_STAGING_URL WEB_PRODUCTION_URL; do
@@ -114,11 +114,18 @@ fi
 if git grep -n 'sslip\.io' -- ':!tool/test_public_boundary.sh' >/dev/null; then
   fail 'tracked public files must not contain deprecated sslip aliases'
 fi
-if git grep -nE '/Users/|/home/' -- ':!tool/test_public_boundary.sh' >/dev/null; then
+if git grep -nE '/Users/|/home/' -- ':!tool/test_public_boundary.sh' |
+  sed 's|/home/deno/functions||g; s|/home/kong/||g' |
+  grep -E '/Users/|/home/' >/dev/null; then
   fail 'tracked public docs and config must not contain personal absolute paths'
 fi
-if grep -Eq '^[A-Z0-9_]+=https?://' .env.example; then
-  fail '.env.example must not contain URL values'
+if awk '
+  /^[A-Z0-9_]+=https?:\/\// &&
+  $0 != "LOCAL__WEB_APP_URL=http://127.0.0.1:7358" &&
+  $0 != "SELFHOSTED__WEB_APP_URL=http://localhost:58080" &&
+  $0 != "SELFHOSTED__SUPABASE_URL=http://localhost:55421" { exit 1 }
+' .env.example; then :; else
+  fail '.env.example contains a non-loopback URL value'
 fi
 
 printf 'Public boundary checks passed.\n'

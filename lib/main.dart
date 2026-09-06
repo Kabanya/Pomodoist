@@ -57,6 +57,9 @@ Future<void> main() async {
                   ref.watch(accountOverviewProvider).value,
                 );
               }),
+              billingEnvironmentEntitlementProvider.overrideWithValue(
+                runtimeConfig.selfHostedFeaturesUnlocked,
+              ),
               billingSignedInProvider.overrideWith((ref) {
                 final account = ref.watch(accountClientProvider);
                 return ref.watch(accountAuthStateProvider).value?.signedIn ??

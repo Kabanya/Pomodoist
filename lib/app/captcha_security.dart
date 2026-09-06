@@ -322,12 +322,14 @@ final class NativeCaptchaBuildConfig {
       registrationUrl: const String.fromEnvironment(
         'POMODOIST_REGISTRATION_URL',
       ),
+      webAppUrl: const String.fromEnvironment('WEB_APP_URL'),
     );
   }
 
   factory NativeCaptchaBuildConfig.fromValues({
     required String environment,
     required String registrationUrl,
+    String webAppUrl = '',
   }) {
     if (environment == 'local' && registrationUrl.isEmpty) {
       throw const FormatException(
@@ -339,6 +341,18 @@ final class NativeCaptchaBuildConfig {
       throw const FormatException('Invalid CAPTCHA challenge URL');
     }
     _validateRegistrationUrl(uri);
+    if (environment == 'selfhosted') {
+      final webUri = Uri.tryParse(webAppUrl);
+      if (webUri == null ||
+          uri.scheme != webUri.scheme ||
+          uri.host != webUri.host ||
+          uri.port != webUri.port) {
+        throw const FormatException(
+          'CAPTCHA challenge URL does not match the environment',
+        );
+      }
+      return NativeCaptchaBuildConfig._(uri);
+    }
     final expectedHost = switch (environment) {
       'staging' => 'app-test.pomodoist.com',
       'production' => 'app.pomodoist.com',
@@ -346,7 +360,7 @@ final class NativeCaptchaBuildConfig {
         'Native CAPTCHA is not configured for $environment',
       ),
     };
-    if (uri.host != expectedHost) {
+    if (uri.host != expectedHost || uri.hasPort) {
       throw const FormatException(
         'CAPTCHA challenge URL does not match the environment',
       );
@@ -442,14 +456,13 @@ String generateCaptchaState() {
 }
 
 void _validateRegistrationUrl(Uri uri) {
-  if (uri.scheme != 'https' ||
-      !const {
-        'app-test.pomodoist.com',
-        'app.pomodoist.com',
-      }.contains(uri.host) ||
+  final safeEndpoint =
+      uri.scheme == 'https' ||
+      uri.scheme == 'http' &&
+          const {'localhost', '127.0.0.1', '::1'}.contains(uri.host);
+  if (!safeEndpoint ||
       uri.path != '/auth/challenge' ||
       uri.userInfo.isNotEmpty ||
-      uri.hasPort ||
       uri.hasQuery ||
       uri.hasFragment) {
     throw const FormatException('Unsupported CAPTCHA challenge URL');

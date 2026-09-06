@@ -255,7 +255,8 @@ final accountSyncEngineProvider = Provider<AccountSyncEngine?>((ref) {
     uuid: const Uuid(),
     kanbanTransitions: ref.watch(kanbanTransitionCoordinatorProvider),
     localPaidEntitlementLoader: () async {
-      return ref.read(billingControllerProvider).hasLocalStoreKitEntitlement;
+      return ref.read(runtimePublicConfigProvider).selfHostedFeaturesUnlocked ||
+          ref.read(billingControllerProvider).hasLocalStoreKitEntitlement;
     },
   );
 });

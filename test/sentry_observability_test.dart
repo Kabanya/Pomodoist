@@ -63,6 +63,35 @@ void main() {
       expect(policy.dsn, isEmpty);
       expect(policy.tracesSampleRate, 0);
     });
+
+    test('selfhosted accepts optional operator Sentry', () {
+      final enabled = SentryRuntimePolicy.fromValues(
+        environment: 'selfhosted',
+        release: release,
+        sentryDsn: 'https://public@sentry.example.com/42',
+      );
+      final disabled = SentryRuntimePolicy.fromValues(
+        environment: 'selfhosted',
+        release: release,
+        sentryDsn: '',
+      );
+
+      expect(enabled.enabled, isTrue);
+      expect(enabled.environment, 'selfhosted');
+      expect(enabled.tracesSampleRate, 0.05);
+      expect(disabled.enabled, isFalse);
+    });
+
+    test('hosted Sentry rejects a prefixed project path', () {
+      expect(
+        () => SentryRuntimePolicy.fromValues(
+          environment: 'staging',
+          release: release,
+          sentryDsn: 'https://public@o123.ingest.sentry.io/prefix/42',
+        ),
+        throwsFormatException,
+      );
+    });
   });
 
   group('runPomodoistStartup', () {

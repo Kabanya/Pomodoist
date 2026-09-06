@@ -188,7 +188,17 @@ if grep -Eiq 'flutter_bootstrap\.js|main\.dart\.js|\.wasm' "$challenge_html"; th
   fail 'static CAPTCHA challenge references the Flutter runtime or WASM'
 fi
 
-node "$repo_root/tool/test_web_browser.mjs" "$staging_url/login" ||
+browser_name="pomodoist-web-browser-$$"
+run_remote \
+  "$browser_name" \
+  staging \
+  https://app-test.pomodoist.com \
+  https://supabase-test.pomodoist.com \
+  1x00000000000000000000AA
+browser_url=$(container_url "$browser_name")
+wait_for_http "$browser_url/healthz"
+
+node "$repo_root/tool/test_web_browser.mjs" "$browser_url/login" ||
   fail 'Chrome/Chromium is required and the headless browser smoke failed'
 
 staging_config="$test_root/staging-config.js"
@@ -302,7 +312,7 @@ run_remote \
   production \
   https://app.pomodoist.com \
   https://ewauihswbwduvklrozke.supabase.co \
-  ''
+  0x4AAAAAAAabcdefghijklmnopqrstuv
 production_url=$(container_url "$production_name")
 wait_for_http "$production_url/healthz"
 
@@ -314,6 +324,28 @@ cmp -s "$staging_config" "$production_config" && fail 'runtime configs must diff
 cmp -s "$staging_version" "$production_version" && fail 'version files must differ'
 [ "$(docker image inspect "$image" --format '{{.Id}}')" = "$image_id" ] ||
   fail 'image changed between staging and production runs'
+
+selfhosted_name="pomodoist-web-selfhosted-$$"
+containers="$containers $selfhosted_name"
+docker run --detach --rm --name "$selfhosted_name" --publish 127.0.0.1::8080 \
+  --env POMODOIST_ENVIRONMENT=selfhosted \
+  --env "POMODOIST_RELEASE=$release" \
+  --env POMODOIST_WEB_URL=http://localhost:58080 \
+  --env SUPABASE_URL=http://localhost:55421 \
+  --env SUPABASE_ANON_KEY=public-anon-key \
+  "$image" >/dev/null
+selfhosted_url=$(container_url "$selfhosted_name")
+wait_for_http "$selfhosted_url/healthz"
+selfhosted_config="$test_root/selfhosted-config.js"
+curl --fail --silent --show-error "$selfhosted_url/config.js" >"$selfhosted_config"
+grep -q '"environment":"selfhosted"' "$selfhosted_config" ||
+  fail 'selfhosted runtime config was not generated'
+assert_header "$selfhosted_url/healthz" \
+  'connect-src .*http://localhost:55421 .*ws://localhost:55421'
+if curl --fail --silent --head "$selfhosted_url/healthz" |
+  grep -Eq 'supabase-test\.pomodoist\.com|ewauihswbwduvklrozke\.supabase\.co|challenges\.cloudflare\.com'; then
+  fail 'selfhosted CSP included unused hosted endpoints'
+fi
 
 expect_startup_failure() {
   label=$1
@@ -351,6 +383,18 @@ expect_startup_failure 'invalid production Supabase host' $common_env \
   --env POMODOIST_ENVIRONMENT=production \
   --env POMODOIST_WEB_URL=https://app.pomodoist.com \
   --env SUPABASE_URL=https://evil.example
+expect_startup_failure 'remote HTTP selfhosted web URL' \
+  --env POMODOIST_ENVIRONMENT=selfhosted \
+  --env POMODOIST_RELEASE="$release" \
+  --env POMODOIST_WEB_URL=http://tasks.example.com \
+  --env SUPABASE_URL=https://api.example.com \
+  --env SUPABASE_ANON_KEY=public-anon-key
+expect_startup_failure 'selfhosted backend with a query' \
+  --env POMODOIST_ENVIRONMENT=selfhosted \
+  --env POMODOIST_RELEASE="$release" \
+  --env POMODOIST_WEB_URL=https://tasks.example.com \
+  --env 'SUPABASE_URL=https://api.example.com?unsafe=1' \
+  --env SUPABASE_ANON_KEY=public-anon-key
 # shellcheck disable=SC2086
 expect_startup_failure 'release mismatch' \
   --env POMODOIST_ENVIRONMENT=staging \

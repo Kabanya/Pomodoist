@@ -1,0 +1,16 @@
+{
+  "imports": {
+    "@modelcontextprotocol/sdk/server/mcp.js": "npm:@modelcontextprotocol/sdk@1.25.3/server/mcp.js",
+    "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js": "npm:@modelcontextprotocol/sdk@1.25.3/server/webStandardStreamableHttp.js",
+    "@modelcontextprotocol/sdk/types.js": "npm:@modelcontextprotocol/sdk@1.25.3/types.js",
+    "@modelcontextprotocol/sdk/client/index.js": "npm:@modelcontextprotocol/sdk@1.25.3/client/index.js",
+    "@modelcontextprotocol/sdk/inMemory.js": "npm:@modelcontextprotocol/sdk@1.25.3/inMemory.js",
+    "@std/assert": "jsr:@std/assert@1",
+    "@supabase/functions-js/edge-runtime.d.ts": "jsr:@supabase/functions-js@2.110.8/edge-runtime.d.ts",
+    "jose": "npm:jose@6.2.5",
+    "resend": "npm:resend@6.17.2",
+    "standardwebhooks": "npm:standardwebhooks@1.0.0",
+    "stripe": "npm:stripe@22.4.0",
+    "zod": "npm:zod@4.1.13"
+  }
+}

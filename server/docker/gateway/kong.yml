@@ -1,0 +1,202 @@
+# Adapted from Supabase self-hosting templates; modified for Pomodoist.
+# Copyright 2024 Supabase. See docker/NOTICE and docker/LICENSE.supabase.
+_format_version: '2.1'
+_transform: true
+
+consumers:
+  - username: anon
+    keyauth_credentials:
+      - key: $SUPABASE_ANON_KEY
+  - username: service_role
+    keyauth_credentials:
+      - key: $SUPABASE_SERVICE_KEY
+
+acls:
+  - consumer: anon
+    group: anon
+  - consumer: service_role
+    group: admin
+
+services:
+  - name: auth-verify
+    url: http://auth:9999/verify
+    routes:
+      - name: auth-verify
+        strip_path: true
+        paths:
+          - /auth/v1/verify
+    plugins:
+      - name: cors
+
+  - name: auth-callback
+    url: http://auth:9999/callback
+    routes:
+      - name: auth-callback
+        strip_path: true
+        paths:
+          - /auth/v1/callback
+    plugins:
+      - name: cors
+
+  - name: auth-authorize
+    url: http://auth:9999/authorize
+    routes:
+      - name: auth-authorize
+        strip_path: true
+        paths:
+          - /auth/v1/authorize
+    plugins:
+      - name: cors
+
+  - name: auth-jwks
+    url: http://auth:9999/.well-known/jwks.json
+    routes:
+      - name: auth-jwks
+        strip_path: true
+        paths:
+          - /auth/v1/.well-known/jwks.json
+    plugins:
+      - name: cors
+
+  - name: auth-oauth
+    url: http://auth:9999/oauth
+    routes:
+      - name: auth-oauth
+        strip_path: true
+        paths:
+          - /auth/v1/oauth
+    plugins:
+      - name: cors
+
+  - name: auth
+    url: http://auth:9999/
+    routes:
+      - name: auth
+        strip_path: true
+        paths:
+          - /auth/v1/
+    plugins:
+      - name: cors
+      - name: key-auth
+        config:
+          hide_credentials: false
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "Authorization: $LUA_AUTH_EXPR"
+          replace:
+            headers:
+              - "Authorization: $LUA_AUTH_EXPR"
+      - name: acl
+        config:
+          hide_groups_header: true
+          allow: [admin, anon]
+
+  - name: rest-openapi
+    url: http://rest:3000/
+    routes:
+      - name: rest-openapi
+        strip_path: true
+        expression: 'http.path == "/rest/v1/"'
+    plugins:
+      - name: cors
+      - name: key-auth
+        config:
+          hide_credentials: false
+      - name: acl
+        config:
+          hide_groups_header: true
+          allow: [admin]
+
+  - name: rest
+    url: http://rest:3000/
+    routes:
+      - name: rest
+        strip_path: true
+        paths:
+          - /rest/v1/
+    plugins:
+      - name: cors
+      - name: key-auth
+        config:
+          hide_credentials: false
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "Authorization: $LUA_AUTH_EXPR"
+          replace:
+            headers:
+              - "Authorization: $LUA_AUTH_EXPR"
+      - name: acl
+        config:
+          hide_groups_header: true
+          allow: [admin, anon]
+
+  - name: realtime-websocket
+    url: http://realtime:4000/socket
+    protocol: ws
+    routes:
+      - name: realtime-websocket
+        strip_path: true
+        paths:
+          - /realtime/v1/
+    plugins:
+      - name: cors
+      - name: key-auth
+        config:
+          hide_credentials: false
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "x-api-key: $LUA_RT_WS_EXPR"
+          replace:
+            querystring:
+              - "apikey: $LUA_RT_WS_EXPR"
+      - name: acl
+        config:
+          hide_groups_header: true
+          allow: [admin, anon]
+
+  - name: realtime-admin-block
+    url: http://realtime:4000/api
+    routes:
+      - name: realtime-admin-block
+        strip_path: true
+        paths:
+          - /realtime/v1/api
+    plugins:
+      - name: request-termination
+        config:
+          status_code: 403
+          message: Access is forbidden.
+
+  - name: mcp-protected-resource-metadata
+    url: http://functions:9000
+    routes:
+      - name: mcp-protected-resource-metadata
+        strip_path: false
+        expression: 'http.path == "/.well-known/oauth-protected-resource/functions/v1/pomodoist-mcp"'
+
+  - name: functions
+    url: http://functions:9000/
+    read_timeout: 150000
+    routes:
+      - name: functions
+        strip_path: true
+        paths:
+          - /functions/v1/
+    plugins:
+      - name: cors
+
+  - name: oauth-metadata
+    url: http://auth:9999/.well-known/oauth-authorization-server
+    routes:
+      - name: oauth-metadata
+        strip_path: true
+        paths:
+          - /.well-known/oauth-authorization-server/auth/v1
+    plugins:
+      - name: cors

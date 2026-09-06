@@ -1,0 +1,53 @@
+project_id = "pomodoist-selfhost"
+
+[api]
+enabled = true
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+site_url = "http://localhost:58080"
+additional_redirect_urls = [
+  "http://localhost:58080/login-callback",
+  "http://localhost:58080/auth/challenge",
+  "pomodoist://login-callback",
+  "pomodoist://captcha-callback",
+]
+
+[auth.hook.custom_access_token]
+enabled = true
+uri = "pg-functions://postgres/private/pomodoist_mcp_access_token_hook"
+
+[auth.oauth_server]
+enabled = true
+authorization_url_path = "/oauth/consent"
+allow_dynamic_registration = true
+
+[functions.account-delete]
+verify_jwt = true
+
+[functions.pomodoist-watch]
+verify_jwt = false
+
+[functions.pomodoist-telegram]
+verify_jwt = false
+
+[functions.pomodoist-purchase]
+verify_jwt = true
+
+[functions.pomodoist-app-store-notifications]
+verify_jwt = false
+
+[functions.pomodoist-stripe-billing]
+verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.pomodoist-mcp]
+verify_jwt = false
+
+[functions.pomodoist-google-calendar]
+verify_jwt = false

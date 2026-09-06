@@ -50,20 +50,28 @@ void main() {
 
     if (!Platform.isMacOS) return;
 
-    final result = await Process.run('xcodebuild', [
-      '-project',
-      'ios/Runner.xcodeproj',
-      '-list',
-      '-json',
+    // Inspect the project without resolving its unrelated Swift packages.
+    final result = await Process.run('plutil', [
+      '-convert',
+      'json',
+      '-o',
+      '-',
+      'ios/Runner.xcodeproj/project.pbxproj',
     ]);
 
     expect(result.exitCode, 0, reason: '${result.stderr}');
-    final project =
-        (jsonDecode(result.stdout as String) as Map<String, dynamic>)['project']
-            as Map<String, dynamic>;
+    final document =
+        jsonDecode(result.stdout as String) as Map<String, dynamic>;
+    final objects = document['objects'] as Map<String, dynamic>;
+    final project = objects[document['rootObject']] as Map<String, dynamic>;
+    final targets = (project['targets'] as List<dynamic>)
+        .map((id) => objects[id] as Map<String, dynamic>)
+        .where((target) => target['name'] == 'PomodoistFocusWidgetExtension');
+    expect(targets, hasLength(1));
+    expect(targets.single['isa'], 'PBXNativeTarget');
     expect(
-      (project['targets'] as List<dynamic>).cast<String>(),
-      contains('PomodoistFocusWidgetExtension'),
+      targets.single['productType'],
+      'com.apple.product-type.app-extension',
     );
   });
 }

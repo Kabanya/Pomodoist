@@ -4,6 +4,13 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('checked-in local profile has a usable loopback web URL', () {
+    expect(
+      _values('.env.example')['LOCAL__WEB_APP_URL'],
+      'http://127.0.0.1:7358',
+    );
+  });
+
   test('bootstrap creates only the master template', () async {
     final root = await Directory.systemTemp.createTemp('pomodoist-env-');
     addTearDown(() => root.delete(recursive: true));
@@ -79,6 +86,7 @@ LOCAL__SUPABASE_URL=https://real.supabase.co
 LOCAL__POMODOIST_ENVIRONMENT=local
 LOCAL__NEW_VALUE=
 STAGING__POMODOIST_ENVIRONMENT=staging
+SELFHOSTED__POMODOIST_ENVIRONMENT=selfhosted
 TESTFLIGHT__POMODOIST_ENVIRONMENT=production
 WINDOWS__POMODOIST_ENVIRONMENT=production
 LINUX__POMODOIST_ENVIRONMENT=production
@@ -89,6 +97,7 @@ PRIVATE__ASC_KEY_ID=
 LOCAL__POMODOIST_ENVIRONMENT=local-from-master
 LOCAL__NEW_VALUE=added
 STAGING__POMODOIST_ENVIRONMENT=staging
+SELFHOSTED__POMODOIST_ENVIRONMENT=selfhosted
 TESTFLIGHT__POMODOIST_ENVIRONMENT=production
 WINDOWS__POMODOIST_ENVIRONMENT=production
 LINUX__POMODOIST_ENVIRONMENT=production
@@ -108,6 +117,10 @@ PRIVATE__ASC_KEY_ID=ABC1234567
     expect(
       _values('${root.path}/.env.staging')['POMODOIST_ENVIRONMENT'],
       'staging',
+    );
+    expect(
+      _values('${root.path}/.env.selfhosted')['POMODOIST_ENVIRONMENT'],
+      'selfhosted',
     );
     expect(
       _values('${root.path}/.env.testflight')['POMODOIST_ENVIRONMENT'],

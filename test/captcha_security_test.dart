@@ -213,6 +213,31 @@ void main() {
       }
     });
 
+    test('selfhosted CAPTCHA stays on the configured web origin', () {
+      expect(
+        NativeCaptchaBuildConfig.fromValues(
+          environment: 'selfhosted',
+          registrationUrl: 'http://localhost:58080/auth/challenge',
+          webAppUrl: 'http://localhost:58080',
+        ).registrationUrl,
+        Uri.parse('http://localhost:58080/auth/challenge'),
+      );
+      for (final registrationUrl in [
+        'http://remote.example.com/auth/challenge',
+        'https://other.example.com/auth/challenge',
+      ]) {
+        expect(
+          () => NativeCaptchaBuildConfig.fromValues(
+            environment: 'selfhosted',
+            registrationUrl: registrationUrl,
+            webAppUrl: 'https://tasks.example.com',
+          ),
+          throwsFormatException,
+          reason: registrationUrl,
+        );
+      }
+    });
+
     test('opens only an approved HTTPS challenge with opaque state', () {
       final session = NativeCaptchaSession(
         registrationUrl: Uri.parse(

@@ -21,6 +21,60 @@ void main() {
     expect(result.exitCode, 0, reason: result.stderr.toString());
   });
 
+  test('accepts selfhosted HTTPS without optional integrations', () {
+    final result = _validateConfig({
+      'POMODOIST_ENVIRONMENT': 'selfhosted',
+      'WEB_APP_URL': 'https://tasks.example.com',
+      'POMODOIST_REGISTRATION_URL': '',
+      'SUPABASE_URL': 'https://api.example.com',
+      'SUPABASE_ANON_KEY': 'public-anon-key',
+      'TURNSTILE_SITE_KEY': '',
+      'SENTRY_DSN': '',
+    });
+
+    expect(result.exitCode, 0, reason: result.stderr.toString());
+  });
+
+  test('accepts selfhosted loopback HTTP', () {
+    final result = _validateConfig({
+      'POMODOIST_ENVIRONMENT': 'selfhosted',
+      'WEB_APP_URL': 'http://localhost:58080',
+      'POMODOIST_REGISTRATION_URL': '',
+      'SUPABASE_URL': 'http://127.0.0.1:55421',
+      'SUPABASE_ANON_KEY': 'public-anon-key',
+      'TURNSTILE_SITE_KEY': '',
+      'SENTRY_DSN': '',
+    });
+
+    expect(result.exitCode, 0, reason: result.stderr.toString());
+  });
+
+  test('rejects incomplete or insecure selfhosted configuration', () {
+    for (final config in [
+      {
+        'POMODOIST_ENVIRONMENT': 'selfhosted',
+        'WEB_APP_URL': 'https://tasks.example.com',
+        'POMODOIST_REGISTRATION_URL': '',
+        'SUPABASE_URL': '',
+        'SUPABASE_ANON_KEY': '',
+        'TURNSTILE_SITE_KEY': '',
+        'SENTRY_DSN': '',
+      },
+      {
+        'POMODOIST_ENVIRONMENT': 'selfhosted',
+        'WEB_APP_URL': 'http://remote.example.com',
+        'POMODOIST_REGISTRATION_URL': '',
+        'SUPABASE_URL': 'https://api.example.com',
+        'SUPABASE_ANON_KEY': 'public-anon-key',
+        'TURNSTILE_SITE_KEY': '',
+        'SENTRY_DSN': '',
+      },
+    ]) {
+      final result = _validateConfig(config);
+      expect(result.exitCode, 64, reason: config.toString());
+    }
+  });
+
   for (final scenario in <({String name, Map<String, Object?> config})>[
     (
       name: 'non-production environment',

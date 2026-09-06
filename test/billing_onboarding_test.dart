@@ -528,6 +528,29 @@ void main() {
     );
   });
 
+  test(
+    'runtime feature access does not impersonate an account grant',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          billingEnvironmentEntitlementProvider.overrideWithValue(true),
+          billingStoreProvider.overrideWithValue(_FakeBillingStore()),
+          applePurchasesSupportedProvider.overrideWithValue(false),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.read(billingControllerProvider);
+      await _settle();
+
+      final state = container.read(billingControllerProvider);
+      expect(state.hasActiveEntitlement, isTrue);
+      expect(state.hasLocalStoreKitEntitlement, isFalse);
+      expect(state.accountEntitlementActive, isFalse);
+      expect(billingAccessTier(state), BillingAccessTier.pro);
+    },
+  );
+
   test('verified StoreKit tier wins over account metadata', () {
     expect(
       billingAccessTier(

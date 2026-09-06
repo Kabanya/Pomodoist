@@ -16,3 +16,6 @@ screenlog.*
 **/.DS_Store
 **/build
 **/.dart_tool
+
+server/.env
+server/backups

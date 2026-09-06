@@ -1,0 +1,24 @@
+{
+  "format": 1,
+  "functions": [
+    "account-delete",
+    "pomodoist-app-store-notifications",
+    "pomodoist-google-calendar",
+    "pomodoist-mcp",
+    "pomodoist-purchase",
+    "pomodoist-stripe-billing",
+    "pomodoist-telegram",
+    "pomodoist-watch",
+    "stripe-webhook"
+  ],
+  "helpers": [
+    "apple_app_transaction.ts",
+    "apple_app_transaction_test.ts",
+    "limited_json.ts",
+    "pomodoist_storekit.ts",
+    "pomodoist_storekit_test.ts"
+  ],
+  "baselineMigrations": [
+    "20260906123349_pomodoist_initial.sql"
+  ]
+}

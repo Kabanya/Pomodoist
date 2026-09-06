@@ -1,9 +1,11 @@
+import 'package:app_voice/app_voice.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pomodoist/app/global_quick_add_window.dart';
+import 'package:pomodoist/app/account_providers.dart';
 import 'package:pomodoist/features/billing/billing.dart';
 import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/core/db/app_database.dart';
@@ -16,6 +18,11 @@ void main() {
   ) async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
+    final recognizer = _IdleRecordedRecognizer();
+    final voiceController = VoiceRecognitionController(
+      recordedRecognizer: recognizer,
+    );
+    addTearDown(voiceController.dispose);
     final sizes = <bool>[];
     var closeCount = 0;
     await tester.pumpWidget(
@@ -24,6 +31,7 @@ void main() {
           appDatabaseProvider.overrideWithValue(db),
           billingAccountEntitlementProvider.overrideWithValue(true),
           applePurchasesSupportedProvider.overrideWithValue(false),
+          voiceRecognitionControllerProvider.overrideWithValue(voiceController),
         ],
         child: GlobalQuickAddWindowApp(
           onClose: () => closeCount++,
@@ -45,9 +53,11 @@ void main() {
     await tester.tap(find.byKey(const Key('voice-expand')));
     await tester.pumpAndSettle();
     expect(sizes, [true, false, true]);
+    expect(recognizer.cancelCalls, 0);
     await tester.tap(find.byTooltip('Close'));
     await tester.pumpAndSettle();
     expect(sizes, [true, false, true, false]);
+    expect(recognizer.cancelCalls, 1);
     expect(find.text('Keep typed task'), findsOneWidget);
     expect(closeCount, 0);
     await tester.pumpWidget(const SizedBox.shrink());
@@ -93,4 +103,21 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 1));
   });
+}
+
+class _IdleRecordedRecognizer extends RecordedVoiceRecognizer {
+  int cancelCalls = 0;
+
+  @override
+  Future<void> start(VoiceRecognitionConfig config) async {
+    throw StateError('Opening the voice panel must not start recording.');
+  }
+
+  @override
+  Future<VoiceRecognitionTranscript> stop(VoiceRecognitionConfig config) async {
+    throw StateError('No recording was started.');
+  }
+
+  @override
+  Future<void> cancel() async => cancelCalls++;
 }

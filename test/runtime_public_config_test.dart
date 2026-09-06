@@ -43,6 +43,98 @@ void main() {
       expect(config.environment, RuntimeEnvironment.production);
     });
 
+    test('accepts selfhosted HTTPS without optional integrations', () {
+      final config = RuntimePublicConfig.fromRuntimeJson({
+        ..._stagingConfig(),
+        'environment': 'selfhosted',
+        'webAppUrl': 'https://tasks.example.com',
+        'supabaseUrl': 'https://api.example.com',
+        'turnstileSiteKey': '',
+        'sentryDsn': '',
+      });
+
+      expect(config.environment, RuntimeEnvironment.selfhosted);
+      expect(config.supabaseUrl, Uri.parse('https://api.example.com'));
+      expect(config.turnstileSiteKey, isEmpty);
+      expect(config.sentryDsn, isNull);
+      expect(config.selfHostedFeaturesUnlocked, isTrue);
+    });
+
+    test('accepts loopback HTTP only for selfhosted endpoints', () {
+      final config = RuntimePublicConfig.fromRuntimeJson({
+        ..._stagingConfig(),
+        'environment': 'selfhosted',
+        'webAppUrl': 'http://localhost:58080',
+        'supabaseUrl': 'http://127.0.0.1:55421',
+        'turnstileSiteKey': '',
+        'sentryDsn': 'http://public@localhost:9000/42',
+      });
+
+      expect(config.webAppUrl, Uri.parse('http://localhost:58080'));
+      expect(config.supabaseUrl, Uri.parse('http://127.0.0.1:55421'));
+      expect(config.sentryDsn, Uri.parse('http://public@localhost:9000/42'));
+
+      for (final field in ['webAppUrl', 'supabaseUrl']) {
+        expect(
+          () => RuntimePublicConfig.fromRuntimeJson({
+            ..._stagingConfig(),
+            'environment': 'selfhosted',
+            'webAppUrl': 'https://tasks.example.com',
+            'supabaseUrl': 'https://api.example.com',
+            'turnstileSiteKey': '',
+            'sentryDsn': '',
+            field: 'http://remote.example.com',
+          }),
+          throwsFormatException,
+          reason: field,
+        );
+      }
+    });
+
+    test('selfhosted requires an explicit backend pair', () {
+      for (final values in [
+        (url: '', key: ''),
+        (url: 'https://api.example.com', key: ''),
+        (url: '', key: 'public-anon-key'),
+      ]) {
+        expect(
+          () => RuntimePublicConfig.fromBuildTimeValues(
+            environment: 'selfhosted',
+            release: _release,
+            webAppUrl: 'https://tasks.example.com',
+            supabaseUrl: values.url,
+            supabaseAnonKey: values.key,
+            turnstileSiteKey: '',
+            sentryDsn: '',
+            nativeRelease: true,
+          ),
+          throwsFormatException,
+          reason: values.toString(),
+        );
+      }
+    });
+
+    test('selfhosted rejects URL credentials, queries, and fragments', () {
+      for (final url in [
+        'https://user@tasks.example.com',
+        'https://tasks.example.com?unsafe=1',
+        'https://tasks.example.com/#unsafe',
+      ]) {
+        expect(
+          () => RuntimePublicConfig.fromRuntimeJson({
+            ..._stagingConfig(),
+            'environment': 'selfhosted',
+            'webAppUrl': url,
+            'supabaseUrl': 'https://api.example.com',
+            'turnstileSiteKey': '',
+            'sentryDsn': '',
+          }),
+          throwsFormatException,
+          reason: url,
+        );
+      }
+    });
+
     test('rejects arbitrary staging and production Supabase hosts', () {
       expect(
         () => RuntimePublicConfig.fromRuntimeJson({
@@ -132,6 +224,7 @@ void main() {
         'https://public@example.ingest.sentry.io/42',
         'https://public@o123.ingest.us.sentry.io/42',
         'https://public@o123.ingest.sentry.io/project',
+        'https://public@o123.ingest.sentry.io/prefix/42',
         'https://public@o123.ingest.sentry.io/42/more',
         'https://public@o123.ingest.sentry.io:8443/42',
         'https://public@sentry.example.test/42',
@@ -221,7 +314,26 @@ void main() {
       expect(config.sentryDsn, isNull);
     });
 
-    test('native release falls back to the production Supabase client', () {
+    test('explicit production native release keeps the official fallback', () {
+      final config = RuntimePublicConfig.fromBuildTimeValues(
+        environment: 'production',
+        release: _release,
+        webAppUrl: 'https://app.pomodoist.com',
+        supabaseUrl: '',
+        supabaseAnonKey: '',
+        turnstileSiteKey: 'turnstile-public-key',
+        sentryDsn: '',
+        nativeRelease: true,
+      );
+
+      expect(
+        config.supabaseUrl,
+        Uri.parse('https://ewauihswbwduvklrozke.supabase.co'),
+      );
+      expect(config.supabaseAnonKey, startsWith('sb_publishable_'));
+    });
+
+    test('explicit local native release does not fall back to cloud', () {
       final config = RuntimePublicConfig.fromBuildTimeValues(
         environment: 'local',
         release: 'development',
@@ -233,11 +345,9 @@ void main() {
         nativeRelease: true,
       );
 
-      expect(
-        config.supabaseUrl,
-        Uri.parse('https://ewauihswbwduvklrozke.supabase.co'),
-      );
-      expect(config.supabaseAnonKey, startsWith('sb_publishable_'));
+      expect(config.supabaseUrl, isNull);
+      expect(config.supabaseAnonKey, isEmpty);
+      expect(config.selfHostedFeaturesUnlocked, isFalse);
     });
   });
 }

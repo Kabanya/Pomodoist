@@ -1,8 +1,9 @@
 # Licensing
 
-## Client software
+## Software
 
-The source code and official Pomodoist client binaries are licensed under the
+The source code, including the self-hostable server core in `server/`, and
+official Pomodoist client binaries are licensed under the
 GNU Affero General Public License v3.0 only (`AGPL-3.0-only`). See
 [LICENSE](LICENSE). FinchForge LLC does not offer an alternative proprietary
 or commercial license for the client software.
@@ -17,6 +18,9 @@ Pomodoist subscriptions pay for account entitlements, hosted infrastructure,
 cloud synchronization, server-side integrations, usage quotas, support, and
 other operated services. A subscription does not change the software license
 or add proprietary client modules to an official build.
+
+Self-hosted instances use their operator's infrastructure, accounts, and provider
+credentials. They do not include access to the official hosted services.
 
 ## Other rights
 

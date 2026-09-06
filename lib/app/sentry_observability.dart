@@ -32,6 +32,7 @@ class SentryRuntimePolicy {
   }) {
     final parsedEnvironment = switch (environment) {
       'local' => RuntimeEnvironment.local,
+      'selfhosted' => RuntimeEnvironment.selfhosted,
       'staging' => RuntimeEnvironment.staging,
       'production' => RuntimeEnvironment.production,
       _ => throw FormatException('Unexpected environment: $environment'),
@@ -44,7 +45,10 @@ class SentryRuntimePolicy {
       throw const FormatException('release is required');
     }
     if (sentryDsn.isNotEmpty) {
-      _validatePublicSentryDsn(sentryDsn);
+      _validatePublicSentryDsn(
+        sentryDsn,
+        allowSelfHosted: parsedEnvironment == RuntimeEnvironment.selfhosted,
+      );
     }
 
     final enabled = remote && sentryDsn.isNotEmpty;
@@ -87,9 +91,7 @@ abstract interface class StartupMonitor {
 }
 
 class SentryStartupMonitor implements StartupMonitor {
-  const SentryStartupMonitor()
-    : _transport = null,
-      _restoreTestGlobals = false;
+  const SentryStartupMonitor() : _transport = null, _restoreTestGlobals = false;
 
   @visibleForTesting
   const SentryStartupMonitor.testing({required Transport transport})
@@ -236,17 +238,25 @@ void _notifyStartupFailure(void Function()? callback) {
   }
 }
 
-void _validatePublicSentryDsn(String value) {
+void _validatePublicSentryDsn(String value, {required bool allowSelfHosted}) {
   final uri = Uri.tryParse(value);
   final publicKey = uri?.userInfo ?? '';
   final segments = uri?.pathSegments ?? const <String>[];
-  if (uri == null ||
-      uri.scheme != 'https' ||
-      uri.hasPort ||
+  final allowedEndpoint =
+      uri != null &&
+      (uri.scheme == 'https' ||
+          allowSelfHosted &&
+              uri.scheme == 'http' &&
+              const {'localhost', '127.0.0.1', '::1'}.contains(uri.host));
+  final validProjectPath = allowSelfHosted
+      ? segments.isNotEmpty && RegExp(r'^[0-9]+$').hasMatch(segments.last)
+      : segments.length == 1 && RegExp(r'^[0-9]+$').hasMatch(segments.single);
+  if (!allowedEndpoint ||
+      !allowSelfHosted && uri.hasPort ||
       !RegExp(r'^[A-Za-z0-9]+$').hasMatch(publicKey) ||
-      !RegExp(r'^o[0-9]+\.ingest\.sentry\.io$').hasMatch(uri.host) ||
-      segments.length != 1 ||
-      !RegExp(r'^[0-9]+$').hasMatch(segments.single) ||
+      !allowSelfHosted &&
+          !RegExp(r'^o[0-9]+\.ingest\.sentry\.io$').hasMatch(uri.host) ||
+      !validProjectPath ||
       uri.hasQuery ||
       uri.hasFragment) {
     throw const FormatException('sentryDsn must be a public Sentry Cloud DSN');

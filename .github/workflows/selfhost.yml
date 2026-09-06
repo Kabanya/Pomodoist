@@ -1,0 +1,43 @@
+name: Self-hosted server
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags:
+      - 'server-v*.*.*'
+
+permissions:
+  contents: read
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
+        with:
+          deno-version: v2.8.0
+      - name: Check public boundary
+        run: sh tool/test_public_boundary.sh
+      - name: Test shared functions
+        run: deno test --config server/supabase/deno.json --allow-env --allow-net --allow-read server/supabase/functions
+      - name: Generate an independent instance
+        run: make -C server setup
+      - name: Start fresh database and API
+        run: make -C server core-up
+      - name: Test schema, ownership, and synchronization
+        run: make -C server test-db test-smoke
+      - name: Build and start the complete self-hosted stack
+        run: make -C server up
+      - name: Show service status
+        if: always()
+        run: docker ps --all --filter name=pomodoist-selfhost-
+      - name: Stop the test instance
+        if: always()
+        run: |
+          if [ -f server/.env ]; then
+            docker compose --project-directory server --env-file server/.env \
+              -f server/compose.yaml down --volumes --remove-orphans
+          fi

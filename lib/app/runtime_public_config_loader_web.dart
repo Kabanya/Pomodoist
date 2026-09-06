@@ -31,7 +31,10 @@ Future<RuntimePublicConfig> loadRuntimePublicConfig() async {
     return parsePreloadedRuntimePublicConfig(preloaded.dartify());
   }
   final buildTime = RuntimePublicConfig.fromBuildTime();
-  if (buildTime.environment == RuntimeEnvironment.local) return buildTime;
+  if (buildTime.environment == RuntimeEnvironment.local ||
+      buildTime.environment == RuntimeEnvironment.selfhosted) {
+    return buildTime;
+  }
   throw const FormatException(
     'window.pomodoistRuntimeConfig is required outside local development',
   );
