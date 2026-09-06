@@ -12,9 +12,9 @@ class ReleaseNotesTest(unittest.TestCase):
                 'v1.0.4', 'windows-preview-123', 'v1.0.3-rc.01']
         self.assertEqual(notes.previous_tag('v1.0.3-rc.2', tags), 'v1.0.3-rc.1')
         self.assertEqual(notes.previous_tag('v1.0.3-rc.1', tags), 'v1.0.2')
-        self.assertEqual(notes.previous_tag('v1.0.3', tags), 'v1.0.2')
+        self.assertEqual(notes.previous_tag('v1.0.3', tags), 'v1.0.3-rc.2')
         self.assertIsNone(notes.previous_tag('v1.0.0', tags))
-        self.assertEqual(notes.previous_tag('v1.0.5-rc.1', ['v1.0.3', 'v1.0.4-rc.9']), 'v1.0.3')
+        self.assertEqual(notes.previous_tag('v1.0.5-rc.1', ['v1.0.3', 'v1.0.4-rc.9']), 'v1.0.4-rc.9')
         with self.assertRaises(ValueError):
             notes.previous_tag('invalid', tags)
 
@@ -27,7 +27,7 @@ class ReleaseNotesTest(unittest.TestCase):
                 patch('sys.stdout', new_callable=io.StringIO) as output:
             notes.main()
         self.assertEqual(git.call_args_list[0].args, ('tag', '--list'))
-        self.assertEqual(git.call_args_list[1].args[-1], 'v1.0.3-rc.1..v1.0.3-rc.2')
+        self.assertEqual(git.call_args_list[1].args, ('log', '--format=- %h %s', 'v1.0.3-rc.1..v1.0.3-rc.2'))
         self.assertIn('compare/v1.0.3-rc.1...v1.0.3-rc.2', output.getvalue())
 
     def test_no_key_and_api_failure_use_commit_list(self):
@@ -42,12 +42,14 @@ class ReleaseNotesTest(unittest.TestCase):
             'choices': [{'message': {'content': '### Fixed\n- Fixed login.'}}],
         }).encode())
         with patch.object(notes, 'urlopen', return_value=response) as call:
-            result = notes.summarize('- abc Fix login', 'test-key')
+            commits = '- abc Fix login\n' * 2000
+            result = notes.summarize(commits, 'test-key')
         self.assertIn('Fixed login', result)
         bodies = [json.loads(c.args[0].data) for c in call.call_args_list]
         self.assertEqual([b['model'] for b in bodies],
                          ['openai/gpt-oss-120b'])
         for body in bodies:
+            self.assertEqual(body['messages'][1]['content'], commits)
             self.assertEqual(body['provider']['only'], ['groq', 'akashml/bf16'])
             self.assertEqual(body['provider']['order'], ['groq', 'akashml/bf16'])
 
