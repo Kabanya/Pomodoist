@@ -82,8 +82,10 @@ supabase/.temp/
 design/
 output/
 docs/
+temp**/
 tmp/
 
 # FVM Version Cache
 .fvm/
 /GNUmakefile
+tool/apple/VOICE_TESTING.md
