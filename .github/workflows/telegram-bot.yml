@@ -1,0 +1,52 @@
+name: Telegram bot
+
+on:
+  pull_request:
+    paths:
+      - 'server/supabase/**'
+      - 'telegram-mini-app/**'
+      - 'server/compose.telegram.yaml'
+      - 'tool/*telegram*'
+      - '.github/workflows/telegram-bot.yml'
+  push:
+    branches: [main, '9-issue/make-better-telegram']
+    paths:
+      - 'server/supabase/**'
+      - 'telegram-mini-app/**'
+      - 'server/compose.telegram.yaml'
+      - 'tool/*telegram*'
+      - '.github/workflows/telegram-bot.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: telegram-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Check the deployed entry point and shared backend types
+        working-directory: server/supabase
+        run: deno check functions/pomodoist-telegram/index.ts
+      - name: Run Telegram, existing Watch and Mini App regressions
+        working-directory: server/supabase
+        run: >-
+          deno test --allow-read --allow-env
+          functions/pomodoist-telegram
+          functions/pomodoist-watch/pomodoist_watch_test.ts
+          ../../telegram-mini-app/core_test.ts
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check opt-in webhook configuration without contacting Telegram
+        run: node --test tool/configure-telegram-bot.test.mjs
