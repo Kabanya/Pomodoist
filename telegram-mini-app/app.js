@@ -35,11 +35,12 @@ let serverState = state;
 let pendingCommands = [];
 let view = "inbox", page = 0, selectedId = null, editingTask = null;
 let routeGeneration = 0, serverGeneration = 0, snapshotRequest = 0;
+let snapshotsInFlight = 0, lastUpdatedAt = null, refreshFailed = false;
 let busy = false,
   loadingRoute = false,
   detailBusy = false,
   autoCompleting = false;
-let lastCompleted = null, toastTimer, draftTimer, clockTimer;
+let lastCompleted = null, toastTimer, draftTimer, clockTimer, refreshTimer;
 let storageWrites = Promise.resolve();
 
 document.documentElement.lang = locale;
@@ -54,7 +55,7 @@ if (!telegramContext) {
   WebApp.expand();
   bindUi();
   WebApp.onEvent?.("themeChanged", applyTheme);
-  WebApp.onEvent?.("activated", refreshUi);
+  WebApp.onEvent?.("activated", refreshInBackground);
   WebApp.SettingsButton?.onClick(openSettings);
   WebApp.SettingsButton?.show();
   WebApp.BackButton?.onClick(goBack);
@@ -92,11 +93,14 @@ async function start() {
     }
   }
   serverState = snapshot;
+  lastUpdatedAt = new Date();
+  refreshFailed = false;
   projectState();
   elements.loading.hidden = true;
   elements.app.hidden = false;
   render();
   if (!clockTimer) clockTimer = window.setInterval(tick, 1000);
+  if (!refreshTimer) refreshTimer = window.setInterval(refreshInBackground, 5000);
   void drainCommands();
 }
 
@@ -248,9 +252,9 @@ function bindUi() {
     start().catch(showFatal);
   });
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) void refreshUi();
+    if (!document.hidden) refreshInBackground();
   });
-  window.addEventListener("online", refreshUi);
+  window.addEventListener("online", refreshInBackground);
   window.addEventListener("offline", render);
 }
 
@@ -268,26 +272,43 @@ async function refreshSnapshot() {
   const route = routeGeneration,
     generation = serverGeneration,
     request = ++snapshotRequest;
-  const snapshot = await api("snapshot", query());
-  if (
-    route !== routeGeneration || generation !== serverGeneration ||
-    request !== snapshotRequest
-  ) return false;
-  serverState = snapshot;
-  page = snapshot.page ?? page;
-  loadingRoute = false;
-  projectState();
-  render();
-  return true;
+  const isCurrent = () => route === routeGeneration &&
+    generation === serverGeneration && request === snapshotRequest;
+  snapshotsInFlight++;
+  try {
+    const snapshot = await api("snapshot", query());
+    if (!isCurrent()) return false;
+    serverState = snapshot;
+    lastUpdatedAt = new Date();
+    refreshFailed = false;
+    page = snapshot.page ?? page;
+    loadingRoute = false;
+    projectState();
+    render();
+    return true;
+  } catch (error) {
+    if (!isCurrent()) return false;
+    refreshFailed = true;
+    renderSyncStatus();
+    throw error;
+  } finally {
+    snapshotsInFlight--;
+  }
 }
 
-async function refreshUi() {
+function refreshInBackground() {
+  if (elements.app.hidden || document.hidden || WebApp?.isActive === false ||
+    !navigator.onLine || busy || detailBusy || snapshotsInFlight) return;
+  void refreshUi(true);
+}
+
+async function refreshUi(background = false) {
   try {
     const updated = await refreshSnapshot();
     void drainCommands();
     return updated;
   } catch (error) {
-    showTransient(errorMessage(error));
+    if (background !== true) showTransient(errorMessage(error));
     return false;
   }
 }
@@ -325,6 +346,7 @@ async function drainCommands() {
     while (pendingCommands.length) {
       const pending = pendingCommands[0];
       const route = routeGeneration;
+      const request = snapshotRequest;
       const { optimisticAt: _, optimisticTask: __, ...command } =
         pending.command;
       let snapshot;
@@ -363,17 +385,19 @@ async function drainCommands() {
       if (["task.update", "task.delete"].includes(command.type)) {
         localStorage.removeItem(detailDraftKey(command.taskId));
       }
-      if (route === routeGeneration) {
+      if (route === routeGeneration && request === snapshotRequest) {
         if (selectedId && snapshot.task?.id !== selectedId) {
           snapshot.task = serverState.task;
         }
         serverState = snapshot;
+        lastUpdatedAt = new Date();
+        refreshFailed = false;
         page = snapshot.page ?? page;
         loadingRoute = false;
         projectState();
         render();
       } else {
-        // A command response belongs to the view that sent it. Fetch the current view.
+        // Navigation or a newer snapshot superseded this command response.
         await refreshSnapshot().catch(() => {});
       }
       pending.resolve?.(snapshot);
@@ -510,11 +534,7 @@ function render() {
     state.focus?.interval.status === "paused" ? text.resume : text.pause;
   elements["focus-status"].textContent =
     state.focus?.interval.status === "paused" ? text.paused : text.focusing;
-  elements["sync-status"].textContent = pendingCommands.length
-    ? text.pending
-    : navigator.onLine
-    ? text.synced
-    : text.offline;
+  renderSyncStatus();
   elements["account-status"].textContent = state.account.linked
     ? text.linked
     : text.guest;
@@ -522,6 +542,20 @@ function render() {
   elements["link-account"].disabled = busy || pendingCommands.length > 0;
   updateDetailActions();
   tick();
+}
+
+function renderSyncStatus() {
+  const messages = [];
+  if (!navigator.onLine) messages.push(text.offline);
+  if (pendingCommands.length) messages.push(text.pending);
+  if (navigator.onLine && refreshFailed) messages.push(text.refreshFailed);
+  if (lastUpdatedAt) {
+    const time = new Intl.DateTimeFormat(locale, {
+      hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone,
+    }).format(lastUpdatedAt);
+    messages.push(text.updatedAt.replace("{time}", time));
+  }
+  elements["sync-status"].textContent = messages.join(" ");
 }
 
 function scheduleLabel(task) {

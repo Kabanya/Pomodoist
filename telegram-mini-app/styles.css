@@ -310,7 +310,8 @@ textarea {
   z-index: 2;
   inset: auto 0 0;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(72px, 1fr));
+  overflow-x: auto;
   max-width: 720px;
   margin-inline: auto;
   padding: 6px var(--safe-right) calc(6px + var(--safe-bottom))

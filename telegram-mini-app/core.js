@@ -34,7 +34,9 @@ const messages = {
     openApp: "Open Pomodoist",
     saving: "Saving…",
     pending: "Changes saved on this device. Waiting to sync.",
-    synced: "Up to date",
+    all: "All tasks",
+    updatedAt: "Updated at {time}",
+    refreshFailed: "Could not refresh tasks.",
     changed:
       "This task changed on another device. Refresh it before saving again.",
     notFound: "Task not found. Refresh the list.",
@@ -113,7 +115,9 @@ const messages = {
     openApp: "Открыть Pomodoist",
     saving: "Сохранение…",
     pending: "Изменения сохранены на устройстве. Ожидаем синхронизацию.",
-    synced: "Всё синхронизировано",
+    all: "Все задачи",
+    updatedAt: "Обновлено в {time}",
+    refreshFailed: "Не удалось обновить задачи.",
     changed:
       "Задача изменилась на другом устройстве. Обновите её перед сохранением.",
     notFound: "Задача не найдена. Обновите список.",
@@ -191,7 +195,9 @@ const messages = {
     saving: "Speichern…",
     pending:
       "Änderungen auf diesem Gerät gespeichert. Synchronisierung ausstehend.",
-    synced: "Synchronisiert",
+    all: "Alle Aufgaben",
+    updatedAt: "Aktualisiert um {time}",
+    refreshFailed: "Aufgaben konnten nicht aktualisiert werden.",
     changed:
       "Die Aufgabe wurde auf einem anderen Gerät geändert. Vor dem Speichern aktualisieren.",
     notFound: "Aufgabe nicht gefunden. Aktualisiere die Liste.",
@@ -274,7 +280,9 @@ const messages = {
     saving: "Guardando…",
     pending:
       "Cambios guardados en este dispositivo. Pendientes de sincronizar.",
-    synced: "Sincronizado",
+    all: "Todas las tareas",
+    updatedAt: "Actualizado a las {time}",
+    refreshFailed: "No se pudieron actualizar las tareas.",
     changed:
       "La tarea cambió en otro dispositivo. Actualízala antes de guardar.",
     notFound: "Tarea no encontrada. Actualiza la lista.",
@@ -357,7 +365,9 @@ const messages = {
     saving: "Enregistrement…",
     pending:
       "Modifications enregistrées sur cet appareil. Synchronisation en attente.",
-    synced: "À jour",
+    all: "Toutes les tâches",
+    updatedAt: "Mis à jour à {time}",
+    refreshFailed: "Impossible d’actualiser les tâches.",
     changed:
       "La tâche a changé sur un autre appareil. Actualisez-la avant d’enregistrer.",
     notFound: "Tâche introuvable. Actualisez la liste.",
@@ -437,7 +447,9 @@ const messages = {
     openApp: "打开 Pomodoist",
     saving: "保存中…",
     pending: "更改已保存在此设备上，等待同步。",
-    synced: "已同步",
+    all: "全部任务",
+    updatedAt: "更新于 {time}",
+    refreshFailed: "无法更新任务。",
     changed: "此任务已在其他设备上更改。请刷新后再保存。",
     notFound: "找不到任务，请刷新列表。",
     requiresApp: "请打开 Pomodoist 来修改此重复任务或大型子任务组。",
@@ -512,7 +524,9 @@ const messages = {
     openApp: "فتح Pomodoist",
     saving: "جارٍ الحفظ…",
     pending: "حُفظت التغييرات على هذا الجهاز. بانتظار المزامنة.",
-    synced: "تمت المزامنة",
+    all: "كل المهام",
+    updatedAt: "آخر تحديث في {time}",
+    refreshFailed: "تعذّر تحديث المهام.",
     changed: "تغيرت المهمة على جهاز آخر. حدّثها قبل الحفظ.",
     notFound: "المهمة غير موجودة. حدّث القائمة.",
     requiresApp:
@@ -778,6 +792,7 @@ function scheduleDay(raw, timeZone) {
 function matchesView(task, view = "inbox", timeZone, now) {
   if (view === "completed") return task.status === "completed";
   if (task.status === "completed") return false;
+  if (view === "all") return true;
   if (view === "inbox") return !task.projectId || task.projectId === "inbox";
   const day = task.day ?? scheduleDay(task.dueJson, timeZone);
   return Boolean(day) &&

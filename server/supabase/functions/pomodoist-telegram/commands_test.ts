@@ -86,6 +86,25 @@ test('snapshot parameters fail closed on invalid zones and page numbers', () => 
   assert.throws(() => snapshotOptions({ page: -1 }));
   assert.throws(() => snapshotOptions({ view: 'everything-secret' }));
 });
+test('All tasks includes undated project tasks, keeps pagination and hides unavailable tasks', () => {
+  const rows = Array.from({ length: 8 }, (_, n) => ({ ...task, id: String(n), projectId: 'work' }));
+  const s = state([...rows,
+    { ...task, id: 'done', status: 'completed' },
+    { ...task, id: 'deleted', isDeleted: true },
+    { ...task, id: 'archived', projectId: 'archived' },
+    { ...task, id: 'deleted-project', projectId: 'deleted-project' },
+  ]);
+  s.projects.set('archived', { isArchived: true });
+  s.projects.set('deleted-project', { isDeleted: true });
+  assert.deepEqual(snapshotOptions({ view: 'all', page: 1 }), { view: 'all', page: 1 });
+  const result = taskPage(s, now, { view: 'all', page: 1 });
+  assert.equal(result.total, 8); assert.equal(result.pages, 2); assert.equal(result.tasks.length, 2);
+  assert.ok(result.tasks.every(row => row.projectId === 'work'));
+  assert.equal(taskPage(s, now, { view: 'inbox' }).total, 0);
+  assert.equal(taskPage(s, now, { view: 'today' }).total, 0);
+  assert.equal(taskPage(s, now, { view: 'upcoming' }).total, 0);
+  assert.equal(taskPage(s, now, { view: 'completed' }).total, 1);
+});
 test('stable action ids are valid deterministic UUIDs', async () => {
   const a = await stableUuid('telegram:42:100'); assert.equal(a, await stableUuid('telegram:42:100'));
   assert.notEqual(a, await stableUuid('telegram:43:100'));

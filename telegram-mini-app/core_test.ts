@@ -20,6 +20,31 @@ Deno.test("all requested Telegram locales resolve with English fallback", () => 
   assertEquals(localeFor("zh-Hans"), "zh");
   assertEquals(localeFor("ja-JP"), "en");
   assertEquals(textFor("ar").direction, "rtl");
+  for (const locale of ["ar", "de", "en", "es", "fr", "ru", "zh"]) {
+    const text = textFor(locale);
+    assertEquals(Boolean(text.all && text.refreshFailed), true);
+    assertEquals(text.updatedAt.includes("{time}"), true);
+  }
+});
+
+Deno.test("All tasks keeps undated project tasks while applying pending edits", () => {
+  const task = { id: "work-task", content: "Read", projectId: "work", status: "open", day: "" };
+  const initial = { inbox: [], tasks: [task], view: "all", total: 1 };
+  const edited = applyOptimisticCommand(initial, {
+    type: "task.update", taskId: task.id, patch: { content: "Edited" },
+  });
+  assertEquals(edited.tasks.length, 1);
+  assertEquals(edited.tasks[0].content, "Edited");
+  assertEquals(edited.inbox, []);
+  const completed = applyOptimisticCommand(edited, { type: "task.complete", taskId: task.id });
+  assertEquals(completed.tasks, []);
+  assertEquals(completed.total, 0);
+  const restored = applyOptimisticCommand(completed, {
+    type: "task.uncomplete", taskId: task.id, optimisticTask: { ...task, status: "completed" },
+  });
+  assertEquals(restored.tasks.length, 1);
+  assertEquals(restored.tasks[0].id, task.id);
+  assertEquals(restored.total, 1);
 });
 
 Deno.test("timer restores from server timestamps and freezes while paused", () => {

@@ -71,7 +71,7 @@ export function validateCommand(command: JsonMap | null): asserts command is Jso
 export function snapshotOptions(value: JsonMap = {}): SnapshotOptions {
   const options: SnapshotOptions = {};
   if (value.view !== undefined) {
-    if (!['inbox', 'today', 'upcoming', 'completed'].includes(String(value.view))) throw new TelegramError('invalid_view');
+    if (!['inbox', 'all', 'today', 'upcoming', 'completed'].includes(String(value.view))) throw new TelegramError('invalid_view');
     options.view = String(value.view);
   }
   if (value.page !== undefined) {
@@ -200,6 +200,7 @@ export function taskPage(state: State, now: Date, input: SnapshotOptions) {
   const rows = visible.filter(task => {
     if (view === 'completed') return task.status === 'completed';
     if (task.status === 'completed') return false;
+    if (view === 'all') return true;
     const d = day(task);
     return view === 'inbox' ? task.projectId === 'inbox' : view === 'today' ? d !== '' && d <= today : d > today;
   }).sort((a, b) => view === 'completed' ? new Date(b.completedAt as string).getTime() - new Date(a.completedAt as string).getTime() :
