@@ -206,11 +206,15 @@ export function taskPage(state: State, now: Date, input: SnapshotOptions) {
     day(a).localeCompare(day(b)) || String(a.orderKey ?? '').localeCompare(String(b.orderKey ?? '')) || String(a.id).localeCompare(String(b.id)));
   const pages = Math.max(1, Math.ceil(rows.length / 6)), page = Math.min(options.page ?? 0, pages - 1);
   const revisions = new Map(state.entities.filter(e => e.entityType === 'task').map(e => [e.entityId, e.serverRevision]));
+  const focusTaskId = [...state.focusRuns.values()].find(active)?.taskId;
   const summarize = (row: JsonMap, detail = false) => ({ id: String(row.id), content: String(row.content ?? ''), status: String(row.status ?? 'open'),
+    timeZone, projectId: row.projectId ?? null, projectName: state.projects.get(String(row.projectId))?.name ?? null,
+    deadlineJson: row.deadlineJson ?? null, isFocused: row.id === focusTaskId,
     day: day(row), dueJson: row.dueJson ?? null, priority: row.priority ?? 4, revision: revisions.get(String(row.id)) ?? 0,
     ...(detail ? { description: row.description ?? null, parentId: row.parentId ?? null } : {}) });
   const selected = options.taskId ? visible.find(row => row.id === options.taskId) : undefined;
-  return { view, timeZone, total: rows.length, page, pages, tasks: rows.slice(page * 6, page * 6 + 6).map(row => summarize(row)), task: selected ? summarize(selected, true) : null };
+  const focusTask = visible.find(row => row.id === focusTaskId);
+  return { focusTask: focusTask ? summarize(focusTask) : null, view, timeZone, total: rows.length, page, pages, tasks: rows.slice(page * 6, page * 6 + 6).map(row => summarize(row)), task: selected ? summarize(selected, true) : null };
 }
 export async function stableUuid(value: string) {
   const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));

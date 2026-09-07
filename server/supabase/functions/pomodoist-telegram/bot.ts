@@ -1,5 +1,6 @@
 import { type JsonMap, object, snapshotOptions, stableUuid, TelegramError, uuidPattern, validDate, validateCommand } from './commands.ts';
-import { copy, errorText, focusScreen, listScreen, navigation, readAction, type Screen, taskScreen } from './bot_ui.ts';
+import { copy, errorText, focusScreen, listScreen, messageScreen, navigation, priorityScreen, readAction, type Screen, taskScreen, withNotice } from './bot_ui.ts';
+import { Message, shorten } from './bot_format.ts';
 import type { TelegramStore } from './pomodoist_telegram.ts';
 export type TelegramApi = (method: string, body: JsonMap) => Promise<JsonMap>;
 export type BotDeps = {
@@ -114,17 +115,16 @@ export async function handleTelegramWebhook(req: Request, deps: BotDeps) {
     const snapshot = async (options: JsonMap = {}) => object(await deps.store.snapshot(account, now, snapshotOptions({ timeZone: deps.timeZone ?? 'UTC', ...options }))) ?? {};
     const showList = async (view = 'inbox', page = 0, notice = '') => {
       const screen = listScreen(await snapshot({ view, page }), t, now);
-      if (notice) screen.text = `${notice}\n\n${screen.text}`;
-      await respond(screen);
+      await respond(notice ? withNotice(screen, notice) : screen);
     };
     const showTask = async (id: string, confirm = false) => {
       const data = await snapshot({ taskId: id }); await respond(taskScreen(object(data.task), t, now, confirm));
     };
     const showAccount = async () => {
       const data = await snapshot(), linked = object(data.account)?.linked === true;
-      await respond({ text: linked ? t.linked : t.guest, reply_markup: { inline_keyboard: [
+      await respond(messageScreen(t.account, linked ? t.linked : t.guest, [
         ...(!linked ? [[{ text: t.link, callback_data: 'link' }]] : []),
-        [{ text: t.open, web_app: { url: miniAppUrl(deps.webAppUrl) } }], ...navigation(t)] } });
+        [{ text: t.open, web_app: { url: miniAppUrl(deps.webAppUrl) } }], ...navigation(t)]));
     };
     const mutate = async (command: JsonMap, receipt?: string) => {
       command.id ??= await stableUuid(`telegram:${botId}:${userId}:${receipt ?? `update:${update.update_id}`}`);
@@ -140,7 +140,10 @@ export async function handleTelegramWebhook(req: Request, deps: BotDeps) {
       if (!task) throw new TelegramError('task_not_found', 404);
       const token = await signPrompt(kind, id, Number(task.revision ?? 0), Math.floor(+now / 1000), userId, deps.secret);
       const explanation = kind === 'edit' ? t.editPrompt : kind === 'note' ? t.notePrompt : t.datePrompt;
-      await deps.call('sendMessage', { chat_id: Number(chatId), text: `${explanation}\n\n${String(task.content).slice(0, 500)}\n${token}`,
+      const title = kind === 'edit' ? t.edit : kind === 'note' ? t.note : t.date;
+      const message = new Message().add(`Pomodoist · ${title}`, 'bold').add(`\n\n${explanation}`)
+        .add(`\n\n${shorten(task.content, 500)}\n`).add(token, 'spoiler');
+      await deps.call('sendMessage', { chat_id: Number(chatId), ...message,
         reply_markup: { force_reply: true, selective: true } });
     };
     if (callback) {
@@ -151,16 +154,22 @@ export async function handleTelegramWebhook(req: Request, deps: BotDeps) {
         if (!match) throw new TelegramError('invalid_control'); await showList(match[1], Number(match[2]));
       } else if (value === 'focus') await respond(focusScreen(await snapshot(), t, now));
       else if (value === 'account') await showAccount();
-      else if (value === 'new') await respond({ text: t.newPrompt, reply_markup: { inline_keyboard: navigation(t) } }, true);
+      else if (value === 'new') await respond(messageScreen(t.add, t.newPrompt, navigation(t)), true);
       else if (value === 'link') {
         const link = object(await deps.store.beginLink(account, now));
         const url = new URL(String(link?.url));
         if (url.origin !== new URL(deps.webAppUrl).origin || url.protocol !== 'https:') throw new TelegramError('invalid_link_url', 503);
-        await respond({ text: t.guest, reply_markup: { inline_keyboard: [[{ text: t.link, url: url.href }], ...navigation(t)] } });
+        await respond(messageScreen(t.account, t.guest, [[{ text: t.link, url: url.href }], ...navigation(t)]));
       } else {
         const action = readAction(value, now);
         if (action.action === 'view' || action.action === 'del') await showTask(action.id, action.action === 'del');
-        else if (['edit', 'note', 'date'].includes(action.action)) await prompt(action.action, action.id);
+        else if (action.action === 'priority') {
+          const data = await snapshot({ taskId: action.id });
+          await respond(priorityScreen(object(data.task), t, now));
+        } else if (['pone', 'ptwo', 'pthree', 'pfour'].includes(action.action)) {
+          await mutate({ type: 'task.update', taskId: action.id, expectedRevision: action.revision,
+            patch: { priority: ['pone', 'ptwo', 'pthree', 'pfour'].indexOf(action.action) + 1 } }, value);
+        } else if (['edit', 'note', 'date'].includes(action.action)) await prompt(action.action, action.id);
         else if (['pause', 'resume', 'stop', 'finish'].includes(action.action)) await mutate({ type: `focus.${action.action === 'finish' ? 'complete' : action.action}`, runId: action.id }, value);
         else await mutate({ type: ({ done: 'task.complete', undo: 'task.uncomplete', yes: 'task.delete', go: 'focus.start' } as Record<string, string>)[action.action],
           taskId: action.id, expectedRevision: action.revision }, value);
@@ -176,7 +185,7 @@ export async function handleTelegramWebhook(req: Request, deps: BotDeps) {
     }
     const match = /^\/([a-z]+)(?:@[A-Za-z0-9_]+)?(?:\s+([\s\S]*))?$/.exec(input);
     const name = match?.[1] ?? '', argument = match?.[2]?.trim() ?? '';
-    if (['start', 'help', 'cancel'].includes(name)) await respond({ text: t.help, reply_markup: { inline_keyboard: navigation(t) } });
+    if (['start', 'help', 'cancel'].includes(name)) await respond(messageScreen(t.menu, t.help, navigation(t)));
     else if (['inbox', 'today', 'upcoming', 'completed'].includes(name)) await showList(name);
     else if (name === 'account') await showAccount();
     else if (name === 'focus') await respond(focusScreen(await snapshot(), t, now));
@@ -185,7 +194,7 @@ export async function handleTelegramWebhook(req: Request, deps: BotDeps) {
       if (!run) throw new TelegramError('focus_changed', 409);
       await mutate({ type: `focus.${name === 'finish' ? 'complete' : name}`, runId: run.id });
     } else if (name === 'add') {
-      if (!argument) await respond({ text: t.newPrompt, reply_markup: { inline_keyboard: navigation(t) } });
+      if (!argument) await respond(messageScreen(t.add, t.newPrompt, navigation(t)));
       else await mutate({ type: 'task.create', content: argument });
     } else if (['task', 'delete', 'edit', 'note', 'schedule', 'done', 'undo'].includes(name)) {
       const [id, ...rest] = argument.split(/\s+/), value = rest.join(' ');
@@ -194,12 +203,12 @@ export async function handleTelegramWebhook(req: Request, deps: BotDeps) {
       else if (name === 'done' || name === 'undo') await mutate({ type: name === 'done' ? 'task.complete' : 'task.uncomplete', taskId: id });
       else if (!value) await prompt(name === 'schedule' ? 'date' : name, id);
       else await mutate({ type: 'task.update', taskId: id, patch: patchFor(name === 'schedule' ? 'date' : name, value) });
-    } else await respond({ text: t.help, reply_markup: { inline_keyboard: navigation(t) } });
+    } else await respond(messageScreen(t.menu, t.help, navigation(t)));
     return Response.json({ ok: true });
   } catch (error) {
     if (error instanceof DeliveryError && !error.retryable) return Response.json({ ok: true });
     if (error instanceof TelegramError && error.status < 500) {
-      try { await respond({ text: errorText(error.code, t), reply_markup: { inline_keyboard: navigation(t) } }, true); return Response.json({ ok: true }); }
+      try { await respond(messageScreen(t.menu, errorText(error.code, t), navigation(t)), true); return Response.json({ ok: true }); }
       catch { /* Retry only with the same mutation receipt id. */ }
     }
     return Response.json({ ok: false, code: 'retry_later' }, { status: 503 });

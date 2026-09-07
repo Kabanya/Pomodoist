@@ -5,6 +5,8 @@ on:
     paths:
       - 'server/supabase/**'
       - 'telegram-mini-app/**'
+      - 'lib/l10n/app_en.arb'
+      - 'lib/l10n/app_ru.arb'
       - 'server/compose.telegram.yaml'
       - 'tool/*telegram*'
       - '.github/workflows/telegram-bot.yml'
@@ -13,6 +15,8 @@ on:
     paths:
       - 'server/supabase/**'
       - 'telegram-mini-app/**'
+      - 'lib/l10n/app_en.arb'
+      - 'lib/l10n/app_ru.arb'
       - 'server/compose.telegram.yaml'
       - 'tool/*telegram*'
       - '.github/workflows/telegram-bot.yml'
