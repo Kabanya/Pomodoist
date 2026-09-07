@@ -14,7 +14,7 @@ bundle=build/app/outputs/bundle/release/app-release.aab
 test -s "$apk" && test -s "$bundle"
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-"$build_tools/apksigner" verify --verbose --print-certs "$apk" > "$work/apk.txt"
+"$build_tools/apksigner" verify --verbose --print-certs-pem "$apk" > "$work/apk.txt"
 if grep -qi 'CN=Android Debug' "$work/apk.txt"; then
   echo 'Refusing an APK signed with an Android Debug certificate.' >&2
   exit 1
@@ -32,9 +32,32 @@ if grep -qi 'unsigned entries' "$work/bundle.txt"; then
   echo 'The AAB contains entries that are not integrity-checked.' >&2
   exit 1
 fi
-keytool -J-Duser.language=en -J-Duser.country=US -printcert -jarfile "$bundle" > "$work/cert.txt"
-apk_sha=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$work/apk.txt" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')
-bundle_sha=$(sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' "$work/cert.txt" | head -n 1 | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')
+keytool -J-Duser.language=en -J-Duser.country=US -printcert -rfc -jarfile "$bundle" > "$work/cert.txt"
+# Hash the certificate DER bytes, not version-dependent labels in CLI prose.
+# apksigner may print the same certificate more than once for SDK ranges.
+certificate_sha() {
+  python3 - "$1" <<'PY'
+import base64
+import hashlib
+from pathlib import Path
+import re
+import sys
+
+text = Path(sys.argv[1]).read_text()
+blocks = re.findall(r'-----BEGIN CERTIFICATE-----(.*?)-----END CERTIFICATE-----', text, re.S)
+try:
+    certificates = {base64.b64decode(re.sub(r'\s+', '', block), validate=True) for block in blocks}
+except ValueError:
+    raise SystemExit('Invalid PEM certificate in signing-tool output.')
+if (len(certificates) != 1 or not next(iter(certificates), b'')
+        or len(blocks) != text.count('-----BEGIN CERTIFICATE-----')):
+    raise SystemExit('Expected one distinct signing certificate per artifact; missing certificates and key rotation require review.')
+print(hashlib.sha256(certificates.pop()).hexdigest().upper())
+PY
+}
+apk_sha=$(certificate_sha "$work/apk.txt")
+bundle_sha=$(certificate_sha "$work/cert.txt")
+printf 'APK certificate SHA-256: %s\nAAB certificate SHA-256: %s\n' "$apk_sha" "$bundle_sha"
 if [[ ! "$apk_sha" =~ ^[0-9A-F]{64}$ || "$apk_sha" != "$bundle_sha" ]]; then
   echo 'APK and AAB must use the same signing certificate.' >&2
   exit 1
