@@ -97,9 +97,13 @@ class UpdateDownloader {
           return chunk;
         }));
         await sink.flush();
-      } finally {
-        await sink.close();
+      } catch (_) {
+        // addStream can close its file sink on a source error. A second close
+        // must not replace the original integrity/network failure.
+        try { await sink.close(); } catch (_) { /* Preserve the source error. */ }
+        rethrow;
       }
+      await sink.close();
       if (received != offer.asset.size) throw const UpdateFailure('The update download was interrupted.');
       progress(UpdatePhase.verifying, null);
       final actual = (await sha256.bind(partial.openRead()).first).toString();

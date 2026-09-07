@@ -171,7 +171,9 @@ class DesktopUpdateController extends ChangeNotifier {
   Future<void> update() async {
     final selected = offer;
     if (!enabled || busy || _disposed || selected == null ||
-        (channel == UpdateChannel.stable && !selected.version.isStable)) return;
+        (channel == UpdateChannel.stable && !selected.version.isStable)) {
+      return;
+    }
     phase = UpdatePhase.downloading;
     error = null;
     progress = 0;

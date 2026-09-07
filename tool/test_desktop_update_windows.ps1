@@ -92,3 +92,7 @@ try {
   Start-Sleep -Milliseconds 500
   Remove-Item -LiteralPath $base -Recurse -Force -ErrorAction SilentlyContinue
 }
+
+# Expected negative-case exit codes were asserted above. Do not leak the final
+# fixture's nonzero exit code into GitHub Actions' PowerShell wrapper.
+exit 0

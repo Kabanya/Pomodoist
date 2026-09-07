@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'update_contracts.dart';
 import 'update_controller.dart';
 import 'update_copy.dart';
 import 'update_providers.dart';
