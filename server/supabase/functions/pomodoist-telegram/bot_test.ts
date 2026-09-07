@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { handleTelegramWebhook, createTelegramApi, signPrompt } from './bot.ts';
+import { handleTelegramWebhook, createTelegramApi, isTelegramWebhookRequest, signPrompt } from './bot.ts';
 import { actionData, readAction } from './bot_ui.ts';
 import { TelegramError } from './commands.ts';
 const test = Deno.test;
@@ -23,6 +23,10 @@ function message(text: string, extra: any = {}) { return { update_id: 10, messag
 function callback(data: string, extra: any = {}) { return { update_id: 11, callback_query: { id: 'click', from: { id: 42, language_code: 'ru' }, data,
   message: { message_id: 5, date: +now / 1000, chat: { id: 42, type: 'private' }, from: { id: 123, is_bot: true } }, ...extra } }; }
 function req(update: unknown, token = secret) { return new Request('https://api.example.com/functions/v1/pomodoist-telegram/webhook', { method: 'POST', headers: { 'X-Telegram-Bot-Api-Secret-Token': token }, body: JSON.stringify(update) }); }
+test('webhook detection survives runtimes that strip the path suffix', () => {
+  assert.equal(isTelegramWebhookRequest(new Request('https://api.example.com/functions/v1/pomodoist-telegram', { headers: { 'X-Telegram-Bot-Api-Secret-Token': secret } })), true);
+  assert.equal(isTelegramWebhookRequest(new Request('https://api.example.com/functions/v1/pomodoist-telegram')), false);
+});
 test('webhook requires its own secret before touching account storage', async () => {
   const f = fixture(); assert.equal((await handleTelegramWebhook(req(message('/start'), 'wrong'), f.deps)).status, 403); assert.equal(f.order.length, 0);
   assert.equal((await handleTelegramWebhook(req(message('/start')), { ...f.deps, secret: '' })).status, 503);

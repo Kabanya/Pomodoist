@@ -7,6 +7,9 @@ export type BotDeps = {
   secret: string; botToken: string; webAppUrl: string; timeZone?: string;
   store: TelegramStore; call: TelegramApi; now?: () => Date;
 };
+export function isTelegramWebhookRequest(req: Request) {
+  return new URL(req.url).pathname.endsWith('/webhook') || req.headers.has('X-Telegram-Bot-Api-Secret-Token');
+}
 class DeliveryError extends Error {
   constructor(readonly retryable: boolean, readonly cannotEdit = false) { super('telegram_delivery_failed'); }
 }
