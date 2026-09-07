@@ -30,6 +30,61 @@ PRIVATE__ASC_KEY_ID=
     expect(File('${root.path}/.env.private').existsSync(), isFalse);
   });
 
+  test(
+    'Telegram profiles sync separately without exposing secrets to clients',
+    () async {
+      final root = await Directory.systemTemp.createTemp(
+        'pomodoist-telegram-env-',
+      );
+      addTearDown(() => root.delete(recursive: true));
+      await File('.env.example').copy('${root.path}/.env.example');
+      final bootstrapped = await _run('bootstrap', ['--root', root.path]);
+      expect(bootstrapped.exitCode, 0, reason: bootstrapped.stderr.toString());
+      final master = File('${root.path}/.env.setup');
+      await master.writeAsString(
+        master
+            .readAsStringSync()
+            .replaceFirst(
+              'TELEGRAM_STAGING__POMODOIST_TELEGRAM_BOT_TOKEN=',
+              'TELEGRAM_STAGING__POMODOIST_TELEGRAM_BOT_TOKEN=staging-fixture',
+            )
+            .replaceFirst(
+              'TELEGRAM_PRODUCTION__POMODOIST_TELEGRAM_BOT_TOKEN=',
+              'TELEGRAM_PRODUCTION__POMODOIST_TELEGRAM_BOT_TOKEN=production-fixture',
+            ),
+      );
+      final result = await _run('sync', ['--root', root.path]);
+      expect(result.exitCode, 0, reason: result.stderr.toString());
+      for (final name in ['staging', 'production']) {
+        final profile = File('${root.path}/.env.telegram.$name');
+        expect(
+          _values(profile.path)['POMODOIST_TELEGRAM_BOT_TOKEN'],
+          '$name-fixture',
+        );
+        expect(
+          _values(profile.path)['POMODOIST_TELEGRAM_BOT_USERNAME'],
+          name == 'staging' ? 'pomodoist_test_bot' : 'pomodoist_bot',
+        );
+        if (!Platform.isWindows) expect(profile.statSync().mode & 0x1ff, 0x180);
+      }
+      for (final name in [
+        'local',
+        'staging',
+        'selfhosted',
+        'testflight',
+        'windows',
+        'linux',
+      ]) {
+        expect(
+          _values(
+            '${root.path}/.env.$name',
+          ).containsKey('POMODOIST_TELEGRAM_BOT_TOKEN'),
+          isFalse,
+        );
+      }
+    },
+  );
+
   test('bootstrap leaves an existing master untouched', () async {
     final root = await Directory.systemTemp.createTemp('pomodoist-env-');
     addTearDown(() => root.delete(recursive: true));

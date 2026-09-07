@@ -10,6 +10,8 @@ const _profiles = <String, String>{
   'LINUX__': '.env.linux',
   'PRIVATE__': '.env.private',
   'DEPLOY__': '.env.deploy',
+  'TELEGRAM_STAGING__': '.env.telegram.staging',
+  'TELEGRAM_PRODUCTION__': '.env.telegram.production',
 };
 
 final _namePattern = RegExp(r'^[A-Z][A-Z0-9_]*$');

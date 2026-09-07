@@ -31,6 +31,32 @@ After a commit (or replay), a private `sync:<account>:pomodoist` broadcast hint 
 
 ## Deployment
 
+The root `.env.example` includes server-only `TELEGRAM_STAGING__` and
+`TELEGRAM_PRODUCTION__` profiles. Fill them in the ignored `.env.setup`, then run
+`make setup-telegram` to generate `.env.telegram.staging` and
+`.env.telegram.production` with private file permissions. These profiles must
+never be compiled into Flutter or public web configuration.
+
+For a local Docker backend, load its normal generated server secrets first and
+the selected Telegram profile second (run from the repository root):
+
+```sh
+docker compose --project-directory server --env-file server/.env \
+  --env-file .env.telegram.staging -f server/compose.yaml \
+  -f server/compose.telegram.yaml up -d --build --wait functions
+```
+
+This runs against the local Docker database; the profile's public webhook URL
+must point to that deployment before Telegram can reach it. For a remote
+deployment, install the profile's server values in that deployment's secret store.
+The overlay honors `POMODOIST_WEB_URL`, falling back to `SITE_URL` when empty.
+
+After deploying the matching function, web host and secrets, register the bot with
+`make telegram-configure` (staging), or
+`make telegram-configure TELEGRAM_ENV=production`. Registration verifies the token
+belongs to `POMODOIST_TELEGRAM_BOT_USERNAME` before changing any Telegram settings.
+Setup alone neither deploys nor registers a webhook.
+
 Deploy the updated **existing** function and configure these server-only values:
 
 ```dotenv

@@ -37,6 +37,12 @@ export async function configureTelegramBot(env, fetcher = fetch) {
     if (!response.ok || result?.ok !== true) throw new Error(`Telegram ${method} failed. Check credentials and deployment.`);
     return result.result;
   };
+  if (env.POMODOIST_TELEGRAM_BOT_USERNAME) {
+    const bot = await call('getMe', {});
+    if (bot?.username !== env.POMODOIST_TELEGRAM_BOT_USERNAME.replace(/^@/, '')) {
+      throw new Error('Bot token does not match POMODOIST_TELEGRAM_BOT_USERNAME. No settings changed.');
+    }
+  }
   for (const language of ['en', 'ru']) await call('setMyCommands', { ...(language === 'ru' ? { language_code: 'ru' } : {}),
     commands: commands[language].map(([command, description]) => ({ command, description })) });
   await call('setChatMenuButton', { menu_button: { type: 'web_app', text: 'Pomodoist', web_app: { url: config.miniApp } } });

@@ -23,3 +23,21 @@ test('setup refuses insecure URLs and absent/weak secrets before network access'
 test('setup errors never contain the token', async () => {
   await assert.rejects(configureTelegramBot(env, async () => { throw new Error(env.POMODOIST_TELEGRAM_BOT_TOKEN); }), error => !error.message.includes('123:TEST'));
 });
+test('profile checks bot identity before changing settings', async () => {
+  for (const username of ['pomodoist_bot', 'pomodoist_test_bot']) {
+    const methods = [];
+    const result = configureTelegramBot({ ...env, POMODOIST_TELEGRAM_BOT_USERNAME: 'pomodoist_test_bot' }, async (url) => {
+      const method = url.split('/').at(-1); methods.push(method);
+      return Response.json({ ok: true, result: method === 'getMe' ? { username } :
+        method === 'getWebhookInfo' ? { url: telegramConfiguration(env).webhook } : true });
+    });
+    if (username === 'pomodoist_bot') {
+      await assert.rejects(result, /does not match/);
+      assert.deepEqual(methods, ['getMe']);
+    } else {
+      await result;
+      assert.equal(methods[0], 'getMe');
+      assert.ok(methods.includes('setWebhook'));
+    }
+  }
+});
