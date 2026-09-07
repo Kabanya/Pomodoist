@@ -3,6 +3,7 @@ import 'dart:io';
 
 const _profiles = <String, String>{
   'LOCAL__': '.env.local',
+  'ANDROID__': '.env.android',
   'STAGING__': '.env.staging',
   'SELFHOSTED__': '.env.selfhosted',
   'TESTFLIGHT__': '.env.testflight',

@@ -69,6 +69,7 @@ PRIVATE__ASC_KEY_ID=
       }
       for (final name in [
         'local',
+        'android',
         'staging',
         'selfhosted',
         'testflight',
@@ -140,6 +141,7 @@ LOCAL__SUPABASE_URL=https://real.supabase.co
     const template = '''
 LOCAL__POMODOIST_ENVIRONMENT=local
 LOCAL__NEW_VALUE=
+ANDROID__POMODOIST_ENVIRONMENT=local
 STAGING__POMODOIST_ENVIRONMENT=staging
 SELFHOSTED__POMODOIST_ENVIRONMENT=selfhosted
 TESTFLIGHT__POMODOIST_ENVIRONMENT=production
@@ -151,6 +153,7 @@ PRIVATE__ASC_KEY_ID=
     await File('${root.path}/.env.setup').writeAsString('''
 LOCAL__POMODOIST_ENVIRONMENT=local-from-master
 LOCAL__NEW_VALUE=added
+ANDROID__POMODOIST_ENVIRONMENT=local
 STAGING__POMODOIST_ENVIRONMENT=staging
 SELFHOSTED__POMODOIST_ENVIRONMENT=selfhosted
 TESTFLIGHT__POMODOIST_ENVIRONMENT=production
@@ -169,6 +172,10 @@ PRIVATE__ASC_KEY_ID=ABC1234567
       'POMODOIST_ENVIRONMENT': 'local-from-master',
       'NEW_VALUE': 'added',
     });
+    expect(
+      _values('${root.path}/.env.android')['POMODOIST_ENVIRONMENT'],
+      'local',
+    );
     expect(
       _values('${root.path}/.env.staging')['POMODOIST_ENVIRONMENT'],
       'staging',

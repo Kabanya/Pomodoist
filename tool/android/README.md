@@ -14,20 +14,27 @@ physical-device matrix below before distributing an official release.
 ## Local development
 
 Install the pinned Flutter SDK, Java 17, Android SDK command-line/build tools,
-Python 3, Bash, and GNU `sort`/`sha256sum` (GNU coreutils on macOS). Point
-`ANDROID_HOME` at the SDK, accept its licenses, and run `flutter doctor -v`.
+GNU Make, Python 3, Bash, and GNU `sort`/`sha256sum` (GNU coreutils on macOS).
+On Windows, install Git for Windows so the repository Makefile can use its Bash.
+Point `ANDROID_HOME` at the SDK, accept its licenses, and run `flutter doctor -v`.
 
 ```sh
-flutter pub get --enforce-lockfile
-flutter run --dart-define-from-file=.env.local.json
+make setup-flutter
+make android
 ```
 
-Use the repository's existing local configuration setup. Debug builds do not
-require a production key and can use HTTP development servers. Only the debug
-manifest permits cleartext traffic; release/profile use HTTPS. Emulator host
-loopback is different from device loopback: configure a reachable development
-backend explicitly. Existing installations under `com.example.pomodoist` are a
-separate app; export/import data or synchronize an account before removing them.
+`make setup-flutter` generates the ignored `.env.android` profile from the
+`ANDROID__` values in `.env.setup`. `make android` uses that profile, isolates
+Gradle state under `build/android/gradle-home`, and writes the debug APK to
+`build/app/outputs/flutter-apk/app-debug.apk` on Windows, macOS, and Linux.
+Override `ANDROID_CONFIG` to use another dotenv or JSON dart-define file.
+
+Debug builds do not require a production key and can use HTTP development
+servers. Only the debug manifest permits cleartext traffic; release/profile use
+HTTPS. Emulator host loopback is different from device loopback: configure a
+reachable development backend explicitly. Existing installations under
+`com.example.pomodoist` are a separate app; export/import data or synchronize an
+account before removing them.
 
 ## Signing: configure once, retain the key
 
