@@ -1,0 +1,109 @@
+name: Android production release
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: 'Optional versionCode override; must exceed previous Play uploads'
+        type: string
+        required: false
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  signed-apk-and-bundle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    environment: android-production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Require a reviewed main commit and valid version
+        env:
+          INPUT_BUILD_NUMBER: ${{ inputs.build_number }}
+        run: |
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
+            echo 'Production Android builds must come from a commit already in main.' >&2
+            exit 1
+          }
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]] || exit 1
+            echo "ANDROID_BUILD_NAME=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+          fi
+          if [[ -n "$INPUT_BUILD_NUMBER" ]]; then
+            [[ "$INPUT_BUILD_NUMBER" =~ ^[1-9][0-9]{0,9}$ ]] || exit 1
+            echo "ANDROID_BUILD_NUMBER=$INPUT_BUILD_NUMBER" >> "$GITHUB_ENV"
+          fi
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version-file: .fvmrc
+      - name: Test Android release tooling
+        run: python3 -m unittest discover -s tool/android -p 'test_*.py' -v
+      - name: Generate public production configuration
+        env:
+          TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+          SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+        run: |
+          umask 077
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          config = {
+              'POMODOIST_ENVIRONMENT': 'production',
+              'WEB_APP_URL': 'https://app.pomodoist.com',
+              'POMODOIST_REGISTRATION_URL': 'https://app.pomodoist.com/auth/challenge',
+              'TURNSTILE_SITE_KEY': os.environ['TURNSTILE_SITE_KEY'],
+              'SENTRY_DSN': os.environ.get('SENTRY_DSN', ''),
+              'POMODOIST_BILLING_CHANNEL': 'storekit',
+          }
+          path = Path(os.environ['RUNNER_TEMP']) / 'android-production.json'
+          path.write_text(json.dumps(config))
+          PY
+          python3 tool/android/validate_config.py "$RUNNER_TEMP/android-production.json"
+      - name: Decode upload key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          umask 077
+          test -n "$ANDROID_KEYSTORE_BASE64" || { echo 'ANDROID_KEYSTORE_BASE64 is required.' >&2; exit 1; }
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/android-release.jks"
+      - name: Build and verify production APK and AAB
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/android-release.jks
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_SIGNING_CERT_SHA256: ${{ secrets.ANDROID_SIGNING_CERT_SHA256 }}
+          POMODOIST_RELEASE: ${{ github.sha }}
+        run: |
+          test -n "$ANDROID_SIGNING_CERT_SHA256" || { echo 'ANDROID_SIGNING_CERT_SHA256 is required.' >&2; exit 1; }
+          bash tool/android/build_release.sh "$RUNNER_TEMP/android-production.json"
+      - name: Save signed release artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: pomodoist-android-${{ github.sha }}
+          path: build/android/release/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Save Dart symbols for crash symbolication
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: pomodoist-android-symbols-${{ github.sha }}
+          path: build/android/symbols/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Remove signing material and configuration
+        if: always()
+        run: rm -f "$RUNNER_TEMP/android-release.jks" "$RUNNER_TEMP/android-production.json"

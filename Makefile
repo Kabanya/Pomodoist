@@ -40,9 +40,11 @@ IOS_EXPORT_OPTIONS ?= ios/ExportOptions.plist
 IOS_IPA_PATH ?= build/ios/ipa/Pomodoist.ipa
 TESTFLIGHT_CONFIG ?= .env.testflight
 DEPLOY_CONFIG ?= .env.deploy
+TELEGRAM_ENV ?= staging
 POMODOIST_RELEASE ?= $(shell git rev-parse HEAD)
 
 .PHONY: setup setup-env setup-flutter setup-linux run run-linux web
+.PHONY: setup-telegram telegram-configure
 .PHONY: analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-packaging check format
 .PHONY: web-debug web-profile web-release
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
@@ -134,6 +136,14 @@ setup-flutter: setup-env
 
 setup-linux: setup-env
 	./tool/linux/setup_arch.sh
+
+setup-telegram: setup-env
+	$(DART) tool/env_setup.dart sync
+
+# Register only after deploying the matching function and secrets.
+telegram-configure: setup-telegram
+	@case "$(TELEGRAM_ENV)" in staging|production) ;; *) echo 'TELEGRAM_ENV must be staging or production' >&2; exit 1;; esac
+	node --env-file=".env.telegram.$(TELEGRAM_ENV)" tool/configure-telegram-bot.mjs --apply
 
 run:
 	$(FLUTTER) run --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"

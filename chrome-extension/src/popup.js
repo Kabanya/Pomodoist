@@ -2,7 +2,7 @@ import { config } from './config.js';
 import { dateKey, dueDay, parseDue, schedule, scheduleFields, tabDraft, tasksFor } from './core.js';
 import { Realtime } from './realtime.js';
 const $ = id => document.getElementById(id);
-let state, view = 'today', editing = null, dirty = new Set(), draftDescription = '', busy = 0, live = false, syncing = false;
+let state, view = 'today', editing = null, dirty = new Set(), busy = 0, live = false, syncing = false;
 let owner = null, poll, hintTimer, refreshAgain = false;
 const realtime = new Realtime(() => call('realtime'), () => {
   clearTimeout(hintTimer); hintTimer = setTimeout(refresh, 150);
@@ -46,7 +46,7 @@ function render(next) {
   $('clear-account').hidden = !!owner || !state.pending;
   if (previousOwner !== owner) {
     editing = null; $('editor').hidden = true; $('task-panel').hidden = false;
-    $('new-title').value = ''; draftDescription = ''; $('tab-preview').hidden = true;
+    $('new-title').value = '';
     realtime.stop(); clearInterval(poll);
     if (owner) { realtime.start(); poll = setInterval(refresh, 30000); }
   }
@@ -129,14 +129,14 @@ $('quick-add').addEventListener('submit', event => {
   event.preventDefault();
   run(async () => {
     const result = await call('mutate', { owner, action: { kind: 'create', content: $('new-title').value,
-      description: draftDescription || null, dueJson: view === 'today' ? schedule(dateKey(), '', 30, null) : null } });
-    $('new-title').value = ''; draftDescription = ''; $('tab-preview').hidden = true; render(result);
+      description: null, dueJson: view === 'today' ? schedule(dateKey(), '', 30, null) : null } });
+    $('new-title').value = ''; render(result);
   });
 });
 $('save-tab').addEventListener('click', () => run(async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const draft = tabDraft(tab); $('new-title').value = draft.content; draftDescription = draft.description;
-  $('tab-preview').textContent = `${draft.description} — review, then press Add to save.`; $('tab-preview').hidden = false;
+  render(await call('mutate', { owner, action: { kind: 'create', ...tabDraft(tab),
+    dueJson: view === 'today' ? schedule(dateKey(), '', 30, null) : null } }));
 }));
 for (const tab of document.querySelectorAll('[data-view]')) {
   tab.addEventListener('click', () => {

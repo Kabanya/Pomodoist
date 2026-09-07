@@ -1,0 +1,93 @@
+name: Android validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-build-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version-file: .fvmrc
+      - name: Test Android packaging and public configuration
+        run: python3 -m unittest discover -s tool/android -p 'test_*.py' -v
+      - run: flutter pub get --enforce-lockfile
+      - name: Test Android runtime contracts
+        run: flutter test test/android_platform_test.dart
+      - name: Prove release signing fails closed
+        run: |
+          if flutter build apk --release --target-platform android-arm64 \
+              --dart-define=POMODOIST_BILLING_CHANNEL=storekit > "$RUNNER_TEMP/unsigned-build.log" 2>&1; then
+            echo 'Release unexpectedly succeeded without signing credentials.' >&2
+            exit 1
+          fi
+          if ! grep -q 'Android release signing is required' "$RUNNER_TEMP/unsigned-build.log"; then
+            cat "$RUNNER_TEMP/unsigned-build.log"
+            exit 1
+          fi
+      - name: Create disposable validation key (never a production key)
+        run: |
+          umask 077
+          password=$(openssl rand -hex 24)
+          echo "::add-mask::$password"
+          export CI_KEY_PASSWORD="$password"
+          keytool -genkeypair -noprompt -storetype JKS -keyalg RSA -keysize 2048 \
+            -validity 2 -alias ci-validation -dname 'CN=Pomodoist CI Validation' \
+            -keystore "$RUNNER_TEMP/android-validation.jks" \
+            -storepass:env CI_KEY_PASSWORD -keypass:env CI_KEY_PASSWORD
+          {
+            echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/android-validation.jks"
+            echo "ANDROID_STORE_PASSWORD=$password"
+            echo 'ANDROID_KEY_ALIAS=ci-validation'
+            echo "ANDROID_KEY_PASSWORD=$password"
+          } >> "$GITHUB_ENV"
+      - name: Compile release APK and AAB without production account access
+        run: |
+          common=(--release --dart-define=POMODOIST_ENVIRONMENT=local
+            --dart-define=WEB_APP_URL=https://app.pomodoist.com
+            --dart-define=POMODOIST_BILLING_CHANNEL=storekit
+            "--dart-define=POMODOIST_RELEASE=$GITHUB_SHA")
+          flutter build apk "${common[@]}"
+          flutter build appbundle "${common[@]}"
+          bash tool/android/verify_artifacts.sh
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Install, launch and resume on Android 15
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: bash tool/android/smoke_test.sh
+      - name: Save CI-only APK and AAB
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: android-validation-NOT-FOR-DISTRIBUTION
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 3
+      - name: Remove disposable signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/android-validation.jks" "$RUNNER_TEMP/unsigned-build.log"

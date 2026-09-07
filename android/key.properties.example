@@ -1,0 +1,6 @@
+# Copy to android/key.properties (ignored). Paths are relative to android/.
+# Prefer an absolute path outside the repository. Use forward slashes on Windows.
+storeFile=/absolute/path/to/pomodoist-upload.jks
+storePassword=
+keyAlias=pomodoist-upload
+keyPassword=

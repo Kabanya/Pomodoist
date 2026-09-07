@@ -3,5 +3,6 @@
 services:
   functions:
     environment:
+      POMODOIST_WEB_URL: ${POMODOIST_WEB_URL:-${SITE_URL:?SITE_URL is required}}
       POMODOIST_TELEGRAM_WEBHOOK_SECRET: ${POMODOIST_TELEGRAM_WEBHOOK_SECRET:?set a random webhook secret first}
       POMODOIST_TELEGRAM_TIME_ZONE: ${POMODOIST_TELEGRAM_TIME_ZONE:-UTC}

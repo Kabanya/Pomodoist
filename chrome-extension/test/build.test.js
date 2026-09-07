@@ -20,9 +20,9 @@ test('insecure non-loopback servers, URL credentials, paths and missing configur
 });
 test('service role and secret keys never enter a public build', () => {
   const jwt = role => 'e30.' + Buffer.from(JSON.stringify({ role })).toString('base64url') + '.signature';
-  // Construct a synthetic invalid key without matching the repository's secret scanner.
-  const privateKeyFixture = ['sb', 'secret', 'private'].join('_');
-  for (const key of [privateKeyFixture, jwt('service_role'), 'not-a-public-key']) {
+  // Assemble the fake credential so public-boundary scanning does not flag test data.
+  const secretFixture = ['sb', 'secret', 'private'].join('_');
+  for (const key of [secretFixture, jwt('service_role'), 'not-a-public-key']) {
     assert.throws(() => configuration({ ...env, SUPABASE_ANON_KEY: key }));
   }
   assert.equal(configuration({ ...env, SUPABASE_ANON_KEY: jwt('anon') }).anonKey, jwt('anon'));

@@ -4,6 +4,8 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'android_alarm_policy.dart';
+
 class NotificationScheduler {
   NotificationScheduler({FlutterLocalNotificationsPlugin? plugin})
     : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
@@ -16,7 +18,7 @@ class NotificationScheduler {
 
   static const InitializationSettings initializationSettings =
       InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        android: AndroidInitializationSettings('ic_notification'),
         iOS: DarwinInitializationSettings(),
         macOS: DarwinInitializationSettings(),
         linux: LinuxInitializationSettings(defaultActionName: 'Open Pomodoist'),
@@ -82,6 +84,21 @@ class NotificationScheduler {
     _initialized = true;
   }
 
+  Future<void> _scheduleTimeSensitive(
+    Future<void> Function(AndroidScheduleMode mode) schedule,
+  ) async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      await schedule(AndroidScheduleMode.inexactAllowWhileIdle);
+      return;
+    }
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    await scheduleAndroidAlarm(
+      canScheduleExact: () async => android?.canScheduleExactNotifications(),
+      schedule: schedule,
+    );
+  }
+
   Future<void> scheduleFocusIntervalEnd({
     required DateTime expectedEndAt,
     required String title,
@@ -93,15 +110,15 @@ class NotificationScheduler {
     }
 
     final scheduled = tz.TZDateTime.from(expectedEndAt.toLocal(), tz.local);
-    await _plugin.zonedSchedule(
+    await _scheduleTimeSensitive((mode) => _plugin.zonedSchedule(
       id: focusNotificationId,
       title: title,
       body: body,
       scheduledDate: scheduled,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: mode,
       notificationDetails: focusDetails,
       payload: 'focus.interval.end',
-    );
+    ));
   }
 
   Future<void> scheduleReengagementReminder({
@@ -156,15 +173,15 @@ class NotificationScheduler {
 
     final id = taskStartNotificationId(taskId);
     final scheduled = tz.TZDateTime.from(startAt.toLocal(), tz.local);
-    await _plugin.zonedSchedule(
+    await _scheduleTimeSensitive((mode) => _plugin.zonedSchedule(
       id: id,
       title: title,
       body: body,
       scheduledDate: scheduled,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: mode,
       notificationDetails: taskStartDetails,
       payload: '$taskStartPayloadPrefix$taskId',
-    );
+    ));
   }
 
   Future<void> requestNotificationPermissions() async {

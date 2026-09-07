@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Chrome extension privacy policy — Pomodoist</title>
+  <style>
+    :root{color-scheme:light dark;font:16px/1.65 system-ui,sans-serif}
+    body{max-width:760px;margin:48px auto;padding:0 24px}h1,h2{line-height:1.2}
+    h1{font-size:32px}h2{font-size:21px;margin-top:32px}a{color:light-dark(#ad3027,#ff9b91)}
+    .muted{opacity:.7}footer{margin:40px 0;border-top:1px solid #8885;padding-top:20px}
+  </style>
+</head>
+<body>
+  <header><a href="https://pomodoist.com/">Pomodoist</a></header>
+  <main>
+    <h1>Chrome extension privacy policy</h1>
+    <p class="muted">Effective September 7, 2026</p>
+    <p>FinchForge operates Pomodoist. This policy describes the Pomodoist Chrome
+      extension and supplements our <a href="https://pomodoist.com/privacy/">service privacy policy</a>.
+      Questions or deletion requests: <a href="mailto:pomodoist@placeq.com">pomodoist@placeq.com</a>.</p>
+
+    <h2>Information the extension uses</h2>
+    <p>The extension uses your account email and identifier, authentication tokens,
+      subscription status, tasks, project names, labels, completion history and
+      workflow assignments to show and synchronize your Pomodoist account. Random
+      device and operation identifiers help synchronize changes reliably.</p>
+    <p>Clicking <strong>Add current tab</strong> immediately creates a task from
+      the active page's title and complete URL, including its query and fragment,
+      and synchronizes it to your account. This happens only when you click the
+      button. The extension does not read page contents, request browsing history,
+      or monitor other tabs.</p>
+
+    <h2>Authentication and service providers</h2>
+    <p>Passwords are sent over HTTPS to Pomodoist's Supabase authentication service
+      and are not saved by the extension. Google or Apple handles sign-in when
+      you choose that provider. Cloudflare Turnstile may verify a sign-in request
+      on a Pomodoist web page; the extension receives only a short-lived verification
+      token from that page. Passwords and account tokens do not cross that page.</p>
+    <p>Account and task data is processed by Pomodoist and its Supabase backend to
+      provide authentication, synchronization and account access. We do not sell
+      this information or use it for advertising, creditworthiness or lending.
+      The extension contains no advertising or analytics code.</p>
+    <p>Our use and transfer of information from Google APIs complies with the
+      <a href="https://developer.chrome.com/docs/webstore/program-policies/user-data-faq">Chrome Web Store User Data Policy</a>,
+      including its Limited Use requirements.</p>
+
+    <h2>Storage and retention</h2>
+    <p>Authentication tokens, cached account data and unsynchronized edits are
+      stored locally in Chrome, accessible only to trusted extension contexts.
+      They are not saved in Chrome's cross-device storage.sync. The extension
+      relies on browser and operating-system protection for local storage and
+      uses HTTPS for communication with the production backend.</p>
+    <p>Synchronized tasks remain in your Pomodoist account until removed under
+      the service's retention and deletion practices. The service privacy policy
+      explains account retention and purchase-record retention.</p>
+
+    <h2>Your choices</h2>
+    <p>Signing out clears local credentials and cached account data. If edits have
+      not synchronized, the extension asks before discarding them. Sign-out also
+      requests revocation of the current server session. It does not delete
+      synchronized tasks. Removing the extension removes its local storage.</p>
+    <p>You can manage your account in <a href="https://app.pomodoist.com/">Pomodoist</a>
+      or contact <a href="mailto:pomodoist@placeq.com">pomodoist@placeq.com</a> to
+      request access, correction or deletion of your data. We will update this
+      page and its effective date if these practices change.</p>
+  </main>
+  <footer>© 2026 FinchForge · <a href="https://pomodoist.com/privacy/">Service privacy policy</a></footer>
+</body>
+</html>
