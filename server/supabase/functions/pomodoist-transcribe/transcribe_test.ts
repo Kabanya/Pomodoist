@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { handleVoiceTranscription, type TranscriptionDeps } from "./transcribe.ts";
 
 function wav(seconds = 1): Uint8Array {
@@ -127,7 +128,7 @@ Deno.test("rejects MIME mismatch without invoking provider", async () => {
   assert.equal((await handleVoiceTranscription(request(body(wav(), "webm")), deps)).status, 400);
   assert.equal(calls.length, 0);
 });
-Deno.test("recognizes common encoded containers without re-encoding", async () => {
+Deno.test("rejects compressed containers before billing because their duration is not verified", async () => {
   const samples: [string, number[]][] = [
     ["webm", [0x1a, 0x45, 0xdf, 0xa3, 0, 0, 0, 0]],
     ["mp3", [73, 68, 51, 4, 0, 0, 0, 0]],
@@ -139,8 +140,8 @@ Deno.test("recognizes common encoded containers without re-encoding", async () =
   for (const [format, bytes] of samples) {
     const { deps, calls } = setup();
     const value = body(new Uint8Array(bytes), format);
-    assert.equal((await handleVoiceTranscription(request(value), deps)).status, 200, format);
-    assert.deepEqual(JSON.parse(String(calls[0].init?.body)).input_audio, value.input_audio);
+    assert.equal((await handleVoiceTranscription(request(value), deps)).status, 400, format);
+    assert.equal(calls.length, 0);
   }
 });
 Deno.test("enforces actual WAV duration rather than trusting client metadata", async () => {
@@ -215,4 +216,14 @@ Deno.test("never falls back to a generic OpenRouter key when the Pomodoist key i
     assert.equal((await response.json()).code, "transcription_unavailable");
     assert.equal(calls.length, 0);
   }
+});
+
+Deno.test("production web CSP explicitly permits recorded audio blob fetches", async () => {
+  const template = await readFile(new URL(
+    "../../../../deploy/web/security-headers.conf.template", import.meta.url,
+  ), "utf8");
+  const sources = /connect-src\s+([^;]+);/.exec(template)?.[1].split(/\s+/) ?? [];
+  assert.ok(sources.includes("blob:"), "connect-src must explicitly allow recorded audio blob URLs");
+  assert.ok(sources.includes("'self'"));
+  assert.ok(!sources.includes("*"), "do not broadly loosen network destinations");
 });

@@ -50,15 +50,16 @@ using `AccountClient.invokeFunction`. The server calls
 are `{ok: true, text}`; failures are `{ok: false, code, error, retryable}`.
 Client-supplied model, URL, API key and duration fields are not trusted.
 
-WAV, WebM, MP3, M4A/MP4, Ogg, FLAC and AAC uploads have bounded base64 and container
-signature validation. WAV additionally validates the header and actual duration;
-compressed formats rely on the provider for decoding/duration validation. The
-app deliberately records a single portable format (16 kHz, mono PCM WAV), without
-transcoding: five minutes is approximately 9.6 MB before base64. Empty/malformed
-transcripts, invalid audio, rate limits, provider errors, network failures and
-both header/body timeouts return sanitized errors. Redirects are disabled for
-the credential-bearing provider request. Audio, transcript text, tokens and
-provider response bodies are never logged or included in error diagnostics.
+Only PCM WAV uploads are accepted: their base64, container header and actual
+sample duration are validated before any billed provider call. Compressed formats
+(WebM, MP3, M4A/MP4, Ogg, FLAC and AAC) are rejected until their duration can be
+verified server-side; byte limits alone cannot bound low-bitrate audio duration.
+All current clients already record 16 kHz, mono PCM WAV without transcoding:
+five minutes is approximately 9.6 MB before base64. Empty/malformed transcripts,
+invalid audio, rate limits, provider errors, network failures and both header/body
+timeouts return sanitized errors. Redirects are disabled for the credential-bearing
+provider request. Audio, transcript text, tokens and provider response bodies are
+never logged or included in error diagnostics.
 
 ## Local audio lifecycle and platform prerequisites
 
@@ -74,7 +75,9 @@ Browser retries retain independent audio bytes **only in the current page's
 memory**, including across overlay/controller disposal. Reloading/closing the tab
 loses that pending recording; audio is never written to browser localStorage.
 Record in a secure context (HTTPS or localhost) and grant the site's microphone
-permission. Browsers on Apple devices use this backend path as well.
+permission. Browsers on Apple devices use this backend path as well. The production
+CSP explicitly permits `blob:` in `connect-src` so recorded audio can be read before
+the recorder revokes its object URL.
 
 Linux requires the `record_linux` runtime tools: `parecord`, `pactl`, and `ffmpeg`
 (for example, `pulseaudio-utils ffmpeg` on Debian/Ubuntu, or `libpulse ffmpeg` on
@@ -88,7 +91,7 @@ does not request storage access or Apple Speech/Siri permissions on these platfo
 ## Verification
 
 ```sh
-deno test --config server/supabase/deno.json server/supabase/functions/pomodoist-transcribe
+deno test --allow-read --config server/supabase/deno.json server/supabase/functions/pomodoist-transcribe
 flutter test test/backend_voice_test.dart test/voice_recording_store_test.dart test/quick_add_voice_test.dart
 flutter test --platform chrome web_test/voice_recording_store_test.dart
 flutter build web --debug

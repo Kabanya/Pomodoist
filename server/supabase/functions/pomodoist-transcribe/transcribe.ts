@@ -13,7 +13,9 @@ const headers = {
 };
 const endpoint = "https://openrouter.ai/api/v1/audio/transcriptions";
 const defaultModel = "openai/whisper-large-v3-turbo";
-const formats = new Set(["wav", "webm", "mp3", "m4a", "mp4", "ogg", "flac", "aac"]);
+// Every current client records PCM WAV. Other containers are rejected until
+// their actual duration can be verified before the billed provider request.
+const formats = new Set(["wav"]);
 
 class VoiceHttpError extends Error {
   constructor(readonly status: number, readonly code: string, message: string) {
@@ -82,16 +84,7 @@ function validateAudio(data: string, format: string, maxBytes: number, maxSecond
   if (binary.length < 8) invalidAudio();
   const byte = (offset: number) => binary.charCodeAt(offset);
   const matches = (offset: number, value: string) => binary.slice(offset, offset + value.length) === value;
-  const compatible = format === "wav" ? matches(0, "RIFF") && matches(8, "WAVE")
-    : format === "webm" ? [0x1a, 0x45, 0xdf, 0xa3].every((v, i) => byte(i) === v)
-    : format === "mp3" ? matches(0, "ID3") || (byte(0) === 0xff && (byte(1) & 0xe0) === 0xe0)
-    : format === "m4a" || format === "mp4" ? matches(4, "ftyp")
-    : format === "ogg" ? matches(0, "OggS")
-    : format === "flac" ? matches(0, "fLaC")
-    : format === "aac" ? byte(0) === 0xff && (byte(1) & 0xf6) === 0xf0
-    : false;
-  if (!compatible) invalidAudio();
-  if (format !== "wav") return; // Compressed containers are fully validated upstream.
+  if (format !== "wav" || !matches(0, "RIFF") || !matches(8, "WAVE")) invalidAudio();
 
   // Our recorder emits PCM WAV. Measure its actual samples, not a client duration.
   const bytes = new Uint8Array(binary.length);
