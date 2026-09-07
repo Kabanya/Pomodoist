@@ -16,10 +16,12 @@ export async function handlePomodoistTelegram(req: Request, deps: PomodoistTeleg
   if (origin !== deps.allowedOrigin) return response({ ok: false, code: 'origin_forbidden' }, 403);
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(origin) });
   if (req.method !== 'POST') return response({ ok: false, code: 'method_not_allowed' }, 405);
-  if (Number(req.headers.get('Content-Length') ?? '0') > 16384) return response({ ok: false, code: 'body_too_large' }, 413);
+  // Title + 8000-character comment + schedule may exceed 16 KiB in UTF-8.
+  const maxBodyBytes = 48 * 1024;
+  if (Number(req.headers.get('Content-Length') ?? '0') > maxBodyBytes) return response({ ok: false, code: 'body_too_large' }, 413);
   let body: JsonMap;
   try {
-    const raw = await req.text(); if (new TextEncoder().encode(raw).length > 16384) throw new TelegramError('body_too_large', 413);
+    const raw = await req.text(); if (new TextEncoder().encode(raw).length > maxBodyBytes) throw new TelegramError('body_too_large', 413);
     const value = object(JSON.parse(raw)); if (!value) throw new TelegramError('invalid_body'); body = value;
   } catch (error) {
     const failure = error instanceof TelegramError ? error : new TelegramError('invalid_body');
@@ -38,7 +40,7 @@ export async function handlePomodoistTelegram(req: Request, deps: PomodoistTeleg
     let data: unknown;
     if (body.action === 'snapshot') data = await deps.store.snapshot(identity, now, snapshotOptions(body));
     else if (body.action === 'command') {
-      const command = object(body.command); validateCommand(command); data = await deps.store.command(identity, command, now);
+      const command = object(body.command); validateCommand(command); data = await deps.store.command(identity, command, now, snapshotOptions(body));
     } else if (body.action === 'begin_link') data = await deps.store.beginLink(identity, now);
     else throw new TelegramError('unsupported_action');
     return response({ ok: true, data }, 200);

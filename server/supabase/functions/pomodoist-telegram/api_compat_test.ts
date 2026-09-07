@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { handlePomodoistTelegram, verifyTelegramInitData } from './pomodoist_telegram.ts';
+import { handlePomodoistTelegram, verifyTelegramInitData, type TelegramStore } from './pomodoist_telegram.ts';
+import { taskPage } from './commands.ts';
 const now = new Date('2026-09-07T12:00:00Z'), token = '123:TEST';
 async function signed(userId = 42, at = now) {
   const p = new URLSearchParams({ auth_date: String(+at / 1000), user: JSON.stringify({ id: userId }), query_id: 'test' });
@@ -11,7 +12,7 @@ async function signed(userId = 42, at = now) {
 }
 function fixture() {
   const identities = new Map(); const calls: string[] = [];
-  const store = { identity: async (id: string) => identities.get(id) ?? null,
+  const store: TelegramStore = { identity: async (id: string) => identities.get(id) ?? null,
     bootstrap: async (id: string) => { if (!identities.has(id)) identities.set(id, { telegramUserId: id, userId: `guest-${id}`, clientId: 'client', linked: false }); return identities.get(id); },
     snapshot: async (i: { userId: string }) => { calls.push(i.userId); return { inbox: [], focus: null, account: { linked: false } }; },
     command: async () => ({}), beginLink: async () => ({}), completeLink: async () => ({ linked: true }) };
@@ -48,4 +49,26 @@ Deno.test('existing authenticated account-link endpoint remains usable without i
   const f = fixture(); const response = await handlePomodoistTelegram(new Request('https://api.example.com/functions/v1/pomodoist-telegram', { method: 'POST',
     headers: { Origin: f.deps.allowedOrigin, Authorization: 'Bearer token' }, body: JSON.stringify({ action: 'complete_link', token: 'opaque' }) }), f.deps);
   assert.equal(response.status, 200);
+});
+
+Deno.test('Mini App mutations retain the selected task view and validate its options', async () => {
+  const f = fixture();
+  const completed = { id: '11111111-1111-4111-8111-111111111111', content: 'Done', status: 'completed', projectId: 'inbox' };
+  const data = { tasks: new Map([[completed.id, completed]]), projects: new Map(), focusRuns: new Map(), focusIntervals: new Map(), entities: [] };
+  f.deps.store = { ...f.store, command: async (_identity, _command, date, options) => taskPage(data, date, options ?? {}) };
+  const body = { action: 'command', view: 'completed', timeZone: 'Europe/Moscow', command: { type: 'task.complete', id: completed.id, taskId: completed.id } };
+  const response = await handlePomodoistTelegram(await request(body), f.deps);
+  assert.equal(response.status, 200);
+  const snapshot = (await response.json()).data;
+  assert.equal(snapshot.view, 'completed');
+  assert.equal(snapshot.timeZone, 'Europe/Moscow');
+  assert.equal(snapshot.tasks[0].content, 'Done');
+  assert.equal((await handlePomodoistTelegram(await request({ ...body, view: 'invalid' }), f.deps)).status, 400);
+});
+
+Deno.test('Mini App accepts the supported Unicode comment length while bounding requests', async () => {
+  const f = fixture();
+  const body = { action: 'command', command: { type: 'task.update', id: '11111111-1111-4111-8111-111111111111', taskId: '11111111-1111-4111-8111-111111111111', patch: { description: '界'.repeat(8000) } } };
+  assert.equal((await handlePomodoistTelegram(await request(body), f.deps)).status, 200);
+  assert.equal((await handlePomodoistTelegram(await request({ padding: 'x'.repeat(50000) }), f.deps)).status, 413);
 });

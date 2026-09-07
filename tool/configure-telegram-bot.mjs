@@ -18,12 +18,8 @@ export function telegramConfiguration(env) {
   return { token, secret, webhook: webhook.href, miniApp: web.href };
 }
 const commands = {
-  en: [ ['start', 'Open Pomodoist'], ['inbox', 'Inbox tasks'], ['today', 'Today and overdue'], ['upcoming', 'Upcoming tasks'],
-    ['completed', 'Completed tasks'], ['add', 'Create a task'], ['focus', 'Show Focus timer'], ['pause', 'Pause Focus'],
-    ['resume', 'Resume Focus'], ['stop', 'Stop Focus'], ['finish', 'Finish elapsed interval'], ['account', 'Connect your account'], ['help', 'Show help'], ['cancel', 'Return to the menu'] ],
-  ru: [ ['start', 'Открыть Pomodoist'], ['inbox', 'Входящие задачи'], ['today', 'Сегодня и просроченные'], ['upcoming', 'Предстоящие задачи'],
-    ['completed', 'Выполненные задачи'], ['add', 'Создать задачу'], ['focus', 'Таймер Фокуса'], ['pause', 'Пауза Фокуса'],
-    ['resume', 'Продолжить Фокус'], ['stop', 'Остановить Фокус'], ['finish', 'Завершить истёкший интервал'], ['account', 'Подключить аккаунт'], ['help', 'Справка'], ['cancel', 'Вернуться в меню'] ],
+  en: [['start', 'Open Pomodoist']],
+  ru: [['start', 'Открыть Pomodoist']],
 };
 export async function configureTelegramBot(env, fetcher = fetch) {
   const config = telegramConfiguration(env);

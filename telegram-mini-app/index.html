@@ -36,6 +36,7 @@
           <div>
             <p class="eyebrow">Pomodoist</p>
             <h1 id="inbox-title"></h1>
+            <p id="view-meta" class="muted view-meta"></p>
           </div>
           <button
             id="account-button"
@@ -43,13 +44,62 @@
             type="button"
             aria-label="Account"
           >
-            •••
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
+            </svg>
           </button>
         </header>
 
-        <section id="focus-card" class="focus-card" hidden aria-live="polite">
+        <section id="focus-card" class="focus-card" hidden>
+          <p class="eyebrow" data-text="focus"></p>
           <p id="focus-task" class="focus-task"></p>
-          <output id="focus-clock" class="focus-clock">25:00</output>
+          <output
+            id="focus-clock"
+            class="focus-clock"
+            role="timer"
+            aria-live="off"
+            data-label="focus"
+          >25:00</output>
+          <p id="focus-status" class="muted"></p>
+          <div class="focus-controls">
+            <button id="focus-toggle" class="primary-button" type="button">
+            </button>
+            <button
+              id="focus-stop"
+              class="secondary-button"
+              type="button"
+              data-text="stop"
+            >
+            </button>
+          </div>
+          <button
+            id="focus-finish"
+            class="text-button"
+            type="button"
+            data-text="finish"
+            hidden
+          >
+          </button>
+        </section>
+
+        <section id="focus-empty" class="empty-state" hidden>
+          <div class="empty-mark" aria-hidden="true">◷</div>
+          <h2 data-text="focusReady"></h2>
+          <p class="muted" data-text="focusHint"></p>
+          <button
+            class="primary-button"
+            type="button"
+            data-view="inbox"
+            data-text="chooseTask"
+          >
+          </button>
         </section>
 
         <form id="add-form" class="add-form">
@@ -60,6 +110,65 @@
 
         <p id="empty" class="empty" hidden></p>
         <ul id="task-list" class="task-list" aria-live="polite"></ul>
+        <div id="pagination" class="pagination" hidden>
+          <button
+            id="previous-page"
+            class="secondary-button"
+            type="button"
+            data-text="previous"
+          >
+          </button>
+          <span id="page-number" class="muted"></span>
+          <button
+            id="next-page"
+            class="secondary-button"
+            type="button"
+            data-text="next"
+          >
+          </button>
+        </div>
+        <div class="sync-bar">
+          <span id="sync-status" role="status"></span>
+          <button
+            id="refresh-button"
+            class="text-button"
+            type="button"
+            data-text="refresh"
+          >
+          </button>
+        </div>
+        <nav class="navigation" aria-label="Pomodoist">
+          <button type="button" data-view="inbox">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m3 9 3-5h12l3 5v11H3Z" />
+              <path d="M3 13h5l2 3h4l2-3h5" />
+            </svg><span data-text="inbox"></span>
+          </button>
+          <button type="button" data-view="today">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <path d="M7 2v6m10-6v6M3 11h18m-13 5h3" />
+            </svg><span data-text="today"></span>
+          </button>
+          <button type="button" data-view="upcoming">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <path d="M7 2v6m10-6v6M3 11h18m-11 4 3 2-3 2" />
+            </svg><span data-text="upcoming"></span>
+          </button>
+          <button type="button" data-view="focus">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="13" r="8" />
+              <path d="M12 9v5l3 2M9 2h6m4 3 2 2" />
+            </svg><span data-text="focus"></span>
+          </button>
+          <button type="button" data-view="completed">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="m7 12 3 3 7-7" />
+            </svg><span data-text="completedView"></span>
+          </button>
+        </nav>
       </section>
 
       <section id="error" class="center-card" hidden role="alert">
@@ -68,7 +177,11 @@
       </section>
     </main>
 
-    <dialog id="settings-dialog" class="settings-dialog">
+    <dialog
+      id="settings-dialog"
+      class="settings-dialog"
+      aria-labelledby="settings-title"
+    >
       <form method="dialog">
         <button
           id="close-settings"
@@ -81,7 +194,120 @@
       </form>
       <h2 id="settings-title"></h2>
       <p id="account-status" class="muted"></p>
+      <p id="account-error" class="form-error" role="alert" hidden></p>
       <button id="link-account" class="primary-button" type="button"></button>
+      <button
+        id="open-app"
+        class="secondary-button"
+        type="button"
+        data-text="openApp"
+      >
+      </button>
+    </dialog>
+
+    <dialog
+      id="task-dialog"
+      class="settings-dialog task-dialog"
+      aria-labelledby="detail-heading"
+    >
+      <button
+        class="dialog-close"
+        id="close-task"
+        type="button"
+        data-label="close"
+      >
+        ×
+      </button>
+      <p class="eyebrow" data-text="task"></p>
+      <h2 id="detail-heading" data-text="taskDetails"></h2>
+      <p id="detail-meta" class="muted"></p>
+      <p id="detail-extra" class="muted field-hint"></p>
+      <form id="edit-form">
+        <label for="edit-title" data-text="title"></label>
+        <textarea id="edit-title" rows="2" required maxlength="2000"></textarea>
+        <label for="edit-note" data-text="note"></label>
+        <textarea id="edit-note" rows="3" maxlength="8000"></textarea>
+        <div class="field-row">
+          <div>
+            <label for="edit-date" data-text="schedule"></label><input
+              id="edit-date"
+              type="date"
+              min="0001-01-01"
+              max="9999-12-31"
+            >
+          </div>
+          <div>
+            <label for="edit-priority" data-text="priority"></label><select
+              id="edit-priority"
+            >
+              <option value="1">P1</option>
+              <option value="2">P2</option>
+              <option value="3">P3</option>
+              <option value="4">P4</option>
+            </select>
+          </div>
+        </div>
+        <p id="schedule-hint" class="muted field-hint"></p>
+        <p id="detail-error" class="form-error" role="alert" hidden></p>
+        <button
+          id="save-task"
+          class="primary-button"
+          type="submit"
+          data-text="save"
+        >
+        </button>
+      </form>
+      <div class="detail-actions">
+        <button id="complete-task" class="secondary-button" type="button">
+        </button>
+        <button
+          id="start-focus"
+          class="secondary-button"
+          type="button"
+          data-text="startFocus"
+        >
+        </button>
+        <button
+          id="refresh-task"
+          class="text-button"
+          type="button"
+          data-text="refresh"
+        >
+        </button>
+        <button
+          id="delete-task"
+          class="text-button danger"
+          type="button"
+          data-text="delete"
+        >
+        </button>
+      </div>
+      <div id="delete-confirmation" class="delete-confirmation" hidden>
+        <p data-text="deleteConfirm"></p>
+        <div class="focus-controls">
+          <button
+            id="cancel-delete"
+            class="secondary-button"
+            type="button"
+            data-text="cancel"
+          >
+          </button>
+          <button
+            id="confirm-delete"
+            class="primary-button"
+            type="button"
+            data-text="delete"
+          >
+          </button>
+        </div>
+      </div>
+      <button
+        id="detail-open-app"
+        class="text-button"
+        type="button"
+        data-text="openApp"
+      >
+      </button>
     </dialog>
 
     <div id="toast" class="toast" hidden role="status">
