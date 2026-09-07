@@ -59,8 +59,8 @@ Setup alone neither deploys nor registers a webhook.
 
 For the normal hosted release path, `make deploy-telegram-staging` deploys staging
 and then configures `@pomodoist_test_bot`; `make deploy-telegram-production` does
-the same for production and `@pomodoist_bot`. They intentionally remain separate
-from `deploy-all`, so absent Telegram credentials cannot block unrelated releases.
+the same for production and `@pomodoist_bot`. `make deploy-all` deploys both
+environments and then configures both Telegram bots.
 
 Deploy the updated **existing** function and configure these server-only values:
 

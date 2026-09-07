@@ -117,11 +117,11 @@ help:
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make testflight-macos' "$${reset}" 'Upload macOS to TestFlight'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'All' "$${reset}" "$${bold}" 'make testflight' "$${reset}" 'Upload iOS + macOS to TestFlight'; \
 	printf '\n'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-staging' "$${reset}" 'Deploy backend + web staging'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-production' "$${reset}" 'Deploy backend + web production'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-all' "$${reset}" 'Deploy staging, then production'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-telegram-staging' "$${reset}" 'Deploy staging and configure @pomodoist_test_bot'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-staging' "$${reset}" '     Deploy backend + web staging'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-production' "$${reset}" '     Deploy backend + web production'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-telegram-staging' "$${reset}" '   Deploy staging and configure @pomodoist_test_bot'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-telegram-production' "$${reset}" 'Deploy production and configure @pomodoist_bot'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-all' "$${reset}" '     Deploy everything, including both Telegram bots'; \
 	printf '\n%s%sUtilities%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make help' "$${reset}" 'Show this command reference'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make devices' "$${reset}" 'List available Flutter devices'; \
@@ -259,6 +259,12 @@ deploy-staging deploy-production deploy-all:
 	@set -eu; \
 		runner="$$( $(DART) tool/env_setup.dart value --env "$(DEPLOY_CONFIG)" --key RUNNER )"; \
 		"$$runner" "$(patsubst deploy-%,%,$@)" "$(CURDIR)" "$(abspath $(DEPLOY_CONFIG))"
+	@if [ "$@" = deploy-all ]; then \
+			$(MAKE) telegram-configure TELEGRAM_ENV=staging; \
+			$(MAKE) telegram-configure TELEGRAM_ENV=production; \
+		fi
+
+deploy-all: setup-telegram
 
 deploy-telegram-staging: setup-telegram deploy-staging
 	$(MAKE) telegram-configure TELEGRAM_ENV=staging
