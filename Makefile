@@ -51,7 +51,7 @@ POMODOIST_RELEASE ?= $(shell git rev-parse HEAD)
 .PHONY: windows-debug windows-profile windows-release windows-installer
 .PHONY: macos-debug macos-profile macos-release
 .PHONY: ios-debug ios-profile ipad-debug ipad-profile watch-debug watch-profile testflight-preflight testflight-auth testflight-ios testflight-macos testflight
-.PHONY: deploy-staging deploy-production deploy-all
+.PHONY: deploy-staging deploy-production deploy-all deploy-telegram-staging deploy-telegram-production
 .PHONY: help devices clean
 
 help:
@@ -120,6 +120,8 @@ help:
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-staging' "$${reset}" 'Deploy backend + web staging'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-production' "$${reset}" 'Deploy backend + web production'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-all' "$${reset}" 'Deploy staging, then production'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-telegram-staging' "$${reset}" 'Deploy staging and configure @pomodoist_test_bot'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-telegram-production' "$${reset}" 'Deploy production and configure @pomodoist_bot'; \
 	printf '\n%s%sUtilities%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make help' "$${reset}" 'Show this command reference'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make devices' "$${reset}" 'List available Flutter devices'; \
@@ -257,6 +259,12 @@ deploy-staging deploy-production deploy-all:
 	@set -eu; \
 		runner="$$( $(DART) tool/env_setup.dart value --env "$(DEPLOY_CONFIG)" --key RUNNER )"; \
 		"$$runner" "$(patsubst deploy-%,%,$@)" "$(CURDIR)" "$(abspath $(DEPLOY_CONFIG))"
+
+deploy-telegram-staging: setup-telegram deploy-staging
+	$(MAKE) telegram-configure TELEGRAM_ENV=staging
+
+deploy-telegram-production: setup-telegram deploy-production
+	$(MAKE) telegram-configure TELEGRAM_ENV=production
 
 testflight-preflight:
 	python3 tool/check_testflight_env.py "$(TESTFLIGHT_CONFIG)"
