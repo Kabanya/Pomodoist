@@ -14,6 +14,7 @@ import '../features/focus/presentation/focus_view_mode.dart';
 import '../features/integrations/google_calendar/data/google_calendar_sync_controller.dart';
 import '../features/integrations/google_calendar/data/google_calendar_sync_lifecycle.dart';
 import '../features/planning/data/task_decomposer.dart';
+import '../features/voice/data/pomodoist_voice_controller.dart';
 import 'native_captcha_startup.dart';
 import 'native_link_coordinator.dart';
 import 'providers.dart';
@@ -182,8 +183,34 @@ final accountAuthStateProvider = StreamProvider<AccountAuthState>((ref) async* {
 
 final voiceRecognitionControllerProvider = Provider<VoiceRecognitionController>(
   (ref) {
-    final controller = VoiceRecognitionController();
-    ref.onDispose(controller.dispose);
+    // Keep a live account reference without rebuilding an active recording on
+    // bootstrap/token changes. Disposal must not access an already-disposed Ref.
+    var account = ref.read(accountClientProvider);
+    var disposed = false;
+    ref.listen<AccountClient?>(accountClientProvider, (_, next) {
+      account = next;
+    });
+    final controller = createPomodoistVoiceController(
+      ownerId: () => account?.currentUserId,
+      invoke: (body) async {
+        final current = account;
+        if (disposed || current == null || current.currentUserId == null) {
+          throw const VoiceRecognitionException(
+            'speech_unavailable',
+            'Sign in to use voice transcription.',
+          );
+        }
+        final response = await current.invokeFunction(
+          'pomodoist-transcribe',
+          body: body,
+        );
+        return response.data;
+      },
+    );
+    ref.onDispose(() {
+      disposed = true;
+      controller.dispose();
+    });
     return controller;
   },
 );
