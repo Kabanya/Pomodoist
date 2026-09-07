@@ -247,7 +247,6 @@ class TaskTimeDisplayModeController extends Notifier<TaskTimeDisplayMode> {
     final prefs = await ref.read(sharedPreferencesProvider.future);
     await prefs?.setString(taskTimeDisplayModePreferenceKey, mode.storageValue);
   }
-
   Future<void> _loadStoredMode() async {
     final prefs = await ref.read(sharedPreferencesProvider.future);
     final mode = TaskTimeDisplayMode.fromStorageValue(
@@ -846,15 +845,9 @@ final taskTimeStateProvider = Provider.autoDispose
 
       final clock = ref.read(clockProvider);
       if (schedule.isAllDay) {
-        return ref.watch(
-          taskTimeTickerProvider.select((ticker) {
-            final localNow = (ticker.value ?? clock.now()).toLocal();
-            final today = DateTime(localNow.year, localNow.month, localNow.day);
-            return schedule.date!.isBefore(today)
-                ? TaskTimeState.overdue
-                : null;
-          }),
-        );
+        final localNow = clock.now().toLocal();
+        final today = DateTime(localNow.year, localNow.month, localNow.day);
+        return schedule.date!.isBefore(today) ? TaskTimeState.overdue : null;
       }
 
       final activeFocusTaskId = ref.watch(
