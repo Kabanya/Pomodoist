@@ -24,3 +24,7 @@ jobs:
       - run: python3 -m unittest discover -s tool -p test_release_notes.py
       - run: flutter analyze
       - run: flutter test
+      - name: Test browser voice recording storage
+        run: flutter test --platform chrome web_test/voice_recording_store_test.dart
+      - name: Compile web platform adapters
+        run: flutter build web --debug
