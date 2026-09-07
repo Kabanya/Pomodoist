@@ -193,7 +193,8 @@ Deno.test("network errors and timeouts are recoverable and sanitized", async () 
   assert.equal((await handleVoiceTranscription(request(), failed.deps)).status, 502);
   let aborted = false;
   const slow = setup({ env: { VOICE_TRANSCRIPTION_TIMEOUT_MS: "5" }, fetch: ((_url, init) => {
-    init?.signal?.addEventListener("abort", () => { aborted = true; });
+    const signal = (init as { signal?: AbortSignal | null } | undefined)?.signal;
+    signal?.addEventListener("abort", () => { aborted = true; });
     return new Promise<Response>(() => {});
   }) as typeof fetch });
   assert.equal((await handleVoiceTranscription(request(), slow.deps)).status, 504);

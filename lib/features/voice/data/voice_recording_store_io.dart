@@ -38,7 +38,9 @@ class FileVoiceRecordingStore implements VoiceRecordingStore {
     try {
       final data = jsonDecode(await manifest.readAsString());
       if (data is! Map || data['file'] is! String || !_fileName.hasMatch(data['file'] as String) ||
-          data['ownerId'] is! String || (data['locale'] != null && data['locale'] is! String)) return null;
+          data['ownerId'] is! String || (data['locale'] != null && data['locale'] is! String)) {
+        return null;
+      }
       final path = p.join(directory.path, data['file'] as String);
       final file = File(path);
       if (!await file.exists() || await file.length() <= 44) return null;
