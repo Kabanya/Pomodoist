@@ -89,3 +89,12 @@ tmp/
 .fvm/
 /GNUmakefile
 tool/apple/VOICE_TESTING.md
+
+# Android signing material (public templates remain tracked).
+/android/key.properties
+*.jks
+*.keystore
+*.p12
+*.pfx
+/android/.kotlin/
+/android/captures/

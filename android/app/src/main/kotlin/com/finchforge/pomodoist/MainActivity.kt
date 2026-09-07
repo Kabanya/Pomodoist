@@ -1,4 +1,4 @@
-package com.example.pomodoist
+package com.finchforge.pomodoist
 
 import io.flutter.embedding.android.FlutterActivity
 
