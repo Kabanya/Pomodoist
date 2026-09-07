@@ -64,7 +64,7 @@ await page.route('**/*', async route => {
         if (command.type === 'task.create') put({ id: telegramEntityId(command.id), content: command.content, status: 'open', projectId: 'inbox', priority: 4, dueJson: null });
         else if (operations) for (const op of operations.filter(op => op.entityType === 'task')) put({ ...model.tasks.get(op.entityId), ...op.payload });
         else if (command.type === 'focus.start') {
-          focus = { run: { id: telegramEntityId(command.id), taskId: command.taskId, status: 'active' }, interval: { id: telegramEntityId(command.id, 2n), runId: telegramEntityId(command.id), status: 'running', plannedSeconds: 1500, startedAt: new Date().toISOString(), pausedAt: null, pausedTotalSeconds: 0 } };
+          focus = { run: { id: telegramEntityId(command.id), taskId: command.taskId ?? null, status: 'active' }, interval: { id: telegramEntityId(command.id, 2n), runId: telegramEntityId(command.id), status: 'running', plannedSeconds: 1500, startedAt: new Date().toISOString(), pausedAt: null, pausedTotalSeconds: 0 } };
         } else if (command.type === 'focus.pause') {
           focus.run.status = 'paused'; focus.interval.status = 'paused'; focus.interval.pausedAt = new Date().toISOString();
         } else if (command.type === 'focus.resume') {
@@ -157,6 +157,26 @@ try {
   assert.equal(focus.interval.status, 'running');
   await page.locator('#focus-stop').click(); await synced();
   assert.equal(focus, null);
+  await nav('focus'); await page.locator('#focus-empty:not([hidden])').waitFor();
+  const taskCount = model.tasks.size;
+  dropReply = 'focus.start';
+  await page.locator('#focus-start').click();
+  await page.locator('#toast:not([hidden])').waitFor();
+  assert.equal(focus.run.taskId, null);
+  const standaloneRunId = focus.run.id;
+  await page.reload(); await page.locator('#app:not([hidden])').waitFor(); await synced();
+  assert.equal(focus.run.id, standaloneRunId);
+  assert.equal(focus.run.taskId, null);
+  assert.equal(model.tasks.size, taskCount);
+  assert.equal(await page.locator('#focus-task').textContent(), 'Фокус');
+  await page.locator('#focus-toggle').click(); await synced();
+  assert.equal(focus.interval.status, 'paused');
+  await page.reload(); await page.locator('#app:not([hidden])').waitFor();
+  assert.equal(await page.locator('#focus-toggle').textContent(), 'Продолжить');
+  await page.locator('#focus-toggle').click(); await synced();
+  assert.equal(focus.interval.status, 'running');
+  await page.locator('#focus-stop').click(); await synced();
+  assert.equal(focus, null);
   await task(3).click(); await page.locator('#edit-title:enabled').waitFor();
   await page.locator('#delete-task').click();
   assert.equal(model.tasks.get(id(3)).isDeleted, undefined);
@@ -189,10 +209,14 @@ try {
   for (const theme of ['light', 'dark']) {
     await page.evaluate(theme => { window.Telegram.WebApp.colorScheme = theme; window.testTelegram.handlers.themeChanged(); }, theme);
     assert.equal(await page.locator('html').getAttribute('data-theme'), theme);
+    await nav('focus'); await page.locator('#focus-empty:not([hidden])').waitFor();
     for (const width of [320, 390]) {
       await page.setViewportSize({ width, height: 844 });
+      assert.equal(await page.locator('#focus-start').isVisible(), true);
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     }
+    if (output) await page.screenshot({ path: `${output}/focus-ready-${theme}.png`, fullPage: true });
+    await nav('inbox'); await waitView('Входящие');
     if (output) await page.screenshot({ path: `${output}/mini-app-${theme}.png`, fullPage: true });
     await task(2).click(); await page.locator('#edit-title:enabled').waitFor();
     assert.ok(await page.locator('#task-dialog').evaluate(el => el.scrollWidth <= el.clientWidth));

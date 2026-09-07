@@ -47,7 +47,7 @@ export function validateCommand(command: JsonMap | null): asserts command is Jso
   if (!command || !types.includes(String(command.type))) throw new TelegramError('unsupported_command');
   if (!uuidPattern.test(String(command.id))) throw new TelegramError('invalid_command_id');
   if (command.type === 'task.create') text(command.content, 2000, 'invalid_task_content');
-  if (command.type !== 'task.create' && (String(command.type).startsWith('task.') || command.type === 'focus.start')) {
+  if (command.type !== 'task.create' && (String(command.type).startsWith('task.') || command.type === 'focus.start' && command.taskId != null)) {
     if (!uuidPattern.test(String(command.taskId))) throw new TelegramError('invalid_task_id');
   }
   for (const key of ['runId', 'intervalId']) {
@@ -123,7 +123,7 @@ export function taskOperations(state: State, command: JsonMap, now: Date): Opera
     const run = [...state.focusRuns.values()].find(active);
     if (type === 'focus.start') {
       const task = state.tasks.get(id);
-      if (!task || task.isDeleted || task.status === 'completed') throw new TelegramError('task_not_found', 404);
+      if (command.taskId != null && (!task || task.isDeleted || task.status === 'completed')) throw new TelegramError('task_not_found', 404);
       if (run) throw new TelegramError('focus_already_active', 409);
     } else {
       if (!run || command.runId !== undefined && command.runId !== run.id) throw new TelegramError('focus_changed', 409);

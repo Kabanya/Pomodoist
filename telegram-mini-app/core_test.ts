@@ -51,6 +51,36 @@ Deno.test("timer restores from server timestamps and freezes while paused", () =
   );
 });
 
+Deno.test("standalone Focus retains no task across persistence, pause and resume", () => {
+  const now = Date.parse("2026-09-08T12:00:00Z");
+  const initial = { inbox: [], tasks: [], focus: null };
+  const started = applyOptimisticCommand(initial, {
+    type: "focus.start",
+    id: "11111111-1111-4111-8111-111111111111",
+  }, now);
+  const restored = JSON.parse(JSON.stringify(started));
+  assertEquals(restored.focus.run.taskId, null);
+  assertEquals(restored.focus.interval.taskId, null);
+  assertEquals(restored.tasks, []);
+  assertEquals(remainingSeconds(restored.focus, now + 60000), 1440);
+  const paused = applyOptimisticCommand(
+    restored,
+    { type: "focus.pause" },
+    now + 60000,
+  );
+  assertEquals(remainingSeconds(paused.focus, now + 120000), 1440);
+  const resumed = applyOptimisticCommand(
+    paused,
+    { type: "focus.resume" },
+    now + 120000,
+  );
+  assertEquals(remainingSeconds(resumed.focus, now + 180000), 1380);
+  assertEquals(
+    applyOptimisticCommand(resumed, { type: "focus.stop" }).focus,
+    null,
+  );
+});
+
 Deno.test("Telegram commands update the interface before the server replies", () => {
   const now = Date.parse("2026-08-04T12:00:00.000Z");
   const task = { id: "task-1", content: "Ship fast" };

@@ -11,6 +11,21 @@ function state(rows: Record<string, unknown>[] = []) {
 }
 const task = { id, content: 'Read', description: 'Keep me', status: 'open', projectId: 'inbox', updatedAt: '2026-09-06T00:00:00Z' };
 function command(type: string, extra: Record<string, unknown> = {}) { return { type, id: commandId, taskId: id, ...extra }; }
+test('Focus can start without a task but still rejects invalid tasks and concurrent sessions', () => {
+  for (const taskId of [undefined, null]) {
+    const start = command('focus.start', { taskId });
+    assert.equal(taskOperations(state(), start, now), null);
+    const active = state();
+    active.focusRuns.set('run', { id: 'run', taskId: null, status: 'active' });
+    assert.throws(() => taskOperations(active, start, now), /focus_already_active/);
+  }
+  for (const taskId of ['', false, 42, 'invalid']) {
+    assert.throws(() => validateCommand(command('focus.start', { taskId })), /invalid_task_id/);
+  }
+  assert.throws(() => taskOperations(state(), command('focus.start'), now), /task_not_found/);
+  assert.throws(() => taskOperations(state([{ ...task, status: 'completed' }]), command('focus.start'), now), /task_not_found/);
+  assert.throws(() => validateCommand(command('task.complete', { taskId: null })), /invalid_task_id/);
+});
 test('update is a captured patch, not a stale full row', () => {
   const [op] = taskOperations(state([task]), command('task.update', { patch: { content: 'Edited' } }), now)!;
   assert.equal(op.payload.content, 'Edited'); assert.equal(op.payload.schemaVersion, 1);

@@ -125,6 +125,21 @@ Deno.test("Telegram focus is one work interval and emits shared focus events", (
   ]);
 });
 
+Deno.test("Telegram standalone Focus creates an unlinked interval without creating a task", () => {
+  const operations = telegramCommandOps(
+    pomodoistState([]),
+    { type: "focus.start", id: "22222222-2222-4222-8222-222222222222" },
+    new Date("2026-09-08T12:00:00Z"),
+  );
+  assertEquals(operations.map((op) => op.entityType), [
+    "focus_run", "focus_interval", "focus_event", "focus_event",
+  ]);
+  assertEquals(operations[0].payload.taskId, null);
+  assertEquals(operations[0].payload.projectId, null);
+  assertEquals(operations[1].payload.taskId, null);
+  assertEquals(operations[1].payload.plannedSeconds, 1500);
+});
+
 Deno.test("Telegram command UUID makes every generated entity idempotent", () => {
   const now = new Date("2026-07-07T12:00:00Z");
   for (

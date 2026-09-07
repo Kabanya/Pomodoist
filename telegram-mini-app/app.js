@@ -196,6 +196,11 @@ function bindUi() {
     void navigate("focus");
     void runCommand({ type: "focus.start", taskId: task.id });
   });
+  elements["focus-start"].addEventListener("click", () => {
+    if (state.focus) return;
+    haptic("impactOccurred", "light");
+    void runCommand({ type: "focus.start" });
+  });
   elements["focus-toggle"].addEventListener(
     "click",
     () =>
