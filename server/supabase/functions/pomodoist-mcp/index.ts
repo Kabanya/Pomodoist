@@ -2,6 +2,7 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 
 import { configFromEnv, createPomodoistMcpHandler } from "./pomodoist_mcp.ts";
 import { registerPomodoistTools } from "./tools.ts";
+import { registerOpenClawTools } from "./openclaw_tools.ts";
 
 const config = configFromEnv();
 const log = (entry: Record<string, unknown>) =>
@@ -10,6 +11,8 @@ const log = (entry: Record<string, unknown>) =>
 Deno.serve(createPomodoistMcpHandler({
   config,
   log,
-  registerTools: (server, auth) =>
-    registerPomodoistTools(server, auth, { config, log }),
+  registerTools: (server, auth) => {
+    registerPomodoistTools(server, auth, { config, log });
+    registerOpenClawTools(server, auth, { config, log });
+  },
 }));
