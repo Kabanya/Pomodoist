@@ -1,0 +1,4 @@
+dist/
+*.zip
+__pycache__/
+test-output/

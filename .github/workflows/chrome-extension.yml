@@ -1,0 +1,39 @@
+name: Chrome extension
+on:
+  pull_request:
+    paths: ['chrome-extension/**', 'web/auth/extension-challenge.*', '.github/workflows/chrome-extension.yml']
+  push:
+    branches: [main]
+    paths: ['chrome-extension/**', 'web/auth/extension-challenge.*', '.github/workflows/chrome-extension.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Unit and protocol tests
+        working-directory: chrome-extension
+        run: |
+          npm test
+          TZ=America/Los_Angeles npm test
+          TZ=Europe/Amsterdam npm test
+      - name: Package a validation-only build (no production credentials)
+        working-directory: chrome-extension
+        env:
+          SUPABASE_URL: https://api.example.test
+          SUPABASE_ANON_KEY: sb_publishable_validation_only
+          WEB_APP_URL: https://tasks.example.test
+        run: |
+          npm run build
+          cd dist
+          zip -r ../pomodoist-chrome-validation.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chrome-extension-validation-build
+          path: chrome-extension/pomodoist-chrome-validation.zip
+          if-no-files-found: error
