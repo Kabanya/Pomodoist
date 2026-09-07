@@ -1008,7 +1008,7 @@ packages:
     source: hosted
     version: "4.1.0"
   record:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: record
       sha256: "10911465138fafacef459a780564e883e01bd48eabf87ab20543684884492870"
