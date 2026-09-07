@@ -7,7 +7,7 @@ Manifest V3 companion for Pomodoist. It uses the same Supabase Auth account, acc
 - Email/password and Google/Apple PKCE sign-in with token refresh.
 - Today (including overdue), Upcoming, Inbox and completed views.
 - Create, edit, schedule, complete and restore tasks.
-- Current-tab title/URL capture after an explicit click and review.
+- One-click task creation from the current tab's title and URL.
 - Durable local outbox, cursor-based pull, idempotent retries and remote tombstones.
 - Private Realtime hints while the popup is open, with a bounded refresh fallback.
 - Server-owned account and subscription/entitlement status.

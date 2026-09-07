@@ -15,7 +15,6 @@ p { margin:10px 0; } .muted { color:var(--muted); } .small { font-size:11px; } #
 nav { display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:12px; padding-bottom:10px; } nav button { border:0; padding:7px 10px; color:var(--muted); } nav [aria-selected=true] { background:var(--soft); color:var(--accent); font-weight:650; }
 #quick-add { display:flex; gap:8px; } #quick-add input { flex:1; }
 .toolbar { display:flex; align-items:center; gap:6px; margin:10px 0; } .toolbar>span { flex:1; } .toolbar button { font-size:12px; } #refresh { margin-left:auto; }
-#tab-preview { overflow-wrap:anywhere; padding:8px; background:var(--soft); border-radius:6px; }
 #task-scroll { max-height:300px; overflow:auto; scrollbar-gutter:stable; } ul { list-style:none; padding:0; margin:0; }
 .task { display:flex; align-items:flex-start; gap:8px; padding:10px 2px; border-bottom:1px solid var(--line); }
 .task input { flex:none; width:17px; height:17px; margin:3px 0 0; accent-color:var(--accent); cursor:pointer; }

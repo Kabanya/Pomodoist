@@ -92,6 +92,14 @@ test('backend changes cannot reuse an old instance session or cache', async () =
 });
 const response = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 const config = { apiUrl: 'https://api.example.test', anonKey: 'sb_publishable_test' };
+test('default browser fetch keeps its global receiver for account requests', async t => {
+  const { store } = await setup();
+  t.mock.method(globalThis, 'fetch', async function () {
+    if (this !== globalThis) throw new TypeError('Illegal invocation');
+    return response({ profile: { pomodoistIsPro: true } });
+  });
+  assert.deepEqual(await new Client(config, store).overview(), { profile: { pomodoistIsPro: true } });
+});
 test('simultaneous requests rotate the refresh token once and persist it before continuing', async () => {
   const { store } = await setup(); await store.save({ session: { ...session(), expires_at: 1 } });
   let refreshes = 0;
@@ -109,6 +117,29 @@ test('401 retries once with a refreshed token, not an unbounded loop', async () 
     rpcs++; return response({}, 401);
   });
   await assert.rejects(client.overview()); assert.equal(rpcs, 2); assert.equal(refreshes, 1);
+});
+test('a rejected realtime hint cannot sign out a successfully synchronized account', async () => {
+  const { store } = await setup();
+  await store.save({ overviewAt: Date.now() });
+  await store.enqueue({ kind: 'create', content: 'Saved task' }, 'user-a');
+  let applied = [], refreshes = 0;
+  const client = new Client(config, store, async (url, options) => {
+    if (url.endsWith('/push_changes')) {
+      applied = JSON.parse(options.body).p_operations.map(op => ({
+        entityType: op.entityType, entityId: op.entityId, data: op.payload,
+      }));
+      return response({ applied, serverRevision: 1 });
+    }
+    if (url.endsWith('/pull_changes')) return response(pull(applied, 1));
+    if (url.includes('grant_type=refresh_token')) { refreshes++; return response(session()); }
+    if (url.endsWith('/realtime/v1/api/broadcast')) return response({ message: 'Unauthorized' }, 401);
+    throw new Error(`Unexpected request: ${url}`);
+  });
+  await synchronize(store, client);
+  assert.equal(store.snapshot().user?.id, 'user-a');
+  assert.equal(store.snapshot().pending, 0);
+  assert.ok(Object.values(store.snapshot().records).some(row => row.content === 'Saved task'));
+  assert.equal(refreshes, 0);
 });
 test('expired session hides cached tasks but preserves same-owner unsynced changes for reauthentication', async () => {
   const { store } = await setup(); await store.enqueue({ kind: 'create', content: 'Private' }, 'user-a');

@@ -11,11 +11,10 @@ status, tasks, project names, labels, completion history and workflow assignment
 to display and synchronize the same account used in other Pomodoist clients.
 A random device identifier and operation identifiers support synchronization.
 
-Choosing **Add current tab** reads only the active page's title and URL. It does
-not read page content or query browsing history. The URL, including any query or
-fragment it contains, is previewed before submission. Nothing is uploaded from
-that action until the user presses **Add**. The resulting title and URL are then
-ordinary task data synchronized to the user's configured account.
+Choosing **Add current tab** immediately creates a task from the active page's
+title and URL, including any query or fragment it contains, and synchronizes it
+to the user's configured account. It does not read page content or query browsing
+history.
 
 Passwords are sent to the configured authentication endpoint for sign-in and
 are not persisted. OAuth is handled by the selected identity provider. When

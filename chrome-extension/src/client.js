@@ -15,7 +15,7 @@ class ApiError extends Error {
   }
 }
 export class Client {
-  constructor(config, store, fetcher = fetch) {
+  constructor(config, store, fetcher = fetch.bind(globalThis)) {
     this.config = config; this.store = store; this.fetcher = fetcher; this.refreshing = null;
   }
   async raw(path, body, token, auth = false) {
@@ -78,11 +78,12 @@ export class Client {
     return this.authorized(`/rest/v1/rpc/${name}`, body);
   }
   overview() { return this.rpc('get_account_overview'); }
-  broadcast() {
-    return this.authorized('/realtime/v1/api/broadcast', { messages: [{
+  async broadcast() {
+    // A rejected best-effort hint must not invalidate the Auth session.
+    return this.raw('/realtime/v1/api/broadcast', { messages: [{
       topic: `sync:${this.store.data.owner}:${APP_ID}`, event: 'changed', private: true,
       payload: { appId: APP_ID, deviceId: this.store.data.deviceId, sentAt: new Date().toISOString() },
-    }] });
+    }] }, await this.token());
   }
   async oauth(provider, identity) {
     if (!['google', 'apple'].includes(provider)) throw new Error('Unsupported sign-in provider.');
