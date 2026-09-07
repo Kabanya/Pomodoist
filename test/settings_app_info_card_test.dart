@@ -130,7 +130,7 @@ void main() {
     const links = {
       'settings-privacy-policy-link': pomodoistPrivacyPolicyUrl,
       'settings-terms-of-use-link': pomodoistTermsOfUseUrl,
-      'settings-support-link': 'mailto:pomodoist@placeq.com',
+      'settings-support-link': 'mailto:support@pomodoist.com',
     };
     for (final entry in links.entries) {
       await tester.tap(find.byKey(Key(entry.key)));
