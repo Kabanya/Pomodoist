@@ -72,26 +72,30 @@ void main() {
   testWidgets('Android preserves account access without initializing StoreKit', (
     tester,
   ) async {
+    final previousPlatform = debugDefaultTargetPlatformOverride;
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
-    addTearDown(() => debugDefaultTargetPlatformOverride = null);
-    final container = ProviderContainer(
-      overrides: [
-        sharedPreferencesProvider.overrideWith((ref) async => null),
-        billingChannelProvider.overrideWithValue(BillingChannel.storeKit),
-        billingAccountEntitlementProvider.overrideWithValue(true),
-        billingStoreProvider.overrideWith(
-          (ref) => throw StateError('StoreKit must not be initialized on Android'),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
-    expect(applePurchasesSupported, isFalse);
-    container.read(billingControllerProvider);
-    await tester.pump();
-    final state = container.read(billingControllerProvider);
-    expect(state.loading, isFalse);
-    expect(state.canPurchase, isFalse);
-    expect(state.accountEntitlementActive, isTrue);
-    expect(state.hasActiveEntitlement, isTrue);
+    try {
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWith((ref) async => null),
+          billingChannelProvider.overrideWithValue(BillingChannel.storeKit),
+          billingAccountEntitlementProvider.overrideWithValue(true),
+          billingStoreProvider.overrideWith(
+            (ref) => throw StateError('StoreKit must not be initialized on Android'),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      expect(applePurchasesSupported, isFalse);
+      container.read(billingControllerProvider);
+      await tester.pump();
+      final state = container.read(billingControllerProvider);
+      expect(state.loading, isFalse);
+      expect(state.canPurchase, isFalse);
+      expect(state.accountEntitlementActive, isTrue);
+      expect(state.hasActiveEntitlement, isTrue);
+    } finally {
+      debugDefaultTargetPlatformOverride = previousPlatform;
+    }
   });
 }
