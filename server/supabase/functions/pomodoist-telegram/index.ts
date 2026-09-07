@@ -14,7 +14,7 @@ const webAppUrl = Deno.env.get("POMODOIST_WEB_URL") ??
     : "https://app-test.pomodoist.com");
 const admin = createClient(supabaseUrl, serviceRoleKey, {
   auth: { persistSession: false, autoRefreshToken: false },
-  global: { fetch: (input, init) => fetch(input, { ...init, signal: init?.signal ?? AbortSignal.timeout(10000) }) },
+  global: { fetch: (input, init) => fetch(input, { ...init, signal: (init && "signal" in init ? init.signal : undefined) ?? AbortSignal.timeout(10000) }) },
 });
 const store = createTelegramStore(admin, webAppUrl, telegramRuntime);
 const call = createTelegramApi(botToken);
