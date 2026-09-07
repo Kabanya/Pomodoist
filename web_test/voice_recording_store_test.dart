@@ -7,6 +7,8 @@ import 'package:pomodoist/features/voice/data/voice_recording.dart';
 import 'package:pomodoist/features/voice/data/voice_recording_store_web.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('browser retains bytes after recorder URL disposal until explicit discard', () async {
     final bytes = Uint8List.fromList(List.generate(100, (i) => i));
     final blob = web.Blob([bytes.toJS].toJS, web.BlobPropertyBag(type: 'audio/wav'));
