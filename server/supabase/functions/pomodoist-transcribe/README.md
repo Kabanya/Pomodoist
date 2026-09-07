@@ -17,7 +17,7 @@ these values.
 
 | Variable | Default / purpose |
 | --- | --- |
-| `OPENROUTER_API_KEY` | Required server credential; existing `POMODOIST_OPENROUTER_API_KEY` is a fallback. |
+| `POMODOIST_OPENROUTER_API_KEY` | Required server credential; transcription uses only this key. |
 | `OPENROUTER_TRANSCRIPTION_MODEL` | `openai/whisper-large-v3-turbo` |
 | `VOICE_TRANSCRIPTION_PROVIDER` | `openrouter`; unsupported values fail closed. Future providers only need a server adapter, not voice UI changes. |
 | `VOICE_TRANSCRIPTION_MAX_BYTES` | `12582912` (12 MiB decoded audio; configurable up to 25 MiB server-side). |

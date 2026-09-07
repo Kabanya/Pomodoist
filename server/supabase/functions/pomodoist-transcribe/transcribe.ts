@@ -189,7 +189,7 @@ export async function handleVoiceTranscription(req: Request, deps: Transcription
     if (!userId) throw new VoiceHttpError(401, "unauthorized", "Sign in to use voice transcription.");
 
     const provider = deps.env.get("VOICE_TRANSCRIPTION_PROVIDER")?.trim() || "openrouter";
-    const apiKey = deps.env.get("OPENROUTER_API_KEY")?.trim() || deps.env.get("POMODOIST_OPENROUTER_API_KEY")?.trim();
+    const apiKey = deps.env.get("POMODOIST_OPENROUTER_API_KEY")?.trim();
     if (provider !== "openrouter" || !apiKey) {
       throw new VoiceHttpError(503, "transcription_unavailable", "Voice transcription is not configured on this server.");
     }

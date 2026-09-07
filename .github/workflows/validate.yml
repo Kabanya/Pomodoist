@@ -25,6 +25,16 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - name: Test browser voice recording storage
-        run: flutter test --platform chrome web_test/voice_recording_store_test.dart
+        shell: bash
+        run: |
+          # Root-only CI runners cannot launch Chrome's sandbox. Keep normal
+          # developer/non-root launches unchanged and scope this to this test.
+          if [ "$(id -u)" -eq 0 ]; then
+            chrome_binary="${CHROME_EXECUTABLE:-$(command -v google-chrome)}"
+            printf '#!/bin/sh\nexec "%s" --no-sandbox "$@"\n' "$chrome_binary" > "$RUNNER_TEMP/chrome-voice-test"
+            chmod +x "$RUNNER_TEMP/chrome-voice-test"
+            export CHROME_EXECUTABLE="$RUNNER_TEMP/chrome-voice-test"
+          fi
+          flutter test --platform chrome web_test/voice_recording_store_test.dart
       - name: Compile web platform adapters
         run: flutter build web --debug

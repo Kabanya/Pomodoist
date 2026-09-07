@@ -38,7 +38,7 @@ function setup(options: {
   result?: unknown; fetch?: typeof fetch;
 } = {}) {
   const calls: { url: string; init?: RequestInit }[] = [];
-  const env = { OPENROUTER_API_KEY: "server-only-secret", ...options.env };
+  const env = { POMODOIST_OPENROUTER_API_KEY: "server-only-secret", ...options.env };
   const deps: TranscriptionDeps = {
     env: { get: (key) => env[key as keyof typeof env] },
     authenticate: async () => options.user === false ? null : "user-1",
@@ -97,13 +97,13 @@ Deno.test("server configuration controls model; clients cannot override it", asy
   assert.equal(forwarded.model, "openai/whisper-large-v3");
   assert.equal(forwarded.apiKey, undefined);
 });
-Deno.test("existing selfhost OpenRouter key is supported as a server-only fallback", async () => {
-  const { deps, calls } = setup({ env: { OPENROUTER_API_KEY: "", POMODOIST_OPENROUTER_API_KEY: "existing-secret" } });
+Deno.test("uses the Pomodoist server key even when a generic OpenRouter key exists", async () => {
+  const { deps, calls } = setup({ env: { OPENROUTER_API_KEY: "unrelated-secret", POMODOIST_OPENROUTER_API_KEY: " existing-secret " } });
   assert.equal((await handleVoiceTranscription(request(), deps)).status, 200);
   assert.equal(new Headers(calls[0].init?.headers).get("Authorization"), "Bearer existing-secret");
 });
 Deno.test("missing credentials and unsupported configured providers fail closed", async () => {
-  for (const env of [{ OPENROUTER_API_KEY: "" }, { VOICE_TRANSCRIPTION_PROVIDER: "unknown" }]) {
+  for (const env of [{ POMODOIST_OPENROUTER_API_KEY: "" }, { VOICE_TRANSCRIPTION_PROVIDER: "unknown" }]) {
     const { deps, calls } = setup({ env });
     assert.equal((await handleVoiceTranscription(request(), deps)).status, 503);
     assert.equal(calls.length, 0);
@@ -203,4 +203,16 @@ Deno.test("network errors and timeouts are recoverable and sanitized", async () 
 Deno.test("timeout covers response body consumption as well as initial headers", async () => {
   const { deps } = setup({ env: { VOICE_TRANSCRIPTION_TIMEOUT_MS: "5" }, fetch: (async () => new Response(new ReadableStream({ start() {} }))) as typeof fetch });
   assert.equal((await handleVoiceTranscription(request(), deps)).status, 504);
+});
+Deno.test("never falls back to a generic OpenRouter key when the Pomodoist key is missing", async () => {
+  for (const key of [undefined, "", "   "]) {
+    const { deps, calls } = setup({ env: {
+      POMODOIST_OPENROUTER_API_KEY: key,
+      OPENROUTER_API_KEY: "unrelated-secret",
+    } });
+    const response = await handleVoiceTranscription(request(), deps);
+    assert.equal(response.status, 503);
+    assert.equal((await response.json()).code, "transcription_unavailable");
+    assert.equal(calls.length, 0);
+  }
 });
