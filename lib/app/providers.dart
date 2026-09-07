@@ -838,15 +838,28 @@ final taskTimeTickerProvider = focusTickerProvider;
 final taskTimeStateProvider = Provider.autoDispose
     .family<TaskTimeState?, TaskItem>((ref, task) {
       final schedule = task.schedule;
-      if (schedule == null || !schedule.isTimed || task.isCompleted) {
+      if (schedule == null || task.isCompleted) {
         return task.isCompleted && schedule?.isTimed == true
             ? TaskTimeState.completed
             : null;
       }
+
+      final clock = ref.read(clockProvider);
+      if (schedule.isAllDay) {
+        return ref.watch(
+          taskTimeTickerProvider.select((ticker) {
+            final localNow = (ticker.value ?? clock.now()).toLocal();
+            final today = DateTime(localNow.year, localNow.month, localNow.day);
+            return schedule.date!.isBefore(today)
+                ? TaskTimeState.overdue
+                : null;
+          }),
+        );
+      }
+
       final activeFocusTaskId = ref.watch(
         activeFocusRunProvider.select((run) => run.value?.taskId),
       );
-      final clock = ref.read(clockProvider);
       return ref.watch(
         taskTimeTickerProvider.select(
           (ticker) => taskTimeStateForTask(
