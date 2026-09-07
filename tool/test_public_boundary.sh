@@ -98,7 +98,7 @@ if awk '
 ' .env.example; then :; else
   fail '.env.example contains a secret value'
 fi
-for prefix in LOCAL SELFHOSTED STAGING TESTFLIGHT WINDOWS LINUX PRIVATE DEPLOY; do
+for prefix in LOCAL ANDROID SELFHOSTED STAGING TESTFLIGHT WINDOWS LINUX PRIVATE DEPLOY; do
   grep -q "^${prefix}__" .env.example || fail ".env.example is missing ${prefix}__ variables"
 done
 for key in RUNNER BACKEND_DIR API_BASE_URL API_TOKEN WEB_STAGING_TRIGGER_URL WEB_PRODUCTION_TRIGGER_URL WEB_STAGING_URL WEB_PRODUCTION_URL; do
@@ -125,6 +125,7 @@ fi
 if awk '
   /^[A-Z0-9_]+=https?:\/\// &&
   $0 != "LOCAL__WEB_APP_URL=http://127.0.0.1:7358" &&
+  $0 != "ANDROID__WEB_APP_URL=http://127.0.0.1:7358" &&
   $0 != "SELFHOSTED__WEB_APP_URL=http://localhost:58080" &&
   $0 != "SELFHOSTED__SUPABASE_URL=http://localhost:55421" { exit 1 }
 ' .env.example; then :; else

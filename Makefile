@@ -26,6 +26,8 @@ WATCH_BUILD_PATH = $(abspath $(WATCH_BUILD_DIR))
 LINUX_BUILD_ENV ?= env -u http_proxy -u https_proxy -u all_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY
 POMODOIST_APPIMAGE_BUILDER ?= ./tool/linux/build_appimage.sh
 LOCAL_CONFIG ?= .env.local
+ANDROID_CONFIG ?= .env.android
+ANDROID_GRADLE_HOME ?= $(abspath build/android/gradle-home)
 LINUX_CONFIG ?= .env.linux
 
 # Windows
@@ -46,7 +48,7 @@ POMODOIST_RELEASE ?= $(shell git rev-parse HEAD)
 .PHONY: setup setup-env setup-flutter setup-linux run run-linux web
 .PHONY: setup-telegram telegram-configure
 .PHONY: analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-packaging check format
-.PHONY: web-debug web-profile web-release
+.PHONY: android web-debug web-profile web-release
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
 .PHONY: windows-debug windows-profile windows-release windows-installer
 .PHONY: macos-debug macos-profile macos-release
@@ -87,6 +89,8 @@ help:
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make format' "$${reset}" 'Format source files'; \
 	printf '\n%s%sRelease & distribution%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-9s %-26s %s%s\n' "$${dim}" 'Platform' 'Command' 'Action' "$${reset}"; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Android' "$${reset}" "$${bold}" 'make android' "$${reset}" 'Debug APK'; \
+	printf '\n'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-debug' "$${reset}" 'Debug app'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-profile' "$${reset}" 'Profile app'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-release' "$${reset}" 'Release app'; \
@@ -177,6 +181,9 @@ check: analyze test
 
 format:
 	$(DART) format lib test tool
+
+android:
+	GRADLE_USER_HOME="$(ANDROID_GRADLE_HOME)" $(FLUTTER) build apk --debug --dart-define-from-file="$(ANDROID_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=storekit
 
 web-debug:
 	$(FLUTTER) build web --debug --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe

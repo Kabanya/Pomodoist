@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('platform mode targets invoke their matching build modes', () {
     const expectedCommands = <String, String>{
+      'android': 'flutter-under-test build apk --debug',
       'web-debug': 'flutter-under-test build web --debug',
       'web-profile': 'flutter-under-test build web --profile',
       'web-release': 'flutter-under-test build web --release',
@@ -33,6 +34,7 @@ void main() {
         'DART=dart-under-test',
         'FLUTTER=flutter-under-test',
         'LOCAL_CONFIG=local.env',
+        'ANDROID_CONFIG=android.env',
         'LINUX_CONFIG=pubspec.yaml',
         'WINDOWS_CONFIG=pubspec.yaml',
         'TESTFLIGHT_CONFIG=pubspec.yaml',
@@ -50,6 +52,7 @@ void main() {
 
   test('platform targets consume their generated environment files', () {
     const expectedConfigs = <String, String>{
+      'android': '--dart-define-from-file="android.env"',
       'run': '--dart-define-from-file="local.env"',
       'run-linux': '--dart-define-from-file="local.env"',
       'web': '--dart-define-from-file="local.env"',
@@ -70,6 +73,7 @@ void main() {
         'DART=dart-under-test',
         'FLUTTER=flutter-under-test',
         'LOCAL_CONFIG=local.env',
+        'ANDROID_CONFIG=android.env',
         'LINUX_CONFIG=linux.env',
         'WINDOWS_CONFIG=C:/windows.env',
         'TESTFLIGHT_CONFIG=testflight.env',
@@ -84,6 +88,32 @@ void main() {
       );
     }
   });
+
+  test(
+    'Android build isolates Gradle state and uses the guarded billing channel',
+    () {
+      final result = Process.runSync(_makeExecutable(), const [
+        '--no-print-directory',
+        '--dry-run',
+        'android',
+        'FLUTTER=flutter-under-test',
+        'ANDROID_CONFIG=android.env',
+        'ANDROID_GRADLE_HOME=build/android/gradle-test-home',
+        'POMODOIST_RELEASE=0123456789abcdef0123456789abcdef01234567',
+      ], workingDirectory: Directory.current.path);
+
+      expect(result.exitCode, 0, reason: result.stderr.toString());
+      final output = result.stdout.toString();
+      expect(
+        output,
+        contains('GRADLE_USER_HOME="build/android/gradle-test-home"'),
+      );
+      expect(
+        output,
+        contains('--dart-define=POMODOIST_BILLING_CHANNEL=storekit'),
+      );
+    },
+  );
 
   test('setup prepares environments before resolving packages', () {
     final result = Process.runSync(_makeExecutable(), const [
@@ -153,7 +183,8 @@ void main() {
       'watch-debug': 'Debug',
       'watch-profile': 'Profile',
     };
-    final watchBuildDir = '${Directory.current.path}/build/watch-test';
+    final makeWorkingDirectory = Directory.current.path.replaceAll(r'\', '/');
+    final watchBuildDir = '$makeWorkingDirectory/build/watch-test';
 
     for (final entry in configurations.entries) {
       final result = Process.runSync(_makeExecutable(), [
