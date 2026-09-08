@@ -21,8 +21,8 @@ policy. Paginate until the user's requested range is covered; do not present one
 page as the full account. For Today/Upcoming/date use the user's IANA time zone,
 not UTC or a guessed offset. Clarify an ambiguous date/time or missing zone.
 
-Examples: "Show today's tasks", "What is upcoming this week?", "Покажи задачи
-на сегодня", "Перенеси подготовку отчёта на завтра в 10:00".
+Examples: "Show today's tasks", "What is upcoming this week?", "Move report
+preparation to tomorrow at 10:00".
 
 ## Changes
 
