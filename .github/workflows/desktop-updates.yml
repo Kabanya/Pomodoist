@@ -60,5 +60,7 @@ jobs:
           test/desktop_update_controller_test.dart
           test/desktop_update_widgets_test.dart
           test/desktop_update_network_test.dart
+          test/desktop_update_exit_test.dart
+          test/desktop_update_provider_test.dart
       - name: Compile native desktop application
         run: flutter build ${{ matrix.platform }} --debug

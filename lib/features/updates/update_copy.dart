@@ -22,6 +22,8 @@ class UpdateCopy {
   String get restart => ru ? 'Приложение перезапустится. Ваши данные сохранятся.'
       : 'The app will restart. Your data will be preserved.';
   String get notes => ru ? 'Все изменения' : 'Release notes';
+  String get ownerManaged => ru ? 'Эту сборку обновляет её владелец, чтобы сохранить настройки сервера. Запросите у него последнюю версию.'
+      : 'This build is updated by its owner to preserve its server configuration. Ask them for the latest version.';
   String get unsupported => ru ? 'Автообновление доступно в официальной Linux AppImage. Другие сборки обновляйте через менеджер пакетов.'
       : 'Automatic updates are available in the official Linux AppImage. Use your package manager for other builds.';
   String version(String value) => ru ? 'Версия $value' : 'Version $value';

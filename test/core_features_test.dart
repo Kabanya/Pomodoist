@@ -1265,6 +1265,7 @@ void main() {
       });
       final container = ProviderContainer(
         overrides: [
+          clockProvider.overrideWithValue(FixedClock(DateTime(2026, 7, 5))),
           taskTimeTickerProvider.overrideWith((ref) => ticker.stream),
         ],
       );

@@ -44,9 +44,9 @@ class _DesktopUpdateHostState extends ConsumerState<DesktopUpdateHost>
   @override
   Widget build(BuildContext context) {
     final controller = ref.watch(desktopUpdateControllerProvider);
-    if (!controller.isDesktop) return widget.child;
+    if (!controller.enabled) return widget.child;
     final reducedMotion = MediaQuery.disableAnimationsOf(context);
-    return Stack(fit: StackFit.expand, children: [
+    return Overlay.wrap(child: Stack(fit: StackFit.expand, children: [
       widget.child,
       Positioned(right: 16, bottom: 16,
         child: ListenableBuilder(listenable: controller, builder: (context, _) =>
@@ -62,7 +62,7 @@ class _DesktopUpdateHostState extends ConsumerState<DesktopUpdateHost>
           ),
         ),
       ),
-    ]);
+    ]));
   }
 }
 
@@ -171,7 +171,8 @@ class DesktopUpdateSettings extends ConsumerWidget {
     return ListenableBuilder(listenable: controller, builder: (context, _) {
       final copy = UpdateCopy.of(context);
       if (!controller.enabled) {
-        return Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Text(copy.unsupported));
+        return Padding(padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Text(controller.officialUpdatesAllowed ? copy.unsupported : copy.ownerManaged));
       }
       return Column(key: const Key('desktop-update-settings'),
         crossAxisAlignment: CrossAxisAlignment.start, children: [

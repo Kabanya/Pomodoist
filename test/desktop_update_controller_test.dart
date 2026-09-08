@@ -78,12 +78,41 @@ class FakeUpdateInstaller implements UpdateInstaller {
 
 DesktopUpdateController testController({FakeUpdateSource? source,
   FakeUpdateInstaller? installer, MemoryUpdatePreferences? preferences,
-  bool automaticChecks = false}) => DesktopUpdateController(
+  bool automaticChecks = false, bool officialUpdatesAllowed = true}) => DesktopUpdateController(
     source: source ?? FakeUpdateSource(), installer: installer ?? FakeUpdateInstaller(),
     preferences: preferences ?? MemoryUpdatePreferences(),
-    installedVersion: () async => '1.0.0+94', automaticChecks: automaticChecks);
+    installedVersion: () async => '1.0.0+94', automaticChecks: automaticChecks,
+    officialUpdatesAllowed: officialUpdatesAllowed);
 
 void main() {
+  test('official updates are denied by default, including manual actions', () async {
+    final source = FakeUpdateSource();
+    final installer = FakeUpdateInstaller();
+    final preferences = MemoryUpdatePreferences();
+    final controller = DesktopUpdateController(
+      source: source, installer: installer, preferences: preferences,
+      installedVersion: () async => '1.0.0',
+    );
+    addTearDown(controller.dispose);
+    await controller.start();
+    controller.onResume();
+    await controller.check();
+    await controller.check(manual: true);
+    await controller.setChannel(UpdateChannel.rc);
+    controller.offer = testOffer();
+    await controller.update();
+    expect(installer.acknowledgements, 1);
+    expect(controller.enabled, isFalse);
+    expect(source.calls, 0);
+    expect(installer.installs, 0);
+    expect(preferences.channel, UpdateChannel.stable);
+    expect(preferences.seen, isEmpty);
+  });
+
+  test('preferences construction does not require a platform plugin', () {
+    expect(SharedUpdatePreferences.new, returnsNormally);
+  });
+
   test('stable is default and showing a release persists its tag', () async {
     final prefs = MemoryUpdatePreferences();
     final source = FakeUpdateSource();

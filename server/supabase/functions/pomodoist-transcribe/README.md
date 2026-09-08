@@ -93,7 +93,7 @@ does not request storage access or Apple Speech/Siri permissions on these platfo
 ```sh
 deno test --allow-read --config server/supabase/deno.json server/supabase/functions/pomodoist-transcribe
 flutter test test/backend_voice_test.dart test/voice_recording_store_test.dart test/quick_add_voice_test.dart
-flutter test --platform chrome web_test/voice_recording_store_test.dart
+flutter test --platform chrome test/web/voice_recording_store_test.dart
 flutter build web --debug
 ```
 

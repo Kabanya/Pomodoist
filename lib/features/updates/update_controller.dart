@@ -7,7 +7,7 @@ import 'update_contracts.dart';
 import 'update_release.dart';
 
 class SharedUpdatePreferences implements UpdatePreferences {
-  final _preferences = SharedPreferencesAsync();
+  late final _preferences = SharedPreferencesAsync();
   static const _channelKey = 'desktop.updater.channel';
   static const _seenKey = 'desktop.updater.seenTags';
 
@@ -28,13 +28,14 @@ class SharedUpdatePreferences implements UpdatePreferences {
 class DesktopUpdateController extends ChangeNotifier {
   DesktopUpdateController({required this.source, required this.installer,
     required this.preferences, required this.installedVersion,
-    this.automaticChecks = true});
+    this.automaticChecks = true, this.officialUpdatesAllowed = false});
 
   final UpdateSource source;
   final UpdateInstaller installer;
   final UpdatePreferences preferences;
   final Future<String> Function() installedVersion;
   final bool automaticChecks;
+  final bool officialUpdatesAllowed;
   UpdateChannel channel = UpdateChannel.stable;
   UpdatePhase phase = UpdatePhase.idle;
   UpdateOffer? offer;
@@ -51,7 +52,7 @@ class DesktopUpdateController extends ChangeNotifier {
   Timer? _periodicTimer;
 
   bool get isDesktop => installer.target != null;
-  bool get enabled => isDesktop && installer.unavailableReason == null;
+  bool get enabled => officialUpdatesAllowed && isDesktop && installer.unavailableReason == null;
   bool get busy => const {UpdatePhase.checking, UpdatePhase.downloading,
     UpdatePhase.verifying, UpdatePhase.installing}.contains(phase);
 

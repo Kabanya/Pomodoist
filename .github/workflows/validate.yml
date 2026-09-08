@@ -35,6 +35,6 @@ jobs:
             chmod +x "$RUNNER_TEMP/chrome-voice-test"
             export CHROME_EXECUTABLE="$RUNNER_TEMP/chrome-voice-test"
           fi
-          flutter test --platform chrome web_test/voice_recording_store_test.dart
+          flutter test --platform chrome test/web/voice_recording_store_test.dart
       - name: Compile web platform adapters
         run: flutter build web --debug

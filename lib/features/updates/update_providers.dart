@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../app/runtime_public_config.dart';
 import 'github_update_source.dart';
 import 'update_controller.dart';
 import 'update_installer.dart';
@@ -12,6 +13,8 @@ final desktopUpdateControllerProvider = Provider<DesktopUpdateController>((ref) 
     installer: createUpdateInstaller(),
     preferences: SharedUpdatePreferences(),
     installedVersion: () async => (await PackageInfo.fromPlatform()).version,
+    officialUpdatesAllowed: ref.watch(runtimePublicConfigProvider).environment ==
+        RuntimeEnvironment.production,
     // Development/test runs never contact GitHub automatically. A real release
     // checks after startup and on a six-hour cadence; manual checks remain usable.
     automaticChecks: kReleaseMode,

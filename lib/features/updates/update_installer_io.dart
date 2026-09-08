@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:ui' show AppExitResponse, AppExitType;
 
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as p;
 
 import 'update_contracts.dart';
@@ -18,6 +19,15 @@ class NativeUpdateInstaller implements UpdateInstaller {
   bool _exitRequested = false;
   UpdateDownloader? _downloader;
   Directory? _helperStage;
+
+  Future<AppExitResponse> requestUpdateExit() async {
+    // Windows acknowledges a native cancelable request before the app decides.
+    // Resolve that decision in Flutter, then hand off without a second request.
+    final decision = await WidgetsBinding.instance.handleRequestAppExit();
+    if (decision == AppExitResponse.cancel || _disposed) return AppExitResponse.cancel;
+    _exitRequested = true;
+    return ServicesBinding.instance.exitApplication(AppExitType.required);
+  }
 
   @override
   UpdateTarget? get target => switch (Abi.current()) {
@@ -136,8 +146,7 @@ class NativeUpdateInstaller implements UpdateInstaller {
       if (_disposed || !await ready.exists()) {
         throw const UpdateFailure('The installer could not prepare the update. The application was not changed.');
       }
-      _exitRequested = true;
-      final response = await ServicesBinding.instance.exitApplication(AppExitType.cancelable);
+      final response = await requestUpdateExit();
       if (response == AppExitResponse.cancel) {
         _exitRequested = false;
         throw const UpdateFailure('Restart cancelled. Your current application is still running.');
@@ -151,7 +160,7 @@ class NativeUpdateInstaller implements UpdateInstaller {
     } finally {
       downloader.dispose();
       _downloader = null;
-      // Normal successful handoff exits the process and never reaches here.
+      // Preserve the helper after a successful exit handoff.
       if (stage != null && !_exitRequested) {
         if (helperStarted) {
           try { await File(p.join(stage.path, 'cancel')).writeAsString('cancel\n', flush: true); }

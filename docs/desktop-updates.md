@@ -5,6 +5,12 @@ and on resume when its last check was more than an hour ago. Automatic checks ru
 in release builds; Settings → About → Updates also works in debug builds. Checks
 never download or execute an installer until the user presses **Update**.
 
+Official updates are enabled only for `POMODOIST_ENVIRONMENT=production`.
+Self-hosted, local and staging builds do not check, download or install official
+updates, including through manual actions. Their Settings explain this restriction;
+self-hosted clients must be rebuilt by their operator to preserve their server
+configuration. Production debug builds still support manual checks.
+
 ## Channels and assets
 
 Stable is the persistent default. The optional RC switch includes `vX.Y.Z-rc.N`
@@ -57,7 +63,11 @@ signing. The current Windows installer remains unsigned and Windows policy may
 block it. No signature verification is claimed.
 
 A bundled helper rechecks the hash, takes an installation lock and acknowledges
-readiness before Flutter requests a cancellable, graceful application exit.
+readiness before Flutter asks its application exit observers for consent. Once
+they agree and the updater is still active, it requests a required native exit.
+This avoids treating Windows' provisional `cancel` response to a native cancelable
+request as a user veto. An actual veto or disposal while awaiting consent cancels
+the helper and leaves the application running.
 It never kills another running Pomodoist instance to force an update. Cancellation
 or timeout leaves the current executable unchanged.
 
@@ -75,14 +85,20 @@ is reversible. Failed staging directories retain `error.log`/`startup.log`, the
 installer log and any recovery copy; successful staging is removed by the new
 process. A restored build reports the failed update in Settings.
 
+Updater preferences initialize only when used. The existing channel and seen-tag
+keys and storage API are unchanged; no preferences or application data migration
+is needed.
+
 On abrupt OS power loss, the Linux target is either the old or new complete file;
 Windows relies on Inno Setup's installation recovery and the retained `previous`
 backup. Do not delete a failed staging directory until recovery is confirmed.
 
 ## Verification
 
-Run `flutter analyze`, `flutter test` and `flutter build web --debug` for the
-shared code and conditional-import boundary. Focused tests are named
+Run the pinned SDK through `.fvm/flutter_sdk/bin/flutter`: `analyze`, `test`,
+`test --platform chrome test/web/voice_recording_store_test.dart` and
+`build web --debug` for the shared code and conditional-import boundary.
+Focused tests are named
 `test/desktop_update_*_test.dart`.
 
 Run `python3 -m unittest tool/test_desktop_update_helpers.py` on Linux and
@@ -92,8 +108,11 @@ fixture executables, including corrupt hashes, cancellation and rollback.
 The `Desktop updater` PR workflow also compiles both native desktop targets.
 It does not publish releases, install into a user's profile or use production secrets.
 
-Before publishing the first updater-enabled release, smoke-test two real release
-builds on Windows 10/11 and an AppImage desktop session: preserve a task, settings
-and login across an update, cancel graceful exit, test a read-only target and
-network failure, and confirm stable/RC behavior and unsigned-installer policy.
+Before publishing a stable updater release, smoke-test an update between two
+consecutive RC builds on Windows 10/11 and an AppImage desktop session: preserve
+a task, settings and login across an update, cancel graceful exit, test a read-only
+target, corrupt download and network failure, and confirm stable/RC behavior and
+unsigned-installer policy.
 Fixture/CI tests do not substitute for that real-device release acceptance pass.
+Record code fixes, automated checks and real upgrade results separately; keep
+the real-upgrade acceptance criteria in issue #58 open until that pass succeeds.
