@@ -13,7 +13,7 @@ function fixture() {
   const store = { identity: async () => { order.push('identity'); return account; }, bootstrap: async () => account,
     snapshot: async (_a: unknown, _n: unknown, opts: any = {}) => ({ ...snapshot, ...opts }),
     command: async (_a: unknown, command: any) => { commands.push(command); return snapshot; },
-    beginLink: async () => ({ url: 'https://app.example.com/telegram-account-link?token=opaque' }), completeLink: async () => ({ linked: true }) };
+    beginLink: async () => ({ url: 'https://app.example.com/telegram-account-link?token=opaque' }), unlinkAccount: async () => ({}), completeLink: async () => ({ linked: true }) };
   const deps = { secret, botToken: '123:test', webAppUrl: 'https://app.example.com', timeZone: 'UTC', store, now: () => now,
     call: async (method: string, body: Record<string, any>) => { order.push(method); calls.push({ method, body }); return { message_id: 2 }; } };
   return { calls, commands, order, store, snapshot, deps };

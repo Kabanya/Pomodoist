@@ -15,7 +15,9 @@ const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Moscow' }).form
 const future = '2099-12-31';
 const id = n => `11111111-1111-4111-8111-${String(n).padStart(12, '0')}`;
 const model = { tasks: new Map(), projects: new Map([['release', { name: 'Pomodoist' }]]), focusRuns: new Map(), focusIntervals: new Map(), entities: [] };
-let revision = 0, focus = null, linked = false, unavailable = false, holdCommand, releaseCommand, dropReply;
+const guestModel = { tasks: new Map(), projects: new Map(), focusRuns: new Map(), focusIntervals: new Map(), entities: [] };
+let revision = 0, focus = null, linked = false, guestMode = false, unavailable = false, unlinkUnavailable = false, holdCommand, releaseCommand, dropReply;
+let snapshotRequests = 0, unlinkRequests = 0;
 const commands = [], receipts = new Set();
 function put(task) {
   model.tasks.set(task.id, task);
@@ -27,17 +29,19 @@ for (const [n, content] of ['Продумать Telegram Mini App', 'Прове�
 }
 put({ id: id(20), content: 'Задача проекта', status: 'open', projectId: 'release', priority: 2, dueJson: JSON.stringify({ type: 'allDay', date: future }) });
 function snapshot(body) {
-  return { account: { linked }, inbox: [...model.tasks.values()].filter(t => !t.isDeleted && t.projectId === 'inbox' && t.status !== 'completed'), focus, generatedAt: new Date().toISOString(), ...taskPage(model, new Date(), body) };
+  const source = guestMode ? guestModel : model;
+  return { account: { linked }, inbox: [...source.tasks.values()].filter(t => !t.isDeleted && t.projectId === 'inbox' && t.status !== 'completed'), focus: guestMode ? null : focus, generatedAt: new Date().toISOString(), ...taskPage(source, new Date(), body) };
 }
 await context.addInitScript(() => {
   const handlers = {};
   const control = () => ({ onClick(fn) { this.click = fn; }, show() {}, hide() {} });
-  window.testTelegram = { handlers, links: [], haptics: [], colors: [] };
+  window.testTelegram = { handlers, links: [], haptics: [], colors: [], confirms: [], confirmResult: true };
   window.Telegram = { WebApp: { initData: 'signed-fixture', initDataUnsafe: { user: { id: 42, language_code: 'ru' } }, colorScheme: 'light',
     ready() {}, expand() {}, onEvent(name, fn) { handlers[name] = fn; }, isVersionAtLeast() { return true; },
     setHeaderColor(value) { window.testTelegram.colors.push(value); }, setBackgroundColor() {}, setBottomBarColor() {},
     BackButton: control(), SettingsButton: control(), MainButton: control(), SecondaryButton: control(),
     HapticFeedback: { impactOccurred(value) { window.testTelegram.haptics.push(value); }, notificationOccurred(value) { window.testTelegram.haptics.push(value); } },
+    showConfirm(message, callback) { window.testTelegram.confirms.push(message); callback(window.testTelegram.confirmResult); },
     openLink(url) { window.testTelegram.links.push(url); },
   } };
 });
@@ -55,6 +59,11 @@ await page.route('**/*', async route => {
   let data;
   try {
     if (body.action === 'begin_link') data = { url: 'https://mini.example/telegram-account-link?token=fixture' };
+    else if (body.action === 'unlink_account') {
+      unlinkRequests++;
+      if (unlinkUnavailable) return route.fulfill({ status: 503, json: { ok: false, code: 'request_failed' } });
+      linked = false; guestMode = true; data = snapshot(body);
+    }
     else if (body.action === 'command') {
       const command = body.command;
       commands.push(command);
@@ -77,7 +86,7 @@ await page.route('**/*', async route => {
       data = snapshot({ ...body, taskId: command.taskId });
       if (dropReply === command.type) { dropReply = null; return route.abort('failed'); }
       if (holdCommand === command.type) { holdCommand = null; await new Promise(resolve => { releaseCommand = resolve; }); }
-    } else data = snapshot(body);
+    } else { snapshotRequests++; data = snapshot(body); }
     await route.fulfill({ json: { ok: true, data } });
   } catch (error) {
     if (!(error instanceof TelegramError)) throw error;
@@ -93,7 +102,12 @@ const output = process.env.TELEGRAM_SCREENSHOT_DIR;
 try {
   await page.goto('https://mini.example/telegram/');
   await page.locator('#app:not([hidden])').waitFor();
+  assert.deepEqual(await page.locator('.navigation [data-view]').evaluateAll(items => items.map(item => item.dataset.view)), ['inbox', 'today', 'upcoming', 'focus']);
+  assert.equal(await page.locator('#sign-out').getAttribute('hidden'), '');
   assert.equal(await page.locator('.task').count(), 6);
+  const initialSnapshots = snapshotRequests;
+  await page.waitForTimeout(5500);
+  assert.equal(snapshotRequests, initialSnapshots);
   if (output) {
     await mkdir(output, { recursive: true });
     for (const theme of ['light', 'dark']) {
@@ -123,9 +137,10 @@ try {
   await nav('upcoming'); await waitView('Предстоящее');
   assert.equal(await page.locator('.task').count(), 2);
   await page.locator(`[data-complete="${id(1)}"]`).click(); await synced();
-  await nav('completed'); await waitView('Завершено');
+  assert.equal(await task(1).count(), 0);
+  await page.locator('#undo-button').click(); await synced();
   assert.equal(await task(1).count(), 1);
-  holdCommand = 'task.uncomplete';
+  holdCommand = 'task.complete';
   await page.locator(`[data-complete="${id(1)}"]`).click();
   await page.waitForFunction(() => !!localStorage.getItem('pomodoist.telegram.pending.v1'));
   await nav('today'); await waitView('Сегодня');
@@ -206,6 +221,7 @@ try {
   linked = true;
   await page.locator('#close-settings').click(); await page.locator('#refresh-button').click();
   await page.waitForFunction(() => document.querySelector('#link-account').hidden);
+  assert.equal(await page.locator('#sign-out').getAttribute('hidden'), null);
   for (const theme of ['light', 'dark']) {
     await page.evaluate(theme => { window.Telegram.WebApp.colorScheme = theme; window.testTelegram.handlers.themeChanged(); }, theme);
     assert.equal(await page.locator('html').getAttribute('data-theme'), theme);
@@ -224,6 +240,39 @@ try {
     await page.evaluate(() => window.Telegram.WebApp.BackButton.click());
     await page.locator('#task-dialog').waitFor({ state: 'hidden' });
   }
+  await page.evaluate(() => {
+    localStorage.setItem('pomodoist.telegram.draft.v1', 'Сохранить черновик');
+    localStorage.setItem('pomodoist.telegram.task-draft.v1.fixture', 'detail');
+    window.testTelegram.confirmResult = false;
+  });
+  await page.locator('#account-button').click();
+  await page.locator('#sign-out').click();
+  assert.equal(linked, true);
+  assert.equal(unlinkRequests, 0);
+  assert.equal(await page.evaluate(() => localStorage.getItem('pomodoist.telegram.draft.v1')), 'Сохранить черновик');
+  await page.evaluate(() => { window.testTelegram.confirmResult = true; });
+  unlinkUnavailable = true;
+  await page.locator('#sign-out').click();
+  await page.locator('#account-error:not([hidden])').waitFor();
+  assert.equal(linked, true);
+  assert.equal(await page.evaluate(() => localStorage.getItem('pomodoist.telegram.task-draft.v1.fixture')), 'detail');
+  await page.locator('#close-settings').click();
+  unavailable = true;
+  await page.locator('#task-input').fill('Discard on logout'); await page.locator('#add-button').click();
+  await page.locator('#sync-status').filter({ hasText: 'Ожидаем' }).waitFor();
+  unavailable = false;
+  await page.evaluate(() => localStorage.setItem('pomodoist.telegram.draft.v1', 'Удалить черновик'));
+  await page.locator('#account-button').click();
+  await page.locator('#sign-out:enabled').waitFor();
+  unlinkUnavailable = false;
+  await page.locator('#sign-out').click();
+  await page.locator('#settings-dialog').waitFor({ state: 'hidden' });
+  assert.equal(linked, false);
+  assert.equal(await page.locator('.task').count(), 0);
+  assert.equal(await page.locator('#inbox-title').textContent(), 'Входящие');
+  assert.equal(await page.evaluate(() => localStorage.getItem('pomodoist.telegram.draft.v1')), null);
+  assert.equal(await page.evaluate(() => localStorage.getItem('pomodoist.telegram.pending.v1')), null);
+  assert.equal(await page.evaluate(() => localStorage.getItem('pomodoist.telegram.task-draft.v1.fixture')), null);
   assert.deepEqual(errors, []);
-  console.log('Mini App browser checks passed: task lifecycle, views, drafts, conflicts, focus, replay, linking, themes, mobile layout.');
+  console.log('Mini App browser checks passed: task lifecycle, four views, drafts, conflicts, focus, replay, linking, logout, polling, themes, mobile layout.');
 } finally { await browser.close(); }

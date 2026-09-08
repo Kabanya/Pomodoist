@@ -100,7 +100,7 @@ async function start() {
   elements.app.hidden = false;
   render();
   if (!clockTimer) clockTimer = window.setInterval(tick, 1000);
-  if (!refreshTimer) refreshTimer = window.setInterval(refreshInBackground, 5000);
+  if (!refreshTimer) refreshTimer = window.setInterval(refreshInBackground, 60_000);
   void drainCommands();
 }
 
@@ -175,6 +175,7 @@ function bindUi() {
   );
   elements["settings-dialog"].addEventListener("close", syncBackButton);
   elements["link-account"].addEventListener("click", beginLink);
+  elements["sign-out"].addEventListener("click", signOut);
   elements["open-app"].addEventListener("click", openApp);
   elements["detail-open-app"].addEventListener("click", openApp);
   elements["close-task"].addEventListener(
@@ -540,6 +541,8 @@ function render() {
     : text.guest;
   elements["link-account"].hidden = state.account.linked;
   elements["link-account"].disabled = busy || pendingCommands.length > 0;
+  elements["sign-out"].hidden = !state.account.linked;
+  elements["sign-out"].disabled = busy;
   updateDetailActions();
   tick();
 }
@@ -840,6 +843,66 @@ async function beginLink() {
     elements["link-account"].textContent = text.signIn;
   }
 }
+async function signOut() {
+  if (busy || !state.account.linked || !await confirmSignOut()) return;
+  if (busy || !state.account.linked) return;
+  busy = true;
+  elements["sign-out"].textContent = text.signingOut;
+  render();
+  try {
+    const snapshot = await api("unlink_account", {
+      view: "inbox",
+      page: 0,
+      timeZone,
+    });
+    await storageRemove(draftKey);
+    await storageRemove(pendingKey);
+    for (let index = localStorage.length - 1; index >= 0; index--) {
+      const key = localStorage.key(index);
+      if (key?.startsWith("pomodoist.telegram.task-draft.v1.")) {
+        localStorage.removeItem(key);
+      }
+    }
+    window.clearTimeout(draftTimer);
+    elements["task-input"].value = "";
+    pendingCommands = [];
+    lastCompleted = null;
+    hideToast();
+    if (elements["task-dialog"].open) elements["task-dialog"].close();
+    if (elements["settings-dialog"].open) elements["settings-dialog"].close();
+    view = "inbox";
+    page = 0;
+    selectedId = null;
+    editingTask = null;
+    loadingRoute = false;
+    routeGeneration++;
+    serverGeneration++;
+    snapshotRequest++;
+    serverState = snapshot;
+    lastUpdatedAt = new Date();
+    refreshFailed = false;
+    projectState();
+  } catch (error) {
+    showTransient(errorMessage(error));
+  } finally {
+    busy = false;
+    elements["sign-out"].textContent = text.signOut;
+    render();
+    syncBackButton();
+  }
+}
+function confirmSignOut() {
+  if (typeof WebApp?.showConfirm !== "function") {
+    return Promise.resolve(window.confirm(text.signOutConfirm));
+  }
+  return new Promise((resolve) => {
+    try {
+      WebApp.showConfirm(text.signOutConfirm, (confirmed) => resolve(Boolean(confirmed)));
+    } catch {
+      resolve(window.confirm(text.signOutConfirm));
+    }
+  });
+}
 
 function applyText() {
   document.querySelectorAll("[data-text]").forEach((element) => {
@@ -857,6 +920,7 @@ function applyText() {
       "add-button": "add",
       "settings-title": "settings",
       "link-account": "signIn",
+      "sign-out": "signOut",
       "undo-button": "undo",
       "retry-button": "retry",
     })

@@ -48,6 +48,55 @@ function fixture() {
   const account = { telegramUserId: '42', userId: 'account-42', clientId: 'client-42', linked: true };
   return { store, account, queries, pushes, receipts, failHint: () => { hintFails = true; }, failPush: () => { failNext = true; }, delegated: () => delegated };
 }
+function unlinkFixture() {
+  let mapping: Record<string, unknown> = { telegram_user_id: '42', user_id: 'account-42', guest_user_id: null, client_id: 'client-42', linked: true };
+  let failRpc = false, creates = 0, deletes = 0;
+  const rpcCalls: Record<string, unknown>[] = [];
+  const users = new Map<string, Record<string, unknown>>();
+  const admin = {
+    auth: { admin: {
+      createUser: async () => {
+        creates++;
+        const user = { id: 'guest-new-42', email: 'tg-new@telegram.invalid', app_metadata: { account_kind: 'telegram_guest' } };
+        users.set(String(user.id), user);
+        return { data: { user }, error: null };
+      },
+      getUserById: async (id: string) => ({ data: { user: users.get(id) ?? null }, error: null }),
+      deleteUser: async (id: string) => { deletes++; users.delete(id); return { error: null }; },
+    } },
+    from(table: string) {
+      const filters: [string, unknown][] = [];
+      const builder = {
+        select: () => builder,
+        eq: (key: string, value: unknown) => { filters.push([key, value]); return builder; },
+        is: () => builder,
+        in: () => builder,
+        gt: () => builder,
+        order: () => builder,
+        limit: async () => ({ data: [], error: null }),
+        maybeSingle: async () => ({ data: table === 'pomodoist_telegram_accounts' ? mapping : null, error: null }),
+      };
+      return builder;
+    },
+    rpc: async (name: string, args: Record<string, unknown>) => {
+      assert.equal(name, 'unlink_pomodoist_telegram');
+      rpcCalls.push(args);
+      if (failRpc) return { data: null, error: { message: 'temporary unlink failure' } };
+      mapping = { ...mapping, user_id: 'guest-new-42', guest_user_id: 'guest-new-42', linked: false };
+      return { data: mapping, error: null };
+    },
+    channel: () => ({ send: async () => 'ok' }),
+    removeChannel: async () => 'ok',
+  };
+  const runtime = {
+    pomodoistState: () => ({ entities: [], tasks: new Map(), projects: new Map(), labels: new Map(), focusPresets: new Map(), focusRuns: new Map(), focusIntervals: new Map(), maxRevision: 0 }),
+    telegramSnapshot: () => ({ generatedAt: at.toISOString(), inbox: [], focus: null }),
+    telegramCommandOps: () => [],
+  } as unknown as TelegramRuntime;
+  const store = createTelegramStore(admin as unknown as Parameters<typeof createTelegramStore>[0], 'https://app.example.com', runtime);
+  const account = { telegramUserId: '42', userId: 'account-42', clientId: 'client-42', linked: true };
+  return { store, account, rpcCalls, creates: () => creates, deletes: () => deletes, fail: () => { failRpc = true; } };
+}
 Deno.test('store keeps the complete edit inside the mapped account RPC and replays without a second write', async () => {
   const f = fixture(), command = { type: 'task.update', id: commandId, taskId, expectedRevision: 1, patch: { content: 'Edited' } };
   await f.store.command(f.account, command, at); await f.store.command(f.account, command, at);
@@ -79,4 +128,23 @@ Deno.test('mutation responses preserve the bot display time zone', async () => {
   const f = fixture();
   const result = await f.store.command(f.account, { type: 'task.update', id: commandId, taskId, patch: { content: 'Renamed' } }, at, { timeZone: 'Europe/Helsinki' });
   assert.equal((result as Record<string, unknown>).timeZone, 'Europe/Helsinki');
+});
+Deno.test('unlink creates one empty guest and repeated requests reuse it', async () => {
+  const f = unlinkFixture();
+  const first = await (f.store as any).unlinkAccount(f.account, at, { view: 'inbox', page: 0, timeZone: 'Europe/Moscow' });
+  const current = await f.store.identity('42');
+  const second = await (f.store as any).unlinkAccount(current, at, { view: 'inbox', page: 0, timeZone: 'Europe/Moscow' });
+  assert.equal(f.creates(), 1);
+  assert.equal(f.rpcCalls.length, 1);
+  assert.equal(f.rpcCalls[0].p_expected_user_id, 'account-42');
+  assert.equal(f.rpcCalls[0].p_guest_user_id, 'guest-new-42');
+  assert.deepEqual((first as Record<string, unknown>).account, { linked: false });
+  assert.deepEqual(second, first);
+});
+Deno.test('failed unlink deletes the unused guest and keeps the linked mapping', async () => {
+  const f = unlinkFixture(); f.fail();
+  await assert.rejects((f.store as any).unlinkAccount(f.account, at), /temporary unlink failure/);
+  assert.equal(f.creates(), 1);
+  assert.equal(f.deletes(), 1);
+  assert.equal((await f.store.identity('42'))?.userId, 'account-42');
 });

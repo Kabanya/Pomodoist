@@ -10,6 +10,12 @@ export type TelegramRuntime = {
 };
 
 export function createTelegramStore(admin: SupabaseClient, webAppUrl: string, runtime: TelegramRuntime): TelegramStore {
+  async function createGuest() {
+    const created = await admin.auth.admin.createUser({ email: `tg-${crypto.randomUUID()}@telegram.invalid`,
+      email_confirm: true, app_metadata: { account_kind: "telegram_guest" } });
+    if (created.error || created.data.user == null) throw new Error(created.error?.message ?? "Guest bootstrap failed");
+    return created.data.user.id;
+  }
   async function identity(telegramUserId: string) {
     const { data, error } = await admin.from("pomodoist_telegram_accounts")
       .select("telegram_user_id,user_id,guest_user_id,client_id").eq("telegram_user_id", telegramUserId).maybeSingle();
@@ -17,10 +23,7 @@ export function createTelegramStore(admin: SupabaseClient, webAppUrl: string, ru
     return data == null ? null : mapIdentity(data);
   }
   async function bootstrap(telegramUserId: string) {
-    const created = await admin.auth.admin.createUser({ email: `tg-${crypto.randomUUID()}@telegram.invalid`,
-      email_confirm: true, app_metadata: { account_kind: "telegram_guest" } });
-    if (created.error || created.data.user == null) throw new Error(created.error?.message ?? "Guest bootstrap failed");
-    const guestUserId = created.data.user.id;
+    const guestUserId = await createGuest();
     const { data, error } = await admin.rpc("bootstrap_pomodoist_telegram", {
       p_telegram_user_id: telegramUserId, p_guest_user_id: guestUserId, p_client_id: crypto.randomUUID(),
     });
@@ -123,6 +126,28 @@ export function createTelegramStore(admin: SupabaseClient, webAppUrl: string, ru
     if (linked.error) throw new Error(linked.error.message);
     return { url: `${webAppUrl}/telegram-account-link?token=${encodeURIComponent(token)}` };
   }
+  async function unlinkAccount(account: TelegramIdentity, now: Date, options: SnapshotOptions = {}) {
+    const current = await identity(account.telegramUserId) ?? account;
+    if (!current.linked) return snapshot(current, now, options);
+    const guestUserId = await createGuest();
+    const unlinked = await admin.rpc("unlink_pomodoist_telegram", {
+      p_telegram_user_id: current.telegramUserId,
+      p_expected_user_id: current.userId,
+      p_guest_user_id: guestUserId,
+    });
+    if (unlinked.error) {
+      await deleteGuest(admin, guestUserId);
+      if (unlinked.error.message.includes("Telegram mapping changed")) {
+        const refreshed = await identity(current.telegramUserId);
+        if (refreshed != null && !refreshed.linked) return snapshot(refreshed, now, options);
+        throw new TelegramError("retry_later", 409);
+      }
+      throw new Error(unlinked.error.message);
+    }
+    const mapped = mapIdentity(unlinked.data as JsonMap);
+    if (mapped.userId !== guestUserId) await deleteGuest(admin, guestUserId);
+    return snapshot(mapped, now, options);
+  }
   async function completeLink(token: string, authorization: string, _now: Date) {
     const match = /^Bearer\s+(.+)$/i.exec(authorization);
     if (match == null) throw new TelegramError("authorization_required", 401);
@@ -142,7 +167,7 @@ export function createTelegramStore(admin: SupabaseClient, webAppUrl: string, ru
     if (guestUserId != null) await deleteGuest(admin, guestUserId);
     return { linked: true, email: authenticated.data.user.email ?? null };
   }
-  return { identity, bootstrap, snapshot, command, beginLink, completeLink };
+  return { identity, bootstrap, snapshot, command, beginLink, unlinkAccount, completeLink };
 }
 async function deleteGuest(admin: SupabaseClient, userId: string) {
   const found = await admin.auth.admin.getUserById(userId), user = found.data.user;

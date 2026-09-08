@@ -7,6 +7,7 @@ export type TelegramStore = {
   snapshot: (identity: TelegramIdentity, now: Date, options?: SnapshotOptions) => Promise<unknown>;
   command: (identity: TelegramIdentity, command: JsonMap, now: Date, options?: SnapshotOptions) => Promise<unknown>;
   beginLink: (identity: TelegramIdentity, now: Date) => Promise<unknown>;
+  unlinkAccount: (identity: TelegramIdentity, now: Date, options?: SnapshotOptions) => Promise<unknown>;
   completeLink: (token: string, authorization: string, now: Date) => Promise<unknown>;
 };
 export type PomodoistTelegramDeps = { botToken: string; allowedOrigin: string; store: TelegramStore; now?: () => Date };
@@ -42,6 +43,7 @@ export async function handlePomodoistTelegram(req: Request, deps: PomodoistTeleg
     else if (body.action === 'command') {
       const command = object(body.command); validateCommand(command); data = await deps.store.command(identity, command, now, snapshotOptions(body));
     } else if (body.action === 'begin_link') data = await deps.store.beginLink(identity, now);
+    else if (body.action === 'unlink_account') data = await deps.store.unlinkAccount(identity, now, snapshotOptions(body));
     else throw new TelegramError('unsupported_action');
     return response({ ok: true, data }, 200);
   } catch (error) {

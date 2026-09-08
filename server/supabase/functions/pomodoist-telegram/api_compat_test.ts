@@ -15,7 +15,7 @@ function fixture() {
   const store: TelegramStore = { identity: async (id: string) => identities.get(id) ?? null,
     bootstrap: async (id: string) => { if (!identities.has(id)) identities.set(id, { telegramUserId: id, userId: `guest-${id}`, clientId: 'client', linked: false }); return identities.get(id); },
     snapshot: async (i: { userId: string }) => { calls.push(i.userId); return { inbox: [], focus: null, account: { linked: false } }; },
-    command: async () => ({}), beginLink: async () => ({}), completeLink: async () => ({ linked: true }) };
+    command: async () => ({}), beginLink: async () => ({}), unlinkAccount: async () => ({}), completeLink: async () => ({ linked: true }) };
   return { store, identities, calls, deps: { botToken: token, allowedOrigin: 'https://app.example.com', store, now: () => now } };
 }
 async function request(body: unknown, user = 42) { return new Request('https://api.example.com/functions/v1/pomodoist-telegram', { method: 'POST',

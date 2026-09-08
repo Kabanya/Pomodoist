@@ -1,7 +1,7 @@
 begin;
 \ir hosted-mode.inc
 
-select plan(24);
+select plan(29);
 
 insert into auth.users (id, email, aud, role, created_at, updated_at)
 values
@@ -13,7 +13,10 @@ values
   ('10000000-0000-4000-8000-000000000006', 'target-3@example.com', 'authenticated', 'authenticated', now(), now()),
   ('10000000-0000-4000-8000-000000000007', 'tg-guest-4@telegram.invalid', 'authenticated', 'authenticated', now(), now()),
   ('10000000-0000-4000-8000-000000000008', 'target-4@example.com', 'authenticated', 'authenticated', now(), now()),
-  ('10000000-0000-4000-8000-000000000009', 'target-5@example.com', 'authenticated', 'authenticated', now(), now());
+  ('10000000-0000-4000-8000-000000000009', 'target-5@example.com', 'authenticated', 'authenticated', now(), now()),
+  ('10000000-0000-4000-8000-000000000010', 'tg-old-guest@telegram.invalid', 'authenticated', 'authenticated', now(), now()),
+  ('10000000-0000-4000-8000-000000000011', 'unlink-target@example.com', 'authenticated', 'authenticated', now(), now()),
+  ('10000000-0000-4000-8000-000000000012', 'tg-new-guest@telegram.invalid', 'authenticated', 'authenticated', now(), now());
 
 select ok(
   not has_table_privilege('anon', 'public.pomodoist_telegram_accounts', 'SELECT')
@@ -26,7 +29,10 @@ select ok(
 select ok(
   has_function_privilege('service_role', 'public.bootstrap_pomodoist_telegram(bigint,uuid,uuid)', 'EXECUTE')
   and has_function_privilege('service_role', 'public.push_pomodoist_telegram_changes(bigint,uuid,uuid,jsonb)', 'EXECUTE')
+  and has_function_privilege('service_role', 'public.unlink_pomodoist_telegram(bigint,uuid,uuid)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.bootstrap_pomodoist_telegram(bigint,uuid,uuid)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.unlink_pomodoist_telegram(bigint,uuid,uuid)', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'public.unlink_pomodoist_telegram(bigint,uuid,uuid)', 'EXECUTE')
   and not has_function_privilege('authenticated', 'public.complete_pomodoist_telegram_link(bytea,uuid)', 'EXECUTE'),
   'only service role can execute Telegram identity RPCs'
 );
@@ -303,6 +309,60 @@ select lives_ok(
     '[{"opId":"focus-one-pause","entityType":"focus_run","entityId":"focus-one","operation":"upsert","payload":{"id":"focus-one","status":"paused"},"clientUpdatedAt":"2026-08-03T12:01:00Z"}]'
   )$$,
   'upsert can pause the current active Focus itself'
+);
+
+insert into public.pomodoist_telegram_accounts (
+  telegram_user_id, user_id, guest_user_id, client_id, linked_at
+) values (
+  46,
+  '10000000-0000-4000-8000-000000000011',
+  null,
+  '20000000-0000-4000-8000-000000000006',
+  now()
+);
+insert into public.pomodoist_telegram_link_attempts (
+  token_hash, telegram_user_id, expires_at
+) values (
+  decode(repeat('66', 32), 'hex'), 46, now() + interval '15 minutes'
+);
+insert into public.sync_entities (
+  user_id, app_id, entity_type, entity_id, server_revision,
+  client_updated_at, data, field_clock
+) values
+  ('10000000-0000-4000-8000-000000000011', 'pomodoist', 'task', 'unlink-target-task', nextval('public.sync_revision_seq'), now(), '{"id":"unlink-target-task","status":"open"}', '{}'),
+  ('10000000-0000-4000-8000-000000000011', 'pomodoist', 'focus_run', 'unlink-target-focus', nextval('public.sync_revision_seq'), now(), '{"id":"unlink-target-focus","status":"active"}', '{}');
+
+select throws_ok(
+  $$select public.unlink_pomodoist_telegram(46, '10000000-0000-4000-8000-000000000009', '10000000-0000-4000-8000-000000000012')$$,
+  '40001',
+  'Telegram mapping changed',
+  'unlink rejects a stale expected account without changing the mapping'
+);
+
+select lives_ok(
+  $$select public.unlink_pomodoist_telegram(46, '10000000-0000-4000-8000-000000000011', '10000000-0000-4000-8000-000000000012')$$,
+  'unlink atomically switches the Telegram identity to a new guest'
+);
+
+select ok(
+  (select user_id = '10000000-0000-4000-8000-000000000012'
+     and guest_user_id = '10000000-0000-4000-8000-000000000012'
+     and linked_at is null
+   from public.pomodoist_telegram_accounts where telegram_user_id = 46),
+  'unlinked mapping points to the fresh guest'
+);
+
+select is(
+  (select count(*) from public.pomodoist_telegram_link_attempts where telegram_user_id = 46),
+  0::bigint,
+  'unlink invalidates every outstanding link attempt'
+);
+
+select ok(
+  exists(select 1 from public.sync_entities where user_id = '10000000-0000-4000-8000-000000000011' and entity_id = 'unlink-target-task')
+  and exists(select 1 from public.sync_entities where user_id = '10000000-0000-4000-8000-000000000011' and entity_id = 'unlink-target-focus' and data ->> 'status' = 'active')
+  and not exists(select 1 from public.sync_entities where user_id = '10000000-0000-4000-8000-000000000012'),
+  'unlink leaves the linked account data and active Focus untouched'
 );
 
 select * from finish();

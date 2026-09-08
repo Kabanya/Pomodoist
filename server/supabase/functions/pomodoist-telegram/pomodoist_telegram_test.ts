@@ -6,6 +6,12 @@ import {
   type TelegramStore,
   verifyTelegramInitData,
 } from "./pomodoist_telegram.ts";
+import { createTelegramStore } from "./store.ts";
+import {
+  pomodoistState,
+  telegramCommandOps,
+  telegramSnapshot,
+} from "../pomodoist-watch/pomodoist_watch.ts";
 
 const botToken = "123456:test-token";
 const now = new Date("2026-08-03T12:00:00.000Z");
@@ -104,6 +110,112 @@ Deno.test("handler forwards the client command UUID for idempotent replay", asyn
     store.commands.every((item) => item.identity.userId === "guest-42"),
     true,
   );
+});
+
+Deno.test("handler signs out a linked Telegram account into its new guest", async () => {
+  const store = new MemoryStore();
+  store.identities.set("42", {
+    telegramUserId: "42",
+    userId: "account-42",
+    guestUserId: "old-guest-42",
+    clientId: "11111111-1111-4111-8111-000000000042",
+    linked: true,
+  });
+  const response = await handlePomodoistTelegram(
+    await request("unlink_account", 42, {
+      view: "inbox",
+      page: 0,
+      timeZone: "Europe/Moscow",
+    }),
+    {
+      botToken,
+      allowedOrigin: "https://app.pomodoist.com",
+      now: () => now,
+      store,
+    },
+  );
+
+  assertEquals(response.status, 200);
+  assertEquals(store.unlinks, ["account-42"]);
+  assertEquals((await response.json()).data, {
+    account: { linked: false },
+    inbox: [],
+    focus: null,
+  });
+});
+
+Deno.test("standalone Focus crosses the signed handler, store, and runtime and survives refresh", async () => {
+  let revision = 0;
+  const rows: Record<string, unknown>[] = [];
+  const mapping = {
+    telegram_user_id: "42",
+    user_id: "guest-42",
+    guest_user_id: "guest-42",
+    client_id: "11111111-1111-4111-8111-000000000042",
+  };
+  const admin = {
+    from(table: string) {
+      const builder = {
+        select: () => builder,
+        eq: () => builder,
+        is: () => builder,
+        in: () => builder,
+        gt: () => builder,
+        order: () => builder,
+        limit: async () => ({ data: rows, error: null }),
+        maybeSingle: async () => ({
+          data: table === "pomodoist_telegram_accounts" ? mapping : null,
+          error: null,
+        }),
+      };
+      return builder;
+    },
+    rpc: async (_name: string, args: Record<string, unknown>) => {
+      for (const operation of args.p_operations as Record<string, unknown>[]) {
+        rows.push({
+          entity_type: operation.entityType,
+          entity_id: operation.entityId,
+          server_revision: ++revision,
+          deleted_at: null,
+          data: operation.payload,
+        });
+      }
+      return { data: {}, error: null };
+    },
+    channel: () => ({ send: async () => "ok" }),
+    removeChannel: async () => "ok",
+  };
+  const store = createTelegramStore(
+    admin as unknown as Parameters<typeof createTelegramStore>[0],
+    "https://app.pomodoist.com",
+    { pomodoistState, telegramCommandOps, telegramSnapshot },
+  );
+  const deps = {
+    botToken,
+    allowedOrigin: "https://app.pomodoist.com",
+    now: () => now,
+    store,
+  };
+  const command = await handlePomodoistTelegram(
+    await request("command", 42, {
+      command: {
+        type: "focus.start",
+        id: "22222222-2222-4222-8222-222222222222",
+      },
+    }),
+    deps,
+  );
+  const started = (await command.json()).data;
+  const refreshed = await handlePomodoistTelegram(
+    await request("snapshot", 42),
+    deps,
+  );
+  const reloaded = (await refreshed.json()).data;
+
+  assertEquals(command.status, 200);
+  assertEquals(started.focus.run.taskId, null);
+  assertEquals(reloaded.focus.run.id, started.focus.run.id);
+  assertEquals(reloaded.focus.interval.status, "running");
 });
 
 Deno.test("handler rejects non-Telegram access and disallowed origins", async () => {
@@ -215,6 +327,7 @@ class MemoryStore implements TelegramStore {
   commands: Array<
     { identity: TelegramIdentity; command: Record<string, unknown> }
   > = [];
+  unlinks: string[] = [];
 
   async identity(telegramUserId: string) {
     return this.identities.get(telegramUserId) ?? null;
@@ -249,6 +362,13 @@ class MemoryStore implements TelegramStore {
 
   async beginLink() {
     return { token: "link-token" };
+  }
+
+  async unlinkAccount(identity: TelegramIdentity) {
+    this.unlinks.push(identity.userId);
+    const guest = { ...identity, userId: `guest-${identity.telegramUserId}`, guestUserId: `guest-${identity.telegramUserId}`, linked: false };
+    this.identities.set(identity.telegramUserId, guest);
+    return this.snapshot(guest);
   }
 
   async completeLink() {
