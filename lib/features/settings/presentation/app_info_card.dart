@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../../app/app_l10n.dart';
 import '../../../app/legal_urls.dart';
 import '../../billing/billing.dart';
+import '../../updates/update_widgets.dart';
 
 final appVersionProvider = FutureProvider<String>((ref) async {
   final packageInfo = await PackageInfo.fromPlatform();
@@ -103,6 +104,7 @@ class SettingsAppInfoCard extends ConsumerWidget {
               onTap: () =>
                   unawaited(launchPomodoistExternalUrl(pomodoistSupportUrl)),
             ),
+            const DesktopUpdateSettings(),
           ],
         ),
       ),

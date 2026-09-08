@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 
+import '../features/updates/update_widgets.dart';
 import 'app_language.dart';
 import 'platform_quick_add.dart';
 import 'app_theme_mode.dart';
@@ -25,6 +26,9 @@ class PomodoistApp extends ConsumerWidget {
       darkTheme: AppTheme.dark(),
       themeMode: themeMode.themeMode,
       routerConfig: router,
+      builder: (context, child) => DesktopUpdateHost(
+        child: child ?? const SizedBox.shrink(),
+      ),
       locale: language.locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
