@@ -1,0 +1,126 @@
+name: Apply premium UI refresh
+
+on:
+  push:
+    branches: [test/premium-ui-refresh]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: premium-ui-apply
+  cancel-in-progress: false
+
+jobs:
+  apply-and-verify:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version-file: .fvmrc
+
+      - name: Reconstruct and verify exact source patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat tool/premium-ui.patch.gz.b64.00 \
+              tool/premium-ui.patch.gz.b64.01 \
+              tool/premium-ui.patch.gz.b64.02 \
+            | base64 --decode > "$RUNNER_TEMP/premium-ui.patch.gz"
+          echo '509f15ba4b09aed51a63b30b8646b927d907db9b932140afe7a39e2d223fc499  '$RUNNER_TEMP'/premium-ui.patch.gz' | sha256sum --check
+          gzip --decompress --stdout "$RUNNER_TEMP/premium-ui.patch.gz" > "$RUNNER_TEMP/premium-ui.patch"
+          echo '886026f6b1858a3e4534d8b548ba7c39bd04b09bc27a96fc71487e0af78a922b  '$RUNNER_TEMP'/premium-ui.patch' | sha256sum --check
+          git apply --check "$RUNNER_TEMP/premium-ui.patch"
+          git apply "$RUNNER_TEMP/premium-ui.patch"
+
+      - name: Build bundled Manrope 400 and 600 assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --user 'fonttools==4.59.1'
+          mkdir -p assets/fonts
+          curl --fail --location --retry 3 \
+            'https://raw.githubusercontent.com/google/fonts/baa2e5561af8a4873b058859dcfe158bdd033942/ofl/manrope/Manrope%5Bwght%5D.ttf' \
+            -o "$RUNNER_TEMP/Manrope-variable.ttf"
+          FONT_SOURCE="$RUNNER_TEMP/Manrope-variable.ttf" python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from fontTools.ttLib import TTFont
+          from fontTools.varLib.instancer import instantiateVariableFont
+
+          source = Path(os.environ['FONT_SOURCE'])
+          for weight, name in [(400, 'Regular'), (600, 'SemiBold')]:
+              font = TTFont(source, recalcTimestamp=False)
+              font = instantiateVariableFont(
+                  font,
+                  {'wght': weight},
+                  inplace=True,
+                  updateFontNames=True,
+              )
+              assert font['OS/2'].usWeightClass == weight
+              font.save(Path(f'assets/fonts/Manrope-{name}.ttf'))
+          PY
+
+      - name: Resolve locked dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Verify formatting
+        shell: bash
+        run: |
+          dart format --output=none --set-exit-if-changed \
+            lib/app/theme/app_theme.dart \
+            lib/app/theme/app_icons.dart \
+            lib/app/widgets/app_surface.dart \
+            lib/app/widgets/adaptive_shell.dart \
+            lib/app/widgets/mini_focus_player.dart \
+            lib/features/tasks/presentation/widgets/task_list_item.dart \
+            lib/features/tasks/presentation/widgets/quick_add_bar.dart \
+            lib/features/focus/presentation/focus_stage.dart \
+            lib/features/focus/presentation/focus_active_controls.dart \
+            lib/features/focus/presentation/focus_timer_stage.dart \
+            lib/features/productivity/presentation/reports_screen.dart \
+            test/design/app_theme_contract_test.dart \
+            test/design/app_icons_contract_test.dart
+
+      - name: Analyze project
+        run: flutter analyze
+
+      - name: Verify premium theme, icons, and preserved task motion
+        run: |
+          flutter test \
+            test/design/app_theme_contract_test.dart \
+            test/design/app_icons_contract_test.dart \
+            test/task_motion_test.dart
+
+      - name: Verify touched user flows
+        run: |
+          flutter test \
+            test/adaptive_shell_focus_visibility_test.dart \
+            test/global_quick_add_window_test.dart \
+            test/quick_add_voice_test.dart \
+            test/task_list_item_agenda_test.dart \
+            test/focus_screen_rhythm_test.dart \
+            test/reports_screen_test.dart \
+            test/reports_achievements_screen_test.dart
+
+      - name: Commit only product changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f \
+            .github/workflows/premium-ui-apply.yml \
+            tool/premium-ui.payload.* \
+            tool/premium-ui.patch.gz.b64.*
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git add -f test/design/app_theme_contract_test.dart test/design/app_icons_contract_test.dart
+          git diff --cached --check
+          git commit -m 'feat(ui): premium visual refresh'
+          git push origin HEAD:test/premium-ui-refresh
