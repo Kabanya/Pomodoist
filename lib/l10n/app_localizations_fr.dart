@@ -2382,4 +2382,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String todayCompletedTasks(int count) {
     return 'Terminées aujourd’hui · $count';
   }
+
+  @override
+  String get sidebarDaily => 'Au quotidien';
+
+  @override
+  String get sidebarViews => 'Vues';
 }

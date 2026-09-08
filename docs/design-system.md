@@ -105,6 +105,14 @@ links remain valid. With at least 960 px of content width, details occupy a
 Navigation waits for pending title and description edits and retains failed
 drafts. Close and Escape restore focus; nested menus handle Escape first.
 
+### Sidebar
+
+Group daily destinations separately from planning views, followed by the existing
+project tree. Search and Add task stay near the profile. Browse, Reports and
+Settings sit below projects; on short windows the footer scrolls with the list.
+Preserve command identities and user shortcut bindings independently of visual
+order. Shortcut hints display the actual configured binding.
+
 ### Today
 
 Keep daily context to one text summary and one active Focus strip. The strip and

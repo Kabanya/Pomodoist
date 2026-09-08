@@ -684,5 +684,7 @@
   "todayFocusingOn": "Im Fokus",
   "openFocus": "Focus öffnen",
   "todayCompletedTasks": "Heute erledigt · {count}",
-  "focusActionFailed": "Focus konnte nicht aktualisiert werden. Versuche es erneut."
+  "focusActionFailed": "Focus konnte nicht aktualisiert werden. Versuche es erneut.",
+  "sidebarDaily": "Täglich",
+  "sidebarViews": "Ansichten"
 }

@@ -4155,6 +4155,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Completed today · {count}'**
   String todayCompletedTasks(int count);
+
+  /// No description provided for @sidebarDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get sidebarDaily;
+
+  /// No description provided for @sidebarViews.
+  ///
+  /// In en, this message translates to:
+  /// **'Views'**
+  String get sidebarViews;
 }
 
 class _AppLocalizationsDelegate

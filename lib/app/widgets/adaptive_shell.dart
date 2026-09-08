@@ -814,7 +814,14 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
     final textTheme = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final colors = context.appColors;
-    final desktopDestinations = _desktopDestinations(context);
+    final destinations = {
+      for (final destination in _desktopDestinations(context))
+        destination.path: destination,
+    };
+    final pinFooter = MediaQuery.sizeOf(context).height >= 560;
+    final searchShortcut = ref
+        .watch(keyboardShortcutsProvider)[AppShortcutCommand.search]
+        ?.labelFor(ref.watch(shortcutTargetPlatformProvider));
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final user = ref.watch(currentUserProvider).value;
@@ -857,6 +864,34 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
       '/upcoming': upcomingCount,
     };
 
+    Widget destinationTile(String path) => _SidebarDestinationTile(
+      destination: destinations[path]!,
+      selected: _isSelected(widget.location, path),
+      count: counts[path],
+      shortcut: path == '/search' ? searchShortcut : null,
+      onTap: () => widget.onDestinationSelected(path),
+    );
+    Widget groupLabel(String title) => Padding(
+      padding: const EdgeInsets.fromLTRB(10, 16, 10, 6),
+      child: Text(
+        title,
+        style: textTheme.labelSmall?.copyWith(
+          color: colors.secondaryText,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+    final footer = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 12),
+        Divider(height: 1, color: colors.border),
+        const SizedBox(height: 8),
+        for (final path in ['/browse', '/reports', '/settings'])
+          destinationTile(path),
+      ],
+    );
+
     return SafeArea(
       right: false,
       child: Container(
@@ -875,29 +910,32 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
                 _SidebarProfileHeader(
                   displayName: displayName,
                   onProfileTap: () => widget.onDestinationSelected('/settings'),
-                  onFocusTap: () => widget.onDestinationSelected('/focus'),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 16),
+                destinationTile('/search'),
+                const SizedBox(height: 4),
                 _AddTaskTile(onTap: () => _showSidebarQuickAddDialog(context)),
                 const SizedBox(height: 10),
                 Expanded(
                   child: ListView(
                     padding: EdgeInsets.zero,
                     children: [
-                      for (final destination in desktopDestinations) ...[
-                        _SidebarDestinationTile(
-                          destination: destination,
-                          selected: _isSelected(
-                            widget.location,
-                            destination.path,
-                          ),
-                          count: counts[destination.path],
-                          onTap: () =>
-                              widget.onDestinationSelected(destination.path),
-                        ),
-                        const SizedBox(height: 2),
-                      ],
-                      const SizedBox(height: 28),
+                      groupLabel(l10n.sidebarDaily),
+                      for (final path in [
+                        '/inbox',
+                        '/today',
+                        '/upcoming',
+                        '/focus',
+                      ])
+                        destinationTile(path),
+                      groupLabel(l10n.sidebarViews),
+                      for (final path in [
+                        '/timeline',
+                        '/kanban',
+                        '/priority-matrix',
+                      ])
+                        destinationTile(path),
+                      const SizedBox(height: 20),
                       _ProjectsHeader(
                         count: projectCount,
                         expanded: _projectsExpanded,
@@ -971,9 +1009,11 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
                           ),
                         ),
                       ],
+                      if (!pinFooter) footer,
                     ],
                   ),
                 ),
+                if (pinFooter) footer,
               ],
             ),
           ),
@@ -1058,12 +1098,10 @@ class _SidebarProfileHeader extends StatelessWidget {
   const _SidebarProfileHeader({
     required this.displayName,
     required this.onProfileTap,
-    required this.onFocusTap,
   });
 
   final String displayName;
   final VoidCallback onProfileTap;
-  final VoidCallback onFocusTap;
 
   @override
   Widget build(BuildContext context) {
@@ -1125,17 +1163,6 @@ class _SidebarProfileHeader extends StatelessWidget {
             ),
           ),
         ),
-        IconButton(
-          tooltip: context.l10n.navFocus,
-          onPressed: onFocusTap,
-          icon: const Icon(LucideIcons.timer),
-          iconSize: 22,
-          style: IconButton.styleFrom(
-            foregroundColor: colors.accent,
-            minimumSize: const Size(36, 36),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-        ),
       ],
     );
   }
@@ -1155,18 +1182,16 @@ class _AddTaskTile extends StatelessWidget {
       height: 0,
       expands: true,
       mainAxisAlignment: MainAxisAlignment.start,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       foregroundColor: colors.accent,
       hoverForegroundColor: colors.accent,
-      leading: const Icon(LucideIcons.circlePlus, size: 24),
-      gap: 12,
-      child: Flexible(
-        child: Text(
-          context.l10n.addTask,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: colors.accent,
-            fontWeight: FontWeight.w600,
-          ),
+      leading: const Icon(LucideIcons.circlePlus, size: 20),
+      gap: 10,
+      child: Text(
+        context.l10n.addTask,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: colors.accent,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -1293,12 +1318,14 @@ class _SidebarDestinationTile extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.count,
+    this.shortcut,
   });
 
   final _Destination destination;
   final bool selected;
   final VoidCallback onTap;
   final int? count;
+  final String? shortcut;
 
   @override
   Widget build(BuildContext context) {
@@ -1310,6 +1337,7 @@ class _SidebarDestinationTile extends StatelessWidget {
       button: true,
       selected: selected,
       label: destination.label,
+      hint: shortcut,
       excludeSemantics: true,
       child: Material(
         key: ValueKey('sidebar-destination-${destination.path}'),
@@ -1325,9 +1353,9 @@ class _SidebarDestinationTile extends StatelessWidget {
                 Icon(
                   selected ? destination.selectedIcon : destination.icon,
                   color: foreground,
-                  size: 24,
+                  size: 20,
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     destination.label,
@@ -1335,17 +1363,32 @@ class _SidebarDestinationTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: foreground,
-                      fontSize: 17,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      fontSize: 14,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                     ),
                   ),
                 ),
+                if (shortcut case final label?)
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 76),
+                    child: Tooltip(
+                      message: label,
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelSmall?.copyWith(color: metadataColor),
+                      ),
+                    ),
+                  ),
                 if (showCount)
                   Text(
                     '$count',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: metadataColor,
-                      fontSize: 16,
+                      fontSize: 12,
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                     ),
                   ),

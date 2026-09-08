@@ -684,5 +684,7 @@
   "todayFocusingOn": "التركيز على",
   "openFocus": "فتح Focus",
   "todayCompletedTasks": "المكتملة اليوم · {count}",
-  "focusActionFailed": "تعذر تحديث Focus. حاول مرة أخرى."
+  "focusActionFailed": "تعذر تحديث Focus. حاول مرة أخرى.",
+  "sidebarDaily": "يوميًا",
+  "sidebarViews": "طرق العرض"
 }

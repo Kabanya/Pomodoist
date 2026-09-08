@@ -684,5 +684,7 @@
   "todayFocusingOn": "В фокусе",
   "openFocus": "Открыть Focus",
   "todayCompletedTasks": "Завершено сегодня · {count}",
-  "focusActionFailed": "Не удалось изменить состояние Focus. Попробуйте ещё раз."
+  "focusActionFailed": "Не удалось изменить состояние Focus. Попробуйте ещё раз.",
+  "sidebarDaily": "На каждый день",
+  "sidebarViews": "Представления"
 }

@@ -2269,4 +2269,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String todayCompletedTasks(int count) {
     return '今日已完成 · $count';
   }
+
+  @override
+  String get sidebarDaily => '日常';
+
+  @override
+  String get sidebarViews => '视图';
 }

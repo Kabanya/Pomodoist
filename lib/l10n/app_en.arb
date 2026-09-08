@@ -772,5 +772,7 @@
   "todayCompletedTasks": "Completed today · {count}",
   "focusActionFailed": "Could not update Focus. Try again.",
   "@todayTaskSummary": {"placeholders": {"tasks": {"type": "int"}, "planned": {"type": "int"}, "time": {"type": "String"}}},
-  "@todayCompletedTasks": {"placeholders": {"count": {"type": "int"}}}
+  "@todayCompletedTasks": {"placeholders": {"count": {"type": "int"}}},
+  "sidebarDaily": "Daily",
+  "sidebarViews": "Views"
 }

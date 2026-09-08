@@ -2379,4 +2379,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String todayCompletedTasks(int count) {
     return 'Completadas hoy · $count';
   }
+
+  @override
+  String get sidebarDaily => 'Día a día';
+
+  @override
+  String get sidebarViews => 'Vistas';
 }

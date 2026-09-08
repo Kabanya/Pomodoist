@@ -684,5 +684,7 @@
   "todayFocusingOn": "Concentration sur",
   "openFocus": "Ouvrir Focus",
   "todayCompletedTasks": "Terminées aujourd’hui · {count}",
-  "focusActionFailed": "Impossible de mettre à jour Focus. Réessayez."
+  "focusActionFailed": "Impossible de mettre à jour Focus. Réessayez.",
+  "sidebarDaily": "Au quotidien",
+  "sidebarViews": "Vues"
 }

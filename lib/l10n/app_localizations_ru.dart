@@ -2388,4 +2388,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String todayCompletedTasks(int count) {
     return 'Завершено сегодня · $count';
   }
+
+  @override
+  String get sidebarDaily => 'На каждый день';
+
+  @override
+  String get sidebarViews => 'Представления';
 }

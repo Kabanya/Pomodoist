@@ -684,5 +684,7 @@
   "todayFocusingOn": "正在专注",
   "openFocus": "打开 Focus",
   "todayCompletedTasks": "今日已完成 · {count}",
-  "focusActionFailed": "无法更新 Focus，请重试。"
+  "focusActionFailed": "无法更新 Focus，请重试。",
+  "sidebarDaily": "日常",
+  "sidebarViews": "视图"
 }
