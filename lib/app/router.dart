@@ -29,6 +29,7 @@ import 'account_auth_feedback.dart';
 import 'account_providers.dart';
 import 'app_startup_gate.dart';
 import 'runtime_public_config.dart';
+import 'task_detail_navigation.dart';
 import 'widgets/adaptive_shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -42,6 +43,13 @@ final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     initialLocation: initialAppLocationFor(isWeb: kIsWeb, baseUri: Uri.base),
     overridePlatformDefaultLocation: true,
+    onEnter: (context, current, next, router) async {
+      if (current.uri != next.uri) {
+        final save = ref.read(taskDetailSaveGuardProvider).save;
+        if (save != null && !await save()) return const Block.stop();
+      }
+      return const Allow();
+    },
     redirect: (_, state) {
       if (_isLoginCallback(state.uri)) {
         return _loginCallbackReturnTo(state.uri);
@@ -116,7 +124,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state, child) {
           return AppStartupGate(
             child: OnboardingGate(
-              child: AdaptiveShell(location: state.uri.path, child: child),
+              child: AdaptiveShell(
+                location: state.uri.path,
+                taskId: state.uri.queryParameters['task'],
+                child: child,
+              ),
             ),
           );
         },
@@ -221,7 +233,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/task/:id',
             pageBuilder: (context, state) => NoTransitionPage(
-              child: TaskDetailScreen(taskId: state.pathParameters['id']!),
+              child: TaskDetailScreen(
+                key: ValueKey(state.pathParameters['id']),
+                taskId: state.pathParameters['id']!,
+              ),
             ),
           ),
         ],

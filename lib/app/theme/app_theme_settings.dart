@@ -244,10 +244,11 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
   Future<void> _load() async {
     try {
       final prefs = await ref.read(appThemePreferencesProvider)();
-      if (ref.mounted)
+      if (ref.mounted) {
         state = AppThemeSettings.decode(
           prefs.get(appThemeSettingsPreferenceKey),
         );
+      }
     } catch (_) {
       _loading = null;
       if (ref.mounted) state = state.copyWith(loadFailed: true);
@@ -256,8 +257,9 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
   }
 
   void _requireReady() {
-    if (!state.isLoaded || state.isSaving)
+    if (!state.isLoaded || state.isSaving) {
       throw StateError('Theme settings are busy');
+    }
   }
 
   Future<void> selectTheme(String id) async {
@@ -287,8 +289,9 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
 
   void updatePreview(AppThemeDefinition draft) {
     _requireReady();
-    if (state.preview?.id != draft.id)
+    if (state.preview?.id != draft.id) {
       throw ArgumentError('Not the current draft');
+    }
     state = state.copyWith(preview: draft);
   }
 

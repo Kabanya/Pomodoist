@@ -241,7 +241,7 @@ void main() {
 }
 
 class _FailingStore extends InMemorySharedPreferencesStore {
-  _FailingStore(Map<String, Object> data) : super.withData(data);
+  _FailingStore(super.data) : super.withData();
   bool fail = true;
 
   @override

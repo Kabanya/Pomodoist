@@ -23,6 +23,7 @@ import '../../../app/theme/app_motion.dart';
 import '../../../app/formatters.dart';
 import '../../../app/providers.dart';
 import '../../../app/task_time.dart';
+import '../../../app/task_detail_navigation.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/widgets/action_feedback.dart';
 import '../../focus/domain/focus_models.dart';
@@ -36,210 +37,301 @@ import 'widgets/quick_add_text_controller.dart';
 import 'widgets/task_list_item.dart';
 import 'widgets/task_motion.dart';
 
-class TaskDetailScreen extends ConsumerWidget {
-  const TaskDetailScreen({required this.taskId, super.key});
+class TaskDetailScreen extends ConsumerStatefulWidget {
+  const TaskDetailScreen({
+    required this.taskId,
+    this.onClose,
+    this.isPanel = false,
+    super.key,
+  });
 
   final String taskId;
+  final VoidCallback? onClose;
+  final bool isPanel;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TaskDetailScreen> createState() => TaskDetailScreenState();
+}
+
+class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
+  final _titleKey = GlobalKey<_EditableTaskTitleState>();
+  final _descriptionKey = GlobalKey<_EditableTaskDescriptionState>();
+  late final TaskDetailSaveGuard _saveGuard;
+  late final Future<bool> Function() _saveCallback;
+
+  @override
+  void initState() {
+    super.initState();
+    _saveGuard = ref.read(taskDetailSaveGuardProvider);
+    _saveCallback = saveEdits;
+    _saveGuard.save = _saveCallback;
+  }
+
+  @override
+  void dispose() {
+    if (_saveGuard.save == _saveCallback) _saveGuard.save = null;
+    super.dispose();
+  }
+
+  Future<bool> saveEdits() async {
+    final titleSaved =
+        await (_titleKey.currentState?._finishEditing() ?? Future.value(true));
+    final descriptionSaved =
+        await (_descriptionKey.currentState?._save() ?? Future.value(true));
+    return titleSaved && descriptionSaved;
+  }
+
+  Future<void> _goBack(BuildContext context) async {
+    if (widget.onClose != null) {
+      widget.onClose!();
+      return;
+    }
+    if (!await saveEdits() || !context.mounted) return;
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/today');
+    }
+  }
+
+  Widget _header(BuildContext context, [TaskItem? item]) {
+    final l10n = context.l10n;
+    return Row(
+      children: [
+        Tooltip(
+          message: widget.isPanel ? l10n.commonClose : l10n.commonBack,
+          child: ShadIconButton.ghost(
+            onPressed: () => _goBack(context),
+            icon: Icon(widget.isPanel ? LucideIcons.x : LucideIcons.arrowLeft),
+            width: 40,
+            height: 40,
+          ),
+        ),
+        const Spacer(),
+        if (item != null)
+          Tooltip(
+            message: l10n.taskMore,
+            child: ShadMenubar(
+              padding: EdgeInsets.zero,
+              border: ShadBorder.none,
+              backgroundColor: Colors.transparent,
+              items: [
+                ShadMenubarItem(
+                  height: 40,
+                  items: [
+                    ShadContextMenuItem(
+                      onPressed: () async {
+                        if (!await saveEdits() || !context.mounted) return;
+                        await deleteTaskWithRecurringPrompt(
+                          context,
+                          ref,
+                          item,
+                          onDeleted: () => Future<void>.delayed(
+                            AppMotion.duration(context, AppMotion.task),
+                            () {
+                              if (context.mounted) _goBack(context);
+                            },
+                          ),
+                        );
+                      },
+                      leading: const Icon(LucideIcons.trash2),
+                      child: Text(l10n.commonDelete),
+                    ),
+                  ],
+                  child: Semantics(
+                    label: l10n.taskMore,
+                    child: const Icon(LucideIcons.ellipsis),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _status(Widget child) => Column(
+    children: [
+      Padding(padding: const EdgeInsets.all(20), child: _header(context)),
+      Expanded(child: Center(child: child)),
+    ],
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final taskId = widget.taskId;
     final l10n = context.l10n;
     final task = ref.watch(taskProvider(taskId));
     final taskRepository = ref.watch(taskRepositoryProvider);
     final focusRepository = ref.watch(focusRepositoryProvider);
-    return TaskMotionScope(
-      key: ValueKey(taskId),
-      builder: (context, motion) => SafeArea(
-        child: task.when(
-          data: (item) {
-            if (item == null) {
-              return Center(child: Text(l10n.taskNotFound));
-            }
-            final calendarLink = ref.watch(googleCalendarLinkProvider(item.id));
-            final presets = ref.watch(focusPresetsProvider).value ?? const [];
-            final selectedPreset = selectedFocusPresetOrDefault(
-              presets,
-              ref.watch(lastFocusPresetIdProvider),
-            );
-            final focusEstimate = targetFocusIntervalsForTask(
-              item,
-              selectedPreset,
-            );
-            return TaskMotionItem(
-              taskId: item.id,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Tooltip(
-                        message: l10n.commonBack,
-                        child: ShadIconButton.ghost(
-                          onPressed: () => _goBack(context),
-                          icon: const Icon(LucideIcons.arrowLeft),
-                          width: 40,
-                          height: 40,
-                        ),
+    return BackButtonListener(
+      onBackButtonPressed: () async {
+        await _goBack(context);
+        return true;
+      },
+      child: TaskMotionScope(
+        key: ValueKey(taskId),
+        builder: (context, motion) => SafeArea(
+          child: task.when(
+            data: (item) {
+              if (item == null || item.isDeleted) {
+                return _status(Text(l10n.taskNotFound));
+              }
+              final calendarLink = ref.watch(
+                googleCalendarLinkProvider(item.id),
+              );
+              final presets = ref.watch(focusPresetsProvider).value ?? const [];
+              final selectedPreset = selectedFocusPresetOrDefault(
+                presets,
+                ref.watch(lastFocusPresetIdProvider),
+              );
+              final focusEstimate = targetFocusIntervalsForTask(
+                item,
+                selectedPreset,
+              );
+              return TaskMotionItem(
+                taskId: item.id,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _header(context, item),
+                      _EditableTaskTitle(key: _titleKey, task: item),
+                      const SizedBox(height: 12),
+                      _EditableTaskDescription(
+                        key: _descriptionKey,
+                        task: item,
                       ),
-                    ),
-                    _EditableTaskTitle(task: item),
-                    const SizedBox(height: 12),
-                    _EditableTaskDescription(task: item),
-                    const SizedBox(height: 16),
-                    _TaskMetadataChips(
-                      task: item,
-                      calendarLinked: calendarLink.value != null,
-                      focusEstimate: focusEstimate,
-                    ),
-                    const SizedBox(height: 20),
-                    _ScheduleActions(task: item),
-                    const SizedBox(height: 20),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        ShadButton(
-                          onPressed: item.isCompleted
-                              ? null
-                              : () async {
-                                  final router = GoRouter.of(context);
-                                  await focusRepository.startRun(
-                                    StartFocusRunInput(
-                                      taskId: item.id,
-                                      projectId: item.projectId,
-                                      presetId: selectedPreset?.id,
-                                      targetWorkIntervals: _targetForStart(
-                                        focusEstimate,
+                      const SizedBox(height: 16),
+                      _TaskMetadataChips(
+                        task: item,
+                        calendarLinked: calendarLink.value != null,
+                        focusEstimate: focusEstimate,
+                      ),
+                      const SizedBox(height: 20),
+                      _ScheduleActions(task: item),
+                      const SizedBox(height: 20),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          ShadButton(
+                            onPressed: item.isCompleted
+                                ? null
+                                : () async {
+                                    final router = GoRouter.of(context);
+                                    await focusRepository.startRun(
+                                      StartFocusRunInput(
+                                        taskId: item.id,
+                                        projectId: item.projectId,
+                                        presetId: selectedPreset?.id,
+                                        targetWorkIntervals: _targetForStart(
+                                          focusEstimate,
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                  if (!context.mounted) {
-                                    return;
-                                  }
-                                  showActionFeedback(
-                                    context,
-                                    message: l10n.focusStarted,
-                                    icon: LucideIcons.circlePlay,
-                                    haptic: AppHapticCue.none,
-                                    action: SnackBarAction(
-                                      label: l10n.commonOpen,
-                                      onPressed: () => router.go('/focus'),
-                                    ),
-                                  );
-                                },
-                          enabled: !(item.isCompleted),
-                          leading: const Icon(LucideIcons.play),
-                          child: Text(l10n.startFocus),
-                        ),
-                        ShadButton.outline(
-                          onPressed: () async {
-                            if (item.isCompleted) {
-                              try {
-                                await taskRepository.uncompleteTask(item.id);
-                              } catch (_) {
-                                if (context.mounted) {
-                                  showActionFeedback(
-                                    context,
-                                    message: l10n.taskActionFailedCount(1),
-                                    icon: LucideIcons.circleAlert,
-                                    sound: ActionFeedbackSound.none,
-                                    haptic: AppHapticCue.none,
-                                  );
-                                }
-                                return;
-                              }
-                              if (!context.mounted) {
-                                return;
-                              }
-                              final reopened = await taskRepository
-                                  .watchTask(item.id)
-                                  .first;
-                              if (!context.mounted) {
-                                return;
-                              }
-                              if (reopened != null) {
-                                motion.reopened([reopened]);
-                              }
-                              showActionFeedback(
-                                context,
-                                message: l10n.taskReopened,
-                                icon: LucideIcons.undo2,
-                              );
-                              return;
-                            }
-
-                            await completeTaskWithUndoFeedback(
-                              context,
-                              ref,
-                              item.id,
-                            );
-                          },
-                          leading: TaskCompletionControl(
-                            taskId: item.id,
-                            isCompleted: item.isCompleted,
-                            color: context.appColors.accent,
-                            fillColor: context.appColors.accentFill,
-                            onPressed: null,
+                                    );
+                                    if (!context.mounted) {
+                                      return;
+                                    }
+                                    showActionFeedback(
+                                      context,
+                                      message: l10n.focusStarted,
+                                      icon: LucideIcons.circlePlay,
+                                      haptic: AppHapticCue.none,
+                                      action: SnackBarAction(
+                                        label: l10n.commonOpen,
+                                        onPressed: () => router.go('/focus'),
+                                      ),
+                                    );
+                                  },
+                            enabled: !(item.isCompleted),
+                            leading: const Icon(LucideIcons.play),
+                            child: Text(l10n.startFocus),
                           ),
-                          child: Text(
-                            item.isCompleted
-                                ? l10n.markOpen
-                                : l10n.markComplete,
-                          ),
-                        ),
-                        ShadButton.ghost(
-                          onPressed: () async {
-                            await deleteTaskWithRecurringPrompt(
-                              context,
-                              ref,
-                              item,
-                              onDeleted: () => Future<void>.delayed(
-                                AppMotion.duration(context, AppMotion.task),
-                                () {
+                          ShadButton.outline(
+                            onPressed: () async {
+                              if (item.isCompleted) {
+                                try {
+                                  await taskRepository.uncompleteTask(item.id);
+                                } catch (_) {
                                   if (context.mounted) {
-                                    _goBack(context);
+                                    showActionFeedback(
+                                      context,
+                                      message: l10n.taskActionFailedCount(1),
+                                      icon: LucideIcons.circleAlert,
+                                      sound: ActionFeedbackSound.none,
+                                      haptic: AppHapticCue.none,
+                                    );
                                   }
-                                },
-                              ),
-                            );
-                          },
-                          leading: const Icon(LucideIcons.trash2),
-                          child: Text(l10n.commonDelete),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    _RecurrenceActions(task: item),
-                    const SizedBox(height: 24),
-                    _SubtasksSection(task: item),
-                    const SizedBox(height: 24),
-                    Text(
-                      l10n.focusHistory,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    _FocusHistory(taskId: item.id),
-                  ],
+                                  return;
+                                }
+                                if (!context.mounted) {
+                                  return;
+                                }
+                                final reopened = await taskRepository
+                                    .watchTask(item.id)
+                                    .first;
+                                if (!context.mounted) {
+                                  return;
+                                }
+                                if (reopened != null) {
+                                  motion.reopened([reopened]);
+                                }
+                                showActionFeedback(
+                                  context,
+                                  message: l10n.taskReopened,
+                                  icon: LucideIcons.undo2,
+                                );
+                                return;
+                              }
+
+                              await completeTaskWithUndoFeedback(
+                                context,
+                                ref,
+                                item.id,
+                              );
+                            },
+                            leading: TaskCompletionControl(
+                              taskId: item.id,
+                              isCompleted: item.isCompleted,
+                              color: context.appColors.accent,
+                              fillColor: context.appColors.accentFill,
+                              onPressed: null,
+                            ),
+                            child: Text(
+                              item.isCompleted
+                                  ? l10n.markOpen
+                                  : l10n.markComplete,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      _SubtasksSection(task: item),
+                      const SizedBox(height: 16),
+                      ExpansionTile(
+                        tilePadding: EdgeInsets.zero,
+                        title: Text(l10n.recurrenceTitle),
+                        children: [_RecurrenceActions(task: item)],
+                      ),
+                      ExpansionTile(
+                        tilePadding: EdgeInsets.zero,
+                        title: Text(l10n.focusHistory),
+                        children: [_FocusHistory(taskId: item.id)],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stackTrace) =>
-              Center(child: Text(l10n.failedToLoadTask(error))),
+              );
+            },
+            loading: () => _status(const CircularProgressIndicator()),
+            error: (error, stackTrace) =>
+                _status(Text(l10n.failedToLoadTask(error))),
+          ),
         ),
       ),
     );
-  }
-}
-
-void _goBack(BuildContext context) {
-  if (context.canPop()) {
-    context.pop();
-  } else {
-    context.go('/today');
   }
 }
 
@@ -511,7 +603,7 @@ Future<void> _runScheduleQuickAction(
 }
 
 class _EditableTaskTitle extends ConsumerStatefulWidget {
-  const _EditableTaskTitle({required this.task});
+  const _EditableTaskTitle({required this.task, super.key});
 
   final TaskItem task;
 
@@ -524,6 +616,7 @@ class _EditableTaskTitleState extends ConsumerState<_EditableTaskTitle> {
   final _focusNode = FocusNode();
   bool _editing = false;
   bool _saving = false;
+  Future<bool>? _pendingSave;
 
   @override
   void initState() {
@@ -548,6 +641,7 @@ class _EditableTaskTitleState extends ConsumerState<_EditableTaskTitle> {
     if (_editing) {
       return QuickAddInput(
         controller: _controller,
+        enabled: !_saving,
         focusNode: _focusNode,
         textFieldKey: const Key('task-title-editor'),
         autofocus: true,
@@ -560,8 +654,8 @@ class _EditableTaskTitleState extends ConsumerState<_EditableTaskTitle> {
     }
     return MouseRegion(
       cursor: SystemMouseCursors.text,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
         onTap: _startEditing,
         child: SizedBox(
           width: double.infinity,
@@ -584,61 +678,66 @@ class _EditableTaskTitleState extends ConsumerState<_EditableTaskTitle> {
     setState(() => _editing = true);
   }
 
-  Future<void> _finishEditing() async {
-    if (_saving) {
-      return;
-    }
-    final next = _controller.text.trim();
-    if (next.isEmpty) {
-      if (mounted) {
-        setState(() => _editing = false);
-      }
-      return;
-    }
-    final parsed = ref
-        .read(quickAddParserProvider)
-        .parse(next, defaultDate: widget.task.schedule?.displayDate);
-    final content = _parsedTitleContent(parsed);
-    var schedule = parsed.dueDate != null || parsed.schedule?.isTimed == true
-        ? parsed.schedule
-        : null;
-    if (parsed.dueDate != null && schedule?.isAllDay == true) {
-      schedule = widget.task.schedule?.moveToDate(parsed.dueDate!) ?? schedule;
-    }
-    final focusPreset = selectedFocusPresetOrDefault(
-      ref.read(focusPresetsProvider).value ?? const [],
-      ref.read(lastFocusPresetIdProvider),
+  Future<bool> _finishEditing() {
+    return _pendingSave ??= _persistTitle().whenComplete(
+      () => _pendingSave = null,
     );
-    final estimatedFocusIntervals = estimateFocusIntervalsForTaskDuration(
-      schedule: parsed.schedule,
-      durationSeconds: null,
-      explicitEstimate: parsed.estimatedFocusIntervals,
-      preset: focusPreset,
-    );
-    final patch = UpdateTaskPatch(
-      content: content == widget.task.content ? null : content,
-      priority: parsed.priority,
-      schedule: schedule,
-      dueDate: schedule == null ? parsed.dueDate : null,
-      estimatedFocusIntervals: estimatedFocusIntervals,
-      labelNames: parsed.labels.isEmpty ? null : parsed.labels,
-    );
-    final shouldUpdateTask =
-        patch.content != null ||
-        patch.priority != null ||
-        patch.schedule != null ||
-        patch.dueDate != null ||
-        patch.estimatedFocusIntervals != null ||
-        patch.labelNames != null;
-    final shouldMoveTask = parsed.project != null;
-    if (!shouldUpdateTask && !shouldMoveTask) {
-      if (mounted) {
-        setState(() => _editing = false);
-      }
-      return;
-    }
-    setState(() => _saving = true);
+  }
+
+  Future<bool> _persistTitle() async {
+    if (!_editing) return true;
     try {
+      final next = _controller.text.trim();
+      if (next.isEmpty) {
+        if (mounted) {
+          setState(() => _editing = false);
+        }
+        return true;
+      }
+      final parsed = ref
+          .read(quickAddParserProvider)
+          .parse(next, defaultDate: widget.task.schedule?.displayDate);
+      final content = _parsedTitleContent(parsed);
+      var schedule = parsed.dueDate != null || parsed.schedule?.isTimed == true
+          ? parsed.schedule
+          : null;
+      if (parsed.dueDate != null && schedule?.isAllDay == true) {
+        schedule =
+            widget.task.schedule?.moveToDate(parsed.dueDate!) ?? schedule;
+      }
+      final focusPreset = selectedFocusPresetOrDefault(
+        ref.read(focusPresetsProvider).value ?? const [],
+        ref.read(lastFocusPresetIdProvider),
+      );
+      final estimatedFocusIntervals = estimateFocusIntervalsForTaskDuration(
+        schedule: parsed.schedule,
+        durationSeconds: null,
+        explicitEstimate: parsed.estimatedFocusIntervals,
+        preset: focusPreset,
+      );
+      final patch = UpdateTaskPatch(
+        content: content == widget.task.content ? null : content,
+        priority: parsed.priority,
+        schedule: schedule,
+        dueDate: schedule == null ? parsed.dueDate : null,
+        estimatedFocusIntervals: estimatedFocusIntervals,
+        labelNames: parsed.labels.isEmpty ? null : parsed.labels,
+      );
+      final shouldUpdateTask =
+          patch.content != null ||
+          patch.priority != null ||
+          patch.schedule != null ||
+          patch.dueDate != null ||
+          patch.estimatedFocusIntervals != null ||
+          patch.labelNames != null;
+      final shouldMoveTask = parsed.project != null;
+      if (!shouldUpdateTask && !shouldMoveTask) {
+        if (mounted) {
+          setState(() => _editing = false);
+        }
+        return true;
+      }
+      setState(() => _saving = true);
       final taskRepository = ref.read(taskRepositoryProvider);
       if (shouldUpdateTask) {
         await taskRepository.updateTask(widget.task.id, patch);
@@ -650,10 +749,14 @@ class _EditableTaskTitleState extends ConsumerState<_EditableTaskTitle> {
             .createProject(project);
         await taskRepository.moveTask(widget.task.id, projectId: projectId);
       }
+      if (mounted) setState(() => _editing = false);
+      return true;
+    } catch (_) {
+      if (mounted) _showEditFailure(context);
+      return false;
     } finally {
       if (mounted) {
         setState(() {
-          _editing = false;
           _saving = false;
         });
       }
@@ -665,6 +768,16 @@ class _EditableTaskTitleState extends ConsumerState<_EditableTaskTitle> {
   }
 }
 
+void _showEditFailure(BuildContext context) {
+  showActionFeedback(
+    context,
+    message: context.l10n.taskActionFailedCount(1),
+    icon: LucideIcons.circleAlert,
+    sound: ActionFeedbackSound.none,
+    haptic: AppHapticCue.none,
+  );
+}
+
 int? _targetForStart(int? estimate) {
   if (estimate == null) {
     return null;
@@ -673,7 +786,7 @@ int? _targetForStart(int? estimate) {
 }
 
 class _EditableTaskDescription extends ConsumerStatefulWidget {
-  const _EditableTaskDescription({required this.task});
+  const _EditableTaskDescription({required this.task, super.key});
 
   final TaskItem task;
 
@@ -687,11 +800,14 @@ class _EditableTaskDescriptionState
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
   bool _saving = false;
+  Future<bool>? _pendingSave;
+  late String _savedText;
 
   @override
   void initState() {
     super.initState();
-    _controller.text = widget.task.description ?? '';
+    _savedText = widget.task.description ?? '';
+    _controller.text = _savedText;
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus) {
         unawaited(_save());
@@ -702,10 +818,11 @@ class _EditableTaskDescriptionState
   @override
   void didUpdateWidget(covariant _EditableTaskDescription oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_focusNode.hasFocus || _saving) {
+    if (_focusNode.hasFocus || _saving || _controller.text != _savedText) {
       return;
     }
     final nextText = widget.task.description ?? '';
+    _savedText = nextText;
     if (_controller.text != nextText) {
       _controller.text = nextText;
     }
@@ -723,6 +840,7 @@ class _EditableTaskDescriptionState
     return ShadInput(
       key: const Key('task-comment-editor'),
       controller: _controller,
+      enabled: !_saving,
       focusNode: _focusNode,
       minLines: 1,
       maxLines: 5,
@@ -733,14 +851,18 @@ class _EditableTaskDescriptionState
     );
   }
 
-  Future<void> _save() async {
-    if (_saving) {
-      return;
-    }
-    final current = widget.task.description?.trim() ?? '';
-    final next = _controller.text.trim();
+  Future<bool> _save() {
+    return _pendingSave ??= _persistDescription().whenComplete(
+      () => _pendingSave = null,
+    );
+  }
+
+  Future<bool> _persistDescription() async {
+    final current = _savedText.trim();
+    final draft = _controller.text;
+    final next = draft.trim();
     if (next == current) {
-      return;
+      return true;
     }
     setState(() => _saving = true);
     try {
@@ -753,6 +875,11 @@ class _EditableTaskDescriptionState
               updateDescription: true,
             ),
           );
+      _savedText = draft;
+      return true;
+    } catch (_) {
+      if (mounted) _showEditFailure(context);
+      return false;
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -1001,11 +1128,6 @@ class _RecurrenceActionsState extends ConsumerState<_RecurrenceActions> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.recurrenceTitle,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 8),
         ShadInput(
           key: const Key('task-recurrence-interval-input'),
           controller: _controller,

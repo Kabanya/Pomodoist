@@ -48,8 +48,7 @@ class _FocusLinkedTaskContext extends ConsumerWidget {
                 ),
                 textStyle: Theme.of(context).textTheme.titleLarge,
               ),
-              onPressed: () =>
-                  context.push('/task/${Uri.encodeComponent(task.id)}'),
+              onPressed: () => openTaskDetails(context, task.id),
               child: Text(
                 task.content,
                 maxLines: compact ? 2 : 1,

@@ -17,9 +17,9 @@ import 'package:shadcn_ui/shadcn_ui.dart'
         ShadSelect;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/semantics.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_l10n.dart';
+import '../../../../app/task_detail_navigation.dart';
 import '../../../../app/theme/app_motion.dart';
 import '../../../../app/formatters.dart';
 import '../../../../app/providers.dart';
@@ -261,7 +261,7 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
     }
   }
 
-  void _openTask(String taskId) => context.push('/task/$taskId');
+  void _openTask(String taskId) => openTaskDetails(context, taskId);
 
   Future<void> _startFocus(KanbanCard card) async {
     if (card.task.isCompleted) {

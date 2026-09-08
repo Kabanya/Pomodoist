@@ -29,6 +29,7 @@ import '../providers.dart';
 import '../theme/app_theme.dart';
 import 'mini_focus_player.dart';
 import 'resizable_dialog.dart';
+import 'task_details_host.dart';
 
 const double _wideLayoutBreakpoint = 820;
 const double _wideSidebarDefaultWidth = 280;
@@ -42,9 +43,15 @@ const Duration _wideSidebarAnimationDuration = AppMotion.panel;
 const Curve _wideSidebarAnimationCurve = Curves.easeOutCubic;
 
 class AdaptiveShell extends ConsumerStatefulWidget {
-  const AdaptiveShell({required this.location, required this.child, super.key});
+  const AdaptiveShell({
+    required this.location,
+    required this.child,
+    this.taskId,
+    super.key,
+  });
 
   final String location;
+  final String? taskId;
   final Widget child;
 
   @override
@@ -137,7 +144,10 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                 context: context,
                 removeTop: true,
                 removeBottom: !wide,
-                child: widget.child,
+                child: TaskDetailsHost(
+                  taskId: widget.taskId,
+                  child: widget.child,
+                ),
               ),
               const Positioned(
                 top: 0,

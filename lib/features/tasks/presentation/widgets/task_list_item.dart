@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_l10n.dart';
+import '../../../../app/task_detail_navigation.dart';
 import '../../../../app/formatters.dart';
 import '../../../../app/providers.dart';
 import '../../../../app/task_time.dart';
@@ -384,7 +385,7 @@ class TaskListItem extends ConsumerWidget {
               if (selection?.active ?? false) {
                 selection!.toggle(task.id);
               } else {
-                context.push('/task/${task.id}');
+                openTaskDetails(context, task.id);
               }
             },
             onSecondaryTapDown: (details) {

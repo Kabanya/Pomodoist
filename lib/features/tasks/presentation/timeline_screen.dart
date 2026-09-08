@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/app_l10n.dart';
+import '../../../app/task_detail_navigation.dart';
 import '../../../app/theme/app_motion.dart';
 import '../../../app/formatters.dart';
 import '../../../app/providers.dart';
@@ -1763,7 +1764,7 @@ class _TimelineCompactTaskBlock extends ConsumerWidget {
       color: Colors.transparent,
       child: InkWell(
         key: Key('timeline-task-${task.id}'),
-        onTap: () => context.go('/task/${task.id}'),
+        onTap: () => openTaskDetails(context, task.id),
         borderRadius: BorderRadius.circular(8),
         child: Container(
           constraints: fillHeight
