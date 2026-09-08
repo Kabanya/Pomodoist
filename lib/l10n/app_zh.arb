@@ -679,5 +679,10 @@
   "themeColorError": "错误",
   "themeColorOverdue": "逾期",
   "themeColorOnAccent": "强调填充上的文字",
-  "themeColorOnError": "错误填充上的文字"
+  "themeColorOnError": "错误填充上的文字",
+  "todayTaskSummary": "{tasks} 个任务 · 计划 {planned} 次专注 · 已专注 {time}",
+  "todayFocusingOn": "正在专注",
+  "openFocus": "打开 Focus",
+  "todayCompletedTasks": "今日已完成 · {count}",
+  "focusActionFailed": "无法更新 Focus，请重试。"
 }

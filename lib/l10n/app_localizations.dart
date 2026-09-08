@@ -3057,7 +3057,7 @@ abstract class AppLocalizations {
   /// No description provided for @focusActionFailed.
   ///
   /// In en, this message translates to:
-  /// **'Unable to update focus. Please try again.'**
+  /// **'Could not update Focus. Try again.'**
   String get focusActionFailed;
 
   /// No description provided for @noActiveSession.
@@ -4131,6 +4131,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Text on error fill'**
   String get themeColorOnError;
+
+  /// No description provided for @todayTaskSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{tasks, plural, one{1 task} other{{tasks} tasks}} · {planned, plural, one{1 planned session} other{{planned} planned sessions}} · {time} focused'**
+  String todayTaskSummary(int tasks, int planned, String time);
+
+  /// No description provided for @todayFocusingOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Focusing on'**
+  String get todayFocusingOn;
+
+  /// No description provided for @openFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Focus'**
+  String get openFocus;
+
+  /// No description provided for @todayCompletedTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed today · {count}'**
+  String todayCompletedTasks(int count);
 }
 
 class _AppLocalizationsDelegate

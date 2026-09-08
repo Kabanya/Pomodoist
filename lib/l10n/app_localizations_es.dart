@@ -1748,7 +1748,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get focusActionFailed =>
-      'No se pudo actualizar el enfoque. Inténtalo de nuevo.';
+      'No se pudo actualizar Focus. Inténtalo de nuevo.';
 
   @override
   String get noActiveSession => 'No hay sesión activa';
@@ -2357,4 +2357,26 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get themeColorOnError => 'Texto sobre relleno de error';
+
+  @override
+  String todayTaskSummary(int tasks, int planned, String time) {
+    String _temp0 = intl.Intl.pluralLogic(
+      tasks,
+      locale: localeName,
+      other: '$tasks tareas',
+      one: '1 tarea',
+    );
+    return '$_temp0 · Sesiones previstas: $planned · Concentración: $time';
+  }
+
+  @override
+  String get todayFocusingOn => 'Concentrándote en';
+
+  @override
+  String get openFocus => 'Abrir Focus';
+
+  @override
+  String todayCompletedTasks(int count) {
+    return 'Completadas hoy · $count';
+  }
 }

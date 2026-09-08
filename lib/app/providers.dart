@@ -247,6 +247,7 @@ class TaskTimeDisplayModeController extends Notifier<TaskTimeDisplayMode> {
     final prefs = await ref.read(sharedPreferencesProvider.future);
     await prefs?.setString(taskTimeDisplayModePreferenceKey, mode.storageValue);
   }
+
   Future<void> _loadStoredMode() async {
     final prefs = await ref.read(sharedPreferencesProvider.future);
     final mode = TaskTimeDisplayMode.fromStorageValue(
@@ -806,6 +807,20 @@ final activeFocusIntervalProvider = StreamProvider<FocusIntervalItem?>((ref) {
   return ref.watch(focusRepositoryProvider).watchActiveInterval();
 });
 
+// Only replace the global player after both streams describe the same session.
+final todayFocusStripVisibleProvider = Provider<bool>((ref) {
+  final runId = ref.watch(
+    activeFocusRunProvider.select((value) => value.value?.id),
+  );
+  final intervalRunId = ref.watch(
+    activeFocusIntervalProvider.select((value) => value.value?.runId),
+  );
+  final hasRemaining = ref.watch(
+    activeFocusRemainingProvider.select((value) => value != null),
+  );
+  return runId != null && runId == intervalRunId && hasRemaining;
+});
+
 final focusIntervalsForRunProvider =
     StreamProvider.family<List<FocusIntervalItem>, String>((ref, runId) {
       return ref.watch(focusRepositoryProvider).watchIntervalsForRun(runId);
@@ -890,6 +905,14 @@ final activeFocusRemainingProvider = Provider<Duration?>((ref) {
 });
 
 final productivitySummaryProvider = StreamProvider<ProductivitySummary>((ref) {
+  final clock = ref.watch(clockProvider);
+  // Refresh the daily stream at midnight even when no database row changes.
+  ref.watch(
+    focusTickerProvider.select((tick) {
+      final now = (tick.value ?? clock.now()).toLocal();
+      return DateTime(now.year, now.month, now.day);
+    }),
+  );
   return ref.watch(productivityRepositoryProvider).watchTodaySummary();
 });
 

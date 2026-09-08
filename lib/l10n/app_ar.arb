@@ -679,5 +679,10 @@
   "themeColorError": "خطأ",
   "themeColorOverdue": "متأخر",
   "themeColorOnAccent": "النص على التعبئة المميزة",
-  "themeColorOnError": "النص على تعبئة الخطأ"
+  "themeColorOnError": "النص على تعبئة الخطأ",
+  "todayTaskSummary": "المهام: {tasks} · الجلسات المخططة: {planned} · التركيز: {time}",
+  "todayFocusingOn": "التركيز على",
+  "openFocus": "فتح Focus",
+  "todayCompletedTasks": "المكتملة اليوم · {count}",
+  "focusActionFailed": "تعذر تحديث Focus. حاول مرة أخرى."
 }

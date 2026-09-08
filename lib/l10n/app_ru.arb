@@ -679,5 +679,10 @@
   "themeColorError": "Ошибка",
   "themeColorOverdue": "Просрочка",
   "themeColorOnAccent": "Текст на акцентной заливке",
-  "themeColorOnError": "Текст на заливке ошибки"
+  "themeColorOnError": "Текст на заливке ошибки",
+  "todayTaskSummary": "{tasks, plural, one{{tasks} задача} few{{tasks} задачи} many{{tasks} задач} other{{tasks} задачи}} · в плане: {planned} · фокус: {time}",
+  "todayFocusingOn": "В фокусе",
+  "openFocus": "Открыть Focus",
+  "todayCompletedTasks": "Завершено сегодня · {count}",
+  "focusActionFailed": "Не удалось изменить состояние Focus. Попробуйте ещё раз."
 }

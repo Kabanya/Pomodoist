@@ -15,16 +15,24 @@ import '../theme/app_theme.dart';
 import 'action_feedback.dart';
 
 class MiniFocusPlayer extends ConsumerWidget {
-  const MiniFocusPlayer({this.floating = false, super.key});
+  const MiniFocusPlayer({
+    this.floating = false,
+    this.dailyContext = false,
+    super.key,
+  });
 
   final bool floating;
+  final bool dailyContext;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final interval = ref.watch(activeFocusIntervalProvider).value;
     final run = ref.watch(activeFocusRunProvider).value;
     final remaining = ref.watch(activeFocusRemainingProvider);
-    if (interval == null || run == null || remaining == null) {
+    if (interval == null ||
+        run == null ||
+        remaining == null ||
+        interval.runId != run.id) {
       return const SizedBox.shrink();
     }
 
@@ -36,6 +44,84 @@ class MiniFocusPlayer extends ConsumerWidget {
     final paused = interval.status == 'paused';
     final l10n = context.l10n;
     final colors = context.appColors;
+    if (dailyContext) {
+      final task = run.taskId == null
+          ? null
+          : ref.watch(taskProvider(run.taskId!)).value;
+      final title = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '${l10n.todayFocusingOn} · '
+            '${ready ? '${l10n.readyShort} · ' : ''}${_intervalLabel(context, interval)}',
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: colors.secondaryText),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            task?.content ?? l10n.navFocus,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+        ],
+      );
+      final controls = Wrap(
+        spacing: 12,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(
+            formatDurationCompact(remaining),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.merge(AppTheme.monoTextStyle),
+          ),
+          IconButton(
+            tooltip: ready
+                ? l10n.startInterval
+                : (paused ? l10n.resume : l10n.pause),
+            onPressed: ready
+                ? () => unawaited(_startReadyInterval(context, repository))
+                : (preset?.allowPause ?? false)
+                ? () =>
+                      unawaited(_toggleFocusPause(context, repository, paused))
+                : null,
+            icon: Icon(ready || paused ? LucideIcons.play : LucideIcons.pause),
+          ),
+          TextButton(
+            onPressed: () => context.go('/focus'),
+            child: Text(l10n.openFocus),
+          ),
+        ],
+      );
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.surfaceTint,
+          border: Border.all(color: colors.border),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: LayoutBuilder(
+            builder: (context, constraints) => constraints.maxWidth >= 600
+                ? Row(
+                    children: [
+                      Expanded(child: title),
+                      const SizedBox(width: 16),
+                      Flexible(child: controls),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [title, const SizedBox(height: 4), controls],
+                  ),
+          ),
+        ),
+      );
+    }
     if (viewMode == FocusViewMode.minimal) {
       return _MinimalMiniFocusPlayer(
         interval: interval,
@@ -293,7 +379,12 @@ Future<void> _startReadyInterval(
   BuildContext context,
   FocusRepository repository,
 ) async {
-  await repository.startReadyInterval();
+  try {
+    await repository.startReadyInterval();
+  } catch (_) {
+    if (context.mounted) _showFocusActionError(context);
+    return;
+  }
   if (!context.mounted) {
     return;
   }
@@ -310,10 +401,15 @@ Future<void> _toggleFocusPause(
   FocusRepository repository,
   bool paused,
 ) async {
-  if (paused) {
-    await repository.resumeActiveInterval();
-  } else {
-    await repository.pauseActiveInterval();
+  try {
+    if (paused) {
+      await repository.resumeActiveInterval();
+    } else {
+      await repository.pauseActiveInterval();
+    }
+  } catch (_) {
+    if (context.mounted) _showFocusActionError(context);
+    return;
   }
   if (!context.mounted) {
     return;
@@ -330,7 +426,12 @@ Future<void> _stopFocus(
   BuildContext context,
   FocusRepository repository,
 ) async {
-  await repository.stopActiveRun(reason: StopFocusReason.stopped);
+  try {
+    await repository.stopActiveRun(reason: StopFocusReason.stopped);
+  } catch (_) {
+    if (context.mounted) _showFocusActionError(context);
+    return;
+  }
   if (!context.mounted) {
     return;
   }
@@ -338,5 +439,14 @@ Future<void> _stopFocus(
     context,
     message: context.l10n.focusStopped,
     icon: LucideIcons.circleStop,
+  );
+}
+
+void _showFocusActionError(BuildContext context) {
+  showActionFeedback(
+    context,
+    message: context.l10n.focusActionFailed,
+    icon: LucideIcons.circleAlert,
+    haptic: AppHapticCue.none,
   );
 }

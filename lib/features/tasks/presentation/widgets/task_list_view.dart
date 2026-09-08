@@ -20,6 +20,7 @@ class TaskListView extends ConsumerWidget {
     required this.query,
     this.subtitle,
     this.headerAddon,
+    this.footerAddon,
     this.emptyMessage,
     this.taskFilter,
     this.showQuickAdd = true,
@@ -31,6 +32,7 @@ class TaskListView extends ConsumerWidget {
   final String? subtitle;
   final TaskQuery query;
   final Widget? headerAddon;
+  final Widget? footerAddon;
   final String? emptyMessage;
   final bool Function(TaskItem task)? taskFilter;
   final bool showQuickAdd;
@@ -126,15 +128,25 @@ class TaskListView extends ConsumerWidget {
                 tasks.when(
                   data: (_) {
                     if (visibleItems.isEmpty) {
-                      return SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: Center(
-                          child: Text(
-                            emptyMessage ?? l10n.noTasksHere,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
+                      final empty = Center(
+                        child: Text(
+                          emptyMessage ?? l10n.noTasksHere,
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
                       );
+                      return footerAddon == null
+                          ? SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: empty,
+                            )
+                          : SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 32,
+                                ),
+                                child: empty,
+                              ),
+                            );
                     }
                     final allItems = [
                       ...?allOpenTasks.value,
@@ -214,6 +226,11 @@ class TaskListView extends ConsumerWidget {
                     child: Center(child: Text(l10n.failedToLoadTasks(error))),
                   ),
                 ),
+                if (footerAddon != null)
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                    sliver: SliverToBoxAdapter(child: footerAddon),
+                  ),
                 if (supportsRootDrop && visibleItems.isNotEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,

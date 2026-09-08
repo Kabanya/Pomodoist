@@ -1737,7 +1737,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get focusSwitchToMinimalView => 'Switch to Minimal';
 
   @override
-  String get focusActionFailed => 'Unable to update focus. Please try again.';
+  String get focusActionFailed => 'Could not update Focus. Try again.';
 
   @override
   String get noActiveSession => 'No active session';
@@ -2358,4 +2358,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeColorOnError => 'Text on error fill';
+
+  @override
+  String todayTaskSummary(int tasks, int planned, String time) {
+    String _temp0 = intl.Intl.pluralLogic(
+      tasks,
+      locale: localeName,
+      other: '$tasks tasks',
+      one: '1 task',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      planned,
+      locale: localeName,
+      other: '$planned planned sessions',
+      one: '1 planned session',
+    );
+    return '$_temp0 · $_temp1 · $time focused';
+  }
+
+  @override
+  String get todayFocusingOn => 'Focusing on';
+
+  @override
+  String get openFocus => 'Open Focus';
+
+  @override
+  String todayCompletedTasks(int count) {
+    return 'Completed today · $count';
+  }
 }

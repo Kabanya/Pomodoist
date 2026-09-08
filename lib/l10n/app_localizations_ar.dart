@@ -1727,7 +1727,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get focusSwitchToMinimalView => 'التبديل إلى العرض المصغر';
 
   @override
-  String get focusActionFailed => 'تعذر تحديث التركيز. حاول مرة أخرى.';
+  String get focusActionFailed => 'تعذر تحديث Focus. حاول مرة أخرى.';
 
   @override
   String get noActiveSession => 'لا توجد جلسة نشطة';
@@ -2333,4 +2333,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get themeColorOnError => 'النص على تعبئة الخطأ';
+
+  @override
+  String todayTaskSummary(int tasks, int planned, String time) {
+    return 'المهام: $tasks · الجلسات المخططة: $planned · التركيز: $time';
+  }
+
+  @override
+  String get todayFocusingOn => 'التركيز على';
+
+  @override
+  String get openFocus => 'فتح Focus';
+
+  @override
+  String todayCompletedTasks(int count) {
+    return 'المكتملة اليوم · $count';
+  }
 }

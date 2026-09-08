@@ -1657,7 +1657,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get focusSwitchToMinimalView => '切换到极简模式';
 
   @override
-  String get focusActionFailed => '无法更新专注。请重试。';
+  String get focusActionFailed => '无法更新 Focus，请重试。';
 
   @override
   String get noActiveSession => '没有活动会话';
@@ -2253,4 +2253,20 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get themeColorOnError => '错误填充上的文字';
+
+  @override
+  String todayTaskSummary(int tasks, int planned, String time) {
+    return '$tasks 个任务 · 计划 $planned 次专注 · 已专注 $time';
+  }
+
+  @override
+  String get todayFocusingOn => '正在专注';
+
+  @override
+  String get openFocus => '打开 Focus';
+
+  @override
+  String todayCompletedTasks(int count) {
+    return '今日已完成 · $count';
+  }
 }

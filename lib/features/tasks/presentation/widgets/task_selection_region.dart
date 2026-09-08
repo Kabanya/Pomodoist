@@ -136,11 +136,13 @@ class TaskSelectionRegion extends ConsumerStatefulWidget {
     required this.visibleTasks,
     required this.child,
     this.scopeKey,
+    this.shrinkWrap = false,
     super.key,
   });
 
   final Iterable<TaskItem> visibleTasks;
   final Object? scopeKey;
+  final bool shrinkWrap;
   final Widget child;
 
   @override
@@ -200,18 +202,25 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
           if (!didPop) _controller.close();
         },
         child: Focus(
-          autofocus: true,
+          autofocus: !widget.shrinkWrap,
           child: CallbackShortcuts(
             bindings: {
-              const SingleActivator(LogicalKeyboardKey.escape):
-                  _controller.close,
+              if (_controller.active)
+                const SingleActivator(LogicalKeyboardKey.escape):
+                    _controller.close,
             },
             child: TaskSelectionScope(
               controller: _controller,
               child: Column(
+                mainAxisSize: widget.shrinkWrap
+                    ? MainAxisSize.min
+                    : MainAxisSize.max,
                 children: [
                   if (_controller.active) _selectionHeader(context),
-                  Expanded(child: widget.child),
+                  if (widget.shrinkWrap)
+                    widget.child
+                  else
+                    Expanded(child: widget.child),
                   if (_controller.active) _selectionBar(context),
                 ],
               ),

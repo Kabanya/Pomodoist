@@ -679,5 +679,10 @@
   "themeColorError": "Erreur",
   "themeColorOverdue": "En retard",
   "themeColorOnAccent": "Texte sur remplissage d’accent",
-  "themeColorOnError": "Texte sur remplissage d’erreur"
+  "themeColorOnError": "Texte sur remplissage d’erreur",
+  "todayTaskSummary": "{tasks, plural, one{{tasks} tâche} other{{tasks} tâches}} · Sessions prévues : {planned} · Concentration : {time}",
+  "todayFocusingOn": "Concentration sur",
+  "openFocus": "Ouvrir Focus",
+  "todayCompletedTasks": "Terminées aujourd’hui · {count}",
+  "focusActionFailed": "Impossible de mettre à jour Focus. Réessayez."
 }

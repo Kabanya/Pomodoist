@@ -679,5 +679,10 @@
   "themeColorError": "Fehler",
   "themeColorOverdue": "Überfällig",
   "themeColorOnAccent": "Text auf Akzentfüllung",
-  "themeColorOnError": "Text auf Fehlerfüllung"
+  "themeColorOnError": "Text auf Fehlerfüllung",
+  "todayTaskSummary": "{tasks, plural, one{1 Aufgabe} other{{tasks} Aufgaben}} · Geplante Sitzungen: {planned} · Fokus: {time}",
+  "todayFocusingOn": "Im Fokus",
+  "openFocus": "Focus öffnen",
+  "todayCompletedTasks": "Heute erledigt · {count}",
+  "focusActionFailed": "Focus konnte nicht aktualisiert werden. Versuche es erneut."
 }

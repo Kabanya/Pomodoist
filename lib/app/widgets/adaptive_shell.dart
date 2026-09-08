@@ -130,7 +130,11 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     final focusLocation = _isFocusLocation(widget.location);
     final mobileDestinations = _mobileDestinations(context);
     final selected = _selectedMobileIndex(widget.location, mobileDestinations);
-    final showMiniFocusPlayer = !focusLocation && widget.location != '/kanban';
+    final hasTodayFocusStrip =
+        widget.location == '/today' &&
+        ref.watch(todayFocusStripVisibleProvider);
+    final showMiniFocusPlayer =
+        !focusLocation && widget.location != '/kanban' && !hasTodayFocusStrip;
     final colors = context.appColors;
     final content = Column(
       children: [

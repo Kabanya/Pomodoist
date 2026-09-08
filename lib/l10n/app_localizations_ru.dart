@@ -1757,7 +1757,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get focusActionFailed =>
-      'Не удалось обновить фокус. Попробуйте ещё раз.';
+      'Не удалось изменить состояние Focus. Попробуйте ещё раз.';
 
   @override
   String get noActiveSession => 'Нет активной сессии';
@@ -2364,4 +2364,28 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get themeColorOnError => 'Текст на заливке ошибки';
+
+  @override
+  String todayTaskSummary(int tasks, int planned, String time) {
+    String _temp0 = intl.Intl.pluralLogic(
+      tasks,
+      locale: localeName,
+      other: '$tasks задачи',
+      many: '$tasks задач',
+      few: '$tasks задачи',
+      one: '$tasks задача',
+    );
+    return '$_temp0 · в плане: $planned · фокус: $time';
+  }
+
+  @override
+  String get todayFocusingOn => 'В фокусе';
+
+  @override
+  String get openFocus => 'Открыть Focus';
+
+  @override
+  String todayCompletedTasks(int count) {
+    return 'Завершено сегодня · $count';
+  }
 }

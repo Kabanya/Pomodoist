@@ -105,6 +105,14 @@ links remain valid. With at least 960 px of content width, details occupy a
 Navigation waits for pending title and description edits and retains failed
 drafts. Close and Escape restore focus; nested menus handle Escape first.
 
+### Today
+
+Keep daily context to one text summary and one active Focus strip. The strip and
+global mini player share the existing session, interval and clock providers.
+Only replace the global player once the run and interval agree and remaining
+time is available. Completed-today rows form a collapsed group with independent
+selection, using the local completion day.
+
 ## Components and independence
 
 - Current direct dependencies: **`shadcn_ui 0.56.3`** and
