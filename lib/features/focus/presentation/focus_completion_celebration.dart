@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
@@ -15,6 +17,22 @@ import '../../tasks/presentation/task_completion_feedback.dart';
 import '../domain/focus_models.dart';
 import 'focus_completion_celebration_controller.dart';
 import 'focus_view_mode.dart';
+
+const _celebrationDuration = Duration(milliseconds: 900);
+
+// The mark completes early; the decorative burst settles on the same timeline.
+({double ring, double check, double halo, double particles})
+focusCompletionProgress(double progress, {bool reduceMotion = false}) {
+  final t = reduceMotion ? 1.0 : progress.clamp(0.0, 1.0);
+  double phase(double start, double end) =>
+      ((t - start) / (end - start)).clamp(0.0, 1.0);
+  return (
+    ring: AppMotion.curve.transform(phase(0, .4)),
+    check: AppMotion.curve.transform(phase(.2, .4)),
+    halo: AppMotion.curve.transform(phase(.12, .8)),
+    particles: phase(.24, 1),
+  );
+}
 
 class FocusRunCompletionCelebrationSlot extends ConsumerWidget {
   const FocusRunCompletionCelebrationSlot({super.key});
@@ -54,10 +72,18 @@ class _FocusRunCompletionCelebrationState
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: AppMotion.state);
-    _contentOpacity = CurvedAnimation(
-      parent: _controller,
-      curve: AppMotion.curve,
+    _controller = AnimationController(
+      vsync: this,
+      duration: _celebrationDuration,
+    );
+    _contentOpacity = _controller.drive(
+      CurveTween(
+        curve: Interval(
+          0,
+          AppMotion.state.inMilliseconds / _celebrationDuration.inMilliseconds,
+          curve: AppMotion.curve,
+        ),
+      ),
     );
   }
 
@@ -131,30 +157,37 @@ class _FocusRunCompletionCelebrationState
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _CelebrationArtwork(
-                        animation: _contentOpacity,
+                        animation: _controller,
                         colors: colors,
                       ),
                       FadeTransition(
                         key: const Key('focus-completion-content-entrance'),
                         opacity: _contentOpacity,
-                        child: _CompletionContent(
-                          completion: completion,
-                          taskTitle: taskTitle,
-                          subtitle: subtitle,
-                          resolvingTask: resolvingTask,
-                          canCompleteTask: canCompleteTask,
-                          onCompleteTask: taskId == null
-                              ? null
-                              : () => _completeTask(taskId),
-                          nextTask: nextTask,
-                          onStartNextTask: nextTask == null
-                              ? null
-                              : () => _startNextTask(
-                                  nextTask,
-                                  nextTaskPreset,
-                                  canCompleteTask ? taskId : null,
-                                ),
-                          onDismiss: _dismiss,
+                        child: AnimatedBuilder(
+                          animation: _contentOpacity,
+                          builder: (context, child) => Transform.translate(
+                            offset: Offset(0, 4 * (1 - _contentOpacity.value)),
+                            child: child,
+                          ),
+                          child: _CompletionContent(
+                            completion: completion,
+                            taskTitle: taskTitle,
+                            subtitle: subtitle,
+                            resolvingTask: resolvingTask,
+                            canCompleteTask: canCompleteTask,
+                            onCompleteTask: taskId == null
+                                ? null
+                                : () => _completeTask(taskId),
+                            nextTask: nextTask,
+                            onStartNextTask: nextTask == null
+                                ? null
+                                : () => _startNextTask(
+                                    nextTask,
+                                    nextTaskPreset,
+                                    canCompleteTask ? taskId : null,
+                                  ),
+                            onDismiss: _dismiss,
+                          ),
                         ),
                       ),
                     ],
@@ -252,26 +285,51 @@ class _CelebrationArtwork extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final size = MediaQuery.sizeOf(context).width < 420 ? 200.0 : 232.0;
     return RepaintBoundary(
-      child: FadeTransition(
-        opacity: animation,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 24),
-          child: Container(
-            key: const Key('focus-completion-mark'),
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: colors.surface,
-              border: Border.all(color: colors.border),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(
-              LucideIcons.circleCheck,
-              size: 36,
-              color: colors.accent,
-            ),
-          ),
+      child: SizedBox.square(
+        dimension: size,
+        child: AnimatedBuilder(
+          animation: animation,
+          builder: (context, child) {
+            final frame = focusCompletionProgress(
+              animation.value,
+              reduceMotion: reduceMotion,
+            );
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                if (!reduceMotion)
+                  CustomPaint(
+                    key: const Key('focus-completion-particles'),
+                    painter: _CelebrationParticlePainter(
+                      progress: frame.particles,
+                      colors: [
+                        colors.accent,
+                        colors.secondaryText,
+                        colors.accent,
+                        colors.border,
+                      ],
+                    ),
+                  ),
+                Center(
+                  child: CustomPaint(
+                    key: const Key('focus-completion-mark'),
+                    size: const Size.square(120),
+                    painter: _CompletionMarkPainter(
+                      ring: frame.ring,
+                      check: frame.check,
+                      halo: frame.halo,
+                      accent: colors.accent,
+                      tint: colors.accentTint,
+                      border: colors.border,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -558,4 +616,118 @@ int _compareScheduledTasks(TaskItem left, TaskItem right) {
   }
   final orderKey = left.orderKey.compareTo(right.orderKey);
   return orderKey != 0 ? orderKey : left.id.compareTo(right.id);
+}
+
+class _CompletionMarkPainter extends CustomPainter {
+  const _CompletionMarkPainter({
+    required this.ring,
+    required this.check,
+    required this.halo,
+    required this.accent,
+    required this.tint,
+    required this.border,
+  });
+
+  final double ring;
+  final double check;
+  final double halo;
+  final Color accent;
+  final Color tint;
+  final Color border;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final radius = size.shortestSide / 2 - 8;
+    canvas.drawCircle(
+      center,
+      radius + 24 * halo,
+      Paint()..color = accent.withValues(alpha: .08 * (1 - halo)),
+    );
+    canvas.drawCircle(center, radius, Paint()..color = tint);
+    final ringPaint = Paint()
+      ..color = border
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    canvas.drawCircle(center, radius, ringPaint);
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2,
+      math.pi * 2 * ring,
+      false,
+      ringPaint..color = accent,
+    );
+    if (check > 0) {
+      final path = Path()
+        ..moveTo(size.width * .31, size.height * .51)
+        ..lineTo(size.width * .45, size.height * .65)
+        ..lineTo(size.width * .70, size.height * .36);
+      final metric = path.computeMetrics().first;
+      canvas.drawPath(
+        metric.extractPath(0, metric.length * check),
+        Paint()
+          ..color = accent
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CompletionMarkPainter oldDelegate) =>
+      oldDelegate.ring != ring ||
+      oldDelegate.check != check ||
+      oldDelegate.halo != halo ||
+      oldDelegate.accent != accent ||
+      oldDelegate.tint != tint ||
+      oldDelegate.border != border;
+}
+
+class _CelebrationParticlePainter extends CustomPainter {
+  const _CelebrationParticlePainter({
+    required this.progress,
+    required this.colors,
+  });
+
+  final double progress;
+  final List<Color> colors;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0 || progress >= 1) return;
+    final center = size.center(Offset.zero);
+    final travel = AppMotion.curve.transform(progress);
+    final opacity = math.sin(math.pi * progress).clamp(0.0, 1.0) * .8;
+    for (var index = 0; index < 18; index++) {
+      final angle = index * math.pi * (3 - math.sqrt(5));
+      final spread = size.shortestSide * (.35 + (index % 5) * .025);
+      final distance = 54 + (spread - 54) * travel;
+      final drift = Offset(math.cos(angle), math.sin(angle)) * distance;
+      final length = 2.0 + (index % 3);
+      final paint = Paint()
+        ..color = colors[index % colors.length].withValues(alpha: opacity);
+      canvas.save();
+      canvas.translate(center.dx + drift.dx, center.dy + drift.dy);
+      canvas.rotate(angle + progress * .6);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset.zero,
+            width: length,
+            height: length * 1.6,
+          ),
+          const Radius.circular(1),
+        ),
+        paint,
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CelebrationParticlePainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.colors != colors;
 }
