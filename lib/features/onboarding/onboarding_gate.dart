@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_account/app_account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../app/account_providers.dart';
 import '../../app/app_language.dart';
@@ -233,7 +234,7 @@ class _OnboardingStepBody extends ConsumerWidget {
               child: IconButton(
                 key: const Key('onboarding-close-button'),
                 onPressed: () => unawaited(controller.complete()),
-                icon: const Icon(Icons.close),
+                icon: const Icon(LucideIcons.x),
               ),
             ),
           ],
@@ -249,16 +250,16 @@ class _OnboardingStepBody extends ConsumerWidget {
         Row(
           children: [
             if (step != OnboardingStep.language)
-              TextButton.icon(
+              ShadButton.ghost(
                 key: const Key('onboarding-back-button'),
                 onPressed: controller.back,
-                icon: const Icon(Icons.arrow_back),
-                label: Text(l10n.commonBack),
+                leading: const Icon(LucideIcons.arrowLeft),
+                child: Text(l10n.commonBack),
               )
             else
               const Spacer(),
             const Spacer(),
-            FilledButton(
+            ShadButton(
               key: const Key('onboarding-next-button'),
               onPressed: step == OnboardingStep.account
                   ? () => unawaited(controller.complete())
@@ -322,7 +323,7 @@ class _LanguageStep extends ConsumerWidget {
       isExpanded: true,
       decoration: InputDecoration(
         labelText: l10n.settingsLanguageTitle,
-        prefixIcon: const Icon(Icons.language),
+        prefixIcon: const Icon(LucideIcons.languages),
       ),
       items: [
         for (final item in AppLanguage.values)
@@ -357,12 +358,12 @@ class _TimerStep extends ConsumerWidget {
       segments: [
         ButtonSegment(
           value: FocusTimerVisualStyle.bar,
-          icon: const Icon(Icons.horizontal_rule),
+          icon: const Icon(LucideIcons.minus),
           label: Text(l10n.settingsTimerVisualBar),
         ),
         ButtonSegment(
           value: FocusTimerVisualStyle.circle,
-          icon: const Icon(Icons.circle_outlined),
+          icon: const Icon(LucideIcons.circle),
           label: Text(l10n.settingsTimerVisualCircle),
         ),
       ],
@@ -416,12 +417,12 @@ class _AccountStep extends ConsumerWidget {
                     ),
                     Align(
                       alignment: AlignmentDirectional.centerEnd,
-                      child: TextButton.icon(
+                      child: ShadButton.ghost(
                         onPressed: () => unawaited(
                           ref.read(accountBootstrapProvider.notifier).retry(),
                         ),
-                        icon: const Icon(Icons.refresh),
-                        label: Text(l10n.commonRetry),
+                        leading: const Icon(LucideIcons.refreshCw),
+                        child: Text(l10n.commonRetry),
                       ),
                     ),
                   ],
@@ -579,10 +580,10 @@ class _LaunchOfferMiniWindowState
       child: SafeArea(
         child: Card(
           key: const Key('launch-offer-mini-window'),
-          elevation: 8,
-          shadowColor: colors.primaryText.withValues(alpha: 0.16),
+          elevation: 2,
+          shadowColor: colors.primaryText.withValues(alpha: 0.08),
           child: InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             onTap: () => _showPaywall(context),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 260),
@@ -591,7 +592,7 @@ class _LaunchOfferMiniWindowState
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.timer_outlined, color: colors.accent, size: 20),
+                    Icon(LucideIcons.timer, color: colors.accent, size: 20),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -613,7 +614,7 @@ class _LaunchOfferMiniWindowState
                         onPressed: () => setState(() {
                           _dismissedCycle = cycle;
                         }),
-                        icon: const Icon(Icons.close),
+                        icon: const Icon(LucideIcons.x),
                       ),
                     ),
                   ],

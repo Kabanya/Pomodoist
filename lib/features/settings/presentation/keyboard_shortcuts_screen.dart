@@ -7,10 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show LucideIcons, ShadButton, ShadSwitch;
 
 import '../../../app/app_l10n.dart';
 import '../../../app/keyboard_shortcuts.dart';
 import '../../../app/platform_quick_add.dart';
+import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_theme.dart';
 
 class KeyboardShortcutsScreen extends ConsumerStatefulWidget {
@@ -75,7 +78,7 @@ class _KeyboardShortcutsScreenState
               IconButton(
                 tooltip: l10n.commonBack,
                 onPressed: () => _goBack(context),
-                icon: const Icon(Icons.arrow_back),
+                icon: const Icon(LucideIcons.arrowLeft),
               ),
               const SizedBox(width: 6),
               Expanded(
@@ -117,8 +120,10 @@ class _KeyboardShortcutsScreenState
               shortcut: _globalShortcut?.labelFor(_platform),
               loading: _loadingGlobalShortcut,
               buttonKey: const Key('shortcut-binding-global'),
-              leading: Switch(
+              leading: ShadSwitch(
                 key: const Key('global-quick-add-enabled'),
+                enabled: !_loadingGlobalShortcut,
+                duration: AppMotion.duration(context, AppMotion.state),
                 value: _globalQuickAddEnabled,
                 onChanged: _loadingGlobalShortcut
                     ? null
@@ -132,11 +137,11 @@ class _KeyboardShortcutsScreenState
           ],
           Align(
             alignment: AlignmentDirectional.centerEnd,
-            child: TextButton.icon(
+            child: ShadButton.ghost(
               key: const Key('shortcuts-reset-all'),
               onPressed: _resetAll,
-              icon: const Icon(Icons.restart_alt),
-              label: Text(l10n.settingsShortcutsResetAll),
+              leading: const Icon(LucideIcons.rotateCcw),
+              child: Text(l10n.settingsShortcutsResetAll),
             ),
           ),
         ],
@@ -323,8 +328,9 @@ class _ShortcutRow extends StatelessWidget {
                 dimension: 20,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : OutlinedButton(
+            : ShadButton.outline(
                 key: buttonKey,
+                enabled: onTap != null,
                 onPressed: onTap,
                 child: Text(shortcut ?? '—'),
               ),
@@ -387,7 +393,8 @@ class _ShortcutRecorderDialogState extends State<_ShortcutRecorderDialog> {
           ],
         ),
         actions: [
-          TextButton(
+          ShadButton.ghost(
+            enabled: !_busy,
             onPressed: _busy ? null : () => Navigator.of(context).pop(),
             child: Text(l10n.commonCancel),
           ),
@@ -505,7 +512,9 @@ class _GlobalShortcutRecorderDialogState
           ],
         ],
       ),
-      actions: [TextButton(onPressed: _cancel, child: Text(l10n.commonCancel))],
+      actions: [
+        ShadButton.ghost(onPressed: _cancel, child: Text(l10n.commonCancel)),
+      ],
     );
   }
 

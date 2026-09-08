@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadInput;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/app_l10n.dart';
@@ -60,15 +61,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 16),
-                    TextField(
+                    ShadInput(
                       controller: _controller,
                       autofocus: true,
                       textInputAction: TextInputAction.search,
-                      decoration: InputDecoration(
-                        hintText: l10n.searchTasks,
-                        prefixIcon: const Icon(Icons.search),
-                      ),
                       onChanged: (value) => setState(() => _query = value),
+                      placeholder: Text(l10n.searchTasks),
+                      leading: const Icon(LucideIcons.search),
                     ),
                   ],
                 ),

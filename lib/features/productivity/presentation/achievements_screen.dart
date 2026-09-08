@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 
 import '../../../app/app_l10n.dart';
 import '../../../app/providers.dart';
@@ -31,7 +32,7 @@ class AchievementsScreen extends ConsumerWidget {
                       IconButton(
                         tooltip: l10n.backToReports,
                         onPressed: () => _goBack(context),
-                        icon: const Icon(Icons.arrow_back),
+                        icon: const Icon(LucideIcons.arrowLeft),
                       ),
                       const SizedBox(width: 6),
                       Expanded(

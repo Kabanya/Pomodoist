@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../../app/app_l10n.dart';
 import '../../../app/providers.dart';
@@ -240,7 +241,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         showActionFeedback(
           context,
           message: context.l10n.focusActionFailed,
-          icon: Icons.error_outline,
+          icon: LucideIcons.circleAlert,
           sound: ActionFeedbackSound.none,
           haptic: AppHapticCue.none,
         );
@@ -253,7 +254,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     showActionFeedback(
       context,
       message: context.l10n.focusStarted,
-      icon: Icons.play_circle_outline,
+      icon: LucideIcons.circlePlay,
       haptic: AppHapticCue.none,
     );
   }
@@ -481,7 +482,7 @@ class _PresetFormDialogState extends State<_PresetFormDialog> {
               controller: _nameController,
               decoration: InputDecoration(
                 labelText: l10n.name,
-                prefixIcon: const Icon(Icons.label_outline),
+                prefixIcon: const Icon(LucideIcons.tag),
               ),
               textInputAction: TextInputAction.next,
               validator: _validateName,
@@ -527,6 +528,7 @@ class _PresetFormDialogState extends State<_PresetFormDialog> {
                       child: TextFormField(
                         key: const Key('preset-cadence-field'),
                         controller: _cadenceController,
+                        style: AppTheme.monoTextStyle,
                         decoration: InputDecoration(
                           labelText: l10n.every,
                           suffixText: l10n.work,
@@ -573,23 +575,23 @@ class _PresetFormDialogState extends State<_PresetFormDialog> {
       ),
       actions: [
         if (preset != null && !preset.isDefault)
-          TextButton(
+          ShadButton.ghost(
             onPressed: () =>
                 Navigator.of(context).pop(const _PresetDialogResult.delete()),
             child: Text(l10n.commonDelete),
           ),
         if (preset != null && !preset.isDefault)
-          TextButton(
+          ShadButton.ghost(
             onPressed: () => Navigator.of(
               context,
             ).pop(const _PresetDialogResult.setDefault()),
             child: Text(l10n.makeDefault),
           ),
-        TextButton(
+        ShadButton.ghost(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l10n.commonCancel),
         ),
-        FilledButton(
+        ShadButton(
           key: const Key('preset-save-button'),
           onPressed: _save,
           child: Text(l10n.commonSave),
@@ -670,6 +672,7 @@ class _MinutesField extends StatelessWidget {
     return TextFormField(
       key: fieldKey,
       controller: controller,
+      style: AppTheme.monoTextStyle,
       decoration: InputDecoration(
         labelText: label,
         suffixText: context.l10n.minutesSuffix,

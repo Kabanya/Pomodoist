@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../../app/account_auth_feedback.dart';
 import '../../../app/account_providers.dart';
@@ -20,6 +21,7 @@ import '../../../app/task_time.dart';
 import '../../../app/legal_urls.dart';
 import '../../../app/providers.dart';
 import '../../../app/app_theme_mode.dart';
+import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../focus/presentation/focus_view_mode.dart';
 import '../../focus/presentation/focus_screen.dart';
@@ -183,7 +185,7 @@ class _GuestLoginSwitcher extends StatefulWidget {
 
 class _GuestLoginSwitcherState extends State<_GuestLoginSwitcher>
     with SingleTickerProviderStateMixin {
-  static const _duration = Duration(milliseconds: 520);
+  static const _duration = AppMotion.panel;
   static const _ctaMotionDuration = Duration(milliseconds: 1200);
   var _timerOpen = false;
   late final AnimationController _ctaMotionController;
@@ -211,9 +213,7 @@ class _GuestLoginSwitcherState extends State<_GuestLoginSwitcher>
 
   @override
   Widget build(BuildContext context) {
-    final duration = MediaQuery.disableAnimationsOf(context)
-        ? Duration.zero
-        : _duration;
+    final duration = AppMotion.duration(context, _duration);
     final child = _timerOpen
         ? _GuestTimerScaffold(onClose: () => _setTimerOpen(false))
         : Column(
@@ -261,7 +261,7 @@ class _GuestLoginSwitcherState extends State<_GuestLoginSwitcher>
                             key: const Key('guest-timer-open'),
                             tooltip: context.l10n.focusTitle,
                             onPressed: () => _setTimerOpen(true),
-                            icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                            icon: const Icon(LucideIcons.chevronDown),
                           ),
                         ],
                       ),
@@ -275,8 +275,8 @@ class _GuestLoginSwitcherState extends State<_GuestLoginSwitcher>
       child: AnimatedSwitcher(
         duration: duration,
         reverseDuration: duration,
-        switchInCurve: Curves.easeInOutCubic,
-        switchOutCurve: Curves.easeInOutCubic,
+        switchInCurve: AppMotion.curve,
+        switchOutCurve: AppMotion.curve,
         transitionBuilder: (child, animation) {
           final timer = child.key == const ValueKey(true);
           return SlideTransition(
@@ -349,7 +349,7 @@ class _GuestTimerScaffold extends ConsumerWidget {
                   key: const Key('guest-timer-close'),
                   tooltip: context.l10n.loginTitle,
                   onPressed: onClose,
-                  icon: const Icon(Icons.keyboard_arrow_up_rounded),
+                  icon: const Icon(LucideIcons.chevronUp),
                 ),
               ),
             ),
@@ -394,7 +394,7 @@ class _GuestTimerError extends StatelessWidget {
         children: [
           Text('$error', textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          OutlinedButton(
+          ShadButton.outline(
             key: const Key('guest-timer-retry'),
             onPressed: onRetry,
             child: Text(context.l10n.commonRetry),
@@ -540,7 +540,7 @@ class _AuthRouteLink extends StatelessWidget {
       spacing: 12,
       children: [
         Text(prompt),
-        OutlinedButton(
+        ShadButton.outline(
           key: buttonKey,
           onPressed: () => context.go(route),
           child: Text(action),
@@ -637,7 +637,7 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              const Icon(Icons.mark_email_read_outlined, size: 40),
+              const Icon(LucideIcons.mailCheck, size: 40),
               const SizedBox(height: 12),
               Text(
                 l10n.registerCheckEmailTitle,
@@ -750,8 +750,9 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
                       AccountAuthRecovery.chooseAnotherProvider) ...[
                 Align(
                   alignment: AlignmentDirectional.centerEnd,
-                  child: TextButton(
+                  child: ShadButton.ghost(
                     key: const Key('register-auth-recovery'),
+                    enabled: !_submitting,
                     onPressed: _submitting
                         ? null
                         : () => _recover(feedback.recovery),
@@ -768,7 +769,7 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
                   liveRegion: true,
                   child: Row(
                     children: [
-                      const Icon(Icons.hourglass_top, size: 18),
+                      const Icon(LucideIcons.hourglass, size: 18),
                       const SizedBox(width: 8),
                       Expanded(child: Text(l10n.operationTakingLonger)),
                     ],
@@ -776,15 +777,19 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
                 ),
               ],
               const SizedBox(height: 16),
-              FilledButton(
+              ShadButton(
                 key: const Key('register-submit-button'),
+                enabled: _canSubmit,
                 onPressed: _canSubmit ? _submit : null,
                 child: _submitting
                     ? _takingLonger
-                          ? const Icon(Icons.hourglass_top, size: 18)
-                          : const SizedBox.square(
+                          ? const Icon(LucideIcons.hourglass, size: 18)
+                          : SizedBox.square(
                               dimension: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
                             )
                     : Text(l10n.registerSubmit),
               ),
@@ -1113,7 +1118,7 @@ class SettingsScreen extends ConsumerWidget {
                     isExpanded: true,
                     decoration: InputDecoration(
                       labelText: l10n.settingsLanguageTitle,
-                      prefixIcon: const Icon(Icons.language),
+                      prefixIcon: const Icon(LucideIcons.languages),
                     ),
                     items: [
                       for (final item in AppLanguage.values)
@@ -1146,7 +1151,7 @@ class SettingsScreen extends ConsumerWidget {
                 horizontal: 16,
                 vertical: 8,
               ),
-              secondary: const Icon(Icons.notifications_active_outlined),
+              secondary: const Icon(LucideIcons.bellRing),
               title: Text(l10n.settingsReturnRemindersTitle),
               subtitle: Text(l10n.settingsReturnRemindersSubtitle),
               value: reengagementEnabled,
@@ -1182,17 +1187,17 @@ class SettingsScreen extends ConsumerWidget {
                     segments: [
                       ButtonSegment(
                         value: AppThemeMode.system,
-                        icon: const Icon(Icons.brightness_auto_outlined),
+                        icon: const Icon(LucideIcons.sunMoon),
                         label: Text(l10n.settingsThemeSystem),
                       ),
                       ButtonSegment(
                         value: AppThemeMode.light,
-                        icon: const Icon(Icons.light_mode_outlined),
+                        icon: const Icon(LucideIcons.sun),
                         label: Text(l10n.settingsThemeLight),
                       ),
                       ButtonSegment(
                         value: AppThemeMode.dark,
-                        icon: const Icon(Icons.dark_mode_outlined),
+                        icon: const Icon(LucideIcons.moon),
                         label: Text(l10n.settingsThemeDark),
                       ),
                     ],
@@ -1234,12 +1239,12 @@ class SettingsScreen extends ConsumerWidget {
                     segments: [
                       ButtonSegment(
                         value: FocusTimerVisualStyle.bar,
-                        icon: const Icon(Icons.horizontal_rule),
+                        icon: const Icon(LucideIcons.minus),
                         label: Text(l10n.settingsTimerVisualBar),
                       ),
                       ButtonSegment(
                         value: FocusTimerVisualStyle.circle,
-                        icon: const Icon(Icons.circle_outlined),
+                        icon: const Icon(LucideIcons.circle),
                         label: Text(l10n.settingsTimerVisualCircle),
                       ),
                     ],
@@ -1277,10 +1282,10 @@ class SettingsScreen extends ConsumerWidget {
           Card(
             key: const Key('settings-shortcuts-button'),
             child: ListTile(
-              leading: const Icon(Icons.keyboard_outlined),
+              leading: const Icon(LucideIcons.keyboard),
               title: Text(l10n.settingsShortcutsTitle),
               subtitle: Text(l10n.settingsShortcutsSubtitle),
-              trailing: const Icon(Icons.chevron_right),
+              trailing: const Icon(LucideIcons.chevronRight),
               onTap: () => context.push('/settings/shortcuts'),
             ),
           ),
@@ -1292,7 +1297,7 @@ class SettingsScreen extends ConsumerWidget {
                 horizontal: 16,
                 vertical: 8,
               ),
-              secondary: const Icon(Icons.celebration_outlined),
+              secondary: const Icon(LucideIcons.partyPopper),
               title: Text(l10n.settingsFocusCompletionCelebrationTitle),
               subtitle: Text(l10n.settingsFocusCompletionCelebrationSubtitle),
               value: focusCompletionCelebrationEnabled,
@@ -1310,19 +1315,17 @@ class SettingsScreen extends ConsumerWidget {
             Align(
               key: const Key('account-delete-section'),
               alignment: Alignment.centerRight,
-              child: TextButton.icon(
+              child: ShadButton.ghost(
                 key: const Key('account-delete-button'),
-                style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.error,
-                ),
+                foregroundColor: Theme.of(context).colorScheme.error,
                 onPressed: () => showDialog<void>(
                   context: context,
                   barrierDismissible: false,
                   builder: (_) =>
                       _AccountDeleteDialog(account: signedInAccount),
                 ),
-                icon: const Icon(Icons.delete_forever_outlined),
-                label: Text(l10n.deleteAccount),
+                leading: const Icon(LucideIcons.trash2),
+                child: Text(l10n.deleteAccount),
               ),
             ),
           ],
@@ -1453,12 +1456,12 @@ class _ConnectedAgentsSectionState extends State<_ConnectedAgentsSection> {
                 l10n.settingsConnectedAgentsRevokeConfirmMessage(clientName),
               ),
               actions: [
-                TextButton(
+                ShadButton.ghost(
                   key: const Key('connected-agent-revoke-cancel'),
                   onPressed: () => Navigator.of(dialogContext).pop(false),
                   child: Text(l10n.commonCancel),
                 ),
-                FilledButton(
+                ShadButton(
                   key: const Key('connected-agent-revoke-confirm'),
                   onPressed: () => Navigator.of(dialogContext).pop(true),
                   child: Text(l10n.settingsConnectedAgentsRevoke),
@@ -1545,7 +1548,7 @@ class _ConnectedAgentsSectionState extends State<_ConnectedAgentsSection> {
               for (final grant in grants!)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.smart_toy_outlined),
+                  leading: const Icon(LucideIcons.bot),
                   title: Text(
                     grant.clientName?.trim().isNotEmpty == true
                         ? grant.clientName!.trim()
@@ -1567,7 +1570,7 @@ class _ConnectedAgentsSectionState extends State<_ConnectedAgentsSection> {
                             dimension: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.link_off_outlined),
+                        : const Icon(LucideIcons.unlink),
                   ),
                 ),
             ],
@@ -1611,11 +1614,11 @@ class _ConnectedAgentsError extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: Text(l10n.settingsConnectedAgentsLoadError)),
-          TextButton.icon(
+          ShadButton.ghost(
             key: retryKey,
             onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: Text(l10n.commonRetry),
+            leading: const Icon(LucideIcons.refreshCw),
+            child: Text(l10n.commonRetry),
           ),
         ],
       ),
@@ -1705,20 +1708,18 @@ class _AccountDeleteDialogState extends ConsumerState<_AccountDeleteDialog> {
                 title: Text(l10n.deleteAccount),
                 content: Text(l10n.deleteAccountFinalConfirmation),
                 actions: [
-                  TextButton(
+                  ShadButton.ghost(
                     key: const Key('account-delete-final-cancel-button'),
                     onPressed: () => Navigator.of(dialogContext).pop(false),
                     child: Text(l10n.commonCancel),
                   ),
-                  FilledButton.icon(
+                  ShadButton.destructive(
                     key: const Key('account-delete-final-confirm-button'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: colors.error,
-                      foregroundColor: colors.onError,
-                    ),
+                    backgroundColor: colors.error,
+                    foregroundColor: colors.onError,
                     onPressed: () => Navigator.of(dialogContext).pop(true),
-                    icon: const Icon(Icons.delete_forever_outlined),
-                    label: Text(l10n.deleteAccount),
+                    leading: const Icon(LucideIcons.trash2),
+                    child: Text(l10n.deleteAccount),
                   ),
                 ],
               ),
@@ -1744,14 +1745,17 @@ class _AccountDeleteDialogState extends ConsumerState<_AccountDeleteDialog> {
           children: [
             Text(l10n.deleteAccountConfirmation),
             const SizedBox(height: 8),
-            TextButton.icon(
+            ShadButton.ghost(
               key: const Key('account-delete-manage-apple-button'),
+              height: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              enabled: !_submitting,
               onPressed: _submitting
                   ? null
                   : () =>
                         unawaited(launchPomodoistExternalUrl(appleAccountUrl)),
-              icon: const Icon(Icons.open_in_new),
-              label: Text(l10n.manageSignInWithApple),
+              leading: const Icon(LucideIcons.externalLink),
+              child: Flexible(child: Text(l10n.manageSignInWithApple)),
             ),
             if (_error case final error?) ...[
               const SizedBox(height: 12),
@@ -1767,19 +1771,19 @@ class _AccountDeleteDialogState extends ConsumerState<_AccountDeleteDialog> {
           ],
         ),
         actions: [
-          TextButton(
+          ShadButton.ghost(
             key: const Key('account-delete-cancel-button'),
+            enabled: !_submitting,
             onPressed: _submitting ? null : () => Navigator.of(context).pop(),
             child: Text(l10n.commonCancel),
           ),
-          FilledButton.icon(
+          ShadButton.destructive(
             key: const Key('account-delete-confirm-button'),
-            style: FilledButton.styleFrom(
-              backgroundColor: colors.error,
-              foregroundColor: colors.onError,
-            ),
+            backgroundColor: colors.error,
+            foregroundColor: colors.onError,
+            enabled: !_submitting,
             onPressed: _submitting ? null : _deleteAccount,
-            icon: _submitting
+            leading: _submitting
                 ? SizedBox.square(
                     dimension: 18,
                     child: CircularProgressIndicator(
@@ -1787,8 +1791,8 @@ class _AccountDeleteDialogState extends ConsumerState<_AccountDeleteDialog> {
                       color: colors.onError,
                     ),
                   )
-                : const Icon(Icons.delete_forever_outlined),
-            label: Text(l10n.deleteAccount),
+                : const Icon(LucideIcons.trash2),
+            child: Text(l10n.deleteAccount),
           ),
         ],
       ),
@@ -1829,11 +1833,11 @@ class _AccountErrorCard extends StatelessWidget {
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton.icon(
+              child: ShadButton.ghost(
                 key: retryKey,
                 onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: Text(l10n.commonRetry),
+                leading: const Icon(LucideIcons.refreshCw),
+                child: Text(l10n.commonRetry),
               ),
             ),
           ],
@@ -1867,11 +1871,11 @@ class _AuthUnavailableCard extends StatelessWidget {
             const SizedBox(height: 8),
             Align(
               alignment: AlignmentDirectional.centerEnd,
-              child: TextButton.icon(
+              child: ShadButton.ghost(
                 key: retryKey,
                 onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: Text(context.l10n.commonRetry),
+                leading: const Icon(LucideIcons.refreshCw),
+                child: Text(context.l10n.commonRetry),
               ),
             ),
           ],
@@ -1919,8 +1923,9 @@ class _AuthFailureNoticeCard extends StatelessWidget {
               const SizedBox(height: 8),
               Align(
                 alignment: AlignmentDirectional.centerEnd,
-                child: TextButton(
+                child: ShadButton.ghost(
                   key: const Key('login-auth-send-new-link'),
+                  enabled: onSendNewLink != null,
                   onPressed: onSendNewLink,
                   child: Text(context.l10n.authSendLink),
                 ),
@@ -2016,7 +2021,7 @@ class _DefaultTimedBlockDurationSettingsState
                 labelText: l10n.settingsDefaultTimedBlockCustomLabel,
                 suffixText: l10n.minutesSuffix,
                 errorText: _errorText,
-                prefixIcon: const Icon(Icons.schedule_outlined),
+                prefixIcon: const Icon(LucideIcons.clock),
               ),
               onChanged: _saveCustomMinutes,
             ),

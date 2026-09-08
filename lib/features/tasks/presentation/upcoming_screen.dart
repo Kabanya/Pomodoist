@@ -8,6 +8,7 @@ import 'package:intl/intl.dart' as intl;
 import '../../../app/app_l10n.dart';
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
+import '../../../app/theme/app_motion.dart';
 import '../../../app/widgets/action_feedback.dart';
 import '../domain/task_models.dart';
 import 'widgets/quick_add_bar.dart';
@@ -249,13 +250,19 @@ class _UpcomingScreenState extends ConsumerState<UpcomingScreen> {
       if (_pendingScrollTop) {
         _pendingScrollTop = false;
         if (_scrollController.hasClients) {
-          unawaited(
-            _scrollController.animateTo(
+          if (MediaQuery.disableAnimationsOf(context)) {
+            _scrollController.jumpTo(
               _scrollController.position.minScrollExtent,
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOutCubic,
-            ),
-          );
+            );
+          } else {
+            unawaited(
+              _scrollController.animateTo(
+                _scrollController.position.minScrollExtent,
+                duration: AppMotion.panel,
+                curve: AppMotion.curve,
+              ),
+            );
+          }
         }
         return;
       }
@@ -270,8 +277,8 @@ class _UpcomingScreenState extends ConsumerState<UpcomingScreen> {
         Scrollable.ensureVisible(
           anchorContext,
           alignment: 0,
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
+          duration: AppMotion.duration(context, AppMotion.panel),
+          curve: AppMotion.curve,
         ),
       );
     });

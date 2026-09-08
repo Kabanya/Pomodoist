@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:app_account/app_account.dart';
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show LucideIcons, ShadButton, ShadIconButton, ShadInput;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -80,14 +82,14 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                         ),
                         Align(
                           alignment: AlignmentDirectional.centerEnd,
-                          child: TextButton.icon(
+                          child: ShadButton.ghost(
                             onPressed: () => unawaited(
                               ref
                                   .read(accountBootstrapProvider.notifier)
                                   .retry(),
                             ),
-                            icon: const Icon(Icons.refresh),
-                            label: Text(l10n.commonRetry),
+                            leading: const Icon(LucideIcons.refreshCw),
+                            child: Text(l10n.commonRetry),
                           ),
                         ),
                       ],
@@ -110,10 +112,10 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                   ),
                   Align(
                     alignment: AlignmentDirectional.centerEnd,
-                    child: TextButton.icon(
+                    child: ShadButton.ghost(
                       onPressed: () => ref.invalidate(accountOverviewProvider),
-                      icon: const Icon(Icons.refresh),
-                      label: Text(l10n.commonRetry),
+                      leading: const Icon(LucideIcons.refreshCw),
+                      child: Text(l10n.commonRetry),
                     ),
                   ),
                 ],
@@ -154,12 +156,12 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                   const SizedBox(height: 8),
                   Align(
                     alignment: Alignment.centerRight,
-                    child: TextButton.icon(
+                    child: ShadButton.ghost(
                       key: const Key('browse-productivity-retry'),
                       onPressed: () =>
                           ref.invalidate(productivitySummaryProvider),
-                      icon: const Icon(Icons.refresh),
-                      label: Text(l10n.commonRetry),
+                      leading: const Icon(LucideIcons.refreshCw),
+                      child: Text(l10n.commonRetry),
                     ),
                   ),
                 ],
@@ -170,9 +172,9 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
           Card(
             child: ListTile(
               key: const Key('browse-completed-tasks'),
-              leading: const Icon(Icons.task_alt_outlined),
+              leading: const Icon(LucideIcons.circleCheck),
               title: Text(l10n.completedTasks),
-              trailing: const Icon(Icons.chevron_right),
+              trailing: const Icon(LucideIcons.chevronRight),
               onTap: () => context.go('/browse/completed'),
             ),
           ),
@@ -196,7 +198,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                 children: [
                   for (final project in items)
                     ListTile(
-                      leading: const Icon(Icons.folder_outlined),
+                      leading: const Icon(LucideIcons.folder),
                       title: Text(project.name),
                       subtitle: Text(project.viewStyle),
                       onTap: () => context.go('/project/${project.id}'),
@@ -230,7 +232,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                 children: [
                   for (final label in items)
                     Chip(
-                      avatar: const Icon(Icons.label_outline, size: 18),
+                      avatar: const Icon(LucideIcons.tag, size: 18),
                       label: Text('@${label.name}'),
                     ),
                 ],
@@ -356,16 +358,20 @@ class _InlineCreate extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: TextField(
+            child: ShadInput(
               controller: controller,
-              decoration: InputDecoration(hintText: hint),
               onSubmitted: (_) => onSubmit(),
+              placeholder: Text(hint),
             ),
           ),
-          IconButton(
-            tooltip: context.l10n.commonCreate,
-            onPressed: onSubmit,
-            icon: const Icon(Icons.add),
+          Tooltip(
+            message: context.l10n.commonCreate,
+            child: ShadIconButton.ghost(
+              onPressed: onSubmit,
+              icon: const Icon(LucideIcons.plus),
+              width: 40,
+              height: 40,
+            ),
           ),
         ],
       ),

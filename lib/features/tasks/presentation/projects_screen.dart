@@ -1,4 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show
+        LucideIcons,
+        ShadButton,
+        ShadContextMenuItem,
+        ShadContextMenuRegion,
+        ShadDialog,
+        ShadIconButton,
+        ShadInput,
+        ShadSwitch,
+        ShadTab,
+        ShadTabs;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -65,59 +77,66 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                         l10n.navProjects,
                         style: Theme.of(context).textTheme.headlineMedium,
                       ),
-                      SegmentedButton<_ProjectsMode>(
-                        key: const Key('projects-mode-segmented-button'),
-                        segments: [
-                          ButtonSegment(
-                            value: _ProjectsMode.projects,
-                            icon: const Icon(Icons.folder_outlined),
-                            label: Text(l10n.navProjects),
-                          ),
-                          ButtonSegment(
-                            value: _ProjectsMode.labels,
-                            icon: const Icon(Icons.label_outline),
-                            label: Text(l10n.labelsTitle),
-                          ),
-                        ],
-                        selected: {_mode},
-                        showSelectedIcon: false,
-                        onSelectionChanged: (selection) =>
-                            setState(() => _mode = selection.single),
-                      ),
-                      IconButton.filled(
-                        key: Key(
-                          projectMode
-                              ? 'projects-add-button'
-                              : 'labels-add-button',
+                      IntrinsicWidth(
+                        child: ShadTabs<_ProjectsMode>(
+                          key: const Key('projects-mode-segmented-button'),
+                          value: _mode,
+                          tabs: [
+                            ShadTab(
+                              value: _ProjectsMode.projects,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(LucideIcons.folder),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.navProjects),
+                                ],
+                              ),
+                            ),
+                            ShadTab(
+                              value: _ProjectsMode.labels,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(LucideIcons.tag),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.labelsTitle),
+                                ],
+                              ),
+                            ),
+                          ],
+                          onChanged: (mode) => setState(() => _mode = mode),
+                          gap: 0,
                         ),
-                        onPressed: projectMode
-                            ? () => showCreateProjectDialog(context)
-                            : () => showCreateLabelDialog(context),
-                        icon: const Icon(Icons.add),
-                        tooltip: projectMode ? l10n.addProject : l10n.addLabel,
-                        style: IconButton.styleFrom(
-                          backgroundColor: colors.accentTint,
-                          foregroundColor: colors.accent,
-                          hoverColor: colors.accent.withValues(alpha: 0.08),
-                          highlightColor: colors.accent.withValues(alpha: 0.14),
-                          fixedSize: const Size(42, 42),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                      ),
+                      Tooltip(
+                        message: projectMode ? l10n.addProject : l10n.addLabel,
+                        child: ShadIconButton(
+                          key: Key(
+                            projectMode
+                                ? 'projects-add-button'
+                                : 'labels-add-button',
                           ),
+                          onPressed: projectMode
+                              ? () => showCreateProjectDialog(context)
+                              : () => showCreateLabelDialog(context),
+                          icon: const Icon(LucideIcons.plus),
+                          foregroundColor: colors.accent,
+                          backgroundColor: colors.accentTint,
+                          height: 42,
+                          width: 42,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 18),
-                  TextField(
+                  ShadInput(
                     key: const Key('projects-search-field'),
                     controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: projectMode
-                          ? l10n.searchProjects
-                          : l10n.searchLabels,
-                      prefixIcon: const Icon(Icons.search),
+                    placeholder: Text(
+                      projectMode ? l10n.searchProjects : l10n.searchLabels,
                     ),
+                    leading: const Icon(LucideIcons.search),
                   ),
                   if (projectMode) ...[
                     const SizedBox(height: 14),
@@ -133,7 +152,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                                 ),
                           ),
                         ),
-                        Switch(
+                        ShadSwitch(
                           key: const Key('projects-archived-switch'),
                           value: _archivedOnly,
                           onChanged: (value) =>
@@ -273,21 +292,21 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
   Future<void> _confirmDeleteProject(ProjectItem project) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => ShadDialog(
         title: Text(context.l10n.deleteProject),
-        content: Text(context.l10n.deleteProjectConfirmation(project.name)),
         actions: [
-          TextButton(
+          ShadButton.ghost(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(context.l10n.commonCancel),
           ),
-          FilledButton.tonalIcon(
+          ShadButton.destructive(
             key: const Key('confirm-delete-project-button'),
             onPressed: () => Navigator.of(context).pop(true),
-            icon: const Icon(Icons.delete_outline),
-            label: Text(context.l10n.commonDelete),
+            leading: const Icon(LucideIcons.trash2),
+            child: Text(context.l10n.commonDelete),
           ),
         ],
+        child: Text(context.l10n.deleteProjectConfirmation(project.name)),
       ),
     );
     if (confirmed != true) {
@@ -337,21 +356,21 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
   Future<void> _confirmDeleteLabel(LabelItem label) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => ShadDialog(
         title: Text(context.l10n.deleteLabel),
-        content: Text(context.l10n.deleteLabelConfirmation(label.name)),
         actions: [
-          TextButton(
+          ShadButton.ghost(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(context.l10n.commonCancel),
           ),
-          FilledButton.tonalIcon(
+          ShadButton.destructive(
             key: const Key('confirm-delete-label-button'),
             onPressed: () => Navigator.of(context).pop(true),
-            icon: const Icon(Icons.delete_outline),
-            label: Text(context.l10n.commonDelete),
+            leading: const Icon(LucideIcons.trash2),
+            child: Text(context.l10n.commonDelete),
           ),
         ],
+        child: Text(context.l10n.deleteLabelConfirmation(label.name)),
       ),
     );
     if (confirmed != true) {
@@ -375,69 +394,6 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
 
 enum _ProjectsMode { projects, labels }
 
-Future<void> _showItemMenu({
-  required BuildContext context,
-  required Offset position,
-  required String deleteLabel,
-  required VoidCallback onDelete,
-  String? renameLabel,
-  VoidCallback? onRename,
-}) async {
-  final action = await showMenu<_ItemMenuAction>(
-    context: context,
-    position: _menuPosition(context, position),
-    items: [
-      if (renameLabel != null && onRename != null)
-        PopupMenuItem(
-          value: _ItemMenuAction.rename,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.drive_file_rename_outline),
-              const SizedBox(width: 12),
-              Text(renameLabel),
-            ],
-          ),
-        ),
-      PopupMenuItem(
-        value: _ItemMenuAction.delete,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.delete_outline, color: context.appColors.accent),
-            const SizedBox(width: 12),
-            Text(deleteLabel),
-          ],
-        ),
-      ),
-    ],
-  );
-  if (!context.mounted) {
-    return;
-  }
-  switch (action) {
-    case _ItemMenuAction.rename:
-      onRename?.call();
-      return;
-    case _ItemMenuAction.delete:
-      onDelete();
-      return;
-    case null:
-      return;
-  }
-}
-
-enum _ItemMenuAction { rename, delete }
-
-RelativeRect _menuPosition(BuildContext context, Offset globalPosition) {
-  final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
-  final position = overlay.globalToLocal(globalPosition);
-  return RelativeRect.fromRect(
-    Rect.fromLTWH(position.dx, position.dy, 0, 0),
-    Offset.zero & overlay.size,
-  );
-}
-
 class _ProjectCountHeader extends StatelessWidget {
   const _ProjectCountHeader({required this.count});
 
@@ -452,7 +408,7 @@ class _ProjectCountHeader extends StatelessWidget {
         context.l10n.projectsCount(count),
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
           color: colors.primaryText,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -487,25 +443,26 @@ class _ProjectListTile extends StatelessWidget {
       color: colors.primaryText,
       fontWeight: FontWeight.w500,
     );
-    return GestureDetector(
+    return ShadContextMenuRegion(
       key: ValueKey('projects-screen-project-${project.id}'),
-      behavior: HitTestBehavior.opaque,
-      onSecondaryTapDown: (details) => _showItemMenu(
-        context: context,
-        position: details.globalPosition,
-        renameLabel: context.l10n.renameProject,
-        deleteLabel: context.l10n.deleteProject,
-        onRename: onRename,
-        onDelete: onDelete,
-      ),
-      onLongPressStart: (details) => _showItemMenu(
-        context: context,
-        position: details.globalPosition,
-        renameLabel: context.l10n.renameProject,
-        deleteLabel: context.l10n.deleteProject,
-        onRename: onRename,
-        onDelete: onDelete,
-      ),
+      tapEnabled: false,
+      longPressEnabled: true,
+      items: [
+        ShadContextMenuItem(
+          leading: const Icon(LucideIcons.pencil, size: 16),
+          onPressed: onRename,
+          child: Text(context.l10n.renameProject),
+        ),
+        ShadContextMenuItem(
+          leading: Icon(
+            LucideIcons.trash2,
+            size: 16,
+            color: Theme.of(context).colorScheme.error,
+          ),
+          onPressed: onDelete,
+          child: Text(context.l10n.deleteProject),
+        ),
+      ],
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
@@ -545,14 +502,24 @@ class _ProjectListTile extends StatelessWidget {
                     ),
                   ),
                 const SizedBox(width: 6),
-                IconButton(
-                  key: ValueKey('project-favorite-${project.id}'),
-                  tooltip: project.isFavorite
+                Tooltip(
+                  message: project.isFavorite
                       ? context.l10n.removeProjectFromFavorites
                       : context.l10n.addProjectToFavorites,
-                  onPressed: onFavorite,
-                  icon: Icon(
-                    project.isFavorite ? Icons.star : Icons.star_border,
+                  child: Semantics(
+                    toggled: project.isFavorite,
+                    child: ShadIconButton.ghost(
+                      key: ValueKey('project-favorite-${project.id}'),
+                      onPressed: onFavorite,
+                      icon: Icon(
+                        LucideIcons.star,
+                        color: project.isFavorite
+                            ? colors.accent
+                            : colors.mutedText,
+                      ),
+                      width: 40,
+                      height: 40,
+                    ),
                   ),
                 ),
               ],
@@ -578,7 +545,7 @@ class _LabelCountHeader extends StatelessWidget {
         context.l10n.labelsCount(count),
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
           color: colors.primaryText,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -594,21 +561,21 @@ class _LabelListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    return GestureDetector(
+    return ShadContextMenuRegion(
       key: ValueKey('projects-screen-label-${label.id}'),
-      behavior: HitTestBehavior.opaque,
-      onSecondaryTapDown: (details) => _showItemMenu(
-        context: context,
-        position: details.globalPosition,
-        deleteLabel: context.l10n.deleteLabel,
-        onDelete: onDelete,
-      ),
-      onLongPressStart: (details) => _showItemMenu(
-        context: context,
-        position: details.globalPosition,
-        deleteLabel: context.l10n.deleteLabel,
-        onDelete: onDelete,
-      ),
+      tapEnabled: false,
+      longPressEnabled: true,
+      items: [
+        ShadContextMenuItem(
+          leading: Icon(
+            LucideIcons.trash2,
+            size: 16,
+            color: Theme.of(context).colorScheme.error,
+          ),
+          onPressed: onDelete,
+          child: Text(context.l10n.deleteLabel),
+        ),
+      ],
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
@@ -618,7 +585,7 @@ class _LabelListTile extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             child: Row(
               children: [
-                Icon(Icons.label_outline, color: colors.mutedText),
+                Icon(LucideIcons.tag, color: colors.mutedText),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(

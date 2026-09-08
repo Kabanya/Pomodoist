@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 
 import '../../../app/app_l10n.dart';
+import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_theme.dart';
 import 'focus_rhythm.dart';
 
@@ -143,8 +145,8 @@ class _FocusRhythmRailState extends State<FocusRhythmRail> {
           unawaited(
             _scrollController.animateTo(
               target,
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
+              duration: AppMotion.duration(context, AppMotion.state),
+              curve: AppMotion.curve,
             ),
           );
         } else {
@@ -197,7 +199,6 @@ class _RhythmStepSlot extends StatelessWidget {
         : 0.0;
     final activeForeground = _highContrastForeground(activeColor);
     final foreground = active ? activeColor : colors.secondaryText;
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final nodeSize = compact
         ? (step.phase == FocusRhythmPhase.work ? 34.0 : 30.0)
         : (step.phase == FocusRhythmPhase.work ? 46.0 : 40.0);
@@ -234,73 +235,56 @@ class _RhythmStepSlot extends StatelessWidget {
             ),
           if (activeStepKey != null)
             SizedBox.square(key: activeStepKey, dimension: nodeSize),
-          TweenAnimationBuilder<double>(
-            key: ValueKey('focus-rhythm-node-motion-${step.sequence}'),
-            duration: reduceMotion || !active
-                ? Duration.zero
-                : const Duration(milliseconds: 260),
-            tween: Tween(begin: 0, end: active ? 1 : 0),
-            builder: (context, value, child) => Transform.scale(
-              key: ValueKey('focus-rhythm-node-landing-${step.sequence}'),
-              scale: active ? _landingScale(value) : 1,
-              child: child,
-            ),
-            child: SizedBox.square(
-              dimension: nodeSize,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    key: ValueKey('focus-rhythm-node-${step.sequence}'),
-                    width: nodeSize,
-                    height: nodeSize,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: active ? activeColor : colors.surfaceHover,
-                      border: Border.all(
-                        color: active ? activeColor : colors.border,
-                        width: active ? 2 : 1,
-                      ),
+          SizedBox.square(
+            dimension: nodeSize,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                AnimatedContainer(
+                  key: ValueKey('focus-rhythm-node-${step.sequence}'),
+                  duration: AppMotion.duration(context, AppMotion.state),
+                  curve: AppMotion.curve,
+                  width: nodeSize,
+                  height: nodeSize,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: active ? activeColor : colors.surfaceHover,
+                    border: Border.all(
+                      color: active ? activeColor : colors.border,
+                      width: active ? 2 : 1,
                     ),
-                    child: AnimatedSwitcher(
-                      duration: reduceMotion
-                          ? Duration.zero
-                          : const Duration(milliseconds: 180),
-                      transitionBuilder: (child, animation) => FadeTransition(
-                        opacity: animation,
-                        child: ScaleTransition(
-                          scale: Tween(begin: 0.9, end: 1.0).animate(animation),
-                          child: child,
-                        ),
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: AppMotion.duration(context, AppMotion.state),
+                    switchInCurve: AppMotion.curve,
+                    switchOutCurve: AppMotion.curve,
+                    child: _RhythmStepMark(
+                      key: ValueKey(
+                        'focus-rhythm-mark-${step.sequence}-${step.state}',
                       ),
-                      child: _RhythmStepMark(
+                      step: step,
+                      color: active ? activeForeground : foreground,
+                      compact: compact,
+                    ),
+                  ),
+                ),
+                if (active && !showTrailingConnector)
+                  RepaintBoundary(
+                    child: SizedBox.square(
+                      dimension: nodeSize,
+                      child: CircularProgressIndicator(
                         key: ValueKey(
-                          'focus-rhythm-mark-${step.sequence}-${step.state}',
+                          'focus-rhythm-node-progress-${step.sequence}',
                         ),
-                        step: step,
-                        color: active ? activeForeground : foreground,
-                        compact: compact,
+                        value: activeProgress,
+                        strokeWidth: 3,
+                        color: activeForeground,
+                        backgroundColor: Colors.transparent,
                       ),
                     ),
                   ),
-                  if (active && !showTrailingConnector)
-                    RepaintBoundary(
-                      child: SizedBox.square(
-                        dimension: nodeSize,
-                        child: CircularProgressIndicator(
-                          key: ValueKey(
-                            'focus-rhythm-node-progress-${step.sequence}',
-                          ),
-                          value: activeProgress,
-                          strokeWidth: 3,
-                          color: activeForeground,
-                          backgroundColor: Colors.transparent,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+              ],
             ),
           ),
           if (!compact)
@@ -310,9 +294,10 @@ class _RhythmStepSlot extends StatelessWidget {
                 context.l10n.durationMinutes(
                   (step.plannedSeconds / 60).round(),
                 ),
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.secondaryText),
+                style: AppTheme.monoTextStyle.copyWith(
+                  fontSize: Theme.of(context).textTheme.bodySmall?.fontSize,
+                  color: colors.secondaryText,
+                ),
               ),
             ),
           if (compact && active)
@@ -377,13 +362,6 @@ bool _isFinished(FocusRhythmStep step) =>
     step.state == FocusRhythmState.completed ||
     step.state == FocusRhythmState.skipped;
 
-double _landingScale(double value) {
-  if (value <= 0.65) {
-    return 0.92 + (1.06 - 0.92) * value / 0.65;
-  }
-  return 1.06 + (1 - 1.06) * (value - 0.65) / 0.35;
-}
-
 Color _activeColor(AppThemePalette colors, FocusRhythmStep step) {
   if (step.state == FocusRhythmState.paused) {
     return colors.warning;
@@ -413,20 +391,25 @@ class _RhythmStepMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (step.state == FocusRhythmState.completed) {
-      return Icon(Icons.check, size: compact ? 17 : 20, color: color);
+      return Icon(LucideIcons.check, size: compact ? 17 : 20, color: color);
     }
     if (step.state == FocusRhythmState.skipped) {
-      return Icon(Icons.skip_next, size: compact ? 17 : 20, color: color);
+      return Icon(
+        LucideIcons.skipForward,
+        size: compact ? 17 : 20,
+        color: color,
+      );
     }
     if (step.phase == FocusRhythmPhase.shortBreak) {
-      return Icon(Icons.coffee_outlined, size: compact ? 15 : 18, color: color);
+      return Icon(LucideIcons.coffee, size: compact ? 15 : 18, color: color);
     }
     if (step.phase == FocusRhythmPhase.longBreak) {
-      return Icon(Icons.schedule, size: compact ? 15 : 18, color: color);
+      return Icon(LucideIcons.clock, size: compact ? 15 : 18, color: color);
     }
     return Text(
       '${step.workOrdinal}',
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+      style: AppTheme.monoTextStyle.copyWith(
+        fontSize: Theme.of(context).textTheme.titleMedium?.fontSize,
         color: color,
         fontWeight: FontWeight.w700,
       ),

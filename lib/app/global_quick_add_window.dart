@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show ShadApp, ShadAppBuilder, ShadTheme, GlobalShadLocalizations;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multiview_desktop/multiview_desktop.dart';
@@ -11,6 +13,7 @@ import 'app_l10n.dart';
 import 'app_language.dart';
 import 'app_theme_mode.dart';
 import 'theme/app_theme.dart';
+import 'theme/app_motion.dart';
 
 const globalQuickAddCompactSize = Size(600, 300);
 const globalQuickAddVoiceSize = Size(720, 720);
@@ -95,39 +98,54 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final language = ref.watch(appLanguageProvider);
     final themeMode = ref.watch(appThemeModeProvider);
-    return MaterialApp(
-      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
+    return ShadApp.custom(
+      theme: AppTheme.shadFromMaterial(AppTheme.light()),
+      darkTheme: AppTheme.shadFromMaterial(AppTheme.dark()),
       themeMode: themeMode.themeMode,
-      locale: language.locale,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Builder(
-              builder: (context) => Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    context.l10n.addTask,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 18),
-                  QuickAddComposer(
-                    onCompleted: onClose,
-                    onCancel: onClose,
-                    onVoiceModeChanged: onVoiceModeChanged,
-                  ),
-                ],
+      appBuilder: (context) => MaterialApp(
+        onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: themeMode.themeMode,
+        themeAnimationDuration: AppMotion.duration(context, AppMotion.state),
+        themeAnimationCurve: AppMotion.curve,
+        locale: language.locale,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalShadLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => ShadTheme(
+          data: AppTheme.shadFromMaterial(
+            Theme.of(context),
+            reduceMotion: MediaQuery.disableAnimationsOf(context),
+          ),
+          child: ShadAppBuilder(child: child),
+        ),
+        home: Scaffold(
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Builder(
+                builder: (context) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      context.l10n.addTask,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 18),
+                    QuickAddComposer(
+                      onCompleted: onClose,
+                      onCancel: onClose,
+                      onVoiceModeChanged: onVoiceModeChanged,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

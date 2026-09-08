@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 
 import '../../../app/app_l10n.dart';
 import '../../../app/legal_urls.dart';
@@ -54,7 +55,7 @@ class SettingsAppInfoCard extends ConsumerWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               visualDensity: VisualDensity.compact,
-              leading: const Icon(Icons.info_outline),
+              leading: const Icon(LucideIcons.info),
               title: Text(l10n.settingsVersionLabel),
               trailing: Text(
                 version,
@@ -65,7 +66,7 @@ class SettingsAppInfoCard extends ConsumerWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               visualDensity: VisualDensity.compact,
-              leading: const Icon(Icons.workspace_premium_outlined),
+              leading: const Icon(LucideIcons.award),
               title: Text(l10n.settingsPlanLabel),
               trailing: Text(
                 plan,
@@ -77,9 +78,9 @@ class SettingsAppInfoCard extends ConsumerWidget {
               key: const Key('settings-privacy-policy-link'),
               contentPadding: EdgeInsets.zero,
               visualDensity: VisualDensity.compact,
-              leading: const Icon(Icons.privacy_tip_outlined),
+              leading: const Icon(LucideIcons.shield),
               title: Text(l10n.privacyPolicy),
-              trailing: const Icon(Icons.open_in_new),
+              trailing: const Icon(LucideIcons.externalLink),
               onTap: () => unawaited(
                 launchPomodoistExternalUrl(pomodoistPrivacyPolicyUrl),
               ),
@@ -88,9 +89,9 @@ class SettingsAppInfoCard extends ConsumerWidget {
               key: const Key('settings-terms-of-use-link'),
               contentPadding: EdgeInsets.zero,
               visualDensity: VisualDensity.compact,
-              leading: const Icon(Icons.description_outlined),
+              leading: const Icon(LucideIcons.fileText),
               title: Text(l10n.termsOfUse),
-              trailing: const Icon(Icons.open_in_new),
+              trailing: const Icon(LucideIcons.externalLink),
               onTap: () =>
                   unawaited(launchPomodoistExternalUrl(pomodoistTermsOfUseUrl)),
             ),
@@ -98,9 +99,9 @@ class SettingsAppInfoCard extends ConsumerWidget {
               key: const Key('settings-support-link'),
               contentPadding: EdgeInsets.zero,
               visualDensity: VisualDensity.compact,
-              leading: const Icon(Icons.support_agent_outlined),
+              leading: const Icon(LucideIcons.headset),
               title: Text(l10n.support),
-              trailing: const Icon(Icons.open_in_new),
+              trailing: const Icon(LucideIcons.externalLink),
               onTap: () =>
                   unawaited(launchPomodoistExternalUrl(pomodoistSupportUrl)),
             ),

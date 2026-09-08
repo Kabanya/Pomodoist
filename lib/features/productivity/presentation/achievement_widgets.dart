@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 
 import '../../../app/app_l10n.dart';
 import '../../../app/theme/app_theme.dart';
@@ -182,8 +183,8 @@ List<AchievementItem> achievementsInGroup(
 
 IconData achievementGroupIcon(AchievementGroup group) {
   return switch (group) {
-    AchievementGroup.focus => Icons.timer_outlined,
-    AchievementGroup.task => Icons.check_circle_outline,
-    AchievementGroup.combo => Icons.auto_awesome_outlined,
+    AchievementGroup.focus => LucideIcons.timer,
+    AchievementGroup.task => LucideIcons.circleCheck,
+    AchievementGroup.combo => LucideIcons.sparkles,
   };
 }

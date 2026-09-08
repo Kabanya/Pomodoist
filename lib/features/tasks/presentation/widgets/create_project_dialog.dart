@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show LucideIcons, ShadButton, ShadInput;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/app_l10n.dart';
@@ -46,8 +48,8 @@ class CreateProjectDialog extends ConsumerWidget {
       hintText: l10n.projectName,
       inputKey: const Key('project-create-input'),
       submitKey: const Key('project-create-submit'),
-      icon: Icons.tag,
-      submitIcon: Icons.add,
+      icon: LucideIcons.folder,
+      submitIcon: LucideIcons.plus,
       submitLabel: l10n.commonAdd,
       initialColor: nextProjectColor(projects),
       onSubmit: (ref, name, color) async {
@@ -77,8 +79,8 @@ class _RenameProjectDialog extends StatelessWidget {
       hintText: l10n.projectName,
       inputKey: const Key('project-rename-input'),
       submitKey: const Key('project-rename-submit'),
-      icon: Icons.drive_file_rename_outline,
-      submitIcon: Icons.save_outlined,
+      icon: LucideIcons.pencil,
+      submitIcon: LucideIcons.save,
       submitLabel: l10n.commonSave,
       initialName: projectName,
       onSubmit: (ref, name, color) => ref
@@ -100,8 +102,8 @@ class CreateLabelDialog extends StatelessWidget {
       hintText: l10n.labelName,
       inputKey: const Key('label-create-input'),
       submitKey: const Key('label-create-submit'),
-      icon: Icons.label_outline,
-      submitIcon: Icons.add,
+      icon: LucideIcons.tag,
+      submitIcon: LucideIcons.plus,
       submitLabel: l10n.commonAdd,
       onSubmit: (ref, name, color) async {
         await ref.read(labelRepositoryProvider).createLabel(name);
@@ -172,16 +174,14 @@ class _NamedItemDialogState extends ConsumerState<_NamedItemDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextField(
+          ShadInput(
             key: widget.inputKey,
             controller: _controller,
             autofocus: true,
             textInputAction: TextInputAction.done,
-            decoration: InputDecoration(
-              hintText: widget.hintText,
-              prefixIcon: Icon(widget.icon),
-            ),
             onSubmitted: (_) => _submit(),
+            placeholder: Text(widget.hintText),
+            leading: Icon(widget.icon),
           ),
           if (_selectedColor != null) ...[
             const SizedBox(height: 20),
@@ -193,20 +193,22 @@ class _NamedItemDialogState extends ConsumerState<_NamedItemDialog> {
         ],
       ),
       actions: [
-        TextButton(
+        ShadButton.ghost(
           onPressed: _busy ? null : () => Navigator.of(context).pop(),
+          enabled: !(_busy),
           child: Text(l10n.commonCancel),
         ),
-        FilledButton.icon(
+        ShadButton(
           key: widget.submitKey,
           onPressed: _busy ? null : _submit,
-          icon: _busy
+          enabled: !(_busy),
+          leading: _busy
               ? const SizedBox.square(
                   dimension: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : Icon(widget.submitIcon),
-          label: Text(widget.submitLabel),
+          child: Text(widget.submitLabel),
         ),
       ],
     );

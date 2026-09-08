@@ -136,10 +136,10 @@ class _FocusActiveActions extends StatelessWidget {
                           context,
                           repository.completeActiveInterval,
                           message: l10n.intervalCompleted,
-                          icon: Icons.check_circle_outline,
+                          icon: LucideIcons.circleCheck,
                         ),
                       ),
-                icon: const Icon(Icons.check),
+                icon: const Icon(LucideIcons.check, size: 18),
                 label: Text(l10n.completeInterval),
               ),
             menu,
@@ -166,7 +166,7 @@ Widget _buildFocusPrimaryAction(
             context,
             repository.startReadyInterval,
             message: l10n.intervalStarted,
-            icon: Icons.play_circle_outline,
+            icon: LucideIcons.circlePlay,
           ),
         )
       : paused || allowPause
@@ -177,36 +177,36 @@ Widget _buildFocusPrimaryAction(
                 ? repository.resumeActiveInterval
                 : repository.pauseActiveInterval,
             message: paused ? l10n.resume : l10n.pause,
-            icon: paused
-                ? Icons.play_circle_outline
-                : Icons.pause_circle_outline,
+            icon: paused ? LucideIcons.circlePlay : LucideIcons.circlePause,
           ),
         )
       : null;
-  final button = _ElasticFocusButton(
-    enabled: onPressed != null,
-    child: FilledButton(
-      key: const Key('focus-primary-action'),
-      style: FilledButton.styleFrom(minimumSize: const Size(176, 48)),
-      onPressed: onPressed,
-      child: AnimatedSwitcher(
-        duration: _motionDuration(context, 180),
-        child: Wrap(
-          key: ValueKey('focus-primary-label-${interval.status}'),
-          alignment: WrapAlignment.center,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 8,
-          children: [
-            Icon(ready || paused ? Icons.play_arrow : Icons.pause),
-            Text(
-              ready
-                  ? l10n.startInterval
-                  : paused
-                  ? l10n.resume
-                  : l10n.pause,
-            ),
-          ],
-        ),
+  final button = FilledButton(
+    key: const Key('focus-primary-action'),
+    style: FilledButton.styleFrom(minimumSize: const Size(176, 48)),
+    onPressed: onPressed,
+    child: AnimatedSwitcher(
+      duration: AppMotion.duration(context, AppMotion.state),
+      switchInCurve: AppMotion.curve,
+      switchOutCurve: AppMotion.curve,
+      child: Wrap(
+        key: ValueKey('focus-primary-label-${interval.status}'),
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 8,
+        children: [
+          Icon(
+            ready || paused ? LucideIcons.play : LucideIcons.pause,
+            size: 18,
+          ),
+          Text(
+            ready
+                ? l10n.startInterval
+                : paused
+                ? l10n.resume
+                : l10n.pause,
+          ),
+        ],
       ),
     ),
   );
@@ -247,7 +247,7 @@ Widget _buildFocusMoreActionsMenu(
       button: true,
       child: PopupMenuButton<_FocusMoreAction>(
         tooltip: l10n.moreFocusActions,
-        icon: const Icon(Icons.more_horiz),
+        icon: const Icon(LucideIcons.ellipsis),
         constraints: const BoxConstraints(minWidth: 220),
         onSelected: (action) {
           switch (action.kind) {
@@ -257,7 +257,7 @@ Widget _buildFocusMoreActionsMenu(
                   context,
                   repository.completeActiveInterval,
                   message: l10n.intervalCompleted,
-                  icon: Icons.check_circle_outline,
+                  icon: LucideIcons.circleCheck,
                 ),
               );
             case _FocusMoreActionKind.skip:
@@ -271,7 +271,7 @@ Widget _buildFocusMoreActionsMenu(
                   () =>
                       repository.stopActiveRun(reason: StopFocusReason.stopped),
                   message: l10n.focusStopped,
-                  icon: Icons.stop_circle_outlined,
+                  icon: LucideIcons.circleStop,
                   haptic: AppHapticCue.light,
                 ),
               );
@@ -352,7 +352,7 @@ Future<void> _performFocusAction(
   BuildContext context,
   Future<void> Function() action, {
   String? message,
-  IconData icon = Icons.check_circle_outline,
+  IconData icon = LucideIcons.circleCheck,
   AppHapticCue haptic = AppHapticCue.none,
 }) async {
   try {
@@ -362,7 +362,7 @@ Future<void> _performFocusAction(
       showActionFeedback(
         context,
         message: context.l10n.focusActionFailed,
-        icon: Icons.error_outline,
+        icon: LucideIcons.circleAlert,
         sound: ActionFeedbackSound.none,
         haptic: AppHapticCue.none,
       );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../../../app/app_l10n.dart';
 import '../../../../app/account_providers.dart';
@@ -52,25 +53,32 @@ class _GoogleCalendarSettingsScreenState
             spacing: 8,
             runSpacing: 8,
             children: [
-              FilledButton.icon(
+              ShadButton(
+                enabled: !_busy,
                 onPressed: _busy
                     ? null
                     : connected
                     ? () => _sync()
                     : () => _connect(),
-                icon: _busy
-                    ? const SizedBox.square(
+                leading: _busy
+                    ? SizedBox.square(
                         dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
                       )
-                    : Icon(connected ? Icons.sync : Icons.link),
-                label: Text(connected ? l10n.syncNow : l10n.connect),
+                    : Icon(
+                        connected ? LucideIcons.refreshCw : LucideIcons.link2,
+                      ),
+                child: Text(connected ? l10n.syncNow : l10n.connect),
               ),
               if (connected)
-                OutlinedButton.icon(
+                ShadButton.outline(
+                  enabled: !_busy,
                   onPressed: _busy ? null : () => _disconnect(),
-                  icon: const Icon(Icons.link_off),
-                  label: Text(l10n.disconnect),
+                  leading: const Icon(LucideIcons.unlink),
+                  child: Text(l10n.disconnect),
                 ),
             ],
           ),
@@ -219,7 +227,7 @@ class _StatusRows extends StatelessWidget {
         if (warning != null && warning!.trim().isNotEmpty) ...[
           const SizedBox(height: 12),
           _MessageBand(
-            icon: Icons.warning_amber_outlined,
+            icon: LucideIcons.triangleAlert,
             text: warning!,
             color: colors.warning,
           ),
@@ -227,7 +235,7 @@ class _StatusRows extends StatelessWidget {
         if (lastError != null && lastError!.trim().isNotEmpty) ...[
           const SizedBox(height: 12),
           _MessageBand(
-            icon: Icons.error_outline,
+            icon: LucideIcons.circleAlert,
             text: lastError!,
             color: colors.accent,
           ),

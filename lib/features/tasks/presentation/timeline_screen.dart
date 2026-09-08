@@ -4,11 +4,14 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show LucideIcons, ShadButton, ShadIconButton, ShadOption, ShadSelect;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/app_l10n.dart';
+import '../../../app/theme/app_motion.dart';
 import '../../../app/formatters.dart';
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
@@ -128,26 +131,36 @@ class _TimelineHeader extends StatelessWidget {
       runSpacing: 8,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        IconButton.filledTonal(
-          tooltip: l10n.timelinePreviousDay,
-          onPressed: () =>
-              _goToDate(context, day.subtract(const Duration(days: 1))),
-          icon: const Icon(Icons.chevron_left),
+        Tooltip(
+          message: l10n.timelinePreviousDay,
+          child: ShadIconButton.secondary(
+            onPressed: () =>
+                _goToDate(context, day.subtract(const Duration(days: 1))),
+            icon: const Icon(LucideIcons.chevronLeft),
+            width: 40,
+            height: 40,
+          ),
         ),
-        FilledButton.tonalIcon(
+        ShadButton.secondary(
           onPressed: () => _pickDate(context, day),
-          icon: const Icon(Icons.event_outlined),
-          label: Text(formatLocalDate(context, day)),
+          leading: const Icon(LucideIcons.calendar),
+          child: Text(formatLocalDate(context, day)),
         ),
-        IconButton.filledTonal(
-          tooltip: l10n.timelineNextDay,
-          onPressed: () => _goToDate(context, day.add(const Duration(days: 1))),
-          icon: const Icon(Icons.chevron_right),
+        Tooltip(
+          message: l10n.timelineNextDay,
+          child: ShadIconButton.secondary(
+            onPressed: () =>
+                _goToDate(context, day.add(const Duration(days: 1))),
+            icon: const Icon(LucideIcons.chevronRight),
+            width: 40,
+            height: 40,
+          ),
         ),
-        OutlinedButton(
+        ShadButton.outline(
           onPressed: _isSameDay(day, today)
               ? null
               : () => _goToDate(context, today),
+          enabled: !(_isSameDay(day, today)),
           child: Text(l10n.today),
         ),
       ],
@@ -209,88 +222,127 @@ class _VisibleHoursControls extends ConsumerWidget {
               children: [
                 SizedBox(
                   width: 160,
-                  child: DropdownButtonFormField<int>(
-                    key: const Key('timeline-start-minutes'),
-                    initialValue: visibleHours.startMinutes,
-                    decoration: InputDecoration(
-                      labelText: l10n.timelineStartHour,
-                    ),
-                    items: [
-                      for (final value in _timeOptions)
-                        if (value < visibleHours.endMinutes)
-                          DropdownMenuItem(
-                            value: value,
-                            child: Text(_formatMinutes(value)),
-                          ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l10n.timelineStartHour,
+                        style: Theme.of(context).textTheme.labelMedium,
+                      ),
+                      const SizedBox(height: 6),
+                      ShadSelect<int>(
+                        key: const Key('timeline-start-minutes'),
+                        initialValue: visibleHours.startMinutes,
+                        onChanged: (value) {
+                          if (value != null) {
+                            unawaited(
+                              ref
+                                  .read(timelineVisibleHoursProvider.notifier)
+                                  .setVisibleHours(
+                                    value,
+                                    visibleHours.endMinutes,
+                                  ),
+                            );
+                          }
+                        },
+                        options: [
+                          for (final value in _timeOptions)
+                            if (value < visibleHours.endMinutes)
+                              ShadOption(
+                                value: value,
+                                child: Text(_formatMinutes(value)),
+                              ),
+                        ],
+                        selectedOptionBuilder: (context, value) =>
+                            Text(_formatMinutes(value)),
+                        placeholder: Text(l10n.timelineStartHour),
+                        minWidth: 160,
+                      ),
                     ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        unawaited(
-                          ref
-                              .read(timelineVisibleHoursProvider.notifier)
-                              .setVisibleHours(value, visibleHours.endMinutes),
-                        );
-                      }
-                    },
                   ),
                 ),
                 SizedBox(
                   width: 160,
-                  child: DropdownButtonFormField<int>(
-                    key: const Key('timeline-end-minutes'),
-                    initialValue: visibleHours.endMinutes,
-                    decoration: InputDecoration(
-                      labelText: l10n.timelineEndHour,
-                    ),
-                    items: [
-                      for (final value in _timeOptions)
-                        if (value > visibleHours.startMinutes)
-                          DropdownMenuItem(
-                            value: value,
-                            child: Text(_formatMinutes(value)),
-                          ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        unawaited(
-                          ref
-                              .read(timelineVisibleHoursProvider.notifier)
-                              .setVisibleHours(
-                                visibleHours.startMinutes,
-                                value,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l10n.timelineEndHour,
+                        style: Theme.of(context).textTheme.labelMedium,
+                      ),
+                      const SizedBox(height: 6),
+                      ShadSelect<int>(
+                        key: const Key('timeline-end-minutes'),
+                        initialValue: visibleHours.endMinutes,
+                        onChanged: (value) {
+                          if (value != null) {
+                            unawaited(
+                              ref
+                                  .read(timelineVisibleHoursProvider.notifier)
+                                  .setVisibleHours(
+                                    visibleHours.startMinutes,
+                                    value,
+                                  ),
+                            );
+                          }
+                        },
+                        options: [
+                          for (final value in _timeOptions)
+                            if (value > visibleHours.startMinutes)
+                              ShadOption(
+                                value: value,
+                                child: Text(_formatMinutes(value)),
                               ),
-                        );
-                      }
-                    },
+                        ],
+                        selectedOptionBuilder: (context, value) =>
+                            Text(_formatMinutes(value)),
+                        placeholder: Text(l10n.timelineEndHour),
+                        minWidth: 160,
+                      ),
+                    ],
                   ),
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton.outlined(
-                      key: const Key('timeline-zoom-out'),
-                      tooltip: l10n.timelineZoomOut,
-                      onPressed: zoomIndex == 0
-                          ? null
-                          : () => unawaited(
-                              ref
-                                  .read(timelineHourWidthProvider.notifier)
-                                  .zoomOut(),
-                            ),
-                      icon: const Icon(Icons.zoom_out),
+                    Tooltip(
+                      message: l10n.timelineZoomOut,
+                      child: ShadIconButton.outline(
+                        key: const Key('timeline-zoom-out'),
+                        onPressed: zoomIndex == 0
+                            ? null
+                            : () => unawaited(
+                                ref
+                                    .read(timelineHourWidthProvider.notifier)
+                                    .zoomOut(),
+                              ),
+                        icon: const Icon(LucideIcons.zoomOut),
+                        enabled: !(zoomIndex == 0),
+                        width: 40,
+                        height: 40,
+                      ),
                     ),
                     const SizedBox(width: 8),
-                    IconButton.outlined(
-                      key: const Key('timeline-zoom-in'),
-                      tooltip: l10n.timelineZoomIn,
-                      onPressed: zoomIndex == timelineHourWidthLevels.length - 1
-                          ? null
-                          : () => unawaited(
-                              ref
-                                  .read(timelineHourWidthProvider.notifier)
-                                  .zoomIn(),
-                            ),
-                      icon: const Icon(Icons.zoom_in),
+                    Tooltip(
+                      message: l10n.timelineZoomIn,
+                      child: ShadIconButton.outline(
+                        key: const Key('timeline-zoom-in'),
+                        onPressed:
+                            zoomIndex == timelineHourWidthLevels.length - 1
+                            ? null
+                            : () => unawaited(
+                                ref
+                                    .read(timelineHourWidthProvider.notifier)
+                                    .zoomIn(),
+                              ),
+                        icon: const Icon(LucideIcons.zoomIn),
+                        enabled:
+                            !(zoomIndex == timelineHourWidthLevels.length - 1),
+                        width: 40,
+                        height: 40,
+                      ),
                     ),
                   ],
                 ),
@@ -454,7 +506,7 @@ class _AllDaySectionState extends ConsumerState<_AllDaySection> {
         final accepting = candidateData.isNotEmpty;
         return AnimatedContainer(
           key: const Key('timeline-all-day-section'),
-          duration: const Duration(milliseconds: 140),
+          duration: AppMotion.duration(context, AppMotion.hover),
           decoration: BoxDecoration(
             color: accepting ? colors.accentTint : colors.surface,
             border: Border.all(
@@ -462,6 +514,7 @@ class _AllDaySectionState extends ConsumerState<_AllDaySection> {
             ),
             borderRadius: BorderRadius.circular(8),
           ),
+          curve: AppMotion.curve,
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -535,10 +588,10 @@ class _AllDaySectionState extends ConsumerState<_AllDaySection> {
                       ],
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: TextButton.icon(
+                        child: ShadButton.ghost(
                           onPressed: () => setState(() => _adding = true),
-                          icon: const Icon(Icons.add),
-                          label: Text(context.l10n.commonAdd),
+                          leading: const Icon(LucideIcons.plus),
+                          child: Text(context.l10n.commonAdd),
                         ),
                       ),
                     ],
@@ -1431,19 +1484,22 @@ class _ProjectColumnHeader extends ConsumerWidget {
               ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
-          IconButton(
-            key: const Key('timeline-project-menu'),
-            tooltip: context.l10n.timelineProjectsMenu,
-            onPressed: () => showDialog<void>(
-              context: context,
-              builder: (context) => _TimelineProjectMenuDialog(
-                projects: projects,
-                visibleProjectIds: visibleProjectIds,
+          Tooltip(
+            message: context.l10n.timelineProjectsMenu,
+            child: ShadIconButton.ghost(
+              key: const Key('timeline-project-menu'),
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (context) => _TimelineProjectMenuDialog(
+                  projects: projects,
+                  visibleProjectIds: visibleProjectIds,
+                ),
               ),
+              icon: const Icon(LucideIcons.slidersHorizontal, size: 18),
+              padding: EdgeInsets.zero,
+              width: 32,
+              height: 32,
             ),
-            icon: const Icon(Icons.tune, size: 18),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
           ),
         ],
       ),
@@ -1484,22 +1540,27 @@ class _TimelineProjectHeader extends ConsumerWidget {
       child: Row(
         children: [
           if (layout.row.hasVisibleChildren)
-            IconButton(
-              key: Key('timeline-project-collapse-${project.id}'),
-              tooltip: collapsed
+            Tooltip(
+              message: collapsed
                   ? context.l10n.timelineExpandProject
                   : context.l10n.timelineCollapseProject,
-              onPressed: () => unawaited(
-                ref
-                    .read(timelineCollapsedProjectIdsProvider.notifier)
-                    .toggle(project.id),
+              child: ShadIconButton.ghost(
+                key: Key('timeline-project-collapse-${project.id}'),
+                onPressed: () => unawaited(
+                  ref
+                      .read(timelineCollapsedProjectIdsProvider.notifier)
+                      .toggle(project.id),
+                ),
+                icon: Icon(
+                  collapsed
+                      ? LucideIcons.chevronRight
+                      : LucideIcons.chevronDown,
+                  size: 18,
+                ),
+                padding: EdgeInsets.zero,
+                width: 28,
+                height: 32,
               ),
-              icon: Icon(
-                collapsed ? Icons.chevron_right : Icons.expand_more,
-                size: 18,
-              ),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(width: 28, height: 32),
             )
           else
             const SizedBox(width: 28),
@@ -1550,6 +1611,12 @@ class _TimelineProjectMenuDialog extends ConsumerWidget {
           ..sort((a, b) => a.orderKey.compareTo(b.orderKey));
     return AlertDialog(
       title: Text(context.l10n.navProjects),
+      actions: [
+        ShadButton.ghost(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(context.l10n.commonClose),
+        ),
+      ],
       content: SizedBox(
         width: 420,
         child: ListView(
@@ -1565,39 +1632,58 @@ class _TimelineProjectMenuDialog extends ConsumerWidget {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(
-                      key: Key('timeline-project-menu-toggle-${project.id}'),
-                      tooltip:
+                    Tooltip(
+                      message:
                           visibleProjectIds.contains(project.id) ||
                               temporary.contains(project.id)
                           ? context.l10n.timelineHideProject
                           : context.l10n.timelineShowProject,
-                      onPressed:
-                          visibleProjectIds.contains(project.id) &&
-                              !temporary.contains(project.id)
-                          ? null
-                          : () => ref
-                                .read(
-                                  timelineTemporarilyVisibleProjectIdsProvider
-                                      .notifier,
-                                )
-                                .toggle(project.id),
-                      icon: Icon(
-                        visibleProjectIds.contains(project.id) ||
-                                temporary.contains(project.id)
-                            ? Icons.visibility
-                            : Icons.visibility_outlined,
+                      child: ShadIconButton.ghost(
+                        key: Key('timeline-project-menu-toggle-${project.id}'),
+                        onPressed:
+                            visibleProjectIds.contains(project.id) &&
+                                !temporary.contains(project.id)
+                            ? null
+                            : () => ref
+                                  .read(
+                                    timelineTemporarilyVisibleProjectIdsProvider
+                                        .notifier,
+                                  )
+                                  .toggle(project.id),
+                        icon: Icon(
+                          visibleProjectIds.contains(project.id) ||
+                                  temporary.contains(project.id)
+                              ? LucideIcons.eye
+                              : LucideIcons.eyeOff,
+                        ),
+                        enabled:
+                            !(visibleProjectIds.contains(project.id) &&
+                                !temporary.contains(project.id)),
+                        width: 40,
+                        height: 40,
                       ),
                     ),
-                    IconButton(
-                      key: Key('timeline-project-menu-favorite-${project.id}'),
-                      tooltip: project.isFavorite
+                    Tooltip(
+                      message: project.isFavorite
                           ? context.l10n.removeProjectFromFavorites
                           : context.l10n.addProjectToFavorites,
-                      onPressed: () =>
-                          unawaited(_toggleFavorite(context, ref, project)),
-                      icon: Icon(
-                        project.isFavorite ? Icons.star : Icons.star_border,
+                      child: Semantics(
+                        toggled: project.isFavorite,
+                        child: ShadIconButton.ghost(
+                          key: Key(
+                            'timeline-project-menu-favorite-${project.id}',
+                          ),
+                          onPressed: () =>
+                              unawaited(_toggleFavorite(context, ref, project)),
+                          icon: Icon(
+                            LucideIcons.star,
+                            color: project.isFavorite
+                                ? context.appColors.accent
+                                : context.appColors.mutedText,
+                          ),
+                          width: 40,
+                          height: 40,
+                        ),
                       ),
                     ),
                   ],
@@ -1606,12 +1692,6 @@ class _TimelineProjectMenuDialog extends ConsumerWidget {
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(context.l10n.commonClose),
-        ),
-      ],
     );
   }
 
@@ -1935,20 +2015,30 @@ class _InlineAddFieldState extends State<_InlineAddField> {
                   onSubmitted: (_) => _submit(),
                 ),
               ),
-              IconButton(
-                tooltip: context.l10n.commonCancel,
-                onPressed: _busy ? null : widget.onCancel,
-                icon: const Icon(Icons.close),
+              Tooltip(
+                message: context.l10n.commonCancel,
+                child: ShadIconButton.ghost(
+                  onPressed: _busy ? null : widget.onCancel,
+                  icon: const Icon(LucideIcons.x),
+                  enabled: !(_busy),
+                  width: 40,
+                  height: 40,
+                ),
               ),
-              IconButton.filledTonal(
-                tooltip: context.l10n.commonAdd,
-                onPressed: _busy ? null : _submit,
-                icon: _busy
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.add),
+              Tooltip(
+                message: context.l10n.commonAdd,
+                child: ShadIconButton.secondary(
+                  onPressed: _busy ? null : _submit,
+                  icon: _busy
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(LucideIcons.plus),
+                  enabled: !(_busy),
+                  width: 40,
+                  height: 40,
+                ),
               ),
             ],
           ),

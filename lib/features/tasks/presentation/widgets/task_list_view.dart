@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/app_l10n.dart';
@@ -282,7 +283,7 @@ class TaskListView extends ConsumerWidget {
       showActionFeedback(
         context,
         message: context.l10n.taskActionFailedCount(1),
-        icon: Icons.error_outline,
+        icon: LucideIcons.circleAlert,
         sound: ActionFeedbackSound.none,
         haptic: AppHapticCue.none,
       );

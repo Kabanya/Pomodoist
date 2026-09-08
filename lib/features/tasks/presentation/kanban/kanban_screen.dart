@@ -1,11 +1,26 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show
+        LucideIcons,
+        ShadBorder,
+        ShadButton,
+        ShadCheckbox,
+        ShadContextMenuItem,
+        ShadDialog,
+        ShadIconButton,
+        ShadInput,
+        ShadMenubar,
+        ShadMenubarItem,
+        ShadOption,
+        ShadSelect;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/semantics.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_l10n.dart';
+import '../../../../app/theme/app_motion.dart';
 import '../../../../app/formatters.dart';
 import '../../../../app/providers.dart';
 import '../../../../app/task_time.dart';
@@ -336,18 +351,18 @@ class _KanbanHardError extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off_outlined, size: 40),
+            const Icon(LucideIcons.cloudOff, size: 40),
             const SizedBox(height: 12),
             Text(
               context.l10n.kanbanCouldNotLoad(error),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
-            FilledButton.icon(
+            ShadButton(
               key: const Key('kanban-retry'),
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: Text(context.l10n.commonRetry),
+              leading: const Icon(LucideIcons.refreshCw),
+              child: Text(context.l10n.commonRetry),
             ),
           ],
         ),
@@ -412,28 +427,36 @@ class _KanbanHeader extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         _ProjectSelectorButton(board: board, onPressed: onSelectProjects),
-        IconButton.outlined(
-          key: const Key('kanban-search-toggle'),
-          tooltip: context.l10n.kanbanSearchTooltip,
-          onPressed: onToggleSearch,
-          icon: Icon(searchVisible ? Icons.search_off : Icons.search),
+        Tooltip(
+          message: context.l10n.kanbanSearchTooltip,
+          child: ShadIconButton.outline(
+            key: const Key('kanban-search-toggle'),
+            onPressed: onToggleSearch,
+            icon: Icon(
+              searchVisible ? LucideIcons.searchX : LucideIcons.search,
+            ),
+            width: 40,
+            height: 40,
+          ),
         ),
-        IconButton.outlined(
-          key: const Key('kanban-filter-toggle'),
-          tooltip: hideDone
+        Tooltip(
+          message: hideDone
               ? context.l10n.kanbanShowDone
               : context.l10n.kanbanHideDone,
-          onPressed: onToggleDone,
-          icon: Icon(
-            hideDone ? Icons.filter_alt_off : Icons.filter_alt_outlined,
+          child: ShadIconButton.outline(
+            key: const Key('kanban-filter-toggle'),
+            onPressed: onToggleDone,
+            icon: Icon(hideDone ? LucideIcons.filterX : LucideIcons.filter),
+            width: 40,
+            height: 40,
           ),
         ),
         if (wide || showMobileTitle)
-          FilledButton.icon(
+          ShadButton(
             key: const Key('kanban-global-add'),
             onPressed: onAdd,
-            icon: const Icon(Icons.add),
-            label: Text(context.l10n.addTask),
+            leading: const Icon(LucideIcons.plus),
+            child: Text(context.l10n.addTask),
           ),
       ],
     );
@@ -464,15 +487,13 @@ class _KanbanHeader extends StatelessWidget {
           ],
           if (searchVisible) ...[
             const SizedBox(height: 10),
-            TextField(
+            ShadInput(
               key: const Key('kanban-search-field'),
               autofocus: true,
               controller: searchController,
               onChanged: onQueryChanged,
-              decoration: InputDecoration(
-                hintText: context.l10n.kanbanSearchHint,
-                prefixIcon: const Icon(Icons.search),
-              ),
+              placeholder: Text(context.l10n.kanbanSearchHint),
+              leading: const Icon(LucideIcons.search),
             ),
           ],
         ],
@@ -494,10 +515,10 @@ class _ProjectSelectorButton extends StatelessWidget {
           (project) => board.settings.selectedProjectIds.contains(project.id),
         )
         .toList(growable: false);
-    return OutlinedButton(
+    return ShadButton.outline(
       key: const Key('kanban-project-selector'),
       onPressed: onPressed,
-      style: OutlinedButton.styleFrom(minimumSize: const Size(180, 48)),
+      height: 48,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -511,7 +532,7 @@ class _ProjectSelectorButton extends StatelessWidget {
           ],
           if (selected.length > 2) Text('+${selected.length - 2}'),
           const SizedBox(width: 4),
-          const Icon(Icons.expand_more),
+          const Icon(LucideIcons.chevronDown),
         ],
       ),
     );
@@ -558,7 +579,9 @@ class _DesktopKanbanBoard extends StatelessWidget {
                 onMove: onMove,
                 onOpen: onOpen,
                 onStartFocus: onStartFocus,
-                onAdd: statuses[index].isDone ? null : () => onAdd(statuses[index]),
+                onAdd: statuses[index].isDone
+                    ? null
+                    : () => onAdd(statuses[index]),
               ),
             ),
           ],
@@ -603,26 +626,17 @@ class _KanbanStatusColumn extends StatelessWidget {
       decoration: BoxDecoration(
         color: background,
         border: Border.all(
-          color: focused
-              ? colors.accent.withValues(alpha: 0.2)
-              : colors.border,
+          color: focused ? colors.accent.withValues(alpha: 0.2) : colors.border,
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
-          _StatusHeader(
-            status: status,
-            count: cards.length,
-            focused: focused,
-          ),
+          _StatusHeader(status: status, count: cards.length, focused: focused),
           Expanded(
             child: ListView.builder(
               key: Key('kanban-column-scroll-${status.id}'),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 4,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               itemCount: cards.length + 1,
               itemBuilder: (context, index) {
                 if (index == cards.length) {
@@ -669,15 +683,12 @@ class _KanbanStatusColumn extends StatelessWidget {
           if (onAdd != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-              child: TextButton.icon(
+              child: ShadButton.ghost(
                 key: Key('kanban-add-${status.id}'),
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 48),
-                  alignment: AlignmentDirectional.centerStart,
-                ),
                 onPressed: onAdd,
-                icon: const Icon(Icons.add),
-                label: Text(context.l10n.addTask),
+                height: 48,
+                leading: const Icon(LucideIcons.plus),
+                child: Text(context.l10n.addTask),
               ),
             ),
         ],
@@ -794,7 +805,7 @@ class _MobileStatusSection extends StatelessWidget {
                 ? colors.accent.withValues(alpha: 0.25)
                 : colors.border,
           ),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           key: Key(
@@ -803,7 +814,7 @@ class _MobileStatusSection extends StatelessWidget {
           children: [
             InkWell(
               key: Key('kanban-section-header-${status.id}'),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
               onTap: onExpanded,
               child: _StatusHeader(
                 status: status,
@@ -835,15 +846,12 @@ class _MobileStatusSection extends StatelessWidget {
               if (onAdd != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
-                  child: TextButton.icon(
+                  child: ShadButton.ghost(
                     key: Key('kanban-add-${status.id}'),
-                    style: TextButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 48),
-                      alignment: AlignmentDirectional.centerStart,
-                    ),
                     onPressed: onAdd,
-                    icon: const Icon(Icons.add),
-                    label: Text(context.l10n.addTask),
+                    height: 48,
+                    leading: const Icon(LucideIcons.plus),
+                    child: Text(context.l10n.addTask),
                   ),
                 ),
             ],
@@ -907,7 +915,9 @@ class _StatusHeader extends StatelessWidget {
               ),
               if (expanded != null) ...[
                 const SizedBox(width: 8),
-                Icon(expanded! ? Icons.expand_less : Icons.expand_more),
+                Icon(
+                  expanded! ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                ),
               ],
             ],
           ),
@@ -933,14 +943,13 @@ class _KanbanDropTarget extends StatelessWidget {
       onWillAcceptWithDetails: (_) => true,
       onAcceptWithDetails: (details) => unawaited(onAccept(details.data)),
       builder: (context, candidates, rejected) {
-        final duration = MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 120);
+        final duration = AppMotion.duration(context, AppMotion.hover);
         return AnimatedPadding(
           duration: duration,
           padding: candidates.isEmpty
               ? EdgeInsets.zero
               : const EdgeInsets.symmetric(vertical: 6),
+          curve: AppMotion.curve,
           child: AnimatedContainer(
             duration: duration,
             decoration: candidates.isEmpty
@@ -949,6 +958,7 @@ class _KanbanDropTarget extends StatelessWidget {
                     border: Border.all(color: context.appColors.accent),
                     borderRadius: BorderRadius.circular(12),
                   ),
+            curve: AppMotion.curve,
             child: child,
           ),
         );
@@ -1080,7 +1090,7 @@ class _KanbanTaskCard extends ConsumerWidget {
                           child: SizedBox.square(
                             key: Key('kanban-drag-handle-${task.id}'),
                             dimension: 48,
-                            child: const Icon(Icons.drag_indicator),
+                            child: const Icon(LucideIcons.gripVertical),
                           ),
                         ),
                       ),
@@ -1118,7 +1128,7 @@ class _KanbanTaskCard extends ConsumerWidget {
                     children: [
                       if (taskTimeLabel != null)
                         _MetaLabel(
-                          icon: Icons.calendar_today_outlined,
+                          icon: LucideIcons.calendar,
                           text: taskTimeLabel,
                           color: taskTimeColor,
                           semanticLabel: taskTimeStatus,
@@ -1126,7 +1136,7 @@ class _KanbanTaskCard extends ConsumerWidget {
                         ),
                       if (card.totalSubtasks > 0)
                         _MetaLabel(
-                          icon: Icons.account_tree_outlined,
+                          icon: LucideIcons.gitBranch,
                           text:
                               '${card.completedSubtasks}/${card.totalSubtasks}',
                         ),
@@ -1208,15 +1218,6 @@ class _KanbanTaskCard extends ConsumerWidget {
   }
 }
 
-enum _CardActionKind { open, move, completeOrRestore, focus }
-
-class _CardAction {
-  const _CardAction(this.kind, [this.statusId]);
-
-  final _CardActionKind kind;
-  final String? statusId;
-}
-
 class _CardMenu extends StatelessWidget {
   const _CardMenu({
     required this.card,
@@ -1241,73 +1242,65 @@ class _CardMenu extends StatelessWidget {
       (candidate) => !candidate.isDone && !candidate.isBacklog,
       orElse: () => statuses.firstWhere((candidate) => candidate.isBacklog),
     );
-    return PopupMenuButton<_CardAction>(
-      key: Key('kanban-card-menu-${card.task.id}'),
-      tooltip: context.l10n.kanbanTaskActions,
-      constraints: const BoxConstraints(minWidth: 220),
-      onSelected: (action) {
-        switch (action.kind) {
-          case _CardActionKind.open:
-            onOpen(card.task.id);
-          case _CardActionKind.move:
-            unawaited(onMove(card.task.id, action.statusId!));
-          case _CardActionKind.completeOrRestore:
-            unawaited(
-              onMove(
-                card.task.id,
-                card.task.isCompleted ? restoreTarget.id : done.id,
+    return Tooltip(
+      message: context.l10n.kanbanTaskActions,
+      child: ShadMenubar(
+        key: Key('kanban-card-menu-${card.task.id}'),
+        padding: EdgeInsets.zero,
+        border: ShadBorder.none,
+        backgroundColor: Colors.transparent,
+        items: [
+          ShadMenubarItem(
+            constraints: const BoxConstraints(minWidth: 220),
+            items: [
+              ShadContextMenuItem(
+                leading: const Icon(LucideIcons.externalLink),
+                onPressed: () => onOpen(card.task.id),
+                child: Text(context.l10n.commonOpen),
               ),
-            );
-          case _CardActionKind.focus:
-            onStartFocus(card);
-        }
-      },
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: const _CardAction(_CardActionKind.open),
-          child: ListTile(
-            leading: const Icon(Icons.open_in_new),
-            title: Text(context.l10n.commonOpen),
-          ),
-        ),
-        for (final candidate in statuses)
-          if (candidate.id != status.id)
-            PopupMenuItem(
-              value: _CardAction(_CardActionKind.move, candidate.id),
-              child: ListTile(
-                leading: const Icon(Icons.arrow_forward),
-                title: Text(
-                  context.l10n.kanbanMoveTo(
-                    _statusDisplayName(context, candidate),
+              for (final candidate in statuses)
+                if (candidate.id != status.id)
+                  ShadContextMenuItem(
+                    leading: const Icon(LucideIcons.arrowRight),
+                    onPressed: () =>
+                        unawaited(onMove(card.task.id, candidate.id)),
+                    child: Text(
+                      context.l10n.kanbanMoveTo(
+                        _statusDisplayName(context, candidate),
+                      ),
+                    ),
+                  ),
+              ShadContextMenuItem(
+                leading: Icon(
+                  card.task.isCompleted
+                      ? LucideIcons.rotateCcw
+                      : LucideIcons.circleCheck,
+                ),
+                onPressed: () => unawaited(
+                  onMove(
+                    card.task.id,
+                    card.task.isCompleted ? restoreTarget.id : done.id,
                   ),
                 ),
+                child: Text(
+                  card.task.isCompleted
+                      ? context.l10n.markOpen
+                      : context.l10n.markComplete,
+                ),
               ),
-            ),
-        PopupMenuItem(
-          value: const _CardAction(_CardActionKind.completeOrRestore),
-          child: ListTile(
-            leading: Icon(
-              card.task.isCompleted
-                  ? Icons.restore
-                  : Icons.check_circle_outline,
-            ),
-            title: Text(
-              card.task.isCompleted
-                  ? context.l10n.markOpen
-                  : context.l10n.markComplete,
-            ),
+              ShadContextMenuItem(
+                enabled: !card.task.isCompleted,
+                leading: const Icon(LucideIcons.timer),
+                onPressed: () => onStartFocus(card),
+                child: Text(context.l10n.startFocus),
+              ),
+            ],
+            height: 36,
+            buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
+            child: const Icon(LucideIcons.ellipsis),
           ),
-        ),
-        PopupMenuItem(
-          enabled: !card.task.isCompleted,
-          value: const _CardAction(_CardActionKind.focus),
-          child: ListTile(
-            leading: const Icon(Icons.timer_outlined),
-            title: Text(context.l10n.startFocus),
-          ),
-        ),
-      ],
-      icon: const Icon(Icons.more_horiz),
+        ],
+      ),
     );
   }
 }
@@ -1347,7 +1340,7 @@ class _PriorityFlag extends StatelessWidget {
       message: context.l10n.kanbanPriority(priority),
       child: SizedBox.square(
         dimension: 44,
-        child: Icon(Icons.flag_outlined, color: color, size: 20),
+        child: Icon(LucideIcons.flag, color: color, size: 20),
       ),
     );
   }
@@ -1442,7 +1435,7 @@ class _ActiveFocusProgress extends ConsumerWidget {
           Row(
             children: [
               Icon(
-                Icons.timer_outlined,
+                LucideIcons.timer,
                 size: 18,
                 color: context.appColors.accent,
               ),
@@ -1465,12 +1458,15 @@ class _ActiveFocusProgress extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 4),
-              IconButton.outlined(
-                key: const Key('kanban-stop-focus'),
-                tooltip: context.l10n.commonStop,
-                visualDensity: VisualDensity.compact,
-                onPressed: () => unawaited(_stop(ref)),
-                icon: const Icon(Icons.stop_rounded, size: 18),
+              Tooltip(
+                message: context.l10n.commonStop,
+                child: ShadIconButton.outline(
+                  key: const Key('kanban-stop-focus'),
+                  onPressed: () => unawaited(_stop(ref)),
+                  icon: const Icon(LucideIcons.square, size: 18),
+                  width: 32,
+                  height: 32,
+                ),
               ),
             ],
           ),
@@ -1509,42 +1505,49 @@ class _ProjectSelectionDialogState extends State<_ProjectSelectionDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return ShadDialog(
       title: Text(context.l10n.kanbanProjectsTitle),
-      content: SizedBox(
+      actions: [
+        ShadButton.ghost(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(context.l10n.commonCancel),
+        ),
+        ShadButton(
+          onPressed: () => Navigator.of(context).pop(_selected),
+          child: Text(context.l10n.commonSave),
+        ),
+      ],
+      child: SizedBox(
         width: 420,
         child: ListView(
           shrinkWrap: true,
           children: [
             for (final project in widget.board.availableProjects)
-              CheckboxListTile(
+              ShadCheckbox(
                 key: Key('kanban-project-option-${project.id}'),
                 value: _selected.contains(project.id),
-                secondary: _ProjectDot(project: project),
-                title: Text(project.name),
                 onChanged: (selected) {
                   setState(() {
-                    if (selected ?? false) {
+                    if (selected) {
                       _selected.add(project.id);
                     } else if (_selected.length > 1) {
                       _selected.remove(project.id);
                     }
                   });
                 },
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _ProjectDot(project: project),
+                    const SizedBox(width: 8),
+                    Flexible(child: Text(project.name)),
+                  ],
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
               ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(context.l10n.commonCancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(_selected),
-          child: Text(context.l10n.commonSave),
-        ),
-      ],
     );
   }
 }
@@ -1584,26 +1587,47 @@ class _KanbanAddDialogState extends ConsumerState<_KanbanAddDialog> {
           _statusDisplayName(context, widget.status),
         ),
       ),
+      actions: [
+        ShadButton.ghost(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(context.l10n.commonCancel),
+        ),
+      ],
       content: SizedBox(
         width: 420,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (projects.length > 1) ...[
-              DropdownButtonFormField<String>(
-                key: const Key('kanban-add-project'),
-                initialValue: _projectId,
-                decoration: InputDecoration(
-                  labelText: context.l10n.kanbanProjectField,
-                ),
-                items: [
-                  for (final project in projects)
-                    DropdownMenuItem(
-                      value: project.id,
-                      child: Text(project.name),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    context.l10n.kanbanProjectField,
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                  const SizedBox(height: 6),
+                  ShadSelect<String>(
+                    key: const Key('kanban-add-project'),
+                    initialValue: _projectId,
+                    onChanged: (value) => setState(() => _projectId = value),
+                    options: [
+                      for (final project in projects)
+                        ShadOption(
+                          value: project.id,
+                          child: Text(project.name),
+                        ),
+                    ],
+                    selectedOptionBuilder: (context, value) => Text(
+                      projects
+                          .firstWhere((project) => project.id == value)
+                          .name,
                     ),
+                    placeholder: Text(context.l10n.kanbanProjectField),
+                    minWidth: double.infinity,
+                  ),
                 ],
-                onChanged: (value) => setState(() => _projectId = value),
               ),
               const SizedBox(height: 12),
             ],
@@ -1627,12 +1651,6 @@ class _KanbanAddDialogState extends ConsumerState<_KanbanAddDialog> {
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(context.l10n.commonCancel),
-        ),
-      ],
     );
   }
 }

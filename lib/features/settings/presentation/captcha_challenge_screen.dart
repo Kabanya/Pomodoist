@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton;
 
 import '../../../app/app_l10n.dart';
 import '../../../app/captcha_handoff.dart';
@@ -65,7 +66,7 @@ class _CaptchaChallengeScreenState
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            FilledButton(
+            ShadButton(
               key: const Key('captcha-handoff-retry'),
               onPressed: () => _handoffController.retry(widget.onHandoff),
               child: Text(context.l10n.captchaReturnToApp),

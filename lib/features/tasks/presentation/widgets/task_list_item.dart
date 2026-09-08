@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../../app/theme/app_motion.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -93,6 +95,11 @@ Future<void> deleteTaskWithRecurringPrompt(
   final includeFollowing = schedule?.isRecurringOccurrence ?? false
       ? await showDialog<bool>(
           context: context,
+          animationStyle: AnimationStyle(
+            duration: AppMotion.duration(context, AppMotion.popup),
+            reverseDuration: AppMotion.duration(context, AppMotion.popup),
+            curve: AppMotion.curve,
+          ),
           builder: (context) {
             final l10n = context.l10n;
             return AlertDialog(
@@ -138,7 +145,7 @@ Future<void> deleteTaskWithRecurringPrompt(
       showActionFeedback(
         context,
         message: context.l10n.taskActionFailedCount(1),
-        icon: Icons.error_outline,
+        icon: LucideIcons.circleAlert,
         sound: ActionFeedbackSound.none,
         haptic: AppHapticCue.none,
       );
@@ -158,7 +165,7 @@ Future<void> deleteTaskWithRecurringPrompt(
   showActionFeedback(
     context,
     message: context.l10n.taskDeleted,
-    icon: Icons.delete_outline,
+    icon: LucideIcons.trash2,
     duration: const Duration(seconds: 7),
     showCloseIcon: true,
     compact: true,
@@ -173,7 +180,7 @@ Future<void> deleteTaskWithRecurringPrompt(
             showActionFeedback(
               context,
               message: context.l10n.taskActionFailedCount(batch.taskIds.length),
-              icon: Icons.error_outline,
+              icon: LucideIcons.circleAlert,
               sound: ActionFeedbackSound.none,
               haptic: AppHapticCue.none,
             );
@@ -193,7 +200,7 @@ Future<void> deleteTaskWithRecurringPrompt(
         showActionFeedback(
           context,
           message: context.l10n.taskActionFailedCount(batch.taskIds.length),
-          icon: Icons.error_outline,
+          icon: LucideIcons.circleAlert,
           sound: ActionFeedbackSound.none,
           haptic: AppHapticCue.none,
         );
@@ -267,7 +274,7 @@ class TaskListItem extends ConsumerWidget {
                 showActionFeedback(
                   context,
                   message: l10n.focusStarted,
-                  icon: Icons.play_circle_outline,
+                  icon: LucideIcons.circlePlay,
                   haptic: AppHapticCue.none,
                   action: SnackBarAction(
                     label: l10n.commonOpen,
@@ -282,7 +289,7 @@ class TaskListItem extends ConsumerWidget {
           disabledForegroundColor: colors.mutedText,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        icon: const Icon(Icons.play_arrow),
+        icon: const Icon(LucideIcons.play),
       );
     }
 
@@ -302,7 +309,7 @@ class TaskListItem extends ConsumerWidget {
             );
             unawaited(_showQuickActions(buttonContext, ref, position));
           },
-          icon: const Icon(Icons.more_horiz),
+          icon: const Icon(LucideIcons.ellipsis),
         ),
       );
     }
@@ -316,7 +323,7 @@ class TaskListItem extends ConsumerWidget {
             showActionFeedback(
               context,
               message: l10n.taskActionFailedCount(1),
-              icon: Icons.error_outline,
+              icon: LucideIcons.circleAlert,
               sound: ActionFeedbackSound.none,
               haptic: AppHapticCue.none,
             );
@@ -336,7 +343,7 @@ class TaskListItem extends ConsumerWidget {
         showActionFeedback(
           context,
           message: l10n.taskReopened,
-          icon: Icons.undo,
+          icon: LucideIcons.undo2,
         );
         return;
       }
@@ -370,6 +377,8 @@ class TaskListItem extends ConsumerWidget {
               : null,
           child: InkWell(
             key: ValueKey('task-list-item-row-${task.id}'),
+            borderRadius: BorderRadius.circular(10),
+            focusColor: colors.accentTint,
             hoverColor: colors.surfaceTint,
             onTap: () {
               if (selection?.active ?? false) {
@@ -482,7 +491,7 @@ class TaskListItem extends ConsumerWidget {
       return AnimatedPadding(
         duration: MediaQuery.disableAnimationsOf(context)
             ? Duration.zero
-            : const Duration(milliseconds: 160),
+            : AppMotion.state,
         curve: Curves.easeOutCubic,
         padding: EdgeInsets.symmetric(vertical: accepting ? 4 : 0),
         child: content,
@@ -573,48 +582,53 @@ class TaskListItem extends ConsumerWidget {
     final selection = TaskSelectionScope.maybeOf(context);
     final action = await showMenu<_TaskQuickAction>(
       context: context,
+      popUpAnimationStyle: AnimationStyle(
+        duration: AppMotion.duration(context, AppMotion.popup),
+        reverseDuration: AppMotion.duration(context, AppMotion.popup),
+        curve: AppMotion.curve,
+      ),
       position: _menuPosition(context, position),
       items: [
         if (selection != null) ...[
           PopupMenuItem(
             value: _TaskQuickAction.select,
             child: _TaskMenuRow(
-              icon: Icons.checklist_outlined,
+              icon: LucideIcons.listChecks,
               label: l10n.taskSelect,
             ),
           ),
           PopupMenuItem(
             value: _TaskQuickAction.schedule,
             child: _TaskMenuRow(
-              icon: Icons.event_outlined,
+              icon: LucideIcons.calendar,
               label: l10n.taskSchedule,
             ),
           ),
           PopupMenuItem(
             value: _TaskQuickAction.move,
             child: _TaskMenuRow(
-              icon: Icons.drive_file_move_outline,
+              icon: LucideIcons.folderInput,
               label: l10n.taskMove,
             ),
           ),
           PopupMenuItem(
             value: _TaskQuickAction.choosePriority,
             child: _TaskMenuRow(
-              icon: Icons.flag_outlined,
+              icon: LucideIcons.flag,
               label: l10n.taskPriority,
             ),
           ),
           PopupMenuItem(
             value: _TaskQuickAction.duplicate,
             child: _TaskMenuRow(
-              icon: Icons.copy_outlined,
+              icon: LucideIcons.copy,
               label: l10n.taskDuplicate,
             ),
           ),
           PopupMenuItem(
             value: _TaskQuickAction.deleteSelection,
             child: _TaskMenuRow(
-              icon: Icons.delete_outline,
+              icon: LucideIcons.trash2,
               label: l10n.commonDelete,
               color: colors.accent,
             ),
@@ -623,12 +637,12 @@ class TaskListItem extends ConsumerWidget {
           PopupMenuItem(
             value: _TaskQuickAction.startFocus,
             enabled: !task.isCompleted,
-            child: _TaskMenuRow(icon: Icons.play_arrow, label: l10n.startFocus),
+            child: _TaskMenuRow(icon: LucideIcons.play, label: l10n.startFocus),
           ),
           PopupMenuItem(
             value: _TaskQuickAction.toggleComplete,
             child: _TaskMenuRow(
-              icon: task.isCompleted ? Icons.undo : Icons.check,
+              icon: task.isCompleted ? LucideIcons.undo2 : LucideIcons.check,
               label: task.isCompleted ? l10n.markOpen : l10n.markComplete,
             ),
           ),
@@ -636,19 +650,22 @@ class TaskListItem extends ConsumerWidget {
             PopupMenuItem(
               value: _TaskQuickAction.makeParent,
               child: _TaskMenuRow(
-                icon: Icons.format_indent_decrease,
+                icon: LucideIcons.indentDecrease,
                 label: l10n.makeParentTask,
               ),
             ),
           const PopupMenuDivider(),
           PopupMenuItem(
             value: _TaskQuickAction.today,
-            child: _TaskMenuRow(icon: Icons.today_outlined, label: l10n.today),
+            child: _TaskMenuRow(
+              icon: LucideIcons.calendarCheck,
+              label: l10n.today,
+            ),
           ),
           PopupMenuItem(
             value: _TaskQuickAction.tomorrow,
             child: _TaskMenuRow(
-              icon: Icons.event_outlined,
+              icon: LucideIcons.calendar,
               label: l10n.tomorrow,
             ),
           ),
@@ -656,7 +673,7 @@ class TaskListItem extends ConsumerWidget {
             PopupMenuItem(
               value: _TaskQuickAction.clearDate,
               child: _TaskMenuRow(
-                icon: Icons.event_busy_outlined,
+                icon: LucideIcons.calendarX,
                 label: l10n.clearDate,
               ),
             ),
@@ -665,7 +682,7 @@ class TaskListItem extends ConsumerWidget {
             PopupMenuItem(
               value: _priorityAction(priority),
               child: _TaskMenuRow(
-                icon: Icons.flag_outlined,
+                icon: LucideIcons.flag,
                 label: l10n.priority(priority),
                 selected: task.priority == priority,
                 color: _priorityColor(
@@ -679,7 +696,7 @@ class TaskListItem extends ConsumerWidget {
           PopupMenuItem(
             value: _TaskQuickAction.delete,
             child: _TaskMenuRow(
-              icon: Icons.delete_outline,
+              icon: LucideIcons.trash2,
               label: l10n.commonDelete,
               color: colors.accent,
             ),
@@ -704,34 +721,22 @@ class TaskListItem extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
           for (final item in [
-            (
-              _TaskQuickAction.select,
-              Icons.checklist_outlined,
-              l10n.taskSelect,
-            ),
+            (_TaskQuickAction.select, LucideIcons.listChecks, l10n.taskSelect),
             (
               _TaskQuickAction.schedule,
-              Icons.event_outlined,
+              LucideIcons.calendar,
               l10n.taskSchedule,
             ),
-            (
-              _TaskQuickAction.move,
-              Icons.drive_file_move_outline,
-              l10n.taskMove,
-            ),
+            (_TaskQuickAction.move, LucideIcons.folderInput, l10n.taskMove),
             (
               _TaskQuickAction.choosePriority,
-              Icons.flag_outlined,
+              LucideIcons.flag,
               l10n.taskPriority,
             ),
-            (
-              _TaskQuickAction.duplicate,
-              Icons.copy_outlined,
-              l10n.taskDuplicate,
-            ),
+            (_TaskQuickAction.duplicate, LucideIcons.copy, l10n.taskDuplicate),
             (
               _TaskQuickAction.deleteSelection,
-              Icons.delete_outline,
+              LucideIcons.trash2,
               l10n.commonDelete,
             ),
           ])
@@ -922,7 +927,7 @@ class TaskListItem extends ConsumerWidget {
       showActionFeedback(
         context,
         message: context.l10n.taskActionFailedCount(1),
-        icon: Icons.error_outline,
+        icon: LucideIcons.circleAlert,
         sound: ActionFeedbackSound.none,
         haptic: AppHapticCue.none,
       );
@@ -1033,13 +1038,13 @@ class _AgendaTaskContent extends StatelessWidget {
     final metadata = <Widget>[
       if (progress != null && progress.total > 0)
         _FixedMetaText(
-          icon: Icons.account_tree_outlined,
+          icon: LucideIcons.gitBranch,
           label: progress.label,
           tooltip: '${context.l10n.subtasks} ${progress.label}',
         ),
       if (focusEstimate != null)
         _FixedMetaText(
-          icon: Icons.timer_outlined,
+          icon: LucideIcons.timer,
           label: '${task.completedFocusIntervals}/$focusEstimate',
         ),
       if (project != null) _AgendaProjectLabel(project: project!),
@@ -1176,7 +1181,7 @@ class _TaskContent extends StatelessWidget {
     final metaItems = <Widget>[
       if (progress != null && progress.total > 0)
         _FixedMetaText(
-          icon: Icons.account_tree_outlined,
+          icon: LucideIcons.gitBranch,
           label: progress.label,
           tooltip: '${context.l10n.subtasks} $progressLabel',
         ),
@@ -1200,7 +1205,7 @@ class _TaskContent extends StatelessWidget {
         ),
       if (focusEstimate != null)
         _FixedMetaText(
-          icon: Icons.timer_outlined,
+          icon: LucideIcons.timer,
           label: '${task.completedFocusIntervals}/$focusEstimate',
         ),
     ];
@@ -1322,7 +1327,7 @@ class _TaskTimeMetaText extends StatelessWidget {
       key: ValueKey('task-time-meta-$taskId'),
       mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
       children: [
-        Icon(Icons.event_outlined, size: 14, color: color),
+        Icon(LucideIcons.calendar, size: 14, color: color),
         const SizedBox(width: 4),
         if (expanded) Expanded(child: _label()) else Flexible(child: _label()),
       ],
@@ -1445,7 +1450,7 @@ class _TaskDragHandle extends StatelessWidget {
           key: ValueKey('task-drag-handle-${task.id}'),
           width: 28,
           height: 44,
-          child: const Icon(Icons.drag_indicator, size: 18),
+          child: const Icon(LucideIcons.gripVertical, size: 18),
         ),
       ),
     );
@@ -1490,7 +1495,7 @@ class _TaskMenuRow extends StatelessWidget {
         Expanded(
           child: Text(label, style: TextStyle(color: color)),
         ),
-        if (selected) const Icon(Icons.check, size: 18),
+        if (selected) const Icon(LucideIcons.check, size: 18),
       ],
     );
   }

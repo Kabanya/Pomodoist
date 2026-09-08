@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class ResizableDialog extends StatefulWidget {
   const ResizableDialog({
@@ -99,11 +100,15 @@ class _ResizableDialogState extends State<ResizableDialog> {
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onPanUpdate: _resizeBy,
-                  child: const SizedBox(
+                  child: SizedBox(
                     key: ResizableDialog.resizeHandleKey,
                     width: 32,
                     height: 32,
-                    child: CustomPaint(painter: _ResizeHandlePainter()),
+                    child: CustomPaint(
+                      painter: _ResizeHandlePainter(
+                        context.appColors.mutedText,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -164,12 +169,14 @@ class _ResizableDialogState extends State<ResizableDialog> {
 }
 
 class _ResizeHandlePainter extends CustomPainter {
-  const _ResizeHandlePainter();
+  const _ResizeHandlePainter(this.color);
+
+  final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.26)
+      ..color = color
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
 
@@ -183,5 +190,6 @@ class _ResizeHandlePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _ResizeHandlePainter oldDelegate) => false;
+  bool shouldRepaint(covariant _ResizeHandlePainter oldDelegate) =>
+      oldDelegate.color != color;
 }

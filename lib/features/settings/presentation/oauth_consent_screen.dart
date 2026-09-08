@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_account/app_account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../../app/account_providers.dart';
 import '../../../app/app_l10n.dart';
@@ -160,7 +161,7 @@ class _OAuthConsentScreenState extends ConsumerState<OAuthConsentScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            OutlinedButton(
+            ShadButton.outline(
               key: const Key('oauth-consent-retry'),
               onPressed: _retry,
               child: Text(l10n.commonRetry),
@@ -233,7 +234,7 @@ class _OAuthConsentScreenState extends ConsumerState<OAuthConsentScreen> {
                 _CapabilitySection(
                   key: const Key('oauth-consent-capabilities'),
                   title: l10n.oauthConsentCapabilitiesTitle,
-                  icon: Icons.check_circle_outline,
+                  icon: LucideIcons.circleCheck,
                   items: [
                     l10n.oauthConsentManagePlanning,
                     l10n.oauthConsentReadInsights,
@@ -243,7 +244,7 @@ class _OAuthConsentScreenState extends ConsumerState<OAuthConsentScreen> {
                 _CapabilitySection(
                   key: const Key('oauth-consent-unavailable'),
                   title: l10n.oauthConsentUnavailableTitle,
-                  icon: Icons.block_outlined,
+                  icon: LucideIcons.ban,
                   items: [l10n.oauthConsentUnavailable],
                 ),
                 if (unsupportedScopes) ...[
@@ -279,8 +280,10 @@ class _OAuthConsentScreenState extends ConsumerState<OAuthConsentScreen> {
                   ),
                 ],
                 const SizedBox(height: 20),
-                FilledButton(
+                ShadButton(
                   key: const Key('oauth-consent-approve'),
+                  enabled:
+                      !(unsupportedScopes || _action != _ConsentAction.idle),
                   onPressed: unsupportedScopes || _action != _ConsentAction.idle
                       ? null
                       : () => unawaited(_submit(true)),
@@ -302,8 +305,9 @@ class _OAuthConsentScreenState extends ConsumerState<OAuthConsentScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                OutlinedButton(
+                ShadButton.outline(
                   key: const Key('oauth-consent-deny'),
+                  enabled: _action == _ConsentAction.idle,
                   onPressed: _action == _ConsentAction.idle
                       ? () => unawaited(_submit(false))
                       : null,

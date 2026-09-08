@@ -3,6 +3,8 @@ import 'dart:math' as math;
 
 import 'package:app_voice/app_voice.dart';
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show LucideIcons, ShadButton, ShadIconButton, ShadSwitch;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -11,6 +13,7 @@ import '../../../../app/account_providers.dart';
 import '../../../../app/app_l10n.dart';
 import '../../../../app/providers.dart';
 import '../../../../app/theme/app_theme.dart';
+import '../../../../app/theme/app_motion.dart';
 import '../../../../core/db/app_database.dart';
 import '../../../billing/billing.dart';
 import '../../../focus/presentation/focus_view_mode.dart';
@@ -21,7 +24,7 @@ import 'quick_add_text_controller.dart';
 import 'voice_panel_motion.dart';
 import 'voice_panel_clearance.dart';
 
-const _voiceSheetBorderRadius = BorderRadius.all(Radius.circular(28));
+const _voiceSheetBorderRadius = BorderRadius.all(Radius.circular(12));
 const _voiceSmartModePreferenceKey = 'voice.smartMode';
 const _voiceMaxDuration = Duration(minutes: 5);
 const _quickAddIconTransitionDuration = Duration(milliseconds: 120);
@@ -77,6 +80,10 @@ Future<List<String>?> showVoiceQuickAddSheet(
   if (!billing.hasActiveEntitlement) {
     return showModalBottomSheet<List<String>>(
       context: context,
+      sheetAnimationStyle: AnimationStyle(
+        duration: AppMotion.duration(context, AppMotion.panel),
+        reverseDuration: AppMotion.duration(context, AppMotion.panel),
+      ),
       isScrollControlled: true,
       useSafeArea: true,
       useRootNavigator: true,
@@ -511,12 +518,12 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
               textInputAction: TextInputAction.done,
               decoration: InputDecoration(
                 hintText: l10n.quickAddHint,
-                prefixIcon: const Icon(Icons.add_task),
+                prefixIcon: const Icon(LucideIcons.listPlus),
                 suffixIcon: IconButton(
                   key: const Key('sidebar-quick-add-voice'),
                   tooltip: l10n.voiceQuickAdd,
                   onPressed: _busy ? null : _openVoiceSheet,
-                  icon: const Icon(Icons.mic_none),
+                  icon: const Icon(LucideIcons.mic),
                 ),
               ),
               onSubmitted: (_) => _submit(),
@@ -526,20 +533,25 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
               alignment: MainAxisAlignment.end,
               spacing: 8,
               children: [
-                TextButton(
+                ShadButton.ghost(
+                  enabled: !_busy,
                   onPressed: _busy ? null : _cancel,
                   child: Text(l10n.commonCancel),
                 ),
-                FilledButton.icon(
+                ShadButton(
                   key: const Key('sidebar-quick-add-submit'),
+                  enabled: !_busy,
                   onPressed: _busy ? null : _submit,
-                  icon: _busy
+                  leading: _busy
                       ? const SizedBox.square(
                           dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
-                      : const Icon(Icons.add),
-                  label: Text(l10n.commonAdd),
+                      : const Icon(LucideIcons.plus),
+                  child: Text(l10n.commonAdd),
                 ),
               ],
             ),
@@ -617,6 +629,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
   Timer? _successTimer;
   bool _busy = false;
   bool _showSuccess = false;
+  bool _hasFocus = false;
 
   @override
   void dispose() {
@@ -629,65 +642,84 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.appColors;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border.all(color: colors.border),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(4, 4, 6, 4),
-        child: Row(
-          children: [
-            Expanded(
-              child: QuickAddInput(
-                textFieldKey: widget.inputKey,
-                controller: _controller,
-                textInputAction: TextInputAction.done,
-                decoration: InputDecoration(
-                  hintText: l10n.quickAddHint,
-                  prefixIcon: const Icon(Icons.add_task),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  filled: false,
+    return Focus(
+      canRequestFocus: false,
+      onFocusChange: (value) => setState(() => _hasFocus = value),
+      child: AnimatedContainer(
+        duration: AppMotion.duration(context, AppMotion.hover),
+        curve: AppMotion.curve,
+        decoration: BoxDecoration(
+          color: colors.surface,
+          border: Border.all(color: _hasFocus ? colors.accent : colors.border),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(4, 4, 6, 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: QuickAddInput(
+                  textFieldKey: widget.inputKey,
+                  controller: _controller,
+                  textInputAction: TextInputAction.done,
+                  decoration: InputDecoration(
+                    hintText: l10n.quickAddHint,
+                    prefixIcon: const Icon(LucideIcons.listPlus),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    filled: false,
+                  ),
+                  onSubmitted: (_) => _submit(),
                 ),
-                onSubmitted: (_) => _submit(),
               ),
-            ),
-            const SizedBox(width: 4),
-            IconButton.filledTonal(
-              key: widget.voiceButtonKey,
-              tooltip: l10n.voiceQuickAdd,
-              onPressed: _busy ? null : _openVoiceSheet,
-              icon: const Icon(Icons.mic_none),
-            ),
-            const SizedBox(width: 4),
-            IconButton.filledTonal(
-              key: widget.submitButtonKey,
-              tooltip: l10n.commonAdd,
-              onPressed: _busy ? null : _submit,
-              icon: AnimatedSwitcher(
-                duration: MediaQuery.disableAnimationsOf(context)
-                    ? Duration.zero
-                    : _quickAddIconTransitionDuration,
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                child: _busy
-                    ? const SizedBox.square(
-                        key: Key('quick-add-submit-progress'),
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : _showSuccess
-                    ? const Icon(
-                        Icons.check,
-                        key: Key('quick-add-submit-success'),
-                      )
-                    : const Icon(Icons.add, key: Key('quick-add-submit-idle')),
+              const SizedBox(width: 4),
+              Tooltip(
+                message: l10n.voiceQuickAdd,
+                child: ShadIconButton.ghost(
+                  key: widget.voiceButtonKey,
+                  width: 40,
+                  height: 40,
+                  enabled: !_busy,
+                  onPressed: _busy ? null : _openVoiceSheet,
+                  icon: const Icon(LucideIcons.mic),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(width: 4),
+              Tooltip(
+                message: l10n.commonAdd,
+                child: ShadIconButton.secondary(
+                  key: widget.submitButtonKey,
+                  width: 40,
+                  height: 40,
+                  enabled: !_busy,
+                  onPressed: _busy ? null : _submit,
+                  icon: AnimatedSwitcher(
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : _quickAddIconTransitionDuration,
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    child: _busy
+                        ? const SizedBox.square(
+                            key: Key('quick-add-submit-progress'),
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : _showSuccess
+                        ? const Icon(
+                            LucideIcons.check,
+                            key: Key('quick-add-submit-success'),
+                          )
+                        : const Icon(
+                            LucideIcons.plus,
+                            key: Key('quick-add-submit-idle'),
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1064,12 +1096,12 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                   else
                     Icon(
                       failed
-                          ? Icons.error_outline
+                          ? LucideIcons.circleAlert
                           : ready
-                          ? Icons.check
+                          ? LucideIcons.check
                           : processing
-                          ? Icons.graphic_eq
-                          : Icons.mic_none,
+                          ? LucideIcons.audioLines
+                          : LucideIcons.mic,
                       color: color,
                       size: 22,
                     ),
@@ -1084,7 +1116,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
           onPressed: _captureActive && _isCapturing && !_stopping
               ? _stop
               : null,
-          icon: const Icon(Icons.stop_rounded),
+          icon: const Icon(LucideIcons.square),
           color: colors.primary,
           constraints: const BoxConstraints.tightFor(width: 48, height: 48),
         ),
@@ -1092,7 +1124,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
           key: const Key('voice-expand'),
           tooltip: context.l10n.voiceExpand,
           onPressed: () => _setExpanded(true),
-          icon: const Icon(Icons.keyboard_arrow_up),
+          icon: const Icon(LucideIcons.chevronUp),
           constraints: const BoxConstraints.tightFor(width: 48, height: 48),
         ),
       ),
@@ -1156,10 +1188,10 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                         ? _amplitudeLevel
                         : null,
                     icon: _analyzing
-                        ? Icons.auto_awesome
+                        ? LucideIcons.sparkles
                         : _isTranscribing
-                        ? Icons.graphic_eq
-                        : Icons.mic_none,
+                        ? LucideIcons.audioLines
+                        : LucideIcons.mic,
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -1182,12 +1214,12 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                     key: const Key('voice-collapse'),
                     tooltip: l10n.voiceCollapse,
                     onPressed: () => _setExpanded(false),
-                    icon: const Icon(Icons.keyboard_arrow_down),
+                    icon: const Icon(LucideIcons.chevronDown),
                   ),
                   IconButton(
                     tooltip: l10n.commonClose,
                     onPressed: _saving ? null : _closeVoice,
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(LucideIcons.x),
                   ),
                 ],
               ),
@@ -1199,9 +1231,10 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                     style: Theme.of(context).textTheme.labelLarge,
                   ),
                   const SizedBox(width: 8),
-                  Switch(
+                  ShadSwitch(
                     key: const Key('voice-smart-mode'),
                     value: _smartMode,
+                    enabled: !_motionActive,
                     onChanged: _motionActive ? null : _setSmartMode,
                   ),
                   const Spacer(),
@@ -1210,6 +1243,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                       _recordingTimeLabel,
                       key: const Key('voice-recording-countdown'),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontFamily: AppTheme.monoTextStyle.fontFamily,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
@@ -1220,7 +1254,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
               const SizedBox(height: 16),
               Flexible(
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 260),
+                  duration: AppMotion.duration(context, AppMotion.state),
                   switchInCurve: Curves.easeOutCubic,
                   switchOutCurve: Curves.easeInCubic,
                   child: _body(colorScheme),
@@ -1248,7 +1282,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                 children: [
                   FilledButton.icon(
                     onPressed: _canStart ? _start : null,
-                    icon: const Icon(Icons.mic_none),
+                    icon: const Icon(LucideIcons.mic),
                     label: Text(
                       _transcript.isEmpty &&
                               _draftControllers.isEmpty &&
@@ -1261,7 +1295,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                     onPressed: _captureActive && _isCapturing && !_stopping
                         ? _stop
                         : null,
-                    icon: const Icon(Icons.stop),
+                    icon: const Icon(LucideIcons.square),
                     label: Text(l10n.voiceStop),
                   ),
                   if (_voiceController.canRetryTranscription &&
@@ -1270,7 +1304,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                     FilledButton.icon(
                       key: const Key('voice-retry-transcription'),
                       onPressed: _canStart ? () => _start(retry: true) : null,
-                      icon: const Icon(Icons.refresh),
+                      icon: const Icon(LucideIcons.rotateCw),
                       label: Text(l10n.voiceRetryTranscription),
                     ),
                   ],
@@ -1278,7 +1312,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                     OutlinedButton.icon(
                       key: const Key('voice-recover-access'),
                       onPressed: _canStart ? _recoverAccess : null,
-                      icon: const Icon(Icons.settings_outlined),
+                      icon: const Icon(LucideIcons.settings2),
                       label: Text(_recoveryLabel),
                     ),
                   if (_error != null &&
@@ -1288,7 +1322,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                       !_analyzing)
                     TextButton.icon(
                       onPressed: () => _decomposeTranscript(_transcript),
-                      icon: const Icon(Icons.refresh),
+                      icon: const Icon(LucideIcons.rotateCw),
                       label: Text(l10n.voiceRetryAnalysis),
                     ),
                   FilledButton.icon(
@@ -1301,7 +1335,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                             _analyzing
                         ? null
                         : _save,
-                    icon: const Icon(Icons.check),
+                    icon: const Icon(LucideIcons.check),
                     label: Text(l10n.voiceAddCount(acceptedTaskCount)),
                   ),
                 ],
@@ -1794,7 +1828,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
       await _analysisProgressController
           .animateTo(
             1,
-            duration: const Duration(milliseconds: 180),
+            duration: AppMotion.duration(context, AppMotion.state),
             curve: Curves.easeOutCubic,
           )
           .orCancel;
@@ -1883,7 +1917,7 @@ class _VoicePulse extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               Transform.scale(
-                scale: 1 + value * .28,
+                scale: 1 + value * .04,
                 child: Opacity(
                   opacity: active ? .18 * (1 - value) : 0,
                   child: DecoratedBox(
@@ -1896,7 +1930,7 @@ class _VoicePulse extends StatelessWidget {
                 ),
               ),
               AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
+                duration: AppMotion.duration(context, AppMotion.state),
                 curve: Curves.easeOutCubic,
                 width: active ? 58 : 52,
                 height: active ? 58 : 52,
@@ -1910,15 +1944,6 @@ class _VoicePulse extends StatelessWidget {
                         ? colorScheme.primary.withValues(alpha: .28)
                         : colorScheme.outlineVariant,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.primary.withValues(
-                        alpha: active ? .18 : .08,
-                      ),
-                      blurRadius: active ? 24 : 12,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
                 ),
                 child: listeningLevel == null
                     ? Icon(
@@ -1991,9 +2016,9 @@ class _VoiceProcessingSteps extends StatelessWidget {
       l10n.voiceStepReview,
     ];
     const icons = [
-      Icons.mic_none,
-      Icons.auto_awesome,
-      Icons.checklist_outlined,
+      LucideIcons.mic,
+      LucideIcons.sparkles,
+      LucideIcons.listChecks,
     ];
 
     return Row(
@@ -2033,7 +2058,7 @@ class _VoiceProcessingStep extends StatelessWidget {
         ? colorScheme.primary
         : colorScheme.onSurfaceVariant;
     return AnimatedDefaultTextStyle(
-      duration: const Duration(milliseconds: 180),
+      duration: AppMotion.duration(context, AppMotion.state),
       curve: Curves.easeOutCubic,
       style: Theme.of(context).textTheme.labelSmall!.copyWith(
         color: foreground,
@@ -2043,7 +2068,7 @@ class _VoiceProcessingStep extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
+            duration: AppMotion.duration(context, AppMotion.state),
             curve: Curves.easeOutCubic,
             width: 34,
             height: 34,
@@ -2151,7 +2176,7 @@ class _AnalysisPanel extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(
-                    Icons.auto_awesome,
+                    LucideIcons.sparkles,
                     size: 18,
                     color: colorScheme.onPrimaryContainer,
                   ),
@@ -2169,7 +2194,7 @@ class _AnalysisPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _KineticTranscript(text: transcript, activity: activity),
+            _TranscriptPreview(text: transcript),
             const SizedBox(height: 16),
             AnimatedBuilder(
               animation: progress,
@@ -2193,107 +2218,26 @@ class _AnalysisPanel extends StatelessWidget {
   }
 }
 
-class _KineticTranscript extends StatelessWidget {
-  const _KineticTranscript({required this.text, required this.activity});
+class _TranscriptPreview extends StatelessWidget {
+  const _TranscriptPreview({required this.text});
 
   final String text;
-  final Animation<double> activity;
 
   @override
   Widget build(BuildContext context) {
-    final words = RegExp(
-      r'\S+',
-    ).allMatches(text).map((match) => match.group(0)!).toList();
-    if (words.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final duration = Duration(
-      milliseconds: math.min(1400, 220 + (words.length - 1) * 70),
-    );
-    final colorScheme = Theme.of(context).colorScheme;
-    final activityAnimation = reduceMotion
-        ? const AlwaysStoppedAnimation<double>(0)
-        : activity;
-
-    return Semantics(
+    final content = Text(
+      text,
       key: const Key('voice-transcript-visualization'),
-      label: text,
-      child: ExcludeSemantics(
-        child: AnimatedBuilder(
-          animation: activityAnimation,
-          builder: (context, _) {
-            return TweenAnimationBuilder<double>(
-              tween: Tween(begin: reduceMotion ? 1 : 0, end: 1),
-              duration: reduceMotion ? Duration.zero : duration,
-              builder: (context, progress, _) {
-                return Wrap(
-                  spacing: 5,
-                  runSpacing: 6,
-                  children: [
-                    for (var index = 0; index < words.length; index += 1)
-                      _word(
-                        context,
-                        colorScheme,
-                        words[index],
-                        index,
-                        words.length,
-                        duration,
-                        progress,
-                        activityAnimation.value,
-                        reduceMotion,
-                      ),
-                  ],
-                );
-              },
-            );
-          },
-        ),
-      ),
+      style: Theme.of(context).textTheme.bodyLarge,
     );
-  }
-
-  Widget _word(
-    BuildContext context,
-    ColorScheme colorScheme,
-    String word,
-    int index,
-    int wordCount,
-    Duration duration,
-    double progress,
-    double activity,
-    bool reduceMotion,
-  ) {
-    final span = math.min(1.0, 220 / duration.inMilliseconds);
-    final start = wordCount == 1 ? 0.0 : index / (wordCount - 1) * (1 - span);
-    final local = ((progress - start) / span).clamp(0.0, 1.0);
-    final value = Curves.easeOutCubic.transform(local);
-    final position = wordCount == 1 ? .5 : index / (wordCount - 1);
-    final emphasis = reduceMotion
-        ? 0.0
-        : (1 - (position - activity).abs() * 3).clamp(0.0, 1.0);
-    final baseColor = Color.lerp(
-      colorScheme.primary,
-      colorScheme.onSurface,
-      value,
-    );
-    return Opacity(
-      key: Key('voice-transcript-word-$index'),
-      opacity: value,
-      child: Transform.translate(
-        offset: Offset(0, 8 * (1 - value)),
-        child: Text(
-          word,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Color.lerp(baseColor, colorScheme.primary, emphasis * .55),
-            fontWeight: FontWeight.lerp(
-              FontWeight.lerp(FontWeight.w700, FontWeight.w500, value),
-              FontWeight.w700,
-              emphasis * .45,
-            ),
-          ),
-        ),
-      ),
+    if (MediaQuery.disableAnimationsOf(context)) return content;
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(text),
+      tween: Tween(begin: 0, end: 1),
+      duration: AppMotion.state,
+      curve: AppMotion.curve,
+      builder: (context, value, child) => Opacity(opacity: value, child: child),
+      child: content,
     );
   }
 }
@@ -2369,13 +2313,13 @@ class _TaskDraftList extends StatelessWidget {
         return TweenAnimationBuilder<double>(
           key: ValueKey(controllers[index]),
           tween: Tween(begin: 0, end: 1),
-          duration: Duration(milliseconds: 180 + index * 45),
+          duration: AppMotion.duration(context, AppMotion.task),
           curve: Curves.easeOutCubic,
           builder: (context, value, child) {
             return Opacity(
               opacity: value,
               child: Transform.translate(
-                offset: Offset(0, 10 * (1 - value)),
+                offset: Offset(0, 6 * (1 - value)),
                 child: child,
               ),
             );
@@ -2423,7 +2367,7 @@ class _TaskDraftItem extends StatelessWidget {
               IconButton.filledTonal(
                 tooltip: context.l10n.voiceRemoveTask,
                 onPressed: onRemove,
-                icon: const Icon(Icons.delete_outline),
+                icon: const Icon(LucideIcons.trash2),
               ),
             ],
           ),
@@ -2460,7 +2404,9 @@ class _TaskDraftItem extends StatelessWidget {
           decoration: InputDecoration(
             labelText: context.l10n.voiceTaskLabel(index + 1),
             prefixIcon: Icon(
-              depth == 0 ? Icons.task_alt : Icons.subdirectory_arrow_right,
+              depth == 0
+                  ? LucideIcons.circleCheck
+                  : LucideIcons.cornerDownRight,
             ),
           ),
         ),
@@ -2473,7 +2419,7 @@ class _TaskDraftItem extends StatelessWidget {
           decoration: InputDecoration(
             labelText: context.l10n.taskComment,
             hintText: context.l10n.taskCommentHint,
-            prefixIcon: const Icon(Icons.notes_outlined),
+            prefixIcon: const Icon(LucideIcons.alignLeft),
           ),
         ),
       ],

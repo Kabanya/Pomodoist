@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../../app/app_l10n.dart';
 
@@ -60,17 +61,18 @@ class _AccountSignOutButtonState extends State<AccountSignOutButton> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        TextButton.icon(
+        ShadButton.ghost(
+          enabled: !_submitting,
           onPressed: _submitting ? null : _signOut,
-          icon: _submitting
+          leading: _submitting
               ? _takingLonger
-                    ? const Icon(Icons.hourglass_top, size: 18)
+                    ? const Icon(LucideIcons.hourglass, size: 18)
                     : const SizedBox.square(
                         dimension: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-              : const Icon(Icons.logout),
-          label: Text(widget.label),
+              : const Icon(LucideIcons.logOut),
+          child: Text(widget.label),
         ),
         if (_takingLonger)
           Semantics(

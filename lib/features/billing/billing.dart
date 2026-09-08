@@ -11,6 +11,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:in_app_purchase_storekit/store_kit_2_wrappers.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../app/app_l10n.dart';
 import '../../app/legal_urls.dart';
@@ -1425,7 +1426,7 @@ class BillingPaywall extends ConsumerWidget {
                 key: const Key('billing-paywall-close'),
                 tooltip: l10n.commonClose,
                 onPressed: onClose,
-                icon: const Icon(Icons.close),
+                icon: const Icon(LucideIcons.x),
               ),
             ],
           ],
@@ -1433,12 +1434,12 @@ class BillingPaywall extends ConsumerWidget {
         const SizedBox(height: 16),
         if (state.hasActiveEntitlement) ...[
           Card(
-            color: colors.accentTint,
+            color: colors.surfaceTint,
             child: Padding(
               padding: const EdgeInsets.all(14),
               child: Row(
                 children: [
-                  Icon(Icons.verified_outlined, color: colors.accent),
+                  Icon(LucideIcons.badgeCheck, color: colors.accent),
                   const SizedBox(width: 10),
                   Expanded(child: Text(l10n.billingActive)),
                 ],
@@ -1449,8 +1450,13 @@ class BillingPaywall extends ConsumerWidget {
               when entitlement.source == 'stripe' && entitlement.subscription)
             Align(
               alignment: Alignment.centerLeft,
-              child: TextButton.icon(
+              child: ShadButton.ghost(
                 key: const Key('billing-manage-link'),
+                height: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 onPressed: () {
                   final gateway = ref.read(billingStripeGatewayProvider);
                   if (gateway != null) {
@@ -1459,8 +1465,8 @@ class BillingPaywall extends ConsumerWidget {
                     );
                   }
                 },
-                icon: const Icon(Icons.open_in_new),
-                label: Text(l10n.billingManageLink),
+                leading: const Icon(LucideIcons.externalLink),
+                child: Flexible(child: Text(l10n.billingManageLink)),
               ),
             ),
           const SizedBox(height: 12),
@@ -1539,8 +1545,17 @@ class BillingPaywall extends ConsumerWidget {
           if (channel == BillingChannel.storeKit)
             Align(
               alignment: Alignment.centerLeft,
-              child: TextButton.icon(
+              child: ShadButton.ghost(
                 key: const Key('billing-restore-button'),
+                height: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                enabled:
+                    state.platformSupported &&
+                    state.storeAvailable &&
+                    !state.restoring,
                 onPressed:
                     state.platformSupported &&
                         state.storeAvailable &&
@@ -1549,13 +1564,13 @@ class BillingPaywall extends ConsumerWidget {
                           .read(billingControllerProvider.notifier)
                           .restorePurchases()
                     : null,
-                icon: state.restoring
+                leading: state.restoring
                     ? const SizedBox.square(
                         dimension: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.restore),
-                label: Text(l10n.billingRestore),
+                    : const Icon(LucideIcons.rotateCcw),
+                child: Flexible(child: Text(l10n.billingRestore)),
               ),
             ),
         ],
@@ -1564,18 +1579,22 @@ class BillingPaywall extends ConsumerWidget {
           alignment: WrapAlignment.center,
           spacing: 4,
           children: [
-            TextButton(
+            ShadButton.ghost(
               key: const Key('billing-privacy-policy'),
+              height: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               onPressed: () => unawaited(
                 launchPomodoistExternalUrl(pomodoistPrivacyPolicyUrl),
               ),
-              child: Text(l10n.privacyPolicy),
+              child: Flexible(child: Text(l10n.privacyPolicy)),
             ),
-            TextButton(
+            ShadButton.ghost(
               key: const Key('billing-terms-of-use'),
+              height: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               onPressed: () =>
                   unawaited(launchPomodoistExternalUrl(pomodoistTermsOfUseUrl)),
-              child: Text(l10n.termsOfUse),
+              child: Flexible(child: Text(l10n.termsOfUse)),
             ),
           ],
         ),
@@ -1653,13 +1672,13 @@ class _BillingProHeader extends StatelessWidget {
         children: [
           DecoratedBox(
             decoration: BoxDecoration(
-              color: colors.surface.withValues(alpha: 0.72),
-              borderRadius: BorderRadius.circular(10),
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(8),
             ),
             child: SizedBox.square(
               dimension: iconSize,
               child: Icon(
-                Icons.mic_none_rounded,
+                LucideIcons.mic,
                 color: colors.accent,
                 size: compact ? 19 : 21,
               ),
@@ -1674,7 +1693,7 @@ class _BillingProHeader extends StatelessWidget {
                   l10n.billingTitle,
                   style:
                       (compact ? textTheme.titleLarge : textTheme.headlineSmall)
-                          ?.copyWith(fontWeight: FontWeight.w800),
+                          ?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 6),
                 Text.rich(
@@ -1687,7 +1706,7 @@ class _BillingProHeader extends StatelessWidget {
                     ),
                     highlightStyle: textTheme.bodyMedium?.copyWith(
                       color: colors.accent,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w600,
                       height: 1.35,
                     ),
                   ),
@@ -1696,7 +1715,7 @@ class _BillingProHeader extends StatelessWidget {
                 Text(
                   l10n.billingCancelAnytime,
                   style: textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -1708,9 +1727,9 @@ class _BillingProHeader extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colors.accentTint,
+        color: colors.surfaceTint,
         borderRadius: borderRadius,
-        border: Border.all(color: colors.accent.withValues(alpha: 0.24)),
+        border: Border.all(color: colors.border),
       ),
       child: onTap == null
           ? content
@@ -1744,7 +1763,7 @@ TextSpan _highlightedBillingSubtitle({
       TextSpan(
         text: highlight,
         style:
-            highlightStyle ?? baseStyle?.copyWith(fontWeight: FontWeight.w800),
+            highlightStyle ?? baseStyle?.copyWith(fontWeight: FontWeight.w600),
       ),
       TextSpan(text: text.substring(index + highlight.length)),
     ],
@@ -1777,8 +1796,10 @@ class _BillingPlanTile extends ConsumerWidget {
     final active = state.activeProductId == plan.productId;
     final pending = state.pendingProductId == plan.productId;
     final highlighted = plan.highlighted;
-    final background = highlighted ? colors.accentTint : colors.surface;
-    final border = highlighted ? colors.accent : colors.border;
+    final background = highlighted ? colors.surfaceTint : colors.surface;
+    final border = highlighted
+        ? colors.accent.withValues(alpha: 0.45)
+        : colors.border;
     final regularPrice = _regularPrice(l10n, plan, product);
     final introductoryPrice =
         forceIntroductoryPrice ||
@@ -1800,7 +1821,7 @@ class _BillingPlanTile extends ConsumerWidget {
       color: background,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: border, width: highlighted ? 1.5 : 1),
+        side: BorderSide(color: border),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -1843,7 +1864,7 @@ class _BillingPlanTile extends ConsumerWidget {
                       Text(
                         displayedPrice,
                         style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w800),
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       if (displayedCompareAtPrice != null)
                         Text(
@@ -1871,8 +1892,13 @@ class _BillingPlanTile extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 12),
-            FilledButton(
+            ShadButton(
               key: ValueKey('billing-buy-${plan.productId}'),
+              enabled:
+                  !(active ||
+                      pending ||
+                      !state.canPurchase ||
+                      (productRequired && product == null)),
               onPressed:
                   active ||
                       pending ||
@@ -1894,12 +1920,12 @@ class _BillingPlanTile extends ConsumerWidget {
                             title: Text(l10n.billingExternalBrowserTitle),
                             content: Text(l10n.billingExternalBrowserMessage),
                             actions: [
-                              TextButton(
+                              ShadButton.ghost(
                                 onPressed: () =>
                                     Navigator.of(dialogContext).pop(false),
                                 child: Text(l10n.commonCancel),
                               ),
-                              FilledButton(
+                              ShadButton(
                                 onPressed: () =>
                                     Navigator.of(dialogContext).pop(true),
                                 child: Text(l10n.commonOpen),
@@ -1914,9 +1940,12 @@ class _BillingPlanTile extends ConsumerWidget {
                           .purchase(plan.productId);
                     },
               child: pending
-                  ? const SizedBox.square(
+                  ? SizedBox.square(
                       dimension: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
                     )
                   : Text(active ? l10n.billingActiveShort : l10n.billingChoose),
             ),
@@ -1938,7 +1967,7 @@ class _Badge extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

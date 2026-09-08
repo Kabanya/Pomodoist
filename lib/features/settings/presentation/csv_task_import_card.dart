@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../../app/app_l10n.dart';
 import '../../../app/providers.dart';
@@ -48,34 +49,48 @@ class _CsvTaskImportCardState extends ConsumerState<CsvTaskImportCard> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                FilledButton.icon(
+                ShadButton(
                   key: const Key('csv-import-select-file'),
+                  enabled: !_busy,
                   onPressed: _busy ? null : _selectFile,
-                  icon: _busy
-                      ? const SizedBox.square(
+                  leading: _busy
+                      ? SizedBox.square(
                           dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
                         )
-                      : const Icon(Icons.upload_file_outlined),
-                  label: Text(l10n.csvImportSelectFile),
+                      : const Icon(LucideIcons.fileUp),
+                  child: Text(l10n.csvImportSelectFile),
                 ),
-                OutlinedButton.icon(
+                ShadButton.outline(
                   key: const Key('csv-import-human-guide'),
+                  height: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   onPressed: () => _showGuide(
                     l10n.csvImportHumanGuideTitle,
                     l10n.csvImportHumanGuide,
                   ),
-                  icon: const Icon(Icons.menu_book_outlined),
-                  label: Text(l10n.csvImportHumanGuideButton),
+                  leading: const Icon(LucideIcons.bookOpen),
+                  child: Flexible(child: Text(l10n.csvImportHumanGuideButton)),
                 ),
-                OutlinedButton.icon(
+                ShadButton.outline(
                   key: const Key('csv-import-agent-guide'),
+                  height: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   onPressed: () => _showGuide(
                     l10n.csvImportAgentGuideTitle,
                     pomodoistCsvAgentInstructions,
                   ),
-                  icon: const Icon(Icons.smart_toy_outlined),
-                  label: Text(l10n.csvImportAgentGuideButton),
+                  leading: const Icon(LucideIcons.bot),
+                  child: Flexible(child: Text(l10n.csvImportAgentGuideButton)),
                 ),
               ],
             ),
@@ -151,7 +166,7 @@ class _CsvTaskImportCardState extends ConsumerState<CsvTaskImportCard> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.warning_amber_rounded, size: 20),
+                      const Icon(LucideIcons.triangleAlert, size: 20),
                       const SizedBox(width: 8),
                       Expanded(child: Text(l10n.csvImportDuplicateWarning)),
                     ],
@@ -160,11 +175,11 @@ class _CsvTaskImportCardState extends ConsumerState<CsvTaskImportCard> {
               ),
             ),
             actions: [
-              TextButton(
+              ShadButton.ghost(
                 onPressed: () => Navigator.pop(context, false),
                 child: Text(l10n.commonCancel),
               ),
-              FilledButton(
+              ShadButton(
                 key: const Key('csv-import-confirm'),
                 onPressed: () => Navigator.pop(context, true),
                 child: Text(l10n.csvImportConfirm),
@@ -187,7 +202,7 @@ class _CsvTaskImportCardState extends ConsumerState<CsvTaskImportCard> {
           child: SingleChildScrollView(child: SelectableText(text)),
         ),
         actions: [
-          TextButton.icon(
+          ShadButton.ghost(
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: text));
               if (context.mounted) {
@@ -196,10 +211,10 @@ class _CsvTaskImportCardState extends ConsumerState<CsvTaskImportCard> {
                 ).showSnackBar(SnackBar(content: Text(l10n.csvImportCopied)));
               }
             },
-            icon: const Icon(Icons.copy_outlined),
-            label: Text(l10n.csvImportCopy),
+            leading: const Icon(LucideIcons.copy),
+            child: Text(l10n.csvImportCopy),
           ),
-          FilledButton(
+          ShadButton(
             key: const Key('csv-import-guide-close'),
             onPressed: () => Navigator.pop(context),
             child: Text(l10n.commonClose),
@@ -220,7 +235,7 @@ class _CsvTaskImportCardState extends ConsumerState<CsvTaskImportCard> {
           child: SingleChildScrollView(child: SelectableText(message)),
         ),
         actions: [
-          FilledButton(
+          ShadButton(
             onPressed: () => Navigator.pop(context),
             child: Text(l10n.commonClose),
           ),

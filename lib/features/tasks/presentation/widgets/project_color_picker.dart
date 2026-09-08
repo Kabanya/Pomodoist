@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../../../app/app_l10n.dart';
+import '../../../../app/theme/app_motion.dart';
 import '../../domain/project_colors.dart';
 
 Color projectColorValue(String hex) {
@@ -16,16 +18,16 @@ Future<String?> showProjectColorPicker(
     context: context,
     builder: (context) => AlertDialog(
       title: Text(context.l10n.projectColor),
-      content: ProjectColorPalettePicker(
-        selectedColor: selectedColor,
-        onSelected: (color) => Navigator.of(context).pop(color),
-      ),
       actions: [
-        TextButton(
+        ShadButton.ghost(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(context.l10n.commonCancel),
         ),
       ],
+      content: ProjectColorPalettePicker(
+        selectedColor: selectedColor,
+        onSelected: (color) => Navigator.of(context).pop(color),
+      ),
     ),
   );
 }
@@ -121,7 +123,7 @@ class _ColorOption extends StatelessWidget {
         onTap: onPressed,
         radius: 24,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
+          duration: AppMotion.duration(context, AppMotion.hover),
           width: 38,
           height: 38,
           decoration: BoxDecoration(
@@ -132,8 +134,9 @@ class _ColorOption extends StatelessWidget {
               width: 3,
             ),
           ),
+          curve: AppMotion.curve,
           child: selected
-              ? Icon(Icons.check, size: 20, color: scheme.surface)
+              ? Icon(LucideIcons.check, size: 20, color: scheme.surface)
               : null,
         ),
       ),

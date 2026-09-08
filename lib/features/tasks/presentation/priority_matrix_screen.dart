@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/app_l10n.dart';
+import '../../../app/theme/app_motion.dart';
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/widgets/action_feedback.dart';
@@ -127,7 +128,7 @@ class _PriorityMatrix extends ConsumerWidget {
 
         final axisStyle = Theme.of(context).textTheme.labelMedium?.copyWith(
           color: context.appColors.secondaryText,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
         );
         final l10n = context.l10n;
         return Table(
@@ -284,9 +285,7 @@ class _PriorityQuadrant extends StatelessWidget {
       onAcceptWithDetails: (details) => onPriorityChanged(details.data),
       builder: (context, candidateData, rejectedData) {
         final accepting = candidateData.isNotEmpty;
-        final duration = MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 140);
+        final duration = AppMotion.duration(context, AppMotion.hover);
         final borderColor = accepting
             ? priorityColor.withValues(alpha: 0.72)
             : colors.border;
@@ -296,6 +295,7 @@ class _PriorityQuadrant extends StatelessWidget {
           padding: accepting
               ? const EdgeInsets.symmetric(vertical: 6)
               : EdgeInsets.zero,
+          curve: AppMotion.curve,
           child: AnimatedContainer(
             duration: duration,
             constraints: const BoxConstraints(minHeight: 180),
@@ -309,6 +309,7 @@ class _PriorityQuadrant extends StatelessWidget {
               border: Border.all(color: borderColor),
               borderRadius: BorderRadius.circular(8),
             ),
+            curve: AppMotion.curve,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Column(
@@ -320,9 +321,7 @@ class _PriorityQuadrant extends StatelessWidget {
                     child: ColoredBox(color: priorityColor),
                   ),
                   Container(
-                    color: priorityColor.withValues(
-                      alpha: isDark ? 0.10 : 0.06,
-                    ),
+                    color: colors.surface,
                     padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
                     child: Row(
                       children: [
@@ -343,7 +342,7 @@ class _PriorityQuadrant extends StatelessWidget {
                             style: Theme.of(context).textTheme.labelLarge
                                 ?.copyWith(
                                   color: priorityColor,
-                                  fontWeight: FontWeight.w800,
+                                  fontWeight: FontWeight.w600,
                                 ),
                           ),
                         ),
@@ -358,7 +357,7 @@ class _PriorityQuadrant extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w700),
+                                    ?.copyWith(fontWeight: FontWeight.w600),
                               ),
                               if (showMeaning) ...[
                                 const SizedBox(height: 2),
@@ -391,7 +390,7 @@ class _PriorityQuadrant extends StatelessWidget {
                             style: Theme.of(context).textTheme.labelMedium
                                 ?.copyWith(
                                   color: colors.mutedText,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: FontWeight.w600,
                                 ),
                           ),
                         ),

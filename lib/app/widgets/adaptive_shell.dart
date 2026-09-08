@@ -5,6 +5,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import '../theme/app_motion.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -36,7 +38,7 @@ const double _wideSidebarCollapseThreshold = 180;
 const double _wideSidebarResizeHandleWidth = 12;
 const double _wideSidebarEdgeHandleWidth = 16;
 const double _shellTopBarHeight = 52;
-const Duration _wideSidebarAnimationDuration = Duration(milliseconds: 220);
+const Duration _wideSidebarAnimationDuration = AppMotion.panel;
 const Curve _wideSidebarAnimationCurve = Curves.easeOutCubic;
 
 class AdaptiveShell extends ConsumerStatefulWidget {
@@ -337,7 +339,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
       tween: Tween<double>(end: targetWidth),
       duration: _wideSidebarDragging
           ? Duration.zero
-          : _wideSidebarAnimationDuration,
+          : AppMotion.duration(context, _wideSidebarAnimationDuration),
       curve: _wideSidebarAnimationCurve,
       onEnd: () {
         if (!mounted || _wideSidebarVisible || !_wideSidebarMounted) {
@@ -571,14 +573,14 @@ class _ShellTopBar extends StatelessWidget {
                     key: const Key('kanban-shell-add'),
                     tooltip: context.l10n.addTask,
                     onPressed: () => _showSidebarQuickAddDialog(context),
-                    icon: const Icon(Icons.add_circle),
+                    icon: const Icon(LucideIcons.circlePlus),
                     color: context.appColors.accent,
                   ),
                   IconButton(
                     key: const Key('kanban-shell-focus'),
                     tooltip: context.l10n.navFocus,
                     onPressed: () => context.go('/focus'),
-                    icon: const Icon(Icons.timer_outlined),
+                    icon: const Icon(LucideIcons.timer),
                     color: context.appColors.accent,
                   ),
                   const SizedBox(width: 4),
@@ -613,7 +615,7 @@ class _ShellMenuButton extends StatelessWidget {
       key: const Key('shell-menu-button'),
       tooltip: context.l10n.menuTooltip,
       onPressed: onPressed,
-      icon: const Icon(Icons.menu),
+      icon: const Icon(LucideIcons.panelLeft),
     );
   }
 }
@@ -675,10 +677,10 @@ class _FloatingBottomNavigationBar extends StatelessWidget {
           decoration: BoxDecoration(
             color: colors.surface,
             border: Border.all(color: colors.border),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: colors.primaryText.withValues(alpha: 0.08),
+                color: Colors.black.withValues(alpha: 0.10),
                 blurRadius: 18,
                 offset: const Offset(0, 8),
               ),
@@ -735,9 +737,9 @@ class _FloatingDestinationButton extends StatelessWidget {
       label: destination.label,
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(8),
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(8),
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
@@ -1068,14 +1070,14 @@ class _SidebarProfileHeader extends StatelessWidget {
                   height: 38,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: colors.info,
-                    shape: BoxShape.circle,
+                    color: colors.surfaceHover,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     initial,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
+                      color: colors.primaryText,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -1098,7 +1100,7 @@ class _SidebarProfileHeader extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Icon(
-                        Icons.keyboard_arrow_down,
+                        LucideIcons.chevronDown,
                         color: colors.secondaryText,
                         size: 20,
                       ),
@@ -1112,7 +1114,7 @@ class _SidebarProfileHeader extends StatelessWidget {
         IconButton(
           tooltip: context.l10n.navFocus,
           onPressed: onFocusTap,
-          icon: const Icon(Icons.timer_outlined),
+          icon: const Icon(LucideIcons.timer),
           iconSize: 22,
           style: IconButton.styleFrom(
             foregroundColor: colors.accent,
@@ -1133,39 +1135,23 @@ class _AddTaskTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        key: const Key('sidebar-add-task'),
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-          child: Row(
-            children: [
-              Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  color: colors.accentFill,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.add, color: Colors.white, size: 24),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  context.l10n.addTask,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: colors.accent,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
+    return ShadButton.ghost(
+      key: const Key('sidebar-add-task'),
+      onPressed: onTap,
+      height: 0,
+      expands: true,
+      mainAxisAlignment: MainAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      foregroundColor: colors.accent,
+      hoverForegroundColor: colors.accent,
+      leading: const Icon(LucideIcons.circlePlus, size: 24),
+      gap: 12,
+      child: Flexible(
+        child: Text(
+          context.l10n.addTask,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: colors.accent,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -1230,7 +1216,7 @@ class _ProjectsHeader extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: colors.primaryText.withValues(alpha: 0.08),
+                          color: Colors.black.withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(5),
                         ),
                         child: Text(
@@ -1256,7 +1242,7 @@ class _ProjectsHeader extends StatelessWidget {
           key: const Key('sidebar-add-project'),
           tooltip: l10n.addProject,
           onPressed: onAdd,
-          icon: const Icon(Icons.add),
+          icon: const Icon(LucideIcons.plus),
           iconSize: 22,
           style: IconButton.styleFrom(
             foregroundColor: colors.secondaryText,
@@ -1271,7 +1257,7 @@ class _ProjectsHeader extends StatelessWidget {
           tooltip: expanded ? l10n.collapseProjects : l10n.expandProjects,
           onPressed: onToggle,
           icon: Icon(
-            expanded ? Icons.keyboard_arrow_down : Icons.chevron_right,
+            expanded ? LucideIcons.chevronDown : LucideIcons.chevronRight,
           ),
           iconSize: 24,
           style: IconButton.styleFrom(
@@ -1600,20 +1586,25 @@ Future<void> _showSidebarQuickAddDialog(BuildContext context) {
 List<_Destination> _mobileDestinations(BuildContext context) {
   final l10n = context.l10n;
   return [
-    _Destination(l10n.navToday, '/today', Icons.today_outlined, Icons.today),
+    _Destination(
+      l10n.navToday,
+      '/today',
+      LucideIcons.calendarCheck,
+      LucideIcons.calendarCheck,
+    ),
     _Destination(
       l10n.navUpcoming,
       '/upcoming',
-      Icons.calendar_month_outlined,
-      Icons.calendar_month,
+      LucideIcons.calendarDays,
+      LucideIcons.calendarDays,
     ),
-    _Destination(l10n.navFocus, '/focus', Icons.timer_outlined, Icons.timer),
-    _Destination(l10n.navInbox, '/inbox', Icons.inbox_outlined, Icons.inbox),
+    _Destination(l10n.navFocus, '/focus', LucideIcons.timer, LucideIcons.timer),
+    _Destination(l10n.navInbox, '/inbox', LucideIcons.inbox, LucideIcons.inbox),
     _Destination(
       l10n.navProjects,
       '/projects',
-      Icons.folder_outlined,
-      Icons.folder,
+      LucideIcons.folder,
+      LucideIcons.folder,
     ),
   ];
 }
@@ -1624,48 +1615,58 @@ List<_Destination> _desktopDestinations(BuildContext context) {
     _Destination(
       l10n.navBrowse,
       '/browse',
-      Icons.grid_view_outlined,
-      Icons.grid_view,
+      LucideIcons.layoutGrid,
+      LucideIcons.layoutGrid,
     ),
-    _Destination(l10n.navSearch, '/search', Icons.search, Icons.search),
-    _Destination(l10n.navToday, '/today', Icons.today_outlined, Icons.today),
+    _Destination(
+      l10n.navSearch,
+      '/search',
+      LucideIcons.search,
+      LucideIcons.search,
+    ),
+    _Destination(
+      l10n.navToday,
+      '/today',
+      LucideIcons.calendarCheck,
+      LucideIcons.calendarCheck,
+    ),
     _Destination(
       l10n.navUpcoming,
       '/upcoming',
-      Icons.calendar_month_outlined,
-      Icons.calendar_month,
+      LucideIcons.calendarDays,
+      LucideIcons.calendarDays,
     ),
-    _Destination(l10n.navFocus, '/focus', Icons.timer_outlined, Icons.timer),
-    _Destination(l10n.navInbox, '/inbox', Icons.inbox_outlined, Icons.inbox),
+    _Destination(l10n.navFocus, '/focus', LucideIcons.timer, LucideIcons.timer),
+    _Destination(l10n.navInbox, '/inbox', LucideIcons.inbox, LucideIcons.inbox),
     _Destination(
       l10n.navPriorityMatrix,
       '/priority-matrix',
-      Icons.dashboard_customize_outlined,
-      Icons.dashboard_customize,
+      LucideIcons.grid2x2,
+      LucideIcons.grid2x2,
     ),
     _Destination(
       l10n.navTimeline,
       '/timeline',
-      Icons.view_timeline_outlined,
-      Icons.view_timeline,
+      LucideIcons.chartNoAxesGantt,
+      LucideIcons.chartNoAxesGantt,
     ),
     _Destination(
       l10n.navKanban,
       '/kanban',
-      Icons.view_kanban_outlined,
-      Icons.view_kanban,
+      LucideIcons.columns3,
+      LucideIcons.columns3,
     ),
     _Destination(
       l10n.navReports,
       '/reports',
-      Icons.bar_chart_outlined,
-      Icons.bar_chart,
+      LucideIcons.chartNoAxesColumnIncreasing,
+      LucideIcons.chartNoAxesColumnIncreasing,
     ),
     _Destination(
       l10n.navSettings,
       '/settings',
-      Icons.settings_outlined,
-      Icons.settings,
+      LucideIcons.settings2,
+      LucideIcons.settings2,
     ),
   ];
 }

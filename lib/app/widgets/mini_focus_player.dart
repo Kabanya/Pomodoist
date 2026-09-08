@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../theme/app_motion.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -55,7 +57,9 @@ class MiniFocusPlayer extends ConsumerWidget {
           child: Row(
             children: [
               Icon(
-                interval.type == 'work' ? Icons.timer : Icons.coffee_outlined,
+                interval.type == 'work'
+                    ? LucideIcons.timer
+                    : LucideIcons.coffee,
                 color: colors.accent,
               ),
               const SizedBox(width: 12),
@@ -66,10 +70,12 @@ class MiniFocusPlayer extends ConsumerWidget {
                   '${formatDurationCompact(remaining)}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: colors.primaryText,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.merge(AppTheme.monoTextStyle)
+                      .copyWith(
+                        color: colors.primaryText,
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ),
               IconButton(
@@ -90,13 +96,15 @@ class MiniFocusPlayer extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                icon: Icon(ready || paused ? Icons.play_arrow : Icons.pause),
+                icon: Icon(
+                  ready || paused ? LucideIcons.play : LucideIcons.pause,
+                ),
               ),
               const SizedBox(width: 8),
               IconButton(
                 tooltip: l10n.commonStop,
                 onPressed: () => unawaited(_stopFocus(context, repository)),
-                icon: const Icon(Icons.stop),
+                icon: const Icon(LucideIcons.square),
               ),
             ],
           ),
@@ -156,7 +164,9 @@ class _MinimalMiniFocusPlayer extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                interval.type == 'work' ? Icons.timer : Icons.coffee_outlined,
+                interval.type == 'work'
+                    ? LucideIcons.timer
+                    : LucideIcons.coffee,
                 color: colors.accent,
                 size: 20,
               ),
@@ -167,10 +177,12 @@ class _MinimalMiniFocusPlayer extends StatelessWidget {
                   '${formatDurationCompact(remaining)}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: colors.primaryText,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.merge(AppTheme.monoTextStyle)
+                      .copyWith(
+                        color: colors.primaryText,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
               ),
               IconButton(
@@ -191,12 +203,19 @@ class _MinimalMiniFocusPlayer extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                icon: Icon(ready || paused ? Icons.play_arrow : Icons.pause),
+                icon: Icon(
+                  ready || paused ? LucideIcons.play : LucideIcons.pause,
+                ),
               ),
               PopupMenuButton<_MiniFocusAction>(
+                popUpAnimationStyle: AnimationStyle(
+                  duration: AppMotion.duration(context, AppMotion.popup),
+                  reverseDuration: AppMotion.duration(context, AppMotion.popup),
+                  curve: AppMotion.curve,
+                ),
                 key: const Key('minimal-mini-focus-more-menu'),
                 tooltip: l10n.moreFocusActions,
-                icon: const Icon(Icons.more_horiz),
+                icon: const Icon(LucideIcons.ellipsis),
                 onSelected: (action) {
                   switch (action) {
                     case _MiniFocusAction.stop:
@@ -227,8 +246,10 @@ class _MiniFocusPlayerFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final radius = floating ? BorderRadius.circular(20) : BorderRadius.zero;
-    final box = DecoratedBox(
+    final radius = floating ? BorderRadius.circular(12) : BorderRadius.zero;
+    final box = AnimatedContainer(
+      duration: AppMotion.duration(context, AppMotion.state),
+      curve: AppMotion.curve,
       key: const Key('mini-focus-player-surface'),
       decoration: BoxDecoration(
         color: colors.surface,
@@ -239,7 +260,7 @@ class _MiniFocusPlayerFrame extends StatelessWidget {
         boxShadow: floating
             ? [
                 BoxShadow(
-                  color: colors.primaryText.withValues(alpha: 0.08),
+                  color: Colors.black.withValues(alpha: 0.10),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
@@ -279,7 +300,7 @@ Future<void> _startReadyInterval(
   showActionFeedback(
     context,
     message: context.l10n.intervalStarted,
-    icon: Icons.play_circle_outline,
+    icon: LucideIcons.circlePlay,
     haptic: AppHapticCue.none,
   );
 }
@@ -300,7 +321,7 @@ Future<void> _toggleFocusPause(
   showActionFeedback(
     context,
     message: paused ? context.l10n.resume : context.l10n.pause,
-    icon: paused ? Icons.play_circle_outline : Icons.pause_circle_outline,
+    icon: paused ? LucideIcons.circlePlay : LucideIcons.circlePause,
     haptic: AppHapticCue.none,
   );
 }
@@ -316,6 +337,6 @@ Future<void> _stopFocus(
   showActionFeedback(
     context,
     message: context.l10n.focusStopped,
-    icon: Icons.stop_circle_outlined,
+    icon: LucideIcons.circleStop,
   );
 }

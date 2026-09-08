@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../theme/app_motion.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'package:flutter/services.dart';
 
 import '../../core/haptics/app_haptics.dart';
@@ -37,7 +39,7 @@ void showActionFeedback(
           ? const EdgeInsets.symmetric(horizontal: 12, vertical: 4)
           : null,
       shape: compact
-          ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(999))
+          ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
           : null,
       backgroundColor: compact ? colors.inverseSurface : null,
       duration: duration,
@@ -53,11 +55,15 @@ void showActionFeedback(
             )
           : Row(
               children: [
-                Icon(icon, size: 18, color: Colors.white),
+                Icon(icon, size: 18, color: colors.onSurface),
                 const SizedBox(width: 8),
                 Flexible(child: Text(message)),
               ],
             ),
+    ),
+    snackBarAnimationStyle: AnimationStyle(
+      duration: AppMotion.duration(context, AppMotion.popup),
+      reverseDuration: AppMotion.duration(context, AppMotion.popup),
     ),
   );
   unawaited(playHaptic(haptic));
@@ -135,7 +141,7 @@ class _CompactActionFeedbackContent extends StatelessWidget {
                   context,
                 ).hideCurrentSnackBar(reason: SnackBarClosedReason.dismiss);
               },
-              icon: const Icon(Icons.close),
+              icon: const Icon(LucideIcons.x),
             ),
           ],
         ],

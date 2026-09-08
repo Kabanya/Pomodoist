@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 
 import '../../../app/app_l10n.dart';
 import '../../../app/providers.dart';
+import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_theme.dart';
 import '../domain/achievement_models.dart';
 
@@ -75,9 +77,9 @@ class _AchievementAnnouncementSlotState
     _scheduleDismiss(item);
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 180),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
+      duration: AppMotion.duration(context, AppMotion.popup),
+      switchInCurve: AppMotion.curve,
+      switchOutCurve: AppMotion.curve,
       child: widget.presentation == AchievementPresentation.globalBanner
           ? _GlobalAchievementBanner(
               key: ValueKey('achievement-global-${item.id}'),
@@ -143,7 +145,7 @@ class _GlobalAchievementBanner extends StatelessWidget {
       child: _AchievementAnnouncementSurface(
         item: item,
         onDismiss: onDismiss,
-        icon: Icons.emoji_events_outlined,
+        icon: LucideIcons.trophy,
         dense: false,
       ),
     );
@@ -168,7 +170,7 @@ class _BottomAchievementPlaque extends StatelessWidget {
       child: _AchievementAnnouncementSurface(
         item: item,
         onDismiss: onDismiss,
-        icon: Icons.auto_awesome_outlined,
+        icon: LucideIcons.sparkles,
         dense: true,
       ),
     );
@@ -193,7 +195,7 @@ class _AchievementAnnouncementSurface extends StatelessWidget {
     final colors = context.appColors;
     final l10n = context.l10n;
     final textTheme = Theme.of(context).textTheme;
-    final radius = BorderRadius.circular(dense ? 16 : 10);
+    final radius = BorderRadius.circular(10);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -203,9 +205,9 @@ class _AchievementAnnouncementSurface extends StatelessWidget {
         boxShadow: dense
             ? [
                 BoxShadow(
-                  color: colors.primaryText.withValues(alpha: 0.08),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
+                  color: colors.primaryText.withValues(alpha: 0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
               ]
             : null,
@@ -258,7 +260,7 @@ class _AchievementAnnouncementSurface extends StatelessWidget {
               IconButton(
                 tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 onPressed: onDismiss,
-                icon: const Icon(Icons.close),
+                icon: const Icon(LucideIcons.x),
               ),
             ],
           ),

@@ -2,9 +2,26 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_motion.dart';
 import '../../domain/task_models.dart';
 
 enum TaskMotionKind { created, completed, reopened, deleted, landed }
+
+// The row settles before its highlight fades, on one shared timeline.
+({double position, double highlight}) taskCreationProgress(
+  double progress, {
+  bool reduceMotion = false,
+}) {
+  if (reduceMotion) return (position: 1, highlight: 0);
+  final t = progress.clamp(0.0, 1.0);
+  return (
+    position: AppMotion.curve.transform(
+      (t * AppMotion.highlight.inMicroseconds / AppMotion.task.inMicroseconds)
+          .clamp(0.0, 1.0),
+    ),
+    highlight: 1 - AppMotion.curve.transform(t),
+  );
+}
 
 class TaskMotionEvent {
   const TaskMotionEvent(this.kind, this.revision);
@@ -134,12 +151,13 @@ class TaskMotionItem extends StatelessWidget {
     final kind = event?.kind;
     final deleting = kind == TaskMotionKind.deleted;
     final creating = kind == TaskMotionKind.created;
-    final duration = MediaQuery.disableAnimationsOf(context)
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final duration = reduceMotion
         ? Duration.zero
         : switch (kind) {
-            TaskMotionKind.created => const Duration(milliseconds: 550),
-            TaskMotionKind.landed => const Duration(milliseconds: 160),
-            TaskMotionKind.deleted => const Duration(milliseconds: 220),
+            TaskMotionKind.created => AppMotion.highlight,
+            TaskMotionKind.landed => AppMotion.state,
+            TaskMotionKind.deleted => AppMotion.task,
             _ => Duration.zero,
           };
     final begin = creating || kind == TaskMotionKind.landed ? 0.0 : 1.0;
@@ -148,21 +166,26 @@ class TaskMotionItem extends StatelessWidget {
       key: ValueKey('${event?.revision ?? 0}-$kind'),
       tween: Tween(begin: begin, end: deleting ? 0 : 1),
       duration: duration,
-      curve: Curves.easeOutCubic,
+      curve: creating ? Curves.linear : AppMotion.curve,
       onEnd: deleting && event != null
           ? () => motion.finishDelete(taskId, event.revision)
           : null,
       builder: (context, value, child) {
         final highlighted = creating || kind == TaskMotionKind.landed;
+        final creation = taskCreationProgress(
+          value,
+          reduceMotion: reduceMotion,
+        );
+        final position = creating ? creation.position : value;
         return DecoratedBox(
           key: Key('task-motion-highlight-$taskId'),
           decoration: BoxDecoration(
             color: highlighted
-                ? Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.12 * (1 - value))
+                ? Theme.of(context).colorScheme.primary.withValues(
+                    alpha: 0.12 * (creating ? creation.highlight : 1 - value),
+                  )
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: ClipRect(
             child: Align(
@@ -170,10 +193,10 @@ class TaskMotionItem extends StatelessWidget {
               heightFactor: deleting ? value : 1,
               child: Transform.translate(
                 key: Key('task-motion-offset-$taskId'),
-                offset: Offset(0, creating ? 6 * (1 - value) : 0),
+                offset: Offset(0, creating ? 6 * (1 - position) : 0),
                 child: Opacity(
                   key: Key('task-motion-opacity-$taskId'),
-                  opacity: value,
+                  opacity: position,
                   child: child,
                 ),
               ),
@@ -212,7 +235,7 @@ class TaskCompletionControl extends StatelessWidget {
         event?.kind == TaskMotionKind.reopened;
     final target = isCompleted ? 1.0 : 0.0;
     final duration = animated && !MediaQuery.disableAnimationsOf(context)
-        ? const Duration(milliseconds: 180)
+        ? AppMotion.state
         : Duration.zero;
     final control = Semantics(
       button: true,

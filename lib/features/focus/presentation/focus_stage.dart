@@ -4,10 +4,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../../app/app_l10n.dart';
 import '../../../app/formatters.dart';
 import '../../../app/providers.dart';
+import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/widgets/action_feedback.dart';
 import '../../tasks/domain/project_colors.dart';
@@ -63,18 +65,18 @@ class FocusIdleStage extends StatelessWidget {
     final rhythm = preset == null
         ? null
         : buildFocusRhythm(preset: preset, targetWorkIntervals: cadence);
-    final primary = _ElasticFocusButton(
-      enabled: onStart != null,
-      child: FilledButton(
-        key: const Key('focus-primary-action'),
-        style: FilledButton.styleFrom(minimumSize: const Size(176, 48)),
-        onPressed: onStart,
-        child: Wrap(
-          alignment: WrapAlignment.center,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 8,
-          children: [const Icon(Icons.play_arrow), Text(l10n.startFocus)],
-        ),
+    final primary = FilledButton(
+      key: const Key('focus-primary-action'),
+      style: FilledButton.styleFrom(minimumSize: const Size(176, 48)),
+      onPressed: onStart,
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 8,
+        children: [
+          const Icon(LucideIcons.play, size: 18),
+          Text(l10n.startFocus),
+        ],
       ),
     );
 
@@ -91,7 +93,10 @@ class FocusIdleStage extends StatelessWidget {
                   children: [
                     Text(
                       l10n.focusSessionProgress(1, cadence),
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      style: AppTheme.monoTextStyle.copyWith(
+                        fontSize: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.fontSize,
                         color: colors.secondaryText,
                       ),
                     ),
@@ -113,14 +118,16 @@ class FocusIdleStage extends StatelessWidget {
           children: [
             if (!inlineCircle) ...[
               Icon(
-                Icons.timer_outlined,
+                LucideIcons.timer,
                 size: compact ? 30 : 34,
                 color: colors.mutedText,
               ),
               const SizedBox(height: 10),
             ],
             AnimatedSwitcher(
-              duration: _motionDuration(context, 200),
+              duration: AppMotion.duration(context, AppMotion.state),
+              switchInCurve: AppMotion.curve,
+              switchOutCurve: AppMotion.curve,
               child: full
                   ? Column(
                       key: const Key('focus-idle-full-copy'),
@@ -174,12 +181,11 @@ class FocusIdleStage extends StatelessWidget {
                                 : formatDurationCompact(
                                     Duration(seconds: preset.workSeconds),
                                   ),
-                            style: Theme.of(context).textTheme.displayLarge
-                                ?.copyWith(
-                                  color: colors.primaryText,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: compact ? 54 : 62,
-                                ),
+                            style: AppTheme.monoTextStyle.copyWith(
+                              color: colors.primaryText,
+                              fontWeight: FontWeight.w700,
+                              fontSize: compact ? 54 : 62,
+                            ),
                           ),
                         ),
                       ),
@@ -192,7 +198,10 @@ class FocusIdleStage extends StatelessWidget {
               Text(
                 l10n.minutesWork((preset.workSeconds / 60).round()),
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                style: AppTheme.monoTextStyle.copyWith(
+                  fontSize: Theme.of(
+                    context,
+                  ).textTheme.headlineMedium?.fontSize,
                   color: colors.primaryText,
                   fontWeight: FontWeight.w700,
                 ),
@@ -218,8 +227,8 @@ class FocusIdleStage extends StatelessWidget {
                     label: Text(candidate.name),
                     avatar: Icon(
                       candidate.id == preset?.id
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_unchecked,
+                          ? LucideIcons.circleDot
+                          : LucideIcons.circle,
                       size: 16,
                     ),
                   ),
@@ -234,16 +243,17 @@ class FocusIdleStage extends StatelessWidget {
           children: [
             primary,
             if (full)
-              OutlinedButton.icon(
+              ShadButton.outline(
+                enabled: onCustomize != null,
                 onPressed: onCustomize,
-                icon: const Icon(Icons.tune),
-                label: Text(l10n.customize),
+                leading: const Icon(LucideIcons.slidersHorizontal, size: 18),
+                child: Text(l10n.customize),
               ),
             if (full)
-              TextButton.icon(
+              ShadButton.ghost(
                 onPressed: onCreate,
-                icon: const Icon(Icons.add),
-                label: Text(l10n.newPreset),
+                leading: const Icon(LucideIcons.plus, size: 18),
+                child: Text(l10n.newPreset),
               ),
             if (showViewModeMenu)
               _FocusViewModeMenu(
@@ -294,7 +304,7 @@ class _MinimalPresetMenu extends StatelessWidget {
             leadingIcon: SizedBox.square(
               dimension: 20,
               child: preset.id == selectedPreset?.id
-                  ? Icon(Icons.check_rounded, size: 18, color: colors.accent)
+                  ? Icon(LucideIcons.check, size: 18, color: colors.accent)
                   : null,
             ),
             onPressed: () {
@@ -307,13 +317,13 @@ class _MinimalPresetMenu extends StatelessWidget {
         if (presets.isNotEmpty) const Divider(height: 1),
         MenuItemButton(
           key: const Key('minimal-preset-customize'),
-          leadingIcon: const Icon(Icons.tune, size: 20),
+          leadingIcon: const Icon(LucideIcons.slidersHorizontal, size: 20),
           onPressed: onCustomize,
           child: Text(l10n.customize),
         ),
         MenuItemButton(
           key: const Key('minimal-preset-create'),
-          leadingIcon: const Icon(Icons.add, size: 20),
+          leadingIcon: const Icon(LucideIcons.plus, size: 20),
           onPressed: onCreate,
           child: Text(l10n.newPreset),
         ),
@@ -355,7 +365,7 @@ class _MinimalPresetMenu extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Icon(
-                  Icons.keyboard_arrow_down_rounded,
+                  LucideIcons.chevronDown,
                   size: 20,
                   color: colors.mutedText,
                 ),
@@ -388,7 +398,7 @@ class _FocusViewModeMenu extends StatelessWidget {
         button: true,
         child: PopupMenuButton<FocusViewMode>(
           tooltip: context.l10n.moreFocusActions,
-          icon: const Icon(Icons.more_horiz),
+          icon: const Icon(LucideIcons.ellipsis),
           onSelected: onChanged,
           itemBuilder: (context) => [
             PopupMenuItem(
@@ -508,7 +518,12 @@ class FocusActiveStage extends StatelessWidget {
                         sessionNumber,
                         run.targetWorkIntervals,
                       ),
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: AppTheme.monoTextStyle.copyWith(
+                        fontSize: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.fontSize,
+                        color: context.appColors.secondaryText,
+                      ),
                     ),
                     SizedBox(height: compact ? 12 : 16),
                     FocusRhythmRail(
@@ -572,7 +587,9 @@ class _FocusModeDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: _motionDuration(context, 200),
+      duration: AppMotion.duration(context, AppMotion.state),
+      switchInCurve: AppMotion.curve,
+      switchOutCurve: AppMotion.curve,
       transitionBuilder: (child, animation) => FadeTransition(
         opacity: animation,
         child: SizeTransition(
@@ -584,52 +601,6 @@ class _FocusModeDetails extends StatelessWidget {
       child: visible
           ? KeyedSubtree(key: const Key('focus-full-details'), child: child)
           : const SizedBox.shrink(key: Key('focus-minimal-details')),
-    );
-  }
-}
-
-Duration _motionDuration(BuildContext context, int milliseconds) =>
-    MediaQuery.disableAnimationsOf(context)
-    ? Duration.zero
-    : Duration(milliseconds: milliseconds);
-
-class _ElasticFocusButton extends StatefulWidget {
-  const _ElasticFocusButton({required this.enabled, required this.child});
-
-  final bool enabled;
-  final Widget child;
-
-  @override
-  State<_ElasticFocusButton> createState() => _ElasticFocusButtonState();
-}
-
-class _ElasticFocusButtonState extends State<_ElasticFocusButton> {
-  bool _pressed = false;
-
-  void _setPressed(bool pressed) {
-    if (!widget.enabled || _pressed == pressed) {
-      return;
-    }
-    setState(() => _pressed = pressed);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      duration: _motionDuration(context, _pressed ? 80 : 180),
-      curve: Curves.easeOutCubic,
-      tween: Tween(begin: 1, end: _pressed ? 0.96 : 1),
-      builder: (context, scale, child) => Transform.scale(
-        key: const Key('focus-primary-action-elastic'),
-        scale: scale,
-        child: child,
-      ),
-      child: Listener(
-        onPointerDown: (_) => _setPressed(true),
-        onPointerUp: (_) => _setPressed(false),
-        onPointerCancel: (_) => _setPressed(false),
-        child: widget.child,
-      ),
     );
   }
 }

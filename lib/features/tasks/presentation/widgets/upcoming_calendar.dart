@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show LucideIcons, ShadButton, ShadIconButton;
 import 'package:flutter/services.dart';
 
 import '../../../../app/app_l10n.dart';
+import '../../../../app/theme/app_motion.dart';
 import '../../../../app/theme/app_theme.dart';
 
 class UpcomingCalendar extends StatefulWidget {
@@ -189,7 +192,7 @@ class _UpcomingCalendarState extends State<UpcomingCalendar> {
         : '$firstMonth – $lastMonth';
     final monthButton = Tooltip(
       message: context.l10n.upcomingOpenDatePicker,
-      child: TextButton.icon(
+      child: ShadButton.ghost(
         key: const ValueKey('upcoming-calendar-month'),
         focusNode: _monthFocusNode,
         onPressed: isWide
@@ -201,14 +204,12 @@ class _UpcomingCalendarState extends State<UpcomingCalendar> {
                 }
               }
             : _showMonthSheet,
-        icon: const Icon(Icons.calendar_month_outlined, size: 20),
-        label: FittedBox(
+        foregroundColor: colors.primaryText,
+        height: 48,
+        leading: const Icon(LucideIcons.calendarDays, size: 20),
+        child: FittedBox(
           fit: BoxFit.scaleDown,
           child: Text(monthLabel, maxLines: 1),
-        ),
-        style: TextButton.styleFrom(
-          foregroundColor: colors.primaryText,
-          minimumSize: const Size(48, 48),
         ),
       ),
     );
@@ -217,16 +218,19 @@ class _UpcomingCalendarState extends State<UpcomingCalendar> {
       padding: const EdgeInsetsDirectional.fromSTEB(8, 6, 8, 6),
       child: Row(
         children: [
-          IconButton(
-            key: const ValueKey('upcoming-calendar-previous'),
-            tooltip: context.l10n.upcomingPreviousPeriod,
-            onPressed: () => _movePage(-pageSize),
-            icon: Icon(
-              direction == TextDirection.rtl
-                  ? Icons.chevron_right
-                  : Icons.chevron_left,
+          Tooltip(
+            message: context.l10n.upcomingPreviousPeriod,
+            child: ShadIconButton.ghost(
+              key: const ValueKey('upcoming-calendar-previous'),
+              onPressed: () => _movePage(-pageSize),
+              icon: Icon(
+                direction == TextDirection.rtl
+                    ? LucideIcons.chevronRight
+                    : LucideIcons.chevronLeft,
+              ),
+              width: 48,
+              height: 48,
             ),
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           ),
           SizedBox(
             width: 18,
@@ -261,28 +265,29 @@ class _UpcomingCalendarState extends State<UpcomingCalendar> {
                   )
                 : Center(child: monthButton),
           ),
-          TextButton(
+          ShadButton.ghost(
             key: const ValueKey('upcoming-calendar-today'),
             onPressed: _selectToday,
-            style: TextButton.styleFrom(
-              minimumSize: const Size(48, 48),
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            height: 48,
             child: FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(context.l10n.today),
             ),
           ),
-          IconButton(
-            key: const ValueKey('upcoming-calendar-next'),
-            tooltip: context.l10n.upcomingNextPeriod,
-            onPressed: () => _movePage(pageSize),
-            icon: Icon(
-              direction == TextDirection.rtl
-                  ? Icons.chevron_left
-                  : Icons.chevron_right,
+          Tooltip(
+            message: context.l10n.upcomingNextPeriod,
+            child: ShadIconButton.ghost(
+              key: const ValueKey('upcoming-calendar-next'),
+              onPressed: () => _movePage(pageSize),
+              icon: Icon(
+                direction == TextDirection.rtl
+                    ? LucideIcons.chevronLeft
+                    : LucideIcons.chevronRight,
+              ),
+              width: 48,
+              height: 48,
             ),
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           ),
         ],
       ),
@@ -517,7 +522,9 @@ class _DayCell extends StatelessWidget {
         onTap: onActivate,
         child: SizedBox(
           height: 88,
-          child: Container(
+          child: AnimatedContainer(
+            duration: AppMotion.duration(context, AppMotion.state),
+            curve: AppMotion.curve,
             key: selected
                 ? ValueKey('upcoming-calendar-selected-marker-$key')
                 : null,

@@ -1,11 +1,25 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show
+        LucideIcons,
+        ShadBadge,
+        ShadBorder,
+        ShadButton,
+        ShadContextMenuItem,
+        ShadIconButton,
+        ShadInput,
+        ShadMenubar,
+        ShadMenubarItem,
+        ShadTab,
+        ShadTabs;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/app_l10n.dart';
+import '../../../app/theme/app_motion.dart';
 import '../../../app/formatters.dart';
 import '../../../app/providers.dart';
 import '../../../app/task_time.dart';
@@ -60,10 +74,14 @@ class TaskDetailScreen extends ConsumerWidget {
                   children: [
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: IconButton(
-                        tooltip: l10n.commonBack,
-                        onPressed: () => _goBack(context),
-                        icon: const Icon(Icons.arrow_back),
+                      child: Tooltip(
+                        message: l10n.commonBack,
+                        child: ShadIconButton.ghost(
+                          onPressed: () => _goBack(context),
+                          icon: const Icon(LucideIcons.arrowLeft),
+                          width: 40,
+                          height: 40,
+                        ),
                       ),
                     ),
                     _EditableTaskTitle(task: item),
@@ -82,7 +100,7 @@ class TaskDetailScreen extends ConsumerWidget {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        FilledButton.icon(
+                        ShadButton(
                           onPressed: item.isCompleted
                               ? null
                               : () async {
@@ -103,7 +121,7 @@ class TaskDetailScreen extends ConsumerWidget {
                                   showActionFeedback(
                                     context,
                                     message: l10n.focusStarted,
-                                    icon: Icons.play_circle_outline,
+                                    icon: LucideIcons.circlePlay,
                                     haptic: AppHapticCue.none,
                                     action: SnackBarAction(
                                       label: l10n.commonOpen,
@@ -111,10 +129,11 @@ class TaskDetailScreen extends ConsumerWidget {
                                     ),
                                   );
                                 },
-                          icon: const Icon(Icons.play_arrow),
-                          label: Text(l10n.startFocus),
+                          enabled: !(item.isCompleted),
+                          leading: const Icon(LucideIcons.play),
+                          child: Text(l10n.startFocus),
                         ),
-                        OutlinedButton.icon(
+                        ShadButton.outline(
                           onPressed: () async {
                             if (item.isCompleted) {
                               try {
@@ -124,7 +143,7 @@ class TaskDetailScreen extends ConsumerWidget {
                                   showActionFeedback(
                                     context,
                                     message: l10n.taskActionFailedCount(1),
-                                    icon: Icons.error_outline,
+                                    icon: LucideIcons.circleAlert,
                                     sound: ActionFeedbackSound.none,
                                     haptic: AppHapticCue.none,
                                   );
@@ -146,7 +165,7 @@ class TaskDetailScreen extends ConsumerWidget {
                               showActionFeedback(
                                 context,
                                 message: l10n.taskReopened,
-                                icon: Icons.undo,
+                                icon: LucideIcons.undo2,
                               );
                               return;
                             }
@@ -157,29 +176,27 @@ class TaskDetailScreen extends ConsumerWidget {
                               item.id,
                             );
                           },
-                          icon: TaskCompletionControl(
+                          leading: TaskCompletionControl(
                             taskId: item.id,
                             isCompleted: item.isCompleted,
                             color: context.appColors.accent,
                             fillColor: context.appColors.accentFill,
                             onPressed: null,
                           ),
-                          label: Text(
+                          child: Text(
                             item.isCompleted
                                 ? l10n.markOpen
                                 : l10n.markComplete,
                           ),
                         ),
-                        TextButton.icon(
+                        ShadButton.ghost(
                           onPressed: () async {
                             await deleteTaskWithRecurringPrompt(
                               context,
                               ref,
                               item,
                               onDeleted: () => Future<void>.delayed(
-                                MediaQuery.disableAnimationsOf(context)
-                                    ? Duration.zero
-                                    : const Duration(milliseconds: 220),
+                                AppMotion.duration(context, AppMotion.task),
                                 () {
                                   if (context.mounted) {
                                     _goBack(context);
@@ -188,8 +205,8 @@ class TaskDetailScreen extends ConsumerWidget {
                               ),
                             );
                           },
-                          icon: const Icon(Icons.delete_outline),
-                          label: Text(l10n.commonDelete),
+                          leading: const Icon(LucideIcons.trash2),
+                          child: Text(l10n.commonDelete),
                         ),
                       ],
                     ),
@@ -262,96 +279,199 @@ class _TaskMetadataChips extends ConsumerWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        PopupMenuButton<int>(
-          key: const Key('task-detail-priority-chip'),
-          tooltip: l10n.priority(task.priority),
-          onSelected: (priority) => unawaited(
-            ref
-                .read(taskRepositoryProvider)
-                .updateTask(task.id, UpdateTaskPatch(priority: priority)),
-          ),
-          itemBuilder: (context) => [
-            for (final priority in [1, 2, 3, 4])
-              CheckedPopupMenuItem<int>(
-                value: priority,
-                checked: task.priority == priority,
-                child: Text(l10n.priority(priority)),
-              ),
-          ],
-          child: Chip(
-            label: Text('p${task.priority}'),
-            avatar: Icon(
-              Icons.flag_outlined,
-              color: _priorityColor(task.priority, colors),
-            ),
-          ),
-        ),
-        PopupMenuButton<_ScheduleQuickAction>(
-          key: const Key('task-detail-schedule-chip'),
-          tooltip: l10n.scheduleTitle,
-          onSelected: (action) =>
-              unawaited(_runScheduleQuickAction(context, ref, task, action)),
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: _ScheduleQuickAction.today,
-              child: Text(l10n.today),
-            ),
-            PopupMenuItem(
-              value: _ScheduleQuickAction.tomorrow,
-              child: Text(l10n.tomorrow),
-            ),
-            const PopupMenuDivider(),
-            PopupMenuItem(
-              value: _ScheduleQuickAction.allDay,
-              child: Text(l10n.allDay),
-            ),
-            PopupMenuItem(
-              value: _ScheduleQuickAction.timed,
-              child: Text(l10n.timedBlock),
-            ),
-            if (task.schedule != null) ...[
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: _ScheduleQuickAction.clear,
-                child: Text(l10n.clearDate),
+        Tooltip(
+          message: l10n.priority(task.priority),
+          child: ShadMenubar(
+            key: const Key('task-detail-priority-chip'),
+            padding: EdgeInsets.zero,
+            border: ShadBorder.none,
+            backgroundColor: Colors.transparent,
+            items: [
+              ShadMenubarItem(
+                items: [
+                  for (final priority in [1, 2, 3, 4])
+                    ShadContextMenuItem(
+                      trailing: Icon(
+                        task.priority == priority ? LucideIcons.check : null,
+                        size: 16,
+                      ),
+                      onPressed: () => unawaited(
+                        ref
+                            .read(taskRepositoryProvider)
+                            .updateTask(
+                              task.id,
+                              UpdateTaskPatch(priority: priority),
+                            ),
+                      ),
+                      child: Text(l10n.priority(priority)),
+                    ),
+                ],
+                height: 36,
+                buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
+                child: ShadBadge.secondary(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        LucideIcons.flag,
+                        size: 16,
+                        color: _priorityColor(task.priority, colors),
+                      ),
+                      const SizedBox(width: 6),
+                      Text('p${task.priority}'),
+                    ],
+                  ),
+                ),
               ),
             ],
-          ],
-          child: Semantics(
-            key: const Key('task-detail-time-meta'),
-            label: scheduleSemanticLabel,
-            child: Chip(
-              label: Text(
-                scheduleLabel,
-                key: const Key('task-detail-time-label'),
-                style: TextStyle(color: taskTimeColor),
+          ),
+        ),
+        Tooltip(
+          message: l10n.scheduleTitle,
+          child: ShadMenubar(
+            key: const Key('task-detail-schedule-chip'),
+            padding: EdgeInsets.zero,
+            border: ShadBorder.none,
+            backgroundColor: Colors.transparent,
+            items: [
+              ShadMenubarItem(
+                items: [
+                  ShadContextMenuItem(
+                    onPressed: () => unawaited(
+                      _runScheduleQuickAction(
+                        context,
+                        ref,
+                        task,
+                        _ScheduleQuickAction.today,
+                      ),
+                    ),
+                    child: Text(l10n.today),
+                  ),
+                  ShadContextMenuItem(
+                    onPressed: () => unawaited(
+                      _runScheduleQuickAction(
+                        context,
+                        ref,
+                        task,
+                        _ScheduleQuickAction.tomorrow,
+                      ),
+                    ),
+                    child: Text(l10n.tomorrow),
+                  ),
+                  const Divider(height: 8),
+                  ShadContextMenuItem(
+                    onPressed: () => unawaited(
+                      _runScheduleQuickAction(
+                        context,
+                        ref,
+                        task,
+                        _ScheduleQuickAction.allDay,
+                      ),
+                    ),
+                    child: Text(l10n.allDay),
+                  ),
+                  ShadContextMenuItem(
+                    onPressed: () => unawaited(
+                      _runScheduleQuickAction(
+                        context,
+                        ref,
+                        task,
+                        _ScheduleQuickAction.timed,
+                      ),
+                    ),
+                    child: Text(l10n.timedBlock),
+                  ),
+                  if (task.schedule != null) ...[
+                    const Divider(height: 8),
+                    ShadContextMenuItem(
+                      onPressed: () => unawaited(
+                        _runScheduleQuickAction(
+                          context,
+                          ref,
+                          task,
+                          _ScheduleQuickAction.clear,
+                        ),
+                      ),
+                      child: Text(l10n.clearDate),
+                    ),
+                  ],
+                ],
+                height: 36,
+                buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Semantics(
+                  key: const Key('task-detail-time-meta'),
+                  label: scheduleSemanticLabel,
+                  child: ShadBadge.secondary(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 5,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          LucideIcons.calendar,
+                          size: 16,
+                          key: const Key('task-detail-time-icon'),
+                          color: taskTimeColor,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          scheduleLabel,
+                          key: const Key('task-detail-time-label'),
+                          style: TextStyle(color: taskTimeColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-              avatar: Icon(
-                Icons.event,
-                key: const Key('task-detail-time-icon'),
-                color: taskTimeColor,
+            ],
+          ),
+        ),
+        ShadBadge.secondary(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(LucideIcons.refreshCw, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                calendarLinked ? l10n.calendarLinked : l10n.calendarNotLinked,
               ),
-            ),
+            ],
           ),
         ),
-        Chip(
-          label: Text(
-            calendarLinked ? l10n.calendarLinked : l10n.calendarNotLinked,
+        ShadBadge.secondary(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(LucideIcons.timer, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                l10n.focusProgress(
+                  task.completedFocusIntervals,
+                  focusEstimate ?? 0,
+                ),
+              ),
+            ],
           ),
-          avatar: const Icon(Icons.sync),
         ),
-        Chip(
-          label: Text(
-            l10n.focusProgress(
-              task.completedFocusIntervals,
-              focusEstimate ?? 0,
-            ),
+        ShadBadge.secondary(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(LucideIcons.history, size: 16),
+              const SizedBox(width: 6),
+              Text(formatFocusTime(context, task.totalFocusSeconds)),
+            ],
           ),
-          avatar: const Icon(Icons.timer_outlined),
-        ),
-        Chip(
-          label: Text(formatFocusTime(context, task.totalFocusSeconds)),
-          avatar: const Icon(Icons.history),
         ),
       ],
     );
@@ -600,18 +720,16 @@ class _EditableTaskDescriptionState
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return ShadInput(
       key: const Key('task-comment-editor'),
       controller: _controller,
       focusNode: _focusNode,
       minLines: 1,
       maxLines: 5,
       textInputAction: TextInputAction.newline,
-      decoration: InputDecoration(
-        labelText: context.l10n.taskComment,
-        hintText: context.l10n.taskCommentHint,
-        prefixIcon: const Icon(Icons.notes_outlined),
-      ),
+      placeholder: Text(context.l10n.taskCommentHint),
+      top: Text(context.l10n.taskComment),
+      leading: const Icon(LucideIcons.notebookPen),
     );
   }
 
@@ -674,26 +792,29 @@ class _SubtasksSectionState extends ConsumerState<_SubtasksSection> {
       children: [
         Text(l10n.subtasks, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 8),
-        TextField(
+        ShadInput(
           key: const Key('add-subtask-field'),
           controller: _controller,
           enabled: !_saving,
           textInputAction: TextInputAction.done,
-          decoration: InputDecoration(
-            hintText: l10n.addSubtaskHint,
-            prefixIcon: const Icon(Icons.subdirectory_arrow_right),
-            suffixIcon: IconButton(
-              tooltip: l10n.addSubtask,
+          onSubmitted: (_) => _submit(),
+          placeholder: Text(l10n.addSubtaskHint),
+          leading: const Icon(LucideIcons.cornerDownRight),
+          trailing: Tooltip(
+            message: l10n.addSubtask,
+            child: ShadIconButton.ghost(
               onPressed: _saving ? null : _submit,
               icon: _saving
                   ? const SizedBox.square(
                       dimension: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.add),
+                  : const Icon(LucideIcons.plus),
+              enabled: !(_saving),
+              width: 40,
+              height: 40,
             ),
           ),
-          onSubmitted: (_) => _submit(),
         ),
         const SizedBox(height: 12),
         tasks.when(
@@ -812,21 +933,21 @@ class _ScheduleActions extends ConsumerWidget {
           spacing: 8,
           runSpacing: 8,
           children: [
-            OutlinedButton.icon(
+            ShadButton.outline(
               onPressed: () => _pickAllDaySchedule(context, ref, task),
-              icon: const Icon(Icons.event_available_outlined),
-              label: Text(context.l10n.allDay),
+              leading: const Icon(LucideIcons.calendarCheck),
+              child: Text(context.l10n.allDay),
             ),
-            OutlinedButton.icon(
+            ShadButton.outline(
               onPressed: () => _pickTimedSchedule(context, ref, task),
-              icon: const Icon(Icons.schedule),
-              label: Text(context.l10n.timedBlock),
+              leading: const Icon(LucideIcons.clock),
+              child: Text(context.l10n.timedBlock),
             ),
             if (task.schedule != null)
-              TextButton.icon(
+              ShadButton.ghost(
                 onPressed: () => _clearTaskSchedule(ref, task),
-                icon: const Icon(Icons.event_busy_outlined),
-                label: Text(context.l10n.commonClear),
+                leading: const Icon(LucideIcons.calendarX),
+                child: Text(context.l10n.commonClear),
               ),
           ],
         ),
@@ -885,7 +1006,7 @@ class _RecurrenceActionsState extends ConsumerState<_RecurrenceActions> {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
-        TextField(
+        ShadInput(
           key: const Key('task-recurrence-interval-input'),
           controller: _controller,
           focusNode: _focusNode,
@@ -893,53 +1014,60 @@ class _RecurrenceActionsState extends ConsumerState<_RecurrenceActions> {
           keyboardType: TextInputType.number,
           textInputAction: TextInputAction.done,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: InputDecoration(
-            labelText: l10n.recurrenceIntervalLabel,
-            errorText: _errorText,
-            prefixIcon: const Icon(Icons.repeat),
-          ),
           onSubmitted: (_) => _save(unit),
+          top: Text(l10n.recurrenceIntervalLabel),
+          leading: const Icon(LucideIcons.repeat),
+          bottom: _errorText == null
+              ? null
+              : Text(
+                  _errorText!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
         ),
         const SizedBox(height: 10),
-        SegmentedButton<TaskRecurrenceUnit>(
-          key: const Key('task-recurrence-unit-select'),
-          showSelectedIcon: false,
-          segments: [
-            ButtonSegment(
-              value: TaskRecurrenceUnit.day,
-              label: Text(l10n.recurrenceUnitDay),
-            ),
-            ButtonSegment(
-              value: TaskRecurrenceUnit.week,
-              label: Text(l10n.recurrenceUnitWeek),
-            ),
-            ButtonSegment(
-              value: TaskRecurrenceUnit.month,
-              label: Text(l10n.recurrenceUnitMonth),
-            ),
-          ],
-          selected: {unit},
-          onSelectionChanged: schedule == null
-              ? null
-              : (selection) => _save(selection.single),
+        IntrinsicWidth(
+          child: ShadTabs<TaskRecurrenceUnit>(
+            key: const Key('task-recurrence-unit-select'),
+            value: unit,
+            gap: 0,
+            tabs: [
+              ShadTab(
+                value: TaskRecurrenceUnit.day,
+                enabled: schedule != null,
+                child: Text(l10n.recurrenceUnitDay),
+              ),
+              ShadTab(
+                value: TaskRecurrenceUnit.week,
+                enabled: schedule != null,
+                child: Text(l10n.recurrenceUnitWeek),
+              ),
+              ShadTab(
+                value: TaskRecurrenceUnit.month,
+                enabled: schedule != null,
+                child: Text(l10n.recurrenceUnitMonth),
+              ),
+            ],
+            onChanged: _save,
+          ),
         ),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
-            FilledButton.icon(
+            ShadButton(
               key: const Key('task-recurrence-save-button'),
               onPressed: schedule == null ? null : () => _save(unit),
-              icon: const Icon(Icons.repeat),
-              label: Text(l10n.commonSave),
+              enabled: !(schedule == null),
+              leading: const Icon(LucideIcons.repeat),
+              child: Text(l10n.commonSave),
             ),
             if (recurrence != null)
-              TextButton.icon(
+              ShadButton.ghost(
                 key: const Key('task-recurrence-clear-button'),
                 onPressed: _clear,
-                icon: const Icon(Icons.repeat_one),
-                label: Text(l10n.commonClear),
+                leading: const Icon(LucideIcons.repeat1),
+                child: Text(l10n.commonClear),
               ),
           ],
         ),
@@ -1136,7 +1264,9 @@ class _FocusHistory extends ConsumerWidget {
             for (final interval in intervals.take(20))
               ListTile(
                 leading: Icon(
-                  interval.type == 'work' ? Icons.timer : Icons.coffee,
+                  interval.type == 'work'
+                      ? LucideIcons.timer
+                      : LucideIcons.coffee,
                 ),
                 title: Text(
                   '${focusIntervalTypeLabel(context.l10n, interval.type)} · '

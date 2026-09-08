@@ -4,6 +4,7 @@ import 'package:app_account/app_account.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../../app/account_auth_feedback.dart';
 import '../../../app/app_l10n.dart';
@@ -39,7 +40,7 @@ List<Widget> pomodoistAccountSignInActions({
       onSignedIn: onSignedIn,
       label: googleLabel,
     ),
-    OutlinedButton.icon(
+    ShadButton.outline(
       onPressed: () => showPomodoistEmailAuthDialog(
         context: context,
         account: account,
@@ -48,8 +49,8 @@ List<Widget> pomodoistAccountSignInActions({
         config: config,
         nativeCaptchaCallbacks: nativeCaptchaCallbacks,
       ),
-      icon: const Icon(Icons.email_outlined),
-      label: Text(emailLabel),
+      leading: const Icon(LucideIcons.mail),
+      child: Text(emailLabel),
     ),
   ];
 }
@@ -163,17 +164,18 @@ class _PomodoistSocialSignInButtonState
   Widget build(BuildContext context) {
     final icon = switch (widget.provider) {
       PomodoistSocialProvider.apple => Icons.apple,
-      PomodoistSocialProvider.google => Icons.account_circle_outlined,
+      PomodoistSocialProvider.google => LucideIcons.circleUserRound,
     };
-    return OutlinedButton.icon(
+    return ShadButton.outline(
+      enabled: !_submitting,
       onPressed: _submitting ? null : _submit,
-      icon: _submitting
+      leading: _submitting
           ? const SizedBox.square(
               dimension: 18,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : Icon(icon),
-      label: Text(widget.label),
+      child: Text(widget.label),
     );
   }
 }
@@ -377,8 +379,9 @@ class _PomodoistEmailAuthDialogState extends State<_PomodoistEmailAuthDialog> {
                 const SizedBox(height: 4),
                 Align(
                   alignment: AlignmentDirectional.centerEnd,
-                  child: TextButton(
+                  child: ShadButton.ghost(
                     key: const Key('account-auth-recovery'),
+                    enabled: !_submitting,
                     onPressed: _submitting
                         ? null
                         : () => _recover(feedback.recovery),
@@ -395,7 +398,7 @@ class _PomodoistEmailAuthDialogState extends State<_PomodoistEmailAuthDialog> {
                   liveRegion: true,
                   child: Row(
                     children: [
-                      const Icon(Icons.hourglass_top, size: 18),
+                      const Icon(LucideIcons.hourglass, size: 18),
                       const SizedBox(width: 8),
                       Expanded(child: Text(context.l10n.operationTakingLonger)),
                     ],
@@ -407,25 +410,30 @@ class _PomodoistEmailAuthDialogState extends State<_PomodoistEmailAuthDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        ShadButton.ghost(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l10n.commonCancel),
         ),
         if (_mode == _EmailAction.signIn)
-          TextButton(
+          ShadButton.ghost(
+            enabled: _canSubmit,
             onPressed: _canSubmit
                 ? () => _submit(_EmailAction.magicLink)
                 : null,
             child: Text(l10n.authSendLink),
           ),
-        FilledButton(
+        ShadButton(
+          enabled: _canSubmit,
           onPressed: _canSubmit ? () => _submit(_mode) : null,
           child: _submitting
               ? _takingLonger
-                    ? const Icon(Icons.hourglass_top, size: 18)
-                    : const SizedBox.square(
+                    ? const Icon(LucideIcons.hourglass, size: 18)
+                    : SizedBox.square(
                         dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
                       )
               : Text(
                   _mode == _EmailAction.signIn

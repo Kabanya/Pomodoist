@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../../app/app_l10n.dart';
 import '../../../app/formatters.dart';
@@ -289,14 +290,14 @@ class _TodayMetrics extends StatelessWidget {
   Widget build(BuildContext context) {
     final children = [
       _StoryMetric(
-        icon: Icons.check_circle_outline,
+        icon: LucideIcons.circleCheck,
         iconKey: const Key('reports-completed-tasks-icon'),
         iconColor: context.appColors.info,
         value: '${summary.completedTasks}',
         label: context.l10n.completedTasks,
       ),
       _StoryMetric(
-        icon: Icons.circle_outlined,
+        icon: LucideIcons.circle,
         iconColor: context.appColors.accent,
         value: '${summary.openTasks}',
         label: context.l10n.openTasks,
@@ -438,6 +439,8 @@ class _WeeklyStory extends StatelessWidget {
                             primaryTextColor: colors.primaryText,
                             mutedTextColor: colors.mutedText,
                             textDirection: Directionality.of(context),
+                            labelStyle:
+                                textTheme.labelSmall ?? const TextStyle(),
                           ),
                         ),
                       ),
@@ -476,6 +479,7 @@ class _WeeklyFocusChartPainter extends CustomPainter {
     required this.primaryTextColor,
     required this.mutedTextColor,
     required this.textDirection,
+    required this.labelStyle,
   });
 
   final List<ProductivityDaySummary> days;
@@ -487,6 +491,7 @@ class _WeeklyFocusChartPainter extends CustomPainter {
   final Color primaryTextColor;
   final Color mutedTextColor;
   final TextDirection textDirection;
+  final TextStyle labelStyle;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -590,7 +595,7 @@ class _WeeklyFocusChartPainter extends CustomPainter {
     final painter = TextPainter(
       text: TextSpan(
         text: value,
-        style: TextStyle(
+        style: labelStyle.copyWith(
           color: color,
           fontSize: 11,
           fontWeight: FontWeight.w500,
@@ -616,7 +621,8 @@ class _WeeklyFocusChartPainter extends CustomPainter {
       fillColor != oldDelegate.fillColor ||
       primaryTextColor != oldDelegate.primaryTextColor ||
       mutedTextColor != oldDelegate.mutedTextColor ||
-      textDirection != oldDelegate.textDirection;
+      textDirection != oldDelegate.textDirection ||
+      labelStyle != oldDelegate.labelStyle;
 }
 
 class _WeeklyTotals extends StatelessWidget {
@@ -639,7 +645,7 @@ class _WeeklyTotals extends StatelessWidget {
       children: [
         Expanded(
           child: _WeeklyTotal(
-            icon: Icons.timelapse,
+            icon: LucideIcons.clock,
             iconColor: context.appColors.accent,
             value: focusTime,
             label: context.l10n.focusTime,
@@ -648,7 +654,7 @@ class _WeeklyTotals extends StatelessWidget {
         ),
         Expanded(
           child: _WeeklyTotal(
-            icon: Icons.timer_outlined,
+            icon: LucideIcons.timer,
             iconColor: context.appColors.accent,
             value: focusIntervals,
             label: context.l10n.focusIntervals,
@@ -657,7 +663,7 @@ class _WeeklyTotals extends StatelessWidget {
         ),
         Expanded(
           child: _WeeklyTotal(
-            icon: Icons.check_circle_outline,
+            icon: LucideIcons.circleCheck,
             iconColor: context.appColors.info,
             value: completedTasks,
             label: context.l10n.completedTasks,
@@ -764,7 +770,7 @@ class _NextAchievementContent extends StatelessWidget {
     if (items.isEmpty) {
       return Row(
         children: [
-          Icon(Icons.emoji_events_outlined, color: colors.mutedText),
+          Icon(LucideIcons.trophy, color: colors.mutedText),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -777,15 +783,19 @@ class _NextAchievementContent extends StatelessWidget {
     }
 
     final next = _closestLockedAchievement(items);
-    final action = TextButton(
+    final action = ShadButton.ghost(
+      height: 0,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       onPressed: () => context.push('/reports/achievements'),
-      child: Text(context.l10n.viewAllAchievementsCount(items.length)),
+      child: Flexible(
+        child: Text(context.l10n.viewAllAchievementsCount(items.length)),
+      ),
     );
 
     if (next == null) {
       return Row(
         children: [
-          Icon(Icons.emoji_events_outlined, color: colors.accent),
+          Icon(LucideIcons.trophy, color: colors.accent),
           const SizedBox(width: 12),
           Expanded(
             child: Text(

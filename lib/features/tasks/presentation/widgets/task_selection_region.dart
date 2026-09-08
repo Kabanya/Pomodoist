@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../../app/theme/app_motion.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' as intl;
@@ -234,7 +236,7 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
               IconButton(
                 tooltip: l10n.commonClose,
                 onPressed: _controller.close,
-                icon: const Icon(Icons.close),
+                icon: const Icon(LucideIcons.x),
               ),
               Expanded(
                 child: Text(
@@ -268,11 +270,11 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
         top: false,
         child: Row(
           children: [
-            _barAction(Icons.event_outlined, l10n.taskDue, _showDue),
-            _barAction(Icons.folder_outlined, l10n.taskProject, _showProject),
-            _barAction(Icons.label_outline, l10n.taskLabels, _showLabels),
-            _barAction(Icons.flag_outlined, l10n.taskPriority, _showPriority),
-            _barAction(Icons.more_horiz, l10n.taskMore, _showMore),
+            _barAction(LucideIcons.calendar, l10n.taskDue, _showDue),
+            _barAction(LucideIcons.folder, l10n.taskProject, _showProject),
+            _barAction(LucideIcons.tag, l10n.taskLabels, _showLabels),
+            _barAction(LucideIcons.flag, l10n.taskPriority, _showPriority),
+            _barAction(LucideIcons.ellipsis, l10n.taskMore, _showMore),
           ],
         ),
       ),
@@ -461,7 +463,7 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
     showActionFeedback(
       context,
       message: reopen ? l10n.taskReopened : l10n.taskCompleted,
-      icon: reopen ? Icons.undo : Icons.check_circle_outline,
+      icon: reopen ? LucideIcons.undo2 : LucideIcons.circleCheck,
       duration: taskCompletionUndoFeedbackDuration,
       showCloseIcon: true,
       compact: true,
@@ -592,7 +594,7 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
     showActionFeedback(
       this.context,
       message: this.context.l10n.taskDeleted,
-      icon: Icons.delete_outline,
+      icon: LucideIcons.trash2,
       duration: const Duration(seconds: 7),
       showCloseIcon: true,
       compact: true,
@@ -683,6 +685,11 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
   Future<bool?> _confirmDelete(BuildContext context, bool recurring) {
     return showDialog<bool>(
       context: context,
+      animationStyle: AnimationStyle(
+        duration: AppMotion.duration(context, AppMotion.popup),
+        reverseDuration: AppMotion.duration(context, AppMotion.popup),
+        curve: AppMotion.curve,
+      ),
       builder: (dialogContext) => AlertDialog(
         title: Text(context.l10n.taskDeleteSelectedTitle),
         content: Text(context.l10n.taskDeleteSelectedMessage),
@@ -750,6 +757,10 @@ Future<T?> showAdaptiveTaskPanel<T>(
   if (_usesTouchPanels) {
     return showModalBottomSheet<T>(
       context: context,
+      sheetAnimationStyle: AnimationStyle(
+        duration: AppMotion.duration(context, AppMotion.panel),
+        reverseDuration: AppMotion.duration(context, AppMotion.panel),
+      ),
       isScrollControlled: true,
       useSafeArea: true,
       builder: builder,
@@ -757,6 +768,11 @@ Future<T?> showAdaptiveTaskPanel<T>(
   }
   return showDialog<T>(
     context: context,
+    animationStyle: AnimationStyle(
+      duration: AppMotion.duration(context, AppMotion.popup),
+      reverseDuration: AppMotion.duration(context, AppMotion.popup),
+      curve: AppMotion.curve,
+    ),
     builder: (dialogContext) => Dialog(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420, maxHeight: 680),
@@ -799,15 +815,11 @@ class _TaskDuePanelState extends State<_TaskDuePanel> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final presets = [
-      (Icons.today_outlined, l10n.today, _today),
+      (LucideIcons.calendarCheck, l10n.today, _today),
+      (LucideIcons.sun, l10n.tomorrow, _today.add(const Duration(days: 1))),
+      (LucideIcons.armchair, l10n.taskWeekend, taskWeekendPresetDate(_today)),
       (
-        Icons.wb_sunny_outlined,
-        l10n.tomorrow,
-        _today.add(const Duration(days: 1)),
-      ),
-      (Icons.weekend_outlined, l10n.taskWeekend, taskWeekendPresetDate(_today)),
-      (
-        Icons.event_repeat_outlined,
+        LucideIcons.calendarSync,
         l10n.taskNextWeek,
         taskNextWeekPresetDate(_today),
       ),
@@ -835,7 +847,7 @@ class _TaskDuePanelState extends State<_TaskDuePanel> {
                   decoration: InputDecoration(
                     hintText: l10n.taskEnterDue,
                     errorText: _error,
-                    prefixIcon: const Icon(Icons.schedule_outlined),
+                    prefixIcon: const Icon(LucideIcons.clock),
                   ),
                   onSubmitted: (_) => _applyDone(),
                 ),

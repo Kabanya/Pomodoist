@@ -2,6 +2,7 @@ import 'package:app_account/app_account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../../app/account_providers.dart';
 
@@ -109,8 +110,13 @@ class _TelegramAccountLinkScreenState
                               ),
                             ],
                             const SizedBox(height: 20),
-                            FilledButton(
+                            ShadButton(
                               key: const Key('telegram-link-confirm'),
+                              enabled:
+                                  !(account == null ||
+                                      email == null ||
+                                      _submitting ||
+                                      widget.token.isEmpty),
                               onPressed:
                                   account == null ||
                                       email == null ||
@@ -119,10 +125,13 @@ class _TelegramAccountLinkScreenState
                                   ? null
                                   : () => _confirm(account),
                               child: _submitting
-                                  ? const SizedBox.square(
+                                  ? SizedBox.square(
                                       dimension: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onPrimary,
                                       ),
                                     )
                                   : const Text('Connect this account'),
@@ -177,7 +186,7 @@ class _Success extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Icon(
-          Icons.check_circle,
+          LucideIcons.circleCheck,
           size: 64,
           color: Theme.of(context).colorScheme.primary,
         ),
@@ -193,11 +202,11 @@ class _Success extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 22),
-        FilledButton.icon(
+        ShadButton(
           key: const Key('telegram-link-return'),
           onPressed: onReturn,
-          icon: const Icon(Icons.telegram),
-          label: Text('Return to @$botName'),
+          leading: const Icon(Icons.telegram),
+          child: Text('Return to @$botName'),
         ),
       ],
     );

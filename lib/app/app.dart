@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show ShadApp, ShadAppBuilder, ShadTheme, GlobalShadLocalizations;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
@@ -9,6 +11,7 @@ import 'platform_quick_add.dart';
 import 'app_theme_mode.dart';
 import 'router.dart';
 import 'theme/app_theme.dart';
+import 'theme/app_motion.dart';
 
 class PomodoistApp extends ConsumerWidget {
   const PomodoistApp({super.key});
@@ -19,24 +22,38 @@ class PomodoistApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
     final language = ref.watch(appLanguageProvider);
     final themeMode = ref.watch(appThemeModeProvider);
-    return MaterialApp.router(
-      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
+    return ShadApp.custom(
+      theme: AppTheme.shadFromMaterial(AppTheme.light()),
+      darkTheme: AppTheme.shadFromMaterial(AppTheme.dark()),
       themeMode: themeMode.themeMode,
-      routerConfig: router,
-      builder: (context, child) => DesktopUpdateHost(
-        child: child ?? const SizedBox.shrink(),
+      appBuilder: (context) => MaterialApp.router(
+        onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: themeMode.themeMode,
+        themeAnimationDuration: AppMotion.duration(context, AppMotion.state),
+        themeAnimationCurve: AppMotion.curve,
+        routerConfig: router,
+        builder: (context, child) => ShadTheme(
+          data: AppTheme.shadFromMaterial(
+            Theme.of(context),
+            reduceMotion: MediaQuery.disableAnimationsOf(context),
+          ),
+          child: ShadAppBuilder(
+            child: DesktopUpdateHost(child: child ?? const SizedBox.shrink()),
+          ),
+        ),
+        locale: language.locale,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalShadLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
       ),
-      locale: language.locale,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
-      supportedLocales: AppLocalizations.supportedLocales,
     );
   }
 }

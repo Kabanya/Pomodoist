@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../../../../app/theme/app_motion.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
@@ -35,7 +36,7 @@ class VoicePanelMotion extends StatefulWidget {
 
 class _VoicePanelMotionState extends State<VoicePanelMotion> {
   static const _capsule = Size(168, 64);
-  static const _duration = Duration(milliseconds: 300);
+  static const _duration = AppMotion.panel;
   final _panelFocus = FocusNode();
   final _dragFocus = FocusNode();
   Alignment _corner = Alignment.bottomRight;
@@ -239,7 +240,7 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
                       elevation: 3,
                       shadowColor: colors.shadow.withValues(alpha: .22),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(32),
+                        borderRadius: BorderRadius.circular(12),
                         side: BorderSide(color: colors.outlineVariant),
                       ),
                       clipBehavior: Clip.antiAlias,
