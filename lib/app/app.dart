@@ -11,6 +11,7 @@ import 'platform_quick_add.dart';
 import 'app_theme_mode.dart';
 import 'router.dart';
 import 'theme/app_theme.dart';
+import 'theme/app_theme_settings.dart';
 import 'theme/app_motion.dart';
 
 class PomodoistApp extends ConsumerWidget {
@@ -22,15 +23,22 @@ class PomodoistApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
     final language = ref.watch(appLanguageProvider);
     final themeMode = ref.watch(appThemeModeProvider);
+    final palettes = ref.watch(
+      appThemeSettingsProvider.select(
+        (settings) => (settings.activeTheme.light, settings.activeTheme.dark),
+      ),
+    );
+    final lightTheme = AppTheme.light(palette: palettes.$1);
+    final darkTheme = AppTheme.dark(palette: palettes.$2);
     return ShadApp.custom(
-      theme: AppTheme.shadFromMaterial(AppTheme.light()),
-      darkTheme: AppTheme.shadFromMaterial(AppTheme.dark()),
+      theme: AppTheme.shadFromMaterial(lightTheme),
+      darkTheme: AppTheme.shadFromMaterial(darkTheme),
       themeMode: themeMode.themeMode,
       appBuilder: (context) => MaterialApp.router(
         onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
+        theme: lightTheme,
+        darkTheme: darkTheme,
         themeMode: themeMode.themeMode,
         themeAnimationDuration: AppMotion.duration(context, AppMotion.state),
         themeAnimationCurve: AppMotion.curve,

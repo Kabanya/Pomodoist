@@ -6,6 +6,42 @@ import 'app_motion.dart';
 
 import '../task_time.dart';
 
+enum AppThemeColor {
+  canvas,
+  surface,
+  surfaceTint,
+  surfaceHover,
+  primaryText,
+  secondaryText,
+  mutedText,
+  border,
+  accent,
+  accentFill,
+  accentTint,
+  warning,
+  info,
+  success,
+  error,
+  overdue,
+  onAccent,
+  onError,
+}
+
+Color? parseThemeColor(String value) {
+  final hex = value.trim();
+  if (!RegExp(r'^#?[0-9a-fA-F]{6}$').hasMatch(hex)) return null;
+  return Color(0xFF000000 | int.parse(hex.replaceFirst('#', ''), radix: 16));
+}
+
+String themeColorHex(Color color) =>
+    '#${(color.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, "0").toUpperCase()}';
+
+double themeContrastRatio(Color first, Color second) {
+  final a = first.computeLuminance();
+  final b = second.computeLuminance();
+  return a > b ? (a + .05) / (b + .05) : (b + .05) / (a + .05);
+}
+
 class AppThemePalette extends ThemeExtension<AppThemePalette> {
   const AppThemePalette({
     required this.canvas,
@@ -22,6 +58,10 @@ class AppThemePalette extends ThemeExtension<AppThemePalette> {
     required this.warning,
     required this.info,
     required this.success,
+    required this.error,
+    required this.overdue,
+    required this.onAccent,
+    required this.onError,
   });
 
   final Color canvas;
@@ -38,6 +78,88 @@ class AppThemePalette extends ThemeExtension<AppThemePalette> {
   final Color warning;
   final Color info;
   final Color success;
+  final Color error;
+  final Color overdue;
+  final Color onAccent;
+  final Color onError;
+
+  Map<AppThemeColor, Color> get values => {
+    AppThemeColor.canvas: canvas,
+    AppThemeColor.surface: surface,
+    AppThemeColor.surfaceTint: surfaceTint,
+    AppThemeColor.surfaceHover: surfaceHover,
+    AppThemeColor.primaryText: primaryText,
+    AppThemeColor.secondaryText: secondaryText,
+    AppThemeColor.mutedText: mutedText,
+    AppThemeColor.border: border,
+    AppThemeColor.accent: accent,
+    AppThemeColor.accentFill: accentFill,
+    AppThemeColor.accentTint: accentTint,
+    AppThemeColor.warning: warning,
+    AppThemeColor.info: info,
+    AppThemeColor.success: success,
+    AppThemeColor.error: error,
+    AppThemeColor.overdue: overdue,
+    AppThemeColor.onAccent: onAccent,
+    AppThemeColor.onError: onError,
+  };
+
+  AppThemePalette withColor(AppThemeColor role, Color color) => copyWith(
+    canvas: role == AppThemeColor.canvas ? color : null,
+    surface: role == AppThemeColor.surface ? color : null,
+    surfaceTint: role == AppThemeColor.surfaceTint ? color : null,
+    surfaceHover: role == AppThemeColor.surfaceHover ? color : null,
+    primaryText: role == AppThemeColor.primaryText ? color : null,
+    secondaryText: role == AppThemeColor.secondaryText ? color : null,
+    mutedText: role == AppThemeColor.mutedText ? color : null,
+    border: role == AppThemeColor.border ? color : null,
+    accent: role == AppThemeColor.accent ? color : null,
+    accentFill: role == AppThemeColor.accentFill ? color : null,
+    accentTint: role == AppThemeColor.accentTint ? color : null,
+    warning: role == AppThemeColor.warning ? color : null,
+    info: role == AppThemeColor.info ? color : null,
+    success: role == AppThemeColor.success ? color : null,
+    error: role == AppThemeColor.error ? color : null,
+    overdue: role == AppThemeColor.overdue ? color : null,
+    onAccent: role == AppThemeColor.onAccent ? color : null,
+    onError: role == AppThemeColor.onError ? color : null,
+  );
+
+  Map<String, String> toJson() => {
+    for (final entry in values.entries)
+      entry.key.name: themeColorHex(entry.value),
+  };
+
+  factory AppThemePalette.fromJson(Object? json) {
+    if (json is! Map) throw const FormatException("Invalid theme palette");
+    Color read(String key) {
+      final value = json[key];
+      final color = value is String ? parseThemeColor(value) : null;
+      if (color == null) throw FormatException("Invalid theme color: $key");
+      return color;
+    }
+
+    return AppThemePalette(
+      canvas: read('canvas'),
+      surface: read('surface'),
+      surfaceTint: read('surfaceTint'),
+      surfaceHover: read('surfaceHover'),
+      primaryText: read('primaryText'),
+      secondaryText: read('secondaryText'),
+      mutedText: read('mutedText'),
+      border: read('border'),
+      accent: read('accent'),
+      accentFill: read('accentFill'),
+      accentTint: read('accentTint'),
+      warning: read('warning'),
+      info: read('info'),
+      success: read('success'),
+      error: read('error'),
+      overdue: read('overdue'),
+      onAccent: read('onAccent'),
+      onError: read('onError'),
+    );
+  }
 
   @override
   AppThemePalette copyWith({
@@ -55,6 +177,10 @@ class AppThemePalette extends ThemeExtension<AppThemePalette> {
     Color? warning,
     Color? info,
     Color? success,
+    Color? error,
+    Color? overdue,
+    Color? onAccent,
+    Color? onError,
   }) {
     return AppThemePalette(
       canvas: canvas ?? this.canvas,
@@ -71,6 +197,10 @@ class AppThemePalette extends ThemeExtension<AppThemePalette> {
       warning: warning ?? this.warning,
       info: info ?? this.info,
       success: success ?? this.success,
+      error: error ?? this.error,
+      overdue: overdue ?? this.overdue,
+      onAccent: onAccent ?? this.onAccent,
+      onError: onError ?? this.onError,
     );
   }
 
@@ -94,6 +224,10 @@ class AppThemePalette extends ThemeExtension<AppThemePalette> {
       warning: Color.lerp(warning, other.warning, t)!,
       info: Color.lerp(info, other.info, t)!,
       success: Color.lerp(success, other.success, t)!,
+      error: Color.lerp(error, other.error, t)!,
+      overdue: Color.lerp(overdue, other.overdue, t)!,
+      onAccent: Color.lerp(onAccent, other.onAccent, t)!,
+      onError: Color.lerp(onError, other.onError, t)!,
     );
   }
 }
@@ -104,7 +238,7 @@ extension AppThemePaletteTaskTime on AppThemePalette {
       TaskTimeState.future => info,
       TaskTimeState.focused => success,
       TaskTimeState.current => warning,
-      TaskTimeState.overdue => accent,
+      TaskTimeState.overdue => overdue,
       TaskTimeState.completed => mutedText,
     };
   }
@@ -115,13 +249,13 @@ extension AppThemePaletteContext on BuildContext {
     final theme = Theme.of(this);
     return theme.extension<AppThemePalette>() ??
         (theme.brightness == Brightness.dark
-            ? AppTheme._dark
-            : AppTheme._light);
+            ? AppTheme.classicDark
+            : AppTheme.classicLight);
   }
 }
 
 class AppTheme {
-  static const _light = AppThemePalette(
+  static const classicLight = AppThemePalette(
     canvas: Color(0xFFFAFAFA),
     surface: Color(0xFFFFFFFF),
     surfaceTint: Color(0xFFF5F5F5),
@@ -136,9 +270,13 @@ class AppTheme {
     warning: Color(0xFFB76A00),
     info: Color(0xFF3B6EA8),
     success: Color(0xFF2E7D32),
+    error: Color(0xFFD83B2E),
+    overdue: Color(0xFFD83B2E),
+    onAccent: Colors.white,
+    onError: Colors.white,
   );
 
-  static const _dark = AppThemePalette(
+  static const classicDark = AppThemePalette(
     canvas: Color(0xFF0A0A0A),
     surface: Color(0xFF141414),
     surfaceTint: Color(0xFF1C1C1C),
@@ -153,11 +291,17 @@ class AppTheme {
     warning: Color(0xFFE0A449),
     info: Color(0xFF6EA6D8),
     success: Color(0xFF6FCF97),
+    error: Color(0xFFD83B2E),
+    overdue: Color(0xFFFF6B5E),
+    onAccent: Colors.white,
+    onError: Colors.white,
   );
 
-  static ThemeData light() => _build(_light, Brightness.light);
+  static ThemeData light({AppThemePalette? palette}) =>
+      _build(palette ?? classicLight, Brightness.light);
 
-  static ThemeData dark() => _build(_dark, Brightness.dark);
+  static ThemeData dark({AppThemePalette? palette}) =>
+      _build(palette ?? classicDark, Brightness.dark);
 
   static const monoTextStyle = TextStyle(
     fontFamily: 'GeistMono',
@@ -215,15 +359,15 @@ class AppTheme {
         popover: colors.surface,
         popoverForeground: colors.primaryText,
         primary: colors.accentFill,
-        primaryForeground: Colors.white,
+        primaryForeground: colors.onAccent,
         secondary: colors.surfaceTint,
         secondaryForeground: colors.primaryText,
         muted: colors.surfaceTint,
         mutedForeground: colors.secondaryText,
         accent: colors.surfaceHover,
         accentForeground: colors.primaryText,
-        destructive: colors.accentFill,
-        destructiveForeground: Colors.white,
+        destructive: colors.error,
+        destructiveForeground: colors.onError,
         border: colors.border,
         input: colors.border,
         ring: colors.accent,
@@ -318,7 +462,7 @@ class AppTheme {
     final scheme = baseScheme.copyWith(
       brightness: brightness,
       primary: colors.accentFill,
-      onPrimary: Colors.white,
+      onPrimary: colors.onAccent,
       primaryContainer: colors.accentTint,
       onPrimaryContainer: colors.accent,
       secondary: colors.secondaryText,
@@ -341,7 +485,13 @@ class AppTheme {
       onSurfaceVariant: colors.secondaryText,
       outline: colors.border,
       outlineVariant: colors.border,
-      error: colors.accentFill,
+      error: colors.error,
+      onError: colors.onError,
+      errorContainer: Color.alphaBlend(
+        colors.error.withValues(alpha: .12),
+        colors.surface,
+      ),
+      onErrorContainer: colors.error,
     );
     final textTheme = Typography.material2021().englishLike
         .merge(ThemeData(useMaterial3: true, brightness: brightness).textTheme)
@@ -450,7 +600,7 @@ class AppTheme {
           animationDuration: AppMotion.hover,
           elevation: 0,
           backgroundColor: colors.accentFill,
-          foregroundColor: Colors.white,
+          foregroundColor: colors.onAccent,
           disabledBackgroundColor: colors.surfaceHover,
           disabledForegroundColor: colors.mutedText,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

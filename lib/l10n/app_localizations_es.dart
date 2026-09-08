@@ -2220,4 +2220,141 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get voiceMovePanel => 'Mover panel de voz';
+
+  @override
+  String get themeClassic => 'Clásico';
+
+  @override
+  String get themeOcean => 'Océano';
+
+  @override
+  String get themeForest => 'Bosque';
+
+  @override
+  String get themeCustomize => 'Personalizar';
+
+  @override
+  String get themeEdit => 'Editar';
+
+  @override
+  String get themeDuplicate => 'Duplicar';
+
+  @override
+  String themeCopyName(String name) {
+    return 'Copia de $name';
+  }
+
+  @override
+  String get themeName => 'Nombre del tema';
+
+  @override
+  String get themeNameRequired => 'Introduce un nombre para el tema.';
+
+  @override
+  String get themeEditorTitle => 'Editar tema';
+
+  @override
+  String get themeLivePreview =>
+      'Los cambios aparecen en toda la aplicación. Cancelar restaura el tema anterior.';
+
+  @override
+  String get themeSaveError =>
+      'No se pudo guardar el tema. Tus cambios siguen aquí; inténtalo de nuevo.';
+
+  @override
+  String get themeLoadError => 'No se pudieron cargar tus temas.';
+
+  @override
+  String get themeDeleteTitle => '¿Eliminar tema?';
+
+  @override
+  String themeDeleteBody(String name) {
+    return '¿Eliminar «$name»? Si está activo, se seleccionará Clásico.';
+  }
+
+  @override
+  String get themeColorsSurfaces => 'Fondo y superficies';
+
+  @override
+  String get themeColorsText => 'Texto';
+
+  @override
+  String get themeColorsAccent => 'Acento';
+
+  @override
+  String get themeColorsStatus => 'Colores de estado';
+
+  @override
+  String get themeInvalidHex =>
+      'Introduce un color HEX de seis dígitos, por ejemplo #2563EB.';
+
+  @override
+  String get themeLowContrast =>
+      'Contraste bajo: algunos textos pueden ser difíciles de leer.';
+
+  @override
+  String get themeBuiltInThemes => 'Temas incluidos';
+
+  @override
+  String get themeCustomThemes => 'Tus temas';
+
+  @override
+  String get themePreviewTask => 'Planifica tu día';
+
+  @override
+  String get themePreviewSecondary => 'Un poco de concentración cada día.';
+
+  @override
+  String get themeColorCanvas => 'Fondo';
+
+  @override
+  String get themeColorSurface => 'Superficie';
+
+  @override
+  String get themeColorSurfaceTint => 'Superficie secundaria';
+
+  @override
+  String get themeColorSurfaceHover => 'Superficie al pasar el cursor';
+
+  @override
+  String get themeColorPrimaryText => 'Texto principal';
+
+  @override
+  String get themeColorSecondaryText => 'Texto secundario';
+
+  @override
+  String get themeColorMutedText => 'Texto atenuado';
+
+  @override
+  String get themeColorBorder => 'Borde';
+
+  @override
+  String get themeColorAccent => 'Texto e iconos de acento';
+
+  @override
+  String get themeColorAccentFill => 'Relleno de acento';
+
+  @override
+  String get themeColorAccentTint => 'Relleno de acento suave';
+
+  @override
+  String get themeColorWarning => 'Advertencia';
+
+  @override
+  String get themeColorInfo => 'Información';
+
+  @override
+  String get themeColorSuccess => 'Éxito';
+
+  @override
+  String get themeColorError => 'Error';
+
+  @override
+  String get themeColorOverdue => 'Vencido';
+
+  @override
+  String get themeColorOnAccent => 'Texto sobre relleno de acento';
+
+  @override
+  String get themeColorOnError => 'Texto sobre relleno de error';
 }

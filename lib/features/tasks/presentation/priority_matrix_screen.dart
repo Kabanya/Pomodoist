@@ -471,7 +471,7 @@ int _compareMatrixTaskOrder(TaskItem a, TaskItem b) {
 
 Color _priorityColor(int priority, AppThemePalette colors) {
   return switch (priority) {
-    1 => colors.accent,
+    1 => colors.overdue,
     2 => colors.warning,
     3 => colors.info,
     _ => colors.mutedText,

@@ -543,11 +543,11 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
                   enabled: !_busy,
                   onPressed: _busy ? null : _submit,
                   leading: _busy
-                      ? const SizedBox.square(
+                      ? SizedBox.square(
                           dimension: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: context.appColors.onAccent,
                           ),
                         )
                       : const Icon(LucideIcons.plus),

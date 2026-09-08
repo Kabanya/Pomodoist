@@ -555,7 +555,7 @@ class TaskListItem extends ConsumerWidget {
     AppThemePalette colors,
   ) {
     return switch (priority) {
-      1 => colors.accent,
+      1 => colors.overdue,
       2 => colors.warning,
       3 => colors.info,
       _ => scheme.outline,

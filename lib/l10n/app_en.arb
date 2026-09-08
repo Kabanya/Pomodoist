@@ -708,5 +708,62 @@
   "@taskActionFailedCount": {"placeholders": {"count": {"type": "int"}}},
   "voiceCollapse": "Collapse voice panel",
   "voiceExpand": "Expand voice panel",
-  "voiceMovePanel": "Move voice panel"
+  "voiceMovePanel": "Move voice panel",
+  "themeClassic": "Classic",
+  "themeOcean": "Ocean",
+  "themeForest": "Forest",
+  "themeCustomize": "Customize",
+  "themeEdit": "Edit",
+  "themeDuplicate": "Duplicate",
+  "themeCopyName": "{name} copy",
+  "themeName": "Theme name",
+  "themeNameRequired": "Enter a theme name.",
+  "themeEditorTitle": "Edit theme",
+  "themeLivePreview": "Changes appear throughout the app. Cancel restores your previous theme.",
+  "themeSaveError": "Could not save the theme. Your changes are still here; try again.",
+  "themeLoadError": "Could not load your themes.",
+  "themeDeleteTitle": "Delete theme?",
+  "themeDeleteBody": "Delete “{name}”? If it is active, Classic will be selected.",
+  "themeColorsSurfaces": "Background and surfaces",
+  "themeColorsText": "Text",
+  "themeColorsAccent": "Accent",
+  "themeColorsStatus": "Status colors",
+  "themeInvalidHex": "Enter a six-digit HEX color, for example #2563EB.",
+  "themeLowContrast": "Low contrast: some text may be difficult to read.",
+  "themeBuiltInThemes": "Built-in themes",
+  "themeCustomThemes": "Your themes",
+  "themePreviewTask": "Plan your day",
+  "themePreviewSecondary": "A little focus, every day.",
+  "themeColorCanvas": "Background",
+  "themeColorSurface": "Surface",
+  "themeColorSurfaceTint": "Secondary surface",
+  "themeColorSurfaceHover": "Hover surface",
+  "themeColorPrimaryText": "Primary text",
+  "themeColorSecondaryText": "Secondary text",
+  "themeColorMutedText": "Muted text",
+  "themeColorBorder": "Border",
+  "themeColorAccent": "Accent text and icons",
+  "themeColorAccentFill": "Accent fill",
+  "themeColorAccentTint": "Soft accent fill",
+  "themeColorWarning": "Warning",
+  "themeColorInfo": "Information",
+  "themeColorSuccess": "Success",
+  "themeColorError": "Error",
+  "themeColorOverdue": "Overdue",
+  "themeColorOnAccent": "Text on accent fill",
+  "themeColorOnError": "Text on error fill",
+  "@themeCopyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@themeDeleteBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

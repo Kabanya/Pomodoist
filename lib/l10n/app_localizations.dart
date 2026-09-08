@@ -3873,6 +3873,264 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Move voice panel'**
   String get voiceMovePanel;
+
+  /// No description provided for @themeClassic.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic'**
+  String get themeClassic;
+
+  /// No description provided for @themeOcean.
+  ///
+  /// In en, this message translates to:
+  /// **'Ocean'**
+  String get themeOcean;
+
+  /// No description provided for @themeForest.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest'**
+  String get themeForest;
+
+  /// No description provided for @themeCustomize.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize'**
+  String get themeCustomize;
+
+  /// No description provided for @themeEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get themeEdit;
+
+  /// No description provided for @themeDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get themeDuplicate;
+
+  /// No description provided for @themeCopyName.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} copy'**
+  String themeCopyName(String name);
+
+  /// No description provided for @themeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme name'**
+  String get themeName;
+
+  /// No description provided for @themeNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a theme name.'**
+  String get themeNameRequired;
+
+  /// No description provided for @themeEditorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit theme'**
+  String get themeEditorTitle;
+
+  /// No description provided for @themeLivePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes appear throughout the app. Cancel restores your previous theme.'**
+  String get themeLivePreview;
+
+  /// No description provided for @themeSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the theme. Your changes are still here; try again.'**
+  String get themeSaveError;
+
+  /// No description provided for @themeLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your themes.'**
+  String get themeLoadError;
+
+  /// No description provided for @themeDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete theme?'**
+  String get themeDeleteTitle;
+
+  /// No description provided for @themeDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”? If it is active, Classic will be selected.'**
+  String themeDeleteBody(String name);
+
+  /// No description provided for @themeColorsSurfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Background and surfaces'**
+  String get themeColorsSurfaces;
+
+  /// No description provided for @themeColorsText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get themeColorsText;
+
+  /// No description provided for @themeColorsAccent.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent'**
+  String get themeColorsAccent;
+
+  /// No description provided for @themeColorsStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status colors'**
+  String get themeColorsStatus;
+
+  /// No description provided for @themeInvalidHex.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a six-digit HEX color, for example #2563EB.'**
+  String get themeInvalidHex;
+
+  /// No description provided for @themeLowContrast.
+  ///
+  /// In en, this message translates to:
+  /// **'Low contrast: some text may be difficult to read.'**
+  String get themeLowContrast;
+
+  /// No description provided for @themeBuiltInThemes.
+  ///
+  /// In en, this message translates to:
+  /// **'Built-in themes'**
+  String get themeBuiltInThemes;
+
+  /// No description provided for @themeCustomThemes.
+  ///
+  /// In en, this message translates to:
+  /// **'Your themes'**
+  String get themeCustomThemes;
+
+  /// No description provided for @themePreviewTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan your day'**
+  String get themePreviewTask;
+
+  /// No description provided for @themePreviewSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'A little focus, every day.'**
+  String get themePreviewSecondary;
+
+  /// No description provided for @themeColorCanvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get themeColorCanvas;
+
+  /// No description provided for @themeColorSurface.
+  ///
+  /// In en, this message translates to:
+  /// **'Surface'**
+  String get themeColorSurface;
+
+  /// No description provided for @themeColorSurfaceTint.
+  ///
+  /// In en, this message translates to:
+  /// **'Secondary surface'**
+  String get themeColorSurfaceTint;
+
+  /// No description provided for @themeColorSurfaceHover.
+  ///
+  /// In en, this message translates to:
+  /// **'Hover surface'**
+  String get themeColorSurfaceHover;
+
+  /// No description provided for @themeColorPrimaryText.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary text'**
+  String get themeColorPrimaryText;
+
+  /// No description provided for @themeColorSecondaryText.
+  ///
+  /// In en, this message translates to:
+  /// **'Secondary text'**
+  String get themeColorSecondaryText;
+
+  /// No description provided for @themeColorMutedText.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted text'**
+  String get themeColorMutedText;
+
+  /// No description provided for @themeColorBorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Border'**
+  String get themeColorBorder;
+
+  /// No description provided for @themeColorAccent.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent text and icons'**
+  String get themeColorAccent;
+
+  /// No description provided for @themeColorAccentFill.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent fill'**
+  String get themeColorAccentFill;
+
+  /// No description provided for @themeColorAccentTint.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft accent fill'**
+  String get themeColorAccentTint;
+
+  /// No description provided for @themeColorWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning'**
+  String get themeColorWarning;
+
+  /// No description provided for @themeColorInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Information'**
+  String get themeColorInfo;
+
+  /// No description provided for @themeColorSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get themeColorSuccess;
+
+  /// No description provided for @themeColorError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get themeColorError;
+
+  /// No description provided for @themeColorOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get themeColorOverdue;
+
+  /// No description provided for @themeColorOnAccent.
+  ///
+  /// In en, this message translates to:
+  /// **'Text on accent fill'**
+  String get themeColorOnAccent;
+
+  /// No description provided for @themeColorOnError.
+  ///
+  /// In en, this message translates to:
+  /// **'Text on error fill'**
+  String get themeColorOnError;
 }
 
 class _AppLocalizationsDelegate

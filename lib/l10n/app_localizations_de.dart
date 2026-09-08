@@ -2224,4 +2224,141 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get voiceMovePanel => 'Sprachbereich verschieben';
+
+  @override
+  String get themeClassic => 'Klassisch';
+
+  @override
+  String get themeOcean => 'Ozean';
+
+  @override
+  String get themeForest => 'Wald';
+
+  @override
+  String get themeCustomize => 'Anpassen';
+
+  @override
+  String get themeEdit => 'Bearbeiten';
+
+  @override
+  String get themeDuplicate => 'Duplizieren';
+
+  @override
+  String themeCopyName(String name) {
+    return '$name Kopie';
+  }
+
+  @override
+  String get themeName => 'Name des Designs';
+
+  @override
+  String get themeNameRequired => 'Gib einen Namen für das Design ein.';
+
+  @override
+  String get themeEditorTitle => 'Design bearbeiten';
+
+  @override
+  String get themeLivePreview =>
+      'Änderungen sind in der ganzen App sichtbar. Abbrechen stellt dein vorheriges Design wieder her.';
+
+  @override
+  String get themeSaveError =>
+      'Das Design konnte nicht gespeichert werden. Deine Änderungen sind noch da; versuche es erneut.';
+
+  @override
+  String get themeLoadError => 'Deine Designs konnten nicht geladen werden.';
+
+  @override
+  String get themeDeleteTitle => 'Design löschen?';
+
+  @override
+  String themeDeleteBody(String name) {
+    return '„$name“ löschen? Wenn es aktiv ist, wird Klassisch ausgewählt.';
+  }
+
+  @override
+  String get themeColorsSurfaces => 'Hintergrund und Flächen';
+
+  @override
+  String get themeColorsText => 'Text';
+
+  @override
+  String get themeColorsAccent => 'Akzent';
+
+  @override
+  String get themeColorsStatus => 'Statusfarben';
+
+  @override
+  String get themeInvalidHex =>
+      'Gib eine sechsstellige HEX-Farbe ein, zum Beispiel #2563EB.';
+
+  @override
+  String get themeLowContrast =>
+      'Geringer Kontrast: Einige Texte sind möglicherweise schwer lesbar.';
+
+  @override
+  String get themeBuiltInThemes => 'Integrierte Designs';
+
+  @override
+  String get themeCustomThemes => 'Deine Designs';
+
+  @override
+  String get themePreviewTask => 'Plane deinen Tag';
+
+  @override
+  String get themePreviewSecondary => 'Jeden Tag ein wenig Fokus.';
+
+  @override
+  String get themeColorCanvas => 'Hintergrund';
+
+  @override
+  String get themeColorSurface => 'Fläche';
+
+  @override
+  String get themeColorSurfaceTint => 'Sekundäre Fläche';
+
+  @override
+  String get themeColorSurfaceHover => 'Fläche beim Darüberfahren';
+
+  @override
+  String get themeColorPrimaryText => 'Primärer Text';
+
+  @override
+  String get themeColorSecondaryText => 'Sekundärer Text';
+
+  @override
+  String get themeColorMutedText => 'Gedämpfter Text';
+
+  @override
+  String get themeColorBorder => 'Rahmen';
+
+  @override
+  String get themeColorAccent => 'Akzenttext und Symbole';
+
+  @override
+  String get themeColorAccentFill => 'Akzentfüllung';
+
+  @override
+  String get themeColorAccentTint => 'Dezente Akzentfüllung';
+
+  @override
+  String get themeColorWarning => 'Warnung';
+
+  @override
+  String get themeColorInfo => 'Information';
+
+  @override
+  String get themeColorSuccess => 'Erfolg';
+
+  @override
+  String get themeColorError => 'Fehler';
+
+  @override
+  String get themeColorOverdue => 'Überfällig';
+
+  @override
+  String get themeColorOnAccent => 'Text auf Akzentfüllung';
+
+  @override
+  String get themeColorOnError => 'Text auf Fehlerfüllung';
 }

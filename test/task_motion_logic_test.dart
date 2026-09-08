@@ -1,8 +1,25 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/theme/app_motion.dart';
 import 'package:pomodoist/features/tasks/presentation/widgets/task_motion.dart';
 
 void main() {
+  test('changing the checkmark color invalidates the completion painter', () {
+    const before = TaskCompletionPainter(
+      progress: 1,
+      color: Colors.red,
+      fillColor: Colors.red,
+      checkColor: Colors.white,
+    );
+    const after = TaskCompletionPainter(
+      progress: 1,
+      color: Colors.red,
+      fillColor: Colors.red,
+      checkColor: Colors.black,
+    );
+    expect(after.shouldRepaint(before), isTrue);
+    expect(before.shouldRepaint(before), isFalse);
+  });
   test('creation settles before its highlight disappears', () {
     final start = taskCreationProgress(0);
     final moving = taskCreationProgress(.2);

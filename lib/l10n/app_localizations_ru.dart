@@ -2227,4 +2227,141 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get voiceMovePanel => 'Переместить голосовую панель';
+
+  @override
+  String get themeClassic => 'Классика';
+
+  @override
+  String get themeOcean => 'Океан';
+
+  @override
+  String get themeForest => 'Лес';
+
+  @override
+  String get themeCustomize => 'Настроить';
+
+  @override
+  String get themeEdit => 'Редактировать';
+
+  @override
+  String get themeDuplicate => 'Дублировать';
+
+  @override
+  String themeCopyName(String name) {
+    return '$name — копия';
+  }
+
+  @override
+  String get themeName => 'Название темы';
+
+  @override
+  String get themeNameRequired => 'Введите название темы.';
+
+  @override
+  String get themeEditorTitle => 'Редактор темы';
+
+  @override
+  String get themeLivePreview =>
+      'Изменения видны во всём приложении. Отмена вернёт предыдущую тему.';
+
+  @override
+  String get themeSaveError =>
+      'Не удалось сохранить тему. Изменения сохранены в редакторе; попробуйте ещё раз.';
+
+  @override
+  String get themeLoadError => 'Не удалось загрузить темы.';
+
+  @override
+  String get themeDeleteTitle => 'Удалить тему?';
+
+  @override
+  String themeDeleteBody(String name) {
+    return 'Удалить «$name»? Если она активна, будет выбрана Классика.';
+  }
+
+  @override
+  String get themeColorsSurfaces => 'Фон и поверхности';
+
+  @override
+  String get themeColorsText => 'Текст';
+
+  @override
+  String get themeColorsAccent => 'Акцент';
+
+  @override
+  String get themeColorsStatus => 'Цвета статусов';
+
+  @override
+  String get themeInvalidHex =>
+      'Введите HEX-цвет из шести цифр, например #2563EB.';
+
+  @override
+  String get themeLowContrast =>
+      'Низкий контраст: часть текста может быть трудно прочитать.';
+
+  @override
+  String get themeBuiltInThemes => 'Встроенные темы';
+
+  @override
+  String get themeCustomThemes => 'Ваши темы';
+
+  @override
+  String get themePreviewTask => 'Спланируйте свой день';
+
+  @override
+  String get themePreviewSecondary => 'Немного сосредоточенности каждый день.';
+
+  @override
+  String get themeColorCanvas => 'Фон';
+
+  @override
+  String get themeColorSurface => 'Поверхность';
+
+  @override
+  String get themeColorSurfaceTint => 'Вторичная поверхность';
+
+  @override
+  String get themeColorSurfaceHover => 'Поверхность при наведении';
+
+  @override
+  String get themeColorPrimaryText => 'Основной текст';
+
+  @override
+  String get themeColorSecondaryText => 'Вторичный текст';
+
+  @override
+  String get themeColorMutedText => 'Приглушённый текст';
+
+  @override
+  String get themeColorBorder => 'Граница';
+
+  @override
+  String get themeColorAccent => 'Акцентный текст и значки';
+
+  @override
+  String get themeColorAccentFill => 'Акцентная заливка';
+
+  @override
+  String get themeColorAccentTint => 'Мягкая акцентная заливка';
+
+  @override
+  String get themeColorWarning => 'Предупреждение';
+
+  @override
+  String get themeColorInfo => 'Информация';
+
+  @override
+  String get themeColorSuccess => 'Успех';
+
+  @override
+  String get themeColorError => 'Ошибка';
+
+  @override
+  String get themeColorOverdue => 'Просрочка';
+
+  @override
+  String get themeColorOnAccent => 'Текст на акцентной заливке';
+
+  @override
+  String get themeColorOnError => 'Текст на заливке ошибки';
 }

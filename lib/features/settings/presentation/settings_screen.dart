@@ -20,7 +20,6 @@ import '../../../app/formatters.dart';
 import '../../../app/task_time.dart';
 import '../../../app/legal_urls.dart';
 import '../../../app/providers.dart';
-import '../../../app/app_theme_mode.dart';
 import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../focus/presentation/focus_view_mode.dart';
@@ -30,6 +29,7 @@ import '../../onboarding/onboarding_gate.dart';
 import 'account_sign_out_button.dart';
 import 'app_info_card.dart';
 import 'csv_task_import_card.dart';
+import 'theme_settings_card.dart';
 import 'pomodoist_account_actions.dart';
 
 class LoginScreen extends ConsumerWidget {
@@ -969,7 +969,6 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final language = ref.watch(appLanguageProvider);
-    final themeMode = ref.watch(appThemeModeProvider);
     final timerVisualStyle = ref.watch(focusTimerVisualStyleProvider);
     ref.watch(accountAuthStateProvider);
     final account = ref.watch(accountClientProvider);
@@ -1163,55 +1162,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.settingsThemeTitle,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.settingsThemeSubtitle,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colors.secondaryText,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  SegmentedButton<AppThemeMode>(
-                    key: const Key('settings-theme-mode-select'),
-                    showSelectedIcon: false,
-                    segments: [
-                      ButtonSegment(
-                        value: AppThemeMode.system,
-                        icon: const Icon(LucideIcons.sunMoon),
-                        label: Text(l10n.settingsThemeSystem),
-                      ),
-                      ButtonSegment(
-                        value: AppThemeMode.light,
-                        icon: const Icon(LucideIcons.sun),
-                        label: Text(l10n.settingsThemeLight),
-                      ),
-                      ButtonSegment(
-                        value: AppThemeMode.dark,
-                        icon: const Icon(LucideIcons.moon),
-                        label: Text(l10n.settingsThemeDark),
-                      ),
-                    ],
-                    selected: {themeMode},
-                    onSelectionChanged: (selection) {
-                      ref
-                          .read(appThemeModeProvider.notifier)
-                          .setThemeMode(selection.single);
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
+          const ThemeSettingsCard(),
           const SizedBox(height: 12),
           const _DefaultTimedBlockDurationSettings(),
           const SizedBox(height: 12),

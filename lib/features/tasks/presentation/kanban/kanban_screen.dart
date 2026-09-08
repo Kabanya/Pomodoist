@@ -1331,7 +1331,7 @@ class _PriorityFlag extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final color = switch (priority) {
-      1 => colors.accent,
+      1 => colors.overdue,
       2 => colors.warning,
       3 => colors.info,
       _ => colors.mutedText,

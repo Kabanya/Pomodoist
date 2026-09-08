@@ -2120,4 +2120,137 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get voiceMovePanel => '移动语音面板';
+
+  @override
+  String get themeClassic => '经典';
+
+  @override
+  String get themeOcean => '海洋';
+
+  @override
+  String get themeForest => '森林';
+
+  @override
+  String get themeCustomize => '自定义';
+
+  @override
+  String get themeEdit => '编辑';
+
+  @override
+  String get themeDuplicate => '创建副本';
+
+  @override
+  String themeCopyName(String name) {
+    return '$name的副本';
+  }
+
+  @override
+  String get themeName => '主题名称';
+
+  @override
+  String get themeNameRequired => '请输入主题名称。';
+
+  @override
+  String get themeEditorTitle => '编辑主题';
+
+  @override
+  String get themeLivePreview => '更改会立即显示在整个应用中。取消将恢复之前的主题。';
+
+  @override
+  String get themeSaveError => '无法保存主题。你的更改仍保留在编辑器中，请重试。';
+
+  @override
+  String get themeLoadError => '无法加载你的主题。';
+
+  @override
+  String get themeDeleteTitle => '删除主题？';
+
+  @override
+  String themeDeleteBody(String name) {
+    return '删除“$name”？如果正在使用，将切换到经典主题。';
+  }
+
+  @override
+  String get themeColorsSurfaces => '背景与表面';
+
+  @override
+  String get themeColorsText => '文字';
+
+  @override
+  String get themeColorsAccent => '强调色';
+
+  @override
+  String get themeColorsStatus => '状态颜色';
+
+  @override
+  String get themeInvalidHex => '请输入六位 HEX 颜色，例如 #2563EB。';
+
+  @override
+  String get themeLowContrast => '对比度较低：部分文字可能难以阅读。';
+
+  @override
+  String get themeBuiltInThemes => '内置主题';
+
+  @override
+  String get themeCustomThemes => '你的主题';
+
+  @override
+  String get themePreviewTask => '规划你的一天';
+
+  @override
+  String get themePreviewSecondary => '每天专注一点。';
+
+  @override
+  String get themeColorCanvas => '背景';
+
+  @override
+  String get themeColorSurface => '表面';
+
+  @override
+  String get themeColorSurfaceTint => '次要表面';
+
+  @override
+  String get themeColorSurfaceHover => '悬停表面';
+
+  @override
+  String get themeColorPrimaryText => '主要文字';
+
+  @override
+  String get themeColorSecondaryText => '次要文字';
+
+  @override
+  String get themeColorMutedText => '弱化文字';
+
+  @override
+  String get themeColorBorder => '边框';
+
+  @override
+  String get themeColorAccent => '强调文字与图标';
+
+  @override
+  String get themeColorAccentFill => '强调填充';
+
+  @override
+  String get themeColorAccentTint => '柔和强调填充';
+
+  @override
+  String get themeColorWarning => '警告';
+
+  @override
+  String get themeColorInfo => '信息';
+
+  @override
+  String get themeColorSuccess => '成功';
+
+  @override
+  String get themeColorError => '错误';
+
+  @override
+  String get themeColorOverdue => '逾期';
+
+  @override
+  String get themeColorOnAccent => '强调填充上的文字';
+
+  @override
+  String get themeColorOnError => '错误填充上的文字';
 }

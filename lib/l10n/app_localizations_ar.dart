@@ -2198,4 +2198,139 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get voiceMovePanel => 'نقل لوحة الصوت';
+
+  @override
+  String get themeClassic => 'كلاسيكي';
+
+  @override
+  String get themeOcean => 'المحيط';
+
+  @override
+  String get themeForest => 'الغابة';
+
+  @override
+  String get themeCustomize => 'تخصيص';
+
+  @override
+  String get themeEdit => 'تعديل';
+
+  @override
+  String get themeDuplicate => 'إنشاء نسخة';
+
+  @override
+  String themeCopyName(String name) {
+    return 'نسخة من $name';
+  }
+
+  @override
+  String get themeName => 'اسم السمة';
+
+  @override
+  String get themeNameRequired => 'أدخل اسمًا للسمة.';
+
+  @override
+  String get themeEditorTitle => 'تعديل السمة';
+
+  @override
+  String get themeLivePreview =>
+      'تظهر التغييرات في التطبيق كله. يعيد الإلغاء السمة السابقة.';
+
+  @override
+  String get themeSaveError =>
+      'تعذر حفظ السمة. ما زالت تغييراتك في المحرر؛ حاول مرة أخرى.';
+
+  @override
+  String get themeLoadError => 'تعذر تحميل سماتك.';
+
+  @override
+  String get themeDeleteTitle => 'حذف السمة؟';
+
+  @override
+  String themeDeleteBody(String name) {
+    return 'هل تريد حذف «$name»؟ إذا كانت نشطة، فسيتم اختيار السمة الكلاسيكية.';
+  }
+
+  @override
+  String get themeColorsSurfaces => 'الخلفية والأسطح';
+
+  @override
+  String get themeColorsText => 'النص';
+
+  @override
+  String get themeColorsAccent => 'اللون المميز';
+
+  @override
+  String get themeColorsStatus => 'ألوان الحالة';
+
+  @override
+  String get themeInvalidHex => 'أدخل لون HEX من ست خانات، مثل #2563EB.';
+
+  @override
+  String get themeLowContrast => 'تباين منخفض: قد تصعب قراءة بعض النصوص.';
+
+  @override
+  String get themeBuiltInThemes => 'السمات المضمنة';
+
+  @override
+  String get themeCustomThemes => 'سماتك';
+
+  @override
+  String get themePreviewTask => 'خطط ليومك';
+
+  @override
+  String get themePreviewSecondary => 'قليل من التركيز كل يوم.';
+
+  @override
+  String get themeColorCanvas => 'الخلفية';
+
+  @override
+  String get themeColorSurface => 'السطح';
+
+  @override
+  String get themeColorSurfaceTint => 'السطح الثانوي';
+
+  @override
+  String get themeColorSurfaceHover => 'سطح التحويم';
+
+  @override
+  String get themeColorPrimaryText => 'النص الأساسي';
+
+  @override
+  String get themeColorSecondaryText => 'النص الثانوي';
+
+  @override
+  String get themeColorMutedText => 'النص الخافت';
+
+  @override
+  String get themeColorBorder => 'الحدود';
+
+  @override
+  String get themeColorAccent => 'النص والأيقونات المميزة';
+
+  @override
+  String get themeColorAccentFill => 'التعبئة المميزة';
+
+  @override
+  String get themeColorAccentTint => 'التعبئة المميزة الخفيفة';
+
+  @override
+  String get themeColorWarning => 'تحذير';
+
+  @override
+  String get themeColorInfo => 'معلومات';
+
+  @override
+  String get themeColorSuccess => 'نجاح';
+
+  @override
+  String get themeColorError => 'خطأ';
+
+  @override
+  String get themeColorOverdue => 'متأخر';
+
+  @override
+  String get themeColorOnAccent => 'النص على التعبئة المميزة';
+
+  @override
+  String get themeColorOnError => 'النص على تعبئة الخطأ';
 }

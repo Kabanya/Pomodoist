@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_motion.dart';
+import '../../../../app/theme/app_theme.dart';
 import '../../domain/task_models.dart';
 
 enum TaskMotionKind { created, completed, reopened, deleted, landed }
@@ -256,6 +257,7 @@ class TaskCompletionControl extends StatelessWidget {
                 progress: progress,
                 color: color,
                 fillColor: fillColor,
+                checkColor: context.appColors.onAccent,
               ),
             ),
           ),
@@ -273,11 +275,13 @@ class TaskCompletionPainter extends CustomPainter {
     required this.progress,
     required this.color,
     required this.fillColor,
+    this.checkColor = Colors.white,
   });
 
   final double progress;
   final Color color;
   final Color fillColor;
+  final Color checkColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -325,7 +329,7 @@ class TaskCompletionPainter extends CustomPainter {
     canvas.drawPath(
       check,
       Paint()
-        ..color = Colors.white.withValues(alpha: fillProgress)
+        ..color = checkColor.withValues(alpha: fillProgress)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
         ..strokeCap = StrokeCap.round
@@ -337,5 +341,6 @@ class TaskCompletionPainter extends CustomPainter {
   bool shouldRepaint(TaskCompletionPainter oldDelegate) =>
       oldDelegate.progress != progress ||
       oldDelegate.color != color ||
-      oldDelegate.fillColor != fillColor;
+      oldDelegate.fillColor != fillColor ||
+      oldDelegate.checkColor != checkColor;
 }
