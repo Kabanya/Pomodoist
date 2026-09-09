@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -253,6 +254,11 @@ class TaskListItem extends ConsumerWidget {
     final hasMeta = _hasListMeta(task, focusEstimate, subtaskProgress);
     final isAgenda = presentation == TaskListItemPresentation.agenda;
     final isModern = ref.watch(taskListStyleProvider) == TaskListStyle.modern;
+    final verticalPadding = switch (ref.watch(taskRowSpacingProvider)) {
+      TaskRowSpacing.compact => 4.0,
+      TaskRowSpacing.comfortable => 10.0,
+      TaskRowSpacing.spacious => 16.0,
+    };
     final rowProject =
         project ??
         (isModern
@@ -442,9 +448,9 @@ class TaskListItem extends ConsumerWidget {
             child: Padding(
               padding: EdgeInsets.fromLTRB(
                 depth * 18,
-                isAgenda ? 4 : 10,
+                verticalPadding,
                 4,
-                isAgenda ? 4 : 10,
+                verticalPadding,
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -1052,6 +1058,25 @@ class _AgendaInteractionRegionState extends State<_AgendaInteractionRegion> {
       ),
     );
   }
+}
+
+class TaskListDivider extends StatelessWidget {
+  const TaskListDivider({
+    this.previousDepth = 0,
+    this.nextDepth = 0,
+    super.key,
+  });
+
+  final int previousDepth;
+  final int nextDepth;
+
+  @override
+  Widget build(BuildContext context) => Divider(
+    height: _usesTouchTaskInteraction ? 12 : 1,
+    thickness: 1,
+    indent: 38 + 18.0 * math.min(previousDepth, nextDepth),
+    color: context.appColors.border,
+  );
 }
 
 class _AgendaTaskContent extends StatelessWidget {

@@ -224,12 +224,12 @@ class TaskListView extends ConsumerWidget {
                         },
                         separatorBuilder: (context, index) {
                           final colorScheme = Theme.of(context).colorScheme;
+                          final divider = TaskListDivider(
+                            previousDepth: rows[index].depth,
+                            nextDepth: rows[index + 1].depth,
+                          );
                           if (!supportsRootDrop) {
-                            return Divider(
-                              height: 1,
-                              indent: 38,
-                              color: colorScheme.outlineVariant,
-                            );
+                            return divider;
                           }
                           return DragTarget<String>(
                             key: ValueKey('task-root-gap-$index'),
@@ -261,11 +261,7 @@ class TaskListView extends ConsumerWidget {
                                                     .onPrimaryContainer,
                                               ),
                                         )
-                                      : Divider(
-                                          height: 1,
-                                          indent: 38,
-                                          color: colorScheme.outlineVariant,
-                                        ),
+                                      : divider,
                                 ),
                               );
                             },

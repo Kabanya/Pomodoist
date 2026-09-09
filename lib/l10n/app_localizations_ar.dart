@@ -2409,6 +2409,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsTaskListClassic => 'كلاسيكي';
 
   @override
+  String get settingsTaskRowSpacing => 'المسافة بين المهام';
+
+  @override
+  String get settingsTaskRowSpacingCompact => 'متقارب';
+
+  @override
+  String get settingsTaskRowSpacingComfortable => 'مريح';
+
+  @override
+  String get settingsTaskRowSpacingSpacious => 'متباعد';
+
+  @override
   String get settingsSaveError => 'تعذر حفظ الإعداد. حاول مرة أخرى.';
 
   @override

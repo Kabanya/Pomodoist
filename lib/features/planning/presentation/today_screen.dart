@@ -110,7 +110,12 @@ class _CompletedToday extends ConsumerWidget {
         key: ValueKey(day),
         title: Text(context.l10n.todayCompletedTasks(tasks.length)),
         initiallyExpanded: false,
-        children: [for (final task in tasks) TaskListItem(task: task)],
+        children: [
+          for (var index = 0; index < tasks.length; index++) ...[
+            if (index > 0) const TaskListDivider(),
+            TaskListItem(task: tasks[index]),
+          ],
+        ],
       ),
     );
   }

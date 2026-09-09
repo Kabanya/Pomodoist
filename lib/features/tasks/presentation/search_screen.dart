@@ -267,11 +267,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           subtaskProgress: progressById[task.id],
                         );
                       },
-                      separatorBuilder: (context, index) => Divider(
-                        height: 1,
-                        indent: 38,
-                        color: Theme.of(context).colorScheme.outlineVariant,
-                      ),
+                      separatorBuilder: (context, index) =>
+                          const TaskListDivider(),
                     ),
                   );
                 },

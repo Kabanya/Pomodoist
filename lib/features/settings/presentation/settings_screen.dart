@@ -1907,6 +1907,7 @@ class _TaskListStyleSettings extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final style = ref.watch(taskListStyleProvider);
+    final spacing = ref.watch(taskRowSpacingProvider);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1942,6 +1943,43 @@ class _TaskListStyleSettings extends ConsumerWidget {
                         await ref
                             .read(taskListStyleProvider.notifier)
                             .setStyle(option);
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(l10n.settingsSaveError)),
+                          );
+                        }
+                      }
+                    },
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text(
+              l10n.settingsTaskRowSpacing,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final option in TaskRowSpacing.values)
+                  ChoiceChip(
+                    label: Text(switch (option) {
+                      TaskRowSpacing.compact =>
+                        l10n.settingsTaskRowSpacingCompact,
+                      TaskRowSpacing.comfortable =>
+                        l10n.settingsTaskRowSpacingComfortable,
+                      TaskRowSpacing.spacious =>
+                        l10n.settingsTaskRowSpacingSpacious,
+                    }),
+                    selected: spacing == option,
+                    onSelected: (_) async {
+                      try {
+                        await ref
+                            .read(taskRowSpacingProvider.notifier)
+                            .setSpacing(option);
                       } catch (_) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(

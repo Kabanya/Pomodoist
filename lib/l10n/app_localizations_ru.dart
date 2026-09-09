@@ -2450,6 +2450,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsTaskListClassic => 'Классический';
 
   @override
+  String get settingsTaskRowSpacing => 'Расстояние между задачами';
+
+  @override
+  String get settingsTaskRowSpacingCompact => 'Компактно';
+
+  @override
+  String get settingsTaskRowSpacingComfortable => 'Комфортно';
+
+  @override
+  String get settingsTaskRowSpacingSpacious => 'Просторно';
+
+  @override
   String get settingsSaveError =>
       'Не удалось сохранить настройку. Попробуйте ещё раз.';
 

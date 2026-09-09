@@ -973,12 +973,15 @@ class _SubtasksSectionState extends ConsumerState<_SubtasksSection> {
             }
             return Column(
               children: [
-                for (final child in children)
+                for (var index = 0; index < children.length; index++) ...[
+                  if (index > 0)
+                    const TaskListDivider(previousDepth: 1, nextDepth: 1),
                   TaskListItem(
-                    task: child,
+                    task: children[index],
                     depth: 1,
-                    subtaskProgress: progressById[child.id],
+                    subtaskProgress: progressById[children[index].id],
                   ),
+                ],
               ],
             );
           },

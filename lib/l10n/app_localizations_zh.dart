@@ -2325,6 +2325,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsTaskListClassic => '经典';
 
   @override
+  String get settingsTaskRowSpacing => '任务间距';
+
+  @override
+  String get settingsTaskRowSpacingCompact => '紧凑';
+
+  @override
+  String get settingsTaskRowSpacingComfortable => '舒适';
+
+  @override
+  String get settingsTaskRowSpacingSpacious => '宽松';
+
+  @override
   String get settingsSaveError => '无法保存设置。请重试。';
 
   @override

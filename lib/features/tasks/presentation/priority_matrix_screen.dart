@@ -427,8 +427,7 @@ class _PriorityQuadrant extends StatelessWidget {
                         task: tasks[index],
                         enableSubtaskDrop: false,
                       ),
-                      if (index != tasks.length - 1)
-                        Divider(height: 1, indent: 38, color: colors.border),
+                      if (index != tasks.length - 1) const TaskListDivider(),
                     ],
                 ],
               ),

@@ -234,6 +234,23 @@ Custom Kanban and Timeline blocks keep their specialized layouts.
 Kanban card action menus open on activation; pointer hover only highlights the
 ellipsis button and must not open its menu (`ShadMenubar.selectOnHover: false`).
 
+Task row spacing is independent of Modern / Classic. The local
+`tasks.rowSpacing` preference selects Compact (4 px), Comfortable (10 px), or
+Spacious (16 px) vertical padding on each side of a row. Comfortable is the
+default for missing or unknown values. Changes apply immediately without a new
+animation; a late preference load must not replace a local selection. A failed
+save keeps the current session's selection and reports the error in Settings.
+Font sizes, icons, metadata placement, and horizontal spacing stay unchanged.
+
+All shared task lists use `TaskListDivider` between rows, including completed
+groups, subtasks, and the priority matrix. The line is 1 px in `appColors.border`,
+starts 38 px from the row's leading edge, and adds 18 px per level of the less
+indented adjacent task. Do not add leading or trailing separators. Its total
+height is 1 px on desktop/web and 12 px on native iOS/Android, with the line
+centered to retain the existing touch drop area. Root-task drop targets keep
+their existing expansion and Reduce Motion behavior. Kanban and Timeline do not
+use this spacing preference.
+
 ### Focus completion actions
 
 When the current task is open and a next scheduled task is available, completing

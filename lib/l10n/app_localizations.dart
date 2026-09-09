@@ -4264,6 +4264,30 @@ abstract class AppLocalizations {
   /// **'Classic'**
   String get settingsTaskListClassic;
 
+  /// No description provided for @settingsTaskRowSpacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Task spacing'**
+  String get settingsTaskRowSpacing;
+
+  /// No description provided for @settingsTaskRowSpacingCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact'**
+  String get settingsTaskRowSpacingCompact;
+
+  /// No description provided for @settingsTaskRowSpacingComfortable.
+  ///
+  /// In en, this message translates to:
+  /// **'Comfortable'**
+  String get settingsTaskRowSpacingComfortable;
+
+  /// No description provided for @settingsTaskRowSpacingSpacious.
+  ///
+  /// In en, this message translates to:
+  /// **'Spacious'**
+  String get settingsTaskRowSpacingSpacious;
+
   /// No description provided for @settingsSaveError.
   ///
   /// In en, this message translates to:

@@ -2446,6 +2446,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTaskListClassic => 'Classic';
 
   @override
+  String get settingsTaskRowSpacing => 'Task spacing';
+
+  @override
+  String get settingsTaskRowSpacingCompact => 'Compact';
+
+  @override
+  String get settingsTaskRowSpacingComfortable => 'Comfortable';
+
+  @override
+  String get settingsTaskRowSpacingSpacious => 'Spacious';
+
+  @override
   String get settingsSaveError =>
       'Could not save the setting. Please try again.';
 

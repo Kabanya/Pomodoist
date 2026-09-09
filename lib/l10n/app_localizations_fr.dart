@@ -2443,6 +2443,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsTaskListClassic => 'Classique';
 
   @override
+  String get settingsTaskRowSpacing => 'Espacement des tâches';
+
+  @override
+  String get settingsTaskRowSpacingCompact => 'Compact';
+
+  @override
+  String get settingsTaskRowSpacingComfortable => 'Confortable';
+
+  @override
+  String get settingsTaskRowSpacingSpacious => 'Aéré';
+
+  @override
   String get settingsSaveError =>
       'Impossible d’enregistrer le réglage. Réessayez.';
 

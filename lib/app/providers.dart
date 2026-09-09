@@ -80,6 +80,7 @@ const quickAddDefaultTimedBlockMinutesPreferenceKey =
     'quickAdd.defaultTimedBlockMinutes';
 const taskTimeDisplayModePreferenceKey = 'tasks.timeDisplayMode';
 const taskListStylePreferenceKey = 'tasks.listStyle';
+const taskRowSpacingPreferenceKey = 'tasks.rowSpacing';
 const timelineVisibleStartMinutesPreferenceKey = 'timeline.visibleStartMinutes';
 const timelineVisibleEndMinutesPreferenceKey = 'timeline.visibleEndMinutes';
 const timelineHourWidthPreferenceKey = 'timeline.hourWidth';
@@ -144,6 +145,48 @@ class TaskListStyleController extends Notifier<TaskListStyle> {
     state = style;
     final prefs = await ref.read(sharedPreferencesProvider.future);
     await prefs?.setString(taskListStylePreferenceKey, style.name);
+  }
+}
+
+enum TaskRowSpacing { compact, comfortable, spacious }
+
+final taskRowSpacingProvider =
+    NotifierProvider<TaskRowSpacingController, TaskRowSpacing>(
+      TaskRowSpacingController.new,
+    );
+
+class TaskRowSpacingController extends Notifier<TaskRowSpacing> {
+  bool _hasLocalSelection = false;
+
+  @override
+  TaskRowSpacing build() {
+    unawaited(_load());
+    return TaskRowSpacing.comfortable;
+  }
+
+  Future<void> _load() async {
+    try {
+      final prefs = await ref.read(sharedPreferencesProvider.future);
+      if (!ref.mounted || _hasLocalSelection) return;
+      final stored = prefs?.get(taskRowSpacingPreferenceKey);
+      state =
+          TaskRowSpacing.values
+              .where((spacing) => spacing.name == stored)
+              .firstOrNull ??
+          TaskRowSpacing.comfortable;
+    } catch (_) {
+      // Keep the default usable when local preferences cannot be read.
+    }
+  }
+
+  Future<void> setSpacing(TaskRowSpacing spacing) async {
+    _hasLocalSelection = true;
+    state = spacing;
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    if (prefs != null &&
+        !await prefs.setString(taskRowSpacingPreferenceKey, spacing.name)) {
+      throw StateError('Failed to save task row spacing');
+    }
   }
 }
 

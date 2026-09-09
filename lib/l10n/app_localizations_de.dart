@@ -2444,6 +2444,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsTaskListClassic => 'Klassisch';
 
   @override
+  String get settingsTaskRowSpacing => 'Abstand zwischen Aufgaben';
+
+  @override
+  String get settingsTaskRowSpacingCompact => 'Kompakt';
+
+  @override
+  String get settingsTaskRowSpacingComfortable => 'Komfortabel';
+
+  @override
+  String get settingsTaskRowSpacingSpacious => 'Großzügig';
+
+  @override
   String get settingsSaveError =>
       'Die Einstellung konnte nicht gespeichert werden. Versuche es erneut.';
 
