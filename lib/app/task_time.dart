@@ -84,3 +84,15 @@ String taskTimeStatusLabel(AppLocalizations l10n, TaskTimeState state) {
     TaskTimeState.completed => l10n.taskTimeStatusCompleted,
   };
 }
+
+/// Actual lateness is independent of the visual state of an active Focus task.
+bool isTaskOverdue(TaskItem task, DateTime now) {
+  if (task.isCompleted || task.isDeleted) return false;
+  final schedule = task.schedule;
+  if (schedule == null) return false;
+  if (schedule.isTimed) return !schedule.end!.isAfter(now);
+  final localNow = now.toLocal();
+  return schedule.date!.isBefore(
+    DateTime(localNow.year, localNow.month, localNow.day),
+  );
+}

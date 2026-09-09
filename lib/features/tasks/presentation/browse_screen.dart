@@ -29,6 +29,7 @@ import 'widgets/create_project_dialog.dart';
 import 'widgets/project_context_menu.dart';
 import 'widgets/project_icon.dart';
 import 'widgets/task_list_view.dart';
+import 'widgets/task_selection_region.dart';
 
 class BrowseScreen extends ConsumerStatefulWidget {
   const BrowseScreen({super.key});
@@ -169,6 +170,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                       },
                     ),
                   ),
+                  const _OverdueSummary(),
                   const SizedBox(height: 28),
                   const Divider(height: 1),
                   const SizedBox(height: 24),
@@ -587,6 +589,88 @@ class CompletedTasksScreen extends ConsumerWidget {
           : (task) => !(task.completedAt ?? task.updatedAt).toUtc().isBefore(
               completedTaskCutoff,
             ),
+    );
+  }
+}
+
+class _OverdueSummary extends ConsumerWidget {
+  const _OverdueSummary();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tasks = ref.watch(overdueTasksProvider);
+    final count = tasks.value?.length ?? 0;
+    if (count == 0 && !tasks.isLoading && !tasks.hasError) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _LoadStatus(
+            value: tasks,
+            errorText: context.l10n.failedToLoadTasks,
+            onRetry: () =>
+                ref.invalidate(tasksByQueryProvider(const TaskQuery.all())),
+          ),
+          if (count > 0)
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 12,
+              runSpacing: 4,
+              children: [
+                Text(context.l10n.overdueTaskCount(count)),
+                ShadButton.ghost(
+                  onPressed: () => context.push('/browse/overdue'),
+                  trailing: const Icon(LucideIcons.arrowRight, size: 16),
+                  child: Text(context.l10n.overdueReview),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class OverdueTasksScreen extends ConsumerWidget {
+  const OverdueTasksScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final overdue = ref.watch(overdueTasksProvider);
+    final ids = {
+      for (final task in overdue.value ?? const <TaskItem>[]) task.id,
+    };
+    return TaskListView(
+      title: context.l10n.overdueTitle,
+      query: const TaskQuery.all(),
+      taskFilter: (task) => ids.contains(task.id),
+      showQuickAdd: false,
+      emptyMessage: context.l10n.overdueEmpty,
+      headerAddon: Builder(
+        builder: (context) {
+          final selection = TaskSelectionScope.maybeOf(context)!;
+          return Wrap(
+            spacing: 12,
+            runSpacing: 4,
+            children: [
+              ShadButton.ghost(
+                leading: const Icon(LucideIcons.arrowLeft, size: 16),
+                onPressed: () =>
+                    context.canPop() ? context.pop() : context.go('/browse'),
+                child: Text(context.l10n.browseTitle),
+              ),
+              ShadButton.ghost(
+                onPressed: ids.isEmpty ? null : () => selection.retainOnly(ids),
+                child: Text(context.l10n.taskSelectAll),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

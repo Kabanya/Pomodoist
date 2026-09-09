@@ -733,5 +733,9 @@
   "commandSearchActions": "Aktionen",
   "commandSearchAllResults": "Alle Ergebnisse",
   "commandSearchHint": "↑ ↓ Navigieren · Enter Öffnen · Esc Schließen",
-  "commandSearchNoMatches": "Keine passenden Aufgaben oder Projekte."
+  "commandSearchNoMatches": "Keine passenden Aufgaben oder Projekte.",
+  "overdueTitle": "Überfällig",
+  "overdueTaskCount": "{count} überfällige Aufgaben",
+  "overdueReview": "Durchsehen",
+  "overdueEmpty": "Keine überfälligen Aufgaben"
 }

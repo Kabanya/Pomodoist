@@ -733,5 +733,9 @@
   "commandSearchActions": "Actions",
   "commandSearchAllResults": "Voir tous les résultats",
   "commandSearchHint": "↑ ↓ Parcourir · Entrée Ouvrir · Échap Fermer",
-  "commandSearchNoMatches": "Aucune tâche ni aucun projet correspondant."
+  "commandSearchNoMatches": "Aucune tâche ni aucun projet correspondant.",
+  "overdueTitle": "En retard",
+  "overdueTaskCount": "{count} tâches en retard",
+  "overdueReview": "Examiner",
+  "overdueEmpty": "Aucune tâche en retard"
 }

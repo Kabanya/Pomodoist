@@ -733,5 +733,9 @@
   "commandSearchActions": "Acciones",
   "commandSearchAllResults": "Ver todos los resultados",
   "commandSearchHint": "↑ ↓ Navegar · Enter Abrir · Esc Cerrar",
-  "commandSearchNoMatches": "No hay tareas ni proyectos coincidentes."
+  "commandSearchNoMatches": "No hay tareas ni proyectos coincidentes.",
+  "overdueTitle": "Atrasadas",
+  "overdueTaskCount": "{count} tareas atrasadas",
+  "overdueReview": "Revisar",
+  "overdueEmpty": "No hay tareas atrasadas"
 }

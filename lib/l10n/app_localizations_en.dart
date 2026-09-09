@@ -2544,4 +2544,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commandSearchNoMatches => 'No matching tasks or projects.';
+
+  @override
+  String get overdueTitle => 'Overdue';
+
+  @override
+  String overdueTaskCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count overdue tasks',
+      one: '$count overdue task',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get overdueReview => 'Review';
+
+  @override
+  String get overdueEmpty => 'No overdue tasks';
 }

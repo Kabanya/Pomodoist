@@ -2540,4 +2540,18 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get commandSearchNoMatches =>
       'No hay tareas ni proyectos coincidentes.';
+
+  @override
+  String get overdueTitle => 'Atrasadas';
+
+  @override
+  String overdueTaskCount(int count) {
+    return '$count tareas atrasadas';
+  }
+
+  @override
+  String get overdueReview => 'Revisar';
+
+  @override
+  String get overdueEmpty => 'No hay tareas atrasadas';
 }

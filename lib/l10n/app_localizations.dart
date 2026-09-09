@@ -4449,6 +4449,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No matching tasks or projects.'**
   String get commandSearchNoMatches;
+
+  /// No description provided for @overdueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get overdueTitle;
+
+  /// No description provided for @overdueTaskCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} overdue task} other{{count} overdue tasks}}'**
+  String overdueTaskCount(int count);
+
+  /// No description provided for @overdueReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get overdueReview;
+
+  /// No description provided for @overdueEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No overdue tasks'**
+  String get overdueEmpty;
 }
 
 class _AppLocalizationsDelegate

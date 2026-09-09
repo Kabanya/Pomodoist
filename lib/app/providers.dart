@@ -931,6 +931,17 @@ final focusTickerProvider = StreamProvider<DateTime>((ref) {
 
 final taskTimeTickerProvider = focusTickerProvider;
 
+final overdueTasksProvider = Provider.autoDispose<AsyncValue<List<TaskItem>>>((
+  ref,
+) {
+  final tasks = ref.watch(tasksByQueryProvider(const TaskQuery.all()));
+  final now =
+      ref.watch(taskTimeTickerProvider).value ?? ref.read(clockProvider).now();
+  return tasks.whenData(
+    (items) => items.where((task) => isTaskOverdue(task, now)).toList(),
+  );
+});
+
 final taskTimeStateProvider = Provider.autoDispose
     .family<TaskTimeState?, TaskItem>((ref, task) {
       final schedule = task.schedule;

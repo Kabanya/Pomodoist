@@ -733,5 +733,9 @@
   "commandSearchActions": "الإجراءات",
   "commandSearchAllResults": "عرض كل النتائج",
   "commandSearchHint": "↑ ↓ تنقّل · Enter فتح · Esc إغلاق",
-  "commandSearchNoMatches": "لا توجد مهام أو مشاريع مطابقة."
+  "commandSearchNoMatches": "لا توجد مهام أو مشاريع مطابقة.",
+  "overdueTitle": "المهام المتأخرة",
+  "overdueTaskCount": "المهام المتأخرة: {count}",
+  "overdueReview": "مراجعة",
+  "overdueEmpty": "لا توجد مهام متأخرة"
 }

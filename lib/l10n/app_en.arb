@@ -808,5 +808,16 @@
   "commandSearchActions": "Actions",
   "commandSearchAllResults": "See all results",
   "commandSearchHint": "↑ ↓ Navigate · Enter Open · Esc Close",
-  "commandSearchNoMatches": "No matching tasks or projects."
+  "commandSearchNoMatches": "No matching tasks or projects.",
+  "overdueTitle": "Overdue",
+  "overdueTaskCount": "{count, plural, one{{count} overdue task} other{{count} overdue tasks}}",
+  "overdueReview": "Review",
+  "overdueEmpty": "No overdue tasks",
+  "@overdueTaskCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

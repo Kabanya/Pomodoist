@@ -733,5 +733,9 @@
   "commandSearchActions": "Действия",
   "commandSearchAllResults": "Все результаты",
   "commandSearchHint": "↑ ↓ Выбор · Enter Открыть · Esc Закрыть",
-  "commandSearchNoMatches": "Подходящих задач и проектов нет."
+  "commandSearchNoMatches": "Подходящих задач и проектов нет.",
+  "overdueTitle": "Просроченное",
+  "overdueTaskCount": "{count, plural, one{Просрочена {count} задача} few{Просрочено {count} задачи} many{Просрочено {count} задач} other{Просрочено {count} задачи}}",
+  "overdueReview": "Разобрать",
+  "overdueEmpty": "Просроченных задач нет"
 }

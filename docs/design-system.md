@@ -188,6 +188,21 @@ queue never confirms successful synchronization. Use the shared popup motion and
 Reduce Motion. Only period changes transition the summary; data updates do not
 replay its entrance.
 
+### Overdue review
+
+Below the Browse summary, show a compact overdue count and Review action only
+when tasks are overdue. Loading and failure remain explicit and retain available
+data. `/browse/overdue` shares the task list, styles, spacing, order and hierarchy;
+include only overdue rows, without pulling in other subtasks. Start with no
+selection, offer Select all, and omit Quick Add. Return to Browse with Back.
+
+Use the same task data and app clock for the count and page. Open, non-deleted
+all-day tasks become overdue at local midnight after their date; timed tasks at
+`end <= now`, even during active Focus. Unscheduled tasks are excluded. Moving a
+date preserves the existing time, duration and recurrence. Cancellation never
+writes; bulk failures retain the failed selection and show an error. A still-past
+schedule stays overdue, and finishing the review shows a quiet empty state.
+
 ### Quick Add
 
 Parsed date/time, project and priority chips edit recognized spans in the source

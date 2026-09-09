@@ -2504,4 +2504,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get commandSearchNoMatches => 'لا توجد مهام أو مشاريع مطابقة.';
+
+  @override
+  String get overdueTitle => 'المهام المتأخرة';
+
+  @override
+  String overdueTaskCount(int count) {
+    return 'المهام المتأخرة: $count';
+  }
+
+  @override
+  String get overdueReview => 'مراجعة';
+
+  @override
+  String get overdueEmpty => 'لا توجد مهام متأخرة';
 }

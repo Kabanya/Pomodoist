@@ -733,5 +733,9 @@
   "commandSearchActions": "操作",
   "commandSearchAllResults": "查看所有结果",
   "commandSearchHint": "↑ ↓ 选择 · Enter 打开 · Esc 关闭",
-  "commandSearchNoMatches": "没有匹配的任务或项目。"
+  "commandSearchNoMatches": "没有匹配的任务或项目。",
+  "overdueTitle": "已逾期",
+  "overdueTaskCount": "{count} 个逾期任务",
+  "overdueReview": "处理",
+  "overdueEmpty": "没有逾期任务"
 }

@@ -2547,4 +2547,18 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get commandSearchNoMatches =>
       'Keine passenden Aufgaben oder Projekte.';
+
+  @override
+  String get overdueTitle => 'Überfällig';
+
+  @override
+  String overdueTaskCount(int count) {
+    return '$count überfällige Aufgaben';
+  }
+
+  @override
+  String get overdueReview => 'Durchsehen';
+
+  @override
+  String get overdueEmpty => 'Keine überfälligen Aufgaben';
 }

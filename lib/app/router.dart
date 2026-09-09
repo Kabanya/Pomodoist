@@ -193,6 +193,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                 const NoTransitionPage(child: BrowseScreen()),
           ),
           GoRoute(
+            path: '/browse/overdue',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: OverdueTasksScreen()),
+          ),
+          GoRoute(
             path: '/browse/completed',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: CompletedTasksScreen()),

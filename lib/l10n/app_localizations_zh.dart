@@ -2416,4 +2416,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get commandSearchNoMatches => '没有匹配的任务或项目。';
+
+  @override
+  String get overdueTitle => '已逾期';
+
+  @override
+  String overdueTaskCount(int count) {
+    return '$count 个逾期任务';
+  }
+
+  @override
+  String get overdueReview => '处理';
+
+  @override
+  String get overdueEmpty => '没有逾期任务';
 }

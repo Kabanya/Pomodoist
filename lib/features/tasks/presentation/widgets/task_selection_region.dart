@@ -14,7 +14,10 @@ import '../../../../app/widgets/action_feedback.dart';
 import '../../../planning/domain/quick_add_parser.dart';
 import '../../domain/task_models.dart';
 import '../task_completion_feedback.dart';
+import '../task_scheduling.dart';
 import 'task_motion.dart';
+
+export '../task_scheduling.dart' show TaskDueResult;
 
 class TaskSelectionController extends ChangeNotifier {
   TaskSelectionController({
@@ -317,30 +320,12 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
     if (!_controller.hasSelection) return;
     final result = await showTaskDuePanel(context, ref);
     if (result == null || !mounted) return;
-    final tasks = _controller.selectedTasks.toList();
-    final failed = <String>[];
-    for (final task in tasks) {
-      try {
-        final requestedSchedule = result.schedule;
-        final schedule = requestedSchedule?.isAllDay ?? false
-            ? task.schedule?.moveToDate(requestedSchedule!.date!) ??
-                  requestedSchedule
-            : requestedSchedule;
-        await ref
-            .read(taskRepositoryProvider)
-            .updateTask(
-              task.id,
-              result.clear
-                  ? const UpdateTaskPatch(clearSchedule: true)
-                  : UpdateTaskPatch(
-                      schedule: _preserveRecurrence(schedule!, task.schedule),
-                    ),
-            );
-      } catch (_) {
-        failed.add(task.id);
-      }
-    }
-    _finishNonDestructive(failed);
+    final failed = await applyTaskDueResult(
+      _controller.selectedTasks,
+      result,
+      updateTask: ref.read(taskRepositoryProvider).updateTask,
+    );
+    if (mounted) _finishNonDestructive(failed);
   }
 
   Future<void> _showProject(BuildContext context) async {
@@ -728,14 +713,6 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
 
 enum _MoreAction { complete, duplicate, delete }
 
-class TaskDueResult {
-  const TaskDueResult.schedule(this.schedule) : clear = false;
-  const TaskDueResult.clear() : schedule = null, clear = true;
-
-  final TaskSchedule? schedule;
-  final bool clear;
-}
-
 Future<TaskDueResult?> showTaskDuePanel(BuildContext context, WidgetRef ref) {
   return showAdaptiveTaskPanel<TaskDueResult>(
     context,
@@ -1002,15 +979,6 @@ class _TaskLabelPanelState extends State<_TaskLabelPanel> {
       ],
     );
   }
-}
-
-TaskSchedule _preserveRecurrence(
-  TaskSchedule schedule,
-  TaskSchedule? existing,
-) {
-  final recurrence = existing?.recurrence;
-  if (recurrence != null) return schedule.withRecurrence(recurrence);
-  return schedule.withRecurrenceSeriesId(existing?.recurrenceSeriesId);
 }
 
 DateTime taskWeekendPresetDate(DateTime today) =>

@@ -2548,4 +2548,26 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get commandSearchNoMatches => 'Подходящих задач и проектов нет.';
+
+  @override
+  String get overdueTitle => 'Просроченное';
+
+  @override
+  String overdueTaskCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Просрочено $count задачи',
+      many: 'Просрочено $count задач',
+      few: 'Просрочено $count задачи',
+      one: 'Просрочена $count задача',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get overdueReview => 'Разобрать';
+
+  @override
+  String get overdueEmpty => 'Просроченных задач нет';
 }
