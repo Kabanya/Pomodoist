@@ -3898,36 +3898,6 @@ abstract class AppLocalizations {
   /// **'Customize'**
   String get themeCustomize;
 
-  /// No description provided for @themeEdit.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit'**
-  String get themeEdit;
-
-  /// No description provided for @themeDuplicate.
-  ///
-  /// In en, this message translates to:
-  /// **'Duplicate'**
-  String get themeDuplicate;
-
-  /// No description provided for @themeCopyName.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} copy'**
-  String themeCopyName(String name);
-
-  /// No description provided for @themeName.
-  ///
-  /// In en, this message translates to:
-  /// **'Theme name'**
-  String get themeName;
-
-  /// No description provided for @themeNameRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a theme name.'**
-  String get themeNameRequired;
-
   /// No description provided for @themeEditorTitle.
   ///
   /// In en, this message translates to:
@@ -3951,18 +3921,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not load your themes.'**
   String get themeLoadError;
-
-  /// No description provided for @themeDeleteTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete theme?'**
-  String get themeDeleteTitle;
-
-  /// No description provided for @themeDeleteBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete “{name}”? If it is active, Classic will be selected.'**
-  String themeDeleteBody(String name);
 
   /// No description provided for @themeColorsSurfaces.
   ///
@@ -3999,18 +3957,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Low contrast: some text may be difficult to read.'**
   String get themeLowContrast;
-
-  /// No description provided for @themeBuiltInThemes.
-  ///
-  /// In en, this message translates to:
-  /// **'Built-in themes'**
-  String get themeBuiltInThemes;
-
-  /// No description provided for @themeCustomThemes.
-  ///
-  /// In en, this message translates to:
-  /// **'Your themes'**
-  String get themeCustomThemes;
 
   /// No description provided for @themePreviewTask.
   ///
@@ -4185,6 +4131,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This project name cannot be inserted without changing it.'**
   String get quickAddProjectNameUnsupported;
+
+  /// No description provided for @themeSepia.
+  ///
+  /// In en, this message translates to:
+  /// **'Sepia'**
+  String get themeSepia;
+
+  /// No description provided for @themeGraphite.
+  ///
+  /// In en, this message translates to:
+  /// **'Graphite'**
+  String get themeGraphite;
+
+  /// No description provided for @themeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get themeCustom;
+
+  /// No description provided for @themeResetToClassic.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to Classic'**
+  String get themeResetToClassic;
 
   /// No description provided for @settingsTaskListStyle.
   ///

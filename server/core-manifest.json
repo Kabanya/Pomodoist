@@ -8,6 +8,7 @@
     "pomodoist-purchase",
     "pomodoist-stripe-billing",
     "pomodoist-telegram",
+    "pomodoist-transcribe",
     "pomodoist-watch",
     "stripe-webhook"
   ],

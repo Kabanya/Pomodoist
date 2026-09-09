@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { handleVoiceTranscription, type TranscriptionDeps } from "./transcribe.ts";
+
+Deno.test("public core release includes every function", async () => {
+  const manifest = JSON.parse(await readFile(new URL("../../../core-manifest.json", import.meta.url), "utf8"));
+  const directories = await readdir(new URL("../", import.meta.url), { withFileTypes: true });
+  const functions = directories.filter((entry) => entry.isDirectory() && !entry.name.startsWith("_")).map((entry) => entry.name);
+  assert.deepEqual(manifest.functions.toSorted(), functions.toSorted());
+});
 
 function wav(seconds = 1): Uint8Array {
   const size = seconds * 32000;

@@ -2234,23 +2234,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get themeCustomize => 'Personalizar';
 
   @override
-  String get themeEdit => 'Editar';
-
-  @override
-  String get themeDuplicate => 'Duplicar';
-
-  @override
-  String themeCopyName(String name) {
-    return 'Copia de $name';
-  }
-
-  @override
-  String get themeName => 'Nombre del tema';
-
-  @override
-  String get themeNameRequired => 'Introduce un nombre para el tema.';
-
-  @override
   String get themeEditorTitle => 'Editar tema';
 
   @override
@@ -2263,14 +2246,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get themeLoadError => 'No se pudieron cargar tus temas.';
-
-  @override
-  String get themeDeleteTitle => '¿Eliminar tema?';
-
-  @override
-  String themeDeleteBody(String name) {
-    return '¿Eliminar «$name»? Si está activo, se seleccionará Clásico.';
-  }
 
   @override
   String get themeColorsSurfaces => 'Fondo y superficies';
@@ -2291,12 +2266,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get themeLowContrast =>
       'Contraste bajo: algunos textos pueden ser difíciles de leer.';
-
-  @override
-  String get themeBuiltInThemes => 'Temas incluidos';
-
-  @override
-  String get themeCustomThemes => 'Tus temas';
 
   @override
   String get themePreviewTask => 'Planifica tu día';
@@ -2395,6 +2364,18 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get quickAddProjectNameUnsupported =>
       'Este nombre de proyecto no se puede insertar sin modificarlo.';
+
+  @override
+  String get themeSepia => 'Sepia';
+
+  @override
+  String get themeGraphite => 'Grafito';
+
+  @override
+  String get themeCustom => 'Custom';
+
+  @override
+  String get themeResetToClassic => 'Restablecer a Clásico';
 
   @override
   String get settingsTaskListStyle => 'Estilo de las filas de tareas';

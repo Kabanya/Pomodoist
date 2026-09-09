@@ -4,11 +4,10 @@ import 'package:pomodoist/app/theme/app_theme.dart';
 import 'package:pomodoist/features/settings/presentation/theme_settings_card.dart';
 
 void main() {
-  test('saving rejects a blank name or invalid color in either palette', () {
-    expect(themeEditorCanSave('My theme', ['#FFFFFF', '123456']), isTrue);
-    expect(themeEditorCanSave('  ', ['#FFFFFF']), isFalse);
-    expect(themeEditorCanSave('My theme', ['#FFFFFF', '#12345Z']), isFalse);
-    expect(themeEditorCanSave('My theme', ['#80112233']), isFalse);
+  test('saving rejects invalid colors in either palette', () {
+    expect(themeEditorCanSave(['#FFFFFF', '123456']), isTrue);
+    expect(themeEditorCanSave(['#FFFFFF', '#12345Z']), isFalse);
+    expect(themeEditorCanSave(['#80112233']), isFalse);
   });
 
   test('contrast feedback includes text on custom button and error fills', () {

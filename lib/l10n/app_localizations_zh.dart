@@ -2134,23 +2134,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themeCustomize => '自定义';
 
   @override
-  String get themeEdit => '编辑';
-
-  @override
-  String get themeDuplicate => '创建副本';
-
-  @override
-  String themeCopyName(String name) {
-    return '$name的副本';
-  }
-
-  @override
-  String get themeName => '主题名称';
-
-  @override
-  String get themeNameRequired => '请输入主题名称。';
-
-  @override
   String get themeEditorTitle => '编辑主题';
 
   @override
@@ -2161,14 +2144,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get themeLoadError => '无法加载你的主题。';
-
-  @override
-  String get themeDeleteTitle => '删除主题？';
-
-  @override
-  String themeDeleteBody(String name) {
-    return '删除“$name”？如果正在使用，将切换到经典主题。';
-  }
 
   @override
   String get themeColorsSurfaces => '背景与表面';
@@ -2187,12 +2162,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get themeLowContrast => '对比度较低：部分文字可能难以阅读。';
-
-  @override
-  String get themeBuiltInThemes => '内置主题';
-
-  @override
-  String get themeCustomThemes => '你的主题';
 
   @override
   String get themePreviewTask => '规划你的一天';
@@ -2284,6 +2253,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get quickAddProjectNameUnsupported => '无法原样插入此项目名称。';
+
+  @override
+  String get themeSepia => '复古棕';
+
+  @override
+  String get themeGraphite => '石墨';
+
+  @override
+  String get themeCustom => 'Custom';
+
+  @override
+  String get themeResetToClassic => '重置为经典';
 
   @override
   String get settingsTaskListStyle => '任务行样式';

@@ -2212,23 +2212,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get themeCustomize => 'تخصيص';
 
   @override
-  String get themeEdit => 'تعديل';
-
-  @override
-  String get themeDuplicate => 'إنشاء نسخة';
-
-  @override
-  String themeCopyName(String name) {
-    return 'نسخة من $name';
-  }
-
-  @override
-  String get themeName => 'اسم السمة';
-
-  @override
-  String get themeNameRequired => 'أدخل اسمًا للسمة.';
-
-  @override
   String get themeEditorTitle => 'تعديل السمة';
 
   @override
@@ -2241,14 +2224,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get themeLoadError => 'تعذر تحميل سماتك.';
-
-  @override
-  String get themeDeleteTitle => 'حذف السمة؟';
-
-  @override
-  String themeDeleteBody(String name) {
-    return 'هل تريد حذف «$name»؟ إذا كانت نشطة، فسيتم اختيار السمة الكلاسيكية.';
-  }
 
   @override
   String get themeColorsSurfaces => 'الخلفية والأسطح';
@@ -2267,12 +2242,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get themeLowContrast => 'تباين منخفض: قد تصعب قراءة بعض النصوص.';
-
-  @override
-  String get themeBuiltInThemes => 'السمات المضمنة';
-
-  @override
-  String get themeCustomThemes => 'سماتك';
 
   @override
   String get themePreviewTask => 'خطط ليومك';
@@ -2365,6 +2334,18 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get quickAddProjectNameUnsupported =>
       'لا يمكن إدراج اسم هذا المشروع دون تغييره.';
+
+  @override
+  String get themeSepia => 'بني داكن';
+
+  @override
+  String get themeGraphite => 'الجرافيت';
+
+  @override
+  String get themeCustom => 'Custom';
+
+  @override
+  String get themeResetToClassic => 'إعادة الضبط إلى كلاسيكي';
 
   @override
   String get settingsTaskListStyle => 'نمط صفوف المهام';

@@ -9,8 +9,7 @@ import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_theme_settings.dart';
 import '../../../l10n/app_localizations.dart';
 
-bool themeEditorCanSave(String name, Iterable<String> colors) =>
-    name.trim().isNotEmpty &&
+bool themeEditorCanSave(Iterable<String> colors) =>
     colors.every((value) => parseThemeColor(value) != null);
 
 bool themeHasLowContrast(AppThemePalette colors) => [
@@ -30,6 +29,9 @@ String _themeName(AppLocalizations l10n, AppThemeDefinition theme) =>
       'classic' => l10n.themeClassic,
       'ocean' => l10n.themeOcean,
       'forest' => l10n.themeForest,
+      'sepia' => l10n.themeSepia,
+      'graphite' => l10n.themeGraphite,
+      'custom' => l10n.themeCustom,
       _ => theme.name,
     };
 
@@ -73,21 +75,10 @@ class ThemeSettingsCard extends ConsumerWidget {
     }
   }
 
-  Future<void> _edit(
-    BuildContext context,
-    WidgetRef ref,
-    AppThemeDefinition theme, {
-    bool duplicate = false,
-  }) async {
+  Future<void> _edit(BuildContext context, WidgetRef ref) async {
     final controller = ref.read(appThemeSettingsProvider.notifier);
     final brightness = Theme.of(context).brightness;
-    final l10n = context.l10n;
-    final name = _themeName(l10n, theme);
-    controller.beginEdit(
-      theme.id,
-      name: theme.isBuiltIn || duplicate ? l10n.themeCopyName(name) : name,
-      duplicate: duplicate,
-    );
+    controller.beginEdit();
     final safeTheme = brightness == Brightness.dark
         ? AppTheme.dark()
         : AppTheme.light();
@@ -111,36 +102,6 @@ class ThemeSettingsCard extends ConsumerWidget {
     }
   }
 
-  Future<void> _delete(
-    BuildContext context,
-    WidgetRef ref,
-    AppThemeDefinition theme,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.themeDeleteTitle),
-        content: Text(context.l10n.themeDeleteBody(theme.name)),
-        actions: [
-          ShadButton.ghost(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.l10n.commonCancel),
-          ),
-          ShadButton.destructive(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(context.l10n.commonDelete),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true && context.mounted) {
-      await _run(
-        context,
-        () => ref.read(appThemeSettingsProvider.notifier).deleteTheme(theme.id),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -150,95 +111,74 @@ class ThemeSettingsCard extends ConsumerWidget {
         settings.isLoaded && !settings.isSaving && settings.preview == null;
     Widget choices(Iterable<AppThemeDefinition> themes) => LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 780
-            ? 3
-            : constraints.maxWidth >= 520
-            ? 2
-            : 1;
-        final width = (constraints.maxWidth - 12 * (columns - 1)) / columns;
-        return Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            for (final theme in themes)
-              SizedBox(
-                width: width,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Semantics(
-                      selected: settings.selectedId == theme.id,
-                      child: OutlinedButton(
-                        onPressed: enabled
-                            ? () => _run(
-                                context,
-                                () => ref
-                                    .read(appThemeSettingsProvider.notifier)
-                                    .selectTheme(theme.id),
-                              )
-                            : null,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.all(12),
-                          side: BorderSide(
-                            color: settings.selectedId == theme.id
-                                ? context.appColors.accent
-                                : context.appColors.border,
-                            width: settings.selectedId == theme.id ? 2 : 1,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    _themeName(l10n, theme),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                if (settings.selectedId == theme.id)
-                                  const Icon(LucideIcons.check, size: 18),
-                              ],
+        final width =
+            ((constraints.maxWidth - 8 * (themes.length - 1)) / themes.length)
+                .clamp(144.0, double.infinity);
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 8,
+            children: [
+              for (final theme in themes)
+                SizedBox(
+                  width: width,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Semantics(
+                        selected: settings.selectedId == theme.id,
+                        child: OutlinedButton(
+                          onPressed: enabled
+                              ? () => _run(
+                                  context,
+                                  () => ref
+                                      .read(appThemeSettingsProvider.notifier)
+                                      .selectTheme(theme.id),
+                                )
+                              : null,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.all(8),
+                            side: BorderSide(
+                              color: settings.selectedId == theme.id
+                                  ? context.appColors.accent
+                                  : context.appColors.border,
+                              width: settings.selectedId == theme.id ? 2 : 1,
                             ),
-                            const SizedBox(height: 12),
-                            _PalettePair(theme: theme, compact: true),
-                          ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      _themeName(l10n, theme),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (settings.selectedId == theme.id)
+                                    const Icon(LucideIcons.check, size: 18),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              _PalettePair(theme: theme, compact: true),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    Wrap(
-                      spacing: 4,
-                      children: [
+                      if (!theme.isBuiltIn)
                         ShadButton.ghost(
                           enabled: enabled,
-                          onPressed: () => _edit(context, ref, theme),
-                          child: Text(
-                            theme.isBuiltIn
-                                ? l10n.themeCustomize
-                                : l10n.themeEdit,
-                          ),
+                          onPressed: () => _edit(context, ref),
+                          child: Text(l10n.themeCustomize),
                         ),
-                        if (!theme.isBuiltIn) ...[
-                          ShadButton.ghost(
-                            enabled: enabled,
-                            onPressed: () =>
-                                _edit(context, ref, theme, duplicate: true),
-                            child: Text(l10n.themeDuplicate),
-                          ),
-                          ShadButton.ghost(
-                            enabled: enabled,
-                            onPressed: () => _delete(context, ref, theme),
-                            child: Text(l10n.commonDelete),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -303,21 +243,8 @@ class ThemeSettingsCard extends ConsumerWidget {
               ),
             ] else if (!settings.isLoaded)
               const LinearProgressIndicator(),
-            Text(
-              l10n.themeBuiltInThemes,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
             const SizedBox(height: 8),
-            choices(builtinAppThemes),
-            if (settings.customThemes.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text(
-                l10n.themeCustomThemes,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 8),
-              choices(settings.customThemes),
-            ],
+            choices(settings.themes),
           ],
         ),
       ),
@@ -346,7 +273,7 @@ class _PalettePair extends StatelessWidget {
               Text(entry.$1, style: Theme.of(context).textTheme.labelMedium),
               const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: EdgeInsets.all(compact ? 8 : 10),
                 decoration: BoxDecoration(
                   color: entry.$2.canvas,
                   borderRadius: BorderRadius.circular(8),
@@ -372,7 +299,7 @@ class _PalettePair extends StatelessWidget {
                       const SizedBox(height: 8),
                     ],
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: EdgeInsets.all(compact ? 4 : 8),
                       decoration: BoxDecoration(
                         color: entry.$2.surface,
                         borderRadius: BorderRadius.circular(4),
@@ -446,9 +373,6 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
   late final AppThemeDefinition _initial = ref
       .read(appThemeSettingsProvider)
       .preview!;
-  late final TextEditingController _name = TextEditingController(
-    text: _initial.name,
-  );
   late Brightness _brightness = widget.initialBrightness;
   AppThemeColor? _expanded = AppThemeColor.accent;
   late final Map<(Brightness, AppThemeColor), String> _hex = {
@@ -461,10 +385,19 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
   };
   bool _saveFailed = false;
 
-  @override
-  void dispose() {
-    _name.dispose();
-    super.dispose();
+  void _reset() {
+    ref.read(appThemeSettingsProvider.notifier).resetPreviewToClassic();
+    setState(() {
+      _hex.updateAll(
+        (key, _) => themeColorHex(
+          (key.$1 == Brightness.light
+                  ? AppTheme.classicLight
+                  : AppTheme.classicDark)
+              .values[key.$2]!,
+        ),
+      );
+      _saveFailed = false;
+    });
   }
 
   void _changeColor(AppThemeColor role, String raw) {
@@ -549,7 +482,9 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
         bindings: {const SingleActivator(LogicalKeyboardKey.escape): cancel},
         child: AlertDialog(
           insetPadding: const EdgeInsets.all(16),
-          constraints: const BoxConstraints(maxWidth: 820),
+          // A tight width bypasses AlertDialog's intrinsic sizing, which the
+          // RGB sliders' LayoutBuilder cannot provide.
+          constraints: const BoxConstraints.tightFor(width: 820),
           scrollable: true,
           title: Text(l10n.themeEditorTitle),
           content: SizedBox(
@@ -558,31 +493,6 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(l10n.themeLivePreview),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.themeName,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(height: 6),
-                ShadInput(
-                  controller: _name,
-                  enabled: !settings.isSaving,
-                  onChanged: (name) {
-                    ref
-                        .read(appThemeSettingsProvider.notifier)
-                        .updatePreview(
-                          ref
-                              .read(appThemeSettingsProvider)
-                              .preview!
-                              .copyWith(name: name),
-                        );
-                  },
-                ),
-                if (_name.text.trim().isEmpty)
-                  Text(
-                    l10n.themeNameRequired,
-                    style: TextStyle(color: context.appColors.error),
-                  ),
                 const SizedBox(height: 16),
                 _PalettePair(theme: draft),
                 const SizedBox(height: 16),
@@ -658,13 +568,16 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
           actions: [
             ShadButton.ghost(
               enabled: !settings.isSaving,
+              onPressed: _reset,
+              child: Text(l10n.themeResetToClassic),
+            ),
+            ShadButton.ghost(
+              enabled: !settings.isSaving,
               onPressed: cancel,
               child: Text(l10n.commonCancel),
             ),
             ShadButton(
-              enabled:
-                  !settings.isSaving &&
-                  themeEditorCanSave(_name.text, _hex.values),
+              enabled: !settings.isSaving && themeEditorCanSave(_hex.values),
               onPressed: _save,
               leading: settings.isSaving
                   ? SizedBox.square(

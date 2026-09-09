@@ -73,15 +73,29 @@ including during theme transitions.
 
 ### Theme selection and editing
 
-The table above describes **Classic**, the default palette. **Ocean** uses cool
-blue accents and surfaces; **Forest** uses green accents and surfaces. Each theme
-is a pair of light and dark palettes. Selecting a pair never changes the separate
-System / Light / Dark preference or its shared web cookie.
+The table above describes **Classic**, the default palette. The selector always
+contains **Classic, Ocean, Forest, Sepia, Graphite, Custom**, in that order, in one
+compact horizontal row that scrolls on narrow layouts. Ocean uses cool blue
+accents and surfaces; Forest uses green;
+Sepia combines paper surfaces with brown and sand accents; Graphite uses neutral
+surfaces with dark accents in light mode and light accents in dark mode. Graphite
+uses dark text on its light button fill. Semantic status colors keep their meaning.
+Each theme is a pair of light and dark palettes. Selecting a pair never changes
+the separate System / Light / Dark preference or its shared web cookie.
 
-Built-in themes are immutable. Customizing one creates a named local copy; copies
-can be edited, renamed, duplicated and deleted. `AppThemeSettingsController`
-persists the selected identifier and custom pairs together in SharedPreferences.
-The shared desktop provider scope keeps Quick Add and the main window aligned.
+The five built-in themes are immutable. Custom is the only editable slot, starts
+from Classic, and keeps its fixed name and identifier. Editing resumes its saved
+colors; there is no base selector, duplication, renaming or deletion. Reset to
+Classic changes both draft palettes; Save commits the reset and Cancel discards
+it. `AppThemeSettingsController` persists the selected identifier and single
+custom pair together in SharedPreferences. The shared desktop provider scope
+keeps Quick Add and the main window aligned.
+
+Local settings use format version 2. The active custom pair from version 1 becomes
+Custom; otherwise Custom starts from Classic and the selected built-in theme is
+preserved. Before the first version 2 write, the controller stores the original
+version 1 JSON, including inactive copies, under `app.themeSettings.v1Backup`.
+A failed backup blocks the new write and keeps the draft available for retry.
 
 All 18 palette roles are editable as opaque RGB / HEX colors, including `error`,
 `overdue`, `onAccent` and `onError`. Use the foreground roles on filled controls

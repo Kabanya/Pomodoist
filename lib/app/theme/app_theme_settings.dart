@@ -4,11 +4,17 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart';
 
 import 'app_theme.dart';
 
 const appThemeSettingsPreferenceKey = 'app.themeSettings';
+const appThemeSettingsLegacyBackupKey = 'app.themeSettings.v1Backup';
+const defaultCustomTheme = AppThemeDefinition(
+  id: 'custom',
+  name: 'Custom',
+  light: AppTheme.classicLight,
+  dark: AppTheme.classicDark,
+);
 
 class AppThemeDefinition {
   const AppThemeDefinition({
@@ -45,17 +51,16 @@ class AppThemeDefinition {
   };
 
   factory AppThemeDefinition.fromJson(Object? json) {
-    if (json is! Map ||
-        json['id'] is! String ||
-        !(json['id'] as String).startsWith('custom:') ||
-        (json['id'] as String).length <= 7 ||
-        json['name'] is! String ||
-        (json['name'] as String).trim().isEmpty) {
+    if (json is! Map || json['id'] is! String) {
       throw const FormatException('Invalid custom theme');
     }
+    final id = json['id'] as String;
+    if (id != 'custom' && !(id.startsWith('custom:') && id.length > 7)) {
+      throw const FormatException('Invalid custom theme identifier');
+    }
     return AppThemeDefinition(
-      id: json['id'] as String,
-      name: (json['name'] as String).trim(),
+      id: 'custom',
+      name: 'Custom',
       light: AppThemePalette.fromJson(json['light']),
       dark: AppThemePalette.fromJson(json['dark']),
     );
@@ -129,12 +134,73 @@ final builtinAppThemes = List<AppThemeDefinition>.unmodifiable([
       accentTint: const Color(0xFF163723),
     ),
   ),
+  AppThemeDefinition(
+    id: 'sepia',
+    name: 'Sepia',
+    light: AppTheme.classicLight.copyWith(
+      canvas: const Color(0xFFFAF7F2),
+      surface: const Color(0xFFFFFDF9),
+      surfaceTint: const Color(0xFFF2EDE5),
+      surfaceHover: const Color(0xFFE9E0D3),
+      primaryText: const Color(0xFF2E251B),
+      secondaryText: const Color(0xFF756655),
+      mutedText: const Color(0xFF756655),
+      border: const Color(0xFFE2D7C8),
+      accent: const Color(0xFF8B5E34),
+      accentFill: const Color(0xFF8B5E34),
+      accentTint: const Color(0xFFF4E8D8),
+    ),
+    dark: AppTheme.classicDark.copyWith(
+      canvas: const Color(0xFF17130F),
+      surface: const Color(0xFF211B15),
+      surfaceTint: const Color(0xFF2B231B),
+      surfaceHover: const Color(0xFF362B20),
+      primaryText: const Color(0xFFF5EBDD),
+      secondaryText: const Color(0xFFB9AA98),
+      mutedText: const Color(0xFFB9AA98),
+      border: const Color(0xFF44382B),
+      accent: const Color(0xFFD6AD7B),
+      accentFill: const Color(0xFF8B5E34),
+      accentTint: const Color(0xFF382A1A),
+    ),
+  ),
+  AppThemeDefinition(
+    id: 'graphite',
+    name: 'Graphite',
+    light: AppTheme.classicLight.copyWith(
+      canvas: const Color(0xFFFAFAFA),
+      surface: const Color(0xFFFFFFFF),
+      surfaceTint: const Color(0xFFF4F4F5),
+      surfaceHover: const Color(0xFFE4E4E7),
+      primaryText: const Color(0xFF18181B),
+      secondaryText: const Color(0xFF71717A),
+      mutedText: const Color(0xFF71717A),
+      border: const Color(0xFFD4D4D8),
+      accent: const Color(0xFF27272A),
+      accentFill: const Color(0xFF27272A),
+      accentTint: const Color(0xFFEDEDEE),
+    ),
+    dark: AppTheme.classicDark.copyWith(
+      canvas: const Color(0xFF0F0F10),
+      surface: const Color(0xFF18181B),
+      surfaceTint: const Color(0xFF222225),
+      surfaceHover: const Color(0xFF2D2D31),
+      primaryText: const Color(0xFFFAFAFA),
+      secondaryText: const Color(0xFFA1A1AA),
+      mutedText: const Color(0xFFA1A1AA),
+      border: const Color(0xFF3A3A40),
+      accent: const Color(0xFFE4E4E7),
+      accentFill: const Color(0xFFE4E4E7),
+      accentTint: const Color(0xFF2D2D31),
+      onAccent: const Color(0xFF18181B),
+    ),
+  ),
 ]);
 
 class AppThemeSettings {
   const AppThemeSettings({
     this.selectedId = 'classic',
-    this.customThemes = const [],
+    this.customTheme = defaultCustomTheme,
     this.preview,
     this.isLoaded = false,
     this.isSaving = false,
@@ -142,16 +208,13 @@ class AppThemeSettings {
   });
 
   final String selectedId;
-  final List<AppThemeDefinition> customThemes;
+  final AppThemeDefinition customTheme;
   final AppThemeDefinition? preview;
   final bool isLoaded;
   final bool isSaving;
   final bool loadFailed;
 
-  Iterable<AppThemeDefinition> get themes => [
-    ...builtinAppThemes,
-    ...customThemes,
-  ];
+  Iterable<AppThemeDefinition> get themes => [...builtinAppThemes, customTheme];
   AppThemeDefinition themeById(String id) => themes.firstWhere(
     (theme) => theme.id == id,
     orElse: () => builtinAppThemes.first,
@@ -160,7 +223,7 @@ class AppThemeSettings {
 
   AppThemeSettings copyWith({
     String? selectedId,
-    List<AppThemeDefinition>? customThemes,
+    AppThemeDefinition? customTheme,
     AppThemeDefinition? preview,
     bool clearPreview = false,
     bool? isLoaded,
@@ -168,9 +231,7 @@ class AppThemeSettings {
     bool? loadFailed,
   }) => AppThemeSettings(
     selectedId: selectedId ?? this.selectedId,
-    customThemes: customThemes == null
-        ? this.customThemes
-        : List.unmodifiable(customThemes),
+    customTheme: customTheme ?? this.customTheme,
     preview: clearPreview ? null : preview ?? this.preview,
     isLoaded: isLoaded ?? this.isLoaded,
     isSaving: isSaving ?? this.isSaving,
@@ -178,9 +239,9 @@ class AppThemeSettings {
   );
 
   String encode() => jsonEncode({
-    'version': 1,
+    'version': 2,
     'selectedId': selectedId,
-    'customThemes': customThemes.map((theme) => theme.toJson()).toList(),
+    'customTheme': customTheme.toJson(),
   });
 
   static AppThemeSettings decode(Object? raw) {
@@ -188,30 +249,40 @@ class AppThemeSettings {
     if (raw is! String) return fallback;
     try {
       final json = jsonDecode(raw);
-      if (json is! Map ||
-          json['version'] != 1 ||
-          json['customThemes'] is! List) {
+      if (json is! Map || (json['version'] != 1 && json['version'] != 2)) {
         return fallback;
       }
-      final themes = <AppThemeDefinition>[];
-      final ids = <String>{};
-      for (final record in json['customThemes'] as List) {
+      var custom = defaultCustomTheme;
+      var selected = json['selectedId'];
+      if (json['version'] == 1) {
+        final copies = json['customThemes'];
+        if (copies is List) {
+          for (final record in copies) {
+            if (record is! Map || record['id'] != selected) continue;
+            try {
+              custom = AppThemeDefinition.fromJson(record);
+              selected = 'custom';
+              break;
+            } on FormatException {
+              // A damaged legacy record must not prevent migration.
+              continue;
+            }
+          }
+        }
+      } else {
         try {
-          final theme = AppThemeDefinition.fromJson(record);
-          if (ids.add(theme.id)) themes.add(theme);
+          custom = AppThemeDefinition.fromJson(json['customTheme']);
         } on FormatException {
-          // One damaged copy must not hide the other saved themes.
-          continue;
+          // Keep the selected preset usable if Custom is damaged.
         }
       }
-      final selected = json['selectedId'];
       final validSelection =
           selected is String &&
-          (ids.contains(selected) ||
+          (selected == 'custom' ||
               builtinAppThemes.any((theme) => theme.id == selected));
       return AppThemeSettings(
         isLoaded: true,
-        customThemes: List.unmodifiable(themes),
+        customTheme: custom,
         selectedId: validSelection ? selected : 'classic',
       );
     } on FormatException {
@@ -232,6 +303,7 @@ final appThemeSettingsProvider =
 
 class AppThemeSettingsController extends Notifier<AppThemeSettings> {
   Future<void>? _loading;
+  String? _legacySettings;
 
   @override
   AppThemeSettings build() {
@@ -244,11 +316,16 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
   Future<void> _load() async {
     try {
       final prefs = await ref.read(appThemePreferencesProvider)();
-      if (ref.mounted) {
-        state = AppThemeSettings.decode(
-          prefs.get(appThemeSettingsPreferenceKey),
-        );
+      final raw = prefs.get(appThemeSettingsPreferenceKey);
+      if (raw is String) {
+        try {
+          final json = jsonDecode(raw);
+          if (json is Map && json['version'] == 1) _legacySettings = raw;
+        } on FormatException {
+          // The decoder below supplies defaults for malformed settings.
+        }
       }
+      if (ref.mounted) state = AppThemeSettings.decode(raw);
     } catch (_) {
       _loading = null;
       if (ref.mounted) state = state.copyWith(loadFailed: true);
@@ -271,20 +348,16 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
     await _persist(state.copyWith(selectedId: id));
   }
 
-  void beginEdit(String id, {required String name, bool duplicate = false}) {
+  void beginEdit() {
     _requireReady();
-    if (state.preview != null || !state.themes.any((theme) => theme.id == id)) {
-      throw StateError('Cannot open theme editor');
-    }
-    final source = state.themeById(id);
-    state = state.copyWith(
-      preview: source.copyWith(
-        id: source.isBuiltIn || duplicate
-            ? 'custom:${const Uuid().v4()}'
-            : source.id,
-        name: name,
-      ),
-    );
+    if (state.preview != null) throw StateError('Theme editor is already open');
+    state = state.copyWith(preview: state.customTheme);
+  }
+
+  void resetPreviewToClassic() {
+    _requireReady();
+    if (state.preview == null) throw StateError('No theme draft');
+    state = state.copyWith(preview: defaultCustomTheme);
   }
 
   void updatePreview(AppThemeDefinition draft) {
@@ -305,35 +378,11 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
     final draft = state.preview;
     if (draft == null) throw StateError('No theme draft');
     final saved = AppThemeDefinition.fromJson(draft.toJson());
-    final themes = [...state.customThemes];
-    final index = themes.indexWhere((theme) => theme.id == saved.id);
-    if (index < 0) {
-      themes.add(saved);
-    } else {
-      themes[index] = saved;
-    }
     await _persist(
       state.copyWith(
-        selectedId: saved.id,
-        customThemes: themes,
+        selectedId: 'custom',
+        customTheme: saved,
         clearPreview: true,
-      ),
-    );
-  }
-
-  Future<void> deleteTheme(String id) async {
-    await load();
-    _requireReady();
-    if (state.preview != null ||
-        !state.customThemes.any((theme) => theme.id == id)) {
-      throw ArgumentError.value(id, 'id');
-    }
-    await _persist(
-      state.copyWith(
-        selectedId: state.selectedId == id ? 'classic' : state.selectedId,
-        customThemes: state.customThemes
-            .where((theme) => theme.id != id)
-            .toList(),
       ),
     );
   }
@@ -343,12 +392,20 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
     SharedPreferences? prefs;
     try {
       prefs = await ref.read(appThemePreferencesProvider)();
+      final legacy = _legacySettings;
+      if (legacy != null &&
+          !prefs.containsKey(appThemeSettingsLegacyBackupKey)) {
+        if (!await prefs.setString(appThemeSettingsLegacyBackupKey, legacy)) {
+          throw StateError('Could not back up legacy theme settings');
+        }
+      }
       if (!await prefs.setString(
         appThemeSettingsPreferenceKey,
         next.encode(),
       )) {
         throw StateError('Could not save theme settings');
       }
+      _legacySettings = null;
       if (ref.mounted) state = next.copyWith(isSaving: false);
     } catch (_) {
       // Legacy preferences update their cache before the disk write succeeds.

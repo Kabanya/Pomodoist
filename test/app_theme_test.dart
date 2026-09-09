@@ -6,6 +6,46 @@ import 'package:pomodoist/app/theme/app_theme_settings.dart';
 
 void main() {
   test(
+    'Sepia and Graphite retain readable button text and independent status colors',
+    () {
+      for (final id in ['sepia', 'graphite']) {
+        final preset = builtinAppThemes.firstWhere((theme) => theme.id == id);
+        for (final (palette, classic) in [
+          (preset.light, AppTheme.classicLight),
+          (preset.dark, AppTheme.classicDark),
+        ]) {
+          expect(
+            themeContrastRatio(palette.accentFill, palette.onAccent),
+            greaterThanOrEqualTo(4.5),
+          );
+          expect(
+            themeContrastRatio(palette.canvas, palette.primaryText),
+            greaterThanOrEqualTo(4.5),
+          );
+          expect(palette.error, classic.error);
+          expect(palette.overdue, classic.overdue);
+          expect(palette.warning, classic.warning);
+          expect(palette.info, classic.info);
+          expect(palette.success, classic.success);
+          expect(
+            AppThemePalette.fromJson(palette.toJson()).toJson(),
+            palette.toJson(),
+          );
+        }
+      }
+      final graphite = builtinAppThemes
+          .firstWhere((theme) => theme.id == 'graphite')
+          .dark;
+      final material = AppTheme.dark(palette: graphite);
+      expect(material.colorScheme.onPrimary.computeLuminance(), lessThan(.1));
+      expect(
+        AppTheme.shadFromMaterial(material).colorScheme.primaryForeground,
+        graphite.onAccent,
+      );
+    },
+  );
+
+  test(
     'editable colors round-trip, reject malformed colors, and preserve semantic roles',
     () {
       final palette = AppTheme.light().extension<AppThemePalette>()!;

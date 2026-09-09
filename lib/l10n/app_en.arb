@@ -713,25 +713,16 @@
   "themeOcean": "Ocean",
   "themeForest": "Forest",
   "themeCustomize": "Customize",
-  "themeEdit": "Edit",
-  "themeDuplicate": "Duplicate",
-  "themeCopyName": "{name} copy",
-  "themeName": "Theme name",
-  "themeNameRequired": "Enter a theme name.",
   "themeEditorTitle": "Edit theme",
   "themeLivePreview": "Changes appear throughout the app. Cancel restores your previous theme.",
   "themeSaveError": "Could not save the theme. Your changes are still here; try again.",
   "themeLoadError": "Could not load your themes.",
-  "themeDeleteTitle": "Delete theme?",
-  "themeDeleteBody": "Delete “{name}”? If it is active, Classic will be selected.",
   "themeColorsSurfaces": "Background and surfaces",
   "themeColorsText": "Text",
   "themeColorsAccent": "Accent",
   "themeColorsStatus": "Status colors",
   "themeInvalidHex": "Enter a six-digit HEX color, for example #2563EB.",
   "themeLowContrast": "Low contrast: some text may be difficult to read.",
-  "themeBuiltInThemes": "Built-in themes",
-  "themeCustomThemes": "Your themes",
   "themePreviewTask": "Plan your day",
   "themePreviewSecondary": "A little focus, every day.",
   "themeColorCanvas": "Background",
@@ -752,20 +743,6 @@
   "themeColorOverdue": "Overdue",
   "themeColorOnAccent": "Text on accent fill",
   "themeColorOnError": "Text on error fill",
-  "@themeCopyName": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "@themeDeleteBody": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "todayTaskSummary": "{tasks, plural, one{1 task} other{{tasks} tasks}} · {planned, plural, one{1 planned session} other{{planned} planned sessions}} · {time} focused",
   "todayFocusingOn": "Focusing on",
   "openFocus": "Open Focus",
@@ -778,6 +755,10 @@
   "quickAddResetDetails": "Use default",
   "quickAddChangeTime": "Change time",
   "quickAddProjectNameUnsupported": "This project name cannot be inserted without changing it.",
+  "themeSepia": "Sepia",
+  "themeGraphite": "Graphite",
+  "themeCustom": "Custom",
+  "themeResetToClassic": "Reset to Classic",
   "settingsTaskListStyle": "Task row style",
   "settingsTaskListStyleDescription": "Choose the new layout or keep the familiar classic rows.",
   "settingsTaskListModern": "Modern",

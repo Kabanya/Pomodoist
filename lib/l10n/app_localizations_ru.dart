@@ -2241,23 +2241,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get themeCustomize => 'Настроить';
 
   @override
-  String get themeEdit => 'Редактировать';
-
-  @override
-  String get themeDuplicate => 'Дублировать';
-
-  @override
-  String themeCopyName(String name) {
-    return '$name — копия';
-  }
-
-  @override
-  String get themeName => 'Название темы';
-
-  @override
-  String get themeNameRequired => 'Введите название темы.';
-
-  @override
   String get themeEditorTitle => 'Редактор темы';
 
   @override
@@ -2270,14 +2253,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get themeLoadError => 'Не удалось загрузить темы.';
-
-  @override
-  String get themeDeleteTitle => 'Удалить тему?';
-
-  @override
-  String themeDeleteBody(String name) {
-    return 'Удалить «$name»? Если она активна, будет выбрана Классика.';
-  }
 
   @override
   String get themeColorsSurfaces => 'Фон и поверхности';
@@ -2298,12 +2273,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get themeLowContrast =>
       'Низкий контраст: часть текста может быть трудно прочитать.';
-
-  @override
-  String get themeBuiltInThemes => 'Встроенные темы';
-
-  @override
-  String get themeCustomThemes => 'Ваши темы';
 
   @override
   String get themePreviewTask => 'Спланируйте свой день';
@@ -2404,6 +2373,18 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get quickAddProjectNameUnsupported =>
       'Не удаётся вставить название проекта без изменений.';
+
+  @override
+  String get themeSepia => 'Сепия';
+
+  @override
+  String get themeGraphite => 'Графит';
+
+  @override
+  String get themeCustom => 'Custom';
+
+  @override
+  String get themeResetToClassic => 'Сбросить к Классике';
 
   @override
   String get settingsTaskListStyle => 'Стиль строк задач';

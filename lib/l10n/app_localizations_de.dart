@@ -2238,23 +2238,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get themeCustomize => 'Anpassen';
 
   @override
-  String get themeEdit => 'Bearbeiten';
-
-  @override
-  String get themeDuplicate => 'Duplizieren';
-
-  @override
-  String themeCopyName(String name) {
-    return '$name Kopie';
-  }
-
-  @override
-  String get themeName => 'Name des Designs';
-
-  @override
-  String get themeNameRequired => 'Gib einen Namen für das Design ein.';
-
-  @override
   String get themeEditorTitle => 'Design bearbeiten';
 
   @override
@@ -2267,14 +2250,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get themeLoadError => 'Deine Designs konnten nicht geladen werden.';
-
-  @override
-  String get themeDeleteTitle => 'Design löschen?';
-
-  @override
-  String themeDeleteBody(String name) {
-    return '„$name“ löschen? Wenn es aktiv ist, wird Klassisch ausgewählt.';
-  }
 
   @override
   String get themeColorsSurfaces => 'Hintergrund und Flächen';
@@ -2295,12 +2270,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get themeLowContrast =>
       'Geringer Kontrast: Einige Texte sind möglicherweise schwer lesbar.';
-
-  @override
-  String get themeBuiltInThemes => 'Integrierte Designs';
-
-  @override
-  String get themeCustomThemes => 'Deine Designs';
 
   @override
   String get themePreviewTask => 'Plane deinen Tag';
@@ -2399,6 +2368,18 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get quickAddProjectNameUnsupported =>
       'Dieser Projektname kann nicht unverändert eingefügt werden.';
+
+  @override
+  String get themeSepia => 'Sepia';
+
+  @override
+  String get themeGraphite => 'Graphit';
+
+  @override
+  String get themeCustom => 'Custom';
+
+  @override
+  String get themeResetToClassic => 'Auf Klassisch zurücksetzen';
 
   @override
   String get settingsTaskListStyle => 'Stil der Aufgabenzeilen';
