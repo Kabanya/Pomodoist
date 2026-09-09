@@ -1164,6 +1164,8 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           const ThemeSettingsCard(),
           const SizedBox(height: 12),
+          const _TaskListStyleSettings(),
+          const SizedBox(height: 12),
           const _DefaultTimedBlockDurationSettings(),
           const SizedBox(height: 12),
           Card(
@@ -1882,6 +1884,66 @@ class _AuthFailureNoticeCard extends StatelessWidget {
                 ),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TaskListStyleSettings extends ConsumerWidget {
+  const _TaskListStyleSettings();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final style = ref.watch(taskListStyleProvider);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.settingsTaskListStyle,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.settingsTaskListStyleDescription,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: context.appColors.secondaryText,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final option in TaskListStyle.values)
+                  ChoiceChip(
+                    label: Text(
+                      option == TaskListStyle.modern
+                          ? l10n.settingsTaskListModern
+                          : l10n.settingsTaskListClassic,
+                    ),
+                    selected: style == option,
+                    onSelected: (_) async {
+                      try {
+                        await ref
+                            .read(taskListStyleProvider.notifier)
+                            .setStyle(option);
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(l10n.settingsSaveError)),
+                          );
+                        }
+                      }
+                    },
+                  ),
+              ],
+            ),
           ],
         ),
       ),

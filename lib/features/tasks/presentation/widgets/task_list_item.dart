@@ -252,6 +252,16 @@ class TaskListItem extends ConsumerWidget {
     final hasDescription = description != null && description.isNotEmpty;
     final hasMeta = _hasListMeta(task, focusEstimate, subtaskProgress);
     final isAgenda = presentation == TaskListItemPresentation.agenda;
+    final isModern = ref.watch(taskListStyleProvider) == TaskListStyle.modern;
+    final rowProject =
+        project ??
+        (isModern
+            ? ref
+                  .watch(projectsProvider)
+                  .value
+                  ?.where((project) => project.id == task.projectId)
+                  .firstOrNull
+            : null);
 
     Widget focusAction({Key? key}) {
       return IconButton(
@@ -308,7 +318,14 @@ class TaskListItem extends ConsumerWidget {
             final position = renderObject.localToGlobal(
               Offset(renderObject.size.width, renderObject.size.height),
             );
-            unawaited(_showQuickActions(buttonContext, ref, position));
+            unawaited(
+              _showQuickActions(
+                buttonContext,
+                ref,
+                position,
+                includeFocus: isModern,
+              ),
+            );
           },
           icon: const Icon(LucideIcons.ellipsis),
         ),
@@ -356,18 +373,36 @@ class TaskListItem extends ConsumerWidget {
       required bool agendaDesktop,
       required bool showAgendaFocusAction,
     }) {
-      final trailingAction = switch (presentation) {
-        TaskListItemPresentation.standard => focusAction(),
-        TaskListItemPresentation.agenda when agendaDesktop => SizedBox(
-          key: ValueKey('agenda-focus-slot-${task.id}'),
-          width: 48,
-          height: 48,
-          child: showAgendaFocusAction
-              ? focusAction(key: ValueKey('agenda-focus-action-${task.id}'))
-              : null,
-        ),
-        TaskListItemPresentation.agenda => overflowAction(),
-      };
+      final trailingAction = isModern
+          ? SizedBox(
+              width: agendaDesktop ? 96 : 48,
+              child: AnimatedOpacity(
+                opacity: !agendaDesktop || showAgendaFocusAction ? 1 : 0,
+                duration: AppMotion.duration(context, AppMotion.hover),
+                curve: AppMotion.curve,
+                alwaysIncludeSemantics: true,
+                child: Row(
+                  children: [
+                    if (agendaDesktop) Expanded(child: focusAction()),
+                    Expanded(child: overflowAction()),
+                  ],
+                ),
+              ),
+            )
+          : switch (presentation) {
+              TaskListItemPresentation.standard => focusAction(),
+              TaskListItemPresentation.agenda when agendaDesktop => SizedBox(
+                key: ValueKey('agenda-focus-slot-${task.id}'),
+                width: 48,
+                height: 48,
+                child: showAgendaFocusAction
+                    ? focusAction(
+                        key: ValueKey('agenda-focus-action-${task.id}'),
+                      )
+                    : null,
+              ),
+              TaskListItemPresentation.agenda => overflowAction(),
+            };
       final content = Material(
         color: accepting || (selection?.isSelected(task.id) ?? false)
             ? colors.accentTint
@@ -449,10 +484,13 @@ class TaskListItem extends ConsumerWidget {
                     child: _TaskTextDragSource(
                       task: task,
                       enabled: !(selection?.active ?? false),
-                      child: isAgenda
+                      child: isAgenda || isModern
                           ? _AgendaTaskContent(
                               task: task,
-                              project: project,
+                              project: rowProject,
+                              modern: isModern,
+                              withinDate: isAgenda,
+                              description: isAgenda ? null : description,
                               focusEstimate: focusEstimate,
                               subtaskProgress: subtaskProgress,
                               allowMetadataWrap: !agendaDesktop,
@@ -523,7 +561,7 @@ class TaskListItem extends ConsumerWidget {
       );
     }
 
-    if (!isAgenda) {
+    if (!isAgenda && !isModern) {
       return TaskMotionItem(
         taskId: task.id,
         child: rowWithDropTarget(
@@ -537,12 +575,19 @@ class TaskListItem extends ConsumerWidget {
       taskId: task.id,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth >= 760;
+          final isDesktop = isModern
+              ? constraints.maxWidth - depth * 18 >=
+                    840 * MediaQuery.textScalerOf(context).scale(14) / 14
+              : constraints.maxWidth >= 760;
           return _AgendaInteractionRegion(
             taskId: task.id,
             builder: (context, isActive) => rowWithDropTarget(
               agendaDesktop: isDesktop,
-              showAgendaFocusAction: isDesktop && isActive,
+              showAgendaFocusAction:
+                  isDesktop &&
+                  (isActive ||
+                      (isModern &&
+                          !_usesImmediateTaskDrag(defaultTargetPlatform))),
             ),
           );
         },
@@ -576,8 +621,9 @@ class TaskListItem extends ConsumerWidget {
   Future<void> _showQuickActions(
     BuildContext context,
     WidgetRef ref,
-    Offset position,
-  ) async {
+    Offset position, {
+    bool includeFocus = false,
+  }) async {
     final l10n = context.l10n;
     final colors = context.appColors;
     final selection = TaskSelectionScope.maybeOf(context);
@@ -590,6 +636,12 @@ class TaskListItem extends ConsumerWidget {
       ),
       position: _menuPosition(context, position),
       items: [
+        if (includeFocus && selection != null)
+          PopupMenuItem(
+            value: _TaskQuickAction.startFocus,
+            enabled: !task.isCompleted && !selection.active,
+            child: _TaskMenuRow(icon: LucideIcons.play, label: l10n.startFocus),
+          ),
         if (selection != null) ...[
           PopupMenuItem(
             value: _TaskQuickAction.select,
@@ -1012,6 +1064,9 @@ class _AgendaTaskContent extends StatelessWidget {
     required this.taskTimeState,
     required this.timeDisplayMode,
     required this.defaultTimedBlockMinutes,
+    this.modern = false,
+    this.withinDate = true,
+    this.description,
   });
 
   final TaskItem task;
@@ -1022,6 +1077,9 @@ class _AgendaTaskContent extends StatelessWidget {
   final TaskTimeState? taskTimeState;
   final TaskTimeDisplayMode timeDisplayMode;
   final int defaultTimedBlockMinutes;
+  final bool modern;
+  final bool withinDate;
+  final String? description;
 
   @override
   Widget build(BuildContext context) {
@@ -1030,70 +1088,141 @@ class _AgendaTaskContent extends StatelessWidget {
     final schedule = task.schedule;
     final scheduleLabel = schedule == null
         ? null
-        : formatTaskListScheduleWithinDate(
+        : (withinDate
+              ? formatTaskListScheduleWithinDate
+              : formatTaskListSchedule)(
             context,
             schedule,
             displayMode: timeDisplayMode,
             defaultTimedBlockMinutes: defaultTimedBlockMinutes,
           );
-    final metadata = <Widget>[
-      if (progress != null && progress.total > 0)
-        _FixedMetaText(
-          icon: LucideIcons.gitBranch,
-          label: progress.label,
-          tooltip: '${context.l10n.subtasks} ${progress.label}',
-        ),
-      if (focusEstimate != null)
-        _FixedMetaText(
-          icon: LucideIcons.timer,
-          label: '${task.completedFocusIntervals}/$focusEstimate',
-        ),
-      if (project != null) _AgendaProjectLabel(project: project!),
-      if (scheduleLabel != null)
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 180),
-          child: _TaskTimeMetaText(
-            taskId: task.id,
-            label: scheduleLabel,
-            state: taskTimeState,
-            color: taskTimeState == null
-                ? colors.mutedText
-                : colors.taskTimeColor(taskTimeState!),
-            textStyle: Theme.of(context).textTheme.labelMedium,
-            key: const Key('agenda-schedule-label'),
-          ),
-        ),
-    ];
+    final metadata = <Widget>[];
+    void addMetadata(Widget? child, double width) {
+      if (modern && !allowMetadataWrap) {
+        metadata.add(SizedBox(width: width, child: child));
+      } else if (child != null) {
+        metadata.add(child);
+      }
+    }
+
+    addMetadata(
+      progress != null && progress.total > 0
+          ? _FixedMetaText(
+              flexible: modern,
+              icon: LucideIcons.gitBranch,
+              label: progress.label,
+              tooltip: '${context.l10n.subtasks} ${progress.label}',
+            )
+          : null,
+      48,
+    );
+    addMetadata(
+      focusEstimate != null
+          ? _FixedMetaText(
+              flexible: modern,
+              icon: LucideIcons.timer,
+              label: '${task.completedFocusIntervals}/$focusEstimate',
+            )
+          : null,
+      56,
+    );
+    addMetadata(
+      project != null ? _AgendaProjectLabel(project: project!) : null,
+      120,
+    );
+    addMetadata(
+      scheduleLabel != null
+          ? ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 180),
+              child: _TaskTimeMetaText(
+                taskId: task.id,
+                label: scheduleLabel,
+                state: taskTimeState,
+                color: taskTimeState == null
+                    ? colors.mutedText
+                    : colors.taskTimeColor(taskTimeState!),
+                textStyle: Theme.of(context).textTheme.labelMedium,
+                key: const Key('agenda-schedule-label'),
+              ),
+            )
+          : null,
+      160,
+    );
     final title = AnimatedDefaultTextStyle(
-      duration: MediaQuery.disableAnimationsOf(context)
+      duration: modern
+          ? AppMotion.duration(context, AppMotion.state)
+          : MediaQuery.disableAnimationsOf(context)
           ? Duration.zero
           : const Duration(milliseconds: 340),
+      curve: modern ? AppMotion.curve : Curves.linear,
       style: Theme.of(context).textTheme.titleMedium!.copyWith(
+        fontWeight: modern ? FontWeight.w600 : null,
         color: task.isCompleted ? colors.mutedText : colors.primaryText,
         decoration: task.isCompleted ? TextDecoration.lineThrough : null,
         decorationColor: colors.mutedText,
       ),
-      child: Text(task.content, maxLines: 1, overflow: TextOverflow.ellipsis),
+      child: Text(
+        task.content,
+        maxLines: modern && !withinDate ? 2 : 1,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
 
+    final heading = modern && (description?.isNotEmpty ?? false)
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              title,
+              const SizedBox(height: 2),
+              Text(
+                description!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: colors.mutedText),
+              ),
+            ],
+          )
+        : title;
     if (metadata.isEmpty) {
-      return title;
+      return heading;
     }
     if (allowMetadataWrap) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          title,
+          heading,
           const SizedBox(height: 4),
           Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: Wrap(
-              spacing: 10,
-              runSpacing: 4,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: metadata,
-            ),
+            alignment: modern
+                ? AlignmentDirectional.centerStart
+                : AlignmentDirectional.centerEnd,
+            child: !modern
+                ? Wrap(
+                    spacing: 10,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: metadata,
+                  )
+                : LayoutBuilder(
+                    builder: (context, constraints) => Wrap(
+                      spacing: 10,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        for (final item in metadata)
+                          ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: constraints.maxWidth,
+                            ),
+                            child: item,
+                          ),
+                      ],
+                    ),
+                  ),
           ),
         ],
       );
@@ -1101,7 +1230,7 @@ class _AgendaTaskContent extends StatelessWidget {
 
     return Row(
       children: [
-        Expanded(child: title),
+        Expanded(child: heading),
         const SizedBox(width: 12),
         for (var index = 0; index < metadata.length; index++) ...[
           if (index > 0) const SizedBox(width: 12),
@@ -1351,27 +1480,34 @@ class _TaskTimeMetaText extends StatelessWidget {
 }
 
 class _FixedMetaText extends StatelessWidget {
-  const _FixedMetaText({required this.icon, required this.label, this.tooltip});
+  const _FixedMetaText({
+    required this.icon,
+    required this.label,
+    this.tooltip,
+    this.flexible = false,
+  });
 
   final IconData icon;
   final String label;
   final String? tooltip;
+  final bool flexible;
 
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    final text = Text(
+      label,
+      maxLines: 1,
+      overflow: flexible ? TextOverflow.ellipsis : TextOverflow.clip,
+      softWrap: false,
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
+    );
     final content = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 14, color: color),
         const SizedBox(width: 4),
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.clip,
-          softWrap: false,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
-        ),
+        if (flexible) Flexible(child: text) else text,
       ],
     );
     final message = tooltip;

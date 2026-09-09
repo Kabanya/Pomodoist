@@ -131,6 +131,16 @@ Quoted metadata names remain literal during date normalization. Ready voice
 subtasks preview the project inherited from their parent's current phrase.
 Details stay below the editable input; the separate window scrolls when needed.
 
+### Task row styles
+
+Modern is the default shared task row layout; Classic preserves the previous
+layout. The local `tasks.listStyle` preference changes only shared rows, including
+search, planning lists and subtasks. Both styles share task actions, selection,
+drag-and-drop and motion. Modern keeps desktop metadata and action slots aligned,
+wraps metadata on narrow screens, and reveals actions on hover or keyboard focus.
+Touch actions stay available. Project and timing colors retain their semantics.
+Custom Kanban and Timeline blocks keep their specialized layouts.
+
 ## Components and independence
 
 - Current direct dependencies: **`shadcn_ui 0.56.3`** and

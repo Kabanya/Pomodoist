@@ -2402,4 +2402,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get quickAddProjectNameUnsupported =>
       'This project name cannot be inserted without changing it.';
+
+  @override
+  String get settingsTaskListStyle => 'Task row style';
+
+  @override
+  String get settingsTaskListStyleDescription =>
+      'Choose the new layout or keep the familiar classic rows.';
+
+  @override
+  String get settingsTaskListModern => 'Modern';
+
+  @override
+  String get settingsTaskListClassic => 'Classic';
+
+  @override
+  String get settingsSaveError =>
+      'Could not save the setting. Please try again.';
 }

@@ -2395,4 +2395,21 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get quickAddProjectNameUnsupported =>
       'Este nombre de proyecto no se puede insertar sin modificarlo.';
+
+  @override
+  String get settingsTaskListStyle => 'Estilo de las filas de tareas';
+
+  @override
+  String get settingsTaskListStyleDescription =>
+      'Elige el nuevo diseño o las filas clásicas.';
+
+  @override
+  String get settingsTaskListModern => 'Moderno';
+
+  @override
+  String get settingsTaskListClassic => 'Clásico';
+
+  @override
+  String get settingsSaveError =>
+      'No se pudo guardar el ajuste. Inténtalo de nuevo.';
 }

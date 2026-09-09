@@ -2284,4 +2284,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get quickAddProjectNameUnsupported => '无法原样插入此项目名称。';
+
+  @override
+  String get settingsTaskListStyle => '任务行样式';
+
+  @override
+  String get settingsTaskListStyleDescription => '选择新布局或保留熟悉的经典任务行。';
+
+  @override
+  String get settingsTaskListModern => '现代';
+
+  @override
+  String get settingsTaskListClassic => '经典';
+
+  @override
+  String get settingsSaveError => '无法保存设置。请重试。';
 }

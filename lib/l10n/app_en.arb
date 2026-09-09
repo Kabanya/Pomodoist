@@ -777,5 +777,10 @@
   "sidebarViews": "Views",
   "quickAddResetDetails": "Use default",
   "quickAddChangeTime": "Change time",
-  "quickAddProjectNameUnsupported": "This project name cannot be inserted without changing it."
+  "quickAddProjectNameUnsupported": "This project name cannot be inserted without changing it.",
+  "settingsTaskListStyle": "Task row style",
+  "settingsTaskListStyleDescription": "Choose the new layout or keep the familiar classic rows.",
+  "settingsTaskListModern": "Modern",
+  "settingsTaskListClassic": "Classic",
+  "settingsSaveError": "Could not save the setting. Please try again."
 }

@@ -689,5 +689,10 @@
   "sidebarViews": "视图",
   "quickAddResetDetails": "使用默认值",
   "quickAddChangeTime": "更改时间",
-  "quickAddProjectNameUnsupported": "无法原样插入此项目名称。"
+  "quickAddProjectNameUnsupported": "无法原样插入此项目名称。",
+  "settingsTaskListStyle": "任务行样式",
+  "settingsTaskListStyleDescription": "选择新布局或保留熟悉的经典任务行。",
+  "settingsTaskListModern": "现代",
+  "settingsTaskListClassic": "经典",
+  "settingsSaveError": "无法保存设置。请重试。"
 }

@@ -4185,6 +4185,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This project name cannot be inserted without changing it.'**
   String get quickAddProjectNameUnsupported;
+
+  /// No description provided for @settingsTaskListStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Task row style'**
+  String get settingsTaskListStyle;
+
+  /// No description provided for @settingsTaskListStyleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the new layout or keep the familiar classic rows.'**
+  String get settingsTaskListStyleDescription;
+
+  /// No description provided for @settingsTaskListModern.
+  ///
+  /// In en, this message translates to:
+  /// **'Modern'**
+  String get settingsTaskListModern;
+
+  /// No description provided for @settingsTaskListClassic.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic'**
+  String get settingsTaskListClassic;
+
+  /// No description provided for @settingsSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the setting. Please try again.'**
+  String get settingsSaveError;
 }
 
 class _AppLocalizationsDelegate

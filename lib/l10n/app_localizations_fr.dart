@@ -2398,4 +2398,21 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get quickAddProjectNameUnsupported =>
       'Ce nom de projet ne peut pas être inséré sans modification.';
+
+  @override
+  String get settingsTaskListStyle => 'Style des lignes de tâches';
+
+  @override
+  String get settingsTaskListStyleDescription =>
+      'Choisissez la nouvelle présentation ou les lignes classiques.';
+
+  @override
+  String get settingsTaskListModern => 'Moderne';
+
+  @override
+  String get settingsTaskListClassic => 'Classique';
+
+  @override
+  String get settingsSaveError =>
+      'Impossible d’enregistrer le réglage. Réessayez.';
 }

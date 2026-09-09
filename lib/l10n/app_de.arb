@@ -689,5 +689,10 @@
   "sidebarViews": "Ansichten",
   "quickAddResetDetails": "Standard verwenden",
   "quickAddChangeTime": "Zeit ändern",
-  "quickAddProjectNameUnsupported": "Dieser Projektname kann nicht unverändert eingefügt werden."
+  "quickAddProjectNameUnsupported": "Dieser Projektname kann nicht unverändert eingefügt werden.",
+  "settingsTaskListStyle": "Stil der Aufgabenzeilen",
+  "settingsTaskListStyleDescription": "Wähle das neue Layout oder die vertrauten klassischen Zeilen.",
+  "settingsTaskListModern": "Modern",
+  "settingsTaskListClassic": "Klassisch",
+  "settingsSaveError": "Die Einstellung konnte nicht gespeichert werden. Versuche es erneut."
 }

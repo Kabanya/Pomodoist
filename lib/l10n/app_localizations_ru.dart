@@ -2404,4 +2404,21 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get quickAddProjectNameUnsupported =>
       'Не удаётся вставить название проекта без изменений.';
+
+  @override
+  String get settingsTaskListStyle => 'Стиль строк задач';
+
+  @override
+  String get settingsTaskListStyleDescription =>
+      'Выберите новый вид или привычные классические строки.';
+
+  @override
+  String get settingsTaskListModern => 'Современный';
+
+  @override
+  String get settingsTaskListClassic => 'Классический';
+
+  @override
+  String get settingsSaveError =>
+      'Не удалось сохранить настройку. Попробуйте ещё раз.';
 }

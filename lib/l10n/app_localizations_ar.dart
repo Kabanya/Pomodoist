@@ -2365,4 +2365,20 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get quickAddProjectNameUnsupported =>
       'لا يمكن إدراج اسم هذا المشروع دون تغييره.';
+
+  @override
+  String get settingsTaskListStyle => 'نمط صفوف المهام';
+
+  @override
+  String get settingsTaskListStyleDescription =>
+      'اختر التصميم الجديد أو احتفظ بالصفوف الكلاسيكية المألوفة.';
+
+  @override
+  String get settingsTaskListModern => 'حديث';
+
+  @override
+  String get settingsTaskListClassic => 'كلاسيكي';
+
+  @override
+  String get settingsSaveError => 'تعذر حفظ الإعداد. حاول مرة أخرى.';
 }

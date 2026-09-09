@@ -79,6 +79,7 @@ const reengagementNotificationsEnabledPreferenceKey =
 const quickAddDefaultTimedBlockMinutesPreferenceKey =
     'quickAdd.defaultTimedBlockMinutes';
 const taskTimeDisplayModePreferenceKey = 'tasks.timeDisplayMode';
+const taskListStylePreferenceKey = 'tasks.listStyle';
 const timelineVisibleStartMinutesPreferenceKey = 'timeline.visibleStartMinutes';
 const timelineVisibleEndMinutesPreferenceKey = 'timeline.visibleEndMinutes';
 const timelineHourWidthPreferenceKey = 'timeline.hourWidth';
@@ -108,6 +109,43 @@ final taskTimeDisplayModeProvider =
     NotifierProvider<TaskTimeDisplayModeController, TaskTimeDisplayMode>(
       TaskTimeDisplayModeController.new,
     );
+
+enum TaskListStyle { modern, classic }
+
+final taskListStyleProvider =
+    NotifierProvider<TaskListStyleController, TaskListStyle>(
+      TaskListStyleController.new,
+    );
+
+class TaskListStyleController extends Notifier<TaskListStyle> {
+  bool _loaded = false;
+  bool _hasLocalSelection = false;
+
+  @override
+  TaskListStyle build() {
+    if (!_loaded) {
+      _loaded = true;
+      unawaited(_load());
+    }
+    return TaskListStyle.modern;
+  }
+
+  Future<void> _load() async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    if (ref.mounted && !_hasLocalSelection) {
+      state = prefs?.getString(taskListStylePreferenceKey) == 'classic'
+          ? TaskListStyle.classic
+          : TaskListStyle.modern;
+    }
+  }
+
+  Future<void> setStyle(TaskListStyle style) async {
+    _hasLocalSelection = true;
+    state = style;
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs?.setString(taskListStylePreferenceKey, style.name);
+  }
+}
 
 final timelineVisibleHoursProvider =
     NotifierProvider<TimelineVisibleHoursController, TimelineVisibleHours>(

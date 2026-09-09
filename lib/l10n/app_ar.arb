@@ -689,5 +689,10 @@
   "sidebarViews": "طرق العرض",
   "quickAddResetDetails": "استخدام الافتراضي",
   "quickAddChangeTime": "تغيير الوقت",
-  "quickAddProjectNameUnsupported": "لا يمكن إدراج اسم هذا المشروع دون تغييره."
+  "quickAddProjectNameUnsupported": "لا يمكن إدراج اسم هذا المشروع دون تغييره.",
+  "settingsTaskListStyle": "نمط صفوف المهام",
+  "settingsTaskListStyleDescription": "اختر التصميم الجديد أو احتفظ بالصفوف الكلاسيكية المألوفة.",
+  "settingsTaskListModern": "حديث",
+  "settingsTaskListClassic": "كلاسيكي",
+  "settingsSaveError": "تعذر حفظ الإعداد. حاول مرة أخرى."
 }

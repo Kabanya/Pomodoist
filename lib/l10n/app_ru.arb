@@ -689,5 +689,10 @@
   "sidebarViews": "Представления",
   "quickAddResetDetails": "По умолчанию",
   "quickAddChangeTime": "Изменить время",
-  "quickAddProjectNameUnsupported": "Не удаётся вставить название проекта без изменений."
+  "quickAddProjectNameUnsupported": "Не удаётся вставить название проекта без изменений.",
+  "settingsTaskListStyle": "Стиль строк задач",
+  "settingsTaskListStyleDescription": "Выберите новый вид или привычные классические строки.",
+  "settingsTaskListModern": "Современный",
+  "settingsTaskListClassic": "Классический",
+  "settingsSaveError": "Не удалось сохранить настройку. Попробуйте ещё раз."
 }

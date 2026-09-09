@@ -2399,4 +2399,21 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get quickAddProjectNameUnsupported =>
       'Dieser Projektname kann nicht unverändert eingefügt werden.';
+
+  @override
+  String get settingsTaskListStyle => 'Stil der Aufgabenzeilen';
+
+  @override
+  String get settingsTaskListStyleDescription =>
+      'Wähle das neue Layout oder die vertrauten klassischen Zeilen.';
+
+  @override
+  String get settingsTaskListModern => 'Modern';
+
+  @override
+  String get settingsTaskListClassic => 'Klassisch';
+
+  @override
+  String get settingsSaveError =>
+      'Die Einstellung konnte nicht gespeichert werden. Versuche es erneut.';
 }
