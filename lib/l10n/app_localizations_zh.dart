@@ -2308,4 +2308,55 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get focusCompletionRetry => '重试';
+
+  @override
+  String get searchAllProjects => '所有项目';
+
+  @override
+  String get searchStatusOpen => '未完成';
+
+  @override
+  String get searchStatusCompleted => '已完成';
+
+  @override
+  String get searchStatusAll => '所有状态';
+
+  @override
+  String get searchClearFilters => '清除筛选';
+
+  @override
+  String get searchEmptyDescription => '按标题或描述查找任务，再按项目或状态筛选。';
+
+  @override
+  String get searchNoMatchesDescription => '尝试其他关键词或清除筛选。也可以将这段文字创建为新任务。';
+
+  @override
+  String get searchCreateTask => '用此文字创建任务';
+
+  @override
+  String get taskListLoadError => '无法加载任务。请重试。';
+
+  @override
+  String get inboxEmptyTitle => '收件箱已清空';
+
+  @override
+  String get inboxEmptyDescription => '在这里记录想法，稍后再决定何时处理。';
+
+  @override
+  String get todayEmptyTitle => '今天还没有安排';
+
+  @override
+  String get todayEmptyDescription => '添加一项任务，开始今天的计划。';
+
+  @override
+  String get todayEmptyCompletedTitle => '今日列表已清空';
+
+  @override
+  String get todayEmptyCompletedDescription => '已完成的任务保留在下方。准备好后再添加下一项。';
+
+  @override
+  String get projectEmptyTitle => '此项目还没有任务';
+
+  @override
+  String get projectEmptyDescription => '添加迈向项目目标的第一步。';
 }

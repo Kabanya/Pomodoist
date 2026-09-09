@@ -2390,4 +2390,59 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get focusCompletionRetry => 'إعادة المحاولة';
+
+  @override
+  String get searchAllProjects => 'كل المشاريع';
+
+  @override
+  String get searchStatusOpen => 'مفتوحة';
+
+  @override
+  String get searchStatusCompleted => 'مكتملة';
+
+  @override
+  String get searchStatusAll => 'كل الحالات';
+
+  @override
+  String get searchClearFilters => 'مسح عوامل التصفية';
+
+  @override
+  String get searchEmptyDescription =>
+      'ابحث عن مهمة بالعنوان أو الوصف ثم صفِّها حسب المشروع أو الحالة.';
+
+  @override
+  String get searchNoMatchesDescription =>
+      'جرّب عبارة أخرى أو امسح عوامل التصفية. يمكنك أيضًا إنشاء مهمة من هذا النص.';
+
+  @override
+  String get searchCreateTask => 'إنشاء مهمة من النص';
+
+  @override
+  String get taskListLoadError => 'تعذر تحميل المهام. حاول مرة أخرى.';
+
+  @override
+  String get inboxEmptyTitle => 'صندوق الوارد فارغ';
+
+  @override
+  String get inboxEmptyDescription =>
+      'دوّن فكرة هنا وقرر لاحقًا متى تعمل عليها.';
+
+  @override
+  String get todayEmptyTitle => 'لا شيء مجدول لليوم';
+
+  @override
+  String get todayEmptyDescription => 'أضف مهمة لتبدأ بها يومك.';
+
+  @override
+  String get todayEmptyCompletedTitle => 'قائمة اليوم فارغة';
+
+  @override
+  String get todayEmptyCompletedDescription =>
+      'مهامك المكتملة محفوظة أدناه. أضف مهمة أخرى عندما تكون جاهزًا.';
+
+  @override
+  String get projectEmptyTitle => 'لا توجد مهام في هذا المشروع بعد';
+
+  @override
+  String get projectEmptyDescription => 'أضف الخطوة الأولى نحو هدف المشروع.';
 }

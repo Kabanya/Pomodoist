@@ -2428,4 +2428,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get focusCompletionRetry => 'Retry';
+
+  @override
+  String get searchAllProjects => 'All projects';
+
+  @override
+  String get searchStatusOpen => 'Open';
+
+  @override
+  String get searchStatusCompleted => 'Completed';
+
+  @override
+  String get searchStatusAll => 'All statuses';
+
+  @override
+  String get searchClearFilters => 'Clear filters';
+
+  @override
+  String get searchEmptyDescription =>
+      'Find a task by its title or description, then narrow it by project or status.';
+
+  @override
+  String get searchNoMatchesDescription =>
+      'Try a different phrase or clear filters. You can also turn this text into a new task.';
+
+  @override
+  String get searchCreateTask => 'Create task from text';
+
+  @override
+  String get taskListLoadError => 'Could not load tasks. Please try again.';
+
+  @override
+  String get inboxEmptyTitle => 'Your inbox is clear';
+
+  @override
+  String get inboxEmptyDescription =>
+      'Capture an idea here and decide when to work on it later.';
+
+  @override
+  String get todayEmptyTitle => 'Nothing scheduled for today';
+
+  @override
+  String get todayEmptyDescription =>
+      'Add a task to give today a starting point.';
+
+  @override
+  String get todayEmptyCompletedTitle => 'Today’s list is clear';
+
+  @override
+  String get todayEmptyCompletedDescription =>
+      'Your completed tasks are saved below. Add another task when you are ready.';
+
+  @override
+  String get projectEmptyTitle => 'No tasks in this project yet';
+
+  @override
+  String get projectEmptyDescription =>
+      'Add the first step toward your project’s goal.';
 }

@@ -697,5 +697,22 @@
   "settingsSaveError": "无法保存设置。请重试。",
   "focusCompletionCompleteAndNext": "完成并开始下一项",
   "focusCompletionStartNext": "开始下一项任务",
-  "focusCompletionRetry": "重试"
+  "focusCompletionRetry": "重试",
+  "searchAllProjects": "所有项目",
+  "searchStatusOpen": "未完成",
+  "searchStatusCompleted": "已完成",
+  "searchStatusAll": "所有状态",
+  "searchClearFilters": "清除筛选",
+  "searchEmptyDescription": "按标题或描述查找任务，再按项目或状态筛选。",
+  "searchNoMatchesDescription": "尝试其他关键词或清除筛选。也可以将这段文字创建为新任务。",
+  "searchCreateTask": "用此文字创建任务",
+  "taskListLoadError": "无法加载任务。请重试。",
+  "inboxEmptyTitle": "收件箱已清空",
+  "inboxEmptyDescription": "在这里记录想法，稍后再决定何时处理。",
+  "todayEmptyTitle": "今天还没有安排",
+  "todayEmptyDescription": "添加一项任务，开始今天的计划。",
+  "todayEmptyCompletedTitle": "今日列表已清空",
+  "todayEmptyCompletedDescription": "已完成的任务保留在下方。准备好后再添加下一项。",
+  "projectEmptyTitle": "此项目还没有任务",
+  "projectEmptyDescription": "添加迈向项目目标的第一步。"
 }

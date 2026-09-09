@@ -286,7 +286,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     if (_quickAddShortcutDialogOpen) return;
     _quickAddShortcutDialogOpen = true;
     unawaited(
-      _showSidebarQuickAddDialog(
+      showQuickAddDialog(
         context,
       ).whenComplete(() => _quickAddShortcutDialogOpen = false),
     );
@@ -586,7 +586,7 @@ class _ShellTopBar extends StatelessWidget {
                   IconButton(
                     key: const Key('kanban-shell-add'),
                     tooltip: context.l10n.addTask,
-                    onPressed: () => _showSidebarQuickAddDialog(context),
+                    onPressed: () => showQuickAddDialog(context),
                     icon: const Icon(LucideIcons.circlePlus),
                     color: context.appColors.accent,
                   ),
@@ -914,7 +914,7 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
                 const SizedBox(height: 16),
                 destinationTile('/search'),
                 const SizedBox(height: 4),
-                _AddTaskTile(onTap: () => _showSidebarQuickAddDialog(context)),
+                _AddTaskTile(onTap: () => showQuickAddDialog(context)),
                 const SizedBox(height: 10),
                 Expanded(
                   child: ListView(
@@ -1484,12 +1484,18 @@ class _SidebarQuickAddDialog extends StatefulWidget {
     required this.onClose,
     required this.onDisposed,
     required this.route,
+    required this.initialText,
+    this.defaultDate,
+    this.projectId,
     super.key,
   });
 
   final VoidCallback onClose;
   final VoidCallback onDisposed;
   final ModalRoute<dynamic>? route;
+  final String initialText;
+  final DateTime? defaultDate;
+  final String? projectId;
 
   @override
   State<_SidebarQuickAddDialog> createState() => _SidebarQuickAddDialogState();
@@ -1568,6 +1574,9 @@ class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
                 initialSize: const Size(560, 260),
                 minSize: const Size(320, 220),
                 content: QuickAddComposer(
+                  initialText: widget.initialText,
+                  defaultDate: widget.defaultDate,
+                  projectId: widget.projectId,
                   onCompleted: widget.onClose,
                   onCancel: widget.onClose,
                   onVoiceSessionChanged: _setVoiceActive,
@@ -1600,7 +1609,12 @@ final _sidebarQuickAdds =
       })
     >();
 
-Future<void> _showSidebarQuickAddDialog(BuildContext context) {
+Future<void> showQuickAddDialog(
+  BuildContext context, {
+  String initialText = '',
+  DateTime? defaultDate,
+  String? projectId,
+}) {
   final overlay = Overlay.of(context, rootOverlay: true);
   final existing = _sidebarQuickAdds[overlay];
   if (existing != null) {
@@ -1629,6 +1643,9 @@ Future<void> _showSidebarQuickAddDialog(BuildContext context) {
       onClose: close,
       onDisposed: () => close(remove: false),
       route: route,
+      initialText: initialText,
+      defaultDate: defaultDate,
+      projectId: projectId,
     ),
   );
   _sidebarQuickAdds[overlay] = (

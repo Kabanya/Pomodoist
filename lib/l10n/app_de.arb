@@ -697,5 +697,22 @@
   "settingsSaveError": "Die Einstellung konnte nicht gespeichert werden. Versuche es erneut.",
   "focusCompletionCompleteAndNext": "Abschließen und nächste starten",
   "focusCompletionStartNext": "Nächste Aufgabe starten",
-  "focusCompletionRetry": "Erneut versuchen"
+  "focusCompletionRetry": "Erneut versuchen",
+  "searchAllProjects": "Alle Projekte",
+  "searchStatusOpen": "Offen",
+  "searchStatusCompleted": "Erledigt",
+  "searchStatusAll": "Alle Status",
+  "searchClearFilters": "Filter zurücksetzen",
+  "searchEmptyDescription": "Suche nach Titel oder Beschreibung und grenze nach Projekt oder Status ein.",
+  "searchNoMatchesDescription": "Versuche einen anderen Suchtext oder setze die Filter zurück. Du kannst daraus auch eine Aufgabe erstellen.",
+  "searchCreateTask": "Aufgabe aus Text erstellen",
+  "taskListLoadError": "Aufgaben konnten nicht geladen werden. Versuche es erneut.",
+  "inboxEmptyTitle": "Dein Eingang ist leer",
+  "inboxEmptyDescription": "Halte eine Idee fest und entscheide später, wann du daran arbeitest.",
+  "todayEmptyTitle": "Für heute ist nichts geplant",
+  "todayEmptyDescription": "Füge eine Aufgabe als Startpunkt für heute hinzu.",
+  "todayEmptyCompletedTitle": "Die heutige Liste ist leer",
+  "todayEmptyCompletedDescription": "Deine erledigten Aufgaben stehen unten. Füge eine weitere hinzu, wenn du bereit bist.",
+  "projectEmptyTitle": "Dieses Projekt hat noch keine Aufgaben",
+  "projectEmptyDescription": "Füge den ersten Schritt zum Projektziel hinzu."
 }

@@ -48,10 +48,13 @@ class QuickAddDetails extends ConsumerWidget {
         return DateTime(date.year, date.month, date.day);
       }),
     );
-    final projects =
+    final allProjects =
         (ref.watch(projectsProvider).value ?? const <ProjectItem>[])
-            .where((project) => !project.isArchived && !project.isDeleted)
+            .where((project) => !project.isDeleted)
             .toList();
+    final projects = allProjects
+        .where((project) => !project.isArchived)
+        .toList();
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: controller,
       builder: (context, value, _) {
@@ -70,7 +73,7 @@ class QuickAddDetails extends ConsumerWidget {
             enabled &&
             (value.composing.isCollapsed || !value.composing.isValid);
         var projectName = inheritedProjectName ?? context.l10n.navInbox;
-        for (final project in projects) {
+        for (final project in allProjects) {
           if (project.id == projectId && inheritedProjectName == null) {
             projectName = project.name;
           }

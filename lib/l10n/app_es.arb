@@ -697,5 +697,22 @@
   "settingsSaveError": "No se pudo guardar el ajuste. Inténtalo de nuevo.",
   "focusCompletionCompleteAndNext": "Completar e iniciar la siguiente",
   "focusCompletionStartNext": "Iniciar la siguiente tarea",
-  "focusCompletionRetry": "Reintentar"
+  "focusCompletionRetry": "Reintentar",
+  "searchAllProjects": "Todos los proyectos",
+  "searchStatusOpen": "Abiertas",
+  "searchStatusCompleted": "Completadas",
+  "searchStatusAll": "Todos los estados",
+  "searchClearFilters": "Quitar filtros",
+  "searchEmptyDescription": "Busca una tarea por título o descripción y filtra por proyecto o estado.",
+  "searchNoMatchesDescription": "Prueba otra frase o quita los filtros. También puedes crear una tarea con este texto.",
+  "searchCreateTask": "Crear tarea con el texto",
+  "taskListLoadError": "No se pudieron cargar las tareas. Inténtalo de nuevo.",
+  "inboxEmptyTitle": "Tu bandeja de entrada está vacía",
+  "inboxEmptyDescription": "Anota una idea aquí y decide después cuándo trabajar en ella.",
+  "todayEmptyTitle": "No hay nada programado para hoy",
+  "todayEmptyDescription": "Añade una tarea para empezar el día.",
+  "todayEmptyCompletedTitle": "La lista de hoy está vacía",
+  "todayEmptyCompletedDescription": "Tus tareas completadas están abajo. Añade otra cuando quieras.",
+  "projectEmptyTitle": "Este proyecto aún no tiene tareas",
+  "projectEmptyDescription": "Añade el primer paso hacia el objetivo del proyecto."
 }

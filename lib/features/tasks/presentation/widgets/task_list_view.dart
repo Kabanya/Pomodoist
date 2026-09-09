@@ -2,17 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/app_l10n.dart';
 import '../../../../app/providers.dart';
 import '../../../../app/widgets/action_feedback.dart';
+import '../../../../app/widgets/adaptive_shell.dart' show showQuickAddDialog;
 import '../../domain/task_models.dart';
 import 'quick_add_bar.dart';
 import 'task_list_item.dart';
 import 'task_motion.dart';
 import 'task_selection_region.dart';
+import 'task_view_state.dart';
 
 class TaskListView extends ConsumerWidget {
   const TaskListView({
@@ -22,6 +24,7 @@ class TaskListView extends ConsumerWidget {
     this.headerAddon,
     this.footerAddon,
     this.emptyMessage,
+    this.emptyDescription,
     this.taskFilter,
     this.showQuickAdd = true,
     this.quickAddProjectId,
@@ -34,6 +37,7 @@ class TaskListView extends ConsumerWidget {
   final Widget? headerAddon;
   final Widget? footerAddon;
   final String? emptyMessage;
+  final String? emptyDescription;
   final bool Function(TaskItem task)? taskFilter;
   final bool showQuickAdd;
   final String? quickAddProjectId;
@@ -45,6 +49,30 @@ class TaskListView extends ConsumerWidget {
     final allOpenTasks = ref.watch(tasksByQueryProvider(const TaskQuery.all()));
     final completedTasks = ref.watch(
       tasksByQueryProvider(const TaskQuery.completed()),
+    );
+    final emptyTitle =
+        emptyMessage ??
+        switch (query.kind) {
+          TaskQueryKind.inbox => l10n.inboxEmptyTitle,
+          TaskQueryKind.today => l10n.todayEmptyTitle,
+          TaskQueryKind.project => l10n.projectEmptyTitle,
+          _ => l10n.noTasksHere,
+        };
+    final emptyBody =
+        emptyDescription ??
+        switch (query.kind) {
+          TaskQueryKind.inbox => l10n.inboxEmptyDescription,
+          TaskQueryKind.today => l10n.todayEmptyDescription,
+          TaskQueryKind.project => l10n.projectEmptyDescription,
+          _ => null,
+        };
+    Widget loadError() => TaskViewState(
+      icon: LucideIcons.circleAlert,
+      title: l10n.taskListLoadError,
+      actions: ShadButton.secondary(
+        onPressed: () => ref.invalidate(tasksByQueryProvider(query)),
+        child: Text(l10n.commonRetry),
+      ),
     );
     final sourceItems = switch (tasks.value) {
       null => const <TaskItem>[],
@@ -125,14 +153,41 @@ class TaskListView extends ConsumerWidget {
                     ),
                   ),
                 ),
+                if (tasks.isLoading && tasks.hasValue)
+                  const SliverToBoxAdapter(child: LinearProgressIndicator()),
+                if (tasks.hasError && tasks.hasValue)
+                  SliverToBoxAdapter(child: loadError()),
                 tasks.when(
+                  skipLoadingOnReload: true,
+                  skipError: true,
                   data: (_) {
+                    if (visibleItems.isEmpty &&
+                        (tasks.isLoading || tasks.hasError)) {
+                      return const SliverToBoxAdapter(child: SizedBox.shrink());
+                    }
                     if (visibleItems.isEmpty) {
-                      final empty = Center(
-                        child: Text(
-                          emptyMessage ?? l10n.noTasksHere,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
+                      final empty = TaskViewState(
+                        icon: switch (query.kind) {
+                          TaskQueryKind.inbox => LucideIcons.inbox,
+                          TaskQueryKind.today => LucideIcons.calendarCheck,
+                          TaskQueryKind.project => LucideIcons.folder,
+                          _ => LucideIcons.listChecks,
+                        },
+                        title: emptyTitle,
+                        description: emptyBody,
+                        actions: showQuickAdd
+                            ? ShadButton.secondary(
+                                onPressed: () => showQuickAddDialog(
+                                  context,
+                                  defaultDate: query.kind == TaskQueryKind.today
+                                      ? query.now
+                                      : null,
+                                  projectId: quickAddProjectId,
+                                ),
+                                leading: const Icon(LucideIcons.plus, size: 16),
+                                child: Text(l10n.addTask),
+                              )
+                            : null,
                       );
                       return footerAddon == null
                           ? SliverFillRemaining(
@@ -223,7 +278,8 @@ class TaskListView extends ConsumerWidget {
                     child: Center(child: CircularProgressIndicator()),
                   ),
                   error: (error, stackTrace) => SliverFillRemaining(
-                    child: Center(child: Text(l10n.failedToLoadTasks(error))),
+                    hasScrollBody: false,
+                    child: loadError(),
                   ),
                 ),
                 if (footerAddon != null)

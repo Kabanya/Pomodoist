@@ -2422,4 +2422,61 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get focusCompletionRetry => 'Reintentar';
+
+  @override
+  String get searchAllProjects => 'Todos los proyectos';
+
+  @override
+  String get searchStatusOpen => 'Abiertas';
+
+  @override
+  String get searchStatusCompleted => 'Completadas';
+
+  @override
+  String get searchStatusAll => 'Todos los estados';
+
+  @override
+  String get searchClearFilters => 'Quitar filtros';
+
+  @override
+  String get searchEmptyDescription =>
+      'Busca una tarea por título o descripción y filtra por proyecto o estado.';
+
+  @override
+  String get searchNoMatchesDescription =>
+      'Prueba otra frase o quita los filtros. También puedes crear una tarea con este texto.';
+
+  @override
+  String get searchCreateTask => 'Crear tarea con el texto';
+
+  @override
+  String get taskListLoadError =>
+      'No se pudieron cargar las tareas. Inténtalo de nuevo.';
+
+  @override
+  String get inboxEmptyTitle => 'Tu bandeja de entrada está vacía';
+
+  @override
+  String get inboxEmptyDescription =>
+      'Anota una idea aquí y decide después cuándo trabajar en ella.';
+
+  @override
+  String get todayEmptyTitle => 'No hay nada programado para hoy';
+
+  @override
+  String get todayEmptyDescription => 'Añade una tarea para empezar el día.';
+
+  @override
+  String get todayEmptyCompletedTitle => 'La lista de hoy está vacía';
+
+  @override
+  String get todayEmptyCompletedDescription =>
+      'Tus tareas completadas están abajo. Añade otra cuando quieras.';
+
+  @override
+  String get projectEmptyTitle => 'Este proyecto aún no tiene tareas';
+
+  @override
+  String get projectEmptyDescription =>
+      'Añade el primer paso hacia el objetivo del proyecto.';
 }

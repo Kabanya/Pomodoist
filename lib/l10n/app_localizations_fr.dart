@@ -2425,4 +2425,62 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get focusCompletionRetry => 'Réessayer';
+
+  @override
+  String get searchAllProjects => 'Tous les projets';
+
+  @override
+  String get searchStatusOpen => 'En cours';
+
+  @override
+  String get searchStatusCompleted => 'Terminées';
+
+  @override
+  String get searchStatusAll => 'Tous les statuts';
+
+  @override
+  String get searchClearFilters => 'Effacer les filtres';
+
+  @override
+  String get searchEmptyDescription =>
+      'Recherchez par titre ou description, puis filtrez par projet ou statut.';
+
+  @override
+  String get searchNoMatchesDescription =>
+      'Essayez une autre expression ou effacez les filtres. Vous pouvez aussi créer une tâche avec ce texte.';
+
+  @override
+  String get searchCreateTask => 'Créer une tâche avec ce texte';
+
+  @override
+  String get taskListLoadError =>
+      'Impossible de charger les tâches. Réessayez.';
+
+  @override
+  String get inboxEmptyTitle => 'Votre boîte de réception est vide';
+
+  @override
+  String get inboxEmptyDescription =>
+      'Notez une idée ici et décidez plus tard quand y travailler.';
+
+  @override
+  String get todayEmptyTitle => 'Rien de prévu pour aujourd’hui';
+
+  @override
+  String get todayEmptyDescription =>
+      'Ajoutez une tâche pour commencer la journée.';
+
+  @override
+  String get todayEmptyCompletedTitle => 'La liste du jour est vide';
+
+  @override
+  String get todayEmptyCompletedDescription =>
+      'Vos tâches terminées sont conservées ci-dessous. Ajoutez-en une autre quand vous le souhaitez.';
+
+  @override
+  String get projectEmptyTitle => 'Ce projet ne contient pas encore de tâches';
+
+  @override
+  String get projectEmptyDescription =>
+      'Ajoutez la première étape vers l’objectif du projet.';
 }

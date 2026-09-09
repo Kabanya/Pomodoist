@@ -151,6 +151,16 @@ existing scheduling order and roll back task completion if starting Focus fails.
 Guard repeated clicks and scope asynchronous dismissal to the completed run.
 Actions remain independent of the decorative animation and Reduce Motion.
 
+### Empty states and full search
+
+Inbox, Today and project empty states explain the current context and offer a
+relevant Quick Add action. Today distinguishes no planned tasks from a clear list
+with completed work. Loading and errors retain available rows and offer retry.
+Search supports project and Open / Completed / All status filters. It starts with
+all projects and open tasks; Clear filters selects all projects and all statuses
+without changing the query. Completed results follow the existing history policy.
+Creating from search opens an editable Quick Add draft without saving it.
+
 ## Components and independence
 
 - Current direct dependencies: **`shadcn_ui 0.56.3`** and

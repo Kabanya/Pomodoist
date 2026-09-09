@@ -697,5 +697,22 @@
   "settingsSaveError": "Impossible d’enregistrer le réglage. Réessayez.",
   "focusCompletionCompleteAndNext": "Terminer et commencer la suivante",
   "focusCompletionStartNext": "Commencer la tâche suivante",
-  "focusCompletionRetry": "Réessayer"
+  "focusCompletionRetry": "Réessayer",
+  "searchAllProjects": "Tous les projets",
+  "searchStatusOpen": "En cours",
+  "searchStatusCompleted": "Terminées",
+  "searchStatusAll": "Tous les statuts",
+  "searchClearFilters": "Effacer les filtres",
+  "searchEmptyDescription": "Recherchez par titre ou description, puis filtrez par projet ou statut.",
+  "searchNoMatchesDescription": "Essayez une autre expression ou effacez les filtres. Vous pouvez aussi créer une tâche avec ce texte.",
+  "searchCreateTask": "Créer une tâche avec ce texte",
+  "taskListLoadError": "Impossible de charger les tâches. Réessayez.",
+  "inboxEmptyTitle": "Votre boîte de réception est vide",
+  "inboxEmptyDescription": "Notez une idée ici et décidez plus tard quand y travailler.",
+  "todayEmptyTitle": "Rien de prévu pour aujourd’hui",
+  "todayEmptyDescription": "Ajoutez une tâche pour commencer la journée.",
+  "todayEmptyCompletedTitle": "La liste du jour est vide",
+  "todayEmptyCompletedDescription": "Vos tâches terminées sont conservées ci-dessous. Ajoutez-en une autre quand vous le souhaitez.",
+  "projectEmptyTitle": "Ce projet ne contient pas encore de tâches",
+  "projectEmptyDescription": "Ajoutez la première étape vers l’objectif du projet."
 }

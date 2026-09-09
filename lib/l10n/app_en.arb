@@ -785,5 +785,22 @@
   "settingsSaveError": "Could not save the setting. Please try again.",
   "focusCompletionCompleteAndNext": "Complete and start next",
   "focusCompletionStartNext": "Start next task",
-  "focusCompletionRetry": "Retry"
+  "focusCompletionRetry": "Retry",
+  "searchAllProjects": "All projects",
+  "searchStatusOpen": "Open",
+  "searchStatusCompleted": "Completed",
+  "searchStatusAll": "All statuses",
+  "searchClearFilters": "Clear filters",
+  "searchEmptyDescription": "Find a task by its title or description, then narrow it by project or status.",
+  "searchNoMatchesDescription": "Try a different phrase or clear filters. You can also turn this text into a new task.",
+  "searchCreateTask": "Create task from text",
+  "taskListLoadError": "Could not load tasks. Please try again.",
+  "inboxEmptyTitle": "Your inbox is clear",
+  "inboxEmptyDescription": "Capture an idea here and decide when to work on it later.",
+  "todayEmptyTitle": "Nothing scheduled for today",
+  "todayEmptyDescription": "Add a task to give today a starting point.",
+  "todayEmptyCompletedTitle": "Today’s list is clear",
+  "todayEmptyCompletedDescription": "Your completed tasks are saved below. Add another task when you are ready.",
+  "projectEmptyTitle": "No tasks in this project yet",
+  "projectEmptyDescription": "Add the first step toward your project’s goal."
 }

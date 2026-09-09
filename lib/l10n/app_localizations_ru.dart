@@ -2430,4 +2430,61 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get focusCompletionRetry => 'Повторить';
+
+  @override
+  String get searchAllProjects => 'Все проекты';
+
+  @override
+  String get searchStatusOpen => 'Открытые';
+
+  @override
+  String get searchStatusCompleted => 'Завершённые';
+
+  @override
+  String get searchStatusAll => 'Все статусы';
+
+  @override
+  String get searchClearFilters => 'Сбросить фильтры';
+
+  @override
+  String get searchEmptyDescription =>
+      'Найдите задачу по названию или описанию, затем уточните проект или статус.';
+
+  @override
+  String get searchNoMatchesDescription =>
+      'Попробуйте другой запрос или сбросьте фильтры. Из этого текста можно создать задачу.';
+
+  @override
+  String get searchCreateTask => 'Создать задачу из текста';
+
+  @override
+  String get taskListLoadError =>
+      'Не удалось загрузить задачи. Попробуйте ещё раз.';
+
+  @override
+  String get inboxEmptyTitle => 'Входящие пусты';
+
+  @override
+  String get inboxEmptyDescription =>
+      'Запишите идею здесь, а время для неё выберите позже.';
+
+  @override
+  String get todayEmptyTitle => 'На сегодня ничего не запланировано';
+
+  @override
+  String get todayEmptyDescription =>
+      'Добавьте задачу, с которой начнёте день.';
+
+  @override
+  String get todayEmptyCompletedTitle => 'Список на сегодня пуст';
+
+  @override
+  String get todayEmptyCompletedDescription =>
+      'Завершённые задачи сохранены ниже. Добавьте следующую, когда будете готовы.';
+
+  @override
+  String get projectEmptyTitle => 'В проекте пока нет задач';
+
+  @override
+  String get projectEmptyDescription => 'Добавьте первый шаг к цели проекта.';
 }

@@ -484,6 +484,9 @@ class QuickAddComposer extends ConsumerStatefulWidget {
   const QuickAddComposer({
     required this.onCompleted,
     required this.onCancel,
+    this.initialText = '',
+    this.defaultDate,
+    this.projectId,
     this.onVoiceModeChanged,
     this.onVoiceSessionChanged,
     super.key,
@@ -491,6 +494,9 @@ class QuickAddComposer extends ConsumerStatefulWidget {
 
   final VoidCallback onCompleted;
   final VoidCallback onCancel;
+  final String initialText;
+  final DateTime? defaultDate;
+  final String? projectId;
   final ValueChanged<bool>? onVoiceModeChanged;
   final ValueChanged<bool>? onVoiceSessionChanged;
 
@@ -501,6 +507,15 @@ class QuickAddComposer extends ConsumerStatefulWidget {
 class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
   final _controller = QuickAddTextController();
   bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.value = TextEditingValue(
+      text: widget.initialText,
+      selection: TextSelection.collapsed(offset: widget.initialText.length),
+    );
+  }
 
   @override
   void dispose() {
@@ -537,7 +552,12 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
               ),
               onSubmitted: (_) => _submit(),
             ),
-            QuickAddDetails(controller: _controller, enabled: !_busy),
+            QuickAddDetails(
+              controller: _controller,
+              defaultDate: widget.defaultDate,
+              projectId: widget.projectId,
+              enabled: !_busy,
+            ),
             const SizedBox(height: 20),
             OverflowBar(
               alignment: MainAxisAlignment.end,
@@ -580,7 +600,13 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
     if (input.isEmpty || _busy) return;
     setState(() => _busy = true);
     try {
-      await ref.read(quickAddServiceProvider).createTask(input);
+      await ref
+          .read(quickAddServiceProvider)
+          .createTask(
+            input,
+            defaultDate: widget.defaultDate,
+            projectId: widget.projectId,
+          );
       if (mounted) widget.onCompleted();
     } catch (_) {
       if (mounted) {
@@ -598,6 +624,8 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
     final created = await showVoiceQuickAddSheet(
       context,
       ref,
+      defaultDate: widget.defaultDate,
+      projectId: widget.projectId,
       onExpandedChanged: (expanded) {
         if (mounted) widget.onVoiceModeChanged?.call(expanded);
       },

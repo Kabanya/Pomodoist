@@ -697,5 +697,22 @@
   "settingsSaveError": "تعذر حفظ الإعداد. حاول مرة أخرى.",
   "focusCompletionCompleteAndNext": "إكمال المهمة وبدء التالية",
   "focusCompletionStartNext": "بدء المهمة التالية",
-  "focusCompletionRetry": "إعادة المحاولة"
+  "focusCompletionRetry": "إعادة المحاولة",
+  "searchAllProjects": "كل المشاريع",
+  "searchStatusOpen": "مفتوحة",
+  "searchStatusCompleted": "مكتملة",
+  "searchStatusAll": "كل الحالات",
+  "searchClearFilters": "مسح عوامل التصفية",
+  "searchEmptyDescription": "ابحث عن مهمة بالعنوان أو الوصف ثم صفِّها حسب المشروع أو الحالة.",
+  "searchNoMatchesDescription": "جرّب عبارة أخرى أو امسح عوامل التصفية. يمكنك أيضًا إنشاء مهمة من هذا النص.",
+  "searchCreateTask": "إنشاء مهمة من النص",
+  "taskListLoadError": "تعذر تحميل المهام. حاول مرة أخرى.",
+  "inboxEmptyTitle": "صندوق الوارد فارغ",
+  "inboxEmptyDescription": "دوّن فكرة هنا وقرر لاحقًا متى تعمل عليها.",
+  "todayEmptyTitle": "لا شيء مجدول لليوم",
+  "todayEmptyDescription": "أضف مهمة لتبدأ بها يومك.",
+  "todayEmptyCompletedTitle": "قائمة اليوم فارغة",
+  "todayEmptyCompletedDescription": "مهامك المكتملة محفوظة أدناه. أضف مهمة أخرى عندما تكون جاهزًا.",
+  "projectEmptyTitle": "لا توجد مهام في هذا المشروع بعد",
+  "projectEmptyDescription": "أضف الخطوة الأولى نحو هدف المشروع."
 }

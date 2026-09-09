@@ -26,10 +26,21 @@ class TodayScreen extends ConsumerWidget {
     );
     final l10n = context.l10n;
     final query = TaskQuery(kind: TaskQueryKind.today, now: today);
+    final completed = ref.watch(
+      tasksByQueryProvider(const TaskQuery.completed()),
+    );
+    final hasCompleted = completedTasksForDay(
+      completed.value ?? const [],
+      today,
+    ).isNotEmpty;
     return TaskListView(
       title: l10n.navToday,
       subtitle: MaterialLocalizations.of(context).formatFullDate(today),
       query: query,
+      emptyMessage: hasCompleted ? l10n.todayEmptyCompletedTitle : null,
+      emptyDescription: hasCompleted
+          ? l10n.todayEmptyCompletedDescription
+          : null,
       headerAddon: _TodayContext(query: query),
       footerAddon: _CompletedToday(day: today),
     );

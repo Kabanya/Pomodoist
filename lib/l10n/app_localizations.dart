@@ -4233,6 +4233,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retry'**
   String get focusCompletionRetry;
+
+  /// No description provided for @searchAllProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'All projects'**
+  String get searchAllProjects;
+
+  /// No description provided for @searchStatusOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get searchStatusOpen;
+
+  /// No description provided for @searchStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get searchStatusCompleted;
+
+  /// No description provided for @searchStatusAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All statuses'**
+  String get searchStatusAll;
+
+  /// No description provided for @searchClearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get searchClearFilters;
+
+  /// No description provided for @searchEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a task by its title or description, then narrow it by project or status.'**
+  String get searchEmptyDescription;
+
+  /// No description provided for @searchNoMatchesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different phrase or clear filters. You can also turn this text into a new task.'**
+  String get searchNoMatchesDescription;
+
+  /// No description provided for @searchCreateTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Create task from text'**
+  String get searchCreateTask;
+
+  /// No description provided for @taskListLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load tasks. Please try again.'**
+  String get taskListLoadError;
+
+  /// No description provided for @inboxEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your inbox is clear'**
+  String get inboxEmptyTitle;
+
+  /// No description provided for @inboxEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture an idea here and decide when to work on it later.'**
+  String get inboxEmptyDescription;
+
+  /// No description provided for @todayEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing scheduled for today'**
+  String get todayEmptyTitle;
+
+  /// No description provided for @todayEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a task to give today a starting point.'**
+  String get todayEmptyDescription;
+
+  /// No description provided for @todayEmptyCompletedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today’s list is clear'**
+  String get todayEmptyCompletedTitle;
+
+  /// No description provided for @todayEmptyCompletedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your completed tasks are saved below. Add another task when you are ready.'**
+  String get todayEmptyCompletedDescription;
+
+  /// No description provided for @projectEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks in this project yet'**
+  String get projectEmptyTitle;
+
+  /// No description provided for @projectEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the first step toward your project’s goal.'**
+  String get projectEmptyDescription;
 }
 
 class _AppLocalizationsDelegate

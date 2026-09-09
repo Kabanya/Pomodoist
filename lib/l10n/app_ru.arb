@@ -697,5 +697,22 @@
   "settingsSaveError": "Не удалось сохранить настройку. Попробуйте ещё раз.",
   "focusCompletionCompleteAndNext": "Завершить и начать следующую",
   "focusCompletionStartNext": "Начать следующую задачу",
-  "focusCompletionRetry": "Повторить"
+  "focusCompletionRetry": "Повторить",
+  "searchAllProjects": "Все проекты",
+  "searchStatusOpen": "Открытые",
+  "searchStatusCompleted": "Завершённые",
+  "searchStatusAll": "Все статусы",
+  "searchClearFilters": "Сбросить фильтры",
+  "searchEmptyDescription": "Найдите задачу по названию или описанию, затем уточните проект или статус.",
+  "searchNoMatchesDescription": "Попробуйте другой запрос или сбросьте фильтры. Из этого текста можно создать задачу.",
+  "searchCreateTask": "Создать задачу из текста",
+  "taskListLoadError": "Не удалось загрузить задачи. Попробуйте ещё раз.",
+  "inboxEmptyTitle": "Входящие пусты",
+  "inboxEmptyDescription": "Запишите идею здесь, а время для неё выберите позже.",
+  "todayEmptyTitle": "На сегодня ничего не запланировано",
+  "todayEmptyDescription": "Добавьте задачу, с которой начнёте день.",
+  "todayEmptyCompletedTitle": "Список на сегодня пуст",
+  "todayEmptyCompletedDescription": "Завершённые задачи сохранены ниже. Добавьте следующую, когда будете готовы.",
+  "projectEmptyTitle": "В проекте пока нет задач",
+  "projectEmptyDescription": "Добавьте первый шаг к цели проекта."
 }

@@ -2426,4 +2426,62 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get focusCompletionRetry => 'Erneut versuchen';
+
+  @override
+  String get searchAllProjects => 'Alle Projekte';
+
+  @override
+  String get searchStatusOpen => 'Offen';
+
+  @override
+  String get searchStatusCompleted => 'Erledigt';
+
+  @override
+  String get searchStatusAll => 'Alle Status';
+
+  @override
+  String get searchClearFilters => 'Filter zurücksetzen';
+
+  @override
+  String get searchEmptyDescription =>
+      'Suche nach Titel oder Beschreibung und grenze nach Projekt oder Status ein.';
+
+  @override
+  String get searchNoMatchesDescription =>
+      'Versuche einen anderen Suchtext oder setze die Filter zurück. Du kannst daraus auch eine Aufgabe erstellen.';
+
+  @override
+  String get searchCreateTask => 'Aufgabe aus Text erstellen';
+
+  @override
+  String get taskListLoadError =>
+      'Aufgaben konnten nicht geladen werden. Versuche es erneut.';
+
+  @override
+  String get inboxEmptyTitle => 'Dein Eingang ist leer';
+
+  @override
+  String get inboxEmptyDescription =>
+      'Halte eine Idee fest und entscheide später, wann du daran arbeitest.';
+
+  @override
+  String get todayEmptyTitle => 'Für heute ist nichts geplant';
+
+  @override
+  String get todayEmptyDescription =>
+      'Füge eine Aufgabe als Startpunkt für heute hinzu.';
+
+  @override
+  String get todayEmptyCompletedTitle => 'Die heutige Liste ist leer';
+
+  @override
+  String get todayEmptyCompletedDescription =>
+      'Deine erledigten Aufgaben stehen unten. Füge eine weitere hinzu, wenn du bereit bist.';
+
+  @override
+  String get projectEmptyTitle => 'Dieses Projekt hat noch keine Aufgaben';
+
+  @override
+  String get projectEmptyDescription =>
+      'Füge den ersten Schritt zum Projektziel hinzu.';
 }
