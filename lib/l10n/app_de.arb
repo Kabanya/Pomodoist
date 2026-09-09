@@ -694,5 +694,8 @@
   "settingsTaskListStyleDescription": "Wähle das neue Layout oder die vertrauten klassischen Zeilen.",
   "settingsTaskListModern": "Modern",
   "settingsTaskListClassic": "Klassisch",
-  "settingsSaveError": "Die Einstellung konnte nicht gespeichert werden. Versuche es erneut."
+  "settingsSaveError": "Die Einstellung konnte nicht gespeichert werden. Versuche es erneut.",
+  "focusCompletionCompleteAndNext": "Abschließen und nächste starten",
+  "focusCompletionStartNext": "Nächste Aufgabe starten",
+  "focusCompletionRetry": "Erneut versuchen"
 }

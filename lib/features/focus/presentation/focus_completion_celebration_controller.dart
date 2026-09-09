@@ -9,6 +9,7 @@ final focusRunCompletionControllerProvider =
 
 class FocusRunCompletionController extends Notifier<FocusRunCompletionEvent?> {
   final Set<String> _presentedRunIds = <String>{};
+  String? _actionRunId;
 
   @override
   FocusRunCompletionEvent? build() => null;
@@ -20,7 +21,18 @@ class FocusRunCompletionController extends Notifier<FocusRunCompletionEvent?> {
     state = event;
   }
 
-  void dismiss() {
+  bool tryBeginAction(String runId) {
+    if (_actionRunId != null || state?.runId != runId) return false;
+    _actionRunId = runId;
+    return true;
+  }
+
+  void endAction(String runId) {
+    if (_actionRunId == runId) _actionRunId = null;
+  }
+
+  void dismiss({String? runId}) {
+    if (runId != null && state?.runId != runId) return;
     state = null;
   }
 }

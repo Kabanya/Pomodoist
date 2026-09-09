@@ -2415,4 +2415,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settingsSaveError =>
       'Impossible d’enregistrer le réglage. Réessayez.';
+
+  @override
+  String get focusCompletionCompleteAndNext =>
+      'Terminer et commencer la suivante';
+
+  @override
+  String get focusCompletionStartNext => 'Commencer la tâche suivante';
+
+  @override
+  String get focusCompletionRetry => 'Réessayer';
 }

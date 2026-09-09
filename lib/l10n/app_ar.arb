@@ -694,5 +694,8 @@
   "settingsTaskListStyleDescription": "اختر التصميم الجديد أو احتفظ بالصفوف الكلاسيكية المألوفة.",
   "settingsTaskListModern": "حديث",
   "settingsTaskListClassic": "كلاسيكي",
-  "settingsSaveError": "تعذر حفظ الإعداد. حاول مرة أخرى."
+  "settingsSaveError": "تعذر حفظ الإعداد. حاول مرة أخرى.",
+  "focusCompletionCompleteAndNext": "إكمال المهمة وبدء التالية",
+  "focusCompletionStartNext": "بدء المهمة التالية",
+  "focusCompletionRetry": "إعادة المحاولة"
 }

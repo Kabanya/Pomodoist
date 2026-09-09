@@ -2381,4 +2381,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsSaveError => 'تعذر حفظ الإعداد. حاول مرة أخرى.';
+
+  @override
+  String get focusCompletionCompleteAndNext => 'إكمال المهمة وبدء التالية';
+
+  @override
+  String get focusCompletionStartNext => 'بدء المهمة التالية';
+
+  @override
+  String get focusCompletionRetry => 'إعادة المحاولة';
 }

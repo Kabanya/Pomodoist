@@ -694,5 +694,8 @@
   "settingsTaskListStyleDescription": "Elige el nuevo diseño o las filas clásicas.",
   "settingsTaskListModern": "Moderno",
   "settingsTaskListClassic": "Clásico",
-  "settingsSaveError": "No se pudo guardar el ajuste. Inténtalo de nuevo."
+  "settingsSaveError": "No se pudo guardar el ajuste. Inténtalo de nuevo.",
+  "focusCompletionCompleteAndNext": "Completar e iniciar la siguiente",
+  "focusCompletionStartNext": "Iniciar la siguiente tarea",
+  "focusCompletionRetry": "Reintentar"
 }

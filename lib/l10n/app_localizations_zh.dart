@@ -2299,4 +2299,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsSaveError => '无法保存设置。请重试。';
+
+  @override
+  String get focusCompletionCompleteAndNext => '完成并开始下一项';
+
+  @override
+  String get focusCompletionStartNext => '开始下一项任务';
+
+  @override
+  String get focusCompletionRetry => '重试';
 }

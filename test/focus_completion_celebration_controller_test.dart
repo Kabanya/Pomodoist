@@ -69,6 +69,39 @@ void main() {
     },
   );
 
+  test(
+    'completion actions reject repeated and stale clicks and allow retry',
+    () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final controller = container.read(
+        focusRunCompletionControllerProvider.notifier,
+      );
+      controller.present(
+        _completion(runId: 'first', completedWorkIntervals: 1),
+      );
+      expect(controller.tryBeginAction('stale'), isFalse);
+      expect(controller.tryBeginAction('first'), isTrue);
+      expect(controller.tryBeginAction('first'), isFalse);
+      controller.endAction('first');
+      expect(controller.tryBeginAction('first'), isTrue);
+      controller.present(_completion(runId: 'next', completedWorkIntervals: 1));
+      controller.dismiss(runId: 'first');
+      expect(
+        container.read(focusRunCompletionControllerProvider)?.runId,
+        'next',
+      );
+      expect(controller.tryBeginAction('next'), isFalse);
+      controller.endAction('first');
+      expect(controller.tryBeginAction('next'), isTrue);
+      controller.endAction('first');
+      expect(controller.tryBeginAction('next'), isFalse);
+      controller.endAction('next');
+      controller.dismiss(runId: 'next');
+      expect(controller.tryBeginAction('next'), isFalse);
+    },
+  );
+
   test('disabled celebration ignores completed repository runs', () async {
     SharedPreferences.setMockInitialValues({
       'focus.completionCelebration.enabled': false,

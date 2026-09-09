@@ -4215,6 +4215,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save the setting. Please try again.'**
   String get settingsSaveError;
+
+  /// No description provided for @focusCompletionCompleteAndNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete and start next'**
+  String get focusCompletionCompleteAndNext;
+
+  /// No description provided for @focusCompletionStartNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Start next task'**
+  String get focusCompletionStartNext;
+
+  /// No description provided for @focusCompletionRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get focusCompletionRetry;
 }
 
 class _AppLocalizationsDelegate

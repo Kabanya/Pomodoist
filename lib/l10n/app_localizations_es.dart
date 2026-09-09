@@ -2412,4 +2412,14 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get settingsSaveError =>
       'No se pudo guardar el ajuste. Inténtalo de nuevo.';
+
+  @override
+  String get focusCompletionCompleteAndNext =>
+      'Completar e iniciar la siguiente';
+
+  @override
+  String get focusCompletionStartNext => 'Iniciar la siguiente tarea';
+
+  @override
+  String get focusCompletionRetry => 'Reintentar';
 }

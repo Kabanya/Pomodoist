@@ -2,7 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show LucideIcons, ShadButton, ShadButtonVariant;
 
 import '../../../app/app_l10n.dart';
 import '../../../app/formatters.dart';
@@ -68,6 +69,7 @@ class _FocusRunCompletionCelebrationState
   late final AnimationController _controller;
   late final Animation<double> _contentOpacity;
   bool _started = false;
+  bool _busy = false;
 
   @override
   void initState() {
@@ -116,17 +118,25 @@ class _FocusRunCompletionCelebrationState
     final l10n = context.l10n;
     final taskId = completion.taskId;
     final taskValue = taskId == null ? null : ref.watch(taskProvider(taskId));
-    final task = taskValue?.value;
+    final task = taskValue?.asData?.value;
     final resolvingTask = taskValue?.isLoading ?? false;
     final canCompleteTask =
         task != null && !task.isDeleted && !task.isCompleted;
+    final tasksValue = ref.watch(tasksByQueryProvider(const TaskQuery.all()));
+    final presetsValue = ref.watch(focusPresetsProvider);
+    final hasError =
+        (taskValue?.hasError ?? false) ||
+        tasksValue.hasError ||
+        presetsValue.hasError;
+    final loading =
+        resolvingTask || tasksValue.isLoading || presetsValue.isLoading;
     final nextTask = _nextScheduledTask(
-      ref.watch(tasksByQueryProvider(const TaskQuery.all())).value ?? const [],
+      tasksValue.asData?.value ?? const [],
       completion,
       task,
     );
     final nextTaskPreset = selectedFocusPresetOrDefault(
-      ref.watch(focusPresetsProvider).value ?? const [],
+      presetsValue.asData?.value ?? const [],
       ref.watch(lastFocusPresetIdProvider),
     );
     final taskTitle = completion.taskTitle?.trim();
@@ -173,9 +183,23 @@ class _FocusRunCompletionCelebrationState
                             completion: completion,
                             taskTitle: taskTitle,
                             subtitle: subtitle,
-                            resolvingTask: resolvingTask,
+                            resolvingTask: loading,
+                            hasError: hasError,
+                            busy: _busy,
+                            onRetry: () {
+                              if (taskId != null) {
+                                ref.invalidate(taskProvider(taskId));
+                              }
+                              ref.invalidate(
+                                tasksByQueryProvider(const TaskQuery.all()),
+                              );
+                              ref.invalidate(focusPresetsProvider);
+                            },
                             canCompleteTask: canCompleteTask,
-                            onCompleteTask: taskId == null
+                            onCompleteTask:
+                                taskId == null ||
+                                    resolvingTask ||
+                                    (taskValue?.hasError ?? false)
                                 ? null
                                 : () => _completeTask(taskId),
                             nextTask: nextTask,
@@ -202,14 +226,25 @@ class _FocusRunCompletionCelebrationState
   }
 
   Future<void> _completeTask(String taskId) async {
+    final controller = ref.read(focusRunCompletionControllerProvider.notifier);
+    final runId = widget.completion.runId;
+    if (_busy || !controller.tryBeginAction(runId)) return;
+    setState(() => _busy = true);
+    final taskRepository = ref.read(taskRepositoryProvider);
     try {
+      final current = await taskRepository.watchTask(taskId).first;
+      if (!mounted) return;
+      if (current == null || current.isDeleted || current.isCompleted) {
+        controller.dismiss(runId: runId);
+        return;
+      }
       final completed = await completeTaskWithUndoFeedback(
         context,
         ref,
         taskId,
       );
       if (completed && mounted) {
-        _dismiss();
+        controller.dismiss(runId: runId);
       }
     } catch (_) {
       if (!mounted) {
@@ -221,6 +256,9 @@ class _FocusRunCompletionCelebrationState
         icon: LucideIcons.circleAlert,
         sound: ActionFeedbackSound.none,
       );
+    } finally {
+      controller.endAction(runId);
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -229,30 +267,36 @@ class _FocusRunCompletionCelebrationState
     FocusPresetItem? preset,
     String? currentTaskId,
   ) async {
+    final controller = ref.read(focusRunCompletionControllerProvider.notifier);
+    final runId = widget.completion.runId;
+    if (_busy || !controller.tryBeginAction(runId)) return;
+    setState(() => _busy = true);
     final taskRepository = ref.read(taskRepositoryProvider);
+    final focusRepository = ref.read(focusRepositoryProvider);
     var completedCurrentTask = false;
     try {
       if (currentTaskId != null) {
-        await taskRepository.completeTask(currentTaskId);
-        completedCurrentTask = true;
+        final current = await taskRepository.watchTask(currentTaskId).first;
+        if (current != null && !current.isDeleted && !current.isCompleted) {
+          await taskRepository.completeTask(currentTaskId);
+          completedCurrentTask = true;
+        }
       }
       final estimate = targetFocusIntervalsForTask(task, preset);
-      await ref
-          .read(focusRepositoryProvider)
-          .startRun(
-            StartFocusRunInput(
-              taskId: task.id,
-              projectId: task.projectId,
-              presetId: preset?.id,
-              targetWorkIntervals: estimate == null
-                  ? null
-                  : estimate < 1
-                  ? 1
-                  : estimate,
-            ),
-          );
+      await focusRepository.startRun(
+        StartFocusRunInput(
+          taskId: task.id,
+          projectId: task.projectId,
+          presetId: preset?.id,
+          targetWorkIntervals: estimate == null
+              ? null
+              : estimate < 1
+              ? 1
+              : estimate,
+        ),
+      );
       if (mounted) {
-        _dismiss();
+        controller.dismiss(runId: runId);
       }
     } catch (error) {
       if (completedCurrentTask) {
@@ -269,11 +313,17 @@ class _FocusRunCompletionCelebrationState
         icon: LucideIcons.circleAlert,
         sound: ActionFeedbackSound.none,
       );
+    } finally {
+      controller.endAction(runId);
+      if (mounted) setState(() => _busy = false);
     }
   }
 
   void _dismiss() {
-    ref.read(focusRunCompletionControllerProvider.notifier).dismiss();
+    if (_busy) return;
+    ref
+        .read(focusRunCompletionControllerProvider.notifier)
+        .dismiss(runId: widget.completion.runId);
   }
 }
 
@@ -342,6 +392,9 @@ class _CompletionContent extends ConsumerWidget {
     required this.taskTitle,
     required this.subtitle,
     required this.resolvingTask,
+    required this.hasError,
+    required this.busy,
+    required this.onRetry,
     required this.canCompleteTask,
     required this.onCompleteTask,
     required this.nextTask,
@@ -353,6 +406,9 @@ class _CompletionContent extends ConsumerWidget {
   final String? taskTitle;
   final String subtitle;
   final bool resolvingTask;
+  final bool hasError;
+  final bool busy;
+  final VoidCallback onRetry;
   final bool canCompleteTask;
   final Future<void> Function()? onCompleteTask;
   final TaskItem? nextTask;
@@ -433,28 +489,70 @@ class _CompletionContent extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 26),
-        if (resolvingTask)
+        if (resolvingTask || busy) ...[
           const SizedBox.square(
             key: Key('focus-completion-task-loading'),
             dimension: 28,
             child: CircularProgressIndicator(strokeWidth: 2.5),
-          )
-        else if (canCompleteTask) ...[
+          ),
+          const SizedBox(height: 16),
+        ],
+        if (hasError) ...[
+          Text(
+            l10n.taskActionFailedCount(1),
+            textAlign: TextAlign.center,
+            style: textTheme.bodyMedium?.copyWith(color: colors.error),
+          ),
+          ShadButton.secondary(
+            onPressed: onRetry,
+            enabled: !busy && !resolvingTask,
+            child: Text(l10n.focusCompletionRetry),
+          ),
+        ],
+        if (canCompleteTask) ...[
           Text(
             l10n.focusCompletionQuestion,
             textAlign: TextAlign.center,
             style: textTheme.bodyLarge?.copyWith(color: colors.primaryText),
           ),
           const SizedBox(height: 16),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 10,
-            runSpacing: 8,
-            children: [
+        ],
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 10,
+          runSpacing: 8,
+          children: [
+            if (nextTask != null)
               ShadButton(
+                key: const Key('focus-completion-start-next-task'),
+                onPressed: onStartNextTask,
+                enabled:
+                    !busy &&
+                    !resolvingTask &&
+                    !hasError &&
+                    onStartNextTask != null,
+                leading: const Icon(LucideIcons.play, size: 18),
+                height: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Flexible(
+                  child: Text(
+                    canCompleteTask
+                        ? l10n.focusCompletionCompleteAndNext
+                        : l10n.focusCompletionStartNext,
+                  ),
+                ),
+              ),
+            if (canCompleteTask)
+              ShadButton.raw(
+                variant: nextTask == null
+                    ? ShadButtonVariant.primary
+                    : ShadButtonVariant.secondary,
                 key: const Key('focus-completion-complete-task'),
                 onPressed: onCompleteTask,
-                enabled: onCompleteTask != null,
+                enabled: !busy && onCompleteTask != null,
                 leading: const Icon(LucideIcons.circleCheck, size: 18),
                 height: 0,
                 padding: const EdgeInsets.symmetric(
@@ -463,27 +561,33 @@ class _CompletionContent extends ConsumerWidget {
                 ),
                 child: Flexible(child: Text(l10n.focusCompletionCompleteTask)),
               ),
+            if (canCompleteTask)
               ShadButton.ghost(
                 key: const Key('focus-completion-keep-open'),
                 onPressed: onDismiss,
+                enabled: !busy,
                 height: 0,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
                 ),
                 child: Flexible(child: Text(l10n.focusCompletionKeepOpen)),
+              )
+            else
+              ShadButton.secondary(
+                key: const Key('focus-completion-done'),
+                onPressed: onDismiss,
+                enabled: !busy,
+                leading: const Icon(LucideIcons.check, size: 18),
+                height: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Flexible(child: Text(l10n.focusCompletionDone)),
               ),
-            ],
-          ),
-        ] else
-          ShadButton(
-            key: const Key('focus-completion-done'),
-            onPressed: onDismiss,
-            leading: const Icon(LucideIcons.check, size: 18),
-            height: 0,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Flexible(child: Text(l10n.focusCompletionDone)),
-          ),
+          ],
+        ),
         if (nextTask case final task?) ...[
           const SizedBox(height: 24),
           Container(
@@ -549,19 +653,6 @@ class _CompletionContent extends ConsumerWidget {
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 14),
-                ShadButton.secondary(
-                  key: const Key('focus-completion-start-next-task'),
-                  onPressed: onStartNextTask,
-                  enabled: onStartNextTask != null,
-                  leading: const Icon(LucideIcons.play, size: 18),
-                  height: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  child: Flexible(child: Text(l10n.startFocus)),
                 ),
               ],
             ),

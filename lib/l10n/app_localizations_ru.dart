@@ -2421,4 +2421,13 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsSaveError =>
       'Не удалось сохранить настройку. Попробуйте ещё раз.';
+
+  @override
+  String get focusCompletionCompleteAndNext => 'Завершить и начать следующую';
+
+  @override
+  String get focusCompletionStartNext => 'Начать следующую задачу';
+
+  @override
+  String get focusCompletionRetry => 'Повторить';
 }

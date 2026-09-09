@@ -2416,4 +2416,14 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsSaveError =>
       'Die Einstellung konnte nicht gespeichert werden. Versuche es erneut.';
+
+  @override
+  String get focusCompletionCompleteAndNext =>
+      'Abschließen und nächste starten';
+
+  @override
+  String get focusCompletionStartNext => 'Nächste Aufgabe starten';
+
+  @override
+  String get focusCompletionRetry => 'Erneut versuchen';
 }

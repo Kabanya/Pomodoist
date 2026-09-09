@@ -694,5 +694,8 @@
   "settingsTaskListStyleDescription": "Choisissez la nouvelle présentation ou les lignes classiques.",
   "settingsTaskListModern": "Moderne",
   "settingsTaskListClassic": "Classique",
-  "settingsSaveError": "Impossible d’enregistrer le réglage. Réessayez."
+  "settingsSaveError": "Impossible d’enregistrer le réglage. Réessayez.",
+  "focusCompletionCompleteAndNext": "Terminer et commencer la suivante",
+  "focusCompletionStartNext": "Commencer la tâche suivante",
+  "focusCompletionRetry": "Réessayer"
 }

@@ -694,5 +694,8 @@
   "settingsTaskListStyleDescription": "选择新布局或保留熟悉的经典任务行。",
   "settingsTaskListModern": "现代",
   "settingsTaskListClassic": "经典",
-  "settingsSaveError": "无法保存设置。请重试。"
+  "settingsSaveError": "无法保存设置。请重试。",
+  "focusCompletionCompleteAndNext": "完成并开始下一项",
+  "focusCompletionStartNext": "开始下一项任务",
+  "focusCompletionRetry": "重试"
 }

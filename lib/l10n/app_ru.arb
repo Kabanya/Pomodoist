@@ -694,5 +694,8 @@
   "settingsTaskListStyleDescription": "Выберите новый вид или привычные классические строки.",
   "settingsTaskListModern": "Современный",
   "settingsTaskListClassic": "Классический",
-  "settingsSaveError": "Не удалось сохранить настройку. Попробуйте ещё раз."
+  "settingsSaveError": "Не удалось сохранить настройку. Попробуйте ещё раз.",
+  "focusCompletionCompleteAndNext": "Завершить и начать следующую",
+  "focusCompletionStartNext": "Начать следующую задачу",
+  "focusCompletionRetry": "Повторить"
 }

@@ -782,5 +782,8 @@
   "settingsTaskListStyleDescription": "Choose the new layout or keep the familiar classic rows.",
   "settingsTaskListModern": "Modern",
   "settingsTaskListClassic": "Classic",
-  "settingsSaveError": "Could not save the setting. Please try again."
+  "settingsSaveError": "Could not save the setting. Please try again.",
+  "focusCompletionCompleteAndNext": "Complete and start next",
+  "focusCompletionStartNext": "Start next task",
+  "focusCompletionRetry": "Retry"
 }

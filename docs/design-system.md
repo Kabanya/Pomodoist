@@ -141,6 +141,16 @@ wraps metadata on narrow screens, and reveals actions on hover or keyboard focus
 Touch actions stay available. Project and timing colors retain their semantics.
 Custom Kanban and Timeline blocks keep their specialized layouts.
 
+### Focus completion actions
+
+When the current task is open and a next scheduled task is available, completing
+it and starting the next task is the primary action. Completing only the current
+task and keeping it open remain explicit alternatives. Finishing a timer never
+automatically completes a task. Show the next task alongside the actions; retain the
+existing scheduling order and roll back task completion if starting Focus fails.
+Guard repeated clicks and scope asynchronous dismissal to the completed run.
+Actions remain independent of the decorative animation and Reduce Motion.
+
 ## Components and independence
 
 - Current direct dependencies: **`shadcn_ui 0.56.3`** and

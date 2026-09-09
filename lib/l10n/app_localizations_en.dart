@@ -2419,4 +2419,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsSaveError =>
       'Could not save the setting. Please try again.';
+
+  @override
+  String get focusCompletionCompleteAndNext => 'Complete and start next';
+
+  @override
+  String get focusCompletionStartNext => 'Start next task';
+
+  @override
+  String get focusCompletionRetry => 'Retry';
 }
