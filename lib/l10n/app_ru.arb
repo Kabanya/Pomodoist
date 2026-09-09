@@ -597,6 +597,8 @@
   "never": "Никогда",
   "durationMinutes": "{minutes}м",
   "durationHoursMinutes": "{hours}ч {minutes}м",
+  "projectIcon": "Иконка проекта",
+  "projectIconOption": "Иконка {number}",
   "projectColor": "Цвет проекта",
   "projectColorOption": "Цвет {number}",
   "addProjectToFavorites": "Добавить проект в избранное",

@@ -597,6 +597,8 @@
   "never": "Nunca",
   "durationMinutes": "{minutes}m",
   "durationHoursMinutes": "{hours}h {minutes}m",
+  "projectIcon": "Icono del proyecto",
+  "projectIconOption": "Icono {number}",
   "projectColor": "Color del proyecto",
   "projectColorOption": "Color {number}",
   "addProjectToFavorites": "Añadir proyecto a favoritos",

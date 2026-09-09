@@ -18,10 +18,10 @@ import '../../../app/app_l10n.dart';
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/db/app_database.dart';
-import '../domain/project_colors.dart';
 import '../domain/task_models.dart';
 import 'widgets/create_project_dialog.dart';
-import 'widgets/project_color_picker.dart';
+import 'widgets/project_context_menu.dart';
+import 'widgets/project_icon.dart';
 
 class ProjectsScreen extends ConsumerStatefulWidget {
   const ProjectsScreen({super.key});
@@ -197,14 +197,10 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                         depth: row.depth,
                         count: taskCounts[row.project.id] ?? 0,
                         onTap: () => context.go('/project/${row.project.id}'),
-                        onRename: () => showRenameProjectDialog(
-                          context,
-                          projectId: row.project.id,
-                          projectName: row.project.name,
-                        ),
-                        onColor: () => _changeProjectColor(row.project),
-                        onFavorite: () => _toggleProjectFavorite(row.project),
-                        onDelete: () => _confirmDeleteProject(row.project),
+                        onColor: () =>
+                            changeProjectColor(context, ref, row.project),
+                        onFavorite: () =>
+                            toggleProjectFavorite(context, ref, row.project),
                       );
                     },
                     separatorBuilder: (context, index) => Divider(
@@ -289,70 +285,6 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
         .toList();
   }
 
-  Future<void> _confirmDeleteProject(ProjectItem project) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => ShadDialog(
-        title: Text(context.l10n.deleteProject),
-        actions: [
-          ShadButton.ghost(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(context.l10n.commonCancel),
-          ),
-          ShadButton.destructive(
-            key: const Key('confirm-delete-project-button'),
-            onPressed: () => Navigator.of(context).pop(true),
-            leading: const Icon(LucideIcons.trash2),
-            child: Text(context.l10n.commonDelete),
-          ),
-        ],
-        child: Text(context.l10n.deleteProjectConfirmation(project.name)),
-      ),
-    );
-    if (confirmed != true) {
-      return;
-    }
-    try {
-      await ref.read(projectRepositoryProvider).deleteProject(project.id);
-    } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.couldNotDeleteProject(error))),
-        );
-      }
-    }
-  }
-
-  Future<void> _changeProjectColor(ProjectItem project) async {
-    final color = await showProjectColorPicker(
-      context,
-      selectedColor: effectiveProjectColor(project),
-    );
-    if (color == null || !mounted) {
-      return;
-    }
-    await _updateProject(project.id, UpdateProjectPatch(color: color));
-  }
-
-  Future<void> _toggleProjectFavorite(ProjectItem project) {
-    return _updateProject(
-      project.id,
-      UpdateProjectPatch(isFavorite: !project.isFavorite),
-    );
-  }
-
-  Future<void> _updateProject(String id, UpdateProjectPatch patch) async {
-    try {
-      await ref.read(projectRepositoryProvider).updateProject(id, patch);
-    } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.couldNotUpdateProject(error))),
-        );
-      }
-    }
-  }
-
   Future<void> _confirmDeleteLabel(LabelItem label) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -421,20 +353,16 @@ class _ProjectListTile extends StatelessWidget {
     required this.depth,
     required this.count,
     required this.onTap,
-    required this.onRename,
     required this.onColor,
     required this.onFavorite,
-    required this.onDelete,
   });
 
   final ProjectItem project;
   final int depth;
   final int count;
   final VoidCallback onTap;
-  final VoidCallback onRename;
   final VoidCallback onColor;
   final VoidCallback onFavorite;
-  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -443,26 +371,9 @@ class _ProjectListTile extends StatelessWidget {
       color: colors.primaryText,
       fontWeight: FontWeight.w500,
     );
-    return ShadContextMenuRegion(
+    return ProjectContextMenu(
       key: ValueKey('projects-screen-project-${project.id}'),
-      tapEnabled: false,
-      longPressEnabled: true,
-      items: [
-        ShadContextMenuItem(
-          leading: const Icon(LucideIcons.pencil, size: 16),
-          onPressed: onRename,
-          child: Text(context.l10n.renameProject),
-        ),
-        ShadContextMenuItem(
-          leading: Icon(
-            LucideIcons.trash2,
-            size: 16,
-            color: Theme.of(context).colorScheme.error,
-          ),
-          onPressed: onDelete,
-          child: Text(context.l10n.deleteProject),
-        ),
-      ],
+      project: project,
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
@@ -478,11 +389,11 @@ class _ProjectListTile extends StatelessWidget {
             ),
             child: Row(
               children: [
-                ProjectColorSwatch(
+                IconButton(
                   key: ValueKey('project-color-${project.id}'),
-                  color: effectiveProjectColor(project),
+                  tooltip: context.l10n.projectColor,
                   onPressed: onColor,
-                  size: 20,
+                  icon: ProjectIconView(project: project),
                 ),
                 const SizedBox(width: 14),
                 Expanded(

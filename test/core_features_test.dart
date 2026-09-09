@@ -1367,6 +1367,47 @@ void main() {
 
     tearDown(() => db.close());
 
+    test('project icons persist, sync and survive unrelated edits', () async {
+      final id = await projectRepository.createProject('Work');
+      await projectRepository.updateProject(
+        id,
+        const UpdateProjectPatch(icon: 'briefcase'),
+      );
+      await projectRepository.updateProject(
+        id,
+        const UpdateProjectPatch(name: 'Office'),
+      );
+      final project = await projectRepository.findByName('Office');
+      expect(project!.icon, 'briefcase');
+      final row = await (db.select(
+        db.projects,
+      )..where((row) => row.id.equals(id))).getSingle();
+      expect(ProjectRow.fromJson(row.toJson()).icon, 'briefcase');
+      final commands = await syncQueue.watchPending().first;
+      expect(
+        jsonDecode(
+          commands
+              .where((command) => command.type == 'project.update')
+              .first
+              .payloadJson,
+        )['icon'],
+        'briefcase',
+      );
+      await expectLater(
+        projectRepository.updateProject(
+          id,
+          const UpdateProjectPatch(icon: 'unknown'),
+        ),
+        throwsArgumentError,
+      );
+      expect((await projectRepository.findByName('Office'))!.icon, 'briefcase');
+      await projectRepository.updateProject(
+        id,
+        const UpdateProjectPatch(icon: 'hash'),
+      );
+      expect((await projectRepository.findByName('Office'))!.icon, 'hash');
+    });
+
     test('quick add creates project, task, label, and sync commands', () async {
       final service = QuickAddService(
         parser: const QuickAddParser(),

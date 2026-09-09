@@ -3634,6 +3634,18 @@ abstract class AppLocalizations {
   /// **'{hours}h {minutes}m'**
   String durationHoursMinutes(int hours, int minutes);
 
+  /// No description provided for @projectIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Project icon'**
+  String get projectIcon;
+
+  /// No description provided for @projectIconOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon {number}'**
+  String projectIconOption(int number);
+
   /// No description provided for @projectColor.
   ///
   /// In en, this message translates to:

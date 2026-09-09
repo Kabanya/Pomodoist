@@ -459,6 +459,21 @@ class TaskItem {
   }
 }
 
+enum ProjectIcon {
+  hash,
+  folder,
+  briefcase,
+  house,
+  bookOpen,
+  code,
+  heart,
+  star,
+  target,
+  plane,
+  music,
+  coffee,
+}
+
 class ProjectItem {
   const ProjectItem({
     required this.id,
@@ -468,6 +483,7 @@ class ProjectItem {
     required this.createdAt,
     required this.updatedAt,
     this.color,
+    this.icon,
     this.parentId,
     this.viewStyle = 'list',
     this.isFavorite = false,
@@ -479,6 +495,7 @@ class ProjectItem {
   final String userId;
   final String name;
   final String? color;
+  final String? icon;
   final String? parentId;
   final String viewStyle;
   final bool isFavorite;
@@ -708,7 +725,9 @@ class UpdateTaskPatch {
 }
 
 class UpdateProjectPatch {
-  const UpdateProjectPatch({this.name, this.color, this.isFavorite});
+  const UpdateProjectPatch({this.name, this.color, this.icon, this.isFavorite});
+
+  final String? icon;
 
   final String? name;
   final String? color;

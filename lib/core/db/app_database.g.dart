@@ -779,6 +779,15 @@ class $ProjectsTable extends Projects
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ProjectsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
@@ -918,6 +927,7 @@ class $ProjectsTable extends Projects
   );
   @override
   List<GeneratedColumn> get $columns => [
+    icon,
     id,
     userId,
     name,
@@ -943,6 +953,12 @@ class $ProjectsTable extends Projects
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('icon')) {
+      context.handle(
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
+    }
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
@@ -1033,6 +1049,10 @@ class $ProjectsTable extends Projects
   ProjectRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ProjectRow(
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      ),
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -1091,6 +1111,7 @@ class $ProjectsTable extends Projects
 }
 
 class ProjectRow extends DataClass implements Insertable<ProjectRow> {
+  final String? icon;
   final String id;
   final String userId;
   final String name;
@@ -1104,6 +1125,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   final DateTime createdAt;
   final DateTime updatedAt;
   const ProjectRow({
+    this.icon,
     required this.id,
     required this.userId,
     required this.name,
@@ -1120,6 +1142,9 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<String>(icon);
+    }
     map['id'] = Variable<String>(id);
     map['user_id'] = Variable<String>(userId);
     map['name'] = Variable<String>(name);
@@ -1141,6 +1166,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
 
   ProjectsCompanion toCompanion(bool nullToAbsent) {
     return ProjectsCompanion(
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
       id: Value(id),
       userId: Value(userId),
       name: Value(name),
@@ -1166,6 +1192,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ProjectRow(
+      icon: serializer.fromJson<String?>(json['icon']),
       id: serializer.fromJson<String>(json['id']),
       userId: serializer.fromJson<String>(json['userId']),
       name: serializer.fromJson<String>(json['name']),
@@ -1184,6 +1211,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'icon': serializer.toJson<String?>(icon),
       'id': serializer.toJson<String>(id),
       'userId': serializer.toJson<String>(userId),
       'name': serializer.toJson<String>(name),
@@ -1200,6 +1228,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   }
 
   ProjectRow copyWith({
+    Value<String?> icon = const Value.absent(),
     String? id,
     String? userId,
     String? name,
@@ -1213,6 +1242,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => ProjectRow(
+    icon: icon.present ? icon.value : this.icon,
     id: id ?? this.id,
     userId: userId ?? this.userId,
     name: name ?? this.name,
@@ -1228,6 +1258,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   );
   ProjectRow copyWithCompanion(ProjectsCompanion data) {
     return ProjectRow(
+      icon: data.icon.present ? data.icon.value : this.icon,
       id: data.id.present ? data.id.value : this.id,
       userId: data.userId.present ? data.userId.value : this.userId,
       name: data.name.present ? data.name.value : this.name,
@@ -1250,6 +1281,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   @override
   String toString() {
     return (StringBuffer('ProjectRow(')
+          ..write('icon: $icon, ')
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('name: $name, ')
@@ -1268,6 +1300,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
 
   @override
   int get hashCode => Object.hash(
+    icon,
     id,
     userId,
     name,
@@ -1285,6 +1318,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ProjectRow &&
+          other.icon == this.icon &&
           other.id == this.id &&
           other.userId == this.userId &&
           other.name == this.name &&
@@ -1300,6 +1334,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
 }
 
 class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
+  final Value<String?> icon;
   final Value<String> id;
   final Value<String> userId;
   final Value<String> name;
@@ -1314,6 +1349,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const ProjectsCompanion({
+    this.icon = const Value.absent(),
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
     this.name = const Value.absent(),
@@ -1329,6 +1365,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
     this.rowid = const Value.absent(),
   });
   ProjectsCompanion.insert({
+    this.icon = const Value.absent(),
     required String id,
     required String userId,
     required String name,
@@ -1349,6 +1386,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
   static Insertable<ProjectRow> custom({
+    Expression<String>? icon,
     Expression<String>? id,
     Expression<String>? userId,
     Expression<String>? name,
@@ -1364,6 +1402,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (icon != null) 'icon': icon,
       if (id != null) 'id': id,
       if (userId != null) 'user_id': userId,
       if (name != null) 'name': name,
@@ -1381,6 +1420,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
   }
 
   ProjectsCompanion copyWith({
+    Value<String?>? icon,
     Value<String>? id,
     Value<String>? userId,
     Value<String>? name,
@@ -1396,6 +1436,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
     Value<int>? rowid,
   }) {
     return ProjectsCompanion(
+      icon: icon ?? this.icon,
       id: id ?? this.id,
       userId: userId ?? this.userId,
       name: name ?? this.name,
@@ -1415,6 +1456,9 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
+    }
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
@@ -1460,6 +1504,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
   @override
   String toString() {
     return (StringBuffer('ProjectsCompanion(')
+          ..write('icon: $icon, ')
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('name: $name, ')
@@ -13278,6 +13323,7 @@ typedef $$WorkspacesTableProcessedTableManager =
     >;
 typedef $$ProjectsTableCreateCompanionBuilder =
     ProjectsCompanion Function({
+      Value<String?> icon,
       required String id,
       required String userId,
       required String name,
@@ -13294,6 +13340,7 @@ typedef $$ProjectsTableCreateCompanionBuilder =
     });
 typedef $$ProjectsTableUpdateCompanionBuilder =
     ProjectsCompanion Function({
+      Value<String?> icon,
       Value<String> id,
       Value<String> userId,
       Value<String> name,
@@ -13318,6 +13365,11 @@ class $$ProjectsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
@@ -13388,6 +13440,11 @@ class $$ProjectsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
@@ -13458,6 +13515,9 @@ class $$ProjectsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
@@ -13530,6 +13590,7 @@ class $$ProjectsTableTableManager
               $$ProjectsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
+                Value<String?> icon = const Value.absent(),
                 Value<String> id = const Value.absent(),
                 Value<String> userId = const Value.absent(),
                 Value<String> name = const Value.absent(),
@@ -13544,6 +13605,7 @@ class $$ProjectsTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectsCompanion(
+                icon: icon,
                 id: id,
                 userId: userId,
                 name: name,
@@ -13560,6 +13622,7 @@ class $$ProjectsTableTableManager
               ),
           createCompanionCallback:
               ({
+                Value<String?> icon = const Value.absent(),
                 required String id,
                 required String userId,
                 required String name,
@@ -13574,6 +13637,7 @@ class $$ProjectsTableTableManager
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
               }) => ProjectsCompanion.insert(
+                icon: icon,
                 id: id,
                 userId: userId,
                 name: name,

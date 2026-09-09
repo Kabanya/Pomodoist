@@ -2096,6 +2096,14 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get projectIcon => 'Icône du projet';
+
+  @override
+  String projectIconOption(int number) {
+    return 'Icône $number';
+  }
+
+  @override
   String get projectColor => 'Couleur du projet';
 
   @override

@@ -597,6 +597,8 @@
   "never": "从不",
   "durationMinutes": "{minutes} 分钟",
   "durationHoursMinutes": "{hours} 小时 {minutes} 分钟",
+  "projectIcon": "项目图标",
+  "projectIconOption": "图标 {number}",
   "projectColor": "项目颜色",
   "projectColorOption": "颜色 {number}",
   "addProjectToFavorites": "将项目添加到收藏",

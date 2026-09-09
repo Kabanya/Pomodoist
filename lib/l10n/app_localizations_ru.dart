@@ -2100,6 +2100,14 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get projectIcon => 'Иконка проекта';
+
+  @override
+  String projectIconOption(int number) {
+    return 'Иконка $number';
+  }
+
+  @override
   String get projectColor => 'Цвет проекта';
 
   @override

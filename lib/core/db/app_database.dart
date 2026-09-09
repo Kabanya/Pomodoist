@@ -59,6 +59,7 @@ class Workspaces extends Table {
 
 @DataClassName('ProjectRow')
 class Projects extends Table {
+  TextColumn get icon => text().nullable()();
   TextColumn get id => text()();
   TextColumn get userId => text()();
   TextColumn get name => text()();
@@ -472,7 +473,7 @@ class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -530,6 +531,12 @@ class AppDatabase extends _$AppDatabase {
           'CREATE INDEX IF NOT EXISTS tasks_active_children_by_parent '
           'ON tasks (parent_id, status, id) '
           'WHERE parent_id IS NOT NULL AND is_deleted = 0',
+        );
+      }
+      if (from < 6) {
+        await _runResumableMigrationStep(
+          () => m.addColumn(projects, projects.icon),
+          alreadyAppliedMessage: 'duplicate column name: icon',
         );
       }
       if (from < 5) {

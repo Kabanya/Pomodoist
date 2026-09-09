@@ -597,6 +597,8 @@
   "never": "أبدا",
   "durationMinutes": "{minutes}د",
   "durationHoursMinutes": "{hours}س {minutes}د",
+  "projectIcon": "أيقونة المشروع",
+  "projectIconOption": "أيقونة {number}",
   "projectColor": "لون المشروع",
   "projectColorOption": "اللون {number}",
   "addProjectToFavorites": "إضافة المشروع إلى المفضلة",

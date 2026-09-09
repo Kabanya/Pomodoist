@@ -1994,6 +1994,14 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get projectIcon => '项目图标';
+
+  @override
+  String projectIconOption(int number) {
+    return '图标 $number';
+  }
+
+  @override
   String get projectColor => '项目颜色';
 
   @override

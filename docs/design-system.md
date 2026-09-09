@@ -127,6 +127,11 @@ Settings sit below projects; on short windows the footer scrolls with the list.
 Preserve command identities and user shortcut bindings independently of visual
 order. Shortcut hints display the actual configured binding.
 
+Project rows share their context menu between the sidebar and Projects screen.
+Secondary click and touch long press expose renaming, icon and color selection,
+favorites, and confirmed deletion. Project icons are synchronized project data;
+existing projects retain the hash icon until changed.
+
 ### Today
 
 Keep daily context to one text summary and one active Focus strip. The strip and

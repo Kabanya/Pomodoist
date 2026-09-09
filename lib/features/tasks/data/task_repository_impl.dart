@@ -1422,7 +1422,16 @@ class DriftProjectRepository implements ProjectRepository {
         'Unsupported project color',
       );
     }
+    if (patch.icon != null &&
+        !ProjectIcon.values.any((icon) => icon.name == patch.icon)) {
+      throw ArgumentError.value(
+        patch.icon,
+        'patch.icon',
+        'Unsupported project icon',
+      );
+    }
     if (normalizedName == null &&
+        patch.icon == null &&
         normalizedColor == null &&
         patch.isFavorite == null) {
       return;
@@ -1433,6 +1442,7 @@ class DriftProjectRepository implements ProjectRepository {
         _db.projects,
       )..where((project) => project.id.equals(id))).write(
         ProjectsCompanion(
+          icon: patch.icon == null ? const Value.absent() : Value(patch.icon),
           name: normalizedName == null
               ? const Value.absent()
               : Value(normalizedName),
@@ -1453,6 +1463,7 @@ class DriftProjectRepository implements ProjectRepository {
           'name': ?normalizedName,
           'color': ?normalizedColor,
           'isFavorite': ?patch.isFavorite,
+          'icon': ?patch.icon,
         },
       );
     });
@@ -1555,6 +1566,7 @@ class DriftProjectRepository implements ProjectRepository {
     userId: row.userId,
     name: row.name,
     color: row.color,
+    icon: row.icon,
     parentId: row.parentId,
     viewStyle: row.viewStyle,
     isFavorite: row.isFavorite,

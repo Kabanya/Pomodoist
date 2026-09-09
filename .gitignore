@@ -79,6 +79,7 @@ pomodoist_app_icon_no_background.png
 key-**.md
 .gitignore
 supabase/.temp/
+server/supabase/.temp/
 design/
 output/
 docs/

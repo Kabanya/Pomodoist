@@ -15,10 +15,10 @@ import '../../core/db/app_database.dart';
 import '../../features/productivity/domain/achievement_models.dart';
 import '../../features/productivity/presentation/achievement_announcements.dart';
 import '../../features/focus/presentation/focus_completion_celebration.dart';
-import '../../features/tasks/domain/project_colors.dart';
 import '../../features/tasks/domain/task_models.dart';
 import '../../features/tasks/presentation/widgets/create_project_dialog.dart';
-import '../../features/tasks/presentation/widgets/project_color_picker.dart';
+import '../../features/tasks/presentation/widgets/project_context_menu.dart';
+import '../../features/tasks/presentation/widgets/project_icon.dart';
 import '../../features/tasks/presentation/widgets/quick_add_bar.dart';
 import '../../features/tasks/presentation/task_search_palette.dart';
 import '../../features/tasks/presentation/widgets/voice_panel_clearance.dart';
@@ -917,7 +917,7 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
         child: Material(
           color: colors.surface,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+            padding: const EdgeInsets.fromLTRB(12, 18, 16, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1273,7 +1273,7 @@ class _ProjectsHeader extends StatelessWidget {
                           borderRadius: BorderRadius.circular(5),
                         ),
                         child: Text(
-                          l10n.projectsCountCompact(count!),
+                          '$count',
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
                                 color: foreground,
@@ -1434,58 +1434,49 @@ class _SidebarProjectTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final foreground = selected ? colors.accent : colors.primaryText;
-    return Material(
-      key: ValueKey('sidebar-project-${project.id}'),
-      color: selected ? colors.accentTint : Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
+    return ProjectContextMenu(
+      project: project,
+      child: Material(
+        key: ValueKey('sidebar-project-${project.id}'),
+        color: selected ? colors.accentTint : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.only(
-            left: 10.0 + depth * 18.0,
-            right: 10,
-            top: 8,
-            bottom: 8,
-          ),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 18,
-                child: Text(
-                  '#',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: projectColorValue(effectiveProjectColor(project)),
-                    fontSize: 22,
-                    fontWeight: FontWeight.w500,
-                    height: 1,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onTap,
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 10.0 + depth * 18.0,
+              right: 10,
+              top: 8,
+              bottom: 8,
+            ),
+            child: Row(
+              children: [
+                ProjectIconView(project: project, size: 18),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    project.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: foreground,
+                      fontSize: 16,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  project.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: foreground,
-                    fontSize: 16,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                if (count > 0)
+                  Text(
+                    '$count',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colors.mutedText,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-              ),
-              if (count > 0)
-                Text(
-                  '$count',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colors.mutedText,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

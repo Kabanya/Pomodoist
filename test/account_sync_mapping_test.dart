@@ -60,6 +60,59 @@ void main() {
     );
   });
 
+  test('project pull preserves icons across legacy updates', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    await db.ensureSeedData();
+    final seed = await (db.select(
+      db.projects,
+    )..where((row) => row.id.equals(inboxProjectId))).getSingle();
+    final engine = AccountSyncEngine(
+      db: db,
+      uuid: const Uuid(),
+      account: _PullOnlyAccountClient(
+        AccountSyncPullResult(
+          nextCursor: 3,
+          hasMore: false,
+          changes: [
+            AccountSyncEntity(
+              entityType: 'project',
+              entityId: 'work',
+              serverRevision: 1,
+              data: {
+                ...seed.toJson(),
+                'id': 'work',
+                'name': 'Work',
+                'icon': 'briefcase',
+              },
+            ),
+            AccountSyncEntity(
+              entityType: 'project',
+              entityId: 'legacy',
+              serverRevision: 2,
+              data: {
+                ...seed.toJson()..remove('icon'),
+                'id': 'legacy',
+                'name': 'Legacy',
+              },
+            ),
+            AccountSyncEntity(
+              entityType: 'project',
+              entityId: 'work',
+              serverRevision: 3,
+              data: {'id': 'work', 'name': 'Office'},
+            ),
+          ],
+        ),
+      ),
+    );
+    await engine.pullLatest();
+    final projects = await db.select(db.projects).get();
+    expect(projects.singleWhere((row) => row.id == 'work').icon, 'briefcase');
+    expect(projects.singleWhere((row) => row.id == 'work').name, 'Office');
+    expect(projects.singleWhere((row) => row.id == 'legacy').icon, isNull);
+  });
+
   test('legacy label payloads default missing kinds to user', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);

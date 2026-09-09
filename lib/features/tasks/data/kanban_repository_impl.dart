@@ -782,6 +782,7 @@ class DriftKanbanRepository implements KanbanRepository {
     userId: row.userId,
     name: row.name,
     color: row.color,
+    icon: row.icon,
     parentId: row.parentId,
     viewStyle: row.viewStyle,
     isFavorite: row.isFavorite,
