@@ -15,6 +15,58 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 void main() {
+  test('background kind migrates photos and safely decodes glass settings', () {
+    final old = {
+      'images': {
+        'main.light': {'imageId': 'a' * 64},
+      },
+    };
+    expect(ThemeBackgrounds.fromJson(old).type, ThemeBackgroundType.photo);
+    expect(ThemeBackgrounds.fromJson({}).type, ThemeBackgroundType.color);
+    final glass = ThemeBackgrounds.fromJson({
+      ...old,
+      'type': 'macosGlass',
+      'glassLightDim': -1,
+      'glassDarkDim': 2,
+    });
+    expect(glass.glassDim(Brightness.light), 0);
+    expect(glass.glassDim(Brightness.dark), 1);
+    expect(ThemeBackgrounds.fromJson(glass.toJson()).toJson(), glass.toJson());
+    final damaged = ThemeBackgrounds.fromJson({
+      'type': 'bad',
+      'glassLightDim': double.nan,
+      'glassDarkDim': 'bad',
+    });
+    expect(damaged.type, ThemeBackgroundType.color);
+    expect(damaged.glassDim(Brightness.light), .4);
+    expect(damaged.glassDim(Brightness.dark), .5);
+    for (final isMacOS in [false, true]) {
+      for (final ready in [false, true]) {
+        for (final reduced in [false, true]) {
+          expect(
+            glass.effectiveType(
+              isMacOS: isMacOS,
+              glassReady: ready,
+              reduceTransparency: reduced,
+            ),
+            isMacOS && ready && !reduced
+                ? ThemeBackgroundType.macosGlass
+                : ThemeBackgroundType.color,
+          );
+        }
+      }
+    }
+    for (final type in ThemeBackgroundType.values) {
+      final switched = glass.copyWith(type: type);
+      expect(switched.imageIds, glass.imageIds);
+      expect(switched.glassDim(Brightness.dark), 1);
+      expect(
+        switched.resolve(ThemeBackgroundZone.main, Brightness.light).imageId,
+        type == ThemeBackgroundType.photo ? 'a' * 64 : null,
+      );
+    }
+  });
+
   test(
     'Custom retains separate background slots in its serialized settings',
     () {
@@ -28,14 +80,18 @@ void main() {
           },
         };
       final restored = AppThemeDefinition.fromJson(json);
-      expect(restored.toJson()['backgrounds'], json['backgrounds']);
+      expect(restored.backgrounds.type, ThemeBackgroundType.photo);
+      expect(
+        restored.backgrounds.toJson()['images'],
+        (json['backgrounds'] as Map)['images'],
+      );
       expect(restored.light.canvas, defaultCustomTheme.light.canvas);
       expect(restored.dark.canvas, defaultCustomTheme.dark.canvas);
     },
   );
 
   test('background modes resolve each zone without losing inactive slots', () {
-    var backgrounds = const ThemeBackgrounds();
+    var backgrounds = const ThemeBackgrounds(type: ThemeBackgroundType.photo);
     for (final zone in ThemeBackgroundZone.values) {
       for (final brightness in Brightness.values) {
         backgrounds = backgrounds.withImage(
@@ -152,6 +208,118 @@ void main() {
                 : Uint8List.fromList([7, 8, 9]),
           ),
         );
+
+    test(
+      'glass and color saves retain photos, tint pairs and resumable drafts',
+      () async {
+        await choose();
+        await choose(Brightness.dark);
+        await controller.savePreview();
+        final ids = images.data.keys.toSet();
+        for (final type in [
+          ThemeBackgroundType.macosGlass,
+          ThemeBackgroundType.color,
+        ]) {
+          controller.beginEdit();
+          final draft = container.read(appThemeSettingsProvider).preview!;
+          controller.updatePreview(
+            draft.copyWith(
+              backgrounds: draft.backgrounds.copyWith(
+                type: type,
+                glassLightDim: .2,
+                glassDarkDim: .7,
+              ),
+            ),
+          );
+          events.clear();
+          await controller.savePreview();
+          expect(events, ['preferences', 'retain']);
+          expect(images.data.keys.toSet(), ids);
+          controller.beginEdit();
+          final resumed = container.read(appThemeSettingsProvider).preview!;
+          expect(resumed.backgrounds.type, type);
+          expect(resumed.backgrounds.glassDim(Brightness.light), .2);
+          expect(resumed.backgrounds.glassDim(Brightness.dark), .7);
+          controller.resetPreviewToClassic();
+          final reset = container
+              .read(appThemeSettingsProvider)
+              .preview!
+              .backgrounds;
+          expect(reset.type, ThemeBackgroundType.color);
+          expect(reset.imageIds, isEmpty);
+          expect(reset.glassDim(Brightness.light), .4);
+          expect(reset.glassDim(Brightness.dark), .5);
+          controller.cancelPreview();
+          expect(
+            container
+                .read(appThemeSettingsProvider)
+                .activeTheme
+                .backgrounds
+                .toJson(),
+            resumed.backgrounds.toJson(),
+          );
+        }
+      },
+    );
+
+    test(
+      'failed glass settings write keeps the draft and cancel restores photos',
+      () async {
+        await choose();
+        await controller.savePreview();
+        controller.beginEdit();
+        final original = container.read(appThemeSettingsProvider).preview!;
+        final draft = original.copyWith(
+          backgrounds: original.backgrounds.copyWith(
+            type: ThemeBackgroundType.macosGlass,
+            glassDarkDim: .25,
+          ),
+        );
+        controller.updatePreview(draft);
+        preferences.fail = true;
+        await expectLater(controller.savePreview(), throwsStateError);
+        expect(container.read(appThemeSettingsProvider).preview, same(draft));
+        expect(images.data.keys.toSet(), original.backgrounds.imageIds);
+        controller.cancelPreview();
+        expect(
+          container.read(appThemeSettingsProvider).activeTheme.backgrounds.type,
+          ThemeBackgroundType.photo,
+        );
+      },
+    );
+
+    test(
+      'a late photo choice cannot change a newly selected background kind',
+      () async {
+        await choose();
+        final selected = Completer<XFile?>();
+        final pending = controller.chooseBackground(
+          ThemeBackgroundZone.main,
+          Brightness.light,
+          () => selected.future,
+        );
+        final draft = container.read(appThemeSettingsProvider).preview!;
+        controller.updatePreview(
+          draft.copyWith(
+            backgrounds: draft.backgrounds.copyWith(
+              type: ThemeBackgroundType.macosGlass,
+            ),
+          ),
+        );
+        selected.complete(XFile.fromData(Uint8List.fromList([4, 5, 6])));
+        await pending;
+        final current = container.read(appThemeSettingsProvider);
+        expect(
+          current.preview!.backgrounds.type,
+          ThemeBackgroundType.macosGlass,
+        );
+        expect(
+          current.preview!.backgrounds.imageIds,
+          draft.backgrounds.imageIds,
+        );
+        expect(current.isPreparingImage, isFalse);
+      },
+    );
 
     test(
       'previews stay in memory, save both variants and resume saved settings',

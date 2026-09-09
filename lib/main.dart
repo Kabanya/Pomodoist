@@ -68,6 +68,11 @@ Future<void> main() async {
               billingAccountRefreshTokenProvider.overrideWith((ref) {
                 return ref.watch(accountOverviewProvider).value?.generatedAt;
               }),
+              billingAccountIdentityProvider.overrideWith((ref) {
+                final account = ref.watch(accountClientProvider);
+                ref.watch(accountAuthStateProvider);
+                return (account, account?.currentUserId);
+              }),
               billingAppAccountTokenLoaderProvider.overrideWith((ref) {
                 final account = ref.watch(accountClientProvider);
                 return () async {
@@ -85,9 +90,21 @@ Future<void> main() async {
                 if (account == null || !signedIn) {
                   return null;
                 }
+                final ownerId = account.currentUserId;
                 return (transactions) async {
+                  final session = account.currentSession;
+                  if (!ref.mounted ||
+                      ownerId == null ||
+                      account.currentUserId != ownerId ||
+                      session == null ||
+                      session.userId != ownerId ||
+                      session.accessToken == null ||
+                      session.accessToken!.isEmpty) {
+                    throw StateError('The purchase account changed.');
+                  }
                   final response = await account.invokeFunction(
                     'pomodoist-purchase',
+                    headers: {'Authorization': 'Bearer ${session.accessToken}'},
                     body: {'transactions': transactions},
                   );
                   final data = response.data;
@@ -107,7 +124,9 @@ Future<void> main() async {
                       'linking failed.',
                     );
                   }
-                  ref.invalidate(accountOverviewProvider);
+                  if (ref.mounted && account.currentUserId == ownerId) {
+                    ref.invalidate(accountOverviewProvider);
+                  }
                 };
               }),
               billingStripeGatewayProvider.overrideWith((ref) {

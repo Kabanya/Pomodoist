@@ -1,6 +1,11 @@
 import type { AppleStoreTransaction } from "./apple_app_transaction.ts";
 
 export const pomodoistBundleId = "com.finchforge.pomodoist";
+export const pomodoistAppleVerificationOptions = {
+  bundleId: pomodoistBundleId,
+  appAppleId: 6794391064,
+  allowedEnvironments: ["Production", "Sandbox"],
+};
 
 const productTypes = new Map<string, "subscription" | "lifetime">([
   ["pomodoist.pro.monthly", "subscription"],

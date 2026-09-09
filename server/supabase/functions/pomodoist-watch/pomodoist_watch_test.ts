@@ -112,10 +112,7 @@ Deno.test("Telegram focus is one work interval and emits shared focus events", (
   );
 
   assertEquals(operations.map((operation) => operation.entityType), [
-    "focus_run",
-    "focus_interval",
-    "focus_event",
-    "focus_event",
+    "focus_run", "focus_interval", "focus_event", "focus_event",
   ]);
   assertEquals(operations[0].payload.targetWorkIntervals, 1);
   assertEquals(operations[1].payload.plannedSeconds, 1500);
@@ -132,7 +129,10 @@ Deno.test("Telegram standalone Focus creates an unlinked interval without creati
     new Date("2026-09-08T12:00:00Z"),
   );
   assertEquals(operations.map((op) => op.entityType), [
-    "focus_run", "focus_interval", "focus_event", "focus_event",
+    "focus_run",
+    "focus_interval",
+    "focus_event",
+    "focus_event",
   ]);
   assertEquals(operations[0].payload.taskId, null);
   assertEquals(operations[0].payload.projectId, null);
@@ -831,7 +831,7 @@ Deno.test("logged-out transcript rejects a revoked Pomodoist lifetime purchase",
   assertEquals(response.status, 403);
 });
 
-Deno.test("logged-out transcript accepts the server-enabled local StoreKit build", async () => {
+Deno.test("logged-out transcript rejects a local StoreKit flag even with the legacy server flag", async () => {
   const response = await handlePomodoistWatch(
     request({
       command: {
@@ -860,7 +860,7 @@ Deno.test("logged-out transcript accepts the server-enabled local StoreKit build
     }),
   );
 
-  assertEquals(response.status, 200);
+  assertEquals(response.status, 403);
 });
 
 Deno.test("transcript command uses the runtime UUID generator", async () => {

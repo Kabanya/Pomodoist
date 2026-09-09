@@ -31,6 +31,7 @@ import '../providers.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_theme_settings.dart';
 import '../theme/theme_background.dart';
+import '../theme/macos_glass.dart';
 import 'app_date_time_picker.dart';
 import 'mini_focus_player.dart';
 import 'resizable_dialog.dart';
@@ -139,6 +140,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
       );
     }
     final wide = MediaQuery.sizeOf(context).width >= _wideLayoutBreakpoint;
+    final compactTaskDetailsOpen = !wide && widget.taskId != null;
     final focusLocation = _isFocusLocation(widget.location);
     final mobileDestinations = _mobileDestinations(context);
     final selected = _selectedMobileIndex(widget.location, mobileDestinations);
@@ -154,10 +156,17 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
       ),
     );
     final brightness = Theme.of(context).brightness;
+    final glass =
+        backgrounds.type == ThemeBackgroundType.macosGlass &&
+        macosGlassReady(context, ref);
     final content = Column(
       children: [
         const AchievementAnnouncementBridge(),
-        _ShellTopBar(location: widget.location, onMenuPressed: _toggleSidebar),
+        if (!compactTaskDetailsOpen)
+          _ShellTopBar(
+            location: widget.location,
+            onMenuPressed: _toggleSidebar,
+          ),
         Expanded(
           child: Stack(
             fit: StackFit.expand,
@@ -199,7 +208,9 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     if (wide) {
       scaffold = Scaffold(
         key: _scaffoldKey,
+        backgroundColor: Colors.transparent,
         body: ThemeBackgroundPreview(
+          glassDim: glass ? 0 : null,
           image: backgrounds.mode == ThemeBackgroundMode.wholeApp
               ? backgrounds
                     .resolve(ThemeBackgroundZone.main, brightness)
@@ -238,10 +249,11 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
               backgroundColor: Colors.transparent,
               drawer: Drawer(
                 width: _wideSidebarDefaultWidth,
-                backgroundColor: colors.surface,
+                backgroundColor: glass ? Colors.transparent : colors.surface,
                 shape: const RoundedRectangleBorder(),
                 child: ThemeBackground(
                   zone: ThemeBackgroundZone.sidebar,
+                  blurBehind: true,
                   wholeAppViewport: (
                     link: _backgroundLink,
                     size: constraints.biggest,
@@ -254,14 +266,16 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                 ),
               ),
               body: content,
-              bottomNavigationBar: VoicePanelBottomClearance(
-                child: _ShellBottomChrome(
-                  selectedIndex: selected,
-                  showMiniFocusPlayer: showMiniFocusPlayer,
-                  onDestinationSelected: (index) =>
-                      context.go(mobileDestinations[index].path),
-                ),
-              ),
+              bottomNavigationBar: compactTaskDetailsOpen
+                  ? null
+                  : VoicePanelBottomClearance(
+                      child: _ShellBottomChrome(
+                        selectedIndex: selected,
+                        showMiniFocusPlayer: showMiniFocusPlayer,
+                        onDestinationSelected: (index) =>
+                            context.go(mobileDestinations[index].path),
+                      ),
+                    ),
             ),
           ),
         ),
@@ -1579,6 +1593,7 @@ class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
               child: ResizableDialog(
                 background: ThemeBackground(
                   zone: ThemeBackgroundZone.quickAdd,
+                  blurBehind: true,
                   color: context.appColors.surface,
                   child: const SizedBox.expand(),
                 ),

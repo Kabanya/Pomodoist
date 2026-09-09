@@ -14,6 +14,9 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "StoreKitHost") {
+      StoreKitHost.register(with: registrar)
+    }
     WatchCompanionHost.shared.configure(with: engineBridge)
     SystemSpeechHost.shared.configure(with: engineBridge)
   }

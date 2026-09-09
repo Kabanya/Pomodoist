@@ -212,7 +212,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get billingStoreConnectionFailed =>
-      'App Store временно недоступен. Повторите попытку чуть позже.';
+      'Не удалось связаться с App Store. Повторите попытку.';
 
   @override
   String billingPurchaseError(String error) {
@@ -2477,6 +2477,26 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get themeResetToClassic => 'Сбросить к Классике';
+
+  @override
+  String get themeBackgroundKindTitle => 'Фон';
+
+  @override
+  String get themeBackgroundColor => 'Цвет';
+
+  @override
+  String get themeBackgroundPhoto => 'Фото';
+
+  @override
+  String get themeBackgroundGlass => 'Стекло macOS';
+
+  @override
+  String get themeBackgroundGlassHint =>
+      'Применяется ко всему приложению и быстрому добавлению. macOS управляет размытием, а ползунок регулирует оттенок палитры.';
+
+  @override
+  String get themeBackgroundGlassUnavailable =>
+      'Доступно в приложении для macOS. На этой платформе используется сплошной фон.';
 
   @override
   String get themeBackgroundTitle => 'Фоновое изображение';

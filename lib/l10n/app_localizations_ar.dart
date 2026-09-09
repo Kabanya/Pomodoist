@@ -212,7 +212,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get billingStoreConnectionFailed =>
-      'متجر App Store غير متاح مؤقتًا. يُرجى المحاولة مرة أخرى بعد قليل.';
+      'تعذّر الاتصال بمتجر App Store. يُرجى المحاولة مرة أخرى.';
 
   @override
   String billingPurchaseError(String error) {
@@ -2436,6 +2436,26 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get themeResetToClassic => 'إعادة الضبط إلى كلاسيكي';
+
+  @override
+  String get themeBackgroundKindTitle => 'الخلفية';
+
+  @override
+  String get themeBackgroundColor => 'اللون';
+
+  @override
+  String get themeBackgroundPhoto => 'صورة';
+
+  @override
+  String get themeBackgroundGlass => 'زجاج macOS';
+
+  @override
+  String get themeBackgroundGlassHint =>
+      'يُطبَّق على التطبيق بالكامل والإضافة السريعة. يتحكم macOS في التمويه، ويضبط شريط التمرير صبغة لوحة الألوان.';
+
+  @override
+  String get themeBackgroundGlassUnavailable =>
+      'متاح في تطبيق macOS. تُستخدم خلفية بلون موحّد على هذه المنصة.';
 
   @override
   String get themeBackgroundTitle => 'صورة الخلفية';

@@ -52,8 +52,12 @@ class _ResizableDialogState extends State<ResizableDialog> {
       insetPadding: const EdgeInsets.all(_viewportMargin),
       clipBehavior: Clip.antiAlias,
       shape: shape,
-      backgroundColor: dialogTheme.backgroundColor ?? theme.colorScheme.surface,
-      surfaceTintColor: dialogTheme.surfaceTintColor ?? Colors.transparent,
+      backgroundColor: widget.background != null
+          ? Colors.transparent
+          : dialogTheme.backgroundColor ?? theme.colorScheme.surface,
+      surfaceTintColor: widget.background != null
+          ? Colors.transparent
+          : dialogTheme.surfaceTintColor ?? Colors.transparent,
       child: SizedBox(
         key: ResizableDialog.containerKey,
         width: size.width,

@@ -376,11 +376,15 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
       final draft = state.preview!;
       updatePreview(
         draft.copyWith(
-          backgrounds: draft.backgrounds.withImage(
-            zone,
-            brightness,
-            draft.backgrounds.imageFor(zone, brightness).copyWith(imageId: id),
-          ),
+          backgrounds: draft.backgrounds
+              .copyWith(type: ThemeBackgroundType.photo)
+              .withImage(
+                zone,
+                brightness,
+                draft.backgrounds
+                    .imageFor(zone, brightness)
+                    .copyWith(imageId: id),
+              ),
         ),
       );
     } catch (_) {
@@ -453,6 +457,10 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
     _requireReady();
     if (state.preview?.id != draft.id) {
       throw ArgumentError('Not the current draft');
+    }
+    if (state.preview!.backgrounds.type != draft.backgrounds.type ||
+        state.preview!.backgrounds.mode != draft.backgrounds.mode) {
+      cancelImageSelection();
     }
     final imageIds = draft.backgrounds.imageIds;
     _pendingImages.removeWhere((id, _) => !imageIds.contains(id));

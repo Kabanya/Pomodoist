@@ -110,6 +110,26 @@ either palette blocks saving. Saving errors keep the draft
 open for retry. The editor itself uses Classic so even an unreadable custom
 palette can be repaired; its two previews show the actual custom colors.
 
+Custom has one global background type: color, photo or `macosGlass`. Switching
+types retains imported photos. Glass has independent light and dark tint amounts
+from 0–100%, defaulting to 40% and 50% respectively. It uses the same theme
+provider, live preview, Save and Cancel flow, and optional version 2 persistence.
+Older settings infer photo when any photo is present and color otherwise. Reset
+to Classic clears every background type's settings in the draft; unreferenced
+photos are removed only after a successful save.
+
+On macOS, place a native `NSVisualEffectView` behind Flutter with behind-window
+blending and `underWindowBackground` material. The main area and sidebar share
+one native glass layer; the separate Quick Add window has its own. Inline Quick Add
+is unchanged; the in-app Quick Add overlay reveals and blurs the app beneath it.
+Keep controls and the Classic editor solid. Background samples use a checkerboard,
+while the real window remains live glass behind the editor.
+
+Fall back to the palette's solid background on non-macOS platforms, before the
+native view is ready, after native errors, and when Reduce Transparency is
+enabled. Accessibility changes update live. Preserve the existing 180 ms theme
+transition, Reduce Motion behavior and interface zoom.
+
 ### Photo backgrounds
 
 Custom supports optional photos in three modes: main area only, one continuous
@@ -161,6 +181,9 @@ The selected task uses the background route's `task` query parameter; changing i
 replaces the selection instead of stacking detail routes. Existing `/task/:id`
 links remain valid. With at least 960 px of content width, details occupy a
 440 px side panel; narrower layouts keep the background mounted behind details.
+Below the 820 px shell breakpoint, details fill the viewport and temporarily
+replace the shell top bar, bottom navigation and mini Focus player. Restore that
+chrome on close, while keeping the detail controls inside the system safe area.
 Navigation waits for pending title and description edits and retains failed
 drafts. Close and Escape restore focus; nested menus handle Escape first.
 Keep the close/back and overflow actions pinned at the top of task details,
@@ -266,6 +289,10 @@ fields. Preserve locale-specific date input, first weekday, and 12/24-hour time
 with the system override. ShadCalendar uses DateTime weekday numbering (1–7),
 whereas Material uses 0 for Sunday. Use the exported ShadTimePicker fields so an
 empty field invalidates the draft instead of retaining the previous time.
+
+The Timed block action in task details opens only the start and end time pickers,
+without a calendar step. Retain the task's scheduled date, or use the current
+local day when it has no schedule. Date selection remains a separate action.
 
 Keep selection local until confirmation. Cancel, Escape and Back dismiss the
 picker without changing the source phrase or saved schedule; restore focus to
@@ -516,6 +543,9 @@ and runs targeted unit tests using the pinned FVM SDK:
 .fvm/flutter_sdk/bin/flutter analyze --no-pub
 .fvm/flutter_sdk/bin/flutter test --no-pub <relevant-unit-test-files>
 ```
+
+For macOS glass background changes, run only selected unit tests with that SDK;
+broader analysis, builds, app launches and visual checks remain separately scoped.
 
 Test changed logic: theme conversion, animation events, bulk limits, state
 preservation, duplicate suppression, and Reduce Motion. Reuse existing tests.

@@ -7,10 +7,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/app/theme/app_theme.dart';
 import 'package:pomodoist/app/widgets/adaptive_shell.dart';
+import 'package:pomodoist/app/widgets/task_details_host.dart';
+import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/features/focus/domain/focus_models.dart';
 import 'package:pomodoist/features/focus/presentation/focus_completion_celebration_controller.dart';
+import 'package:pomodoist/features/integrations/google_calendar/data/google_calendar_repository.dart';
 import 'package:pomodoist/features/productivity/domain/achievement_models.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/features/tasks/presentation/task_detail_screen.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -101,6 +105,48 @@ void main() {
     },
   );
 
+  testWidgets('compact task details replace shell chrome and fill viewport', (
+    tester,
+  ) async {
+    await _pumpShell(
+      tester,
+      size: const Size(600, 800),
+      initialLocation: '/inbox',
+      taskId: 'task-1',
+      taskRepository: _TaskRepository(_task()),
+    );
+
+    expect(find.text('Ship celebration'), findsOneWidget);
+    expect(find.byKey(const Key('shell-menu-button')), findsNothing);
+    expect(find.byKey(const Key('mobile-bottom-navigation')), findsNothing);
+    expect(
+      tester.getRect(find.byType(TaskDetailsHost)),
+      const Rect.fromLTWH(0, 0, 600, 800),
+    );
+
+    await tester.tap(find.byTooltip('Close'));
+    await _pumpShellFrame(tester);
+
+    expect(find.text('Ship celebration'), findsNothing);
+    expect(find.byKey(const Key('shell-menu-button')), findsOneWidget);
+    expect(find.byKey(const Key('mobile-bottom-navigation')), findsOneWidget);
+  });
+
+  testWidgets('wide task details keep the 440-pixel side panel', (
+    tester,
+  ) async {
+    await _pumpShell(
+      tester,
+      size: const Size(1400, 900),
+      initialLocation: '/inbox',
+      taskId: 'task-1',
+      taskRepository: _TaskRepository(_task()),
+    );
+
+    expect(find.byKey(const Key('shell-menu-button')), findsOneWidget);
+    expect(tester.getSize(find.byType(TaskDetailScreen)).width, 440);
+  });
+
   testWidgets('completion overlays a non-Focus shell route', (tester) async {
     await _pumpShell(
       tester,
@@ -165,6 +211,7 @@ Future<void> _pumpShell(
   WidgetTester tester, {
   required Size size,
   String initialLocation = '/inbox',
+  String? taskId,
   TaskRepository? taskRepository,
 }) async {
   final previousSize = tester.view.physicalSize;
@@ -180,11 +227,16 @@ Future<void> _pumpShell(
 
   final now = DateTime.utc(2026, 7, 10, 10);
   final router = GoRouter(
+    initialLocation: taskId == null
+        ? '/'
+        : '/?task=${Uri.encodeQueryComponent(taskId)}',
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, _) =>
-            _AdaptiveShellRouteHarness(initialLocation: initialLocation),
+        builder: (_, state) => _AdaptiveShellRouteHarness(
+          initialLocation: initialLocation,
+          taskId: state.uri.queryParameters['task'],
+        ),
       ),
     ],
   );
@@ -201,6 +253,9 @@ Future<void> _pumpShell(
         projectsProvider.overrideWith((ref) => Stream.value(const [])),
         achievementRepositoryProvider.overrideWithValue(
           const _NoopAchievementRepository(),
+        ),
+        calendarIntegrationRepositoryProvider.overrideWithValue(
+          const _NoopCalendarIntegrationRepository(),
         ),
         achievementsProvider.overrideWith(
           (ref) => Stream.value(const <AchievementItem>[]),
@@ -231,9 +286,13 @@ Future<void> _pumpShellFrame(WidgetTester tester) async {
 }
 
 class _AdaptiveShellRouteHarness extends StatefulWidget {
-  const _AdaptiveShellRouteHarness({required this.initialLocation});
+  const _AdaptiveShellRouteHarness({
+    required this.initialLocation,
+    required this.taskId,
+  });
 
   final String initialLocation;
+  final String? taskId;
 
   @override
   State<_AdaptiveShellRouteHarness> createState() =>
@@ -249,6 +308,7 @@ class _AdaptiveShellRouteHarnessState
     final onFocus = _location == '/focus';
     return AdaptiveShell(
       location: _location,
+      taskId: widget.taskId,
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -334,6 +394,18 @@ class _NoopAchievementRepository implements AchievementRepository {
   Future<List<AchievementItem>> takePendingAnnouncements(
     List<AchievementItem> items,
   ) async => const [];
+}
+
+class _NoopCalendarIntegrationRepository
+    implements CalendarIntegrationRepository {
+  const _NoopCalendarIntegrationRepository();
+
+  @override
+  Stream<GoogleCalendarConnectionRow?> watchConnection() => Stream.value(null);
+
+  @override
+  Stream<GoogleCalendarEventLinkRow?> watchLinkForTask(String taskId) =>
+      Stream.value(null);
 }
 
 const _globalAchievement = AchievementItem(

@@ -1,3 +1,11 @@
+import "npm:reflect-metadata@0.2.2";
+import {
+  BasicConstraintsExtension,
+  KeyUsageFlags,
+  KeyUsagesExtension,
+  X509Certificate,
+} from "npm:@peculiar/x509@2.1.0";
+
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
@@ -38,7 +46,8 @@ export type AppleAppStoreNotification = {
 
 type VerifyOptions = {
   bundleId: string;
-  allowedEnvironments?: string[];
+  appAppleId?: number;
+  allowedEnvironments?: readonly string[];
   allowJwkFixtures?: boolean;
 };
 
@@ -56,6 +65,7 @@ export async function verifyAppleAppTransactionJws(
     jws,
     options,
     "AppTransaction",
+    "receiptCreationDate",
   );
 
   const bundleId = stringClaim(payload.bundleId);
@@ -65,10 +75,12 @@ export async function verifyAppleAppTransactionJws(
 
   const environment = stringClaim(payload.environment ?? payload.receiptType);
   const allowed = options.allowedEnvironments ??
-    ["Production", "Sandbox", "Xcode", "LocalTesting"];
+    ["Production", "Sandbox"];
   if (!allowed.includes(environment)) {
     throw new Error("AppTransaction environment is not allowed.");
   }
+
+  verifyAppAppleId(payload, environment, options);
 
   const appTransactionId = stringClaim(
     payload.appTransactionId ?? payload.originalTransactionId ??
@@ -109,11 +121,15 @@ export async function verifyAppleStoreTransactionJws(
 
   const environment = stringClaim(payload.environment ?? payload.receiptType);
   const allowed = options.allowedEnvironments ??
-    ["Production", "Sandbox", "Xcode", "LocalTesting"];
+    ["Production", "Sandbox"];
   if (!allowed.includes(environment)) {
     throw new Error("StoreKit transaction environment is not allowed.");
   }
 
+  // StoreKit transaction claims do not normally include appAppleId.
+  if (payload.appAppleId != null) {
+    verifyAppAppleId(payload, environment, options);
+  }
   const transactionId = stringClaim(payload.transactionId);
   const originalTransactionId = stringClaim(
     payload.originalTransactionId ?? payload.transactionId,
@@ -145,7 +161,9 @@ export async function verifyAppleAppStoreNotificationJws(
     options,
     "App Store notification",
   );
-  const data = payload.data;
+  const envelope = ["data", "summary", "externalPurchaseToken", "appData"]
+    .find((name) => payload[name] != null);
+  const data = envelope == null ? undefined : payload[envelope];
   if (typeof data !== "object" || data === null || Array.isArray(data)) {
     throw new Error("App Store notification is missing data.");
   }
@@ -154,12 +172,17 @@ export async function verifyAppleAppStoreNotificationJws(
   if (bundleId !== options.bundleId) {
     throw new Error("App Store notification bundle id does not match.");
   }
-  const environment = stringClaim(claims.environment);
+  const environment = envelope === "externalPurchaseToken"
+    ? optionalString(claims.externalPurchaseId)?.startsWith("SANDBOX")
+      ? "Sandbox"
+      : "Production"
+    : stringClaim(claims.environment);
   const allowed = options.allowedEnvironments ??
-    ["Production", "Sandbox", "Xcode", "LocalTesting"];
+    ["Production", "Sandbox"];
   if (!allowed.includes(environment)) {
     throw new Error("App Store notification environment is not allowed.");
   }
+  verifyAppAppleId(claims, environment, options);
   const signedDate = optionalAppleDate(payload.signedDate);
   if (signedDate == null) {
     throw new Error("App Store notification is missing signedDate.");
@@ -171,7 +194,9 @@ export async function verifyAppleAppStoreNotificationJws(
     notificationUuid: stringClaim(payload.notificationUUID),
     signedDate,
     environment,
-    signedTransactionJws: optionalString(claims.signedTransactionInfo),
+    signedTransactionJws: envelope === "data"
+      ? optionalString(claims.signedTransactionInfo)
+      : undefined,
     claims: payload,
   };
 }
@@ -180,6 +205,7 @@ async function verifyAppleJwsPayload(
   jws: string,
   options: VerifyOptions,
   label: string,
+  dateClaim = "signedDate",
 ) {
   const parts = jws.split(".");
   if (parts.length !== 3) {
@@ -193,7 +219,14 @@ async function verifyAppleJwsPayload(
     throw new Error(`Unsupported ${label} algorithm.`);
   }
 
-  const key = await verificationKey(header, options);
+  const signedAt = payload[dateClaim];
+  if (
+    typeof signedAt !== "number" ||
+    !Number.isFinite(new Date(signedAt).getTime())
+  ) {
+    throw new Error(`${label} is missing a valid ${dateClaim}.`);
+  }
+  const key = await verificationKey(header, options, signedAt);
   const verified = await crypto.subtle.verify(
     { name: "ECDSA", hash: "SHA-256" },
     key,
@@ -209,6 +242,7 @@ async function verifyAppleJwsPayload(
 async function verificationKey(
   header: Record<string, unknown>,
   options: VerifyOptions,
+  signedAt: number,
 ) {
   const jwk = header.jwk;
   if (jwk && typeof jwk === "object") {
@@ -235,280 +269,123 @@ async function verificationKey(
       }
       return base64Decode(value);
     });
-    await validateAppleCertificateChain(certificates);
-    const spki = extractSubjectPublicKeyInfo(certificates[0]);
-    return crypto.subtle.importKey(
-      "spki",
-      arrayBufferFrom(spki),
-      { name: "ECDSA", namedCurve: "P-256" },
-      false,
-      ["verify"],
-    );
+    // Root trust is fixed here; neither request claims nor verifier options can override it.
+    return validateAppleCertificateChain(certificates, signedAt);
   }
 
   throw new Error("AppTransaction JWS is missing verification key.");
 }
 
-async function validateAppleCertificateChain(certificates: Uint8Array[]) {
-  if (certificates.length < 2) {
-    throw new Error("AppTransaction certificate chain is incomplete.");
+// The explicit trust argument lets certificate tests exercise the same validation
+// with generated chains. Production callers always use the private Apple roots.
+export async function validateAppleCertificateChain(
+  certificates: Uint8Array[],
+  signedAt: number,
+  trustedRoots: ReadonlySet<string> = appleRootSha256Fingerprints,
+): Promise<CryptoKey> {
+  if (certificates.length !== 3) {
+    throw new Error(
+      "AppTransaction certificate chain must contain three certificates.",
+    );
   }
-  const rootFingerprint = await sha256Hex(
-    certificates[certificates.length - 1],
-  );
-  if (!appleRootSha256Fingerprints.has(rootFingerprint)) {
+  if (!trustedRoots.has(await sha256Hex(certificates[2]))) {
     throw new Error("AppTransaction certificate chain is not rooted at Apple.");
   }
-  for (let index = 0; index < certificates.length - 1; index += 1) {
-    const child = parseCertificateForVerification(certificates[index]);
-    const issuerSpki = extractSubjectPublicKeyInfo(certificates[index + 1]);
-    const verified = await verifyCertificateSignature(child, issuerSpki);
-    if (!verified) {
+  const chain = certificates.map((certificate) =>
+    new X509Certificate(arrayBufferFrom(certificate))
+  );
+  if (
+    !chain[0].getExtension("1.2.840.113635.100.6.11.1") ||
+    !chain[1].getExtension("1.2.840.113635.100.6.2.1")
+  ) {
+    throw new Error("Invalid AppTransaction certificate purpose.");
+  }
+  for (let index = 0; index < chain.length; index++) {
+    const certificate = chain[index];
+    const issuer = chain[Math.min(index + 1, 2)];
+    if (
+      certificate.extensions.some((extension) =>
+        extension.critical &&
+        !(extension instanceof BasicConstraintsExtension) &&
+        !(extension instanceof KeyUsagesExtension)
+      )
+    ) {
+      throw new Error(
+        "Unsupported AppTransaction certificate critical extension.",
+      );
+    }
+    const constraints = certificate.getExtension(BasicConstraintsExtension);
+    const usages = certificate.getExtension(KeyUsagesExtension)?.usages ?? 0;
+    if (!constraints || constraints.ca !== (index > 0)) {
+      throw new Error("Invalid AppTransaction certificate CA constraints.");
+    }
+    if (
+      index > 0 && constraints.pathLength != null &&
+      constraints.pathLength < index - 1
+    ) {
+      throw new Error("Invalid AppTransaction certificate path length.");
+    }
+    if (
+      index === 0
+        ? !(usages & KeyUsageFlags.digitalSignature) ||
+          !!(usages & KeyUsageFlags.keyCertSign)
+        : !(usages & KeyUsageFlags.keyCertSign)
+    ) {
+      throw new Error("Invalid AppTransaction certificate key usage.");
+    }
+    // Historical lifetime proofs remain valid after their signing certificate
+    // expires. Subscription expiry is evaluated separately against the current time.
+    if (
+      !Number.isFinite(signedAt) ||
+      signedAt < certificate.notBefore.getTime() - 60_000 ||
+      signedAt > certificate.notAfter.getTime() + 60_000
+    ) {
+      throw new Error(
+        "AppTransaction certificate is outside its validity period.",
+      );
+    }
+    if (certificate.issuer !== issuer.subject) {
+      throw new Error("Invalid AppTransaction certificate issuer.");
+    }
+    if (
+      !(await certificate.verify({
+        publicKey: issuer.publicKey,
+        signatureOnly: true,
+      }, crypto))
+    ) {
       throw new Error("Invalid AppTransaction certificate chain signature.");
     }
   }
-}
-
-type CertificateVerificationParts = {
-  tbs: Uint8Array;
-  algorithmOid: string;
-  signature: Uint8Array;
-};
-
-function parseCertificateForVerification(
-  certificate: Uint8Array,
-): CertificateVerificationParts {
-  const certificateNode = readDerNode(certificate, 0);
-  const children = readDerChildren(certificate, certificateNode);
-  const tbs = children[0];
-  const algorithm = children[1];
-  const signature = children[2];
-  if (!tbs || !algorithm || !signature || signature.tag !== 0x03) {
-    throw new Error("Invalid AppTransaction certificate.");
+  const algorithm = chain[0].publicKey.algorithm as EcKeyAlgorithm;
+  if (algorithm.name !== "ECDSA" || algorithm.namedCurve !== "P-256") {
+    throw new Error("AppTransaction signing certificate must use P-256.");
   }
-  return {
-    tbs: certificate.slice(tbs.start, tbs.next),
-    algorithmOid: oidFromAlgorithmIdentifier(certificate, algorithm),
-    signature: certificate.slice(
-      signature.contentStart + 1,
-      signature.contentEnd,
-    ),
-  };
-}
-
-async function verifyCertificateSignature(
-  child: CertificateVerificationParts,
-  issuerSpki: Uint8Array,
-) {
-  if (child.algorithmOid === "1.2.840.10045.4.3.2") {
-    return verifyEcdsaCertificate(child, issuerSpki, "SHA-256");
-  }
-  if (child.algorithmOid === "1.2.840.10045.4.3.3") {
-    return verifyEcdsaCertificate(child, issuerSpki, "SHA-384");
-  }
-  if (child.algorithmOid === "1.2.840.113549.1.1.11") {
-    return verifyRsaCertificate(child, issuerSpki, "SHA-256");
-  }
-  if (child.algorithmOid === "1.2.840.113549.1.1.12") {
-    return verifyRsaCertificate(child, issuerSpki, "SHA-384");
-  }
-  throw new Error(
-    "Unsupported AppTransaction certificate signature algorithm.",
-  );
-}
-
-async function verifyEcdsaCertificate(
-  child: CertificateVerificationParts,
-  issuerSpki: Uint8Array,
-  hash: "SHA-256" | "SHA-384",
-) {
-  for (const curve of ["P-256", "P-384"] as const) {
-    try {
-      const key = await crypto.subtle.importKey(
-        "spki",
-        arrayBufferFrom(issuerSpki),
-        { name: "ECDSA", namedCurve: curve },
-        false,
-        ["verify"],
-      );
-      const rawSignature = derEcdsaSignatureToRaw(
-        child.signature,
-        curve === "P-256" ? 32 : 48,
-      );
-      return crypto.subtle.verify(
-        { name: "ECDSA", hash },
-        key,
-        arrayBufferFrom(rawSignature),
-        arrayBufferFrom(child.tbs),
-      );
-    } catch {
-      // Try the other Apple root/intermediate curve.
-    }
-  }
-  return false;
-}
-
-async function verifyRsaCertificate(
-  child: CertificateVerificationParts,
-  issuerSpki: Uint8Array,
-  hash: "SHA-256" | "SHA-384",
-) {
-  const key = await crypto.subtle.importKey(
-    "spki",
-    arrayBufferFrom(issuerSpki),
-    { name: "RSASSA-PKCS1-v1_5", hash },
-    false,
+  return chain[0].publicKey.export(
+    { name: "ECDSA", namedCurve: "P-256" },
     ["verify"],
-  );
-  return crypto.subtle.verify(
-    "RSASSA-PKCS1-v1_5",
-    key,
-    arrayBufferFrom(child.signature),
-    arrayBufferFrom(child.tbs),
+    crypto,
   );
 }
 
-function extractSubjectPublicKeyInfo(certificate: Uint8Array): Uint8Array {
-  const certificateNode = readDerNode(certificate, 0);
-  if (certificateNode.tag !== 0x30) {
-    throw new Error("Invalid AppTransaction certificate.");
-  }
-  const certificateChildren = readDerChildren(certificate, certificateNode);
-  const tbsCertificate = certificateChildren[0];
-  if (!tbsCertificate || tbsCertificate.tag !== 0x30) {
-    throw new Error("Invalid AppTransaction certificate body.");
-  }
-  const tbsChildren = readDerChildren(certificate, tbsCertificate);
-  const hasVersion = tbsChildren[0]?.tag === 0xa0;
-  const spki = tbsChildren[hasVersion ? 6 : 5];
-  if (!spki || spki.tag !== 0x30) {
-    throw new Error("AppTransaction certificate is missing public key.");
-  }
-  return certificate.slice(spki.start, spki.next);
-}
-
-type DerNode = {
-  tag: number;
-  start: number;
-  contentStart: number;
-  contentEnd: number;
-  next: number;
-};
-
-function readDerChildren(data: Uint8Array, node: DerNode) {
-  const children: DerNode[] = [];
-  let offset = node.contentStart;
-  while (offset < node.contentEnd) {
-    const child = readDerNode(data, offset);
-    children.push(child);
-    offset = child.next;
-  }
-  return children;
-}
-
-function readDerNode(data: Uint8Array, start: number): DerNode {
-  const tag = data[start];
-  let offset = start + 1;
-  const lengthByte = data[offset++];
-  let length = lengthByte;
-  if ((lengthByte & 0x80) !== 0) {
-    const lengthBytes = lengthByte & 0x7f;
-    if (lengthBytes === 0 || lengthBytes > 4) {
-      throw new Error("Unsupported DER length.");
-    }
-    length = 0;
-    for (let index = 0; index < lengthBytes; index += 1) {
-      length = (length << 8) | data[offset++];
-    }
-  }
-  const contentStart = offset;
-  const contentEnd = contentStart + length;
-  if (contentEnd > data.length) {
-    throw new Error("Invalid DER node length.");
-  }
-  return {
-    tag,
-    start,
-    contentStart,
-    contentEnd,
-    next: contentEnd,
-  };
-}
-
-function oidFromAlgorithmIdentifier(data: Uint8Array, node: DerNode) {
-  const children = readDerChildren(data, node);
-  const oid = children[0];
-  if (!oid || oid.tag !== 0x06) {
-    throw new Error("Invalid certificate algorithm identifier.");
-  }
-  return decodeOid(data.slice(oid.contentStart, oid.contentEnd));
-}
-
-function decodeOid(bytes: Uint8Array) {
-  if (bytes.length === 0) {
-    throw new Error("Invalid OID.");
-  }
-  const values = [Math.floor(bytes[0] / 40), bytes[0] % 40];
-  let value = 0;
-  for (let index = 1; index < bytes.length; index += 1) {
-    value = (value << 7) | (bytes[index] & 0x7f);
-    if ((bytes[index] & 0x80) === 0) {
-      values.push(value);
-      value = 0;
-    }
-  }
-  return values.join(".");
-}
-
-function derEcdsaSignatureToRaw(
-  signature: Uint8Array,
-  componentLength: number,
+function verifyAppAppleId(
+  claims: Record<string, unknown>,
+  environment: string,
+  options: VerifyOptions,
 ) {
-  const sequence = readDerNode(signature, 0);
-  if (sequence.tag !== 0x30) {
-    throw new Error("Invalid ECDSA signature.");
-  }
-  const integers = readDerChildren(signature, sequence);
   if (
-    integers.length !== 2 || integers[0].tag !== 0x02 ||
-    integers[1].tag !== 0x02
+    environment === "Production" &&
+    (options.appAppleId == null || claims.appAppleId !== options.appAppleId)
   ) {
-    throw new Error("Invalid ECDSA signature integers.");
+    throw new Error("App Store appAppleId does not match.");
   }
-  const raw = new Uint8Array(componentLength * 2);
-  raw.set(
-    trimAndPadInteger(
-      signature.slice(integers[0].contentStart, integers[0].contentEnd),
-      componentLength,
-    ),
-    0,
-  );
-  raw.set(
-    trimAndPadInteger(
-      signature.slice(integers[1].contentStart, integers[1].contentEnd),
-      componentLength,
-    ),
-    componentLength,
-  );
-  return raw;
-}
-
-function trimAndPadInteger(value: Uint8Array, length: number) {
-  let start = 0;
-  while (start < value.length - 1 && value[start] === 0) {
-    start += 1;
-  }
-  const trimmed = value.slice(start);
-  if (trimmed.length > length) {
-    throw new Error("ECDSA signature integer is too large.");
-  }
-  const output = new Uint8Array(length);
-  output.set(trimmed, length - trimmed.length);
-  return output;
 }
 
 function parseJsonPart(value: string) {
-  return JSON.parse(textDecoder.decode(base64UrlDecode(value)));
+  const parsed = JSON.parse(textDecoder.decode(base64UrlDecode(value)));
+  if (typeof parsed !== "object" || parsed == null || Array.isArray(parsed)) {
+    throw new Error("AppTransaction JWS must contain JSON objects.");
+  }
+  return parsed as Record<string, unknown>;
 }
 
 function stringClaim(value: unknown) {

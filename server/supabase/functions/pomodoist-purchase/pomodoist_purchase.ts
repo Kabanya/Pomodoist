@@ -1,7 +1,7 @@
 import type { AppleStoreTransaction } from "../_shared/apple_app_transaction.ts";
 import { readLimitedJson } from "../_shared/limited_json.ts";
 import {
-  pomodoistBundleId,
+  pomodoistAppleVerificationOptions,
   pomodoistPurchaseState,
 } from "../_shared/pomodoist_storekit.ts";
 
@@ -30,7 +30,7 @@ export type PomodoistPurchaseDeps = {
   ) => Promise<{ userId: string; accountToken: string } | null>;
   verifyStoreTransaction: (
     jws: string,
-    options: { bundleId: string },
+    options: typeof pomodoistAppleVerificationOptions,
   ) => Promise<AppleStoreTransaction>;
   recordPurchase: (
     params: PomodoistPurchaseRpcParams,
@@ -103,9 +103,10 @@ export async function handlePomodoistPurchase(
   }> = [];
   for (const jws of candidates as string[]) {
     try {
-      const transaction = await deps.verifyStoreTransaction(jws, {
-        bundleId: pomodoistBundleId,
-      });
+      const transaction = await deps.verifyStoreTransaction(
+        jws,
+        pomodoistAppleVerificationOptions,
+      );
       const state = pomodoistPurchaseState(
         transaction,
         deps.now?.() ?? new Date(),

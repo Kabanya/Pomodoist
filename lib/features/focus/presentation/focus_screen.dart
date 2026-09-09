@@ -176,7 +176,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       return content;
     }
     return Material(
-      color: ThemeBackground.hasImage(context)
+      color: ThemeBackground.hasBackdrop(context)
           ? Colors.transparent
           : context.appColors.canvas,
       child: SafeArea(child: content),

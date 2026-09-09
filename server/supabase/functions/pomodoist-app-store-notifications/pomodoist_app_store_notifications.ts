@@ -4,7 +4,7 @@ import type {
 } from "../_shared/apple_app_transaction.ts";
 import { readLimitedJson } from "../_shared/limited_json.ts";
 import {
-  pomodoistBundleId,
+  pomodoistAppleVerificationOptions,
   pomodoistPurchaseState,
 } from "../_shared/pomodoist_storekit.ts";
 import type {
@@ -17,11 +17,11 @@ const maxSignedPayloadLength = 196_608;
 export type PomodoistAppStoreNotificationDeps = {
   verifyNotification: (
     jws: string,
-    options: { bundleId: string },
+    options: typeof pomodoistAppleVerificationOptions,
   ) => Promise<AppleAppStoreNotification>;
   verifyTransaction: (
     jws: string,
-    options: { bundleId: string },
+    options: typeof pomodoistAppleVerificationOptions,
   ) => Promise<AppleStoreTransaction>;
   recordPurchase: (
     params: PomodoistPurchaseRpcParams,
@@ -61,9 +61,10 @@ export async function handlePomodoistAppStoreNotification(
 
   let notification: AppleAppStoreNotification;
   try {
-    notification = await deps.verifyNotification(signedPayload, {
-      bundleId: pomodoistBundleId,
-    });
+    notification = await deps.verifyNotification(
+      signedPayload,
+      pomodoistAppleVerificationOptions,
+    );
   } catch {
     return json({ error: "Could not verify App Store notification." }, 401);
   }
@@ -75,7 +76,7 @@ export async function handlePomodoistAppStoreNotification(
   try {
     transaction = await deps.verifyTransaction(
       notification.signedTransactionJws,
-      { bundleId: pomodoistBundleId },
+      pomodoistAppleVerificationOptions,
     );
   } catch {
     return json({ error: "Could not verify App Store transaction." }, 401);

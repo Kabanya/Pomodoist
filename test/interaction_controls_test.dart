@@ -390,6 +390,7 @@ void main() {
   testWidgets('task list checkbox and focus icon do not open detail', (
     tester,
   ) async {
+    late GoRouter router;
     final platformCalls = <MethodCall>[];
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -400,7 +401,11 @@ void main() {
     addTearDown(
       () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
     );
-    final harness = await _pumpApp(tester, size: const Size(1280, 844));
+    final harness = await _pumpApp(
+      tester,
+      size: const Size(1280, 844),
+      onRouter: (value) => router = value,
+    );
     platformCalls.clear();
 
     await tester.tap(find.byKey(const Key('task-completion-control-task-1')));
@@ -427,7 +432,7 @@ void main() {
 
     expect(harness.focusRepository.startInputs, hasLength(1));
     expect(harness.focusRepository.startInputs.single.taskId, 'task-1');
-    expect(find.text('Focus started'), findsOneWidget);
+    expect(_routerUri(router), '/focus');
     expect(find.text('Focus history'), findsNothing);
   });
 
@@ -842,13 +847,15 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('All-day').last);
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.widgetWithText(ShadButton, 'OK').last);
+    await tester.pumpAndSettle();
     expect(
       tester.getRect(find.text('OK').last).bottom,
       lessThanOrEqualTo(
         tester.view.physicalSize.height / tester.view.devicePixelRatio,
       ),
     );
-    await tester.tap(find.text('OK').last);
+    await tester.tap(find.widgetWithText(ShadButton, 'OK').last);
     await tester.pumpAndSettle();
 
     expect(
@@ -1185,33 +1192,27 @@ void main() {
     expect(_taskCheckboxValue(tester, 'Failed task'), isTrue);
   });
 
-  testWidgets('touch long press opens task actions and drag uses its handle', (
-    tester,
-  ) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-    try {
-      await _pumpApp(tester);
+  testWidgets(
+    'touch long press does not open actions or show a separate handle',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      try {
+        await _pumpApp(tester);
 
-      expect(
-        find.byKey(const ValueKey('task-drag-handle-task-1')),
-        findsOneWidget,
-      );
-      await tester.longPress(find.text('Today task'));
-      await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('task-drag-handle-task-1')),
+          findsNothing,
+        );
+        await tester.longPress(find.text('Today task'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Select'), findsOneWidget);
-      expect(find.text('Schedule'), findsOneWidget);
-      await tester.tap(find.text('Select'));
-      await tester.pumpAndSettle();
-      expect(find.text('1 selected'), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('task-drag-handle-task-1')),
-        findsNothing,
-      );
-    } finally {
-      debugDefaultTargetPlatformOverride = null;
-    }
-  });
+        expect(find.text('Select'), findsNothing);
+        expect(find.text('Schedule'), findsNothing);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    },
+  );
 
   testWidgets('Escape and route changes close task selection', (tester) async {
     late GoRouter router;

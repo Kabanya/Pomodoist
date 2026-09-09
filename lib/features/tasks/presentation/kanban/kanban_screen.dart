@@ -134,7 +134,7 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
             final wide =
                 MediaQuery.sizeOf(context).width >= _kanbanWideBreakpoint;
             return ColoredBox(
-              color: ThemeBackground.hasImage(context)
+              color: ThemeBackground.hasBackdrop(context)
                   ? Colors.transparent
                   : context.appColors.canvas,
               child: SafeArea(

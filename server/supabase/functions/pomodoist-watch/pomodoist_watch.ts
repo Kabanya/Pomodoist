@@ -3,7 +3,7 @@ import {
   verifyAppleStoreTransactionJws,
 } from "../_shared/apple_app_transaction.ts";
 import {
-  pomodoistBundleId,
+  pomodoistAppleVerificationOptions,
   pomodoistPurchaseState,
 } from "../_shared/pomodoist_storekit.ts";
 
@@ -51,7 +51,7 @@ export type PomodoistWatchDeps = {
   uuid?: () => string;
   verifyStoreTransaction?: (
     jws: string,
-    options: { bundleId: string; allowedEnvironments?: string[] },
+    options: typeof pomodoistAppleVerificationOptions,
   ) => Promise<AppleStoreTransaction>;
 };
 
@@ -219,12 +219,6 @@ async function hasActivePomodoistStoreTransaction(
   deps: PomodoistWatchDeps,
   now: Date,
 ) {
-  if (
-    body.localStoreKit === true &&
-    deps.env.get("POMODOIST_ALLOW_LOCAL_STOREKIT") === "true"
-  ) {
-    return true;
-  }
   const values = body.storeTransactions;
   if (!Array.isArray(values) || values.length === 0 || values.length > 100) {
     return false;
@@ -237,7 +231,10 @@ async function hasActivePomodoistStoreTransaction(
       continue;
     }
     try {
-      const transaction = await verify(value, { bundleId: pomodoistBundleId });
+      const transaction = await verify(
+        value,
+        pomodoistAppleVerificationOptions,
+      );
       if (pomodoistPurchaseState(transaction, now)?.status === "active") {
         return true;
       }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as developer;
 
 import 'package:app_account/app_account.dart';
 import 'package:flutter/foundation.dart';
@@ -15,6 +16,7 @@ import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../app/app_l10n.dart';
 import '../../app/legal_urls.dart';
+import '../../app/providers.dart' show clockProvider;
 import '../../app/theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../focus/presentation/focus_view_mode.dart';
@@ -199,6 +201,39 @@ bool _isTransientStoreKitError(Object error) {
       RegExp(r'-(?:1001|1003|1004|1005|1008|1009)\b').hasMatch(message);
 }
 
+bool _isStoreKitCancelled(Object error) =>
+    error is PlatformException &&
+    (error.code == 'userCancelled' ||
+        RegExp(
+          r'\buserCancelled\b|\bSKErrorDomain\b[^\n]*\bCode=2\b',
+        ).hasMatch('${error.details}'));
+
+void _recordStoreKitError(String stage, Object error) {
+  var code = switch (error) {
+    PlatformException() => error.code,
+    IAPError() => error.code,
+    _ => error.runtimeType.toString(),
+  };
+  code = code.replaceAll(RegExp(r'[^a-zA-Z0-9_.-]'), '');
+  if (code.length > 80) code = code.substring(0, 80);
+  final native = RegExp(
+    r'([A-Za-z][A-Za-z0-9_.]*ErrorDomain)[^\n]*?(?:Code[=:]\s*|error\s+)(-?\d+)',
+  ).allMatches('$error').map((m) => '${m[1]}:${m[2]}').toSet();
+  if (error case PlatformException(details: final Map details)) {
+    final domain = details['domain'];
+    final number = details['code'];
+    if (domain is String &&
+        number is num &&
+        RegExp(r'^[A-Za-z0-9_.]{1,80}$').hasMatch(domain)) {
+      native.add('$domain:$number');
+    }
+  }
+  developer.log(
+    '$stage code=$code native=${native.join(',')}',
+    name: 'pomodoist.storekit',
+  );
+}
+
 enum BillingPlanKind { subscription, lifetime }
 
 class BillingPlan {
@@ -287,7 +322,7 @@ bool pomodoistStoreKitPurchaseIsActive(PurchaseDetails purchase, DateTime now) {
       return false;
     }
     final value = Map<String, dynamic>.from(decoded);
-    if (value['revocationDate'] != null) {
+    if (value['revocationDate'] != null || value['isUpgraded'] == true) {
       return false;
     }
     if (plan.kind == BillingPlanKind.lifetime) {
@@ -318,24 +353,58 @@ DateTime? _appleDate(Object? value) {
 }
 
 class BillingTransactionProof {
-  const BillingTransactionProof({required this.productId, required this.jws});
+  const BillingTransactionProof({
+    required this.productId,
+    required this.jws,
+    this.transactionId = '',
+    this.localVerificationData = '{}',
+  });
 
   final String productId;
   final String jws;
+  final String transactionId;
+  final String localVerificationData;
+
+  factory BillingTransactionProof.fromPurchase(PurchaseDetails purchase) =>
+      BillingTransactionProof(
+        productId: purchase.productID,
+        transactionId: purchase.purchaseID ?? purchase.productID,
+        jws: purchase.verificationData.serverVerificationData,
+        localVerificationData: purchase.verificationData.localVerificationData,
+      );
+
+  PurchaseDetails toPurchase() => PurchaseDetails(
+    productID: productId,
+    purchaseID: transactionId,
+    transactionDate: null,
+    verificationData: PurchaseVerificationData(
+      localVerificationData: localVerificationData,
+      serverVerificationData: jws,
+      source: 'app_store',
+    ),
+    status: PurchaseStatus.restored,
+  );
 }
 
 typedef BillingTransactionLoader =
     Future<List<BillingTransactionProof>> Function();
 
 class BillingStore {
-  BillingStore({BillingTransactionLoader? transactionLoader})
-    : _transactionLoader = transactionLoader,
-      _localPurchases = pomodoistLocalStoreKit
-          ? StreamController<List<PurchaseDetails>>.broadcast()
-          : null;
+  BillingStore({
+    BillingTransactionLoader? transactionLoader,
+    Future<void> Function()? restoreSynchronizer,
+  }) : _transactionLoader = transactionLoader,
+       _restoreSynchronizer = restoreSynchronizer,
+       _localPurchases = pomodoistLocalStoreKit
+           ? StreamController<List<PurchaseDetails>>.broadcast()
+           : null;
 
   InAppPurchase get _purchase => InAppPurchase.instance;
   final BillingTransactionLoader? _transactionLoader;
+  final Future<void> Function()? _restoreSynchronizer;
+  static const _channel = MethodChannel('pomodoist/storekit');
+  Future<List<BillingTransactionProof>>? _entitlementsLoad;
+  Future<List<BillingTransactionProof>>? _restoreLoad;
   final StreamController<List<PurchaseDetails>>? _localPurchases;
   final _localPurchasedProductIds = <String>{};
 
@@ -403,22 +472,70 @@ class BillingStore {
     );
   }
 
-  Future<void> restorePurchases() async {
-    if (pomodoistLocalStoreKit) {
-      _localPurchases?.add([
-        for (final productId in _localPurchasedProductIds)
-          _localPurchase(productId, PurchaseStatus.restored),
-      ]);
-      return;
+  Future<List<BillingTransactionProof>> restorePurchases() =>
+      _restoreLoad ??= _restore().whenComplete(() => _restoreLoad = null);
+
+  Future<List<BillingTransactionProof>> _restore() async {
+    if (!pomodoistLocalStoreKit) {
+      await (_restoreSynchronizer ?? AppStore().sync)().timeout(
+        billingStoreTimeout,
+      );
     }
-    return _purchase.restorePurchases();
+    // A read begun before sync cannot represent its result. Its completion
+    // must not clear the new in-flight read.
+    _entitlementsLoad = null;
+    return refreshCurrentEntitlements();
   }
 
-  Future<void> refreshCurrentEntitlements() {
+  Future<List<BillingTransactionProof>> refreshCurrentEntitlements() {
+    final existing = _entitlementsLoad;
+    if (existing != null) return existing;
+    late final Future<List<BillingTransactionProof>> operation;
+    operation = _readCurrentEntitlements()
+        .timeout(billingStoreTimeout)
+        .whenComplete(() {
+          if (identical(_entitlementsLoad, operation)) _entitlementsLoad = null;
+        });
+    return _entitlementsLoad = operation;
+  }
+
+  Future<List<BillingTransactionProof>> _readCurrentEntitlements() async {
     if (pomodoistLocalStoreKit) {
-      return restorePurchases();
+      return [
+        for (final productId in _localPurchasedProductIds)
+          BillingTransactionProof.fromPurchase(
+            _localPurchase(productId, PurchaseStatus.restored),
+          ),
+      ];
     }
-    return _purchase.restorePurchases();
+    if (_transactionLoader != null) return _transactionLoader();
+    if (!applePurchasesSupported) return const [];
+    final values = await _channel.invokeListMethod<Object?>(
+      'currentEntitlements',
+    );
+    if (values == null) {
+      throw const FormatException('Missing StoreKit snapshot.');
+    }
+    return [for (final value in values) _decodeTransaction(value)];
+  }
+
+  BillingTransactionProof _decodeTransaction(Object? value) {
+    if (value is! Map ||
+        ['productId', 'transactionId', 'jws', 'localVerificationData'].any(
+          (key) => value[key] is! String || (value[key] as String).isEmpty,
+        )) {
+      throw const FormatException('Invalid StoreKit snapshot.');
+    }
+    final local = value['localVerificationData'] as String;
+    if (jsonDecode(local) is! Map) {
+      throw const FormatException('Invalid StoreKit transaction data.');
+    }
+    return BillingTransactionProof(
+      productId: value['productId'] as String,
+      transactionId: value['transactionId'] as String,
+      jws: value['jws'] as String,
+      localVerificationData: local,
+    );
   }
 
   Future<void> completePurchase(PurchaseDetails purchase) {
@@ -432,50 +549,13 @@ class BillingStore {
     if (pomodoistLocalStoreKit) {
       return const [];
     }
-    final transactions = await (_transactionLoader ?? _storeKitTransactions)();
-    return [
+    final transactions = await refreshCurrentEntitlements();
+    return {
       for (final transaction in transactions)
         if (billingProductIds.contains(transaction.productId) &&
             transaction.jws.isNotEmpty)
           transaction.jws,
-    ];
-  }
-
-  Future<List<BillingTransactionProof>> _storeKitTransactions() async {
-    if (!applePurchasesSupported) {
-      return const [];
-    }
-    final result = Completer<List<BillingTransactionProof>>();
-    final subscription = purchaseStream.listen(
-      (purchases) {
-        final transactions = [
-          for (final purchase in purchases)
-            if (billingProductIds.contains(purchase.productID) &&
-                purchase.verificationData.serverVerificationData.isNotEmpty)
-              BillingTransactionProof(
-                productId: purchase.productID,
-                jws: purchase.verificationData.serverVerificationData,
-              ),
-        ];
-        if (transactions.isNotEmpty && !result.isCompleted) {
-          result.complete(transactions);
-        }
-      },
-      onError: (Object error, StackTrace stackTrace) {
-        if (!result.isCompleted) {
-          result.completeError(error, stackTrace);
-        }
-      },
-    );
-    try {
-      await restorePurchases();
-      return await result.future.timeout(
-        const Duration(seconds: 3),
-        onTimeout: () => const [],
-      );
-    } finally {
-      await subscription.cancel();
-    }
+    }.toList(growable: false);
   }
 }
 
@@ -518,6 +598,7 @@ typedef BillingSignInPrompt = Future<void> Function(BuildContext context);
 typedef BillingEntitlementRefresher = Future<bool> Function();
 
 final billingSignedInProvider = Provider<bool>((ref) => false);
+final billingAccountIdentityProvider = Provider<Object?>((ref) => null);
 final billingAccountRefreshTokenProvider = Provider<Object?>((ref) => null);
 final billingAppAccountTokenLoaderProvider =
     Provider<BillingAppAccountTokenLoader>(
@@ -551,6 +632,8 @@ class BillingState {
     this.storeAvailable = false,
     this.restoring = false,
     this.productDetailsById = const {},
+    this.missingProductIds = const {},
+    this.catalogError,
     this.eligibleIntroductoryProductIds = const {},
     this.purchasedProductIds = const {},
     this.activeStoreKitProductIds = const {},
@@ -570,6 +653,8 @@ class BillingState {
   final bool storeAvailable;
   final bool restoring;
   final Map<String, ProductDetails> productDetailsById;
+  final Set<String> missingProductIds;
+  final String? catalogError;
   final Set<String> eligibleIntroductoryProductIds;
   final Set<String> purchasedProductIds;
   final Set<String> activeStoreKitProductIds;
@@ -583,6 +668,9 @@ class BillingState {
   final String? purchaseSuccessProductId;
   final String? error;
 
+  bool get needsCatalogRetry =>
+      !storeAvailable || missingProductIds.isNotEmpty || catalogError != null;
+
   bool get hasLocalStoreKitEntitlement =>
       pomodoistDevUnlock || activeStoreKitProductIds.isNotEmpty;
   bool get hasActiveEntitlement =>
@@ -592,7 +680,8 @@ class BillingState {
   bool get canPurchase =>
       platformSupported &&
       storeAvailable &&
-      !loading &&
+      (!loading || productDetailsById.isNotEmpty) &&
+      !restoring &&
       pendingProductId == null;
 
   BillingState copyWith({
@@ -601,6 +690,8 @@ class BillingState {
     bool? storeAvailable,
     bool? restoring,
     Map<String, ProductDetails>? productDetailsById,
+    Set<String>? missingProductIds,
+    Object? catalogError = _unset,
     Set<String>? eligibleIntroductoryProductIds,
     Set<String>? purchasedProductIds,
     Set<String>? activeStoreKitProductIds,
@@ -620,6 +711,10 @@ class BillingState {
       storeAvailable: storeAvailable ?? this.storeAvailable,
       restoring: restoring ?? this.restoring,
       productDetailsById: productDetailsById ?? this.productDetailsById,
+      missingProductIds: missingProductIds ?? this.missingProductIds,
+      catalogError: identical(catalogError, _unset)
+          ? this.catalogError
+          : catalogError as String?,
       eligibleIntroductoryProductIds:
           eligibleIntroductoryProductIds ?? this.eligibleIntroductoryProductIds,
       purchasedProductIds: purchasedProductIds ?? this.purchasedProductIds,
@@ -693,10 +788,17 @@ class BillingController extends Notifier<BillingState> {
   StreamSubscription<List<PurchaseDetails>>? _subscription;
   Future<void>? _catalogLoad;
   Timer? _purchaseWatchdog;
+  Timer? _expiryTimer;
+  Future<void> _stateChanges = Future<void>.value();
+  final _verifiedTransactions = <String, BillingTransactionProof>{};
+  var _entitlementRevision = 0;
+  String? _purchaseToConfirm;
+  var _accountGeneration = 0;
   final _operationCancellations = <Timer, void Function()>{};
   Future<void>? _silentRefresh;
   var _silentRefreshQueued = false;
   var _explicitRestoreInProgress = false;
+  var _restoreSuccessPending = false;
   var _skipNextAccountRefresh = false;
   var _signedIn = false;
   final _attemptedTransactionJws = <String>{};
@@ -726,9 +828,21 @@ class BillingController extends Notifier<BillingState> {
       }
     });
     _signedIn = ref.read(billingSignedInProvider);
+    ref.listen<Object?>(billingAccountIdentityProvider, (previous, next) {
+      if (previous == next) return;
+      _accountGeneration += 1;
+      _attemptedTransactionJws.clear();
+      _skipNextAccountRefresh = false;
+      if (ref.read(billingSignedInProvider)) {
+        unawaited(_refreshCurrentEntitlements(queueIfRunning: true));
+      }
+    });
     ref.listen<bool>(billingSignedInProvider, (_, next) {
       final wasSignedIn = _signedIn;
       _signedIn = next;
+      _accountGeneration += 1;
+      _attemptedTransactionJws.clear();
+      _skipNextAccountRefresh = false;
       if (!wasSignedIn && next) {
         if (ref.read(billingChannelProvider) == BillingChannel.stripe) {
           unawaited(reload());
@@ -753,13 +867,16 @@ class BillingController extends Notifier<BillingState> {
     });
     final lifecycleListener = AppLifecycleListener(
       onResume: () {
-        if (ref.mounted &&
-            ref.read(billingChannelProvider) == BillingChannel.storeKit &&
-            state.platformSupported &&
-            !state.storeAvailable &&
-            !state.loading &&
-            !state.restoring) {
+        if (!ref.mounted ||
+            ref.read(billingChannelProvider) != BillingChannel.storeKit ||
+            !state.platformSupported) {
+          return;
+        }
+        unawaited(_changeEntitlements(_commitEntitlements));
+        if (state.needsCatalogRetry && !state.loading && !state.restoring) {
           unawaited(reload());
+        } else if (!state.restoring) {
+          unawaited(_refreshCurrentEntitlements());
         }
       },
     );
@@ -767,6 +884,7 @@ class BillingController extends Notifier<BillingState> {
     ref.onDispose(() {
       lifecycleListener.dispose();
       _purchaseWatchdog?.cancel();
+      _expiryTimer?.cancel();
       for (final entry in _operationCancellations.entries.toList()) {
         entry.key.cancel();
         entry.value();
@@ -805,6 +923,7 @@ class BillingController extends Notifier<BillingState> {
     _cancelPurchaseWatchdog();
     state = state.copyWith(pendingProductId: productId, error: null);
     _startPurchaseWatchdog(productId);
+    final accountGeneration = _accountGeneration;
     try {
       String? appAccountToken;
       try {
@@ -816,6 +935,13 @@ class BillingController extends Notifier<BillingState> {
         // App Store purchasing remains available if account token loading fails.
       }
       if (!ref.mounted) {
+        return;
+      }
+      // Resolve pending auth changes before starting the native purchase.
+      ref.read(billingAccountIdentityProvider);
+      if (accountGeneration != _accountGeneration) {
+        _cancelPurchaseWatchdog();
+        state = state.copyWith(pendingProductId: null);
         return;
       }
       final sent = await _withTimeout(
@@ -838,46 +964,55 @@ class BillingController extends Notifier<BillingState> {
       if (!ref.mounted) {
         return;
       }
+      if (!_isStoreKitCancelled(error)) _recordStoreKitError('purchase', error);
       _cancelPurchaseWatchdog();
       state = state.copyWith(
         pendingProductId: null,
-        error: error is PlatformException && error.code == 'userCancelled'
-            ? null
-            : '$error',
+        error: _isStoreKitCancelled(error) ? null : '$error',
       );
     }
   }
 
   Future<void> restorePurchases() async {
-    if (ref.read(billingChannelProvider) != BillingChannel.storeKit) {
-      return;
-    }
-    if (!state.platformSupported) {
-      state = state.copyWith(
-        error: 'Purchases are available on Apple devices.',
-      );
-      return;
-    }
-    if (state.restoring || state.pendingProductId != null) {
+    if (ref.read(billingChannelProvider) != BillingChannel.storeKit ||
+        !state.platformSupported ||
+        state.restoring ||
+        state.pendingProductId != null) {
       return;
     }
     state = state.copyWith(restoring: true, error: null);
     _attemptedTransactionJws.clear();
     _explicitRestoreInProgress = true;
+    _restoreSuccessPending = true;
+    final revision = ++_entitlementRevision;
+    final accountGeneration = _accountGeneration;
     try {
-      await _withTimeout(
+      final transactions = await _withTimeout(
         ref.read(billingStoreProvider).restorePurchases(),
         ref.read(billingStoreTimeoutProvider),
       );
+      await _acceptSnapshot(
+        transactions,
+        revision,
+        accountGeneration,
+        explicitRestore: true,
+      );
     } catch (error) {
+      _restoreSuccessPending = false;
+      if (!_isStoreKitCancelled(error)) _recordStoreKitError('restore', error);
       if (ref.mounted) {
-        state = state.copyWith(error: '$error');
+        state = state.copyWith(
+          error: _isStoreKitCancelled(error) ? null : '$error',
+        );
       }
     } finally {
-      await Future<void>.delayed(Duration.zero);
       _explicitRestoreInProgress = false;
       if (ref.mounted) {
         state = state.copyWith(restoring: false);
+        if (_silentRefreshQueued) {
+          _silentRefreshQueued = false;
+          unawaited(_refreshCurrentEntitlements(queueIfRunning: true));
+        }
       }
     }
   }
@@ -895,7 +1030,11 @@ class BillingController extends Notifier<BillingState> {
     if (!ref.mounted) {
       return;
     }
-    state = state.copyWith(loading: true, error: null);
+    state = state.copyWith(
+      loading: state.productDetailsById.isEmpty,
+      error: null,
+      catalogError: null,
+    );
     final activeProductId = pomodoistEffectiveActiveProductId(
       prefs?.getString(billingActiveProductIdPreferenceKey),
     );
@@ -946,6 +1085,7 @@ class BillingController extends Notifier<BillingState> {
     _subscription ??= store.purchaseStream.listen(
       (purchases) => unawaited(_handlePurchases(purchases)),
       onError: (Object error) {
+        _recordStoreKitError('updates', error);
         if (ref.mounted) {
           _cancelPurchaseWatchdog();
           state = state.copyWith(
@@ -971,13 +1111,25 @@ class BillingController extends Notifier<BillingState> {
       if (!ref.mounted) {
         return;
       }
+      final returnedProducts = {
+        for (final product in response.productDetails)
+          if (billingProductIds.contains(product.id)) product.id: product,
+      };
+      final products = {
+        if (response.error != null) ...state.productDetailsById,
+        ...returnedProducts,
+      };
+      if (response.error != null) {
+        _recordStoreKitError('catalog', response.error!);
+      }
       state = state.copyWith(
         loading: false,
-        storeAvailable: response.error == null,
-        productDetailsById: {
-          for (final product in response.productDetails) product.id: product,
-        },
-        error: response.error?.message,
+        storeAvailable: products.isNotEmpty,
+        productDetailsById: products,
+        missingProductIds: billingProductIds.difference(
+          returnedProducts.keys.toSet(),
+        ),
+        catalogError: response.error?.message,
       );
       final eligibleProductIds = <String>{};
       for (final product in response.productDetails) {
@@ -1002,11 +1154,12 @@ class BillingController extends Notifier<BillingState> {
         );
       }
     } catch (error) {
+      _recordStoreKitError('catalog', error);
       if (ref.mounted) {
         state = state.copyWith(
           loading: false,
-          storeAvailable: false,
-          error: '$error',
+          storeAvailable: state.productDetailsById.isNotEmpty,
+          catalogError: '$error',
         );
       }
     } finally {
@@ -1153,96 +1306,106 @@ class BillingController extends Notifier<BillingState> {
     if (!ref.mounted) {
       return;
     }
-    final explicitRestore = _explicitRestoreInProgress;
+    if (purchases.any(
+      (p) =>
+          billingProductIds.contains(p.productID) &&
+          (p.status == PurchaseStatus.purchased ||
+              p.status == PurchaseStatus.restored),
+    )) {
+      _entitlementRevision += 1;
+    }
     if (purchases.isEmpty) {
       return;
     }
-    final transactionJws = <String>[];
-    for (final purchase in purchases) {
-      if (!ref.mounted) {
-        return;
-      }
-      if (!billingProductIds.contains(purchase.productID)) {
-        continue;
-      }
-      switch (purchase.status) {
-        case PurchaseStatus.pending:
-          if (state.pendingProductId == null ||
-              state.pendingProductId == purchase.productID) {
-            state = state.copyWith(pendingProductId: purchase.productID);
-            _startPurchaseWatchdog(purchase.productID);
-          }
-        case PurchaseStatus.purchased:
-        case PurchaseStatus.restored:
-          final matchesPending = state.pendingProductId == purchase.productID;
-          if (matchesPending) {
-            _cancelPurchaseWatchdog();
-          }
-          try {
-            final active = pomodoistStoreKitPurchaseIsActive(
+    var refreshEntitlements = false;
+    final toFinish = <PurchaseDetails>[];
+    await _changeEntitlements(() async {
+      for (final purchase in purchases) {
+        if (!ref.mounted) {
+          return;
+        }
+        if (!billingProductIds.contains(purchase.productID)) {
+          continue;
+        }
+        switch (purchase.status) {
+          case PurchaseStatus.pending:
+            if (state.pendingProductId == null ||
+                state.pendingProductId == purchase.productID) {
+              state = state.copyWith(pendingProductId: purchase.productID);
+              _startPurchaseWatchdog(purchase.productID);
+            }
+          case PurchaseStatus.purchased:
+          case PurchaseStatus.restored:
+            final matchesPending = state.pendingProductId == purchase.productID;
+            if (matchesPending) {
+              _cancelPurchaseWatchdog();
+            }
+            // The plugin also emits purchased for StoreKit .unverified results.
+            // Only the native verified snapshot can add or extend access.
+            refreshEntitlements = true;
+            final transaction = BillingTransactionProof.fromPurchase(purchase);
+            if (!pomodoistStoreKitPurchaseIsActive(
               purchase,
-              DateTime.now(),
-            );
-            if (active) {
-              await _activate(purchase.productID);
-            } else {
-              await _deactivate(purchase.productID);
+              ref.read(clockProvider).now(),
+            )) {
+              _verifiedTransactions.remove(transaction.transactionId);
+              await _commitEntitlements();
+              if (!ref.mounted) return;
             }
-            if (!ref.mounted) {
-              return;
-            }
+            if (matchesPending) _purchaseToConfirm = purchase.productID;
             state = state.copyWith(
               pendingProductId: matchesPending ? null : state.pendingProductId,
-              purchaseSuccessProductId:
-                  active && (matchesPending || explicitRestore)
-                  ? purchase.productID
-                  : state.purchaseSuccessProductId,
-              error: null,
             );
-          } catch (error) {
-            if (!ref.mounted) {
-              return;
+          case PurchaseStatus.error:
+            if (purchase.error != null) {
+              _recordStoreKitError('purchase_event', purchase.error!);
             }
+            if (state.pendingProductId != null &&
+                state.pendingProductId != purchase.productID) {
+              break;
+            }
+            _cancelPurchaseWatchdog();
             state = state.copyWith(
-              pendingProductId: matchesPending ? null : state.pendingProductId,
-              error: '$error',
+              pendingProductId: null,
+              error: purchase.error?.message ?? 'Purchase failed.',
             );
-          }
-          final jws = purchase.verificationData.serverVerificationData;
-          if (jws.isNotEmpty) {
-            transactionJws.add(jws);
-          }
-        case PurchaseStatus.error:
-          if (state.pendingProductId != null &&
-              state.pendingProductId != purchase.productID) {
-            break;
-          }
-          _cancelPurchaseWatchdog();
-          state = state.copyWith(
-            pendingProductId: null,
-            error: purchase.error?.message ?? 'Purchase failed.',
-          );
-        case PurchaseStatus.canceled:
-          if (state.pendingProductId != null &&
-              state.pendingProductId != purchase.productID) {
-            break;
-          }
-          _cancelPurchaseWatchdog();
-          state = state.copyWith(pendingProductId: null);
-      }
-      if (purchase.pendingCompletePurchase &&
-          purchase.status != PurchaseStatus.pending) {
-        try {
-          await _withTimeout(
-            ref.read(billingStoreProvider).completePurchase(purchase),
-            ref.read(billingStoreTimeoutProvider),
-          );
-        } on Object {
-          // StoreKit has already delivered the verified purchase. Finishing is
-          // retried by StoreKit and must not turn success into a user error.
+          case PurchaseStatus.canceled:
+            if (state.pendingProductId != null &&
+                state.pendingProductId != purchase.productID) {
+              break;
+            }
+            _cancelPurchaseWatchdog();
+            state = state.copyWith(pendingProductId: null);
+        }
+        if (purchase.pendingCompletePurchase &&
+            purchase.status != PurchaseStatus.pending) {
+          toFinish.add(purchase);
         }
       }
+    });
+    if (refreshEntitlements && ref.mounted) {
+      unawaited(_refreshCurrentEntitlements(queueIfRunning: true));
     }
+    for (final purchase in toFinish) {
+      if (!ref.mounted) return;
+      try {
+        await _withTimeout(
+          ref.read(billingStoreProvider).completePurchase(purchase),
+          ref.read(billingStoreTimeoutProvider),
+        );
+      } on Object catch (error) {
+        _recordStoreKitError('finish', error);
+      }
+    }
+  }
+
+  Future<void> _linkTransactions(
+    List<String> transactionJws,
+    int accountGeneration,
+  ) async {
+    if (!ref.mounted) return;
+    ref.read(billingAccountIdentityProvider);
+    if (accountGeneration != _accountGeneration) return;
     final linker = ref.read(billingSignedInProvider)
         ? ref.read(billingPurchaseLinkerProvider)
         : null;
@@ -1253,11 +1416,18 @@ class BillingController extends Notifier<BillingState> {
     if (linker != null && unattemptedJws.isNotEmpty) {
       _attemptedTransactionJws.addAll(unattemptedJws);
       try {
-        await linker(unattemptedJws);
-        _skipNextAccountRefresh = true;
-      } on Object {
-        // Account synchronization is best-effort after local StoreKit access
-        // is active and must not be presented as a failed purchase.
+        await _withTimeout(
+          linker(unattemptedJws),
+          ref.read(billingStoreTimeoutProvider),
+        );
+        if (ref.mounted && accountGeneration == _accountGeneration) {
+          _skipNextAccountRefresh = true;
+        }
+      } on Object catch (error) {
+        if (ref.mounted && accountGeneration == _accountGeneration) {
+          _attemptedTransactionJws.removeAll(unattemptedJws);
+        }
+        _recordStoreKitError('account_link', error);
       }
     }
   }
@@ -1266,6 +1436,10 @@ class BillingController extends Notifier<BillingState> {
     if (!ref.mounted ||
         ref.read(billingChannelProvider) != BillingChannel.storeKit ||
         !ref.read(applePurchasesSupportedProvider)) {
+      return Future.value();
+    }
+    if (_explicitRestoreInProgress) {
+      _silentRefreshQueued |= queueIfRunning;
       return Future.value();
     }
     final existing = _silentRefresh;
@@ -1278,7 +1452,7 @@ class BillingController extends Notifier<BillingState> {
     operation.then<void>((_) {
       if (identical(_silentRefresh, operation)) {
         _silentRefresh = null;
-        if (_silentRefreshQueued) {
+        if (_silentRefreshQueued && !_explicitRestoreInProgress) {
           _silentRefreshQueued = false;
           unawaited(_refreshCurrentEntitlements());
         }
@@ -1288,16 +1462,75 @@ class BillingController extends Notifier<BillingState> {
   }
 
   Future<void> _runSilentRefresh() async {
-    if (!pomodoistLocalStoreKit && ref.mounted) {
-      state = state.copyWith(activeStoreKitProductIds: const <String>{});
-    }
+    final revision = _entitlementRevision;
+    final accountGeneration = _accountGeneration;
     try {
-      await _withTimeout(
+      final transactions = await _withTimeout(
         ref.read(billingStoreProvider).refreshCurrentEntitlements(),
         ref.read(billingStoreTimeoutProvider),
       );
-    } on Object {
-      // Silent StoreKit refreshes do not surface restore feedback.
+      await _acceptSnapshot(transactions, revision, accountGeneration);
+    } on Object catch (error) {
+      _recordStoreKitError('entitlements', error);
+      if (ref.mounted && _purchaseToConfirm != null) {
+        state = state.copyWith(error: '$error');
+      }
+      // Transport failure cannot invalidate a previously verified purchase.
+    }
+  }
+
+  Future<void> _acceptSnapshot(
+    List<BillingTransactionProof> transactions,
+    int revision,
+    int accountGeneration, {
+    bool explicitRestore = false,
+  }) async {
+    var accepted = false;
+    await _changeEntitlements(() async {
+      if (revision != _entitlementRevision) {
+        _silentRefreshQueued = true;
+        return;
+      }
+      _verifiedTransactions
+        ..clear()
+        ..addEntries(
+          transactions
+              .where((p) => billingProductIds.contains(p.productId))
+              .map(
+                (p) => MapEntry(
+                  p.transactionId.isEmpty ? p.productId : p.transactionId,
+                  p,
+                ),
+              ),
+        );
+      await _commitEntitlements();
+      if (!ref.mounted) return;
+      accepted = true;
+      final purchased = _purchaseToConfirm;
+      if (purchased != null &&
+          state.activeStoreKitProductIds.contains(purchased)) {
+        _purchaseToConfirm = null;
+        state = state.copyWith(
+          purchaseSuccessProductId: purchased,
+          error: null,
+        );
+      } else if (explicitRestore || _restoreSuccessPending) {
+        state = state.copyWith(
+          purchaseSuccessProductId: state.hasLocalStoreKitEntitlement
+              ? state.activeProductId
+              : null,
+        );
+      }
+      _restoreSuccessPending = false;
+    });
+    if (accepted) {
+      unawaited(
+        _linkTransactions([
+          for (final p in transactions)
+            if (billingProductIds.contains(p.productId) && p.jws.isNotEmpty)
+              p.jws,
+        ], accountGeneration),
+      );
     }
   }
 
@@ -1358,46 +1591,83 @@ class BillingController extends Notifier<BillingState> {
     return completer.future;
   }
 
-  Future<void> _activate(String productId) async {
-    final prefs = await ref.read(sharedPreferencesProvider.future);
-    final purchased = {...state.purchasedProductIds, productId};
-    final active = {...state.activeStoreKitProductIds, productId};
-    await prefs?.setString(billingActiveProductIdPreferenceKey, productId);
-    await prefs?.setStringList(
-      billingPurchasedProductIdsPreferenceKey,
-      purchased.toList()..sort(),
-    );
-    if (ref.mounted) {
-      state = state.copyWith(
-        activeProductId: productId,
-        activeStoreKitProductIds: active,
-        purchasedProductIds: purchased,
-      );
-    }
+  Future<void> _changeEntitlements(Future<void> Function() change) {
+    final operation = _stateChanges.then((_) async {
+      if (ref.mounted) await change();
+    });
+    return _stateChanges = operation.catchError((
+      Object error,
+      StackTrace stack,
+    ) {
+      _recordStoreKitError('entitlement_state', error);
+    });
   }
 
-  Future<void> _deactivate(String productId) async {
-    if (!state.activeStoreKitProductIds.contains(productId)) {
-      return;
+  Future<void> _commitEntitlements() async {
+    if (!ref.mounted) return;
+    final now = ref.read(clockProvider).now();
+    final active = {
+      for (final transaction in _verifiedTransactions.values)
+        if (pomodoistStoreKitPurchaseIsActive(transaction.toPurchase(), now))
+          transaction.productId,
+    };
+    final preferred = [
+      pomodoistLifetimeProductId,
+      pomodoistLifetimeLaunchProductId,
+      pomodoistAnnualProductId,
+      pomodoistMonthlyProductId,
+    ].where(active.contains).firstOrNull;
+    final purchased = {
+      ...state.purchasedProductIds,
+      ..._verifiedTransactions.values.map((p) => p.productId),
+    };
+    state = state.copyWith(
+      activeProductId: preferred,
+      activeStoreKitProductIds: active,
+      purchasedProductIds: purchased,
+    );
+    _expiryTimer?.cancel();
+    DateTime? nextExpiry;
+    for (final transaction in _verifiedTransactions.values) {
+      if (billingPlanForProduct(transaction.productId)?.kind !=
+          BillingPlanKind.subscription) {
+        continue;
+      }
+      try {
+        final data = jsonDecode(transaction.localVerificationData) as Map;
+        final expiry = _appleDate(
+          data['expiresDate'] ?? data['expirationDate'],
+        );
+        if (expiry != null &&
+            expiry.isAfter(now) &&
+            (nextExpiry == null || expiry.isBefore(nextExpiry))) {
+          nextExpiry = expiry;
+        }
+      } on Object {
+        /* Malformed proof cannot grant access. */
+      }
     }
-    final active = {...state.activeStoreKitProductIds}..remove(productId);
-    final nextProductId = state.activeProductId == productId
-        ? active.firstOrNull
-        : state.activeProductId;
-    final prefs = await ref.read(sharedPreferencesProvider.future);
-    if (nextProductId == null) {
-      await prefs?.remove(billingActiveProductIdPreferenceKey);
-    } else if (nextProductId != state.activeProductId) {
-      await prefs?.setString(
-        billingActiveProductIdPreferenceKey,
-        nextProductId,
-      );
+    if (nextExpiry != null) {
+      _expiryTimer = Timer(nextExpiry.difference(now), () {
+        unawaited(_changeEntitlements(_commitEntitlements));
+      });
     }
-    if (ref.mounted) {
-      state = state.copyWith(
-        activeProductId: nextProductId,
-        activeStoreKitProductIds: active,
+    // Preferences record purchase history, never authority to grant Pro.
+    try {
+      final prefs = await ref.read(sharedPreferencesProvider.future);
+      if (!ref.mounted) return;
+      if (preferred == null) {
+        await prefs?.remove(billingActiveProductIdPreferenceKey);
+      } else {
+        await prefs?.setString(billingActiveProductIdPreferenceKey, preferred);
+      }
+      if (!ref.mounted) return;
+      await prefs?.setStringList(
+        billingPurchasedProductIdsPreferenceKey,
+        purchased.toList()..sort(),
       );
+    } on Object catch (error) {
+      _recordStoreKitError('purchase_history', error);
     }
   }
 }
@@ -1449,11 +1719,14 @@ class BillingPaywall extends ConsumerWidget {
     final state = ref.watch(billingControllerProvider);
     final channel = ref.watch(billingChannelProvider);
     final l10n = context.l10n;
-    final errorMessage = state.error == null
+    final displayedError = channel == BillingChannel.storeKit
+        ? state.error ?? state.catalogError
+        : state.error;
+    final errorMessage = displayedError == null
         ? null
         : channel == BillingChannel.stripe
-        ? stripeBillingErrorMessage(l10n, state.error!)
-        : storeKitBillingErrorMessage(l10n, state.error!);
+        ? stripeBillingErrorMessage(l10n, displayedError)
+        : storeKitBillingErrorMessage(l10n, displayedError);
     final colors = context.appColors;
     final textTheme = Theme.of(context).textTheme;
     final collapsedActive = state.hasActiveEntitlement && !showPlansWhenActive;
@@ -1581,7 +1854,7 @@ class BillingPaywall extends ConsumerWidget {
           else if (channel == BillingChannel.storeKit &&
               !state.storeAvailable &&
               !state.loading &&
-              state.error == null)
+              displayedError == null)
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(
@@ -1594,7 +1867,7 @@ class BillingPaywall extends ConsumerWidget {
           if (errorMessage != null) ...[
             const SizedBox(height: 8),
             Text(
-              channel == BillingChannel.storeKit && !state.storeAvailable
+              channel == BillingChannel.storeKit && state.error == null
                   ? errorMessage
                   : l10n.billingPurchaseError(errorMessage),
               style: textTheme.bodySmall?.copyWith(color: colors.error),
@@ -1603,7 +1876,7 @@ class BillingPaywall extends ConsumerWidget {
           const SizedBox(height: 8),
           if (channel == BillingChannel.storeKit &&
               state.platformSupported &&
-              !state.storeAvailable)
+              state.needsCatalogRetry)
             Align(
               alignment: Alignment.centerLeft,
               child: ShadButton.ghost(

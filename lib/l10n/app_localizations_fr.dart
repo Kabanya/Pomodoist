@@ -215,7 +215,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get billingStoreConnectionFailed =>
-      'L’App Store est temporairement indisponible. Veuillez réessayer dans un instant.';
+      'Impossible de se connecter à l’App Store. Veuillez réessayer.';
 
   @override
   String billingPurchaseError(String error) {
@@ -2470,6 +2470,26 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get themeResetToClassic => 'Rétablir Classique';
+
+  @override
+  String get themeBackgroundKindTitle => 'Arrière-plan';
+
+  @override
+  String get themeBackgroundColor => 'Couleur';
+
+  @override
+  String get themeBackgroundPhoto => 'Photo';
+
+  @override
+  String get themeBackgroundGlass => 'Verre macOS';
+
+  @override
+  String get themeBackgroundGlassHint =>
+      'S’applique à toute l’application et à l’ajout rapide. macOS contrôle le flou ; le curseur ajuste la teinte de la palette.';
+
+  @override
+  String get themeBackgroundGlassUnavailable =>
+      'Disponible dans l’application macOS. Un arrière-plan uni est utilisé sur cette plateforme.';
 
   @override
   String get themeBackgroundTitle => 'Image de fond';

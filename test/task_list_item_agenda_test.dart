@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -77,6 +78,7 @@ void main() {
   testWidgets('agenda actions adapt between desktop and narrow widths', (
     tester,
   ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
     SharedPreferences.setMockInitialValues({
       taskListStylePreferenceKey: 'classic',
     });
@@ -88,6 +90,13 @@ void main() {
       presentation: TaskListItemPresentation.agenda,
       size: const Size(1000, 240),
     );
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(TaskListItem)),
+    );
+    await container
+        .read(taskListStyleProvider.notifier)
+        .setStyle(TaskListStyle.classic);
+    await tester.pumpAndSettle();
 
     expect(
       find.byKey(const ValueKey('agenda-focus-slot-$taskId')),
@@ -155,6 +164,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Start focus'), findsOneWidget);
     await mouse.removePointer();
+    debugDefaultTargetPlatformOverride = null;
   });
 
   testWidgets('standard presentation remains the default', (tester) async {

@@ -214,7 +214,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get billingStoreConnectionFailed =>
-      'The App Store is temporarily unavailable. Please try again in a moment.';
+      'Could not connect to the App Store. Please try again.';
 
   @override
   String billingPurchaseError(String error) {
@@ -2473,6 +2473,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeResetToClassic => 'Reset to Classic';
+
+  @override
+  String get themeBackgroundKindTitle => 'Background';
+
+  @override
+  String get themeBackgroundColor => 'Color';
+
+  @override
+  String get themeBackgroundPhoto => 'Photo';
+
+  @override
+  String get themeBackgroundGlass => 'macOS glass';
+
+  @override
+  String get themeBackgroundGlassHint =>
+      'Applies to the entire app and Quick Add. macOS controls the blur; the slider adjusts the palette tint.';
+
+  @override
+  String get themeBackgroundGlassUnavailable =>
+      'Available in the macOS app. A solid background is used on this platform.';
 
   @override
   String get themeBackgroundTitle => 'Background image';

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_motion.dart';
 import 'app_theme.dart';
 import 'app_theme_settings.dart';
+import 'macos_glass.dart';
 
 final _decodedThemeImageProvider = FutureProvider.autoDispose
     .family<ui.Image?, String>((ref, id) async {
@@ -32,6 +33,7 @@ class ThemeBackground extends ConsumerWidget {
     this.sharedWholeApp = false,
     this.wholeAppViewport,
     this.color,
+    this.blurBehind = false,
     super.key,
   });
 
@@ -40,11 +42,12 @@ class ThemeBackground extends ConsumerWidget {
   final bool sharedWholeApp;
   final ({LayerLink link, Size size})? wholeAppViewport;
   final Color? color;
+  final bool blurBehind;
 
-  static bool hasImage(BuildContext context) =>
+  static bool hasBackdrop(BuildContext context) =>
       context
           .dependOnInheritedWidgetOfExactType<_ThemeBackgroundScope>()
-          ?.hasImage ??
+          ?.hasBackdrop ??
       false;
 
   @override
@@ -55,21 +58,34 @@ class ThemeBackground extends ConsumerWidget {
       ),
     );
     final theme = Theme.of(context);
+    final type = backgrounds.effectiveType(
+      isMacOS: supportsMacosGlass,
+      glassReady: macosGlassReady(context, ref),
+    );
     final image = backgrounds.resolve(zone, theme.brightness);
     return ThemeBackgroundPreview(
       image: image,
+      glassDim: type == ThemeBackgroundType.macosGlass
+          ? backgrounds.glassDim(theme.brightness)
+          : null,
+      blurBehind: blurBehind,
       color:
           color ??
           (zone == ThemeBackgroundZone.sidebar
               ? context.appColors.surface
               : context.appColors.canvas),
-      viewport: backgrounds.mode == ThemeBackgroundMode.wholeApp
+      viewport:
+          type == ThemeBackgroundType.photo &&
+              backgrounds.mode == ThemeBackgroundMode.wholeApp
           ? wholeAppViewport
           : null,
       paintImage:
-          !sharedWholeApp || backgrounds.mode != ThemeBackgroundMode.wholeApp,
+          !sharedWholeApp ||
+          type != ThemeBackgroundType.photo ||
+          backgrounds.mode != ThemeBackgroundMode.wholeApp,
       child: _ThemeBackgroundScope(
-        hasImage: image.imageId != null,
+        hasBackdrop:
+            image.imageId != null || type == ThemeBackgroundType.macosGlass,
         child: Theme(
           data: theme.copyWith(scaffoldBackgroundColor: Colors.transparent),
           child: child,
@@ -80,13 +96,16 @@ class ThemeBackground extends ConsumerWidget {
 }
 
 class _ThemeBackgroundScope extends InheritedWidget {
-  const _ThemeBackgroundScope({required this.hasImage, required super.child});
+  const _ThemeBackgroundScope({
+    required this.hasBackdrop,
+    required super.child,
+  });
 
-  final bool hasImage;
+  final bool hasBackdrop;
 
   @override
   bool updateShouldNotify(_ThemeBackgroundScope oldWidget) =>
-      hasImage != oldWidget.hasImage;
+      hasBackdrop != oldWidget.hasBackdrop;
 }
 
 class ThemeBackgroundPreview extends ConsumerWidget {
@@ -96,12 +115,18 @@ class ThemeBackgroundPreview extends ConsumerWidget {
     required this.child,
     this.paintImage = true,
     this.viewport,
+    this.glassDim,
+    this.glassSample = false,
+    this.blurBehind = false,
     super.key,
   });
 
   final ThemeBackgroundImage image;
   final Color color;
   final Widget child;
+  final double? glassDim;
+  final bool glassSample;
+  final bool blurBehind;
 
   // The wide shell paints one shared image; its zones only add their tint.
   final bool paintImage;
@@ -120,8 +145,10 @@ class ThemeBackgroundPreview extends ConsumerWidget {
     Widget background = Stack(
       fit: StackFit.expand,
       children: [
-        if (paintImage) ColoredBox(color: color),
-        if (paintImage && decoded != null)
+        if (glassDim == null && paintImage) ColoredBox(color: color),
+        if (glassDim != null && glassSample)
+          const CustomPaint(painter: _TransparencyPainter()),
+        if (glassDim == null && paintImage && decoded != null)
           TweenAnimationBuilder<double>(
             key: ValueKey(decoded),
             tween: Tween(begin: 0, end: 1),
@@ -151,7 +178,9 @@ class ThemeBackgroundPreview extends ConsumerWidget {
           ),
         TweenAnimationBuilder<Color?>(
           tween: ColorTween(
-            end: color.withValues(alpha: decoded == null ? 1 : image.dim),
+            end: color.withValues(
+              alpha: glassDim ?? (decoded == null ? 1 : image.dim),
+            ),
           ),
           duration: duration,
           curve: AppMotion.curve,
@@ -159,6 +188,12 @@ class ThemeBackgroundPreview extends ConsumerWidget {
         ),
       ],
     );
+    if (glassDim != null && blurBehind) {
+      background = BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: background,
+      );
+    }
     final viewport = this.viewport;
     if (viewport != null) {
       // Keep the drawer crop fixed to the shell while the drawer slides.
@@ -186,4 +221,24 @@ class ThemeBackgroundPreview extends ConsumerWidget {
       ],
     );
   }
+}
+
+class _TransparencyPainter extends CustomPainter {
+  const _TransparencyPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint();
+    for (var y = 0.0; y < size.height; y += 12) {
+      for (var x = 0.0; x < size.width; x += 12) {
+        paint.color = ((x / 12).round() + (y / 12).round()).isEven
+            ? const Color(0xFFEEEEEE)
+            : const Color(0xFFBBBBBB);
+        canvas.drawRect(Rect.fromLTWH(x, y, 12, 12), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_TransparencyPainter oldDelegate) => false;
 }

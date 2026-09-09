@@ -204,7 +204,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get billingStoreUnavailable => 'App Store 当前不可用。';
 
   @override
-  String get billingStoreConnectionFailed => 'App Store 暂时不可用。请稍后重试。';
+  String get billingStoreConnectionFailed => '无法连接到 App Store。请重试。';
 
   @override
   String billingPurchaseError(String error) {
@@ -2350,6 +2350,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get themeResetToClassic => '重置为经典';
+
+  @override
+  String get themeBackgroundKindTitle => '背景';
+
+  @override
+  String get themeBackgroundColor => '颜色';
+
+  @override
+  String get themeBackgroundPhoto => '照片';
+
+  @override
+  String get themeBackgroundGlass => 'macOS 玻璃';
+
+  @override
+  String get themeBackgroundGlassHint =>
+      '应用于整个应用和快速添加。模糊效果由 macOS 控制；滑块用于调整调色板色调。';
+
+  @override
+  String get themeBackgroundGlassUnavailable => '仅在 macOS 应用中可用。此平台将使用纯色背景。';
 
   @override
   String get themeBackgroundTitle => '背景图片';

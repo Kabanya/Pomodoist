@@ -1318,18 +1318,10 @@ Future<void> _pickTimedSchedule(
   AppDateTimePickerState picker,
 ) async {
   final now = ref.read(clockProvider).now().toLocal();
-  final initialDate = task.schedule?.displayDate ?? now;
-  final pickedDate = await picker.pickDate(
-    initialDate: initialDate,
-    firstDate: DateTime(now.year - 5),
-    lastDate: DateTime(now.year + 10),
-  );
-  if (pickedDate == null || !context.mounted) {
-    return;
-  }
+  final date = task.schedule?.displayDate ?? now;
   final currentStart = task.schedule?.isTimed ?? false
       ? task.schedule!.start!.toLocal()
-      : DateTime(pickedDate.year, pickedDate.month, pickedDate.day, 9);
+      : DateTime(date.year, date.month, date.day, 9);
   final pickedStart = await picker.pickTime(
     initialTime: TimeOfDay.fromDateTime(currentStart),
     helpText: context.l10n.timelineStartHour,
@@ -1338,9 +1330,9 @@ Future<void> _pickTimedSchedule(
     return;
   }
   final start = DateTime(
-    pickedDate.year,
-    pickedDate.month,
-    pickedDate.day,
+    date.year,
+    date.month,
+    date.day,
     pickedStart.hour,
     pickedStart.minute,
   );
@@ -1353,9 +1345,9 @@ Future<void> _pickTimedSchedule(
     return;
   }
   var end = DateTime(
-    pickedDate.year,
-    pickedDate.month,
-    pickedDate.day,
+    date.year,
+    date.month,
+    date.day,
     pickedEnd.hour,
     pickedEnd.minute,
   );

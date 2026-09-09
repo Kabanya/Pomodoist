@@ -11,6 +11,7 @@ import '../../../app/app_theme_mode.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_theme_settings.dart';
 import '../../../app/theme/theme_background.dart';
+import '../../../app/theme/macos_glass.dart';
 import '../../../app/theme/theme_image_preparation.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -272,6 +273,13 @@ class _PalettePair extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: ThemeBackgroundPreview(
+                  glassSample: true,
+                  glassDim:
+                      theme.backgrounds.type == ThemeBackgroundType.macosGlass
+                      ? theme.backgrounds.glassDim(
+                          index == 0 ? Brightness.light : Brightness.dark,
+                        )
+                      : null,
                   image: theme.backgrounds.resolve(
                     backgroundZone,
                     index == 0 ? Brightness.light : Brightness.dark,
@@ -404,13 +412,16 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
     Brightness? brightness,
     ThemeBackgroundZone? zone,
     ThemeBackgroundMode? mode,
+    ThemeBackgroundType? type,
   }) {
     final controller = ref.read(appThemeSettingsProvider.notifier);
     controller.cancelImageSelection();
-    if (mode != null) {
+    if (mode != null || type != null) {
       final draft = ref.read(appThemeSettingsProvider).preview!;
       controller.updatePreview(
-        draft.copyWith(backgrounds: draft.backgrounds.copyWith(mode: mode)),
+        draft.copyWith(
+          backgrounds: draft.backgrounds.copyWith(mode: mode, type: type),
+        ),
       );
     }
     setState(() {
@@ -520,10 +531,17 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
     final draft = settings.preview ?? _initial;
     final palette = _brightness == Brightness.light ? draft.light : draft.dark;
     final l10n = context.l10n;
-    final zone = draft.backgrounds.mode == ThemeBackgroundMode.separate
+    final zone =
+        draft.backgrounds.type == ThemeBackgroundType.photo &&
+            draft.backgrounds.mode == ThemeBackgroundMode.separate
         ? _backgroundZone
         : ThemeBackgroundZone.main;
     final background = draft.backgrounds.imageFor(zone, _brightness);
+    final backgroundTypes = {
+      ThemeBackgroundType.color: l10n.themeBackgroundColor,
+      ThemeBackgroundType.photo: l10n.themeBackgroundPhoto,
+      ThemeBackgroundType.macosGlass: l10n.themeBackgroundGlass,
+    };
     final backgroundModes = {
       ThemeBackgroundMode.mainOnly: l10n.themeBackgroundMainOnly,
       ThemeBackgroundMode.wholeApp: l10n.themeBackgroundWholeApp,
@@ -751,7 +769,7 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Text(
-                                  l10n.themeBackgroundTitle,
+                                  l10n.themeBackgroundKindTitle,
                                   style: Theme.of(context).textTheme.titleSmall,
                                 ),
                                 const SizedBox(height: 8),
@@ -759,153 +777,248 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
                                   spacing: 8,
                                   runSpacing: 8,
                                   children: [
-                                    for (final entry in backgroundModes.entries)
+                                    for (final entry in backgroundTypes.entries)
                                       ChoiceChip(
                                         label: Text(entry.value),
                                         selected:
-                                            draft.backgrounds.mode == entry.key,
-                                        onSelected: settings.isSaving
+                                            draft.backgrounds.type == entry.key,
+                                        onSelected:
+                                            settings.isSaving ||
+                                                (entry.key ==
+                                                        ThemeBackgroundType
+                                                            .macosGlass &&
+                                                    !supportsMacosGlass)
                                             ? null
                                             : (_) => _backgroundContextChanged(
-                                                mode: entry.key,
+                                                type: entry.key,
                                               ),
                                       ),
                                   ],
                                 ),
-                                if (draft.backgrounds.mode ==
-                                    ThemeBackgroundMode.separate) ...[
+                                const SizedBox(height: 12),
+                                _PalettePair(
+                                  theme: draft,
+                                  backgroundZone: zone,
+                                ),
+                                if (draft.backgrounds.type ==
+                                    ThemeBackgroundType.macosGlass) ...[
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    supportsMacosGlass
+                                        ? l10n.themeBackgroundGlassHint
+                                        : l10n.themeBackgroundGlassUnavailable,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '${l10n.themeBackgroundDim}: ${(draft.backgrounds.glassDim(_brightness) * 100).round()}%',
+                                  ),
+                                  Slider(
+                                    value: draft.backgrounds.glassDim(
+                                      _brightness,
+                                    ),
+                                    divisions: 100,
+                                    label:
+                                        '${(draft.backgrounds.glassDim(_brightness) * 100).round()}%',
+                                    semanticFormatterCallback: (value) =>
+                                        '${l10n.themeBackgroundDim}: ${(value * 100).round()}%',
+                                    onChanged: settings.isSaving
+                                        ? null
+                                        : (value) {
+                                            ref
+                                                .read(
+                                                  appThemeSettingsProvider
+                                                      .notifier,
+                                                )
+                                                .updatePreview(
+                                                  draft.copyWith(
+                                                    backgrounds: draft
+                                                        .backgrounds
+                                                        .copyWith(
+                                                          glassLightDim:
+                                                              _brightness ==
+                                                                  Brightness
+                                                                      .light
+                                                              ? value
+                                                              : null,
+                                                          glassDarkDim:
+                                                              _brightness ==
+                                                                  Brightness
+                                                                      .dark
+                                                              ? value
+                                                              : null,
+                                                        ),
+                                                  ),
+                                                );
+                                          },
+                                  ),
+                                ],
+                                if (draft.backgrounds.type ==
+                                    ThemeBackgroundType.photo) ...[
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    l10n.themeBackgroundTitle,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleSmall,
+                                  ),
                                   const SizedBox(height: 8),
                                   Wrap(
                                     spacing: 8,
                                     runSpacing: 8,
                                     children: [
                                       for (final entry
-                                          in backgroundZones.entries)
+                                          in backgroundModes.entries)
                                         ChoiceChip(
                                           label: Text(entry.value),
-                                          selected: zone == entry.key,
+                                          selected:
+                                              draft.backgrounds.mode ==
+                                              entry.key,
                                           onSelected: settings.isSaving
                                               ? null
                                               : (_) =>
                                                     _backgroundContextChanged(
-                                                      zone: entry.key,
+                                                      mode: entry.key,
                                                     ),
                                         ),
                                     ],
                                   ),
-                                ],
-                                const SizedBox(height: 12),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: ThemeBackgroundPreview(
-                                    image: background,
-                                    color: zone == ThemeBackgroundZone.sidebar
-                                        ? palette.surface
-                                        : palette.canvas,
-                                    child: SizedBox(
-                                      height: 140,
-                                      child: background.imageId == null
-                                          ? Center(
-                                              child: Text(
-                                                l10n.themeBackgroundEmpty,
-                                                style: TextStyle(
-                                                  color: palette.primaryText,
-                                                ),
-                                              ),
-                                            )
-                                          : null,
+                                  if (draft.backgrounds.mode ==
+                                      ThemeBackgroundMode.separate) ...[
+                                    const SizedBox(height: 8),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: [
+                                        for (final entry
+                                            in backgroundZones.entries)
+                                          ChoiceChip(
+                                            label: Text(entry.value),
+                                            selected: zone == entry.key,
+                                            onSelected: settings.isSaving
+                                                ? null
+                                                : (_) =>
+                                                      _backgroundContextChanged(
+                                                        zone: entry.key,
+                                                      ),
+                                          ),
+                                      ],
                                     ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: [
-                                    ShadButton.outline(
-                                      height: 48,
-                                      enabled:
-                                          !settings.isSaving &&
-                                          !settings.isPreparingImage,
-                                      onPressed: _pickBackground,
-                                      child: Text(
-                                        background.imageId == null
-                                            ? l10n.themeBackgroundChoose
-                                            : l10n.themeBackgroundReplace,
-                                      ),
-                                    ),
-                                    if (background.imageId != null)
-                                      ShadButton.ghost(
-                                        height: 48,
-                                        enabled: !settings.isSaving,
-                                        onPressed: () {
-                                          ref
-                                              .read(
-                                                appThemeSettingsProvider
-                                                    .notifier,
-                                              )
-                                              .cancelImageSelection();
-                                          _changeBackground(
-                                            background.copyWith(
-                                              clearImage: true,
-                                            ),
-                                          );
-                                          setState(() => _imageError = null);
-                                        },
-                                        child: Text(l10n.themeBackgroundRemove),
-                                      ),
                                   ],
-                                ),
-                                if (settings.isPreparingImage)
-                                  Semantics(
-                                    liveRegion: true,
-                                    child: Text(l10n.themeBackgroundLoading),
-                                  ),
-                                if (_imageError != null)
-                                  Semantics(
-                                    liveRegion: true,
-                                    child: Text(
-                                      _imageError!,
-                                      style: TextStyle(
-                                        color: context.appColors.error,
+                                  const SizedBox(height: 12),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: ThemeBackgroundPreview(
+                                      image: background,
+                                      color: zone == ThemeBackgroundZone.sidebar
+                                          ? palette.surface
+                                          : palette.canvas,
+                                      child: SizedBox(
+                                        height: 140,
+                                        child: background.imageId == null
+                                            ? Center(
+                                                child: Text(
+                                                  l10n.themeBackgroundEmpty,
+                                                  style: TextStyle(
+                                                    color: palette.primaryText,
+                                                  ),
+                                                ),
+                                              )
+                                            : null,
                                       ),
                                     ),
                                   ),
-                                Text(
-                                  '${l10n.themeBackgroundDim}: ${(background.dim * 100).round()}%',
-                                ),
-                                Slider(
-                                  value: background.dim,
-                                  divisions: 100,
-                                  label: '${(background.dim * 100).round()}%',
-                                  semanticFormatterCallback: (value) =>
-                                      '${l10n.themeBackgroundDim}: ${(value * 100).round()}%',
-                                  onChanged:
-                                      settings.isSaving ||
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      ShadButton.outline(
+                                        height: 48,
+                                        enabled:
+                                            !settings.isSaving &&
+                                            !settings.isPreparingImage,
+                                        onPressed: _pickBackground,
+                                        child: Text(
                                           background.imageId == null
-                                      ? null
-                                      : (value) => _changeBackground(
-                                          background.copyWith(dim: value),
+                                              ? l10n.themeBackgroundChoose
+                                              : l10n.themeBackgroundReplace,
                                         ),
-                                ),
-                                Text(
-                                  '${l10n.themeBackgroundBlur}: ${background.blur.round()}',
-                                ),
-                                Slider(
-                                  value: background.blur,
-                                  max: 20,
-                                  divisions: 20,
-                                  label: '${background.blur.round()}',
-                                  semanticFormatterCallback: (value) =>
-                                      '${l10n.themeBackgroundBlur}: ${value.round()}',
-                                  onChanged:
-                                      settings.isSaving ||
-                                          background.imageId == null
-                                      ? null
-                                      : (value) => _changeBackground(
-                                          background.copyWith(blur: value),
+                                      ),
+                                      if (background.imageId != null)
+                                        ShadButton.ghost(
+                                          height: 48,
+                                          enabled: !settings.isSaving,
+                                          onPressed: () {
+                                            ref
+                                                .read(
+                                                  appThemeSettingsProvider
+                                                      .notifier,
+                                                )
+                                                .cancelImageSelection();
+                                            _changeBackground(
+                                              background.copyWith(
+                                                clearImage: true,
+                                              ),
+                                            );
+                                            setState(() => _imageError = null);
+                                          },
+                                          child: Text(
+                                            l10n.themeBackgroundRemove,
+                                          ),
                                         ),
-                                ),
+                                    ],
+                                  ),
+                                  if (settings.isPreparingImage)
+                                    Semantics(
+                                      liveRegion: true,
+                                      child: Text(l10n.themeBackgroundLoading),
+                                    ),
+                                  if (_imageError != null)
+                                    Semantics(
+                                      liveRegion: true,
+                                      child: Text(
+                                        _imageError!,
+                                        style: TextStyle(
+                                          color: context.appColors.error,
+                                        ),
+                                      ),
+                                    ),
+                                  Text(
+                                    '${l10n.themeBackgroundDim}: ${(background.dim * 100).round()}%',
+                                  ),
+                                  Slider(
+                                    value: background.dim,
+                                    divisions: 100,
+                                    label: '${(background.dim * 100).round()}%',
+                                    semanticFormatterCallback: (value) =>
+                                        '${l10n.themeBackgroundDim}: ${(value * 100).round()}%',
+                                    onChanged:
+                                        settings.isSaving ||
+                                            background.imageId == null
+                                        ? null
+                                        : (value) => _changeBackground(
+                                            background.copyWith(dim: value),
+                                          ),
+                                  ),
+                                  Text(
+                                    '${l10n.themeBackgroundBlur}: ${background.blur.round()}',
+                                  ),
+                                  Slider(
+                                    value: background.blur,
+                                    max: 20,
+                                    divisions: 20,
+                                    label: '${background.blur.round()}',
+                                    semanticFormatterCallback: (value) =>
+                                        '${l10n.themeBackgroundBlur}: ${value.round()}',
+                                    onChanged:
+                                        settings.isSaving ||
+                                            background.imageId == null
+                                        ? null
+                                        : (value) => _changeBackground(
+                                            background.copyWith(blur: value),
+                                          ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),

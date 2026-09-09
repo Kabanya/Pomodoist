@@ -16,6 +16,7 @@ import 'app_theme_mode.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_theme_settings.dart';
 import 'theme/app_motion.dart';
+import 'theme/macos_glass.dart';
 import 'theme/theme_background.dart';
 import 'widgets/keyboard_dismiss_region.dart';
 
@@ -135,10 +136,12 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
             Theme.of(context),
             reduceMotion: MediaQuery.disableAnimationsOf(context),
           ),
-          child: AppZoom(
-            child: ShadAppBuilder(
-              child: KeyboardDismissRegion(
-                child: child ?? const SizedBox.shrink(),
+          child: MacosGlassHost(
+            child: AppZoom(
+              child: ShadAppBuilder(
+                child: KeyboardDismissRegion(
+                  child: child ?? const SizedBox.shrink(),
+                ),
               ),
             ),
           ),

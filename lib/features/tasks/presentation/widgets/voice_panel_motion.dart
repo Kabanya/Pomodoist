@@ -89,6 +89,7 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
   final _dragFocus = FocusNode();
   final _swipe = VoicePanelSwipe();
   final _touchPointers = <int>{};
+  final _dragPointers = <int>{};
   int? _panZoomPointer;
   bool _swipeAllowed = false;
   bool _scrollBurst = false;
@@ -174,6 +175,7 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
 
   void _pointerEnd(PointerEvent event) {
     _touchPointers.remove(event.pointer);
+    _dragPointers.remove(event.pointer);
     if (_touchPointers.isEmpty) _swipe.cancel();
   }
 
@@ -244,8 +246,14 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
     behavior: HitTestBehavior.opaque,
     onPointerDown: _pointerDown,
     onPointerMove: (event) {
-      if (!_touchPointers.contains(event.pointer)) return;
+      if (!_touchPointers.contains(event.pointer) ||
+          _dragPointers.contains(event.pointer)) {
+        return;
+      }
       _swipe.add(event.localDelta);
+      if (event.localDelta.dy.abs() >= event.localDelta.dx.abs()) {
+        _swipeAllowed = true;
+      }
       _applySwipe();
     },
     onPointerUp: _pointerEnd,
@@ -265,23 +273,9 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
       _swipe.cancel();
     },
     onPointerSignal: _pointerSignal,
-    child: GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      excludeFromSemantics: true,
-      supportedDevices: const {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.trackpad,
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.invertedStylus,
-      },
-      onVerticalDragStart: (_) {
-        _swipeAllowed = true;
-        _applySwipe();
-      },
-      child: NotificationListener<ScrollNotification>(
-        onNotification: _onScrollNotification,
-        child: child,
-      ),
+    child: NotificationListener<ScrollNotification>(
+      onNotification: _onScrollNotification,
+      child: child,
     ),
   );
 
@@ -318,22 +312,27 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
     cursor: _dragPosition == null
         ? SystemMouseCursors.grab
         : SystemMouseCursors.grabbing,
-    child: GestureDetector(
-      key: key,
-      behavior: HitTestBehavior.opaque,
-      excludeFromSemantics: true,
-      supportedDevices: const {
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.touch,
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.invertedStylus,
-      },
-      onTap: _dragFocus.requestFocus,
-      onPanStart: _startDrag,
-      onPanUpdate: _updateDrag,
-      onPanEnd: _endDrag,
-      onPanCancel: _endDrag,
-      child: child,
+    child: Listener(
+      onPointerDown: (event) => _dragPointers.add(event.pointer),
+      onPointerUp: (event) => _dragPointers.remove(event.pointer),
+      onPointerCancel: (event) => _dragPointers.remove(event.pointer),
+      child: GestureDetector(
+        key: key,
+        behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
+        supportedDevices: const {
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.touch,
+          PointerDeviceKind.stylus,
+          PointerDeviceKind.invertedStylus,
+        },
+        onTap: _dragFocus.requestFocus,
+        onPanStart: _startDrag,
+        onPanUpdate: _updateDrag,
+        onPanEnd: _endDrag,
+        onPanCancel: _endDrag,
+        child: child,
+      ),
     ),
   );
 

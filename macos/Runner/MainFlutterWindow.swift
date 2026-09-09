@@ -20,6 +20,7 @@ class MainFlutterWindow: NSWindow {
     self.setFrame(windowFrame, display: false)
 
     RegisterGeneratedPlugins(registry: flutterViewController)
+    StoreKitHost.register(with: flutterViewController.registrar(forPlugin: "StoreKitHost"))
 
     super.awakeFromNib()
 

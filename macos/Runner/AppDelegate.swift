@@ -10,6 +10,7 @@ class AppDelegate: FlutterAppDelegate {
   private var appMenuController: AppMenuController?
   private var focusStatusItemController: FocusStatusItemController?
   private var systemSpeechHost: SystemSpeechHost?
+  private var macosGlassController: MacosGlassController?
 
   override func applicationDidFinishLaunching(_ notification: Notification) {
     configureNativeControllers()
@@ -25,7 +26,8 @@ class AppDelegate: FlutterAppDelegate {
     guard quickAddHotKeyController == nil ||
             appMenuController == nil ||
             focusStatusItemController == nil ||
-            systemSpeechHost == nil
+            systemSpeechHost == nil ||
+            macosGlassController == nil
     else {
       return
     }
@@ -71,6 +73,14 @@ class AppDelegate: FlutterAppDelegate {
         binaryMessenger: flutterViewController.engine.binaryMessenger
       )
       systemSpeechHost = SystemSpeechHost(channel: speechChannel)
+    }
+
+    if macosGlassController == nil {
+      let glassChannel = FlutterMethodChannel(
+        name: MacosGlassController.channelName,
+        binaryMessenger: flutterViewController.engine.binaryMessenger
+      )
+      macosGlassController = MacosGlassController(channel: glassChannel)
     }
   }
 

@@ -723,8 +723,12 @@ void main() {
     expect(store.restoreCount, 1);
     expect(
       container.read(billingControllerProvider).purchaseSuccessProductId,
-      pomodoistAnnualProductId,
+      pomodoistLifetimeProductId,
     );
+    expect(container.read(billingControllerProvider).activeStoreKitProductIds, {
+      pomodoistLifetimeProductId,
+      pomodoistAnnualProductId,
+    });
   });
 
   test(
@@ -1043,15 +1047,20 @@ void main() {
     expect(await store.pomodoistTransactionJws(), ['signed-pomodoist']);
   });
 
-  test('billing store restores a signed current entitlement proof', () async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-    addTearDown(() => debugDefaultTargetPlatformOverride = null);
-    final store = _FakeBillingStore();
+  test(
+    'billing store reads a signed current entitlement proof silently',
+    () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      final store = _FakeBillingStore(
+        refreshedProductIds: {pomodoistAnnualProductId},
+      );
 
-    expect(await store.pomodoistTransactionJws(), [
-      'server-$pomodoistAnnualProductId',
-    ]);
-  });
+      expect(await store.pomodoistTransactionJws(), [
+        'server-$pomodoistAnnualProductId',
+      ]);
+    },
+  );
 
   test(
     'billing controller keeps successful intro eligibility when one check fails',
@@ -1541,7 +1550,8 @@ void main() {
         prefs.getString(billingActiveProductIdPreferenceKey),
         pomodoistLifetimeLaunchProductId,
       );
-      expect(store.completedProductIds, [pomodoistLifetimeLaunchProductId]);
+      // Reading current entitlements does not finish transactions again.
+      expect(store.completedProductIds, isEmpty);
       expect(
         container.read(billingControllerProvider).hasActiveEntitlement,
         isTrue,
@@ -1602,7 +1612,7 @@ void main() {
       expect(container.read(billingControllerProvider).canPurchase, isFalse);
       expect(store.catalogRequests, 3);
       expect(
-        container.read(billingControllerProvider).error,
+        container.read(billingControllerProvider).catalogError,
         contains('-1008'),
       );
 
@@ -1686,7 +1696,7 @@ void main() {
     final state = container.read(billingControllerProvider);
     expect(state.loading, isFalse);
     expect(state.storeAvailable, isFalse);
-    expect(state.error, contains('TimeoutException'));
+    expect(state.catalogError, contains('TimeoutException'));
   });
 
   test('restore without purchase events clears restoring state', () async {
@@ -2672,9 +2682,12 @@ class _FakeBillingStore extends BillingStore {
     },
     this.eligibilityErrorProductIds = const {},
     this.productDetailsById = const {},
-    this.refreshedProductIds = const {},
+    Set<String> refreshedProductIds = const {},
     this.completeError,
-  }) : super();
+  }) : _verifiedPurchases = {
+         for (final productId in refreshedProductIds)
+           productId: _purchase(productId, PurchaseStatus.restored),
+       };
 
   final _controller = StreamController<List<PurchaseDetails>>.broadcast();
   final completedProductIds = <String>[];
@@ -2684,7 +2697,7 @@ class _FakeBillingStore extends BillingStore {
   final Set<String> eligibleProductIds;
   final Set<String> eligibilityErrorProductIds;
   final Map<String, ProductDetails> productDetailsById;
-  final Set<String> refreshedProductIds;
+  final Map<String, PurchaseDetails> _verifiedPurchases;
   final Object? completeError;
   final eligibilityChecks = <String>{};
   var refreshCount = 0;
@@ -2697,7 +2710,19 @@ class _FakeBillingStore extends BillingStore {
   @override
   Stream<List<PurchaseDetails>> get purchaseStream => _controller.stream;
 
-  void emit(List<PurchaseDetails> purchases) => _controller.add(purchases);
+  void emit(List<PurchaseDetails> purchases) {
+    for (final purchase in purchases) {
+      if (purchase.status == PurchaseStatus.purchased ||
+          purchase.status == PurchaseStatus.restored) {
+        if (pomodoistStoreKitPurchaseIsActive(purchase, DateTime.utc(2026))) {
+          _verifiedPurchases[purchase.productID] = purchase;
+        } else {
+          _verifiedPurchases.remove(purchase.productID);
+        }
+      }
+    }
+    _controller.add(purchases);
+  }
 
   @override
   Future<bool> isAvailable() async => true;
@@ -2753,30 +2778,30 @@ class _FakeBillingStore extends BillingStore {
     if (emitPurchase) {
       final purchase = _purchase(productDetails.id, PurchaseStatus.purchased);
       purchase.pendingCompletePurchase = true;
-      _controller.add([purchase]);
+      emit([purchase]);
     }
     return true;
   }
 
   @override
-  Future<void> restorePurchases() async {
+  Future<List<BillingTransactionProof>> restorePurchases() async {
     restoreCount += 1;
     if (emitRestore) {
-      final purchase = _purchase(restoredProductId, PurchaseStatus.restored);
-      purchase.pendingCompletePurchase = true;
-      _controller.add([purchase]);
+      _verifiedPurchases[restoredProductId] = _purchase(
+        restoredProductId,
+        PurchaseStatus.restored,
+      );
     }
+    return refreshCurrentEntitlements();
   }
 
   @override
-  Future<void> refreshCurrentEntitlements() async {
+  Future<List<BillingTransactionProof>> refreshCurrentEntitlements() async {
     refreshCount += 1;
-    if (refreshedProductIds.isNotEmpty) {
-      _controller.add([
-        for (final productId in refreshedProductIds)
-          _purchase(productId, PurchaseStatus.restored),
-      ]);
-    }
+    return [
+      for (final purchase in _verifiedPurchases.values)
+        BillingTransactionProof.fromPurchase(purchase),
+    ];
   }
 
   @override
@@ -2886,7 +2911,8 @@ class _SlowBillingStore extends BillingStore {
 
 class _HangingRestoreBillingStore extends _FakeBillingStore {
   @override
-  Future<void> restorePurchases() => Completer<void>().future;
+  Future<List<BillingTransactionProof>> restorePurchases() =>
+      Completer<List<BillingTransactionProof>>().future;
 }
 
 class _HangingPurchaseBillingStore extends _FakeBillingStore {

@@ -483,7 +483,7 @@ abstract class AppLocalizations {
   /// No description provided for @billingStoreConnectionFailed.
   ///
   /// In en, this message translates to:
-  /// **'The App Store is temporarily unavailable. Please try again in a moment.'**
+  /// **'Could not connect to the App Store. Please try again.'**
   String get billingStoreConnectionFailed;
 
   /// No description provided for @billingPurchaseError.
@@ -4317,6 +4317,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reset to Classic'**
   String get themeResetToClassic;
+
+  /// No description provided for @themeBackgroundKindTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get themeBackgroundKindTitle;
+
+  /// No description provided for @themeBackgroundColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get themeBackgroundColor;
+
+  /// No description provided for @themeBackgroundPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get themeBackgroundPhoto;
+
+  /// No description provided for @themeBackgroundGlass.
+  ///
+  /// In en, this message translates to:
+  /// **'macOS glass'**
+  String get themeBackgroundGlass;
+
+  /// No description provided for @themeBackgroundGlassHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to the entire app and Quick Add. macOS controls the blur; the slider adjusts the palette tint.'**
+  String get themeBackgroundGlassHint;
+
+  /// No description provided for @themeBackgroundGlassUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available in the macOS app. A solid background is used on this platform.'**
+  String get themeBackgroundGlassUnavailable;
 
   /// No description provided for @themeBackgroundTitle.
   ///
