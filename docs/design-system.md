@@ -144,6 +144,9 @@ project tree. Search and Add task stay near the profile. Browse, Reports and
 Settings sit below projects; on short windows the footer scrolls with the list.
 Preserve command identities and user shortcut bindings independently of visual
 order. Shortcut hints display the actual configured binding.
+Use `textTheme.titleMedium` for destination labels, Add task, and project names
+and their header, matching task titles. Group captions, counts, and shortcut
+hints keep their smaller text styles.
 
 Project rows share their context menu between the sidebar and Projects screen.
 Secondary click and touch long press expose renaming, icon and color selection,

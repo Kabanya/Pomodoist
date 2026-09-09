@@ -1160,7 +1160,7 @@ class _AddTaskTile extends StatelessWidget {
       child: Text(
         context.l10n.addTask,
         textAlign: TextAlign.start,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
           color: colors.accent,
           fontWeight: FontWeight.w600,
         ),
@@ -1213,7 +1213,6 @@ class _ProjectsHeader extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
                               color: foreground,
-                              fontSize: 16,
                               fontWeight: FontWeight.w800,
                             ),
                       ),
@@ -1332,9 +1331,8 @@ class _SidebarDestinationTile extends StatelessWidget {
                     destination.label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: foreground,
-                      fontSize: 14,
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                     ),
                   ),
@@ -1416,9 +1414,8 @@ class _SidebarProjectTile extends StatelessWidget {
                     project.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: foreground,
-                      fontSize: 16,
                       fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),

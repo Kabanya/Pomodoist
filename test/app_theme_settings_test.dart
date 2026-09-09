@@ -331,8 +331,7 @@ void main() {
 }
 
 class _FailingStore extends InMemorySharedPreferencesStore {
-  _FailingStore(Map<String, Object> data, this.failedKey)
-    : super.withData(data);
+  _FailingStore(super.data, this.failedKey) : super.withData();
   final String failedKey;
   bool fail = true;
 
