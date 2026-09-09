@@ -1,4 +1,6 @@
+import 'support/test_app.dart';
 import 'dart:async';
+import 'package:go_router/go_router.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +14,7 @@ import 'package:pomodoist/features/tasks/presentation/task_detail_screen.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   testWidgets('detail schedule chip colors its timed label and icon', (
     tester,
   ) async {
@@ -52,11 +55,20 @@ void main() {
           clockProvider.overrideWithValue(FixedClock(now)),
           taskTimeTickerProvider.overrideWith((ref) => Stream.value(now)),
         ],
-        child: MaterialApp(
+        child: MaterialApp.router(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(body: TaskDetailScreen(taskId: 'detail')),
+          routerConfig: GoRouter(
+            routes: [
+              GoRoute(
+                path: '/',
+                builder: (_, _) =>
+                    const Scaffold(body: TaskDetailScreen(taskId: 'detail')),
+              ),
+            ],
+          ),
         ),
       ),
     );

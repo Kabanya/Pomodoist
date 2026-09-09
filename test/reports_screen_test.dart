@@ -1,3 +1,4 @@
+import 'support/test_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -12,6 +13,7 @@ import 'package:pomodoist/features/productivity/presentation/reports_screen.dart
 import 'package:pomodoist/l10n/app_localizations.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   testWidgets('reports tell the progress story in priority order on desktop', (
     tester,
   ) async {
@@ -302,6 +304,7 @@ void main() {
         child: ValueListenableBuilder<Locale>(
           valueListenable: locale,
           builder: (context, value, child) => MaterialApp(
+            builder: testAppBuilder,
             theme: AppTheme.light(),
             locale: value,
             localizationsDelegates: const [
@@ -357,6 +360,7 @@ Future<void> _pumpReports(
         achievementsProvider.overrideWith((ref) => Stream.value(achievements)),
       ],
       child: MaterialApp(
+        builder: testAppBuilder,
         theme: AppTheme.light(),
         locale: locale,
         localizationsDelegates: const [

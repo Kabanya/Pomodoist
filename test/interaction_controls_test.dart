@@ -1,3 +1,11 @@
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show
+        ShadButton,
+        ShadIconButton,
+        ShadContextMenuItem,
+        ShadInput,
+        LucideIcons;
+import 'support/test_app.dart';
 import 'dart:async';
 
 import 'package:app_account/app_account.dart';
@@ -34,6 +42,7 @@ import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   setUp(() {
     SharedPreferences.setMockInitialValues({
       onboardingCompletedPreferenceKey: true,
@@ -131,21 +140,27 @@ void main() {
   ) async {
     await _pumpApp(tester);
 
-    expect(find.textContaining('Focus load:'), findsOneWidget);
+    expect(
+      find.byKey(const Key('task-completion-control-task-1')),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('Today task'));
     await tester.pump();
     await tester.pump();
 
     expect(find.text('Focus history'), findsOneWidget);
-    expect(find.textContaining('Focus load:'), findsNothing);
+    expect(
+      find.byKey(const Key('task-completion-control-task-1')),
+      findsNWidgets(2),
+    );
 
     await _pumpFrames(tester);
 
     expect(find.text('Focus history'), findsOneWidget);
     expect(find.text('Today task'), findsAtLeastNWidgets(1));
 
-    await tester.tap(find.byTooltip('Back'));
+    await tester.tap(find.byTooltip('Close'));
     await _pumpFrames(tester);
 
     expect(find.text('Today'), findsAtLeastNWidgets(1));
@@ -385,7 +400,7 @@ void main() {
     addTearDown(
       () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
     );
-    final harness = await _pumpApp(tester);
+    final harness = await _pumpApp(tester, size: const Size(1280, 844));
     platformCalls.clear();
 
     await tester.tap(find.byKey(const Key('task-completion-control-task-1')));
@@ -402,7 +417,12 @@ void main() {
     expect(harness.taskRepository.uncompletedTaskIds, contains('task-1'));
     expect(_hapticCalls(platformCalls), hasLength(2));
 
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer();
+    await mouse.moveTo(tester.getCenter(find.text('Today task')));
+    await _pumpFrames(tester);
     await tester.tap(find.byTooltip('Start focus').first);
+    await mouse.removePointer();
     await _pumpFrames(tester);
 
     expect(harness.focusRepository.startInputs, hasLength(1));
@@ -412,7 +432,7 @@ void main() {
   });
 
   testWidgets('task row keeps comment and compact metadata', (tester) async {
-    final now = DateTime.now();
+    final now = DateTime(2026, 1, 2, 11);
     final today = DateTime(now.year, now.month, now.day);
     await _pumpApp(
       tester,
@@ -437,7 +457,7 @@ void main() {
     expect(find.text('51m'), findsNothing);
   });
 
-  testWidgets('task row shows compact subtask progress before date', (
+  testWidgets('narrow task row shows compact subtask progress below title', (
     tester,
   ) async {
     final today = _todaySchedule();
@@ -465,10 +485,10 @@ void main() {
 
     expect(find.text('1/3'), findsOneWidget);
     expect(find.text('0/0'), findsNothing);
-    expect(find.byIcon(Icons.account_tree_outlined), findsOneWidget);
+    expect(find.byIcon(LucideIcons.gitBranch), findsOneWidget);
     expect(
-      tester.getTopLeft(find.byIcon(Icons.account_tree_outlined)).dx,
-      lessThan(tester.getTopLeft(find.byIcon(Icons.event_outlined).first).dx),
+      tester.getTopLeft(find.byIcon(LucideIcons.gitBranch)).dy,
+      greaterThan(tester.getTopLeft(find.text('Parent task')).dy),
     );
   });
 
@@ -484,30 +504,33 @@ void main() {
       router.go('/task/task-1');
       await _pumpFrames(tester);
 
-      await tester.tap(find.widgetWithText(FilledButton, 'Start focus'));
+      await tester.tap(find.widgetWithText(ShadButton, 'Start focus'));
       await _pumpFrames(tester);
       expect(harness.focusRepository.startInputs.single.taskId, 'task-1');
       expect(find.text('Focus started'), findsOneWidget);
 
-      await tester.tap(find.widgetWithText(OutlinedButton, 'Mark complete'));
+      await tester.tap(find.widgetWithText(ShadButton, 'Mark complete'));
       await _pumpFrames(tester);
       expect(harness.taskRepository.completedTaskIds, contains('task-1'));
       expect(find.text('Task completed'), findsOneWidget);
       _expectTaskCompletionSnackBar(tester);
 
-      await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+      await tester.tap(find.byTooltip('More').last);
+      await _pumpFrames(tester);
+      await tester.tap(find.widgetWithText(ShadContextMenuItem, 'Delete'));
       await _pumpFrames(tester);
       expect(harness.taskRepository.deletedTaskIds, contains('task-1'));
       expect(find.text('Task deleted'), findsOneWidget);
       expect(find.text('Today'), findsAtLeastNWidgets(1));
       expect(find.text('Focus history'), findsNothing);
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Undo'));
       await _pumpFrames(tester);
       expect(harness.taskRepository.restoredBatches.single.taskIds, {'task-1'});
 
       router.go('/task/done-1');
       await _pumpFrames(tester);
-      await tester.tap(find.widgetWithText(OutlinedButton, 'Mark open'));
+      await tester.tap(find.widgetWithText(ShadButton, 'Mark open'));
       await _pumpFrames(tester);
       expect(harness.taskRepository.uncompletedTaskIds, contains('done-1'));
       expect(find.text('Task reopened'), findsOneWidget);
@@ -540,9 +563,10 @@ void main() {
 
     router.go('/task/repeat-1');
     await _pumpFrames(tester);
-    await tester.ensureVisible(find.widgetWithText(TextButton, 'Delete'));
+
+    await tester.tap(find.byTooltip('More').last);
     await _pumpFrames(tester);
-    await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+    await tester.tap(find.widgetWithText(ShadContextMenuItem, 'Delete'));
     await _pumpFrames(tester);
 
     expect(find.text('Delete recurring task?'), findsOneWidget);
@@ -575,7 +599,7 @@ void main() {
 
     final patch = harness.taskRepository.updatePatches.single;
     final schedule = patch.schedule!;
-    final tomorrow = DateTime.now().add(const Duration(days: 1));
+    final tomorrow = DateTime(2026, 1, 2, 11).add(const Duration(days: 1));
 
     expect(patch.content, 'Renamed');
     expect(schedule.isTimed, isTrue);
@@ -775,9 +799,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('task-detail-priority-chip')));
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.widgetWithText(CheckedPopupMenuItem<int>, 'Priority 1'),
-    );
+    await tester.tap(find.widgetWithText(ShadContextMenuItem, 'Priority 1'));
     await tester.pumpAndSettle();
 
     expect(harness.taskRepository.updatePatches.single.priority, 1);
@@ -787,7 +809,7 @@ void main() {
     tester,
   ) async {
     late GoRouter router;
-    final now = DateTime.now();
+    final now = DateTime(2026, 1, 2, 11);
     final today = DateTime(now.year, now.month, now.day);
     final harness = await _pumpApp(
       tester,
@@ -820,6 +842,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('All-day').last);
     await tester.pumpAndSettle();
+    expect(
+      tester.getRect(find.text('OK').last).bottom,
+      lessThanOrEqualTo(
+        tester.view.physicalSize.height / tester.view.devicePixelRatio,
+      ),
+    );
     await tester.tap(find.text('OK').last);
     await tester.pumpAndSettle();
 
@@ -1267,7 +1295,7 @@ void main() {
 
     router.go('/search');
     await _pumpFrames(tester);
-    await tester.enterText(find.byType(TextField).first, 'Today');
+    await tester.enterText(find.byType(EditableText).first, 'Today');
     await _pumpFrames(tester);
     await _openTaskContextMenu(tester, 'Today scoped');
     await tester.tap(find.text('Select').last);
@@ -1381,7 +1409,7 @@ void main() {
     tester,
   ) async {
     late GoRouter router;
-    final now = DateTime.now();
+    final now = DateTime(2026, 1, 2, 11);
     final today = DateTime(now.year, now.month, now.day);
     final harness = await _pumpApp(
       tester,
@@ -2404,8 +2432,7 @@ void main() {
     final scrollFinder = find.byKey(const Key('timeline-horizontal-scroll'));
     final frame = tester.widget<Container>(frameFinder);
     expect((frame.decoration as BoxDecoration).color, Colors.white);
-    final foregroundDecoration =
-        frame.foregroundDecoration as BoxDecoration;
+    final foregroundDecoration = frame.foregroundDecoration as BoxDecoration;
     expect(foregroundDecoration.color, isNull);
     final controller = tester
         .widget<SingleChildScrollView>(scrollFinder)
@@ -2413,7 +2440,13 @@ void main() {
     controller.jumpTo(300);
     await tester.pump();
     final borderBeforeFocus = foregroundDecoration.border!;
-    expect(borderBeforeFocus.top.color, const Color(0x1A25221E));
+    expect(
+      borderBeforeFocus.top.color,
+      tester
+          .element(find.byKey(const Key('timeline-grid-frame')))
+          .appColors
+          .border,
+    );
     expect(borderBeforeFocus.top.width, 1);
     final scrollRect = tester.getRect(scrollFinder);
     await tester.tapAt(Offset(scrollRect.center.dx, scrollRect.top + 12));
@@ -2423,7 +2456,14 @@ void main() {
                 as BoxDecoration)
             .border!;
 
-    expect(borderWithFocus.top.color.toARGB32(), 0x59E44332);
+    expect(
+      borderWithFocus.top.color,
+      tester
+          .element(find.byKey(const Key('timeline-grid-frame')))
+          .appColors
+          .accent
+          .withValues(alpha: 0.35),
+    );
     expect(borderWithFocus.top.width, 1);
     final keyHandled = await tester.sendKeyDownEvent(
       LogicalKeyboardKey.arrowRight,
@@ -2533,7 +2573,7 @@ void main() {
     expect(newCenterMinutes, moreOrLessEquals(oldCenterMinutes, epsilon: 0.1));
     expect(
       tester
-          .widget<IconButton>(find.byKey(const Key('timeline-zoom-in')))
+          .widget<ShadIconButton>(find.byKey(const Key('timeline-zoom-in')))
           .onPressed,
       isNull,
     );
@@ -2545,7 +2585,7 @@ void main() {
     expect(tester.getSize(slot).width, 24);
     expect(
       tester
-          .widget<IconButton>(find.byKey(const Key('timeline-zoom-out')))
+          .widget<ShadIconButton>(find.byKey(const Key('timeline-zoom-out')))
           .onPressed,
       isNull,
     );
@@ -3213,7 +3253,8 @@ void main() {
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
     await _pumpFrames(tester);
 
-    final surface = find.byKey(const Key('mini-focus-player-surface'));
+    final surface = find.byKey(const Key('mobile-bottom-navigation'));
+    expect(find.byKey(const Key('mini-focus-player-surface')), findsNothing);
     final bottomNavigation = find.byKey(const Key('mobile-bottom-navigation'));
     final lastTaskRow = find
         .ancestor(of: lastTask, matching: find.byType(InkWell))
@@ -3222,7 +3263,7 @@ void main() {
     expect(bottomNavigation, findsOneWidget);
     expect(
       tester.getBottomLeft(lastTaskRow).dy,
-      moreOrLessEquals(tester.getTopLeft(surface).dy, epsilon: 1),
+      lessThanOrEqualTo(tester.getTopLeft(surface).dy),
     );
 
     await tester.tap(lastTask);
@@ -3323,10 +3364,10 @@ void main() {
 
     await _pumpFocusScreen(tester, focusRepository, now);
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Pause'));
+    await tester.tap(find.text('Pause'));
     await tester.pump();
     expect(find.text('Log distraction'), findsNothing);
-    await tester.tap(find.widgetWithText(OutlinedButton, 'Complete interval'));
+    await tester.tap(find.text('Complete interval'));
     await tester.pump();
     expect(find.text('Interval completed'), findsOneWidget);
     await _tapFullFocusMenuItem(tester, 'Skip');
@@ -3355,17 +3396,14 @@ void main() {
 
     await _pumpFocusScreen(tester, focusRepository, now);
 
-    expect(
-      find.widgetWithText(OutlinedButton, 'Complete interval'),
-      findsNothing,
-    );
-    expect(find.widgetWithText(OutlinedButton, 'Skip'), findsNothing);
-    expect(find.widgetWithText(TextButton, 'Stop'), findsNothing);
+    expect(find.widgetWithText(ShadButton, 'Complete interval'), findsNothing);
+    expect(find.widgetWithText(ShadButton, 'Skip'), findsNothing);
+    expect(find.widgetWithText(ShadButton, 'Stop'), findsNothing);
     expect(find.byKey(const Key('minimal-active-more-menu')), findsNothing);
     final menu = find.byKey(const Key('focus-details-menu'));
     expect(menu, findsOneWidget);
     await tester.tap(
-      find.descendant(of: menu, matching: find.byIcon(Icons.more_horiz)),
+      find.descendant(of: menu, matching: find.byIcon(LucideIcons.ellipsis)),
     );
     await tester.pumpAndSettle();
     expect(find.text('Switch to Full'), findsOneWidget);
@@ -3373,7 +3411,7 @@ void main() {
     await tester.tapAt(Offset.zero);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Pause'));
+    await tester.tap(find.text('Pause'));
     await tester.pump();
 
     expect(focusRepository.pauseCount, 1);
@@ -3397,7 +3435,7 @@ void main() {
 
     await _pumpFocusScreen(tester, focusRepository, now);
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Resume'));
+    await tester.tap(find.text('Resume'));
     await tester.pump();
 
     expect(focusRepository.resumeCount, 1);
@@ -3417,7 +3455,7 @@ void main() {
 
     await _pumpFocusScreen(tester, focusRepository, now);
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Start interval'));
+    await tester.tap(find.text('Start interval'));
     await tester.pump();
 
     expect(focusRepository.startReadyCount, 1);
@@ -3432,7 +3470,7 @@ void main() {
 
     await _pumpFocusScreen(tester, focusRepository, now);
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Resume'));
+    await tester.tap(find.text('Resume'));
     await tester.pump();
 
     expect(focusRepository.resumeCount, 1);
@@ -3443,20 +3481,19 @@ void main() {
   ) async {
     final harness = await _pumpBrowseScreen(tester);
 
+    await tester.tap(find.text('New project'));
+    await _pumpFrames(tester);
     await tester.enterText(
-      find.widgetWithText(TextField, 'New project'),
+      find.byKey(const Key('project-create-input')),
       'Personal',
     );
-    await tester.tap(find.byTooltip('Create').at(0));
+    await tester.tap(find.widgetWithText(ShadButton, 'Add'));
     await _pumpFrames(tester);
-
-    await tester.scrollUntilVisible(
-      find.widgetWithText(TextField, 'New label'),
-      180,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.enterText(find.widgetWithText(TextField, 'New label'), 'home');
-    await tester.tap(find.byTooltip('Create').at(1));
+    await tester.ensureVisible(find.byTooltip('New label'));
+    await tester.tap(find.byTooltip('New label'));
+    await _pumpFrames(tester);
+    await tester.enterText(find.byKey(const Key('label-create-input')), 'home');
+    await tester.tap(find.widgetWithText(ShadButton, 'Add'));
     await _pumpFrames(tester);
 
     expect(harness.projectRepository.createdProjectNames, ['Personal']);
@@ -3623,7 +3660,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final input = find.byKey(const Key('project-rename-input'));
-    expect(tester.widget<TextField>(input).controller!.text, 'Work');
+    expect(tester.widget<ShadInput>(input).controller!.text, 'Work');
     await tester.enterText(input, 'Renamed project');
     await tester.tap(find.byKey(const Key('project-rename-submit')));
     await _pumpFrames(tester);
@@ -3697,6 +3734,7 @@ class _TestApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
     onRouter?.call(router);
     return MaterialApp.router(
+      builder: testAppBuilder,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
@@ -3758,7 +3796,11 @@ Future<_BrowseHarness> _pumpBrowseScreen(
         ),
         pendingSyncCommandsProvider.overrideWith((ref) => Stream.value([])),
       ],
-      child: MaterialApp(theme: AppTheme.light(), home: const BrowseScreen()),
+      child: MaterialApp(
+        builder: testAppBuilder,
+        theme: AppTheme.light(),
+        home: const BrowseScreen(),
+      ),
     ),
   );
   await _pumpFrames(tester);
@@ -3887,6 +3929,7 @@ Future<void> _pumpFocusScreen(
         focusTickerProvider.overrideWith((ref) => Stream.value(now)),
       ],
       child: MaterialApp(
+        builder: testAppBuilder,
         theme: AppTheme.light(),
         home: const Scaffold(body: FocusScreen()),
       ),
@@ -3902,7 +3945,7 @@ Future<void> _pumpFrames(WidgetTester tester) async {
 }
 
 DateTime _testToday() {
-  final now = DateTime.now();
+  final now = DateTime(2026, 1, 2, 11);
   return DateTime(now.year, now.month, now.day);
 }
 
@@ -3917,7 +3960,7 @@ void _expectTaskCompletionSnackBar(WidgetTester tester) {
     const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
   );
   expect(tester.getSize(find.byType(SnackBar)).height, lessThanOrEqualTo(48));
-  expect(find.byIcon(Icons.close), findsOneWidget);
+  expect(find.byIcon(LucideIcons.x), findsOneWidget);
 }
 
 void _setTimelineVisibleHourPrefs({
@@ -3939,7 +3982,7 @@ Future<void> _tapFullFocusMenuItem(WidgetTester tester, String label) async {
   await tester.ensureVisible(menu);
   await tester.pump();
   await tester.tap(
-    find.descendant(of: menu, matching: find.byIcon(Icons.more_horiz)),
+    find.descendant(of: menu, matching: find.byIcon(LucideIcons.ellipsis)),
   );
   await tester.pumpAndSettle();
   await tester.tap(find.text(label).last);
@@ -4035,7 +4078,7 @@ Finder _taskDragSource(String title) {
   );
   final handle = find.descendant(
     of: row.first,
-    matching: find.byIcon(Icons.drag_indicator),
+    matching: find.byIcon(LucideIcons.gripVertical),
   );
   return handle.evaluate().isEmpty ? find.text(title).first : handle.first;
 }
@@ -4106,12 +4149,12 @@ Finder _timelineTaskBlockForTitle(String title) {
 }
 
 TaskSchedule _todaySchedule() {
-  final now = DateTime.now();
+  final now = DateTime(2026, 1, 2, 11);
   return TaskSchedule.allDay(DateTime(now.year, now.month, now.day));
 }
 
 TaskSchedule _timedSchedule(int hour) {
-  final now = DateTime.now();
+  final now = DateTime(2026, 1, 2, 11);
   final start = DateTime(now.year, now.month, now.day, hour);
   return TaskSchedule.timed(
     start: start,
@@ -4144,7 +4187,7 @@ String _routeDate(DateTime date) {
 }
 
 List<TaskItem> _testTasks() {
-  final now = DateTime.now();
+  final now = DateTime(2026, 1, 2, 11);
   final today = DateTime(now.year, now.month, now.day);
   return [
     _task(

@@ -667,6 +667,7 @@ class QuickAddBar extends ConsumerStatefulWidget {
 
 class _QuickAddBarState extends ConsumerState<QuickAddBar> {
   final _controller = QuickAddTextController();
+  final _focusNode = FocusNode();
   Timer? _successTimer;
   bool _busy = false;
   bool _showSuccess = false;
@@ -676,6 +677,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
   void dispose() {
     _successTimer?.cancel();
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -705,6 +707,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     QuickAddInput(
+                      focusNode: _focusNode,
                       enabled: !_busy,
                       textFieldKey: widget.inputKey,
                       controller: _controller,
@@ -842,6 +845,11 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
       _busy = false;
       _showSuccess = succeeded && !reduceMotion;
     });
+    if (succeeded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_busy) _focusNode.requestFocus();
+      });
+    }
     if (!_showSuccess) {
       return;
     }

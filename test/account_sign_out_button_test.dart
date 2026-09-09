@@ -1,3 +1,5 @@
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton;
+import 'support/test_app.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -5,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/features/settings/presentation/account_sign_out_button.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   testWidgets('pending sign-out may complete after the button is disposed', (
     tester,
   ) async {
@@ -13,6 +16,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         home: AccountSignOutButton(
           label: 'Sign out',
           onSignOut: () {
@@ -28,7 +32,9 @@ void main() {
     await tester.tap(find.text('Sign out'));
     expect(calls, 1, reason: 'duplicate presses must be ignored');
 
-    await tester.pumpWidget(const MaterialApp(home: SizedBox.shrink()));
+    await tester.pumpWidget(
+      const MaterialApp(builder: testAppBuilder, home: SizedBox.shrink()),
+    );
     pending.complete();
     await tester.pump();
 
@@ -43,6 +49,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         home: Scaffold(
           body: AccountSignOutButton(
             label: 'Sign out',
@@ -63,7 +70,7 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(calls, 1);
     expect(
-      tester.widget<TextButton>(find.byType(TextButton)).onPressed,
+      tester.widget<ShadButton>(find.byType(ShadButton)).onPressed,
       isNull,
     );
 
@@ -72,7 +79,7 @@ void main() {
 
     expect(find.byKey(const Key('account-sign-out-slow')), findsNothing);
     expect(
-      tester.widget<TextButton>(find.byType(TextButton)).onPressed,
+      tester.widget<ShadButton>(find.byType(ShadButton)).onPressed,
       isNotNull,
     );
     expect(calls, 1);

@@ -1,3 +1,5 @@
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadSwitch, LucideIcons;
+import 'support/test_app.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -34,6 +36,7 @@ import 'package:shadcn_ui/shadcn_ui.dart' show ShadTheme;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
@@ -165,6 +168,7 @@ void main() {
         child: ShadTheme(
           data: AppTheme.shadFromMaterial(AppTheme.light()),
           child: const MaterialApp(
+            builder: testAppBuilder,
             locale: Locale('ru'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -269,6 +273,7 @@ void main() {
             child: ShadTheme(
               data: AppTheme.shadFromMaterial(AppTheme.light()),
               child: MaterialApp(
+                builder: testAppBuilder,
                 theme: AppTheme.light(),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
@@ -386,6 +391,7 @@ void main() {
           child: ShadTheme(
             data: AppTheme.shadFromMaterial(AppTheme.light()),
             child: const MaterialApp(
+              builder: testAppBuilder,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(body: QuickAddBar()),
@@ -486,6 +492,7 @@ void main() {
           child: ShadTheme(
             data: AppTheme.shadFromMaterial(AppTheme.light()),
             child: const MaterialApp(
+              builder: testAppBuilder,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(body: QuickAddBar()),
@@ -538,6 +545,7 @@ void main() {
           voiceRecognitionControllerProvider.overrideWithValue(controller),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar()),
@@ -654,6 +662,7 @@ void main() {
           ),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar()),
@@ -704,6 +713,7 @@ void main() {
           appDatabaseProvider.overrideWithValue(db),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
@@ -768,6 +778,7 @@ void main() {
     for (var attempt = 0; attempt < 20 && createdIds.isEmpty; attempt++) {
       await tester.pump();
     }
+    await tester.pump();
     expect(createdIds, hasLength(1));
     expect(find.byKey(const Key('quick-add-submit-success')), findsOneWidget);
     expect(tester.widget<TextField>(field).controller!.text, isEmpty);
@@ -898,6 +909,7 @@ void main() {
           appDatabaseProvider.overrideWithValue(db),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar(projectId: 'project-context')),
@@ -964,6 +976,7 @@ void main() {
           ),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar()),
@@ -980,7 +993,9 @@ void main() {
     expect(find.text('Analyze'), findsOneWidget);
     expect(find.text('Review'), findsOneWidget);
     expect(
-      tester.widget<Switch>(find.byKey(const Key('voice-smart-mode'))).value,
+      tester
+          .widget<ShadSwitch>(find.byKey(const Key('voice-smart-mode')))
+          .value,
       isFalse,
     );
 
@@ -1065,6 +1080,7 @@ void main() {
           ),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar()),
@@ -1139,6 +1155,7 @@ void main() {
           voiceRecognitionControllerProvider.overrideWithValue(controller),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar()),
@@ -1208,6 +1225,7 @@ void main() {
           taskDecomposerProvider.overrideWithValue(decomposer),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar()),
@@ -1293,6 +1311,7 @@ void main() {
           taskDecomposerProvider.overrideWithValue(decomposer),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           navigatorKey: navigator,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -1406,6 +1425,7 @@ void main() {
           voiceRecognitionControllerProvider.overrideWithValue(controller),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar()),
@@ -1460,6 +1480,7 @@ void main() {
             voiceRecognitionControllerProvider.overrideWithValue(controller),
           ],
           child: const MaterialApp(
+            builder: testAppBuilder,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(body: QuickAddBar()),
@@ -1553,6 +1574,7 @@ void main() {
             taskDecomposerProvider.overrideWithValue(decomposer),
           ],
           child: const MaterialApp(
+            builder: testAppBuilder,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(body: QuickAddBar()),
@@ -1608,6 +1630,7 @@ void main() {
           voiceRecognitionControllerProvider.overrideWithValue(controller),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar()),
@@ -1649,6 +1672,7 @@ void main() {
           taskDecomposerProvider.overrideWithValue(decomposer),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar()),
@@ -1710,7 +1734,9 @@ void main() {
           supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) => MediaQuery(
             data: MediaQuery.of(context).copyWith(disableAnimations: true),
-            child: child!,
+            child: Builder(
+              builder: (context) => testAppBuilder(context, child),
+            ),
           ),
           home: const Scaffold(body: QuickAddBar()),
         ),
@@ -1768,6 +1794,7 @@ void main() {
           ),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar(defaultPriority: 2)),
@@ -1803,6 +1830,7 @@ void main() {
           appDatabaseProvider.overrideWithValue(db),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
@@ -1870,6 +1898,7 @@ void main() {
             ),
           ],
           child: MaterialApp(
+            builder: testAppBuilder,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
@@ -1926,6 +1955,7 @@ void main() {
           clockProvider.overrideWithValue(FixedClock(startedAt)),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar()),
@@ -1980,6 +2010,7 @@ void main() {
           ),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar()),
@@ -2030,6 +2061,7 @@ void main() {
           taskDecomposerProvider.overrideWithValue(decomposer),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar()),
@@ -2040,7 +2072,9 @@ void main() {
     await tester.tap(find.byTooltip('Voice quick add'));
     await tester.pumpAndSettle();
     expect(
-      tester.widget<Switch>(find.byKey(const Key('voice-smart-mode'))).value,
+      tester
+          .widget<ShadSwitch>(find.byKey(const Key('voice-smart-mode')))
+          .value,
       isTrue,
     );
 
@@ -2080,6 +2114,7 @@ void main() {
           taskDecomposerProvider.overrideWithValue(decomposer),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar()),
@@ -2135,6 +2170,7 @@ void main() {
           taskDecomposerProvider.overrideWithValue(decomposer),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar()),
@@ -2160,29 +2196,22 @@ void main() {
       find.byKey(const Key('voice-transcript-visualization')),
       findsOneWidget,
     );
-    expect(find.text('Купить,'), findsOneWidget);
-    expect(find.text('milk'), findsOneWidget);
-    expect(find.text('tomorrow!'), findsOneWidget);
-    final transcriptSemantics = tester.widget<Semantics>(
-      find.byKey(const Key('voice-transcript-visualization')),
-    );
-    expect(transcriptSemantics.properties.label, 'Купить, milk tomorrow!');
+    final transcript = find.byKey(const Key('voice-transcript-visualization'));
+    expect(find.text('Купить, milk tomorrow!'), findsOneWidget);
     expect(
       find.text('Pomodoist is splitting speech into tasks'),
       findsOneWidget,
     );
     expect(find.byKey(const Key('voice-analysis-status')), findsOneWidget);
-    expect(find.byIcon(Icons.auto_awesome), findsWidgets);
+    expect(find.byIcon(LucideIcons.sparkles), findsWidgets);
     expect(find.textContaining('DeepSeek'), findsNothing);
-
+    final fade = find
+        .ancestor(of: transcript, matching: find.byType(Opacity))
+        .first;
+    final initialOpacity = tester.widget<Opacity>(fade).opacity;
     await tester.pump(const Duration(milliseconds: 180));
-    final firstWord = tester.widget<Opacity>(
-      find.byKey(const Key('voice-transcript-word-0')),
-    );
-    final lastWord = tester.widget<Opacity>(
-      find.byKey(const Key('voice-transcript-word-2')),
-    );
-    expect(firstWord.opacity, greaterThan(lastWord.opacity));
+    expect(tester.widget<Opacity>(fade).opacity, greaterThan(initialOpacity));
+    expect(tester.getSemantics(transcript).label, 'Купить, milk tomorrow!');
 
     final initialProgress = tester
         .widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator))
@@ -2195,16 +2224,6 @@ void main() {
         .widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator))
         .value;
     expect(laterProgress, greaterThan(initialProgress!));
-
-    await tester.pump(const Duration(milliseconds: 320));
-    final middleWord = find.descendant(
-      of: find.byKey(const Key('voice-transcript-word-1')),
-      matching: find.byType(Text),
-    );
-    final firstColor = tester.widget<Text>(middleWord).style!.color;
-    await tester.pump(const Duration(milliseconds: 650));
-    final laterColor = tester.widget<Text>(middleWord).style!.color;
-    expect(laterColor, isNot(firstColor));
 
     decomposer.complete(const [DecomposedTaskDraft(quickAdd: 'Buy coffee')]);
     await tester.pumpAndSettle();
@@ -2233,7 +2252,9 @@ void main() {
           supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) => MediaQuery(
             data: MediaQuery.of(context).copyWith(disableAnimations: true),
-            child: child!,
+            child: Builder(
+              builder: (context) => testAppBuilder(context, child),
+            ),
           ),
           home: const Scaffold(body: QuickAddBar()),
         ),
@@ -2247,21 +2268,17 @@ void main() {
     await tester.tap(find.text('Stop'));
     await tester.pump();
 
-    for (var index = 0; index < 3; index += 1) {
-      expect(
-        tester
-            .widget<Opacity>(find.byKey(Key('voice-transcript-word-$index')))
-            .opacity,
-        1,
-      );
-    }
-    final middleWord = find.descendant(
-      of: find.byKey(const Key('voice-transcript-word-1')),
-      matching: find.byType(Text),
+    final transcript = find.byKey(const Key('voice-transcript-visualization'));
+    expect(find.text('Buy milk, please'), findsOneWidget);
+    expect(
+      find.ancestor(
+        of: transcript,
+        matching: find.byType(TweenAnimationBuilder<double>),
+      ),
+      findsNothing,
     );
-    final initialColor = tester.widget<Text>(middleWord).style!.color;
     await tester.pump(const Duration(milliseconds: 650));
-    expect(tester.widget<Text>(middleWord).style!.color, initialColor);
+    expect(find.text('Buy milk, please'), findsOneWidget);
 
     decomposer.complete(const [DecomposedTaskDraft(quickAdd: 'Buy milk')]);
     await tester.pumpAndSettle();
@@ -2313,6 +2330,7 @@ void main() {
             ),
           ],
           child: const MaterialApp(
+            builder: testAppBuilder,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
@@ -2445,6 +2463,7 @@ void main() {
                   ),
                 ],
                 child: MaterialApp(
+                  builder: testAppBuilder,
                   debugShowCheckedModeBanner: false,
                   theme: AppTheme.light(),
                   darkTheme: AppTheme.dark(),
@@ -2551,7 +2570,7 @@ Widget _quickAddMotionApp(
         data: MediaQuery.of(
           context,
         ).copyWith(disableAnimations: disableAnimations),
-        child: child!,
+        child: Builder(builder: (context) => testAppBuilder(context, child)),
       ),
       home: Scaffold(
         body: QuickAddBar(

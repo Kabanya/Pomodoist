@@ -590,14 +590,14 @@ Future<void> _runScheduleQuickAction(
 ) {
   switch (action) {
     case _ScheduleQuickAction.today:
-      final today = _today();
+      final today = _today(ref);
       return _setTaskSchedule(
         ref,
         task,
         task.schedule?.moveToDate(today) ?? TaskSchedule.allDay(today),
       );
     case _ScheduleQuickAction.tomorrow:
-      final tomorrow = _today().add(const Duration(days: 1));
+      final tomorrow = _today(ref).add(const Duration(days: 1));
       return _setTaskSchedule(
         ref,
         task,
@@ -706,7 +706,11 @@ class _EditableTaskTitleState extends ConsumerState<_EditableTaskTitle> {
       }
       final parsed = ref
           .read(quickAddParserProvider)
-          .parse(next, defaultDate: widget.task.schedule?.displayDate);
+          .parse(
+            next,
+            now: ref.read(clockProvider).now().toLocal(),
+            defaultDate: widget.task.schedule?.displayDate,
+          );
       final content = _parsedTitleContent(parsed);
       var schedule = parsed.dueDate != null || parsed.schedule?.isTimed == true
           ? parsed.schedule
@@ -999,7 +1003,9 @@ class _SubtasksSectionState extends ConsumerState<_SubtasksSection> {
     }
     setState(() => _saving = true);
     try {
-      final parsed = ref.read(quickAddParserProvider).parse(input);
+      final parsed = ref
+          .read(quickAddParserProvider)
+          .parse(input, now: ref.read(clockProvider).now().toLocal());
       if (parsed.content.isEmpty) {
         return;
       }
@@ -1277,7 +1283,7 @@ Future<void> _pickAllDaySchedule(
   TaskItem task,
   AppDateTimePickerState picker,
 ) async {
-  final now = DateTime.now();
+  final now = ref.read(clockProvider).now().toLocal();
   final picked = await picker.pickDate(
     initialDate: task.schedule?.displayDate ?? now,
     firstDate: DateTime(now.year - 5),
@@ -1295,7 +1301,7 @@ Future<void> _pickTimedSchedule(
   TaskItem task,
   AppDateTimePickerState picker,
 ) async {
-  final now = DateTime.now();
+  final now = ref.read(clockProvider).now().toLocal();
   final initialDate = task.schedule?.displayDate ?? now;
   final pickedDate = await picker.pickDate(
     initialDate: initialDate,
@@ -1369,8 +1375,8 @@ Future<void> _clearTaskSchedule(WidgetRef ref, TaskItem task) async {
       .updateTask(task.id, const UpdateTaskPatch(clearSchedule: true));
 }
 
-DateTime _today() {
-  final now = DateTime.now();
+DateTime _today(WidgetRef ref) {
+  final now = ref.read(clockProvider).now().toLocal();
   return DateTime(now.year, now.month, now.day);
 }
 

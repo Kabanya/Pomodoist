@@ -206,6 +206,7 @@ class _UpcomingCalendarState extends State<UpcomingCalendar> {
             : _showMonthSheet,
         foregroundColor: colors.primaryText,
         height: 48,
+        expands: true,
         leading: const Icon(LucideIcons.calendarDays, size: 20),
         child: FittedBox(
           fit: BoxFit.scaleDown,
@@ -269,6 +270,8 @@ class _UpcomingCalendarState extends State<UpcomingCalendar> {
             key: const ValueKey('upcoming-calendar-today'),
             onPressed: _selectToday,
             padding: const EdgeInsets.symmetric(horizontal: 6),
+            width: 80,
+            expands: true,
             height: 48,
             child: FittedBox(
               fit: BoxFit.scaleDown,

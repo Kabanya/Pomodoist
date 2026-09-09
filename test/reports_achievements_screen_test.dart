@@ -1,3 +1,4 @@
+import 'support/test_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +12,7 @@ import 'package:pomodoist/features/productivity/presentation/achievements_screen
 import 'package:pomodoist/features/productivity/presentation/reports_screen.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   testWidgets('catalog keeps focus task and combo groups', (tester) async {
     final semantics = tester.ensureSemantics();
     await _pumpCatalog(tester, achievements: _achievements);
@@ -79,6 +81,7 @@ void main() {
           ),
         ],
         child: MaterialApp.router(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           routerConfig: router,
         ),
@@ -116,6 +119,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           home: const AchievementsScreen(),
         ),
@@ -145,6 +149,7 @@ Future<void> _pumpCatalog(
         achievementsProvider.overrideWith((ref) => Stream.value(achievements)),
       ],
       child: MaterialApp(
+        builder: testAppBuilder,
         theme: AppTheme.light(),
         home: const AchievementsScreen(),
       ),

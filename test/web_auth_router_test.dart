@@ -1,3 +1,4 @@
+import 'support/test_app.dart';
 import 'dart:async';
 
 import 'package:app_account/app_account.dart';
@@ -9,6 +10,7 @@ import 'package:pomodoist/app/account_providers.dart';
 import 'package:pomodoist/app/router.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   test('auth refresh keeps the active native route', () async {
     final authStates = StreamController<AccountAuthState>();
     final container = ProviderContainer(
@@ -66,7 +68,10 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: MaterialApp.router(routerConfig: router),
+        child: MaterialApp.router(
+          builder: testAppBuilder,
+          routerConfig: router,
+        ),
       ),
     );
     await tester.pump();
@@ -102,7 +107,10 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: MaterialApp.router(routerConfig: router),
+          child: MaterialApp.router(
+            builder: testAppBuilder,
+            routerConfig: router,
+          ),
         ),
       );
 
@@ -149,7 +157,10 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: MaterialApp.router(routerConfig: router),
+        child: MaterialApp.router(
+          builder: testAppBuilder,
+          routerConfig: router,
+        ),
       ),
     );
 
@@ -217,7 +228,10 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: MaterialApp.router(routerConfig: router),
+        child: MaterialApp.router(
+          builder: testAppBuilder,
+          routerConfig: router,
+        ),
       ),
     );
 

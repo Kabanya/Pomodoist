@@ -1,3 +1,5 @@
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton;
+import 'support/test_app.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -17,6 +19,7 @@ import 'package:pomodoist/l10n/app_localizations_ar.dart';
 import 'package:pomodoist/l10n/app_localizations_ru.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   final today = DateTime(2030, 1, 10);
 
   test('Russian and Arabic task counts keep their plural categories', () {
@@ -675,7 +678,7 @@ void main() {
     await tester.pump();
     expect(_verticalOffset(tester), greaterThan(0));
 
-    final todayButton = tester.widget<TextButton>(
+    final todayButton = tester.widget<ShadButton>(
       find.byKey(const ValueKey('upcoming-calendar-today')),
     );
     todayButton.onPressed!();
@@ -862,7 +865,7 @@ Future<_Harness> _pumpUpcoming(
             alwaysUse24HourFormat: true,
             textScaler: TextScaler.linear(textScale),
           ),
-          child: child!,
+          child: Builder(builder: (context) => testAppBuilder(context, child)),
         ),
       ),
     ),

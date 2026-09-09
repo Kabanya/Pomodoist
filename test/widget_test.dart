@@ -1,3 +1,6 @@
+import 'support/test_app.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +24,7 @@ import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
@@ -185,6 +189,7 @@ void main() {
   testWidgets('action feedback can skip sound', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         home: Scaffold(
           body: Builder(
             builder: (context) => TextButton(
@@ -211,6 +216,7 @@ void main() {
   testWidgets('action feedback with action still times out', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         home: Scaffold(
           body: Builder(
             builder: (context) => TextButton(
@@ -255,14 +261,14 @@ void main() {
         child: const PomodoistApp(),
       ),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('app-startup-error-title')), findsOneWidget);
     expect(find.textContaining('seed failed'), findsOneWidget);
     expect(find.byType(AdaptiveShell), findsNothing);
 
     await tester.tap(find.byKey(const Key('app-startup-retry-button')));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(attempts, 2);
   });
@@ -306,7 +312,7 @@ void main() {
         overrides: [
           focusRepositoryProvider.overrideWithValue(_FakeFocusRepository()),
         ],
-        child: const MaterialApp(home: FocusScreen()),
+        child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
     await tester.pump();
@@ -332,7 +338,7 @@ void main() {
         overrides: [
           focusRepositoryProvider.overrideWithValue(_FakeFocusRepository()),
         ],
-        child: const MaterialApp(home: FocusScreen()),
+        child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
     await tester.pump();
@@ -353,7 +359,7 @@ void main() {
         overrides: [
           focusRepositoryProvider.overrideWithValue(_FakeFocusRepository()),
         ],
-        child: const MaterialApp(home: FocusScreen()),
+        child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
     await tester.pump();
@@ -376,7 +382,7 @@ void main() {
         overrides: [
           focusRepositoryProvider.overrideWithValue(_FakeFocusRepository()),
         ],
-        child: const MaterialApp(home: FocusScreen()),
+        child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
     await tester.pump();
@@ -386,7 +392,7 @@ void main() {
     expect(find.byKey(const Key('minimal-preset-select')), findsNothing);
     expect(find.byKey(const Key('minimal-idle-more-menu')), findsNothing);
     expect(find.text('Classic'), findsOneWidget);
-    expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
+    expect(find.byIcon(LucideIcons.chevronDown), findsOneWidget);
     expect(find.text('25:00'), findsOneWidget);
     expect(find.text('Start focus'), findsOneWidget);
     expect(find.text('Customize'), findsNothing);
@@ -401,7 +407,7 @@ void main() {
     expect(
       find.descendant(
         of: classicChoice,
-        matching: find.byIcon(Icons.check_rounded),
+        matching: find.byIcon(LucideIcons.check),
       ),
       findsOneWidget,
     );
@@ -429,14 +435,14 @@ void main() {
     expect(
       find.descendant(
         of: deepWorkChoice,
-        matching: find.byIcon(Icons.check_rounded),
+        matching: find.byIcon(LucideIcons.check),
       ),
       findsOneWidget,
     );
     expect(
       find.descendant(
         of: classicChoice,
-        matching: find.byIcon(Icons.check_rounded),
+        matching: find.byIcon(LucideIcons.check),
       ),
       findsNothing,
     );
@@ -453,7 +459,7 @@ void main() {
         overrides: [
           focusRepositoryProvider.overrideWithValue(_FakeFocusRepository()),
         ],
-        child: const MaterialApp(home: FocusScreen()),
+        child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
     await tester.pump();
@@ -476,7 +482,7 @@ void main() {
             (ref) => Stream.error(StateError('presets failed')),
           ),
         ],
-        child: const MaterialApp(home: FocusScreen()),
+        child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
     await tester.pump();
@@ -499,7 +505,7 @@ void main() {
             _FakeFocusRepository(presets: const []),
           ),
         ],
-        child: const MaterialApp(home: FocusScreen()),
+        child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
     await tester.pump();
@@ -598,7 +604,10 @@ void main() {
             (ref) => Stream.value(null),
           ),
         ],
-        child: const MaterialApp(home: SettingsScreen()),
+        child: const MaterialApp(
+          builder: testAppBuilder,
+          home: SettingsScreen(),
+        ),
       ),
     );
     await tester.pump();
@@ -640,7 +649,10 @@ void main() {
             (ref) => Stream.value(null),
           ),
         ],
-        child: const MaterialApp(home: SettingsScreen()),
+        child: const MaterialApp(
+          builder: testAppBuilder,
+          home: SettingsScreen(),
+        ),
       ),
     );
     await tester.pump();
@@ -692,7 +704,10 @@ void main() {
             (ref) => Stream.value(null),
           ),
         ],
-        child: const MaterialApp(home: SettingsScreen()),
+        child: const MaterialApp(
+          builder: testAppBuilder,
+          home: SettingsScreen(),
+        ),
       ),
     );
     await tester.pump();
@@ -734,7 +749,10 @@ void main() {
             (ref) => Stream.value(null),
           ),
         ],
-        child: const MaterialApp(home: SettingsScreen()),
+        child: const MaterialApp(
+          builder: testAppBuilder,
+          home: SettingsScreen(),
+        ),
       ),
     );
     await tester.pump();
@@ -758,7 +776,10 @@ void main() {
             (ref) => Stream.value(null),
           ),
         ],
-        child: const MaterialApp(home: SettingsScreen()),
+        child: const MaterialApp(
+          builder: testAppBuilder,
+          home: SettingsScreen(),
+        ),
       ),
     );
     await tester.pump();
@@ -789,7 +810,10 @@ void main() {
             (ref) => Stream.value(null),
           ),
         ],
-        child: const MaterialApp(home: SettingsScreen()),
+        child: const MaterialApp(
+          builder: testAppBuilder,
+          home: SettingsScreen(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -823,7 +847,10 @@ void main() {
             (ref) => Stream.value(null),
           ),
         ],
-        child: const MaterialApp(home: SettingsScreen()),
+        child: const MaterialApp(
+          builder: testAppBuilder,
+          home: SettingsScreen(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -907,7 +934,7 @@ void main() {
 
     final surface = find.byKey(const Key('mini-focus-player-surface'));
     final decoration =
-        tester.widget<DecoratedBox>(surface).decoration as BoxDecoration;
+        tester.widget<AnimatedContainer>(surface).decoration as BoxDecoration;
 
     expect(
       tester.getSize(surface).width,
@@ -936,13 +963,13 @@ void main() {
 
     final surface = find.byKey(const Key('mini-focus-player-surface'));
     final decoration =
-        tester.widget<DecoratedBox>(surface).decoration as BoxDecoration;
+        tester.widget<AnimatedContainer>(surface).decoration as BoxDecoration;
 
     expect(
       tester.getSize(surface).width,
       lessThan(tester.view.physicalSize.width / tester.view.devicePixelRatio),
     );
-    expect(decoration.borderRadius, BorderRadius.circular(20));
+    expect(decoration.borderRadius, BorderRadius.circular(12));
     expect(decoration.border, isA<Border>());
     expect(decoration.boxShadow, isNotEmpty);
   });
@@ -1219,7 +1246,7 @@ void main() {
         overrides: [
           focusRepositoryProvider.overrideWithValue(_FakeFocusRepository()),
         ],
-        child: const MaterialApp(home: FocusScreen()),
+        child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
     await tester.pump();
@@ -1246,7 +1273,7 @@ void main() {
         overrides: [
           focusRepositoryProvider.overrideWithValue(_FakeFocusRepository()),
         ],
-        child: const MaterialApp(home: FocusScreen()),
+        child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
     await tester.pump();
@@ -1270,7 +1297,7 @@ void main() {
         overrides: [
           focusRepositoryProvider.overrideWithValue(_FakeFocusRepository()),
         ],
-        child: const MaterialApp(home: FocusScreen()),
+        child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
     await tester.pump();
@@ -1341,7 +1368,7 @@ void main() {
             (ref) => const Duration(minutes: 24),
           ),
         ],
-        child: const MaterialApp(home: FocusScreen()),
+        child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
     await tester.pump();
@@ -1352,7 +1379,7 @@ void main() {
     await tester.ensureVisible(menu);
     await tester.pump();
     await tester.tap(
-      find.descendant(of: menu, matching: find.byIcon(Icons.more_horiz)),
+      find.descendant(of: menu, matching: find.byIcon(LucideIcons.ellipsis)),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Use Deep Work').last);
@@ -1379,7 +1406,7 @@ void main() {
     await tester.ensureVisible(menu);
     await tester.pump();
     await tester.tap(
-      find.descendant(of: menu, matching: find.byIcon(Icons.more_horiz)),
+      find.descendant(of: menu, matching: find.byIcon(LucideIcons.ellipsis)),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text('New preset'));
@@ -1428,6 +1455,7 @@ Future<void> _pumpActiveFocusScreen(
         focusTickerProvider.overrideWith((ref) => Stream.value(now)),
       ],
       child: MaterialApp(
+        builder: testAppBuilder,
         theme: platform == null ? null : ThemeData(platform: platform),
         home: const FocusScreen(),
       ),
@@ -1449,6 +1477,7 @@ Future<void> _pumpMiniFocusPlayer(
         focusTickerProvider.overrideWith((ref) => Stream.value(now)),
       ],
       child: MaterialApp(
+        builder: testAppBuilder,
         home: Scaffold(
           body: Align(
             alignment: Alignment.bottomCenter,
@@ -1477,24 +1506,13 @@ Future<void> _pumpCompactAdaptiveShell(
       ..devicePixelRatio = previousDevicePixelRatio;
   });
 
-  await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        focusRepositoryProvider.overrideWithValue(
-          _FakeFocusRepository(
-            activeRun: _focusRun(now),
-            activeInterval: _focusInterval(now, status: 'running'),
-          ),
-        ),
-        focusTickerProvider.overrideWith((ref) => Stream.value(now)),
-        achievementsProvider.overrideWith(
-          (ref) => Stream.value(const <AchievementItem>[]),
-        ),
-      ],
-      child: MaterialApp(
-        theme: AppTheme.light(),
-        home: AdaptiveShell(
-          location: '/today',
+  final router = GoRouter(
+    initialLocation: '/inbox',
+    routes: [
+      GoRoute(
+        path: '/inbox',
+        builder: (context, state) => AdaptiveShell(
+          location: '/inbox',
           child:
               child ??
               Center(
@@ -1510,6 +1528,28 @@ Future<void> _pumpCompactAdaptiveShell(
                 ),
               ),
         ),
+      ),
+    ],
+  );
+  addTearDown(router.dispose);
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        focusRepositoryProvider.overrideWithValue(
+          _FakeFocusRepository(
+            activeRun: _focusRun(now),
+            activeInterval: _focusInterval(now, status: 'running'),
+          ),
+        ),
+        focusTickerProvider.overrideWith((ref) => Stream.value(now)),
+        achievementsProvider.overrideWith(
+          (ref) => Stream.value(const <AchievementItem>[]),
+        ),
+      ],
+      child: MaterialApp.router(
+        builder: testAppBuilder,
+        theme: AppTheme.light(),
+        routerConfig: router,
       ),
     ),
   );
@@ -1579,6 +1619,7 @@ class _AchievementAnnouncementHarnessState
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      builder: testAppBuilder,
       theme: AppTheme.light(),
       home: const Scaffold(
         body: Column(

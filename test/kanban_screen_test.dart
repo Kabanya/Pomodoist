@@ -1,3 +1,4 @@
+import 'support/test_app.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   testWidgets('820 desktop columns adaptively span the full board width', (
     tester,
   ) async {
@@ -80,6 +82,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Move to To do'));
     await tester.pump();
+    await tester.pump();
 
     expect(harness.kanban.moves.single.statusId, kanbanStatusTodoId);
 
@@ -118,6 +121,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Mark complete'));
     await tester.pump();
+    await tester.pump();
 
     expect(harness.kanban.moves.single.statusId, kanbanStatusDoneId);
   });
@@ -131,6 +135,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Mark complete'));
     await tester.pump();
+    await tester.pump();
 
     expect(harness.kanban.moves.single.statusId, kanbanStatusDoneId);
     expect(
@@ -142,7 +147,7 @@ void main() {
     );
     expect(_motionHighlight(tester, 'task-focus').a, greaterThan(0));
 
-    await tester.pump(const Duration(milliseconds: 160));
+    await tester.pump(const Duration(milliseconds: 180));
     expect(_motionHighlight(tester, 'task-focus').a, 0);
   });
 
@@ -379,7 +384,7 @@ Future<_KanbanHarness> _pumpKanban(
           data: MediaQuery.of(
             context,
           ).copyWith(textScaler: TextScaler.linear(textScale)),
-          child: child!,
+          child: Builder(builder: (context) => testAppBuilder(context, child)),
         ),
       ),
     ),

@@ -1,3 +1,4 @@
+import 'support/test_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,6 +9,7 @@ import 'package:pomodoist/features/tasks/presentation/widgets/quick_add_text_con
 import 'package:pomodoist/l10n/app_localizations.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   testWidgets('quick-add input displays the shared effective hint', (
     tester,
   ) async {
@@ -25,6 +27,7 @@ void main() {
           ),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: QuickAddBar()),
@@ -52,6 +55,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         home: Builder(
           builder: (context) {
             span = controller.buildTextSpan(
@@ -89,6 +93,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         home: Builder(
           builder: (context) {
             span = controller.buildTextSpan(

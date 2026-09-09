@@ -877,7 +877,7 @@ class TaskListItem extends ConsumerWidget {
                 task.id,
               ).then<void>((_) {});
       case _TaskQuickAction.today:
-        final today = _today();
+        final today = _today(ref);
         return taskRepository.updateTask(
           task.id,
           UpdateTaskPatch(
@@ -886,7 +886,7 @@ class TaskListItem extends ConsumerWidget {
           ),
         );
       case _TaskQuickAction.tomorrow:
-        final tomorrow = _today().add(const Duration(days: 1));
+        final tomorrow = _today(ref).add(const Duration(days: 1));
         return taskRepository.updateTask(
           task.id,
           UpdateTaskPatch(
@@ -945,8 +945,8 @@ class TaskListItem extends ConsumerWidget {
     );
   }
 
-  DateTime _today() {
-    final now = DateTime.now();
+  DateTime _today(WidgetRef ref) {
+    final now = ref.read(clockProvider).now().toLocal();
     return DateTime(now.year, now.month, now.day);
   }
 

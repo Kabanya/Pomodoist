@@ -1,3 +1,5 @@
+import 'package:go_router/go_router.dart';
+import 'support/test_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +15,7 @@ import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
@@ -38,7 +41,7 @@ void main() {
 
         expect(_miniPlayerSurface, findsNothing);
 
-        await tester.tap(find.byKey(const Key('go-today')));
+        await tester.tap(find.byKey(const Key('go-inbox')));
         await _pumpShellFrame(tester);
 
         expect(_miniPlayerSurface, findsOneWidget);
@@ -64,7 +67,7 @@ void main() {
         (tester) async {
           await _pumpShell(tester, size: layout.value);
 
-          final contentAnchor = find.byKey(const Key('go-today'));
+          final contentAnchor = find.byKey(const Key('go-inbox'));
           final baselineCenter = tester.getCenter(contentAnchor);
           final container = ProviderScope.containerOf(
             tester.element(find.byType(AdaptiveShell)),
@@ -102,7 +105,7 @@ void main() {
     await _pumpShell(
       tester,
       size: const Size(600, 800),
-      initialLocation: '/today',
+      initialLocation: '/inbox',
     );
     final context = tester.element(find.byType(AdaptiveShell));
     ProviderScope.containerOf(context)
@@ -119,7 +122,7 @@ void main() {
     await tester.pump();
 
     expect(find.byKey(const Key('focus-completion-overlay')), findsOneWidget);
-    expect(find.byKey(const Key('go-today')).hitTestable(), findsNothing);
+    expect(find.byKey(const Key('go-inbox')).hitTestable(), findsNothing);
   });
 
   testWidgets('global completion keeps task undo feedback visible', (
@@ -129,7 +132,7 @@ void main() {
     await _pumpShell(
       tester,
       size: const Size(600, 800),
-      initialLocation: '/today',
+      initialLocation: '/inbox',
       taskRepository: taskRepository,
     );
     final context = tester.element(find.byType(AdaptiveShell));
@@ -161,7 +164,7 @@ Finder get _miniPlayerSurface =>
 Future<void> _pumpShell(
   WidgetTester tester, {
   required Size size,
-  String initialLocation = '/today',
+  String initialLocation = '/inbox',
   TaskRepository? taskRepository,
 }) async {
   final previousSize = tester.view.physicalSize;
@@ -176,6 +179,16 @@ Future<void> _pumpShell(
   });
 
   final now = DateTime.utc(2026, 7, 10, 10);
+  final router = GoRouter(
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (_, _) =>
+            _AdaptiveShellRouteHarness(initialLocation: initialLocation),
+      ),
+    ],
+  );
+  addTearDown(router.dispose);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -195,7 +208,8 @@ Future<void> _pumpShell(
         if (taskRepository != null)
           taskRepositoryProvider.overrideWithValue(taskRepository),
       ],
-      child: MaterialApp(
+      child: MaterialApp.router(
+        builder: testAppBuilder,
         theme: AppTheme.light(),
         localizationsDelegates: const [
           AppLocalizations.delegate,
@@ -204,7 +218,7 @@ Future<void> _pumpShell(
           GlobalWidgetsLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        home: _AdaptiveShellRouteHarness(initialLocation: initialLocation),
+        routerConfig: router,
       ),
     ),
   );
@@ -256,9 +270,9 @@ class _AdaptiveShellRouteHarnessState
               child: const Text('Open nested Focus'),
             ),
             TextButton(
-              key: const Key('go-today'),
-              onPressed: () => setState(() => _location = '/today'),
-              child: const Text('Open Today'),
+              key: const Key('go-inbox'),
+              onPressed: () => setState(() => _location = '/inbox'),
+              child: const Text('Open Inbox'),
             ),
           ],
         ),

@@ -1,3 +1,5 @@
+import 'support/test_app.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -8,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/app/theme/app_theme.dart';
+import 'package:pomodoist/app/theme/app_motion.dart';
 import 'package:pomodoist/features/focus/domain/focus_models.dart';
 import 'package:pomodoist/features/focus/presentation/focus_screen.dart';
 import 'package:pomodoist/features/focus/presentation/focus_rhythm.dart';
@@ -19,6 +22,7 @@ import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   setUp(() {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
@@ -88,7 +92,7 @@ void main() {
     expect(more, findsOneWidget);
     expect(tester.getSize(more), const Size(48, 48));
     expect(find.text('Classic'), findsOneWidget);
-    expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
+    expect(find.byIcon(LucideIcons.chevronDown), findsOneWidget);
     expect(find.text('25:00'), findsOneWidget);
     expect(find.text('25m work'), findsNothing);
     expect(find.text('Start focus'), findsOneWidget);
@@ -104,7 +108,7 @@ void main() {
     expect(tester.getSemantics(more).label, 'More focus actions');
 
     await tester.tap(
-      find.descendant(of: more, matching: find.byIcon(Icons.more_horiz)),
+      find.descendant(of: more, matching: find.byIcon(LucideIcons.ellipsis)),
     );
     await tester.pumpAndSettle();
     expect(find.text('Switch to Full'), findsOneWidget);
@@ -145,7 +149,7 @@ void main() {
 
     final stage = find.byKey(const Key('focus-primary-stage'));
     final idleIcon = tester.widget<Icon>(
-      find.descendant(of: stage, matching: find.byIcon(Icons.timer_outlined)),
+      find.descendant(of: stage, matching: find.byIcon(LucideIcons.timer)),
     );
     final context = tester.element(find.byType(FocusScreen));
     expect(idleIcon.color, context.appColors.mutedText);
@@ -158,7 +162,7 @@ void main() {
       size: const Size(390, 844),
     );
 
-    final node = tester.widget<Container>(
+    final node = tester.widget<AnimatedContainer>(
       find.byKey(const ValueKey('focus-rhythm-node-1')),
     );
     final decoration = node.decoration! as BoxDecoration;
@@ -177,6 +181,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         theme: AppTheme.dark(),
         home: Scaffold(
           body: SizedBox(
@@ -195,7 +200,7 @@ void main() {
     await tester.pump();
 
     final step = find.byKey(const ValueKey('focus-rhythm-step-1'));
-    final node = tester.widget<Container>(
+    final node = tester.widget<AnimatedContainer>(
       find.byKey(const ValueKey('focus-rhythm-node-1')),
     );
     final decoration = node.decoration! as BoxDecoration;
@@ -284,7 +289,7 @@ void main() {
     await tester.ensureVisible(menu);
     await tester.pump();
     await tester.tap(
-      find.descendant(of: menu, matching: find.byIcon(Icons.more_horiz)),
+      find.descendant(of: menu, matching: find.byIcon(LucideIcons.ellipsis)),
     );
     await tester.pumpAndSettle();
 
@@ -426,7 +431,7 @@ void main() {
     await tester.ensureVisible(menu);
     await tester.pump();
     await tester.tap(
-      find.descendant(of: menu, matching: find.byIcon(Icons.more_horiz)),
+      find.descendant(of: menu, matching: find.byIcon(LucideIcons.ellipsis)),
     );
     await tester.pumpAndSettle();
     expect(find.text('Skip'), findsOneWidget);
@@ -599,7 +604,7 @@ void main() {
     );
     final menu = find.byKey(const Key('focus-details-menu'));
     await tester.tap(
-      find.descendant(of: menu, matching: find.byIcon(Icons.more_horiz)),
+      find.descendant(of: menu, matching: find.byIcon(LucideIcons.ellipsis)),
     );
     await tester.pumpAndSettle();
     final switchMode = find.byKey(const Key('focus-switch-view-mode'));
@@ -657,52 +662,54 @@ void main() {
     expect(repository.pauseCount, 1);
   });
 
-  testWidgets('resolved linked task shows project and opens task route', (
-    tester,
-  ) async {
-    final now = DateTime.utc(2026, 7, 10, 9);
-    final interval = _interval(now, status: 'running');
-    final task = _task(now);
-    final router = GoRouter(
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (context, state) => const Scaffold(body: FocusScreen()),
+  testWidgets(
+    'resolved linked task shows project and selects contextual task details',
+    (tester) async {
+      final now = DateTime.utc(2026, 7, 10, 9);
+      final interval = _interval(now, status: 'running');
+      final task = _task(now);
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => const Scaffold(body: FocusScreen()),
+          ),
+          GoRoute(
+            path: '/task/:id',
+            builder: (context, state) =>
+                Text('Task route ${state.pathParameters['id']}'),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await _pumpLinkedFocusScreen(
+        tester,
+        router: router,
+        focusRepository: _FocusRepository(
+          activeRun: _run(now, taskId: task.id),
+          activeInterval: interval,
+          intervals: [interval],
         ),
-        GoRoute(
-          path: '/task/:id',
-          builder: (context, state) =>
-              Text('Task route ${state.pathParameters['id']}'),
-        ),
-      ],
-    );
-    addTearDown(router.dispose);
+        taskRepository: _TaskRepository(task),
+        projectRepository: _ProjectRepository([_project(now)]),
+        now: now,
+      );
 
-    await _pumpLinkedFocusScreen(
-      tester,
-      router: router,
-      focusRepository: _FocusRepository(
-        activeRun: _run(now, taskId: task.id),
-        activeInterval: interval,
-        intervals: [interval],
-      ),
-      taskRepository: _TaskRepository(task),
-      projectRepository: _ProjectRepository([_project(now)]),
-      now: now,
-    );
+      expect(find.byKey(const Key('focus-task-context')), findsOneWidget);
+      expect(find.text(task.content), findsOneWidget);
+      expect(find.text('# Product Launch'), findsOneWidget);
 
-    expect(find.byKey(const Key('focus-task-context')), findsOneWidget);
-    expect(find.text(task.content), findsOneWidget);
-    expect(find.text('# Product Launch'), findsOneWidget);
+      final linkedTask = find.byKey(const Key('focus-linked-task'));
+      await tester.ensureVisible(linkedTask);
+      await tester.pump();
+      tester.widget<TextButton>(linkedTask).onPressed!.call();
+      await tester.pumpAndSettle();
 
-    final linkedTask = find.byKey(const Key('focus-linked-task'));
-    await tester.ensureVisible(linkedTask);
-    await tester.pump();
-    tester.widget<TextButton>(linkedTask).onPressed!.call();
-    await tester.pumpAndSettle();
-
-    expect(find.text('Task route ${task.id}'), findsOneWidget);
-  });
+      expect(router.state.uri.path, '/');
+      expect(router.state.uri.queryParameters['task'], task.id);
+    },
+  );
 
   testWidgets('project context keeps only its marker colored in both themes', (
     tester,
@@ -796,7 +803,11 @@ void main() {
         overrides: [
           focusRepositoryProvider.overrideWithValue(_FocusRepository()),
         ],
-        child: MaterialApp(theme: AppTheme.light(), home: const FocusScreen()),
+        child: MaterialApp(
+          builder: testAppBuilder,
+          theme: AppTheme.light(),
+          home: const FocusScreen(),
+        ),
       ),
     );
     await tester.pump();
@@ -854,7 +865,7 @@ void main() {
       type: 'work',
       status: 'running',
       label: 'Work interval',
-      icon: Icons.timer_outlined,
+      icon: LucideIcons.timer,
       color: (colors) => colors.accent,
       primary: 'Pause',
     );
@@ -862,7 +873,7 @@ void main() {
       type: 'shortBreak',
       status: 'running',
       label: 'Short break',
-      icon: Icons.coffee_outlined,
+      icon: LucideIcons.coffee,
       color: (colors) => colors.info,
       primary: 'Pause',
     );
@@ -870,7 +881,7 @@ void main() {
       type: 'longBreak',
       status: 'running',
       label: 'Long break',
-      icon: Icons.schedule,
+      icon: LucideIcons.clock,
       color: (colors) => colors.info,
       primary: 'Pause',
     );
@@ -878,7 +889,7 @@ void main() {
       type: 'work',
       status: 'paused',
       label: 'Work interval',
-      icon: Icons.timer_outlined,
+      icon: LucideIcons.timer,
       color: (colors) => colors.warning,
       primary: 'Resume',
     );
@@ -886,7 +897,7 @@ void main() {
       type: 'work',
       status: 'ready',
       label: 'Ready: Work interval',
-      icon: Icons.timer_outlined,
+      icon: LucideIcons.timer,
       color: (colors) => colors.accent,
       primary: 'Start interval',
     );
@@ -904,12 +915,11 @@ void main() {
         _focusActiveStageHarness(now: now, interval: interval, style: style),
       );
 
-      double scale() => tester
-          .widget<Transform>(find.byKey(const Key('focus-timer-elastic')))
-          .transform
-          .storage[0];
-
-      expect(scale(), moreOrLessEquals(1, epsilon: 0.001));
+      final timer = find.byKey(const Key('focus-timer-repaint-boundary'));
+      final bounds = tester.getRect(timer);
+      await tester.pump(const Duration(milliseconds: 90));
+      expect(tester.getRect(timer), bounds);
+      expect(find.byKey(const Key('focus-timer-elastic')), findsNothing);
     }
   });
 
@@ -932,14 +942,15 @@ void main() {
     remaining.value = const Duration(minutes: 23, seconds: 59);
     await tester.pump();
 
-    final transform = tester.widget<Transform>(
-      find.byKey(const Key('focus-timer-elastic')),
+    expect(
+      find.byKey(const Key('focus-timer-repaint-boundary')),
+      findsOneWidget,
     );
-    expect(transform.transform.storage[0], 1);
+    expect(find.byKey(const Key('focus-timer-elastic')), findsNothing);
     expect(tester.binding.transientCallbackCount, 0);
   });
 
-  testWidgets('primary press compresses for 80ms and releases once', (
+  testWidgets('primary press keeps geometry stable and activates once', (
     tester,
   ) async {
     final now = DateTime.utc(2026, 7, 10, 9);
@@ -953,23 +964,26 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    final initialBounds = tester.getRect(
+      find.byKey(const Key('focus-primary-action')),
+    );
     final gesture = await tester.startGesture(
       tester.getCenter(find.byKey(const Key('focus-primary-action'))),
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 80));
-    final pressed = tester.widget<Transform>(
-      find.byKey(const Key('focus-primary-action-elastic')),
+    expect(
+      tester.getRect(find.byKey(const Key('focus-primary-action'))),
+      initialBounds,
     );
-    expect(pressed.transform.storage[0], 0.96);
 
     await gesture.up();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 180));
-    final released = tester.widget<Transform>(
-      find.byKey(const Key('focus-primary-action-elastic')),
+    expect(
+      tester.getRect(find.byKey(const Key('focus-primary-action'))),
+      initialBounds,
     );
-    expect(released.transform.storage[0], 1);
     expect(repository.pauseCount, 1);
   });
 
@@ -988,10 +1002,10 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('focus-primary-action')));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(
-      find.text('Unable to update focus. Please try again.'),
+      find.text(lookupAppLocalizations(const Locale('en')).focusActionFailed),
       findsOneWidget,
     );
     expect(find.textContaining('database down'), findsNothing);
@@ -1074,6 +1088,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    final timerBounds = tester.getRect(
+      find.byKey(const Key('focus-timer-repaint-boundary')),
+    );
     interval.value = _interval(
       now,
       status: 'running',
@@ -1081,20 +1098,20 @@ void main() {
       sequence: 2,
     );
     await tester.pump();
-    final launched = tester.widget<Transform>(
-      find.byKey(const Key('focus-timer-elastic')),
+    expect(
+      tester.getRect(find.byKey(const Key('focus-timer-repaint-boundary'))),
+      timerBounds,
     );
-    expect(launched.transform.storage[0], 0.92);
 
     await tester.pump(const Duration(milliseconds: 90));
     expect(find.text('Work interval'), findsOneWidget);
     expect(find.text('Short break'), findsOneWidget);
 
     await tester.pump(const Duration(milliseconds: 90));
-    final peak = tester.widget<Transform>(
-      find.byKey(const Key('focus-timer-elastic')),
+    expect(
+      tester.getRect(find.byKey(const Key('focus-timer-repaint-boundary'))),
+      timerBounds,
     );
-    expect(peak.transform.storage[0], moreOrLessEquals(1.06, epsilon: 0.01));
 
     await tester.pump(const Duration(milliseconds: 80));
     await tester.pumpAndSettle();
@@ -1125,11 +1142,19 @@ void main() {
     );
     await tester.pump();
 
-    final transform = tester.widget<Transform>(
-      find.byKey(const Key('focus-timer-elastic')),
+    expect(
+      find.byKey(const Key('focus-timer-repaint-boundary')),
+      findsOneWidget,
     );
-    expect(transform.transform.storage[0], 1);
-    expect(tester.binding.transientCallbackCount, 0);
+    expect(find.byKey(const Key('focus-timer-elastic')), findsNothing);
+    for (final switcher in tester.widgetList<AnimatedSwitcher>(
+      find.descendant(
+        of: find.byType(FocusActiveStage),
+        matching: find.byType(AnimatedSwitcher),
+      ),
+    )) {
+      expect(switcher.duration, Duration.zero);
+    }
   });
 
   testWidgets('reduce motion switches Full and Minimal immediately', (
@@ -1150,7 +1175,7 @@ void main() {
 
     final menu = find.byKey(const Key('focus-details-menu'));
     await tester.tap(
-      find.descendant(of: menu, matching: find.byIcon(Icons.more_horiz)),
+      find.descendant(of: menu, matching: find.byIcon(LucideIcons.ellipsis)),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('focus-switch-view-mode')));
@@ -1192,7 +1217,7 @@ void main() {
 
     final activeNode = find.byKey(const ValueKey('focus-rhythm-node-2'));
     expect(activeNode, findsOneWidget);
-    final node = tester.widget<Container>(activeNode);
+    final node = tester.widget<AnimatedContainer>(activeNode);
     final decoration = node.decoration! as BoxDecoration;
     final context = tester.element(find.byType(FocusScreen));
     expect(decoration.color, context.appColors.warning);
@@ -1210,6 +1235,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         theme: AppTheme.light(),
         home: Scaffold(
           body: SingleChildScrollView(
@@ -1252,6 +1278,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         theme: AppTheme.light(),
         home: Scaffold(
           body: SingleChildScrollView(
@@ -1304,6 +1331,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         theme: AppTheme.light(),
         home: Scaffold(
           body: Center(
@@ -1368,6 +1396,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         theme: AppTheme.light(),
         home: Scaffold(
           body: Center(
@@ -1426,6 +1455,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         theme: AppTheme.light(),
         home: Scaffold(
           body: Center(
@@ -1452,19 +1482,27 @@ void main() {
     );
     await tester.pump();
 
-    double scale(int sequence) => tester
-        .widget<Transform>(
-          find.byKey(ValueKey('focus-rhythm-node-landing-$sequence')),
-        )
-        .transform
-        .storage[0];
-    expect(scale(1), 1);
+    expect(
+      tester
+          .widget<AnimatedContainer>(
+            find.byKey(const ValueKey('focus-rhythm-node-1')),
+          )
+          .duration,
+      Duration.zero,
+    );
 
     activeSequence.value = 13;
     await tester.pump();
     await tester.pump();
 
-    expect(scale(13), 1);
+    expect(
+      tester
+          .widget<AnimatedContainer>(
+            find.byKey(const ValueKey('focus-rhythm-node-13')),
+          )
+          .duration,
+      Duration.zero,
+    );
     expect(
       tester.getCenter(find.byKey(const ValueKey('focus-rhythm-step-13'))).dx,
       moreOrLessEquals(
@@ -1472,7 +1510,14 @@ void main() {
         epsilon: 2,
       ),
     );
-    expect(tester.binding.transientCallbackCount, 0);
+    for (final switcher in tester.widgetList<AnimatedSwitcher>(
+      find.descendant(
+        of: find.byType(FocusRhythmRail),
+        matching: find.byType(AnimatedSwitcher),
+      ),
+    )) {
+      expect(switcher.duration, Duration.zero);
+    }
   });
 
   testWidgets('RTL leading connector points toward the preceding step', (
@@ -1485,6 +1530,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         theme: AppTheme.light(),
         home: Scaffold(
           body: Directionality(
@@ -1532,6 +1578,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         theme: AppTheme.light(),
         home: Scaffold(
           body: SizedBox(
@@ -1570,6 +1617,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         theme: AppTheme.light(),
         home: Scaffold(
           body: SizedBox(
@@ -1611,6 +1659,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         theme: AppTheme.light(),
         home: Scaffold(
           body: SizedBox(
@@ -1634,47 +1683,46 @@ void main() {
     expect(progress.value, 0.4);
   });
 
-  testWidgets('active rhythm node lands with a one-shot overshoot', (
-    tester,
-  ) async {
-    final rhythm = buildFocusRhythm(
-      preset: _classicPreset,
-      targetWorkIntervals: 1,
-    );
+  testWidgets(
+    'active rhythm node uses calm color motion without changing geometry',
+    (tester) async {
+      final rhythm = buildFocusRhythm(
+        preset: _classicPreset,
+        targetWorkIntervals: 1,
+      );
 
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: Scaffold(
-          body: SizedBox(
-            width: 600,
-            child: FocusRhythmRail(
-              rhythm: rhythm,
-              semanticsLabel: 'Cycle preview',
-              compact: false,
-              activeSequence: 1,
-              activeProgress: 0,
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: testAppBuilder,
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: SizedBox(
+              width: 600,
+              child: FocusRhythmRail(
+                rhythm: rhythm,
+                semanticsLabel: 'Cycle preview',
+                compact: false,
+                activeSequence: 1,
+                activeProgress: 0,
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
 
-    double scale() => tester
-        .widget<Transform>(
-          find.byKey(const ValueKey('focus-rhythm-node-landing-1')),
-        )
-        .transform
-        .storage[0];
-
-    expect(scale(), moreOrLessEquals(0.92, epsilon: 0.001));
-    await tester.pump(const Duration(milliseconds: 169));
-    expect(scale(), moreOrLessEquals(1.06, epsilon: 0.01));
-    await tester.pump(const Duration(milliseconds: 91));
-    expect(scale(), moreOrLessEquals(1, epsilon: 0.001));
-    await tester.pumpAndSettle();
-    expect(tester.binding.transientCallbackCount, 0);
-  });
+      final node = find.byKey(const ValueKey('focus-rhythm-node-1'));
+      final animation = tester.widget<AnimatedContainer>(node);
+      expect(animation.duration, AppMotion.state);
+      expect(animation.curve, AppMotion.curve);
+      final bounds = tester.getRect(node);
+      await tester.pump(const Duration(milliseconds: 90));
+      expect(tester.getRect(node), bounds);
+      await tester.pump(AppMotion.state);
+      expect(tester.getRect(node), bounds);
+      await tester.pumpAndSettle();
+      expect(tester.binding.transientCallbackCount, 0);
+    },
+  );
 
   testWidgets('completed rhythm mark crossfades into its check', (
     tester,
@@ -1685,6 +1733,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         theme: AppTheme.light(),
         home: Scaffold(
           body: SizedBox(
@@ -1727,7 +1776,7 @@ void main() {
     final firstStep = find.byKey(const ValueKey('focus-rhythm-step-1'));
     expect(find.descendant(of: firstStep, matching: find.text('1')), findsOne);
     expect(
-      find.descendant(of: firstStep, matching: find.byIcon(Icons.check)),
+      find.descendant(of: firstStep, matching: find.byIcon(LucideIcons.check)),
       findsOne,
     );
     await tester.pump(const Duration(milliseconds: 90));
@@ -1737,7 +1786,7 @@ void main() {
       findsNothing,
     );
     expect(
-      find.descendant(of: firstStep, matching: find.byIcon(Icons.check)),
+      find.descendant(of: firstStep, matching: find.byIcon(LucideIcons.check)),
       findsOne,
     );
   });
@@ -1753,6 +1802,7 @@ void main() {
     for (final direction in TextDirection.values) {
       await tester.pumpWidget(
         MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           home: Scaffold(
             body: Directionality(
@@ -1798,6 +1848,7 @@ void main() {
     for (final activeSequence in [1, 2]) {
       await tester.pumpWidget(
         MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           home: Scaffold(
             body: SizedBox(
@@ -1854,6 +1905,7 @@ void main() {
     for (final direction in TextDirection.values) {
       await tester.pumpWidget(
         MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           home: Scaffold(
             body: Directionality(
@@ -1950,7 +2002,9 @@ void main() {
             data: MediaQuery.of(
               context,
             ).copyWith(textScaler: const TextScaler.linear(2)),
-            child: child!,
+            child: Builder(
+              builder: (context) => testAppBuilder(context, child),
+            ),
           ),
           home: const Scaffold(body: FocusScreen()),
         ),
@@ -1995,7 +2049,9 @@ void main() {
             data: MediaQuery.of(
               context,
             ).copyWith(textScaler: const TextScaler.linear(2)),
-            child: child!,
+            child: Builder(
+              builder: (context) => testAppBuilder(context, child),
+            ),
           ),
           home: const Scaffold(body: FocusScreen()),
         ),
@@ -2034,6 +2090,7 @@ void main() {
           focusTickerProvider.overrideWith((ref) => Stream.value(now)),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           locale: const Locale('zh'),
           localizationsDelegates: const [
@@ -2064,6 +2121,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           locale: const Locale('ar'),
           localizationsDelegates: const [
             AppLocalizations.delegate,
@@ -2096,6 +2154,7 @@ void main() {
           focusPresetsProvider.overrideWith((ref) => loadingPresets.stream),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           home: const Scaffold(body: FocusScreen()),
         ),
@@ -2117,6 +2176,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           home: const Scaffold(body: FocusScreen()),
         ),
@@ -2307,6 +2367,7 @@ Widget _focusActiveStageHarness({
       : buildRemaining(interval as FocusIntervalItem);
 
   return MaterialApp(
+    builder: testAppBuilder,
     theme: AppTheme.light(),
     home: Builder(
       builder: (context) => MediaQuery(
@@ -2353,6 +2414,7 @@ Future<void> _pumpFocusScreen(
           projectRepositoryProvider.overrideWithValue(projectRepository),
       ],
       child: MaterialApp(
+        builder: testAppBuilder,
         theme: theme ?? AppTheme.light(),
         home: const Scaffold(body: FocusScreen()),
       ),
@@ -2388,7 +2450,11 @@ Future<void> _pumpLinkedFocusScreen(
         taskRepositoryProvider.overrideWithValue(taskRepository),
         projectRepositoryProvider.overrideWithValue(projectRepository),
       ],
-      child: MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+      child: MaterialApp.router(
+        builder: testAppBuilder,
+        theme: AppTheme.light(),
+        routerConfig: router,
+      ),
     ),
   );
   await tester.pump();

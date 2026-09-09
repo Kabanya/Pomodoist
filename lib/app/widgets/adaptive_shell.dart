@@ -1202,7 +1202,7 @@ class _ProjectsHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               onTap: onTitleTap,
               child: Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(16, 10, 0, 10),
+                padding: const EdgeInsetsDirectional.fromSTEB(10, 10, 0, 10),
                 child: Row(
                   children: [
                     Expanded(

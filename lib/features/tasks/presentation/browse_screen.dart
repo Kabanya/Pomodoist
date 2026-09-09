@@ -344,9 +344,15 @@ class _BrowseSecondary extends ConsumerWidget {
           runSpacing: 8,
           children: [
             for (final label in items)
-              Chip(
-                avatar: const Icon(LucideIcons.tag, size: 14),
-                label: Text('@${label.name}', overflow: TextOverflow.ellipsis),
+              Material(
+                type: MaterialType.transparency,
+                child: Chip(
+                  avatar: const Icon(LucideIcons.tag, size: 14),
+                  label: Text(
+                    '@${label.name}',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
           ],
         ),

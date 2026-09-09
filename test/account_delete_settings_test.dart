@@ -1,3 +1,5 @@
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton;
+import 'support/test_app.dart';
 import 'dart:async';
 
 import 'package:app_account/app_account.dart';
@@ -16,6 +18,7 @@ import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
@@ -170,7 +173,7 @@ void main() {
     );
     expect(manageApple, findsOneWidget);
     expect(find.text('Manage Sign in with Apple'), findsOneWidget);
-    expect(tester.widget<TextButton>(manageApple).onPressed, isNotNull);
+    expect(tester.widget<ShadButton>(manageApple).onPressed, isNotNull);
   });
 
   testWidgets('confirmed deletion is single-flight and clears local data', (
@@ -191,7 +194,7 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(
       tester
-          .widget<FilledButton>(
+          .widget<ShadButton>(
             find.byKey(const Key('account-delete-confirm-button')),
           )
           .onPressed,
@@ -312,7 +315,7 @@ void main() {
     expect(find.byKey(const Key('account-delete-error')), findsOneWidget);
     expect(
       tester
-          .widget<FilledButton>(
+          .widget<ShadButton>(
             find.byKey(const Key('account-delete-confirm-button')),
           )
           .onPressed,
@@ -457,6 +460,7 @@ Future<void> _pumpSettings(
         ),
       ],
       child: const MaterialApp(
+        builder: testAppBuilder,
         localizationsDelegates: [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,

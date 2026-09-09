@@ -4,7 +4,7 @@ import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/features/tasks/presentation/widgets/task_motion.dart';
 
 void main() {
-  testWidgets('local creation fades, rises, and highlights for 550ms', (
+  testWidgets('local creation settles by 240ms and highlights for 500ms', (
     tester,
   ) async {
     late TaskMotionController motion;
@@ -28,18 +28,23 @@ void main() {
     expect(_offset(tester, 'task-1').dy, 6);
     expect(_motionColor(tester, 'task-1').a, greaterThan(0));
 
-    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 120));
     expect(_opacity(tester, 'task-1'), inExclusiveRange(0, 1));
     expect(_offset(tester, 'task-1').dy, inExclusiveRange(0, 6));
     expect(_motionColor(tester, 'task-1').a, greaterThan(0));
 
-    await tester.pump(const Duration(milliseconds: 150));
+    await tester.pump(const Duration(milliseconds: 120));
+    expect(_opacity(tester, 'task-1'), 1);
+    expect(_offset(tester, 'task-1').dy, 0);
+    expect(_motionColor(tester, 'task-1').a, greaterThan(0));
+
+    await tester.pump(const Duration(milliseconds: 260));
     expect(_opacity(tester, 'task-1'), 1);
     expect(_offset(tester, 'task-1').dy, 0);
     expect(_motionColor(tester, 'task-1').a, 0);
   });
 
-  testWidgets('confirmed deletion fades and collapses for 220ms', (
+  testWidgets('confirmed deletion fades and collapses for 240ms', (
     tester,
   ) async {
     late TaskMotionController motion;
@@ -63,11 +68,11 @@ void main() {
     expect(motion.retainedTasks, [task]);
     expect(_opacity(tester, 'task-1'), 1);
 
-    await tester.pump(const Duration(milliseconds: 110));
+    await tester.pump(const Duration(milliseconds: 120));
     expect(_opacity(tester, 'task-1'), inExclusiveRange(0, 1));
     expect(_heightFactor(tester, 'task-1'), inExclusiveRange(0, 1));
 
-    await tester.pump(const Duration(milliseconds: 110));
+    await tester.pump(const Duration(milliseconds: 120));
     await tester.pumpAndSettle();
     expect(motion.retainedTasks, isEmpty);
   });
@@ -182,7 +187,7 @@ void main() {
     expect(motion.retainedTasks, isEmpty);
   });
 
-  testWidgets('landing highlight fades for 160ms', (tester) async {
+  testWidgets('landing highlight fades for 180ms', (tester) async {
     late TaskMotionController motion;
     await tester.pumpWidget(
       MaterialApp(
@@ -202,10 +207,10 @@ void main() {
     await tester.pump();
     expect(_motionColor(tester, 'task-1').a, greaterThan(0));
 
-    await tester.pump(const Duration(milliseconds: 80));
+    await tester.pump(const Duration(milliseconds: 90));
     expect(_motionColor(tester, 'task-1').a, greaterThan(0));
 
-    await tester.pump(const Duration(milliseconds: 80));
+    await tester.pump(const Duration(milliseconds: 90));
     expect(_motionColor(tester, 'task-1').a, 0);
   });
 }

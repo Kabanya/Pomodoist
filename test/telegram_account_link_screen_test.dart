@@ -1,3 +1,4 @@
+import 'support/test_app.dart';
 import 'package:app_account/app_account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,7 @@ import 'package:pomodoist/app/router.dart';
 import 'package:pomodoist/features/settings/presentation/telegram_account_link_screen.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   test(
     'Telegram account link route requires web sign in and preserves token',
     () {
@@ -45,6 +47,7 @@ void main() {
           }),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           home: TelegramAccountLinkScreen(
             token: 'valid_link_token_1234567890123456789012345',
             botName: 'pomodoist_bot',
@@ -80,6 +83,7 @@ void main() {
           }),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           home: TelegramAccountLinkScreen(
             token: 'valid_link_token_1234567890123456789012345',
             botName: 'pomodoist_bot',

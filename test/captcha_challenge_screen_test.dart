@@ -1,9 +1,11 @@
+import 'support/test_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/captcha_security.dart';
 import 'package:pomodoist/features/settings/presentation/captcha_challenge_screen.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   testWidgets('shows a user-clicked fallback that retries the exact handoff', (
     tester,
   ) async {
@@ -18,6 +20,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: testAppBuilder,
         home: CaptchaChallengeScreen(
           uri: uri,
           handoffController: controller,

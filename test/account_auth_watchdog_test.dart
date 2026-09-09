@@ -1,3 +1,5 @@
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton;
+import 'support/test_app.dart';
 import 'dart:async';
 
 import 'package:app_account/app_account.dart';
@@ -17,6 +19,7 @@ import 'package:supabase_flutter/supabase_flutter.dart'
     show AuthApiException, AuthRetryableFetchException;
 
 void main() {
+  setUpAll(loadTestAppResources);
   testWidgets('email auth dialog stays wide on compact screens', (
     tester,
   ) async {
@@ -77,8 +80,8 @@ void main() {
     );
     await tester.pump();
 
-    final submit = find.widgetWithText(FilledButton, 'Create account');
-    expect(tester.widget<FilledButton>(submit).onPressed, isNull);
+    final submit = find.widgetWithText(ShadButton, 'Create account').last;
+    expect(tester.widget<ShadButton>(submit).onPressed, isNull);
 
     final verification = tester.widget<CaptchaVerification>(
       find.byType(CaptchaVerification),
@@ -139,7 +142,10 @@ void main() {
     expect(password.controller?.text, isEmpty);
     expect(password.autofillHints, const [AutofillHints.newPassword]);
     expect(find.text('Send link'), findsNothing);
-    expect(find.widgetWithText(FilledButton, 'Create account'), findsOneWidget);
+    expect(
+      find.widgetWithText(ShadButton, 'Create account').last,
+      findsOneWidget,
+    );
   });
 
   testWidgets('unconfirmed email asks the user to confirm it', (tester) async {
@@ -160,7 +166,7 @@ void main() {
       'password',
     );
     await tester.pump();
-    await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
+    await tester.tap(find.widgetWithText(ShadButton, 'Sign in'));
     await tester.pump();
 
     expect(
@@ -231,7 +237,7 @@ void main() {
       find.byKey(const Key('account-password-field')),
       'wrong-password',
     );
-    await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
+    await tester.tap(find.widgetWithText(ShadButton, 'Sign in'));
     await tester.pump();
 
     expect(
@@ -328,7 +334,7 @@ void main() {
         find.byKey(const Key('account-password-field')),
         'password',
       );
-      await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
+      await tester.tap(find.widgetWithText(ShadButton, 'Sign in'));
       await tester.pump();
 
       expect(find.text(scenario.$2), findsOneWidget);
@@ -352,7 +358,7 @@ void main() {
       'password',
     );
     await tester.pump();
-    await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
+    await tester.tap(find.widgetWithText(ShadButton, 'Sign in'));
     await tester.pump();
 
     final calls = <MethodCall>[];
@@ -479,7 +485,7 @@ void main() {
       'password',
     );
     await tester.pump();
-    await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
+    await tester.tap(find.widgetWithText(ShadButton, 'Sign in'));
     await tester.pumpAndSettle();
 
     expect(account.signInCalls, 1);
@@ -509,7 +515,7 @@ void main() {
       'password',
     );
     await tester.pump();
-    await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
+    await tester.tap(find.widgetWithText(ShadButton, 'Sign in'));
     await tester.pumpAndSettle();
 
     expect(
@@ -635,7 +641,7 @@ void main() {
       'password',
     );
     await tester.pump();
-    await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
+    await tester.tap(find.widgetWithText(ShadButton, 'Sign in'));
     await tester.pump();
 
     expect(account.signInCalls, 1);
@@ -647,7 +653,16 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(account.signInCalls, 1);
     expect(
-      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+      tester
+          .widget<ShadButton>(
+            find
+                .descendant(
+                  of: find.byType(AlertDialog),
+                  matching: find.byType(ShadButton),
+                )
+                .last,
+          )
+          .onPressed,
       isNull,
     );
 
@@ -690,9 +705,7 @@ void main() {
       expect(account.signUpCalls, 1);
       expect(
         tester
-            .widget<FilledButton>(
-              find.byKey(const Key('register-submit-button')),
-            )
+            .widget<ShadButton>(find.byKey(const Key('register-submit-button')))
             .onPressed,
         isNull,
       );
@@ -724,6 +737,7 @@ Future<void> _pumpAuthScreen(
           runtimePublicConfigProvider.overrideWithValue(config),
       ],
       child: MaterialApp(
+        builder: testAppBuilder,
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
@@ -755,6 +769,7 @@ Future<void> _pumpAuthRouter(
           runtimePublicConfigProvider.overrideWithValue(config),
       ],
       child: MaterialApp.router(
+        builder: testAppBuilder,
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,

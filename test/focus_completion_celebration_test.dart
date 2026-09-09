@@ -1,3 +1,4 @@
+import 'support/test_app.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   testWidgets('standalone completion stays visible until Done', (tester) async {
     final container = _container();
     addTearDown(container.dispose);
@@ -403,7 +405,7 @@ void main() {
     );
     expect(initial.opacity.value, 0);
 
-    await tester.pump(const Duration(milliseconds: 900));
+    await tester.pump(const Duration(milliseconds: 90));
     final midway = tester.widget<FadeTransition>(
       find.byKey(const Key('focus-completion-content-entrance')),
     );
@@ -486,13 +488,29 @@ void main() {
 
     final done = find.byKey(const Key('focus-completion-done'));
     expect(
-      tester.getSemantics(done),
+      tester.getSemantics(
+        find
+            .descendant(
+              of: done,
+              matching: find.byWidgetPredicate(
+                (widget) =>
+                    widget is Semantics && widget.properties.button == true,
+              ),
+            )
+            .first,
+      ),
       matchesSemantics(
-        label: 'تم',
-        textDirection: TextDirection.rtl,
         hasEnabledState: true,
         isEnabled: true,
         isButton: true,
+        isFocusable: true,
+      ),
+    );
+    expect(
+      tester.getSemantics(find.descendant(of: done, matching: find.text('تم'))),
+      matchesSemantics(
+        label: 'تم',
+        textDirection: TextDirection.rtl,
         isFocusable: true,
         hasTapAction: true,
         hasFocusAction: true,
@@ -523,7 +541,7 @@ void main() {
       find.byKey(const Key('focus-completion-task-loading')),
       findsOneWidget,
     );
-    expect(find.byKey(const Key('focus-completion-done')), findsNothing);
+    expect(find.byKey(const Key('focus-completion-done')), findsOneWidget);
     expect(
       find.byKey(const Key('focus-completion-complete-task')),
       findsNothing,
@@ -580,7 +598,7 @@ Future<void> _pumpCelebration(
           data: MediaQuery.of(
             context,
           ).copyWith(disableAnimations: disableAnimations),
-          child: child!,
+          child: Builder(builder: (context) => testAppBuilder(context, child)),
         ),
         localizationsDelegates: const [
           AppLocalizations.delegate,

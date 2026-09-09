@@ -688,7 +688,13 @@ class _KanbanStatusColumn extends StatelessWidget {
                 onPressed: onAdd,
                 height: 48,
                 leading: const Icon(LucideIcons.plus),
-                child: Text(context.l10n.addTask),
+                child: Flexible(
+                  child: Text(
+                    context.l10n.addTask,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
             ),
         ],
@@ -851,7 +857,13 @@ class _MobileStatusSection extends StatelessWidget {
                     onPressed: onAdd,
                     height: 48,
                     leading: const Icon(LucideIcons.plus),
-                    child: Text(context.l10n.addTask),
+                    child: Flexible(
+                      child: Text(
+                        context.l10n.addTask,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ),
                 ),
             ],

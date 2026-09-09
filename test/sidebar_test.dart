@@ -1,3 +1,4 @@
+import 'support/test_app.dart';
 // ignore_for_file: deprecated_member_use
 
 import 'dart:convert';
@@ -49,6 +50,7 @@ const _wideSidebarEdgeHandleKey = Key('wide-sidebar-edge-reveal-handle');
 const _shellMenuButtonKey = Key('shell-menu-button');
 
 void main() {
+  setUpAll(loadTestAppResources);
   setUp(() {
     SharedPreferences.setMockInitialValues({
       onboardingCompletedPreferenceKey: true,
@@ -78,15 +80,15 @@ void main() {
       findsNothing,
     );
     const destinations = [
-      '/browse',
       '/search',
+      '/inbox',
       '/today',
       '/upcoming',
       '/focus',
-      '/inbox',
-      '/priority-matrix',
       '/timeline',
       '/kanban',
+      '/priority-matrix',
+      '/browse',
       '/reports',
       '/settings',
     ];
@@ -101,7 +103,13 @@ void main() {
       expect(destinationTops[i], greaterThan(destinationTops[i - 1]));
     }
     expect(find.text('Projects'), findsOneWidget);
-    expect(find.text('Projects: 1'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('sidebar-projects-link')),
+        matching: find.text('1'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Work'), findsOneWidget);
     expect(
       find.descendant(
@@ -187,89 +195,93 @@ void main() {
     await _disposeApp(tester);
   });
 
-  testWidgets('number shortcuts follow the desktop sidebar order', (
-    tester,
-  ) async {
-    await _pumpWideApp(tester);
+  testWidgets(
+    'number shortcuts retain their commands after sidebar reordering',
+    (tester) async {
+      await _pumpWideApp(tester);
 
-    await _pressShortcut(
-      tester,
-      LogicalKeyboardKey.metaLeft,
-      LogicalKeyboardKey.digit1,
-    );
-    expect(find.byType(BrowseScreen), findsOneWidget);
+      await _pressShortcut(
+        tester,
+        LogicalKeyboardKey.metaLeft,
+        LogicalKeyboardKey.digit1,
+      );
+      expect(find.byType(BrowseScreen), findsOneWidget);
 
-    await _pressShortcut(
-      tester,
-      LogicalKeyboardKey.metaLeft,
-      LogicalKeyboardKey.digit2,
-    );
-    expect(find.byType(SearchScreen), findsOneWidget);
+      await _pressShortcut(
+        tester,
+        LogicalKeyboardKey.metaLeft,
+        LogicalKeyboardKey.digit2,
+      );
+      expect(find.byType(Dialog), findsOneWidget);
+      expect(find.byType(SearchScreen), findsNothing);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
 
-    await _pressShortcut(
-      tester,
-      LogicalKeyboardKey.metaLeft,
-      LogicalKeyboardKey.digit3,
-    );
-    expect(find.byType(TodayScreen), findsOneWidget);
+      await _pressShortcut(
+        tester,
+        LogicalKeyboardKey.metaLeft,
+        LogicalKeyboardKey.digit3,
+      );
+      expect(find.byType(TodayScreen), findsOneWidget);
 
-    await _pressShortcut(
-      tester,
-      LogicalKeyboardKey.metaLeft,
-      LogicalKeyboardKey.digit4,
-    );
-    expect(find.byType(UpcomingScreen), findsOneWidget);
+      await _pressShortcut(
+        tester,
+        LogicalKeyboardKey.metaLeft,
+        LogicalKeyboardKey.digit4,
+      );
+      expect(find.byType(UpcomingScreen), findsOneWidget);
 
-    await _pressShortcut(
-      tester,
-      LogicalKeyboardKey.metaLeft,
-      LogicalKeyboardKey.digit5,
-    );
-    expect(find.byType(FocusScreen), findsOneWidget);
+      await _pressShortcut(
+        tester,
+        LogicalKeyboardKey.metaLeft,
+        LogicalKeyboardKey.digit5,
+      );
+      expect(find.byType(FocusScreen), findsOneWidget);
 
-    await _pressShortcut(
-      tester,
-      LogicalKeyboardKey.metaLeft,
-      LogicalKeyboardKey.digit6,
-    );
-    expect(find.byType(InboxScreen), findsOneWidget);
+      await _pressShortcut(
+        tester,
+        LogicalKeyboardKey.metaLeft,
+        LogicalKeyboardKey.digit6,
+      );
+      expect(find.byType(InboxScreen), findsOneWidget);
 
-    await _pressShortcut(
-      tester,
-      LogicalKeyboardKey.metaLeft,
-      LogicalKeyboardKey.digit7,
-    );
-    expect(find.byType(PriorityMatrixScreen), findsOneWidget);
+      await _pressShortcut(
+        tester,
+        LogicalKeyboardKey.metaLeft,
+        LogicalKeyboardKey.digit7,
+      );
+      expect(find.byType(PriorityMatrixScreen), findsOneWidget);
 
-    await _pressShortcut(
-      tester,
-      LogicalKeyboardKey.metaLeft,
-      LogicalKeyboardKey.digit8,
-    );
-    expect(find.byType(TimelineScreen), findsOneWidget);
+      await _pressShortcut(
+        tester,
+        LogicalKeyboardKey.metaLeft,
+        LogicalKeyboardKey.digit8,
+      );
+      expect(find.byType(TimelineScreen), findsOneWidget);
 
-    await _pressShortcut(
-      tester,
-      LogicalKeyboardKey.metaLeft,
-      LogicalKeyboardKey.digit9,
-    );
-    expect(find.byType(KanbanScreen), findsOneWidget);
+      await _pressShortcut(
+        tester,
+        LogicalKeyboardKey.metaLeft,
+        LogicalKeyboardKey.digit9,
+      );
+      expect(find.byType(KanbanScreen), findsOneWidget);
 
-    await _pressShortcut(
-      tester,
-      LogicalKeyboardKey.metaLeft,
-      LogicalKeyboardKey.digit0,
-    );
-    expect(find.byType(ReportsScreen), findsOneWidget);
+      await _pressShortcutWithShift(
+        tester,
+        LogicalKeyboardKey.metaLeft,
+        LogicalKeyboardKey.digit0,
+      );
+      expect(find.byType(ReportsScreen), findsOneWidget);
 
-    await _pressShortcutWithShift(
-      tester,
-      LogicalKeyboardKey.metaLeft,
-      LogicalKeyboardKey.digit1,
-    );
-    expect(find.byType(SettingsScreen), findsOneWidget);
-    await _disposeApp(tester);
-  });
+      await _pressShortcutWithShift(
+        tester,
+        LogicalKeyboardKey.metaLeft,
+        LogicalKeyboardKey.digit1,
+      );
+      expect(find.byType(SettingsScreen), findsOneWidget);
+      await _disposeApp(tester);
+    },
+  );
 
   testWidgets('reassigned sidebar shortcut replaces the default', (
     tester,
@@ -487,13 +499,15 @@ void main() {
       activeRun: _activeRun(now),
       activeInterval: _activeInterval(now),
     );
+    await tester.tap(find.text('Inbox'));
+    await _pumpFrames(tester);
 
     final surface = find.byKey(const Key('mini-focus-player-surface'));
     final decoration =
-        tester.widget<DecoratedBox>(surface).decoration as BoxDecoration;
+        tester.widget<AnimatedContainer>(surface).decoration as BoxDecoration;
 
     expect(tester.getSize(surface).width, lessThan(600));
-    expect(decoration.borderRadius, BorderRadius.circular(20));
+    expect(decoration.borderRadius, BorderRadius.circular(12));
     expect(decoration.boxShadow, isNotEmpty);
     await _disposeApp(tester);
   });
@@ -510,6 +524,8 @@ void main() {
       activeInterval: _activeInterval(now),
       hasAccountPro: true,
     );
+    await tester.tap(find.text('Inbox'));
+    await _pumpFrames(tester);
 
     expect(find.byKey(const Key('mini-focus-player-surface')), findsOneWidget);
     expect(find.byKey(const Key('mobile-bottom-navigation')), findsOneWidget);
@@ -527,7 +543,7 @@ void main() {
       ),
       findsNothing,
     );
-    expect(find.text('Today task 1'), findsOneWidget);
+    expect(find.text('Inbox task'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Voice quick add'));
     await _pumpFrames(tester);
@@ -536,8 +552,12 @@ void main() {
     await tester.tap(find.text('Focus'), warnIfMissed: false);
     await _pumpFrames(tester);
 
+    expect(find.byKey(const Key('voice-mini-panel')), findsOneWidget);
+    expect(find.text('Voice add'), findsNothing);
+    expect(find.text('Inbox task'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('voice-expand')));
+    await _pumpFrames(tester);
     expect(find.text('Voice add'), findsOneWidget);
-    expect(find.text('Today task 1'), findsOneWidget);
     await _disposeApp(tester);
   });
 
@@ -841,7 +861,9 @@ void main() {
     await tester.tap(find.text('Search'));
     await _pumpFrames(tester);
     expect(find.text('Search'), findsAtLeastNWidgets(1));
-    expect(find.text('Search tasks'), findsOneWidget);
+    expect(find.byType(Dialog), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Reports'));
     await _pumpFrames(tester);
@@ -938,11 +960,15 @@ void main() {
     final settings = find.byKey(const Key('settings-theme-mode-select')).last;
     expect(settings, findsOneWidget);
 
-    await tester.tap(find.text('Dark'));
+    await tester.tap(
+      find.descendant(of: settings, matching: find.text('Dark')),
+    );
     await tester.pumpAndSettle();
     expect(Theme.of(tester.element(settings)).brightness, Brightness.dark);
 
-    await tester.tap(find.text('Light'));
+    await tester.tap(
+      find.descendant(of: settings, matching: find.text('Light')),
+    );
     await tester.pumpAndSettle();
     expect(Theme.of(tester.element(settings)).brightness, Brightness.light);
     await _disposeApp(tester);
@@ -1034,6 +1060,7 @@ class _TestApp extends ConsumerWidget {
     final language = ref.watch(appLanguageProvider);
     final themeMode = ref.watch(appThemeModeProvider);
     return MaterialApp.router(
+      builder: testAppBuilder,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),

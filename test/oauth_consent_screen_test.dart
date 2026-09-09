@@ -1,3 +1,5 @@
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton;
+import 'support/test_app.dart';
 import 'dart:async';
 import 'dart:ui' show Tristate;
 
@@ -12,6 +14,7 @@ import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   testWidgets('missing, blank, and duplicate authorization IDs are rejected', (
     tester,
   ) async {
@@ -92,13 +95,13 @@ void main() {
     expect(find.byKey(const Key('oauth-consent-unavailable')), findsOneWidget);
     expect(
       tester
-          .widget<FilledButton>(find.byKey(const Key('oauth-consent-approve')))
+          .widget<ShadButton>(find.byKey(const Key('oauth-consent-approve')))
           .onPressed,
       isNotNull,
     );
     expect(
       tester
-          .widget<OutlinedButton>(find.byKey(const Key('oauth-consent-deny')))
+          .widget<ShadButton>(find.byKey(const Key('oauth-consent-deny')))
           .onPressed,
       isNotNull,
     );
@@ -107,7 +110,15 @@ void main() {
     );
     expect(heading.flagsCollection.isHeader, isTrue);
     final approve = tester.getSemantics(
-      find.byKey(const Key('oauth-consent-approve')),
+      find
+          .descendant(
+            of: find.byKey(const Key('oauth-consent-approve')),
+            matching: find.byWidgetPredicate(
+              (widget) =>
+                  widget is Semantics && widget.properties.button == true,
+            ),
+          )
+          .first,
     );
     expect(approve.flagsCollection.isButton, isTrue);
     expect(approve.flagsCollection.isEnabled, Tristate.isTrue);
@@ -141,16 +152,14 @@ void main() {
       );
       expect(
         tester
-            .widget<FilledButton>(
-              find.byKey(const Key('oauth-consent-approve')),
-            )
+            .widget<ShadButton>(find.byKey(const Key('oauth-consent-approve')))
             .onPressed,
         isNull,
         reason: forbiddenScope,
       );
       expect(
         tester
-            .widget<OutlinedButton>(find.byKey(const Key('oauth-consent-deny')))
+            .widget<ShadButton>(find.byKey(const Key('oauth-consent-deny')))
             .onPressed,
         isNotNull,
         reason: forbiddenScope,
@@ -267,7 +276,7 @@ void main() {
     expect(find.byKey(const Key('oauth-consent-approving')), findsOneWidget);
     expect(
       tester
-          .widget<OutlinedButton>(find.byKey(const Key('oauth-consent-deny')))
+          .widget<ShadButton>(find.byKey(const Key('oauth-consent-deny')))
           .onPressed,
       isNull,
     );
@@ -323,7 +332,7 @@ void main() {
     expect(find.byKey(const Key('oauth-consent-denying')), findsOneWidget);
     expect(
       tester
-          .widget<FilledButton>(find.byKey(const Key('oauth-consent-approve')))
+          .widget<ShadButton>(find.byKey(const Key('oauth-consent-approve')))
           .onPressed,
       isNull,
     );
@@ -336,7 +345,7 @@ void main() {
     expect(find.byKey(const Key('oauth-consent-action-error')), findsOneWidget);
     expect(
       tester
-          .widget<OutlinedButton>(find.byKey(const Key('oauth-consent-deny')))
+          .widget<ShadButton>(find.byKey(const Key('oauth-consent-deny')))
           .onPressed,
       isNotNull,
     );
@@ -540,13 +549,13 @@ void main() {
     );
     expect(
       tester
-          .widget<FilledButton>(
-            find.widgetWithText(FilledButton, 'Create account'),
+          .widget<ShadButton>(
+            find.widgetWithText(ShadButton, 'Create account').last,
           )
           .onPressed,
       isNotNull,
     );
-    await tester.tap(find.widgetWithText(FilledButton, 'Create account'));
+    await tester.tap(find.widgetWithText(ShadButton, 'Create account').last);
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('account-auth-error')), findsNothing);
@@ -587,6 +596,7 @@ Future<void> _pumpConsent(
         ),
       ],
       child: MaterialApp(
+        builder: testAppBuilder,
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
@@ -616,6 +626,7 @@ Future<void> _pumpLogin(
         accountOverviewProvider.overrideWith((ref) async => null),
       ],
       child: MaterialApp(
+        builder: testAppBuilder,
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,

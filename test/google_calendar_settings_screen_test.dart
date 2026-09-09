@@ -1,3 +1,5 @@
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton;
+import 'support/test_app.dart';
 import 'package:app_account/app_account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +11,7 @@ import 'package:pomodoist/features/integrations/google_calendar/data/google_cale
 import 'package:pomodoist/features/integrations/google_calendar/presentation/google_calendar_settings_screen.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   testWidgets('settings ignores legacy owner device and uses server actions', (
     tester,
   ) async {
@@ -52,6 +55,7 @@ void main() {
           ),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           home: Scaffold(body: GoogleCalendarSettingsScreen()),
         ),
       ),
@@ -62,9 +66,9 @@ void main() {
     expect(find.text('Disconnect'), findsOneWidget);
     expect(find.text('Use this device'), findsNothing);
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Sync now'));
+    await tester.tap(find.widgetWithText(ShadButton, 'Sync now'));
     await tester.pump();
-    await tester.tap(find.widgetWithText(OutlinedButton, 'Disconnect'));
+    await tester.tap(find.widgetWithText(ShadButton, 'Disconnect'));
     await tester.pump();
 
     expect(actions, ['sync', 'disconnect']);
@@ -102,13 +106,14 @@ void main() {
           ),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           home: Scaffold(body: GoogleCalendarSettingsScreen()),
         ),
       ),
     );
     await tester.pump();
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Sync now'));
+    await tester.tap(find.widgetWithText(ShadButton, 'Sync now'));
     await tester.pump();
 
     expect(find.textContaining('DioException'), findsNothing);

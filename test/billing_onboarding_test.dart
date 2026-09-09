@@ -1,3 +1,5 @@
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton;
+import 'support/test_app.dart';
 import 'dart:async';
 
 import 'package:app_account/app_account.dart';
@@ -26,6 +28,7 @@ import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
@@ -244,6 +247,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -274,6 +278,7 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(true),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -308,6 +313,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -352,6 +358,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -395,6 +402,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           locale: const Locale('ru'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -444,6 +452,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -1016,6 +1025,7 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(true),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -1110,6 +1120,7 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(true),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -1146,6 +1157,7 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(true),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -1746,7 +1758,7 @@ void main() {
       subtitleText,
       'natural language',
     )!;
-    expect(highlightedSubtitleSpan.style?.fontWeight, FontWeight.w800);
+    expect(highlightedSubtitleSpan.style?.fontWeight, FontWeight.w600);
     expect(find.text('Cancel anytime.'), findsOneWidget);
     final annualPlan = find.byKey(
       const ValueKey('billing-plan-pomodoist.pro.annual'),
@@ -2214,6 +2226,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -2281,6 +2294,7 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(true),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           localizationsDelegates: const [
             AppLocalizations.delegate,
@@ -2311,7 +2325,7 @@ void main() {
     expect(find.text(r'$5.99/month'), findsOneWidget);
     expect(
       tester
-          .widget<FilledButton>(
+          .widget<ShadButton>(
             find.byKey(const ValueKey('billing-buy-pomodoist.pro.monthly')),
           )
           .onPressed,
@@ -2378,6 +2392,7 @@ void main() {
           billingStripePollIntervalProvider.overrideWithValue(Duration.zero),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -2763,6 +2778,7 @@ class _OnboardingHarness extends ConsumerWidget {
     final language = ref.watch(appLanguageProvider);
     final themeMode = ref.watch(appThemeModeProvider);
     return MaterialApp(
+      builder: testAppBuilder,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeMode.themeMode,
@@ -2789,6 +2805,7 @@ class _SettingsHarness extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
+      builder: testAppBuilder,
       theme: AppTheme.light(),
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -2829,6 +2846,7 @@ class _SettingsRouterHarness extends StatelessWidget {
     );
     onRouter(router);
     return MaterialApp.router(
+      builder: testAppBuilder,
       theme: AppTheme.light(),
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -2872,6 +2890,7 @@ class _OnboardingRouterHarness extends StatelessWidget {
     );
     onRouter(router);
     return MaterialApp.router(
+      builder: testAppBuilder,
       theme: AppTheme.light(),
       localizationsDelegates: const [
         AppLocalizations.delegate,

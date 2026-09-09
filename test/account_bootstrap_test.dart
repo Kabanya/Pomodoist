@@ -1,3 +1,4 @@
+import 'support/test_app.dart';
 import 'dart:async';
 
 import 'package:app_account/app_account.dart';
@@ -12,6 +13,7 @@ import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   test('late account bootstrap success replaces timeout error', () async {
     final completer = Completer<AccountClient?>();
     final account = _FakeAccountClient();
@@ -130,6 +132,7 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(false),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -217,6 +220,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,

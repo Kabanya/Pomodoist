@@ -311,6 +311,8 @@ a result before acting after data changes.
 
 - Interactive elements must have distinguishable hover, pressed, selected,
   disabled, loading, error, and keyboard focus states where applicable.
+- Menubar popovers use the shared automatic anchor so actions remain inside
+  the viewport near window edges.
 - Keep keyboard focus visible. Task row actions must be available through
   keyboard focus and touch, not only hover.
 - Communicate state through text, icons, or semantics as well as color.

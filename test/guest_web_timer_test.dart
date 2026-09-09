@@ -1,3 +1,4 @@
+import 'support/test_app.dart';
 import 'dart:async';
 
 import 'package:app_account/app_account.dart';
@@ -15,6 +16,7 @@ import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   setUp(() => SharedPreferences.setMockInitialValues(const {}));
 
   testWidgets('guest timer stays dormant while the login screen is open', (
@@ -104,6 +106,7 @@ void main() {
         child: UncontrolledProviderScope(
           container: container,
           child: const MaterialApp(
+            builder: testAppBuilder,
             localizationsDelegates: [
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
@@ -213,7 +216,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: SizedBox()),
+        child: const MaterialApp(builder: testAppBuilder, home: SizedBox()),
       ),
     );
     await tester.pump();
@@ -317,6 +320,7 @@ Future<void> _pumpGuestLogin(
     UncontrolledProviderScope(
       container: container,
       child: MaterialApp(
+        builder: testAppBuilder,
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,

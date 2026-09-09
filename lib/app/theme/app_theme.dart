@@ -428,6 +428,13 @@ class AppTheme {
         effects: enter,
         reverseDuration: popupDuration,
       ),
+      menubarTheme: const shad.ShadMenubarTheme(
+        anchor: shad.ShadAnchorAuto(
+          offset: Offset(0, 4),
+          targetAnchor: AlignmentDirectional.bottomEnd,
+          followerAnchor: AlignmentDirectional.topEnd,
+        ),
+      ),
       contextMenuTheme: shad.ShadContextMenuTheme(
         effects: enter,
         popoverReverseDuration: popupDuration,

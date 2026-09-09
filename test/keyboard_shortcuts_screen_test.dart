@@ -1,3 +1,5 @@
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadSwitch;
+import 'support/test_app.dart';
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/foundation.dart';
@@ -13,6 +15,7 @@ import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   TestWidgetsFlutterBinding.ensureInitialized();
   const channel = MethodChannel(quickAddChannelName);
 
@@ -116,7 +119,7 @@ void main() {
 
     final preferences = await SharedPreferences.getInstance();
     expect(preferences.getBool(globalQuickAddEnabledPreferenceKey), isFalse);
-    expect(tester.widget<Switch>(toggle).value, isFalse);
+    expect(tester.widget<ShadSwitch>(toggle).value, isFalse);
 
     await tester.scrollUntilVisible(
       find.byKey(const Key('shortcuts-reset-all')),
@@ -126,7 +129,7 @@ void main() {
     await tester.tap(find.byKey(const Key('shortcuts-reset-all')));
     await tester.pumpAndSettle();
 
-    expect(tester.widget<Switch>(toggle).value, isFalse);
+    expect(tester.widget<ShadSwitch>(toggle).value, isFalse);
     expect(preferences.getBool(globalQuickAddEnabledPreferenceKey), isFalse);
   });
 
@@ -241,6 +244,7 @@ Future<void> _pumpScreen(
     ProviderScope(
       overrides: [shortcutTargetPlatformProvider.overrideWithValue(platform)],
       child: MaterialApp(
+        builder: testAppBuilder,
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,

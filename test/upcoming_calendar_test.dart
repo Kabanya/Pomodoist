@@ -1,3 +1,5 @@
+import 'support/test_app.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton;
 import 'dart:ui' show Tristate;
 
 import 'package:flutter/material.dart';
@@ -9,6 +11,7 @@ import 'package:pomodoist/features/tasks/presentation/widgets/upcoming_calendar.
 import 'package:pomodoist/l10n/app_localizations.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   final today = DateTime(2026, 12, 30);
 
   group('UpcomingCalendar layout and paging', () {
@@ -576,7 +579,7 @@ void main() {
           }
           await tester.pump(const Duration(milliseconds: 300));
 
-          final opener = tester.widget<TextButton>(
+          final opener = tester.widget<ShadButton>(
             find.byKey(const ValueKey('upcoming-calendar-month')),
           );
           expect(opener.focusNode?.hasFocus, isTrue, reason: 'width $width');
@@ -707,7 +710,7 @@ Future<void> _pumpCalendar(
       builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(textScaler: textScaler),
-          child: child!,
+          child: Builder(builder: (context) => testAppBuilder(context, child)),
         );
       },
       home: Scaffold(

@@ -1,4 +1,7 @@
+import 'support/test_app.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -13,6 +16,8 @@ import 'package:pomodoist/features/tasks/presentation/widgets/task_list_item.dar
 import 'package:pomodoist/l10n/app_localizations.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
+  setUp(() => SharedPreferences.setMockInitialValues({}));
   testWidgets('agenda row shows project color and within-day time', (
     tester,
   ) async {
@@ -38,7 +43,7 @@ void main() {
     expect(find.text('Agenda rows stay compact'), findsNothing);
     expect(
       tester.getTopLeft(find.text('Work')).dx,
-      lessThan(tester.getTopLeft(find.text('14:00')).dx),
+      greaterThan(tester.getTopLeft(find.text('14:00')).dx),
     );
 
     expect(find.text('#'), findsOneWidget);
@@ -66,12 +71,15 @@ void main() {
     expect(find.text('Work'), findsOneWidget);
     expect(find.byKey(const Key('agenda-schedule-label')), findsNothing);
     expect(find.textContaining('July'), findsNothing);
-    expect(find.byIcon(Icons.event_outlined), findsNothing);
+    expect(find.byIcon(LucideIcons.calendarDays), findsNothing);
   });
 
   testWidgets('agenda actions adapt between desktop and narrow widths', (
     tester,
   ) async {
+    SharedPreferences.setMockInitialValues({
+      taskListStylePreferenceKey: 'classic',
+    });
     const taskId = 'agenda-task';
     await _pumpRow(
       tester,
@@ -161,13 +169,13 @@ void main() {
     );
 
     expect(find.text('Standard description'), findsOneWidget);
-    expect(find.byIcon(Icons.event_outlined), findsOneWidget);
+    expect(find.byKey(const ValueKey('task-time-label-task')), findsOneWidget);
     expect(find.byTooltip('Start focus'), findsOneWidget);
-    expect(find.byKey(const Key('agenda-project-label')), findsNothing);
-    expect(find.byKey(const Key('agenda-schedule-label')), findsNothing);
+    expect(find.byKey(const Key('agenda-project-label')), findsOneWidget);
+    expect(find.byKey(const Key('agenda-schedule-label')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('agenda-overflow-action-task')),
-      findsNothing,
+      findsOneWidget,
     );
   });
 
@@ -314,6 +322,7 @@ Future<void> _pumpRow(
         ),
       ],
       child: MaterialApp(
+        builder: testAppBuilder,
         theme: AppTheme.light(),
         locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,

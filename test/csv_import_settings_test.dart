@@ -1,3 +1,4 @@
+import 'support/test_app.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -13,6 +14,7 @@ import 'package:pomodoist/features/settings/presentation/csv_task_import_card.da
 import 'package:pomodoist/l10n/app_localizations.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   test('CSV import is available on web, macOS, and Windows', () {
     expect(
       isCsvTaskImportSupported(web: true, platform: TargetPlatform.windows),
@@ -97,6 +99,7 @@ Future<void> _pumpCard(WidgetTester tester, Widget card, {AppDatabase? db}) {
     ProviderScope(
       overrides: [if (db != null) appDatabaseProvider.overrideWithValue(db)],
       child: MaterialApp(
+        builder: testAppBuilder,
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,

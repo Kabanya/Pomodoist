@@ -1,3 +1,4 @@
+import 'support/test_app.dart';
 import 'dart:async';
 import 'dart:collection';
 
@@ -14,6 +15,7 @@ import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
@@ -345,6 +347,7 @@ Future<void> _pumpSettings(
         ),
       ],
       child: MaterialApp(
+        builder: testAppBuilder,
         locale: locale,
         localizationsDelegates: const [
           AppLocalizations.delegate,

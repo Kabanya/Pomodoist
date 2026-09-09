@@ -162,7 +162,10 @@ class AppDateTimePickerState extends State<AppDateTimePicker> {
       // The library positions against the full overlay, including the keyboard.
       anchor: media.viewInsets.bottom > 0
           ? ShadGlobalAnchor(Offset(anchorX, media.padding.top + 12))
-          : null,
+          : const ShadAnchorAuto(
+              targetAnchor: Alignment.topCenter,
+              followerAnchor: Alignment.topCenter,
+            ),
       padding: const EdgeInsets.all(12),
       decoration: ShadDecoration(
         color: colors.surface,
