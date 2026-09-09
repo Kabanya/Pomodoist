@@ -193,6 +193,7 @@ class _KeyboardShortcutsScreenState
       builder: (dialogContext) => _ShortcutRecorderDialog(
         onSubmit: (binding) async {
           final conflictMessage = context.l10n.settingsShortcutsConflict;
+          if (isAppZoomBinding(binding, _platform)) return conflictMessage;
           if (_globalShortcut?.displaySignature == binding.displaySignature) {
             return conflictMessage;
           }
@@ -212,6 +213,9 @@ class _KeyboardShortcutsScreenState
         barrierDismissible: false,
         builder: (dialogContext) => _ShortcutRecorderDialog(
           onSubmit: (binding) async {
+            if (isAppZoomBinding(binding, _platform)) {
+              return context.l10n.settingsShortcutsConflict;
+            }
             final candidate = GlobalQuickAddBinding(
               keyCode: binding.physicalKeyId,
               keyLabel: binding.keyLabel,
@@ -248,10 +252,11 @@ class _KeyboardShortcutsScreenState
       barrierDismissible: false,
       builder: (dialogContext) => _GlobalShortcutRecorderDialog(
         controller: ref.read(platformQuickAddControllerProvider),
-        hasConflict: (candidate) => ref
-            .read(keyboardShortcutsProvider)
-            .values
-            .any(
+        hasConflict: (candidate) =>
+            [
+              ...ref.read(keyboardShortcutsProvider).values,
+              ...appZoomBindings(_platform).keys,
+            ].any(
               (binding) =>
                   binding.displaySignature == candidate.displaySignature,
             ),
@@ -371,10 +376,13 @@ class _ShortcutRecorderDialogState extends State<_ShortcutRecorderDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return KeyboardListener(
+    return Focus(
       focusNode: _focusNode,
       autofocus: true,
-      onKeyEvent: _handleKeyEvent,
+      onKeyEvent: (_, event) {
+        _handleKeyEvent(event);
+        return KeyEventResult.handled;
+      },
       child: AlertDialog(
         key: const Key('shortcut-recorder-dialog'),
         title: Text(l10n.settingsShortcutsRecordTitle),

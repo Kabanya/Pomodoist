@@ -7,6 +7,7 @@ import 'package:pomodoist/l10n/app_localizations.dart';
 
 import '../features/updates/update_widgets.dart';
 import 'app_language.dart';
+import 'app_zoom.dart';
 import 'platform_quick_add.dart';
 import 'app_theme_mode.dart';
 import 'router.dart';
@@ -48,8 +49,10 @@ class PomodoistApp extends ConsumerWidget {
             Theme.of(context),
             reduceMotion: MediaQuery.disableAnimationsOf(context),
           ),
-          child: ShadAppBuilder(
-            child: DesktopUpdateHost(child: child ?? const SizedBox.shrink()),
+          child: AppZoom(
+            child: ShadAppBuilder(
+              child: DesktopUpdateHost(child: child ?? const SizedBox.shrink()),
+            ),
           ),
         ),
         locale: language.locale,

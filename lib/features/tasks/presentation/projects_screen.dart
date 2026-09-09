@@ -4,7 +4,6 @@ import 'package:shadcn_ui/shadcn_ui.dart'
         LucideIcons,
         ShadButton,
         ShadContextMenuItem,
-        ShadContextMenuRegion,
         ShadDialog,
         ShadIconButton,
         ShadInput,
@@ -15,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/app_l10n.dart';
+import '../../../app/widgets/app_context_menu_region.dart';
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/db/app_database.dart';
@@ -475,10 +475,8 @@ class _LabelListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    return ShadContextMenuRegion(
+    return AppContextMenuRegion(
       key: ValueKey('projects-screen-label-${label.id}'),
-      tapEnabled: false,
-      longPressEnabled: true,
       items: [
         ShadContextMenuItem(
           leading: Icon(

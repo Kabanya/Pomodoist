@@ -7,11 +7,11 @@ import 'package:shadcn_ui/shadcn_ui.dart'
         ShadButton,
         ShadContextMenuController,
         ShadContextMenuItem,
-        ShadContextMenuRegion,
         ShadDialog,
         ShadIconButton;
 
 import '../../../../app/app_l10n.dart';
+import '../../../../app/widgets/app_context_menu_region.dart';
 import '../../../../app/providers.dart';
 import '../../domain/project_colors.dart';
 import '../../domain/task_models.dart';
@@ -54,10 +54,8 @@ class _ProjectContextMenuState extends ConsumerState<ProjectContextMenu> {
         const SingleActivator(LogicalKeyboardKey.f10, shift: true):
             _controller.show,
       },
-      child: ShadContextMenuRegion(
+      child: AppContextMenuRegion(
         controller: _controller,
-        tapEnabled: false,
-        longPressEnabled: true,
         items: [
           ShadContextMenuItem(
             leading: const Icon(LucideIcons.pencil, size: 16),

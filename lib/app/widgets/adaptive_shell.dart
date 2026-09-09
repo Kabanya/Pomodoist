@@ -105,6 +105,11 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
         widget.location == '/settings/shortcuts') {
       return;
     }
+    if (appZoomBindings(
+      ref.read(shortcutTargetPlatformProvider),
+    ).keys.any((binding) => binding.matchesRawEvent(event))) {
+      return;
+    }
     for (final entry in ref.read(keyboardShortcutsProvider).entries) {
       if (entry.value.matchesRawEvent(event)) {
         _rawHandledPhysicalKeyId = event.physicalKey.usbHidUsage;
@@ -240,6 +245,11 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     }
 
     final keyboard = HardwareKeyboard.instance;
+    if (appZoomBindings(
+      ref.read(shortcutTargetPlatformProvider),
+    ).keys.any((binding) => binding.matches(event, keyboard))) {
+      return false;
+    }
     AppShortcutCommand? command;
     for (final entry in ref.read(keyboardShortcutsProvider).entries) {
       if (entry.value.matches(event, keyboard)) {

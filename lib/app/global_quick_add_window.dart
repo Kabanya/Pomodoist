@@ -11,6 +11,7 @@ import '../features/tasks/presentation/widgets/quick_add_bar.dart';
 import '../l10n/app_localizations.dart';
 import 'app_l10n.dart';
 import 'app_language.dart';
+import 'app_zoom.dart';
 import 'app_theme_mode.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_theme_settings.dart';
@@ -132,7 +133,7 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
             Theme.of(context),
             reduceMotion: MediaQuery.disableAnimationsOf(context),
           ),
-          child: ShadAppBuilder(child: child),
+          child: AppZoom(child: ShadAppBuilder(child: child)),
         ),
         home: Scaffold(
           body: SafeArea(

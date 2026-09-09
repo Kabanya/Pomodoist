@@ -109,6 +109,24 @@ mode. Invalid HEX input in either tab blocks saving. Saving errors keep the draf
 open for retry. The editor itself uses Classic so even an unreadable custom
 palette can be repaired; its two previews show the actual custom colors.
 
+## Interface zoom
+
+Native windows share a locally saved interface zoom of 70–150%, initially 100%.
+Command + / − changes it by 10 percentage points and Command 0 resets it;
+Windows and Linux use Control. Accept both Command = and Command Shift = for
+zooming in, plus the numeric keypad equivalents. Reserve these shortcuts from
+navigation bindings; Reports defaults to Command/Control Shift 0. Migrate older
+conflicting bindings while keeping unrelated custom shortcuts and avoiding
+duplicates. Shortcut recording consumes its keys without changing zoom.
+
+Scale the entire content viewport, including Material and Shadcn overlays and
+the separate Quick Add window. Keep the widget tree mounted so zoom retains
+drafts, focus, routes and timer state. Adapt logical viewport size, density and
+insets together; retain system text scaling and Reduce Motion. Context menus
+convert pointer coordinates into their overlay's coordinate space. Zoom applies
+immediately without an animation. On the web, browser zoom owns these keys and
+its persistence; do not add a second app-level scale.
+
 ## Contextual navigation
 
 Desktop task details retain the underlying list, selection and scroll position.

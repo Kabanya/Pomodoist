@@ -146,9 +146,15 @@ class AppDateTimePickerState extends State<AppDateTimePicker> {
     final media = MediaQuery.of(context);
     final colors = context.appColors;
     final anchorBox = focusNode.context?.findRenderObject();
+    final overlayBox = Overlay.maybeOf(context)?.context.findRenderObject();
     final anchorX =
         anchorBox is RenderBox && anchorBox.attached && anchorBox.hasSize
-        ? anchorBox.localToGlobal(anchorBox.size.center(Offset.zero)).dx
+        ? anchorBox
+              .localToGlobal(
+                anchorBox.size.center(Offset.zero),
+                ancestor: overlayBox,
+              )
+              .dx
         : media.size.width / 2;
     final panel = ShadPopover(
       controller: _popover,

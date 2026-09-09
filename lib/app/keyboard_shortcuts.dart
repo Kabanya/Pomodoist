@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart' show ShortcutActivator;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -47,7 +48,7 @@ const _newAppShortcutCommands = [
 ];
 
 @immutable
-class AppShortcutBinding {
+class AppShortcutBinding implements ShortcutActivator {
   const AppShortcutBinding({
     required this.physicalKeyId,
     required this.keyLabel,
@@ -113,6 +114,17 @@ class AppShortcutBinding {
         alt == keyboard.isAltPressed &&
         shift == keyboard.isShiftPressed;
   }
+
+  @override
+  Iterable<LogicalKeyboardKey>? get triggers => null;
+
+  @override
+  String debugDescribeKeys() => labelFor(defaultTargetPlatform);
+
+  @override
+  bool accepts(KeyEvent event, HardwareKeyboard state) =>
+      (event is KeyDownEvent || event is KeyRepeatEvent) &&
+      matches(event, state);
 
   bool matchesRawEvent(RawKeyEvent event) {
     return physicalKeyId == event.physicalKey.usbHidUsage &&
@@ -213,7 +225,11 @@ Map<AppShortcutCommand, AppShortcutBinding> defaultAppShortcutBindings(
     AppShortcutCommand.priorityMatrix: binding(PhysicalKeyboardKey.digit7, '7'),
     AppShortcutCommand.timeline: binding(PhysicalKeyboardKey.digit8, '8'),
     AppShortcutCommand.kanban: binding(PhysicalKeyboardKey.digit9, '9'),
-    AppShortcutCommand.reports: binding(PhysicalKeyboardKey.digit0, '0'),
+    AppShortcutCommand.reports: binding(
+      PhysicalKeyboardKey.digit0,
+      '0',
+      shift: true,
+    ),
     AppShortcutCommand.settings: binding(
       PhysicalKeyboardKey.digit1,
       '1',
@@ -221,6 +237,32 @@ Map<AppShortcutCommand, AppShortcutBinding> defaultAppShortcutBindings(
     ),
   };
 }
+
+enum AppZoomCommand { increase, decrease, reset }
+
+Map<AppShortcutBinding, AppZoomCommand> appZoomBindings(
+  TargetPlatform platform,
+) => {
+  _platformBinding(platform, PhysicalKeyboardKey.equal, '='):
+      AppZoomCommand.increase,
+  _platformBinding(platform, PhysicalKeyboardKey.equal, '+', shift: true):
+      AppZoomCommand.increase,
+  _platformBinding(platform, PhysicalKeyboardKey.numpadAdd, '+'):
+      AppZoomCommand.increase,
+  _platformBinding(platform, PhysicalKeyboardKey.minus, '-'):
+      AppZoomCommand.decrease,
+  _platformBinding(platform, PhysicalKeyboardKey.numpadSubtract, '-'):
+      AppZoomCommand.decrease,
+  _platformBinding(platform, PhysicalKeyboardKey.digit0, '0'):
+      AppZoomCommand.reset,
+  _platformBinding(platform, PhysicalKeyboardKey.numpad0, '0'):
+      AppZoomCommand.reset,
+};
+
+bool isAppZoomBinding(AppShortcutBinding binding, TargetPlatform platform) =>
+    appZoomBindings(
+      platform,
+    ).keys.any((candidate) => candidate.signature == binding.signature);
 
 Map<AppShortcutCommand, AppShortcutBinding> _legacyDefaultBindings(
   TargetPlatform platform,
@@ -306,7 +348,7 @@ class KeyboardShortcutsController
     AppShortcutCommand command,
     AppShortcutBinding binding,
   ) async {
-    if (!binding.isValid) {
+    if (!binding.isValid || isAppZoomBinding(binding, _platform)) {
       throw ArgumentError.value(binding, 'binding', 'Invalid shortcut');
     }
     for (final entry in state.entries) {
@@ -356,7 +398,24 @@ class KeyboardShortcutsController
         AppShortcutCommand.values.length) {
       return;
     }
+    // Reserve standard zoom keys while retaining unrelated custom shortcuts.
+    final displaced = loaded.keys
+        .where((command) => isAppZoomBinding(loaded[command]!, _platform))
+        .toList();
+    final used = loaded.entries
+        .where((entry) => !displaced.contains(entry.key))
+        .map((entry) => entry.value.signature)
+        .toSet();
+    for (final command in displaced) {
+      final replacement = [
+        defaults[command]!,
+        ...defaults.values,
+      ].firstWhere((binding) => !used.contains(binding.signature));
+      loaded[command] = replacement;
+      used.add(replacement.signature);
+    }
     if (ref.mounted) state = Map.unmodifiable(loaded);
+    if (ref.mounted && displaced.isNotEmpty) await _persist();
   }
 
   Future<void> _loadLegacy(
@@ -370,6 +429,7 @@ class KeyboardShortcutsController
         decoded[command.storageKey],
       );
       if (candidate == null ||
+          isAppZoomBinding(candidate, _platform) ||
           candidate.signature == legacyDefaults[command]!.signature) {
         continue;
       }

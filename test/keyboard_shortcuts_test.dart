@@ -32,7 +32,7 @@ void main() {
         '⌘7',
         '⌘8',
         '⌘9',
-        '⌘0',
+        '⇧⌘0',
         '⇧⌘1',
       ],
     );
@@ -54,6 +54,188 @@ void main() {
       'Ctrl+Shift+1',
     );
   });
+
+  test('zoom handles plus variants, repeats, reset and platform modifiers', () {
+    final bindings = appZoomBindings(TargetPlatform.macOS);
+    final keyboard = _KeyboardState(meta: true);
+    for (final key in [
+      PhysicalKeyboardKey.equal,
+      PhysicalKeyboardKey.numpadAdd,
+    ]) {
+      final event = KeyDownEvent(
+        physicalKey: key,
+        logicalKey: LogicalKeyboardKey.add,
+        timeStamp: Duration.zero,
+      );
+      expect(
+        bindings.entries
+            .where((entry) => entry.key.accepts(event, keyboard))
+            .map((entry) => entry.value),
+        [AppZoomCommand.increase],
+      );
+    }
+    final plus = KeyDownEvent(
+      physicalKey: PhysicalKeyboardKey.equal,
+      logicalKey: LogicalKeyboardKey.add,
+      timeStamp: Duration.zero,
+    );
+    expect(
+      bindings.entries
+          .singleWhere(
+            (entry) => entry.key.accepts(
+              plus,
+              _KeyboardState(meta: true, shift: true),
+            ),
+          )
+          .value,
+      AppZoomCommand.increase,
+    );
+    expect(
+      bindings.keys.any((binding) => binding.accepts(plus, _KeyboardState())),
+      isFalse,
+    );
+    final repeat = KeyRepeatEvent(
+      physicalKey: PhysicalKeyboardKey.minus,
+      logicalKey: LogicalKeyboardKey.minus,
+      timeStamp: Duration.zero,
+    );
+    expect(
+      bindings.entries
+          .singleWhere((entry) => entry.key.accepts(repeat, keyboard))
+          .value,
+      AppZoomCommand.decrease,
+    );
+    final up = KeyUpEvent(
+      physicalKey: PhysicalKeyboardKey.minus,
+      logicalKey: LogicalKeyboardKey.minus,
+      timeStamp: Duration.zero,
+    );
+    expect(
+      bindings.keys.any((binding) => binding.accepts(up, keyboard)),
+      isFalse,
+    );
+    final reset = KeyDownEvent(
+      physicalKey: PhysicalKeyboardKey.digit0,
+      logicalKey: LogicalKeyboardKey.digit0,
+      timeStamp: Duration.zero,
+    );
+    expect(
+      bindings.entries
+          .singleWhere((entry) => entry.key.accepts(reset, keyboard))
+          .value,
+      AppZoomCommand.reset,
+    );
+    expect(
+      appZoomBindings(TargetPlatform.windows).entries
+          .singleWhere(
+            (entry) => entry.key.accepts(reset, _KeyboardState(control: true)),
+          )
+          .value,
+      AppZoomCommand.reset,
+    );
+  });
+
+  test(
+    'saved reset key migrates while preserving unrelated custom shortcuts',
+    () async {
+      final saved = defaultAppShortcutBindings(TargetPlatform.macOS);
+      saved[AppShortcutCommand.reports] = AppShortcutBinding(
+        physicalKeyId: PhysicalKeyboardKey.digit0.usbHidUsage,
+        keyLabel: '0',
+        meta: true,
+      );
+      saved[AppShortcutCommand.search] = AppShortcutBinding(
+        physicalKeyId: PhysicalKeyboardKey.keyJ.usbHidUsage,
+        keyLabel: 'J',
+        meta: true,
+      );
+      SharedPreferences.setMockInitialValues({
+        keyboardShortcutsPreferenceKey: jsonEncode({
+          for (final entry in saved.entries)
+            entry.key.storageKey: entry.value.toJson(),
+        }),
+      });
+      final container = ProviderContainer(
+        overrides: [
+          shortcutTargetPlatformProvider.overrideWithValue(
+            TargetPlatform.macOS,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(keyboardShortcutsLoadedProvider.future);
+      final loaded = container.read(keyboardShortcutsProvider);
+      expect(loaded[AppShortcutCommand.reports]!.shift, isTrue);
+      expect(
+        loaded[AppShortcutCommand.search],
+        saved[AppShortcutCommand.search],
+      );
+      expect(
+        loaded.values.any(
+          (binding) => isAppZoomBinding(binding, TargetPlatform.macOS),
+        ),
+        isFalse,
+      );
+      await expectLater(
+        container
+            .read(keyboardShortcutsProvider.notifier)
+            .setBinding(
+              AppShortcutCommand.search,
+              saved[AppShortcutCommand.reports]!,
+            ),
+        throwsArgumentError,
+      );
+      final stored = jsonDecode(
+        (await SharedPreferences.getInstance()).getString(
+          keyboardShortcutsPreferenceKey,
+        )!,
+      );
+      expect(stored['reports']['shift'], isTrue);
+    },
+  );
+
+  test(
+    'migration retains a custom shortcut occupying the new reports default',
+    () async {
+      final saved = defaultAppShortcutBindings(TargetPlatform.macOS);
+      saved[AppShortcutCommand.search] = saved[AppShortcutCommand.reports]!;
+      saved[AppShortcutCommand.reports] = AppShortcutBinding(
+        physicalKeyId: PhysicalKeyboardKey.digit0.usbHidUsage,
+        keyLabel: '0',
+        meta: true,
+      );
+      SharedPreferences.setMockInitialValues({
+        keyboardShortcutsPreferenceKey: jsonEncode({
+          for (final entry in saved.entries)
+            entry.key.storageKey: entry.value.toJson(),
+        }),
+      });
+      final container = ProviderContainer(
+        overrides: [
+          shortcutTargetPlatformProvider.overrideWithValue(
+            TargetPlatform.macOS,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(keyboardShortcutsLoadedProvider.future);
+      final loaded = container.read(keyboardShortcutsProvider);
+      expect(
+        loaded[AppShortcutCommand.search],
+        saved[AppShortcutCommand.search],
+      );
+      expect(
+        loaded.values.map((binding) => binding.signature).toSet(),
+        hasLength(loaded.length),
+      );
+      expect(
+        loaded.values.any(
+          (binding) => isAppZoomBinding(binding, TargetPlatform.macOS),
+        ),
+        isFalse,
+      );
+    },
+  );
 
   test('binding round-trips and malformed JSON is rejected', () {
     const binding = AppShortcutBinding(
@@ -250,7 +432,7 @@ void main() {
           '⌘7',
           '⌘8',
           '⌘9',
-          '⌘0',
+          '⇧⌘0',
           '⇧⌘1',
         ],
       );
@@ -385,10 +567,15 @@ void main() {
 }
 
 class _KeyboardState implements HardwareKeyboard {
-  const _KeyboardState({this.meta = false, this.shift = false});
+  const _KeyboardState({
+    this.meta = false,
+    this.shift = false,
+    this.control = false,
+  });
 
   final bool meta;
   final bool shift;
+  final bool control;
 
   @override
   bool get isMetaPressed => meta;
@@ -400,7 +587,7 @@ class _KeyboardState implements HardwareKeyboard {
   bool get isAltPressed => false;
 
   @override
-  bool get isControlPressed => false;
+  bool get isControlPressed => control;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
