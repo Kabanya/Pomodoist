@@ -221,10 +221,11 @@ layout. The local `tasks.listStyle` preference changes only shared rows, includi
 search, planning lists and subtasks. Both styles share task actions, selection,
 drag-and-drop and motion. Modern keeps desktop metadata and action slots aligned,
 wraps metadata on narrow screens, and reveals actions on hover or keyboard focus.
-In the shared column layout, metadata follows the title in this order: time
-(160 px), project (120 px), then focus progress (56 px), before row actions.
-Keep that order when metadata wraps; the subtask indicator retains its position
-before these fields.
+In both styles, timing stays below the task title and its description when shown,
+including in date-grouped lists. Keep its existing date/time format and status
+color. In the shared column layout, project (120 px) and focus progress (56 px)
+remain to the right of the title block, before row actions. Keep their order when
+metadata wraps; the subtask indicator retains its position before these fields.
 Touch actions stay available. Project and timing colors retain their semantics.
 Custom Kanban and Timeline blocks keep their specialized layouts.
 

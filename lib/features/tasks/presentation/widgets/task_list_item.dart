@@ -1117,24 +1117,6 @@ class _AgendaTaskContent extends StatelessWidget {
       48,
     );
     addMetadata(
-      scheduleLabel != null
-          ? ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 180),
-              child: _TaskTimeMetaText(
-                taskId: task.id,
-                label: scheduleLabel,
-                state: taskTimeState,
-                color: taskTimeState == null
-                    ? colors.mutedText
-                    : colors.taskTimeColor(taskTimeState!),
-                textStyle: Theme.of(context).textTheme.labelMedium,
-                key: const Key('agenda-schedule-label'),
-              ),
-            )
-          : null,
-      160,
-    );
-    addMetadata(
       project != null ? _AgendaProjectLabel(project: project!) : null,
       120,
     );
@@ -1168,21 +1150,37 @@ class _AgendaTaskContent extends StatelessWidget {
       ),
     );
 
-    final heading = modern && (description?.isNotEmpty ?? false)
+    final hasDescription = modern && (description?.isNotEmpty ?? false);
+    final heading = hasDescription || scheduleLabel != null
         ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               title,
-              const SizedBox(height: 2),
-              Text(
-                description!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.mutedText),
-              ),
+              if (hasDescription) ...[
+                const SizedBox(height: 2),
+                Text(
+                  description!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: colors.mutedText),
+                ),
+              ],
+              if (scheduleLabel != null) ...[
+                const SizedBox(height: 4),
+                _TaskTimeMetaText(
+                  taskId: task.id,
+                  label: scheduleLabel,
+                  state: taskTimeState,
+                  color: taskTimeState == null
+                      ? colors.mutedText
+                      : colors.taskTimeColor(taskTimeState!),
+                  textStyle: Theme.of(context).textTheme.labelMedium,
+                  key: const Key('agenda-schedule-label'),
+                ),
+              ],
             ],
           )
         : title;
