@@ -1117,20 +1117,6 @@ class _AgendaTaskContent extends StatelessWidget {
       48,
     );
     addMetadata(
-      focusEstimate != null
-          ? _FixedMetaText(
-              flexible: modern,
-              icon: LucideIcons.timer,
-              label: '${task.completedFocusIntervals}/$focusEstimate',
-            )
-          : null,
-      56,
-    );
-    addMetadata(
-      project != null ? _AgendaProjectLabel(project: project!) : null,
-      120,
-    );
-    addMetadata(
       scheduleLabel != null
           ? ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 180),
@@ -1147,6 +1133,20 @@ class _AgendaTaskContent extends StatelessWidget {
             )
           : null,
       160,
+    );
+    addMetadata(
+      project != null ? _AgendaProjectLabel(project: project!) : null,
+      120,
+    );
+    addMetadata(
+      focusEstimate != null
+          ? _FixedMetaText(
+              flexible: modern,
+              icon: LucideIcons.timer,
+              label: '${task.completedFocusIntervals}/$focusEstimate',
+            )
+          : null,
+      56,
     );
     final title = AnimatedDefaultTextStyle(
       duration: modern
