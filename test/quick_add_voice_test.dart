@@ -7,6 +7,7 @@ import 'package:app_account/app_account.dart';
 import 'package:app_voice/app_voice.dart';
 import 'package:drift/drift.dart' hide Column, isNotNull, isNull;
 import 'package:drift/native.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -25,8 +26,11 @@ import 'package:pomodoist/features/planning/data/quick_add_service.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/features/tasks/presentation/widgets/quick_add_bar.dart';
 import 'package:pomodoist/features/tasks/presentation/widgets/task_list_view.dart';
+import 'package:pomodoist/features/voice/data/pomodoist_voice_controller.dart';
+import 'package:pomodoist/features/voice/data/voice_transcription_mode.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadTheme;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
@@ -43,6 +47,57 @@ void main() {
     ...emptySuggestionOverrides,
     billingAccountEntitlementProvider.overrideWithValue(true),
   ];
+
+  test('Apple controller uses cloud preference only while signed in', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    SharedPreferences.setMockInitialValues({
+      voiceTranscriptionModePreferenceKey: 'cloud',
+    });
+    const recordChannel = MethodChannel('com.llfbandit.record/messages');
+    final recordersDisposed = Completer<void>();
+    var disposeCalls = 0;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(recordChannel, (call) async {
+          if (call.method == 'dispose' && ++disposeCalls == 2) {
+            recordersDisposed.complete();
+          }
+          return null;
+        });
+    addTearDown(() {
+      debugDefaultTargetPlatformOverride = null;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(recordChannel, null);
+    });
+
+    final signedIn = ProviderContainer(
+      overrides: [
+        accountClientProvider.overrideWithValue(
+          _VoiceAccountClient(userId: 'user'),
+        ),
+      ],
+    );
+    await signedIn.read(voiceTranscriptionModeProvider.notifier).ready;
+    expect(
+      signedIn.read(voiceRecognitionControllerProvider),
+      isA<BackendVoiceController>(),
+    );
+    signedIn.dispose();
+
+    final signedOut = ProviderContainer(
+      overrides: [
+        accountClientProvider.overrideWithValue(
+          _VoiceAccountClient(userId: null),
+        ),
+      ],
+    );
+    await signedOut.read(voiceTranscriptionModeProvider.notifier).ready;
+    expect(
+      signedOut.read(voiceRecognitionControllerProvider),
+      isNot(isA<BackendVoiceController>()),
+    );
+    signedOut.dispose();
+    await recordersDisposed.future;
+  });
 
   test(
     'account bootstrap changes do not recreate the voice controller',
@@ -107,11 +162,14 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(false),
           voiceRecognitionControllerProvider.overrideWithValue(controller),
         ],
-        child: const MaterialApp(
-          locale: Locale('ru'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: QuickAddBar()),
+        child: ShadTheme(
+          data: AppTheme.shadFromMaterial(AppTheme.light()),
+          child: const MaterialApp(
+            locale: Locale('ru'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: QuickAddBar()),
+          ),
         ),
       ),
     );
@@ -130,6 +188,258 @@ void main() {
     );
     expect(find.textContaining('PlatformException'), findsNothing);
   });
+
+  for (final scenario in [
+    'recording',
+    'microphoneDenied',
+    'cloudUnavailable',
+  ]) {
+    final microphoneDenied = scenario == 'microphoneDenied';
+    final cloudUnavailable = scenario == 'cloudUnavailable';
+    testWidgets(
+      microphoneDenied
+          ? 'Apple speech failure with a denied microphone does not offer cloud'
+          : cloudUnavailable
+          ? 'Apple cloud errors do not offer system dictation settings'
+          : 'Apple speech failure switches to cloud and starts recording',
+      (tester) async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+        addTearDown(() => debugDefaultTargetPlatformOverride = null);
+        const channel = MethodChannel(systemSpeechChannelName);
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(
+              channel,
+              (_) async => {
+                'microphone': microphoneDenied ? 'denied' : 'authorized',
+                'speech': cloudUnavailable ? 'authorized' : 'restricted',
+              },
+            );
+        addTearDown(
+          () => TestDefaultBinaryMessengerBinding
+              .instance
+              .defaultBinaryMessenger
+              .setMockMethodCallHandler(channel, null),
+        );
+        final systemRecognizer = _FakeRecordedRecognizer(
+          transcript: const VoiceRecognitionTranscript(text: ''),
+          startError: const VoiceRecognitionException(
+            'speech_dictation_disabled',
+            'Dictation is disabled.',
+          ),
+        );
+        final cloudRecognizer = _FakeRecordedRecognizer(
+          transcript: const VoiceRecognitionTranscript(text: 'Cloud result'),
+          startError: cloudUnavailable
+              ? const VoiceRecognitionException(
+                  'speech_unavailable',
+                  'Cloud unavailable.',
+                )
+              : null,
+        );
+        final systemController = VoiceRecognitionController(
+          recordedRecognizer: systemRecognizer,
+          platformSupport: const VoicePlatformSupport(
+            supportsRecordedSystem: true,
+          ),
+        );
+        final cloudController = VoiceRecognitionController(
+          recordedRecognizer: cloudRecognizer,
+          platformSupport: const VoicePlatformSupport(
+            supportsRecordedSystem: true,
+          ),
+        );
+        addTearDown(systemController.dispose);
+        addTearDown(cloudController.dispose);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              ...proVoiceOverrides,
+              accountClientProvider.overrideWithValue(
+                _VoiceAccountClient(userId: 'user'),
+              ),
+              applePurchasesSupportedProvider.overrideWithValue(false),
+              voiceRecognitionControllerProvider.overrideWith((ref) {
+                return ref.read(voiceTranscriptionModeProvider) ==
+                        VoiceTranscriptionMode.cloud
+                    ? cloudController
+                    : systemController;
+              }),
+            ],
+            child: ShadTheme(
+              data: AppTheme.shadFromMaterial(AppTheme.light()),
+              child: MaterialApp(
+                theme: AppTheme.light(),
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: const Scaffold(body: QuickAddBar()),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.byTooltip('Voice quick add'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Record'));
+        await tester.pumpAndSettle();
+        if (microphoneDenied) {
+          expect(
+            find.byKey(const Key('voice-use-cloud-transcription')),
+            findsNothing,
+          );
+          expect(cloudRecognizer.startCalls, 0);
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.pump();
+          debugDefaultTargetPlatformOverride = null;
+          return;
+        }
+        expect(
+          find.byKey(const Key('voice-use-cloud-transcription')),
+          findsOneWidget,
+        );
+        final cancelsBeforeSwitch = systemRecognizer.cancelCalls;
+
+        await tester.tap(
+          find.byKey(const Key('voice-use-cloud-transcription')),
+        );
+        await tester.pump();
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 10)),
+        );
+        await tester.pump();
+
+        expect(systemRecognizer.cancelCalls, greaterThan(cancelsBeforeSwitch));
+        expect(
+          cloudRecognizer.startCalls,
+          1,
+          reason: 'system starts: ${systemRecognizer.startCalls}',
+        );
+        expect(
+          (await SharedPreferences.getInstance()).getString(
+            voiceTranscriptionModePreferenceKey,
+          ),
+          'cloud',
+        );
+        if (cloudUnavailable) {
+          await tester.pumpAndSettle();
+          expect(find.byKey(const Key('voice-recover-access')), findsNothing);
+          expect(
+            find.byKey(const Key('voice-use-cloud-transcription')),
+            findsNothing,
+          );
+        }
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        debugDefaultTargetPlatformOverride = null;
+      },
+    );
+  }
+
+  testWidgets(
+    'Apple cold start restores audio and applies mode changes in the open panel',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      SharedPreferences.setMockInitialValues({
+        voiceTranscriptionModePreferenceKey: 'cloud',
+      });
+      final systemRecognizer = _FakeRecordedRecognizer(
+        transcript: const VoiceRecognitionTranscript(text: ''),
+      );
+      final cloudRecognizer = _SavedRecordedRecognizer();
+      final systemController = VoiceRecognitionController(
+        recordedRecognizer: systemRecognizer,
+        platformSupport: const VoicePlatformSupport(
+          supportsRecordedSystem: true,
+        ),
+      );
+      final cloudController = VoiceRecognitionController(
+        recordedRecognizer: cloudRecognizer,
+        platformSupport: const VoicePlatformSupport(
+          supportsRecordedSystem: true,
+        ),
+      );
+      addTearDown(systemController.dispose);
+      addTearDown(cloudController.dispose);
+      final modes = <VoiceTranscriptionMode>[];
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            ...proVoiceOverrides,
+            accountClientProvider.overrideWithValue(
+              _VoiceAccountClient(userId: 'user'),
+            ),
+            applePurchasesSupportedProvider.overrideWithValue(false),
+            voiceRecognitionControllerProvider.overrideWith((ref) {
+              final mode = ref.read(voiceTranscriptionModeProvider);
+              modes.add(mode);
+              return mode == VoiceTranscriptionMode.cloud
+                  ? cloudController
+                  : systemController;
+            }),
+            taskDecomposerProvider.overrideWithValue(
+              const _FakeTaskDecomposer([
+                DecomposedTaskDraft(quickAdd: 'Recovered cloud recording'),
+              ]),
+            ),
+          ],
+          child: ShadTheme(
+            data: AppTheme.shadFromMaterial(AppTheme.light()),
+            child: const MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(body: QuickAddBar()),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byTooltip('Voice quick add'));
+      await tester.pumpAndSettle();
+      expect(modes, [
+        VoiceTranscriptionMode.system,
+        VoiceTranscriptionMode.cloud,
+      ]);
+      expect(cloudRecognizer.cancelCalls, 0);
+      expect(find.text('Retry transcription'), findsOneWidget);
+      await tester.tap(find.text('Retry transcription'));
+      await tester.pumpAndSettle();
+      expect(cloudRecognizer.retryCalls, 1);
+      expect(cloudRecognizer.startCalls, 0);
+      expect(find.text('Recovered cloud recording'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('voice-collapse')));
+      await tester.pumpAndSettle();
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(QuickAddBar)),
+      );
+      await container
+          .read(voiceTranscriptionModeProvider.notifier)
+          .setMode(VoiceTranscriptionMode.system);
+      await tester.tap(find.byKey(const Key('voice-expand')));
+      await tester.pumpAndSettle();
+      final canceling = Completer<void>();
+      cloudRecognizer.cancelWait = canceling.future;
+      addTearDown(() {
+        if (!canceling.isCompleted) canceling.complete();
+      });
+      final again = find.widgetWithText(FilledButton, 'Again');
+      await tester.tap(again);
+      await tester.pump();
+      expect(tester.widget<FilledButton>(again).onPressed, isNull);
+      canceling.complete();
+      await tester.pump();
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 10)),
+      );
+      await tester.pump();
+      expect(systemRecognizer.startCalls, 1);
+      expect(cloudRecognizer.startCalls, 0);
+      expect(modes.last, VoiceTranscriptionMode.system);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
 
   testWidgets(
     'saved voice opens settings and retries without recording again',
@@ -173,10 +483,13 @@ void main() {
               ]),
             ),
           ],
-          child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(body: QuickAddBar()),
+          child: ShadTheme(
+            data: AppTheme.shadFromMaterial(AppTheme.light()),
+            child: const MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(body: QuickAddBar()),
+            ),
           ),
         ),
       );
@@ -2359,6 +2672,7 @@ class _FakeRecordedRecognizer extends RecordedVoiceRecognizer
   var startCalls = 0;
   var stopCalls = 0;
   var cancelCalls = 0;
+  Future<void>? cancelWait;
 
   @override
   Future<void> start(VoiceRecognitionConfig config) async {
@@ -2377,10 +2691,23 @@ class _FakeRecordedRecognizer extends RecordedVoiceRecognizer
   @override
   Future<void> cancel() async {
     cancelCalls += 1;
+    await cancelWait;
   }
 
   @override
   void dispose() {}
+}
+
+class _VoiceAccountClient implements AccountClient {
+  _VoiceAccountClient({required this.userId});
+
+  final String? userId;
+
+  @override
+  String? get currentUserId => userId;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _SavedRecordedRecognizer extends _FakeRecordedRecognizer {

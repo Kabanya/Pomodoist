@@ -1542,6 +1542,42 @@ abstract class AppLocalizations {
   /// **'System default'**
   String get settingsLanguageSystem;
 
+  /// No description provided for @settingsVoiceTranscriptionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice transcription'**
+  String get settingsVoiceTranscriptionTitle;
+
+  /// No description provided for @settingsVoiceTranscriptionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how recordings are converted to text on this device.'**
+  String get settingsVoiceTranscriptionSubtitle;
+
+  /// No description provided for @settingsVoiceTranscriptionSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System (Apple)'**
+  String get settingsVoiceTranscriptionSystem;
+
+  /// No description provided for @settingsVoiceTranscriptionCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud'**
+  String get settingsVoiceTranscriptionCloud;
+
+  /// No description provided for @settingsVoiceTranscriptionCloudDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud transcription sends audio to Pomodoist and requires an internet connection.'**
+  String get settingsVoiceTranscriptionCloudDescription;
+
+  /// No description provided for @settingsVoiceTranscriptionCloudRequiresSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to use cloud transcription. System transcription is active until then.'**
+  String get settingsVoiceTranscriptionCloudRequiresSignIn;
+
   /// No description provided for @settingsThemeTitle.
   ///
   /// In en, this message translates to:
@@ -1931,6 +1967,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enable Dictation'**
   String get voiceEnableDictation;
+
+  /// No description provided for @voiceUseCloudTranscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use cloud transcription'**
+  String get voiceUseCloudTranscription;
 
   /// No description provided for @voiceMicrophoneDenied.
   ///

@@ -821,6 +821,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsLanguageSystem => 'افتراضي النظام';
 
   @override
+  String get settingsVoiceTranscriptionTitle => 'نسخ الصوت';
+
+  @override
+  String get settingsVoiceTranscriptionSubtitle =>
+      'اختر كيفية تحويل التسجيلات إلى نص على هذا الجهاز.';
+
+  @override
+  String get settingsVoiceTranscriptionSystem => 'النظام (Apple)';
+
+  @override
+  String get settingsVoiceTranscriptionCloud => 'السحابة';
+
+  @override
+  String get settingsVoiceTranscriptionCloudDescription =>
+      'يرسل النسخ السحابي الصوت إلى Pomodoist ويتطلب اتصالاً بالإنترنت.';
+
+  @override
+  String get settingsVoiceTranscriptionCloudRequiresSignIn =>
+      'سجّل الدخول لاستخدام النسخ السحابي. سيظل النسخ النظامي نشطًا حتى ذلك الحين.';
+
+  @override
   String get settingsThemeTitle => 'السمة';
 
   @override
@@ -1037,6 +1058,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get voiceEnableDictation => 'تفعيل الإملاء';
+
+  @override
+  String get voiceUseCloudTranscription => 'استخدام النسخ السحابي';
 
   @override
   String get voiceMicrophoneDenied =>

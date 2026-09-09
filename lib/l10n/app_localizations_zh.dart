@@ -773,6 +773,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsLanguageSystem => '跟随系统';
 
   @override
+  String get settingsVoiceTranscriptionTitle => '语音转写';
+
+  @override
+  String get settingsVoiceTranscriptionSubtitle => '选择如何在此设备上将录音转换为文字。';
+
+  @override
+  String get settingsVoiceTranscriptionSystem => '系统 (Apple)';
+
+  @override
+  String get settingsVoiceTranscriptionCloud => '云端';
+
+  @override
+  String get settingsVoiceTranscriptionCloudDescription =>
+      '云端转写会将音频发送到 Pomodoist，并且需要互联网连接。';
+
+  @override
+  String get settingsVoiceTranscriptionCloudRequiresSignIn =>
+      '登录后可使用云端转写。在此之前将使用系统转写。';
+
+  @override
   String get settingsThemeTitle => '主题';
 
   @override
@@ -981,6 +1001,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get voiceEnableDictation => '启用听写';
+
+  @override
+  String get voiceUseCloudTranscription => '使用云端转写';
 
   @override
   String get voiceMicrophoneDenied => '请在系统设置中允许访问麦克风。';

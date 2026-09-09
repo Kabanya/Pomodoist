@@ -15,6 +15,7 @@ import '../features/integrations/google_calendar/data/google_calendar_sync_contr
 import '../features/integrations/google_calendar/data/google_calendar_sync_lifecycle.dart';
 import '../features/planning/data/task_decomposer.dart';
 import '../features/voice/data/pomodoist_voice_controller.dart';
+import '../features/voice/data/voice_transcription_mode.dart';
 import 'native_captcha_startup.dart';
 import 'native_link_coordinator.dart';
 import 'providers.dart';
@@ -191,6 +192,12 @@ final voiceRecognitionControllerProvider = Provider<VoiceRecognitionController>(
       account = next;
     });
     final controller = createPomodoistVoiceController(
+      mode: effectiveVoiceTranscriptionMode(
+        isWeb: kIsWeb,
+        platform: defaultTargetPlatform,
+        preferred: ref.read(voiceTranscriptionModeProvider),
+        signedIn: account?.currentUserId != null,
+      ),
       ownerId: () => account?.currentUserId,
       invoke: (body) async {
         final current = account;

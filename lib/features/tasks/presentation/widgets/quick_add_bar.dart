@@ -21,6 +21,8 @@ import '../../../focus/presentation/focus_view_mode.dart';
 import '../../../onboarding/onboarding_gate.dart';
 import '../../../planning/data/task_decomposer.dart';
 import '../../../planning/domain/quick_add_parser.dart';
+import '../../../voice/data/pomodoist_voice_controller.dart';
+import '../../../voice/data/voice_transcription_mode.dart';
 import '../../domain/task_models.dart';
 import 'quick_add_text_controller.dart';
 import 'quick_add_details.dart';
@@ -878,7 +880,8 @@ class VoiceQuickAddHost extends ConsumerStatefulWidget {
 
 class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
     with TickerProviderStateMixin, WidgetsBindingObserver {
-  late final VoiceRecognitionController _voiceController;
+  late VoiceRecognitionController _voiceController;
+  late VoiceTranscriptionMode _voiceMode;
   late final AnimationController _pulseController;
   late final AnimationController _analysisProgressController;
   VoiceRecognitionStatus _status = VoiceRecognitionStatus.idle;
@@ -969,6 +972,14 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
   void initState() {
     super.initState();
     _voiceController = ref.read(voiceRecognitionControllerProvider);
+    _voiceMode =
+        supportsVoiceTranscriptionModeSelection(
+              isWeb: kIsWeb,
+              platform: defaultTargetPlatform,
+            ) &&
+            _voiceController is! BackendVoiceController
+        ? VoiceTranscriptionMode.system
+        : VoiceTranscriptionMode.cloud;
     WidgetsBinding.instance.addObserver(this);
     _pulseController = AnimationController(
       vsync: this,
@@ -1373,6 +1384,13 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
                       icon: const Icon(LucideIcons.settings2),
                       label: Text(_recoveryLabel),
                     ),
+                  if (_canUseCloudFallback)
+                    OutlinedButton.icon(
+                      key: const Key('voice-use-cloud-transcription'),
+                      onPressed: _canStart ? _useCloudTranscription : null,
+                      icon: const Icon(LucideIcons.cloud),
+                      label: Text(l10n.voiceUseCloudTranscription),
+                    ),
                   if (_error != null &&
                       _transcript.trim().isNotEmpty &&
                       !_captureActive &&
@@ -1541,6 +1559,20 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
     if (!_canStart) {
       return;
     }
+    if (!retry) {
+      _setSheetState(() => _accessBusy = true);
+      try {
+        await _syncVoiceControllerForNewRecording();
+      } catch (_) {
+        if (mounted) {
+          _setSheetState(() => _error = context.l10n.voiceStatusError);
+        }
+        return;
+      } finally {
+        if (mounted) _setSheetState(() => _accessBusy = false);
+      }
+      if (!mounted || !_canStart) return;
+    }
     final locale = Localizations.localeOf(context).toLanguageTag();
     _setSheetState(() {
       _captureActive = true;
@@ -1672,6 +1704,13 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
 
   Future<void> _restoreRecording() async {
     try {
+      await ref.read(voiceTranscriptionModeProvider.notifier).ready;
+      if (!mounted) return;
+      final mode = _effectiveVoiceMode;
+      if (mode != _voiceMode) {
+        // Select the saved mode before restoring; opening must not discard audio.
+        _replaceVoiceController(mode);
+      }
       await _voiceController.restorePendingRecording();
     } catch (_) {
       if (mounted) _error = context.l10n.voiceStatusError;
@@ -1702,6 +1741,65 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
           (_voiceErrorCode == 'microphone_restricted' ||
               _voiceErrorCode == 'speech_authorization_restricted'));
 
+  VoiceTranscriptionMode get _effectiveVoiceMode =>
+      effectiveVoiceTranscriptionMode(
+        isWeb: kIsWeb,
+        platform: defaultTargetPlatform,
+        preferred: ref.read(voiceTranscriptionModeProvider),
+        signedIn: ref.read(accountClientProvider)?.currentUserId != null,
+      );
+
+  bool get _canUseCloudFallback =>
+      _access['microphone'] != 'denied' &&
+      _access['microphone'] != 'restricted' &&
+      canOfferCloudTranscriptionFallback(
+        isWeb: kIsWeb,
+        platform: defaultTargetPlatform,
+        mode: _voiceMode,
+        signedIn: ref.read(accountClientProvider)?.currentUserId != null,
+        errorCode: _voiceErrorCode,
+      );
+
+  Future<void> _syncVoiceControllerForNewRecording() async {
+    await ref.read(voiceTranscriptionModeProvider.notifier).ready;
+    final mode = _effectiveVoiceMode;
+    if (mode == _voiceMode) return;
+    await _voiceController.cancel();
+    if (!mounted) return;
+    _replaceVoiceController(mode);
+  }
+
+  void _replaceVoiceController(VoiceTranscriptionMode mode) {
+    ref.invalidate(voiceRecognitionControllerProvider);
+    _voiceController = ref.read(voiceRecognitionControllerProvider);
+    _voiceMode = mode;
+  }
+
+  Future<void> _useCloudTranscription() async {
+    if (!_canStart || !_canUseCloudFallback) return;
+    _setSheetState(() => _accessBusy = true);
+    try {
+      await _voiceController.cancel();
+      await ref
+          .read(voiceTranscriptionModeProvider.notifier)
+          .setMode(VoiceTranscriptionMode.cloud);
+      if (!mounted) return;
+      _replaceVoiceController(VoiceTranscriptionMode.cloud);
+      _setSheetState(() {
+        _error = null;
+        _voiceErrorCode = null;
+      });
+    } catch (_) {
+      if (mounted) {
+        _setSheetState(() => _error = context.l10n.voiceStatusError);
+      }
+      return;
+    } finally {
+      if (mounted) _setSheetState(() => _accessBusy = false);
+    }
+    if (mounted) await _start();
+  }
+
   bool get _needsPermissionRequest =>
       !_accessRestricted &&
       (_access['microphone'] == 'notDetermined' ||
@@ -1713,6 +1811,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
         _voiceErrorCode == 'microphone_denied') {
       return VoiceSettingsDestination.microphone;
     }
+    if (_voiceMode != VoiceTranscriptionMode.system) return null;
     if (_access['speech'] == 'denied' ||
         _voiceErrorCode == 'speech_authorization_denied' ||
         _voiceErrorCode == 'speech_permission_denied') {

@@ -6,15 +6,27 @@ import 'package:url_launcher/url_launcher.dart';
 import 'backend_voice_recognizer.dart';
 import 'record_voice_recorder.dart';
 import 'voice_recording_store.dart';
+import 'voice_transcription_mode.dart';
 
-bool usesBackendVoice({required bool isWeb, required TargetPlatform platform}) =>
-    isWeb || (platform != TargetPlatform.iOS && platform != TargetPlatform.macOS);
+bool usesBackendVoice({
+  required bool isWeb,
+  required TargetPlatform platform,
+  required VoiceTranscriptionMode mode,
+}) =>
+    isWeb ||
+    (platform != TargetPlatform.iOS && platform != TargetPlatform.macOS) ||
+    mode == VoiceTranscriptionMode.cloud;
 
 VoiceRecognitionController createPomodoistVoiceController({
   required VoiceBackendInvoke invoke,
   required String? Function() ownerId,
+  required VoiceTranscriptionMode mode,
 }) {
-  if (!usesBackendVoice(isWeb: kIsWeb, platform: defaultTargetPlatform)) {
+  if (!usesBackendVoice(
+    isWeb: kIsWeb,
+    platform: defaultTargetPlatform,
+    mode: mode,
+  )) {
     return VoiceRecognitionController(); // Preserve Apple's implementation.
   }
   return BackendVoiceController(BackendVoiceRecognizer(
@@ -51,6 +63,11 @@ class BackendVoiceController extends VoiceRecognitionController {
     }
     if (defaultTargetPlatform == TargetPlatform.windows) {
       return launchUrl(Uri.parse('ms-settings:privacy-microphone'));
+    }
+    if ((defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.macOS) &&
+        destination == VoiceSettingsDestination.microphone) {
+      return MethodChannelSystemSpeechTranscriber().openSettings(destination);
     }
     return false;
   }

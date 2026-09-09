@@ -26,10 +26,12 @@ import '../../focus/presentation/focus_view_mode.dart';
 import '../../focus/presentation/focus_screen.dart';
 import '../../integrations/google_calendar/presentation/google_calendar_settings_screen.dart';
 import '../../onboarding/onboarding_gate.dart';
+import '../../voice/data/voice_transcription_mode.dart';
 import 'account_sign_out_button.dart';
 import 'app_info_card.dart';
 import 'csv_task_import_card.dart';
 import 'theme_settings_card.dart';
+import 'voice_transcription_settings_card.dart';
 import 'pomodoist_account_actions.dart';
 
 class LoginScreen extends ConsumerWidget {
@@ -1142,6 +1144,13 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ),
+          if (supportsVoiceTranscriptionModeSelection(
+            isWeb: kIsWeb,
+            platform: defaultTargetPlatform,
+          )) ...[
+            const SizedBox(height: 12),
+            VoiceTranscriptionSettingsCard(signedIn: signedInAccount != null),
+          ],
           const SizedBox(height: 12),
           Card(
             child: SwitchListTile(

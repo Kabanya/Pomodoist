@@ -928,7 +928,7 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
         child: Material(
           color: colors.surface,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 18, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1159,6 +1159,7 @@ class _AddTaskTile extends StatelessWidget {
       gap: 10,
       child: Text(
         context.l10n.addTask,
+        textAlign: TextAlign.start,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
           color: colors.accent,
           fontWeight: FontWeight.w600,
@@ -1201,7 +1202,7 @@ class _ProjectsHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               onTap: onTitleTap,
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                padding: const EdgeInsetsDirectional.fromSTEB(16, 10, 0, 10),
                 child: Row(
                   children: [
                     Expanded(

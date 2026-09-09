@@ -831,6 +831,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLanguageSystem => 'System default';
 
   @override
+  String get settingsVoiceTranscriptionTitle => 'Voice transcription';
+
+  @override
+  String get settingsVoiceTranscriptionSubtitle =>
+      'Choose how recordings are converted to text on this device.';
+
+  @override
+  String get settingsVoiceTranscriptionSystem => 'System (Apple)';
+
+  @override
+  String get settingsVoiceTranscriptionCloud => 'Cloud';
+
+  @override
+  String get settingsVoiceTranscriptionCloudDescription =>
+      'Cloud transcription sends audio to Pomodoist and requires an internet connection.';
+
+  @override
+  String get settingsVoiceTranscriptionCloudRequiresSignIn =>
+      'Sign in to use cloud transcription. System transcription is active until then.';
+
+  @override
   String get settingsThemeTitle => 'Theme';
 
   @override
@@ -1048,6 +1069,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceEnableDictation => 'Enable Dictation';
+
+  @override
+  String get voiceUseCloudTranscription => 'Use cloud transcription';
 
   @override
   String get voiceMicrophoneDenied =>

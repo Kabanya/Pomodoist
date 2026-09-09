@@ -3,20 +3,58 @@ import 'dart:convert';
 
 import 'package:app_voice/app_voice.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/features/voice/data/backend_voice_recognizer.dart';
 import 'package:pomodoist/features/voice/data/pomodoist_voice_controller.dart';
 import 'package:pomodoist/features/voice/data/voice_recording.dart';
+import 'package:pomodoist/features/voice/data/voice_transcription_mode.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('only native Apple runtimes keep system transcription', () {
+  test('Apple runtimes honor the selected transcription mode', () {
     for (final platform in TargetPlatform.values) {
-      expect(usesBackendVoice(isWeb: true, platform: platform), isTrue);
-      expect(usesBackendVoice(isWeb: false, platform: platform),
-          platform != TargetPlatform.iOS && platform != TargetPlatform.macOS);
+      expect(usesBackendVoice(isWeb: true, platform: platform,
+          mode: VoiceTranscriptionMode.system), isTrue);
+      final isApple = platform == TargetPlatform.iOS ||
+          platform == TargetPlatform.macOS;
+      expect(usesBackendVoice(isWeb: false, platform: platform,
+          mode: VoiceTranscriptionMode.system), !isApple);
+      expect(usesBackendVoice(isWeb: false, platform: platform,
+          mode: VoiceTranscriptionMode.cloud), isTrue);
     }
+  });
+
+  test('Apple cloud mode opens the existing microphone settings channel', () async {
+    const channel = MethodChannel('pomodoist/system_speech');
+    final calls = <MethodCall>[];
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+      calls.add(call);
+      return true;
+    });
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() {
+      debugDefaultTargetPlatformOverride = null;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+    });
+    final controller = BackendVoiceController(BackendVoiceRecognizer(
+      recorder: FakeRecorder(), store: MemoryStore(), ownerId: () => 'user',
+      invoke: (_) async => null,
+    ));
+    addTearDown(controller.dispose);
+
+    expect(await controller.openSettings(VoiceSettingsDestination.microphone),
+        isTrue);
+    expect(calls, [
+      isA<MethodCall>()
+          .having((call) => call.method, 'method', 'openSettings')
+          .having((call) => call.arguments, 'arguments', {
+        'destination': 'microphone',
+      }),
+    ]);
   });
 
   test('successful transcript is emitted into the existing controller flow', () async {

@@ -833,6 +833,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsLanguageSystem => 'Как в системе';
 
   @override
+  String get settingsVoiceTranscriptionTitle => 'Транскрибация голоса';
+
+  @override
+  String get settingsVoiceTranscriptionSubtitle =>
+      'Выберите, как преобразовывать записи в текст на этом устройстве.';
+
+  @override
+  String get settingsVoiceTranscriptionSystem => 'Системная (Apple)';
+
+  @override
+  String get settingsVoiceTranscriptionCloud => 'Облачная';
+
+  @override
+  String get settingsVoiceTranscriptionCloudDescription =>
+      'Облачная транскрибация отправляет аудио в Pomodoist и требует подключения к интернету.';
+
+  @override
+  String get settingsVoiceTranscriptionCloudRequiresSignIn =>
+      'Войдите, чтобы использовать облачную транскрибацию. До этого будет активна системная.';
+
+  @override
   String get settingsThemeTitle => 'Тема';
 
   @override
@@ -1053,6 +1074,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get voiceEnableDictation => 'Включить Диктовку';
+
+  @override
+  String get voiceUseCloudTranscription =>
+      'Использовать облачную транскрибацию';
 
   @override
   String get voiceMicrophoneDenied =>

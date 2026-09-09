@@ -837,6 +837,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsLanguageSystem => 'Predeterminado del sistema';
 
   @override
+  String get settingsVoiceTranscriptionTitle => 'Transcripción de voz';
+
+  @override
+  String get settingsVoiceTranscriptionSubtitle =>
+      'Elige cómo convertir las grabaciones en texto en este dispositivo.';
+
+  @override
+  String get settingsVoiceTranscriptionSystem => 'Sistema (Apple)';
+
+  @override
+  String get settingsVoiceTranscriptionCloud => 'Nube';
+
+  @override
+  String get settingsVoiceTranscriptionCloudDescription =>
+      'La transcripción en la nube envía el audio a Pomodoist y requiere conexión a internet.';
+
+  @override
+  String get settingsVoiceTranscriptionCloudRequiresSignIn =>
+      'Inicia sesión para usar la transcripción en la nube. Hasta entonces se usará la transcripción del sistema.';
+
+  @override
   String get settingsThemeTitle => 'Tema';
 
   @override
@@ -1057,6 +1078,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get voiceEnableDictation => 'Activar Dictado';
+
+  @override
+  String get voiceUseCloudTranscription => 'Usar transcripción en la nube';
 
   @override
   String get voiceMicrophoneDenied =>
