@@ -1305,6 +1305,23 @@ class AppLocalizationsRu extends AppLocalizations {
       'Аккаунт удалён, но локальные данные очистить не удалось. Очистите данные приложения перед дальнейшим использованием этого устройства.';
 
   @override
+  String get browseSevenDays => '7 дней';
+
+  @override
+  String get browseOpenNow => 'Открыто сейчас';
+
+  @override
+  String get browseQueueLoading => 'Загрузка ожидающих изменений…';
+
+  @override
+  String get browseQueueUnavailable =>
+      'Не удалось загрузить ожидающие изменения.';
+
+  @override
+  String get browseQueueExplanation =>
+      'Здесь показаны локальные изменения, ожидающие отправки. Пустая очередь не подтверждает, что данные на всех устройствах актуальны.';
+
+  @override
   String get productivityTitle => 'Продуктивность';
 
   @override

@@ -19,6 +19,7 @@ import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/db/app_database.dart';
 import '../domain/task_models.dart';
+import 'project_list_data.dart';
 import 'widgets/create_project_dialog.dart';
 import 'widgets/project_context_menu.dart';
 import 'widgets/project_icon.dart';
@@ -56,7 +57,9 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     final projects = ref.watch(projectsProvider);
     final labels = ref.watch(labelsProvider);
     final tasks = ref.watch(tasksByQueryProvider(const TaskQuery.all()));
-    final taskCounts = _projectTaskCounts(tasks.value ?? const <TaskItem>[]);
+    final taskCounts = countOpenTasksByProject(
+      tasks.value ?? const <TaskItem>[],
+    );
     final projectMode = _mode == _ProjectsMode.projects;
 
     return SafeArea(
@@ -169,7 +172,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
             projects.when(
               data: (items) {
                 final filteredProjects = _filteredProjects(items);
-                final rows = _projectRows(filteredProjects);
+                final rows = projectRows(filteredProjects);
                 if (rows.isEmpty) {
                   return SliverFillRemaining(
                     hasScrollBody: false,
@@ -516,59 +519,4 @@ class _LabelListTile extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ProjectListRow {
-  const _ProjectListRow({required this.project, required this.depth});
-
-  final ProjectItem project;
-  final int depth;
-}
-
-class _ProjectTreeNode {
-  _ProjectTreeNode(this.project);
-
-  final ProjectItem project;
-  final List<_ProjectTreeNode> children = [];
-}
-
-List<_ProjectListRow> _projectRows(List<ProjectItem> projects) {
-  final nodes = {
-    for (final project in projects) project.id: _ProjectTreeNode(project),
-  };
-  final roots = <_ProjectTreeNode>[];
-
-  for (final project in projects) {
-    final node = nodes[project.id]!;
-    final parentId = project.parentId;
-    if (parentId != null && nodes.containsKey(parentId)) {
-      nodes[parentId]!.children.add(node);
-    } else {
-      roots.add(node);
-    }
-  }
-
-  final rows = <_ProjectListRow>[];
-  void visit(_ProjectTreeNode node, int depth) {
-    rows.add(_ProjectListRow(project: node.project, depth: depth));
-    for (final child in node.children) {
-      visit(child, depth + 1);
-    }
-  }
-
-  for (final root in roots) {
-    visit(root, 0);
-  }
-  return rows;
-}
-
-Map<String, int> _projectTaskCounts(List<TaskItem> tasks) {
-  final counts = <String, int>{};
-  for (final task in tasks) {
-    if (task.projectId == inboxProjectId || task.isCompleted) {
-      continue;
-    }
-    counts.update(task.projectId, (count) => count + 1, ifAbsent: () => 1);
-  }
-  return counts;
 }

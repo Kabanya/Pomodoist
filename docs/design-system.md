@@ -140,6 +140,33 @@ Only replace the global player once the run and interval agree and remaining
 time is available. Completed-today rows form a collapsed group with independent
 selection, using the local completion day.
 
+### Browse
+
+Center Browse content within 1120 px. Keep the header, account settings link and
+pending-change indicator compact. The productivity summary spans the content
+width; projects sit beside labels and the completed-task link at 960 px or more
+of available content width. Below that, stack sections. Separate sections with
+spacing and subtle dividers instead of large cards or permanent creation fields.
+
+Today is the initial period; the seven-day selection lasts only while the page
+is open. Sum the existing `lastSevenDays` for completed tasks, completed focus
+intervals and focus time. Open now always shows the current open-task count.
+Use four metric columns, or two below 640 px, and keep labels readable. Retain
+available data during refreshes and errors, showing loading and retry explicitly.
+
+Show active projects in their existing tree order, excluding Inbox. Reuse their
+colors, icons, creation dialog and context menu. Counts include only each
+project's own open tasks, including subtasks, without rolling up child projects.
+Keep the menu button visible for keyboard and touch access. Labels use compact
+chips and the existing confirmed creation form. Completed tasks retain their
+existing route and history policy.
+
+The queue indicator describes local changes awaiting upload, not overall sync
+health. Its details distinguish loading, failure and a known count; an empty
+queue never confirms successful synchronization. Use the shared popup motion and
+Reduce Motion. Only period changes transition the summary; data updates do not
+replay its entrance.
+
 ### Quick Add
 
 Parsed date/time, project and priority chips edit recognized spans in the source

@@ -1223,6 +1223,21 @@ class AppLocalizationsZh extends AppLocalizations {
       '您的账户已删除，但无法清除本地数据。再次使用此设备前，请先清除应用数据。';
 
   @override
+  String get browseSevenDays => '7 天';
+
+  @override
+  String get browseOpenNow => '当前未完成';
+
+  @override
+  String get browseQueueLoading => '正在加载待发送的更改…';
+
+  @override
+  String get browseQueueUnavailable => '无法加载待发送的更改。';
+
+  @override
+  String get browseQueueExplanation => '这里显示等待发送的本地更改。队列为空并不代表所有设备上的数据均已更新。';
+
+  @override
   String get productivityTitle => '生产力';
 
   @override

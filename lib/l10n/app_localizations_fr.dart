@@ -1310,6 +1310,23 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre compte a été supprimé, mais les données locales n’ont pas pu être effacées. Effacez les données de l’application avant de réutiliser cet appareil.';
 
   @override
+  String get browseSevenDays => '7 jours';
+
+  @override
+  String get browseOpenNow => 'Ouvertes maintenant';
+
+  @override
+  String get browseQueueLoading => 'Chargement des modifications en attente…';
+
+  @override
+  String get browseQueueUnavailable =>
+      'Impossible de charger les modifications en attente.';
+
+  @override
+  String get browseQueueExplanation =>
+      'Les modifications locales en attente d’envoi sont affichées ici. Une file vide ne confirme pas que tous les appareils sont à jour.';
+
+  @override
   String get productivityTitle => 'Productivité';
 
   @override

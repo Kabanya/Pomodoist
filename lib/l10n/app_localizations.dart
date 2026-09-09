@@ -2358,6 +2358,36 @@ abstract class AppLocalizations {
   /// **'Your account was deleted, but local data could not be cleared. Clear the app\'s data before using this device again.'**
   String get accountDeletedLocalCleanupError;
 
+  /// No description provided for @browseSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days'**
+  String get browseSevenDays;
+
+  /// No description provided for @browseOpenNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Open now'**
+  String get browseOpenNow;
+
+  /// No description provided for @browseQueueLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading pending changes…'**
+  String get browseQueueLoading;
+
+  /// No description provided for @browseQueueUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load pending changes.'**
+  String get browseQueueUnavailable;
+
+  /// No description provided for @browseQueueExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'This shows local changes waiting to be sent. An empty queue does not confirm that all devices are up to date.'**
+  String get browseQueueExplanation;
+
   /// No description provided for @productivityTitle.
   ///
   /// In en, this message translates to:

@@ -1308,6 +1308,23 @@ class AppLocalizationsEs extends AppLocalizations {
       'Tu cuenta se eliminó, pero no se pudieron borrar los datos locales. Borra los datos de la aplicación antes de volver a usar este dispositivo.';
 
   @override
+  String get browseSevenDays => '7 días';
+
+  @override
+  String get browseOpenNow => 'Abiertas ahora';
+
+  @override
+  String get browseQueueLoading => 'Cargando cambios pendientes…';
+
+  @override
+  String get browseQueueUnavailable =>
+      'No se pudieron cargar los cambios pendientes.';
+
+  @override
+  String get browseQueueExplanation =>
+      'Aquí se muestran los cambios locales pendientes de envío. Una cola vacía no confirma que todos los dispositivos estén actualizados.';
+
+  @override
   String get productivityTitle => 'Productividad';
 
   @override

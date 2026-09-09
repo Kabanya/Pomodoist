@@ -1289,6 +1289,22 @@ class AppLocalizationsAr extends AppLocalizations {
       'تم حذف حسابك، لكن تعذر مسح البيانات المحلية. امسح بيانات التطبيق قبل استخدام هذا الجهاز مرة أخرى.';
 
   @override
+  String get browseSevenDays => '7 أيام';
+
+  @override
+  String get browseOpenNow => 'المفتوحة الآن';
+
+  @override
+  String get browseQueueLoading => 'جارٍ تحميل التغييرات المعلّقة…';
+
+  @override
+  String get browseQueueUnavailable => 'تعذّر تحميل التغييرات المعلّقة.';
+
+  @override
+  String get browseQueueExplanation =>
+      'تظهر هنا التغييرات المحلية التي تنتظر الإرسال. لا تعني قائمة الانتظار الفارغة أن البيانات محدّثة على جميع الأجهزة.';
+
+  @override
   String get productivityTitle => 'الإنتاجية';
 
   @override

@@ -1298,6 +1298,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your account was deleted, but local data could not be cleared. Clear the app\'s data before using this device again.';
 
   @override
+  String get browseSevenDays => '7 days';
+
+  @override
+  String get browseOpenNow => 'Open now';
+
+  @override
+  String get browseQueueLoading => 'Loading pending changes…';
+
+  @override
+  String get browseQueueUnavailable => 'Could not load pending changes.';
+
+  @override
+  String get browseQueueExplanation =>
+      'This shows local changes waiting to be sent. An empty queue does not confirm that all devices are up to date.';
+
+  @override
   String get productivityTitle => 'Productivity';
 
   @override

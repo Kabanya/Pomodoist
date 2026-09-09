@@ -1311,6 +1311,23 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dein Konto wurde gelöscht, aber die lokalen Daten konnten nicht gelöscht werden. Lösche die App-Daten, bevor du dieses Gerät weiter verwendest.';
 
   @override
+  String get browseSevenDays => '7 Tage';
+
+  @override
+  String get browseOpenNow => 'Aktuell offen';
+
+  @override
+  String get browseQueueLoading => 'Ausstehende Änderungen werden geladen…';
+
+  @override
+  String get browseQueueUnavailable =>
+      'Ausstehende Änderungen konnten nicht geladen werden.';
+
+  @override
+  String get browseQueueExplanation =>
+      'Hier stehen lokale Änderungen, die noch gesendet werden müssen. Eine leere Warteschlange bestätigt nicht, dass alle Geräte auf dem neuesten Stand sind.';
+
+  @override
   String get productivityTitle => 'Produktivität';
 
   @override

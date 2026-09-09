@@ -8,7 +8,8 @@ import 'package:shadcn_ui/shadcn_ui.dart'
         ShadContextMenuController,
         ShadContextMenuItem,
         ShadContextMenuRegion,
-        ShadDialog;
+        ShadDialog,
+        ShadIconButton;
 
 import '../../../../app/app_l10n.dart';
 import '../../../../app/providers.dart';
@@ -22,11 +23,13 @@ class ProjectContextMenu extends ConsumerStatefulWidget {
   const ProjectContextMenu({
     required this.project,
     required this.child,
+    this.showMenuButton = false,
     super.key,
   });
 
   final ProjectItem project;
   final Widget child;
+  final bool showMenuButton;
 
   @override
   ConsumerState<ProjectContextMenu> createState() => _ProjectContextMenuState();
@@ -94,7 +97,23 @@ class _ProjectContextMenuState extends ConsumerState<ProjectContextMenu> {
             child: Text(l10n.deleteProject),
           ),
         ],
-        child: widget.child,
+        child: widget.showMenuButton
+            ? Row(
+                children: [
+                  Expanded(child: widget.child),
+                  Tooltip(
+                    message: '${l10n.taskMore}: ${project.name}',
+                    child: ShadIconButton.ghost(
+                      onPressed: _controller.show,
+                      onSecondaryTapUp: (_) => _controller.show(),
+                      icon: const Icon(LucideIcons.ellipsis, size: 18),
+                      width: 36,
+                      height: 36,
+                    ),
+                  ),
+                ],
+              )
+            : widget.child,
       ),
     );
   }

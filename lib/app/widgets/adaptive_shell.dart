@@ -16,6 +16,7 @@ import '../../features/productivity/domain/achievement_models.dart';
 import '../../features/productivity/presentation/achievement_announcements.dart';
 import '../../features/focus/presentation/focus_completion_celebration.dart';
 import '../../features/tasks/domain/task_models.dart';
+import '../../features/tasks/presentation/project_list_data.dart';
 import '../../features/tasks/presentation/widgets/create_project_dialog.dart';
 import '../../features/tasks/presentation/widgets/project_context_menu.dart';
 import '../../features/tasks/presentation/widgets/project_icon.dart';
@@ -863,7 +864,7 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
       ),
     );
     final projects = ref.watch(projectsProvider);
-    final projectTaskCounts = _projectTaskCounts(
+    final projectTaskCounts = countOpenTasksByProject(
       ref.watch(tasksByQueryProvider(const TaskQuery.all())).value ??
           const <TaskItem>[],
     );
@@ -986,7 +987,7 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
                                 ),
                               );
                             }
-                            final rows = _projectRows(visibleProjects);
+                            final rows = projectRows(visibleProjects);
                             return Column(
                               children: [
                                 for (final row in rows)
@@ -1051,61 +1052,6 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
     }
     return trimmed;
   }
-}
-
-class _ProjectListRow {
-  const _ProjectListRow({required this.project, required this.depth});
-
-  final ProjectItem project;
-  final int depth;
-}
-
-class _ProjectTreeNode {
-  _ProjectTreeNode(this.project);
-
-  final ProjectItem project;
-  final List<_ProjectTreeNode> children = [];
-}
-
-List<_ProjectListRow> _projectRows(List<ProjectItem> projects) {
-  final nodes = {
-    for (final project in projects) project.id: _ProjectTreeNode(project),
-  };
-  final roots = <_ProjectTreeNode>[];
-
-  for (final project in projects) {
-    final node = nodes[project.id]!;
-    final parentId = project.parentId;
-    if (parentId != null && nodes.containsKey(parentId)) {
-      nodes[parentId]!.children.add(node);
-    } else {
-      roots.add(node);
-    }
-  }
-
-  final rows = <_ProjectListRow>[];
-  void visit(_ProjectTreeNode node, int depth) {
-    rows.add(_ProjectListRow(project: node.project, depth: depth));
-    for (final child in node.children) {
-      visit(child, depth + 1);
-    }
-  }
-
-  for (final root in roots) {
-    visit(root, 0);
-  }
-  return rows;
-}
-
-Map<String, int> _projectTaskCounts(List<TaskItem> tasks) {
-  final counts = <String, int>{};
-  for (final task in tasks) {
-    if (task.projectId == inboxProjectId || task.isCompleted) {
-      continue;
-    }
-    counts.update(task.projectId, (count) => count + 1, ifAbsent: () => 1);
-  }
-  return counts;
 }
 
 class _SidebarProfileHeader extends StatelessWidget {
