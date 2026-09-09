@@ -28,6 +28,7 @@ import '../keyboard_shortcuts.dart';
 import '../macos_app_menu.dart';
 import '../providers.dart';
 import '../theme/app_theme.dart';
+import 'app_date_time_picker.dart';
 import 'mini_focus_player.dart';
 import 'resizable_dialog.dart';
 import 'task_details_host.dart';
@@ -1537,6 +1538,10 @@ class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
     _backEntry = LocalHistoryEntry(
       onRemove: () {
         _backEntry = null;
+        if (!_disposing && AppDateTimePicker.dismissFocused()) {
+          _installBackHandler();
+          return;
+        }
         if (!_disposing && !_voiceActive) widget.onClose();
       },
     );

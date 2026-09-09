@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import '../../../../app/account_providers.dart';
 import '../../../../app/app_l10n.dart';
 import '../../../../app/providers.dart';
+import '../../../../app/widgets/app_date_time_picker.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../../app/theme/app_motion.dart';
 import '../../../../core/db/app_database.dart';
@@ -1025,6 +1026,10 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
     final entry = LocalHistoryEntry(
       onRemove: () {
         _backEntry = null;
+        if (mounted && AppDateTimePicker.dismissFocused()) {
+          _installBackHandler();
+          return;
+        }
         if (mounted && _expanded) _setExpanded(false);
       },
     );

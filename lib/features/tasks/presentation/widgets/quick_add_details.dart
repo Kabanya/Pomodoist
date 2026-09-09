@@ -10,6 +10,7 @@ import 'package:shadcn_ui/shadcn_ui.dart'
 
 import '../../../../app/app_l10n.dart';
 import '../../../../app/providers.dart';
+import '../../../../app/widgets/app_date_time_picker.dart';
 import '../../../planning/domain/quick_add_parser.dart';
 import '../../domain/task_models.dart';
 import 'quick_add_metadata_edit.dart';
@@ -111,11 +112,10 @@ class QuickAddDetails extends ConsumerWidget {
               (current.dueDate == null ? defaultSchedule : null);
         }
 
-        Future<void> changeDate() async {
+        Future<void> changeDate(AppDateTimePickerState picker) async {
           final current = currentSchedule();
           final initial = current?.displayDate ?? clock.now();
-          final date = await showDatePicker(
-            context: context,
+          final date = await picker.pickDate(
             initialDate: initial,
             firstDate: DateTime(1),
             lastDate: DateTime(9999, 12, 31),
@@ -130,10 +130,9 @@ class QuickAddDetails extends ConsumerWidget {
           );
         }
 
-        Future<void> changeTime() async {
+        Future<void> changeTime(AppDateTimePickerState picker) async {
           final current = currentSchedule();
-          final time = await showTimePicker(
-            context: context,
+          final time = await picker.pickTime(
             initialTime: TimeOfDay.fromDateTime(
               current?.start?.toLocal() ?? clock.now(),
             ),
@@ -174,37 +173,40 @@ class QuickAddDetails extends ConsumerWidget {
             spacing: 4,
             runSpacing: 4,
             children: [
-              _DetailsMenu(
-                label: timeLabel == null
-                    ? dateLabel
-                    : '$dateLabel · $timeLabel',
-                icon: LucideIcons.calendar,
-                enabled: canEdit,
-                items: (close) => [
-                  _option(context.l10n.timelinePickDate, () {
-                    close();
-                    changeDate();
-                  }),
-                  _option(context.l10n.quickAddChangeTime, () {
-                    close();
-                    changeTime();
-                  }),
-                  _option(context.l10n.allDay, () {
-                    close();
-                    edit(
-                      quickAddSchedulingKinds,
-                      quickAddScheduleToken(
-                        TaskSchedule.allDay(
-                          currentSchedule()?.displayDate ?? clock.now(),
+              AppDateTimePicker(
+                builder: (context, picker) => _DetailsMenu(
+                  focusNode: picker.focusNode,
+                  label: timeLabel == null
+                      ? dateLabel
+                      : '$dateLabel · $timeLabel',
+                  icon: LucideIcons.calendar,
+                  enabled: canEdit,
+                  items: (close) => [
+                    _option(context.l10n.timelinePickDate, () {
+                      close();
+                      changeDate(picker);
+                    }),
+                    _option(context.l10n.quickAddChangeTime, () {
+                      close();
+                      changeTime(picker);
+                    }),
+                    _option(context.l10n.allDay, () {
+                      close();
+                      edit(
+                        quickAddSchedulingKinds,
+                        quickAddScheduleToken(
+                          TaskSchedule.allDay(
+                            currentSchedule()?.displayDate ?? clock.now(),
+                          ),
                         ),
-                      ),
-                    );
-                  }),
-                  _option(context.l10n.quickAddResetDetails, () {
-                    close();
-                    edit(quickAddSchedulingKinds, null);
-                  }),
-                ],
+                      );
+                    }),
+                    _option(context.l10n.quickAddResetDetails, () {
+                      close();
+                      edit(quickAddSchedulingKinds, null);
+                    }),
+                  ],
+                ),
               ),
               _DetailsMenu(
                 label: projectName,
@@ -283,9 +285,11 @@ class _DetailsMenu extends StatefulWidget {
     required this.icon,
     required this.enabled,
     required this.items,
+    this.focusNode,
   });
   final String label;
   final IconData icon;
+  final FocusNode? focusNode;
   final bool enabled;
   final List<Widget> Function(VoidCallback close) items;
 
@@ -315,6 +319,7 @@ class _DetailsMenuState extends State<_DetailsMenu> {
       ),
     ),
     child: ShadButton.outline(
+      focusNode: widget.focusNode,
       size: ShadButtonSize.sm,
       enabled: widget.enabled,
       onPressed: widget.enabled ? _popover.toggle : null,
