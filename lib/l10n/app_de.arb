@@ -686,5 +686,8 @@
   "todayCompletedTasks": "Heute erledigt · {count}",
   "focusActionFailed": "Focus konnte nicht aktualisiert werden. Versuche es erneut.",
   "sidebarDaily": "Täglich",
-  "sidebarViews": "Ansichten"
+  "sidebarViews": "Ansichten",
+  "quickAddResetDetails": "Standard verwenden",
+  "quickAddChangeTime": "Zeit ändern",
+  "quickAddProjectNameUnsupported": "Dieser Projektname kann nicht unverändert eingefügt werden."
 }

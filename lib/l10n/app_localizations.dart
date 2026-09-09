@@ -4167,6 +4167,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Views'**
   String get sidebarViews;
+
+  /// No description provided for @quickAddResetDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Use default'**
+  String get quickAddResetDetails;
+
+  /// No description provided for @quickAddChangeTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Change time'**
+  String get quickAddChangeTime;
+
+  /// No description provided for @quickAddProjectNameUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This project name cannot be inserted without changing it.'**
+  String get quickAddProjectNameUnsupported;
 }
 
 class _AppLocalizationsDelegate

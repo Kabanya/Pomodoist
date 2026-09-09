@@ -2389,4 +2389,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sidebarViews => 'Ansichten';
+
+  @override
+  String get quickAddResetDetails => 'Standard verwenden';
+
+  @override
+  String get quickAddChangeTime => 'Zeit ändern';
+
+  @override
+  String get quickAddProjectNameUnsupported =>
+      'Dieser Projektname kann nicht unverändert eingefügt werden.';
 }

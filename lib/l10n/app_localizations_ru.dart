@@ -2394,4 +2394,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sidebarViews => 'Представления';
+
+  @override
+  String get quickAddResetDetails => 'По умолчанию';
+
+  @override
+  String get quickAddChangeTime => 'Изменить время';
+
+  @override
+  String get quickAddProjectNameUnsupported =>
+      'Не удаётся вставить название проекта без изменений.';
 }

@@ -2388,4 +2388,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get sidebarViews => 'Vues';
+
+  @override
+  String get quickAddResetDetails => 'Utiliser la valeur par défaut';
+
+  @override
+  String get quickAddChangeTime => 'Modifier l’heure';
+
+  @override
+  String get quickAddProjectNameUnsupported =>
+      'Ce nom de projet ne peut pas être inséré sans modification.';
 }

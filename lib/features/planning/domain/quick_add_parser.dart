@@ -3,6 +3,10 @@ import 'dart:core';
 import '../../tasks/domain/task_models.dart';
 import 'quick_add_date_time_normalizer.dart';
 
+/// Canonical quoted metadata value; unknown legacy backslash escapes stay literal.
+String quickAddQuotedMetadataValue(String name) =>
+    '"${name.replaceAll(r'\', r'\\').replaceAll('"', r'\"')}"';
+
 const _todayWords = {
   'today',
   'сегодня',
@@ -102,12 +106,34 @@ class QuickAddParser {
     String input, {
     DateTime? now,
     DateTime? defaultDate,
+    bool includeInvalidScheduling = false,
   }) {
     final effectiveNow = now ?? DateTime.now();
-    final parsed = parse(input, now: effectiveNow, defaultDate: defaultDate);
+    // Editing may repair invalid date commands; ordinary parsing/highlighting
+    // continues to leave them visible and suppress scheduling.
+    final editingInput = includeInvalidScheduling
+        ? QuickAddDateTimeNormalizer(_dateOnly(effectiveNow))
+              .normalize(
+                input,
+                invalidDateReplacement: (defaultDate ?? effectiveNow)
+                    .toIso8601String()
+                    .split('T')
+                    .first,
+              )
+              .text
+        : input;
+    final parsed = parse(
+      editingInput,
+      now: effectiveNow,
+      defaultDate: defaultDate,
+    );
     return QuickAddAnalysis(
       parsed: parsed,
-      matches: _sourceMatches(input, _dateOnly(effectiveNow)),
+      matches: _sourceMatches(
+        input,
+        _dateOnly(effectiveNow),
+        includeInvalidScheduling: includeInvalidScheduling,
+      ),
     );
   }
 
@@ -260,9 +286,14 @@ class QuickAddParser {
     );
   }
 
-  List<QuickAddTokenMatch> _sourceMatches(String input, DateTime today) {
+  List<QuickAddTokenMatch> _sourceMatches(
+    String input,
+    DateTime today, {
+    bool includeInvalidScheduling = false,
+  }) {
     final normalized = QuickAddDateTimeNormalizer(today).normalize(input);
-    final suppressTemporal = normalized.hasInvalidExplicitDate;
+    final suppressTemporal =
+        normalized.hasInvalidExplicitDate && !includeInvalidScheduling;
     final tokens = _sourceTokens(input);
     final matches = <QuickAddTokenMatch>[];
 
@@ -315,7 +346,13 @@ class QuickAddParser {
       if (suppressTemporal) {
         continue;
       }
-      final temporal = _longestTemporalMatch(input, tokens, index, today);
+      final temporal = _longestTemporalMatch(
+        input,
+        tokens,
+        index,
+        today,
+        includeInvalidScheduling: includeInvalidScheduling,
+      );
       if (temporal != null) {
         matches.add(temporal.match);
         index = temporal.lastTokenIndex;
@@ -330,16 +367,20 @@ class QuickAddParser {
     String input,
     List<_QuickAddSourceToken> tokens,
     int startIndex,
-    DateTime today,
-  ) {
+    DateTime today, {
+    bool includeInvalidScheduling = false,
+  }) {
     final maxEnd = (startIndex + 8).clamp(0, tokens.length);
     for (var endIndex = maxEnd - 1; endIndex >= startIndex; endIndex--) {
       final source = input.substring(
         tokens[startIndex].start,
         tokens[endIndex].end,
       );
-      final normalized = QuickAddDateTimeNormalizer(today).normalize(source);
-      if (normalized.hasInvalidExplicitDate) {
+      final normalized = QuickAddDateTimeNormalizer(today).normalize(
+        source,
+        invalidDateReplacement: includeInvalidScheduling ? '2000-01-01' : null,
+      );
+      if (normalized.hasInvalidExplicitDate && !includeInvalidScheduling) {
         continue;
       }
       final kind = _normalizedTemporalKind(normalized.text, today);
@@ -404,6 +445,11 @@ class QuickAddParser {
       if (quotedMetadata) {
         index += 2;
         while (index < input.length && input[index] != '"') {
+          if (input[index] == r'\' &&
+              index + 1 < input.length &&
+              (input[index + 1] == '"' || input[index + 1] == r'\')) {
+            index++;
+          }
           index++;
         }
         if (index < input.length) {
@@ -443,6 +489,11 @@ class QuickAddParser {
       if (quotedMetadata) {
         index += 2;
         while (index < input.length && input[index] != '"') {
+          if (input[index] == r'\' &&
+              index + 1 < input.length &&
+              (input[index + 1] == '"' || input[index + 1] == r'\')) {
+            index++;
+          }
           index++;
         }
         if (index < input.length) {
@@ -468,7 +519,9 @@ class QuickAddParser {
       if (value.length <= 1 || !value.endsWith('"')) {
         return null;
       }
-      value = value.substring(1, value.length - 1);
+      value = value
+          .substring(1, value.length - 1)
+          .replaceAllMapped(RegExp(r'\\([\\"])'), (match) => match.group(1)!);
     }
     value = value.trim();
     return value.isEmpty ? null : value;

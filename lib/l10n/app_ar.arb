@@ -686,5 +686,8 @@
   "todayCompletedTasks": "المكتملة اليوم · {count}",
   "focusActionFailed": "تعذر تحديث Focus. حاول مرة أخرى.",
   "sidebarDaily": "يوميًا",
-  "sidebarViews": "طرق العرض"
+  "sidebarViews": "طرق العرض",
+  "quickAddResetDetails": "استخدام الافتراضي",
+  "quickAddChangeTime": "تغيير الوقت",
+  "quickAddProjectNameUnsupported": "لا يمكن إدراج اسم هذا المشروع دون تغييره."
 }

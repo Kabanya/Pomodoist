@@ -645,6 +645,7 @@ final achievementAnnouncementControllerProvider =
 
 final quickAddServiceProvider = Provider<QuickAddService>((ref) {
   return QuickAddService(
+    now: ref.watch(clockProvider).now,
     parser: ref.watch(quickAddParserProvider),
     taskRepository: ref.watch(taskRepositoryProvider),
     projectRepository: ref.watch(projectRepositoryProvider),

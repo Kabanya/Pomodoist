@@ -13,6 +13,7 @@ class QuickAddDateTimeNormalizer {
 
   final DateTime today;
   bool _hasInvalidExplicitDate = false;
+  String? _invalidDateReplacement;
 
   static const _monthNumbers = <String, int>{
     'january': 1,
@@ -118,10 +119,26 @@ class QuickAddDateTimeNormalizer {
   static final _monthPattern = _monthNumbers.keys.map(RegExp.escape).toList()
     ..sort((left, right) => right.length.compareTo(left.length));
 
-  NormalizedQuickAddDateTimeInput normalize(String input) {
+  NormalizedQuickAddDateTimeInput normalize(
+    String input, {
+    String? invalidDateReplacement,
+  }) {
+    _invalidDateReplacement = invalidDateReplacement;
+    final metadata = <String>[];
+    var marker = '\uE000';
+    while (input.contains(marker)) {
+      marker += '\uE000';
+    }
+    final protected = input.replaceAllMapped(
+      RegExp(r'(^|\s)([#@](?:"(?:\\.|[^"\\])*"|[^\s]+)|/[^\s]+)'),
+      (match) {
+        metadata.add(match.group(2)!);
+        return '${match.group(1)}$marker${metadata.length - 1}$marker';
+      },
+    );
     _hasInvalidExplicitDate = false;
     var value = _normalizeDigits(
-      input,
+      protected,
     ).replaceAll('\u00a0', ' ').replaceAll('\u202f', ' ');
     value = _replaceSharedMeridiemRanges(value);
     value = _replaceChineseDates(value);
@@ -135,8 +152,13 @@ class QuickAddDateTimeNormalizer {
     value = _replaceArabicTimes(value);
     value = _replaceChineseTimes(value);
     value = _collapseTimeRanges(value);
+    value = value.replaceAll(RegExp(r'\s+'), ' ').trim();
+    value = value.replaceAllMapped(
+      RegExp('$marker(\\d+)$marker'),
+      (match) => metadata[int.parse(match.group(1)!)],
+    );
     return NormalizedQuickAddDateTimeInput(
-      text: value.replaceAll(RegExp(r'\s+'), ' ').trim(),
+      text: value,
       hasInvalidExplicitDate: _hasInvalidExplicitDate,
     );
   }
@@ -425,7 +447,9 @@ class QuickAddDateTimeNormalizer {
     final date = _dateToken(day: day, month: month, year: year);
     if (date == null) {
       _hasInvalidExplicitDate = true;
-      return match.group(0)!;
+      return _invalidDateReplacement == null
+          ? match.group(0)!
+          : '${prefix ?? match.group(1)}$_invalidDateReplacement';
     }
     return '${prefix ?? match.group(1)}$date';
   }

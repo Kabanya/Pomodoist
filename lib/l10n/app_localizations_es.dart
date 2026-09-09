@@ -2385,4 +2385,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sidebarViews => 'Vistas';
+
+  @override
+  String get quickAddResetDetails => 'Usar valor predeterminado';
+
+  @override
+  String get quickAddChangeTime => 'Cambiar hora';
+
+  @override
+  String get quickAddProjectNameUnsupported =>
+      'Este nombre de proyecto no se puede insertar sin modificarlo.';
 }

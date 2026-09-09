@@ -2355,4 +2355,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sidebarViews => 'طرق العرض';
+
+  @override
+  String get quickAddResetDetails => 'استخدام الافتراضي';
+
+  @override
+  String get quickAddChangeTime => 'تغيير الوقت';
+
+  @override
+  String get quickAddProjectNameUnsupported =>
+      'لا يمكن إدراج اسم هذا المشروع دون تغييره.';
 }

@@ -686,5 +686,8 @@
   "todayCompletedTasks": "Завершено сегодня · {count}",
   "focusActionFailed": "Не удалось изменить состояние Focus. Попробуйте ещё раз.",
   "sidebarDaily": "На каждый день",
-  "sidebarViews": "Представления"
+  "sidebarViews": "Представления",
+  "quickAddResetDetails": "По умолчанию",
+  "quickAddChangeTime": "Изменить время",
+  "quickAddProjectNameUnsupported": "Не удаётся вставить название проекта без изменений."
 }

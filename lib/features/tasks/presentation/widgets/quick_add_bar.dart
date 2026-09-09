@@ -19,8 +19,10 @@ import '../../../billing/billing.dart';
 import '../../../focus/presentation/focus_view_mode.dart';
 import '../../../onboarding/onboarding_gate.dart';
 import '../../../planning/data/task_decomposer.dart';
+import '../../../planning/domain/quick_add_parser.dart';
 import '../../domain/task_models.dart';
 import 'quick_add_text_controller.dart';
+import 'quick_add_details.dart';
 import 'voice_panel_motion.dart';
 import 'voice_panel_clearance.dart';
 
@@ -188,6 +190,7 @@ class QuickAddInput extends ConsumerStatefulWidget {
     this.enabled = true,
     this.textInputAction = TextInputAction.done,
     this.onSubmitted,
+    this.onChanged,
     super.key,
   });
 
@@ -201,6 +204,7 @@ class QuickAddInput extends ConsumerStatefulWidget {
   final bool enabled;
   final TextInputAction textInputAction;
   final ValueChanged<String>? onSubmitted;
+  final ValueChanged<String>? onChanged;
 
   @override
   ConsumerState<QuickAddInput> createState() => _QuickAddInputState();
@@ -308,6 +312,7 @@ class _QuickAddInputState extends ConsumerState<QuickAddInput> {
             textInputAction: widget.textInputAction,
             decoration: decoration,
             onSubmitted: widget.onSubmitted,
+            onChanged: widget.onChanged,
           ),
         );
       },
@@ -407,6 +412,7 @@ class _QuickAddInputState extends ConsumerState<QuickAddInput> {
     );
     _lastValueWithSuggestions = null;
     _hiddenForText = text;
+    widget.onChanged?.call(text);
   }
 }
 
@@ -469,7 +475,9 @@ class _QuickAddSuggestion {
 }
 
 String _quickAddTokenValue(String name) {
-  return RegExp(r'\s').hasMatch(name) ? '"$name"' : name;
+  return RegExp(r'[\s"\\]').hasMatch(name)
+      ? quickAddQuotedMetadataValue(name)
+      : name;
 }
 
 class QuickAddComposer extends ConsumerStatefulWidget {
@@ -514,6 +522,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
             QuickAddInput(
               textFieldKey: const Key('sidebar-quick-add-input'),
               controller: _controller,
+              enabled: !_busy,
               autofocus: true,
               textInputAction: TextInputAction.done,
               decoration: InputDecoration(
@@ -528,6 +537,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
               ),
               onSubmitted: (_) => _submit(),
             ),
+            QuickAddDetails(controller: _controller, enabled: !_busy),
             const SizedBox(height: 20),
             OverflowBar(
               alignment: MainAxisAlignment.end,
@@ -656,21 +666,36 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(4, 4, 6, 4),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: QuickAddInput(
-                  textFieldKey: widget.inputKey,
-                  controller: _controller,
-                  textInputAction: TextInputAction.done,
-                  decoration: InputDecoration(
-                    hintText: l10n.quickAddHint,
-                    prefixIcon: const Icon(LucideIcons.listPlus),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    filled: false,
-                  ),
-                  onSubmitted: (_) => _submit(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    QuickAddInput(
+                      enabled: !_busy,
+                      textFieldKey: widget.inputKey,
+                      controller: _controller,
+                      textInputAction: TextInputAction.done,
+                      decoration: InputDecoration(
+                        hintText: l10n.quickAddHint,
+                        prefixIcon: const Icon(LucideIcons.listPlus),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                      ),
+                      onSubmitted: (_) => _submit(),
+                    ),
+                    QuickAddDetails(
+                      controller: _controller,
+                      defaultDate: widget.defaultDate,
+                      projectId: widget.projectId,
+                      priority: widget.defaultPriority,
+                      enabled: !_busy,
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: 4),
@@ -1360,6 +1385,10 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
       return _TaskDraftList(
         key: const ValueKey('drafts'),
         controllers: _draftControllers,
+        defaultDate: widget.defaultDate,
+        projectId: widget.projectId,
+        priority: widget.defaultPriority,
+        enabled: !_saving && !_motionActive,
         onChanged: () => _setSheetState(() {}),
         onRemove: _removeTask,
       );
@@ -2268,7 +2297,7 @@ class _VoiceTaskDraftController {
     required String quickAdd,
     String? description,
     List<DecomposedTaskDraft> subtasks = const [],
-  }) : quickAdd = TextEditingController(text: quickAdd),
+  }) : quickAdd = QuickAddTextController(text: quickAdd),
        description = TextEditingController(text: description ?? ''),
        subtasks = [
          for (final subtask in subtasks)
@@ -2279,7 +2308,7 @@ class _VoiceTaskDraftController {
            ),
        ];
 
-  final TextEditingController quickAdd;
+  final QuickAddTextController quickAdd;
   final TextEditingController description;
   final List<_VoiceTaskDraftController> subtasks;
 
@@ -2298,9 +2327,17 @@ class _TaskDraftList extends StatelessWidget {
     required this.controllers,
     required this.onChanged,
     required this.onRemove,
+    this.defaultDate,
+    this.projectId,
+    this.priority,
+    this.enabled = true,
   });
 
   final List<_VoiceTaskDraftController> controllers;
+  final DateTime? defaultDate;
+  final String? projectId;
+  final int? priority;
+  final bool enabled;
   final VoidCallback onChanged;
   final ValueChanged<int> onRemove;
 
@@ -2329,6 +2366,10 @@ class _TaskDraftList extends StatelessWidget {
             depth: 0,
             index: index,
             onChanged: onChanged,
+            defaultDate: defaultDate,
+            projectId: projectId,
+            priority: priority,
+            enabled: enabled,
             onRemove: () => onRemove(index),
           ),
         );
@@ -2337,23 +2378,40 @@ class _TaskDraftList extends StatelessWidget {
   }
 }
 
-class _TaskDraftItem extends StatelessWidget {
+class _TaskDraftItem extends ConsumerWidget {
   const _TaskDraftItem({
     required this.controller,
     required this.depth,
     required this.index,
     required this.onChanged,
     required this.onRemove,
+    this.defaultDate,
+    this.projectId,
+    this.inheritedProjectName,
+    this.priority,
+    this.enabled = true,
   });
 
   final _VoiceTaskDraftController controller;
+  final DateTime? defaultDate;
+  final String? projectId;
+  final String? inheritedProjectName;
+  final int? priority;
+  final bool enabled;
   final int depth;
   final int index;
   final VoidCallback onChanged;
   final VoidCallback onRemove;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final parsed = ref
+        .watch(quickAddParserProvider)
+        .parse(
+          controller.quickAdd.text,
+          now: ref.read(clockProvider).now(),
+          defaultDate: defaultDate,
+        );
     final horizontalOffset = depth * 20.0;
     return Padding(
       padding: EdgeInsets.only(left: horizontalOffset),
@@ -2366,7 +2424,7 @@ class _TaskDraftItem extends StatelessWidget {
               const SizedBox(width: 8),
               IconButton.filledTonal(
                 tooltip: context.l10n.voiceRemoveTask,
-                onPressed: onRemove,
+                onPressed: enabled ? onRemove : null,
                 icon: const Icon(LucideIcons.trash2),
               ),
             ],
@@ -2382,6 +2440,11 @@ class _TaskDraftItem extends StatelessWidget {
               depth: depth + 1,
               index: childIndex,
               onChanged: onChanged,
+              defaultDate: defaultDate,
+              projectId: parsed.project == null ? projectId : null,
+              inheritedProjectName: parsed.project ?? inheritedProjectName,
+              priority: priority,
+              enabled: enabled,
               onRemove: () {
                 controller.subtasks.removeAt(childIndex).dispose();
                 onChanged();
@@ -2396,9 +2459,9 @@ class _TaskDraftItem extends StatelessWidget {
   Widget _fields(BuildContext context) {
     return Column(
       children: [
-        TextField(
+        QuickAddInput(
           controller: controller.quickAdd,
-          minLines: 1,
+          enabled: enabled,
           maxLines: 3,
           onChanged: (_) => onChanged(),
           decoration: InputDecoration(
@@ -2410,8 +2473,18 @@ class _TaskDraftItem extends StatelessWidget {
             ),
           ),
         ),
+        QuickAddDetails(
+          controller: controller.quickAdd,
+          defaultDate: defaultDate,
+          projectId: projectId,
+          inheritedProjectName: inheritedProjectName,
+          priority: priority,
+          enabled: enabled,
+          onChanged: onChanged,
+        ),
         const SizedBox(height: 8),
         TextField(
+          enabled: enabled,
           controller: controller.description,
           minLines: 1,
           maxLines: 3,

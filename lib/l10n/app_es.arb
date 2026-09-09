@@ -686,5 +686,8 @@
   "todayCompletedTasks": "Completadas hoy · {count}",
   "focusActionFailed": "No se pudo actualizar Focus. Inténtalo de nuevo.",
   "sidebarDaily": "Día a día",
-  "sidebarViews": "Vistas"
+  "sidebarViews": "Vistas",
+  "quickAddResetDetails": "Usar valor predeterminado",
+  "quickAddChangeTime": "Cambiar hora",
+  "quickAddProjectNameUnsupported": "Este nombre de proyecto no se puede insertar sin modificarlo."
 }

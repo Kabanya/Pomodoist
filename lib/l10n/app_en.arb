@@ -774,5 +774,8 @@
   "@todayTaskSummary": {"placeholders": {"tasks": {"type": "int"}, "planned": {"type": "int"}, "time": {"type": "String"}}},
   "@todayCompletedTasks": {"placeholders": {"count": {"type": "int"}}},
   "sidebarDaily": "Daily",
-  "sidebarViews": "Views"
+  "sidebarViews": "Views",
+  "quickAddResetDetails": "Use default",
+  "quickAddChangeTime": "Change time",
+  "quickAddProjectNameUnsupported": "This project name cannot be inserted without changing it."
 }

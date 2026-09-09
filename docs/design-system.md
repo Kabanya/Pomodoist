@@ -121,6 +121,16 @@ Only replace the global player once the run and interval agree and remaining
 time is available. Completed-today rows form a collapsed group with independent
 selection, using the local completion day.
 
+### Quick Add
+
+Parsed date/time, project and priority chips edit recognized spans in the source
+phrase. The phrase is the only metadata state: clearing a token reveals the
+existing context defaults. Preview and creation use the same parser, configured
+duration and clock. Preserve IME composition, selection and unrelated tokens.
+Quoted metadata names remain literal during date normalization. Ready voice
+subtasks preview the project inherited from their parent's current phrase.
+Details stay below the editable input; the separate window scrolls when needed.
+
 ## Components and independence
 
 - Current direct dependencies: **`shadcn_ui 0.56.3`** and

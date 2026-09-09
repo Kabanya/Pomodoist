@@ -2392,4 +2392,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sidebarViews => 'Views';
+
+  @override
+  String get quickAddResetDetails => 'Use default';
+
+  @override
+  String get quickAddChangeTime => 'Change time';
+
+  @override
+  String get quickAddProjectNameUnsupported =>
+      'This project name cannot be inserted without changing it.';
 }

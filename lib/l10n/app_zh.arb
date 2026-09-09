@@ -686,5 +686,8 @@
   "todayCompletedTasks": "今日已完成 · {count}",
   "focusActionFailed": "无法更新 Focus，请重试。",
   "sidebarDaily": "日常",
-  "sidebarViews": "视图"
+  "sidebarViews": "视图",
+  "quickAddResetDetails": "使用默认值",
+  "quickAddChangeTime": "更改时间",
+  "quickAddProjectNameUnsupported": "无法原样插入此项目名称。"
 }

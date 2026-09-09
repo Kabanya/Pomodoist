@@ -2275,4 +2275,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sidebarViews => '视图';
+
+  @override
+  String get quickAddResetDetails => '使用默认值';
+
+  @override
+  String get quickAddChangeTime => '更改时间';
+
+  @override
+  String get quickAddProjectNameUnsupported => '无法原样插入此项目名称。';
 }

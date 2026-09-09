@@ -9,13 +9,16 @@ class QuickAddService {
     required TaskRepository taskRepository,
     required ProjectRepository projectRepository,
     FocusPresetItem? focusPreset,
+    DateTime Function()? now,
     Future<FocusPresetItem?> Function()? focusPresetProvider,
-  }) : _parser = parser,
+  }) : _now = now ?? DateTime.now,
+       _parser = parser,
        _taskRepository = taskRepository,
        _projectRepository = projectRepository,
        _focusPreset = focusPreset,
        _focusPresetProvider = focusPresetProvider;
 
+  final DateTime Function() _now;
   final QuickAddParser _parser;
   final TaskRepository _taskRepository;
   final ProjectRepository _projectRepository;
@@ -88,7 +91,7 @@ class QuickAddService {
     TaskSchedule? defaultSchedule,
     String? kanbanStatusId,
   ) async {
-    final parsed = _parser.parse(input, defaultDate: defaultDate);
+    final parsed = _parser.parse(input, now: _now(), defaultDate: defaultDate);
     if (parsed.content.isEmpty) {
       throw ArgumentError.value(input, 'input', 'Task content is empty');
     }
