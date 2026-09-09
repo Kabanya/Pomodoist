@@ -26,6 +26,7 @@ import '../../../app/task_time.dart';
 import '../../../app/task_detail_navigation.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/widgets/action_feedback.dart';
+import '../../../app/widgets/app_date_time_picker.dart';
 import '../../focus/domain/focus_models.dart';
 import '../../focus/presentation/focus_view_mode.dart';
 import '../../planning/domain/quick_add_parser.dart';
@@ -424,60 +425,40 @@ class _TaskMetadataChips extends ConsumerWidget {
         ),
         Tooltip(
           message: l10n.scheduleTitle,
-          child: ShadMenubar(
-            key: const Key('task-detail-schedule-chip'),
-            padding: EdgeInsets.zero,
-            border: ShadBorder.none,
-            backgroundColor: Colors.transparent,
-            items: [
-              ShadMenubarItem(
-                items: [
-                  ShadContextMenuItem(
-                    onPressed: () => unawaited(
-                      _runScheduleQuickAction(
-                        context,
-                        ref,
-                        task,
-                        _ScheduleQuickAction.today,
+          child: AppDateTimePicker(
+            builder: (context, picker) => ShadMenubar(
+              key: const Key('task-detail-schedule-chip'),
+              padding: EdgeInsets.zero,
+              border: ShadBorder.none,
+              backgroundColor: Colors.transparent,
+              items: [
+                ShadMenubarItem(
+                  focusNode: picker.focusNode,
+                  items: [
+                    ShadContextMenuItem(
+                      onPressed: () => unawaited(
+                        _runScheduleQuickAction(
+                          context,
+                          ref,
+                          task,
+                          picker,
+                          _ScheduleQuickAction.today,
+                        ),
                       ),
+                      child: Text(l10n.today),
                     ),
-                    child: Text(l10n.today),
-                  ),
-                  ShadContextMenuItem(
-                    onPressed: () => unawaited(
-                      _runScheduleQuickAction(
-                        context,
-                        ref,
-                        task,
-                        _ScheduleQuickAction.tomorrow,
+                    ShadContextMenuItem(
+                      onPressed: () => unawaited(
+                        _runScheduleQuickAction(
+                          context,
+                          ref,
+                          task,
+                          picker,
+                          _ScheduleQuickAction.tomorrow,
+                        ),
                       ),
+                      child: Text(l10n.tomorrow),
                     ),
-                    child: Text(l10n.tomorrow),
-                  ),
-                  const Divider(height: 8),
-                  ShadContextMenuItem(
-                    onPressed: () => unawaited(
-                      _runScheduleQuickAction(
-                        context,
-                        ref,
-                        task,
-                        _ScheduleQuickAction.allDay,
-                      ),
-                    ),
-                    child: Text(l10n.allDay),
-                  ),
-                  ShadContextMenuItem(
-                    onPressed: () => unawaited(
-                      _runScheduleQuickAction(
-                        context,
-                        ref,
-                        task,
-                        _ScheduleQuickAction.timed,
-                      ),
-                    ),
-                    child: Text(l10n.timedBlock),
-                  ),
-                  if (task.schedule != null) ...[
                     const Divider(height: 8),
                     ShadContextMenuItem(
                       onPressed: () => unawaited(
@@ -485,44 +466,72 @@ class _TaskMetadataChips extends ConsumerWidget {
                           context,
                           ref,
                           task,
-                          _ScheduleQuickAction.clear,
+                          picker,
+                          _ScheduleQuickAction.allDay,
                         ),
                       ),
-                      child: Text(l10n.clearDate),
+                      child: Text(l10n.allDay),
                     ),
+                    ShadContextMenuItem(
+                      onPressed: () => unawaited(
+                        _runScheduleQuickAction(
+                          context,
+                          ref,
+                          task,
+                          picker,
+                          _ScheduleQuickAction.timed,
+                        ),
+                      ),
+                      child: Text(l10n.timedBlock),
+                    ),
+                    if (task.schedule != null) ...[
+                      const Divider(height: 8),
+                      ShadContextMenuItem(
+                        onPressed: () => unawaited(
+                          _runScheduleQuickAction(
+                            context,
+                            ref,
+                            task,
+                            picker,
+                            _ScheduleQuickAction.clear,
+                          ),
+                        ),
+                        child: Text(l10n.clearDate),
+                      ),
+                    ],
                   ],
-                ],
-                height: 36,
-                buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Semantics(
-                  key: const Key('task-detail-time-meta'),
-                  label: scheduleSemanticLabel,
-                  child: ShadBadge.secondary(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 5,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          LucideIcons.calendar,
-                          size: 16,
-                          key: const Key('task-detail-time-icon'),
-                          color: taskTimeColor,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          scheduleLabel,
-                          key: const Key('task-detail-time-label'),
-                          style: TextStyle(color: taskTimeColor),
-                        ),
-                      ],
+                  height: 36,
+                  buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Semantics(
+                    key: const Key('task-detail-time-meta'),
+                    label: scheduleSemanticLabel,
+                    child: ShadBadge.secondary(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 5,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            LucideIcons.calendar,
+                            size: 16,
+                            key: const Key('task-detail-time-icon'),
+                            color: taskTimeColor,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            scheduleLabel,
+                            key: const Key('task-detail-time-label'),
+                            style: TextStyle(color: taskTimeColor),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         ShadBadge.secondary(
@@ -576,6 +585,7 @@ Future<void> _runScheduleQuickAction(
   BuildContext context,
   WidgetRef ref,
   TaskItem task,
+  AppDateTimePickerState picker,
   _ScheduleQuickAction action,
 ) {
   switch (action) {
@@ -594,9 +604,9 @@ Future<void> _runScheduleQuickAction(
         task.schedule?.moveToDate(tomorrow) ?? TaskSchedule.allDay(tomorrow),
       );
     case _ScheduleQuickAction.allDay:
-      return _pickAllDaySchedule(context, ref, task);
+      return _pickAllDaySchedule(context, ref, task, picker);
     case _ScheduleQuickAction.timed:
-      return _pickTimedSchedule(context, ref, task);
+      return _pickTimedSchedule(context, ref, task, picker);
     case _ScheduleQuickAction.clear:
       return _clearTaskSchedule(ref, task);
   }
@@ -1060,15 +1070,22 @@ class _ScheduleActions extends ConsumerWidget {
           spacing: 8,
           runSpacing: 8,
           children: [
-            ShadButton.outline(
-              onPressed: () => _pickAllDaySchedule(context, ref, task),
-              leading: const Icon(LucideIcons.calendarCheck),
-              child: Text(context.l10n.allDay),
+            AppDateTimePicker(
+              builder: (context, picker) => ShadButton.outline(
+                focusNode: picker.focusNode,
+                onPressed: () =>
+                    _pickAllDaySchedule(context, ref, task, picker),
+                leading: const Icon(LucideIcons.calendarCheck),
+                child: Text(context.l10n.allDay),
+              ),
             ),
-            ShadButton.outline(
-              onPressed: () => _pickTimedSchedule(context, ref, task),
-              leading: const Icon(LucideIcons.clock),
-              child: Text(context.l10n.timedBlock),
+            AppDateTimePicker(
+              builder: (context, picker) => ShadButton.outline(
+                focusNode: picker.focusNode,
+                onPressed: () => _pickTimedSchedule(context, ref, task, picker),
+                leading: const Icon(LucideIcons.clock),
+                child: Text(context.l10n.timedBlock),
+              ),
             ),
             if (task.schedule != null)
               ShadButton.ghost(
@@ -1255,15 +1272,15 @@ Future<void> _pickAllDaySchedule(
   BuildContext context,
   WidgetRef ref,
   TaskItem task,
+  AppDateTimePickerState picker,
 ) async {
   final now = DateTime.now();
-  final picked = await showDatePicker(
-    context: context,
+  final picked = await picker.pickDate(
     initialDate: task.schedule?.displayDate ?? now,
     firstDate: DateTime(now.year - 5),
     lastDate: DateTime(now.year + 10),
   );
-  if (picked == null) {
+  if (picked == null || !context.mounted) {
     return;
   }
   await _setTaskSchedule(ref, task, TaskSchedule.allDay(picked));
@@ -1273,11 +1290,11 @@ Future<void> _pickTimedSchedule(
   BuildContext context,
   WidgetRef ref,
   TaskItem task,
+  AppDateTimePickerState picker,
 ) async {
   final now = DateTime.now();
   final initialDate = task.schedule?.displayDate ?? now;
-  final pickedDate = await showDatePicker(
-    context: context,
+  final pickedDate = await picker.pickDate(
     initialDate: initialDate,
     firstDate: DateTime(now.year - 5),
     lastDate: DateTime(now.year + 10),
@@ -1288,9 +1305,9 @@ Future<void> _pickTimedSchedule(
   final currentStart = task.schedule?.isTimed ?? false
       ? task.schedule!.start!.toLocal()
       : DateTime(pickedDate.year, pickedDate.month, pickedDate.day, 9);
-  final pickedStart = await showTimePicker(
-    context: context,
+  final pickedStart = await picker.pickTime(
     initialTime: TimeOfDay.fromDateTime(currentStart),
+    helpText: context.l10n.timelineStartHour,
   );
   if (pickedStart == null || !context.mounted) {
     return;
@@ -1303,11 +1320,11 @@ Future<void> _pickTimedSchedule(
     pickedStart.minute,
   );
   final currentDuration = task.schedule?.duration ?? const Duration(hours: 1);
-  final pickedEnd = await showTimePicker(
-    context: context,
+  final pickedEnd = await picker.pickTime(
     initialTime: TimeOfDay.fromDateTime(start.add(currentDuration)),
+    helpText: context.l10n.timelineEndHour,
   );
-  if (pickedEnd == null) {
+  if (pickedEnd == null || !context.mounted) {
     return;
   }
   var end = DateTime(

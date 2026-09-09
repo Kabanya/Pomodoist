@@ -145,6 +145,25 @@ Quoted metadata names remain literal during date normalization. Ready voice
 subtasks preview the project inherited from their parent's current phrase.
 Details stay below the editable input; the separate window scrolls when needed.
 
+### Date and time selection
+
+Use `AppDateTimePicker` for date/time selection in Quick Add, task details and
+Timeline. Keep its anchor mounted on the invoking chip or button. Its
+`ShadPopover` belongs above that surface, including manually inserted Quick Add
+and voice overlays; do not push a Navigator picker route underneath them.
+
+Use the shared palette and typography for a compact calendar and editable clock
+fields. Preserve locale-specific date input, first weekday, and 12/24-hour time
+with the system override. ShadCalendar uses DateTime weekday numbering (1–7),
+whereas Material uses 0 for Sunday. Use the exported ShadTimePicker fields so an
+empty field invalidates the draft instead of retaining the previous time.
+
+Keep selection local until confirmation. Cancel, Escape and Back dismiss the
+picker without changing the source phrase or saved schedule; restore focus to
+the invoking control. Preserve each caller's date limits and interval rules.
+Use shared popup motion and Reduce Motion, constrain panels to the viewport,
+and keep their content reachable with scrolling and an on-screen keyboard.
+
 ### Task row styles
 
 Modern is the default shared task row layout; Classic preserves the previous

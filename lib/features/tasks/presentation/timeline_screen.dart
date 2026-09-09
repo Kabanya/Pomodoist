@@ -17,6 +17,7 @@ import '../../../app/formatters.dart';
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/widgets/action_feedback.dart';
+import '../../../app/widgets/app_date_time_picker.dart';
 import '../../../core/db/app_database.dart';
 import '../domain/project_colors.dart';
 import '../domain/task_models.dart';
@@ -142,10 +143,13 @@ class _TimelineHeader extends StatelessWidget {
             height: 40,
           ),
         ),
-        ShadButton.secondary(
-          onPressed: () => _pickDate(context, day),
-          leading: const Icon(LucideIcons.calendar),
-          child: Text(formatLocalDate(context, day)),
+        AppDateTimePicker(
+          builder: (context, picker) => ShadButton.secondary(
+            focusNode: picker.focusNode,
+            onPressed: () => _pickDate(context, day, picker),
+            leading: const Icon(LucideIcons.calendar),
+            child: Text(formatLocalDate(context, day)),
+          ),
         ),
         Tooltip(
           message: l10n.timelineNextDay,
@@ -168,10 +172,13 @@ class _TimelineHeader extends StatelessWidget {
     );
   }
 
-  Future<void> _pickDate(BuildContext context, DateTime initialDate) async {
+  Future<void> _pickDate(
+    BuildContext context,
+    DateTime initialDate,
+    AppDateTimePickerState picker,
+  ) async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
+    final picked = await picker.pickDate(
       initialDate: initialDate,
       firstDate: DateTime(now.year - 5),
       lastDate: DateTime(now.year + 10),
