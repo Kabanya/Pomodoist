@@ -138,7 +138,10 @@ class ThemeSettingsCard extends ConsumerWidget {
                                 )
                               : null,
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 16,
+                            ),
                             side: BorderSide(
                               color: settings.selectedId == theme.id
                                   ? context.appColors.accent

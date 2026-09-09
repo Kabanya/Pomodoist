@@ -231,6 +231,8 @@ remain to the right of the title block, before row actions. Keep their order whe
 metadata wraps; the subtask indicator retains its position before these fields.
 Touch actions stay available. Project and timing colors retain their semantics.
 Custom Kanban and Timeline blocks keep their specialized layouts.
+Kanban card action menus open on activation; pointer hover only highlights the
+ellipsis button and must not open its menu (`ShadMenubar.selectOnHover: false`).
 
 ### Focus completion actions
 

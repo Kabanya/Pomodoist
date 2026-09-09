@@ -1246,6 +1246,7 @@ class _CardMenu extends StatelessWidget {
       message: context.l10n.kanbanTaskActions,
       child: ShadMenubar(
         key: Key('kanban-card-menu-${card.task.id}'),
+        selectOnHover: false,
         padding: EdgeInsets.zero,
         border: ShadBorder.none,
         backgroundColor: Colors.transparent,
