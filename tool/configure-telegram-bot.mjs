@@ -21,18 +21,22 @@ const commands = {
   en: [['start', 'Open Pomodoist']],
   ru: [['start', 'Открыть Pomodoist']],
 };
-export async function configureTelegramBot(env, fetcher = fetch) {
-  const config = telegramConfiguration(env);
-  const call = async (method, body) => {
+export function telegramApi(token, fetcher = fetch) {
+  if (!/^\d+:[A-Za-z0-9_-]+$/.test(token ?? '')) throw new Error('POMODOIST_TELEGRAM_BOT_TOKEN is required.');
+  return async (method, body) => {
     let response;
     try {
-      response = await fetcher(`https://api.telegram.org/bot${config.token}/${method}`, { method: 'POST',
+      response = await fetcher(`https://api.telegram.org/bot${token}/${method}`, { method: 'POST',
         headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), redirect: 'error', signal: AbortSignal.timeout(10000) });
     } catch { throw new Error(`Telegram ${method} request failed. Credentials were not logged.`); }
     const result = await response.json().catch(() => null);
     if (!response.ok || result?.ok !== true) throw new Error(`Telegram ${method} failed. Check credentials and deployment.`);
     return result.result;
   };
+}
+export async function configureTelegramBot(env, fetcher = fetch) {
+  const config = telegramConfiguration(env);
+  const call = telegramApi(config.token, fetcher);
   if (env.POMODOIST_TELEGRAM_BOT_USERNAME) {
     const bot = await call('getMe', {});
     if (bot?.username !== env.POMODOIST_TELEGRAM_BOT_USERNAME.replace(/^@/, '')) {

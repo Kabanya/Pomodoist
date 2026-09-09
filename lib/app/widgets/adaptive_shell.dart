@@ -29,6 +29,8 @@ import '../keyboard_shortcuts.dart';
 import '../macos_app_menu.dart';
 import '../providers.dart';
 import '../theme/app_theme.dart';
+import '../theme/app_theme_settings.dart';
+import '../theme/theme_background.dart';
 import 'app_date_time_picker.dart';
 import 'mini_focus_player.dart';
 import 'resizable_dialog.dart';
@@ -63,6 +65,7 @@ class AdaptiveShell extends ConsumerStatefulWidget {
 
 class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _backgroundLink = LayerLink();
   bool _wideSidebarVisible = true;
   bool _wideSidebarMounted = true;
   bool _wideSidebarDragging = false;
@@ -145,6 +148,12 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     final showMiniFocusPlayer =
         !focusLocation && widget.location != '/kanban' && !hasTodayFocusStrip;
     final colors = context.appColors;
+    final backgrounds = ref.watch(
+      appThemeSettingsProvider.select(
+        (settings) => settings.activeTheme.backgrounds,
+      ),
+    );
+    final brightness = Theme.of(context).brightness;
     final content = Column(
       children: [
         const AchievementAnnouncementBridge(),
@@ -190,40 +199,70 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     if (wide) {
       scaffold = Scaffold(
         key: _scaffoldKey,
-        body: Stack(
-          children: [
-            Row(
-              children: [
-                _buildWideSidebar(context),
-                Expanded(child: content),
-              ],
-            ),
-            if ((!_wideSidebarVisible && !_wideSidebarMounted) ||
-                _wideSidebarRevealingFromEdge)
-              _buildWideSidebarEdgeHandle(),
-          ],
+        body: ThemeBackgroundPreview(
+          image: backgrounds.mode == ThemeBackgroundMode.wholeApp
+              ? backgrounds
+                    .resolve(ThemeBackgroundZone.main, brightness)
+                    .copyWith(dim: 0)
+              : ThemeBackgroundImage.empty(brightness),
+          color: colors.canvas,
+          child: Stack(
+            children: [
+              Row(
+                children: [
+                  _buildWideSidebar(context),
+                  Expanded(
+                    child: ThemeBackground(
+                      zone: ThemeBackgroundZone.main,
+                      sharedWholeApp: true,
+                      child: content,
+                    ),
+                  ),
+                ],
+              ),
+              if ((!_wideSidebarVisible && !_wideSidebarMounted) ||
+                  _wideSidebarRevealingFromEdge)
+                _buildWideSidebarEdgeHandle(),
+            ],
+          ),
         ),
       );
     } else {
-      scaffold = Scaffold(
-        key: _scaffoldKey,
-        drawer: Drawer(
-          width: _wideSidebarDefaultWidth,
-          backgroundColor: colors.surface,
-          shape: const RoundedRectangleBorder(),
-          child: _TodoistSidebar(
-            location: widget.location,
-            width: _wideSidebarDefaultWidth,
-            onDestinationSelected: _goFromDrawer,
-          ),
-        ),
-        body: content,
-        bottomNavigationBar: VoicePanelBottomClearance(
-          child: _ShellBottomChrome(
-            selectedIndex: selected,
-            showMiniFocusPlayer: showMiniFocusPlayer,
-            onDestinationSelected: (index) =>
-                context.go(mobileDestinations[index].path),
+      scaffold = LayoutBuilder(
+        builder: (context, constraints) => CompositedTransformTarget(
+          link: _backgroundLink,
+          child: ThemeBackground(
+            zone: ThemeBackgroundZone.main,
+            child: Scaffold(
+              key: _scaffoldKey,
+              backgroundColor: Colors.transparent,
+              drawer: Drawer(
+                width: _wideSidebarDefaultWidth,
+                backgroundColor: colors.surface,
+                shape: const RoundedRectangleBorder(),
+                child: ThemeBackground(
+                  zone: ThemeBackgroundZone.sidebar,
+                  wholeAppViewport: (
+                    link: _backgroundLink,
+                    size: constraints.biggest,
+                  ),
+                  child: _TodoistSidebar(
+                    location: widget.location,
+                    width: _wideSidebarDefaultWidth,
+                    onDestinationSelected: _goFromDrawer,
+                  ),
+                ),
+              ),
+              body: content,
+              bottomNavigationBar: VoicePanelBottomClearance(
+                child: _ShellBottomChrome(
+                  selectedIndex: selected,
+                  showMiniFocusPlayer: showMiniFocusPlayer,
+                  onDestinationSelected: (index) =>
+                      context.go(mobileDestinations[index].path),
+                ),
+              ),
+            ),
           ),
         ),
       );
@@ -344,6 +383,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
       unawaited(
         showTaskSearchPalette(
           context,
+          ref,
         ).whenComplete(() => _searchPaletteOpen = false),
       );
       return;
@@ -407,10 +447,14 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                     child: Opacity(
                       opacity: opacity,
                       child: RepaintBoundary(
-                        child: _TodoistSidebar(
-                          location: widget.location,
-                          width: contentWidth,
-                          onDestinationSelected: _go,
+                        child: ThemeBackground(
+                          zone: ThemeBackgroundZone.sidebar,
+                          sharedWholeApp: true,
+                          child: _TodoistSidebar(
+                            location: widget.location,
+                            width: contentWidth,
+                            onDestinationSelected: _go,
+                          ),
                         ),
                       ),
                     ),
@@ -922,11 +966,10 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
       child: Container(
         width: widget.width,
         decoration: BoxDecoration(
-          color: colors.surface,
           border: Border(right: BorderSide(color: colors.border)),
         ),
         child: Material(
-          color: colors.surface,
+          color: Colors.transparent,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
             child: Column(
@@ -1202,7 +1245,7 @@ class _ProjectsHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               onTap: onTitleTap,
               child: Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(10, 10, 0, 10),
+                padding: const EdgeInsetsDirectional.fromSTEB(10, 10, 4, 10),
                 child: Row(
                   children: [
                     Expanded(
@@ -1533,6 +1576,11 @@ class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
             FocusScope(
               node: _focus,
               child: ResizableDialog(
+                background: ThemeBackground(
+                  zone: ThemeBackgroundZone.quickAdd,
+                  color: context.appColors.surface,
+                  child: const SizedBox.expand(),
+                ),
                 title: Text(context.l10n.addTask),
                 initialSize: const Size(560, 260),
                 minSize: const Size(320, 220),

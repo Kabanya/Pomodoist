@@ -1,11 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:crypto/crypto.dart';
+import 'package:file_selector/file_selector.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_theme.dart';
+import 'theme_backgrounds.dart';
+import 'theme_image_preparation.dart';
+import 'theme_image_store.dart';
+
+export 'theme_backgrounds.dart';
 
 const appThemeSettingsPreferenceKey = 'app.themeSettings';
 const appThemeSettingsLegacyBackupKey = 'app.themeSettings.v1Backup';
@@ -22,12 +31,14 @@ class AppThemeDefinition {
     required this.name,
     required this.light,
     required this.dark,
+    this.backgrounds = const ThemeBackgrounds(),
   });
 
   final String id;
   final String name;
   final AppThemePalette light;
   final AppThemePalette dark;
+  final ThemeBackgrounds backgrounds;
 
   bool get isBuiltIn => builtinAppThemes.any((theme) => theme.id == id);
 
@@ -36,11 +47,13 @@ class AppThemeDefinition {
     String? name,
     AppThemePalette? light,
     AppThemePalette? dark,
+    ThemeBackgrounds? backgrounds,
   }) => AppThemeDefinition(
     id: id ?? this.id,
     name: name ?? this.name,
     light: light ?? this.light,
     dark: dark ?? this.dark,
+    backgrounds: backgrounds ?? this.backgrounds,
   );
 
   Map<String, Object> toJson() => {
@@ -48,6 +61,7 @@ class AppThemeDefinition {
     'name': name,
     'light': light.toJson(),
     'dark': dark.toJson(),
+    'backgrounds': backgrounds.toJson(),
   };
 
   factory AppThemeDefinition.fromJson(Object? json) {
@@ -63,6 +77,7 @@ class AppThemeDefinition {
       name: 'Custom',
       light: AppThemePalette.fromJson(json['light']),
       dark: AppThemePalette.fromJson(json['dark']),
+      backgrounds: ThemeBackgrounds.fromJson(json['backgrounds']),
     );
   }
 }
@@ -205,6 +220,7 @@ class AppThemeSettings {
     this.isLoaded = false,
     this.isSaving = false,
     this.loadFailed = false,
+    this.isPreparingImage = false,
   });
 
   final String selectedId;
@@ -213,6 +229,7 @@ class AppThemeSettings {
   final bool isLoaded;
   final bool isSaving;
   final bool loadFailed;
+  final bool isPreparingImage;
 
   Iterable<AppThemeDefinition> get themes => [...builtinAppThemes, customTheme];
   AppThemeDefinition themeById(String id) => themes.firstWhere(
@@ -229,6 +246,7 @@ class AppThemeSettings {
     bool? isLoaded,
     bool? isSaving,
     bool? loadFailed,
+    bool? isPreparingImage,
   }) => AppThemeSettings(
     selectedId: selectedId ?? this.selectedId,
     customTheme: customTheme ?? this.customTheme,
@@ -236,6 +254,7 @@ class AppThemeSettings {
     isLoaded: isLoaded ?? this.isLoaded,
     isSaving: isSaving ?? this.isSaving,
     loadFailed: loadFailed ?? this.loadFailed,
+    isPreparingImage: isPreparingImage ?? this.isPreparingImage,
   );
 
   String encode() => jsonEncode({
@@ -296,6 +315,16 @@ final appThemePreferencesProvider =
       (ref) => SharedPreferences.getInstance,
     );
 
+final themeImageStoreProvider = Provider<ThemeImageStore>(
+  (ref) => createThemeImageStore(),
+);
+final themeImagePreparerProvider =
+    Provider<Future<Uint8List> Function(Uint8List)>((ref) => prepareThemeImage);
+final themeImageBytesProvider = FutureProvider.autoDispose
+    .family<Uint8List?, String>(
+      (ref, id) => ref.read(appThemeSettingsProvider.notifier).readImage(id),
+    );
+
 final appThemeSettingsProvider =
     NotifierProvider<AppThemeSettingsController, AppThemeSettings>(
       AppThemeSettingsController.new,
@@ -304,6 +333,61 @@ final appThemeSettingsProvider =
 class AppThemeSettingsController extends Notifier<AppThemeSettings> {
   Future<void>? _loading;
   String? _legacySettings;
+  int _imageSelection = 0;
+  bool _needsImageCleanup = false;
+  final Map<String, Uint8List> _pendingImages = {};
+
+  Future<Uint8List?> readImage(String id) async =>
+      _pendingImages[id] ?? await ref.read(themeImageStoreProvider).read(id);
+
+  void cancelImageSelection() {
+    _imageSelection++;
+    if (ref.mounted && state.isPreparingImage) {
+      state = state.copyWith(isPreparingImage: false);
+    }
+  }
+
+  Future<void> chooseBackground(
+    ThemeBackgroundZone zone,
+    Brightness brightness,
+    Future<XFile?> Function() pickFile,
+  ) async {
+    _requireReady();
+    if (state.preview == null) throw StateError('No theme draft');
+    final selection = ++_imageSelection;
+    bool current() =>
+        ref.mounted && state.preview != null && selection == _imageSelection;
+    state = state.copyWith(isPreparingImage: true);
+    try {
+      final file = await pickFile();
+      if (!current() || file == null) return;
+      if (await file.length() > themeImageMaxBytes)
+        throw const ThemeImageTooLargeException();
+      if (!current()) return;
+      final bytes = await file.readAsBytes();
+      if (!current()) return;
+      final prepared = await ref.read(themeImagePreparerProvider)(bytes);
+      if (!current()) return;
+      final id = sha256.convert(prepared).toString();
+      _pendingImages[id] = prepared;
+      // A previously missing image may have been cached by a preview.
+      ref.invalidate(themeImageBytesProvider(id));
+      final draft = state.preview!;
+      updatePreview(
+        draft.copyWith(
+          backgrounds: draft.backgrounds.withImage(
+            zone,
+            brightness,
+            draft.backgrounds.imageFor(zone, brightness).copyWith(imageId: id),
+          ),
+        ),
+      );
+    } catch (_) {
+      if (current()) rethrow;
+    } finally {
+      if (current()) state = state.copyWith(isPreparingImage: false);
+    }
+  }
 
   @override
   AppThemeSettings build() {
@@ -351,12 +435,16 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
   void beginEdit() {
     _requireReady();
     if (state.preview != null) throw StateError('Theme editor is already open');
+    cancelImageSelection();
+    _pendingImages.clear();
     state = state.copyWith(preview: state.customTheme);
   }
 
   void resetPreviewToClassic() {
     _requireReady();
     if (state.preview == null) throw StateError('No theme draft');
+    cancelImageSelection();
+    _pendingImages.clear();
     state = state.copyWith(preview: defaultCustomTheme);
   }
 
@@ -365,11 +453,15 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
     if (state.preview?.id != draft.id) {
       throw ArgumentError('Not the current draft');
     }
+    final imageIds = draft.backgrounds.imageIds;
+    _pendingImages.removeWhere((id, _) => !imageIds.contains(id));
     state = state.copyWith(preview: draft);
   }
 
   void cancelPreview() {
     if (!ref.mounted || state.isSaving || state.preview == null) return;
+    cancelImageSelection();
+    _pendingImages.clear();
     state = state.copyWith(clearPreview: true);
   }
 
@@ -377,6 +469,9 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
     _requireReady();
     final draft = state.preview;
     if (draft == null) throw StateError('No theme draft');
+    if (state.isPreparingImage)
+      throw StateError('Image is still being prepared');
+    cancelImageSelection();
     final saved = AppThemeDefinition.fromJson(draft.toJson());
     await _persist(
       state.copyWith(
@@ -384,29 +479,70 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
         customTheme: saved,
         clearPreview: true,
       ),
+      savingPreview: true,
     );
   }
 
-  Future<void> _persist(AppThemeSettings next) async {
+  Future<void> _persist(
+    AppThemeSettings next, {
+    bool savingPreview = false,
+  }) async {
+    final oldImageIds = state.customTheme.backgrounds.imageIds;
     state = state.copyWith(isSaving: true);
     SharedPreferences? prefs;
     try {
-      prefs = await ref.read(appThemePreferencesProvider)();
-      final legacy = _legacySettings;
-      if (legacy != null &&
-          !prefs.containsKey(appThemeSettingsLegacyBackupKey)) {
-        if (!await prefs.setString(appThemeSettingsLegacyBackupKey, legacy)) {
-          throw StateError('Could not back up legacy theme settings');
+      final store = ref.read(themeImageStoreProvider);
+      await store.protect(() async {
+        prefs = await ref.read(appThemePreferencesProvider)();
+        final preferences = prefs!;
+        await preferences.reload();
+        if (!savingPreview) {
+          // Selecting a preset must not overwrite a Custom saved in another tab.
+          final latest = AppThemeSettings.decode(
+            preferences.get(appThemeSettingsPreferenceKey),
+          );
+          next = next.copyWith(customTheme: latest.customTheme);
         }
-      }
-      if (!await prefs.setString(
-        appThemeSettingsPreferenceKey,
-        next.encode(),
-      )) {
-        throw StateError('Could not save theme settings');
-      }
-      _legacySettings = null;
-      if (ref.mounted) state = next.copyWith(isSaving: false);
+        final legacy = _legacySettings;
+        if (legacy != null &&
+            !preferences.containsKey(appThemeSettingsLegacyBackupKey)) {
+          if (!await preferences.setString(
+            appThemeSettingsLegacyBackupKey,
+            legacy,
+          )) {
+            throw StateError('Could not back up legacy theme settings');
+          }
+        }
+        for (final id in next.customTheme.backgrounds.imageIds) {
+          final bytes = _pendingImages[id];
+          if (bytes != null) {
+            _needsImageCleanup = true;
+            await store.write(id, bytes);
+          } else if (savingPreview && await store.read(id) == null) {
+            throw StateError('A background image is no longer available');
+          }
+        }
+        if (!await preferences.setString(
+          appThemeSettingsPreferenceKey,
+          next.encode(),
+        )) {
+          throw StateError('Could not save theme settings');
+        }
+        _legacySettings = null;
+        if (_needsImageCleanup ||
+            oldImageIds.isNotEmpty ||
+            next.customTheme.backgrounds.imageIds.isNotEmpty ||
+            _pendingImages.isNotEmpty) {
+          try {
+            await store.retain(next.customTheme.backgrounds.imageIds);
+            _needsImageCleanup = false;
+          } catch (_) {
+            // Cleanup must never invalidate successfully saved settings.
+          }
+        }
+        _pendingImages.clear();
+        if (ref.mounted) state = next.copyWith(isSaving: false);
+      });
     } catch (_) {
       // Legacy preferences update their cache before the disk write succeeds.
       try {

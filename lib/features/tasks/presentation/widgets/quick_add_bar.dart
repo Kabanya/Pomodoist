@@ -381,7 +381,7 @@ class _QuickAddInputState extends ConsumerState<QuickAddInput> {
       return const <_QuickAddSuggestion>[];
     }
     final query = token.query.toLowerCase();
-    final names = token.marker == '#'
+    final names = isQuickAddProjectMarker(token.marker)
         ? projects
               .where(
                 (project) =>
@@ -455,7 +455,7 @@ class _ActiveQuickAddToken {
       return null;
     }
     final marker = beforeCursor[0];
-    if (marker != '#' && marker != '@') {
+    if (!isQuickAddProjectMarker(marker) && marker != '@') {
       return null;
     }
     final query = beforeCursor.length > 1 && beforeCursor[1] == '"'
@@ -1913,6 +1913,14 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
     final l10n = context.l10n;
     if (message.contains('setActive: Session activation failed')) {
       return l10n.voiceMicrophoneUnavailable;
+    }
+    if (_voiceMode == VoiceTranscriptionMode.cloud &&
+        const [
+          'speech_unavailable',
+          'speech_recognition_failed',
+          'speech_network_unavailable',
+        ].contains(_voiceErrorCode)) {
+      return l10n.voiceCloudServiceUnavailable;
     }
     return switch (_voiceErrorCode) {
       'microphone_denied' || 'permission_denied' => l10n.voiceMicrophoneDenied,

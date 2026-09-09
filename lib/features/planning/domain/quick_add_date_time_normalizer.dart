@@ -130,7 +130,7 @@ class QuickAddDateTimeNormalizer {
       marker += '\uE000';
     }
     final protected = input.replaceAllMapped(
-      RegExp(r'(^|\s)([#@](?:"(?:\\.|[^"\\])*"|[^\s]+)|/[^\s]+)'),
+      RegExp(r'(^|\s)([#№@](?:"(?:\\.|[^"\\])*"|[^\s]+)|/[^\s]+)'),
       (match) {
         metadata.add(match.group(2)!);
         return '${match.group(1)}$marker${metadata.length - 1}$marker';

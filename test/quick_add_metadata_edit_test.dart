@@ -107,7 +107,7 @@ void main() {
   test('quoted project source ranges replace completely and reset', () {
     final name = r'Team "A" \next September 9';
     final token = quickAddProjectToken(name, parser, now: now)!;
-    var value = TextEditingValue(text: 'Task $token #Old @"Label ١٢"');
+    var value = TextEditingValue(text: 'Task $token №Old @"Label ١٢"');
     final replacement = quickAddProjectToken('New  team', parser, now: now)!;
     value = rewriteQuickAddMetadata(
       value,

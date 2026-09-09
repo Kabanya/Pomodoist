@@ -177,6 +177,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get billingStoreUnavailable => 'App Store غير متاح الآن.';
 
   @override
+  String get billingStoreConnectionFailed =>
+      'متجر App Store غير متاح مؤقتًا. يُرجى المحاولة مرة أخرى بعد قليل.';
+
+  @override
   String billingPurchaseError(String error) {
     return 'خطأ في الشراء: $error';
   }
@@ -1080,6 +1084,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get voiceServiceUnavailable =>
       'التعرف على الكلام غير متاح. تحقق من الاتصال. على Mac، تحقق أيضاً من إعدادات النظام ← لوحة المفاتيح ← الإملاء واللغة.';
+
+  @override
+  String get voiceCloudServiceUnavailable =>
+      'فشل النسخ السحابي. تحقق من اتصالك بالإنترنت وأعد محاولة نسخ التسجيل المحفوظ.';
 
   @override
   String get voiceLocaleUnsupported =>
@@ -2396,6 +2404,56 @@ class AppLocalizationsAr extends AppLocalizations {
   String get themeResetToClassic => 'إعادة الضبط إلى كلاسيكي';
 
   @override
+  String get themeBackgroundTitle => 'صورة الخلفية';
+
+  @override
+  String get themeBackgroundMainOnly => 'المنطقة الرئيسية فقط';
+
+  @override
+  String get themeBackgroundWholeApp => 'التطبيق بالكامل';
+
+  @override
+  String get themeBackgroundSeparate => 'خلفيات منفصلة';
+
+  @override
+  String get themeBackgroundMain => 'المنطقة الرئيسية';
+
+  @override
+  String get themeBackgroundSidebar => 'الشريط الجانبي';
+
+  @override
+  String get themeBackgroundQuickAdd => 'إضافة سريعة';
+
+  @override
+  String get themeBackgroundChoose => 'اختيار صورة';
+
+  @override
+  String get themeBackgroundReplace => 'استبدال الصورة';
+
+  @override
+  String get themeBackgroundRemove => 'إزالة الصورة';
+
+  @override
+  String get themeBackgroundDim => 'التعتيم';
+
+  @override
+  String get themeBackgroundBlur => 'التمويه';
+
+  @override
+  String get themeBackgroundEmpty => 'لا توجد صورة';
+
+  @override
+  String get themeBackgroundImageError =>
+      'تعذر فتح هذه الصورة. اختر صورة أخرى.';
+
+  @override
+  String get themeBackgroundTooLarge =>
+      'اختر صورة لا يزيد حجمها عن 50 ميغابايت.';
+
+  @override
+  String get themeBackgroundLoading => 'جارٍ تجهيز الصورة…';
+
+  @override
   String get settingsTaskListStyle => 'نمط صفوف المهام';
 
   @override
@@ -2495,6 +2553,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get commandSearchActions => 'الإجراءات';
+
+  @override
+  String get commandSearchDictateTask => 'إملاء مهمة';
 
   @override
   String get commandSearchAllResults => 'عرض كل النتائج';

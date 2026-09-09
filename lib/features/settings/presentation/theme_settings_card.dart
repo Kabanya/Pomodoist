@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -7,6 +8,8 @@ import '../../../app/app_l10n.dart';
 import '../../../app/app_theme_mode.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_theme_settings.dart';
+import '../../../app/theme/theme_background.dart';
+import '../../../app/theme/theme_image_preparation.dart';
 import '../../../l10n/app_localizations.dart';
 
 bool themeEditorCanSave(Iterable<String> colors) =>
@@ -256,9 +259,14 @@ class ThemeSettingsCard extends ConsumerWidget {
 }
 
 class _PalettePair extends StatelessWidget {
-  const _PalettePair({required this.theme, this.compact = false});
+  const _PalettePair({
+    required this.theme,
+    this.compact = false,
+    this.backgroundZone = ThemeBackgroundZone.main,
+  });
   final AppThemeDefinition theme;
   final bool compact;
+  final ThemeBackgroundZone backgroundZone;
 
   @override
   Widget build(BuildContext context) => Row(
@@ -275,85 +283,94 @@ class _PalettePair extends StatelessWidget {
             children: [
               Text(entry.$1, style: Theme.of(context).textTheme.labelMedium),
               const SizedBox(height: 4),
-              Container(
-                padding: EdgeInsets.all(compact ? 8 : 10),
-                decoration: BoxDecoration(
-                  color: entry.$2.canvas,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: entry.$2.border),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (!compact) ...[
-                      Text(
-                        context.l10n.themePreviewTask,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: entry.$2.primaryText,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        context.l10n.themePreviewSecondary,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: entry.$2.secondaryText,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                    Container(
-                      padding: EdgeInsets.all(compact ? 4 : 8),
-                      decoration: BoxDecoration(
-                        color: entry.$2.surface,
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: entry.$2.border),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            LucideIcons.circleCheck,
-                            color: entry.$2.accent,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Container(
-                              height: 3,
-                              color: entry.$2.secondaryText,
-                            ),
-                          ),
-                        ],
-                      ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: ThemeBackgroundPreview(
+                  image: theme.backgrounds.resolve(
+                    backgroundZone,
+                    index == 0 ? Brightness.light : Brightness.dark,
+                  ),
+                  color: backgroundZone == ThemeBackgroundZone.sidebar
+                      ? entry.$2.surface
+                      : entry.$2.canvas,
+                  child: Container(
+                    padding: EdgeInsets.all(compact ? 8 : 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: entry.$2.border),
                     ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: entry.$2.accentFill,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: compact
-                          ? SizedBox(
-                              height: 8,
-                              child: Center(
-                                child: Icon(
-                                  LucideIcons.plus,
-                                  size: 10,
-                                  color: entry.$2.onAccent,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (!compact) ...[
+                          Text(
+                            context.l10n.themePreviewTask,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(color: entry.$2.primaryText),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            context.l10n.themePreviewSecondary,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: entry.$2.secondaryText),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        Container(
+                          padding: EdgeInsets.all(compact ? 4 : 8),
+                          decoration: BoxDecoration(
+                            color: entry.$2.surface,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: entry.$2.border),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                LucideIcons.circleCheck,
+                                color: entry.$2.accent,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Container(
+                                  height: 3,
+                                  color: entry.$2.secondaryText,
                                 ),
                               ),
-                            )
-                          : Text(
-                              context.l10n.commonAdd,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.labelMedium
-                                  ?.copyWith(color: entry.$2.onAccent),
-                            ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: entry.$2.accentFill,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: compact
+                              ? SizedBox(
+                                  height: 8,
+                                  child: Center(
+                                    child: Icon(
+                                      LucideIcons.plus,
+                                      size: 10,
+                                      color: entry.$2.onAccent,
+                                    ),
+                                  ),
+                                )
+                              : Text(
+                                  context.l10n.commonAdd,
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.labelMedium
+                                      ?.copyWith(color: entry.$2.onAccent),
+                                ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -387,6 +404,88 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
         (pair.$1, entry.key): themeColorHex(entry.value),
   };
   bool _saveFailed = false;
+  ThemeBackgroundZone _backgroundZone = ThemeBackgroundZone.main;
+  String? _imageError;
+
+  ThemeBackgroundZone get _editingZone =>
+      ref.read(appThemeSettingsProvider).preview!.backgrounds.mode ==
+          ThemeBackgroundMode.separate
+      ? _backgroundZone
+      : ThemeBackgroundZone.main;
+
+  void _backgroundContextChanged({
+    Brightness? brightness,
+    ThemeBackgroundZone? zone,
+    ThemeBackgroundMode? mode,
+  }) {
+    final controller = ref.read(appThemeSettingsProvider.notifier);
+    controller.cancelImageSelection();
+    if (mode != null) {
+      final draft = ref.read(appThemeSettingsProvider).preview!;
+      controller.updatePreview(
+        draft.copyWith(backgrounds: draft.backgrounds.copyWith(mode: mode)),
+      );
+    }
+    setState(() {
+      _brightness = brightness ?? _brightness;
+      _backgroundZone = zone ?? _backgroundZone;
+      _imageError = null;
+    });
+  }
+
+  void _changeBackground(ThemeBackgroundImage image) {
+    final controller = ref.read(appThemeSettingsProvider.notifier);
+    final draft = ref.read(appThemeSettingsProvider).preview!;
+    controller.updatePreview(
+      draft.copyWith(
+        backgrounds: draft.backgrounds.withImage(
+          _editingZone,
+          _brightness,
+          image,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickBackground() async {
+    setState(() => _imageError = null);
+    try {
+      await ref
+          .read(appThemeSettingsProvider.notifier)
+          .chooseBackground(
+            _editingZone,
+            _brightness,
+            () => openFile(
+              acceptedTypeGroups: const [
+                XTypeGroup(
+                  label: 'Images',
+                  extensions: [
+                    'jpg',
+                    'jpeg',
+                    'png',
+                    'webp',
+                    'gif',
+                    'bmp',
+                    'heic',
+                    'heif',
+                    'tif',
+                    'tiff',
+                  ],
+                  mimeTypes: ['image/*'],
+                  uniformTypeIdentifiers: ['public.image'],
+                ),
+              ],
+            ),
+          );
+    } catch (error) {
+      if (mounted)
+        setState(
+          () => _imageError = error is ThemeImageTooLargeException
+              ? context.l10n.themeBackgroundTooLarge
+              : context.l10n.themeBackgroundImageError,
+        );
+    }
+  }
 
   void _reset() {
     ref.read(appThemeSettingsProvider.notifier).resetPreviewToClassic();
@@ -400,6 +499,7 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
         ),
       );
       _saveFailed = false;
+      _imageError = null;
     });
   }
 
@@ -432,6 +532,20 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
     final draft = settings.preview ?? _initial;
     final palette = _brightness == Brightness.light ? draft.light : draft.dark;
     final l10n = context.l10n;
+    final zone = draft.backgrounds.mode == ThemeBackgroundMode.separate
+        ? _backgroundZone
+        : ThemeBackgroundZone.main;
+    final background = draft.backgrounds.imageFor(zone, _brightness);
+    final backgroundModes = {
+      ThemeBackgroundMode.mainOnly: l10n.themeBackgroundMainOnly,
+      ThemeBackgroundMode.wholeApp: l10n.themeBackgroundWholeApp,
+      ThemeBackgroundMode.separate: l10n.themeBackgroundSeparate,
+    };
+    final backgroundZones = {
+      ThemeBackgroundZone.main: l10n.themeBackgroundMain,
+      ThemeBackgroundZone.sidebar: l10n.themeBackgroundSidebar,
+      ThemeBackgroundZone.quickAdd: l10n.themeBackgroundQuickAdd,
+    };
     final groups = [
       (
         l10n.themeColorsSurfaces,
@@ -497,7 +611,7 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
               children: [
                 Text(l10n.themeLivePreview),
                 const SizedBox(height: 16),
-                _PalettePair(theme: draft),
+                _PalettePair(theme: draft, backgroundZone: zone),
                 const SizedBox(height: 16),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -517,9 +631,139 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
                     selected: {_brightness},
                     onSelectionChanged: settings.isSaving
                         ? null
-                        : (selection) =>
-                              setState(() => _brightness = selection.single),
+                        : (selection) => _backgroundContextChanged(
+                            brightness: selection.single,
+                          ),
                   ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  l10n.themeBackgroundTitle,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final entry in backgroundModes.entries)
+                      ChoiceChip(
+                        label: Text(entry.value),
+                        selected: draft.backgrounds.mode == entry.key,
+                        onSelected: settings.isSaving
+                            ? null
+                            : (_) => _backgroundContextChanged(mode: entry.key),
+                      ),
+                  ],
+                ),
+                if (draft.backgrounds.mode == ThemeBackgroundMode.separate) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final entry in backgroundZones.entries)
+                        ChoiceChip(
+                          label: Text(entry.value),
+                          selected: zone == entry.key,
+                          onSelected: settings.isSaving
+                              ? null
+                              : (_) =>
+                                    _backgroundContextChanged(zone: entry.key),
+                        ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: ThemeBackgroundPreview(
+                    image: background,
+                    color: zone == ThemeBackgroundZone.sidebar
+                        ? palette.surface
+                        : palette.canvas,
+                    child: SizedBox(
+                      height: 140,
+                      child: background.imageId == null
+                          ? Center(
+                              child: Text(
+                                l10n.themeBackgroundEmpty,
+                                style: TextStyle(color: palette.primaryText),
+                              ),
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ShadButton.outline(
+                      enabled: !settings.isSaving && !settings.isPreparingImage,
+                      onPressed: _pickBackground,
+                      child: Text(
+                        background.imageId == null
+                            ? l10n.themeBackgroundChoose
+                            : l10n.themeBackgroundReplace,
+                      ),
+                    ),
+                    if (background.imageId != null)
+                      ShadButton.ghost(
+                        enabled: !settings.isSaving,
+                        onPressed: () {
+                          ref
+                              .read(appThemeSettingsProvider.notifier)
+                              .cancelImageSelection();
+                          _changeBackground(
+                            background.copyWith(clearImage: true),
+                          );
+                          setState(() => _imageError = null);
+                        },
+                        child: Text(l10n.themeBackgroundRemove),
+                      ),
+                  ],
+                ),
+                if (settings.isPreparingImage)
+                  Semantics(
+                    liveRegion: true,
+                    child: Text(l10n.themeBackgroundLoading),
+                  ),
+                if (_imageError != null)
+                  Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      _imageError!,
+                      style: TextStyle(color: context.appColors.error),
+                    ),
+                  ),
+                Text(
+                  '${l10n.themeBackgroundDim}: ${(background.dim * 100).round()}%',
+                ),
+                Slider(
+                  value: background.dim,
+                  divisions: 100,
+                  label: '${(background.dim * 100).round()}%',
+                  semanticFormatterCallback: (value) =>
+                      '${l10n.themeBackgroundDim}: ${(value * 100).round()}%',
+                  onChanged: settings.isSaving || background.imageId == null
+                      ? null
+                      : (value) =>
+                            _changeBackground(background.copyWith(dim: value)),
+                ),
+                Text('${l10n.themeBackgroundBlur}: ${background.blur.round()}'),
+                Slider(
+                  value: background.blur,
+                  max: 20,
+                  divisions: 20,
+                  label: '${background.blur.round()}',
+                  semanticFormatterCallback: (value) =>
+                      '${l10n.themeBackgroundBlur}: ${value.round()}',
+                  onChanged: settings.isSaving || background.imageId == null
+                      ? null
+                      : (value) =>
+                            _changeBackground(background.copyWith(blur: value)),
                 ),
                 if (themeHasLowContrast(draft.light) ||
                     themeHasLowContrast(draft.dark))
@@ -580,7 +824,10 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
               child: Text(l10n.commonCancel),
             ),
             ShadButton(
-              enabled: !settings.isSaving && themeEditorCanSave(_hex.values),
+              enabled:
+                  !settings.isSaving &&
+                  !settings.isPreparingImage &&
+                  themeEditorCanSave(_hex.values),
               onPressed: _save,
               leading: settings.isSaving
                   ? SizedBox.square(

@@ -414,6 +414,12 @@ abstract class AppLocalizations {
   /// **'The App Store is not available right now.'**
   String get billingStoreUnavailable;
 
+  /// No description provided for @billingStoreConnectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The App Store is temporarily unavailable. Please try again in a moment.'**
+  String get billingStoreConnectionFailed;
+
   /// No description provided for @billingPurchaseError.
   ///
   /// In en, this message translates to:
@@ -2003,6 +2009,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Speech recognition is unavailable. Check your connection. On Mac, also check System Settings → Keyboard → Dictation and your language.'**
   String get voiceServiceUnavailable;
+
+  /// No description provided for @voiceCloudServiceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud transcription failed. Check your internet connection and retry the saved recording.'**
+  String get voiceCloudServiceUnavailable;
 
   /// No description provided for @voiceLocaleUnsupported.
   ///
@@ -4240,6 +4252,102 @@ abstract class AppLocalizations {
   /// **'Reset to Classic'**
   String get themeResetToClassic;
 
+  /// No description provided for @themeBackgroundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Background image'**
+  String get themeBackgroundTitle;
+
+  /// No description provided for @themeBackgroundMainOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Main area only'**
+  String get themeBackgroundMainOnly;
+
+  /// No description provided for @themeBackgroundWholeApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Entire app'**
+  String get themeBackgroundWholeApp;
+
+  /// No description provided for @themeBackgroundSeparate.
+  ///
+  /// In en, this message translates to:
+  /// **'Separate backgrounds'**
+  String get themeBackgroundSeparate;
+
+  /// No description provided for @themeBackgroundMain.
+  ///
+  /// In en, this message translates to:
+  /// **'Main area'**
+  String get themeBackgroundMain;
+
+  /// No description provided for @themeBackgroundSidebar.
+  ///
+  /// In en, this message translates to:
+  /// **'Sidebar'**
+  String get themeBackgroundSidebar;
+
+  /// No description provided for @themeBackgroundQuickAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Add'**
+  String get themeBackgroundQuickAdd;
+
+  /// No description provided for @themeBackgroundChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photo'**
+  String get themeBackgroundChoose;
+
+  /// No description provided for @themeBackgroundReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace photo'**
+  String get themeBackgroundReplace;
+
+  /// No description provided for @themeBackgroundRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get themeBackgroundRemove;
+
+  /// No description provided for @themeBackgroundDim.
+  ///
+  /// In en, this message translates to:
+  /// **'Dimming'**
+  String get themeBackgroundDim;
+
+  /// No description provided for @themeBackgroundBlur.
+  ///
+  /// In en, this message translates to:
+  /// **'Blur'**
+  String get themeBackgroundBlur;
+
+  /// No description provided for @themeBackgroundEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No photo'**
+  String get themeBackgroundEmpty;
+
+  /// No description provided for @themeBackgroundImageError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open this image. Choose another photo.'**
+  String get themeBackgroundImageError;
+
+  /// No description provided for @themeBackgroundTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an image no larger than 50 MB.'**
+  String get themeBackgroundTooLarge;
+
+  /// No description provided for @themeBackgroundLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing image…'**
+  String get themeBackgroundLoading;
+
   /// No description provided for @settingsTaskListStyle.
   ///
   /// In en, this message translates to:
@@ -4431,6 +4539,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Actions'**
   String get commandSearchActions;
+
+  /// No description provided for @commandSearchDictateTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Dictate task'**
+  String get commandSearchDictateTask;
 
   /// No description provided for @commandSearchAllResults.
   ///

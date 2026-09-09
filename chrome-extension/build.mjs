@@ -32,8 +32,10 @@ export function manifestFor(config) {
     content_security_policy: { extension_pages: `default-src 'self'; script-src 'self'; object-src 'none'; style-src 'self'; img-src 'self'; connect-src ${config.apiUrl} ${socket.origin}; base-uri 'none'; form-action 'none'` },
   };
 }
-export async function build(env = process.env) {
-  const config = configuration(env), destination = path.join(root, 'dist');
+export async function build(env = process.env, destination = path.join(root, 'dist')) {
+  const config = configuration(env);
+  destination = path.resolve(destination);
+  if (destination === path.parse(destination).root || destination === root || root.startsWith(destination + path.sep)) throw new Error('Build output must not contain the extension source.');
   await rm(destination, { recursive: true, force: true });
   await mkdir(path.join(destination, 'src'), { recursive: true });
   for (const file of ['background.js', 'client.js', 'core.js', 'popup.js', 'realtime.js', 'sync.js']) {

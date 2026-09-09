@@ -7,6 +7,8 @@ import 'quick_add_date_time_normalizer.dart';
 String quickAddQuotedMetadataValue(String name) =>
     '"${name.replaceAll(r'\', r'\\').replaceAll('"', r'\"')}"';
 
+bool isQuickAddProjectMarker(String marker) => marker == '#' || marker == '№';
+
 const _todayWords = {
   'today',
   'сегодня',
@@ -439,7 +441,7 @@ class QuickAddParser {
       }
       final start = index;
       final quotedMetadata =
-          (input[index] == '#' || input[index] == '@') &&
+          (isQuickAddProjectMarker(input[index]) || input[index] == '@') &&
           index + 1 < input.length &&
           input[index + 1] == '"';
       if (quotedMetadata) {
@@ -483,7 +485,7 @@ class QuickAddParser {
 
       final start = index;
       final quotedMetadata =
-          (input[index] == '#' || input[index] == '@') &&
+          (isQuickAddProjectMarker(input[index]) || input[index] == '@') &&
           index + 1 < input.length &&
           input[index + 1] == '"';
       if (quotedMetadata) {
@@ -511,7 +513,10 @@ class QuickAddParser {
   }
 
   String? _metadataValue(String token, String marker) {
-    if (!token.startsWith(marker) || token.length <= 1) {
+    if (token.length <= 1 ||
+        !(marker == '#'
+            ? isQuickAddProjectMarker(token[0])
+            : token.startsWith(marker))) {
       return null;
     }
     var value = token.substring(1);

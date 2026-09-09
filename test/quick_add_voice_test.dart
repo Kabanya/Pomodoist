@@ -26,6 +26,7 @@ import 'package:pomodoist/features/onboarding/onboarding_gate.dart';
 import 'package:pomodoist/features/planning/data/task_decomposer.dart';
 import 'package:pomodoist/features/planning/data/quick_add_service.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/features/tasks/presentation/task_search_palette.dart';
 import 'package:pomodoist/features/tasks/presentation/widgets/quick_add_bar.dart';
 import 'package:pomodoist/features/tasks/presentation/widgets/task_list_view.dart';
 import 'package:pomodoist/features/voice/data/pomodoist_voice_controller.dart';
@@ -50,6 +51,65 @@ void main() {
     ...emptySuggestionOverrides,
     billingAccountEntitlementProvider.overrideWithValue(true),
   ];
+
+  testWidgets(
+    'search dictation opens voice with keyboard and releases search',
+    (tester) async {
+      final recognizer = _FakeRecordedRecognizer(
+        transcript: const VoiceRecognitionTranscript(text: ''),
+      );
+      final controller = VoiceRecognitionController(
+        recordedRecognizer: recognizer,
+        platformSupport: const VoicePlatformSupport(
+          supportsRecordedSystem: true,
+        ),
+      );
+      addTearDown(controller.dispose);
+      var searchClosed = false;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            ...proVoiceOverrides,
+            applePurchasesSupportedProvider.overrideWithValue(false),
+            voiceRecognitionControllerProvider.overrideWithValue(controller),
+            tasksByQueryProvider(
+              const TaskQuery.all(),
+            ).overrideWith((ref) => Stream.value(const <TaskItem>[])),
+            activeFocusRunProvider.overrideWith((ref) => Stream.value(null)),
+          ],
+          child: MaterialApp(
+            builder: testAppBuilder,
+            theme: AppTheme.light(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Consumer(
+              builder: (context, ref, _) => Scaffold(
+                body: TextButton(
+                  onPressed: () async {
+                    await showTaskSearchPalette(context, ref);
+                    searchClosed = true;
+                  },
+                  child: const Text('Search'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Search'));
+      await tester.pumpAndSettle();
+      expect(find.text('Dictate task'), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(find.text('Dictate task'), findsNothing);
+      expect(find.byType(VoiceQuickAddHost), findsOneWidget);
+      expect(searchClosed, isTrue);
+      expect(recognizer.startCalls, 0);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    },
+  );
 
   test('Apple controller uses cloud preference only while signed in', () async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
@@ -327,6 +387,11 @@ void main() {
         );
         if (cloudUnavailable) {
           await tester.pumpAndSettle();
+          expect(find.textContaining('Dictation'), findsNothing);
+          expect(
+            find.textContaining('Cloud transcription failed.'),
+            findsOneWidget,
+          );
           expect(find.byKey(const Key('voice-recover-access')), findsNothing);
           expect(
             find.byKey(const Key('voice-use-cloud-transcription')),

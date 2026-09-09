@@ -28,6 +28,22 @@ function encode(bytes: Uint8Array): string {
   for (const byte of bytes) value += String.fromCharCode(byte);
   return btoa(value);
 }
+// Synthetic audio with the same extended PCM header and padding as macOS record.
+function appleWav(seconds = 1): Uint8Array {
+  const pcm = wav(seconds);
+  const bytes = new Uint8Array(pcm.length + 4052);
+  const view = new DataView(bytes.buffer);
+  const text = (offset: number, value: string) => bytes.set(new TextEncoder().encode(value), offset);
+  bytes.set(pcm.subarray(0, 12)); view.setUint32(4, bytes.length - 8, true);
+  text(12, "JUNK"); view.setUint32(16, 28, true);
+  text(48, "fmt "); view.setUint32(52, 40, true);
+  bytes.set(pcm.subarray(20, 36), 56); view.setUint16(56, 0xfffe, true);
+  view.setUint16(72, 22, true); view.setUint16(74, 16, true); view.setUint32(76, 4, true);
+  bytes.set([1, 0, 0, 0, 0, 0, 0x10, 0, 0x80, 0, 0, 0xaa, 0, 0x38, 0x9b, 0x71], 80);
+  text(96, "FLLR"); view.setUint32(100, 3984, true);
+  bytes.set(pcm.subarray(36), 4088);
+  return bytes;
+}
 function body(bytes = wav(), format = "wav") {
   return { input_audio: { data: encode(bytes), format }, locale: "ru-RU" };
 }
@@ -80,6 +96,24 @@ Deno.test("auth is required even when an API key is configured", async () => {
     assert.equal((await handleVoiceTranscription(request(body(), withHeader), deps)).status, 401);
     assert.equal(calls.length, 0);
   }
+});
+Deno.test("accepts macOS extended PCM WAV without changing its audio", async () => {
+  const { deps, calls } = setup();
+  const input = body(appleWav());
+  assert.equal((await handleVoiceTranscription(request(input), deps)).status, 200);
+  assert.deepEqual(JSON.parse(String(calls[0].init?.body)).input_audio, input.input_audio);
+});
+Deno.test("extended WAV still rejects unknown codecs, malformed headers and excess duration", async () => {
+  for (const [offset, value] of [[80, 6], [84, 1], [95, 0], [72, 21], [72, 24], [74, 17]]) {
+    const bytes = appleWav();
+    bytes[offset] = value;
+    const { deps, calls } = setup();
+    assert.equal((await handleVoiceTranscription(request(body(bytes)), deps)).status, 400);
+    assert.equal(calls.length, 0);
+  }
+  const { deps, calls } = setup({ env: { VOICE_TRANSCRIPTION_MAX_SECONDS: "1" } });
+  assert.equal((await handleVoiceTranscription(request(body(appleWav(2))), deps)).status, 413);
+  assert.equal(calls.length, 0);
 });
 Deno.test("auth service failures are sanitized", async () => {
   const { deps, calls } = setup();

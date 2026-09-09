@@ -429,6 +429,7 @@ class AppTheme {
         reverseDuration: popupDuration,
       ),
       menubarTheme: const shad.ShadMenubarTheme(
+        selectOnHover: false,
         anchor: shad.ShadAnchorAuto(
           offset: Offset(0, 4),
           targetAnchor: AlignmentDirectional.bottomEnd,

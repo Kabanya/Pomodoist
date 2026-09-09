@@ -33,6 +33,35 @@ Use a public `anon` JWT or `sb_publishable_...` key only. The builder rejects se
 
 The build reuses `web/icons/Icon-192.png` and the repository `LICENSE`.
 
+### Make commands
+
+From the repository root:
+
+```sh
+make chrome-debug    # .env.staging → build/chrome/debug; opens Chrome
+make chrome-release  # .env.testflight → build/chrome/release + ZIP
+```
+
+The first time, enable Developer mode in `chrome://extensions`, choose **Load
+unpacked**, and select `build/chrome/debug`. Keep using that directory so its
+local extension ID stays stable on this computer. After rebuilding, click
+**Reload**, then reopen the popup. Popup-only changes also appear when reopening
+it. Debug uses real staging accounts; production accounts are separate.
+
+The release archive is `build/chrome/pomodoist-chrome-release.zip`. Release builds
+do not overwrite debug files or publish to the store. `npm run build` still writes
+to `chrome-extension/dist`.
+
+Use `COMPANION_OPEN=0` to skip opening Chrome. Override profile paths with
+`COMPANION_DEBUG_CONFIG` and `COMPANION_RELEASE_CONFIG`. Match the profile's public
+URL, anon key and `TURNSTILE_SITE_KEY` to the server's published `/config.js`;
+an empty site key against a server requiring CAPTCHA breaks password sign-in.
+Keep these values in the ignored `.env.setup` and generated profiles, not in the
+tracked template. After loading the unpacked extension, register its actual
+`https://<extension-id>.chromiumapp.org/auth-callback*` URL in the **staging** Auth
+redirect allowlist before testing Google/Apple sign-in. This is separate from
+the published extension's callback.
+
 ## Authentication deployment
 
 For Google/Apple, add the real extension ID callback to the shared Supabase Auth allowlist:

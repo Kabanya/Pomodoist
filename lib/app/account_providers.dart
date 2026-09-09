@@ -276,6 +276,141 @@ final accountOverviewProvider = FutureProvider<AccountOverview?>((ref) async {
   return account.getOverview().timeout(timeout);
 }, retry: (_, _) => null);
 
+final _connectedAgentsOwnerProvider = Provider<(AccountClient?, String?)>((
+  ref,
+) {
+  final account = ref.watch(accountClientProvider);
+  final auth = ref.watch(accountAuthStateProvider).value;
+  if (account == null ||
+      !ref.watch(accountConfiguredProvider) ||
+      auth?.signedIn == false) {
+    return (null, null);
+  }
+  return (account, account.currentUserId);
+});
+
+final connectedAgentsProvider =
+    NotifierProvider<
+      ConnectedAgentsController,
+      AsyncValue<List<AccountOAuthGrant>>
+    >(ConnectedAgentsController.new);
+
+class ConnectedAgentsController
+    extends Notifier<AsyncValue<List<AccountOAuthGrant>>> {
+  AccountClient? _account;
+  String? _userId;
+  List<AccountOAuthGrant>? _grants;
+  Future<void>? _inFlight;
+  var _generation = 0;
+  var _loadGeneration = 0;
+
+  // AsyncError retains the error; the last successful list stays visible too.
+  List<AccountOAuthGrant>? get grants => _grants;
+
+  @override
+  AsyncValue<List<AccountOAuthGrant>> build() {
+    // Keep session changes observable even while Settings has no listeners.
+    final owner = ref.container.listen(
+      _connectedAgentsOwnerProvider,
+      (_, _) => ref.invalidateSelf(),
+    );
+    ref.onDispose(() {
+      owner.close();
+      _generation += 1;
+      _grants = null;
+      _inFlight = null;
+    });
+    final (account, userId) = owner.read();
+    _account = account;
+    _userId = userId;
+    _grants = null;
+    _inFlight = null;
+    final generation = ++_generation;
+    if (account == null || userId == null) return const AsyncData([]);
+    unawaited(
+      Future<void>.microtask(() {
+        if (_isCurrent(account, userId, generation)) return refresh();
+      }),
+    );
+    return const AsyncLoading();
+  }
+
+  bool _isCurrent(AccountClient account, String userId, int generation) =>
+      ref.mounted &&
+      generation == _generation &&
+      identical(account, _account) &&
+      userId == _userId &&
+      userId == account.currentUserId &&
+      ref.read(_connectedAgentsOwnerProvider) == (account, userId);
+
+  Future<void> refresh() {
+    final account = _account;
+    final userId = _userId;
+    final generation = _generation;
+    if (account == null ||
+        userId == null ||
+        !_isCurrent(account, userId, generation)) {
+      return Future.value();
+    }
+    if (_inFlight case final pending?) return pending;
+    final loadGeneration = ++_loadGeneration;
+    return _inFlight = _load(account, userId, generation, loadGeneration)
+        .whenComplete(() {
+          if (generation == _generation && loadGeneration == _loadGeneration) {
+            _inFlight = null;
+          }
+        });
+  }
+
+  Future<void> _load(
+    AccountClient account,
+    String userId,
+    int generation,
+    int loadGeneration,
+  ) async {
+    try {
+      final grants = await account.listOAuthGrants().timeout(
+        ref.read(accountRequestTimeoutProvider),
+      );
+      if (!_isCurrent(account, userId, generation) ||
+          loadGeneration != _loadGeneration) {
+        return;
+      }
+      _grants = List.unmodifiable(grants);
+      state = AsyncData(_grants!);
+    } catch (error, stackTrace) {
+      if (_isCurrent(account, userId, generation) &&
+          loadGeneration == _loadGeneration) {
+        state = AsyncError(error, stackTrace);
+      }
+    }
+  }
+
+  Future<void> revoke(String clientId) async {
+    final account = _account;
+    final userId = _userId;
+    final generation = _generation;
+    if (account == null ||
+        userId == null ||
+        !_isCurrent(account, userId, generation)) {
+      return;
+    }
+    await account
+        .revokeOAuthGrant(clientId)
+        .timeout(ref.read(accountRequestTimeoutProvider));
+    if (!_isCurrent(account, userId, generation)) return;
+    // A list requested before revocation must not put the removed agent back.
+    _loadGeneration += 1;
+    _inFlight = null;
+    _grants = List.unmodifiable([
+      for (final grant in _grants ?? <AccountOAuthGrant>[])
+        if (grant.clientId != clientId) grant,
+    ]);
+    state = AsyncData(_grants!);
+    await refresh();
+  }
+}
+
 final accountSyncEngineProvider = Provider<AccountSyncEngine?>((ref) {
   final account = ref.watch(accountClientProvider);
   final authState = ref.watch(accountAuthStateProvider).value;

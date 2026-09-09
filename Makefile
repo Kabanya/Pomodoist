@@ -43,10 +43,15 @@ IOS_IPA_PATH ?= build/ios/ipa/Pomodoist.ipa
 TESTFLIGHT_CONFIG ?= .env.testflight
 DEPLOY_CONFIG ?= .env.deploy
 TELEGRAM_ENV ?= staging
+COMPANION_DEBUG_CONFIG ?= .env.staging
+COMPANION_RELEASE_CONFIG ?= $(TESTFLIGHT_CONFIG)
+COMPANION_OPEN ?= 1
+TELEGRAM_DEBUG_CONFIG ?= .env.telegram.staging
 POMODOIST_RELEASE ?= $(shell git rev-parse HEAD)
 
 .PHONY: setup setup-env setup-flutter setup-linux run run-linux web
 .PHONY: setup-telegram telegram-configure
+.PHONY: telegram-debug telegram-release chrome-debug chrome-release
 .PHONY: analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-packaging check format
 .PHONY: android web-debug web-profile web-release
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
@@ -81,6 +86,8 @@ help:
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make run' "$${reset}" 'Run Pomodoist on a connected device'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make run-linux' "$${reset}" 'Run the native Linux desktop app'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make web' "$${reset}" 'Run Pomodoist in Chrome'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make telegram-debug' "$${reset}" 'Local Mini App through HTTPS, using the staging bot'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make chrome-debug' "$${reset}" 'Build the staging extension and open Chrome'; \
 	printf '\n%s%sQuality%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make analyze' "$${reset}" 'Analyze Dart code'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make test' "$${reset}" 'Run Flutter tests'; \
@@ -94,6 +101,8 @@ help:
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-debug' "$${reset}" 'Debug app'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-profile' "$${reset}" 'Profile app'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-release' "$${reset}" 'Release app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Telegram' "$${reset}" "$${bold}" 'make telegram-release' "$${reset}" 'Production Mini App files and ZIP'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Chrome' "$${reset}" "$${bold}" 'make chrome-release' "$${reset}" 'Production extension files and ZIP'; \
 	printf '\n'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-debug' "$${reset}" 'Debug app'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-profile' "$${reset}" 'Profile app'; \
@@ -150,6 +159,18 @@ setup-telegram: setup-env
 telegram-configure: setup-telegram
 	@case "$(TELEGRAM_ENV)" in staging|production) ;; *) echo 'TELEGRAM_ENV must be staging or production' >&2; exit 1;; esac
 	node --env-file=".env.telegram.$(TELEGRAM_ENV)" tool/configure-telegram-bot.mjs --apply
+
+telegram-debug:
+	node tool/telegram-debug.mjs --config "$(COMPANION_DEBUG_CONFIG)" --bot-config "$(TELEGRAM_DEBUG_CONFIG)" $(if $(filter 0,$(COMPANION_OPEN)),--no-open,)
+
+telegram-release:
+	node tool/web-companions.mjs telegram release --config "$(COMPANION_RELEASE_CONFIG)"
+
+chrome-debug:
+	node tool/web-companions.mjs chrome debug --config "$(COMPANION_DEBUG_CONFIG)" $(if $(filter 0,$(COMPANION_OPEN)),--no-open,)
+
+chrome-release:
+	node tool/web-companions.mjs chrome release --config "$(COMPANION_RELEASE_CONFIG)"
 
 run:
 	$(FLUTTER) run --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"

@@ -16,6 +16,8 @@ import 'app_theme_mode.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_theme_settings.dart';
 import 'theme/app_motion.dart';
+import 'theme/theme_background.dart';
+import 'widgets/keyboard_dismiss_region.dart';
 
 const globalQuickAddCompactSize = Size(600, 300);
 const globalQuickAddVoiceSize = Size(720, 720);
@@ -133,27 +135,37 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
             Theme.of(context),
             reduceMotion: MediaQuery.disableAnimationsOf(context),
           ),
-          child: AppZoom(child: ShadAppBuilder(child: child)),
+          child: AppZoom(
+            child: ShadAppBuilder(
+              child: KeyboardDismissRegion(
+                child: child ?? const SizedBox.shrink(),
+              ),
+            ),
+          ),
         ),
-        home: Scaffold(
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Builder(
-                builder: (context) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      context.l10n.addTask,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 18),
-                    QuickAddComposer(
-                      onCompleted: onClose,
-                      onCancel: onClose,
-                      onVoiceModeChanged: onVoiceModeChanged,
-                    ),
-                  ],
+        home: ThemeBackground(
+          zone: ThemeBackgroundZone.quickAdd,
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Builder(
+                  builder: (context) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        context.l10n.addTask,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 18),
+                      QuickAddComposer(
+                        onCompleted: onClose,
+                        onCancel: onClose,
+                        onVoiceModeChanged: onVoiceModeChanged,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -1,11 +1,59 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import '../../../../app/theme/app_motion.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../app/app_l10n.dart';
+import '../../../../app/theme/app_motion.dart';
+
+/// Shared displacement and one-action-per-gesture tracking for touch/trackpads.
+@visibleForTesting
+class VoicePanelSwipe {
+  Offset _distance = Offset.zero;
+  bool _expanded = false;
+  bool _cancelled = true;
+  Duration? _lastScroll;
+
+  void begin({required bool expanded}) {
+    _distance = Offset.zero;
+    _expanded = expanded;
+    _cancelled = false;
+    _lastScroll = null;
+  }
+
+  void cancel() => _cancelled = true;
+
+  void add(Offset delta) {
+    if (_cancelled) return;
+    _distance += delta;
+    final towardTarget = _expanded ? _distance.dy : -_distance.dy;
+    if ((_distance.dx.abs() > kTouchSlop &&
+            _distance.dx.abs() > _distance.dy.abs()) ||
+        towardTarget < -kTouchSlop) {
+      cancel();
+    }
+  }
+
+  void scroll(Offset delta, Duration timeStamp, {required bool expanded}) {
+    // Wheel events have no gesture-end event, including browser trackpads.
+    if (_lastScroll == null ||
+        timeStamp - _lastScroll! > const Duration(milliseconds: 200)) {
+      begin(expanded: expanded);
+    }
+    _lastScroll = timeStamp;
+    add(-delta); // Scroll offsets have the opposite sign to content motion.
+  }
+
+  bool? takeAction() {
+    final towardTarget = _expanded ? _distance.dy : -_distance.dy;
+    if (_cancelled || towardTarget < 48) return null;
+    cancel();
+    return !_expanded;
+  }
+}
 
 /// A retained voice editor that folds into a draggable, corner-snapping capsule.
 class VoicePanelMotion extends StatefulWidget {
@@ -39,6 +87,11 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
   static const _duration = AppMotion.panel;
   final _panelFocus = FocusNode();
   final _dragFocus = FocusNode();
+  final _swipe = VoicePanelSwipe();
+  final _touchPointers = <int>{};
+  int? _panZoomPointer;
+  bool _swipeAllowed = false;
+  bool _scrollBurst = false;
   Alignment _corner = Alignment.bottomRight;
   Rect _bounds = Rect.zero;
   Rect? _displayed;
@@ -48,7 +101,10 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
   @override
   void didUpdateWidget(VoicePanelMotion oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.expanded != oldWidget.expanded) _dragPosition = null;
+    if (widget.expanded != oldWidget.expanded) {
+      _dragPosition = null;
+      _swipe.cancel();
+    }
     if (widget.expanded && !oldWidget.expanded) _panelFocus.requestFocus();
   }
 
@@ -68,6 +124,7 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
   );
 
   void _startDrag(DragStartDetails details) {
+    _swipe.cancel();
     _dragFocus.requestFocus();
     setState(() => _dragPosition = _displayed!.topLeft);
   }
@@ -91,6 +148,142 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
       _dragPosition = null;
     });
   }
+
+  void _beginSwipe() {
+    _swipe.begin(expanded: widget.expanded);
+    _swipeAllowed = false;
+    _scrollBurst = false;
+  }
+
+  void _applySwipe() {
+    if (!_swipeAllowed) return;
+    final expanded = _swipe.takeAction();
+    if (expanded == true) widget.onExpand();
+    if (expanded == false) widget.onCollapse();
+  }
+
+  void _pointerDown(PointerDownEvent event) {
+    if (event.kind == PointerDeviceKind.mouse) return;
+    _touchPointers.add(event.pointer);
+    if (_touchPointers.length == 1 && _panZoomPointer == null) {
+      _beginSwipe();
+    } else {
+      _swipe.cancel();
+    }
+  }
+
+  void _pointerEnd(PointerEvent event) {
+    _touchPointers.remove(event.pointer);
+    if (_touchPointers.isEmpty) _swipe.cancel();
+  }
+
+  bool _onScrollNotification(ScrollNotification notification) {
+    if (_scrollBurst) {
+      // A child consumed this wheel burst: reaching its top must not turn the
+      // remainder (or its inertia) into a collapse gesture.
+      _swipe.cancel();
+    } else if (notification is ScrollStartNotification &&
+        notification.dragDetails != null &&
+        (_touchPointers.isNotEmpty || _panZoomPointer != null)) {
+      final scrollContext = notification.context;
+      if (scrollContext == null ||
+          scrollContext.findAncestorWidgetOfExactType<EditableText>() != null) {
+        _swipe.cancel();
+        return false;
+      }
+      // Every enclosing scroll view must already be at its top when the new
+      // gesture starts. This also works with bouncing and clamping physics.
+      var scrollable = Scrollable.maybeOf(scrollContext);
+      while (scrollable != null) {
+        final position = scrollable.position;
+        if (position.axisDirection != AxisDirection.down ||
+            position.pixels >
+                position.minScrollExtent + precisionErrorTolerance) {
+          _swipe.cancel();
+          return false;
+        }
+        scrollable = Scrollable.maybeOf(scrollable.context);
+      }
+      _swipeAllowed = true;
+      _applySwipe();
+    }
+    return false;
+  }
+
+  void _pointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent ||
+        _touchPointers.isNotEmpty ||
+        _panZoomPointer != null ||
+        _dragPosition != null) {
+      return;
+    }
+    _scrollBurst = true;
+    _swipe.scroll(
+      event.scrollDelta,
+      event.timeStamp,
+      expanded: widget.expanded,
+    );
+    final keys = HardwareKeyboard.instance;
+    if (keys.isControlPressed ||
+        keys.isMetaPressed ||
+        keys.isAltPressed ||
+        keys.isShiftPressed) {
+      _swipe.cancel();
+      return;
+    }
+    GestureBinding.instance.pointerSignalResolver.register(event, (resolved) {
+      _swipeAllowed = true;
+      _applySwipe();
+      if (event.scrollDelta.dy.abs() > event.scrollDelta.dx.abs()) {
+        resolved.respond(allowPlatformDefault: false);
+      }
+    });
+  }
+
+  Widget _swipeSurface(Widget child) => Listener(
+    behavior: HitTestBehavior.opaque,
+    onPointerDown: _pointerDown,
+    onPointerMove: (event) {
+      if (!_touchPointers.contains(event.pointer)) return;
+      _swipe.add(event.localDelta);
+      _applySwipe();
+    },
+    onPointerUp: _pointerEnd,
+    onPointerCancel: _pointerEnd,
+    onPointerPanZoomStart: (event) {
+      _panZoomPointer = event.pointer;
+      _beginSwipe();
+      if (_touchPointers.isNotEmpty) _swipe.cancel();
+    },
+    onPointerPanZoomUpdate: (event) {
+      if (event.scale != 1 || event.rotation != 0) _swipe.cancel();
+      _swipe.add(event.localPanDelta);
+      _applySwipe();
+    },
+    onPointerPanZoomEnd: (_) {
+      _panZoomPointer = null;
+      _swipe.cancel();
+    },
+    onPointerSignal: _pointerSignal,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      supportedDevices: const {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.invertedStylus,
+      },
+      onVerticalDragStart: (_) {
+        _swipeAllowed = true;
+        _applySwipe();
+      },
+      child: NotificationListener<ScrollNotification>(
+        onNotification: _onScrollNotification,
+        child: child,
+      ),
+    ),
+  );
 
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
@@ -129,6 +322,12 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
       key: key,
       behavior: HitTestBehavior.opaque,
       excludeFromSemantics: true,
+      supportedDevices: const {
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.touch,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.invertedStylus,
+      },
       onTap: _dragFocus.requestFocus,
       onPanStart: _startDrag,
       onPanUpdate: _updateDrag,
@@ -235,48 +434,50 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
                   _displayed = rect;
                   return Positioned.fromRect(
                     rect: rect,
-                    child: Material(
-                      color: colors.surface,
-                      elevation: 3,
-                      shadowColor: colors.shadow.withValues(alpha: .22),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: colors.outlineVariant),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Offstage(
-                            offstage: !widget.expanded && rect == target,
-                            child: IgnorePointer(
-                              ignoring: !widget.expanded,
-                              child: ExcludeFocus(
-                                excluding: !widget.expanded,
-                                child: ExcludeSemantics(
+                    child: _swipeSurface(
+                      Material(
+                        color: colors.surface,
+                        elevation: 3,
+                        shadowColor: colors.shadow.withValues(alpha: .22),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: colors.outlineVariant),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Offstage(
+                              offstage: !widget.expanded && rect == target,
+                              child: IgnorePointer(
+                                ignoring: !widget.expanded,
+                                child: ExcludeFocus(
                                   excluding: !widget.expanded,
-                                  child: AnimatedOpacity(
-                                    opacity: widget.expanded ? 1 : 0,
-                                    duration: duration,
-                                    child: TickerMode(
-                                      enabled: widget.expanded,
-                                      child: OverflowBox(
-                                        alignment: Alignment.topLeft,
-                                        minWidth: panelWidth,
-                                        maxWidth: panelWidth,
-                                        minHeight: 0,
-                                        maxHeight: _bounds.height,
-                                        child: _MeasurePanel(
-                                          onSize: (size) {
-                                            if (mounted &&
-                                                _panelHeight != size.height) {
-                                              setState(
-                                                () =>
-                                                    _panelHeight = size.height,
-                                              );
-                                            }
-                                          },
-                                          child: widget.panel,
+                                  child: ExcludeSemantics(
+                                    excluding: !widget.expanded,
+                                    child: AnimatedOpacity(
+                                      opacity: widget.expanded ? 1 : 0,
+                                      duration: duration,
+                                      child: TickerMode(
+                                        enabled: widget.expanded,
+                                        child: OverflowBox(
+                                          alignment: Alignment.topLeft,
+                                          minWidth: panelWidth,
+                                          maxWidth: panelWidth,
+                                          minHeight: 0,
+                                          maxHeight: _bounds.height,
+                                          child: _MeasurePanel(
+                                            onSize: (size) {
+                                              if (mounted &&
+                                                  _panelHeight != size.height) {
+                                                setState(
+                                                  () => _panelHeight =
+                                                      size.height,
+                                                );
+                                              }
+                                            },
+                                            child: widget.panel,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -284,92 +485,91 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
                                 ),
                               ),
                             ),
-                          ),
-                          Offstage(
-                            offstage: widget.expanded && rect == target,
-                            child: IgnorePointer(
-                              ignoring: widget.expanded,
-                              child: ExcludeFocus(
-                                excluding: widget.expanded,
-                                child: ExcludeSemantics(
+                            Offstage(
+                              offstage: widget.expanded && rect == target,
+                              child: IgnorePointer(
+                                ignoring: widget.expanded,
+                                child: ExcludeFocus(
                                   excluding: widget.expanded,
-                                  child: AnimatedOpacity(
-                                    opacity: widget.expanded ? 0 : 1,
-                                    duration: duration,
-                                    child: OverflowBox(
-                                      alignment: Alignment.topLeft,
-                                      minWidth: 168,
-                                      maxWidth: 168,
-                                      minHeight: 64,
-                                      maxHeight: 64,
-                                      child: Stack(
-                                        key: const Key('voice-mini-panel'),
-                                        children: [
-                                          Positioned.fill(child: _handle()),
-                                          Padding(
-                                            padding: const EdgeInsets.all(8),
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                Focus(
-                                                  focusNode: _dragFocus,
-                                                  onFocusChange: (_) =>
-                                                      setState(() {}),
-                                                  child: Semantics(
-                                                    label: context
-                                                        .l10n
-                                                        .voiceMovePanel,
-                                                    button: true,
-                                                    onTap: widget.onExpand,
-                                                    child: _handle(
-                                                      key: const Key(
-                                                        'voice-drag-handle',
-                                                      ),
-                                                      child: SizedBox.square(
-                                                        dimension: 48,
-                                                        child: DecoratedBox(
-                                                          decoration: BoxDecoration(
-                                                            shape:
-                                                                BoxShape.circle,
-                                                            border:
-                                                                _dragFocus
-                                                                    .hasFocus
-                                                                ? Border.all(
-                                                                    color: colors
-                                                                        .primary,
-                                                                    width: 2,
-                                                                  )
-                                                                : null,
+                                  child: ExcludeSemantics(
+                                    excluding: widget.expanded,
+                                    child: AnimatedOpacity(
+                                      opacity: widget.expanded ? 0 : 1,
+                                      duration: duration,
+                                      child: OverflowBox(
+                                        alignment: Alignment.topLeft,
+                                        minWidth: 168,
+                                        maxWidth: 168,
+                                        minHeight: 64,
+                                        maxHeight: 64,
+                                        child: Stack(
+                                          key: const Key('voice-mini-panel'),
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.all(8),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Focus(
+                                                    focusNode: _dragFocus,
+                                                    onFocusChange: (_) =>
+                                                        setState(() {}),
+                                                    child: Semantics(
+                                                      label: context
+                                                          .l10n
+                                                          .voiceMovePanel,
+                                                      button: true,
+                                                      onTap: widget.onExpand,
+                                                      child: _handle(
+                                                        key: const Key(
+                                                          'voice-drag-handle',
+                                                        ),
+                                                        child: SizedBox.square(
+                                                          dimension: 48,
+                                                          child: DecoratedBox(
+                                                            decoration: BoxDecoration(
+                                                              shape: BoxShape
+                                                                  .circle,
+                                                              border:
+                                                                  _dragFocus
+                                                                      .hasFocus
+                                                                  ? Border.all(
+                                                                      color: colors
+                                                                          .primary,
+                                                                      width: 2,
+                                                                    )
+                                                                  : null,
+                                                            ),
+                                                            child: widget
+                                                                .indicator,
                                                           ),
-                                                          child:
-                                                              widget.indicator,
                                                         ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                                SizedBox.square(
-                                                  dimension: 48,
-                                                  child: widget.stopButton,
-                                                ),
-                                                SizedBox.square(
-                                                  dimension: 48,
-                                                  child: widget.expandButton,
-                                                ),
-                                              ],
+                                                  SizedBox.square(
+                                                    dimension: 48,
+                                                    child: widget.stopButton,
+                                                  ),
+                                                  SizedBox.square(
+                                                    dimension: 48,
+                                                    child: widget.expandButton,
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   );

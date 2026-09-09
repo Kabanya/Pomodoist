@@ -34,11 +34,59 @@ class AppDateTimePickerState extends State<AppDateTimePicker> {
   Completer<Object?>? _request;
   Widget _content = const SizedBox.shrink();
   LocalHistoryEntry? _backEntry;
+  ({Rect anchor, Size size})? _geometry;
+  ScrollNotificationObserverState? _scrollObserver;
+  bool _geometryUpdateScheduled = false;
 
   @override
   void initState() {
     super.initState();
     _popover.addListener(_onToggle);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final observer = ScrollNotificationObserver.maybeOf(context);
+    if (observer != _scrollObserver) {
+      _scrollObserver?.removeListener(_onScroll);
+      _scrollObserver = observer;
+      _scrollObserver?.addListener(_onScroll);
+    }
+  }
+
+  void _onScroll(ScrollNotification notification) => _scheduleGeometryUpdate();
+
+  ({Rect anchor, Size size})? _readGeometry() {
+    final trigger = context.findRenderObject();
+    final overlay = Overlay.of(context).context.findRenderObject();
+    if (trigger is! RenderBox ||
+        !trigger.hasSize ||
+        overlay is! RenderBox ||
+        !overlay.hasSize) {
+      return null;
+    }
+    return (
+      anchor: Rect.fromPoints(
+        trigger.localToGlobal(Offset.zero, ancestor: overlay),
+        trigger.localToGlobal(
+          trigger.size.bottomRight(Offset.zero),
+          ancestor: overlay,
+        ),
+      ),
+      size: overlay.size,
+    );
+  }
+
+  void _scheduleGeometryUpdate() {
+    if (_request == null || _geometryUpdateScheduled) return;
+    _geometryUpdateScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _geometryUpdateScheduled = false;
+      if (!mounted || _request == null) return;
+      final geometry = _readGeometry();
+      if (geometry != _geometry) setState(() => _geometry = geometry);
+    });
   }
 
   Future<DateTime?> pickDate({
@@ -89,6 +137,7 @@ class AppDateTimePickerState extends State<AppDateTimePicker> {
     final request = Completer<Object?>();
     setState(() {
       _request = request;
+      _geometry = _readGeometry();
       _content = content((value) {
         if (identical(_request, request)) _finish(value);
       });
@@ -135,6 +184,7 @@ class AppDateTimePickerState extends State<AppDateTimePicker> {
     _request = null;
     _backEntry?.remove();
     request?.complete(null);
+    _scrollObserver?.removeListener(_onScroll);
     _popover.removeListener(_onToggle);
     _popover.dispose();
     focusNode.dispose();
@@ -143,29 +193,38 @@ class AppDateTimePickerState extends State<AppDateTimePicker> {
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
+    final localMedia = MediaQuery.of(context);
+    final media = MediaQuery.maybeOf(Overlay.of(context).context) ?? localMedia;
     final colors = context.appColors;
-    final anchorBox = focusNode.context?.findRenderObject();
-    final overlayBox = Overlay.maybeOf(context)?.context.findRenderObject();
-    final anchorX =
-        anchorBox is RenderBox && anchorBox.attached && anchorBox.hasSize
-        ? anchorBox
-              .localToGlobal(
-                anchorBox.size.center(Offset.zero),
-                ancestor: overlayBox,
-              )
-              .dx
-        : media.size.width / 2;
+    _scheduleGeometryUpdate();
+    final anchor =
+        _geometry?.anchor ??
+        Rect.fromCenter(
+          center: media.size.center(Offset.zero),
+          width: 0,
+          height: 0,
+        );
+    final space = pickerAvailableSpace(
+      anchor,
+      _geometry?.size ?? media.size,
+      viewPadding: media.viewPadding,
+      viewInsets: media.viewInsets,
+    );
+    // Include the popover's padding and border in the available rectangle.
+    final width = math.max(1.0, math.min(320.0, space.width - 26));
+    final height = math.max(1.0, space.height - 26);
+    final centerX = space.width <= width + 26
+        ? space.center.dx
+        : anchor.center.dx.clamp(
+            space.left + (width + 26) / 2,
+            space.right - (width + 26) / 2,
+          );
     final panel = ShadPopover(
       controller: _popover,
       groupId: _group,
-      // The library positions against the full overlay, including the keyboard.
-      anchor: media.viewInsets.bottom > 0
-          ? ShadGlobalAnchor(Offset(anchorX, media.padding.top + 12))
-          : const ShadAnchorAuto(
-              targetAnchor: Alignment.topCenter,
-              followerAnchor: Alignment.topCenter,
-            ),
+      // Start inside the chosen visible area: its top stays valid even when
+      // calendar rows, text scale, or validation messages change the height.
+      anchor: ShadGlobalAnchor(Offset(centerX, space.top)),
       padding: const EdgeInsets.all(12),
       decoration: ShadDecoration(
         color: colors.surface,
@@ -175,16 +234,7 @@ class AppDateTimePickerState extends State<AppDateTimePicker> {
         ),
       ),
       popover: (_) => ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: math.max(1, math.min(320, media.size.width - 48)),
-          maxHeight: math.max(
-            1,
-            media.size.height -
-                media.viewInsets.bottom -
-                media.padding.vertical -
-                48,
-          ),
-        ),
+        constraints: BoxConstraints(maxWidth: width, maxHeight: height),
         child: SingleChildScrollView(
           child: Material(type: MaterialType.transparency, child: _content),
         ),
@@ -201,6 +251,44 @@ class AppDateTimePickerState extends State<AppDateTimePicker> {
       child: panel,
     );
   }
+}
+
+/// Chooses a visible rectangle above or below the trigger in overlay coordinates.
+Rect pickerAvailableSpace(
+  Rect anchor,
+  Size viewport, {
+  EdgeInsets viewPadding = EdgeInsets.zero,
+  EdgeInsets viewInsets = EdgeInsets.zero,
+}) {
+  final left = (math.max(viewPadding.left, viewInsets.left) + 12).clamp(
+    0.0,
+    viewport.width,
+  );
+  final top = (math.max(viewPadding.top, viewInsets.top) + 12).clamp(
+    0.0,
+    viewport.height,
+  );
+  final visible = Rect.fromLTRB(
+    left,
+    top,
+    math.max(
+      left,
+      viewport.width - math.max(viewPadding.right, viewInsets.right) - 12,
+    ),
+    math.max(
+      top,
+      viewport.height - math.max(viewPadding.bottom, viewInsets.bottom) - 12,
+    ),
+  );
+  final aboveBottom = (anchor.top - 8).clamp(visible.top, visible.bottom);
+  final belowTop = (anchor.bottom + 8).clamp(visible.top, visible.bottom);
+  final above = aboveBottom - visible.top;
+  final below = visible.bottom - belowTop;
+  // If neither side can hold a control, use the visible area and allow overlap.
+  if (math.max(above, below) < 48) return visible;
+  return above > below
+      ? Rect.fromLTRB(visible.left, visible.top, visible.right, aboveBottom)
+      : Rect.fromLTRB(visible.left, belowTop, visible.right, visible.bottom);
 }
 
 bool pickerUses24Hours(

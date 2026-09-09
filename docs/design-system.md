@@ -109,6 +109,32 @@ mode. Invalid HEX input in either tab blocks saving. Saving errors keep the draf
 open for retry. The editor itself uses Classic so even an unreadable custom
 palette can be repaired; its two previews show the actual custom colors.
 
+### Photo backgrounds
+
+Custom supports optional photos in three modes: main area only, one continuous
+background across the entire app, or separate backgrounds for the main area,
+sidebar and Quick Add. Each zone has independent light and dark settings, up to
+six photos; an empty zone uses its solid palette color. Entire app reuses the
+main photo for Quick Add. The sidebar includes the mobile drawer; Quick Add
+includes its overlay and separate window, while the inline composer is unchanged.
+
+Center photos with cover scaling and keep them pinned while content scrolls.
+Dimming mixes in the zone's palette `canvas` or `surface` color from 0–100%,
+defaulting to 40% in light mode and 50% in dark mode. Blur ranges from 0–20,
+defaults to 0, and affects only the image. Cards, inputs, menus, dialogs and the
+Classic theme editor remain solid, preserving readable controls and focus states.
+
+Photo edits share the existing live preview, Save and Cancel behavior; Reset to
+Classic clears photos and restores both palettes in the draft. Import and save
+errors preserve the draft. Accept source files up to 50 MiB, normalize the first
+frame to PNG with a maximum dimension of 2560 px, and store images locally in
+native application support files or browser IndexedDB. Store only references and
+photo settings in optional version 2 theme fields. Browser writes and cleanup hold
+one Web Lock; preset selection reloads the latest saved Custom before writing.
+Browsers without Web Locks retain old image files instead of risking another tab's
+photos. Missing image references cannot overwrite a valid saved draft. Photos do
+not synchronize or require new dependencies.
+
 ## Interface zoom
 
 Native windows share a locally saved interface zoom of 70–150%, initially 100%.
@@ -136,6 +162,8 @@ links remain valid. With at least 960 px of content width, details occupy a
 440 px side panel; narrower layouts keep the background mounted behind details.
 Navigation waits for pending title and description edits and retains failed
 drafts. Close and Escape restore focus; nested menus handle Escape first.
+Keep the close/back and overflow actions pinned at the top of task details,
+inside the safe area, with task content scrolling below them.
 
 ### Sidebar
 
@@ -206,12 +234,24 @@ schedule stays overdue, and finishing the review shows a quiet empty state.
 ### Quick Add
 
 Parsed date/time, project and priority chips edit recognized spans in the source
-phrase. The phrase is the only metadata state: clearing a token reveals the
-existing context defaults. Preview and creation use the same parser, configured
+phrase. Both `#` and `№` introduce project names, including quoted names, in
+parsing, highlighting, and autocomplete. The phrase is the only metadata state:
+clearing a token reveals the existing context defaults. Preview and creation use the same parser, configured
 duration and clock. Preserve IME composition, selection and unrelated tokens.
 Quoted metadata names remain literal during date normalization. Ready voice
 subtasks preview the project inherited from their parent's current phrase.
 Details stay below the editable input; the separate window scrolls when needed.
+
+Voice gestures belong only to the voice panel's surface. Swipe up on the compact
+panel to expand and down on the editor to collapse, using touch or trackpad input.
+Keep capsule dragging on the microphone handle; buttons, text editing and
+keyboard actions retain their normal behavior. Scrolling takes priority: a new
+downward gesture may collapse only when the touched content and its enclosing
+scroll views already start at the top. Require 48 logical pixels of vertical
+movement, ignore horizontal gestures and pinching, and allow one transition per
+gesture (one wheel burst ends after 200 ms without events). Reuse the retained
+voice editor and its 240 ms transition, including Reduce Motion; collapsing never
+stops recording, transcription or analysis and never discards drafts.
 
 ### Date and time selection
 
@@ -229,8 +269,12 @@ empty field invalidates the draft instead of retaining the previous time.
 Keep selection local until confirmation. Cancel, Escape and Back dismiss the
 picker without changing the source phrase or saved schedule; restore focus to
 the invoking control. Preserve each caller's date limits and interval rules.
-Use shared popup motion and Reduce Motion, constrain panels to the viewport,
-and keep their content reachable with scrolling and an on-screen keyboard.
+Use shared popup motion and Reduce Motion. Place pickers in the roomier visible
+area above or below the invoking control, using overlay coordinates so zoom
+stays correct. Exclude safe insets and the on-screen keyboard, cap the complete
+panel size including decoration, and scroll content within that area. Recompute
+placement after scrolling or resizing; when neither side can hold a control,
+use the visible viewport with overlap rather than placing controls off-screen.
 
 ### Task row styles
 
@@ -326,8 +370,10 @@ Creating from search opens an editable Quick Add draft without saving it.
 The existing Search command and sidebar entry open a contextual palette on wide
 layouts; narrow layouts keep the full search screen. Preserve user-configured
 shortcut bindings. Show at most six matching open tasks and three active projects,
-followed by creation, Focus and full-search actions. Reuse local task data and
-filtering. Task results open contextual details; creation opens an editable draft.
+followed by creation, dictation, Focus and full-search actions. Reuse local task
+data and filtering. Task results open contextual details; creation opens an
+editable draft. Dictation closes search and opens the existing voice panel,
+preserving its transcription preference, access checks and any active session.
 Arrow keys, Enter and Escape work without disrupting IME composition; restore
 focus on closing. Keep result selection tied to stable identifiers and revalidate
 a result before acting after data changes.
@@ -363,12 +409,24 @@ a result before acting after data changes.
   disabled, loading, error, and keyboard focus states where applicable.
 - Menubar popovers use the shared automatic anchor so actions remain inside
   the viewport near window edges.
+- Open field and action menus through explicit activation (click, tap, or
+  keyboard), never pointer hover. Keep `ShadMenubarTheme.selectOnHover` disabled.
 - Keep keyboard focus visible. Task row actions must be available through
   keyboard focus and touch, not only hover.
 - Communicate state through text, icons, or semantics as well as color.
   Icon-only actions need accessible labels and tooltips where appropriate.
 - On narrow screens, use wrapping, existing adaptive layouts, and scrolling.
   Do not shrink text or touch targets simply to eliminate overflow.
+
+### Software keyboard
+
+Both app roots use `KeyboardDismissRegion` above navigation and overlays. A
+completed touch tap on unused space removes focus and hides the software
+keyboard on native mobile and mobile web. Do not unfocus on touch down, scrolling
+or dragging; let fields, selection, suggestions and buttons handle their own
+gestures. Keep mouse behavior unchanged and exclude the surrounding tap handler
+from accessibility semantics. Dismissal only removes focus: it does not submit a
+form, close a panel or clear a draft. Existing save-on-blur behavior still applies.
 
 ## Motion
 

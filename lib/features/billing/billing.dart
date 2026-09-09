@@ -185,6 +185,20 @@ String stripeBillingErrorMessage(AppLocalizations l10n, String code) {
   };
 }
 
+String storeKitBillingErrorMessage(AppLocalizations l10n, String error) {
+  if (error.contains('NSURLErrorDomain') ||
+      error.contains('TimeoutException')) {
+    return l10n.billingStoreConnectionFailed;
+  }
+  return error;
+}
+
+bool _isTransientStoreKitError(Object error) {
+  final message = '$error';
+  return message.contains('NSURLErrorDomain') &&
+      RegExp(r'-(?:1001|1003|1004|1005|1008|1009)\b').hasMatch(message);
+}
+
 enum BillingPlanKind { subscription, lifetime }
 
 class BillingPlan {
@@ -677,6 +691,7 @@ const _unset = Object();
 
 class BillingController extends Notifier<BillingState> {
   StreamSubscription<List<PurchaseDetails>>? _subscription;
+  Future<void>? _catalogLoad;
   Timer? _purchaseWatchdog;
   final _operationCancellations = <Timer, void Function()>{};
   Future<void>? _silentRefresh;
@@ -716,7 +731,7 @@ class BillingController extends Notifier<BillingState> {
       _signedIn = next;
       if (!wasSignedIn && next) {
         if (ref.read(billingChannelProvider) == BillingChannel.stripe) {
-          unawaited(_load());
+          unawaited(reload());
         } else {
           _attemptedTransactionJws.clear();
           unawaited(_refreshCurrentEntitlements(queueIfRunning: true));
@@ -736,8 +751,21 @@ class BillingController extends Notifier<BillingState> {
       _attemptedTransactionJws.clear();
       unawaited(_refreshCurrentEntitlements(queueIfRunning: true));
     });
-    unawaited(_load());
+    final lifecycleListener = AppLifecycleListener(
+      onResume: () {
+        if (ref.mounted &&
+            ref.read(billingChannelProvider) == BillingChannel.storeKit &&
+            state.platformSupported &&
+            !state.storeAvailable &&
+            !state.loading &&
+            !state.restoring) {
+          unawaited(reload());
+        }
+      },
+    );
+    unawaited(reload());
     ref.onDispose(() {
+      lifecycleListener.dispose();
       _purchaseWatchdog?.cancel();
       for (final entry in _operationCancellations.entries.toList()) {
         entry.key.cancel();
@@ -754,7 +782,9 @@ class BillingController extends Notifier<BillingState> {
     );
   }
 
-  Future<void> reload() => _load();
+  Future<void> reload() => _catalogLoad ??= _load().whenComplete(() {
+    _catalogLoad = null;
+  });
 
   Future<void> purchase(String productId) async {
     if (!state.canPurchase) {
@@ -828,8 +858,7 @@ class BillingController extends Notifier<BillingState> {
       );
       return;
     }
-    if (!state.storeAvailable) {
-      state = state.copyWith(error: 'The App Store is not available.');
+    if (state.restoring || state.pendingProductId != null) {
       return;
     }
     state = state.copyWith(restoring: true, error: null);
@@ -866,6 +895,7 @@ class BillingController extends Notifier<BillingState> {
     if (!ref.mounted) {
       return;
     }
+    state = state.copyWith(loading: true, error: null);
     final activeProductId = pomodoistEffectiveActiveProductId(
       prefs?.getString(billingActiveProductIdPreferenceKey),
     );
@@ -902,6 +932,17 @@ class BillingController extends Notifier<BillingState> {
 
     final store = ref.read(billingStoreProvider);
     final timeout = ref.read(billingStoreTimeoutProvider);
+    state = state.copyWith(
+      activeProductId: state.activeProductId ?? activeProductId,
+      activeStoreKitProductIds: {
+        ...state.activeStoreKitProductIds,
+        ...activeStoreKitProductIds,
+      },
+      purchasedProductIds: {
+        ...state.purchasedProductIds,
+        ...purchasedProductIds,
+      },
+    );
     _subscription ??= store.purchaseStream.listen(
       (purchases) => unawaited(_handlePurchases(purchases)),
       onError: (Object error) {
@@ -915,25 +956,18 @@ class BillingController extends Notifier<BillingState> {
         }
       },
     );
+    // StoreKit reads verified purchases locally, independently of the catalog.
+    final entitlementsRefresh = _refreshCurrentEntitlements();
 
     try {
       final available = await _withTimeout(store.isAvailable(), timeout);
       if (!available) {
         if (ref.mounted) {
-          state = state.copyWith(
-            loading: false,
-            storeAvailable: false,
-            activeProductId: activeProductId,
-            activeStoreKitProductIds: activeStoreKitProductIds,
-            purchasedProductIds: purchasedProductIds,
-          );
+          state = state.copyWith(loading: false, storeAvailable: false);
         }
         return;
       }
-      final response = await _withTimeout(
-        store.queryProductDetails(billingProductIds),
-        timeout,
-      );
+      final response = await _queryStoreKitProducts(store, timeout);
       if (!ref.mounted) {
         return;
       }
@@ -943,9 +977,6 @@ class BillingController extends Notifier<BillingState> {
         productDetailsById: {
           for (final product in response.productDetails) product.id: product,
         },
-        activeProductId: activeProductId,
-        activeStoreKitProductIds: activeStoreKitProductIds,
-        purchasedProductIds: purchasedProductIds,
         error: response.error?.message,
       );
       final eligibleProductIds = <String>{};
@@ -970,19 +1001,41 @@ class BillingController extends Notifier<BillingState> {
           eligibleIntroductoryProductIds: eligibleProductIds,
         );
       }
-      if (ref.mounted && state.storeAvailable) {
-        await _refreshCurrentEntitlements();
-      }
     } catch (error) {
       if (ref.mounted) {
         state = state.copyWith(
           loading: false,
           storeAvailable: false,
-          activeProductId: activeProductId,
-          activeStoreKitProductIds: activeStoreKitProductIds,
-          purchasedProductIds: purchasedProductIds,
           error: '$error',
         );
+      }
+    } finally {
+      await entitlementsRefresh;
+    }
+  }
+
+  Future<ProductDetailsResponse> _queryStoreKitProducts(
+    BillingStore store,
+    Duration timeout,
+  ) async {
+    for (var attempt = 0; ; attempt += 1) {
+      try {
+        final response = await _withTimeout(
+          store.queryProductDetails(billingProductIds),
+          timeout,
+        );
+        if (response.error == null ||
+            attempt == 2 ||
+            !_isTransientStoreKitError(response.error!)) {
+          return response;
+        }
+      } catch (error) {
+        // Only retry completed network failures, not a still-running request.
+        if (attempt == 2 || !_isTransientStoreKitError(error)) rethrow;
+      }
+      await Future<void>.delayed(Duration(seconds: attempt + 1));
+      if (!ref.mounted) {
+        throw StateError('StoreKit catalog loading was disposed.');
       }
     }
   }
@@ -1210,7 +1263,9 @@ class BillingController extends Notifier<BillingState> {
   }
 
   Future<void> _refreshCurrentEntitlements({bool queueIfRunning = false}) {
-    if (!ref.mounted || !state.storeAvailable) {
+    if (!ref.mounted ||
+        ref.read(billingChannelProvider) != BillingChannel.storeKit ||
+        !ref.read(applePurchasesSupportedProvider)) {
       return Future.value();
     }
     final existing = _silentRefresh;
@@ -1394,6 +1449,11 @@ class BillingPaywall extends ConsumerWidget {
     final state = ref.watch(billingControllerProvider);
     final channel = ref.watch(billingChannelProvider);
     final l10n = context.l10n;
+    final errorMessage = state.error == null
+        ? null
+        : channel == BillingChannel.stripe
+        ? stripeBillingErrorMessage(l10n, state.error!)
+        : storeKitBillingErrorMessage(l10n, state.error!);
     final colors = context.appColors;
     final textTheme = Theme.of(context).textTheme;
     final collapsedActive = state.hasActiveEntitlement && !showPlansWhenActive;
@@ -1520,7 +1580,8 @@ class BillingPaywall extends ConsumerWidget {
             )
           else if (channel == BillingChannel.storeKit &&
               !state.storeAvailable &&
-              !state.loading)
+              !state.loading &&
+              state.error == null)
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(
@@ -1530,18 +1591,32 @@ class BillingPaywall extends ConsumerWidget {
                 ),
               ),
             ),
-          if (state.error != null) ...[
+          if (errorMessage != null) ...[
             const SizedBox(height: 8),
             Text(
-              l10n.billingPurchaseError(
-                channel == BillingChannel.stripe
-                    ? stripeBillingErrorMessage(l10n, state.error!)
-                    : state.error!,
-              ),
-              style: textTheme.bodySmall?.copyWith(color: colors.accent),
+              channel == BillingChannel.storeKit && !state.storeAvailable
+                  ? errorMessage
+                  : l10n.billingPurchaseError(errorMessage),
+              style: textTheme.bodySmall?.copyWith(color: colors.error),
             ),
           ],
           const SizedBox(height: 8),
+          if (channel == BillingChannel.storeKit &&
+              state.platformSupported &&
+              !state.storeAvailable)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: ShadButton.ghost(
+                key: const Key('billing-retry-button'),
+                leading: const Icon(LucideIcons.refreshCw),
+                enabled: !state.loading,
+                onPressed: state.loading
+                    ? null
+                    : () =>
+                          ref.read(billingControllerProvider.notifier).reload(),
+                child: Text(l10n.commonRetry),
+              ),
+            ),
           if (channel == BillingChannel.storeKit)
             Align(
               alignment: Alignment.centerLeft,
@@ -1554,11 +1629,11 @@ class BillingPaywall extends ConsumerWidget {
                 ),
                 enabled:
                     state.platformSupported &&
-                    state.storeAvailable &&
+                    state.pendingProductId == null &&
                     !state.restoring,
                 onPressed:
                     state.platformSupported &&
-                        state.storeAvailable &&
+                        state.pendingProductId == null &&
                         !state.restoring
                     ? () => ref
                           .read(billingControllerProvider.notifier)

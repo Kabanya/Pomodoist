@@ -5,6 +5,37 @@ void main() {
   const parser = QuickAddParser();
   final now = DateTime(2026, 7, 10, 12);
 
+  test('numero project marker matches hash parsing and source ranges', () {
+    for (final name in [
+      'Работа',
+      '"Мой проект"',
+      '"4 мая 2027 в 5 вечера"',
+      r'"A \"quote\""',
+    ]) {
+      final input = 'Заметка №$name завтра p2';
+      final expected = parser.parse('Заметка #$name завтра p2', now: now);
+      final analysis = parser.analyze(input, now: now);
+      expect(analysis.parsed.project, expected.project, reason: input);
+      expect(analysis.parsed.content, 'Заметка', reason: input);
+      expect(analysis.parsed.dueDate, expected.dueDate);
+      expect(analysis.parsed.priority, 2);
+      final project = analysis.matches.singleWhere(
+        (match) => match.kind == QuickAddTokenKind.project,
+      );
+      expect(input.substring(project.start, project.end), '№$name');
+    }
+    for (final input in [
+      'Заметка №',
+      'Заметка №"Мой проект',
+      'Заметка№Работа',
+    ]) {
+      final analysis = parser.analyze(input, now: now);
+      expect(analysis.parsed.project, isNull);
+      expect(analysis.parsed.content, input);
+      expect(analysis.matches, isEmpty);
+    }
+  });
+
   test('reports every recognized quick-add range in the original text', () {
     const input =
         'Plan @work #family /home p1 17:00-19:00 16:00 7 PM 8 march 45m 3p';
