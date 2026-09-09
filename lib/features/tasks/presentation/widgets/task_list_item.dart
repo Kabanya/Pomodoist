@@ -395,6 +395,16 @@ class TaskListItem extends ConsumerWidget {
                 ),
               ),
             )
+          : _usesTouchTaskInteraction
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (presentation == TaskListItemPresentation.standard ||
+                    agendaDesktop)
+                  focusAction(),
+                overflowAction(),
+              ],
+            )
           : switch (presentation) {
               TaskListItemPresentation.standard => focusAction(),
               TaskListItemPresentation.agenda when agendaDesktop => SizedBox(
@@ -436,15 +446,10 @@ class TaskListItem extends ConsumerWidget {
                 );
               }
             },
-            onLongPress: !_usesTouchTaskInteraction
-                ? null
-                : () {
-                    if (selection?.active ?? false) {
-                      selection!.toggle(task.id);
-                    } else {
-                      unawaited(_showTouchActions(context, ref));
-                    }
-                  },
+            onLongPress:
+                _usesTouchTaskInteraction && (selection?.active ?? false)
+                ? () => selection!.toggle(task.id)
+                : null,
             child: Padding(
               padding: EdgeInsets.fromLTRB(
                 depth * 18,
@@ -519,9 +524,6 @@ class TaskListItem extends ConsumerWidget {
                             ),
                     ),
                   ),
-                  if (_usesTouchTaskInteraction &&
-                      !(selection?.active ?? false))
-                    _TaskDragHandle(task: task),
                   const SizedBox(width: 8),
                   trailingAction,
                 ],
@@ -767,49 +769,6 @@ class TaskListItem extends ConsumerWidget {
       return;
     }
     await _runQuickAction(context, ref, action);
-  }
-
-  Future<void> _showTouchActions(BuildContext context, WidgetRef ref) async {
-    final selection = TaskSelectionScope.maybeOf(context);
-    if (selection == null) return;
-    final l10n = context.l10n;
-    final action = await showAdaptiveTaskPanel<_TaskQuickAction>(
-      context,
-      builder: (panelContext) => ListView(
-        shrinkWrap: true,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        children: [
-          for (final item in [
-            (_TaskQuickAction.select, LucideIcons.listChecks, l10n.taskSelect),
-            (
-              _TaskQuickAction.schedule,
-              LucideIcons.calendar,
-              l10n.taskSchedule,
-            ),
-            (_TaskQuickAction.move, LucideIcons.folderInput, l10n.taskMove),
-            (
-              _TaskQuickAction.choosePriority,
-              LucideIcons.flag,
-              l10n.taskPriority,
-            ),
-            (_TaskQuickAction.duplicate, LucideIcons.copy, l10n.taskDuplicate),
-            (
-              _TaskQuickAction.deleteSelection,
-              LucideIcons.trash2,
-              l10n.commonDelete,
-            ),
-          ])
-            ListTile(
-              leading: Icon(item.$2),
-              title: Text(item.$3),
-              onTap: () => Navigator.of(panelContext).pop(item.$1),
-            ),
-        ],
-      ),
-    );
-    if (action != null && context.mounted) {
-      await _runQuickAction(context, ref, action);
-    }
   }
 
   RelativeRect _menuPosition(BuildContext context, Offset globalPosition) {
@@ -1588,32 +1547,15 @@ class _TaskTextDragSource extends StatelessWidget {
         child: child,
       );
     }
+    if (_usesTouchTaskInteraction) {
+      return LongPressDraggable<String>(
+        data: task.id,
+        feedback: feedback,
+        childWhenDragging: childWhenDragging,
+        child: child,
+      );
+    }
     return child;
-  }
-}
-
-class _TaskDragHandle extends StatelessWidget {
-  const _TaskDragHandle({required this.task});
-
-  final TaskItem task;
-
-  @override
-  Widget build(BuildContext context) {
-    return LongPressDraggable<String>(
-      data: task.id,
-      feedback: _TaskDragFeedback(task: task),
-      childWhenDragging: const SizedBox(width: 28),
-      child: Semantics(
-        button: true,
-        label: context.l10n.taskMove,
-        child: SizedBox(
-          key: ValueKey('task-drag-handle-${task.id}'),
-          width: 28,
-          height: 44,
-          child: const Icon(LucideIcons.gripVertical, size: 18),
-        ),
-      ),
-    );
   }
 }
 

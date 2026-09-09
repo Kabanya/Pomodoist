@@ -266,6 +266,16 @@ centered to retain the existing touch drop area. Root-task drop targets keep
 their existing expansion and Reduce Motion behavior. Kanban and Timeline do not
 use this spacing preference.
 
+### Touch task dragging
+
+On native iOS/Android, long-press the shared row's text or metadata to drag using
+`LongPressDraggable`. Do not show a separate grip or start dragging from the
+checkbox or action buttons. Long-press no longer opens a competing context menu;
+keep the ellipsis available in both row styles alongside existing buttons.
+In selection mode, long-press toggles selection and dragging is disabled. Preserve
+drag payloads, previews, nesting and drop targets. Mouse dragging and specialized
+Kanban and Timeline cards retain their existing behavior.
+
 ### Focus completion actions
 
 When the current task is open and a next scheduled task is available, completing
