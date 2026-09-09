@@ -714,5 +714,11 @@
   "todayEmptyCompletedTitle": "今日列表已清空",
   "todayEmptyCompletedDescription": "已完成的任务保留在下方。准备好后再添加下一项。",
   "projectEmptyTitle": "此项目还没有任务",
-  "projectEmptyDescription": "添加迈向项目目标的第一步。"
+  "projectEmptyDescription": "添加迈向项目目标的第一步。",
+  "commandSearchPlaceholder": "搜索任务、项目和操作",
+  "commandSearchTasks": "任务",
+  "commandSearchActions": "操作",
+  "commandSearchAllResults": "查看所有结果",
+  "commandSearchHint": "↑ ↓ 选择 · Enter 打开 · Esc 关闭",
+  "commandSearchNoMatches": "没有匹配的任务或项目。"
 }

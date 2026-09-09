@@ -20,6 +20,7 @@ import '../../features/tasks/domain/task_models.dart';
 import '../../features/tasks/presentation/widgets/create_project_dialog.dart';
 import '../../features/tasks/presentation/widgets/project_color_picker.dart';
 import '../../features/tasks/presentation/widgets/quick_add_bar.dart';
+import '../../features/tasks/presentation/task_search_palette.dart';
 import '../../features/tasks/presentation/widgets/voice_panel_clearance.dart';
 import '../account_providers.dart';
 import '../app_l10n.dart';
@@ -67,6 +68,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   double _wideSidebarWidth = _wideSidebarDefaultWidth;
   double _lastExpandedSidebarWidth = _wideSidebarDefaultWidth;
   bool _quickAddShortcutDialogOpen = false;
+  bool _searchPaletteOpen = false;
   int? _rawHandledPhysicalKeyId;
   late final MacOSAppMenuController? _appMenuController;
 
@@ -294,7 +296,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
 
   void _goFromShortcut(String path) {
     _scaffoldKey.currentState?.closeDrawer();
-    context.go(path);
+    _go(path);
   }
 
   void _toggleSidebar() {
@@ -323,12 +325,23 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   }
 
   void _go(String path) {
+    if (path == '/search' &&
+        MediaQuery.sizeOf(context).width >= _wideLayoutBreakpoint) {
+      if (_searchPaletteOpen) return;
+      _searchPaletteOpen = true;
+      unawaited(
+        showTaskSearchPalette(
+          context,
+        ).whenComplete(() => _searchPaletteOpen = false),
+      );
+      return;
+    }
     context.go(path);
   }
 
   void _goFromDrawer(String path) {
     _scaffoldKey.currentState?.closeDrawer();
-    context.go(path);
+    _go(path);
   }
 
   Widget _buildWideSidebar(BuildContext context) {

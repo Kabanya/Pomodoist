@@ -2484,4 +2484,25 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get projectEmptyDescription =>
       'Füge den ersten Schritt zum Projektziel hinzu.';
+
+  @override
+  String get commandSearchPlaceholder =>
+      'Aufgaben, Projekte und Aktionen suchen';
+
+  @override
+  String get commandSearchTasks => 'Aufgaben';
+
+  @override
+  String get commandSearchActions => 'Aktionen';
+
+  @override
+  String get commandSearchAllResults => 'Alle Ergebnisse';
+
+  @override
+  String get commandSearchHint =>
+      '↑ ↓ Navigieren · Enter Öffnen · Esc Schließen';
+
+  @override
+  String get commandSearchNoMatches =>
+      'Keine passenden Aufgaben oder Projekte.';
 }

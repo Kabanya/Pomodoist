@@ -161,6 +161,17 @@ all projects and open tasks; Clear filters selects all projects and all statuses
 without changing the query. Completed results follow the existing history policy.
 Creating from search opens an editable Quick Add draft without saving it.
 
+### Desktop command search
+
+The existing Search command and sidebar entry open a contextual palette on wide
+layouts; narrow layouts keep the full search screen. Preserve user-configured
+shortcut bindings. Show at most six matching open tasks and three active projects,
+followed by creation, Focus and full-search actions. Reuse local task data and
+filtering. Task results open contextual details; creation opens an editable draft.
+Arrow keys, Enter and Escape work without disrupting IME composition; restore
+focus on closing. Keep result selection tied to stable identifiers and revalidate
+a result before acting after data changes.
+
 ## Components and independence
 
 - Current direct dependencies: **`shadcn_ui 0.56.3`** and

@@ -714,5 +714,11 @@
   "todayEmptyCompletedTitle": "Die heutige Liste ist leer",
   "todayEmptyCompletedDescription": "Deine erledigten Aufgaben stehen unten. Füge eine weitere hinzu, wenn du bereit bist.",
   "projectEmptyTitle": "Dieses Projekt hat noch keine Aufgaben",
-  "projectEmptyDescription": "Füge den ersten Schritt zum Projektziel hinzu."
+  "projectEmptyDescription": "Füge den ersten Schritt zum Projektziel hinzu.",
+  "commandSearchPlaceholder": "Aufgaben, Projekte und Aktionen suchen",
+  "commandSearchTasks": "Aufgaben",
+  "commandSearchActions": "Aktionen",
+  "commandSearchAllResults": "Alle Ergebnisse",
+  "commandSearchHint": "↑ ↓ Navigieren · Enter Öffnen · Esc Schließen",
+  "commandSearchNoMatches": "Keine passenden Aufgaben oder Projekte."
 }

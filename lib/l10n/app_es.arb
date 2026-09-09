@@ -714,5 +714,11 @@
   "todayEmptyCompletedTitle": "La lista de hoy está vacía",
   "todayEmptyCompletedDescription": "Tus tareas completadas están abajo. Añade otra cuando quieras.",
   "projectEmptyTitle": "Este proyecto aún no tiene tareas",
-  "projectEmptyDescription": "Añade el primer paso hacia el objetivo del proyecto."
+  "projectEmptyDescription": "Añade el primer paso hacia el objetivo del proyecto.",
+  "commandSearchPlaceholder": "Buscar tareas, proyectos y acciones",
+  "commandSearchTasks": "Tareas",
+  "commandSearchActions": "Acciones",
+  "commandSearchAllResults": "Ver todos los resultados",
+  "commandSearchHint": "↑ ↓ Navegar · Enter Abrir · Esc Cerrar",
+  "commandSearchNoMatches": "No hay tareas ni proyectos coincidentes."
 }

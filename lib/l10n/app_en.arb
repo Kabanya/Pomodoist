@@ -802,5 +802,11 @@
   "todayEmptyCompletedTitle": "Today’s list is clear",
   "todayEmptyCompletedDescription": "Your completed tasks are saved below. Add another task when you are ready.",
   "projectEmptyTitle": "No tasks in this project yet",
-  "projectEmptyDescription": "Add the first step toward your project’s goal."
+  "projectEmptyDescription": "Add the first step toward your project’s goal.",
+  "commandSearchPlaceholder": "Search tasks, projects, and actions",
+  "commandSearchTasks": "Tasks",
+  "commandSearchActions": "Actions",
+  "commandSearchAllResults": "See all results",
+  "commandSearchHint": "↑ ↓ Navigate · Enter Open · Esc Close",
+  "commandSearchNoMatches": "No matching tasks or projects."
 }

@@ -2359,4 +2359,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get projectEmptyDescription => '添加迈向项目目标的第一步。';
+
+  @override
+  String get commandSearchPlaceholder => '搜索任务、项目和操作';
+
+  @override
+  String get commandSearchTasks => '任务';
+
+  @override
+  String get commandSearchActions => '操作';
+
+  @override
+  String get commandSearchAllResults => '查看所有结果';
+
+  @override
+  String get commandSearchHint => '↑ ↓ 选择 · Enter 打开 · Esc 关闭';
+
+  @override
+  String get commandSearchNoMatches => '没有匹配的任务或项目。';
 }

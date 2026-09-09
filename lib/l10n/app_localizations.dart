@@ -4335,6 +4335,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add the first step toward your project’s goal.'**
   String get projectEmptyDescription;
+
+  /// No description provided for @commandSearchPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search tasks, projects, and actions'**
+  String get commandSearchPlaceholder;
+
+  /// No description provided for @commandSearchTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get commandSearchTasks;
+
+  /// No description provided for @commandSearchActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get commandSearchActions;
+
+  /// No description provided for @commandSearchAllResults.
+  ///
+  /// In en, this message translates to:
+  /// **'See all results'**
+  String get commandSearchAllResults;
+
+  /// No description provided for @commandSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'↑ ↓ Navigate · Enter Open · Esc Close'**
+  String get commandSearchHint;
+
+  /// No description provided for @commandSearchNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching tasks or projects.'**
+  String get commandSearchNoMatches;
 }
 
 class _AppLocalizationsDelegate

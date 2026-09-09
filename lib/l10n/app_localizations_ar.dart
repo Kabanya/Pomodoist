@@ -2445,4 +2445,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get projectEmptyDescription => 'أضف الخطوة الأولى نحو هدف المشروع.';
+
+  @override
+  String get commandSearchPlaceholder => 'ابحث عن المهام والمشاريع والإجراءات';
+
+  @override
+  String get commandSearchTasks => 'المهام';
+
+  @override
+  String get commandSearchActions => 'الإجراءات';
+
+  @override
+  String get commandSearchAllResults => 'عرض كل النتائج';
+
+  @override
+  String get commandSearchHint => '↑ ↓ تنقّل · Enter فتح · Esc إغلاق';
+
+  @override
+  String get commandSearchNoMatches => 'لا توجد مهام أو مشاريع مطابقة.';
 }

@@ -2487,4 +2487,22 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get projectEmptyDescription => 'Добавьте первый шаг к цели проекта.';
+
+  @override
+  String get commandSearchPlaceholder => 'Поиск задач, проектов и действий';
+
+  @override
+  String get commandSearchTasks => 'Задачи';
+
+  @override
+  String get commandSearchActions => 'Действия';
+
+  @override
+  String get commandSearchAllResults => 'Все результаты';
+
+  @override
+  String get commandSearchHint => '↑ ↓ Выбор · Enter Открыть · Esc Закрыть';
+
+  @override
+  String get commandSearchNoMatches => 'Подходящих задач и проектов нет.';
 }

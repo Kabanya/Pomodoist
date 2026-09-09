@@ -714,5 +714,11 @@
   "todayEmptyCompletedTitle": "قائمة اليوم فارغة",
   "todayEmptyCompletedDescription": "مهامك المكتملة محفوظة أدناه. أضف مهمة أخرى عندما تكون جاهزًا.",
   "projectEmptyTitle": "لا توجد مهام في هذا المشروع بعد",
-  "projectEmptyDescription": "أضف الخطوة الأولى نحو هدف المشروع."
+  "projectEmptyDescription": "أضف الخطوة الأولى نحو هدف المشروع.",
+  "commandSearchPlaceholder": "ابحث عن المهام والمشاريع والإجراءات",
+  "commandSearchTasks": "المهام",
+  "commandSearchActions": "الإجراءات",
+  "commandSearchAllResults": "عرض كل النتائج",
+  "commandSearchHint": "↑ ↓ تنقّل · Enter فتح · Esc إغلاق",
+  "commandSearchNoMatches": "لا توجد مهام أو مشاريع مطابقة."
 }

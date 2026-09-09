@@ -714,5 +714,11 @@
   "todayEmptyCompletedTitle": "La liste du jour est vide",
   "todayEmptyCompletedDescription": "Vos tâches terminées sont conservées ci-dessous. Ajoutez-en une autre quand vous le souhaitez.",
   "projectEmptyTitle": "Ce projet ne contient pas encore de tâches",
-  "projectEmptyDescription": "Ajoutez la première étape vers l’objectif du projet."
+  "projectEmptyDescription": "Ajoutez la première étape vers l’objectif du projet.",
+  "commandSearchPlaceholder": "Rechercher des tâches, projets et actions",
+  "commandSearchTasks": "Tâches",
+  "commandSearchActions": "Actions",
+  "commandSearchAllResults": "Voir tous les résultats",
+  "commandSearchHint": "↑ ↓ Parcourir · Entrée Ouvrir · Échap Fermer",
+  "commandSearchNoMatches": "Aucune tâche ni aucun projet correspondant."
 }

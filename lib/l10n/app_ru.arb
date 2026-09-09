@@ -714,5 +714,11 @@
   "todayEmptyCompletedTitle": "Список на сегодня пуст",
   "todayEmptyCompletedDescription": "Завершённые задачи сохранены ниже. Добавьте следующую, когда будете готовы.",
   "projectEmptyTitle": "В проекте пока нет задач",
-  "projectEmptyDescription": "Добавьте первый шаг к цели проекта."
+  "projectEmptyDescription": "Добавьте первый шаг к цели проекта.",
+  "commandSearchPlaceholder": "Поиск задач, проектов и действий",
+  "commandSearchTasks": "Задачи",
+  "commandSearchActions": "Действия",
+  "commandSearchAllResults": "Все результаты",
+  "commandSearchHint": "↑ ↓ Выбор · Enter Открыть · Esc Закрыть",
+  "commandSearchNoMatches": "Подходящих задач и проектов нет."
 }
