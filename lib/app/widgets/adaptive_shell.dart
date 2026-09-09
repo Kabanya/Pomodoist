@@ -977,7 +977,8 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
               children: [
                 _SidebarProfileHeader(
                   displayName: displayName,
-                  onProfileTap: () => widget.onDestinationSelected('/settings'),
+                  onProfileTap: () =>
+                      widget.onDestinationSelected('/settings?section=account'),
                 ),
                 const SizedBox(height: 16),
                 destinationTile('/search'),

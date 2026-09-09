@@ -219,8 +219,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/settings',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: SettingsScreen()),
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: SettingsScreen(location: state.uri),
+            ),
           ),
           GoRoute(
             path: '/settings/shortcuts',

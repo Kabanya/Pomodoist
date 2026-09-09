@@ -62,6 +62,7 @@ class _AccountSignOutButtonState extends State<AccountSignOutButton> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         ShadButton.ghost(
+          height: 48,
           enabled: !_submitting,
           onPressed: _submitting ? null : _signOut,
           leading: _submitting

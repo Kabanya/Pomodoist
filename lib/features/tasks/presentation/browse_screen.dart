@@ -78,7 +78,8 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                               LucideIcons.userRound,
                               size: 16,
                             ),
-                            onPressed: () => context.go('/settings'),
+                            onPressed: () =>
+                                context.go('/settings?section=account'),
                             child: Text(l10n.account),
                           ),
                         ],

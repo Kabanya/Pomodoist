@@ -108,6 +108,72 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// No description provided for @settingsSectionGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get settingsSectionGeneral;
+
+  /// No description provided for @settingsSectionAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsSectionAppearance;
+
+  /// No description provided for @settingsSectionTasksFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks and Focus'**
+  String get settingsSectionTasksFocus;
+
+  /// No description provided for @settingsSectionIntegrations.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrations and data'**
+  String get settingsSectionIntegrations;
+
+  /// No description provided for @settingsSectionAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account and Pro'**
+  String get settingsSectionAccount;
+
+  /// No description provided for @settingsThemeColorsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Colors'**
+  String get settingsThemeColorsTab;
+
+  /// No description provided for @settingsThemeBackgroundsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Backgrounds'**
+  String get settingsThemeBackgroundsTab;
+
+  /// No description provided for @settingsRefreshAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh account'**
+  String get settingsRefreshAccount;
+
+  /// No description provided for @settingsSubscriptionActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription options'**
+  String get settingsSubscriptionActions;
+
+  /// No description provided for @settingsSubscriptionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not refresh your subscription. Previously confirmed access is retained.'**
+  String get settingsSubscriptionError;
+
+  /// No description provided for @settingsVersionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the version.'**
+  String get settingsVersionError;
+
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:

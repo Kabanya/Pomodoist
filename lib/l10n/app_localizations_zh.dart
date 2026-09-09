@@ -9,6 +9,39 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get settingsSectionGeneral => '通用';
+
+  @override
+  String get settingsSectionAppearance => '外观';
+
+  @override
+  String get settingsSectionTasksFocus => '任务与专注';
+
+  @override
+  String get settingsSectionIntegrations => '集成与数据';
+
+  @override
+  String get settingsSectionAccount => '账户与 Pro';
+
+  @override
+  String get settingsThemeColorsTab => '颜色';
+
+  @override
+  String get settingsThemeBackgroundsTab => '背景';
+
+  @override
+  String get settingsRefreshAccount => '刷新账户';
+
+  @override
+  String get settingsSubscriptionActions => '管理订阅';
+
+  @override
+  String get settingsSubscriptionError => '无法刷新订阅。此前已确认的访问权限将保留。';
+
+  @override
+  String get settingsVersionError => '无法加载版本。';
+
+  @override
   String get appTitle => 'pomodoist';
 
   @override

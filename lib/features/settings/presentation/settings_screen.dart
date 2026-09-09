@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show LucideIcons, ShadButton, ShadSwitch, ShadSelect, ShadOption;
 
 import '../../../app/account_auth_feedback.dart';
 import '../../../app/account_providers.dart';
@@ -25,8 +26,10 @@ import '../../../app/theme/app_theme.dart';
 import '../../focus/presentation/focus_view_mode.dart';
 import '../../focus/presentation/focus_screen.dart';
 import '../../integrations/google_calendar/presentation/google_calendar_settings_screen.dart';
-import '../../onboarding/onboarding_gate.dart';
 import '../../voice/data/voice_transcription_mode.dart';
+import 'settings_components.dart';
+import 'settings_navigation.dart';
+import 'settings_subscription.dart';
 import 'account_sign_out_button.dart';
 import 'app_info_card.dart';
 import 'csv_task_import_card.dart';
@@ -963,15 +966,23 @@ String _authRoute(String path, String returnTo) {
 }
 
 class SettingsScreen extends ConsumerStatefulWidget {
-  const SettingsScreen({this.signOutOverride, super.key});
+  const SettingsScreen({this.location, this.signOutOverride, super.key});
 
+  final Uri? location;
   final Future<void> Function()? signOutOverride;
 
   @override
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen>
+    with SingleTickerProviderStateMixin {
+  late final _navigation = SettingsNavigation(
+    widget.location ?? Uri(path: '/settings'),
+  );
+  final _visited = <SettingsSection>{};
+  late final _fade = AnimationController(vsync: this, value: 1);
+
   @override
   void initState() {
     super.initState();
@@ -988,331 +999,506 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  void didUpdateWidget(covariant SettingsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final previous = _navigation.selected;
+    _navigation.syncLocation(widget.location ?? Uri(path: '/settings'));
+    if (_navigation.selected != previous) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      _fade.duration = AppMotion.duration(context, AppMotion.state);
+      _fade.forward(from: 0);
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) _fade.value = 1;
+  }
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    super.dispose();
+  }
+
+  String _title(SettingsSection section) {
     final l10n = context.l10n;
-    final language = ref.watch(appLanguageProvider);
-    final timerVisualStyle = ref.watch(focusTimerVisualStyleProvider);
-    ref.watch(accountAuthStateProvider);
-    final account = ref.watch(accountClientProvider);
-    final accountBootstrap = ref.watch(accountBootstrapProvider);
-    final accountOverview = ref.watch(accountOverviewProvider);
-    final accountConfigured = ref.watch(accountConfiguredProvider);
-    final signedInAccount = account?.currentUserId == null ? null : account;
-    final hasAccountOverview = accountOverview.asData?.value != null;
-    final reengagementEnabled = ref.watch(
-      reengagementNotificationsEnabledProvider,
-    );
-    final focusCompletionCelebrationEnabled = ref.watch(
-      focusCompletionCelebrationEnabledProvider,
-    );
-    final colors = context.appColors;
-    return SafeArea(
-      child: ListView(
-        key: const Key('settings-list'),
-        padding: const EdgeInsets.all(20),
-        children: [
-          Text(
-            l10n.settingsTitle,
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 16),
-          if (account == null && accountBootstrap.hasError)
-            _AccountErrorCard(
-              key: const Key('account-bootstrap-error'),
-              error: accountBootstrap.error!,
-              retryKey: const Key('account-bootstrap-retry'),
-              onRetry: () {
-                unawaited(
-                  ref
-                      .read(accountBootstrapProvider.notifier)
-                      .retry()
-                      .whenComplete(
-                        () => ref.invalidate(accountOverviewProvider),
-                      ),
-                );
-              },
-            )
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (!accountConfigured)
-                  _AuthUnavailableCard(
-                    retryKey: const Key('account-unavailable-retry'),
-                    onRetry: () => unawaited(
-                      ref
-                          .read(accountBootstrapProvider.notifier)
-                          .retry()
-                          .whenComplete(
-                            () => ref.invalidate(accountOverviewProvider),
-                          ),
-                    ),
-                  )
-                else
-                  accountOverview.when(
-                    data: (overview) => AccountOverviewPanel(
-                      overview: overview,
-                      configured: true,
-                      onRefresh: () => ref.invalidate(accountOverviewProvider),
-                      actions: pomodoistAccountSignInActions(
-                        context: context,
-                        account: account,
-                        redirectTo: pomodoistLoginRedirect,
-                        config: ref.read(runtimePublicConfigProvider),
-                        nativeCaptchaCallbacks: ref
-                            .read(nativeLinkCoordinatorProvider)
-                            ?.captchaCallbacks,
-                      ),
-                    ),
-                    loading: () => const Card(
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: LinearProgressIndicator(),
-                      ),
-                    ),
-                    error: (error, _) => _AccountErrorCard(
-                      key: const Key('account-overview-error'),
-                      error: error,
-                      retryKey: const Key('account-overview-retry'),
-                      onRetry: () => ref.invalidate(accountOverviewProvider),
-                    ),
-                  ),
-                if (hasAccountOverview || signedInAccount != null)
-                  Wrap(
-                    alignment: WrapAlignment.end,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 8,
-                    children: [
-                      AccountSignOutButton(
-                        key: const Key('account-sign-out-button'),
-                        onSignOut:
-                            widget.signOutOverride ??
-                            () async {
-                              await account?.signOut();
-                            },
-                        label: l10n.signOut,
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-          if (accountConfigured && signedInAccount != null) ...[
-            const SizedBox(height: 12),
-            _ConnectedAgentsSection(
-              key: ValueKey(signedInAccount.currentUserId),
-              account: signedInAccount,
-            ),
-          ],
-          const SizedBox(height: 12),
-          const Card(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: LaunchOfferPaywall(),
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (isCsvTaskImportSupported()) ...[
-            const CsvTaskImportCard(),
-            const SizedBox(height: 12),
-          ],
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.settingsLanguageTitle,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.settingsLanguageSubtitle,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colors.secondaryText,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  DropdownButtonFormField<AppLanguage>(
-                    key: const Key('settings-language-select'),
-                    initialValue: language,
-                    isExpanded: true,
-                    decoration: InputDecoration(
-                      labelText: l10n.settingsLanguageTitle,
-                      prefixIcon: const Icon(LucideIcons.languages),
-                    ),
-                    items: [
-                      for (final item in AppLanguage.values)
-                        DropdownMenuItem(
-                          value: item,
-                          child: Text(
-                            item == AppLanguage.system
-                                ? l10n.settingsLanguageSystem
-                                : item.nativeName,
-                          ),
-                        ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        ref
-                            .read(appLanguageProvider.notifier)
-                            .setLanguage(value);
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (supportsVoiceTranscriptionModeSelection(
-            isWeb: kIsWeb,
-            platform: defaultTargetPlatform,
-          )) ...[
-            const SizedBox(height: 12),
-            VoiceTranscriptionSettingsCard(signedIn: signedInAccount != null),
-          ],
-          const SizedBox(height: 12),
-          Card(
-            child: SwitchListTile(
-              key: const Key('settings-reengagement-notifications-switch'),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              secondary: const Icon(LucideIcons.bellRing),
-              title: Text(l10n.settingsReturnRemindersTitle),
-              subtitle: Text(l10n.settingsReturnRemindersSubtitle),
-              value: reengagementEnabled,
-              onChanged: (value) {
-                ref
-                    .read(reengagementNotificationsEnabledProvider.notifier)
-                    .setEnabled(value);
-              },
-            ),
-          ),
-          const SizedBox(height: 12),
-          const ThemeSettingsCard(),
-          const SizedBox(height: 12),
-          const _TaskListStyleSettings(),
-          const SizedBox(height: 12),
-          const _DefaultTimedBlockDurationSettings(),
-          const SizedBox(height: 12),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.settingsTimerVisualTitle,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.settingsTimerVisualSubtitle,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colors.secondaryText,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  SegmentedButton<FocusTimerVisualStyle>(
-                    key: const Key('settings-timer-visual-style-select'),
-                    showSelectedIcon: false,
-                    segments: [
-                      ButtonSegment(
-                        value: FocusTimerVisualStyle.bar,
-                        icon: const Icon(LucideIcons.minus),
-                        label: Text(l10n.settingsTimerVisualBar),
-                      ),
-                      ButtonSegment(
-                        value: FocusTimerVisualStyle.circle,
-                        icon: const Icon(LucideIcons.circle),
-                        label: Text(l10n.settingsTimerVisualCircle),
-                      ),
-                    ],
-                    selected: {timerVisualStyle},
-                    onSelectionChanged: (selection) {
-                      ref
-                          .read(focusTimerVisualStyleProvider.notifier)
-                          .setStyle(selection.single);
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (!kIsWeb) ...[
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return switch (section) {
+      SettingsSection.general => l10n.settingsSectionGeneral,
+      SettingsSection.appearance => l10n.settingsSectionAppearance,
+      SettingsSection.tasksFocus => l10n.settingsSectionTasksFocus,
+      SettingsSection.integrations => l10n.settingsSectionIntegrations,
+      SettingsSection.account => l10n.settingsSectionAccount,
+      SettingsSection.about => l10n.settingsAboutTitle,
+    };
+  }
+
+  IconData _icon(SettingsSection section) => switch (section) {
+    SettingsSection.general => LucideIcons.slidersHorizontal,
+    SettingsSection.appearance => LucideIcons.palette,
+    SettingsSection.tasksFocus => LucideIcons.timer,
+    SettingsSection.integrations => LucideIcons.plug,
+    SettingsSection.account => LucideIcons.userRound,
+    SettingsSection.about => LucideIcons.info,
+  };
+
+  Widget _menu({required bool wide}) => ListView(
+    padding: EdgeInsets.zero,
+    children: [
+      for (final section in SettingsSection.values)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Semantics(
+            selected: wide && _navigation.selected == section,
+            child: ShadButton.ghost(
+              height: 48,
+              mainAxisAlignment: MainAxisAlignment.start,
+              backgroundColor: wide && _navigation.selected == section
+                  ? context.appColors.accent.withValues(alpha: 0.10)
+                  : null,
+              foregroundColor: wide && _navigation.selected == section
+                  ? context.appColors.accent
+                  : context.appColors.primaryText,
+              onPressed: () => context.go(settingsLocation(section).toString()),
+              child: Expanded(
+                child: Row(
                   children: [
-                    Text(
-                      l10n.navIntegrations,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 16),
-                    const GoogleCalendarSettingsScreen(embedded: true),
+                    Icon(_icon(section), size: 18),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(_title(section))),
+                    if (!wide) const Icon(LucideIcons.chevronRight, size: 16),
                   ],
                 ),
               ),
             ),
-          ],
-          const SizedBox(height: 12),
-          Card(
-            key: const Key('settings-shortcuts-button'),
-            child: ListTile(
-              leading: const Icon(LucideIcons.keyboard),
+          ),
+        ),
+    ],
+  );
+
+  @override
+  Widget build(BuildContext context) => SettingsSurface(
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 960;
+        _navigation.resolveLayout(wide: wide);
+        final selected = _navigation.selected;
+        if (selected != null) _visited.add(selected);
+        return PopScope(
+          canPop: wide || selected == null,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop && !wide && selected != null) {
+              context.go(settingsLocation(null).toString());
+            }
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  if (!wide && selected != null) ...[
+                    IconButton(
+                      tooltip: MaterialLocalizations.of(
+                        context,
+                      ).backButtonTooltip,
+                      onPressed: () =>
+                          context.go(settingsLocation(null).toString()),
+                      icon: const Icon(LucideIcons.arrowLeft),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(
+                    child: Text(
+                      context.l10n.settingsTitle,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Offstage(
+                      offstage: !wide,
+                      child: ExcludeFocus(
+                        excluding: !wide,
+                        child: SizedBox(width: 216, child: _menu(wide: true)),
+                      ),
+                    ),
+                    SizedBox(width: wide ? 32 : 0),
+                    Expanded(
+                      child: FadeTransition(
+                        opacity: _fade.drive(
+                          CurveTween(curve: AppMotion.curve),
+                        ),
+                        child: IndexedStack(
+                          index: selected == null ? 0 : selected.index + 1,
+                          children: [
+                            ExcludeFocus(
+                              excluding: selected != null,
+                              child: _menu(wide: false),
+                            ),
+                            for (final section in SettingsSection.values)
+                              TickerMode(
+                                enabled: selected == section,
+                                child: ExcludeFocus(
+                                  excluding: selected != section,
+                                  child: _visited.contains(section)
+                                      ? ListView(
+                                          key: PageStorageKey(
+                                            'settings-${section.name}',
+                                          ),
+                                          padding: EdgeInsets.zero,
+                                          children: [
+                                            Text(
+                                              _title(section),
+                                              style: Theme.of(
+                                                context,
+                                              ).textTheme.titleLarge,
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Consumer(
+                                              builder: (context, ref, _) =>
+                                                  _content(section, ref),
+                                            ),
+                                            const SizedBox(height: 24),
+                                          ],
+                                        )
+                                      : const SizedBox.shrink(),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    ),
+  );
+
+  Widget _content(SettingsSection section, WidgetRef ref) {
+    final l10n = context.l10n;
+    switch (section) {
+      case SettingsSection.general:
+        ref.watch(accountAuthStateProvider);
+        final language = ref.watch(appLanguageProvider);
+        return SettingsGroup(
+          children: [
+            SettingsRow(
+              title: l10n.settingsLanguageTitle,
+              subtitle: l10n.settingsLanguageSubtitle,
+              control: ShadSelect<AppLanguage>(
+                key: ValueKey(language),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 14,
+                ),
+                initialValue: language,
+                options: [
+                  for (final item in AppLanguage.values)
+                    ShadOption(
+                      value: item,
+                      child: Text(
+                        item == AppLanguage.system
+                            ? l10n.settingsLanguageSystem
+                            : item.nativeName,
+                      ),
+                    ),
+                ],
+                selectedOptionBuilder: (context, item) => Text(
+                  item == AppLanguage.system
+                      ? l10n.settingsLanguageSystem
+                      : item.nativeName,
+                ),
+                onChanged: (value) {
+                  if (value != null) {
+                    saveSetting(
+                      context,
+                      ref.read(appLanguageProvider.notifier).setLanguage(value),
+                    );
+                  }
+                },
+              ),
+            ),
+            if (supportsVoiceTranscriptionModeSelection(
+              isWeb: kIsWeb,
+              platform: defaultTargetPlatform,
+            ))
+              VoiceTranscriptionSettingsCard(
+                signedIn:
+                    ref.watch(accountClientProvider)?.currentUserId != null,
+              ),
+            SettingsRow(
+              title: l10n.settingsReturnRemindersTitle,
+              subtitle: l10n.settingsReturnRemindersSubtitle,
+              onTap: () => saveSetting(
+                context,
+                ref
+                    .read(reengagementNotificationsEnabledProvider.notifier)
+                    .setEnabled(
+                      !ref.read(reengagementNotificationsEnabledProvider),
+                    ),
+              ),
+              controlWidth: 48,
+              control: ShadSwitch(
+                key: const Key('settings-reengagement-notifications-switch'),
+                value: ref.watch(reengagementNotificationsEnabledProvider),
+                onChanged: (value) => saveSetting(
+                  context,
+                  ref
+                      .read(reengagementNotificationsEnabledProvider.notifier)
+                      .setEnabled(value),
+                ),
+              ),
+            ),
+            ListTile(
+              key: const Key('settings-shortcuts-button'),
+              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              leading: const Icon(LucideIcons.keyboard, size: 20),
               title: Text(l10n.settingsShortcutsTitle),
               subtitle: Text(l10n.settingsShortcutsSubtitle),
-              trailing: const Icon(LucideIcons.chevronRight),
+              trailing: const Icon(LucideIcons.chevronRight, size: 18),
               onTap: () => context.push('/settings/shortcuts'),
             ),
-          ),
-          const SizedBox(height: 12),
-          Card(
-            child: SwitchListTile(
-              key: const Key('settings-focus-completion-celebration-switch'),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              secondary: const Icon(LucideIcons.partyPopper),
-              title: Text(l10n.settingsFocusCompletionCelebrationTitle),
-              subtitle: Text(l10n.settingsFocusCompletionCelebrationSubtitle),
-              value: focusCompletionCelebrationEnabled,
-              onChanged: (value) {
-                ref
-                    .read(focusCompletionCelebrationEnabledProvider.notifier)
-                    .setEnabled(value);
-              },
-            ),
-          ),
-          const SizedBox(height: 12),
-          const SettingsAppInfoCard(key: Key('settings-app-info-section')),
-          if (signedInAccount != null) ...[
-            const SizedBox(height: 12),
-            Align(
-              key: const Key('account-delete-section'),
-              alignment: Alignment.centerRight,
-              child: ShadButton.ghost(
-                key: const Key('account-delete-button'),
-                foregroundColor: Theme.of(context).colorScheme.error,
-                onPressed: () => showDialog<void>(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (_) =>
-                      _AccountDeleteDialog(account: signedInAccount),
+          ],
+        );
+      case SettingsSection.appearance:
+        return const Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ThemeSettingsCard(),
+            SizedBox(height: 24),
+            _TaskListStyleSettings(),
+          ],
+        );
+      case SettingsSection.tasksFocus:
+        final style = ref.watch(focusTimerVisualStyleProvider);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const _DefaultTimedBlockDurationSettings(),
+            const SizedBox(height: 24),
+            SettingsGroup(
+              children: [
+                SettingsRow(
+                  title: l10n.settingsTimerVisualTitle,
+                  subtitle: l10n.settingsTimerVisualSubtitle,
+                  control: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final option in FocusTimerVisualStyle.values)
+                        ChoiceChip(
+                          label: Text(
+                            option == FocusTimerVisualStyle.bar
+                                ? l10n.settingsTimerVisualBar
+                                : l10n.settingsTimerVisualCircle,
+                          ),
+                          selected: option == style,
+                          onSelected: (_) => saveSetting(
+                            context,
+                            ref
+                                .read(focusTimerVisualStyleProvider.notifier)
+                                .setStyle(option),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-                leading: const Icon(LucideIcons.trash2),
-                child: Text(l10n.deleteAccount),
+                SettingsRow(
+                  title: l10n.settingsFocusCompletionCelebrationTitle,
+                  subtitle: l10n.settingsFocusCompletionCelebrationSubtitle,
+                  onTap: () => saveSetting(
+                    context,
+                    ref
+                        .read(
+                          focusCompletionCelebrationEnabledProvider.notifier,
+                        )
+                        .setEnabled(
+                          !ref.read(focusCompletionCelebrationEnabledProvider),
+                        ),
+                  ),
+                  controlWidth: 48,
+                  control: ShadSwitch(
+                    key: const Key(
+                      'settings-focus-completion-celebration-switch',
+                    ),
+                    value: ref.watch(focusCompletionCelebrationEnabledProvider),
+                    onChanged: (value) => saveSetting(
+                      context,
+                      ref
+                          .read(
+                            focusCompletionCelebrationEnabledProvider.notifier,
+                          )
+                          .setEnabled(value),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      case SettingsSection.integrations:
+        ref.watch(accountAuthStateProvider);
+        final account = ref.watch(accountClientProvider);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!kIsWeb) ...[
+              const GoogleCalendarSettingsScreen(embedded: true),
+              const SizedBox(height: 24),
+            ],
+            if (ref.watch(accountConfiguredProvider) &&
+                account?.currentUserId != null) ...[
+              _ConnectedAgentsSection(
+                key: ValueKey(account!.currentUserId),
+                account: account,
+              ),
+              const SizedBox(height: 24),
+            ],
+            if (isCsvTaskImportSupported()) const CsvTaskImportCard(),
+          ],
+        );
+      case SettingsSection.account:
+        return _account(ref);
+      case SettingsSection.about:
+        return const SettingsAppInfoCard(key: Key('settings-app-info-section'));
+    }
+  }
+
+  Widget _account(WidgetRef ref) {
+    final l10n = context.l10n;
+    ref.watch(accountAuthStateProvider);
+    final account = ref.watch(accountClientProvider);
+    final bootstrap = ref.watch(accountBootstrapProvider);
+    final overview = ref.watch(accountOverviewProvider);
+    final configured = ref.watch(accountConfiguredProvider);
+    final signedIn = account?.currentUserId != null;
+    final profile = overview.value?.profile;
+    final returnTo = settingsLocation(SettingsSection.account).toString();
+    void retryBootstrap() => unawaited(
+      ref
+          .read(accountBootstrapProvider.notifier)
+          .retry()
+          .whenComplete(() => ref.invalidate(accountOverviewProvider)),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (account == null && bootstrap.hasError)
+          _AccountErrorCard(
+            key: const Key('account-bootstrap-error'),
+            error: bootstrap.error!,
+            retryKey: const Key('account-bootstrap-retry'),
+            onRetry: retryBootstrap,
+          )
+        else if (account == null && bootstrap.isLoading)
+          const LinearProgressIndicator()
+        else if (!configured)
+          _AuthUnavailableCard(
+            retryKey: const Key('account-unavailable-retry'),
+            onRetry: retryBootstrap,
+          )
+        else ...[
+          if (overview.isLoading) const LinearProgressIndicator(minHeight: 2),
+          if (profile != null || signedIn)
+            SettingsRow(
+              title: profile?.displayName ?? profile?.email ?? l10n.account,
+              subtitle: profile?.email,
+              controlWidth: 48,
+              control: IconButton(
+                tooltip: l10n.settingsRefreshAccount,
+                onPressed: overview.isLoading
+                    ? null
+                    : () => ref.invalidate(accountOverviewProvider),
+                icon: const Icon(LucideIcons.refreshCw, size: 18),
+              ),
+            )
+          else if (!overview.isLoading && !overview.hasError) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(l10n.loginTitle),
+            ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: pomodoistAccountSignInActions(
+                context: context,
+                account: account,
+                redirectTo: _loginRedirectFor(returnTo),
+                onSignedIn: () => context.go(returnTo),
+                config: ref.read(runtimePublicConfigProvider),
+                nativeCaptchaCallbacks: ref
+                    .read(nativeLinkCoordinatorProvider)
+                    ?.captchaCallbacks,
+                appleLabel: l10n.accountApple,
+                googleLabel: l10n.accountGoogle,
+                emailLabel: l10n.accountEmail,
               ),
             ),
           ],
+          if (overview.hasError)
+            _AccountErrorCard(
+              key: const Key('account-overview-error'),
+              error: overview.error!,
+              retryKey: const Key('account-overview-retry'),
+              onRetry: () => ref.invalidate(accountOverviewProvider),
+            ),
         ],
-      ),
+        const SizedBox(height: 24),
+        const SettingsSubscription(),
+        if (signedIn) ...[
+          const SizedBox(height: 24),
+          Divider(height: 1, thickness: 1, color: context.appColors.border),
+          Padding(
+            key: const Key('account-delete-section'),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                AccountSignOutButton(
+                  key: const Key('account-sign-out-button'),
+                  onSignOut:
+                      widget.signOutOverride ??
+                      () async {
+                        await account?.signOut();
+                      },
+                  label: l10n.signOut,
+                ),
+                ShadButton.ghost(
+                  height: 48,
+                  key: const Key('account-delete-button'),
+                  foregroundColor: context.appColors.error,
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    barrierDismissible: false,
+                    animationStyle: AnimationStyle(
+                      duration: AppMotion.duration(context, AppMotion.popup),
+                      reverseDuration: AppMotion.duration(
+                        context,
+                        AppMotion.popup,
+                      ),
+                      curve: AppMotion.curve,
+                    ),
+                    builder: (_) => _AccountDeleteDialog(account: account!),
+                  ),
+                  leading: const Icon(LucideIcons.trash2, size: 18),
+                  child: Text(l10n.deleteAccount),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -1394,6 +1580,11 @@ class _ConnectedAgentsSectionState
         await showDialog<bool>(
           context: context,
           barrierDismissible: false,
+          animationStyle: AnimationStyle(
+            duration: AppMotion.duration(context, AppMotion.popup),
+            reverseDuration: AppMotion.duration(context, AppMotion.popup),
+            curve: AppMotion.curve,
+          ),
           builder: (dialogContext) {
             _confirmationContext = dialogContext;
             return AlertDialog(
@@ -1404,11 +1595,13 @@ class _ConnectedAgentsSectionState
               ),
               actions: [
                 ShadButton.ghost(
+                  height: 48,
                   key: const Key('connected-agent-revoke-cancel'),
                   onPressed: () => Navigator.of(dialogContext).pop(false),
                   child: Text(l10n.commonCancel),
                 ),
                 ShadButton(
+                  height: 48,
                   key: const Key('connected-agent-revoke-confirm'),
                   onPressed: () => Navigator.of(dialogContext).pop(true),
                   child: Text(l10n.settingsConnectedAgentsRevoke),
@@ -1452,94 +1645,89 @@ class _ConnectedAgentsSectionState
     final errorColor = Theme.of(context).colorScheme.error;
     final agents = ref.watch(connectedAgentsProvider);
     final grants = ref.read(connectedAgentsProvider.notifier).grants;
-    return Card(
+    return Column(
       key: const Key('connected-agents-section'),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.settingsConnectedAgentsTitle,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 12),
-            if (agents.isLoading && grants == null)
-              Semantics(
-                key: const Key('connected-agents-loading'),
-                liveRegion: true,
-                child: Row(
-                  children: [
-                    const SizedBox.square(
-                      dimension: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(l10n.settingsConnectedAgentsLoading)),
-                  ],
-                ),
-              )
-            else if (agents.hasError && grants == null)
-              _ConnectedAgentsError(
-                retryKey: const Key('connected-agents-retry'),
-                onRetry: _load,
-              )
-            else if (grants?.isEmpty ?? true)
-              Text(
-                key: const Key('connected-agents-empty'),
-                l10n.settingsConnectedAgentsEmpty,
-              )
-            else ...[
-              for (final grant in grants!)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(LucideIcons.bot),
-                  title: Text(
-                    grant.clientName?.trim().isNotEmpty == true
-                        ? grant.clientName!.trim()
-                        : l10n.settingsConnectedAgentsUnknownClient,
-                  ),
-                  subtitle: Text(
-                    l10n.settingsConnectedAgentsConnectedOn(
-                      formatLocalDate(context, grant.connectedAt.toLocal()),
-                    ),
-                  ),
-                  trailing: IconButton(
-                    key: Key('connected-agent-revoke-${grant.clientId}'),
-                    tooltip: l10n.settingsConnectedAgentsRevoke,
-                    onPressed: _revokingClientId == null
-                        ? () => _confirmRevoke(grant)
-                        : null,
-                    icon: _revokingClientId == grant.clientId
-                        ? const SizedBox.square(
-                            dimension: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(LucideIcons.unlink),
-                  ),
-                ),
-            ],
-            if (agents.hasError && grants != null) ...[
-              const SizedBox(height: 8),
-              _ConnectedAgentsError(
-                retryKey: const Key('connected-agents-retry'),
-                onRetry: _load,
-              ),
-            ],
-            if (_revokeError != null) ...[
-              const SizedBox(height: 8),
-              Semantics(
-                key: const Key('connected-agent-revoke-error'),
-                liveRegion: true,
-                child: Text(
-                  l10n.settingsConnectedAgentsRevokeError,
-                  style: TextStyle(color: errorColor),
-                ),
-              ),
-            ],
-          ],
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l10n.settingsConnectedAgentsTitle,
+          style: Theme.of(context).textTheme.titleLarge,
         ),
-      ),
+        const SizedBox(height: 12),
+        if (agents.isLoading && grants == null)
+          Semantics(
+            key: const Key('connected-agents-loading'),
+            liveRegion: true,
+            child: Row(
+              children: [
+                const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: Text(l10n.settingsConnectedAgentsLoading)),
+              ],
+            ),
+          )
+        else if (agents.hasError && grants == null)
+          _ConnectedAgentsError(
+            retryKey: const Key('connected-agents-retry'),
+            onRetry: _load,
+          )
+        else if (grants?.isEmpty ?? true)
+          Text(
+            key: const Key('connected-agents-empty'),
+            l10n.settingsConnectedAgentsEmpty,
+          )
+        else ...[
+          for (final grant in grants!)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(LucideIcons.bot),
+              title: Text(
+                grant.clientName?.trim().isNotEmpty == true
+                    ? grant.clientName!.trim()
+                    : l10n.settingsConnectedAgentsUnknownClient,
+              ),
+              subtitle: Text(
+                l10n.settingsConnectedAgentsConnectedOn(
+                  formatLocalDate(context, grant.connectedAt.toLocal()),
+                ),
+              ),
+              trailing: IconButton(
+                key: Key('connected-agent-revoke-${grant.clientId}'),
+                tooltip: l10n.settingsConnectedAgentsRevoke,
+                onPressed: _revokingClientId == null
+                    ? () => _confirmRevoke(grant)
+                    : null,
+                icon: _revokingClientId == grant.clientId
+                    ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(LucideIcons.unlink),
+              ),
+            ),
+        ],
+        if (agents.hasError && grants != null) ...[
+          const SizedBox(height: 8),
+          _ConnectedAgentsError(
+            retryKey: const Key('connected-agents-retry'),
+            onRetry: _load,
+          ),
+        ],
+        if (_revokeError != null) ...[
+          const SizedBox(height: 8),
+          Semantics(
+            key: const Key('connected-agent-revoke-error'),
+            liveRegion: true,
+            child: Text(
+              l10n.settingsConnectedAgentsRevokeError,
+              style: TextStyle(color: errorColor),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -1560,6 +1748,7 @@ class _ConnectedAgentsError extends StatelessWidget {
         children: [
           Expanded(child: Text(l10n.settingsConnectedAgentsLoadError)),
           ShadButton.ghost(
+            height: 48,
             key: retryKey,
             onPressed: onRetry,
             leading: const Icon(LucideIcons.refreshCw),
@@ -1643,22 +1832,31 @@ class _AccountDeleteDialogState extends ConsumerState<_AccountDeleteDialog> {
     return await showDialog<bool>(
           context: context,
           barrierDismissible: false,
+          animationStyle: AnimationStyle(
+            duration: AppMotion.duration(context, AppMotion.popup),
+            reverseDuration: AppMotion.duration(context, AppMotion.popup),
+            curve: AppMotion.curve,
+          ),
           builder: (dialogContext) {
             final colors = Theme.of(dialogContext).colorScheme;
             final l10n = dialogContext.l10n;
             return PopScope(
               canPop: false,
               child: AlertDialog(
+                scrollable: true,
+                constraints: const BoxConstraints(maxWidth: 560),
                 key: const Key('account-delete-final-dialog'),
                 title: Text(l10n.deleteAccount),
                 content: Text(l10n.deleteAccountFinalConfirmation),
                 actions: [
                   ShadButton.ghost(
+                    height: 48,
                     key: const Key('account-delete-final-cancel-button'),
                     onPressed: () => Navigator.of(dialogContext).pop(false),
                     child: Text(l10n.commonCancel),
                   ),
                   ShadButton.destructive(
+                    height: 48,
                     key: const Key('account-delete-final-confirm-button'),
                     backgroundColor: colors.error,
                     foregroundColor: colors.onError,
@@ -1683,6 +1881,7 @@ class _AccountDeleteDialogState extends ConsumerState<_AccountDeleteDialog> {
       child: AlertDialog(
         key: const Key('account-delete-dialog'),
         scrollable: true,
+        constraints: const BoxConstraints(maxWidth: 560),
         title: Text(l10n.deleteAccount),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1693,7 +1892,7 @@ class _AccountDeleteDialogState extends ConsumerState<_AccountDeleteDialog> {
             ShadButton.ghost(
               key: const Key('account-delete-manage-apple-button'),
               height: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
               enabled: !_submitting,
               onPressed: _submitting
                   ? null
@@ -1717,12 +1916,14 @@ class _AccountDeleteDialogState extends ConsumerState<_AccountDeleteDialog> {
         ),
         actions: [
           ShadButton.ghost(
+            height: 48,
             key: const Key('account-delete-cancel-button'),
             enabled: !_submitting,
             onPressed: _submitting ? null : () => Navigator.of(context).pop(),
             child: Text(l10n.commonCancel),
           ),
           ShadButton.destructive(
+            height: 48,
             key: const Key('account-delete-confirm-button'),
             backgroundColor: colors.error,
             foregroundColor: colors.onError,
@@ -1891,92 +2092,75 @@ class _TaskListStyleSettings extends ConsumerWidget {
     final l10n = context.l10n;
     final style = ref.watch(taskListStyleProvider);
     final spacing = ref.watch(taskRowSpacingProvider);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.settingsTaskListStyle,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.settingsTaskListStyleDescription,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: context.appColors.secondaryText,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final option in TaskListStyle.values)
-                  ChoiceChip(
-                    label: Text(
-                      option == TaskListStyle.modern
-                          ? l10n.settingsTaskListModern
-                          : l10n.settingsTaskListClassic,
-                    ),
-                    selected: style == option,
-                    onSelected: (_) async {
-                      try {
-                        await ref
-                            .read(taskListStyleProvider.notifier)
-                            .setStyle(option);
-                      } catch (_) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.settingsSaveError)),
-                          );
-                        }
-                      }
-                    },
+    return SettingsGroup(
+      children: [
+        SettingsRow(
+          title: l10n.settingsTaskListStyle,
+          subtitle: l10n.settingsTaskListStyleDescription,
+          control: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final option in TaskListStyle.values)
+                ChoiceChip(
+                  label: Text(
+                    option == TaskListStyle.modern
+                        ? l10n.settingsTaskListModern
+                        : l10n.settingsTaskListClassic,
                   ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Text(
-              l10n.settingsTaskRowSpacing,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final option in TaskRowSpacing.values)
-                  ChoiceChip(
-                    label: Text(switch (option) {
-                      TaskRowSpacing.compact =>
-                        l10n.settingsTaskRowSpacingCompact,
-                      TaskRowSpacing.comfortable =>
-                        l10n.settingsTaskRowSpacingComfortable,
-                      TaskRowSpacing.spacious =>
-                        l10n.settingsTaskRowSpacingSpacious,
-                    }),
-                    selected: spacing == option,
-                    onSelected: (_) async {
-                      try {
-                        await ref
-                            .read(taskRowSpacingProvider.notifier)
-                            .setSpacing(option);
-                      } catch (_) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.settingsSaveError)),
-                          );
-                        }
+                  selected: style == option,
+                  onSelected: (_) async {
+                    try {
+                      await ref
+                          .read(taskListStyleProvider.notifier)
+                          .setStyle(option);
+                    } catch (_) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.settingsSaveError)),
+                        );
                       }
-                    },
-                  ),
-              ],
-            ),
-          ],
+                    }
+                  },
+                ),
+            ],
+          ),
         ),
-      ),
+        SettingsRow(
+          title: l10n.settingsTaskRowSpacing,
+          control: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final option in TaskRowSpacing.values)
+                ChoiceChip(
+                  label: Text(switch (option) {
+                    TaskRowSpacing.compact =>
+                      l10n.settingsTaskRowSpacingCompact,
+                    TaskRowSpacing.comfortable =>
+                      l10n.settingsTaskRowSpacingComfortable,
+                    TaskRowSpacing.spacious =>
+                      l10n.settingsTaskRowSpacingSpacious,
+                  }),
+                  selected: spacing == option,
+                  onSelected: (_) async {
+                    try {
+                      await ref
+                          .read(taskRowSpacingProvider.notifier)
+                          .setSpacing(option);
+                    } catch (_) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.settingsSaveError)),
+                        );
+                      }
+                    }
+                  },
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -2015,102 +2199,85 @@ class _DefaultTimedBlockDurationSettingsState
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final colors = context.appColors;
     ref.listen<int>(
       quickAddDefaultTimedBlockMinutesProvider,
       (_, next) => _showMinutes(next),
     );
     final minutes = ref.watch(quickAddDefaultTimedBlockMinutesProvider);
     final timeDisplayMode = ref.watch(taskTimeDisplayModeProvider);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.settingsDefaultTimedBlockTitle,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.settingsDefaultTimedBlockSubtitle,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: colors.secondaryText),
-            ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final preset in _presets)
-                  ChoiceChip(
-                    key: ValueKey('settings-default-block-$preset'),
-                    label: Text(l10n.durationMinutes(preset)),
-                    selected: minutes == preset,
-                    onSelected: (_) => _setMinutes(preset),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              key: const Key('settings-default-timed-block-minutes-input'),
-              controller: _controller,
-              keyboardType: TextInputType.number,
-              textInputAction: TextInputAction.done,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                labelText: l10n.settingsDefaultTimedBlockCustomLabel,
-                suffixText: l10n.minutesSuffix,
-                errorText: _errorText,
-                prefixIcon: const Icon(LucideIcons.clock),
+    return SettingsGroup(
+      children: [
+        SettingsRow(
+          title: l10n.settingsDefaultTimedBlockTitle,
+          subtitle: l10n.settingsDefaultTimedBlockSubtitle,
+          controlWidth: 320,
+          control: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final preset in _presets)
+                    ChoiceChip(
+                      key: ValueKey('settings-default-block-$preset'),
+                      label: Text(l10n.durationMinutes(preset)),
+                      selected: minutes == preset,
+                      onSelected: (_) => _setMinutes(preset),
+                    ),
+                ],
               ),
-              onChanged: _saveCustomMinutes,
-            ),
-            const SizedBox(height: 18),
-            Text(
-              l10n.settingsTaskTimeDisplayTitle,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.settingsTaskTimeDisplaySubtitle,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: colors.secondaryText),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                ChoiceChip(
-                  key: const ValueKey('settings-task-time-display-smart'),
-                  label: Text(l10n.settingsTaskTimeDisplaySmart),
-                  selected: timeDisplayMode == TaskTimeDisplayMode.smart,
-                  onSelected: (_) =>
-                      _setTimeDisplayMode(TaskTimeDisplayMode.smart),
+              const SizedBox(height: 14),
+              TextField(
+                key: const Key('settings-default-timed-block-minutes-input'),
+                controller: _controller,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: InputDecoration(
+                  labelText: l10n.settingsDefaultTimedBlockCustomLabel,
+                  suffixText: l10n.minutesSuffix,
+                  errorText: _errorText,
+                  prefixIcon: const Icon(LucideIcons.clock),
                 ),
-                ChoiceChip(
-                  key: const ValueKey('settings-task-time-display-range'),
-                  label: Text(l10n.settingsTaskTimeDisplayRange),
-                  selected: timeDisplayMode == TaskTimeDisplayMode.range,
-                  onSelected: (_) =>
-                      _setTimeDisplayMode(TaskTimeDisplayMode.range),
-                ),
-                ChoiceChip(
-                  key: const ValueKey('settings-task-time-display-start-only'),
-                  label: Text(l10n.settingsTaskTimeDisplayStartOnly),
-                  selected: timeDisplayMode == TaskTimeDisplayMode.startOnly,
-                  onSelected: (_) =>
-                      _setTimeDisplayMode(TaskTimeDisplayMode.startOnly),
-                ),
-              ],
-            ),
-          ],
+                onChanged: _saveCustomMinutes,
+              ),
+            ],
+          ),
         ),
-      ),
+        SettingsRow(
+          title: l10n.settingsTaskTimeDisplayTitle,
+          subtitle: l10n.settingsTaskTimeDisplaySubtitle,
+          controlWidth: 320,
+          control: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ChoiceChip(
+                key: const ValueKey('settings-task-time-display-smart'),
+                label: Text(l10n.settingsTaskTimeDisplaySmart),
+                selected: timeDisplayMode == TaskTimeDisplayMode.smart,
+                onSelected: (_) =>
+                    _setTimeDisplayMode(TaskTimeDisplayMode.smart),
+              ),
+              ChoiceChip(
+                key: const ValueKey('settings-task-time-display-range'),
+                label: Text(l10n.settingsTaskTimeDisplayRange),
+                selected: timeDisplayMode == TaskTimeDisplayMode.range,
+                onSelected: (_) =>
+                    _setTimeDisplayMode(TaskTimeDisplayMode.range),
+              ),
+              ChoiceChip(
+                key: const ValueKey('settings-task-time-display-start-only'),
+                label: Text(l10n.settingsTaskTimeDisplayStartOnly),
+                selected: timeDisplayMode == TaskTimeDisplayMode.startOnly,
+                onSelected: (_) =>
+                    _setTimeDisplayMode(TaskTimeDisplayMode.startOnly),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -2136,9 +2303,12 @@ class _DefaultTimedBlockDurationSettingsState
 
   void _setMinutes(int minutes) {
     setState(() => _errorText = null);
-    ref
-        .read(quickAddDefaultTimedBlockMinutesProvider.notifier)
-        .setMinutes(minutes);
+    saveSetting(
+      context,
+      ref
+          .read(quickAddDefaultTimedBlockMinutesProvider.notifier)
+          .setMinutes(minutes),
+    );
   }
 
   void _saveCustomMinutes(String raw) {
@@ -2150,12 +2320,18 @@ class _DefaultTimedBlockDurationSettingsState
       return;
     }
     setState(() => _errorText = null);
-    ref
-        .read(quickAddDefaultTimedBlockMinutesProvider.notifier)
-        .setMinutes(minutes);
+    saveSetting(
+      context,
+      ref
+          .read(quickAddDefaultTimedBlockMinutesProvider.notifier)
+          .setMinutes(minutes),
+    );
   }
 
   void _setTimeDisplayMode(TaskTimeDisplayMode mode) {
-    ref.read(taskTimeDisplayModeProvider.notifier).setMode(mode);
+    saveSetting(
+      context,
+      ref.read(taskTimeDisplayModeProvider.notifier).setMode(mode),
+    );
   }
 }

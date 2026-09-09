@@ -9,6 +9,40 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get settingsSectionGeneral => 'Общие';
+
+  @override
+  String get settingsSectionAppearance => 'Внешний вид';
+
+  @override
+  String get settingsSectionTasksFocus => 'Задачи и Фокус';
+
+  @override
+  String get settingsSectionIntegrations => 'Интеграции и данные';
+
+  @override
+  String get settingsSectionAccount => 'Аккаунт и Pro';
+
+  @override
+  String get settingsThemeColorsTab => 'Цвета';
+
+  @override
+  String get settingsThemeBackgroundsTab => 'Фоны';
+
+  @override
+  String get settingsRefreshAccount => 'Обновить аккаунт';
+
+  @override
+  String get settingsSubscriptionActions => 'Управление подпиской';
+
+  @override
+  String get settingsSubscriptionError =>
+      'Не удалось обновить подписку. Ранее подтверждённый доступ сохранён.';
+
+  @override
+  String get settingsVersionError => 'Не удалось загрузить версию.';
+
+  @override
   String get appTitle => 'pomodoist';
 
   @override

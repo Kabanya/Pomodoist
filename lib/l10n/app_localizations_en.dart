@@ -9,6 +9,40 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get settingsSectionGeneral => 'General';
+
+  @override
+  String get settingsSectionAppearance => 'Appearance';
+
+  @override
+  String get settingsSectionTasksFocus => 'Tasks and Focus';
+
+  @override
+  String get settingsSectionIntegrations => 'Integrations and data';
+
+  @override
+  String get settingsSectionAccount => 'Account and Pro';
+
+  @override
+  String get settingsThemeColorsTab => 'Colors';
+
+  @override
+  String get settingsThemeBackgroundsTab => 'Backgrounds';
+
+  @override
+  String get settingsRefreshAccount => 'Refresh account';
+
+  @override
+  String get settingsSubscriptionActions => 'Subscription options';
+
+  @override
+  String get settingsSubscriptionError =>
+      'Could not refresh your subscription. Previously confirmed access is retained.';
+
+  @override
+  String get settingsVersionError => 'Could not load the version.';
+
+  @override
   String get appTitle => 'pomodoist';
 
   @override

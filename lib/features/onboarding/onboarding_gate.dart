@@ -455,9 +455,15 @@ class _AccountStep extends ConsumerWidget {
 }
 
 class LaunchOfferPaywall extends ConsumerStatefulWidget {
-  const LaunchOfferPaywall({super.key, this.compact = false, this.onClose});
+  const LaunchOfferPaywall({
+    super.key,
+    this.compact = false,
+    this.onClose,
+    this.showPlansWhenActive = false,
+  });
 
   final bool compact;
+  final bool showPlansWhenActive;
   final VoidCallback? onClose;
 
   @override
@@ -505,6 +511,7 @@ class _LaunchOfferPaywallState extends ConsumerState<LaunchOfferPaywall> {
         (!serverOwned || billing.stripeLaunchOfferEligible);
     return BillingPaywall(
       compact: widget.compact,
+      showPlansWhenActive: widget.showPlansWhenActive,
       onClose: widget.onClose,
       launchOfferMode: offerActive,
       launchOfferTimerLabel: offerActive

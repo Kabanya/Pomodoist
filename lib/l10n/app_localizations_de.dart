@@ -9,6 +9,40 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get settingsSectionGeneral => 'Allgemein';
+
+  @override
+  String get settingsSectionAppearance => 'Darstellung';
+
+  @override
+  String get settingsSectionTasksFocus => 'Aufgaben und Fokus';
+
+  @override
+  String get settingsSectionIntegrations => 'Integrationen und Daten';
+
+  @override
+  String get settingsSectionAccount => 'Konto und Pro';
+
+  @override
+  String get settingsThemeColorsTab => 'Farben';
+
+  @override
+  String get settingsThemeBackgroundsTab => 'Hintergründe';
+
+  @override
+  String get settingsRefreshAccount => 'Konto aktualisieren';
+
+  @override
+  String get settingsSubscriptionActions => 'Abo verwalten';
+
+  @override
+  String get settingsSubscriptionError =>
+      'Das Abo konnte nicht aktualisiert werden. Bereits bestätigter Zugriff bleibt erhalten.';
+
+  @override
+  String get settingsVersionError => 'Die Version konnte nicht geladen werden.';
+
+  @override
   String get appTitle => 'pomodoist';
 
   @override

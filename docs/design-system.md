@@ -104,8 +104,9 @@ instead of fixed white. Derived Material and Shadcn colors remain centralized in
 
 Editor changes preview immediately in both app roots but remain in memory until
 Save. Cancel, Escape and Back discard the preview and restore the prior selection.
-Switching editor tabs selects which palette to edit without changing brightness
-mode. Invalid HEX input in either tab blocks saving. Saving errors keep the draft
+The light/dark switch selects the palette to edit without changing application
+brightness. Colors and Backgrounds tabs share one draft. Invalid HEX input in
+either palette blocks saving. Saving errors keep the draft
 open for retry. The editor itself uses Classic so even an unreadable custom
 palette can be repaired; its two previews show the actual custom colors.
 
@@ -377,6 +378,43 @@ preserving its transcription preference, access checks and any active session.
 Arrow keys, Enter and Escape work without disrupting IME composition; restore
 focus on closing. Keep result selection tied to stable identifiers and revalidate
 a result before acting after data changes.
+
+### Settings
+
+Keep settings centered within 1120 px. At 960 px of available content width,
+use a 216 px section menu and a content pane. Narrower layouts show the section
+index or the selected section with Back. Resize the existing tree: retain the
+selected section, each visited section's scroll position, and unfinished input.
+The `section` query parameter on `/settings` identifies General, Appearance,
+Tasks and Focus (`tasks-focus`), Integrations and data, Account and Pro, or About.
+Without a valid parameter, the initial wide view opens General and the narrow
+view opens the index. Profile and Browse account links open `section=account`.
+Keep the existing shortcuts and Google Calendar routes and their return paths.
+
+Use flat setting rows with 12 px vertical padding, thin `border` separators,
+and 24 px between groups. Labels and explanations sit beside controls; below
+600 px of content width, complex controls stack beneath them. Keep the same
+widget subtree when changing direction so editing state survives resizing.
+Keep tap targets at least 48 px on phones, and use shared hover/focus states.
+Only substantive previews and status notices need cards. Section transitions
+use the existing 180 ms fade and end immediately with Reduce Motion.
+
+The theme editor uses Colors and Backgrounds tabs with one shared light/dark
+draft. Keep its heading, palette switch, tabs, validation feedback and Save/Cancel
+actions pinned around a scrolling body. Use an at-most 820 px dialog on wide
+windows and a full-screen surface below 600 px. Preserve independent tab scroll
+positions and invalid input while switching tabs. Keep Classic editor chrome,
+live previews, validation, reset, save failures and cancel restoration.
+
+Show a compact, localized account profile and subscription status. Offer the
+existing LaunchOfferPaywall through a button, retaining purchase, restoration
+and management actions and the account-section return location. Loading and
+failed subscription lookups are unknown rather than confirmed Free; keep
+confirmed entitlement data visible during refreshes. Put sign-out and account
+deletion in a separate bottom group. Keep platform and authentication gates,
+import previews, integration warnings, revoke confirmations and shortcut conflict
+handling. Persistence errors show existing feedback without resetting session
+values. Standalone login, registration and onboarding layouts are unchanged.
 
 ## Components and independence
 

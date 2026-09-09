@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../app/app_l10n.dart';
+import '../../../app/theme/app_motion.dart';
+import 'settings_components.dart';
 import '../../../app/app_theme_mode.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_theme_settings.dart';
@@ -89,6 +91,11 @@ class ThemeSettingsCard extends ConsumerWidget {
       await showDialog<void>(
         context: context,
         barrierDismissible: false,
+        animationStyle: AnimationStyle(
+          duration: AppMotion.duration(context, AppMotion.popup),
+          reverseDuration: AppMotion.duration(context, AppMotion.popup),
+          curve: AppMotion.curve,
+        ),
         builder: (context) => Theme(
           data: safeTheme,
           child: ShadTheme(
@@ -176,6 +183,7 @@ class ThemeSettingsCard extends ConsumerWidget {
                       ),
                       if (!theme.isBuiltIn)
                         ShadButton.ghost(
+                          height: 48,
                           enabled: enabled,
                           onPressed: () => _edit(context, ref),
                           child: Text(l10n.themeCustomize),
@@ -188,72 +196,50 @@ class ThemeSettingsCard extends ConsumerWidget {
         );
       },
     );
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.settingsThemeTitle,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.settingsThemeSubtitle,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: context.appColors.secondaryText,
-              ),
-            ),
-            const SizedBox(height: 14),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SegmentedButton<AppThemeMode>(
-                key: const Key('settings-theme-mode-select'),
-                showSelectedIcon: false,
-                segments: [
-                  ButtonSegment(
-                    value: AppThemeMode.system,
-                    icon: const Icon(LucideIcons.sunMoon),
-                    label: Text(l10n.settingsThemeSystem),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SettingsRow(
+          title: l10n.settingsThemeTitle,
+          subtitle: l10n.settingsThemeSubtitle,
+          control: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final option in AppThemeMode.values)
+                ChoiceChip(
+                  label: Text(switch (option) {
+                    AppThemeMode.system => l10n.settingsThemeSystem,
+                    AppThemeMode.light => l10n.settingsThemeLight,
+                    AppThemeMode.dark => l10n.settingsThemeDark,
+                  }),
+                  selected: mode == option,
+                  onSelected: (_) => _run(
+                    context,
+                    () => ref
+                        .read(appThemeModeProvider.notifier)
+                        .setThemeMode(option),
                   ),
-                  ButtonSegment(
-                    value: AppThemeMode.light,
-                    icon: const Icon(LucideIcons.sun),
-                    label: Text(l10n.settingsThemeLight),
-                  ),
-                  ButtonSegment(
-                    value: AppThemeMode.dark,
-                    icon: const Icon(LucideIcons.moon),
-                    label: Text(l10n.settingsThemeDark),
-                  ),
-                ],
-                selected: {mode},
-                onSelectionChanged: (selection) => _run(
-                  context,
-                  () => ref
-                      .read(appThemeModeProvider.notifier)
-                      .setThemeMode(selection.single),
                 ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            if (settings.loadFailed) ...[
-              Text(l10n.themeLoadError),
-              ShadButton.outline(
-                onPressed: () => _run(
-                  context,
-                  () => ref.read(appThemeSettingsProvider.notifier).load(),
-                ),
-                child: Text(l10n.commonRetry),
-              ),
-            ] else if (!settings.isLoaded)
-              const LinearProgressIndicator(),
-            const SizedBox(height: 8),
-            choices(settings.themes),
-          ],
+            ],
+          ),
         ),
-      ),
+        const SizedBox(height: 12),
+        if (settings.loadFailed) ...[
+          Text(l10n.themeLoadError),
+          ShadButton.outline(
+            height: 48,
+            onPressed: () => _run(
+              context,
+              () => ref.read(appThemeSettingsProvider.notifier).load(),
+            ),
+            child: Text(l10n.commonRetry),
+          ),
+        ] else if (!settings.isLoaded)
+          const LinearProgressIndicator(),
+        const SizedBox(height: 8),
+        choices(settings.themes),
+      ],
     );
   }
 }
@@ -393,6 +379,7 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
   late final AppThemeDefinition _initial = ref
       .read(appThemeSettingsProvider)
       .preview!;
+  bool _showBackgrounds = false;
   late Brightness _brightness = widget.initialBrightness;
   AppThemeColor? _expanded = AppThemeColor.accent;
   late final Map<(Brightness, AppThemeColor), String> _hex = {
@@ -598,250 +585,404 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
       },
       child: CallbackShortcuts(
         bindings: {const SingleActivator(LogicalKeyboardKey.escape): cancel},
-        child: AlertDialog(
-          insetPadding: const EdgeInsets.all(16),
-          // A tight width bypasses AlertDialog's intrinsic sizing, which the
-          // RGB sliders' LayoutBuilder cannot provide.
-          constraints: const BoxConstraints.tightFor(width: 820),
-          scrollable: true,
-          title: Text(l10n.themeEditorTitle),
-          content: SizedBox(
-            width: 760,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(l10n.themeLivePreview),
-                const SizedBox(height: 16),
-                _PalettePair(theme: draft, backgroundZone: zone),
-                const SizedBox(height: 16),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SegmentedButton<Brightness>(
-                    segments: [
-                      ButtonSegment(
-                        value: Brightness.light,
-                        label: Text(l10n.settingsThemeLight),
-                        icon: const Icon(LucideIcons.sun),
-                      ),
-                      ButtonSegment(
-                        value: Brightness.dark,
-                        label: Text(l10n.settingsThemeDark),
-                        icon: const Icon(LucideIcons.moon),
-                      ),
-                    ],
-                    selected: {_brightness},
-                    onSelectionChanged: settings.isSaving
-                        ? null
-                        : (selection) => _backgroundContextChanged(
-                            brightness: selection.single,
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  l10n.themeBackgroundTitle,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final entry in backgroundModes.entries)
-                      ChoiceChip(
-                        label: Text(entry.value),
-                        selected: draft.backgrounds.mode == entry.key,
-                        onSelected: settings.isSaving
-                            ? null
-                            : (_) => _backgroundContextChanged(mode: entry.key),
-                      ),
-                  ],
-                ),
-                if (draft.backgrounds.mode == ThemeBackgroundMode.separate) ...[
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final entry in backgroundZones.entries)
-                        ChoiceChip(
-                          label: Text(entry.value),
-                          selected: zone == entry.key,
-                          onSelected: settings.isSaving
-                              ? null
-                              : (_) =>
-                                    _backgroundContextChanged(zone: entry.key),
-                        ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: ThemeBackgroundPreview(
-                    image: background,
-                    color: zone == ThemeBackgroundZone.sidebar
-                        ? palette.surface
-                        : palette.canvas,
-                    child: SizedBox(
-                      height: 140,
-                      child: background.imageId == null
-                          ? Center(
-                              child: Text(
-                                l10n.themeBackgroundEmpty,
-                                style: TextStyle(color: palette.primaryText),
-                              ),
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    ShadButton.outline(
-                      enabled: !settings.isSaving && !settings.isPreparingImage,
-                      onPressed: _pickBackground,
-                      child: Text(
-                        background.imageId == null
-                            ? l10n.themeBackgroundChoose
-                            : l10n.themeBackgroundReplace,
-                      ),
-                    ),
-                    if (background.imageId != null)
-                      ShadButton.ghost(
-                        enabled: !settings.isSaving,
-                        onPressed: () {
-                          ref
-                              .read(appThemeSettingsProvider.notifier)
-                              .cancelImageSelection();
-                          _changeBackground(
-                            background.copyWith(clearImage: true),
-                          );
-                          setState(() => _imageError = null);
-                        },
-                        child: Text(l10n.themeBackgroundRemove),
-                      ),
-                  ],
-                ),
-                if (settings.isPreparingImage)
-                  Semantics(
-                    liveRegion: true,
-                    child: Text(l10n.themeBackgroundLoading),
-                  ),
-                if (_imageError != null)
-                  Semantics(
-                    liveRegion: true,
-                    child: Text(
-                      _imageError!,
-                      style: TextStyle(color: context.appColors.error),
-                    ),
-                  ),
-                Text(
-                  '${l10n.themeBackgroundDim}: ${(background.dim * 100).round()}%',
-                ),
-                Slider(
-                  value: background.dim,
-                  divisions: 100,
-                  label: '${(background.dim * 100).round()}%',
-                  semanticFormatterCallback: (value) =>
-                      '${l10n.themeBackgroundDim}: ${(value * 100).round()}%',
-                  onChanged: settings.isSaving || background.imageId == null
-                      ? null
-                      : (value) =>
-                            _changeBackground(background.copyWith(dim: value)),
-                ),
-                Text('${l10n.themeBackgroundBlur}: ${background.blur.round()}'),
-                Slider(
-                  value: background.blur,
-                  max: 20,
-                  divisions: 20,
-                  label: '${background.blur.round()}',
-                  semanticFormatterCallback: (value) =>
-                      '${l10n.themeBackgroundBlur}: ${value.round()}',
-                  onChanged: settings.isSaving || background.imageId == null
-                      ? null
-                      : (value) =>
-                            _changeBackground(background.copyWith(blur: value)),
-                ),
-                if (themeHasLowContrast(draft.light) ||
-                    themeHasLowContrast(draft.dark))
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Text(
-                      l10n.themeLowContrast,
-                      style: TextStyle(color: context.appColors.warning),
-                    ),
-                  ),
-                for (final group in groups) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(top: 20, bottom: 8),
-                    child: Text(
-                      group.$1,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                  ),
-                  for (final role in group.$2)
-                    _ColorEditorRow(
-                      key: ValueKey((_brightness, role)),
-                      label: _colorName(l10n, role),
-                      hex: _hex[(_brightness, role)]!,
-                      color: palette.values[role]!,
-                      expanded: _expanded == role,
-                      enabled: !settings.isSaving,
-                      onToggle: () => setState(
-                        () => _expanded = _expanded == role ? null : role,
-                      ),
-                      onChanged: (raw) => _changeColor(role, raw),
-                    ),
-                ],
-                if (_hex.values.any((value) => parseThemeColor(value) == null))
-                  Text(
-                    l10n.themeInvalidHex,
-                    style: TextStyle(color: context.appColors.error),
-                  ),
-                if (_saveFailed)
-                  Semantics(
-                    liveRegion: true,
-                    child: Text(
-                      l10n.themeSaveError,
-                      style: TextStyle(color: context.appColors.error),
-                    ),
-                  ),
-              ],
+        child: Dialog(
+          insetPadding: MediaQuery.sizeOf(context).width < 600
+              ? EdgeInsets.zero
+              : const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              MediaQuery.sizeOf(context).width < 600 ? 0 : 12,
             ),
           ),
-          actions: [
-            ShadButton.ghost(
-              enabled: !settings.isSaving,
-              onPressed: _reset,
-              child: Text(l10n.themeResetToClassic),
+          clipBehavior: Clip.antiAlias,
+          constraints: const BoxConstraints(maxWidth: 820),
+          child: SafeArea(
+            child: SizedBox(
+              width: 820,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 12, 0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.themeEditorTitle,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: l10n.commonCancel,
+                          onPressed: settings.isSaving ? null : cancel,
+                          icon: const Icon(LucideIcons.x, size: 20),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    child: Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      spacing: 16,
+                      runSpacing: 12,
+                      children: [
+                        Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          children: [
+                            for (final backgrounds in [false, true])
+                              ChoiceChip(
+                                label: Text(
+                                  backgrounds
+                                      ? l10n.settingsThemeBackgroundsTab
+                                      : l10n.settingsThemeColorsTab,
+                                ),
+                                selected: _showBackgrounds == backgrounds,
+                                onSelected: (_) => setState(
+                                  () => _showBackgrounds = backgrounds,
+                                ),
+                              ),
+                          ],
+                        ),
+                        Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          children: [
+                            for (final brightness in [
+                              Brightness.light,
+                              Brightness.dark,
+                            ])
+                              ChoiceChip(
+                                label: Text(
+                                  brightness == Brightness.light
+                                      ? l10n.settingsThemeLight
+                                      : l10n.settingsThemeDark,
+                                ),
+                                selected: _brightness == brightness,
+                                onSelected: settings.isSaving
+                                    ? null
+                                    : (_) => _backgroundContextChanged(
+                                        brightness: brightness,
+                                      ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: context.appColors.border,
+                  ),
+                  Expanded(
+                    child: IndexedStack(
+                      index: _showBackgrounds ? 1 : 0,
+                      children: [
+                        ExcludeFocus(
+                          excluding: _showBackgrounds,
+                          child: SingleChildScrollView(
+                            key: const PageStorageKey('theme-colors'),
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(l10n.themeLivePreview),
+                                const SizedBox(height: 12),
+                                _PalettePair(
+                                  theme: draft,
+                                  backgroundZone: zone,
+                                ),
+                                if (themeHasLowContrast(draft.light) ||
+                                    themeHasLowContrast(draft.dark))
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 12),
+                                    child: Text(
+                                      l10n.themeLowContrast,
+                                      style: TextStyle(
+                                        color: context.appColors.warning,
+                                      ),
+                                    ),
+                                  ),
+                                for (final group in groups) ...[
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 20,
+                                      bottom: 8,
+                                    ),
+                                    child: Text(
+                                      group.$1,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleSmall,
+                                    ),
+                                  ),
+                                  for (final role in group.$2)
+                                    _ColorEditorRow(
+                                      key: ValueKey((_brightness, role)),
+                                      label: _colorName(l10n, role),
+                                      hex: _hex[(_brightness, role)]!,
+                                      color: palette.values[role]!,
+                                      expanded: _expanded == role,
+                                      enabled: !settings.isSaving,
+                                      onToggle: () => setState(
+                                        () => _expanded = _expanded == role
+                                            ? null
+                                            : role,
+                                      ),
+                                      onChanged: (raw) =>
+                                          _changeColor(role, raw),
+                                    ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                        ExcludeFocus(
+                          excluding: !_showBackgrounds,
+                          child: SingleChildScrollView(
+                            key: const PageStorageKey('theme-backgrounds'),
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  l10n.themeBackgroundTitle,
+                                  style: Theme.of(context).textTheme.titleSmall,
+                                ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    for (final entry in backgroundModes.entries)
+                                      ChoiceChip(
+                                        label: Text(entry.value),
+                                        selected:
+                                            draft.backgrounds.mode == entry.key,
+                                        onSelected: settings.isSaving
+                                            ? null
+                                            : (_) => _backgroundContextChanged(
+                                                mode: entry.key,
+                                              ),
+                                      ),
+                                  ],
+                                ),
+                                if (draft.backgrounds.mode ==
+                                    ThemeBackgroundMode.separate) ...[
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      for (final entry
+                                          in backgroundZones.entries)
+                                        ChoiceChip(
+                                          label: Text(entry.value),
+                                          selected: zone == entry.key,
+                                          onSelected: settings.isSaving
+                                              ? null
+                                              : (_) =>
+                                                    _backgroundContextChanged(
+                                                      zone: entry.key,
+                                                    ),
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                                const SizedBox(height: 12),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: ThemeBackgroundPreview(
+                                    image: background,
+                                    color: zone == ThemeBackgroundZone.sidebar
+                                        ? palette.surface
+                                        : palette.canvas,
+                                    child: SizedBox(
+                                      height: 140,
+                                      child: background.imageId == null
+                                          ? Center(
+                                              child: Text(
+                                                l10n.themeBackgroundEmpty,
+                                                style: TextStyle(
+                                                  color: palette.primaryText,
+                                                ),
+                                              ),
+                                            )
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    ShadButton.outline(
+                                      height: 48,
+                                      enabled:
+                                          !settings.isSaving &&
+                                          !settings.isPreparingImage,
+                                      onPressed: _pickBackground,
+                                      child: Text(
+                                        background.imageId == null
+                                            ? l10n.themeBackgroundChoose
+                                            : l10n.themeBackgroundReplace,
+                                      ),
+                                    ),
+                                    if (background.imageId != null)
+                                      ShadButton.ghost(
+                                        height: 48,
+                                        enabled: !settings.isSaving,
+                                        onPressed: () {
+                                          ref
+                                              .read(
+                                                appThemeSettingsProvider
+                                                    .notifier,
+                                              )
+                                              .cancelImageSelection();
+                                          _changeBackground(
+                                            background.copyWith(
+                                              clearImage: true,
+                                            ),
+                                          );
+                                          setState(() => _imageError = null);
+                                        },
+                                        child: Text(l10n.themeBackgroundRemove),
+                                      ),
+                                  ],
+                                ),
+                                if (settings.isPreparingImage)
+                                  Semantics(
+                                    liveRegion: true,
+                                    child: Text(l10n.themeBackgroundLoading),
+                                  ),
+                                if (_imageError != null)
+                                  Semantics(
+                                    liveRegion: true,
+                                    child: Text(
+                                      _imageError!,
+                                      style: TextStyle(
+                                        color: context.appColors.error,
+                                      ),
+                                    ),
+                                  ),
+                                Text(
+                                  '${l10n.themeBackgroundDim}: ${(background.dim * 100).round()}%',
+                                ),
+                                Slider(
+                                  value: background.dim,
+                                  divisions: 100,
+                                  label: '${(background.dim * 100).round()}%',
+                                  semanticFormatterCallback: (value) =>
+                                      '${l10n.themeBackgroundDim}: ${(value * 100).round()}%',
+                                  onChanged:
+                                      settings.isSaving ||
+                                          background.imageId == null
+                                      ? null
+                                      : (value) => _changeBackground(
+                                          background.copyWith(dim: value),
+                                        ),
+                                ),
+                                Text(
+                                  '${l10n.themeBackgroundBlur}: ${background.blur.round()}',
+                                ),
+                                Slider(
+                                  value: background.blur,
+                                  max: 20,
+                                  divisions: 20,
+                                  label: '${background.blur.round()}',
+                                  semanticFormatterCallback: (value) =>
+                                      '${l10n.themeBackgroundBlur}: ${value.round()}',
+                                  onChanged:
+                                      settings.isSaving ||
+                                          background.imageId == null
+                                      ? null
+                                      : (value) => _changeBackground(
+                                          background.copyWith(blur: value),
+                                        ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: context.appColors.border,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_hex.values.any(
+                          (value) => parseThemeColor(value) == null,
+                        ))
+                          Text(
+                            l10n.themeInvalidHex,
+                            style: TextStyle(color: context.appColors.error),
+                          ),
+                        if (_saveFailed)
+                          Semantics(
+                            liveRegion: true,
+                            child: Text(
+                              l10n.themeSaveError,
+                              style: TextStyle(color: context.appColors.error),
+                            ),
+                          ),
+
+                        Wrap(
+                          alignment: WrapAlignment.end,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            ShadButton.ghost(
+                              height: 48,
+                              enabled: !settings.isSaving,
+                              onPressed: _reset,
+                              child: Text(l10n.themeResetToClassic),
+                            ),
+                            ShadButton.ghost(
+                              height: 48,
+                              enabled: !settings.isSaving,
+                              onPressed: cancel,
+                              child: Text(l10n.commonCancel),
+                            ),
+                            ShadButton(
+                              height: 48,
+                              enabled:
+                                  !settings.isSaving &&
+                                  !settings.isPreparingImage &&
+                                  themeEditorCanSave(_hex.values),
+                              onPressed: _save,
+                              leading: settings.isSaving
+                                  ? SizedBox.square(
+                                      dimension: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: context.appColors.onAccent,
+                                      ),
+                                    )
+                                  : null,
+                              child: Text(l10n.commonSave),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            ShadButton.ghost(
-              enabled: !settings.isSaving,
-              onPressed: cancel,
-              child: Text(l10n.commonCancel),
-            ),
-            ShadButton(
-              enabled:
-                  !settings.isSaving &&
-                  !settings.isPreparingImage &&
-                  themeEditorCanSave(_hex.values),
-              onPressed: _save,
-              leading: settings.isSaving
-                  ? SizedBox.square(
-                      dimension: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.appColors.onAccent,
-                      ),
-                    )
-                  : null,
-              child: Text(l10n.commonSave),
-            ),
-          ],
+          ),
         ),
       ),
     );

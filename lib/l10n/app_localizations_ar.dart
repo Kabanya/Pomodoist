@@ -9,6 +9,40 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get settingsSectionGeneral => 'عام';
+
+  @override
+  String get settingsSectionAppearance => 'المظهر';
+
+  @override
+  String get settingsSectionTasksFocus => 'المهام والتركيز';
+
+  @override
+  String get settingsSectionIntegrations => 'التكاملات والبيانات';
+
+  @override
+  String get settingsSectionAccount => 'الحساب وPro';
+
+  @override
+  String get settingsThemeColorsTab => 'الألوان';
+
+  @override
+  String get settingsThemeBackgroundsTab => 'الخلفيات';
+
+  @override
+  String get settingsRefreshAccount => 'تحديث الحساب';
+
+  @override
+  String get settingsSubscriptionActions => 'إدارة الاشتراك';
+
+  @override
+  String get settingsSubscriptionError =>
+      'تعذّر تحديث الاشتراك. تم الاحتفاظ بصلاحيات الوصول المؤكدة سابقًا.';
+
+  @override
+  String get settingsVersionError => 'تعذّر تحميل الإصدار.';
+
+  @override
   String get appTitle => 'pomodoist';
 
   @override

@@ -4,9 +4,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show LucideIcons, ShadButton, ShadSwitch;
 
 import '../../app/theme/app_motion.dart';
+import '../../app/theme/app_theme.dart';
+import '../settings/presentation/settings_components.dart';
 
 import 'update_controller.dart';
 import 'update_copy.dart';
@@ -298,43 +301,60 @@ class DesktopUpdateSettings extends ConsumerWidget {
           key: const Key('desktop-update-settings'),
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Divider(height: 28),
             Text(copy.settings, style: Theme.of(context).textTheme.titleMedium),
-            SwitchListTile.adaptive(
-              key: const Key('desktop-update-rc'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(copy.rc),
-              subtitle: Text(copy.rcHelp),
-              value: controller.channel == UpdateChannel.rc,
-              onChanged: controller.busy
-                  ? null
-                  : (enabled) => unawaited(
+            SettingsGroup(
+              children: [
+                SettingsRow(
+                  title: copy.rc,
+                  subtitle: copy.rcHelp,
+                  controlWidth: 48,
+                  onTap: controller.busy
+                      ? null
+                      : () => unawaited(
+                          controller.setChannel(
+                            controller.channel == UpdateChannel.rc
+                                ? UpdateChannel.stable
+                                : UpdateChannel.rc,
+                          ),
+                        ),
+                  control: ShadSwitch(
+                    key: const Key('desktop-update-rc'),
+                    enabled: !controller.busy,
+                    value: controller.channel == UpdateChannel.rc,
+                    onChanged: (enabled) => unawaited(
                       controller.setChannel(
                         enabled ? UpdateChannel.rc : UpdateChannel.stable,
                       ),
                     ),
+                  ),
+                ),
+                SettingsRow(
+                  title: controller.channel == UpdateChannel.stable
+                      ? copy.stable
+                      : copy.rcChannel,
+                  subtitle: copy.phase(controller.phase),
+                  control: Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: ShadButton.outline(
+                      height: 48,
+                      key: const Key('desktop-update-check'),
+                      enabled: !controller.busy,
+                      onPressed: () =>
+                          unawaited(controller.check(manual: true)),
+                      leading: const Icon(LucideIcons.refreshCw, size: 18),
+                      child: Text(copy.check),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            Text(
-              controller.channel == UpdateChannel.stable
-                  ? copy.stable
-                  : copy.rcChannel,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              controller.error ?? copy.phase(controller.phase),
-              key: const Key('desktop-update-settings-status'),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 12),
-            ShadButton.outline(
-              key: const Key('desktop-update-check'),
-              enabled: !controller.busy,
-              onPressed: controller.busy
-                  ? null
-                  : () => unawaited(controller.check(manual: true)),
-              leading: const Icon(LucideIcons.refreshCw),
-              child: Text(copy.check),
-            ),
+            if (controller.error != null)
+              Text(
+                controller.error!,
+                key: const Key('desktop-update-settings-status'),
+                style: TextStyle(color: context.appColors.error),
+              ),
+            if (controller.busy) const LinearProgressIndicator(minHeight: 2),
           ],
         );
       },

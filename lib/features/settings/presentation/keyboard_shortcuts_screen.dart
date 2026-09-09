@@ -11,6 +11,7 @@ import 'package:shadcn_ui/shadcn_ui.dart'
     show LucideIcons, ShadButton, ShadSwitch;
 
 import '../../../app/app_l10n.dart';
+import 'settings_components.dart';
 import '../../../app/keyboard_shortcuts.dart';
 import '../../../app/platform_quick_add.dart';
 import '../../../app/theme/app_motion.dart';
@@ -68,10 +69,10 @@ class _KeyboardShortcutsScreenState
     final colors = context.appColors;
     final bindings = ref.watch(keyboardShortcutsProvider);
     ref.watch(keyboardShortcutsLoadedProvider);
-    return SafeArea(
+    return SettingsSurface(
       child: ListView(
         key: const Key('keyboard-shortcuts-list'),
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+        padding: EdgeInsets.zero,
         children: [
           Row(
             children: [
@@ -100,44 +101,46 @@ class _KeyboardShortcutsScreenState
             ),
           ),
           const SizedBox(height: 20),
-          for (final command in AppShortcutCommand.values) ...[
-            _ShortcutRow(
-              key: Key('shortcut-row-${command.storageKey}'),
-              title: appShortcutLabel(l10n, command),
-              shortcut: bindings[command]!.labelFor(_platform),
-              buttonKey: Key('shortcut-binding-${command.storageKey}'),
-              onTap: () => _recordAppShortcut(command),
-            ),
-            const SizedBox(height: 8),
-          ],
-          if (_supportsGlobalShortcut) ...[
-            _ShortcutRow(
-              key: const Key('shortcut-row-global'),
-              title: l10n.settingsShortcutsGlobalQuickAdd,
-              subtitle: _globalQuickAddError == null
-                  ? l10n.settingsShortcutsGlobalQuickAddSubtitle
-                  : l10n.settingsShortcutsGlobalError,
-              shortcut: _globalShortcut?.labelFor(_platform),
-              loading: _loadingGlobalShortcut,
-              buttonKey: const Key('shortcut-binding-global'),
-              leading: ShadSwitch(
-                key: const Key('global-quick-add-enabled'),
-                enabled: !_loadingGlobalShortcut,
-                duration: AppMotion.duration(context, AppMotion.state),
-                value: _globalQuickAddEnabled,
-                onChanged: _loadingGlobalShortcut
-                    ? null
-                    : _setGlobalQuickAddEnabled,
-              ),
-              onTap: !_globalQuickAddEnabled || _globalShortcut == null
-                  ? null
-                  : _recordGlobalShortcut,
-            ),
-            const SizedBox(height: 8),
-          ],
+          SettingsGroup(
+            children: [
+              for (final command in AppShortcutCommand.values)
+                _ShortcutRow(
+                  key: Key('shortcut-row-${command.storageKey}'),
+                  title: appShortcutLabel(l10n, command),
+                  shortcut: bindings[command]!.labelFor(_platform),
+                  buttonKey: Key('shortcut-binding-${command.storageKey}'),
+                  onTap: () => _recordAppShortcut(command),
+                ),
+              if (_supportsGlobalShortcut)
+                _ShortcutRow(
+                  key: const Key('shortcut-row-global'),
+                  title: l10n.settingsShortcutsGlobalQuickAdd,
+                  subtitle: _globalQuickAddError == null
+                      ? l10n.settingsShortcutsGlobalQuickAddSubtitle
+                      : l10n.settingsShortcutsGlobalError,
+                  shortcut: _globalShortcut?.labelFor(_platform),
+                  loading: _loadingGlobalShortcut,
+                  buttonKey: const Key('shortcut-binding-global'),
+                  leading: ShadSwitch(
+                    key: const Key('global-quick-add-enabled'),
+                    enabled: !_loadingGlobalShortcut,
+                    duration: AppMotion.duration(context, AppMotion.state),
+                    value: _globalQuickAddEnabled,
+                    onChanged: _loadingGlobalShortcut
+                        ? null
+                        : _setGlobalQuickAddEnabled,
+                  ),
+                  onTap: !_globalQuickAddEnabled || _globalShortcut == null
+                      ? null
+                      : _recordGlobalShortcut,
+                ),
+            ],
+          ),
+          const SizedBox(height: 24),
           Align(
             alignment: AlignmentDirectional.centerEnd,
             child: ShadButton.ghost(
+              height: 48,
               key: const Key('shortcuts-reset-all'),
               onPressed: _resetAll,
               leading: const Icon(LucideIcons.rotateCcw),
@@ -189,6 +192,11 @@ class _KeyboardShortcutsScreenState
   Future<void> _recordAppShortcut(AppShortcutCommand command) {
     return showDialog<void>(
       context: context,
+      animationStyle: AnimationStyle(
+        duration: AppMotion.duration(context, AppMotion.popup),
+        reverseDuration: AppMotion.duration(context, AppMotion.popup),
+        curve: AppMotion.curve,
+      ),
       barrierDismissible: false,
       builder: (dialogContext) => _ShortcutRecorderDialog(
         onSubmit: (binding) async {
@@ -210,6 +218,11 @@ class _KeyboardShortcutsScreenState
     if (_platform != TargetPlatform.macOS) {
       return showDialog<void>(
         context: context,
+        animationStyle: AnimationStyle(
+          duration: AppMotion.duration(context, AppMotion.popup),
+          reverseDuration: AppMotion.duration(context, AppMotion.popup),
+          curve: AppMotion.curve,
+        ),
         barrierDismissible: false,
         builder: (dialogContext) => _ShortcutRecorderDialog(
           onSubmit: (binding) async {
@@ -249,6 +262,11 @@ class _KeyboardShortcutsScreenState
     }
     return showDialog<void>(
       context: context,
+      animationStyle: AnimationStyle(
+        duration: AppMotion.duration(context, AppMotion.popup),
+        reverseDuration: AppMotion.duration(context, AppMotion.popup),
+        curve: AppMotion.curve,
+      ),
       barrierDismissible: false,
       builder: (dialogContext) => _GlobalShortcutRecorderDialog(
         controller: ref.read(platformQuickAddControllerProvider),
@@ -297,7 +315,7 @@ class _KeyboardShortcutsScreenState
 
   Future<void> _goBack(BuildContext context) async {
     final popped = await Navigator.of(context).maybePop();
-    if (!popped && context.mounted) context.go('/settings');
+    if (!popped && context.mounted) context.go('/settings?section=general');
   }
 }
 
@@ -323,23 +341,30 @@ class _ShortcutRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        leading: leading,
-        title: Text(title),
-        subtitle: subtitle == null ? null : Text(subtitle!),
-        trailing: loading
-            ? const SizedBox.square(
-                dimension: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : ShadButton.outline(
-                key: buttonKey,
-                enabled: onTap != null,
-                onPressed: onTap,
-                child: Text(shortcut ?? '—'),
-              ),
-        onTap: onTap,
+    return SettingsRow(
+      title: title,
+      subtitle: subtitle,
+      control: Wrap(
+        alignment: WrapAlignment.end,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 12,
+        runSpacing: 8,
+        children: [
+          ?leading,
+          if (loading)
+            const SizedBox.square(
+              dimension: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          else
+            ShadButton.outline(
+              key: buttonKey,
+              height: 48,
+              enabled: onTap != null,
+              onPressed: onTap,
+              child: Text(shortcut ?? '—', style: AppTheme.monoTextStyle),
+            ),
+        ],
       ),
     );
   }
@@ -384,6 +409,8 @@ class _ShortcutRecorderDialogState extends State<_ShortcutRecorderDialog> {
         return KeyEventResult.handled;
       },
       child: AlertDialog(
+        scrollable: true,
+        constraints: const BoxConstraints(maxWidth: 560),
         key: const Key('shortcut-recorder-dialog'),
         title: Text(l10n.settingsShortcutsRecordTitle),
         content: Column(
@@ -402,6 +429,7 @@ class _ShortcutRecorderDialogState extends State<_ShortcutRecorderDialog> {
         ),
         actions: [
           ShadButton.ghost(
+            height: 48,
             enabled: !_busy,
             onPressed: _busy ? null : () => Navigator.of(context).pop(),
             child: Text(l10n.commonCancel),
@@ -502,6 +530,8 @@ class _GlobalShortcutRecorderDialogState
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return AlertDialog(
+      scrollable: true,
+      constraints: const BoxConstraints(maxWidth: 560),
       key: const Key('shortcut-recorder-dialog'),
       title: Text(l10n.settingsShortcutsRecordTitle),
       content: Column(

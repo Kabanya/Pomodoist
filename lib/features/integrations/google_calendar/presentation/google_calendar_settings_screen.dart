@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../../../app/app_l10n.dart';
+import '../../../settings/presentation/settings_components.dart';
 import '../../../../app/account_providers.dart';
 import '../../../../app/formatters.dart';
 import '../../../../app/providers.dart';
@@ -26,63 +28,58 @@ class _GoogleCalendarSettingsScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final colors = context.appColors;
     final connection = ref.watch(googleCalendarConnectionProvider);
     final child = connection.when(
+      skipError: true,
+      skipLoadingOnReload: true,
       data: (row) {
         final connected =
             row?.calendarId != null && row?.status != 'disconnected';
         final children = [
-          Text(
-            l10n.googleCalendarTitle,
-            style: widget.embedded
-                ? Theme.of(context).textTheme.titleMedium
-                : Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            connected
+          if (connection.isLoading) const LinearProgressIndicator(minHeight: 2),
+          if (connection.hasError) _loadError(connection.error!),
+          SettingsRow(
+            title: l10n.googleCalendarTitle,
+            subtitle: connected
                 ? l10n.googleCalendarConnectedSubtitle
                 : l10n.googleCalendarDisconnectedSubtitle,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: colors.secondaryText),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ShadButton(
-                enabled: !_busy,
-                onPressed: _busy
-                    ? null
-                    : connected
-                    ? () => _sync()
-                    : () => _connect(),
-                leading: _busy
-                    ? SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
-                      )
-                    : Icon(
-                        connected ? LucideIcons.refreshCw : LucideIcons.link2,
-                      ),
-                child: Text(connected ? l10n.syncNow : l10n.connect),
-              ),
-              if (connected)
-                ShadButton.outline(
+            control: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ShadButton(
+                  height: 48,
                   enabled: !_busy,
-                  onPressed: _busy ? null : () => _disconnect(),
-                  leading: const Icon(LucideIcons.unlink),
-                  child: Text(l10n.disconnect),
+                  onPressed: _busy
+                      ? null
+                      : connected
+                      ? () => _sync()
+                      : () => _connect(),
+                  leading: _busy
+                      ? SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        )
+                      : Icon(
+                          connected ? LucideIcons.refreshCw : LucideIcons.link2,
+                        ),
+                  child: Text(connected ? l10n.syncNow : l10n.connect),
                 ),
-            ],
+                if (connected)
+                  ShadButton.outline(
+                    height: 48,
+                    enabled: !_busy,
+                    onPressed: _busy ? null : () => _disconnect(),
+                    leading: const Icon(LucideIcons.unlink),
+                    child: Text(l10n.disconnect),
+                  ),
+              ],
+            ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
           _StatusRows(
             accountEmail: row?.accountEmail,
             calendarName: row?.calendarName,
@@ -93,23 +90,58 @@ class _GoogleCalendarSettingsScreenState
             warning: row?.warning,
           ),
         ];
-        if (widget.embedded) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: children,
-          );
-        }
-        return ListView(padding: const EdgeInsets.all(20), children: children);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: children,
+        );
       },
       loading: () => widget.embedded
           ? const LinearProgressIndicator(minHeight: 2)
           : const Center(child: CircularProgressIndicator()),
-      error: (error, stackTrace) => widget.embedded
-          ? Text(l10n.failedToLoadIntegration(error))
-          : Center(child: Text(l10n.failedToLoadIntegration(error))),
+      error: (error, stackTrace) => _loadError(error),
     );
-    return widget.embedded ? child : SafeArea(child: child);
+    return widget.embedded
+        ? child
+        : SettingsSurface(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: ShadButton.ghost(
+                    height: 48,
+                    leading: const Icon(LucideIcons.arrowLeft, size: 18),
+                    onPressed: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go('/settings?section=integrations');
+                      }
+                    },
+                    child: Text(l10n.settingsSectionIntegrations),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                child,
+              ],
+            ),
+          );
   }
+
+  Widget _loadError(Object error) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        context.l10n.failedToLoadIntegration(error),
+        style: TextStyle(color: context.appColors.error),
+      ),
+      ShadButton.ghost(
+        height: 48,
+        onPressed: () => ref.invalidate(googleCalendarConnectionProvider),
+        child: Text(context.l10n.commonRetry),
+      ),
+    ],
+  );
 
   Future<void> _connect() async {
     await _run(() => ref.read(googleCalendarSyncControllerProvider).connect());
@@ -199,31 +231,18 @@ class _StatusRows extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final row in rows)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 110,
-                  child: Text(
-                    row.$1,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colors.secondaryText,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+        SettingsGroup(
+          children: [
+            for (final row in rows)
+              SettingsRow(
+                title: row.$1,
+                control: SelectableText(
+                  row.$2,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                Expanded(
-                  child: SelectableText(
-                    row.$2,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
+          ],
+        ),
         if (warning != null && warning!.trim().isNotEmpty) ...[
           const SizedBox(height: 12),
           _MessageBand(
@@ -237,7 +256,7 @@ class _StatusRows extends StatelessWidget {
           _MessageBand(
             icon: LucideIcons.circleAlert,
             text: lastError!,
-            color: colors.accent,
+            color: colors.error,
           ),
         ],
       ],
