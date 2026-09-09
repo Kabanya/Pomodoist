@@ -8,6 +8,7 @@ import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 import '../../../app/app_l10n.dart';
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
+import '../../../app/theme/theme_background.dart';
 import '../../../app/widgets/action_feedback.dart';
 import '../../../app/widgets/resizable_dialog.dart';
 import '../domain/focus_models.dart';
@@ -175,7 +176,9 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       return content;
     }
     return Material(
-      color: context.appColors.canvas,
+      color: ThemeBackground.hasImage(context)
+          ? Colors.transparent
+          : context.appColors.canvas,
       child: SafeArea(child: content),
     );
   }

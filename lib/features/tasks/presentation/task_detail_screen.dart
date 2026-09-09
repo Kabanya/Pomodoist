@@ -190,140 +190,156 @@ class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                 item,
                 selectedPreset,
               );
-              return TaskMotionItem(
-                taskId: item.id,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _header(context, item),
-                      _EditableTaskTitle(key: _titleKey, task: item),
-                      const SizedBox(height: 12),
-                      _EditableTaskDescription(
-                        key: _descriptionKey,
-                        task: item,
-                      ),
-                      const SizedBox(height: 16),
-                      _TaskMetadataChips(
-                        task: item,
-                        calendarLinked: calendarLink.value != null,
-                        focusEstimate: focusEstimate,
-                      ),
-                      const SizedBox(height: 20),
-                      _ScheduleActions(task: item),
-                      const SizedBox(height: 20),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          ShadButton(
-                            onPressed: item.isCompleted
-                                ? null
-                                : () async {
-                                    final router = GoRouter.of(context);
-                                    await focusRepository.startRun(
-                                      StartFocusRunInput(
-                                        taskId: item.id,
-                                        projectId: item.projectId,
-                                        presetId: selectedPreset?.id,
-                                        targetWorkIntervals: _targetForStart(
-                                          focusEstimate,
-                                        ),
-                                      ),
-                                    );
-                                    if (!context.mounted) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: _header(context, item),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      child: TaskMotionItem(
+                        taskId: item.id,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _EditableTaskTitle(key: _titleKey, task: item),
+                            const SizedBox(height: 12),
+                            _EditableTaskDescription(
+                              key: _descriptionKey,
+                              task: item,
+                            ),
+                            const SizedBox(height: 16),
+                            _TaskMetadataChips(
+                              task: item,
+                              calendarLinked: calendarLink.value != null,
+                              focusEstimate: focusEstimate,
+                            ),
+                            const SizedBox(height: 20),
+                            _ScheduleActions(task: item),
+                            const SizedBox(height: 20),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                ShadButton(
+                                  onPressed: item.isCompleted
+                                      ? null
+                                      : () async {
+                                          final router = GoRouter.of(context);
+                                          await focusRepository.startRun(
+                                            StartFocusRunInput(
+                                              taskId: item.id,
+                                              projectId: item.projectId,
+                                              presetId: selectedPreset?.id,
+                                              targetWorkIntervals:
+                                                  _targetForStart(
+                                                    focusEstimate,
+                                                  ),
+                                            ),
+                                          );
+                                          if (!context.mounted) {
+                                            return;
+                                          }
+                                          showActionFeedback(
+                                            context,
+                                            message: l10n.focusStarted,
+                                            icon: LucideIcons.circlePlay,
+                                            haptic: AppHapticCue.none,
+                                            action: SnackBarAction(
+                                              label: l10n.commonOpen,
+                                              onPressed: () =>
+                                                  router.go('/focus'),
+                                            ),
+                                          );
+                                        },
+                                  enabled: !(item.isCompleted),
+                                  leading: const Icon(LucideIcons.play),
+                                  child: Text(l10n.startFocus),
+                                ),
+                                ShadButton.outline(
+                                  onPressed: () async {
+                                    if (item.isCompleted) {
+                                      try {
+                                        await taskRepository.uncompleteTask(
+                                          item.id,
+                                        );
+                                      } catch (_) {
+                                        if (context.mounted) {
+                                          showActionFeedback(
+                                            context,
+                                            message: l10n.taskActionFailedCount(
+                                              1,
+                                            ),
+                                            icon: LucideIcons.circleAlert,
+                                            sound: ActionFeedbackSound.none,
+                                            haptic: AppHapticCue.none,
+                                          );
+                                        }
+                                        return;
+                                      }
+                                      if (!context.mounted) {
+                                        return;
+                                      }
+                                      final reopened = await taskRepository
+                                          .watchTask(item.id)
+                                          .first;
+                                      if (!context.mounted) {
+                                        return;
+                                      }
+                                      if (reopened != null) {
+                                        motion.reopened([reopened]);
+                                      }
+                                      showActionFeedback(
+                                        context,
+                                        message: l10n.taskReopened,
+                                        icon: LucideIcons.undo2,
+                                      );
                                       return;
                                     }
-                                    showActionFeedback(
+
+                                    await completeTaskWithUndoFeedback(
                                       context,
-                                      message: l10n.focusStarted,
-                                      icon: LucideIcons.circlePlay,
-                                      haptic: AppHapticCue.none,
-                                      action: SnackBarAction(
-                                        label: l10n.commonOpen,
-                                        onPressed: () => router.go('/focus'),
-                                      ),
+                                      ref,
+                                      item.id,
                                     );
                                   },
-                            enabled: !(item.isCompleted),
-                            leading: const Icon(LucideIcons.play),
-                            child: Text(l10n.startFocus),
-                          ),
-                          ShadButton.outline(
-                            onPressed: () async {
-                              if (item.isCompleted) {
-                                try {
-                                  await taskRepository.uncompleteTask(item.id);
-                                } catch (_) {
-                                  if (context.mounted) {
-                                    showActionFeedback(
-                                      context,
-                                      message: l10n.taskActionFailedCount(1),
-                                      icon: LucideIcons.circleAlert,
-                                      sound: ActionFeedbackSound.none,
-                                      haptic: AppHapticCue.none,
-                                    );
-                                  }
-                                  return;
-                                }
-                                if (!context.mounted) {
-                                  return;
-                                }
-                                final reopened = await taskRepository
-                                    .watchTask(item.id)
-                                    .first;
-                                if (!context.mounted) {
-                                  return;
-                                }
-                                if (reopened != null) {
-                                  motion.reopened([reopened]);
-                                }
-                                showActionFeedback(
-                                  context,
-                                  message: l10n.taskReopened,
-                                  icon: LucideIcons.undo2,
-                                );
-                                return;
-                              }
-
-                              await completeTaskWithUndoFeedback(
-                                context,
-                                ref,
-                                item.id,
-                              );
-                            },
-                            leading: TaskCompletionControl(
-                              taskId: item.id,
-                              isCompleted: item.isCompleted,
-                              color: context.appColors.accent,
-                              fillColor: context.appColors.accentFill,
-                              onPressed: null,
+                                  leading: TaskCompletionControl(
+                                    taskId: item.id,
+                                    isCompleted: item.isCompleted,
+                                    color: context.appColors.accent,
+                                    fillColor: context.appColors.accentFill,
+                                    onPressed: null,
+                                  ),
+                                  child: Text(
+                                    item.isCompleted
+                                        ? l10n.markOpen
+                                        : l10n.markComplete,
+                                  ),
+                                ),
+                              ],
                             ),
-                            child: Text(
-                              item.isCompleted
-                                  ? l10n.markOpen
-                                  : l10n.markComplete,
+                            const SizedBox(height: 20),
+                            _SubtasksSection(task: item),
+                            const SizedBox(height: 16),
+                            ExpansionTile(
+                              tilePadding: EdgeInsets.zero,
+                              title: Text(l10n.recurrenceTitle),
+                              children: [_RecurrenceActions(task: item)],
                             ),
-                          ),
-                        ],
+                            ExpansionTile(
+                              tilePadding: EdgeInsets.zero,
+                              title: Text(l10n.focusHistory),
+                              children: [_FocusHistory(taskId: item.id)],
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 20),
-                      _SubtasksSection(task: item),
-                      const SizedBox(height: 16),
-                      ExpansionTile(
-                        tilePadding: EdgeInsets.zero,
-                        title: Text(l10n.recurrenceTitle),
-                        children: [_RecurrenceActions(task: item)],
-                      ),
-                      ExpansionTile(
-                        tilePadding: EdgeInsets.zero,
-                        title: Text(l10n.focusHistory),
-                        children: [_FocusHistory(taskId: item.id)],
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               );
             },
             loading: () => _status(const CircularProgressIndicator()),

@@ -171,6 +171,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get billingStoreUnavailable => 'App Store 当前不可用。';
 
   @override
+  String get billingStoreConnectionFailed => 'App Store 暂时不可用。请稍后重试。';
+
+  @override
   String billingPurchaseError(String error) {
     return '购买错误：$error';
   }
@@ -1020,6 +1023,9 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get voiceServiceUnavailable =>
       '语音识别暂不可用。请检查网络连接。在 Mac 上，还请检查“系统设置 → 键盘 → 听写”和所选语言。';
+
+  @override
+  String get voiceCloudServiceUnavailable => '云端转写失败。请检查网络连接，然后重试转写已保存的录音。';
 
   @override
   String get voiceLocaleUnsupported => '此设备的系统语音识别不支持所选语言。';
@@ -2313,6 +2319,54 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themeResetToClassic => '重置为经典';
 
   @override
+  String get themeBackgroundTitle => '背景图片';
+
+  @override
+  String get themeBackgroundMainOnly => '仅主区域';
+
+  @override
+  String get themeBackgroundWholeApp => '整个应用';
+
+  @override
+  String get themeBackgroundSeparate => '独立背景';
+
+  @override
+  String get themeBackgroundMain => '主区域';
+
+  @override
+  String get themeBackgroundSidebar => '侧边栏';
+
+  @override
+  String get themeBackgroundQuickAdd => '快速添加';
+
+  @override
+  String get themeBackgroundChoose => '选择照片';
+
+  @override
+  String get themeBackgroundReplace => '替换照片';
+
+  @override
+  String get themeBackgroundRemove => '移除照片';
+
+  @override
+  String get themeBackgroundDim => '调暗';
+
+  @override
+  String get themeBackgroundBlur => '模糊';
+
+  @override
+  String get themeBackgroundEmpty => '无照片';
+
+  @override
+  String get themeBackgroundImageError => '无法打开此图片。请选择其他照片。';
+
+  @override
+  String get themeBackgroundTooLarge => '请选择不超过 50 MB 的图片。';
+
+  @override
+  String get themeBackgroundLoading => '正在准备图片…';
+
+  @override
   String get settingsTaskListStyle => '任务行样式';
 
   @override
@@ -2407,6 +2461,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get commandSearchActions => '操作';
+
+  @override
+  String get commandSearchDictateTask => '口述任务';
 
   @override
   String get commandSearchAllResults => '查看所有结果';

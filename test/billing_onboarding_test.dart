@@ -686,6 +686,75 @@ void main() {
     expect(state.restoring, isFalse);
   });
 
+  test('verified Pro loads before a failing StoreKit catalog', () async {
+    final store = _FakeBillingStore(
+      refreshedProductIds: const {pomodoistLifetimeProductId},
+    )..catalogWaiter = Completer<void>();
+    final container = ProviderContainer(
+      overrides: [
+        billingStoreProvider.overrideWithValue(store),
+        applePurchasesSupportedProvider.overrideWithValue(true),
+      ],
+    );
+    addTearDown(container.dispose);
+    container.read(billingControllerProvider);
+    await _settle();
+    expect(container.read(billingControllerProvider).loading, isTrue);
+    expect(
+      container.read(billingControllerProvider).hasActiveEntitlement,
+      isTrue,
+    );
+
+    store.catalogError = IAPError(
+      source: 'app_store',
+      code: 'storekit2_products_error',
+      message: 'NSURLErrorDomain error -1008.',
+    );
+    store.catalogWaiter!.complete();
+    await container.read(billingControllerProvider.notifier).reload();
+    final state = container.read(billingControllerProvider);
+    expect(state.storeAvailable, isFalse);
+    expect(state.activeStoreKitProductIds, {pomodoistLifetimeProductId});
+    expect(state.activeProductId, pomodoistLifetimeProductId);
+    expect(state.purchaseSuccessProductId, isNull);
+
+    await container.read(billingControllerProvider.notifier).restorePurchases();
+    await _settle();
+    expect(store.restoreCount, 1);
+    expect(
+      container.read(billingControllerProvider).purchaseSuccessProductId,
+      pomodoistAnnualProductId,
+    );
+  });
+
+  test(
+    'StoreKit catalog retries a transient network failure automatically',
+    () async {
+      final store = _FakeBillingStore()
+        ..catalogError = IAPError(
+          source: 'app_store',
+          code: 'storekit2_products_error',
+          message: 'NSURLErrorDomain error -1008.',
+        );
+      final container = ProviderContainer(
+        overrides: [
+          billingStoreProvider.overrideWithValue(store),
+          applePurchasesSupportedProvider.overrideWithValue(true),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(billingControllerProvider);
+      await _settle();
+      store.catalogError = null;
+      await _waitFor(
+        () => container.read(billingControllerProvider).canPurchase,
+        'automatic StoreKit recovery',
+      );
+      expect(store.catalogRequests, 2);
+      expect(container.read(billingControllerProvider).error, isNull);
+    },
+  );
+
   test(
     'purchase passes account token and links after local activation',
     () async {
@@ -1490,6 +1559,109 @@ void main() {
         container.read(billingControllerProvider).hasActiveEntitlement,
         isTrue,
       );
+    },
+  );
+
+  test('StoreKit network failures show a localized recovery action', () async {
+    final l10n = await AppLocalizations.delegate.load(const Locale('ru'));
+    for (final error in [
+      'The operation couldn’t be completed. (NSURLErrorDomain error -1008.)',
+      'PlatformException(storekit_no_response, NSURLErrorDomain error -1009., null)',
+      'TimeoutException after 0:00:30.000000',
+    ]) {
+      final message = storeKitBillingErrorMessage(l10n, error);
+      expect(message, l10n.billingStoreConnectionFailed);
+      expect(message, isNot(contains('NSURLErrorDomain')));
+      expect(message, isNot(contains('TimeoutException')));
+    }
+    expect(
+      storeKitBillingErrorMessage(l10n, 'This product is not available yet.'),
+      'This product is not available yet.',
+    );
+  });
+
+  test(
+    'StoreKit catalog can recover after a VPN error without restarting',
+    () async {
+      final store = _FakeBillingStore()
+        ..catalogError = IAPError(
+          source: 'app_store',
+          code: 'storekit_no_response',
+          message:
+              'The operation couldn’t be completed. (NSURLErrorDomain error -1008.)',
+        );
+      final container = ProviderContainer(
+        overrides: [
+          billingStoreProvider.overrideWithValue(store),
+          applePurchasesSupportedProvider.overrideWithValue(true),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(billingControllerProvider);
+      await container.read(billingControllerProvider.notifier).reload();
+      expect(container.read(billingControllerProvider).canPurchase, isFalse);
+      expect(store.catalogRequests, 3);
+      expect(
+        container.read(billingControllerProvider).error,
+        contains('-1008'),
+      );
+
+      store.catalogError = null;
+      final waiter = store.catalogWaiter = Completer<void>();
+      final controller = container.read(billingControllerProvider.notifier);
+      final retry = controller.reload();
+      final duplicate = controller.reload();
+      await _settle();
+      final loading = container.read(billingControllerProvider);
+      expect(loading.loading, isTrue);
+      expect(loading.error, isNull);
+      expect(loading.canPurchase, isFalse);
+      expect(store.catalogRequests, 4);
+
+      waiter.complete();
+      await Future.wait([retry, duplicate]);
+      final ready = container.read(billingControllerProvider);
+      expect(ready.loading, isFalse);
+      expect(ready.error, isNull);
+      expect(ready.canPurchase, isTrue);
+      expect(ready.productDetailsById.keys, contains(pomodoistAnnualProductId));
+    },
+  );
+
+  test(
+    'StoreKit catalog retries on resume without retrying certificate errors',
+    () async {
+      final store = _FakeBillingStore()
+        ..catalogError = IAPError(
+          source: 'app_store',
+          code: 'storekit2_products_error',
+          message: 'NSURLErrorDomain error -1202.',
+        );
+      final container = ProviderContainer(
+        overrides: [
+          billingStoreProvider.overrideWithValue(store),
+          applePurchasesSupportedProvider.overrideWithValue(true),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(billingControllerProvider);
+      await container.read(billingControllerProvider.notifier).reload();
+      expect(store.catalogRequests, 1);
+      expect(container.read(billingControllerProvider).canPurchase, isFalse);
+
+      store.catalogError = null;
+      WidgetsBinding.instance.handleAppLifecycleStateChanged(
+        AppLifecycleState.inactive,
+      );
+      WidgetsBinding.instance.handleAppLifecycleStateChanged(
+        AppLifecycleState.resumed,
+      );
+      await _waitFor(
+        () => container.read(billingControllerProvider).canPurchase,
+        'StoreKit recovery on resume',
+      );
+      expect(store.catalogRequests, 2);
+      expect(container.read(billingControllerProvider).error, isNull);
     },
   );
 
@@ -2517,6 +2689,9 @@ class _FakeBillingStore extends BillingStore {
   final eligibilityChecks = <String>{};
   var refreshCount = 0;
   var restoreCount = 0;
+  var catalogRequests = 0;
+  IAPError? catalogError;
+  Completer<void>? catalogWaiter;
   String? lastAppAccountToken;
 
   @override
@@ -2537,7 +2712,18 @@ class _FakeBillingStore extends BillingStore {
   }
 
   @override
-  Future<ProductDetailsResponse> queryProductDetails(Set<String> productIds) {
+  Future<ProductDetailsResponse> queryProductDetails(
+    Set<String> productIds,
+  ) async {
+    catalogRequests += 1;
+    await catalogWaiter?.future;
+    if (catalogError != null) {
+      return ProductDetailsResponse(
+        productDetails: const [],
+        notFoundIDs: productIds.toList(),
+        error: catalogError,
+      );
+    }
     return Future.value(
       ProductDetailsResponse(
         productDetails: [

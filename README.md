@@ -25,6 +25,10 @@
   <a href="CONTRIBUTING.md">Contribute</a>
 </p>
 
+<p align="center">
+  <a href="https://trendshift.io/repositories/206223?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-206223" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/206223/daily?language=Dart" alt="Kabanya%2FPomodoist | Trendshift" width="250" height="55"/></a>
+</p>
+
 Pomodoist is an open-source productivity app for macOS, iOS and iPadOS,
 Android, Linux, Windows, and the web.
 
@@ -83,6 +87,8 @@ Detailed build, self-hosting, and platform-specific instructions are available i
 - [Linux and Windows builds](https://pomodoist.com/docs/installation/desktop/): Desktop prerequisites, development, and release builds
 - [Configuration reference](https://pomodoist.com/docs/configuration/reference/): Environment files and client configuration
 - [Developer guide](https://pomodoist.com/docs/developer-guide/): Repository layout, Make targets, testing, migrations, and contributing
+- [Telegram Mini App development](telegram-mini-app/README.md): `make telegram-debug` with real staging accounts and `make telegram-release`
+- [Chrome extension development](chrome-extension/README.md#make-commands): `make chrome-debug` and `make chrome-release`
 
 ## Contributing
 

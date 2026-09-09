@@ -1,8 +1,9 @@
-# Non-Apple voice transcription
+# Cloud voice transcription
 
 Linux, Windows, Android and **all browsers** record through `record` and submit
 WAV audio to the authenticated `pomodoist-transcribe` Edge Function. Native iOS
-and macOS continue using the unchanged `app_voice` Apple Speech implementation.
+and macOS use Apple Speech by default and can select cloud transcription in
+Settings while signed in.
 The existing recording/loading/retry UI, transcript analysis and task creation
 remain the same, including the existing UI entitlement gate. The new backend
 requires a signed-in account but does not add separate purchase verification;
@@ -50,8 +51,9 @@ using `AccountClient.invokeFunction`. The server calls
 are `{ok: true, text}`; failures are `{ok: false, code, error, retryable}`.
 Client-supplied model, URL, API key and duration fields are not trusted.
 
-Only PCM WAV uploads are accepted: their base64, container header and actual
-sample duration are validated before any billed provider call. Compressed formats
+Only PCM WAV uploads are accepted, including Apple's `WAVE_FORMAT_EXTENSIBLE`
+headers with standard PCM/float subtype GUIDs. Their base64, container header and
+actual sample duration are validated before any billed provider call. Compressed formats
 (WebM, MP3, M4A/MP4, Ogg, FLAC and AAC) are rejected until their duration can be
 verified server-side; byte limits alone cannot bound low-bitrate audio duration.
 All current clients already record 16 kHz, mono PCM WAV without transcoding:
@@ -107,7 +109,7 @@ Browser storage tests verify survival after the recorder revokes its blob URL.
 Before release, test real microphones on Linux/Windows/Android and Chrome/Firefox/
 Safari over HTTPS: allow/deny permission, record a short phrase and a full five
 minutes, stop, create a task, go offline and retry, close/discard while processing,
-and verify iOS/macOS still use native recognition. Live OpenRouter calls require
+and verify both native and cloud recognition on iOS/macOS. Live OpenRouter calls require
 an operator-supplied key and are not made by unit tests.
 
 Protocol references (checked for this implementation):

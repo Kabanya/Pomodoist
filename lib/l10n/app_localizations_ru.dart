@@ -177,6 +177,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get billingStoreUnavailable => 'App Store сейчас недоступен.';
 
   @override
+  String get billingStoreConnectionFailed =>
+      'App Store временно недоступен. Повторите попытку чуть позже.';
+
+  @override
   String billingPurchaseError(String error) {
     return 'Ошибка покупки: $error';
   }
@@ -1098,6 +1102,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get voiceServiceUnavailable =>
       'Распознавание недоступно. Проверьте подключение к интернету. На Mac также проверьте язык и Диктовку: Системные настройки → Клавиатура → Диктовка.';
+
+  @override
+  String get voiceCloudServiceUnavailable =>
+      'Облачная транскрибация не удалась. Проверьте подключение к интернету и повторите распознавание сохранённой записи.';
 
   @override
   String get voiceLocaleUnsupported =>
@@ -2437,6 +2445,56 @@ class AppLocalizationsRu extends AppLocalizations {
   String get themeResetToClassic => 'Сбросить к Классике';
 
   @override
+  String get themeBackgroundTitle => 'Фоновое изображение';
+
+  @override
+  String get themeBackgroundMainOnly => 'Только основная область';
+
+  @override
+  String get themeBackgroundWholeApp => 'Всё приложение';
+
+  @override
+  String get themeBackgroundSeparate => 'Отдельные фоны';
+
+  @override
+  String get themeBackgroundMain => 'Основная область';
+
+  @override
+  String get themeBackgroundSidebar => 'Боковая панель';
+
+  @override
+  String get themeBackgroundQuickAdd => 'Быстрое добавление';
+
+  @override
+  String get themeBackgroundChoose => 'Выбрать фото';
+
+  @override
+  String get themeBackgroundReplace => 'Заменить фото';
+
+  @override
+  String get themeBackgroundRemove => 'Удалить фото';
+
+  @override
+  String get themeBackgroundDim => 'Затемнение';
+
+  @override
+  String get themeBackgroundBlur => 'Размытие';
+
+  @override
+  String get themeBackgroundEmpty => 'Нет фото';
+
+  @override
+  String get themeBackgroundImageError =>
+      'Не удалось открыть изображение. Выберите другое фото.';
+
+  @override
+  String get themeBackgroundTooLarge =>
+      'Выберите изображение размером не более 50 МБ.';
+
+  @override
+  String get themeBackgroundLoading => 'Подготовка изображения…';
+
+  @override
   String get settingsTaskListStyle => 'Стиль строк задач';
 
   @override
@@ -2539,6 +2597,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get commandSearchActions => 'Действия';
+
+  @override
+  String get commandSearchDictateTask => 'Продиктовать задачу';
 
   @override
   String get commandSearchAllResults => 'Все результаты';

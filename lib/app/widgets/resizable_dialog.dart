@@ -10,6 +10,7 @@ class ResizableDialog extends StatefulWidget {
     required this.actions,
     required this.initialSize,
     required this.minSize,
+    this.background,
     super.key,
   });
 
@@ -21,6 +22,7 @@ class ResizableDialog extends StatefulWidget {
   final List<Widget> actions;
   final Size initialSize;
   final Size minSize;
+  final Widget? background;
 
   @override
   State<ResizableDialog> createState() => _ResizableDialogState();
@@ -58,6 +60,8 @@ class _ResizableDialogState extends State<ResizableDialog> {
         height: size.height,
         child: Stack(
           children: [
+            if (widget.background != null)
+              Positioned.fill(child: widget.background!),
             Padding(
               padding: const EdgeInsets.only(bottom: 10, right: 10),
               child: Column(

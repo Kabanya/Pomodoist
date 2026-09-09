@@ -4,6 +4,39 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/widgets/app_date_time_picker.dart';
 
 void main() {
+  test('picker uses the roomier side within the visible overlay', () {
+    const viewport = Size(800, 600);
+    final nearTop = pickerAvailableSpace(
+      const Rect.fromLTWH(40, 30, 100, 40),
+      viewport,
+    );
+    expect(nearTop, const Rect.fromLTRB(12, 78, 788, 588));
+    final nearBottom = pickerAvailableSpace(
+      const Rect.fromLTWH(700, 530, 80, 40),
+      viewport,
+    );
+    expect(nearBottom, const Rect.fromLTRB(12, 12, 788, 522));
+    final keyboard = pickerAvailableSpace(
+      const Rect.fromLTWH(100, 400, 100, 40),
+      viewport,
+      viewPadding: const EdgeInsets.only(top: 24),
+      viewInsets: const EdgeInsets.only(bottom: 300),
+    );
+    expect(keyboard, const Rect.fromLTRB(12, 36, 788, 288));
+    // Zoomed and narrow overlays use their own logical coordinates.
+    final narrow = pickerAvailableSpace(
+      const Rect.fromLTWH(10, 110, 100, 40),
+      const Size(240, 300),
+    );
+    expect(narrow, const Rect.fromLTRB(12, 158, 228, 288));
+    final tiny = pickerAvailableSpace(
+      const Rect.fromLTWH(10, 25, 100, 40),
+      const Size(240, 90),
+    );
+    expect(tiny, const Rect.fromLTRB(12, 12, 228, 78));
+    expect(pickerAvailableSpace(Rect.zero, Size.zero), Rect.zero);
+  });
+
   test(
     'locale controls clock format and maps the first weekday to DateTime',
     () async {

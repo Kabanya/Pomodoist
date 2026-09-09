@@ -180,6 +180,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Der App Store ist momentan nicht verfügbar.';
 
   @override
+  String get billingStoreConnectionFailed =>
+      'Der App Store ist vorübergehend nicht erreichbar. Bitte versuche es gleich noch einmal.';
+
+  @override
   String billingPurchaseError(String error) {
     return 'Kauffehler: $error';
   }
@@ -1104,6 +1108,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get voiceServiceUnavailable =>
       'Die Spracherkennung ist nicht verfügbar. Prüfen Sie Ihre Verbindung. Prüfen Sie auf dem Mac auch Systemeinstellungen → Tastatur → Diktierfunktion und Ihre Sprache.';
+
+  @override
+  String get voiceCloudServiceUnavailable =>
+      'Die Cloud-Transkription ist fehlgeschlagen. Prüfen Sie Ihre Internetverbindung und versuchen Sie, die gespeicherte Aufnahme erneut zu transkribieren.';
 
   @override
   String get voiceLocaleUnsupported =>
@@ -2431,6 +2439,55 @@ class AppLocalizationsDe extends AppLocalizations {
   String get themeResetToClassic => 'Auf Klassisch zurücksetzen';
 
   @override
+  String get themeBackgroundTitle => 'Hintergrundbild';
+
+  @override
+  String get themeBackgroundMainOnly => 'Nur Hauptbereich';
+
+  @override
+  String get themeBackgroundWholeApp => 'Gesamte App';
+
+  @override
+  String get themeBackgroundSeparate => 'Separate Hintergründe';
+
+  @override
+  String get themeBackgroundMain => 'Hauptbereich';
+
+  @override
+  String get themeBackgroundSidebar => 'Seitenleiste';
+
+  @override
+  String get themeBackgroundQuickAdd => 'Schnelles Hinzufügen';
+
+  @override
+  String get themeBackgroundChoose => 'Foto auswählen';
+
+  @override
+  String get themeBackgroundReplace => 'Foto ersetzen';
+
+  @override
+  String get themeBackgroundRemove => 'Foto entfernen';
+
+  @override
+  String get themeBackgroundDim => 'Abdunkelung';
+
+  @override
+  String get themeBackgroundBlur => 'Unschärfe';
+
+  @override
+  String get themeBackgroundEmpty => 'Kein Foto';
+
+  @override
+  String get themeBackgroundImageError =>
+      'Dieses Bild konnte nicht geöffnet werden. Wähle ein anderes Foto.';
+
+  @override
+  String get themeBackgroundTooLarge => 'Wähle ein Bild mit höchstens 50 MB.';
+
+  @override
+  String get themeBackgroundLoading => 'Bild wird vorbereitet…';
+
+  @override
   String get settingsTaskListStyle => 'Stil der Aufgabenzeilen';
 
   @override
@@ -2536,6 +2593,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get commandSearchActions => 'Aktionen';
+
+  @override
+  String get commandSearchDictateTask => 'Aufgabe diktieren';
 
   @override
   String get commandSearchAllResults => 'Alle Ergebnisse';

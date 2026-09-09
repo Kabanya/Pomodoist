@@ -25,6 +25,7 @@ import '../../../../app/formatters.dart';
 import '../../../../app/providers.dart';
 import '../../../../app/task_time.dart';
 import '../../../../app/theme/app_theme.dart';
+import '../../../../app/theme/theme_background.dart';
 import '../../../../app/widgets/action_feedback.dart';
 import '../../../focus/domain/focus_models.dart';
 import '../../domain/project_colors.dart';
@@ -133,7 +134,9 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
             final wide =
                 MediaQuery.sizeOf(context).width >= _kanbanWideBreakpoint;
             return ColoredBox(
-              color: context.appColors.canvas,
+              color: ThemeBackground.hasImage(context)
+                  ? Colors.transparent
+                  : context.appColors.canvas,
               child: SafeArea(
                 top: false,
                 bottom: false,

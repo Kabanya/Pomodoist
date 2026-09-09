@@ -99,10 +99,20 @@ function validateAudio(data: string, format: string, maxBytes: number, maxSecond
     if (start + length > bytes.length) invalidAudio();
     if (matches(offset, "fmt ")) {
       if (length < 16) invalidAudio();
-      const encoding = view.getUint16(start, true);
+      let encoding = view.getUint16(start, true);
       const channels = view.getUint16(start + 2, true);
       const sampleRate = view.getUint32(start + 4, true);
       const bits = view.getUint16(start + 14, true);
+      // Apple record emits WAVE_FORMAT_EXTENSIBLE even for mono 16-bit PCM.
+      // Accept only the standard PCM/float subtype GUIDs, not arbitrary codecs.
+      if (encoding === 0xfffe) {
+        if (length < 40) invalidAudio();
+        const extraSize = view.getUint16(start + 16, true);
+        const validBits = view.getUint16(start + 18, true);
+        if (extraSize < 22 || 18 + extraSize > length || !validBits || validBits > bits ||
+          !matches(start + 28, "\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71")) invalidAudio();
+        encoding = view.getUint32(start + 24, true);
+      }
       byteRate = view.getUint32(start + 8, true);
       const block = channels * bits / 8;
       if (![1, 3].includes(encoding) || channels < 1 || channels > 8 ||

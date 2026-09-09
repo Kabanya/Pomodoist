@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +16,7 @@ import '../../focus/domain/focus_models.dart';
 import '../../focus/presentation/focus_view_mode.dart';
 import '../domain/task_models.dart';
 import 'task_search.dart';
+import 'widgets/quick_add_bar.dart' show showVoiceQuickAddSheet;
 
 /// Stable identities keep keyboard selection attached to the same local result.
 List<({String id, String title})> taskSearchPaletteResults(
@@ -60,7 +63,7 @@ bool taskSearchPaletteCanActivate(
   String currentQuery,
 ) => renderedQuery == currentQuery && currentIds.contains(id);
 
-Future<void> showTaskSearchPalette(BuildContext context) async {
+Future<void> showTaskSearchPalette(BuildContext context, WidgetRef ref) async {
   final previousFocus = FocusManager.instance.primaryFocus;
   final container = ProviderScope.containerOf(context);
   final result = await showDialog<({String id, String query})>(
@@ -97,6 +100,8 @@ Future<void> showTaskSearchPalette(BuildContext context) async {
     }
   } else if (result.id == 'create') {
     await showQuickAddDialog(context, initialText: result.query);
+  } else if (result.id == 'dictate') {
+    unawaited(showVoiceQuickAddSheet(context, ref));
   } else if (result.id == 'focus') {
     context.go('/focus');
   } else if (result.id == 'all') {
@@ -132,6 +137,7 @@ class _TaskSearchPaletteState extends ConsumerState<_TaskSearchPalette> {
   List<String> _ids() => [
     for (final result in _results()) result.id,
     'create',
+    'dictate',
     'focus',
     'all',
   ];
@@ -241,6 +247,7 @@ class _TaskSearchPaletteState extends ConsumerState<_TaskSearchPalette> {
     final ids = [
       for (final result in results) result.id,
       'create',
+      'dictate',
       'focus',
       'all',
     ];
@@ -357,6 +364,11 @@ class _TaskSearchPaletteState extends ConsumerState<_TaskSearchPalette> {
                               ? l10n.addTask
                               : l10n.searchCreateTask,
                           LucideIcons.plus,
+                        ),
+                        row(
+                          'dictate',
+                          l10n.commandSearchDictateTask,
+                          LucideIcons.mic,
                         ),
                         row(
                           'focus',

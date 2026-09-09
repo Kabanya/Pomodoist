@@ -14,6 +14,7 @@ import 'router.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_theme_settings.dart';
 import 'theme/app_motion.dart';
+import 'widgets/keyboard_dismiss_region.dart';
 
 class PomodoistApp extends ConsumerWidget {
   const PomodoistApp({super.key});
@@ -51,7 +52,11 @@ class PomodoistApp extends ConsumerWidget {
           ),
           child: AppZoom(
             child: ShadAppBuilder(
-              child: DesktopUpdateHost(child: child ?? const SizedBox.shrink()),
+              child: KeyboardDismissRegion(
+                child: DesktopUpdateHost(
+                  child: child ?? const SizedBox.shrink(),
+                ),
+              ),
             ),
           ),
         ),

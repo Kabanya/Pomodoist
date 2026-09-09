@@ -27,14 +27,18 @@ void main() {
         projectRepository: projects,
         now: () => now,
       );
-      for (final source in ['Ship tomorrow 23:30 p2', 'Ship 23:30']) {
+      for (final source in [
+        'Ship tomorrow 23:30 p2',
+        'Ship 23:30',
+        'Ship №Release tomorrow 23:30',
+      ]) {
         final inheritedDate = DateTime(2036, 2, 3);
         final preview = parser
             .analyze(source, now: now, defaultDate: inheritedDate)
             .parsed;
         final id = await service.createTask(
           source,
-          projectId: projectId,
+          projectId: preview.project == null ? projectId : inboxProjectId,
           priority: 3,
           defaultDate: inheritedDate,
         );

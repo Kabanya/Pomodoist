@@ -179,6 +179,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The App Store is not available right now.';
 
   @override
+  String get billingStoreConnectionFailed =>
+      'The App Store is temporarily unavailable. Please try again in a moment.';
+
+  @override
   String billingPurchaseError(String error) {
     return 'Purchase error: $error';
   }
@@ -1092,6 +1096,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get voiceServiceUnavailable =>
       'Speech recognition is unavailable. Check your connection. On Mac, also check System Settings → Keyboard → Dictation and your language.';
+
+  @override
+  String get voiceCloudServiceUnavailable =>
+      'Cloud transcription failed. Check your internet connection and retry the saved recording.';
 
   @override
   String get voiceLocaleUnsupported =>
@@ -2433,6 +2441,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeResetToClassic => 'Reset to Classic';
 
   @override
+  String get themeBackgroundTitle => 'Background image';
+
+  @override
+  String get themeBackgroundMainOnly => 'Main area only';
+
+  @override
+  String get themeBackgroundWholeApp => 'Entire app';
+
+  @override
+  String get themeBackgroundSeparate => 'Separate backgrounds';
+
+  @override
+  String get themeBackgroundMain => 'Main area';
+
+  @override
+  String get themeBackgroundSidebar => 'Sidebar';
+
+  @override
+  String get themeBackgroundQuickAdd => 'Quick Add';
+
+  @override
+  String get themeBackgroundChoose => 'Choose photo';
+
+  @override
+  String get themeBackgroundReplace => 'Replace photo';
+
+  @override
+  String get themeBackgroundRemove => 'Remove photo';
+
+  @override
+  String get themeBackgroundDim => 'Dimming';
+
+  @override
+  String get themeBackgroundBlur => 'Blur';
+
+  @override
+  String get themeBackgroundEmpty => 'No photo';
+
+  @override
+  String get themeBackgroundImageError =>
+      'Could not open this image. Choose another photo.';
+
+  @override
+  String get themeBackgroundTooLarge => 'Choose an image no larger than 50 MB.';
+
+  @override
+  String get themeBackgroundLoading => 'Preparing image…';
+
+  @override
   String get settingsTaskListStyle => 'Task row style';
 
   @override
@@ -2535,6 +2592,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commandSearchActions => 'Actions';
+
+  @override
+  String get commandSearchDictateTask => 'Dictate task';
 
   @override
   String get commandSearchAllResults => 'See all results';

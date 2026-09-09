@@ -962,13 +962,33 @@ String _authRoute(String path, String returnTo) {
   return Uri(path: path, queryParameters: {'returnTo': returnTo}).toString();
 }
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({this.signOutOverride, super.key});
 
   final Future<void> Function()? signOutOverride;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // The controller owns the first request; later visits refresh quietly.
+    if (!ref.read(connectedAgentsProvider).isLoading) {
+      unawaited(
+        Future<void>.microtask(() {
+          if (mounted) {
+            return ref.read(connectedAgentsProvider.notifier).refresh();
+          }
+        }),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final language = ref.watch(appLanguageProvider);
     final timerVisualStyle = ref.watch(focusTimerVisualStyleProvider);
@@ -1066,7 +1086,7 @@ class SettingsScreen extends ConsumerWidget {
                       AccountSignOutButton(
                         key: const Key('account-sign-out-button'),
                         onSignOut:
-                            signOutOverride ??
+                            widget.signOutOverride ??
                             () async {
                               await account?.signOut();
                             },
@@ -1297,33 +1317,29 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-class _ConnectedAgentsSection extends StatefulWidget {
+class _ConnectedAgentsSection extends ConsumerStatefulWidget {
   const _ConnectedAgentsSection({required this.account, super.key});
 
   final AccountClient account;
 
   @override
-  State<_ConnectedAgentsSection> createState() =>
+  ConsumerState<_ConnectedAgentsSection> createState() =>
       _ConnectedAgentsSectionState();
 }
 
-class _ConnectedAgentsSectionState extends State<_ConnectedAgentsSection> {
-  List<AccountOAuthGrant>? _grants;
-  Object? _loadError;
+class _ConnectedAgentsSectionState
+    extends ConsumerState<_ConnectedAgentsSection> {
   Object? _revokeError;
   String? _revokingClientId;
   BuildContext? _confirmationContext;
   late AccountClient _account;
   String? _userId;
-  var _loading = true;
-  var _loadGeneration = 0;
 
   @override
   void initState() {
     super.initState();
     _account = widget.account;
     _userId = widget.account.currentUserId;
-    unawaited(_load());
   }
 
   @override
@@ -1334,12 +1350,8 @@ class _ConnectedAgentsSectionState extends State<_ConnectedAgentsSection> {
       _dismissConfirmation();
       _account = widget.account;
       _userId = userId;
-      _loadGeneration += 1;
-      _grants = null;
-      _loadError = null;
       _revokeError = null;
       _revokingClientId = null;
-      unawaited(_load());
     }
   }
 
@@ -1367,34 +1379,7 @@ class _ConnectedAgentsSectionState extends State<_ConnectedAgentsSection> {
     });
   }
 
-  Future<void> _load() async {
-    final account = widget.account;
-    final userId = account.currentUserId;
-    if (!_isCurrent(account, userId)) return;
-    final generation = ++_loadGeneration;
-    setState(() {
-      _loading = true;
-      _loadError = null;
-    });
-    try {
-      final grants = await account.listOAuthGrants();
-      if (!_isCurrent(account, userId) || generation != _loadGeneration) {
-        return;
-      }
-      setState(() {
-        _grants = grants;
-        _loading = false;
-      });
-    } on Object catch (error) {
-      if (!_isCurrent(account, userId) || generation != _loadGeneration) {
-        return;
-      }
-      setState(() {
-        _loading = false;
-        _loadError = error;
-      });
-    }
-  }
+  Future<void> _load() => ref.read(connectedAgentsProvider.notifier).refresh();
 
   Future<void> _confirmRevoke(AccountOAuthGrant grant) async {
     if (_revokingClientId != null) return;
@@ -1449,9 +1434,7 @@ class _ConnectedAgentsSectionState extends State<_ConnectedAgentsSection> {
       _revokeError = null;
     });
     try {
-      await account.revokeOAuthGrant(clientId);
-      if (!_isCurrent(account, userId)) return;
-      await _load();
+      await ref.read(connectedAgentsProvider.notifier).revoke(clientId);
     } on Object catch (error) {
       if (_isCurrent(account, userId)) {
         setState(() => _revokeError = error);
@@ -1467,7 +1450,8 @@ class _ConnectedAgentsSectionState extends State<_ConnectedAgentsSection> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final errorColor = Theme.of(context).colorScheme.error;
-    final grants = _grants;
+    final agents = ref.watch(connectedAgentsProvider);
+    final grants = ref.read(connectedAgentsProvider.notifier).grants;
     return Card(
       key: const Key('connected-agents-section'),
       child: Padding(
@@ -1480,7 +1464,7 @@ class _ConnectedAgentsSectionState extends State<_ConnectedAgentsSection> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
-            if (_loading && grants == null)
+            if (agents.isLoading && grants == null)
               Semantics(
                 key: const Key('connected-agents-loading'),
                 liveRegion: true,
@@ -1495,7 +1479,7 @@ class _ConnectedAgentsSectionState extends State<_ConnectedAgentsSection> {
                   ],
                 ),
               )
-            else if (_loadError != null && grants == null)
+            else if (agents.hasError && grants == null)
               _ConnectedAgentsError(
                 retryKey: const Key('connected-agents-retry'),
                 onRetry: _load,
@@ -1506,7 +1490,6 @@ class _ConnectedAgentsSectionState extends State<_ConnectedAgentsSection> {
                 l10n.settingsConnectedAgentsEmpty,
               )
             else ...[
-              if (_loading) const LinearProgressIndicator(),
               for (final grant in grants!)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -1536,7 +1519,7 @@ class _ConnectedAgentsSectionState extends State<_ConnectedAgentsSection> {
                   ),
                 ),
             ],
-            if (_loadError != null && grants != null) ...[
+            if (agents.hasError && grants != null) ...[
               const SizedBox(height: 8),
               _ConnectedAgentsError(
                 retryKey: const Key('connected-agents-retry'),
