@@ -737,5 +737,8 @@
   "overdueTitle": "Просроченное",
   "overdueTaskCount": "{count, plural, one{Просрочена {count} задача} few{Просрочено {count} задачи} many{Просрочено {count} задач} other{Просрочено {count} задачи}}",
   "overdueReview": "Разобрать",
-  "overdueEmpty": "Просроченных задач нет"
+  "overdueEmpty": "Просроченных задач нет",
+  "taskFocusSwitchTitle": "Переключить фокус?",
+  "taskFocusSwitchMessage": "Текущая сессия остановится. Начать фокус на задаче «{task}»?",
+  "taskFocusSwitchConfirm": "Переключить"
 }

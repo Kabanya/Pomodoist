@@ -737,5 +737,8 @@
   "overdueTitle": "已逾期",
   "overdueTaskCount": "{count} 个逾期任务",
   "overdueReview": "处理",
-  "overdueEmpty": "没有逾期任务"
+  "overdueEmpty": "没有逾期任务",
+  "taskFocusSwitchTitle": "切换专注任务？",
+  "taskFocusSwitchMessage": "当前专注将停止。要开始专注于“{task}”吗？",
+  "taskFocusSwitchConfirm": "切换"
 }

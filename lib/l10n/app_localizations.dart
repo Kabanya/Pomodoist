@@ -4473,6 +4473,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No overdue tasks'**
   String get overdueEmpty;
+
+  /// No description provided for @taskFocusSwitchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch Focus?'**
+  String get taskFocusSwitchTitle;
+
+  /// No description provided for @taskFocusSwitchMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The current session will stop. Start Focus on “{task}”?'**
+  String taskFocusSwitchMessage(String task);
+
+  /// No description provided for @taskFocusSwitchConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get taskFocusSwitchConfirm;
 }
 
 class _AppLocalizationsDelegate

@@ -737,5 +737,8 @@
   "overdueTitle": "Überfällig",
   "overdueTaskCount": "{count} überfällige Aufgaben",
   "overdueReview": "Durchsehen",
-  "overdueEmpty": "Keine überfälligen Aufgaben"
+  "overdueEmpty": "Keine überfälligen Aufgaben",
+  "taskFocusSwitchTitle": "Fokus wechseln?",
+  "taskFocusSwitchMessage": "Die aktuelle Sitzung wird beendet. Fokus für „{task}“ starten?",
+  "taskFocusSwitchConfirm": "Wechseln"
 }

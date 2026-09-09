@@ -2430,4 +2430,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get overdueEmpty => '没有逾期任务';
+
+  @override
+  String get taskFocusSwitchTitle => '切换专注任务？';
+
+  @override
+  String taskFocusSwitchMessage(String task) {
+    return '当前专注将停止。要开始专注于“$task”吗？';
+  }
+
+  @override
+  String get taskFocusSwitchConfirm => '切换';
 }

@@ -737,5 +737,8 @@
   "overdueTitle": "Atrasadas",
   "overdueTaskCount": "{count} tareas atrasadas",
   "overdueReview": "Revisar",
-  "overdueEmpty": "No hay tareas atrasadas"
+  "overdueEmpty": "No hay tareas atrasadas",
+  "taskFocusSwitchTitle": "¿Cambiar el enfoque?",
+  "taskFocusSwitchMessage": "La sesión actual se detendrá. ¿Iniciar el enfoque en «{task}»?",
+  "taskFocusSwitchConfirm": "Cambiar"
 }

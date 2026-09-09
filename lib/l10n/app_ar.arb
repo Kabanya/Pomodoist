@@ -737,5 +737,8 @@
   "overdueTitle": "المهام المتأخرة",
   "overdueTaskCount": "المهام المتأخرة: {count}",
   "overdueReview": "مراجعة",
-  "overdueEmpty": "لا توجد مهام متأخرة"
+  "overdueEmpty": "لا توجد مهام متأخرة",
+  "taskFocusSwitchTitle": "تبديل التركيز؟",
+  "taskFocusSwitchMessage": "ستتوقف الجلسة الحالية. هل تريد بدء التركيز على «{task}»؟",
+  "taskFocusSwitchConfirm": "تبديل"
 }

@@ -2570,4 +2570,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get overdueEmpty => 'Просроченных задач нет';
+
+  @override
+  String get taskFocusSwitchTitle => 'Переключить фокус?';
+
+  @override
+  String taskFocusSwitchMessage(String task) {
+    return 'Текущая сессия остановится. Начать фокус на задаче «$task»?';
+  }
+
+  @override
+  String get taskFocusSwitchConfirm => 'Переключить';
 }

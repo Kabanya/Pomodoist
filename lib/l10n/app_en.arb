@@ -819,5 +819,15 @@
         "type": "int"
       }
     }
+  },
+  "taskFocusSwitchTitle": "Switch Focus?",
+  "taskFocusSwitchMessage": "The current session will stop. Start Focus on “{task}”?",
+  "taskFocusSwitchConfirm": "Switch",
+  "@taskFocusSwitchMessage": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
   }
 }

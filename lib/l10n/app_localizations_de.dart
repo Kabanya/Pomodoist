@@ -2561,4 +2561,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get overdueEmpty => 'Keine überfälligen Aufgaben';
+
+  @override
+  String get taskFocusSwitchTitle => 'Fokus wechseln?';
+
+  @override
+  String taskFocusSwitchMessage(String task) {
+    return 'Die aktuelle Sitzung wird beendet. Fokus für „$task“ starten?';
+  }
+
+  @override
+  String get taskFocusSwitchConfirm => 'Wechseln';
 }

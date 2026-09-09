@@ -2518,4 +2518,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get overdueEmpty => 'لا توجد مهام متأخرة';
+
+  @override
+  String get taskFocusSwitchTitle => 'تبديل التركيز؟';
+
+  @override
+  String taskFocusSwitchMessage(String task) {
+    return 'ستتوقف الجلسة الحالية. هل تريد بدء التركيز على «$task»؟';
+  }
+
+  @override
+  String get taskFocusSwitchConfirm => 'تبديل';
 }

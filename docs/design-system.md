@@ -276,6 +276,31 @@ In selection mode, long-press toggles selection and dragging is disabled. Preser
 drag payloads, previews, nesting and drop targets. Mouse dragging and specialized
 Kanban and Timeline cards retain their existing behavior.
 
+### Mobile swipe actions
+
+On native iOS/Android, an unfinished shared task row follows a horizontal finger
+gesture. A physical right swipe reveals Focus; a physical left swipe reveals
+Schedule, independently of text direction. Reveal after 48 logical pixels, with
+an action area capped at 144 px and half the row width. Even a full swipe only
+reveals a button: never execute or dismiss a task on gesture completion.
+
+Use Flutter's gesture arena to separate horizontal swipes, vertical scrolling and
+long-press dragging. Disable swiping during selection, task dragging and action
+execution. Close on an outside tap, reverse swipe or Back. Snap open and closed
+with the existing 180 ms state transition; Reduce Motion applies the final state
+immediately, without delaying actions or waiting for animation callbacks.
+
+Single-task Schedule uses the same confirmed date panel and patch application as
+bulk scheduling, without changing selection or requiring a selection scope. Read
+the task again before applying a single update, retain recurrence and interval
+rules, and surface failures. The action also works in subtasks and the matrix.
+
+Shared row Focus actions use the selected preset and task estimate. Open an
+existing active or paused session for the same task without restarting it. Ask
+before replacing a different session, revalidate after confirmation, and preserve
+it on cancellation. Share the in-flight guard across rows, report failures, and
+open Focus after a successful action. Completion remains on the checkbox.
+
 ### Focus completion actions
 
 When the current task is open and a next scheduled task is available, completing

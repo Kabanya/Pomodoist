@@ -21,6 +21,9 @@ import '../../domain/project_colors.dart';
 import '../../domain/task_focus_estimate.dart';
 import '../../domain/task_models.dart';
 import '../task_completion_feedback.dart';
+import '../task_scheduling.dart';
+import '../task_focus_launcher.dart';
+import 'task_swipe_actions.dart';
 import 'project_color_picker.dart';
 import 'task_motion.dart';
 import 'task_selection_region.dart';
@@ -235,7 +238,6 @@ class TaskListItem extends ConsumerWidget {
     final l10n = context.l10n;
     final selection = TaskSelectionScope.maybeOf(context);
     final taskRepository = ref.watch(taskRepositoryProvider);
-    final focusRepository = ref.watch(focusRepositoryProvider);
     final presets = ref.watch(focusPresetsProvider).value ?? const [];
     final selectedPreset = selectedFocusPresetOrDefault(
       presets,
@@ -275,30 +277,7 @@ class TaskListItem extends ConsumerWidget {
         tooltip: l10n.startFocus,
         onPressed: task.isCompleted || (selection?.active ?? false)
             ? null
-            : () async {
-                final router = GoRouter.of(context);
-                await focusRepository.startRun(
-                  StartFocusRunInput(
-                    taskId: task.id,
-                    projectId: task.projectId,
-                    presetId: selectedPreset?.id,
-                    targetWorkIntervals: _targetForStart(focusEstimate),
-                  ),
-                );
-                if (!context.mounted) {
-                  return;
-                }
-                showActionFeedback(
-                  context,
-                  message: l10n.focusStarted,
-                  icon: LucideIcons.circlePlay,
-                  haptic: AppHapticCue.none,
-                  action: SnackBarAction(
-                    label: l10n.commonOpen,
-                    onPressed: () => router.go('/focus'),
-                  ),
-                );
-              },
+            : () => _startFocus(context, ref),
         style: IconButton.styleFrom(
           backgroundColor: colors.accentTint,
           foregroundColor: colors.accent,
@@ -419,129 +398,142 @@ class TaskListItem extends ConsumerWidget {
               ),
               TaskListItemPresentation.agenda => overflowAction(),
             };
-      final content = Material(
-        color: accepting || (selection?.isSelected(task.id) ?? false)
-            ? colors.accentTint
-            : Colors.transparent,
-        child: Semantics(
-          selected: selection?.active ?? false
-              ? selection!.isSelected(task.id)
-              : null,
-          child: InkWell(
-            key: ValueKey('task-list-item-row-${task.id}'),
-            borderRadius: BorderRadius.circular(10),
-            focusColor: colors.accentTint,
-            hoverColor: colors.surfaceTint,
-            onTap: () {
-              if (selection?.active ?? false) {
-                selection!.toggle(task.id);
-              } else {
-                openTaskDetails(context, task.id);
-              }
-            },
-            onSecondaryTapDown: (details) {
-              if (!(selection?.active ?? false)) {
-                unawaited(
-                  _showQuickActions(context, ref, details.globalPosition),
-                );
-              }
-            },
-            onLongPress:
-                _usesTouchTaskInteraction && (selection?.active ?? false)
-                ? () => selection!.toggle(task.id)
+      Widget buildContent(ValueChanged<bool>? onTaskDraggingChanged) {
+        final content = Material(
+          color: accepting || (selection?.isSelected(task.id) ?? false)
+              ? colors.accentTint
+              : Colors.transparent,
+          child: Semantics(
+            selected: selection?.active ?? false
+                ? selection!.isSelected(task.id)
                 : null,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                depth * 18,
-                verticalPadding,
-                4,
-                verticalPadding,
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 34,
-                    child: selection?.active ?? false
-                        ? Checkbox(
-                            value: selection!.isSelected(task.id),
-                            visualDensity: VisualDensity.compact,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                            shape: const CircleBorder(),
-                            onChanged: (_) => selection.toggle(task.id),
-                          )
-                        : Center(
-                            child: TaskCompletionControl(
-                              taskId: task.id,
-                              isCompleted: task.isCompleted,
-                              color: task.isCompleted
-                                  ? colors.accent
-                                  : _priorityColor(
-                                      task.priority,
-                                      colorScheme,
-                                      colors,
-                                    ),
-                              fillColor: colors.accentFill,
-                              tooltip: task.isCompleted
-                                  ? l10n.markOpen
-                                  : l10n.markComplete,
-                              onPressed: toggleCompletion,
-                            ),
-                          ),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: _TaskTextDragSource(
-                      task: task,
-                      enabled: !(selection?.active ?? false),
-                      child: isAgenda || isModern
-                          ? _AgendaTaskContent(
-                              task: task,
-                              project: rowProject,
-                              modern: isModern,
-                              withinDate: isAgenda,
-                              description: isAgenda ? null : description,
-                              focusEstimate: focusEstimate,
-                              subtaskProgress: subtaskProgress,
-                              allowMetadataWrap: !agendaDesktop,
-                              taskTimeState: taskTimeState,
-                              timeDisplayMode: timeDisplayMode,
-                              defaultTimedBlockMinutes:
-                                  defaultTimedBlockMinutes,
+            child: InkWell(
+              key: ValueKey('task-list-item-row-${task.id}'),
+              borderRadius: BorderRadius.circular(10),
+              focusColor: colors.accentTint,
+              hoverColor: colors.surfaceTint,
+              onTap: () {
+                if (selection?.active ?? false) {
+                  selection!.toggle(task.id);
+                } else {
+                  openTaskDetails(context, task.id);
+                }
+              },
+              onSecondaryTapDown: (details) {
+                if (!(selection?.active ?? false)) {
+                  unawaited(
+                    _showQuickActions(context, ref, details.globalPosition),
+                  );
+                }
+              },
+              onLongPress:
+                  _usesTouchTaskInteraction && (selection?.active ?? false)
+                  ? () => selection!.toggle(task.id)
+                  : null,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  depth * 18,
+                  verticalPadding,
+                  4,
+                  verticalPadding,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 34,
+                      child: selection?.active ?? false
+                          ? Checkbox(
+                              value: selection!.isSelected(task.id),
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              shape: const CircleBorder(),
+                              onChanged: (_) => selection.toggle(task.id),
                             )
-                          : _TaskContent(
-                              task: task,
-                              description: description,
-                              hasDescription: hasDescription,
-                              hasMeta: hasMeta,
-                              focusEstimate: focusEstimate,
-                              subtaskProgress: subtaskProgress,
-                              taskTimeState: taskTimeState,
-                              timeDisplayMode: timeDisplayMode,
-                              defaultTimedBlockMinutes:
-                                  defaultTimedBlockMinutes,
+                          : Center(
+                              child: TaskCompletionControl(
+                                taskId: task.id,
+                                isCompleted: task.isCompleted,
+                                color: task.isCompleted
+                                    ? colors.accent
+                                    : _priorityColor(
+                                        task.priority,
+                                        colorScheme,
+                                        colors,
+                                      ),
+                                fillColor: colors.accentFill,
+                                tooltip: task.isCompleted
+                                    ? l10n.markOpen
+                                    : l10n.markComplete,
+                                onPressed: toggleCompletion,
+                              ),
                             ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  trailingAction,
-                ],
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: _TaskTextDragSource(
+                        task: task,
+                        onDraggingChanged: onTaskDraggingChanged,
+                        enabled: !(selection?.active ?? false),
+                        child: isAgenda || isModern
+                            ? _AgendaTaskContent(
+                                task: task,
+                                project: rowProject,
+                                modern: isModern,
+                                withinDate: isAgenda,
+                                description: isAgenda ? null : description,
+                                focusEstimate: focusEstimate,
+                                subtaskProgress: subtaskProgress,
+                                allowMetadataWrap: !agendaDesktop,
+                                taskTimeState: taskTimeState,
+                                timeDisplayMode: timeDisplayMode,
+                                defaultTimedBlockMinutes:
+                                    defaultTimedBlockMinutes,
+                              )
+                            : _TaskContent(
+                                task: task,
+                                description: description,
+                                hasDescription: hasDescription,
+                                hasMeta: hasMeta,
+                                focusEstimate: focusEstimate,
+                                subtaskProgress: subtaskProgress,
+                                taskTimeState: taskTimeState,
+                                timeDisplayMode: timeDisplayMode,
+                                defaultTimedBlockMinutes:
+                                    defaultTimedBlockMinutes,
+                              ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    trailingAction,
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      );
-      if (!enableSubtaskDrop) {
-        return content;
+        );
+        if (!enableSubtaskDrop) {
+          return content;
+        }
+        return AnimatedPadding(
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : AppMotion.state,
+          curve: Curves.easeOutCubic,
+          padding: EdgeInsets.symmetric(vertical: accepting ? 4 : 0),
+          child: content,
+        );
       }
-      return AnimatedPadding(
-        duration: MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : AppMotion.state,
-        curve: Curves.easeOutCubic,
-        padding: EdgeInsets.symmetric(vertical: accepting ? 4 : 0),
-        child: content,
+
+      if (!_usesTouchTaskInteraction) return buildContent(null);
+      return TaskSwipeActions(
+        key: ValueKey('task-swipe-${task.id}'),
+        enabled:
+            !task.isCompleted && !(selection?.active ?? false) && !accepting,
+        onFocus: () => _startFocus(context, ref),
+        onSchedule: () => _scheduleTask(context, ref),
+        builder: buildContent,
       );
     }
 
@@ -650,19 +642,19 @@ class TaskListItem extends ConsumerWidget {
             enabled: !task.isCompleted && !selection.active,
             child: _TaskMenuRow(icon: LucideIcons.play, label: l10n.startFocus),
           ),
+        PopupMenuItem(
+          value: _TaskQuickAction.schedule,
+          child: _TaskMenuRow(
+            icon: LucideIcons.calendar,
+            label: l10n.taskSchedule,
+          ),
+        ),
         if (selection != null) ...[
           PopupMenuItem(
             value: _TaskQuickAction.select,
             child: _TaskMenuRow(
               icon: LucideIcons.listChecks,
               label: l10n.taskSelect,
-            ),
-          ),
-          PopupMenuItem(
-            value: _TaskQuickAction.schedule,
-            child: _TaskMenuRow(
-              icon: LucideIcons.calendar,
-              label: l10n.taskSchedule,
             ),
           ),
           PopupMenuItem(
@@ -792,9 +784,7 @@ class TaskListItem extends ConsumerWidget {
         TaskSelectionScope.maybeOf(context)?.begin(task.id);
         return Future.value();
       case _TaskQuickAction.schedule:
-        final selection = TaskSelectionScope.maybeOf(context);
-        selection?.begin(task.id);
-        return selection?.showDue(context) ?? Future.value();
+        return _scheduleTask(context, ref);
       case _TaskQuickAction.move:
         final selection = TaskSelectionScope.maybeOf(context);
         selection?.begin(task.id);
@@ -812,21 +802,7 @@ class TaskListItem extends ConsumerWidget {
         selection?.begin(task.id);
         return selection?.delete(context) ?? Future.value();
       case _TaskQuickAction.startFocus:
-        if (task.isCompleted) {
-          return Future.value();
-        }
-        final selectedPreset = _selectedPreset(ref);
-        final focusEstimate = targetFocusIntervalsForTask(task, selectedPreset);
-        return ref
-            .read(focusRepositoryProvider)
-            .startRun(
-              StartFocusRunInput(
-                taskId: task.id,
-                projectId: task.projectId,
-                presetId: selectedPreset?.id,
-                targetWorkIntervals: _targetForStart(focusEstimate),
-              ),
-            );
+        return _startFocus(context, ref);
       case _TaskQuickAction.toggleComplete:
         return task.isCompleted
             ? taskRepository.uncompleteTask(task.id)
@@ -890,17 +866,83 @@ class TaskListItem extends ConsumerWidget {
     }
   }
 
-  int? _targetForStart(int? estimate) {
-    if (estimate == null) {
-      return null;
+  Future<void> _scheduleTask(BuildContext context, WidgetRef ref) async {
+    final repository = ref.read(taskRepositoryProvider);
+    try {
+      final result = await showTaskDuePanel(context, ref);
+      if (result == null || !context.mounted) return;
+      final latest = await repository.watchTask(task.id).first;
+      if (!context.mounted) return;
+      if (latest == null || latest.isDeleted) {
+        throw StateError('Task unavailable');
+      }
+      final failed = await applyTaskDueResult(
+        [latest],
+        result,
+        updateTask: repository.updateTask,
+      );
+      if (failed.isNotEmpty) throw StateError('Could not schedule task');
+    } catch (_) {
+      if (context.mounted) _showActionError(context);
     }
-    return estimate < 1 ? 1 : estimate;
   }
 
-  FocusPresetItem? _selectedPreset(WidgetRef ref) {
-    return selectedFocusPresetOrDefault(
-      ref.read(focusPresetsProvider).value ?? const [],
-      ref.read(lastFocusPresetIdProvider),
+  Future<void> _startFocus(BuildContext context, WidgetRef ref) async {
+    final launcher = ref.read(taskFocusLauncherProvider);
+    final presets = ref.read(focusPresetsProvider.future);
+    final presetId = ref.read(lastFocusPresetIdProvider);
+    try {
+      final preset = selectedFocusPresetOrDefault(await presets, presetId);
+      if (!context.mounted) return;
+      final opened = await launcher.open(
+        task,
+        preset: preset,
+        confirmSwitch: () async {
+          if (!context.mounted) return false;
+          return await showDialog<bool>(
+                    context: context,
+                    animationStyle: AnimationStyle(
+                      duration: AppMotion.duration(context, AppMotion.popup),
+                      reverseDuration: AppMotion.duration(
+                        context,
+                        AppMotion.popup,
+                      ),
+                      curve: AppMotion.curve,
+                    ),
+                    builder: (dialogContext) => AlertDialog(
+                      title: Text(context.l10n.taskFocusSwitchTitle),
+                      content: Text(
+                        context.l10n.taskFocusSwitchMessage(task.content),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext, false),
+                          child: Text(context.l10n.commonCancel),
+                        ),
+                        FilledButton(
+                          onPressed: () => Navigator.pop(dialogContext, true),
+                          child: Text(context.l10n.taskFocusSwitchConfirm),
+                        ),
+                      ],
+                    ),
+                  ) ==
+                  true &&
+              context.mounted;
+        },
+      );
+      if (opened && context.mounted) context.go('/focus');
+    } catch (_) {
+      if (context.mounted) _showActionError(context);
+    }
+  }
+
+  void _showActionError(BuildContext context) {
+    showActionFeedback(
+      context,
+      message: context.l10n.taskActionFailedCount(1),
+      icon: LucideIcons.circleAlert,
+      sound: ActionFeedbackSound.none,
+      haptic: AppHapticCue.none,
     );
   }
 
@@ -1528,11 +1570,13 @@ class _TaskTextDragSource extends StatelessWidget {
     required this.task,
     required this.child,
     this.enabled = true,
+    this.onDraggingChanged,
   });
 
   final TaskItem task;
   final Widget child;
   final bool enabled;
+  final ValueChanged<bool>? onDraggingChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -1550,6 +1594,8 @@ class _TaskTextDragSource extends StatelessWidget {
     if (_usesTouchTaskInteraction) {
       return LongPressDraggable<String>(
         data: task.id,
+        onDragStarted: () => onDraggingChanged?.call(true),
+        onDragEnd: (_) => onDraggingChanged?.call(false),
         feedback: feedback,
         childWhenDragging: childWhenDragging,
         child: child,
