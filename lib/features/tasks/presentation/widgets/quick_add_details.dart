@@ -10,7 +10,6 @@ import 'package:shadcn_ui/shadcn_ui.dart'
 
 import '../../../../app/app_l10n.dart';
 import '../../../../app/providers.dart';
-import '../../../../app/theme/app_theme.dart';
 import '../../../planning/domain/quick_add_parser.dart';
 import '../../domain/task_models.dart';
 import 'quick_add_metadata_edit.dart';
@@ -171,119 +170,96 @@ class QuickAddDetails extends ConsumerWidget {
             : null;
         return Padding(
           padding: const EdgeInsets.only(top: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Wrap(
+            spacing: 4,
+            runSpacing: 4,
             children: [
-              if (parsed.content.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    parsed.content,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: context.appColors.secondaryText,
-                    ),
-                  ),
-                ),
-              Wrap(
-                spacing: 4,
-                runSpacing: 4,
-                children: [
-                  _DetailsMenu(
-                    label: timeLabel == null
-                        ? dateLabel
-                        : '$dateLabel · $timeLabel',
-                    icon: LucideIcons.calendar,
-                    enabled: canEdit,
-                    items: (close) => [
-                      _option(context.l10n.timelinePickDate, () {
-                        close();
-                        changeDate();
-                      }),
-                      _option(context.l10n.quickAddChangeTime, () {
-                        close();
-                        changeTime();
-                      }),
-                      _option(context.l10n.allDay, () {
-                        close();
-                        edit(
-                          quickAddSchedulingKinds,
-                          quickAddScheduleToken(
-                            TaskSchedule.allDay(
-                              currentSchedule()?.displayDate ?? clock.now(),
-                            ),
-                          ),
-                        );
-                      }),
-                      _option(context.l10n.quickAddResetDetails, () {
-                        close();
-                        edit(quickAddSchedulingKinds, null);
-                      }),
-                    ],
-                  ),
-                  _DetailsMenu(
-                    label: projectName,
-                    icon: LucideIcons.hash,
-                    enabled: canEdit,
-                    items: (close) => [
-                      _option(context.l10n.quickAddResetDetails, () {
-                        close();
-                        edit({QuickAddTokenKind.project}, null);
-                      }),
-                      for (final project in projects)
-                        Tooltip(
-                          message:
-                              quickAddProjectToken(
+              _DetailsMenu(
+                label: timeLabel == null
+                    ? dateLabel
+                    : '$dateLabel · $timeLabel',
+                icon: LucideIcons.calendar,
+                enabled: canEdit,
+                items: (close) => [
+                  _option(context.l10n.timelinePickDate, () {
+                    close();
+                    changeDate();
+                  }),
+                  _option(context.l10n.quickAddChangeTime, () {
+                    close();
+                    changeTime();
+                  }),
+                  _option(context.l10n.allDay, () {
+                    close();
+                    edit(
+                      quickAddSchedulingKinds,
+                      quickAddScheduleToken(
+                        TaskSchedule.allDay(
+                          currentSchedule()?.displayDate ?? clock.now(),
+                        ),
+                      ),
+                    );
+                  }),
+                  _option(context.l10n.quickAddResetDetails, () {
+                    close();
+                    edit(quickAddSchedulingKinds, null);
+                  }),
+                ],
+              ),
+              _DetailsMenu(
+                label: projectName,
+                icon: LucideIcons.hash,
+                enabled: canEdit,
+                items: (close) => [
+                  _option(context.l10n.quickAddResetDetails, () {
+                    close();
+                    edit({QuickAddTokenKind.project}, null);
+                  }),
+                  for (final project in projects)
+                    Tooltip(
+                      message:
+                          quickAddProjectToken(
+                                project.name,
+                                parser,
+                                now: now,
+                              ) ==
+                              null
+                          ? context.l10n.quickAddProjectNameUnsupported
+                          : project.name,
+                      child: _option(
+                        project.name,
+                        quickAddProjectToken(project.name, parser, now: now) ==
+                                null
+                            ? null
+                            : () {
+                                close();
+                                edit(
+                                  {QuickAddTokenKind.project},
+                                  quickAddProjectToken(
                                     project.name,
                                     parser,
-                                    now: now,
-                                  ) ==
-                                  null
-                              ? context.l10n.quickAddProjectNameUnsupported
-                              : project.name,
-                          child: _option(
-                            project.name,
-                            quickAddProjectToken(
-                                      project.name,
-                                      parser,
-                                      now: now,
-                                    ) ==
-                                    null
-                                ? null
-                                : () {
-                                    close();
-                                    edit(
-                                      {QuickAddTokenKind.project},
-                                      quickAddProjectToken(
-                                        project.name,
-                                        parser,
-                                        now: clock.now(),
-                                      ),
-                                    );
-                                  },
-                          ),
-                        ),
-                    ],
-                  ),
-                  _DetailsMenu(
-                    label: context.l10n.priority(
-                      parsed.priority ?? priority ?? 4,
+                                    now: clock.now(),
+                                  ),
+                                );
+                              },
+                      ),
                     ),
-                    icon: LucideIcons.flag,
-                    enabled: canEdit,
-                    items: (close) => [
-                      for (var number = 1; number <= 4; number++)
-                        _option(context.l10n.priority(number), () {
-                          close();
-                          edit({QuickAddTokenKind.priority}, 'p$number');
-                        }),
-                      _option(context.l10n.quickAddResetDetails, () {
-                        close();
-                        edit({QuickAddTokenKind.priority}, null);
-                      }),
-                    ],
-                  ),
+                ],
+              ),
+              _DetailsMenu(
+                label: context.l10n.priority(parsed.priority ?? priority ?? 4),
+                icon: LucideIcons.flag,
+                enabled: canEdit,
+                items: (close) => [
+                  for (var number = 1; number <= 4; number++)
+                    _option(context.l10n.priority(number), () {
+                      close();
+                      edit({QuickAddTokenKind.priority}, 'p$number');
+                    }),
+                  _option(context.l10n.quickAddResetDetails, () {
+                    close();
+                    edit({QuickAddTokenKind.priority}, null);
+                  }),
                 ],
               ),
             ],
