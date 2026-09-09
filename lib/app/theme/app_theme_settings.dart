@@ -361,8 +361,9 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
     try {
       final file = await pickFile();
       if (!current() || file == null) return;
-      if (await file.length() > themeImageMaxBytes)
+      if (await file.length() > themeImageMaxBytes) {
         throw const ThemeImageTooLargeException();
+      }
       if (!current()) return;
       final bytes = await file.readAsBytes();
       if (!current()) return;
@@ -469,8 +470,9 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
     _requireReady();
     final draft = state.preview;
     if (draft == null) throw StateError('No theme draft');
-    if (state.isPreparingImage)
+    if (state.isPreparingImage) {
       throw StateError('Image is still being prepared');
+    }
     cancelImageSelection();
     final saved = AppThemeDefinition.fromJson(draft.toJson());
     await _persist(

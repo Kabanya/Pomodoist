@@ -478,12 +478,13 @@ class _ThemeEditorState extends ConsumerState<_ThemeEditor> {
             ),
           );
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _imageError = error is ThemeImageTooLargeException
               ? context.l10n.themeBackgroundTooLarge
               : context.l10n.themeBackgroundImageError,
         );
+      }
     }
   }
 

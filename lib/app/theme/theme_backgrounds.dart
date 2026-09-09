@@ -28,7 +28,7 @@ class ThemeBackgroundImage {
   );
 
   Map<String, Object> toJson() => {
-    if (imageId != null) 'imageId': imageId!,
+    'imageId': ?imageId,
     'dim': dim,
     'blur': blur,
   };

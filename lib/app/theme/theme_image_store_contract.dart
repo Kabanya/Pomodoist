@@ -14,6 +14,7 @@ bool isThemeImageId(String id) =>
     id.length == 64 && _imageIdPattern.hasMatch(id);
 
 void validateThemeImageId(String id) {
-  if (!isThemeImageId(id))
+  if (!isThemeImageId(id)) {
     throw const FormatException('Invalid theme image ID');
+  }
 }

@@ -77,7 +77,7 @@ void main() {
         '/absolute',
         'A' * 64,
         'a' * 63,
-        '${first}\n',
+        '$first\n',
       ]) {
         await expectLater(store.read(id), throwsFormatException);
         await expectLater(store.write(id, Uint8List(1)), throwsFormatException);
