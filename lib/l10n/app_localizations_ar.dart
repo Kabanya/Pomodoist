@@ -381,7 +381,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get registerCheckEmailMessage =>
-      'افتح رابط التأكيد لإكمال إنشاء حسابك.';
+      'إذا كان هذا العنوان يحتاج إلى تأكيد، فستصلك رسالة بريد إلكتروني تحتوي على رابط. إذا كان لديك حساب بالفعل، فسجّل الدخول أو أعد تعيين كلمة المرور.';
 
   @override
   String registerError(Object error) {
@@ -492,7 +492,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get authMagicLinkSent =>
-      'تم إرسال رابط تسجيل الدخول. تحقق من صندوق الوارد ومجلد الرسائل غير المرغوب فيها.';
+      'إذا كان هناك حساب بهذا العنوان، فسيصلك رابط لتسجيل الدخول. تحقق من صندوق الوارد ومجلد الرسائل غير المرغوب فيها.';
 
   @override
   String get authAccountCreated => 'تم إنشاء الحساب.';
@@ -512,7 +512,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get authInvalidCredentials =>
-      'البريد الإلكتروني أو كلمة المرور غير صحيحين. تحقّق منهما وحاول مجددًا.';
+      'البريد الإلكتروني أو كلمة المرور غير صحيحة. تحقق من العنوان أو أعد تعيين كلمة المرور أو أنشئ حسابًا.';
 
   @override
   String get authEmailUnconfirmed =>
@@ -524,7 +524,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get authAccountMayExist =>
-      'تعذر إنشاء الحساب. إذا سبق أن سجلت بهذا البريد الإلكتروني، فسجّل الدخول بدلاً من ذلك.';
+      'قد يوجد حساب يستخدم هذا البريد الإلكتروني بالفعل. سجّل الدخول أو أعد تعيين كلمة المرور.';
 
   @override
   String get authRateLimited =>
@@ -596,6 +596,13 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get authUnexpectedMagicLink =>
       'تعذر إرسال رابط تسجيل الدخول. حاول مجددًا.';
+
+  @override
+  String get authResendConfirmation => 'إعادة إرسال التأكيد';
+
+  @override
+  String get authConfirmationSendFailed =>
+      'تعذر إرسال رسالة التأكيد. حاول مرة أخرى لاحقًا.';
 
   @override
   String get authRetryVerification => 'إعادة محاولة التحقق';

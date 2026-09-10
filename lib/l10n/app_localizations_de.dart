@@ -386,7 +386,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get registerCheckEmailMessage =>
-      'Öffne den Bestätigungslink, um dein Konto fertig zu erstellen.';
+      'Falls diese Adresse bestätigt werden muss, erhalten Sie eine E-Mail mit einem Link. Wenn Sie bereits ein Konto haben, melden Sie sich an oder setzen Sie Ihr Passwort zurück.';
 
   @override
   String registerError(Object error) {
@@ -498,7 +498,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get authMagicLinkSent =>
-      'Anmeldelink gesendet. Prüfe den Posteingang und Spam-Ordner.';
+      'Falls ein Konto mit dieser Adresse existiert, erhalten Sie einen Anmeldelink. Prüfen Sie Ihren Posteingang und Spam-Ordner.';
 
   @override
   String get authAccountCreated => 'Konto erstellt.';
@@ -518,7 +518,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get authInvalidCredentials =>
-      'E-Mail-Adresse oder Passwort ist falsch. Prüfe beides und versuche es erneut.';
+      'E-Mail-Adresse oder Passwort ist falsch. Prüfen Sie die Adresse, setzen Sie Ihr Passwort zurück oder erstellen Sie ein Konto.';
 
   @override
   String get authEmailUnconfirmed =>
@@ -530,7 +530,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get authAccountMayExist =>
-      'Das Konto konnte nicht erstellt werden. Wenn du dich mit dieser E-Mail schon registriert hast, melde dich stattdessen an.';
+      'Möglicherweise besteht bereits ein Konto mit dieser E-Mail-Adresse. Melden Sie sich an oder setzen Sie Ihr Passwort zurück.';
 
   @override
   String get authRateLimited =>
@@ -607,6 +607,13 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get authUnexpectedMagicLink =>
       'Der Anmeldelink konnte nicht gesendet werden. Versuche es erneut.';
+
+  @override
+  String get authResendConfirmation => 'Bestätigung erneut senden';
+
+  @override
+  String get authConfirmationSendFailed =>
+      'Die Bestätigungs-E-Mail konnte nicht gesendet werden. Versuchen Sie es später erneut.';
 
   @override
   String get authRetryVerification => 'Prüfung erneut versuchen';

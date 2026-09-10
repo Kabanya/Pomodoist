@@ -385,7 +385,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get registerCheckEmailMessage =>
-      'Abre el enlace de confirmación para terminar de crear tu cuenta.';
+      'Si esta dirección necesita confirmación, recibirás un correo con un enlace. Si ya tienes una cuenta, inicia sesión o restablece tu contraseña.';
 
   @override
   String registerError(Object error) {
@@ -497,7 +497,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get authMagicLinkSent =>
-      'Enlace de acceso enviado. Revisa la bandeja de entrada y la carpeta de spam.';
+      'Si existe una cuenta con esta dirección, recibirás un enlace para iniciar sesión. Revisa tu bandeja de entrada y la carpeta de spam.';
 
   @override
   String get authAccountCreated => 'Cuenta creada.';
@@ -517,7 +517,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get authInvalidCredentials =>
-      'El email o la contraseña no son correctos. Revísalos e inténtalo de nuevo.';
+      'El correo o la contraseña son incorrectos. Comprueba la dirección, restablece tu contraseña o crea una cuenta.';
 
   @override
   String get authEmailUnconfirmed =>
@@ -529,7 +529,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get authAccountMayExist =>
-      'No se pudo crear la cuenta. Si ya te registraste con este email, inicia sesión.';
+      'Puede que ya exista una cuenta con este correo. Inicia sesión o restablece tu contraseña.';
 
   @override
   String get authRateLimited =>
@@ -606,6 +606,13 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get authUnexpectedMagicLink =>
       'No se pudo enviar el enlace de acceso. Inténtalo de nuevo.';
+
+  @override
+  String get authResendConfirmation => 'Reenviar confirmación';
+
+  @override
+  String get authConfirmationSendFailed =>
+      'No se pudo enviar el correo de confirmación. Inténtalo más tarde.';
 
   @override
   String get authRetryVerification => 'Reintentar verificación';

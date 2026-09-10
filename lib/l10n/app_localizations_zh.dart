@@ -359,7 +359,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get registerCheckEmailTitle => '查看你的邮箱';
 
   @override
-  String get registerCheckEmailMessage => '打开确认链接以完成账户创建。';
+  String get registerCheckEmailMessage =>
+      '如果此邮箱需要验证，你将收到一封包含验证链接的邮件。如果已有账户，请登录或重置密码。';
 
   @override
   String registerError(Object error) {
@@ -460,7 +461,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authSendLink => '发送链接';
 
   @override
-  String get authMagicLinkSent => '登录链接已发送。请检查收件箱和垃圾邮件文件夹。';
+  String get authMagicLinkSent => '如果此邮箱已有账户，你将收到登录链接。请检查收件箱和垃圾邮件文件夹。';
 
   @override
   String get authAccountCreated => '账户已创建。';
@@ -478,7 +479,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authPasswordRequired => '请输入密码。';
 
   @override
-  String get authInvalidCredentials => '邮箱或密码不正确。请检查后重试。';
+  String get authInvalidCredentials => '邮箱或密码不正确。请检查邮箱地址、重置密码或创建账户。';
 
   @override
   String get authEmailUnconfirmed => '请使用我们发送的链接确认邮箱，然后重新登录。';
@@ -487,7 +488,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authWeakPassword => '此密码太容易被猜到。请使用更长、更难预测的密码。';
 
   @override
-  String get authAccountMayExist => '无法创建账户。如果你曾用此邮箱注册，请改为登录。';
+  String get authAccountMayExist => '此邮箱可能已有关联账户。请登录或重置密码。';
 
   @override
   String get authRateLimited => '尝试次数过多。请等待几分钟后重试。';
@@ -547,6 +548,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get authUnexpectedMagicLink => '无法发送登录链接。请重试。';
+
+  @override
+  String get authResendConfirmation => '重新发送验证邮件';
+
+  @override
+  String get authConfirmationSendFailed => '无法发送验证邮件。请稍后重试。';
 
   @override
   String get authRetryVerification => '重新验证';

@@ -386,7 +386,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get registerCheckEmailMessage =>
-      'Ouvrez le lien de confirmation pour terminer la création de votre compte.';
+      'Si cette adresse doit être confirmée, vous recevrez un email contenant un lien. Si vous avez déjà un compte, connectez-vous ou réinitialisez votre mot de passe.';
 
   @override
   String registerError(Object error) {
@@ -498,7 +498,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authMagicLinkSent =>
-      'Lien de connexion envoyé. Vérifiez votre boîte de réception et les indésirables.';
+      'Si un compte existe pour cette adresse, vous recevrez un lien de connexion. Vérifiez votre boîte de réception et les courriers indésirables.';
 
   @override
   String get authAccountCreated => 'Compte créé.';
@@ -518,7 +518,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authInvalidCredentials =>
-      'L’email ou le mot de passe est incorrect. Vérifiez-les et réessayez.';
+      'L’adresse email ou le mot de passe est incorrect. Vérifiez l’adresse, réinitialisez votre mot de passe ou créez un compte.';
 
   @override
   String get authEmailUnconfirmed =>
@@ -530,7 +530,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authAccountMayExist =>
-      'Impossible de créer le compte. Si vous avez déjà utilisé cet email, connectez-vous.';
+      'Un compte utilise peut-être déjà cette adresse email. Connectez-vous ou réinitialisez votre mot de passe.';
 
   @override
   String get authRateLimited =>
@@ -606,6 +606,13 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get authUnexpectedMagicLink =>
       'Impossible d’envoyer le lien de connexion. Réessayez.';
+
+  @override
+  String get authResendConfirmation => 'Renvoyer la confirmation';
+
+  @override
+  String get authConfirmationSendFailed =>
+      'Impossible d’envoyer l’email de confirmation. Réessayez plus tard.';
 
   @override
   String get authRetryVerification => 'Réessayer la vérification';

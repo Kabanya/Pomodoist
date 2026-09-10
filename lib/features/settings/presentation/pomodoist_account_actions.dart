@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/account_auth_feedback.dart';
 import '../../../app/account_providers.dart';
+import '../../../app/email_auth.dart';
 import '../../../app/password_recovery.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_motion.dart';
@@ -194,7 +195,13 @@ class _PomodoistSocialSignInButtonState
   }
 }
 
-enum _EmailAction { magicLink, signIn, signUp, resetPassword }
+enum _EmailAction {
+  magicLink,
+  signIn,
+  signUp,
+  resetPassword,
+  resendConfirmation,
+}
 
 const _accountOperationSlowThreshold = Duration(seconds: 30);
 
@@ -348,6 +355,10 @@ class _PomodoistEmailAuthDialogState
                     autofocus: true,
                     onPressed: () => _changeMode(_EmailAction.signIn),
                     child: Text(l10n.authBackToSignIn),
+                  ),
+                  ShadButton.ghost(
+                    onPressed: () => _changeMode(_EmailAction.resetPassword),
+                    child: Text(l10n.authForgotPassword),
                   ),
                 ],
               ),
@@ -636,7 +647,9 @@ class _PomodoistEmailAuthDialogState
     if (!_canSubmit) return;
     final emailFailure = validateAccountEmail(_email.text);
     final passwordFailure =
-        action == _EmailAction.magicLink || action == _EmailAction.resetPassword
+        action == _EmailAction.magicLink ||
+            action == _EmailAction.resetPassword ||
+            action == _EmailAction.resendConfirmation
         ? null
         : validateAccountPassword(_password.text);
     if (emailFailure != null || passwordFailure != null) {
@@ -687,6 +700,7 @@ class _PomodoistEmailAuthDialogState
         token = null;
       }
       if (!mounted) return;
+      var signedIn = false;
       switch (action) {
         case _EmailAction.resetPassword:
           final recovery = ref.read(passwordRecoveryProvider);
@@ -706,45 +720,40 @@ class _PomodoistEmailAuthDialogState
           }
           return;
         case _EmailAction.magicLink:
-          await widget.account.signInWithEmail(
-            _email.text.trim(),
-            redirectTo: widget.redirectTo,
-            captchaToken: token,
-          );
         case _EmailAction.signIn:
-          await widget.account.signInWithPassword(
-            email: _email.text.trim(),
-            password: _password.text,
-            captchaToken: token,
-          );
         case _EmailAction.signUp:
-          await widget.account.signUpWithPassword(
-            email: _email.text.trim(),
-            password: _password.text,
-            redirectTo: widget.redirectTo,
-            captchaToken: token,
-          );
+        case _EmailAction.resendConfirmation:
+          final result = await ref
+              .read(emailAuthProvider)
+              .submit(
+                action: switch (action) {
+                  _EmailAction.magicLink => EmailAuthAction.magicLink,
+                  _EmailAction.signIn => EmailAuthAction.signIn,
+                  _EmailAction.signUp => EmailAuthAction.signUp,
+                  _EmailAction.resendConfirmation =>
+                    EmailAuthAction.resendConfirmation,
+                  _EmailAction.resetPassword => throw StateError(
+                    'Separate recovery flow',
+                  ),
+                },
+                email: _email.text,
+                password: _password.text,
+                redirectTo: widget.redirectTo,
+                captchaToken: token,
+              );
+          if (result == null) return;
+          signedIn = result == EmailAuthResult.signedIn;
       }
-      if (action != _EmailAction.magicLink) {
+      if (action == _EmailAction.signIn || action == _EmailAction.signUp) {
         TextInput.finishAutofillContext(shouldSave: true);
       }
       if (!mounted) return;
-      final signedIn = widget.account.currentUserId != null;
-      if (action == _EmailAction.signUp && !signedIn) {
+      if ((action == _EmailAction.signUp ||
+              action == _EmailAction.resendConfirmation) &&
+          !signedIn) {
         FocusScope.of(context).unfocus();
         _password.clear();
         setState(() => _registrationEmailSent = true);
-        return;
-      }
-      if (action == _EmailAction.signIn && !signedIn) {
-        _showFailure(
-          const AccountAuthFailure(
-            AccountAuthFailureKind.unexpected,
-            field: AccountAuthField.form,
-            recovery: AccountAuthRecovery.retry,
-          ),
-          operation: AccountAuthOperation.passwordSignIn,
-        );
         return;
       }
       final successMessage = switch (action) {
@@ -752,6 +761,8 @@ class _PomodoistEmailAuthDialogState
         _EmailAction.resetPassword => context.l10n.authResetEmailSent,
         _EmailAction.signIn => context.l10n.authSignedIn,
         _EmailAction.signUp => context.l10n.authAccountCreated,
+        _EmailAction.resendConfirmation =>
+          context.l10n.registerCheckEmailMessage,
       };
       final messenger = ScaffoldMessenger.maybeOf(context);
       Navigator.of(context).pop();
@@ -781,6 +792,7 @@ class _PomodoistEmailAuthDialogState
     _EmailAction.resetPassword => AccountAuthOperation.passwordReset,
     _EmailAction.signIn => AccountAuthOperation.passwordSignIn,
     _EmailAction.signUp => AccountAuthOperation.signUp,
+    _EmailAction.resendConfirmation => AccountAuthOperation.confirmationEmail,
   };
 
   void _showFailure(
@@ -827,11 +839,17 @@ class _PomodoistEmailAuthDialogState
         });
         _passwordFocus.requestFocus();
       case AccountAuthRecovery.sendNewLink:
+        if (_mode == _EmailAction.resetPassword) {
+          unawaited(_submit(_EmailAction.resetPassword));
+          return;
+        }
         setState(() {
           _mode = _EmailAction.signIn;
           _feedback = null;
         });
         unawaited(_submit(_EmailAction.magicLink));
+      case AccountAuthRecovery.resendConfirmation:
+        unawaited(_submit(_EmailAction.resendConfirmation));
       case AccountAuthRecovery.editEmail:
         _emailFocus.requestFocus();
       case AccountAuthRecovery.editPassword:

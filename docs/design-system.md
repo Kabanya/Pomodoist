@@ -463,7 +463,31 @@ After registration without an active session, replace the dialog form with a
 persistent Check your email step showing the submitted address and a return to
 sign-in action. Clear the password and keep the email when returning. Do not
 reduce this instruction to a transient snackbar; registration with an immediate
-session keeps the existing signed-in transition.
+session keeps the existing signed-in transition. Describe email delivery
+conditionally: Supabase can return the same response for a new signup and a
+masked duplicate. Provide sign-in and password-recovery paths without promising
+that an email was sent or exposing whether an address is registered.
+
+Email entry points share the application-layer `EmailAuthController`. Preserve
+CAPTCHA, SDK PKCE handling and return paths, block concurrent submissions, and
+keep field values after failures. Magic-link sign-in uses `shouldCreateUser:
+false`; only explicit registration creates a new account.
+
+| Scenario | Feedback and next action |
+|---|---|
+| Empty or malformed input | Field validation before any request |
+| Unknown address or wrong password at sign-in | The same email-or-password error; offer recovery and registration |
+| Explicit duplicate-account response | Offer sign-in or password recovery |
+| New signup or masked duplicate without a session | Persistent, conditional check-email step |
+| Signup with a session | Continue through the existing signed-in return path |
+| Unconfirmed password sign-in | Offer signup-confirmation resend using CAPTCHA |
+| Unknown address for a magic link or recovery | Conditional check-email response; do not create an account |
+| Email delivery failure or server conflict | Retryable service error, distinct from rate limits and duplicate accounts |
+| Expired recovery or PKCE link | Offer a new recovery link |
+| Network, rate limit, CAPTCHA, weak password or restricted account | Localized existing feedback and appropriate retry/edit action |
+
+Classify documented error codes rather than parsing or displaying server messages.
+Changing the server's confirmation policy is separate from the client flow.
 
 Enter the new-password flow only for a password-recovery session validated by the
 authentication SDK. Require a new password and confirmation; keep user input when

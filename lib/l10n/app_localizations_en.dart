@@ -384,7 +384,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registerCheckEmailMessage =>
-      'Open the confirmation link to finish creating your account.';
+      'If this address needs confirmation, you will receive an email with a link. If you already have an account, sign in or reset your password.';
 
   @override
   String registerError(Object error) {
@@ -494,7 +494,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authMagicLinkSent =>
-      'Sign-in link sent. Check your inbox and spam folder.';
+      'If an account exists for this address, you will receive a sign-in link. Check your inbox and spam folder.';
 
   @override
   String get authAccountCreated => 'Account created.';
@@ -514,7 +514,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authInvalidCredentials =>
-      'The email or password is incorrect. Check both and try again.';
+      'The email or password is incorrect. Check the address, reset your password, or create an account.';
 
   @override
   String get authEmailUnconfirmed =>
@@ -526,7 +526,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authAccountMayExist =>
-      'Could not create the account. If you registered with this email before, sign in instead.';
+      'An account may already use this email. Sign in or reset your password.';
 
   @override
   String get authRateLimited =>
@@ -600,6 +600,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authUnexpectedMagicLink =>
       'Could not send the sign-in link. Try again.';
+
+  @override
+  String get authResendConfirmation => 'Resend confirmation';
+
+  @override
+  String get authConfirmationSendFailed =>
+      'Could not send the confirmation email. Try again later.';
 
   @override
   String get authRetryVerification => 'Try verification again';

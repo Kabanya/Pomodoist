@@ -777,7 +777,7 @@ abstract class AppLocalizations {
   /// No description provided for @registerCheckEmailMessage.
   ///
   /// In en, this message translates to:
-  /// **'Open the confirmation link to finish creating your account.'**
+  /// **'If this address needs confirmation, you will receive an email with a link. If you already have an account, sign in or reset your password.'**
   String get registerCheckEmailMessage;
 
   /// No description provided for @registerError.
@@ -975,7 +975,7 @@ abstract class AppLocalizations {
   /// No description provided for @authMagicLinkSent.
   ///
   /// In en, this message translates to:
-  /// **'Sign-in link sent. Check your inbox and spam folder.'**
+  /// **'If an account exists for this address, you will receive a sign-in link. Check your inbox and spam folder.'**
   String get authMagicLinkSent;
 
   /// No description provided for @authAccountCreated.
@@ -1011,7 +1011,7 @@ abstract class AppLocalizations {
   /// No description provided for @authInvalidCredentials.
   ///
   /// In en, this message translates to:
-  /// **'The email or password is incorrect. Check both and try again.'**
+  /// **'The email or password is incorrect. Check the address, reset your password, or create an account.'**
   String get authInvalidCredentials;
 
   /// No description provided for @authEmailUnconfirmed.
@@ -1029,7 +1029,7 @@ abstract class AppLocalizations {
   /// No description provided for @authAccountMayExist.
   ///
   /// In en, this message translates to:
-  /// **'Could not create the account. If you registered with this email before, sign in instead.'**
+  /// **'An account may already use this email. Sign in or reset your password.'**
   String get authAccountMayExist;
 
   /// No description provided for @authRateLimited.
@@ -1145,6 +1145,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not send the sign-in link. Try again.'**
   String get authUnexpectedMagicLink;
+
+  /// No description provided for @authResendConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend confirmation'**
+  String get authResendConfirmation;
+
+  /// No description provided for @authConfirmationSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send the confirmation email. Try again later.'**
+  String get authConfirmationSendFailed;
 
   /// No description provided for @authRetryVerification.
   ///

@@ -10,6 +10,7 @@ import 'package:shadcn_ui/shadcn_ui.dart'
     show LucideIcons, ShadButton, ShadSwitch, ShadSelect, ShadOption;
 
 import '../../../app/account_auth_feedback.dart';
+import '../../../app/email_auth.dart';
 import '../../../app/account_providers.dart';
 import '../../../app/captcha_security.dart';
 import '../../../app/captcha_verification.dart';
@@ -806,6 +807,7 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
   }
 
   Future<void> _submit() async {
+    if (!_canSubmit || _emailSent) return;
     final account = widget.account;
     if (account == null) {
       return;
@@ -852,17 +854,21 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
       } else {
         token = null;
       }
-      await account.signUpWithPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        redirectTo: widget.redirectTo,
-        captchaToken: token,
-      );
+      final result = await ref
+          .read(emailAuthProvider)
+          .submit(
+            action: EmailAuthAction.signUp,
+            email: _emailController.text,
+            password: _passwordController.text,
+            redirectTo: widget.redirectTo,
+            captchaToken: token,
+          );
+      if (result == null) return;
       TextInput.finishAutofillContext(shouldSave: true);
       if (!mounted) {
         return;
       }
-      if (account.currentUserId != null) {
+      if (result == EmailAuthResult.signedIn) {
         context.go(widget.returnTo);
         return;
       }
@@ -923,6 +929,7 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
         }
       case AccountAuthRecovery.switchToSignIn:
       case AccountAuthRecovery.sendNewLink:
+      case AccountAuthRecovery.resendConfirmation:
         final account = widget.account;
         if (account == null) return;
         _passwordController.clear();

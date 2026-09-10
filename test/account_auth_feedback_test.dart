@@ -15,6 +15,81 @@ import 'package:pomodoist/l10n/app_localizations_zh.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
+  test('unconfirmed password login offers a real confirmation resend', () {
+    final failure = classifyAccountAuthFailure(
+      const AuthApiException('private', code: 'email_not_confirmed'),
+      operation: AccountAuthOperation.passwordSignIn,
+    );
+    expect(failure.recovery, AccountAuthRecovery.resendConfirmation);
+    expect(failure.field, AccountAuthField.email);
+    expect(
+      classifyAccountAuthFailure(
+        const AuthApiException(
+          'private',
+          code: 'provider_email_needs_verification',
+        ),
+        operation: AccountAuthOperation.apple,
+      ).recovery,
+      AccountAuthRecovery.none,
+    );
+  });
+
+  test('credential errors do not blame only the password', () {
+    for (final code in ['invalid_credentials', 'user_not_found']) {
+      final failure = classifyAccountAuthFailure(
+        AuthApiException('private server detail', code: code),
+        operation: AccountAuthOperation.passwordSignIn,
+      );
+      expect(failure.kind, AccountAuthFailureKind.invalidCredentials);
+      expect(failure.field, AccountAuthField.form);
+    }
+  });
+
+  test(
+    'delivery failures and conflicts are not email rate limits or duplicates',
+    () {
+      for (final code in [
+        'email_send_failed',
+        'email_address_not_authorized',
+        'conflict',
+      ]) {
+        final failure = classifyAccountAuthFailure(
+          AuthApiException('private server detail', code: code),
+          operation: AccountAuthOperation.signUp,
+        );
+        expect(failure.kind, AccountAuthFailureKind.serviceUnavailable);
+        expect(failure.recovery, AccountAuthRecovery.retry);
+      }
+    },
+  );
+
+  test('server-rejected email addresses stay attached to the email field', () {
+    final failure = classifyAccountAuthFailure(
+      const AuthApiException(
+        'private server detail',
+        code: 'email_address_invalid',
+      ),
+      operation: AccountAuthOperation.signUp,
+    );
+    expect(failure.kind, AccountAuthFailureKind.emailInvalid);
+    expect(failure.field, AccountAuthField.email);
+  });
+
+  test('expired reset callbacks offer a new recovery link', () {
+    for (final code in [
+      'otp_expired',
+      'flow_state_expired',
+      'bad_code_verifier',
+    ]) {
+      final failure = classifyAccountAuthFailure(
+        AuthApiException('private server detail', code: code),
+        operation: AccountAuthOperation.passwordUpdate,
+      );
+      expect(failure.kind, AccountAuthFailureKind.linkExpired);
+      expect(failure.recovery, AccountAuthRecovery.sendNewLink);
+    }
+  });
+
   test(
     'password update feedback distinguishes expiry and reused passwords',
     () {

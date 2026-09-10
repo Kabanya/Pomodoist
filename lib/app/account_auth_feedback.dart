@@ -11,6 +11,7 @@ enum AccountAuthOperation {
   passwordSignIn,
   signUp,
   magicLink,
+  confirmationEmail,
   passwordReset,
   passwordUpdate,
   apple,
@@ -58,10 +59,11 @@ enum AccountAuthRecovery {
   retryCaptcha,
   switchToSignIn,
   sendNewLink,
+  resendConfirmation,
   chooseAnotherProvider,
 }
 
-final class AccountAuthFailure {
+final class AccountAuthFailure implements Exception {
   const AccountAuthFailure(
     this.kind, {
     required this.field,
@@ -127,6 +129,7 @@ AccountAuthFailure classifyAccountAuthFailure(
   Object error, {
   required AccountAuthOperation operation,
 }) {
+  if (error is AccountAuthFailure) return error;
   if (error is NativeCaptchaException) {
     return switch (error.code) {
       NativeCaptchaFailureCode.cancelled => const AccountAuthFailure(
@@ -200,6 +203,7 @@ AccountAuthFailure classifyAccountAuthFailure(
       if (status == 429) {
         return AccountAuthFailure(
           operation == AccountAuthOperation.magicLink ||
+                  operation == AccountAuthOperation.confirmationEmail ||
                   operation == AccountAuthOperation.passwordReset ||
                   operation == AccountAuthOperation.signUp
               ? AccountAuthFailureKind.emailRateLimited
@@ -215,10 +219,11 @@ AccountAuthFailure classifyAccountAuthFailure(
           recovery: AccountAuthRecovery.retry,
         );
       }
-      if (status == 400 && operation == AccountAuthOperation.passwordSignIn) {
+      if ((status == 400 || status == 401) &&
+          operation == AccountAuthOperation.passwordSignIn) {
         return const AccountAuthFailure(
           AccountAuthFailureKind.invalidCredentials,
-          field: AccountAuthField.password,
+          field: AccountAuthField.form,
           recovery: AccountAuthRecovery.editPassword,
         );
       }
@@ -237,14 +242,21 @@ AccountAuthFailure _classifyAuthCode(
     case 'user_not_found':
       return const AccountAuthFailure(
         AccountAuthFailureKind.invalidCredentials,
-        field: AccountAuthField.password,
+        field: AccountAuthField.form,
         recovery: AccountAuthRecovery.editPassword,
       );
     case 'email_not_confirmed':
+      return AccountAuthFailure(
+        AccountAuthFailureKind.emailUnconfirmed,
+        field: AccountAuthField.email,
+        recovery: operation == AccountAuthOperation.passwordSignIn
+            ? AccountAuthRecovery.resendConfirmation
+            : AccountAuthRecovery.none,
+      );
     case 'provider_email_needs_verification':
       return const AccountAuthFailure(
         AccountAuthFailureKind.emailUnconfirmed,
-        field: AccountAuthField.email,
+        field: AccountAuthField.form,
         recovery: AccountAuthRecovery.none,
       );
     case 'same_password':
@@ -274,12 +286,12 @@ AccountAuthFailure _classifyAuthCode(
     case 'email_exists':
     case 'user_already_exists':
     case 'identity_already_exists':
-    case 'conflict':
       return const AccountAuthFailure(
         AccountAuthFailureKind.accountMayExist,
         field: AccountAuthField.email,
         recovery: AccountAuthRecovery.switchToSignIn,
       );
+    case 'email_address_invalid':
     case 'validation_failed':
       if (operation == AccountAuthOperation.passwordUpdate) {
         return _operationFallback(operation);
@@ -290,11 +302,18 @@ AccountAuthFailure _classifyAuthCode(
         recovery: AccountAuthRecovery.editEmail,
       );
     case 'over_email_send_rate_limit':
-    case 'email_send_failed':
       return const AccountAuthFailure(
         AccountAuthFailureKind.emailRateLimited,
         field: AccountAuthField.form,
         recovery: AccountAuthRecovery.none,
+      );
+    case 'email_send_failed':
+    case 'email_address_not_authorized':
+    case 'conflict':
+      return const AccountAuthFailure(
+        AccountAuthFailureKind.serviceUnavailable,
+        field: AccountAuthField.form,
+        recovery: AccountAuthRecovery.retry,
       );
     case 'over_request_rate_limit':
       return const AccountAuthFailure(
@@ -325,6 +344,7 @@ AccountAuthFailure _classifyAuthCode(
       );
     case 'provider_disabled':
     case 'oauth_provider_not_supported':
+    case 'otp_disabled':
       return const AccountAuthFailure(
         AccountAuthFailureKind.providerUnavailable,
         field: AccountAuthField.form,
@@ -341,12 +361,17 @@ AccountAuthFailure _classifyAuthCode(
     case 'flow_state_not_found':
     case 'bad_oauth_state':
     case 'bad_oauth_callback':
+    case 'bad_code_verifier':
+    case 'reauthentication_needed':
+    case 'reauthentication_not_valid':
       return AccountAuthFailure(
         AccountAuthFailureKind.linkExpired,
         field: AccountAuthField.form,
         recovery:
             operation == AccountAuthOperation.magicLink ||
-                operation == AccountAuthOperation.callback
+                operation == AccountAuthOperation.callback ||
+                operation == AccountAuthOperation.passwordReset ||
+                operation == AccountAuthOperation.passwordUpdate
             ? AccountAuthRecovery.sendNewLink
             : AccountAuthRecovery.retry,
       );
@@ -533,6 +558,7 @@ AccountAuthFeedback presentAccountAuthFailure(
     AccountAuthFailureKind.unexpected => switch (operation) {
       AccountAuthOperation.signUp => l10n.authUnexpectedSignUp,
       AccountAuthOperation.magicLink => l10n.authUnexpectedMagicLink,
+      AccountAuthOperation.confirmationEmail => l10n.authConfirmationSendFailed,
       AccountAuthOperation.passwordReset => l10n.authUnexpectedReset,
       AccountAuthOperation.passwordUpdate => l10n.authUnexpectedPasswordUpdate,
       _ => l10n.authUnexpectedSignIn,
@@ -554,6 +580,7 @@ String accountAuthRecoveryLabel(
     AccountAuthRecovery.retryCaptcha => l10n.authRetryVerification,
     AccountAuthRecovery.switchToSignIn => l10n.registerSignInAction,
     AccountAuthRecovery.sendNewLink => l10n.authSendLink,
+    AccountAuthRecovery.resendConfirmation => l10n.authResendConfirmation,
     AccountAuthRecovery.chooseAnotherProvider => l10n.authSignInAction,
     AccountAuthRecovery.none ||
     AccountAuthRecovery.editEmail ||

@@ -383,7 +383,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get registerCheckEmailMessage =>
-      'Откройте ссылку подтверждения, чтобы завершить создание аккаунта.';
+      'Если этому адресу требуется подтверждение, вы получите письмо со ссылкой. Если аккаунт уже есть, войдите или восстановите пароль.';
 
   @override
   String registerError(Object error) {
@@ -493,7 +493,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get authMagicLinkSent =>
-      'Ссылка для входа отправлена. Проверьте входящие и папку «Спам».';
+      'Если для этого адреса есть аккаунт, вы получите ссылку для входа. Проверьте входящие и папку «Спам».';
 
   @override
   String get authAccountCreated => 'Аккаунт создан.';
@@ -513,7 +513,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get authInvalidCredentials =>
-      'Неверный email или пароль. Проверьте данные и попробуйте снова.';
+      'Неверная почта или пароль. Проверьте адрес, восстановите пароль или создайте аккаунт.';
 
   @override
   String get authEmailUnconfirmed =>
@@ -525,7 +525,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get authAccountMayExist =>
-      'Не удалось создать аккаунт. Если вы уже регистрировались с этим email, войдите.';
+      'Возможно, аккаунт с этой почтой уже существует. Войдите или восстановите пароль.';
 
   @override
   String get authRateLimited =>
@@ -601,6 +601,13 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get authUnexpectedMagicLink =>
       'Не удалось отправить ссылку для входа. Попробуйте снова.';
+
+  @override
+  String get authResendConfirmation => 'Отправить подтверждение ещё раз';
+
+  @override
+  String get authConfirmationSendFailed =>
+      'Не удалось отправить письмо подтверждения. Попробуйте позже.';
 
   @override
   String get authRetryVerification => 'Повторить проверку';
