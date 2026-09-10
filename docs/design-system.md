@@ -408,7 +408,8 @@ a result before acting after data changes.
 
 ### Settings
 
-Keep settings centered within 1120 px. At 960 px of available content width,
+Keep settings centered within 1200 px so all six theme previews fit at full width.
+At 960 px of available content width,
 use a 216 px section menu and a content pane. Narrower layouts show the section
 index or the selected section with Back. Resize the existing tree: retain the
 selected section, each visited section's scroll position, and unfinished input.

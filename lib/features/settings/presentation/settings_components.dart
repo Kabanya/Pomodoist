@@ -12,7 +12,7 @@ class SettingsSurface extends StatelessWidget {
   Widget build(BuildContext context) => SafeArea(
     child: Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1120),
+        constraints: const BoxConstraints(maxWidth: 1200),
         child: Padding(padding: const EdgeInsets.all(20), child: child),
       ),
     ),
