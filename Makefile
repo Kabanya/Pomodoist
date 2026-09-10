@@ -56,7 +56,7 @@ POMODOIST_RELEASE ?= $(shell git rev-parse HEAD)
 .PHONY: android web-debug web-profile web-release
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
 .PHONY: windows-debug windows-profile windows-release windows-installer
-.PHONY: macos-debug macos-profile macos-release
+.PHONY: macos-debug macos-profile macos-release macos-reset
 .PHONY: ios-debug ios-profile ipad-debug ipad-profile watch-debug watch-profile testflight-preflight testflight-auth testflight-ios testflight-macos testflight
 .PHONY: deploy-staging deploy-production deploy-all deploy-telegram-staging deploy-telegram-production
 .PHONY: help devices clean
@@ -138,6 +138,7 @@ help:
 	printf '\n%s%sUtilities%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make help' "$${reset}" 'Show this command reference'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make devices' "$${reset}" 'List available Flutter devices'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make macos-reset' "$${reset}" 'Erase local app data and permissions (quit Pomodoist first)'; \
 	printf '  %s%-26s%s %s\n\n' "$${bold}" 'make clean' "$${reset}" 'Remove Flutter build outputs'
 
 setup: setup-env setup-flutter
@@ -265,6 +266,31 @@ macos-release: testflight-preflight
 		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
 		--dart-define=POMODOIST_BILLING_CHANNEL=storekit
+
+# Destructive local reset; cloud accounts and purchases are unchanged.
+# Keep macOS container metadata; rm does not follow the sandbox's symlinks.
+macos-reset:
+	@test "$$(uname -s)" = Darwin || { echo 'macos-reset requires macOS.' >&2; exit 1; }
+	@test -n "$${HOME:-}" && test "$$HOME" != / && test -d "$$HOME" || { echo 'A valid HOME directory is required.' >&2; exit 1; }
+	@if pgrep -ix pomodoist >/dev/null; then echo 'Quit Pomodoist with Cmd+Q, then run make macos-reset again.' >&2; exit 1; fi
+	@echo 'Deleting local Pomodoist data, including unsynced tasks, settings and saved sessions.'
+	@for domain in com.finchforge.pomodoist com.finchforge.pomodoist.focuswidget group.com.pomodoist \
+		"$$HOME/Library/Containers/com.finchforge.pomodoist/Data/Library/Preferences/com.finchforge.pomodoist" \
+		"$$HOME/Library/Containers/com.finchforge.pomodoist.focuswidget/Data/Library/Preferences/com.finchforge.pomodoist.focuswidget" \
+		"$$HOME/Library/Group Containers/group.com.pomodoist/Library/Preferences/group.com.pomodoist"; do \
+		defaults delete "$$domain" 2>/dev/null || true; \
+	done
+	rm -rf "$$HOME/Library/Containers/com.finchforge.pomodoist/Data" \
+		"$$HOME/Library/Containers/com.finchforge.pomodoist.focuswidget/Data" \
+		"$$HOME/Library/Group Containers/group.com.pomodoist/Library" \
+		"$$HOME/Library/Group Containers/group.com.pomodoist/focus-snapshot-v1.json" \
+		"$$HOME/Library/Application Support/com.finchforge.pomodoist" \
+		"$$HOME/Library/Caches/com.finchforge.pomodoist" \
+		"$$HOME/Library/Saved Application State/com.finchforge.pomodoist.savedState"
+	rm -f "$$HOME/Library/Preferences/com.finchforge.pomodoist.plist" \
+		"$$HOME/Documents/pomodoist.sqlite" "$$HOME/Documents/pomodoist.sqlite-wal" "$$HOME/Documents/pomodoist.sqlite-shm"
+	tccutil reset All com.finchforge.pomodoist
+	@echo 'Local reset complete. Start Pomodoist in guest mode for a clean slate.'
 
 # Flutter profile mode is unavailable on iOS Simulator, so local runs use debug.
 ios-debug ios-profile: RUN_SIMULATOR = $(IOS_SIMULATOR)

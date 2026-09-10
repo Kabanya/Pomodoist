@@ -26,6 +26,9 @@ class PomodoistApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
     final language = ref.watch(appLanguageProvider);
     final themeMode = ref.watch(appThemeModeProvider);
+    final rootBackground = ref.watch(
+      macosGlassRootBackgroundProvider(View.of(context).viewId),
+    );
     final palettes = ref.watch(
       appThemeSettingsProvider.select(
         (settings) => (settings.activeTheme.light, settings.activeTheme.dark),
@@ -54,6 +57,7 @@ class PomodoistApp extends ConsumerWidget {
           child: MacosGlassHost(
             child: AppZoom(
               child: ShadAppBuilder(
+                backgroundColor: rootBackground,
                 child: KeyboardDismissRegion(
                   child: DesktopUpdateHost(
                     child: child ?? const SizedBox.shrink(),

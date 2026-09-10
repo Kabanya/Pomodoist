@@ -1577,6 +1577,8 @@ void main() {
       'The operation couldn’t be completed. (NSURLErrorDomain error -1008.)',
       'PlatformException(storekit_no_response, NSURLErrorDomain error -1009., null)',
       'TimeoutException after 0:00:30.000000',
+      'StoreKit: Failed to get response from platform.',
+      'PlatformException(storekit_no_response, null, null)',
     ]) {
       final message = storeKitBillingErrorMessage(l10n, error);
       expect(message, l10n.billingStoreConnectionFailed);

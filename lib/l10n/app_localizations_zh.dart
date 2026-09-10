@@ -204,8 +204,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get billingStoreUnavailable => 'App Store 当前不可用。';
 
   @override
-  String get billingStoreConnectionFailed =>
-      '如果你正在使用 VPN，它可能会影响购买。无法连接到 App Store。请尝试切换 VPN 服务器或暂时关闭 VPN，然后重试。';
+  String get billingStoreConnectionFailed => '请关闭 VPN 后重试。';
 
   @override
   String billingPurchaseError(String error) {

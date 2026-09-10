@@ -62,7 +62,7 @@
   "billingExternalBrowserMessage": "Pomodoist откроет Stripe Checkout в Safari или браузере по умолчанию. Разрешите открытие окна, чтобы продолжить.",
   "billingAppleOnly": "Покупки доступны через App Store.",
   "billingStoreUnavailable": "App Store сейчас недоступен.",
-  "billingStoreConnectionFailed": "Если у вас включён VPN, он может мешать оплате. Не удалось подключиться к App Store. Попробуйте сменить VPN-сервер или временно отключить VPN и повторить попытку.",
+  "billingStoreConnectionFailed": "Отключите VPN и повторите попытку.",
   "billingPurchaseError": "Ошибка покупки: {error}",
   "billingStripeAuthenticationRequired": "Войдите в Pomodoist и попробуйте снова.",
   "billingStripeDisabled": "Платежи пока недоступны. Попробуйте позже.",

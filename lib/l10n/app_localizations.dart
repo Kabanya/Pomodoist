@@ -483,7 +483,7 @@ abstract class AppLocalizations {
   /// No description provided for @billingStoreConnectionFailed.
   ///
   /// In en, this message translates to:
-  /// **'If you use a VPN, it may interfere with purchases. Could not connect to the App Store. Try another VPN server or temporarily turn it off, then try again.'**
+  /// **'Turn off your VPN and try again.'**
   String get billingStoreConnectionFailed;
 
   /// No description provided for @billingPurchaseError.

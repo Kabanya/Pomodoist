@@ -211,8 +211,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get billingStoreUnavailable => 'App Store غير متاح الآن.';
 
   @override
-  String get billingStoreConnectionFailed =>
-      'إذا كنت تستخدم VPN، فقد يؤثر في عملية الشراء. تعذّر الاتصال بمتجر App Store. جرّب خادم VPN آخر أو عطّل VPN مؤقتًا، ثم أعد المحاولة.';
+  String get billingStoreConnectionFailed => 'عطّل VPN وأعد المحاولة.';
 
   @override
   String billingPurchaseError(String error) {

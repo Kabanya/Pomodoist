@@ -212,7 +212,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get billingStoreConnectionFailed =>
-      'Если у вас включён VPN, он может мешать оплате. Не удалось подключиться к App Store. Попробуйте сменить VPN-сервер или временно отключить VPN и повторить попытку.';
+      'Отключите VPN и повторите попытку.';
 
   @override
   String billingPurchaseError(String error) {

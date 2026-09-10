@@ -19,6 +19,26 @@ bool macosGlassReady(BuildContext context, WidgetRef ref) =>
       ),
     );
 
+// ShadAppBuilder paints an opaque background by default, above the native glass.
+// Keep that default until this view is ready, and restore it as soon as glass ends.
+final macosGlassRootBackgroundProvider = Provider.family<Color?, int>((
+  ref,
+  viewId,
+) {
+  if (!supportsMacosGlass) return null;
+  final enabled = ref.watch(
+    appThemeSettingsProvider.select(
+      (settings) =>
+          settings.activeTheme.backgrounds.type ==
+          ThemeBackgroundType.macosGlass,
+    ),
+  );
+  final ready = ref.watch(
+    macosGlassProvider.select((windows) => windows[viewId] ?? false),
+  );
+  return enabled && ready ? Colors.transparent : null;
+});
+
 final macosGlassOpaqueFrameProvider = Provider<Future<void> Function(Duration)>(
   (ref) => (duration) async {
     // Keep the native material until Flutter's opaque transition has painted.
@@ -44,6 +64,20 @@ class MacosGlassController extends Notifier<Map<int, bool>> {
   @override
   Map<int, bool> build() {
     _channel.setMethodCallHandler((call) async {
+      if (call.method == 'windowModeChanged') {
+        final args = call.arguments;
+        if (args is! Map ||
+            args['viewId'] is! int ||
+            args['fullScreen'] is! bool)
+          return;
+        final id = args['viewId'] as int;
+        final request = _requests[id];
+        if (request == null) return;
+        // Cover the native layer until its eligibility in this window is known.
+        state = {...state, id: false};
+        await _schedule(id, request, Duration.zero);
+        return;
+      }
       if (call.method != 'transparencyChanged' ||
           call.arguments is! Map ||
           (call.arguments as Map)['reduceTransparency'] is! bool)

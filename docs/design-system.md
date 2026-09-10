@@ -124,6 +124,12 @@ one native glass layer; the separate Quick Add window has its own. Inline Quick 
 is unchanged; the in-app Quick Add overlay reveals and blurs the app beneath it.
 Keep controls and the Classic editor solid. Background samples use a checkerboard,
 while the real window remains live glass behind the editor.
+Both app roots must also make `ShadAppBuilder.backgroundColor` transparent only
+for active, acknowledged glass; its default opaque fill would cover the native
+effect even when the page and window backgrounds are transparent.
+In native macOS full screen, glass temporarily becomes the opaque Custom palette
+(Classic by default); colors remain editable. Restore glass when that window
+leaves full screen, without changing the saved theme, photos or dimming values.
 
 Fall back to the palette's solid background on non-macOS platforms, before the
 native view is ready, after native errors, and when Reduce Transparency is

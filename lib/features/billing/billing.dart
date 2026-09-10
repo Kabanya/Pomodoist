@@ -189,7 +189,9 @@ String stripeBillingErrorMessage(AppLocalizations l10n, String code) {
 
 String storeKitBillingErrorMessage(AppLocalizations l10n, String error) {
   if (error.contains('NSURLErrorDomain') ||
-      error.contains('TimeoutException')) {
+      error.contains('TimeoutException') ||
+      error.contains('storekit_no_response') ||
+      error == 'StoreKit: Failed to get response from platform.') {
     return l10n.billingStoreConnectionFailed;
   }
   return error;

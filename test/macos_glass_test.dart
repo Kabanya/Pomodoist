@@ -1,9 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pomodoist/app/theme/app_theme_settings.dart';
 import 'package:pomodoist/app/theme/macos_glass.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +39,52 @@ void main() {
   tearDown(() {
     container.dispose();
     messenger.setMockMethodCallHandler(channel, null);
+    debugDefaultTargetPlatformOverride = null;
   });
+
+  test(
+    'app roots reveal glass only for the active draft and acknowledged view',
+    () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      SharedPreferences.setMockInitialValues({});
+      final themes = container.read(appThemeSettingsProvider.notifier);
+      await themes.load();
+      themes.beginEdit();
+      void select(ThemeBackgroundType type) {
+        final draft = container.read(appThemeSettingsProvider).preview!;
+        themes.updatePreview(
+          draft.copyWith(backgrounds: draft.backgrounds.copyWith(type: type)),
+        );
+      }
+
+      select(ThemeBackgroundType.macosGlass);
+      expect(container.read(macosGlassRootBackgroundProvider(42)), isNull);
+      await controller.update(42, enabled: true, dark: true);
+      expect(
+        container.read(macosGlassRootBackgroundProvider(42)),
+        Colors.transparent,
+      );
+      expect(container.read(macosGlassRootBackgroundProvider(99)), isNull);
+      for (final type in [
+        ThemeBackgroundType.color,
+        ThemeBackgroundType.photo,
+      ]) {
+        select(type);
+        expect(container.read(macosGlassProvider)[42], isTrue);
+        expect(container.read(macosGlassRootBackgroundProvider(42)), isNull);
+      }
+      select(ThemeBackgroundType.macosGlass);
+      expect(
+        container.read(macosGlassRootBackgroundProvider(42)),
+        Colors.transparent,
+      );
+      await controller.update(42, enabled: false, dark: true);
+      expect(container.read(macosGlassRootBackgroundProvider(42)), isNull);
+      await controller.update(42, enabled: true, dark: true);
+      themes.cancelPreview();
+      expect(container.read(macosGlassRootBackgroundProvider(42)), isNull);
+    },
+  );
 
   test(
     'per-view enabling waits for acknowledgement and disabling waits for paint',
@@ -64,6 +113,83 @@ void main() {
       ]);
       await controller.update(99, enabled: true, dark: false);
       expect(events.last, {'viewId': 99, 'enabled': true, 'dark': false});
+    },
+  );
+
+  test(
+    'full screen uses the editable palette and restores glass on exit',
+    () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      SharedPreferences.setMockInitialValues({});
+      final themes = container.read(appThemeSettingsProvider.notifier);
+      await themes.load();
+      themes.beginEdit();
+      final draft = container.read(appThemeSettingsProvider).preview!;
+      themes.updatePreview(
+        draft.copyWith(
+          light: draft.light.copyWith(accent: const Color(0xFF123456)),
+          backgrounds: draft.backgrounds.copyWith(
+            type: ThemeBackgroundType.macosGlass,
+          ),
+        ),
+      );
+      final savedDraft = container.read(appThemeSettingsProvider).preview!;
+      var fullScreen = false;
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        events.add(call.arguments);
+        return {'enabled': !fullScreen, 'reduceTransparency': false};
+      });
+      await controller.update(42, enabled: true, dark: true);
+      await controller.update(99, enabled: true, dark: false);
+      expect(
+        container.read(macosGlassRootBackgroundProvider(42)),
+        Colors.transparent,
+      );
+      Future<void> notify(bool value) async {
+        fullScreen = value;
+        final done = Completer<void>();
+        await messenger.handlePlatformMessage(
+          channel.name,
+          const StandardMethodCodec().encodeMethodCall(
+            MethodCall('windowModeChanged', {
+              'viewId': 42,
+              'fullScreen': value,
+            }),
+          ),
+          (_) => done.complete(),
+        );
+        await done.future;
+      }
+
+      events.clear();
+      await notify(true);
+      expect(container.read(macosGlassProvider)[42], isFalse);
+      expect(container.read(macosGlassRootBackgroundProvider(42)), isNull);
+      expect(
+        container.read(macosGlassRootBackgroundProvider(99)),
+        Colors.transparent,
+      );
+      expect(
+        container.read(appThemeSettingsProvider).preview,
+        same(savedDraft),
+      );
+      expect(
+        container.read(appThemeSettingsProvider).activeTheme.light.accent,
+        const Color(0xFF123456),
+      );
+      await notify(false);
+      expect(
+        container.read(macosGlassRootBackgroundProvider(42)),
+        Colors.transparent,
+      );
+      expect(events, [
+        {'viewId': 42, 'enabled': true, 'dark': true},
+        {'viewId': 42, 'enabled': true, 'dark': true},
+      ]);
+      expect(
+        container.read(appThemeSettingsProvider).preview,
+        same(savedDraft),
+      );
     },
   );
 

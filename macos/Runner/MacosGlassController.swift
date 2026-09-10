@@ -31,6 +31,7 @@ final class MacosGlassController {
   private var states: [UInt64: WindowState] = [:]
   private var accessibilityObserver: NSObjectProtocol?
   private var windowObserver: NSObjectProtocol?
+  private var fullScreenObservers: [NSObjectProtocol] = []
 
   init(channel: FlutterMethodChannel) {
     self.channel = channel
@@ -52,6 +53,14 @@ final class MacosGlassController {
       guard let window = notification.object as? NSWindow else { return }
       self?.states = self?.states.filter { $0.value.window !== window } ?? [:]
     }
+    for name in [NSWindow.didEnterFullScreenNotification, NSWindow.didExitFullScreenNotification] {
+      fullScreenObservers.append(NotificationCenter.default.addObserver(
+        forName: name, object: nil, queue: .main
+      ) { [weak self] notification in
+        guard let window = notification.object as? NSWindow else { return }
+        self?.windowModeChanged(window)
+      })
+    }
   }
 
   deinit {
@@ -60,6 +69,7 @@ final class MacosGlassController {
       NSWorkspace.shared.notificationCenter.removeObserver(accessibilityObserver)
     }
     if let windowObserver { NotificationCenter.default.removeObserver(windowObserver) }
+    for observer in fullScreenObservers { NotificationCenter.default.removeObserver(observer) }
   }
 
   private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -104,7 +114,10 @@ final class MacosGlassController {
     state.dark = dark
     let reduceTransparency = NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
     apply(state, reduceTransparency: reduceTransparency)
-    result(["enabled": enabled && !reduceTransparency, "reduceTransparency": reduceTransparency])
+    result([
+      "enabled": enabled && !reduceTransparency && !window.styleMask.contains(.fullScreen),
+      "reduceTransparency": reduceTransparency
+    ])
   }
 
   private func flutterViewController(viewId: UInt64) -> FlutterViewController? {
@@ -148,7 +161,9 @@ final class MacosGlassController {
     }
 
     let appearance = NSAppearance(named: state.dark ? .darkAqua : .aqua) ?? window.effectiveAppearance
-    if reduceTransparency {
+    // Full-screen Spaces can tint behind-window materials with the wallpaper.
+    // Let Flutter paint the editable Custom palette (Classic by default) instead.
+    if reduceTransparency || window.styleMask.contains(.fullScreen) {
       state.effectView?.removeFromSuperview()
       state.effectView = nil
       var fallback = NSColor.windowBackgroundColor
@@ -187,5 +202,16 @@ final class MacosGlassController {
       "transparencyChanged",
       arguments: ["reduceTransparency": reduceTransparency]
     )
+  }
+
+  private func windowModeChanged(_ window: NSWindow) {
+    let reduced = NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
+    for (viewId, state) in states where state.window === window {
+      apply(state, reduceTransparency: reduced)
+      channel.invokeMethod("windowModeChanged", arguments: [
+        "viewId": Int64(viewId),
+        "fullScreen": window.styleMask.contains(.fullScreen)
+      ])
+    }
   }
 }

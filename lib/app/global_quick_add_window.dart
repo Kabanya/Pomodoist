@@ -103,6 +103,9 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final language = ref.watch(appLanguageProvider);
     final themeMode = ref.watch(appThemeModeProvider);
+    final rootBackground = ref.watch(
+      macosGlassRootBackgroundProvider(View.of(context).viewId),
+    );
     final palettes = ref.watch(
       appThemeSettingsProvider.select(
         (settings) => (settings.activeTheme.light, settings.activeTheme.dark),
@@ -139,6 +142,7 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
           child: MacosGlassHost(
             child: AppZoom(
               child: ShadAppBuilder(
+                backgroundColor: rootBackground,
                 child: KeyboardDismissRegion(
                   child: child ?? const SizedBox.shrink(),
                 ),
