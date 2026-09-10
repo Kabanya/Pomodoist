@@ -483,7 +483,7 @@ abstract class AppLocalizations {
   /// No description provided for @billingStoreConnectionFailed.
   ///
   /// In en, this message translates to:
-  /// **'Could not connect to the App Store. Please try again.'**
+  /// **'If you use a VPN, it may interfere with purchases. Could not connect to the App Store. Try another VPN server or temporarily turn it off, then try again.'**
   String get billingStoreConnectionFailed;
 
   /// No description provided for @billingPurchaseError.
@@ -791,6 +791,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign in with email'**
   String get authEmailSignInTitle;
+
+  /// No description provided for @authWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to Pomodoist'**
+  String get authWelcomeTitle;
+
+  /// No description provided for @authWelcomeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your tasks and focus, on every device.'**
+  String get authWelcomeDescription;
+
+  /// No description provided for @authSignInWithLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with a link'**
+  String get authSignInWithLink;
+
+  /// No description provided for @authForgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get authForgotPassword;
+
+  /// No description provided for @authBackToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to sign in'**
+  String get authBackToSignIn;
+
+  /// No description provided for @authNoAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'No account yet?'**
+  String get authNoAccount;
+
+  /// No description provided for @authHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get authHaveAccount;
+
+  /// No description provided for @authShowPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get authShowPassword;
+
+  /// No description provided for @authHidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get authHidePassword;
+
+  /// No description provided for @authResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset your password'**
+  String get authResetTitle;
+
+  /// No description provided for @authResetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your account email. We will send a link to change your password.'**
+  String get authResetDescription;
+
+  /// No description provided for @authResetEmailSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your email'**
+  String get authResetEmailSentTitle;
+
+  /// No description provided for @authResetEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'If an account exists for this email, you will receive a password reset link.'**
+  String get authResetEmailSent;
+
+  /// No description provided for @authResetSendAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Send again'**
+  String get authResetSendAgain;
+
+  /// No description provided for @authResetEditEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email'**
+  String get authResetEditEmail;
+
+  /// No description provided for @authNewPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a new password'**
+  String get authNewPasswordTitle;
+
+  /// No description provided for @authNewPasswordDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a password you do not use for other accounts.'**
+  String get authNewPasswordDescription;
+
+  /// No description provided for @authNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get authNewPassword;
+
+  /// No description provided for @authConfirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat password'**
+  String get authConfirmPassword;
+
+  /// No description provided for @authSavePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Save password'**
+  String get authSavePassword;
+
+  /// No description provided for @authPasswordMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The passwords do not match.'**
+  String get authPasswordMismatch;
+
+  /// No description provided for @authPasswordUnchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a different password from your current one.'**
+  String get authPasswordUnchanged;
+
+  /// No description provided for @authPasswordUpdatedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Password updated'**
+  String get authPasswordUpdatedTitle;
+
+  /// No description provided for @authPasswordUpdatedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your new password is saved. You can continue using Pomodoist.'**
+  String get authPasswordUpdatedMessage;
+
+  /// No description provided for @authResetLinkExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This password reset link is invalid or expired. Request a new link.'**
+  String get authResetLinkExpired;
+
+  /// No description provided for @authUnexpectedReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send the password reset email. Try again.'**
+  String get authUnexpectedReset;
+
+  /// No description provided for @authUnexpectedPasswordUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save your new password. Try again.'**
+  String get authUnexpectedPasswordUpdate;
+
+  /// No description provided for @authCheckingResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your password reset link…'**
+  String get authCheckingResetLink;
 
   /// No description provided for @authSignInAction.
   ///

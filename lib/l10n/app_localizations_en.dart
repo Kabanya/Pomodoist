@@ -214,7 +214,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get billingStoreConnectionFailed =>
-      'Could not connect to the App Store. Please try again.';
+      'If you use a VPN, it may interfere with purchases. Could not connect to the App Store. Try another VPN server or temporarily turn it off, then try again.';
 
   @override
   String billingPurchaseError(String error) {
@@ -393,6 +393,98 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authEmailSignInTitle => 'Sign in with email';
+
+  @override
+  String get authWelcomeTitle => 'Sign in to Pomodoist';
+
+  @override
+  String get authWelcomeDescription => 'Your tasks and focus, on every device.';
+
+  @override
+  String get authSignInWithLink => 'Sign in with a link';
+
+  @override
+  String get authForgotPassword => 'Forgot password?';
+
+  @override
+  String get authBackToSignIn => 'Back to sign in';
+
+  @override
+  String get authNoAccount => 'No account yet?';
+
+  @override
+  String get authHaveAccount => 'Already have an account?';
+
+  @override
+  String get authShowPassword => 'Show password';
+
+  @override
+  String get authHidePassword => 'Hide password';
+
+  @override
+  String get authResetTitle => 'Reset your password';
+
+  @override
+  String get authResetDescription =>
+      'Enter your account email. We will send a link to change your password.';
+
+  @override
+  String get authResetEmailSentTitle => 'Check your email';
+
+  @override
+  String get authResetEmailSent =>
+      'If an account exists for this email, you will receive a password reset link.';
+
+  @override
+  String get authResetSendAgain => 'Send again';
+
+  @override
+  String get authResetEditEmail => 'Change email';
+
+  @override
+  String get authNewPasswordTitle => 'Choose a new password';
+
+  @override
+  String get authNewPasswordDescription =>
+      'Use a password you do not use for other accounts.';
+
+  @override
+  String get authNewPassword => 'New password';
+
+  @override
+  String get authConfirmPassword => 'Repeat password';
+
+  @override
+  String get authSavePassword => 'Save password';
+
+  @override
+  String get authPasswordMismatch => 'The passwords do not match.';
+
+  @override
+  String get authPasswordUnchanged =>
+      'Choose a different password from your current one.';
+
+  @override
+  String get authPasswordUpdatedTitle => 'Password updated';
+
+  @override
+  String get authPasswordUpdatedMessage =>
+      'Your new password is saved. You can continue using Pomodoist.';
+
+  @override
+  String get authResetLinkExpired =>
+      'This password reset link is invalid or expired. Request a new link.';
+
+  @override
+  String get authUnexpectedReset =>
+      'Could not send the password reset email. Try again.';
+
+  @override
+  String get authUnexpectedPasswordUpdate =>
+      'Could not save your new password. Try again.';
+
+  @override
+  String get authCheckingResetLink => 'Checking your password reset link…';
 
   @override
   String get authSignInAction => 'Sign in';

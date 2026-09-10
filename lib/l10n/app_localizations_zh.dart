@@ -204,7 +204,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get billingStoreUnavailable => 'App Store 当前不可用。';
 
   @override
-  String get billingStoreConnectionFailed => '无法连接到 App Store。请重试。';
+  String get billingStoreConnectionFailed =>
+      '如果你正在使用 VPN，它可能会影响购买。无法连接到 App Store。请尝试切换 VPN 服务器或暂时关闭 VPN，然后重试。';
 
   @override
   String billingPurchaseError(String error) {
@@ -367,6 +368,90 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get authEmailSignInTitle => '使用邮箱登录';
+
+  @override
+  String get authWelcomeTitle => '登录 Pomodoist';
+
+  @override
+  String get authWelcomeDescription => '你的任务与专注，跨设备随时同步。';
+
+  @override
+  String get authSignInWithLink => '使用链接登录';
+
+  @override
+  String get authForgotPassword => '忘记密码？';
+
+  @override
+  String get authBackToSignIn => '返回登录';
+
+  @override
+  String get authNoAccount => '还没有账户？';
+
+  @override
+  String get authHaveAccount => '已有账户？';
+
+  @override
+  String get authShowPassword => '显示密码';
+
+  @override
+  String get authHidePassword => '隐藏密码';
+
+  @override
+  String get authResetTitle => '重置密码';
+
+  @override
+  String get authResetDescription => '输入账户邮箱。我们会发送更改密码的链接。';
+
+  @override
+  String get authResetEmailSentTitle => '查看你的邮箱';
+
+  @override
+  String get authResetEmailSent => '如果此邮箱对应的账户存在，你将收到密码重置链接。';
+
+  @override
+  String get authResetSendAgain => '重新发送';
+
+  @override
+  String get authResetEditEmail => '更改邮箱';
+
+  @override
+  String get authNewPasswordTitle => '设置新密码';
+
+  @override
+  String get authNewPasswordDescription => '请使用未在其他账户中使用的密码。';
+
+  @override
+  String get authNewPassword => '新密码';
+
+  @override
+  String get authConfirmPassword => '再次输入密码';
+
+  @override
+  String get authSavePassword => '保存密码';
+
+  @override
+  String get authPasswordMismatch => '两次输入的密码不一致。';
+
+  @override
+  String get authPasswordUnchanged => '请选择与当前密码不同的密码。';
+
+  @override
+  String get authPasswordUpdatedTitle => '密码已更新';
+
+  @override
+  String get authPasswordUpdatedMessage => '新密码已保存。你可以继续使用 Pomodoist。';
+
+  @override
+  String get authResetLinkExpired => '此密码重置链接无效或已过期。请申请新链接。';
+
+  @override
+  String get authUnexpectedReset => '无法发送密码重置邮件。请重试。';
+
+  @override
+  String get authUnexpectedPasswordUpdate => '无法保存新密码。请重试。';
+
+  @override
+  String get authCheckingResetLink => '正在检查密码重置链接…';
 
   @override
   String get authSignInAction => '登录';

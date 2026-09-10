@@ -171,6 +171,8 @@ String? nativeRouteForLink(Uri uri) {
     return '/purchase-success?source=stripe';
   }
   if (!_isLoginCallbackLink(uri)) return null;
+  final recoveryLocation = passwordRecoveryCallbackLocation(uri);
+  if (recoveryLocation != null) return recoveryLocation;
   final returnToValues = uri.queryParametersAll['returnTo'];
   final returnTo = returnToValues?.length == 1
       ? _safeNativeReturnTo(returnToValues!.single)

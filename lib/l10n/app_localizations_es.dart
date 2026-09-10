@@ -214,7 +214,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get billingStoreConnectionFailed =>
-      'No se pudo conectar con App Store. Inténtalo de nuevo.';
+      'Si usas una VPN, puede interferir con las compras. No se pudo conectar con App Store. Prueba otro servidor VPN o desactívala temporalmente y vuelve a intentarlo.';
 
   @override
   String billingPurchaseError(String error) {
@@ -394,6 +394,100 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get authEmailSignInTitle => 'Iniciar sesión con email';
+
+  @override
+  String get authWelcomeTitle => 'Inicia sesión en Pomodoist';
+
+  @override
+  String get authWelcomeDescription =>
+      'Tus tareas y tu concentración, en todos tus dispositivos.';
+
+  @override
+  String get authSignInWithLink => 'Iniciar sesión con un enlace';
+
+  @override
+  String get authForgotPassword => '¿Has olvidado la contraseña?';
+
+  @override
+  String get authBackToSignIn => 'Volver al inicio de sesión';
+
+  @override
+  String get authNoAccount => '¿Aún no tienes cuenta?';
+
+  @override
+  String get authHaveAccount => '¿Ya tienes una cuenta?';
+
+  @override
+  String get authShowPassword => 'Mostrar contraseña';
+
+  @override
+  String get authHidePassword => 'Ocultar contraseña';
+
+  @override
+  String get authResetTitle => 'Restablece tu contraseña';
+
+  @override
+  String get authResetDescription =>
+      'Introduce el email de tu cuenta. Te enviaremos un enlace para cambiar la contraseña.';
+
+  @override
+  String get authResetEmailSentTitle => 'Revisa tu email';
+
+  @override
+  String get authResetEmailSent =>
+      'Si existe una cuenta con este email, recibirás un enlace para restablecer la contraseña.';
+
+  @override
+  String get authResetSendAgain => 'Enviar de nuevo';
+
+  @override
+  String get authResetEditEmail => 'Cambiar email';
+
+  @override
+  String get authNewPasswordTitle => 'Elige una nueva contraseña';
+
+  @override
+  String get authNewPasswordDescription =>
+      'Usa una contraseña que no utilices en otras cuentas.';
+
+  @override
+  String get authNewPassword => 'Nueva contraseña';
+
+  @override
+  String get authConfirmPassword => 'Repite la contraseña';
+
+  @override
+  String get authSavePassword => 'Guardar contraseña';
+
+  @override
+  String get authPasswordMismatch => 'Las contraseñas no coinciden.';
+
+  @override
+  String get authPasswordUnchanged =>
+      'Elige una contraseña diferente de la actual.';
+
+  @override
+  String get authPasswordUpdatedTitle => 'Contraseña actualizada';
+
+  @override
+  String get authPasswordUpdatedMessage =>
+      'Tu nueva contraseña se ha guardado. Puedes seguir usando Pomodoist.';
+
+  @override
+  String get authResetLinkExpired =>
+      'Este enlace para restablecer la contraseña no es válido o ha caducado. Solicita uno nuevo.';
+
+  @override
+  String get authUnexpectedReset =>
+      'No se pudo enviar el email para restablecer la contraseña. Inténtalo de nuevo.';
+
+  @override
+  String get authUnexpectedPasswordUpdate =>
+      'No se pudo guardar la nueva contraseña. Inténtalo de nuevo.';
+
+  @override
+  String get authCheckingResetLink =>
+      'Comprobando el enlace para restablecer la contraseña…';
 
   @override
   String get authSignInAction => 'Iniciar sesión';

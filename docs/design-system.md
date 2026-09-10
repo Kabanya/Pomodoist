@@ -443,6 +443,32 @@ import previews, integration warnings, revoke confirmations and shortcut conflic
 handling. Persistence errors show existing feedback without resetting session
 values. Standalone login, registration and onboarding layouts are unchanged.
 
+### Authentication
+
+Use one compact dialog, up to **440 px** wide, for sign-in, registration and
+password recovery. Keep the Pomodoist brand and close action at the top, put
+labels above the email and password fields, provide an accessible show/hide
+control for password fields, and make the primary action full width. The
+secondary magic-link action and registration or sign-in footer remain visible
+without competing with the primary action.
+
+Switch the same form between sign-in, registration and recovery while preserving
+the entered email. Use the shared **180 ms** transition and finish immediately
+with Reduce Motion. Support light and dark themes, scroll the content in short or
+narrow windows, retain visible keyboard focus, and expose labels, errors and
+icon-only controls to accessibility services.
+
+Enter the new-password flow only for a password-recovery session validated by the
+authentication SDK. Require a new password and confirmation; keep user input when
+validation or network errors occur. If a password update takes more than 30 seconds,
+show the shared slow-request message and allow leaving the screen. Keep further
+updates blocked until the original request settles; leaving is not cancellation
+of a request already sent to the server. The password PUT is bound to the verified
+recovery session and must not apply a late user response to a different SDK session.
+Never log recovery tokens or passwords. Route
+cold-start and warm-app callbacks through the same handler so each valid callback
+is processed once and invalid or expired links return to a recoverable state.
+
 ## Components and independence
 
 - Current direct dependencies: **`shadcn_ui 0.56.3`** and

@@ -15,6 +15,24 @@ import 'package:pomodoist/l10n/app_localizations_zh.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
+  test(
+    'password update feedback distinguishes expiry and reused passwords',
+    () {
+      final expired = classifyAccountAuthFailure(
+        const AuthApiException('private detail', statusCode: '401'),
+        operation: AccountAuthOperation.passwordUpdate,
+      );
+      expect(expired.kind, AccountAuthFailureKind.linkExpired);
+      expect(expired.recovery, AccountAuthRecovery.sendNewLink);
+      final same = classifyAccountAuthFailure(
+        const AuthApiException('private detail', code: 'same_password'),
+        operation: AccountAuthOperation.passwordUpdate,
+      );
+      expect(same.kind, AccountAuthFailureKind.passwordUnchanged);
+      expect(same.field, AccountAuthField.password);
+    },
+  );
+
   test('validates required fields without sending them to the server', () {
     expect(
       validateAccountEmail('')?.kind,

@@ -11,6 +11,7 @@ import '../features/planning/presentation/today_screen.dart';
 import '../features/productivity/presentation/reports_screen.dart';
 import '../features/productivity/presentation/achievements_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/settings/presentation/pomodoist_account_actions.dart';
 import '../features/settings/presentation/keyboard_shortcuts_screen.dart';
 import '../features/settings/presentation/telegram_account_link_screen.dart';
 import '../features/settings/presentation/captcha_challenge_screen.dart';
@@ -27,6 +28,7 @@ import '../features/tasks/presentation/timeline_screen.dart';
 import '../features/tasks/presentation/upcoming_screen.dart';
 import 'account_auth_feedback.dart';
 import 'account_providers.dart';
+import 'password_recovery.dart';
 import 'app_startup_gate.dart';
 import 'runtime_public_config.dart';
 import 'task_detail_navigation.dart';
@@ -51,8 +53,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       return const Allow();
     },
     redirect: (_, state) {
+      if (ref.read(passwordRecoveryProvider).needsRoute &&
+          state.uri.path != '/reset-password') {
+        return '/reset-password';
+      }
       if (_isLoginCallback(state.uri)) {
-        return _loginCallbackReturnTo(state.uri);
+        return passwordRecoveryCallbackLocation(state.uri) ??
+            _loginCallbackReturnTo(state.uri);
       }
       if (_isFocusDeepLink(state.uri)) {
         return '/focus';
@@ -82,6 +89,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         redirect: (_, state) => signedIn() ? _authReturnTo(state.uri) : null,
         pageBuilder: (context, state) => NoTransitionPage(
           child: RegisterScreen(returnTo: _authReturnTo(state.uri)),
+        ),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        pageBuilder: (context, state) => NoTransitionPage(
+          child: PasswordResetScreen(
+            fromCallback: state.uri.queryParameters['callback'] == '1',
+            initialFailure: accountAuthCallbackFailureFromValue(
+              state.uri.queryParameters['authFailure'],
+            ),
+          ),
         ),
       ),
       GoRoute(
@@ -254,6 +272,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
   ref.listen(accountAuthStateProvider, (_, _) => router.refresh());
+  ref.listen(passwordRecoveryProvider, (_, _) => router.refresh());
   ref.listen(accountClientProvider, (_, _) => router.refresh());
   final detachNativeRoutes = nativeLinkCoordinator?.attachRouteSink((location) {
     router.go(location);
@@ -288,6 +307,8 @@ String initialAppLocationFor({required bool isWeb, required Uri baseUri}) {
     return '/today';
   }
   if (baseUri.path == '/login-callback') {
+    final recoveryLocation = passwordRecoveryCallbackLocation(baseUri);
+    if (recoveryLocation != null) return recoveryLocation;
     final returnToValues = baseUri.queryParametersAll['returnTo'];
     final returnTo = returnToValues?.length == 1
         ? _localReturnPath(
@@ -398,6 +419,7 @@ bool _requiresWebAccount(String path) {
   return path != '/login' &&
       path != '/register' &&
       path != '/login-callback' &&
+      path != '/reset-password' &&
       path != '/auth/challenge' &&
       path != '/purchase-success';
 }

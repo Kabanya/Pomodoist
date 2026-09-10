@@ -11,6 +11,8 @@ enum AccountAuthOperation {
   passwordSignIn,
   signUp,
   magicLink,
+  passwordReset,
+  passwordUpdate,
   apple,
   google,
   callback,
@@ -21,6 +23,8 @@ enum AccountAuthFailureKind {
   emailRequired,
   emailInvalid,
   passwordRequired,
+  passwordMismatch,
+  passwordUnchanged,
   invalidCredentials,
   emailUnconfirmed,
   weakPassword,
@@ -175,12 +179,28 @@ AccountAuthFailure classifyAccountAuthFailure(
       recovery: AccountAuthRecovery.retry,
     );
   }
+  if (error is AuthSessionMissingException &&
+      operation == AccountAuthOperation.passwordUpdate) {
+    return const AccountAuthFailure(
+      AccountAuthFailureKind.linkExpired,
+      field: AccountAuthField.form,
+      recovery: AccountAuthRecovery.sendNewLink,
+    );
+  }
   if (error is AuthException) {
     if (error.code == null) {
       final status = int.tryParse(error.statusCode ?? '');
+      if (status == 401 && operation == AccountAuthOperation.passwordUpdate) {
+        return const AccountAuthFailure(
+          AccountAuthFailureKind.linkExpired,
+          field: AccountAuthField.form,
+          recovery: AccountAuthRecovery.sendNewLink,
+        );
+      }
       if (status == 429) {
         return AccountAuthFailure(
           operation == AccountAuthOperation.magicLink ||
+                  operation == AccountAuthOperation.passwordReset ||
                   operation == AccountAuthOperation.signUp
               ? AccountAuthFailureKind.emailRateLimited
               : AccountAuthFailureKind.rateLimited,
@@ -227,6 +247,24 @@ AccountAuthFailure _classifyAuthCode(
         field: AccountAuthField.email,
         recovery: AccountAuthRecovery.none,
       );
+    case 'same_password':
+      return const AccountAuthFailure(
+        AccountAuthFailureKind.passwordUnchanged,
+        field: AccountAuthField.password,
+        recovery: AccountAuthRecovery.editPassword,
+      );
+    case 'session_not_found':
+    case 'session_expired':
+    case 'refresh_token_not_found':
+    case 'bad_jwt':
+      if (operation == AccountAuthOperation.passwordUpdate) {
+        return const AccountAuthFailure(
+          AccountAuthFailureKind.linkExpired,
+          field: AccountAuthField.form,
+          recovery: AccountAuthRecovery.sendNewLink,
+        );
+      }
+      return _operationFallback(operation);
     case 'weak_password':
       return const AccountAuthFailure(
         AccountAuthFailureKind.weakPassword,
@@ -243,6 +281,9 @@ AccountAuthFailure _classifyAuthCode(
         recovery: AccountAuthRecovery.switchToSignIn,
       );
     case 'validation_failed':
+      if (operation == AccountAuthOperation.passwordUpdate) {
+        return _operationFallback(operation);
+      }
       return const AccountAuthFailure(
         AccountAuthFailureKind.emailInvalid,
         field: AccountAuthField.email,
@@ -461,6 +502,8 @@ AccountAuthFeedback presentAccountAuthFailure(
     AccountAuthFailureKind.emailRequired => l10n.authEmailRequired,
     AccountAuthFailureKind.emailInvalid => l10n.authEmailInvalid,
     AccountAuthFailureKind.passwordRequired => l10n.authPasswordRequired,
+    AccountAuthFailureKind.passwordMismatch => l10n.authPasswordMismatch,
+    AccountAuthFailureKind.passwordUnchanged => l10n.authPasswordUnchanged,
     AccountAuthFailureKind.invalidCredentials => l10n.authInvalidCredentials,
     AccountAuthFailureKind.emailUnconfirmed => l10n.authEmailUnconfirmed,
     AccountAuthFailureKind.weakPassword => l10n.authWeakPassword,
@@ -481,11 +524,17 @@ AccountAuthFeedback presentAccountAuthFailure(
     ),
     AccountAuthFailureKind.signUpDisabled => l10n.authSignUpDisabled,
     AccountAuthFailureKind.accountRestricted => l10n.authAccountRestricted,
-    AccountAuthFailureKind.linkExpired => l10n.authLinkExpired,
+    AccountAuthFailureKind.linkExpired =>
+      operation == AccountAuthOperation.passwordUpdate ||
+              operation == AccountAuthOperation.passwordReset
+          ? l10n.authResetLinkExpired
+          : l10n.authLinkExpired,
     AccountAuthFailureKind.cancelled => '',
     AccountAuthFailureKind.unexpected => switch (operation) {
       AccountAuthOperation.signUp => l10n.authUnexpectedSignUp,
       AccountAuthOperation.magicLink => l10n.authUnexpectedMagicLink,
+      AccountAuthOperation.passwordReset => l10n.authUnexpectedReset,
+      AccountAuthOperation.passwordUpdate => l10n.authUnexpectedPasswordUpdate,
       _ => l10n.authUnexpectedSignIn,
     },
   };
@@ -518,4 +567,26 @@ bool _isCancellationCode(String value) {
       normalized == 'canceled' ||
       normalized == 'usercancelled' ||
       normalized == 'usercanceled';
+}
+
+/// Sanitizes recovery navigation. The SDK still owns the original callback and
+/// must verify its credentials before the recovery controller permits an update.
+String? passwordRecoveryCallbackLocation(Uri uri) {
+  final returnTo = uri.queryParametersAll['returnTo'];
+  final types = [
+    ...?uri.queryParametersAll['type'],
+    if (uri.hasFragment)
+      ...?Uri(query: uri.fragment).queryParametersAll['type'],
+  ];
+  final recovery =
+      (returnTo?.length == 1 && returnTo!.single == '/reset-password') ||
+      (types.length == 1 && types.single == 'recovery');
+  if (!recovery) return null;
+  return Uri(
+    path: '/reset-password',
+    queryParameters: {
+      'callback': '1',
+      'authFailure': ?safeAccountAuthCallbackFailureValue(uri),
+    },
+  ).toString();
 }

@@ -212,7 +212,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get billingStoreConnectionFailed =>
-      'تعذّر الاتصال بمتجر App Store. يُرجى المحاولة مرة أخرى.';
+      'إذا كنت تستخدم VPN، فقد يؤثر في عملية الشراء. تعذّر الاتصال بمتجر App Store. جرّب خادم VPN آخر أو عطّل VPN مؤقتًا، ثم أعد المحاولة.';
 
   @override
   String billingPurchaseError(String error) {
@@ -390,6 +390,99 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get authEmailSignInTitle => 'تسجيل الدخول بالبريد الإلكتروني';
+
+  @override
+  String get authWelcomeTitle => 'تسجيل الدخول إلى Pomodoist';
+
+  @override
+  String get authWelcomeDescription => 'مهامك وتركيزك على كل جهاز.';
+
+  @override
+  String get authSignInWithLink => 'تسجيل الدخول باستخدام رابط';
+
+  @override
+  String get authForgotPassword => 'هل نسيت كلمة المرور؟';
+
+  @override
+  String get authBackToSignIn => 'العودة إلى تسجيل الدخول';
+
+  @override
+  String get authNoAccount => 'ليس لديك حساب؟';
+
+  @override
+  String get authHaveAccount => 'لديك حساب بالفعل؟';
+
+  @override
+  String get authShowPassword => 'إظهار كلمة المرور';
+
+  @override
+  String get authHidePassword => 'إخفاء كلمة المرور';
+
+  @override
+  String get authResetTitle => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String get authResetDescription =>
+      'أدخل البريد الإلكتروني لحسابك. سنرسل رابطًا لتغيير كلمة المرور.';
+
+  @override
+  String get authResetEmailSentTitle => 'تحقق من بريدك الإلكتروني';
+
+  @override
+  String get authResetEmailSent =>
+      'إذا كان هناك حساب مرتبط بهذا البريد الإلكتروني، فستتلقى رابطًا لإعادة تعيين كلمة المرور.';
+
+  @override
+  String get authResetSendAgain => 'إعادة الإرسال';
+
+  @override
+  String get authResetEditEmail => 'تغيير البريد الإلكتروني';
+
+  @override
+  String get authNewPasswordTitle => 'اختر كلمة مرور جديدة';
+
+  @override
+  String get authNewPasswordDescription =>
+      'استخدم كلمة مرور لا تستخدمها لحسابات أخرى.';
+
+  @override
+  String get authNewPassword => 'كلمة المرور الجديدة';
+
+  @override
+  String get authConfirmPassword => 'أعد إدخال كلمة المرور';
+
+  @override
+  String get authSavePassword => 'حفظ كلمة المرور';
+
+  @override
+  String get authPasswordMismatch => 'كلمتا المرور غير متطابقتين.';
+
+  @override
+  String get authPasswordUnchanged =>
+      'اختر كلمة مرور مختلفة عن كلمة المرور الحالية.';
+
+  @override
+  String get authPasswordUpdatedTitle => 'تم تحديث كلمة المرور';
+
+  @override
+  String get authPasswordUpdatedMessage =>
+      'تم حفظ كلمة المرور الجديدة. يمكنك متابعة استخدام Pomodoist.';
+
+  @override
+  String get authResetLinkExpired =>
+      'رابط إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية. اطلب رابطًا جديدًا.';
+
+  @override
+  String get authUnexpectedReset =>
+      'تعذر إرسال رسالة إعادة تعيين كلمة المرور. حاول مجددًا.';
+
+  @override
+  String get authUnexpectedPasswordUpdate =>
+      'تعذر حفظ كلمة المرور الجديدة. حاول مجددًا.';
+
+  @override
+  String get authCheckingResetLink =>
+      'جارٍ التحقق من رابط إعادة تعيين كلمة المرور…';
 
   @override
   String get authSignInAction => 'تسجيل الدخول';

@@ -212,7 +212,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get billingStoreConnectionFailed =>
-      'Не удалось связаться с App Store. Повторите попытку.';
+      'Если у вас включён VPN, он может мешать оплате. Не удалось подключиться к App Store. Попробуйте сменить VPN-сервер или временно отключить VPN и повторить попытку.';
 
   @override
   String billingPurchaseError(String error) {
@@ -392,6 +392,98 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get authEmailSignInTitle => 'Вход по email';
+
+  @override
+  String get authWelcomeTitle => 'Войдите в Pomodoist';
+
+  @override
+  String get authWelcomeDescription =>
+      'Ваши задачи и фокус — на каждом устройстве.';
+
+  @override
+  String get authSignInWithLink => 'Войти по ссылке';
+
+  @override
+  String get authForgotPassword => 'Забыли пароль?';
+
+  @override
+  String get authBackToSignIn => 'Назад ко входу';
+
+  @override
+  String get authNoAccount => 'Нет аккаунта?';
+
+  @override
+  String get authHaveAccount => 'Уже есть аккаунт?';
+
+  @override
+  String get authShowPassword => 'Показать пароль';
+
+  @override
+  String get authHidePassword => 'Скрыть пароль';
+
+  @override
+  String get authResetTitle => 'Сбросьте пароль';
+
+  @override
+  String get authResetDescription =>
+      'Введите email аккаунта. Мы отправим ссылку для смены пароля.';
+
+  @override
+  String get authResetEmailSentTitle => 'Проверьте email';
+
+  @override
+  String get authResetEmailSent =>
+      'Если аккаунт с таким email существует, вы получите ссылку для сброса пароля.';
+
+  @override
+  String get authResetSendAgain => 'Отправить снова';
+
+  @override
+  String get authResetEditEmail => 'Изменить email';
+
+  @override
+  String get authNewPasswordTitle => 'Придумайте новый пароль';
+
+  @override
+  String get authNewPasswordDescription =>
+      'Используйте пароль, которого нет у других ваших аккаунтов.';
+
+  @override
+  String get authNewPassword => 'Новый пароль';
+
+  @override
+  String get authConfirmPassword => 'Повторите пароль';
+
+  @override
+  String get authSavePassword => 'Сохранить пароль';
+
+  @override
+  String get authPasswordMismatch => 'Пароли не совпадают.';
+
+  @override
+  String get authPasswordUnchanged => 'Выберите пароль, отличный от текущего.';
+
+  @override
+  String get authPasswordUpdatedTitle => 'Пароль обновлён';
+
+  @override
+  String get authPasswordUpdatedMessage =>
+      'Новый пароль сохранён. Вы можете продолжить работу в Pomodoist.';
+
+  @override
+  String get authResetLinkExpired =>
+      'Ссылка для сброса пароля недействительна или устарела. Запросите новую.';
+
+  @override
+  String get authUnexpectedReset =>
+      'Не удалось отправить письмо для сброса пароля. Попробуйте снова.';
+
+  @override
+  String get authUnexpectedPasswordUpdate =>
+      'Не удалось сохранить новый пароль. Попробуйте снова.';
+
+  @override
+  String get authCheckingResetLink => 'Проверяем ссылку для сброса пароля…';
 
   @override
   String get authSignInAction => 'Войти';
