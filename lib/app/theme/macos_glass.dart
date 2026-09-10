@@ -68,8 +68,9 @@ class MacosGlassController extends Notifier<Map<int, bool>> {
         final args = call.arguments;
         if (args is! Map ||
             args['viewId'] is! int ||
-            args['fullScreen'] is! bool)
+            args['fullScreen'] is! bool) {
           return;
+        }
         final id = args['viewId'] as int;
         final request = _requests[id];
         if (request == null) return;
@@ -80,8 +81,9 @@ class MacosGlassController extends Notifier<Map<int, bool>> {
       }
       if (call.method != 'transparencyChanged' ||
           call.arguments is! Map ||
-          (call.arguments as Map)['reduceTransparency'] is! bool)
+          (call.arguments as Map)['reduceTransparency'] is! bool) {
         return;
+      }
       _reduced = (call.arguments as Map)['reduceTransparency'] as bool;
       if (_reduced) {
         // Also invalidate replies issued before the accessibility change.
