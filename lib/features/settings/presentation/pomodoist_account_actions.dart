@@ -236,11 +236,12 @@ class _PomodoistEmailAuthDialogState
   Timer? _slowTimer;
   bool _submitting = false;
   bool _resetEmailSent = false;
+  bool _registrationEmailSent = false;
   bool _takingLonger = false;
   AccountAuthFeedback? _feedback;
   _EmailAction? _lastAction;
 
-  bool get _canSubmit => !_submitting;
+  bool get _canSubmit => !_submitting && !_registrationEmailSent;
 
   @override
   void initState() {
@@ -287,6 +288,7 @@ class _PomodoistEmailAuthDialogState
       _mode = mode;
       _feedback = null;
       _resetEmailSent = false;
+      _registrationEmailSent = false;
     });
     _emailFocus.requestFocus();
   }
@@ -301,6 +303,59 @@ class _PomodoistEmailAuthDialogState
         Navigator.of(context).pop();
       }
     });
+    if (_registrationEmailSent) {
+      return Dialog(
+        constraints: const BoxConstraints(maxWidth: 440),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: _AuthSurface(
+          onClose: () => Navigator.of(context).pop(),
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: 1),
+            duration: AppMotion.duration(context, AppMotion.state),
+            curve: AppMotion.curve,
+            builder: (context, opacity, child) =>
+                Opacity(opacity: opacity, child: child),
+            child: Semantics(
+              liveRegion: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Icon(
+                      LucideIcons.mailCheck,
+                      size: 32,
+                      color: context.appColors.accent,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.registerCheckEmailTitle,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.registerCheckEmailMessage,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: context.appColors.secondaryText,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SelectableText(_email.text.trim()),
+                  const SizedBox(height: 24),
+                  ShadButton(
+                    autofocus: true,
+                    onPressed: () => _changeMode(_EmailAction.signIn),
+                    child: Text(l10n.authBackToSignIn),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     final feedback = _feedback;
     final resetting = _mode == _EmailAction.resetPassword;
     final signingIn = _mode == _EmailAction.signIn;
@@ -675,6 +730,12 @@ class _PomodoistEmailAuthDialogState
       }
       if (!mounted) return;
       final signedIn = widget.account.currentUserId != null;
+      if (action == _EmailAction.signUp && !signedIn) {
+        FocusScope.of(context).unfocus();
+        _password.clear();
+        setState(() => _registrationEmailSent = true);
+        return;
+      }
       if (action == _EmailAction.signIn && !signedIn) {
         _showFailure(
           const AccountAuthFailure(
@@ -690,10 +751,7 @@ class _PomodoistEmailAuthDialogState
         _EmailAction.magicLink => context.l10n.authMagicLinkSent,
         _EmailAction.resetPassword => context.l10n.authResetEmailSent,
         _EmailAction.signIn => context.l10n.authSignedIn,
-        _EmailAction.signUp =>
-          signedIn
-              ? context.l10n.authAccountCreated
-              : context.l10n.registerCheckEmailMessage,
+        _EmailAction.signUp => context.l10n.authAccountCreated,
       };
       final messenger = ScaffoldMessenger.maybeOf(context);
       Navigator.of(context).pop();

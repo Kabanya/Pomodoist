@@ -459,6 +459,12 @@ with Reduce Motion. Support light and dark themes, scroll the content in short o
 narrow windows, retain visible keyboard focus, and expose labels, errors and
 icon-only controls to accessibility services.
 
+After registration without an active session, replace the dialog form with a
+persistent Check your email step showing the submitted address and a return to
+sign-in action. Clear the password and keep the email when returning. Do not
+reduce this instruction to a transient snackbar; registration with an immediate
+session keeps the existing signed-in transition.
+
 Enter the new-password flow only for a password-recovery session validated by the
 authentication SDK. Require a new password and confirmation; keep user input when
 validation or network errors occur. If a password update takes more than 30 seconds,
