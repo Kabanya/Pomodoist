@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -55,6 +54,21 @@ class VoicePanelSwipe {
   }
 }
 
+/// Only explicit panel chrome accepts collapse/expand gestures.
+/// Keep scrollable content outside this area, including when it reaches an edge.
+class VoicePanelSwipeArea extends StatelessWidget {
+  const VoicePanelSwipeArea({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) =>
+      context.findAncestorStateOfType<_VoicePanelMotionState>()?._swipeSurface(
+        child,
+      ) ??
+      child;
+}
+
 /// A retained voice editor that folds into a draggable, corner-snapping capsule.
 class VoicePanelMotion extends StatefulWidget {
   const VoicePanelMotion({
@@ -91,8 +105,6 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
   final _touchPointers = <int>{};
   final _dragPointers = <int>{};
   int? _panZoomPointer;
-  bool _swipeAllowed = false;
-  bool _scrollBurst = false;
   Alignment _corner = Alignment.bottomRight;
   Rect _bounds = Rect.zero;
   Rect? _displayed;
@@ -152,12 +164,9 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
 
   void _beginSwipe() {
     _swipe.begin(expanded: widget.expanded);
-    _swipeAllowed = false;
-    _scrollBurst = false;
   }
 
   void _applySwipe() {
-    if (!_swipeAllowed) return;
     final expanded = _swipe.takeAction();
     if (expanded == true) widget.onExpand();
     if (expanded == false) widget.onCollapse();
@@ -179,39 +188,6 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
     if (_touchPointers.isEmpty) _swipe.cancel();
   }
 
-  bool _onScrollNotification(ScrollNotification notification) {
-    if (_scrollBurst) {
-      // A child consumed this wheel burst: reaching its top must not turn the
-      // remainder (or its inertia) into a collapse gesture.
-      _swipe.cancel();
-    } else if (notification is ScrollStartNotification &&
-        notification.dragDetails != null &&
-        (_touchPointers.isNotEmpty || _panZoomPointer != null)) {
-      final scrollContext = notification.context;
-      if (scrollContext == null ||
-          scrollContext.findAncestorWidgetOfExactType<EditableText>() != null) {
-        _swipe.cancel();
-        return false;
-      }
-      // Every enclosing scroll view must already be at its top when the new
-      // gesture starts. This also works with bouncing and clamping physics.
-      var scrollable = Scrollable.maybeOf(scrollContext);
-      while (scrollable != null) {
-        final position = scrollable.position;
-        if (position.axisDirection != AxisDirection.down ||
-            position.pixels >
-                position.minScrollExtent + precisionErrorTolerance) {
-          _swipe.cancel();
-          return false;
-        }
-        scrollable = Scrollable.maybeOf(scrollable.context);
-      }
-      _swipeAllowed = true;
-      _applySwipe();
-    }
-    return false;
-  }
-
   void _pointerSignal(PointerSignalEvent event) {
     if (event is! PointerScrollEvent ||
         _touchPointers.isNotEmpty ||
@@ -219,7 +195,6 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
         _dragPosition != null) {
       return;
     }
-    _scrollBurst = true;
     _swipe.scroll(
       event.scrollDelta,
       event.timeStamp,
@@ -234,7 +209,6 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
       return;
     }
     GestureBinding.instance.pointerSignalResolver.register(event, (resolved) {
-      _swipeAllowed = true;
       _applySwipe();
       if (event.scrollDelta.dy.abs() > event.scrollDelta.dx.abs()) {
         resolved.respond(allowPlatformDefault: false);
@@ -251,9 +225,6 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
         return;
       }
       _swipe.add(event.localDelta);
-      if (event.localDelta.dy.abs() >= event.localDelta.dx.abs()) {
-        _swipeAllowed = true;
-      }
       _applySwipe();
     },
     onPointerUp: _pointerEnd,
@@ -273,10 +244,7 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
       _swipe.cancel();
     },
     onPointerSignal: _pointerSignal,
-    child: NotificationListener<ScrollNotification>(
-      onNotification: _onScrollNotification,
-      child: child,
-    ),
+    child: child,
   );
 
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
@@ -433,50 +401,48 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
                   _displayed = rect;
                   return Positioned.fromRect(
                     rect: rect,
-                    child: _swipeSurface(
-                      Material(
-                        color: colors.surface,
-                        elevation: 3,
-                        shadowColor: colors.shadow.withValues(alpha: .22),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: colors.outlineVariant),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Offstage(
-                              offstage: !widget.expanded && rect == target,
-                              child: IgnorePointer(
-                                ignoring: !widget.expanded,
-                                child: ExcludeFocus(
+                    child: Material(
+                      color: colors.surface,
+                      elevation: 3,
+                      shadowColor: colors.shadow.withValues(alpha: .22),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: colors.outlineVariant),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Offstage(
+                            offstage: !widget.expanded && rect == target,
+                            child: IgnorePointer(
+                              ignoring: !widget.expanded,
+                              child: ExcludeFocus(
+                                excluding: !widget.expanded,
+                                child: ExcludeSemantics(
                                   excluding: !widget.expanded,
-                                  child: ExcludeSemantics(
-                                    excluding: !widget.expanded,
-                                    child: AnimatedOpacity(
-                                      opacity: widget.expanded ? 1 : 0,
-                                      duration: duration,
-                                      child: TickerMode(
-                                        enabled: widget.expanded,
-                                        child: OverflowBox(
-                                          alignment: Alignment.topLeft,
-                                          minWidth: panelWidth,
-                                          maxWidth: panelWidth,
-                                          minHeight: 0,
-                                          maxHeight: _bounds.height,
-                                          child: _MeasurePanel(
-                                            onSize: (size) {
-                                              if (mounted &&
-                                                  _panelHeight != size.height) {
-                                                setState(
-                                                  () => _panelHeight =
-                                                      size.height,
-                                                );
-                                              }
-                                            },
-                                            child: widget.panel,
-                                          ),
+                                  child: AnimatedOpacity(
+                                    opacity: widget.expanded ? 1 : 0,
+                                    duration: duration,
+                                    child: TickerMode(
+                                      enabled: widget.expanded,
+                                      child: OverflowBox(
+                                        alignment: Alignment.topLeft,
+                                        minWidth: panelWidth,
+                                        maxWidth: panelWidth,
+                                        minHeight: 0,
+                                        maxHeight: _bounds.height,
+                                        child: _MeasurePanel(
+                                          onSize: (size) {
+                                            if (mounted &&
+                                                _panelHeight != size.height) {
+                                              setState(
+                                                () =>
+                                                    _panelHeight = size.height,
+                                              );
+                                            }
+                                          },
+                                          child: widget.panel,
                                         ),
                                       ),
                                     ),
@@ -484,10 +450,12 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
                                 ),
                               ),
                             ),
-                            Offstage(
-                              offstage: widget.expanded && rect == target,
-                              child: IgnorePointer(
-                                ignoring: widget.expanded,
+                          ),
+                          Offstage(
+                            offstage: widget.expanded && rect == target,
+                            child: IgnorePointer(
+                              ignoring: widget.expanded,
+                              child: VoicePanelSwipeArea(
                                 child: ExcludeFocus(
                                   excluding: widget.expanded,
                                   child: ExcludeSemantics(
@@ -567,8 +535,8 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   );

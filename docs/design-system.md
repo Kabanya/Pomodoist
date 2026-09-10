@@ -271,14 +271,18 @@ duration and clock. Preserve IME composition, selection and unrelated tokens.
 Quoted metadata names remain literal during date normalization. Ready voice
 subtasks preview the project inherited from their parent's current phrase.
 Details stay below the editable input; the separate window scrolls when needed.
+Voice draft titles start at one line and grow with their text up to three lines;
+do not reserve blank lines for short tasks. Keep metadata and comments editable.
 
-Voice gestures belong only to the voice panel's surface. Swipe up on the compact
-panel to expand and down on the editor to collapse, using touch or trackpad input.
+Voice gestures belong only to explicit `VoicePanelSwipeArea` surfaces. Swipe up
+on the compact panel to expand and down on the editor header to collapse, using
+touch or trackpad input. The task list, transcript, fields, and surrounding body
+remain outside those areas: scrolling there must never collapse the panel,
+including at either edge, during overscroll, or when the content fits without
+scrolling. Do not hand off a content-scroll gesture to panel motion.
 Keep capsule dragging on the microphone handle; buttons, text editing and
-keyboard actions retain their normal behavior. Scrolling takes priority: a new
-downward gesture may collapse only when the touched content and its enclosing
-scroll views already start at the top. Require 48 logical pixels of vertical
-movement, ignore horizontal gestures and pinching, and allow one transition per
+keyboard actions retain their normal behavior. Require 48 logical pixels of
+vertical movement, ignore horizontal gestures and pinching, and allow one transition per
 gesture (one wheel burst ends after 200 ms without events). Reuse the retained
 voice editor and its 240 ms transition, including Reduce Motion; collapsing never
 stops recording, transcription or analysis and never discards drafts.

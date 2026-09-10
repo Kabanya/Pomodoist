@@ -28,8 +28,7 @@ void main() {
     swipe.add(const Offset(0, -100));
     expect(swipe.takeAction(), isNull);
 
-    // Pinch, editing, a second finger, or scrolling away from the top
-    // cancels this entire gesture, even if it later reaches an edge.
+    // Pinch, capsule dragging, or a second finger cancels the entire gesture.
     swipe.begin(expanded: true);
     swipe.add(const Offset(0, 30));
     swipe.cancel();
@@ -40,7 +39,7 @@ void main() {
     expect(swipe.takeAction(), isFalse);
   });
 
-  test('wheel bursts normalize direction and suppress inertia and handoff', () {
+  test('wheel bursts normalize direction and preserve cancellation', () {
     final swipe = VoicePanelSwipe();
     swipe.scroll(const Offset(0, 30), Duration.zero, expanded: false);
     expect(swipe.takeAction(), isNull);
@@ -68,7 +67,7 @@ void main() {
       const Duration(milliseconds: 500),
       expanded: true,
     );
-    swipe.cancel(); // A nested scroll view consumed the start of this burst.
+    swipe.cancel(); // Modified wheel input cancels the whole burst.
     swipe.scroll(
       const Offset(0, -80),
       const Duration(milliseconds: 530),

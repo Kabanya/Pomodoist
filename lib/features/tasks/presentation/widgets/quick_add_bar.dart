@@ -310,6 +310,7 @@ class _QuickAddInputState extends ConsumerState<QuickAddInput> {
             focusNode: focusNode,
             autofocus: widget.autofocus,
             enabled: widget.enabled,
+            minLines: 1,
             maxLines: widget.maxLines,
             style: widget.style,
             textInputAction: widget.textInputAction,
@@ -1253,52 +1254,55 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _VoicePulse(
-                    animation: _pulseController,
-                    active:
-                        _motionActive &&
-                        !MediaQuery.disableAnimationsOf(context),
-                    listeningLevel: _status == VoiceRecognitionStatus.recording
-                        ? _amplitudeLevel
-                        : null,
-                    icon: _analyzing
-                        ? LucideIcons.sparkles
-                        : _isTranscribing
-                        ? LucideIcons.audioLines
-                        : LucideIcons.mic,
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.voiceTitle,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          _statusLabel(context),
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
+              VoicePanelSwipeArea(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _VoicePulse(
+                      animation: _pulseController,
+                      active:
+                          _motionActive &&
+                          !MediaQuery.disableAnimationsOf(context),
+                      listeningLevel:
+                          _status == VoiceRecognitionStatus.recording
+                          ? _amplitudeLevel
+                          : null,
+                      icon: _analyzing
+                          ? LucideIcons.sparkles
+                          : _isTranscribing
+                          ? LucideIcons.audioLines
+                          : LucideIcons.mic,
                     ),
-                  ),
-                  IconButton(
-                    key: const Key('voice-collapse'),
-                    tooltip: l10n.voiceCollapse,
-                    onPressed: () => _setExpanded(false),
-                    icon: const Icon(LucideIcons.chevronDown),
-                  ),
-                  IconButton(
-                    tooltip: l10n.commonClose,
-                    onPressed: _saving ? null : _closeVoice,
-                    icon: const Icon(LucideIcons.x),
-                  ),
-                ],
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.voiceTitle,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            _statusLabel(context),
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      key: const Key('voice-collapse'),
+                      tooltip: l10n.voiceCollapse,
+                      onPressed: () => _setExpanded(false),
+                      icon: const Icon(LucideIcons.chevronDown),
+                    ),
+                    IconButton(
+                      tooltip: l10n.commonClose,
+                      onPressed: _saving ? null : _closeVoice,
+                      icon: const Icon(LucideIcons.x),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 14),
               Row(
