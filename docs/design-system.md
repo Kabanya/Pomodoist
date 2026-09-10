@@ -485,6 +485,14 @@ CAPTCHA, SDK PKCE handling and return paths, block concurrent submissions, and
 keep field values after failures. Magic-link sign-in uses `shouldCreateUser:
 false`; only explicit registration creates a new account.
 
+Native OAuth and email links keep the exact registered
+`pomodoist://login-callback` redirect, with the local `returnTo` route in its URL
+fragment. Supabase includes query parameters when matching its redirect allowlist,
+so putting navigation metadata in the query can send native users to the website
+fallback. Web sign-in retains its `/login-callback` URL and query return path.
+Read legacy query return paths as well, reject ambiguous or external destinations,
+and leave authorization codes and session verification to the SDK.
+
 | Scenario | Feedback and next action |
 |---|---|
 | Empty or malformed input | Field validation before any request |

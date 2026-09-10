@@ -24,7 +24,7 @@ void main() {
         passwordRecoveryRedirect(
           'pomodoist://login-callback?returnTo=%2Ftoday',
         ),
-        'pomodoist://login-callback?returnTo=%2Freset-password',
+        'pomodoist://login-callback#returnTo=%2Freset-password',
       );
       expect(
         passwordRecoveryRedirect(

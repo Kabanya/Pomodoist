@@ -173,9 +173,9 @@ String? nativeRouteForLink(Uri uri) {
   if (!_isLoginCallbackLink(uri)) return null;
   final recoveryLocation = passwordRecoveryCallbackLocation(uri);
   if (recoveryLocation != null) return recoveryLocation;
-  final returnToValues = uri.queryParametersAll['returnTo'];
-  final returnTo = returnToValues?.length == 1
-      ? _safeNativeReturnTo(returnToValues!.single)
+  final callbackReturnTo = accountAuthCallbackReturnTo(uri);
+  final returnTo = callbackReturnTo != null
+      ? _safeNativeReturnTo(callbackReturnTo)
       : '/settings';
   final authFailure = safeAccountAuthCallbackFailureValue(uri);
   return Uri(

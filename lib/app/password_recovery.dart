@@ -366,6 +366,5 @@ class PasswordRecoveryController extends ChangeNotifier {
   }
 }
 
-String passwordRecoveryRedirect(String loginRedirect) => Uri.parse(
-  loginRedirect,
-).replace(queryParameters: {'returnTo': '/reset-password'}).toString();
+String passwordRecoveryRedirect(String loginRedirect) =>
+    accountAuthRedirect(loginRedirect, '/reset-password');

@@ -309,10 +309,10 @@ String initialAppLocationFor({required bool isWeb, required Uri baseUri}) {
   if (baseUri.path == '/login-callback') {
     final recoveryLocation = passwordRecoveryCallbackLocation(baseUri);
     if (recoveryLocation != null) return recoveryLocation;
-    final returnToValues = baseUri.queryParametersAll['returnTo'];
-    final returnTo = returnToValues?.length == 1
+    final callbackReturnTo = accountAuthCallbackReturnTo(baseUri);
+    final returnTo = callbackReturnTo != null
         ? _localReturnPath(
-            returnToValues!.single,
+            callbackReturnTo,
             fallback: '/settings',
             blockedPath: '/login-callback',
           )
@@ -343,7 +343,7 @@ String _purchaseSuccessReturnTo(String? value) {
 
 String _loginCallbackReturnTo(Uri uri) {
   final returnTo = _localReturnPath(
-    uri.queryParameters['returnTo'],
+    accountAuthCallbackReturnTo(uri),
     fallback: '/settings',
     blockedPath: '/login-callback',
   );

@@ -958,12 +958,8 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
   }
 }
 
-String _loginRedirectFor(String returnTo) {
-  final uri = Uri.parse(pomodoistLoginRedirect);
-  return uri
-      .replace(queryParameters: {...uri.queryParameters, 'returnTo': returnTo})
-      .toString();
-}
+String _loginRedirectFor(String returnTo) =>
+    accountAuthRedirect(pomodoistLoginRedirect, returnTo);
 
 String _authRoute(String path, String returnTo) {
   if (returnTo == '/today') {

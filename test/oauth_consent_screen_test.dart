@@ -490,7 +490,7 @@ void main() {
   ) async {
     const returnTo = '/oauth/consent?authorization_id=a%2Fb%2Bc%2520d';
     const loginRedirect =
-        'pomodoist://login-callback?returnTo=%2Foauth%2Fconsent%3F'
+        'pomodoist://login-callback#returnTo=%2Foauth%2Fconsent%3F'
         'authorization_id%3Da%252Fb%252Bc%252520d';
     final account = _ReturnToAccount();
     await _pumpLogin(tester, account: account, returnTo: returnTo);

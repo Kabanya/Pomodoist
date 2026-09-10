@@ -385,6 +385,36 @@ AccountAuthFailure _classifyAuthCode(
   return _operationFallback(operation);
 }
 
+String accountAuthRedirect(String loginRedirect, String returnTo) {
+  final uri = Uri.parse(loginRedirect);
+  if (uri.scheme == 'pomodoist') {
+    // Supabase matches the redirect allowlist without the fragment, but with
+    // the query. Keep navigation metadata out of the registered callback URL.
+    final query = {...uri.queryParameters}..remove('returnTo');
+    return Uri(
+      scheme: uri.scheme,
+      userInfo: uri.userInfo,
+      host: uri.host,
+      port: uri.hasPort ? uri.port : null,
+      path: uri.path,
+      queryParameters: query.isEmpty ? null : query,
+      fragment: Uri(queryParameters: {'returnTo': returnTo}).query,
+    ).toString();
+  }
+  return uri
+      .replace(queryParameters: {...uri.queryParameters, 'returnTo': returnTo})
+      .toString();
+}
+
+String? accountAuthCallbackReturnTo(Uri uri) {
+  final values = [
+    ...?uri.queryParametersAll['returnTo'],
+    if (uri.hasFragment)
+      ...?Uri(query: uri.fragment).queryParametersAll['returnTo'],
+  ];
+  return values.length == 1 ? values.single : null;
+}
+
 String? safeAccountAuthCallbackFailureValue(Uri uri) {
   final parameterSources = [
     uri.queryParametersAll,
@@ -599,14 +629,14 @@ bool _isCancellationCode(String value) {
 /// Sanitizes recovery navigation. The SDK still owns the original callback and
 /// must verify its credentials before the recovery controller permits an update.
 String? passwordRecoveryCallbackLocation(Uri uri) {
-  final returnTo = uri.queryParametersAll['returnTo'];
+  final returnTo = accountAuthCallbackReturnTo(uri);
   final types = [
     ...?uri.queryParametersAll['type'],
     if (uri.hasFragment)
       ...?Uri(query: uri.fragment).queryParametersAll['type'],
   ];
   final recovery =
-      (returnTo?.length == 1 && returnTo!.single == '/reset-password') ||
+      returnTo == '/reset-password' ||
       (types.length == 1 && types.single == 'recovery');
   if (!recovery) return null;
   return Uri(
