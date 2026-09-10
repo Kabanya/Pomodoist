@@ -78,8 +78,17 @@ class EmailAuthController {
           return EmailAuthResult.checkEmail;
       }
       if (response.session != null) return EmailAuthResult.signedIn;
-      // A masked duplicate signup is indistinguishable from a new signup here.
-      if (action == EmailAuthAction.signUp) return EmailAuthResult.checkEmail;
+      if (action == EmailAuthAction.signUp) {
+        // Supabase masks existing accounts with an explicit empty identity list.
+        if (response.user?.identities?.isEmpty == true) {
+          throw const AccountAuthFailure(
+            AccountAuthFailureKind.accountMayExist,
+            field: AccountAuthField.email,
+            recovery: AccountAuthRecovery.switchToSignIn,
+          );
+        }
+        return EmailAuthResult.checkEmail;
+      }
       throw const AccountAuthFailure(
         AccountAuthFailureKind.unexpected,
         field: AccountAuthField.form,

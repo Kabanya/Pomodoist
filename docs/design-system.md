@@ -463,10 +463,12 @@ After registration without an active session, replace the dialog form with a
 persistent Check your email step showing the submitted address and a return to
 sign-in action. Clear the password and keep the email when returning. Do not
 reduce this instruction to a transient snackbar; registration with an immediate
-session keeps the existing signed-in transition. Describe email delivery
-conditionally: Supabase can return the same response for a new signup and a
-masked duplicate. Provide sign-in and password-recovery paths without promising
-that an email was sent or exposing whether an address is registered.
+session keeps the existing signed-in transition. A sessionless signup response
+with an explicit empty identity list uses the existing account-may-exist feedback
+and sign-in action, not the check-email step. Do not treat omitted identity data
+as an empty list. Describe email delivery conditionally and provide sign-in and
+password-recovery paths without promising that an email was sent. Do not add a
+separate account-existence lookup.
 
 Email entry points share the application-layer `EmailAuthController`. Preserve
 CAPTCHA, SDK PKCE handling and return paths, block concurrent submissions, and
@@ -477,8 +479,8 @@ false`; only explicit registration creates a new account.
 |---|---|
 | Empty or malformed input | Field validation before any request |
 | Unknown address or wrong password at sign-in | The same email-or-password error; offer recovery and registration |
-| Explicit duplicate-account response | Offer sign-in or password recovery |
-| New signup or masked duplicate without a session | Persistent, conditional check-email step |
+| Explicit duplicate-account error or sessionless signup with empty identities | Keep the form and offer sign-in or password recovery |
+| Signup without a session and without an explicit empty identity list | Persistent, conditional check-email step |
 | Signup with a session | Continue through the existing signed-in return path |
 | Unconfirmed password sign-in | Offer signup-confirmation resend using CAPTCHA |
 | Unknown address for a magic link or recovery | Conditional check-email response; do not create an account |

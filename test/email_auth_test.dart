@@ -62,9 +62,14 @@ void main() {
   );
 
   test(
-    'new signup and masked duplicate both use a neutral check-email step',
+    'new signup uses check-email, including backends omitting identities',
     () async {
-      for (final identities in [null, <Object>[]]) {
+      for (final identities in [
+        null,
+        [
+          {'id': 'user', 'user_id': 'user', 'provider': 'email'},
+        ],
+      ]) {
         respond = (_) async => http.Response(
           jsonEncode({
             'id': 'user',
@@ -92,6 +97,44 @@ void main() {
     },
   );
 
+  test('masked duplicate offers sign-in instead of check-email', () async {
+    respond = (_) async => http.Response(
+      jsonEncode({
+        'id': 'masked-user',
+        'aud': 'authenticated',
+        'created_at': '2026-09-10T00:00:00Z',
+        'email': 'person@example.com',
+        'identities': <Object>[],
+      }),
+      200,
+    );
+    for (var attempt = 0; attempt < 2; attempt++) {
+      await expectLater(
+        submit(EmailAuthAction.signUp),
+        throwsA(
+          isA<AccountAuthFailure>()
+              .having(
+                (failure) => failure.kind,
+                'kind',
+                AccountAuthFailureKind.accountMayExist,
+              )
+              .having(
+                (failure) => failure.field,
+                'field',
+                AccountAuthField.email,
+              )
+              .having(
+                (failure) => failure.recovery,
+                'recovery',
+                AccountAuthRecovery.switchToSignIn,
+              ),
+        ),
+      );
+    }
+    expect(auth.currentSession, isNull);
+    expect(requests, hasLength(2));
+  });
+
   test(
     'password login and auto-confirm signup require an actual session',
     () async {
@@ -99,6 +142,7 @@ void main() {
         'id': 'user',
         'aud': 'authenticated',
         'created_at': '2026-09-10T00:00:00Z',
+        'identities': <Object>[],
       };
       respond = (_) async => http.Response(
         jsonEncode({
