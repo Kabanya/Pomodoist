@@ -1,7 +1,52 @@
+import 'package:app_account/app_account.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pomodoist/app/account_providers.dart';
+import 'package:pomodoist/features/billing/billing.dart';
 import 'package:pomodoist/features/planning/data/task_decomposer.dart';
 
 void main() {
+  for (final signedIn in [true, false]) {
+    test(
+      'task analysis uses ${signedIn ? 'account access without StoreKit' : 'StoreKit proofs without an account'}',
+      () async {
+        final account = _Account(signedIn ? 'account-id' : null);
+        var reads = 0;
+        final store = BillingStore(
+          transactionLoader: () async {
+            reads++;
+            if (signedIn) throw StateError('StoreKit unavailable');
+            return const [
+              BillingTransactionProof(
+                productId: pomodoistLifetimeProductId,
+                jws: 'verified-proof',
+              ),
+            ];
+          },
+        );
+        final container = ProviderContainer(
+          overrides: [
+            accountClientProvider.overrideWithValue(account),
+            billingStoreProvider.overrideWithValue(store),
+          ],
+        );
+        addTearDown(container.dispose);
+        final tasks = await container
+            .read(taskDecomposerProvider)
+            .decompose(
+              'Buy milk',
+              now: DateTime.utc(2026, 9, 10),
+              locale: 'en',
+            );
+        expect(tasks.single.quickAdd, 'Buy milk');
+        expect(reads, signedIn ? 0 : 1);
+        expect(
+          account.body?['storeTransactions'],
+          signedIn ? isEmpty : ['verified-proof'],
+        );
+      },
+    );
+  }
   test('Supabase decomposer sends local time and smart mode', () async {
     Map<String, Object?>? request;
     final now = DateTime.parse('2026-07-13T12:00:00+03:00');
@@ -59,4 +104,34 @@ void main() {
       throwsA(isA<TaskDecompositionException>()),
     );
   });
+}
+
+class _Account implements AccountClient {
+  _Account(this.currentUserId);
+  @override
+  final String? currentUserId;
+  Map? body;
+  @override
+  Future<AccountFunctionResponse> invokeFunction(
+    String functionName, {
+    Map<String, String>? headers,
+    Object? body,
+    Map<String, dynamic>? queryParameters,
+    String? region,
+  }) async {
+    expect(functionName, 'pomodoist-watch');
+    this.body = body as Map;
+    return const AccountFunctionResponse(
+      status: 200,
+      data: {
+        'ok': true,
+        'tasks': [
+          {'quickAdd': 'Buy milk'},
+        ],
+      },
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

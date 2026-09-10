@@ -545,6 +545,28 @@ class BillingStore {
     return _purchase.completePurchase(purchase);
   }
 
+  Future<bool> isVerifiedInactivePurchase(PurchaseDetails purchase) async {
+    // The plugin's unfinished API returns only native .verified transactions.
+    // Expired/refunded transactions are absent from currentEntitlements.
+    for (final transaction in await SK2Transaction.unfinishedTransactions()) {
+      if (transaction.id != purchase.purchaseID ||
+          transaction.productId != purchase.productID) {
+        continue;
+      }
+      final proof = BillingTransactionProof(
+        productId: transaction.productId,
+        transactionId: transaction.id,
+        jws: transaction.receiptData ?? '',
+        localVerificationData: transaction.jsonRepresentation ?? '{}',
+      );
+      return !pomodoistStoreKitPurchaseIsActive(
+        proof.toPurchase(),
+        DateTime.now(),
+      );
+    }
+    return false;
+  }
+
   Future<List<String>> pomodoistTransactionJws() async {
     if (pomodoistLocalStoreKit) {
       return const [];
@@ -791,6 +813,8 @@ class BillingController extends Notifier<BillingState> {
   Timer? _expiryTimer;
   Future<void> _stateChanges = Future<void>.value();
   final _verifiedTransactions = <String, BillingTransactionProof>{};
+  final _purchasesToFinish = <String, PurchaseDetails>{};
+  final _finishingPurchases = <String>{};
   var _entitlementRevision = 0;
   String? _purchaseToConfirm;
   var _accountGeneration = 0;
@@ -989,7 +1013,8 @@ class BillingController extends Notifier<BillingState> {
     try {
       final transactions = await _withTimeout(
         ref.read(billingStoreProvider).restorePurchases(),
-        ref.read(billingStoreTimeoutProvider),
+        // Restore performs two bounded operations: sync, then a fresh snapshot.
+        ref.read(billingStoreTimeoutProvider) * 2,
       );
       await _acceptSnapshot(
         transactions,
@@ -1097,7 +1122,7 @@ class BillingController extends Notifier<BillingState> {
       },
     );
     // StoreKit reads verified purchases locally, independently of the catalog.
-    final entitlementsRefresh = _refreshCurrentEntitlements();
+    unawaited(_refreshCurrentEntitlements());
 
     try {
       final available = await _withTimeout(store.isAvailable(), timeout);
@@ -1126,33 +1151,15 @@ class BillingController extends Notifier<BillingState> {
         loading: false,
         storeAvailable: products.isNotEmpty,
         productDetailsById: products,
+        eligibleIntroductoryProductIds: state.eligibleIntroductoryProductIds
+            .where(products.containsKey)
+            .toSet(),
         missingProductIds: billingProductIds.difference(
           returnedProducts.keys.toSet(),
         ),
         catalogError: response.error?.message,
       );
-      final eligibleProductIds = <String>{};
-      for (final product in response.productDetails) {
-        if (billingPlanForProduct(product.id)?.introductoryFallbackPrice ==
-            null) {
-          continue;
-        }
-        try {
-          if (await _withTimeout(
-            store.isIntroductoryOfferEligible(product.id),
-            timeout,
-          )) {
-            eligibleProductIds.add(product.id);
-          }
-        } catch (_) {
-          // StoreKit eligibility can fail independently of catalog loading.
-        }
-      }
-      if (ref.mounted) {
-        state = state.copyWith(
-          eligibleIntroductoryProductIds: eligibleProductIds,
-        );
-      }
+      unawaited(_refreshIntroductoryEligibility(response.productDetails));
     } catch (error) {
       _recordStoreKitError('catalog', error);
       if (ref.mounted) {
@@ -1162,8 +1169,39 @@ class BillingController extends Notifier<BillingState> {
           catalogError: '$error',
         );
       }
-    } finally {
-      await entitlementsRefresh;
+    }
+  }
+
+  Future<void> _refreshIntroductoryEligibility(
+    List<ProductDetails> products,
+  ) async {
+    for (final product in products) {
+      if (!ref.mounted) return;
+      if (billingPlanForProduct(product.id)?.introductoryFallbackPrice ==
+          null) {
+        continue;
+      }
+      var eligible = false;
+      try {
+        eligible = await _withTimeout(
+          ref
+              .read(billingStoreProvider)
+              .isIntroductoryOfferEligible(product.id),
+          ref.read(billingStoreTimeoutProvider),
+        );
+      } on Object {
+        // Eligibility failure must not block catalog retries or checkout.
+      }
+      if (!ref.mounted) return;
+      if (!identical(state.productDetailsById[product.id], product)) continue;
+      state = state.copyWith(
+        eligibleIntroductoryProductIds: {
+          ...state.eligibleIntroductoryProductIds.where(
+            (id) => id != product.id,
+          ),
+          if (eligible) product.id,
+        },
+      );
     }
   }
 
@@ -1379,7 +1417,13 @@ class BillingController extends Notifier<BillingState> {
         }
         if (purchase.pendingCompletePurchase &&
             purchase.status != PurchaseStatus.pending) {
-          toFinish.add(purchase);
+          if (purchase.status == PurchaseStatus.purchased ||
+              purchase.status == PurchaseStatus.restored) {
+            final id = purchase.purchaseID;
+            if (id != null) _purchasesToFinish[id] = purchase;
+          } else {
+            toFinish.add(purchase);
+          }
         }
       }
     });
@@ -1428,6 +1472,33 @@ class BillingController extends Notifier<BillingState> {
           _attemptedTransactionJws.removeAll(unattemptedJws);
         }
         _recordStoreKitError('account_link', error);
+      }
+    }
+  }
+
+  Future<void> _finishVerifiedPurchases() async {
+    for (final entry in _purchasesToFinish.entries.toList()) {
+      if (!ref.mounted) return;
+      if (!_finishingPurchases.add(entry.key)) continue;
+      try {
+        final store = ref.read(billingStoreProvider);
+        final timeout = ref.read(billingStoreTimeoutProvider);
+        final proof = _verifiedTransactions[entry.key];
+        if (proof?.productId != entry.value.productID &&
+            !await _withTimeout(
+              store.isVerifiedInactivePurchase(entry.value),
+              timeout,
+            )) {
+          continue;
+        }
+        if (!ref.mounted) return;
+        await _withTimeout(store.completePurchase(entry.value), timeout);
+        _purchasesToFinish.remove(entry.key);
+      } on Object catch (error) {
+        // Keep the verified transaction pending for the next refresh/Restore.
+        _recordStoreKitError('finish', error);
+      } finally {
+        _finishingPurchases.remove(entry.key);
       }
     }
   }
@@ -1524,6 +1595,7 @@ class BillingController extends Notifier<BillingState> {
       _restoreSuccessPending = false;
     });
     if (accepted) {
+      unawaited(_finishVerifiedPurchases());
       unawaited(
         _linkTransactions([
           for (final p in transactions)

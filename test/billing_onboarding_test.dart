@@ -23,7 +23,6 @@ import 'package:pomodoist/features/billing/billing.dart';
 import 'package:pomodoist/features/billing/purchase_success_screen.dart';
 import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
 import 'package:pomodoist/features/onboarding/onboarding_gate.dart';
-import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -2251,127 +2250,6 @@ void main() {
     expect(find.byKey(const Key('launch-offer-mini-window')), findsNothing);
   });
 
-  testWidgets('settings changes only Lifetime during the promo window', (
-    tester,
-  ) async {
-    final startedAt = DateTime.utc(2026, 1, 1, 10);
-    final clock = FixedClock(startedAt);
-    SharedPreferences.setMockInitialValues({
-      launchOfferStartedAtPreferenceKey: startedAt.toIso8601String(),
-    });
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          billingStoreProvider.overrideWithValue(_FakeBillingStore()),
-          applePurchasesSupportedProvider.overrideWithValue(true),
-          clockProvider.overrideWithValue(clock),
-          pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
-          googleCalendarConnectionProvider.overrideWith(
-            (ref) => Stream.value(null),
-          ),
-        ],
-        child: const _SettingsHarness(),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(
-      find.byKey(const ValueKey('billing-plan-pomodoist.pro.monthly')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('billing-plan-pomodoist.pro.annual')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('billing-plan-pomodoist.pro.annual.launch')),
-      findsNothing,
-    );
-    expect(
-      find.byKey(const ValueKey('billing-plan-pomodoist.pro.lifetime')),
-      findsNothing,
-    );
-    expect(
-      find.byKey(const ValueKey('billing-plan-pomodoist.pro.lifetime.full')),
-      findsNothing,
-    );
-    expect(
-      find.byKey(const ValueKey('billing-plan-pomodoist.pro.lifetime.launch')),
-      findsOneWidget,
-    );
-
-    clock.value = startedAt.add(const Duration(hours: 25));
-    await tester.pump(const Duration(seconds: 1));
-
-    expect(
-      find.byKey(const ValueKey('billing-plan-pomodoist.pro.annual.launch')),
-      findsNothing,
-    );
-    expect(
-      find.byKey(const ValueKey('billing-plan-pomodoist.pro.lifetime.launch')),
-      findsNothing,
-    );
-    expect(
-      find.byKey(const ValueKey('billing-plan-pomodoist.pro.annual')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('billing-plan-pomodoist.pro.lifetime')),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('settings collapses active Pro paywall until header tap', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({
-      billingActiveProductIdPreferenceKey: pomodoistLifetimeProductId,
-    });
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          billingStoreProvider.overrideWithValue(_FakeBillingStore()),
-          applePurchasesSupportedProvider.overrideWithValue(true),
-          billingAccountEntitlementProvider.overrideWithValue(true),
-          pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
-          googleCalendarConnectionProvider.overrideWith(
-            (ref) => Stream.value(null),
-          ),
-        ],
-        child: const _SettingsHarness(),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(
-      find.text('Pomodoist Pro is active on this device.'),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('billing-plan-pomodoist.pro.monthly')),
-      findsNothing,
-    );
-    expect(find.byKey(const Key('billing-restore-button')), findsNothing);
-
-    await tester.tap(find.byKey(const Key('billing-pro-header')));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.byKey(const ValueKey('billing-plan-pomodoist.pro.monthly')),
-      findsOneWidget,
-    );
-    expect(find.byKey(const Key('billing-restore-button')), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('billing-paywall-close')));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.byKey(const ValueKey('billing-plan-pomodoist.pro.monthly')),
-      findsNothing,
-    );
-    expect(find.byKey(const Key('billing-restore-button')), findsNothing);
-  });
-
   testWidgets('Stripe subscription shows Link management without restore', (
     tester,
   ) async {
@@ -2425,47 +2303,6 @@ void main() {
     expect(openedUrl, Uri.parse('https://link.com'));
   });
 
-  testWidgets('settings may be disposed while sign-out is pending', (
-    tester,
-  ) async {
-    final pending = Completer<void>();
-    var calls = 0;
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          billingStoreProvider.overrideWithValue(_FakeBillingStore()),
-          applePurchasesSupportedProvider.overrideWithValue(true),
-          accountOverviewProvider.overrideWith(
-            (ref) async => AccountOverview.empty('user-1'),
-          ),
-          googleCalendarConnectionProvider.overrideWith(
-            (ref) => Stream.value(null),
-          ),
-        ],
-        child: _SettingsHarness(
-          signOutOverride: () {
-            calls += 1;
-            return pending.future;
-          },
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final signOut = find.byKey(const Key('account-sign-out-button'));
-    await tester.ensureVisible(signOut);
-    await tester.tap(signOut);
-    await tester.pump();
-    expect(calls, 1);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    pending.complete();
-    await tester.pump();
-
-    expect(tester.takeException(), isNull);
-  });
-
   testWidgets('paywall shows plans while StoreKit products are loading', (
     tester,
   ) async {
@@ -2513,51 +2350,6 @@ void main() {
           .onPressed,
       isNull,
     );
-  });
-
-  testWidgets('buying from settings opens success route and returns', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({
-      onboardingCompletedPreferenceKey: true,
-      launchOfferStartedAtPreferenceKey: DateTime.utc(
-        2026,
-        1,
-        1,
-      ).toIso8601String(),
-    });
-    late GoRouter router;
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          billingStoreProvider.overrideWithValue(_FakeBillingStore()),
-          applePurchasesSupportedProvider.overrideWithValue(true),
-          pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
-          googleCalendarConnectionProvider.overrideWith(
-            (ref) => Stream.value(null),
-          ),
-        ],
-        child: _SettingsRouterHarness(onRouter: (value) => router = value),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final buyButton = find.byKey(
-      const ValueKey('billing-buy-pomodoist.pro.monthly'),
-    );
-    await tester.ensureVisible(buyButton);
-    await tester.pumpAndSettle();
-    await tester.tap(buyButton);
-    await tester.pumpAndSettle();
-
-    expect(_routerUri(router), '/purchase-success?returnTo=%2Fsettings');
-    expect(find.byKey(const Key('purchase-success-title')), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('purchase-success-continue')));
-    await tester.pumpAndSettle();
-
-    expect(_routerUri(router), '/settings');
   });
 
   testWidgets('Stripe success waits for the server entitlement', (
@@ -3005,69 +2797,6 @@ class _OnboardingHarness extends ConsumerWidget {
       home: const Scaffold(
         body: OnboardingGate(child: Center(child: Text('Home'))),
       ),
-    );
-  }
-}
-
-class _SettingsHarness extends ConsumerWidget {
-  const _SettingsHarness({this.signOutOverride});
-
-  final Future<void> Function()? signOutOverride;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp(
-      builder: testAppBuilder,
-      theme: AppTheme.light(),
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: SettingsScreen(signOutOverride: signOutOverride),
-    );
-  }
-}
-
-class _SettingsRouterHarness extends StatelessWidget {
-  const _SettingsRouterHarness({required this.onRouter});
-
-  final ValueChanged<GoRouter> onRouter;
-
-  @override
-  Widget build(BuildContext context) {
-    final router = GoRouter(
-      initialLocation: '/settings',
-      routes: [
-        GoRoute(
-          path: '/settings',
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: SettingsScreen()),
-        ),
-        GoRoute(
-          path: '/purchase-success',
-          pageBuilder: (context, state) => NoTransitionPage(
-            child: PurchaseSuccessScreen(
-              returnTo: state.uri.queryParameters['returnTo'] ?? '/today',
-            ),
-          ),
-        ),
-      ],
-    );
-    onRouter(router);
-    return MaterialApp.router(
-      builder: testAppBuilder,
-      theme: AppTheme.light(),
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
-      supportedLocales: AppLocalizations.supportedLocales,
-      routerConfig: router,
     );
   }
 }

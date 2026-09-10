@@ -246,6 +246,8 @@ windows-release:
 windows-installer: windows-release
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/installer/build.ps1 -BuildDirectory "$(WINDOWS_RELEASE_DIR)"
 
+macos-debug macos-profile: POMODOIST_BILLING_CHANNEL = storekit
+
 macos-debug:
 	$(FLUTTER) build macos --debug \
 		--dart-define-from-file="$(LOCAL_CONFIG)" \

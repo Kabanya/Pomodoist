@@ -22,6 +22,149 @@ void main() {
   });
   tearDown(() => debugDefaultTargetPlatformOverride = null);
 
+  test('catalog retry does not wait for an unrelated entitlement read', () {
+    fakeAsync((time) {
+      final snapshot = Completer<List<BillingTransactionProof>>();
+      var requests = 0;
+      final store = _Store()
+        ..snapshot = (() => snapshot.future)
+        ..catalog = () async {
+          requests++;
+          return _catalog({});
+        };
+      final container = _ready(store, time);
+      expect(
+        container.read(billingControllerProvider).needsCatalogRetry,
+        isTrue,
+      );
+      container.read(billingControllerProvider.notifier).reload();
+      time.flushMicrotasks();
+      expect(requests, 2);
+      snapshot.complete([]);
+      time.flushMicrotasks();
+    });
+  });
+
+  test('partial catalog retry does not wait for introductory eligibility', () {
+    fakeAsync((time) {
+      final eligibility = Completer<bool>();
+      var requests = 0;
+      final store = _Store()
+        ..eligibility = ((_) => eligibility.future)
+        ..catalog = () async {
+          requests++;
+          return _catalog({pomodoistAnnualProductId});
+        };
+      final container = _ready(store, time);
+      store.catalog = () async {
+        requests++;
+        return _catalog({pomodoistLifetimeProductId});
+      };
+      container.read(billingControllerProvider.notifier).reload();
+      time.flushMicrotasks();
+      expect(requests, 2);
+      eligibility.complete(true);
+      time.flushMicrotasks();
+      expect(
+        container
+            .read(billingControllerProvider)
+            .eligibleIntroductoryProductIds,
+        isEmpty,
+      );
+    });
+  });
+
+  test(
+    'purchase finishes only after verification and retries a failed finish',
+    () {
+      fakeAsync((time) {
+        final store = _Store();
+        final container = _ready(store, time);
+        final snapshot = Completer<List<BillingTransactionProof>>();
+        store.snapshot = () => snapshot.future;
+        final purchase = _purchase(pomodoistLifetimeProductId)
+          ..pendingCompletePurchase = true;
+        store.emit([purchase]);
+        time.flushMicrotasks();
+        expect(store.finished, isEmpty);
+        snapshot.completeError(StateError('verification unavailable'));
+        time.flushMicrotasks();
+        expect(store.finished, isEmpty);
+
+        store.snapshot = null;
+        store.finish = (_) async => throw StateError('finish unavailable');
+        container.read(billingControllerProvider.notifier).reload();
+        time.flushMicrotasks();
+        expect(
+          container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+          isTrue,
+        );
+        expect(store.finished, [purchase.purchaseID]);
+
+        final finish = Completer<void>();
+        store.finish = (_) => finish.future;
+        container.read(billingControllerProvider.notifier).reload();
+        time.flushMicrotasks();
+        store.emit([purchase, purchase]);
+        time.flushMicrotasks();
+        expect(store.finished, [purchase.purchaseID, purchase.purchaseID]);
+        finish.complete();
+        time.flushMicrotasks();
+        container.read(billingControllerProvider.notifier).reload();
+        time.flushMicrotasks();
+        expect(store.finished, hasLength(2));
+      });
+    },
+  );
+
+  test('Restore allows both sync and the subsequent snapshot to complete', () {
+    fakeAsync((time) {
+      final sync = Completer<void>();
+      final snapshot = Completer<List<BillingTransactionProof>>();
+      final nativeStore = BillingStore(
+        restoreSynchronizer: () => sync.future,
+        transactionLoader: () => snapshot.future,
+      );
+      final store = _Store()..restore = nativeStore.restorePurchases;
+      final container = _ready(store, time);
+      container.read(billingControllerProvider.notifier).restorePurchases();
+      time.elapse(const Duration(seconds: 20));
+      sync.complete();
+      time.flushMicrotasks();
+      time.elapse(const Duration(seconds: 20));
+      expect(container.read(billingControllerProvider).restoring, isTrue);
+      snapshot.complete([
+        BillingTransactionProof.fromPurchase(
+          _purchase(pomodoistLifetimeProductId),
+        ),
+      ]);
+      time.flushMicrotasks();
+      expect(container.read(billingControllerProvider).error, isNull);
+      expect(
+        container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+        isTrue,
+      );
+    });
+  });
+
+  test('verified revoked transaction can finish without restoring access', () {
+    fakeAsync((time) {
+      final store = _Store();
+      final container = _ready(store, time);
+      final purchase = _purchase(pomodoistAnnualProductId, revoked: true)
+        ..pendingCompletePurchase = true;
+      store.snapshot = () async => [];
+      store.inactiveVerifiedIds.add(purchase.purchaseID!);
+      store.emit([purchase]);
+      time.flushMicrotasks();
+      expect(store.finished, [purchase.purchaseID]);
+      expect(
+        container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+        isFalse,
+      );
+    });
+  });
+
   test('failed refresh preserves previously verified lifetime access', () {
     fakeAsync((time) {
       final store = _Store();
@@ -485,13 +628,16 @@ void main() {
       store.snapshot = () async =>
           throw PlatformException(code: 'storekit_unverified_transaction');
       // The plugin sends exactly this event for both verified and unverified purchases.
-      store.events.add([_purchase(pomodoistLifetimeProductId)]);
+      store.events.add([
+        _purchase(pomodoistLifetimeProductId)..pendingCompletePurchase = true,
+      ]);
       time.flushMicrotasks();
       final state = container.read(billingControllerProvider);
       expect(state.hasLocalStoreKitEntitlement, isFalse);
       expect(state.purchaseSuccessProductId, isNull);
       expect(state.error, contains('storekit_unverified_transaction'));
       expect(links, isEmpty);
+      expect(store.finished, isEmpty);
     });
   });
 
@@ -694,11 +840,15 @@ class _Store extends BillingStore {
   bool emptyCatalog;
   Set<String>? catalogIds;
   Future<ProductDetailsResponse> Function()? catalog;
+  Future<bool> Function(String)? eligibility;
+  Future<void> Function(PurchaseDetails)? finish;
   BillingTransactionLoader? snapshot;
   BillingTransactionLoader? restore;
   int refreshRequests = 0;
   int restoreRequests = 0;
   final bought = <String>[];
+  final finished = <String?>[];
+  final inactiveVerifiedIds = <String>{};
   List<PurchaseDetails> transactions = [];
   final events = StreamController<List<PurchaseDetails>>.broadcast();
   void emit(List<PurchaseDetails> purchases) {
@@ -715,7 +865,8 @@ class _Store extends BillingStore {
   @override
   Future<bool> isAvailable() async => true;
   @override
-  Future<bool> isIntroductoryOfferEligible(String productId) async => false;
+  Future<bool> isIntroductoryOfferEligible(String productId) async =>
+      eligibility == null ? false : eligibility!(productId);
   @override
   Future<ProductDetailsResponse> queryProductDetails(
     Set<String> productIds,
@@ -746,7 +897,14 @@ class _Store extends BillingStore {
   }
 
   @override
-  Future<void> completePurchase(PurchaseDetails purchase) async {}
+  Future<void> completePurchase(PurchaseDetails purchase) async {
+    finished.add(purchase.purchaseID);
+    await finish?.call(purchase);
+  }
+
+  @override
+  Future<bool> isVerifiedInactivePurchase(PurchaseDetails purchase) async =>
+      inactiveVerifiedIds.contains(purchase.purchaseID);
 }
 
 ProductDetailsResponse _catalog(Set<String> ids) => ProductDetailsResponse(

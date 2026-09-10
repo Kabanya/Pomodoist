@@ -232,7 +232,10 @@ final taskDecomposerProvider = Provider<TaskDecomposer>((ref) {
           'Voice analysis is unavailable.',
         );
       }
-      final storeTransactions = await billingStore.pomodoistTransactionJws();
+      // The server accepts account authorization or verified StoreKit proofs.
+      final storeTransactions = account.currentUserId != null
+          ? const <String>[]
+          : await billingStore.pomodoistTransactionJws();
       final response = await account.invokeFunction(
         'pomodoist-watch',
         body: {
