@@ -360,7 +360,7 @@ testflight-ios: testflight-preflight testflight-auth
 
 MACOS_ARCHIVE_PATH = $(abspath build/TestFlight/Pomodoist-macOS.xcarchive)
 MACOS_EXPORT_PATH = $(abspath build/TestFlight/macos)
-MACOS_PACKAGE_PATH = $(MACOS_EXPORT_PATH)/pomodoist.pkg
+MACOS_PACKAGE_PATH = $(MACOS_EXPORT_PATH)/Pomodoist.pkg
 
 testflight-macos: testflight-preflight testflight-auth
 	@set -eu; \

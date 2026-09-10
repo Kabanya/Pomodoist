@@ -120,7 +120,7 @@ SENTRY_DSN=
     expect(output, contains('-authenticationKeyPath "\$key_path"'));
     expect(output, contains('altool --validate-app'));
     expect(output, contains('altool --upload-app'));
-    expect(output, contains('pomodoist.pkg'));
+    expect(output, contains('Pomodoist.pkg'));
     expect(output, isNot(contains('ditto -c -k --keepParent')));
     expect(output, contains('--type macos'));
     expect(

@@ -562,7 +562,7 @@ Deno.test("transcript falls through both unavailable APIs to DeepSeek Flash", as
   assertEquals(calls[2].body.reasoning_effort, undefined);
 });
 
-Deno.test("transcript skips missing keys and Smart stays on DeepSeek Flash", async () => {
+Deno.test("transcript skips missing keys and Smart uses DeepSeek V4.1 Flash", async () => {
   for (const smart of [false, true]) {
     const urls: string[] = [];
     const response = await handlePomodoistWatch(
@@ -582,7 +582,10 @@ Deno.test("transcript skips missing keys and Smart stays on DeepSeek Flash", asy
         fetch: (async (input, init) => {
           urls.push(String(input));
           const body = JSON.parse((init as { body: string }).body);
-          assertEquals(body.model, "deepseek-v4-flash");
+          assertEquals(
+            body.model,
+            smart ? "deepseek-flash" : "deepseek-v4-flash",
+          );
           assertEquals(body.thinking, { type: smart ? "enabled" : "disabled" });
           assertEquals(body.reasoning_effort, smart ? "high" : undefined);
           return Response.json({

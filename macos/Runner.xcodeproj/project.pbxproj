@@ -103,7 +103,7 @@
 		331C80D7294CF71000263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		333000ED22D3DE5D00554162 /* Warnings.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Warnings.xcconfig; sourceTree = "<group>"; };
 		335BBD1A22A9A15E00E9071D /* GeneratedPluginRegistrant.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneratedPluginRegistrant.swift; sourceTree = "<group>"; };
-		33CC10ED2044A3C60003C045 /* pomodoist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = pomodoist.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		33CC10ED2044A3C60003C045 /* Pomodoist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pomodoist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		33CC10F02044A3C60003C045 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		33CC10F22044A3C60003C045 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Runner/Assets.xcassets; sourceTree = "<group>"; };
 		33CC10F52044A3C60003C045 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
@@ -205,7 +205,7 @@
 		33CC10EE2044A3C60003C045 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				33CC10ED2044A3C60003C045 /* pomodoist.app */,
+				33CC10ED2044A3C60003C045 /* Pomodoist.app */,
 				7D0000160000000000000006 /* PomodoistFocusWidgetExtension.appex */,
 				331C80D5294CF71000263BE5 /* RunnerTests.xctest */,
 			);
@@ -344,7 +344,7 @@
 				78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */,
 			);
 			productName = Runner;
-			productReference = 33CC10ED2044A3C60003C045 /* pomodoist.app */;
+			productReference = 33CC10ED2044A3C60003C045 /* Pomodoist.app */;
 			productType = "com.apple.product-type.application";
 		};
 		7D0000230000000000000023 /* PomodoistFocusWidgetExtension */ = {
@@ -636,7 +636,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/pomodoist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/pomodoist";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist";
 			};
 			name = Debug;
 		};
@@ -651,7 +651,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/pomodoist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/pomodoist";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist";
 			};
 			name = Release;
 		};
@@ -666,7 +666,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/pomodoist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/pomodoist";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist";
 			};
 			name = Profile;
 		};
@@ -1001,7 +1001,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/pomodoist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/pomodoist";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist";
 			};
 			name = "Debug-RunnerStoreKitLocal";
 		};

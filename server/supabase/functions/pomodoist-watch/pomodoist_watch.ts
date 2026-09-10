@@ -1379,7 +1379,7 @@ async function decomposeTranscript(
       key: "DEEPSEEK_API_KEY",
       timeoutMs: smart ? 115_000 : 40_000,
       options: {
-        model: "deepseek-v4-flash",
+        model: smart ? "deepseek-flash" : "deepseek-v4-flash",
         thinking: { type: smart ? "enabled" : "disabled" },
         ...(smart ? { reasoning_effort: "high" } : { temperature: 0.1 }),
       },
