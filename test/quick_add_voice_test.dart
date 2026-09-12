@@ -2610,6 +2610,7 @@ class _QuickAddMotionService implements QuickAddService {
     DateTime? defaultDate,
     TaskSchedule? defaultSchedule,
     String? kanbanStatusId,
+    String? labelId,
   }) => create();
 
   @override

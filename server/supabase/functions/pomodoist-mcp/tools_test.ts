@@ -835,6 +835,55 @@ Deno.test("cascades task/project/label/status mutations and protects anchors", a
   });
 });
 
+Deno.test("deleting a project promotes children in place without moving their tasks", async () => {
+  const calls: RpcCall[] = [];
+  const parent = snapshot.projects[1];
+  const data = {
+    ...snapshot,
+    projects: [
+      snapshot.projects[0],
+      { ...parent, id: "before", orderKey: "a", parentId: null },
+      { ...parent, parentId: null, orderKey: "b" },
+      { ...parent, id: "after", orderKey: "c", parentId: null },
+      { ...parent, id: "child", parentId: "project-a", orderKey: "d" },
+      { ...parent, id: "grandchild", parentId: "child", orderKey: "e" },
+    ],
+    tasks: [...snapshot.tasks, {
+      ...snapshot.tasks[0],
+      id: "nested-task",
+      projectId: "child",
+    }],
+  };
+  await withClient(rpcFetcher(calls, { snapshot: data }), async (client) => {
+    assertSuccessParity(
+      await client.callTool({
+        name: "delete_project",
+        arguments: { project_id: "project-a" },
+      }),
+    );
+    const operations = writeOperations(calls);
+    const updates = operations.filter((op) =>
+      op.entityType === "project" && op.operation === "upsert"
+    );
+    assertEquals(updates.map((op) => op.entityId), [
+      "before",
+      "child",
+      "after",
+    ]);
+    assertEquals(updates.map((op) => op.payload.parentId), [null, null, null]);
+    assertEquals(updates.map((op) => op.payload.orderKey), [
+      "00000000000000001024",
+      "00000000000000002048",
+      "00000000000000003072",
+    ]);
+    assert(
+      !operations.some((op) =>
+        op.entityId === "nested-task" || op.entityId === "grandchild"
+      ),
+    );
+  });
+});
+
 Deno.test("maps RPC failures and keeps committed mutations successful after hint failure", async () => {
   const logs: unknown[] = [];
   let hintFails = true;

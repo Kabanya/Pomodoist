@@ -1235,6 +1235,7 @@ Future<_SidebarHarness> _pumpApp(
               query.projectId == workProjectId
                   ? projectTasks
                   : const <TaskItem>[],
+            TaskQueryKind.label => const <TaskItem>[],
             TaskQueryKind.search => [
               ...inboxTasks,
               ...todayTasks,

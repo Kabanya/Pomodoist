@@ -1222,7 +1222,7 @@ class AccountSyncEngine {
     }
     await _db
         .into(_db.projects)
-        .insertOnConflictUpdate(ProjectRow.fromJson(merged));
+        .insertOnConflictUpdate(ProjectRow.fromJson(merged).toCompanion(false));
   }
 
   Future<void> _upsertSection(String id, Map<String, dynamic> data) async {

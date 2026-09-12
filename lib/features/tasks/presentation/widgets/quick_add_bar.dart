@@ -20,6 +20,7 @@ import '../../../billing/billing.dart';
 import '../../../focus/presentation/focus_view_mode.dart';
 import '../../../onboarding/onboarding_gate.dart';
 import '../../../planning/data/task_decomposer.dart';
+import '../../../planning/data/quick_add_service.dart';
 import '../../../planning/domain/quick_add_parser.dart';
 import '../../../voice/data/pomodoist_voice_controller.dart';
 import '../../../voice/data/voice_transcription_mode.dart';
@@ -66,6 +67,7 @@ Future<List<String>?> showVoiceQuickAddSheet(
   DateTime? defaultDate,
   String? projectId,
   String? kanbanStatusId,
+  String? labelId,
   ValueChanged<bool>? onExpandedChanged,
 }) async {
   final overlay = Overlay.of(context, rootOverlay: true);
@@ -126,6 +128,7 @@ Future<List<String>?> showVoiceQuickAddSheet(
       defaultDate: defaultDate,
       projectId: projectId,
       kanbanStatusId: kanbanStatusId,
+      labelId: labelId,
       onExpandedChanged: onExpandedChanged,
     ),
   );
@@ -134,15 +137,14 @@ Future<List<String>?> showVoiceQuickAddSheet(
 }
 
 Future<List<String>> createVoiceQuickAddTasks(
-  WidgetRef ref,
+  QuickAddService quickAdd,
   Iterable<DecomposedTaskDraft> tasks, {
   int? defaultPriority,
   DateTime? defaultDate,
   String? projectId,
   String? kanbanStatusId,
+  String? labelId,
 }) async {
-  final quickAdd = ref.read(quickAddServiceProvider);
-
   Future<List<String>> createAll(
     Iterable<DecomposedTaskDraft> drafts, {
     String? parentId,
@@ -164,6 +166,7 @@ Future<List<String>> createVoiceQuickAddTasks(
         priority: defaultPriority,
         defaultDate: defaultDate,
         kanbanStatusId: kanbanStatusId,
+        labelId: labelId,
       );
       createdIds.add(task.id);
       createdIds.addAll(
@@ -491,6 +494,7 @@ class QuickAddComposer extends ConsumerStatefulWidget {
     this.initialText = '',
     this.defaultDate,
     this.projectId,
+    this.labelId,
     this.onVoiceModeChanged,
     this.onVoiceSessionChanged,
     super.key,
@@ -501,6 +505,7 @@ class QuickAddComposer extends ConsumerStatefulWidget {
   final String initialText;
   final DateTime? defaultDate;
   final String? projectId;
+  final String? labelId;
   final ValueChanged<bool>? onVoiceModeChanged;
   final ValueChanged<bool>? onVoiceSessionChanged;
 
@@ -610,6 +615,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
             input,
             defaultDate: widget.defaultDate,
             projectId: widget.projectId,
+            labelId: widget.labelId,
           );
       if (mounted) widget.onCompleted();
     } catch (_) {
@@ -630,6 +636,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
       ref,
       defaultDate: widget.defaultDate,
       projectId: widget.projectId,
+      labelId: widget.labelId,
       onExpandedChanged: (expanded) {
         if (mounted) widget.onVoiceModeChanged?.call(expanded);
       },
@@ -646,6 +653,7 @@ class QuickAddBar extends ConsumerStatefulWidget {
     this.defaultDate,
     this.projectId,
     this.kanbanStatusId,
+    this.labelId,
     this.inputKey,
     this.voiceButtonKey,
     this.submitButtonKey,
@@ -657,6 +665,7 @@ class QuickAddBar extends ConsumerStatefulWidget {
   final DateTime? defaultDate;
   final String? projectId;
   final String? kanbanStatusId;
+  final String? labelId;
   final Key? inputKey;
   final Key? voiceButtonKey;
   final Key? submitButtonKey;
@@ -793,6 +802,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
       defaultDate: widget.defaultDate,
       projectId: widget.projectId,
       kanbanStatusId: widget.kanbanStatusId,
+      labelId: widget.labelId,
     );
     if (!mounted || created == null || created.isEmpty) return;
     widget.onTaskCreated?.call(created);
@@ -815,6 +825,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
             defaultDate: widget.defaultDate,
             projectId: widget.projectId,
             kanbanStatusId: widget.kanbanStatusId,
+            labelId: widget.labelId,
           );
       _controller.clear();
       widget.onTaskCreated?.call([task]);
@@ -872,6 +883,7 @@ class VoiceQuickAddHost extends ConsumerStatefulWidget {
     this.defaultDate,
     this.projectId,
     this.kanbanStatusId,
+    this.labelId,
     this.onExpandedChanged,
     super.key,
   }) : _session = session;
@@ -881,6 +893,7 @@ class VoiceQuickAddHost extends ConsumerStatefulWidget {
   final DateTime? defaultDate;
   final String? projectId;
   final String? kanbanStatusId;
+  final String? labelId;
   final ValueChanged<bool>? onExpandedChanged;
 
   @override
@@ -1079,12 +1092,13 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
           .read(appDatabaseProvider)
           .transaction(
             () => createVoiceQuickAddTasks(
-              ref,
+              ref.read(quickAddServiceProvider),
               _acceptedTasks,
               defaultPriority: widget.defaultPriority,
               defaultDate: widget.defaultDate,
               projectId: widget.projectId,
               kanbanStatusId: widget.kanbanStatusId,
+              labelId: widget.labelId,
             ),
           );
       if (!mounted) return;

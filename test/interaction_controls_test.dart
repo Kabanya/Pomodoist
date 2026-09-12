@@ -4425,6 +4425,7 @@ class _FakeTaskRepository implements TaskRepository {
                     ),
           TaskQueryKind.project =>
             !task.isCompleted && task.projectId == query.projectId,
+          TaskQueryKind.label => false,
           TaskQueryKind.search => !task.isCompleted,
           TaskQueryKind.all => !task.isCompleted,
           TaskQueryKind.completed => task.isCompleted,
@@ -4800,7 +4801,11 @@ class _FakeProjectRepository implements ProjectRepository {
   Future<ProjectItem?> findByName(String name) async => null;
 
   @override
-  Future<String> createProject(String name, {String? color}) async {
+  Future<String> createProject(
+    String name, {
+    String? color,
+    String? parentId,
+  }) async {
     createdProjectNames.add(name);
     createdProjectColors.add(color);
     return 'project-${createdProjectNames.length}';
@@ -4811,6 +4816,13 @@ class _FakeProjectRepository implements ProjectRepository {
     updatedProjectIds.add(id);
     updateProjectPatches.add(patch);
   }
+
+  @override
+  Future<void> moveProject(
+    String id, {
+    required String? parentId,
+    String? beforeProjectId,
+  }) async {}
 
   @override
   Future<void> deleteProject(String id) async {
@@ -4838,10 +4850,13 @@ class _FakeLabelRepository implements LabelRepository {
   Future<LabelItem?> findByName(String name) async => null;
 
   @override
-  Future<String> createLabel(String name) async {
+  Future<String> createLabel(String name, {String? icon}) async {
     createdLabelNames.add(name);
     return 'label-${createdLabelNames.length}';
   }
+
+  @override
+  Future<void> updateLabelIcon(String id, String icon) async {}
 
   @override
   Future<void> deleteLabel(String id) async {

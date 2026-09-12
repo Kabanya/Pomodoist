@@ -2641,4 +2641,61 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get taskFocusSwitchConfirm => '切换';
+
+  @override
+  String get labelIcon => '标签图标';
+
+  @override
+  String get labelUpdateFailed => '无法更新标签，请重试。';
+
+  @override
+  String get labelNotFound => '未找到标签';
+
+  @override
+  String get labelTasksSubtitle => '所有项目中带有此标签的任务';
+
+  @override
+  String labelIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'tag': '标签',
+      'bookmark': '书签',
+      'flag': '旗帜',
+      'bolt': '螺栓',
+      'lightbulb': '灯泡',
+      'clock': '时钟',
+      'bell': '铃铛',
+      'pin': '图钉',
+      'phone': '电话',
+      'mail': '邮件',
+      'link': '链接',
+      'wrench': '扳手',
+      'other': '标签',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get addSubproject => '创建子项目';
+
+  @override
+  String get moveProject => '移动项目';
+
+  @override
+  String get projectTopLevel => '顶层';
+
+  @override
+  String get projectMoveUp => '上移';
+
+  @override
+  String get projectMoveDown => '下移';
+
+  @override
+  String projectParentName(String name) {
+    return '父项目：$name';
+  }
+
+  @override
+  String deleteProjectWithChildrenConfirmation(String name) {
+    return '删除“$name”？其子项目将上移一级。只有此项目中的任务会移至 Inbox。';
+  }
 }

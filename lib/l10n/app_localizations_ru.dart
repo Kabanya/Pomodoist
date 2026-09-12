@@ -2795,4 +2795,62 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get taskFocusSwitchConfirm => 'Переключить';
+
+  @override
+  String get labelIcon => 'Иконка метки';
+
+  @override
+  String get labelUpdateFailed =>
+      'Не удалось обновить метку. Попробуйте ещё раз.';
+
+  @override
+  String get labelNotFound => 'Метка не найдена';
+
+  @override
+  String get labelTasksSubtitle => 'Задачи с этой меткой из всех проектов';
+
+  @override
+  String labelIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'tag': 'Бирка',
+      'bookmark': 'Закладка',
+      'flag': 'Флаг',
+      'bolt': 'Болт',
+      'lightbulb': 'Лампочка',
+      'clock': 'Часы',
+      'bell': 'Колокольчик',
+      'pin': 'Булавка',
+      'phone': 'Телефон',
+      'mail': 'Письмо',
+      'link': 'Ссылка',
+      'wrench': 'Гаечный ключ',
+      'other': 'Бирка',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get addSubproject => 'Создать подпроект';
+
+  @override
+  String get moveProject => 'Переместить проект';
+
+  @override
+  String get projectTopLevel => 'Верхний уровень';
+
+  @override
+  String get projectMoveUp => 'Выше';
+
+  @override
+  String get projectMoveDown => 'Ниже';
+
+  @override
+  String projectParentName(String name) {
+    return 'Родительский проект: $name';
+  }
+
+  @override
+  String deleteProjectWithChildrenConfirmation(String name) {
+    return 'Удалить «$name»? Подпроекты поднимутся на уровень выше. Только задачи этого проекта будут перенесены во Входящие.';
+  }
 }

@@ -2787,4 +2787,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taskFocusSwitchConfirm => 'Switch';
+
+  @override
+  String get labelIcon => 'Label icon';
+
+  @override
+  String get labelUpdateFailed => 'Could not update label. Try again.';
+
+  @override
+  String get labelNotFound => 'Label not found';
+
+  @override
+  String get labelTasksSubtitle => 'Tasks with this label from all projects';
+
+  @override
+  String labelIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'tag': 'Tag',
+      'bookmark': 'Bookmark',
+      'flag': 'Flag',
+      'bolt': 'Bolt',
+      'lightbulb': 'Light bulb',
+      'clock': 'Clock',
+      'bell': 'Bell',
+      'pin': 'Pin',
+      'phone': 'Phone',
+      'mail': 'Mail',
+      'link': 'Link',
+      'wrench': 'Wrench',
+      'other': 'Tag',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get addSubproject => 'Create subproject';
+
+  @override
+  String get moveProject => 'Move project';
+
+  @override
+  String get projectTopLevel => 'Top level';
+
+  @override
+  String get projectMoveUp => 'Move up';
+
+  @override
+  String get projectMoveDown => 'Move down';
+
+  @override
+  String projectParentName(String name) {
+    return 'Parent project: $name';
+  }
+
+  @override
+  String deleteProjectWithChildrenConfirmation(String name) {
+    return 'Delete \"$name\"? Its subprojects will move up one level. Only tasks in this project will move to Inbox.';
+  }
 }

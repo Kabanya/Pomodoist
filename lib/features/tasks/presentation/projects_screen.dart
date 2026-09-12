@@ -23,9 +23,13 @@ import 'project_list_data.dart';
 import 'widgets/create_project_dialog.dart';
 import 'widgets/project_context_menu.dart';
 import 'widgets/project_icon.dart';
+import 'widgets/project_tree_controls.dart';
+import 'widgets/label_icon.dart';
 
 class ProjectsScreen extends ConsumerStatefulWidget {
-  const ProjectsScreen({super.key});
+  const ProjectsScreen({this.showLabels = false, super.key});
+
+  final bool showLabels;
 
   @override
   ConsumerState<ProjectsScreen> createState() => _ProjectsScreenState();
@@ -35,15 +39,20 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
   final _searchController = TextEditingController();
   _ProjectsMode _mode = _ProjectsMode.projects;
   bool _archivedOnly = false;
+  final _projectTree = ProjectTreeController();
+  void _treeChanged() => setState(() {});
 
   @override
   void initState() {
     super.initState();
+    _projectTree.addListener(_treeChanged);
+    if (widget.showLabels) _mode = _ProjectsMode.labels;
     _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
+    _projectTree.dispose();
     _searchController
       ..removeListener(_onSearchChanged)
       ..dispose();
@@ -172,7 +181,12 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
             projects.when(
               data: (items) {
                 final filteredProjects = _filteredProjects(items);
-                final rows = projectRows(filteredProjects);
+                final rows = projectRows(
+                  filteredProjects,
+                  collapsedIds: _searchController.text.trim().isEmpty
+                      ? _projectTree.collapsedIds
+                      : const {},
+                );
                 if (rows.isEmpty) {
                   return SliverFillRemaining(
                     hasScrollBody: false,
@@ -184,31 +198,52 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                     ),
                   );
                 }
-                return SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-                  sliver: SliverList.separated(
-                    itemCount: rows.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        return _ProjectCountHeader(
-                          count: filteredProjects.length,
+                return ProjectTreeScope(
+                  controller: _projectTree,
+                  child: SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                    sliver: SliverList.separated(
+                      itemCount: rows.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          return Column(
+                            children: [
+                              _ProjectCountHeader(
+                                count: filteredProjects.length,
+                              ),
+                              if (!_archivedOnly &&
+                                  _searchController.text.trim().isEmpty)
+                                const ProjectTreeRootTarget(),
+                            ],
+                          );
+                        }
+                        final row = rows[index - 1];
+                        return ProjectTreeRow(
+                          key: ValueKey('project-tree-${row.project.id}'),
+                          row: row,
+                          dragEnabled:
+                              !_archivedOnly &&
+                              _searchController.text.trim().isEmpty,
+                          child: _ProjectListTile(
+                            project: row.project,
+                            depth: 0,
+                            count: taskCounts[row.project.id] ?? 0,
+                            onTap: () =>
+                                context.go('/project/${row.project.id}'),
+                            onColor: () =>
+                                changeProjectColor(context, ref, row.project),
+                            onFavorite: () => toggleProjectFavorite(
+                              context,
+                              ref,
+                              row.project,
+                            ),
+                          ),
                         );
-                      }
-                      final row = rows[index - 1];
-                      return _ProjectListTile(
-                        project: row.project,
-                        depth: row.depth,
-                        count: taskCounts[row.project.id] ?? 0,
-                        onTap: () => context.go('/project/${row.project.id}'),
-                        onColor: () =>
-                            changeProjectColor(context, ref, row.project),
-                        onFavorite: () =>
-                            toggleProjectFavorite(context, ref, row.project),
-                      );
-                    },
-                    separatorBuilder: (context, index) => Divider(
-                      height: 1,
-                      color: Theme.of(context).colorScheme.outlineVariant,
+                      },
+                      separatorBuilder: (context, index) => Divider(
+                        height: 1,
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
                     ),
                   ),
                 );
@@ -377,6 +412,7 @@ class _ProjectListTile extends StatelessWidget {
     return ProjectContextMenu(
       key: ValueKey('projects-screen-project-${project.id}'),
       project: project,
+      showMenuButton: true,
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
@@ -466,18 +502,23 @@ class _LabelCountHeader extends StatelessWidget {
   }
 }
 
-class _LabelListTile extends StatelessWidget {
+class _LabelListTile extends ConsumerWidget {
   const _LabelListTile({required this.label, required this.onDelete});
 
   final LabelItem label;
   final VoidCallback onDelete;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
     return AppContextMenuRegion(
       key: ValueKey('projects-screen-label-${label.id}'),
       items: [
+        ShadContextMenuItem(
+          leading: Icon(labelIconData(label.icon), size: 16),
+          onPressed: () => editLabelIcon(context, ref, label),
+          child: Text(context.l10n.labelIcon),
+        ),
         ShadContextMenuItem(
           leading: Icon(
             LucideIcons.trash2,
@@ -492,12 +533,13 @@ class _LabelListTile extends StatelessWidget {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
+          onTap: () => context.push('/label/${label.id}'),
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             child: Row(
               children: [
-                Icon(LucideIcons.tag, color: colors.mutedText),
+                Icon(labelIconData(label.icon), color: colors.mutedText),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
@@ -509,6 +551,11 @@ class _LabelListTile extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
+                ),
+                IconButton(
+                  tooltip: context.l10n.labelIcon,
+                  onPressed: () => editLabelIcon(context, ref, label),
+                  icon: const Icon(LucideIcons.pencil, size: 16),
                 ),
               ],
             ),

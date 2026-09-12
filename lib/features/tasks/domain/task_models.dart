@@ -506,6 +506,21 @@ class ProjectItem {
   final DateTime updatedAt;
 }
 
+enum LabelIcon {
+  tag,
+  bookmark,
+  flag,
+  bolt,
+  lightbulb,
+  clock,
+  bell,
+  pin,
+  phone,
+  mail,
+  link,
+  wrench,
+}
+
 class LabelItem {
   const LabelItem({
     required this.id,
@@ -515,6 +530,7 @@ class LabelItem {
     required this.createdAt,
     required this.updatedAt,
     this.color,
+    this.icon,
     this.isFavorite = false,
     this.isDeleted = false,
   });
@@ -523,6 +539,7 @@ class LabelItem {
   final String userId;
   final String name;
   final String? color;
+  final String? icon;
   final String orderKey;
   final bool isFavorite;
   final bool isDeleted;
@@ -623,6 +640,7 @@ enum TaskQueryKind {
   upcoming,
   day,
   project,
+  label,
   search,
   all,
   completed,
@@ -632,6 +650,7 @@ class TaskQuery {
   const TaskQuery({
     required this.kind,
     this.projectId,
+    this.labelId,
     this.search,
     this.now,
     this.date,
@@ -647,6 +666,7 @@ class TaskQuery {
 
   final TaskQueryKind kind;
   final String? projectId;
+  final String? labelId;
   final String? search;
   final DateTime? now;
   final DateTime? date;
@@ -657,13 +677,14 @@ class TaskQuery {
         other is TaskQuery &&
             other.kind == kind &&
             other.projectId == projectId &&
+            other.labelId == labelId &&
             other.search == search &&
             other.now == now &&
             other.date == date;
   }
 
   @override
-  int get hashCode => Object.hash(kind, projectId, search, now, date);
+  int get hashCode => Object.hash(kind, projectId, labelId, search, now, date);
 }
 
 class CreateTaskInput {
@@ -671,6 +692,7 @@ class CreateTaskInput {
     required this.content,
     this.description,
     this.projectId,
+    this.labelId,
     this.sectionId,
     this.parentId,
     this.priority,
@@ -686,6 +708,7 @@ class CreateTaskInput {
   final String content;
   final String? description;
   final String? projectId;
+  final String? labelId;
   final String? sectionId;
   final String? parentId;
   final int? priority;
@@ -821,7 +844,12 @@ abstract interface class TaskRepository {
 abstract interface class ProjectRepository {
   Stream<List<ProjectItem>> watchProjects();
   Future<ProjectItem?> findByName(String name);
-  Future<String> createProject(String name, {String? color});
+  Future<String> createProject(String name, {String? color, String? parentId});
+  Future<void> moveProject(
+    String id, {
+    required String? parentId,
+    String? beforeProjectId,
+  });
   Future<void> updateProject(String id, UpdateProjectPatch patch);
   Future<void> deleteProject(String id);
 }
@@ -829,7 +857,8 @@ abstract interface class ProjectRepository {
 abstract interface class LabelRepository {
   Stream<List<LabelItem>> watchLabels();
   Future<LabelItem?> findByName(String name);
-  Future<String> createLabel(String name);
+  Future<String> createLabel(String name, {String? icon});
+  Future<void> updateLabelIcon(String id, String icon);
   Future<void> deleteLabel(String id);
 }
 

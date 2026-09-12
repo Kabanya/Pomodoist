@@ -3793,6 +3793,15 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, LabelRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _kindMeta = const VerificationMeta('kind');
   @override
   late final GeneratedColumn<String> kind = GeneratedColumn<String>(
@@ -3889,6 +3898,7 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, LabelRow> {
     userId,
     name,
     color,
+    icon,
     kind,
     systemKey,
     orderKey,
@@ -3934,6 +3944,12 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, LabelRow> {
       context.handle(
         _colorMeta,
         color.isAcceptableOrUnknown(data['color']!, _colorMeta),
+      );
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
       );
     }
     if (data.containsKey('kind')) {
@@ -4009,6 +4025,10 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, LabelRow> {
         DriftSqlType.string,
         data['${effectivePrefix}color'],
       ),
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      ),
       kind: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}kind'],
@@ -4051,6 +4071,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
   final String userId;
   final String name;
   final String? color;
+  final String? icon;
   final String kind;
   final String? systemKey;
   final String orderKey;
@@ -4063,6 +4084,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
     required this.userId,
     required this.name,
     this.color,
+    this.icon,
     required this.kind,
     this.systemKey,
     required this.orderKey,
@@ -4079,6 +4101,9 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || color != null) {
       map['color'] = Variable<String>(color);
+    }
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<String>(icon);
     }
     map['kind'] = Variable<String>(kind);
     if (!nullToAbsent || systemKey != null) {
@@ -4100,6 +4125,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
       color: color == null && nullToAbsent
           ? const Value.absent()
           : Value(color),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
       kind: Value(kind),
       systemKey: systemKey == null && nullToAbsent
           ? const Value.absent()
@@ -4122,6 +4148,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
       userId: serializer.fromJson<String>(json['userId']),
       name: serializer.fromJson<String>(json['name']),
       color: serializer.fromJson<String?>(json['color']),
+      icon: serializer.fromJson<String?>(json['icon']),
       kind: serializer.fromJson<String>(json['kind']),
       systemKey: serializer.fromJson<String?>(json['systemKey']),
       orderKey: serializer.fromJson<String>(json['orderKey']),
@@ -4139,6 +4166,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
       'userId': serializer.toJson<String>(userId),
       'name': serializer.toJson<String>(name),
       'color': serializer.toJson<String?>(color),
+      'icon': serializer.toJson<String?>(icon),
       'kind': serializer.toJson<String>(kind),
       'systemKey': serializer.toJson<String?>(systemKey),
       'orderKey': serializer.toJson<String>(orderKey),
@@ -4154,6 +4182,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
     String? userId,
     String? name,
     Value<String?> color = const Value.absent(),
+    Value<String?> icon = const Value.absent(),
     String? kind,
     Value<String?> systemKey = const Value.absent(),
     String? orderKey,
@@ -4166,6 +4195,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
     userId: userId ?? this.userId,
     name: name ?? this.name,
     color: color.present ? color.value : this.color,
+    icon: icon.present ? icon.value : this.icon,
     kind: kind ?? this.kind,
     systemKey: systemKey.present ? systemKey.value : this.systemKey,
     orderKey: orderKey ?? this.orderKey,
@@ -4180,6 +4210,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
       userId: data.userId.present ? data.userId.value : this.userId,
       name: data.name.present ? data.name.value : this.name,
       color: data.color.present ? data.color.value : this.color,
+      icon: data.icon.present ? data.icon.value : this.icon,
       kind: data.kind.present ? data.kind.value : this.kind,
       systemKey: data.systemKey.present ? data.systemKey.value : this.systemKey,
       orderKey: data.orderKey.present ? data.orderKey.value : this.orderKey,
@@ -4199,6 +4230,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
           ..write('userId: $userId, ')
           ..write('name: $name, ')
           ..write('color: $color, ')
+          ..write('icon: $icon, ')
           ..write('kind: $kind, ')
           ..write('systemKey: $systemKey, ')
           ..write('orderKey: $orderKey, ')
@@ -4216,6 +4248,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
     userId,
     name,
     color,
+    icon,
     kind,
     systemKey,
     orderKey,
@@ -4232,6 +4265,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
           other.userId == this.userId &&
           other.name == this.name &&
           other.color == this.color &&
+          other.icon == this.icon &&
           other.kind == this.kind &&
           other.systemKey == this.systemKey &&
           other.orderKey == this.orderKey &&
@@ -4246,6 +4280,7 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
   final Value<String> userId;
   final Value<String> name;
   final Value<String?> color;
+  final Value<String?> icon;
   final Value<String> kind;
   final Value<String?> systemKey;
   final Value<String> orderKey;
@@ -4259,6 +4294,7 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
     this.userId = const Value.absent(),
     this.name = const Value.absent(),
     this.color = const Value.absent(),
+    this.icon = const Value.absent(),
     this.kind = const Value.absent(),
     this.systemKey = const Value.absent(),
     this.orderKey = const Value.absent(),
@@ -4273,6 +4309,7 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
     required String userId,
     required String name,
     this.color = const Value.absent(),
+    this.icon = const Value.absent(),
     this.kind = const Value.absent(),
     this.systemKey = const Value.absent(),
     required String orderKey,
@@ -4292,6 +4329,7 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
     Expression<String>? userId,
     Expression<String>? name,
     Expression<String>? color,
+    Expression<String>? icon,
     Expression<String>? kind,
     Expression<String>? systemKey,
     Expression<String>? orderKey,
@@ -4306,6 +4344,7 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
       if (userId != null) 'user_id': userId,
       if (name != null) 'name': name,
       if (color != null) 'color': color,
+      if (icon != null) 'icon': icon,
       if (kind != null) 'kind': kind,
       if (systemKey != null) 'system_key': systemKey,
       if (orderKey != null) 'order_key': orderKey,
@@ -4322,6 +4361,7 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
     Value<String>? userId,
     Value<String>? name,
     Value<String?>? color,
+    Value<String?>? icon,
     Value<String>? kind,
     Value<String?>? systemKey,
     Value<String>? orderKey,
@@ -4336,6 +4376,7 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
       userId: userId ?? this.userId,
       name: name ?? this.name,
       color: color ?? this.color,
+      icon: icon ?? this.icon,
       kind: kind ?? this.kind,
       systemKey: systemKey ?? this.systemKey,
       orderKey: orderKey ?? this.orderKey,
@@ -4361,6 +4402,9 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
     }
     if (color.present) {
       map['color'] = Variable<String>(color.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
     }
     if (kind.present) {
       map['kind'] = Variable<String>(kind.value);
@@ -4396,6 +4440,7 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
           ..write('userId: $userId, ')
           ..write('name: $name, ')
           ..write('color: $color, ')
+          ..write('icon: $icon, ')
           ..write('kind: $kind, ')
           ..write('systemKey: $systemKey, ')
           ..write('orderKey: $orderKey, ')
@@ -14718,6 +14763,7 @@ typedef $$LabelsTableCreateCompanionBuilder =
       required String userId,
       required String name,
       Value<String?> color,
+      Value<String?> icon,
       Value<String> kind,
       Value<String?> systemKey,
       required String orderKey,
@@ -14733,6 +14779,7 @@ typedef $$LabelsTableUpdateCompanionBuilder =
       Value<String> userId,
       Value<String> name,
       Value<String?> color,
+      Value<String?> icon,
       Value<String> kind,
       Value<String?> systemKey,
       Value<String> orderKey,
@@ -14769,6 +14816,11 @@ class $$LabelsTableFilterComposer
 
   ColumnFilters<String> get color => $composableBuilder(
     column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get icon => $composableBuilder(
+    column: $table.icon,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -14837,6 +14889,11 @@ class $$LabelsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get kind => $composableBuilder(
     column: $table.kind,
     builder: (column) => ColumnOrderings(column),
@@ -14894,6 +14951,9 @@ class $$LabelsTableAnnotationComposer
   GeneratedColumn<String> get color =>
       $composableBuilder(column: $table.color, builder: (column) => column);
 
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+
   GeneratedColumn<String> get kind =>
       $composableBuilder(column: $table.kind, builder: (column) => column);
 
@@ -14950,6 +15010,7 @@ class $$LabelsTableTableManager
                 Value<String> userId = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> color = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
                 Value<String> kind = const Value.absent(),
                 Value<String?> systemKey = const Value.absent(),
                 Value<String> orderKey = const Value.absent(),
@@ -14963,6 +15024,7 @@ class $$LabelsTableTableManager
                 userId: userId,
                 name: name,
                 color: color,
+                icon: icon,
                 kind: kind,
                 systemKey: systemKey,
                 orderKey: orderKey,
@@ -14978,6 +15040,7 @@ class $$LabelsTableTableManager
                 required String userId,
                 required String name,
                 Value<String?> color = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
                 Value<String> kind = const Value.absent(),
                 Value<String?> systemKey = const Value.absent(),
                 required String orderKey,
@@ -14991,6 +15054,7 @@ class $$LabelsTableTableManager
                 userId: userId,
                 name: name,
                 color: color,
+                icon: icon,
                 kind: kind,
                 systemKey: systemKey,
                 orderKey: orderKey,

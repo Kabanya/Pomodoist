@@ -2787,4 +2787,63 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get taskFocusSwitchConfirm => 'Wechseln';
+
+  @override
+  String get labelIcon => 'Etikett-Symbol';
+
+  @override
+  String get labelUpdateFailed =>
+      'Etikett konnte nicht aktualisiert werden. Bitte erneut versuchen.';
+
+  @override
+  String get labelNotFound => 'Etikett nicht gefunden';
+
+  @override
+  String get labelTasksSubtitle =>
+      'Aufgaben mit diesem Etikett aus allen Projekten';
+
+  @override
+  String labelIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'tag': 'Etikett',
+      'bookmark': 'Lesezeichen',
+      'flag': 'Flagge',
+      'bolt': 'Bolzen',
+      'lightbulb': 'Glühbirne',
+      'clock': 'Uhr',
+      'bell': 'Glocke',
+      'pin': 'Stecknadel',
+      'phone': 'Telefon',
+      'mail': 'Brief',
+      'link': 'Link',
+      'wrench': 'Schraubenschlüssel',
+      'other': 'Etikett',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get addSubproject => 'Unterprojekt erstellen';
+
+  @override
+  String get moveProject => 'Projekt verschieben';
+
+  @override
+  String get projectTopLevel => 'Oberste Ebene';
+
+  @override
+  String get projectMoveUp => 'Nach oben';
+
+  @override
+  String get projectMoveDown => 'Nach unten';
+
+  @override
+  String projectParentName(String name) {
+    return 'Übergeordnetes Projekt: $name';
+  }
+
+  @override
+  String deleteProjectWithChildrenConfirmation(String name) {
+    return '„$name“ löschen? Unterprojekte werden eine Ebene höher verschoben. Nur Aufgaben dieses Projekts werden in den Eingang verschoben.';
+  }
 }

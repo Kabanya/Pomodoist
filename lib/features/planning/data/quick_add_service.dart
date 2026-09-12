@@ -35,6 +35,7 @@ class QuickAddService {
     DateTime? defaultDate,
     TaskSchedule? defaultSchedule,
     String? kanbanStatusId,
+    String? labelId,
   }) async {
     final task = await createTaskWithContext(
       input,
@@ -46,6 +47,7 @@ class QuickAddService {
       defaultDate: defaultDate,
       defaultSchedule: defaultSchedule,
       kanbanStatusId: kanbanStatusId,
+      labelId: labelId,
     );
     return task.id;
   }
@@ -61,6 +63,7 @@ class QuickAddService {
     DateTime? defaultDate,
     TaskSchedule? defaultSchedule,
     String? kanbanStatusId,
+    String? labelId,
   }) async {
     final context = await _createTask(
       input,
@@ -72,6 +75,7 @@ class QuickAddService {
       defaultDate,
       defaultSchedule,
       kanbanStatusId,
+      labelId,
     );
     return (
       id: await _taskRepository.createTask(context.input),
@@ -90,6 +94,7 @@ class QuickAddService {
     DateTime? defaultDate,
     TaskSchedule? defaultSchedule,
     String? kanbanStatusId,
+    String? labelId,
   ) async {
     final parsed = _parser.parse(input, now: _now(), defaultDate: defaultDate);
     if (parsed.content.isEmpty) {
@@ -128,6 +133,7 @@ class QuickAddService {
         durationSeconds: effectiveSchedule?.duration?.inSeconds,
         estimatedFocusIntervals: estimatedFocusIntervals,
         kanbanStatusId: kanbanStatusId,
+        labelId: labelId,
       ),
     );
   }

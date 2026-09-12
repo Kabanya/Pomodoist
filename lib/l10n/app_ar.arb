@@ -806,5 +806,17 @@
   "overdueEmpty": "لا توجد مهام متأخرة",
   "taskFocusSwitchTitle": "تبديل التركيز؟",
   "taskFocusSwitchMessage": "ستتوقف الجلسة الحالية. هل تريد بدء التركيز على «{task}»؟",
-  "taskFocusSwitchConfirm": "تبديل"
+  "taskFocusSwitchConfirm": "تبديل",
+  "labelIcon": "أيقونة التصنيف",
+  "labelUpdateFailed": "تعذر تحديث التصنيف. حاول مرة أخرى.",
+  "labelNotFound": "التصنيف غير موجود",
+  "labelTasksSubtitle": "المهام التي تحمل هذا التصنيف من جميع المشاريع",
+  "labelIconOption": "{icon, select, tag{وسم} bookmark{إشارة مرجعية} flag{علم} bolt{برغي} lightbulb{مصباح} clock{ساعة} bell{جرس} pin{دبوس} phone{هاتف} mail{بريد} link{رابط} wrench{مفتاح ربط} other{وسم}}",
+  "addSubproject": "إنشاء مشروع فرعي",
+  "moveProject": "نقل المشروع",
+  "projectTopLevel": "المستوى الأعلى",
+  "projectMoveUp": "نقل لأعلى",
+  "projectMoveDown": "نقل لأسفل",
+  "projectParentName": "المشروع الرئيسي: {name}",
+  "deleteProjectWithChildrenConfirmation": "حذف «{name}»؟ ستنتقل مشاريعه الفرعية إلى المستوى الأعلى. ستُنقل مهام هذا المشروع فقط إلى Inbox."
 }

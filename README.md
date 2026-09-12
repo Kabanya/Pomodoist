@@ -87,6 +87,7 @@ Detailed build, self-hosting, and platform-specific instructions are available i
 - [Linux and Windows builds](https://pomodoist.com/docs/installation/desktop/): Desktop prerequisites, development, and release builds
 - [Configuration reference](https://pomodoist.com/docs/configuration/reference/): Environment files and client configuration
 - [Developer guide](https://pomodoist.com/docs/developer-guide/): Repository layout, Make targets, testing, migrations, and contributing
+- [Email address operations](docs/email-addresses.md): Add incoming Cloudflare routes and outgoing Brevo senders
 - [Telegram Mini App development](telegram-mini-app/README.md): `make telegram-debug` with real staging accounts and `make telegram-release`
 - [Chrome extension development](chrome-extension/README.md#make-commands): `make chrome-debug` and `make chrome-release`
 

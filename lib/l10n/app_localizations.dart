@@ -4887,6 +4887,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Switch'**
   String get taskFocusSwitchConfirm;
+
+  /// No description provided for @labelIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Label icon'**
+  String get labelIcon;
+
+  /// No description provided for @labelUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update label. Try again.'**
+  String get labelUpdateFailed;
+
+  /// No description provided for @labelNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Label not found'**
+  String get labelNotFound;
+
+  /// No description provided for @labelTasksSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks with this label from all projects'**
+  String get labelTasksSubtitle;
+
+  /// No description provided for @labelIconOption.
+  ///
+  /// In en, this message translates to:
+  /// **'{icon, select, tag{Tag} bookmark{Bookmark} flag{Flag} bolt{Bolt} lightbulb{Light bulb} clock{Clock} bell{Bell} pin{Pin} phone{Phone} mail{Mail} link{Link} wrench{Wrench} other{Tag}}'**
+  String labelIconOption(String icon);
+
+  /// No description provided for @addSubproject.
+  ///
+  /// In en, this message translates to:
+  /// **'Create subproject'**
+  String get addSubproject;
+
+  /// No description provided for @moveProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Move project'**
+  String get moveProject;
+
+  /// No description provided for @projectTopLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Top level'**
+  String get projectTopLevel;
+
+  /// No description provided for @projectMoveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get projectMoveUp;
+
+  /// No description provided for @projectMoveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get projectMoveDown;
+
+  /// No description provided for @projectParentName.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent project: {name}'**
+  String projectParentName(String name);
+
+  /// No description provided for @deleteProjectWithChildrenConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"? Its subprojects will move up one level. Only tasks in this project will move to Inbox.'**
+  String deleteProjectWithChildrenConfirmation(String name);
 }
 
 class _AppLocalizationsDelegate

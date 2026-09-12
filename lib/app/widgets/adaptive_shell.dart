@@ -19,6 +19,7 @@ import '../../features/tasks/domain/task_models.dart';
 import '../../features/tasks/presentation/project_list_data.dart';
 import '../../features/tasks/presentation/widgets/create_project_dialog.dart';
 import '../../features/tasks/presentation/widgets/project_context_menu.dart';
+import '../../features/tasks/presentation/widgets/project_tree_controls.dart';
 import '../../features/tasks/presentation/widgets/project_icon.dart';
 import '../../features/tasks/presentation/widgets/quick_add_bar.dart';
 import '../../features/tasks/presentation/task_search_palette.dart';
@@ -891,6 +892,20 @@ class _TodoistSidebar extends ConsumerStatefulWidget {
 
 class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
   bool _projectsExpanded = true;
+  final _projectTree = ProjectTreeController();
+  void _treeChanged() => setState(() {});
+
+  @override
+  void initState() {
+    super.initState();
+    _projectTree.addListener(_treeChanged);
+  }
+
+  @override
+  void dispose() {
+    _projectTree.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1055,23 +1070,38 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
                                 ),
                               );
                             }
-                            final rows = projectRows(visibleProjects);
-                            return Column(
-                              children: [
-                                for (final row in rows)
-                                  _SidebarProjectTile(
-                                    project: row.project,
-                                    depth: row.depth,
-                                    count:
-                                        projectTaskCounts[row.project.id] ?? 0,
-                                    selected:
-                                        widget.location ==
-                                        '/project/${row.project.id}',
-                                    onTap: () => widget.onDestinationSelected(
-                                      '/project/${row.project.id}',
+                            final rows = projectRows(
+                              visibleProjects,
+                              collapsedIds: _projectTree.collapsedIds,
+                            );
+                            return ProjectTreeScope(
+                              controller: _projectTree,
+                              child: Column(
+                                children: [
+                                  const ProjectTreeRootTarget(),
+                                  for (final row in rows)
+                                    ProjectTreeRow(
+                                      key: ValueKey(
+                                        'sidebar-tree-${row.project.id}',
+                                      ),
+                                      row: row,
+                                      child: _SidebarProjectTile(
+                                        project: row.project,
+                                        depth: 0,
+                                        count:
+                                            projectTaskCounts[row.project.id] ??
+                                            0,
+                                        selected:
+                                            widget.location ==
+                                            '/project/${row.project.id}',
+                                        onTap: () =>
+                                            widget.onDestinationSelected(
+                                              '/project/${row.project.id}',
+                                            ),
+                                      ),
                                     ),
-                                  ),
-                              ],
+                                ],
+                              ),
                             );
                           },
                           loading: () => const Padding(
@@ -1449,6 +1479,7 @@ class _SidebarProjectTile extends StatelessWidget {
     final foreground = selected ? colors.accent : colors.primaryText;
     return ProjectContextMenu(
       project: project,
+      showMenuButton: true,
       child: Material(
         key: ValueKey('sidebar-project-${project.id}'),
         color: selected ? colors.accentTint : Colors.transparent,
@@ -1504,6 +1535,7 @@ class _SidebarQuickAddDialog extends StatefulWidget {
     required this.initialText,
     this.defaultDate,
     this.projectId,
+    this.labelId,
     super.key,
   });
 
@@ -1513,6 +1545,7 @@ class _SidebarQuickAddDialog extends StatefulWidget {
   final String initialText;
   final DateTime? defaultDate;
   final String? projectId;
+  final String? labelId;
 
   @override
   State<_SidebarQuickAddDialog> createState() => _SidebarQuickAddDialogState();
@@ -1604,6 +1637,7 @@ class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
                   initialText: widget.initialText,
                   defaultDate: widget.defaultDate,
                   projectId: widget.projectId,
+                  labelId: widget.labelId,
                   onCompleted: widget.onClose,
                   onCancel: widget.onClose,
                   onVoiceSessionChanged: _setVoiceActive,
@@ -1641,7 +1675,16 @@ Future<void> showQuickAddDialog(
   String initialText = '',
   DateTime? defaultDate,
   String? projectId,
+  String? labelId,
 }) {
+  final segments =
+      GoRouter.maybeOf(
+        context,
+      )?.routeInformationProvider.value.uri.pathSegments ??
+      const <String>[];
+  labelId ??= segments.length == 2 && segments.first == 'label'
+      ? segments[1]
+      : null;
   final overlay = Overlay.of(context, rootOverlay: true);
   final existing = _sidebarQuickAdds[overlay];
   if (existing != null) {
@@ -1673,6 +1716,7 @@ Future<void> showQuickAddDialog(
       initialText: initialText,
       defaultDate: defaultDate,
       projectId: projectId,
+      labelId: labelId,
     ),
   );
   _sidebarQuickAdds[overlay] = (

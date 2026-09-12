@@ -806,5 +806,17 @@
   "overdueEmpty": "Aucune tâche en retard",
   "taskFocusSwitchTitle": "Changer de tâche de concentration ?",
   "taskFocusSwitchMessage": "La session actuelle sera arrêtée. Commencer une session pour « {task} » ?",
-  "taskFocusSwitchConfirm": "Changer"
+  "taskFocusSwitchConfirm": "Changer",
+  "labelIcon": "Icône de l’étiquette",
+  "labelUpdateFailed": "Impossible de modifier l’étiquette. Réessayez.",
+  "labelNotFound": "Étiquette introuvable",
+  "labelTasksSubtitle": "Tâches portant cette étiquette dans tous les projets",
+  "labelIconOption": "{icon, select, tag{Étiquette} bookmark{Signet} flag{Drapeau} bolt{Boulon} lightbulb{Ampoule} clock{Horloge} bell{Cloche} pin{Épingle} phone{Téléphone} mail{Courrier} link{Lien} wrench{Clé} other{Étiquette}}",
+  "addSubproject": "Créer un sous-projet",
+  "moveProject": "Déplacer le projet",
+  "projectTopLevel": "Premier niveau",
+  "projectMoveUp": "Monter",
+  "projectMoveDown": "Descendre",
+  "projectParentName": "Projet parent : {name}",
+  "deleteProjectWithChildrenConfirmation": "Supprimer « {name} » ? Ses sous-projets remonteront d’un niveau. Seules les tâches de ce projet seront déplacées vers Inbox."
 }

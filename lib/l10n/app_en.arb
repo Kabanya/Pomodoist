@@ -895,5 +895,26 @@
         "type": "String"
       }
     }
-  }
+  },
+  "labelIcon": "Label icon",
+  "labelUpdateFailed": "Could not update label. Try again.",
+  "labelNotFound": "Label not found",
+  "labelTasksSubtitle": "Tasks with this label from all projects",
+  "labelIconOption": "{icon, select, tag{Tag} bookmark{Bookmark} flag{Flag} bolt{Bolt} lightbulb{Light bulb} clock{Clock} bell{Bell} pin{Pin} phone{Phone} mail{Mail} link{Link} wrench{Wrench} other{Tag}}",
+  "@labelIconOption": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
+  "addSubproject": "Create subproject",
+  "moveProject": "Move project",
+  "projectTopLevel": "Top level",
+  "projectMoveUp": "Move up",
+  "projectMoveDown": "Move down",
+  "projectParentName": "Parent project: {name}",
+  "@projectParentName": {"placeholders": {"name": {"type": "String"}}},
+  "deleteProjectWithChildrenConfirmation": "Delete \"{name}\"? Its subprojects will move up one level. Only tasks in this project will move to Inbox.",
+  "@deleteProjectWithChildrenConfirmation": {"placeholders": {"name": {"type": "String"}}}
 }

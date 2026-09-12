@@ -806,5 +806,17 @@
   "overdueEmpty": "No hay tareas atrasadas",
   "taskFocusSwitchTitle": "¿Cambiar el enfoque?",
   "taskFocusSwitchMessage": "La sesión actual se detendrá. ¿Iniciar el enfoque en «{task}»?",
-  "taskFocusSwitchConfirm": "Cambiar"
+  "taskFocusSwitchConfirm": "Cambiar",
+  "labelIcon": "Icono de etiqueta",
+  "labelUpdateFailed": "No se pudo actualizar la etiqueta. Inténtalo de nuevo.",
+  "labelNotFound": "Etiqueta no encontrada",
+  "labelTasksSubtitle": "Tareas con esta etiqueta de todos los proyectos",
+  "labelIconOption": "{icon, select, tag{Etiqueta} bookmark{Marcador} flag{Bandera} bolt{Perno} lightbulb{Bombilla} clock{Reloj} bell{Campana} pin{Chincheta} phone{Teléfono} mail{Correo} link{Enlace} wrench{Llave inglesa} other{Etiqueta}}",
+  "addSubproject": "Crear subproyecto",
+  "moveProject": "Mover proyecto",
+  "projectTopLevel": "Nivel superior",
+  "projectMoveUp": "Subir",
+  "projectMoveDown": "Bajar",
+  "projectParentName": "Proyecto principal: {name}",
+  "deleteProjectWithChildrenConfirmation": "¿Eliminar «{name}»? Sus subproyectos subirán un nivel. Solo las tareas de este proyecto se moverán a Inbox."
 }

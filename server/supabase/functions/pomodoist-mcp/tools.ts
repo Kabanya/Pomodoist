@@ -747,6 +747,28 @@ export function registerPomodoistTools(
             now,
           )
         );
+      const projects = snapshot.projects.filter((row) => !row.isDeleted)
+        .sort((a, b) => compareProjectOrder(a, b));
+      const parents = projectParents(projects);
+      const parentId = parents.get(project_id) ?? null;
+      const children = projects.filter((row) =>
+        parents.get(string(row.id)) === project_id
+      );
+      const siblings = projects.filter((row) =>
+        row.id !== inboxId && parents.get(string(row.id)) === parentId
+      )
+        .flatMap((row) => row.id === project_id ? children : [row]);
+      siblings.forEach((row, index) => {
+        const key = String((index + 1) * 1024).padStart(20, "0");
+        if ((row.parentId ?? null) === parentId && row.orderKey === key) return;
+        operations.push(upsert("project", string(row.id), {
+          ...row,
+          parentId,
+          orderKey: key,
+          commandType: "project.update",
+          updatedAt: now,
+        }, now));
+      });
       const selected = selectedProjectIds(snapshot.settings)
         .filter((id) => id !== project_id);
       if (selected.length === 0) selected.push(inboxId);
@@ -1173,6 +1195,45 @@ async function rpc(
   } catch {
     throw new RpcFailure(500);
   }
+}
+
+function compareProjectOrder(a: RecordValue, b: RecordValue): number {
+  const left = string(a.orderKey), right = string(b.orderKey);
+  if (left !== right) return left < right ? -1 : 1;
+  return string(a.id) < string(b.id)
+    ? -1
+    : string(a.id) === string(b.id)
+    ? 0
+    : 1;
+}
+
+// Match Flutter's display forest when handling incomplete or cyclic legacy data.
+function projectParents(projects: RecordValue[]): Map<string, string | null> {
+  const ids = new Set(projects.map((row) => string(row.id)));
+  const parents = new Map(projects.map((row): [string, string | null] => {
+    const parentId = nullableString(row.parentId);
+    return [
+      string(row.id),
+      parentId !== inboxId && parentId !== null && ids.has(parentId)
+        ? parentId
+        : null,
+    ];
+  }));
+  const visited = new Set<string>();
+  for (const row of projects) {
+    const path = new Set<string>();
+    let id: string | null = string(row.id);
+    while (id !== null && !visited.has(id)) {
+      if (path.has(id)) {
+        parents.set(id, null);
+        break;
+      }
+      path.add(id);
+      id = parents.get(id) ?? null;
+    }
+    for (const id of path) visited.add(id);
+  }
+  return parents;
 }
 
 type Snapshot = {

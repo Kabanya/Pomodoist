@@ -113,6 +113,63 @@ void main() {
     expect(projects.singleWhere((row) => row.id == 'legacy').icon, isNull);
   });
 
+  test('label pull preserves icons across legacy updates', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    await db.ensureSeedData();
+    final seed = await (db.select(
+      db.labels,
+    )..where((row) => row.id.equals('kanban-status-todo-v1'))).getSingle();
+    final engine = AccountSyncEngine(
+      db: db,
+      uuid: const Uuid(),
+      account: _PullOnlyAccountClient(
+        AccountSyncPullResult(
+          nextCursor: 3,
+          hasMore: false,
+          changes: [
+            AccountSyncEntity(
+              entityType: 'label',
+              entityId: 'work',
+              serverRevision: 1,
+              data: {
+                ...seed.toJson(),
+                'id': 'work',
+                'name': 'Work',
+                'kind': 'user',
+                'systemKey': null,
+                'icon': 'bookmark',
+              },
+            ),
+            AccountSyncEntity(
+              entityType: 'label',
+              entityId: 'legacy',
+              serverRevision: 2,
+              data: {
+                ...seed.toJson()..remove('icon'),
+                'id': 'legacy',
+                'name': 'Legacy',
+                'kind': 'user',
+                'systemKey': null,
+              },
+            ),
+            AccountSyncEntity(
+              entityType: 'label',
+              entityId: 'work',
+              serverRevision: 3,
+              data: {'id': 'work', 'name': 'Office'},
+            ),
+          ],
+        ),
+      ),
+    );
+    await engine.pullLatest();
+    final labels = await db.select(db.labels).get();
+    expect(labels.singleWhere((row) => row.id == 'work').icon, 'bookmark');
+    expect(labels.singleWhere((row) => row.id == 'work').name, 'Office');
+    expect(labels.singleWhere((row) => row.id == 'legacy').icon, isNull);
+  });
+
   test('legacy label payloads default missing kinds to user', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);

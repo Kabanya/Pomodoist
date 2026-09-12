@@ -18,6 +18,9 @@ import '../../domain/task_models.dart';
 import 'create_project_dialog.dart';
 import 'project_color_picker.dart';
 import 'project_icon.dart';
+import 'project_tree_controls.dart';
+import '../../domain/project_hierarchy.dart';
+import '../../../../core/db/app_database.dart' show inboxProjectId;
 
 class ProjectContextMenu extends ConsumerStatefulWidget {
   const ProjectContextMenu({
@@ -48,6 +51,19 @@ class _ProjectContextMenuState extends ConsumerState<ProjectContextMenu> {
   Widget build(BuildContext context) {
     final project = widget.project;
     final l10n = context.l10n;
+    final projects = ref.watch(projectsProvider).value ?? const <ProjectItem>[];
+    final parents = projectParents(projects);
+    final siblings =
+        projects
+            .where(
+              (p) =>
+                  p.id != inboxProjectId &&
+                  !p.isDeleted &&
+                  parents[p.id] == parents[project.id],
+            )
+            .toList()
+          ..sort(compareProjects);
+    final index = siblings.indexWhere((p) => p.id == project.id);
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.contextMenu): _controller.show,
@@ -57,6 +73,47 @@ class _ProjectContextMenuState extends ConsumerState<ProjectContextMenu> {
       child: AppContextMenuRegion(
         controller: _controller,
         items: [
+          if (!project.isArchived && project.id != inboxProjectId) ...[
+            ShadContextMenuItem(
+              leading: const Icon(LucideIcons.folderPlus, size: 16),
+              onPressed: () =>
+                  showCreateProjectDialog(context, parentId: project.id),
+              child: Text(l10n.addSubproject),
+            ),
+            ShadContextMenuItem(
+              leading: const Icon(LucideIcons.folderInput, size: 16),
+              onPressed: () => showMoveProjectDialog(context, ref, project),
+              child: Text(l10n.moveProject),
+            ),
+            if (index > 0)
+              ShadContextMenuItem(
+                leading: const Icon(LucideIcons.arrowUp, size: 16),
+                onPressed: () => moveProjectInTree(
+                  context,
+                  ref,
+                  project.id,
+                  ProjectMoveTarget(
+                    parents[project.id],
+                    siblings[index - 1].id,
+                  ),
+                ),
+                child: Text(l10n.projectMoveUp),
+              ),
+            if (index >= 0 && index + 1 < siblings.length)
+              ShadContextMenuItem(
+                leading: const Icon(LucideIcons.arrowDown, size: 16),
+                onPressed: () => moveProjectInTree(
+                  context,
+                  ref,
+                  project.id,
+                  ProjectMoveTarget(
+                    parents[project.id],
+                    index + 2 < siblings.length ? siblings[index + 2].id : null,
+                  ),
+                ),
+                child: Text(l10n.projectMoveDown),
+              ),
+          ],
           ShadContextMenuItem(
             leading: const Icon(LucideIcons.pencil, size: 16),
             onPressed: () => showRenameProjectDialog(
@@ -153,7 +210,13 @@ Future<void> _confirmDeleteProject(
           child: Text(context.l10n.commonDelete),
         ),
       ],
-      child: Text(context.l10n.deleteProjectConfirmation(project.name)),
+      child: Text(
+        (ref.read(projectsProvider).value ?? const <ProjectItem>[]).any(
+              (p) => p.parentId == project.id && !p.isDeleted,
+            )
+            ? context.l10n.deleteProjectWithChildrenConfirmation(project.name)
+            : context.l10n.deleteProjectConfirmation(project.name),
+      ),
     ),
   );
   if (confirmed != true || !context.mounted) {

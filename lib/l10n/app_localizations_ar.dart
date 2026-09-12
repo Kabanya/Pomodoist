@@ -2743,4 +2743,62 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get taskFocusSwitchConfirm => 'تبديل';
+
+  @override
+  String get labelIcon => 'أيقونة التصنيف';
+
+  @override
+  String get labelUpdateFailed => 'تعذر تحديث التصنيف. حاول مرة أخرى.';
+
+  @override
+  String get labelNotFound => 'التصنيف غير موجود';
+
+  @override
+  String get labelTasksSubtitle =>
+      'المهام التي تحمل هذا التصنيف من جميع المشاريع';
+
+  @override
+  String labelIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'tag': 'وسم',
+      'bookmark': 'إشارة مرجعية',
+      'flag': 'علم',
+      'bolt': 'برغي',
+      'lightbulb': 'مصباح',
+      'clock': 'ساعة',
+      'bell': 'جرس',
+      'pin': 'دبوس',
+      'phone': 'هاتف',
+      'mail': 'بريد',
+      'link': 'رابط',
+      'wrench': 'مفتاح ربط',
+      'other': 'وسم',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get addSubproject => 'إنشاء مشروع فرعي';
+
+  @override
+  String get moveProject => 'نقل المشروع';
+
+  @override
+  String get projectTopLevel => 'المستوى الأعلى';
+
+  @override
+  String get projectMoveUp => 'نقل لأعلى';
+
+  @override
+  String get projectMoveDown => 'نقل لأسفل';
+
+  @override
+  String projectParentName(String name) {
+    return 'المشروع الرئيسي: $name';
+  }
+
+  @override
+  String deleteProjectWithChildrenConfirmation(String name) {
+    return 'حذف «$name»؟ ستنتقل مشاريعه الفرعية إلى المستوى الأعلى. ستُنقل مهام هذا المشروع فقط إلى Inbox.';
+  }
 }

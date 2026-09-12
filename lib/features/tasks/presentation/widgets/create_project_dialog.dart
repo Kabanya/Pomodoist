@@ -9,11 +9,20 @@ import '../../../../app/widgets/resizable_dialog.dart';
 import '../../domain/project_colors.dart';
 import '../../domain/task_models.dart';
 import 'project_color_picker.dart';
+import 'label_icon.dart';
+import 'project_tree_controls.dart';
 
-Future<void> showCreateProjectDialog(BuildContext context) {
+Future<void> showCreateProjectDialog(BuildContext context, {String? parentId}) {
+  final tree = ProjectTreeScope.of(context);
+  final projects =
+      ProviderScope.containerOf(context).read(projectsProvider).value ??
+      const <ProjectItem>[];
   return showDialog<void>(
     context: context,
-    builder: (context) => const CreateProjectDialog(),
+    builder: (_) => CreateProjectDialog(
+      parentId: parentId,
+      onCreated: () => tree?.reveal(parentId, projects),
+    ),
   );
 }
 
@@ -37,14 +46,18 @@ Future<void> showCreateLabelDialog(BuildContext context) {
 }
 
 class CreateProjectDialog extends ConsumerWidget {
-  const CreateProjectDialog({super.key});
+  const CreateProjectDialog({this.parentId, this.onCreated, super.key});
+  final String? parentId;
+  final VoidCallback? onCreated;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final projects = ref.watch(projectsProvider).value ?? const [];
+    final parent = projects.where((p) => p.id == parentId).firstOrNull;
     return _NamedItemDialog(
-      title: l10n.addProject,
+      title: parentId == null ? l10n.addProject : l10n.addSubproject,
+      description: parent == null ? null : l10n.projectParentName(parent.name),
       hintText: l10n.projectName,
       inputKey: const Key('project-create-input'),
       submitKey: const Key('project-create-submit'),
@@ -52,10 +65,11 @@ class CreateProjectDialog extends ConsumerWidget {
       submitIcon: LucideIcons.plus,
       submitLabel: l10n.commonAdd,
       initialColor: nextProjectColor(projects),
-      onSubmit: (ref, name, color) async {
+      onSubmit: (ref, name, color, icon) async {
         await ref
             .read(projectRepositoryProvider)
-            .createProject(name, color: color);
+            .createProject(name, color: color, parentId: parentId);
+        onCreated?.call();
       },
       errorText: (context, error) => context.l10n.couldNotAddProject(error),
     );
@@ -83,7 +97,7 @@ class _RenameProjectDialog extends StatelessWidget {
       submitIcon: LucideIcons.save,
       submitLabel: l10n.commonSave,
       initialName: projectName,
-      onSubmit: (ref, name, color) => ref
+      onSubmit: (ref, name, color, icon) => ref
           .read(projectRepositoryProvider)
           .updateProject(projectId, UpdateProjectPatch(name: name)),
       errorText: (context, error) => context.l10n.couldNotUpdateProject(error),
@@ -100,13 +114,14 @@ class CreateLabelDialog extends StatelessWidget {
     return _NamedItemDialog(
       title: l10n.addLabel,
       hintText: l10n.labelName,
+      selectLabelIcon: true,
       inputKey: const Key('label-create-input'),
       submitKey: const Key('label-create-submit'),
       icon: LucideIcons.tag,
       submitIcon: LucideIcons.plus,
       submitLabel: l10n.commonAdd,
-      onSubmit: (ref, name, color) async {
-        await ref.read(labelRepositoryProvider).createLabel(name);
+      onSubmit: (ref, name, color, icon) async {
+        await ref.read(labelRepositoryProvider).createLabel(name, icon: icon);
       },
       errorText: (context, error) => context.l10n.couldNotAddLabel(error),
     );
@@ -125,7 +140,9 @@ class _NamedItemDialog extends ConsumerStatefulWidget {
     required this.onSubmit,
     required this.errorText,
     this.initialName = '',
+    this.description,
     this.initialColor,
+    this.selectLabelIcon = false,
   });
 
   final String title;
@@ -135,11 +152,18 @@ class _NamedItemDialog extends ConsumerStatefulWidget {
   final IconData icon;
   final IconData submitIcon;
   final String submitLabel;
-  final Future<void> Function(WidgetRef ref, String name, String? color)
+  final Future<void> Function(
+    WidgetRef ref,
+    String name,
+    String? color,
+    String? icon,
+  )
   onSubmit;
   final String Function(BuildContext context, Object error) errorText;
   final String initialName;
+  final String? description;
   final String? initialColor;
+  final bool selectLabelIcon;
 
   @override
   ConsumerState<_NamedItemDialog> createState() => _NamedItemDialogState();
@@ -148,6 +172,7 @@ class _NamedItemDialog extends ConsumerStatefulWidget {
 class _NamedItemDialogState extends ConsumerState<_NamedItemDialog> {
   late final TextEditingController _controller;
   bool _busy = false;
+  String _selectedIcon = 'tag';
   late String? _selectedColor;
 
   @override
@@ -174,6 +199,14 @@ class _NamedItemDialogState extends ConsumerState<_NamedItemDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (widget.description != null) ...[
+            Text(
+              widget.description!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+          ],
           ShadInput(
             key: widget.inputKey,
             controller: _controller,
@@ -181,7 +214,23 @@ class _NamedItemDialogState extends ConsumerState<_NamedItemDialog> {
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => _submit(),
             placeholder: Text(widget.hintText),
-            leading: Icon(widget.icon),
+            leading: widget.selectLabelIcon
+                ? IconButton(
+                    tooltip: l10n.labelIcon,
+                    onPressed: _busy
+                        ? null
+                        : () async {
+                            final icon = await showLabelIconPicker(
+                              context,
+                              selectedIcon: _selectedIcon,
+                            );
+                            if (icon != null && mounted) {
+                              setState(() => _selectedIcon = icon);
+                            }
+                          },
+                    icon: Icon(labelIconData(_selectedIcon)),
+                  )
+                : Icon(widget.icon),
           ),
           if (_selectedColor != null) ...[
             const SizedBox(height: 20),
@@ -221,7 +270,12 @@ class _NamedItemDialogState extends ConsumerState<_NamedItemDialog> {
     }
     setState(() => _busy = true);
     try {
-      await widget.onSubmit(ref, name, _selectedColor);
+      await widget.onSubmit(
+        ref,
+        name,
+        _selectedColor,
+        widget.selectLabelIcon ? _selectedIcon : null,
+      );
       if (mounted) {
         Navigator.of(context).pop();
       }

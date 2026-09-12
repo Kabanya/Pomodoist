@@ -2787,4 +2787,63 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get taskFocusSwitchConfirm => 'Changer';
+
+  @override
+  String get labelIcon => 'Icône de l’étiquette';
+
+  @override
+  String get labelUpdateFailed =>
+      'Impossible de modifier l’étiquette. Réessayez.';
+
+  @override
+  String get labelNotFound => 'Étiquette introuvable';
+
+  @override
+  String get labelTasksSubtitle =>
+      'Tâches portant cette étiquette dans tous les projets';
+
+  @override
+  String labelIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'tag': 'Étiquette',
+      'bookmark': 'Signet',
+      'flag': 'Drapeau',
+      'bolt': 'Boulon',
+      'lightbulb': 'Ampoule',
+      'clock': 'Horloge',
+      'bell': 'Cloche',
+      'pin': 'Épingle',
+      'phone': 'Téléphone',
+      'mail': 'Courrier',
+      'link': 'Lien',
+      'wrench': 'Clé',
+      'other': 'Étiquette',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get addSubproject => 'Créer un sous-projet';
+
+  @override
+  String get moveProject => 'Déplacer le projet';
+
+  @override
+  String get projectTopLevel => 'Premier niveau';
+
+  @override
+  String get projectMoveUp => 'Monter';
+
+  @override
+  String get projectMoveDown => 'Descendre';
+
+  @override
+  String projectParentName(String name) {
+    return 'Projet parent : $name';
+  }
+
+  @override
+  String deleteProjectWithChildrenConfirmation(String name) {
+    return 'Supprimer « $name » ? Ses sous-projets remonteront d’un niveau. Seules les tâches de ce projet seront déplacées vers Inbox.';
+  }
 }

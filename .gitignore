@@ -82,7 +82,8 @@ supabase/.temp/
 server/supabase/.temp/
 design/
 output/
-docs/
+docs/*
+!docs/email-addresses.md
 temp**/
 tmp/
 
@@ -99,3 +100,4 @@ tool/apple/VOICE_TESTING.md
 *.pfx
 /android/.kotlin/
 /android/captures/
+docs/email-addresses.md

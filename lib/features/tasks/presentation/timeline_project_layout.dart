@@ -1,5 +1,6 @@
 import '../../../core/db/app_database.dart';
 import '../domain/task_models.dart';
+import '../domain/project_hierarchy.dart';
 
 class TimelineProjectRow {
   const TimelineProjectRow({
@@ -23,6 +24,7 @@ List<TimelineProjectRow> buildTimelineProjectRows({
     for (final project in projects)
       if (!project.isArchived && !project.isDeleted) project.id: project,
   };
+  final parents = projectParents(active.values);
   final visibleIds = <String>{
     if (active.containsKey(inboxProjectId)) inboxProjectId,
     ...temporarilyVisibleProjectIds.where(active.containsKey),
@@ -49,8 +51,8 @@ List<TimelineProjectRow> buildTimelineProjectRows({
     if (project == null) {
       continue;
     }
-    final parentId = visibleIds.contains(project.parentId)
-        ? project.parentId
+    final parentId = visibleIds.contains(parents[project.id])
+        ? parents[project.id]
         : null;
     children.putIfAbsent(parentId, () => []).add(project);
   }
@@ -58,13 +60,15 @@ List<TimelineProjectRow> buildTimelineProjectRows({
     items.sort((a, b) => a.orderKey.compareTo(b.orderKey));
   }
 
-  final favoriteBranchCache = <String, bool>{};
+  final favoriteBranches = <String>{};
+  for (final project in active.values.where((p) => p.isFavorite)) {
+    String? id = project.id;
+    while (id != null && favoriteBranches.add(id)) {
+      id = parents[id];
+    }
+  }
   bool branchHasFavorite(ProjectItem project) =>
-      favoriteBranchCache[project.id] ??=
-          project.isFavorite ||
-          (children[project.id] ?? const <ProjectItem>[]).any(
-            branchHasFavorite,
-          );
+      favoriteBranches.contains(project.id);
 
   int compareFavoriteBranches(ProjectItem a, ProjectItem b) {
     final aFavorite = branchHasFavorite(a);
@@ -95,25 +99,24 @@ List<TimelineProjectRow> buildTimelineProjectRows({
   });
 
   final rows = <TimelineProjectRow>[];
-  void visit(ProjectItem project, int depth) {
-    final visibleChildren = children[project.id] ?? const <ProjectItem>[];
+  final stack = <(ProjectItem, int)>[
+    for (final root in roots.reversed) (root, 0),
+  ];
+  while (stack.isNotEmpty) {
+    final (project, depth) = stack.removeLast();
+    final nested = children[project.id] ?? const <ProjectItem>[];
     rows.add(
       TimelineProjectRow(
         project: project,
         depth: depth,
-        hasVisibleChildren: visibleChildren.isNotEmpty,
+        hasVisibleChildren: nested.isNotEmpty,
       ),
     );
-    if (collapsedProjectIds.contains(project.id)) {
-      return;
+    if (!collapsedProjectIds.contains(project.id)) {
+      for (final child in nested.reversed) {
+        stack.add((child, depth + 1));
+      }
     }
-    for (final child in visibleChildren) {
-      visit(child, depth + 1);
-    }
-  }
-
-  for (final root in roots) {
-    visit(root, 0);
   }
   return rows;
 }

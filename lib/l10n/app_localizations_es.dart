@@ -2781,4 +2781,63 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get taskFocusSwitchConfirm => 'Cambiar';
+
+  @override
+  String get labelIcon => 'Icono de etiqueta';
+
+  @override
+  String get labelUpdateFailed =>
+      'No se pudo actualizar la etiqueta. Inténtalo de nuevo.';
+
+  @override
+  String get labelNotFound => 'Etiqueta no encontrada';
+
+  @override
+  String get labelTasksSubtitle =>
+      'Tareas con esta etiqueta de todos los proyectos';
+
+  @override
+  String labelIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'tag': 'Etiqueta',
+      'bookmark': 'Marcador',
+      'flag': 'Bandera',
+      'bolt': 'Perno',
+      'lightbulb': 'Bombilla',
+      'clock': 'Reloj',
+      'bell': 'Campana',
+      'pin': 'Chincheta',
+      'phone': 'Teléfono',
+      'mail': 'Correo',
+      'link': 'Enlace',
+      'wrench': 'Llave inglesa',
+      'other': 'Etiqueta',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get addSubproject => 'Crear subproyecto';
+
+  @override
+  String get moveProject => 'Mover proyecto';
+
+  @override
+  String get projectTopLevel => 'Nivel superior';
+
+  @override
+  String get projectMoveUp => 'Subir';
+
+  @override
+  String get projectMoveDown => 'Bajar';
+
+  @override
+  String projectParentName(String name) {
+    return 'Proyecto principal: $name';
+  }
+
+  @override
+  String deleteProjectWithChildrenConfirmation(String name) {
+    return '¿Eliminar «$name»? Sus subproyectos subirán un nivel. Solo las tareas de este proyecto se moverán a Inbox.';
+  }
 }

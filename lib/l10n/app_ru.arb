@@ -806,5 +806,17 @@
   "overdueEmpty": "Просроченных задач нет",
   "taskFocusSwitchTitle": "Переключить фокус?",
   "taskFocusSwitchMessage": "Текущая сессия остановится. Начать фокус на задаче «{task}»?",
-  "taskFocusSwitchConfirm": "Переключить"
+  "taskFocusSwitchConfirm": "Переключить",
+  "labelIcon": "Иконка метки",
+  "labelUpdateFailed": "Не удалось обновить метку. Попробуйте ещё раз.",
+  "labelNotFound": "Метка не найдена",
+  "labelTasksSubtitle": "Задачи с этой меткой из всех проектов",
+  "labelIconOption": "{icon, select, tag{Бирка} bookmark{Закладка} flag{Флаг} bolt{Болт} lightbulb{Лампочка} clock{Часы} bell{Колокольчик} pin{Булавка} phone{Телефон} mail{Письмо} link{Ссылка} wrench{Гаечный ключ} other{Бирка}}",
+  "addSubproject": "Создать подпроект",
+  "moveProject": "Переместить проект",
+  "projectTopLevel": "Верхний уровень",
+  "projectMoveUp": "Выше",
+  "projectMoveDown": "Ниже",
+  "projectParentName": "Родительский проект: {name}",
+  "deleteProjectWithChildrenConfirmation": "Удалить «{name}»? Подпроекты поднимутся на уровень выше. Только задачи этого проекта будут перенесены во Входящие."
 }

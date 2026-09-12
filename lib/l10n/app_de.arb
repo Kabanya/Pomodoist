@@ -806,5 +806,17 @@
   "overdueEmpty": "Keine überfälligen Aufgaben",
   "taskFocusSwitchTitle": "Fokus wechseln?",
   "taskFocusSwitchMessage": "Die aktuelle Sitzung wird beendet. Fokus für „{task}“ starten?",
-  "taskFocusSwitchConfirm": "Wechseln"
+  "taskFocusSwitchConfirm": "Wechseln",
+  "labelIcon": "Etikett-Symbol",
+  "labelUpdateFailed": "Etikett konnte nicht aktualisiert werden. Bitte erneut versuchen.",
+  "labelNotFound": "Etikett nicht gefunden",
+  "labelTasksSubtitle": "Aufgaben mit diesem Etikett aus allen Projekten",
+  "labelIconOption": "{icon, select, tag{Etikett} bookmark{Lesezeichen} flag{Flagge} bolt{Bolzen} lightbulb{Glühbirne} clock{Uhr} bell{Glocke} pin{Stecknadel} phone{Telefon} mail{Brief} link{Link} wrench{Schraubenschlüssel} other{Etikett}}",
+  "addSubproject": "Unterprojekt erstellen",
+  "moveProject": "Projekt verschieben",
+  "projectTopLevel": "Oberste Ebene",
+  "projectMoveUp": "Nach oben",
+  "projectMoveDown": "Nach unten",
+  "projectParentName": "Übergeordnetes Projekt: {name}",
+  "deleteProjectWithChildrenConfirmation": "„{name}“ löschen? Unterprojekte werden eine Ebene höher verschoben. Nur Aufgaben dieses Projekts werden in den Eingang verschoben."
 }

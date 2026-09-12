@@ -605,7 +605,11 @@ class _FakeProjectRepository implements ProjectRepository {
   Stream<List<ProjectItem>> watchProjects() => Stream.value(projects);
 
   @override
-  Future<String> createProject(String name, {String? color}) async {
+  Future<String> createProject(
+    String name, {
+    String? color,
+    String? parentId,
+  }) async {
     return projects.first.id;
   }
 

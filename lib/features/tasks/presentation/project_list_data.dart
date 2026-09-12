@@ -1,46 +1,46 @@
 import '../../../core/db/app_database.dart' show inboxProjectId;
 import '../domain/task_models.dart';
+import '../domain/project_hierarchy.dart';
 
 class ProjectListRow {
-  const ProjectListRow({required this.project, required this.depth});
-
+  const ProjectListRow({
+    required this.project,
+    required this.depth,
+    this.hasChildren = false,
+  });
   final ProjectItem project;
   final int depth;
+  final bool hasChildren;
 }
 
-class _ProjectTreeNode {
-  _ProjectTreeNode(this.project);
-
-  final ProjectItem project;
-  final List<_ProjectTreeNode> children = [];
-}
-
-List<ProjectListRow> projectRows(List<ProjectItem> projects) {
-  final nodes = {
-    for (final project in projects) project.id: _ProjectTreeNode(project),
-  };
-  final roots = <_ProjectTreeNode>[];
-
+List<ProjectListRow> projectRows(
+  List<ProjectItem> projects, {
+  Set<String> collapsedIds = const {},
+}) {
+  final parents = projectParents(projects);
+  final children = <String?, List<ProjectItem>>{};
   for (final project in projects) {
-    final node = nodes[project.id]!;
-    final parentId = project.parentId;
-    if (parentId != null && nodes.containsKey(parentId)) {
-      nodes[parentId]!.children.add(node);
-    } else {
-      roots.add(node);
-    }
+    children.putIfAbsent(parents[project.id], () => []).add(project);
   }
-
+  final stack = <(ProjectItem, int)>[
+    for (final root in (children[null] ?? <ProjectItem>[]).reversed) (root, 0),
+  ];
   final rows = <ProjectListRow>[];
-  void visit(_ProjectTreeNode node, int depth) {
-    rows.add(ProjectListRow(project: node.project, depth: depth));
-    for (final child in node.children) {
-      visit(child, depth + 1);
+  while (stack.isNotEmpty) {
+    final (project, depth) = stack.removeLast();
+    final nested = children[project.id] ?? const <ProjectItem>[];
+    rows.add(
+      ProjectListRow(
+        project: project,
+        depth: depth,
+        hasChildren: nested.isNotEmpty,
+      ),
+    );
+    if (!collapsedIds.contains(project.id)) {
+      for (final child in nested.reversed) {
+        stack.add((child, depth + 1));
+      }
     }
-  }
-
-  for (final root in roots) {
-    visit(root, 0);
   }
   return rows;
 }

@@ -13,7 +13,7 @@ void main() {
   const inProgressId = 'kanban-status-in-progress-v1';
   const doneId = 'kanban-status-done-v1';
 
-  group('schema v6', () {
+  group('schema v7', () {
     late AppDatabase db;
     migrations.InitializedSchema? initializedV3;
 
@@ -23,11 +23,33 @@ void main() {
       initializedV3 = null;
     });
 
+    test('v6 labels retain their data and links after adding icons', () async {
+      final verifier = migrations.SchemaVerifier(v3_schema.GeneratedHelper());
+      initializedV3 = await verifier.schemaAt(3);
+      _seedCompleteV3(initializedV3!.rawDatabase);
+      db = AppDatabase(initializedV3!.newConnection());
+      await db.ensureSeedData();
+      final labelsBefore = await db.select(db.labels).get();
+      final linksBefore = await db.select(db.taskLabels).get();
+      await db.customStatement('ALTER TABLE labels DROP COLUMN icon');
+      await db.customStatement('PRAGMA user_version = 6');
+      await db.close();
+      db = AppDatabase(initializedV3!.newConnection());
+      expect(await db.select(db.labels).get(), labelsBefore);
+      expect(await db.select(db.taskLabels).get(), linksBefore);
+      expect(
+        (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
+          'user_version',
+        ),
+        7,
+      );
+    });
+
     test('fresh database creates compact Kanban schema and index', () async {
       db = AppDatabase(NativeDatabase.memory());
 
-      expect(db.schemaVersion, 6);
-      if (db.schemaVersion != 6) {
+      expect(db.schemaVersion, 7);
+      if (db.schemaVersion != 7) {
         return;
       }
       await db
@@ -38,6 +60,7 @@ void main() {
           .get();
       await db.customSelect('SELECT kind FROM task_labels LIMIT 0').get();
       await db.customSelect('SELECT icon FROM projects LIMIT 0').get();
+      await db.customSelect('SELECT icon FROM labels LIMIT 0').get();
       await db.customSelect('SELECT * FROM kanban_settings LIMIT 0').get();
 
       final index = await db
@@ -125,8 +148,8 @@ void main() {
         final version = await db
             .customSelect('PRAGMA user_version')
             .getSingle();
-        expect(version.read<int>('user_version'), 6);
-        if (version.read<int>('user_version') != 6) {
+        expect(version.read<int>('user_version'), 7);
+        if (version.read<int>('user_version') != 7) {
           return;
         }
         final userLabels = await db
@@ -212,10 +235,10 @@ void main() {
 
       final version = await db.customSelect('PRAGMA user_version').getSingle();
 
-      expect(version.read<int>('user_version'), 6);
+      expect(version.read<int>('user_version'), 7);
       expect(
         await _columnNames(db, 'labels'),
-        containsAll(['kind', 'system_key']),
+        containsAll(['kind', 'system_key', 'icon']),
       );
       expect(await _columnNames(db, 'task_labels'), contains('kind'));
       await db.customSelect('SELECT * FROM kanban_settings LIMIT 0').get();
@@ -227,7 +250,7 @@ void main() {
       final retriedVersion = await db
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(retriedVersion.read<int>('user_version'), 6);
+      expect(retriedVersion.read<int>('user_version'), 7);
     });
   });
 

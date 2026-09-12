@@ -211,6 +211,23 @@ Secondary click and touch long press expose renaming, icon and color selection,
 favorites, and confirmed deletion. Project icons are synchronized project data;
 existing projects retain the hash icon until changed.
 
+Projects support arbitrary nesting with globally unique names. The shared menu
+offers Create subproject, Move project, and Move up/down among siblings. Keep
+the menu button visible for keyboard and touch access. A project and its task
+count include only its own tasks. Deleting a parent promotes its immediate
+children into its position; only the deleted project's tasks move to Inbox.
+
+The sidebar and Projects screen share tree controls. Branches start expanded,
+retain collapse state while the screen is mounted, and reveal the destination
+ancestors after creation or movement. Limit indentation to four visual steps
+without limiting hierarchy depth. Mouse dragging the middle half of a row
+nests a branch; the top and bottom quarters insert before and after the row.
+Show a parent highlight or insertion line, scroll at viewport edges, and show
+a Top level target during dragging. Disable dragging during search and archive
+viewing. Touch retains long-press menus; keyboard users can move through the
+same menus. Keep feedback immediate, without introducing motion or dependencies.
+Missing parents and cycles from synchronization must never hide projects.
+
 ### Today
 
 Keep daily context to one text summary and one active Focus strip. The strip and
@@ -415,6 +432,21 @@ preserving its transcription preference, access checks and any active session.
 Arrow keys, Enter and Escape work without disrupting IME composition; restore
 focus on closing. Keep result selection tied to stable identifiers and revalidate
 a result before acting after data changes.
+
+### Labels
+
+Open a user label from Projects / Labels into the shared task list, filtered by
+label ID across projects. Text and voice Quick Add on that screen inherit the
+label while preserving explicitly selected projects and other labels. Missing
+or deleted labels show a return to Labels instead of a task composer.
+
+Label icons use a separate Lucide set: tag (default), bookmark, flag, bolt,
+lightbulb, clock, bell, pin, phone, mail, link, and wrench. Keep this set distinct
+from project icons. Offer selection during label creation, from the label row's
+context menu and visible edit button, and from its screen heading. Use localized
+icon names, keyboard focus, and selected-state semantics. Persist and synchronize
+icon identifiers; missing or unknown identifiers render as tag. Kanban status
+labels are excluded from these screens and edits.
 
 ### Settings
 

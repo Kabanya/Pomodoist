@@ -162,6 +162,7 @@ class Labels extends Table {
   TextColumn get userId => text()();
   TextColumn get name => text()();
   TextColumn get color => text().nullable()();
+  TextColumn get icon => text().nullable()();
   TextColumn get kind => text()
       .withDefault(const Constant(labelKindUser))
       .check(
@@ -473,7 +474,7 @@ class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -531,6 +532,12 @@ class AppDatabase extends _$AppDatabase {
           'CREATE INDEX IF NOT EXISTS tasks_active_children_by_parent '
           'ON tasks (parent_id, status, id) '
           'WHERE parent_id IS NOT NULL AND is_deleted = 0',
+        );
+      }
+      if (from < 7) {
+        await _runResumableMigrationStep(
+          () => m.addColumn(labels, labels.icon),
+          alreadyAppliedMessage: 'duplicate column name: icon',
         );
       }
       if (from < 6) {

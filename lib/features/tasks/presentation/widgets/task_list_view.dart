@@ -28,6 +28,7 @@ class TaskListView extends ConsumerWidget {
     this.taskFilter,
     this.showQuickAdd = true,
     this.quickAddProjectId,
+    this.titleLeading,
     super.key,
   });
 
@@ -41,6 +42,7 @@ class TaskListView extends ConsumerWidget {
   final bool Function(TaskItem task)? taskFilter;
   final bool showQuickAdd;
   final String? quickAddProjectId;
+  final Widget? titleLeading;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -116,9 +118,21 @@ class TaskListView extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          title,
-                          style: Theme.of(context).textTheme.headlineMedium,
+                        Row(
+                          children: [
+                            if (titleLeading != null) ...[
+                              titleLeading!,
+                              const SizedBox(width: 8),
+                            ],
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineMedium,
+                              ),
+                            ),
+                          ],
                         ),
                         if (subtitle != null) ...[
                           const SizedBox(height: 4),
@@ -143,6 +157,7 @@ class TaskListView extends ConsumerWidget {
                                 ? query.now
                                 : null,
                             projectId: quickAddProjectId,
+                            labelId: query.labelId,
                             onTaskCreated: (taskIds) {
                               motion.created(taskIds.toSet());
                               unawaited(playHaptic(AppHapticCue.light));
@@ -171,6 +186,7 @@ class TaskListView extends ConsumerWidget {
                           TaskQueryKind.inbox => LucideIcons.inbox,
                           TaskQueryKind.today => LucideIcons.calendarCheck,
                           TaskQueryKind.project => LucideIcons.folder,
+                          TaskQueryKind.label => LucideIcons.tag,
                           _ => LucideIcons.listChecks,
                         },
                         title: emptyTitle,
@@ -183,6 +199,7 @@ class TaskListView extends ConsumerWidget {
                                       ? query.now
                                       : null,
                                   projectId: quickAddProjectId,
+                                  labelId: query.labelId,
                                 ),
                                 leading: const Icon(LucideIcons.plus, size: 16),
                                 child: Text(l10n.addTask),

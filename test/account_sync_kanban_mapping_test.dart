@@ -39,6 +39,19 @@ void main() {
 
     tearDown(() => db.close());
 
+    test('user label icon updates are included in outbound sync', () async {
+      final labels = DriftLabelRepository(db, queue);
+      final id = await labels.createLabel('Review', icon: 'bookmark');
+      await labels.updateLabelIcon(id, 'bolt');
+      await engine.pushPending();
+      final operations = account.pushed
+          .where((op) => op.entityType == 'label' && op.entityId == id)
+          .toList();
+      expect(operations, isNotEmpty);
+      expect(operations.last.payload['icon'], 'bolt');
+      expect(operations.last.payload['kind'], labelKindUser);
+    });
+
     test(
       'snapshot separates user labels, stable status assignment, and settings',
       () async {

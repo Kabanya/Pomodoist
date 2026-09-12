@@ -21,6 +21,7 @@ import '../features/tasks/presentation/inbox_screen.dart';
 import '../features/tasks/presentation/kanban/kanban_screen.dart';
 import '../features/tasks/presentation/priority_matrix_screen.dart';
 import '../features/tasks/presentation/project_screen.dart';
+import '../features/tasks/presentation/label_screen.dart';
 import '../features/tasks/presentation/projects_screen.dart';
 import '../features/tasks/presentation/search_screen.dart';
 import '../features/tasks/presentation/task_detail_screen.dart';
@@ -222,8 +223,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/projects',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: ProjectsScreen()),
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ProjectsScreen(
+                showLabels: state.uri.queryParameters['tab'] == 'labels',
+              ),
+            ),
           ),
           GoRoute(
             path: '/reports',
@@ -251,6 +255,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/integrations/google-calendar',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: GoogleCalendarSettingsScreen()),
+          ),
+          GoRoute(
+            path: '/label/:id',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: LabelScreen(labelId: state.pathParameters['id']!),
+            ),
           ),
           GoRoute(
             path: '/project/:id',
