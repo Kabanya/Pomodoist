@@ -17,15 +17,16 @@ import {
   decomposeTranscript,
   TaskDecompositionError,
 } from "./task_decomposition.ts";
+import type { LlmQuota, LlmQuotaSubject } from "./llm_quota.ts";
 
-export async function hasActivePomodoistStoreTransaction(
+async function activePurchaseSubject(
   body: JsonMap,
   deps: PomodoistWatchDeps,
   now: Date,
 ) {
   const values = body.storeTransactions;
   if (!Array.isArray(values) || values.length === 0 || values.length > 100) {
-    return false;
+    return null;
   }
   const verify = deps.verifyStoreTransaction ?? verifyAppleStoreTransactionJws;
   for (const value of values) {
@@ -40,14 +41,16 @@ export async function hasActivePomodoistStoreTransaction(
         pomodoistAppleVerificationOptions,
       );
       if (pomodoistPurchaseState(transaction, now)?.status === "active") {
-        return true;
+        // Renewals and re-signed receipts retain the same original purchase ID.
+        if (!/^[^:]{1,128}$/.test(transaction.originalTransactionId)) continue;
+        return `apple:${transaction.environment}:${transaction.originalTransactionId}`;
       }
     } catch {
       // A candidate may be stale or unrelated; another signed transaction can
       // still represent the customer's current entitlement.
     }
   }
-  return false;
+  return null;
 }
 
 export const corsHeaders = {
@@ -62,6 +65,7 @@ export type PomodoistWatchDeps = {
   createClient: (authorization: string) => SupabaseClient;
   now?: () => Date;
   uuid?: () => string;
+  quota?: LlmQuota;
   verifyStoreTransaction?: (
     jws: string,
     options: typeof pomodoistAppleVerificationOptions,
@@ -88,7 +92,13 @@ export async function handleTaskDecomposition(
   now: Date,
 ) {
   const uuid = deps.uuid ?? (() => crypto.randomUUID());
-  if (!user && !(await hasActivePomodoistStoreTransaction(body, deps, now))) {
+  const subject: LlmQuotaSubject | null =
+    user && !(user as User & { is_anonymous?: boolean }).is_anonymous
+      ? { userId: user.id }
+      : await activePurchaseSubject(body, deps, now).then((purchaseSubject) =>
+        purchaseSubject ? { purchaseSubject } : null
+      );
+  if (!subject) {
     return json({
       ok: false,
       code: "purchase_verification_failed",
@@ -97,10 +107,40 @@ export async function handleTaskDecomposition(
   }
   const requestId = uuid();
   const startedAt = performance.now();
+  const unavailable = () =>
+    json({
+      ok: false,
+      code: "llm_quota_unavailable",
+      error: "Task analysis usage verification is temporarily unavailable.",
+      retryable: true,
+    }, 503);
+  let reservation;
   try {
-    const tasks = await decomposeTranscript(command, deps, requestId);
-    return json({ ok: true, tasks });
+    if (!deps.quota) return unavailable();
+    reservation = await deps.quota("reserve", subject, requestId);
+  } catch {
+    return unavailable();
+  }
+  if (!reservation.allowed) {
+    return json({
+      ok: false,
+      code: "llm_quota_exceeded",
+      error: "Monthly task analysis limit reached.",
+      retryable: false,
+      resetsAt: reservation.resetsAt,
+    }, 429);
+  }
+  let tasks;
+  try {
+    tasks = await decomposeTranscript(command, {
+      ...deps,
+      // Include reservation time and leave ten seconds for quota settlement.
+      deadline: startedAt + (command.smart === true ? 105_000 : 30_000),
+    }, requestId);
   } catch (error) {
+    try {
+      await deps.quota("release", subject, requestId);
+    } catch { /* expiry releases it */ }
     if (error instanceof TaskDecompositionError) {
       console.error(JSON.stringify({
         requestId,
@@ -123,4 +163,10 @@ export async function handleTaskDecomposition(
       502,
     );
   }
+  try {
+    await deps.quota("complete", subject, requestId);
+  } catch {
+    return unavailable();
+  }
+  return json({ ok: true, tasks });
 }

@@ -43,14 +43,25 @@ deployment-level rate limits in addition to the monthly application quota.
 One unit is one successfully recognized audio recording, regardless of duration
 or how many tasks the transcript contains. The existing definition in
 `public.quota_definitions` controls the per-account monthly limit (currently
-2,500 `voice_transcriptions`). All devices share the same counter. Native Apple
+1,000 `voice_transcriptions`). All devices share the same counter. Native Apple
 Speech does not use this cloud quota. Months start at 00:00 UTC on the first day;
 the server determines the period and ignores client-supplied period boundaries.
 
 `public.usage_periods` stores `used`, `limit_value`, `period_start`, and `period_end`
 for each `user_id`, app, and quota. A new month's row is created on demand; previous
-months remain available. This counter does not meter the separate text-to-task
-LLM calls, token usage, or dollar cost.
+months remain available. The separate `llm_requests` counter allows 1,000 successful
+text-to-task analyses per month, shared by normal and Smart mode and enforced by
+both `pomodoist-ai` and the legacy `pomodoist-watch` route. Internal provider retries
+use one reservation. Provider failures release it; settlement retries are idempotent.
+Quota errors return `llm_quota_exceeded` (429) or `llm_quota_unavailable` (503).
+
+Signed-in LLM callers use their verified Auth `user_id`. StoreKit-only callers use
+`purchase_subject = apple:<environment>:<originalTransactionId>` derived from a
+verified active purchase; their rows have no `user_id` and are hidden by ownership
+RLS. These are separate account and purchase allowances. Neither counter records
+tokens or dollar cost. Apply `pomodoist_llm_and_voice_quotas_1000` before deploying
+the AI/Watch handlers; the service-role-only `pomodoist_llm_quota` RPC reuses the
+same short-lived reservation table and cleanup job as transcription.
 
 After validating the audio, the function reserves one slot before contacting the
 provider. Concurrent requests cannot reserve beyond the remaining limit. A usable
@@ -59,6 +70,11 @@ provider errors release the slot. Abandoned reservations expire after ten minute
 and a cron job removes expired request metadata. No audio or transcript is stored
 in the reservation table. A response lost after successful processing can still
 count; submitting the recording again starts a new request.
+
+Monthly renewal does not depend on cron, an app restart, or a client clock.
+A request reserved before midnight and completed afterward is charged to its
+original month. Usage readers also run in UTC, regardless of the connection's
+timezone.
 
 An exhausted quota returns HTTP 429 with `code: voice_quota_exceeded`,
 `retryable: false` and `resetsAt`. A quota database outage fails closed with HTTP

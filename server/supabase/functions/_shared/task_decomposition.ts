@@ -8,6 +8,7 @@ export type TaskDecompositionDeps = {
   env: Pick<typeof Deno.env, "get">;
   fetch: typeof fetch;
   now?: () => Date;
+  deadline?: number;
 };
 
 export class TaskDecompositionError extends Error {
@@ -93,7 +94,10 @@ export async function decomposeTranscript(
   }
 
   // Finish before the client's 45s / 120s timeout, including fallback requests.
-  const deadline = startedAt + (smart ? 115_000 : 40_000);
+  const deadline = Math.min(
+    startedAt + (smart ? 115_000 : 40_000),
+    deps.deadline ?? Infinity,
+  );
   const providers = [
     ...(!smart
       ? [

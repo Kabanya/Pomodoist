@@ -604,7 +604,7 @@ Deno.test("transcript skips missing keys and Smart uses DeepSeek V4.1 Flash", as
   }
 });
 
-Deno.test("transcript fallback and JSON retry share the 40 second budget", async () => {
+Deno.test("transcript fallback leaves ten seconds for quota settlement", async () => {
   const originalNow = performance.now;
   const originalTimeout = AbortSignal.timeout;
   let elapsed = 0;
@@ -628,14 +628,14 @@ Deno.test("transcript fallback and JSON retry share the 40 second budget", async
         env: { get: () => "test-key" },
         fetch: (async () => {
           calls += 1;
-          elapsed = [8000, 20000, 39500, 40000][calls - 1];
+          elapsed = [8000, 20000, 29500, 30000][calls - 1];
           if (calls === 3) return Response.json({ choices: [] });
           throw new DOMException("timed out", "TimeoutError");
         }) as typeof fetch,
       }),
     );
     assertEquals(response.status, 504);
-    assertEquals(timeouts, [8000, 12000, 20000, 500]);
+    assertEquals(timeouts, [8000, 12000, 10000, 500]);
     assertEquals(calls, 4);
   } finally {
     performance.now = originalNow;
@@ -1124,6 +1124,7 @@ function deps(args: {
       return () => `uuid-${++counter}`;
     })(),
     fetch: args.fetch ?? fetch,
+    quota: async () => ({ allowed: true }),
     env: args.env ?? { get: () => "" },
     verifyStoreTransaction: args.verifyStoreTransaction,
     createClient: () => ({

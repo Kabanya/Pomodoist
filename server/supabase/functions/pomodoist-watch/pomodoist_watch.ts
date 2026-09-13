@@ -66,6 +66,10 @@ export async function handlePomodoistWatch(
   const client = authorization ? deps.createClient(authorization) : null;
   const user = client ? (await client.auth.getUser()).data.user : null;
 
+  // Compatibility for clients using the pre-R2 AI endpoint; both routes share
+  // the same implementation. Remove this branch and its unused handler import
+  // only after an explicit decision to end support for those clients, not merely
+  // when R2 ships. Keep the Watch endpoint and its task/Focus commands.
   if (type === "task.decomposeTranscript") {
     return handleTaskDecomposition(body, command, user, deps, now);
   }

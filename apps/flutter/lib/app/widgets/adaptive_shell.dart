@@ -26,6 +26,8 @@ import '../../features/tasks/presentation/quick_add_dialog.dart';
 export '../../features/tasks/presentation/quick_add_dialog.dart'
     show showQuickAddDialog;
 import '../../features/tasks/presentation/widgets/voice_panel_clearance.dart';
+import '../../features/tasks/presentation/widgets/quick_add_bar.dart'
+    show voiceQuickAddActiveOf;
 import '../account_providers.dart';
 import '../app_l10n.dart';
 import '../keyboard_shortcuts.dart';
@@ -268,6 +270,28 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                 ),
               ),
               body: content,
+              floatingActionButton: ValueListenableBuilder<bool>(
+                valueListenable: voiceQuickAddActiveOf(context),
+                builder: (context, voiceActive, _) => voiceActive
+                    ? const SizedBox.shrink()
+                    : SizedBox.square(
+                        dimension: 52,
+                        child: FloatingActionButton(
+                          key: const Key('compact-add-task'),
+                          heroTag: null,
+                          tooltip: context.l10n.addTask,
+                          backgroundColor: colors.accentFill,
+                          foregroundColor: colors.onAccent,
+                          focusColor: colors.onAccent.withValues(alpha: 0.24),
+                          elevation: 3,
+                          shape: const CircleBorder(),
+                          onPressed: () => showQuickAddDialog(context),
+                          child: const Icon(LucideIcons.plus, size: 24),
+                        ),
+                      ),
+              ),
+              floatingActionButtonLocation:
+                  FloatingActionButtonLocation.endFloat,
               bottomNavigationBar: compactTaskDetailsOpen
                   ? null
                   : VoicePanelBottomClearance(

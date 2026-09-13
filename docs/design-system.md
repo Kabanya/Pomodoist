@@ -195,6 +195,22 @@ drafts. Close and Escape restore focus; nested menus handle Escape first.
 Keep the close/back and overflow actions pinned at the top of task details,
 inside the safe area, with task content scrolling below them.
 
+### Compact task creation
+
+Below the 820 px shell breakpoint, show a 52 px circular Add task button with a
+24 px plus icon, `accentFill` background, `onAccent` foreground and subtle shadow.
+Use the standard floating end position, 16 px from the safe right and bottom
+edges, above bottom navigation, the mini Focus player and the software keyboard.
+Keep it available on all shell routes, including Focus, Settings and task details.
+It opens the existing Quick Add dialog; modal surfaces retain their normal input
+barriers. Give the button the localized Add task label and a visible focus state.
+
+Hide it for the entire voice Quick Add session in the same root overlay, including
+recording, transcription, draft review and the collapsed panel. Restore it when
+the session finishes or closes. Track session lifetime centrally for every voice
+entry point; do not derive visibility from recording status or panel expansion.
+Wide layouts keep their existing task creation controls.
+
 ### Sidebar
 
 Group daily destinations separately from planning views, followed by the existing

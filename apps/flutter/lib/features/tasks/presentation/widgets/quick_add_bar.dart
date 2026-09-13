@@ -30,12 +30,20 @@ import 'quick_add_text_controller.dart';
 import 'quick_add_details.dart';
 import 'voice_panel_motion.dart';
 import 'voice_panel_clearance.dart';
+import 'voice_quick_add_session.dart';
 
 const _voiceSheetBorderRadius = BorderRadius.all(Radius.circular(12));
 const _quickAddIconTransitionDuration = Duration(milliseconds: 120);
 const _quickAddSuccessHoldDuration = Duration(milliseconds: 800);
 
-final _voiceSessions = Expando<_VoiceHostSession>();
+final _voiceSessions = Expando<VoiceQuickAddSessionSlot<_VoiceHostSession>>();
+
+VoiceQuickAddSessionSlot<_VoiceHostSession> _voiceSessionOf(
+  OverlayState overlay,
+) => _voiceSessions[overlay] ??= VoiceQuickAddSessionSlot<_VoiceHostSession>();
+
+ValueListenable<bool> voiceQuickAddActiveOf(BuildContext context) =>
+    _voiceSessionOf(Overlay.of(context, rootOverlay: true));
 
 class _VoiceHostSession {
   _VoiceHostSession(this.overlay, this.route);
@@ -48,9 +56,7 @@ class _VoiceHostSession {
 
   void finish(List<String>? ids, {bool remove = true}) {
     if (result.isCompleted) return;
-    if (identical(_voiceSessions[overlay], this)) {
-      _voiceSessions[overlay] = null;
-    }
+    _voiceSessionOf(overlay).finish(this);
     result.complete(ids);
     if (remove) {
       entry.remove();
@@ -70,7 +76,8 @@ Future<List<String>?> showVoiceQuickAddSheet(
   ValueChanged<bool>? onExpandedChanged,
 }) async {
   final overlay = Overlay.of(context, rootOverlay: true);
-  final existing = _voiceSessions[overlay];
+  final sessions = _voiceSessionOf(overlay);
+  final existing = sessions.current;
   if (existing != null) {
     overlay.rearrange([existing.entry], below: existing.entry);
     existing.key.currentState?._setExpanded(true);
@@ -108,7 +115,7 @@ Future<List<String>?> showVoiceQuickAddSheet(
     );
   }
   // A second opener may have completed the entitlement check first.
-  final pending = _voiceSessions[overlay];
+  final pending = sessions.current;
   if (pending != null) {
     overlay.rearrange([pending.entry], below: pending.entry);
     pending.key.currentState?._setExpanded(true);
@@ -117,7 +124,6 @@ Future<List<String>?> showVoiceQuickAddSheet(
   }
   FocusManager.instance.primaryFocus?.unfocus();
   final session = _VoiceHostSession(overlay, ModalRoute.of(context));
-  _voiceSessions[overlay] = session;
   session.entry = OverlayEntry(
     maintainState: true,
     builder: (_) => VoiceQuickAddHost._(
@@ -132,6 +138,7 @@ Future<List<String>?> showVoiceQuickAddSheet(
     ),
   );
   overlay.insert(session.entry);
+  sessions.open(session);
   return session.result.future;
 }
 
