@@ -83,6 +83,7 @@ server/supabase/.temp/
 design/
 output/
 docs/*
+!docs/localization/
 !docs/email-addresses.md
 temp**/
 tmp/
@@ -101,3 +102,4 @@ tool/apple/VOICE_TESTING.md
 /android/.kotlin/
 /android/captures/
 docs/email-addresses.md
+ios/build/

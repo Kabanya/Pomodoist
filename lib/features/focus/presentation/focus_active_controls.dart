@@ -69,7 +69,7 @@ class _FocusLinkedTaskContext extends ConsumerWidget {
                     ),
                   ),
                   TextSpan(
-                    text: ' ${project.name}',
+                    text: ' ${project.displayName(context.l10n)}',
                     style: TextStyle(color: context.appColors.secondaryText),
                   ),
                 ],
@@ -326,7 +326,7 @@ Widget _buildFocusMoreActionsMenu(
                 preset.id,
               ),
               enabled: preset.id != selectedPreset?.id,
-              child: Text(l10n.usePreset(preset.name)),
+              child: Text(l10n.usePreset(preset.displayName(l10n))),
             ),
           if (showViewModeMenu && !minimal) const PopupMenuDivider(),
           if (showViewModeMenu)

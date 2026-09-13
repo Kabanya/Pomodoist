@@ -5,7 +5,14 @@ import {
   type PomodoistStripeBillingDeps,
   stripeCatalogForAccount,
   stripeCheckoutParams,
+  stripeCheckoutLocale,
 } from "./pomodoist_stripe_billing.ts";
+
+Deno.test("Checkout locale preserves Brazilian Portuguese and validates all new languages", () => {
+  for (const [input, expected] of [["pt", "pt-BR"], ["pt_BR", "pt-BR"], ["ja-JP", "ja"], ["ko-KR", "ko"], ["unknown", "auto"], ["ja<script>", "auto"]]) {
+    assertEquals(stripeCheckoutLocale(input), expected);
+  }
+});
 
 Deno.test("Stripe catalog derives the launch window from the server profile anchor", () => {
   const catalog = stripeCatalogForAccount({

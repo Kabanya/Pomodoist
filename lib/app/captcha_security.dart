@@ -1,3 +1,4 @@
+import 'app_language.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -244,7 +245,10 @@ final class CaptchaChallengeRequest {
         uri.userInfo.isNotEmpty ||
         uri.hasPort ||
         !uri.hasFragment ||
-        parameters.keys.toSet().length != 1 ||
+        parameters.keys.any((key) => key != 'returnTo' && key != 'lang') ||
+        (parameters.containsKey('lang') &&
+            AppLanguage.fromLanguageTag(parameters['lang']?.singleOrNull) ==
+                null) ||
         !parameters.keys.toSet().contains('returnTo') ||
         parameters.values.any((values) => values.length != 1) ||
         fragmentParameters.keys.toSet().length != 1 ||
@@ -396,7 +400,7 @@ final class NativeCaptchaSession {
 
   bool get hasPending => _pendingState != null;
 
-  Uri begin() {
+  Uri begin({String? locale}) {
     final state = _stateFactory();
     if (!isValidCaptchaState(state)) {
       throw const NativeCaptchaException(NativeCaptchaFailureCode.unavailable);
@@ -404,7 +408,11 @@ final class NativeCaptchaSession {
     _pendingState = state;
     _createdAt = _now();
     return registrationUrl.replace(
-      queryParameters: {'returnTo': callbackTarget.toString()},
+      queryParameters: {
+        'returnTo': callbackTarget.toString(),
+        if (AppLanguage.fromLanguageTag(locale) case final language?)
+          'lang': language.locale!.toLanguageTag(),
+      },
       fragment: Uri(queryParameters: {'state': state}).query,
     );
   }

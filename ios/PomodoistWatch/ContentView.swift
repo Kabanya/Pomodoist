@@ -287,7 +287,7 @@ struct BrowseTabView: View {
   var body: some View {
     NavigationStack {
       List {
-        Text(store.pendingCommands.isEmpty ? store.syncStatus : "Queued")
+        Text(LocalizedStringKey(store.pendingCommands.isEmpty ? store.syncStatus : "sync.statusQueued"))
           .font(.caption2)
           .foregroundStyle(.secondary)
 
@@ -364,14 +364,14 @@ struct ProjectListView: View {
     List(projects) { project in
       NavigationLink {
         WatchTaskListView(
-          title: Text(project.name),
+          title: Text(project.displayName),
           tasks: store.snapshot.tasks.byProject[project.id] ?? []
         )
       } label: {
         HStack {
           Image(systemName: "folder")
             .foregroundStyle(.red)
-          Text(project.name)
+          Text(project.displayName)
             .lineLimit(1)
           Spacer()
           Text("\(project.openTaskCount)")

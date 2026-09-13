@@ -1126,15 +1126,10 @@ class DriftFocusRepository implements FocusRepository {
       plannedSeconds: plannedSeconds,
       pausedTotalSeconds: pausedTotalSeconds,
     );
-    final label = switch (type) {
-      'work' => 'Focus interval completed',
-      'longBreak' => 'Long break completed',
-      _ => 'Break completed',
-    };
     return _notifications.scheduleFocusIntervalEnd(
       expectedEndAt: endAt,
       title: 'pomodoist',
-      body: label,
+      body: _notifications.focusCompletedBody(type),
     );
   }
 

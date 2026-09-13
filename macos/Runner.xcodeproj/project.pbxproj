@@ -44,6 +44,10 @@
 		B50000000000000000000001 /* SystemSpeechTranscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50000000000000000000002 /* SystemSpeechTranscriber.swift */; };
 		B60000000000000000000001 /* StoreKitHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60000000000000000000002 /* StoreKitHost.swift */; };
 		C60000000000000000000001 /* MacosGlassController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C60000000000000000000002 /* MacosGlassController.swift */; };
+		06D4C8BDD1AE87463F9B66BE /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F70640268851B1260EC1EDE2 /* Localizable.strings */; };
+		0279F8A08B39CEABF321504A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F70640268851B1260EC1EDE2 /* Localizable.strings */; };
+		EC94E618B3B8A02CFA518BBB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 25778229D0DA21714F8F106D /* InfoPlist.strings */; };
+		3D5CECE55C35C80FAF683BC1 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 25778229D0DA21714F8F106D /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -127,6 +131,13 @@
 		B50000000000000000000002 /* SystemSpeechTranscriber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SystemSpeechTranscriber.swift; path = ../apple/SystemSpeechTranscriber.swift; sourceTree = SOURCE_ROOT; };
 		B60000000000000000000002 /* StoreKitHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StoreKitHost.swift; path = ../apple/StoreKitHost.swift; sourceTree = SOURCE_ROOT; };
 		C60000000000000000000002 /* MacosGlassController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacosGlassController.swift; sourceTree = "<group>"; };
+		E95F3301AA714DDD7BE01CE5 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "../apple/Localization/pt-BR.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
+		B54BADFE35A7707C260E2C9E /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ja"; path = "../apple/Localization/ja.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
+		596822A34DA75216F0BE5A9B /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ko"; path = "../apple/Localization/ko.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
+		7C149D7442B9CA04A0DC5973 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en"; path = "../apple/Localization/en.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
+		B5E17B540E0E402457BAD6D4 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "../apple/Localization/pt-BR.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
+		20C9B970C30B42BF3075EE26 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ja"; path = "../apple/Localization/ja.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
+		989592D338A4948AFF31EBD7 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ko"; path = "../apple/Localization/ko.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -158,6 +169,8 @@
 		331C80D6294CF71000263BE5 /* RunnerTests */ = {
 			isa = PBXGroup;
 			children = (
+				25778229D0DA21714F8F106D /* InfoPlist.strings */,
+				F70640268851B1260EC1EDE2 /* Localizable.strings */,
 				331C80D7294CF71000263BE5 /* RunnerTests.swift */,
 			);
 			path = RunnerTests;
@@ -380,7 +393,16 @@
 			knownRegions = (
 				en,
 				Base,
-			);
+							"ar",
+				"de",
+				"es",
+				"fr",
+				"ru",
+				"zh",
+				"pt-BR",
+				"ja",
+				"ko",
+);
 			mainGroup = 33CC10E42044A3C60003C045;
 			packageReferences = (
 				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */,
@@ -409,6 +431,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EC94E618B3B8A02CFA518BBB /* InfoPlist.strings in Resources */,
+				06D4C8BDD1AE87463F9B66BE /* Localizable.strings in Resources */,
 				33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
 				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
 				A80000010000000000000001 /* PrivacyInfo.xcprivacy in Resources */,
@@ -419,6 +443,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3D5CECE55C35C80FAF683BC1 /* InfoPlist.strings in Resources */,
+				0279F8A08B39CEABF321504A /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -533,6 +559,27 @@
 			);
 			name = MainMenu.xib;
 			path = Runner;
+			sourceTree = "<group>";
+		};
+		F70640268851B1260EC1EDE2 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				E95F3301AA714DDD7BE01CE5 /* pt-BR */,
+				B54BADFE35A7707C260E2C9E /* ja */,
+				596822A34DA75216F0BE5A9B /* ko */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		25778229D0DA21714F8F106D /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7C149D7442B9CA04A0DC5973 /* en */,
+				B5E17B540E0E402457BAD6D4 /* pt-BR */,
+				20C9B970C30B42BF3075EE26 /* ja */,
+				989592D338A4948AFF31EBD7 /* ko */,
+			);
+			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

@@ -70,7 +70,7 @@ final class FocusStatusItemController: NSObject, NSMenuDelegate {
     statusItem.menu = menu
     menu.delegate = self
     if let button = statusItem.button {
-      button.setAccessibilityLabel("Pomodoist focus timer")
+      button.setAccessibilityLabel(pomodoistLocalized("Pomodoist focus timer", locale: snapshot.locale))
     }
   }
 
@@ -100,6 +100,7 @@ final class FocusStatusItemController: NSObject, NSMenuDelegate {
       return
     }
     snapshot = decoded
+    statusItem.button?.setAccessibilityLabel(pomodoistLocalized("Pomodoist focus timer", locale: decoded.locale))
     store.save(dictionary: dictionary)
     updateStatusItem()
     WidgetCenter.shared.reloadTimelines(ofKind: pomodoistFocusWidgetKind)
@@ -160,7 +161,7 @@ final class FocusStatusItemController: NSObject, NSMenuDelegate {
     menu.removeAllItems()
 
     let focus = snapshot.focus
-    let stateTitle = PomodoistFocusDisplay.stateLabel(focus: focus)
+    let stateTitle = PomodoistFocusDisplay.stateLabel(focus: focus, locale: snapshot.locale)
     let header = NSMenuItem(
       title: "\(stateTitle) - \(PomodoistFocusDisplay.timerText(now: Date(), focus: focus))",
       action: nil,
@@ -200,14 +201,14 @@ final class FocusStatusItemController: NSObject, NSMenuDelegate {
   }
 
   private func item(title: String, action: Selector) -> NSMenuItem {
-    let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
+    let item = NSMenuItem(title: pomodoistLocalized(title, locale: snapshot.locale), action: action, keyEquivalent: "")
     item.target = self
     return item
   }
 
   private func timerColorMenuItem() -> NSMenuItem {
-    let parent = NSMenuItem(title: "Timer Color", action: nil, keyEquivalent: "")
-    let submenu = NSMenu(title: "Timer Color")
+    let parent = NSMenuItem(title: pomodoistLocalized("Timer Color", locale: snapshot.locale), action: nil, keyEquivalent: "")
+    let submenu = NSMenu(title: pomodoistLocalized("Timer Color", locale: snapshot.locale))
 
     let automatic = item(title: "Automatic", action: #selector(resetTimerColor))
     automatic.state = selectedTimerColor == nil ? .on : .off

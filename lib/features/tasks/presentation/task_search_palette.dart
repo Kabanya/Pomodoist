@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadInput;
 
 import '../../../app/app_l10n.dart';
+import '../../../l10n/app_localizations.dart';
+import 'project_localizations.dart';
 import '../../../app/providers.dart';
 import '../../../app/task_detail_navigation.dart';
 import '../../../app/theme/app_motion.dart';
@@ -22,8 +24,9 @@ import 'widgets/quick_add_bar.dart' show showVoiceQuickAddSheet;
 List<({String id, String title})> taskSearchPaletteResults(
   Iterable<TaskItem> tasks,
   Iterable<ProjectItem> projects,
-  String query,
-) {
+  String query, {
+  AppLocalizations? l10n,
+}) {
   final search = query.trim().toLowerCase();
   return [
     if (search.isNotEmpty) ...[
@@ -35,10 +38,18 @@ List<({String id, String title})> taskSearchPaletteResults(
                 (project) =>
                     !project.isDeleted &&
                     !project.isArchived &&
-                    project.name.toLowerCase().contains(search),
+                    (project.name.toLowerCase().contains(search) ||
+                        (l10n != null &&
+                            project
+                                .displayName(l10n)
+                                .toLowerCase()
+                                .contains(search))),
               )
               .take(3))
-        (id: 'project:${project.id}', title: project.name),
+        (
+          id: 'project:${project.id}',
+          title: l10n == null ? project.name : project.displayName(l10n),
+        ),
     ],
   ];
 }
@@ -132,6 +143,7 @@ class _TaskSearchPaletteState extends ConsumerState<_TaskSearchPalette> {
     ref.read(tasksByQueryProvider(const TaskQuery.all())).value ?? [],
     ref.read(projectsProvider).value ?? [],
     _controller.text,
+    l10n: context.l10n,
   );
 
   List<String> _ids() => [

@@ -1,0 +1,1601 @@
+{
+  "@@locale": "ja",
+  "settingsSectionGeneral": "一般",
+  "settingsSectionAppearance": "外観",
+  "settingsSectionTasksFocus": "タスクと集中",
+  "settingsSectionIntegrations": "連携とデータ",
+  "settingsSectionAccount": "アカウントとPro",
+  "settingsThemeColorsTab": "色",
+  "settingsThemeBackgroundsTab": "背景",
+  "settingsRefreshAccount": "アカウントを更新",
+  "settingsSubscriptionActions": "サブスクリプションのオプション",
+  "settingsSubscriptionError": "サブスクリプションを更新できませんでした。確認済みの利用権は維持されます。",
+  "settingsVersionError": "バージョンを読み込めませんでした。",
+  "appTitle": "pomodoist",
+  "commonAdd": "追加",
+  "commonCancel": "キャンセル",
+  "commonSave": "保存",
+  "commonDelete": "削除",
+  "commonUndo": "元に戻す",
+  "commonOpen": "開く",
+  "commonBack": "戻る",
+  "commonClose": "閉じる",
+  "commonCreate": "作成",
+  "commonClear": "クリア",
+  "commonStop": "停止",
+  "skip": "スキップ",
+  "onboardingLanguageTitle": "言語を選択",
+  "onboardingLanguageSubtitle": "Pomodoistで使う言語を選んでください。",
+  "onboardingTimerTitle": "タイマーのスタイルを選択",
+  "onboardingTimerSubtitle": "集中セッションのポモドーロ進捗表示を選んでください。",
+  "onboardingPaywallTitle": "Pomodoistの全機能を利用",
+  "onboardingPaywallSubtitle": "買い切りプランの特典は毎週24時間限定です。",
+  "onboardingAccountTitle": "アカウントを作成",
+  "onboardingAccountSubtitle": "ログインして、デバイス間でタスク、集中履歴、設定を同期しましょう。",
+  "startupPreparingTasks": "タスクを準備中",
+  "operationTakingLonger": "通常より時間がかかっています。処理は引き続き実行中です。",
+  "onboardingContinue": "続ける",
+  "onboardingMaybeLater": "後で",
+  "onboardingFinish": "完了",
+  "billingTitle": "Pomodoist Pro",
+  "billingSubtitle": "自然な言葉で話すだけで、Pomodoistがタスクを作成します。タスク履歴は無期限に保存されます。",
+  "billingSubtitleHighlight": "自然な言葉",
+  "billingCancelAnytime": "いつでも解約できます。",
+  "billingMonthlyTitle": "月額",
+  "billingAnnualTitle": "年額",
+  "billingPricePerMonth": "{price}/月",
+  "@billingPricePerMonth": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "billingPricePerYear": "{price}/年",
+  "@billingPricePerYear": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "billingMonthlyIntroSubtitle": "最初の3か月間、その後は{price}。",
+  "@billingMonthlyIntroSubtitle": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "billingAnnualIntroSubtitle": "その後は{price}。",
+  "@billingAnnualIntroSubtitle": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "billingLifetimeTitle": "買い切り",
+  "billingLifetimeSubtitle": "一度のお支払いで永久に利用。",
+  "billingBestValue": "最もお得",
+  "billingChoose": "選択",
+  "billingActive": "このデバイスではPomodoist Proが有効です。",
+  "billingActiveShort": "有効",
+  "billingRestore": "購入を復元",
+  "privacyPolicy": "プライバシーポリシー",
+  "termsOfUse": "利用規約",
+  "support": "サポート",
+  "billingManageLink": "Linkで管理",
+  "billingExternalBrowserTitle": "ブラウザで支払いを開きます",
+  "billingExternalBrowserMessage": "PomodoistがSafariまたは標準ブラウザでStripe Checkoutを開きます。ブラウザウィンドウを許可して続けてください。",
+  "billingAppleOnly": "購入はiPhone、iPad、Macで利用できます。",
+  "billingStoreUnavailable": "現在App Storeを利用できません。",
+  "billingStoreConnectionFailed": "VPNをオフにして再試行してください。",
+  "billingPurchaseError": "購入エラー: {error}",
+  "@billingPurchaseError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "billingStripeAuthenticationRequired": "Pomodoistにログインして再試行してください。",
+  "billingStripeDisabled": "支払いはまだ利用できません。後でもう一度お試しください。",
+  "billingStripeAlreadyEntitled": "Pomodoist Proはすでに有効です。アカウントの状態を更新してください。",
+  "billingStripeOfferExpired": "この特典は終了しました。他の利用可能なプランを選んでください。",
+  "billingStripeManagedPaymentsUnavailable": "Stripe決済は一時的に利用できません。後で再試行するか、サポートにお問い合わせください。",
+  "billingStripeCheckoutFailed": "支払いを開始できませんでした。接続を確認して再試行してください。",
+  "purchaseSuccessTitle": "Proが有効になりました",
+  "purchaseSuccessMessage": "Pomodoistをご支援いただきありがとうございます。すべてのPro機能をご利用いただけます。",
+  "purchaseSuccessContinue": "続ける",
+  "purchaseProcessingTitle": "支払いを処理中",
+  "purchaseProcessingMessage": "支払いを確認しています。しばらくしてもProが表示されない場合は、後で再度更新してください。",
+  "purchaseOpenApp": "Pomodoistを開く",
+  "launchOfferEndsIn": "買い切り特典の終了まで{time}",
+  "@launchOfferEndsIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "accountApple": "Apple",
+  "accountGoogle": "Google",
+  "accountEmail": "メール",
+  "loginTitle": "Pomodoistにログイン",
+  "accountChecking": "アカウントを確認中",
+  "oauthConsentTitle": "エージェントを接続",
+  "oauthConsentLoading": "接続リクエストを確認中",
+  "oauthConsentInvalidAuthorization": "接続リクエストがないか、無効です。",
+  "oauthConsentLoadError": "接続リクエストを読み込めませんでした。",
+  "oauthConsentActionError": "リクエストを完了できませんでした。再試行してください。",
+  "oauthConsentRedirectError": "戻り先のアドレスがないか、安全ではありません。アクセス権は渡されませんでした。",
+  "oauthConsentClientFallback": "エージェント",
+  "oauthConsentClientRequest": "{clientName}がPomodoistへのアクセスを求めています",
+  "@oauthConsentClientRequest": {
+    "placeholders": {
+      "clientName": {
+        "type": "String"
+      }
+    }
+  },
+  "oauthConsentRedirectOrigin": "戻り先アドレス",
+  "oauthConsentCapabilitiesTitle": "このエージェントができること",
+  "oauthConsentManagePlanning": "タスク、プロジェクト、ユーザーラベル、カンバンの読み取りと管理。",
+  "oauthConsentReadInsights": "完了した集中履歴、生産性レポート、実績の読み取り。",
+  "oauthConsentUnavailableTitle": "このエージェントができないこと",
+  "oauthConsentUnavailable": "アカウント、請求情報、Googleカレンダー、実行中の集中タイマーへのアクセス。",
+  "oauthConsentUnsupportedScopes": "このリクエストは未対応のアカウントアクセスを求めているため、承認できません。",
+  "oauthConsentApprove": "許可",
+  "oauthConsentDeny": "拒否",
+  "oauthConsentApproving": "アクセスを許可中…",
+  "oauthConsentDenying": "アクセスを拒否中…",
+  "oauthConsentRedirecting": "エージェントに戻っています…",
+  "loginCreateAccountPrompt": "アカウントをお持ちでないですか？",
+  "loginCreateAccountAction": "アカウントを作成",
+  "registerTitle": "アカウントを作成",
+  "registerSubtitle": "デバイス間でタスク、集中履歴、設定を同期します。",
+  "registerPassword": "パスワード",
+  "registerSubmit": "アカウントを作成",
+  "registerSignInPrompt": "すでにアカウントをお持ちですか？",
+  "registerSignInAction": "ログイン",
+  "registerCheckEmailTitle": "メールを確認",
+  "registerCheckEmailMessage": "このアドレスに確認が必要な場合、リンク付きのメールが届きます。すでにアカウントがある場合は、ログインするかパスワードを再設定してください。",
+  "registerError": "アカウントを作成できませんでした: {error}",
+  "@registerError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "authEmailSignInTitle": "メールでログイン",
+  "authWelcomeTitle": "Pomodoistにログイン",
+  "authWelcomeDescription": "どのデバイスでも、あなたのタスクと集中を。",
+  "authSignInWithLink": "リンクでログイン",
+  "authForgotPassword": "パスワードをお忘れですか？",
+  "authBackToSignIn": "ログインに戻る",
+  "authNoAccount": "アカウントをお持ちでないですか？",
+  "authHaveAccount": "すでにアカウントをお持ちですか？",
+  "authShowPassword": "パスワードを表示",
+  "authHidePassword": "パスワードを非表示",
+  "authResetTitle": "パスワードを再設定",
+  "authResetDescription": "アカウントのメールアドレスを入力してください。パスワード変更用のリンクをお送りします。",
+  "authResetEmailSentTitle": "メールを確認",
+  "authResetEmailSent": "このメールアドレスのアカウントがある場合、パスワード再設定用のリンクが届きます。",
+  "authResetSendAgain": "再送信",
+  "authResetEditEmail": "メールアドレスを変更",
+  "authNewPasswordTitle": "新しいパスワードを設定",
+  "authNewPasswordDescription": "他のアカウントで使っていないパスワードを設定してください。",
+  "authNewPassword": "新しいパスワード",
+  "authConfirmPassword": "パスワードを再入力",
+  "authSavePassword": "パスワードを保存",
+  "authPasswordMismatch": "パスワードが一致しません。",
+  "authPasswordUnchanged": "現在とは異なるパスワードを設定してください。",
+  "authPasswordUpdatedTitle": "パスワードを更新しました",
+  "authPasswordUpdatedMessage": "新しいパスワードを保存しました。引き続きPomodoistをご利用いただけます。",
+  "authResetLinkExpired": "このパスワード再設定リンクは無効か期限切れです。新しいリンクをリクエストしてください。",
+  "authUnexpectedReset": "パスワード再設定メールを送信できませんでした。再試行してください。",
+  "authUnexpectedPasswordUpdate": "新しいパスワードを保存できませんでした。再試行してください。",
+  "authCheckingResetLink": "パスワード再設定リンクを確認中…",
+  "authSignInAction": "ログイン",
+  "authSendLink": "リンクを送信",
+  "authMagicLinkSent": "このアドレスのアカウントがある場合、ログイン用のリンクが届きます。受信トレイと迷惑メールフォルダをご確認ください。",
+  "authAccountCreated": "アカウントを作成しました。",
+  "authSignedIn": "ログインしました。",
+  "authEmailRequired": "メールアドレスを入力してください。",
+  "authEmailInvalid": "メールアドレスを確認してください（例: name@example.com）。",
+  "authPasswordRequired": "パスワードを入力してください。",
+  "authInvalidCredentials": "メールアドレスまたはパスワードが違います。アドレスを確認するか、パスワードを再設定するか、アカウントを作成してください。",
+  "authEmailUnconfirmed": "送信したリンクでメールアドレスを確認してから、再度ログインしてください。",
+  "authWeakPassword": "このパスワードは推測されやすいため、より長く推測されにくいものを使用してください。",
+  "authAccountMayExist": "このメールアドレスはすでに登録されている可能性があります。ログインするかパスワードを再設定してください。",
+  "authRateLimited": "試行回数が多すぎます。数分待ってから再試行してください。",
+  "authEmailRateLimited": "メールのリクエストが多すぎます。数分待ってから再度リクエストしてください。",
+  "authOffline": "アカウントサービスに接続できませんでした。インターネット接続を確認して再試行してください。",
+  "authTimeout": "アカウントサービスの応答に時間がかかっています。再試行してください。",
+  "authServiceUnavailable": "アカウントサービスは一時的に利用できません。後で再試行してください。",
+  "authCaptchaRequired": "セキュリティ確認を完了して続けてください。",
+  "authCaptchaExpired": "セキュリティ確認の期限が切れました。もう一度行ってください。",
+  "authCaptchaFailed": "セキュリティ確認に失敗しました。もう一度お試しください。",
+  "authCaptchaCancelled": "セキュリティ確認がキャンセルされました。続けるには再開してください。",
+  "authCaptchaUnavailable": "現在セキュリティ確認を利用できません。接続を確認して再試行してください。",
+  "authCaptchaOpenFailed": "ブラウザでセキュリティ確認を開けませんでした。標準ブラウザを確認して再試行してください。",
+  "authProviderFallback": "このプロバイダ",
+  "authProviderUnavailable": "現在{provider}でのログインは利用できません。再試行するか別の方法をお使いください。",
+  "@authProviderUnavailable": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "authSignUpDisabled": "メールでのアカウント作成は一時的に利用できません。別のログイン方法をお試しください。",
+  "authAccountRestricted": "このアカウントは現在ログインできません。誤りと思われる場合はサポートにお問い合わせください。",
+  "authLinkExpired": "このログインリンクは無効か期限切れです。新しいリンクをリクエストしてください。",
+  "authUnexpectedSignIn": "ログインできませんでした。再試行してください。",
+  "authUnexpectedSignUp": "アカウントを作成できませんでした。再試行してください。",
+  "authUnexpectedMagicLink": "ログインリンクを送信できませんでした。再試行してください。",
+  "authResendConfirmation": "確認メールを再送信",
+  "authConfirmationSendFailed": "確認メールを送信できませんでした。後で再試行してください。",
+  "authRetryVerification": "確認を再試行",
+  "captchaSecurityLabel": "セキュリティ確認",
+  "captchaChallengeTitle": "Pomodoistセキュリティ確認",
+  "captchaChallengePrompt": "人間であることを確認してPomodoistを続けてください。",
+  "captchaChallengeInvalid": "このセキュリティ確認リンクは無効です。Pomodoistに戻って再試行してください。",
+  "captchaChallengeHandoffHelp": "Pomodoistが開かない場合は下のボタンを使ってください。アプリがインストールされていない場合は、このページを閉じて開始したデバイスに戻ってください。",
+  "captchaReturnToApp": "Pomodoistに戻る",
+  "navSearch": "検索",
+  "navInbox": "受信トレイ",
+  "navPriorityMatrix": "優先度マトリクス",
+  "navTimeline": "タイムライン",
+  "navKanban": "カンバン",
+  "kanbanTitle": "カンバン",
+  "kanbanSubtitle": "作業の流れを可視化して、今大切なことに集中しましょう。",
+  "kanbanDefaultBacklog": "バックログ",
+  "kanbanDefaultTodo": "未着手",
+  "kanbanDefaultInProgress": "進行中",
+  "kanbanDefaultDone": "完了",
+  "kanbanSearchTooltip": "カンバンを検索",
+  "kanbanSearchHint": "タスクまたはプロジェクトを検索",
+  "kanbanHideDone": "完了を非表示",
+  "kanbanShowDone": "完了を表示",
+  "kanbanProjectsTitle": "このボードのプロジェクト",
+  "kanbanAddToStatus": "{status}に追加",
+  "@kanbanAddToStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "kanbanTaskField": "タスク",
+  "kanbanProjectField": "プロジェクト",
+  "kanbanChooseProject": "プロジェクトを選んでください。",
+  "kanbanTaskActions": "タスクの操作",
+  "kanbanDragTask": "タスクをドラッグ",
+  "kanbanMoveTo": "{status}に移動",
+  "@kanbanMoveTo": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "kanbanRestoreBeforeFocus": "集中を開始する前にタスクを復元してください。",
+  "kanbanCouldNotStartFocus": "集中を開始できませんでした: {error}",
+  "@kanbanCouldNotStartFocus": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "kanbanCouldNotLoad": "カンバンを読み込めませんでした: {error}",
+  "@kanbanCouldNotLoad": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "commonRetry": "再試行",
+  "commonContinueWaiting": "待機を続ける",
+  "kanbanTasksCount": "{count}件のタスク",
+  "@kanbanTasksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kanbanSubtasksProgress": "サブタスク{completed}/{total}件",
+  "@kanbanSubtasksProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "kanbanFocusIntervalsProgress": "集中インターバル{completed}/{total}回",
+  "@kanbanFocusIntervalsProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "kanbanActive": "アクティブ",
+  "kanbanPriority": "優先度{priority}",
+  "@kanbanPriority": {
+    "placeholders": {
+      "priority": {
+        "type": "int"
+      }
+    }
+  },
+  "kanbanMoveAnnouncement": "{status}に移動しました",
+  "@kanbanMoveAnnouncement": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "kanbanFocusStartedAnnouncement": "{task}の集中を開始しました",
+  "@kanbanFocusStartedAnnouncement": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "kanbanNoTasks": "まだタスクはありません",
+  "navToday": "今日",
+  "navUpcoming": "近日予定",
+  "navBrowse": "ブラウズ",
+  "navIntegrations": "連携",
+  "navReports": "レポート",
+  "navFocus": "集中",
+  "navProjects": "プロジェクト",
+  "navSettings": "設定",
+  "settingsTitle": "設定",
+  "settingsAboutTitle": "このアプリについて",
+  "settingsFocusCompletionCelebrationTitle": "集中完了のお祝い",
+  "settingsFocusCompletionCelebrationSubtitle": "最後の休憩後に全画面でお祝いを表示します。",
+  "settingsVersionLabel": "バージョン",
+  "settingsPlanLabel": "プラン",
+  "settingsPlanFree": "無料",
+  "settingsPlanPro": "Pomodoist Pro",
+  "settingsShortcutsTitle": "キーボードショートカット",
+  "settingsShortcutsSubtitle": "物理キーボードで使えるコマンドをカスタマイズします。",
+  "settingsShortcutsToggleSidebar": "サイドバーを切り替え",
+  "settingsShortcutsGlobalQuickAdd": "グローバルクイック追加",
+  "settingsShortcutsGlobalQuickAddSubtitle": "Pomodoistがアクティブでないときも使えます。",
+  "settingsShortcutsRecordTitle": "ショートカットを押してください",
+  "settingsShortcutsRecordPrompt": "Command、Control、Altのいずれかとキーを組み合わせてください。Escでキャンセルします。",
+  "settingsShortcutsInvalid": "Command、Control、Altのいずれかを含めてください。",
+  "settingsShortcutsConflict": "このショートカットはすでに使われています。",
+  "settingsShortcutsGlobalError": "このグローバルショートカットは利用できません。以前のショートカットが引き続き有効です。",
+  "settingsShortcutsResetAll": "すべてリセット",
+  "settingsShortcutsResetDone": "キーボードショートカットをリセットしました。",
+  "csvImportTitle": "CSVからタスクをインポート",
+  "csvImportSubtitle": "タスク、プロジェクト、ラベル、ワークフローのステータスを作成する前にCSVファイルを確認します。",
+  "csvImportSelectFile": "CSVファイルを選択",
+  "csvImportHumanGuideButton": "利用者向けガイド",
+  "csvImportAgentGuideButton": "エージェント向けガイド",
+  "csvImportHumanGuideTitle": "CSVファイルの準備方法",
+  "csvImportAgentGuideTitle": "エージェント向けCSV仕様",
+  "csvImportCopy": "コピー",
+  "csvImportCopied": "クリップボードにコピーしました。",
+  "csvImportPreviewTitle": "インポートを確認",
+  "csvImportPreviewTasks": "タスク",
+  "csvImportPreviewSubtasks": "サブタスク",
+  "csvImportPreviewNewProjects": "新しいプロジェクト",
+  "csvImportPreviewNewLabels": "新しいラベル",
+  "csvImportPreviewNewStatuses": "新しいワークフローステータス",
+  "csvImportNone": "なし",
+  "csvImportDuplicateWarning": "同じファイルを再度インポートするとタスクが重複します。",
+  "csvImportConfirm": "インポート",
+  "csvImportSuccess": "タスクをインポートしました",
+  "csvImportErrorTitle": "CSVのインポートに失敗しました",
+  "csvImportUnexpectedError": "ファイルをインポートできませんでした。",
+  "csvImportHumanGuide": "1. ファイルをUTF-8のCSVで保存します。区切りにはカンマ（推奨）またはセミコロンを使ってください。\n\n2. content列は必須です。次の列も使用できます: key, description, project, labels, priority, due_date, start_at, end_at, time_zone, recurrence, recurrence_interval, deadline, estimate, kanban_status, parent_key。\n\n3. 1行につき未完了のタスクを1つ入力します。ラベルは|で区切ります。優先度は1～4で、空欄は4です。プロジェクトが空欄なら受信トレイ、ステータスが空欄ならバックログになります。存在しないプロジェクト、ラベル、未完了のステータスは自動作成されます。\n\n4. 終日タスクはdue_dateをYYYY-MM-DD形式にします。時間指定のタスクはstart_atとend_atをUTCオフセット付きRFC3339形式で入力し、Europe/MoscowなどのIANA time_zoneを指定します。\n\n5. サブタスクを作るには、親の行に一意のkeyを設定し、子のparent_keyにその値を入力します。親はファイルの後ろにあっても構いません。子は親と同じプロジェクトにする必要があります。\n\n6. Pomodoistはファイル全体を検証し、インポート前にプレビューを表示します。無効な行があれば何も保存されません。再インポートするとタスクが重複します。",
+  "settingsConnectedAgentsTitle": "接続済みエージェント",
+  "settingsConnectedAgentsLoading": "接続済みエージェントを読み込み中…",
+  "settingsConnectedAgentsEmpty": "接続済みのエージェントはありません。",
+  "settingsConnectedAgentsLoadError": "接続済みエージェントを読み込めませんでした。",
+  "settingsConnectedAgentsUnknownClient": "エージェント",
+  "settingsConnectedAgentsConnectedOn": "{date}に接続",
+  "@settingsConnectedAgentsConnectedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsConnectedAgentsRevoke": "アクセス権を取り消す",
+  "settingsConnectedAgentsRevokeConfirmTitle": "エージェントのアクセス権を取り消しますか？",
+  "settingsConnectedAgentsRevokeConfirmMessage": "{clientName}のPomodoistへのアクセス権を取り消しますか？",
+  "@settingsConnectedAgentsRevokeConfirmMessage": {
+    "placeholders": {
+      "clientName": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsConnectedAgentsRevokeError": "アクセス権を取り消せませんでした。再試行してください。",
+  "settingsLanguageTitle": "言語",
+  "settingsLanguageSubtitle": "アプリの言語を選びます。",
+  "settingsLanguageSystem": "システムのデフォルト",
+  "settingsVoiceTranscriptionTitle": "音声文字起こし",
+  "settingsVoiceTranscriptionSubtitle": "このデバイスで録音を文字に変換する方法を選びます。",
+  "settingsVoiceTranscriptionSystem": "システム（Apple）",
+  "settingsVoiceTranscriptionCloud": "クラウド",
+  "settingsVoiceTranscriptionCloudDescription": "クラウド文字起こしは音声をPomodoistに送信し、インターネット接続が必要です。",
+  "settingsVoiceTranscriptionCloudRequiresSignIn": "クラウド文字起こしを使うにはログインしてください。それまではシステムの文字起こしが有効です。",
+  "settingsThemeTitle": "テーマ",
+  "settingsThemeSubtitle": "アプリの外観を選びます。",
+  "settingsThemeSystem": "システム",
+  "settingsThemeLight": "ライト",
+  "settingsThemeDark": "ダーク",
+  "settingsTimerVisualTitle": "ポモドーロタイマー",
+  "settingsTimerVisualSubtitle": "集中画面での進捗表示を選びます。",
+  "settingsTimerVisualBar": "バー",
+  "settingsTimerVisualCircle": "円",
+  "settingsReturnRemindersTitle": "再開リマインダー",
+  "settingsReturnRemindersSubtitle": "今日タスクを1つも完了していない場合、20:30にお知らせします。",
+  "settingsDefaultTimedBlockTitle": "カレンダーブロックの既定時間",
+  "settingsDefaultTimedBlockSubtitle": "時刻のみを入力した新規タスクには、このカレンダー上の長さを使います。",
+  "settingsDefaultTimedBlockCustomLabel": "カスタム時間",
+  "settingsDefaultTimedBlockError": "1～480分を入力してください。",
+  "settingsTaskTimeDisplayTitle": "タスクの時刻表示",
+  "settingsTaskTimeDisplaySubtitle": "時間指定タスクの予定表示を選びます。",
+  "settingsTaskTimeDisplaySmart": "スマート",
+  "settingsTaskTimeDisplayRange": "開始時刻と終了時刻",
+  "settingsTaskTimeDisplayStartOnly": "開始時刻のみ",
+  "taskTimeStatusFuture": "今後の予定",
+  "taskTimeStatusFocused": "集中中",
+  "taskTimeStatusCurrent": "進行中",
+  "taskTimeStatusOverdue": "期限切れ",
+  "taskTimeStatusCompleted": "完了",
+  "menuTooltip": "メニュー",
+  "localUser": "ローカルユーザー",
+  "addTask": "タスクを追加",
+  "quickAddHint": "同期機能を作る 明日 p1 #App @coding 4p",
+  "couldNotAddTask": "タスクを追加できませんでした: {error}",
+  "@couldNotAddTask": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "taskCreateFailed": "タスクを作成できませんでした。再試行してください。",
+  "couldNotAddProject": "プロジェクトを追加できませんでした: {error}",
+  "@couldNotAddProject": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "tasksCreated": "{count, plural, =1{1件のタスクを追加しました} other{{count}件のタスクを追加しました}}",
+  "@tasksCreated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "voiceQuickAdd": "音声クイック追加",
+  "voiceTitle": "音声追加",
+  "voiceRecord": "録音",
+  "voiceAgain": "もう一度",
+  "voiceStop": "停止",
+  "voiceAddCount": "{count}件追加",
+  "@voiceAddCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "voiceTaskLabel": "タスク{index}",
+  "@voiceTaskLabel": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "voiceRemoveTask": "削除",
+  "voiceInstruction": "録音をタップしてタスクを話してください。",
+  "voiceStatusIdle": "内蔵マイク入力のみ",
+  "voiceStatusRequestingPermission": "アクセスをリクエスト中",
+  "voiceStatusRecording": "内蔵マイクで聞き取り中",
+  "voiceStatusTranscribing": "録音を文字起こし中",
+  "voiceStatusCanceled": "録音をキャンセルしました",
+  "voiceStatusUnsupported": "未対応のプラットフォームです",
+  "voiceStatusError": "音声を認識できませんでした",
+  "voiceStatusAnalyzing": "タスクに分割中",
+  "voiceStatusReview": "追加前にタスクを確認",
+  "voiceStepRecord": "録音",
+  "voiceStepText": "テキスト",
+  "voiceStepAnalyze": "解析",
+  "voiceStepReview": "確認",
+  "voiceAnalyzing": "Pomodoistが音声をタスクに分割しています",
+  "voiceFallbackError": "音声を処理できませんでした。手動で編集できるよう下書きを保存しました。",
+  "voiceMicrophoneUnavailable": "現在マイクを利用できません。通話やボイスチャットを終了して再試行してください。",
+  "voiceSmartMode": "スマートモード",
+  "voiceRetryTranscription": "文字起こしを再試行",
+  "voiceRecordingSaved": "このデバイスに録音を保存しました。録り直さずに再試行できます。",
+  "voiceAllowAccess": "アクセスを許可",
+  "voiceOpenMicrophoneSettings": "マイク設定を開く",
+  "voiceOpenSpeechSettings": "音声認識の設定を開く",
+  "voiceEnableDictation": "音声入力を有効にする",
+  "voiceUseCloudTranscription": "クラウド文字起こしを使う",
+  "voiceMicrophoneDenied": "システム設定でマイクへのアクセスを許可してください。",
+  "voiceSpeechDenied": "システム設定で音声認識を許可してください。",
+  "voiceAccessRestricted": "管理者またはスクリーンタイムの設定でアクセスが制限されています。",
+  "voiceDictationDisabled": "システム設定 → キーボード → 音声入力で音声入力を有効にし、言語を選んでから再試行してください。",
+  "voiceServiceUnavailable": "音声認識を利用できません。接続を確認してください。Macではシステム設定 → キーボード → 音声入力と言語も確認してください。",
+  "voiceCloudServiceUnavailable": "クラウド文字起こしに失敗しました。インターネット接続を確認し、保存した録音で再試行してください。",
+  "voiceLocaleUnsupported": "このデバイスのシステム音声認識は選択した言語に対応していません。",
+  "voiceNetworkUnavailable": "この言語の音声認識にはインターネット接続が必要です。再接続して再試行してください。",
+  "voiceSettingsFailed": "設定を開けませんでした。システム設定を手動で開き、マイクと音声認識のアクセス権を確認してください。Macではキーボード → 音声入力も確認してください。",
+  "voiceRetryAnalysis": "解析を再試行",
+  "screenInboxSubtitle": "整理する前にタスクを記録しましょう。",
+  "priorityMatrixSubtitle": "タスクを優先度間でドラッグします。日付は同じ優先度内の並び順にのみ使われます。",
+  "priorityMatrixP1Title": "今すぐ実行",
+  "priorityMatrixP2Title": "予定する",
+  "priorityMatrixP3Title": "任せる",
+  "priorityMatrixP4Title": "手放す",
+  "priorityMatrixAxisUrgent": "緊急",
+  "priorityMatrixAxisNotUrgent": "緊急ではない",
+  "priorityMatrixAxisImportant": "重要",
+  "priorityMatrixAxisNotImportant": "重要ではない",
+  "timelineSubtitle": "時間グリッドで1日の予定を立てます。",
+  "timelineAllDay": "終日",
+  "timelineBeforeHours": "表示時間より前",
+  "timelineAfterHours": "表示時間より後",
+  "timelineVisibleHours": "表示時間",
+  "timelineStartHour": "開始",
+  "timelineEndHour": "終了",
+  "timelineZoomOut": "縮小",
+  "timelineZoomIn": "拡大",
+  "timelineAddTimedHint": "{time}のタスク",
+  "@timelineAddTimedHint": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineAddAllDayHint": "終日タスク",
+  "timelineNoAllDayTasks": "終日タスクはありません",
+  "timelineNoTimedTasks": "時間指定のタスクはありません",
+  "timelinePreviousDay": "前日",
+  "timelineNextDay": "翌日",
+  "timelinePickDate": "日付を選択",
+  "upcomingPreviousPeriod": "前の期間",
+  "upcomingNextPeriod": "次の期間",
+  "upcomingOpenDatePicker": "日付選択を開く",
+  "upcomingTaskCount": "{count, plural, =0{タスクなし} =1{1件のタスク} other{{count}件のタスク}}",
+  "@upcomingTaskCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "screenTodayFocusSummary": "集中予定: {planned}回 - 完了: {completed}回 - 集中: {focus}",
+  "@screenTodayFocusSummary": {
+    "placeholders": {
+      "planned": {
+        "type": "int"
+      },
+      "completed": {
+        "type": "int"
+      },
+      "focus": {
+        "type": "String"
+      }
+    }
+  },
+  "screenUpcomingSubtitle": "明日以降に予定されているタスク。",
+  "screenUpcomingSelectedSubtitle": "{date}に予定されているタスク。",
+  "@screenUpcomingSelectedSubtitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "noTasksHere": "ここにタスクはありません",
+  "noUpcomingTasks": "日付付きのタスクはありません",
+  "noTasksForDay": "この日の予定タスクはありません",
+  "failedToLoadTasks": "タスクの読み込みに失敗しました: {error}",
+  "@failedToLoadTasks": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "searchTasks": "タスクを検索",
+  "searchStartTyping": "入力してタスクを検索",
+  "searchNoMatches": "一致するタスクはありません",
+  "failedToSearchTasks": "タスクの検索に失敗しました: {error}",
+  "@failedToSearchTasks": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "previousMonth": "前の月",
+  "nextMonth": "次の月",
+  "clearDateFilter": "日付フィルターをクリア",
+  "weekMon": "月",
+  "weekTue": "火",
+  "weekWed": "水",
+  "weekThu": "木",
+  "weekFri": "金",
+  "weekSat": "土",
+  "weekSun": "日",
+  "browseTitle": "ブラウズ",
+  "unifiedAccount": "統合アカウント",
+  "accountUnavailable": "アカウントを利用できません: {error}",
+  "@accountUnavailable": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "signOut": "ログアウト",
+  "deleteAccount": "アカウントを削除",
+  "deleteAccountConfirmation": "アカウント、クラウドデータ、ローカルのタスク、プロジェクト、集中履歴を完全に削除します。元には戻せません。ストアのサブスクリプションは自動解約されません。「Appleでサインイン」を使用した場合は、Apple Accountの設定からPomodoistへのアクセスを別途取り消してください。",
+  "manageSignInWithApple": "Appleでサインインを管理",
+  "deleteAccountFinalConfirmation": "本当によろしいですか？これが最後の確認です。",
+  "deleteAccountError": "アカウントを削除できませんでした: {error}",
+  "@deleteAccountError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "accountDeleted": "アカウントを削除しました。",
+  "accountDeletedLocalCleanupError": "アカウントを削除しましたが、ローカルデータを消去できませんでした。このデバイスを再び使う前にアプリのデータを消去してください。",
+  "browseSevenDays": "7日間",
+  "browseOpenNow": "現在の未完了",
+  "browseQueueLoading": "保留中の変更を読み込み中…",
+  "browseQueueUnavailable": "保留中の変更を読み込めませんでした。",
+  "browseQueueExplanation": "送信待ちのローカル変更を表示します。キューが空でも、すべてのデバイスが最新であるとは限りません。",
+  "productivityTitle": "生産性",
+  "achievementsTitle": "実績",
+  "allTimeLabel": "全期間",
+  "lastSevenDaysLabel": "過去7日間",
+  "noWeeklyStatsLabel": "集中やタスクのデータはまだありません",
+  "completedFocuses": "完了した集中",
+  "completedTasks": "完了したタスク",
+  "unlocked": "獲得済み",
+  "locked": "未獲得",
+  "progressLabel": "進捗",
+  "focusAchievements": "集中の実績",
+  "taskAchievements": "タスクの実績",
+  "comboAchievements": "コンボの実績",
+  "focusIntervals": "集中インターバル",
+  "focusTime": "集中時間",
+  "openTasks": "未完了タスク",
+  "plannedIntervals": "予定インターバル",
+  "labelsTitle": "ラベル",
+  "newProject": "新しいプロジェクト",
+  "newLabel": "新しいラベル",
+  "syncReadyQueue": "同期待ちキュー",
+  "pendingLocalCommands": "{count, plural, =0{保留中のローカルコマンドなし} =1{保留中のローカルコマンド1件} other{保留中のローカルコマンド{count}件}}",
+  "@pendingLocalCommands": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedToLoadProjects": "プロジェクトの読み込みに失敗しました: {error}",
+  "@failedToLoadProjects": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "failedToLoadLabels": "ラベルの読み込みに失敗しました: {error}",
+  "@failedToLoadLabels": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "addProject": "プロジェクトを追加",
+  "projectName": "プロジェクト名",
+  "addLabel": "ラベルを追加",
+  "labelName": "ラベル名",
+  "couldNotAddLabel": "ラベルを追加できませんでした: {error}",
+  "@couldNotAddLabel": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "projectsUnavailable": "プロジェクトを利用できません: {error}",
+  "@projectsUnavailable": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "projectsUnavailableShort": "プロジェクトを利用できません",
+  "noProjects": "プロジェクトなし",
+  "searchProjects": "プロジェクトを検索",
+  "searchLabels": "ラベルを検索",
+  "archivedProjectsOnly": "アーカイブ済みプロジェクトのみ",
+  "projectsCount": "{count, plural, =1{1件のプロジェクト} other{{count}件のプロジェクト}}",
+  "@projectsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noLabels": "ラベルなし",
+  "labelsCount": "{count, plural, =1{1個のラベル} other{{count}個のラベル}}",
+  "@labelsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "renameProject": "プロジェクト名を変更",
+  "deleteProject": "プロジェクトを削除",
+  "deleteLabel": "ラベルを削除",
+  "deleteProjectConfirmation": "「{name}」を削除しますか？このプロジェクトのタスクは受信トレイに移動します。",
+  "@deleteProjectConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteLabelConfirmation": "「{name}」を削除しますか？",
+  "@deleteLabelConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotDeleteProject": "プロジェクトを削除できませんでした: {error}",
+  "@couldNotDeleteProject": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "couldNotDeleteLabel": "ラベルを削除できませんでした: {error}",
+  "@couldNotDeleteLabel": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "projectsCountCompact": "プロジェクト: {count}",
+  "@projectsCountCompact": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "collapseProjects": "プロジェクトを折りたたむ",
+  "expandProjects": "プロジェクトを展開",
+  "projectFallbackTitle": "プロジェクト",
+  "projectSubtitle": "リスト表示です。ボードとカレンダーは今後対応予定です。",
+  "reportsTitle": "レポート",
+  "reportsFocusedDay": "今日はここまで集中できました",
+  "reportsThisWeek": "今週の集中",
+  "reportsNextAchievement": "次の実績",
+  "viewAllAchievements": "すべての実績を見る",
+  "viewAllAchievementsCount": "全{count}件を見る",
+  "@viewAllAchievementsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "allAchievementsUnlocked": "すべての実績を獲得しました",
+  "noAchievementsYet": "まだ実績はありません",
+  "failedToLoadAchievements": "実績の読み込みに失敗しました: {error}",
+  "@failedToLoadAchievements": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "backToReports": "レポートに戻る",
+  "reportsIntervalProgressSemantics": "集中インターバル{completed}/{target}回完了",
+  "@reportsIntervalProgressSemantics": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "reportsIntervalCountSemantics": "集中インターバル{completed}回完了、目標未設定",
+  "@reportsIntervalCountSemantics": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      }
+    }
+  },
+  "reportsWeeklyChartSemantics": "過去7日間の集中時間: {summary}",
+  "@reportsWeeklyChartSemantics": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadReports": "レポートの読み込みに失敗しました: {error}",
+  "@failedToLoadReports": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "taskNotFound": "タスクが見つかりません",
+  "taskTitleHint": "タスクのタイトル",
+  "taskComment": "コメント",
+  "taskCommentHint": "コメントを追加",
+  "subtasks": "サブタスク",
+  "addSubtask": "サブタスクを追加",
+  "addSubtaskHint": "サブタスクを追加",
+  "noSubtasks": "まだサブタスクはありません。",
+  "makeParentTask": "親タスクにする",
+  "couldNotMoveTask": "タスクを移動できませんでした: {error}",
+  "@couldNotMoveTask": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "scheduleTitle": "予定",
+  "allDay": "終日",
+  "timedBlock": "時間枠",
+  "recurrenceTitle": "繰り返し",
+  "recurrenceNeedsSchedule": "繰り返す前に日付または時刻を追加してください。",
+  "recurrenceIntervalLabel": "間隔",
+  "recurrenceUnitDay": "日",
+  "recurrenceUnitWeek": "週",
+  "recurrenceUnitMonth": "月",
+  "recurrenceInvalidInterval": "1～999を入力してください。",
+  "recurrenceEveryDays": "{interval, plural, =1{毎日} other{{interval}日ごと}}",
+  "@recurrenceEveryDays": {
+    "placeholders": {
+      "interval": {
+        "type": "int"
+      }
+    }
+  },
+  "recurrenceEveryWeeks": "{interval, plural, =1{毎週} other{{interval}週ごと}}",
+  "@recurrenceEveryWeeks": {
+    "placeholders": {
+      "interval": {
+        "type": "int"
+      }
+    }
+  },
+  "recurrenceEveryMonths": "{interval, plural, =1{毎月} other{{interval}か月ごと}}",
+  "@recurrenceEveryMonths": {
+    "placeholders": {
+      "interval": {
+        "type": "int"
+      }
+    }
+  },
+  "noDate": "日付なし",
+  "calendarNotLinked": "カレンダー未連携",
+  "calendarLinked": "Googleカレンダー連携済み",
+  "focusProgress": "集中{completed}/{total}",
+  "@focusProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "startFocus": "集中を開始",
+  "focusStarted": "集中を開始しました",
+  "taskReopened": "タスクを未完了に戻しました",
+  "taskCompleted": "タスクを完了しました",
+  "taskDeleted": "タスクを削除しました",
+  "recurringDeleteTitle": "繰り返しタスクを削除しますか？",
+  "recurringDeleteMessage": "このタスクは繰り返しの一部です。",
+  "recurringDeleteThis": "このタスクを削除",
+  "recurringDeleteThisAndFollowing": "このタスク以降を削除",
+  "markOpen": "未完了にする",
+  "markComplete": "完了にする",
+  "focusHistory": "集中履歴",
+  "failedToLoadTask": "タスクの読み込みに失敗しました: {error}",
+  "@failedToLoadTask": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "noFocusIntervals": "まだ集中インターバルはありません。",
+  "today": "今日",
+  "tomorrow": "明日",
+  "yesterday": "昨日",
+  "clearDate": "日付をクリア",
+  "priority": "優先度{priority}",
+  "@priority": {
+    "placeholders": {
+      "priority": {
+        "type": "int"
+      }
+    }
+  },
+  "focusTitle": "集中",
+  "focusLoadError": "集中を読み込めませんでした: {error}",
+  "@focusLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "focusViewFull": "詳細",
+  "focusViewMinimal": "シンプル",
+  "focusSwitchToFullView": "詳細表示に切り替え",
+  "focusSwitchToMinimalView": "シンプル表示に切り替え",
+  "focusActionFailed": "集中を更新できませんでした。再試行してください。",
+  "noActiveSession": "実行中のセッションなし",
+  "focusIdleSubtitle": "単独の集中インターバルを開始するか、タスクから集中を開始します。",
+  "noPreset": "プリセットなし",
+  "preparingFocus": "集中を準備中",
+  "moreFocusOptions": "その他の集中オプション",
+  "moreFocusActions": "その他の集中操作",
+  "preset": "プリセット",
+  "newPreset": "新しいプリセット",
+  "customize": "カスタマイズ",
+  "customizePreset": "プリセットをカスタマイズ",
+  "startInterval": "インターバルを開始",
+  "intervalStarted": "インターバルを開始しました",
+  "intervalCompleted": "インターバルを完了しました",
+  "focusStopped": "集中を停止しました",
+  "focusCompletionTitle": "よくできました！",
+  "focusCompletionLinkedSubtitle": "このタスクで予定した集中インターバルがすべて完了しました。",
+  "focusCompletionStandaloneSubtitle": "集中サイクルが完了しました。",
+  "focusCompletionQuestion": "このタスクを完了しますか？",
+  "focusCompletionCompleteTask": "タスクを完了",
+  "focusCompletionKeepOpen": "タスクを未完了のままにする",
+  "focusCompletionDone": "完了",
+  "focusCompletionNextTask": "次の予定タスク",
+  "focusCompletionTaskError": "タスクを完了できませんでした: {error}",
+  "@focusCompletionTaskError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "completeInterval": "インターバルを完了",
+  "logDistraction": "気が散ったことを記録",
+  "workInterval": "作業インターバル",
+  "work": "作業",
+  "shortBreak": "短い休憩",
+  "breakLabel": "休憩",
+  "longBreak": "長い休憩",
+  "readyLabel": "準備完了: {label}",
+  "@readyLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "readyShort": "準備完了",
+  "focusTimerTotal": "全{duration}",
+  "@focusTimerTotal": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "focusSessionProgress": "セッション{current}/{total}",
+  "@focusSessionProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "focusRhythmPreviewSummary": "集中リズムのプレビュー、{count}ステップ",
+  "@focusRhythmPreviewSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "focusRhythmSummary": "集中リズム、ステップ{current}/{total}: {phase}、{status}",
+  "@focusRhythmSummary": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "phase": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "focusTimerSummary": "{phase}、{status}、残り{remaining}、合計{total}",
+  "@focusTimerSummary": {
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      },
+      "remaining": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "focusStatusRunning": "実行中",
+  "focusStatusPaused": "一時停止中",
+  "focusWorkProgress": "作業{completed}/{total}",
+  "@focusWorkProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "intervalNumber": "インターバル{number}",
+  "@intervalNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "focusIntervalSummary": "作業{completed}/{total} - インターバル{number}",
+  "@focusIntervalSummary": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "pause": "一時停止",
+  "resume": "再開",
+  "presetForNextIntervals": "次のインターバルのプリセット",
+  "usePreset": "{name}を使う",
+  "@usePreset": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "minutesWork": "作業{minutes}分",
+  "@minutesWork": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesShort": "短い休憩{minutes}分",
+  "@minutesShort": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesLong": "長い休憩{minutes}分",
+  "@minutesLong": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "longEvery": "{count}回ごとに長い休憩",
+  "@longEvery": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autoBreaks": "自動休憩",
+  "autoWork": "自動作業",
+  "noPause": "一時停止なし",
+  "focusPauseUnavailable": "このプリセットでは一時停止できません",
+  "strict": "厳格",
+  "flexible": "柔軟",
+  "name": "名前",
+  "workField": "作業",
+  "shortField": "短い休憩",
+  "longField": "長い休憩",
+  "every": "間隔",
+  "minutesSuffix": "分",
+  "makeDefault": "デフォルトにする",
+  "autoStartBreaks": "休憩を自動開始",
+  "autoStartWork": "作業を自動開始",
+  "allowPause": "一時停止を許可",
+  "strictMode": "厳格モード",
+  "nameRequired": "名前は必須です",
+  "nameMustBeUnique": "名前は重複できません",
+  "googleCalendarTitle": "Googleカレンダー",
+  "googleCalendarConnectedSubtitle": "Pomodoistカレンダーの双方向同期が有効です。",
+  "googleCalendarDisconnectedSubtitle": "Googleアカウントを接続して予定タスクを同期します。",
+  "googleCalendarConnectedOnAnotherDeviceSubtitle": "Googleカレンダーの同期は別のデバイスで動作しています。Pomodoistのデータはこのデバイスでも同期されます。",
+  "syncNow": "今すぐ同期",
+  "useThisDevice": "このデバイスを使う",
+  "connect": "接続",
+  "disconnect": "接続解除",
+  "failedToLoadIntegration": "連携の読み込みに失敗しました: {error}",
+  "@failedToLoadIntegration": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "googleCalendarFailed": "Googleカレンダーのエラー: {message}",
+  "@googleCalendarFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "googleAuthRequired": "Googleカレンダーの認証が必要です。再度ログインし、「今すぐ同期」を実行してください。",
+  "googleSignInNotConfigured": "Googleログインが未設定です。このiOSターゲットにGOOGLE_CLIENT_IDとGOOGLE_REVERSED_CLIENT_IDを設定してください。",
+  "googleCallbackNotConfigured": "Googleログインのコールバックが未設定です。ios/Flutter/GoogleOAuth.xcconfigにGOOGLE_REVERSED_CLIENT_IDを設定してください。",
+  "googleWebButtonFirst": "ウェブでは先にGoogleログインボタンを押し、その後「接続」を押してください。",
+  "googleAccessDenied": "Googleへのアクセスが拒否されました。このGoogleアカウントをOAuthテストユーザーに追加するか、OAuthアプリを公開して検証してください。",
+  "status": "状態",
+  "account": "アカウント",
+  "calendar": "カレンダー",
+  "calendarId": "カレンダーID",
+  "lastSync": "最終同期",
+  "notConnected": "未接続",
+  "notCreated": "未作成",
+  "never": "なし",
+  "durationMinutes": "{minutes}分",
+  "@durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}時間{minutes}分",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "projectIcon": "プロジェクトアイコン",
+  "projectIconOption": "アイコン{number}",
+  "@projectIconOption": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "projectColor": "プロジェクトの色",
+  "projectColorOption": "色{number}",
+  "@projectColorOption": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "addProjectToFavorites": "プロジェクトをお気に入りに追加",
+  "removeProjectFromFavorites": "プロジェクトをお気に入りから削除",
+  "timelineProjectsMenu": "タイムラインのプロジェクトを管理",
+  "timelineShowProject": "タイムラインにプロジェクトを表示",
+  "timelineHideProject": "一時的なプロジェクトを非表示",
+  "timelineCollapseProject": "プロジェクトの枝を折りたたむ",
+  "timelineExpandProject": "プロジェクトの枝を展開",
+  "timelineCurrentTime": "現在時刻",
+  "couldNotUpdateProject": "プロジェクトを更新できませんでした: {error}",
+  "@couldNotUpdateProject": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "commonDone": "完了",
+  "taskSelect": "選択",
+  "taskSelectedCount": "{count, plural, =0{0件選択} =1{1件選択} other{{count}件選択}}",
+  "@taskSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "taskSelectAll": "すべて選択",
+  "taskDeselectAll": "選択をすべて解除",
+  "taskDue": "期限",
+  "taskProject": "プロジェクト",
+  "taskLabels": "ラベル",
+  "taskPriority": "優先度",
+  "taskMore": "その他",
+  "taskSchedule": "予定",
+  "taskMove": "移動",
+  "taskDuplicate": "複製",
+  "taskDuplicateTitle": "タスクを複製",
+  "taskDuplicateSelectedOnly": "選択したもののみ",
+  "taskDuplicateWithSubtasks": "サブタスクを含める",
+  "taskWeekend": "今週末",
+  "taskNextWeek": "来週",
+  "taskEnterDue": "期限の日付または時刻を入力",
+  "taskInvalidDue": "有効な日付または時刻を入力してください",
+  "taskClearDue": "期限をクリア",
+  "taskDeleteSelectedTitle": "選択したタスクを削除しますか？",
+  "taskDeleteSelectedMessage": "7秒以内なら元に戻せます。",
+  "taskCompleteSelected": "選択したタスクを完了",
+  "taskReopenSelected": "選択したタスクを未完了に戻す",
+  "taskActionFailedCount": "{count, plural, =1{1件のタスクを更新できませんでした} other{{count}件のタスクを更新できませんでした}}",
+  "@taskActionFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "voiceCollapse": "音声パネルを折りたたむ",
+  "voiceExpand": "音声パネルを展開",
+  "voiceMovePanel": "音声パネルを移動",
+  "themeClassic": "クラシック",
+  "themeOcean": "オーシャン",
+  "themeForest": "フォレスト",
+  "themeCustomize": "カスタマイズ",
+  "themeEditorTitle": "テーマを編集",
+  "themeLivePreview": "変更はアプリ全体に反映されます。キャンセルすると以前のテーマに戻ります。",
+  "themeSaveError": "テーマを保存できませんでした。変更は保持されています。再試行してください。",
+  "themeLoadError": "テーマを読み込めませんでした。",
+  "themeColorsSurfaces": "背景とサーフェス",
+  "themeColorsText": "テキスト",
+  "themeColorsAccent": "アクセント",
+  "themeColorsStatus": "状態の色",
+  "themeInvalidHex": "6桁のHEXカラーを入力してください（例: #2563EB）。",
+  "themeLowContrast": "コントラストが低いため、一部の文字が読みにくい可能性があります。",
+  "themePreviewTask": "1日を計画する",
+  "themePreviewSecondary": "毎日、少しずつ集中を。",
+  "themeColorCanvas": "背景",
+  "themeColorSurface": "サーフェス",
+  "themeColorSurfaceTint": "副サーフェス",
+  "themeColorSurfaceHover": "ホバー時のサーフェス",
+  "themeColorPrimaryText": "主要テキスト",
+  "themeColorSecondaryText": "補助テキスト",
+  "themeColorMutedText": "控えめなテキスト",
+  "themeColorBorder": "枠線",
+  "themeColorAccent": "アクセントの文字とアイコン",
+  "themeColorAccentFill": "アクセントの塗り",
+  "themeColorAccentTint": "淡いアクセントの塗り",
+  "themeColorWarning": "警告",
+  "themeColorInfo": "情報",
+  "themeColorSuccess": "成功",
+  "themeColorError": "エラー",
+  "themeColorOverdue": "期限切れ",
+  "themeColorOnAccent": "アクセント背景の文字",
+  "themeColorOnError": "エラー背景の文字",
+  "todayTaskSummary": "{tasks, plural, one{タスク1件} other{タスク{tasks}件}} · {planned, plural, one{予定セッション1回} other{予定セッション{planned}回}} · 集中{time}",
+  "@todayTaskSummary": {
+    "placeholders": {
+      "tasks": {
+        "type": "int"
+      },
+      "planned": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todayFocusingOn": "集中しているタスク",
+  "openFocus": "集中を開く",
+  "todayCompletedTasks": "今日の完了 · {count}",
+  "@todayCompletedTasks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sidebarDaily": "毎日",
+  "sidebarViews": "ビュー",
+  "quickAddResetDetails": "デフォルトを使う",
+  "quickAddChangeTime": "時刻を変更",
+  "quickAddProjectNameUnsupported": "このプロジェクト名は変更せずに挿入できません。",
+  "themeSepia": "セピア",
+  "themeGraphite": "グラファイト",
+  "themeCustom": "カスタム",
+  "themeResetToClassic": "クラシックにリセット",
+  "themeBackgroundKindTitle": "背景",
+  "themeBackgroundColor": "色",
+  "themeBackgroundPhoto": "写真",
+  "themeBackgroundGlass": "macOSガラス",
+  "themeBackgroundGlassHint": "アプリ全体とクイック追加に適用します。ぼかしはmacOSが制御し、スライダーでパレットの色合いを調整します。",
+  "themeBackgroundGlassUnavailable": "macOSアプリで利用できます。このプラットフォームでは単色の背景を使います。",
+  "themeBackgroundTitle": "背景画像",
+  "themeBackgroundMainOnly": "メイン領域のみ",
+  "themeBackgroundWholeApp": "アプリ全体",
+  "themeBackgroundSeparate": "個別の背景",
+  "themeBackgroundMain": "メイン領域",
+  "themeBackgroundSidebar": "サイドバー",
+  "themeBackgroundQuickAdd": "クイック追加",
+  "themeBackgroundChoose": "写真を選択",
+  "themeBackgroundReplace": "写真を変更",
+  "themeBackgroundRemove": "写真を削除",
+  "themeBackgroundDim": "暗さ",
+  "themeBackgroundBlur": "ぼかし",
+  "themeBackgroundEmpty": "写真なし",
+  "themeBackgroundImageError": "この画像を開けませんでした。別の写真を選んでください。",
+  "themeBackgroundTooLarge": "50MB以下の画像を選んでください。",
+  "themeBackgroundLoading": "画像を準備中…",
+  "settingsTaskListStyle": "タスク行のスタイル",
+  "settingsTaskListStyleDescription": "新しいレイアウトか、使い慣れたクラシックな行を選びます。",
+  "settingsTaskListModern": "モダン",
+  "settingsTaskListClassic": "クラシック",
+  "settingsTaskRowSpacing": "タスクの間隔",
+  "settingsTaskRowSpacingCompact": "コンパクト",
+  "settingsTaskRowSpacingComfortable": "標準",
+  "settingsTaskRowSpacingSpacious": "広め",
+  "settingsSaveError": "設定を保存できませんでした。再試行してください。",
+  "focusCompletionCompleteAndNext": "完了して次を開始",
+  "focusCompletionStartNext": "次のタスクを開始",
+  "focusCompletionRetry": "再試行",
+  "searchAllProjects": "すべてのプロジェクト",
+  "searchStatusOpen": "未完了",
+  "searchStatusCompleted": "完了",
+  "searchStatusAll": "すべての状態",
+  "searchClearFilters": "フィルターをクリア",
+  "searchEmptyDescription": "タイトルや説明でタスクを探し、プロジェクトや状態で絞り込めます。",
+  "searchNoMatchesDescription": "別の語句を試すか、フィルターをクリアしてください。このテキストから新しいタスクを作ることもできます。",
+  "searchCreateTask": "テキストからタスクを作成",
+  "taskListLoadError": "タスクを読み込めませんでした。再試行してください。",
+  "inboxEmptyTitle": "受信トレイは空です",
+  "inboxEmptyDescription": "ここにアイデアを記録して、いつ取り組むかは後で決めましょう。",
+  "todayEmptyTitle": "今日の予定はありません",
+  "todayEmptyDescription": "タスクを追加して今日を始めましょう。",
+  "todayEmptyCompletedTitle": "今日のリストは完了です",
+  "todayEmptyCompletedDescription": "完了したタスクは下に保存されています。準備ができたら次のタスクを追加しましょう。",
+  "projectEmptyTitle": "このプロジェクトにはまだタスクがありません",
+  "projectEmptyDescription": "プロジェクトの目標に向けた最初の一歩を追加しましょう。",
+  "commandSearchPlaceholder": "タスク、プロジェクト、操作を検索",
+  "commandSearchTasks": "タスク",
+  "commandSearchActions": "操作",
+  "commandSearchDictateTask": "タスクを音声入力",
+  "commandSearchAllResults": "すべての結果を見る",
+  "commandSearchHint": "↑ ↓ 移動 · Enter 開く · Esc 閉じる",
+  "commandSearchNoMatches": "一致するタスクやプロジェクトはありません。",
+  "overdueTitle": "期限切れ",
+  "overdueTaskCount": "{count, plural, one{期限切れのタスク{count}件} other{期限切れのタスク{count}件}}",
+  "@overdueTaskCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "overdueReview": "確認",
+  "overdueEmpty": "期限切れのタスクはありません",
+  "taskFocusSwitchTitle": "集中を切り替えますか？",
+  "taskFocusSwitchMessage": "現在のセッションを停止します。「{task}」の集中を開始しますか？",
+  "@taskFocusSwitchMessage": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "taskFocusSwitchConfirm": "切り替え",
+  "labelIcon": "ラベルアイコン",
+  "labelUpdateFailed": "ラベルを更新できませんでした。再試行してください。",
+  "labelNotFound": "ラベルが見つかりません",
+  "labelTasksSubtitle": "すべてのプロジェクトでこのラベルの付いたタスク",
+  "labelIconOption": "{icon, select, tag{タグ} bookmark{ブックマーク} flag{旗} bolt{稲妻} lightbulb{電球} clock{時計} bell{ベル} pin{ピン} phone{電話} mail{メール} link{リンク} wrench{レンチ} other{タグ}}",
+  "@labelIconOption": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
+  "addSubproject": "サブプロジェクトを作成",
+  "moveProject": "プロジェクトを移動",
+  "projectTopLevel": "最上位",
+  "projectMoveUp": "上に移動",
+  "projectMoveDown": "下に移動",
+  "projectParentName": "親プロジェクト: {name}",
+  "@projectParentName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteProjectWithChildrenConfirmation": "「{name}」を削除しますか？サブプロジェクトは1つ上の階層に移動します。このプロジェクトのタスクのみ受信トレイに移動します。",
+  "@deleteProjectWithChildrenConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "accountNickname": "ニックネーム",
+  "accountChangeNickname": "ニックネームを変更",
+  "accountNicknameSaveError": "ニックネームを保存できませんでした。再試行してください。",
+  "notificationTaskStarting": "タスクの開始",
+  "notificationReturnTitle": "トマトがあなたを待っています",
+  "notificationReturnBody": "集中を1回、またはタスクを1つ完了すれば、今日は実りある1日になります。",
+  "notificationFocusChannel": "集中",
+  "notificationFocusDescription": "集中インターバル完了の通知",
+  "notificationReturnChannel": "再開リマインダー",
+  "notificationReturnDescription": "Pomodoistの再開を優しくお知らせ",
+  "notificationTaskChannel": "タスク開始",
+  "notificationTaskDescription": "タスク開始の通知",
+  "notificationOpenApp": "Pomodoistを開く",
+  "notificationFocusCompleted": "集中インターバルが完了しました",
+  "notificationLongBreakCompleted": "長い休憩が終了しました",
+  "notificationBreakCompleted": "休憩が終了しました",
+  "updateTitle": "Pomodoistの更新",
+  "updateAction": "更新",
+  "updateCheck": "アップデートを確認",
+  "updateSettings": "アップデート",
+  "updateReceiveRc": "リリース候補（RC）を受け取る",
+  "updateStableChannel": "チャンネル: 安定版",
+  "updateRcChannel": "チャンネル: 安定版とRC",
+  "updateRcHelp": "RCには不具合が含まれる場合があります。アルファ版とベータ版は対象外です。",
+  "updateRestart": "アプリを再起動します。データは保持されます。",
+  "updateNotes": "リリースノート",
+  "updateOwnerManaged": "このビルドはサーバー設定を維持するため所有者が更新します。最新版は所有者にお問い合わせください。",
+  "updateUnsupported": "自動更新は公式Linux AppImageで利用できます。他のビルドはパッケージマネージャーで更新してください。",
+  "updateVersion": "バージョン{value}",
+  "@updateVersion": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "updatePhaseIdle": "いつでも確認できます。",
+  "updatePhaseChecking": "リリースを確認中…",
+  "updatePhaseAvailable": "新しいバージョンがあります",
+  "updatePhaseDownloading": "アップデートをダウンロード中…",
+  "updatePhaseVerifying": "整合性を検証中…",
+  "updatePhaseInstalling": "インストールと再起動を準備中…",
+  "updatePhaseUpToDate": "最新の互換バージョンを使用しています。",
+  "updatePhaseFailed": "アップデートを完了できませんでした",
+  "achievementFocusSubtitle": "{count, plural, =1{作業の集中を1回完了する} other{作業の集中を{count}回完了する}}",
+  "@achievementFocusSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementTaskSubtitle": "{count, plural, =1{タスクを1件完了する} other{タスクを{count}件完了する}}",
+  "@achievementTaskSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementDayNotWastedSubtitle": "1日で集中1回とタスク1件を完了する",
+  "achievementFocusPlusCheckSubtitle": "1日で集中3回とタスク3件を完了する",
+  "achievementNoFussSubtitle": "1日で集中を中断せずに5回完了する",
+  "achievementCleanEntrySubtitle": "紐付けられた集中の後にタスクを完了する",
+  "achievementTomatoClosedSubtitle": "作業の集中と同じ日にタスクを完了する",
+  "achievementTitle": "{id, select, focus_1{初めてのトマト} focus_5{ウォームアップ} focus_10{集中をつかんだ} focus_25{トマト勤務} focus_50{モード起動} focus_100{赤帯} focus_250{深い根} focus_500{タイマーの達人} focus_1000{千個目のトマト} focus_5000{集中農家} focus_10000{注意力の農園} focus_50000{トマト帝国} focus_100000{赤い超知能} focus_1000000{トマト特異点} task_1{初めてのチェック} task_5{リストが揺れた} task_10{うれしいチェックボックス} task_25{山積みを片付ける} task_50{チェックの達人} task_100{やり残しを解決} task_250{リストを掌握} task_500{オフィスの完全勝利} task_1000{千個のチェック} task_5000{勝利の記録係} task_10000{チェックマシン} task_50000{解決済み案件局} task_100000{リストの支配者} task_1000000{最後のチェック} combo_day_not_wasted{実りある1日} combo_focus_plus_check{集中＋チェック} combo_no_fuss{慌てず着実に} combo_clean_entry{きれいな流れ} combo_tomato_closed_question{トマトが解決} other{実績}}",
+  "@achievementTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "focusPresetDeepWork": "深い集中",
+  "focusPresetShortSprint": "短期スプリント",
+  "csvImportIssueRow": "{row}行目: {message}",
+  "@csvImportIssueRow": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "csvImportIssueMessage": "{code, select, fileTooLarge{CSVファイルが16MiBを超えています。} invalidUtf8{CSVは有効なUTF-8である必要があります。} missingHeader{CSVのヘッダーがありません。} malformed{CSVの形式が不正です。} unknownHeader{不明なヘッダー「{value}」です。} duplicateHeader{ヘッダー「{value}」が重複しています。} contentHeaderRequired{contentヘッダーが必要です。} tooManyTasks{CSVに含められるタスクは1000件までです。} tooManyFields{行のフィールド数がヘッダーを超えています。} contentRequired{contentは必須です。} invalidPriority{priorityは1～4の整数にしてください。} invalidDate{{value}はYYYY-MM-DD形式にしてください。} mixedSchedule{期限の日付と時間指定の予定は併用できません。} timedFieldsRequired{時間指定の予定にはstart_at、end_at、time_zoneが必要です。} invalidTimestamp{{value}はUTCオフセットを明示したRFC3339形式にしてください。} invalidTimeZone{time_zoneは有効なIANA名にしてください。} endBeforeStart{end_atはstart_atより後にしてください。} invalidRecurrence{recurrenceはday、week、monthのいずれかにしてください。} invalidInteger{{value}は1～999の整数にしてください。} intervalWithoutRecurrence{recurrence_intervalにはrecurrenceが必要です。} recurrenceWithoutSchedule{recurrenceには予定が必要です。} doneTask{完了したタスクはインポートできません。} invalidKey{{value}の形式が不正です。} empty{CSVにタスクが含まれていません。} duplicateKey{キー「{value}」が重複しています。} parentCycle{parent_keyの参照が循環しています。} missingParent{parent_key「{value}」が存在しません。} childProject{サブタスクは親と同じプロジェクトにしてください。} other{ファイルをインポートできませんでした。}}",
+  "@csvImportIssueMessage": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

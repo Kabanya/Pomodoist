@@ -5,6 +5,9 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/core/db/app_database.dart';
+import 'package:pomodoist/features/productivity/presentation/achievement_localizations.dart';
+import 'package:pomodoist/l10n/app_localizations_en.dart';
+import 'package:pomodoist/l10n/app_localizations_ru.dart';
 import 'package:pomodoist/features/productivity/data/achievement_repository_impl.dart';
 import 'package:pomodoist/features/productivity/data/productivity_repository_impl.dart';
 import 'package:timezone/data/latest.dart' as time_zone_data;
@@ -103,10 +106,10 @@ void main() {
         reason: '${fixtureCase['name']}: unlocked achievement IDs',
       );
       for (final item in unlockedItems) {
-        expect(item.titleFor('ru'), isNotEmpty);
-        expect(item.subtitleFor('ru'), isNotEmpty);
-        expect(item.titleFor('en'), isNotEmpty);
-        expect(item.subtitleFor('en'), isNotEmpty);
+        expect(item.titleFor(AppLocalizationsRu()), isNotEmpty);
+        expect(item.subtitleFor(AppLocalizationsRu()), isNotEmpty);
+        expect(item.titleFor(AppLocalizationsEn()), isNotEmpty);
+        expect(item.subtitleFor(AppLocalizationsEn()), isNotEmpty);
       }
     }
   });

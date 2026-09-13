@@ -11,6 +11,7 @@ import '../../../app/formatters.dart';
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
 import '../domain/achievement_models.dart';
+import 'achievement_localizations.dart';
 import '../domain/productivity_models.dart';
 import 'achievement_widgets.dart';
 
@@ -865,14 +866,14 @@ class _NextAchievementContent extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    next.titleFor(context.l10n.localeName),
+                    next.titleFor(context.l10n),
                     style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    next.subtitleFor(context.l10n.localeName),
+                    next.subtitleFor(context.l10n),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.bodySmall,

@@ -13,6 +13,7 @@ import '../../../../app/providers.dart';
 import '../../../../app/widgets/app_date_time_picker.dart';
 import '../../../planning/domain/quick_add_parser.dart';
 import '../../domain/task_models.dart';
+import '../project_localizations.dart';
 import 'quick_add_metadata_edit.dart';
 import 'quick_add_text_controller.dart';
 
@@ -75,10 +76,18 @@ class QuickAddDetails extends ConsumerWidget {
         var projectName = inheritedProjectName ?? context.l10n.navInbox;
         for (final project in allProjects) {
           if (project.id == projectId && inheritedProjectName == null) {
-            projectName = project.name;
+            projectName = project.displayName(context.l10n);
           }
         }
-        projectName = parsed.project ?? projectName;
+        if (parsed.project case final name?) {
+          projectName = name;
+          for (final project in allProjects) {
+            if (project.name.toLowerCase() == name.toLowerCase()) {
+              projectName = project.displayName(context.l10n);
+              break;
+            }
+          }
+        }
         void edit(Set<QuickAddTokenKind> kinds, String? token) {
           if (!enabled) return;
           final current = controller.value;
@@ -227,9 +236,9 @@ class QuickAddDetails extends ConsumerWidget {
                               ) ==
                               null
                           ? context.l10n.quickAddProjectNameUnsupported
-                          : project.name,
+                          : project.displayName(context.l10n),
                       child: _option(
-                        project.name,
+                        project.displayName(context.l10n),
                         quickAddProjectToken(project.name, parser, now: now) ==
                                 null
                             ? null

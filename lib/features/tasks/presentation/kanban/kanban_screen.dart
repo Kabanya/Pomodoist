@@ -1,3 +1,4 @@
+import '../project_localizations.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -215,7 +216,11 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
             .where(
               (card) =>
                   card.task.content.toLowerCase().contains(normalized) ||
-                  card.project.name.toLowerCase().contains(normalized),
+                  card.project.name.toLowerCase().contains(normalized) ||
+                  card.project
+                      .displayName(context.l10n)
+                      .toLowerCase()
+                      .contains(normalized),
             )
             .toList(growable: false),
     };
@@ -529,7 +534,10 @@ class _ProjectSelectorButton extends StatelessWidget {
             _ProjectDot(project: project),
             const SizedBox(width: 5),
             Flexible(
-              child: Text(project.name, overflow: TextOverflow.ellipsis),
+              child: Text(
+                project.displayName(context.l10n),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             const SizedBox(width: 8),
           ],
@@ -1126,7 +1134,7 @@ class _KanbanTaskCard extends ConsumerWidget {
                     const SizedBox(width: 7),
                     Expanded(
                       child: Text(
-                        card.project.name,
+                        card.project.displayName(context.l10n),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(color: colors.secondaryText),
@@ -1204,7 +1212,7 @@ class _KanbanTaskCard extends ConsumerWidget {
     final parts = <String>[
       task.content,
       _statusDisplayName(context, status),
-      card.project.name,
+      card.project.displayName(context.l10n),
       context.l10n.kanbanPriority(task.priority),
     ];
     if (taskTimeLabel != null) {
@@ -1556,7 +1564,7 @@ class _ProjectSelectionDialogState extends State<_ProjectSelectionDialog> {
                   children: [
                     _ProjectDot(project: project),
                     const SizedBox(width: 8),
-                    Flexible(child: Text(project.name)),
+                    Flexible(child: Text(project.displayName(context.l10n))),
                   ],
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1632,7 +1640,7 @@ class _KanbanAddDialogState extends ConsumerState<_KanbanAddDialog> {
                       for (final project in projects)
                         ShadOption(
                           value: project.id,
-                          child: Text(project.name),
+                          child: Text(project.displayName(context.l10n)),
                         ),
                     ],
                     selectedOptionBuilder: (context, value) => Text(

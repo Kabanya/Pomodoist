@@ -1,5 +1,7 @@
-import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton;
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton, ShadInput;
 import 'support/test_app.dart';
+import 'support/account_email_auth.dart';
+import 'package:pomodoist/app/email_auth.dart';
 import 'dart:async';
 
 import 'package:app_account/app_account.dart';
@@ -64,12 +66,8 @@ void main() {
 
     await tester.tap(find.text('Email'));
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.descendant(
-        of: find.byKey(const Key('account-auth-mode')),
-        matching: find.text('Create account'),
-      ),
-    );
+    await tester.ensureVisible(find.byKey(const Key('account-auth-mode')));
+    await tester.tap(find.byKey(const Key('account-auth-mode')));
     await tester.enterText(
       find.byKey(const Key('account-email-field')),
       'user@example.com',
@@ -113,13 +111,13 @@ void main() {
 
     expect(
       tester
-          .widget<TextField>(find.byKey(const Key('account-email-field')))
+          .widget<ShadInput>(find.byKey(const Key('account-email-field')))
           .autofillHints,
       const [AutofillHints.username, AutofillHints.email],
     );
     expect(
       tester
-          .widget<TextField>(find.byKey(const Key('account-password-field')))
+          .widget<ShadInput>(find.byKey(const Key('account-password-field')))
           .autofillHints,
       const [AutofillHints.password],
     );
@@ -128,15 +126,11 @@ void main() {
       find.byKey(const Key('account-password-field')),
       'existing-password',
     );
-    await tester.tap(
-      find.descendant(
-        of: find.byKey(const Key('account-auth-mode')),
-        matching: find.text('Create account'),
-      ),
-    );
+    await tester.ensureVisible(find.byKey(const Key('account-auth-mode')));
+    await tester.tap(find.byKey(const Key('account-auth-mode')));
     await tester.pump();
 
-    final password = tester.widget<TextField>(
+    final password = tester.widget<ShadInput>(
       find.byKey(const Key('account-password-field')),
     );
     expect(password.controller?.text, isEmpty);
@@ -242,7 +236,7 @@ void main() {
 
     expect(
       find.text(
-        'The email or password is incorrect. Check both and try again.',
+        'The email or password is incorrect. Check the address, reset your password, or create an account.',
       ),
       findsOneWidget,
     );
@@ -276,7 +270,7 @@ void main() {
 
     expect(
       find.text(
-        'Could not create the account. If you registered with this email before, sign in instead.',
+        'An account may already use this email. Sign in or reset your password.',
       ),
       findsOneWidget,
     );
@@ -284,17 +278,17 @@ void main() {
 
     await tester.tap(find.byKey(const Key('register-auth-recovery')));
     await tester.pumpAndSettle();
-    expect(find.text('Sign in with email'), findsOneWidget);
+    expect(find.text('Sign in to Pomodoist'), findsOneWidget);
     expect(
       tester
-          .widget<TextField>(find.byKey(const Key('account-email-field')))
+          .widget<ShadInput>(find.byKey(const Key('account-email-field')))
           .controller
           ?.text,
       'user@example.com',
     );
     expect(
       tester
-          .widget<TextField>(find.byKey(const Key('account-password-field')))
+          .widget<ShadInput>(find.byKey(const Key('account-password-field')))
           .controller
           ?.text,
       isEmpty,
@@ -650,23 +644,16 @@ void main() {
     await tester.pump(const Duration(seconds: 30));
 
     expect(find.byKey(const Key('account-auth-slow')), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(account.signInCalls, 1);
     expect(
       tester
-          .widget<ShadButton>(
-            find
-                .descendant(
-                  of: find.byType(AlertDialog),
-                  matching: find.byType(ShadButton),
-                )
-                .last,
-          )
+          .widget<ShadButton>(find.byKey(const Key('account-auth-submit')))
           .onPressed,
       isNull,
     );
 
-    await tester.tap(find.text('Cancel'));
+    await tester.tap(find.byTooltip('Close'));
     await tester.pumpAndSettle();
 
     expect(find.text('Email sign in'), findsNothing);
@@ -729,6 +716,7 @@ Future<void> _pumpAuthScreen(
     ProviderScope(
       overrides: [
         accountClientProvider.overrideWithValue(account),
+        emailAuthProvider.overrideWithValue(AccountEmailAuth(account)),
         accountAuthStateProvider.overrideWithValue(
           const AsyncData(AccountAuthState(signedIn: false)),
         ),
@@ -762,6 +750,7 @@ Future<void> _pumpAuthRouter(
     ProviderScope(
       overrides: [
         accountClientProvider.overrideWithValue(account),
+        emailAuthProvider.overrideWithValue(AccountEmailAuth(account)),
         accountAuthStateProvider.overrideWithValue(
           const AsyncData(AccountAuthState(signedIn: false)),
         ),

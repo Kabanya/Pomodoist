@@ -470,7 +470,7 @@ export function registerPomodoistTools(
       inputSchema: z.object({
         date,
         time_zone: timeZone,
-        locale: z.enum(["ru", "en"]),
+        locale: z.enum(["ru", "en", "pt", "pt-BR", "ja", "ko"]),
       }).strict(),
       outputSchema: outputSchemas.achievements,
       annotations: readAnnotations,
@@ -2255,7 +2255,10 @@ function productivityReport(value: unknown) {
   };
 }
 
-function achievements(value: unknown, locale: "ru" | "en") {
+function achievements(
+  value: unknown,
+  locale: "ru" | "en" | "pt" | "pt-BR" | "ja" | "ko",
+) {
   const inputs = record(record(value)?.achievementInputs) ?? {};
   const completedTasks = number(inputs.completedTasks);
   const completedFocus = number(inputs.completedWorkIntervals);
@@ -2274,14 +2277,193 @@ function achievements(value: unknown, locale: "ru" | "en") {
       presentation: definition.group === "combo"
         ? "bottomPlaque"
         : "globalBanner",
-      title: definition[locale].title,
-      subtitle: definition[locale].subtitle,
+      ...achievementCopy(definition, locale),
       progress: Math.min(progress, definition.target),
       target: definition.target,
       unlocked: progress >= definition.target,
     };
   });
 }
+
+function achievementCopy(
+  definition: {
+    id: string;
+    group: string;
+    target: number;
+    ru: { title: string; subtitle: string };
+    en: { title: string; subtitle: string };
+  },
+  locale: "ru" | "en" | "pt" | "pt-BR" | "ja" | "ko",
+) {
+  if (locale === "ru" || locale === "en") return definition[locale];
+  const copy = achievementTranslations[locale === "pt-BR" ? "pt" : locale];
+  return {
+    title: copy.titles[definition.id],
+    subtitle: definition.group === "focus"
+      ? copy.focusSubtitle(definition.target)
+      : definition.group === "task"
+      ? copy.taskSubtitle(definition.target)
+      : copy.comboSubtitles[definition.id],
+  };
+}
+
+// Keep localized copy aligned with lib/l10n/app_{locale}.arb; IDs remain shared.
+const achievementTranslations: Record<"pt" | "ja" | "ko", {
+  titles: Record<string, string>;
+  focusSubtitle: (count: number) => string;
+  taskSubtitle: (count: number) => string;
+  comboSubtitles: Record<string, string>;
+}> = {
+  pt: {
+    titles: {
+      "focus_1": "Primeiro tomate",
+      "focus_5": "Aquecimento",
+      "focus_10": "Foco encontrado",
+      "focus_25": "Turno de tomates",
+      "focus_50": "Modo ativado",
+      "focus_100": "Faixa vermelha",
+      "focus_250": "Raízes profundas",
+      "focus_500": "Autoridade do timer",
+      "focus_1000": "Milésimo tomate",
+      "focus_5000": "Fazendeiro do foco",
+      "focus_10000": "Plantação de atenção",
+      "focus_50000": "Império do tomate",
+      "focus_100000": "Supermente vermelha",
+      "focus_1000000": "Singularidade do tomate",
+      "task_1": "Primeira marca",
+      "task_5": "A lista tremeu",
+      "task_10": "Caixa feliz",
+      "task_25": "Limpando a pilha",
+      "task_50": "Mestre das marcas",
+      "task_100": "Pontas soltas resolvidas",
+      "task_250": "Lista sob controle",
+      "task_500": "Nocaute no escritório",
+      "task_1000": "Mil marcas",
+      "task_5000": "Arquivista de vitórias",
+      "task_10000": "Máquina de marcar",
+      "task_50000": "Escritório de assuntos resolvidos",
+      "task_100000": "Senhor das listas",
+      "task_1000000": "Marca final",
+      "combo_day_not_wasted": "Dia bem aproveitado",
+      "combo_focus_plus_check": "Foco + marca",
+      "combo_no_fuss": "Sem correria",
+      "combo_clean_entry": "Entrada perfeita",
+      "combo_tomato_closed_question": "O tomate resolveu",
+    },
+    focusSubtitle: (count) =>
+      count === 1
+        ? "Conclua 1 foco de trabalho"
+        : `Conclua ${count} focos de trabalho`,
+    taskSubtitle: (count) =>
+      count === 1 ? "Conclua 1 tarefa" : `Conclua ${count} tarefas`,
+    comboSubtitles: {
+      "combo_day_not_wasted": "Conclua um foco e uma tarefa no mesmo dia",
+      "combo_focus_plus_check": "Conclua 3 focos e 3 tarefas no mesmo dia",
+      "combo_no_fuss": "Conclua 5 focos no mesmo dia sem interrupções",
+      "combo_clean_entry": "Conclua uma tarefa após o foco vinculado a ela",
+      "combo_tomato_closed_question":
+        "Conclua uma tarefa no dia do seu foco de trabalho",
+    },
+  },
+  ja: {
+    titles: {
+      "focus_1": "初めてのトマト",
+      "focus_5": "ウォームアップ",
+      "focus_10": "集中をつかんだ",
+      "focus_25": "トマト勤務",
+      "focus_50": "モード起動",
+      "focus_100": "赤帯",
+      "focus_250": "深い根",
+      "focus_500": "タイマーの達人",
+      "focus_1000": "千個目のトマト",
+      "focus_5000": "集中農家",
+      "focus_10000": "注意力の農園",
+      "focus_50000": "トマト帝国",
+      "focus_100000": "赤い超知能",
+      "focus_1000000": "トマト特異点",
+      "task_1": "初めてのチェック",
+      "task_5": "リストが揺れた",
+      "task_10": "うれしいチェックボックス",
+      "task_25": "山積みを片付ける",
+      "task_50": "チェックの達人",
+      "task_100": "やり残しを解決",
+      "task_250": "リストを掌握",
+      "task_500": "オフィスの完全勝利",
+      "task_1000": "千個のチェック",
+      "task_5000": "勝利の記録係",
+      "task_10000": "チェックマシン",
+      "task_50000": "解決済み案件局",
+      "task_100000": "リストの支配者",
+      "task_1000000": "最後のチェック",
+      "combo_day_not_wasted": "実りある1日",
+      "combo_focus_plus_check": "集中＋チェック",
+      "combo_no_fuss": "慌てず着実に",
+      "combo_clean_entry": "きれいな流れ",
+      "combo_tomato_closed_question": "トマトが解決",
+    },
+    focusSubtitle: (count) =>
+      count === 1
+        ? "作業の集中を1回完了する"
+        : `作業の集中を${count}回完了する`,
+    taskSubtitle: (count) =>
+      count === 1 ? "タスクを1件完了する" : `タスクを${count}件完了する`,
+    comboSubtitles: {
+      "combo_day_not_wasted": "1日で集中1回とタスク1件を完了する",
+      "combo_focus_plus_check": "1日で集中3回とタスク3件を完了する",
+      "combo_no_fuss": "1日で集中を中断せずに5回完了する",
+      "combo_clean_entry": "紐付けられた集中の後にタスクを完了する",
+      "combo_tomato_closed_question": "作業の集中と同じ日にタスクを完了する",
+    },
+  },
+  ko: {
+    titles: {
+      "focus_1": "첫 토마토",
+      "focus_5": "준비 운동",
+      "focus_10": "집중 포착",
+      "focus_25": "토마토 근무",
+      "focus_50": "모드 가동",
+      "focus_100": "빨간 띠",
+      "focus_250": "깊은 뿌리",
+      "focus_500": "타이머의 권위자",
+      "focus_1000": "천 번째 토마토",
+      "focus_5000": "집중 농부",
+      "focus_10000": "주의력 농장",
+      "focus_50000": "토마토 제국",
+      "focus_100000": "붉은 초지능",
+      "focus_1000000": "토마토 특이점",
+      "task_1": "첫 체크",
+      "task_5": "목록이 흔들렸다",
+      "task_10": "행복한 체크박스",
+      "task_25": "쌓인 일 정리",
+      "task_50": "체크의 달인",
+      "task_100": "마무리 해결사",
+      "task_250": "목록 장악",
+      "task_500": "사무실 완승",
+      "task_1000": "천 개의 체크",
+      "task_5000": "승리의 기록관",
+      "task_10000": "체크 머신",
+      "task_50000": "문제 해결국",
+      "task_100000": "목록의 지배자",
+      "task_1000000": "마지막 체크",
+      "combo_day_not_wasted": "알찬 하루",
+      "combo_focus_plus_check": "집중 + 체크",
+      "combo_no_fuss": "차분하게",
+      "combo_clean_entry": "깔끔한 시작",
+      "combo_tomato_closed_question": "토마토가 해결했다",
+    },
+    focusSubtitle: (count) =>
+      count === 1 ? "작업 집중 1회 완료" : `작업 집중 ${count}회 완료`,
+    taskSubtitle: (count) =>
+      count === 1 ? "작업 1개 완료" : `작업 ${count}개 완료`,
+    comboSubtitles: {
+      "combo_day_not_wasted": "하루에 집중 한 번과 작업 하나 완료",
+      "combo_focus_plus_check": "하루에 집중 3회와 작업 3개 완료",
+      "combo_no_fuss": "하루에 중단 없이 집중 5회 완료",
+      "combo_clean_entry": "연결된 집중 후 작업 완료",
+      "combo_tomato_closed_question": "작업 집중을 한 날에 해당 작업 완료",
+    },
+  },
+};
 
 const focusTargets = [
   1,

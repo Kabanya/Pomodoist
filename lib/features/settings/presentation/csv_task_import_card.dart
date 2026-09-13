@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import '../../../app/app_l10n.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../app/theme/app_motion.dart';
 import 'settings_components.dart';
 import '../../../app/providers.dart';
@@ -104,10 +105,10 @@ class _CsvTaskImportCardState extends ConsumerState<CsvTaskImportCard> {
         ),
       );
     } on CsvTaskImportException catch (error) {
-      if (mounted) await _showError(_formatIssues(error));
-    } on Object catch (error) {
+      if (mounted) await _showError(formatCsvImportIssues(error, context.l10n));
+    } on Object {
       if (mounted) {
-        await _showError('${context.l10n.csvImportUnexpectedError}\n$error');
+        await _showError(context.l10n.csvImportUnexpectedError);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -278,9 +279,14 @@ Future<XFile?> _openCsvFile() => openFile(
   ],
 );
 
-String _formatIssues(CsvTaskImportException error) => error.issues
-    .map(
-      (issue) =>
-          issue.row > 0 ? 'Row ${issue.row}: ${issue.message}' : issue.message,
-    )
+String formatCsvImportIssues(
+  CsvTaskImportException error,
+  AppLocalizations l10n,
+) => error.issues
+    .map((issue) {
+      final message = l10n.csvImportIssueMessage(issue.code, issue.value);
+      return issue.row > 0
+          ? l10n.csvImportIssueRow(issue.row, message)
+          : message;
+    })
     .join('\n');

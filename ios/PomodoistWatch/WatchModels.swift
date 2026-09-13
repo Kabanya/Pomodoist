@@ -193,6 +193,9 @@ struct WatchTaskSchedule: Codable, Equatable {
 }
 
 struct WatchProject: Codable, Equatable, Identifiable {
+  var displayName: String {
+    id == "inbox" && name == "Inbox" ? String(localized: "browse.inbox") : name
+  }
   var id: String
   var name: String
   var color: String?

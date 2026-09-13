@@ -1,3 +1,4 @@
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadSelect, ShadButton;
 import 'support/test_app.dart';
 // ignore_for_file: deprecated_member_use
 
@@ -337,7 +338,9 @@ void main() {
       (call) => call.method == macOSAppMenuSetCommandsMethod,
     );
     final commands = Map<String, Object?>.from(syncCall.arguments as Map);
+    expect(commands['locale'], 'en');
     expect(commands.keys, {
+      'locale',
       for (final command in AppShortcutCommand.values) command.name,
     });
     expect(commands[AppShortcutCommand.quickAdd.name], {
@@ -899,12 +902,10 @@ void main() {
       find.byKey(const ValueKey('sidebar-destination-/settings')),
     );
     await _pumpFrames(tester);
-    await tester.drag(find.byType(ListView).last, const Offset(0, -520));
+    await tester.tap(find.widgetWithText(ShadButton, 'General'));
     await tester.pumpAndSettle();
-    final languageSelect = find
-        .byKey(const Key('settings-language-select'))
-        .last;
-    expect(find.byKey(const Key('settings-language-select')), findsWidgets);
+    final languageSelect = find.byType(ShadSelect<AppLanguage>);
+    expect(languageSelect, findsOneWidget);
     expect(find.text('Language'), findsAtLeastNWidgets(1));
 
     await tester.tap(languageSelect);
@@ -926,18 +927,12 @@ void main() {
       find.byKey(const ValueKey('sidebar-destination-/settings')),
     );
     await _pumpFrames(tester);
-    final settingsScrollable = tester.state<ScrollableState>(
-      find.descendant(
-        of: find.byKey(const Key('settings-list')),
-        matching: find.byType(Scrollable),
-      ),
+    await tester.tap(find.widgetWithText(ShadButton, 'General'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const Key('settings-shortcuts-button')),
     );
-    for (var i = 0; i < 3; i += 1) {
-      settingsScrollable.position.jumpTo(
-        settingsScrollable.position.maxScrollExtent,
-      );
-      await tester.pumpAndSettle();
-    }
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('settings-shortcuts-button')));
     await _pumpFrames(tester);
 
@@ -955,20 +950,16 @@ void main() {
       find.byKey(const ValueKey('sidebar-destination-/settings')),
     );
     await _pumpFrames(tester);
-    await tester.drag(find.byType(ListView).last, const Offset(0, -760));
+    await tester.tap(find.widgetWithText(ShadButton, 'Appearance'));
     await tester.pumpAndSettle();
-    final settings = find.byKey(const Key('settings-theme-mode-select')).last;
+    final settings = find.widgetWithText(ChoiceChip, 'Dark');
     expect(settings, findsOneWidget);
 
-    await tester.tap(
-      find.descendant(of: settings, matching: find.text('Dark')),
-    );
+    await tester.tap(settings);
     await tester.pumpAndSettle();
     expect(Theme.of(tester.element(settings)).brightness, Brightness.dark);
 
-    await tester.tap(
-      find.descendant(of: settings, matching: find.text('Light')),
-    );
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Light'));
     await tester.pumpAndSettle();
     expect(Theme.of(tester.element(settings)).brightness, Brightness.light);
     await _disposeApp(tester);
@@ -984,9 +975,9 @@ void main() {
       find.byKey(const ValueKey('sidebar-destination-/settings')),
     );
     await _pumpFrames(tester);
-    await tester.drag(find.byType(ListView).last, const Offset(0, -760));
+    await tester.tap(find.widgetWithText(ShadButton, 'Appearance'));
     await tester.pumpAndSettle();
-    final settings = find.byKey(const Key('settings-theme-mode-select')).last;
+    final settings = find.widgetWithText(ChoiceChip, 'Dark');
 
     expect(settings, findsOneWidget);
     expect(Theme.of(tester.element(settings)).brightness, Brightness.dark);

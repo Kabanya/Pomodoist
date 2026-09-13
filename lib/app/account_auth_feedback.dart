@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import 'captcha_security.dart';
+import 'app_language.dart';
 
 enum AccountAuthOperation {
   bootstrap,
@@ -403,6 +404,23 @@ String accountAuthRedirect(String loginRedirect, String returnTo) {
   }
   return uri
       .replace(queryParameters: {...uri.queryParameters, 'returnTo': returnTo})
+      .toString();
+}
+
+/// Locale is presentation metadata; the registered callback and PKCE stay intact.
+String localizedAccountAuthRedirect(String redirect, String? languageTag) {
+  final language = AppLanguage.fromLanguageTag(languageTag);
+  if (language == null) return redirect;
+  final uri = Uri.parse(redirect);
+  return uri
+      .replace(
+        fragment: Uri(
+          queryParameters: {
+            ...Uri(query: uri.fragment).queryParameters,
+            'lang': language.locale!.toLanguageTag(),
+          },
+        ).query,
+      )
       .toString();
 }
 

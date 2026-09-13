@@ -9,6 +9,7 @@ import '../../../app/providers.dart';
 import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_theme.dart';
 import '../domain/achievement_models.dart';
+import 'achievement_localizations.dart';
 
 const _achievementAnnouncementDuration = Duration(seconds: 4);
 
@@ -235,7 +236,7 @@ class _AchievementAnnouncementSurface extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${l10n.unlocked}: ${item.titleFor(l10n.localeName)}',
+                      '${l10n.unlocked}: ${item.titleFor(l10n)}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style:
@@ -247,7 +248,7 @@ class _AchievementAnnouncementSurface extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      item.subtitleFor(l10n.localeName),
+                      item.subtitleFor(l10n),
                       maxLines: dense ? 1 : 2,
                       overflow: TextOverflow.ellipsis,
                       style: textTheme.bodySmall?.copyWith(

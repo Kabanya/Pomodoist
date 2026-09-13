@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -64,9 +63,40 @@ final currentUserProvider = StreamProvider<UserRow?>((ref) {
 
 final clockProvider = Provider<Clock>((ref) => const SystemClock());
 
-final notificationSchedulerProvider = Provider<NotificationScheduler>(
-  (ref) => NotificationScheduler(),
-);
+final Provider<NotificationScheduler>
+notificationSchedulerProvider = Provider<NotificationScheduler>((ref) {
+  final scheduler = NotificationScheduler(
+    localizations: () =>
+        lookupAppLocalizations(resolveAppLocale(ref.read(appLanguageProvider))),
+  );
+  ref.listen(appLanguageProvider, (_, _) {
+    Future<void> refresh() async {
+      await scheduler.refreshLanguage();
+      if (!ref.mounted) return;
+      final interval = await ref
+          .read(focusRepositoryProvider)
+          .watchActiveInterval()
+          .first;
+      if (!ref.mounted || interval == null || interval.status != 'running') {
+        return;
+      }
+      final end = calculateExpectedEndAt(
+        startedAt: interval.startedAt,
+        plannedSeconds: interval.plannedSeconds,
+        pausedTotalSeconds: interval.pausedTotalSeconds,
+      );
+      if (!end.isAfter(DateTime.now())) return;
+      await scheduler.scheduleFocusIntervalEnd(
+        expectedEndAt: end,
+        title: 'pomodoist',
+        body: scheduler.focusCompletedBody(interval.type),
+      );
+    }
+
+    unawaited(refresh().catchError((Object _) {}));
+  });
+  return scheduler;
+});
 
 final focusSoundPlayerProvider = Provider<FocusSoundPlayer>((ref) {
   final player = AssetFocusSoundPlayer();
@@ -558,28 +588,14 @@ final effectiveQuickAddHintProvider = Provider<String>((ref) {
       quickAddHintFallbackFor(ref.watch(appLanguageProvider));
 });
 
-String activeQuickAddHintLocale(AppLanguage language) {
-  return (language.locale ?? PlatformDispatcher.instance.locale)
-      .toLanguageTag();
-}
+String activeQuickAddHintLocale(AppLanguage language) =>
+    resolveAppLocale(language).toLanguageTag();
 
-String quickAddHintFallbackFor(AppLanguage language) {
-  final requested = language.locale ?? PlatformDispatcher.instance.locale;
-  final locale = AppLocalizations.supportedLocales.firstWhere(
-    (candidate) => candidate.languageCode == requested.languageCode,
-    orElse: () => const Locale('en'),
-  );
-  return lookupAppLocalizations(locale).quickAddHint;
-}
+String quickAddHintFallbackFor(AppLanguage language) =>
+    lookupAppLocalizations(resolveAppLocale(language)).quickAddHint;
 
-String quickAddHintEmptyFor(AppLanguage language) {
-  final requested = language.locale ?? PlatformDispatcher.instance.locale;
-  final locale = AppLocalizations.supportedLocales.firstWhere(
-    (candidate) => candidate.languageCode == requested.languageCode,
-    orElse: () => const Locale('en'),
-  );
-  return lookupAppLocalizations(locale).addTask;
-}
+String quickAddHintEmptyFor(AppLanguage language) =>
+    lookupAppLocalizations(resolveAppLocale(language)).addTask;
 
 class QuickAddHintController extends Notifier<QuickAddHintState> {
   late final QuickAddHintCoordinator _coordinator;
@@ -858,13 +874,11 @@ Future<void> syncTaskStartNotifications({
 }
 
 _TaskStartNotificationCopy _taskStartNotificationCopy(AppLanguage language) {
-  final russian =
-      language == AppLanguage.ru ||
-      (language == AppLanguage.system &&
-          PlatformDispatcher.instance.locale.languageCode == 'ru');
-  return russian
-      ? const _TaskStartNotificationCopy(title: 'Время задачи')
-      : const _TaskStartNotificationCopy(title: 'Task starting');
+  return _TaskStartNotificationCopy(
+    title: lookupAppLocalizations(
+      resolveAppLocale(language),
+    ).notificationTaskStarting,
+  );
 }
 
 class _TaskStartNotificationCopy {
@@ -1047,8 +1061,7 @@ Future<void> syncReengagementReminder({
   await scheduler.scheduleReengagementReminder(
     firstAt: nextReengagementReminderAt(
       now: now,
-      hasProgressToday:
-          summary.completedTasks > 0 || summary.completedFocusIntervals > 0,
+      hasProgressToday: summary.completedTasks > 0,
     ),
     title: copy.title,
     body: copy.body,
@@ -1068,7 +1081,13 @@ DateTime nextReengagementReminderAt({
     _reengagementReminderMinute,
   );
   if (hasProgressToday || !local.isBefore(todayReminder)) {
-    return todayReminder.add(const Duration(days: 1));
+    return DateTime(
+      local.year,
+      local.month,
+      local.day + 1,
+      _reengagementReminderHour,
+      _reengagementReminderMinute,
+    );
   }
   return todayReminder;
 }
@@ -1076,19 +1095,10 @@ DateTime nextReengagementReminderAt({
 _ReengagementNotificationCopy _reengagementNotificationCopy(
   AppLanguage language,
 ) {
-  final russian =
-      language == AppLanguage.ru ||
-      (language == AppLanguage.system &&
-          PlatformDispatcher.instance.locale.languageCode == 'ru');
-  if (russian) {
-    return const _ReengagementNotificationCopy(
-      title: 'Помидор скучает',
-      body: 'Один фокус или одна галочка — и день уже не зря.',
-    );
-  }
-  return const _ReengagementNotificationCopy(
-    title: 'Your tomato misses you',
-    body: 'One focus or one checkmark is enough to save the day.',
+  final l10n = lookupAppLocalizations(resolveAppLocale(language));
+  return _ReengagementNotificationCopy(
+    title: l10n.notificationReturnTitle,
+    body: l10n.notificationReturnBody,
   );
 }
 

@@ -1023,7 +1023,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsReturnRemindersSubtitle =>
-      'Мягкий вечерний пинок, если сегодня нет фокуса или закрытой задачи.';
+      'Напоминание в 20:30, только если за сегодня не закрыто ни одной задачи.';
 
   @override
   String get settingsDefaultTimedBlockTitle =>
@@ -2852,5 +2852,258 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String deleteProjectWithChildrenConfirmation(String name) {
     return 'Удалить «$name»? Подпроекты поднимутся на уровень выше. Только задачи этого проекта будут перенесены во Входящие.';
+  }
+
+  @override
+  String get accountNickname => 'Никнейм';
+
+  @override
+  String get accountChangeNickname => 'Изменить никнейм';
+
+  @override
+  String get accountNicknameSaveError =>
+      'Не удалось сохранить никнейм. Попробуйте ещё раз.';
+
+  @override
+  String get notificationTaskStarting => 'Время задачи';
+
+  @override
+  String get notificationReturnTitle => 'Помидор скучает';
+
+  @override
+  String get notificationReturnBody =>
+      'Один фокус или одна галочка — и день уже не зря.';
+
+  @override
+  String get notificationFocusChannel => 'Фокус';
+
+  @override
+  String get notificationFocusDescription =>
+      'Уведомления о завершении интервала фокуса';
+
+  @override
+  String get notificationReturnChannel => 'Напоминания о возвращении';
+
+  @override
+  String get notificationReturnDescription =>
+      'Мягкие напоминания вернуться в Pomodoist';
+
+  @override
+  String get notificationTaskChannel => 'Начало задачи';
+
+  @override
+  String get notificationTaskDescription => 'Уведомления о начале задачи';
+
+  @override
+  String get notificationOpenApp => 'Открыть Pomodoist';
+
+  @override
+  String get notificationFocusCompleted => 'Фокус-интервал завершён';
+
+  @override
+  String get notificationLongBreakCompleted => 'Длинный перерыв завершён';
+
+  @override
+  String get notificationBreakCompleted => 'Перерыв завершён';
+
+  @override
+  String get updateTitle => 'Обновление Pomodoist';
+
+  @override
+  String get updateAction => 'Обновить';
+
+  @override
+  String get updateCheck => 'Проверить обновления';
+
+  @override
+  String get updateSettings => 'Обновления';
+
+  @override
+  String get updateReceiveRc => 'Получать релиз-кандидаты (RC)';
+
+  @override
+  String get updateStableChannel => 'Канал: стабильные релизы';
+
+  @override
+  String get updateRcChannel => 'Канал: стабильные релизы и RC';
+
+  @override
+  String get updateRcHelp =>
+      'RC могут содержать ошибки. Альфа- и бета-версии исключены.';
+
+  @override
+  String get updateRestart =>
+      'Приложение перезапустится. Ваши данные сохранятся.';
+
+  @override
+  String get updateNotes => 'Все изменения';
+
+  @override
+  String get updateOwnerManaged =>
+      'Эту сборку обновляет её владелец, чтобы сохранить настройки сервера. Запросите у него последнюю версию.';
+
+  @override
+  String get updateUnsupported =>
+      'Автообновление доступно в официальной Linux AppImage. Другие сборки обновляйте через менеджер пакетов.';
+
+  @override
+  String updateVersion(String value) {
+    return 'Версия $value';
+  }
+
+  @override
+  String get updatePhaseIdle => 'Проверка доступна в любое время.';
+
+  @override
+  String get updatePhaseChecking => 'Проверяем релизы…';
+
+  @override
+  String get updatePhaseAvailable => 'Доступна новая версия';
+
+  @override
+  String get updatePhaseDownloading => 'Скачиваем обновление…';
+
+  @override
+  String get updatePhaseVerifying => 'Проверяем целостность…';
+
+  @override
+  String get updatePhaseInstalling => 'Подготавливаем установку и перезапуск…';
+
+  @override
+  String get updatePhaseUpToDate => 'Установлена последняя подходящая версия.';
+
+  @override
+  String get updatePhaseFailed => 'Не удалось обновить приложение';
+
+  @override
+  String achievementFocusSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Завершить $count work-фокусов',
+      one: 'Завершить 1 work-фокус',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String achievementTaskSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Закрыть $count задач',
+      one: 'Закрыть 1 задачу',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get achievementDayNotWastedSubtitle =>
+      'За день есть фокус и закрытая задача';
+
+  @override
+  String get achievementFocusPlusCheckSubtitle =>
+      'За день есть 3 фокуса и 3 задачи';
+
+  @override
+  String get achievementNoFussSubtitle => '5 фокусов за день без остановок';
+
+  @override
+  String get achievementCleanEntrySubtitle =>
+      'Закрыть задачу после связанного фокуса';
+
+  @override
+  String get achievementTomatoClosedSubtitle =>
+      'Закрыть задачу в день ее work-фокуса';
+
+  @override
+  String achievementTitle(String id) {
+    String _temp0 = intl.Intl.selectLogic(id, {
+      'focus_1': 'Первый помидор',
+      'focus_5': 'Разогрев',
+      'focus_10': 'Фокус пойман',
+      'focus_25': 'Помидорная смена',
+      'focus_50': 'Режим включен',
+      'focus_100': 'Красный пояс',
+      'focus_250': 'Глубокая посадка',
+      'focus_500': 'Таймерный авторитет',
+      'focus_1000': 'Тысячный помидор',
+      'focus_5000': 'Фермер фокуса',
+      'focus_10000': 'Плантация внимания',
+      'focus_50000': 'Помидорная империя',
+      'focus_100000': 'Красный сверхразум',
+      'focus_1000000': 'Сингулярность помидора',
+      'task_1': 'Первая галочка',
+      'task_5': 'Список дрогнул',
+      'task_10': 'Чекбокс доволен',
+      'task_25': 'Разбор завалов',
+      'task_50': 'Мастер галочек',
+      'task_100': 'Закрыватель хвостов',
+      'task_250': 'Список под контролем',
+      'task_500': 'Канцелярский нокаут',
+      'task_1000': 'Тысяча галочек',
+      'task_5000': 'Архивариус побед',
+      'task_10000': 'Чекбокс-машина',
+      'task_50000': 'Бюро закрытых вопросов',
+      'task_100000': 'Повелитель списков',
+      'task_1000000': 'Последняя галочка',
+      'combo_day_not_wasted': 'День не зря',
+      'combo_focus_plus_check': 'Фокус + галочка',
+      'combo_no_fuss': 'Без суеты',
+      'combo_clean_entry': 'Чистый заход',
+      'combo_tomato_closed_question': 'Помидор закрыл вопрос',
+      'other': 'Достижение',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get focusPresetDeepWork => 'Глубокая работа';
+
+  @override
+  String get focusPresetShortSprint => 'Короткий спринт';
+
+  @override
+  String csvImportIssueRow(int row, String message) {
+    return 'Строка $row: $message';
+  }
+
+  @override
+  String csvImportIssueMessage(String code, String value) {
+    String _temp0 = intl.Intl.selectLogic(code, {
+      'fileTooLarge': 'Файл CSV превышает 16 МиБ.',
+      'invalidUtf8': 'CSV должен быть в кодировке UTF-8.',
+      'missingHeader': 'Отсутствует заголовок CSV.',
+      'malformed': 'Некорректный формат CSV.',
+      'unknownHeader': 'Неизвестный заголовок «$value».',
+      'duplicateHeader': 'Повторяющийся заголовок «$value».',
+      'contentHeaderRequired': 'Заголовок content обязателен.',
+      'tooManyTasks': 'CSV не может содержать более 1000 задач.',
+      'tooManyFields': 'В строке больше полей, чем в заголовке.',
+      'contentRequired': 'Поле content обязательно.',
+      'invalidPriority': 'priority должен быть целым числом от 1 до 4.',
+      'invalidDate': '$value должен быть в формате YYYY-MM-DD.',
+      'mixedSchedule': 'Нельзя сочетать due_date с расписанием по времени.',
+      'timedFieldsRequired':
+          'Для расписания по времени нужны start_at, end_at и time_zone.',
+      'invalidTimestamp':
+          '$value должен быть в формате RFC3339 с явным смещением UTC.',
+      'invalidTimeZone': 'time_zone должен быть корректным именем IANA.',
+      'endBeforeStart': 'end_at должен быть позже start_at.',
+      'invalidRecurrence': 'recurrence должен быть day, week или month.',
+      'invalidInteger': '$value должен быть целым числом от 1 до 999.',
+      'intervalWithoutRecurrence': 'Для recurrence_interval нужен recurrence.',
+      'recurrenceWithoutSchedule': 'Для recurrence нужно расписание.',
+      'doneTask': 'Нельзя импортировать завершённые задачи.',
+      'invalidKey': 'У $value некорректный формат.',
+      'empty': 'CSV не содержит задач.',
+      'duplicateKey': 'Повторяющийся ключ «$value».',
+      'parentCycle': 'Ссылки parent_key образуют цикл.',
+      'missingParent': 'parent_key «$value» не существует.',
+      'childProject':
+          'Подзадача должна быть в том же проекте, что и родительская задача.',
+      'other': 'Не удалось импортировать файл.',
+    });
+    return '$_temp0';
   }
 }

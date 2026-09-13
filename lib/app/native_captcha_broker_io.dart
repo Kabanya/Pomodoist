@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'captcha_security.dart';
+import 'app_language.dart';
 
 class NativeCaptchaBroker {
   NativeCaptchaBroker({
@@ -25,18 +26,21 @@ class NativeCaptchaBroker {
   final bool _useLoopback;
   _NativeCaptchaRequest? _activeRequest;
 
-  Future<String> requestToken() {
+  Future<String> requestToken({String? locale}) {
     if (_activeRequest != null) {
       throw const NativeCaptchaException(NativeCaptchaFailureCode.unavailable);
     }
     final completer = Completer<String>();
-    final request = _NativeCaptchaRequest(completer);
+    final request = _NativeCaptchaRequest(completer, locale);
     _activeRequest = request;
-    unawaited(_beginRequest(request));
+    unawaited(_beginRequest(request, locale));
     return completer.future;
   }
 
-  Future<void> _beginRequest(_NativeCaptchaRequest request) async {
+  Future<void> _beginRequest(
+    _NativeCaptchaRequest request,
+    String? locale,
+  ) async {
     try {
       final callbackTarget = _useLoopback
           ? await _startLoopbackServer(request)
@@ -65,7 +69,7 @@ class NativeCaptchaBroker {
           const NativeCaptchaException(NativeCaptchaFailureCode.expired),
         ),
       );
-      final launched = await _launch(session.begin());
+      final launched = await _launch(session.begin(locale: locale));
       if (identical(_activeRequest, request) && !launched) {
         _fail(
           request,
@@ -112,7 +116,12 @@ class NativeCaptchaBroker {
     HttpRequest httpRequest,
   ) async {
     if (!identical(_activeRequest, request)) {
-      await _respondToLoopback(httpRequest, HttpStatus.gone, success: false);
+      await _respondToLoopback(
+        httpRequest,
+        HttpStatus.gone,
+        locale: request.locale,
+        success: false,
+      );
       return;
     }
     final session = request.session;
@@ -124,6 +133,7 @@ class NativeCaptchaBroker {
       await _respondToLoopback(
         httpRequest,
         HttpStatus.badRequest,
+        locale: request.locale,
         success: false,
       );
       return;
@@ -136,12 +146,18 @@ class NativeCaptchaBroker {
         await _respondToLoopback(
           httpRequest,
           HttpStatus.badRequest,
+          locale: request.locale,
           success: false,
         );
         return;
       }
       final token = session.consumeCallback(callback);
-      await _respondToLoopback(httpRequest, HttpStatus.ok, success: true);
+      await _respondToLoopback(
+        httpRequest,
+        HttpStatus.ok,
+        locale: request.locale,
+        success: true,
+      );
       if (_clear(request) && !request.completer.isCompleted) {
         request.completer.complete(token);
       }
@@ -149,6 +165,7 @@ class NativeCaptchaBroker {
       await _respondToLoopback(
         httpRequest,
         HttpStatus.badRequest,
+        locale: request.locale,
         success: false,
       );
     }
@@ -212,7 +229,9 @@ class NativeCaptchaBroker {
 }
 
 final class _NativeCaptchaRequest {
-  _NativeCaptchaRequest(this.completer);
+  _NativeCaptchaRequest(this.completer, this.locale);
+
+  final String? locale;
 
   final Completer<String> completer;
   NativeCaptchaSession? session;
@@ -227,11 +246,14 @@ Future<void> _respondToLoopback(
   HttpRequest request,
   int status, {
   required bool success,
+  String? locale,
 }) async {
   try {
-    final locale = _preferredLoopbackLocale(
-      request.headers.value(HttpHeaders.acceptLanguageHeader),
-    );
+    locale =
+        AppLanguage.fromLanguageTag(locale)?.locale?.toLanguageTag() ??
+        _preferredLoopbackLocale(
+          request.headers.value(HttpHeaders.acceptLanguageHeader),
+        );
     final copy = _loopbackCopy(locale);
     request.response
       ..statusCode = status
@@ -255,7 +277,18 @@ Future<void> _respondToLoopback(
 }
 
 String _preferredLoopbackLocale(String? acceptLanguage) {
-  const supported = {'ar', 'de', 'en', 'es', 'fr', 'ru', 'zh'};
+  const supported = {
+    'ar',
+    'de',
+    'en',
+    'es',
+    'fr',
+    'ru',
+    'zh',
+    'pt',
+    'ja',
+    'ko',
+  };
   for (final entry in (acceptLanguage ?? '').split(',')) {
     final language = entry
         .split(';')
@@ -264,7 +297,9 @@ String _preferredLoopbackLocale(String? acceptLanguage) {
         .toLowerCase()
         .split('-')
         .first;
-    if (supported.contains(language)) return language;
+    if (supported.contains(language)) {
+      return language == 'pt' ? 'pt-BR' : language;
+    }
   }
   return 'en';
 }
@@ -273,6 +308,22 @@ String _preferredLoopbackLocale(String? acceptLanguage) {
   String locale,
 ) {
   return switch (locale) {
+    'pt-BR' => (
+      success:
+          'Verificação concluída. Você pode fechar esta aba e voltar ao Pomodoist.',
+      invalid: 'Este link de verificação é inválido.',
+      direction: 'ltr',
+    ),
+    'ja' => (
+      success: '確認が完了しました。このタブを閉じて Pomodoist に戻れます。',
+      invalid: 'この確認リンクは無効です。',
+      direction: 'ltr',
+    ),
+    'ko' => (
+      success: '인증이 완료되었습니다. 이 탭을 닫고 Pomodoist로 돌아가세요.',
+      invalid: '이 인증 링크는 유효하지 않습니다.',
+      direction: 'ltr',
+    ),
     'ar' => (
       success: 'اكتمل التحقق. يمكنك إغلاق علامة التبويب والعودة إلى Pomodoist.',
       invalid: 'رابط التحقق هذا غير صالح.',

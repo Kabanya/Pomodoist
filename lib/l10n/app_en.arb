@@ -44,13 +44,37 @@
   "billingMonthlyTitle": "Monthly",
   "billingAnnualTitle": "Annual",
   "billingPricePerMonth": "{price}/month",
-  "@billingPricePerMonth": {"placeholders": {"price": {"type": "String"}}},
+  "@billingPricePerMonth": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "billingPricePerYear": "{price}/year",
-  "@billingPricePerYear": {"placeholders": {"price": {"type": "String"}}},
+  "@billingPricePerYear": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "billingMonthlyIntroSubtitle": "First 3 months, then {price}.",
-  "@billingMonthlyIntroSubtitle": {"placeholders": {"price": {"type": "String"}}},
+  "@billingMonthlyIntroSubtitle": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "billingAnnualIntroSubtitle": "Then {price}.",
-  "@billingAnnualIntroSubtitle": {"placeholders": {"price": {"type": "String"}}},
+  "@billingAnnualIntroSubtitle": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "billingLifetimeTitle": "Lifetime",
   "billingLifetimeSubtitle": "One payment forever.",
   "billingBestValue": "Best value",
@@ -68,7 +92,13 @@
   "billingStoreUnavailable": "The App Store is not available right now.",
   "billingStoreConnectionFailed": "Turn off your VPN and try again.",
   "billingPurchaseError": "Purchase error: {error}",
-  "@billingPurchaseError": {"placeholders": {"error": {"type": "String"}}},
+  "@billingPurchaseError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "billingStripeAuthenticationRequired": "Sign in to Pomodoist and try again.",
   "billingStripeDisabled": "Payments are not available yet. Try again later.",
   "billingStripeAlreadyEntitled": "Pomodoist Pro is already active. Refresh your account status.",
@@ -82,7 +112,13 @@
   "purchaseProcessingMessage": "Your payment is being confirmed. If Pro does not appear shortly, refresh again later.",
   "purchaseOpenApp": "Open Pomodoist",
   "launchOfferEndsIn": "{time} left on Lifetime offer",
-  "@launchOfferEndsIn": {"placeholders": {"time": {"type": "String"}}},
+  "@launchOfferEndsIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "accountApple": "Apple",
   "accountGoogle": "Google",
   "accountEmail": "Email",
@@ -96,7 +132,13 @@
   "oauthConsentRedirectError": "Pomodoist received an unsafe or missing return address. Access was not handed off.",
   "oauthConsentClientFallback": "Agent",
   "oauthConsentClientRequest": "{clientName} wants to access Pomodoist",
-  "@oauthConsentClientRequest": {"placeholders": {"clientName": {"type": "String"}}},
+  "@oauthConsentClientRequest": {
+    "placeholders": {
+      "clientName": {
+        "type": "String"
+      }
+    }
+  },
   "oauthConsentRedirectOrigin": "Return address",
   "oauthConsentCapabilitiesTitle": "This agent can",
   "oauthConsentManagePlanning": "Read and manage tasks, projects, user labels, and Kanban.",
@@ -120,7 +162,13 @@
   "registerCheckEmailTitle": "Check your email",
   "registerCheckEmailMessage": "If this address needs confirmation, you will receive an email with a link. If you already have an account, sign in or reset your password.",
   "registerError": "Could not create account: {error}",
-  "@registerError": {"placeholders": {"error": {"type": "Object"}}},
+  "@registerError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "authEmailSignInTitle": "Sign in with email",
   "authWelcomeTitle": "Sign in to Pomodoist",
   "authWelcomeDescription": "Your tasks and focus, on every device.",
@@ -175,7 +223,13 @@
   "authCaptchaOpenFailed": "Pomodoist could not open the security check in your browser. Check your default browser and try again.",
   "authProviderFallback": "this provider",
   "authProviderUnavailable": "Sign-in with {provider} is unavailable right now. Try again or use another method.",
-  "@authProviderUnavailable": {"placeholders": {"provider": {"type": "String"}}},
+  "@authProviderUnavailable": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
   "authSignUpDisabled": "Account creation with email is temporarily unavailable. Try another sign-in method.",
   "authAccountRestricted": "This account cannot sign in right now. Contact support if you think this is a mistake.",
   "authLinkExpired": "This sign-in link is invalid or expired. Request a new link.",
@@ -208,34 +262,100 @@
   "kanbanShowDone": "Show Done",
   "kanbanProjectsTitle": "Projects on this board",
   "kanbanAddToStatus": "Add to {status}",
-  "@kanbanAddToStatus": {"placeholders": {"status": {"type": "String"}}},
+  "@kanbanAddToStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanTaskField": "Task",
   "kanbanProjectField": "Project",
   "kanbanChooseProject": "Choose a project.",
   "kanbanTaskActions": "Task actions",
   "kanbanDragTask": "Drag task",
   "kanbanMoveTo": "Move to {status}",
-  "@kanbanMoveTo": {"placeholders": {"status": {"type": "String"}}},
+  "@kanbanMoveTo": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanRestoreBeforeFocus": "Restore the task before starting Focus.",
   "kanbanCouldNotStartFocus": "Could not start Focus: {error}",
-  "@kanbanCouldNotStartFocus": {"placeholders": {"error": {"type": "Object"}}},
+  "@kanbanCouldNotStartFocus": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "kanbanCouldNotLoad": "Could not load Kanban: {error}",
-  "@kanbanCouldNotLoad": {"placeholders": {"error": {"type": "Object"}}},
+  "@kanbanCouldNotLoad": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "commonRetry": "Retry",
   "commonContinueWaiting": "Continue waiting",
   "kanbanTasksCount": "{count} tasks",
-  "@kanbanTasksCount": {"placeholders": {"count": {"type": "int"}}},
+  "@kanbanTasksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanSubtasksProgress": "{completed} of {total} subtasks",
-  "@kanbanSubtasksProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@kanbanSubtasksProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanFocusIntervalsProgress": "{completed} of {total} focus intervals",
-  "@kanbanFocusIntervalsProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@kanbanFocusIntervalsProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanActive": "Active",
   "kanbanPriority": "Priority {priority}",
-  "@kanbanPriority": {"placeholders": {"priority": {"type": "int"}}},
+  "@kanbanPriority": {
+    "placeholders": {
+      "priority": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanMoveAnnouncement": "Moved to {status}",
-  "@kanbanMoveAnnouncement": {"placeholders": {"status": {"type": "String"}}},
+  "@kanbanMoveAnnouncement": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanFocusStartedAnnouncement": "Focus started for {task}",
-  "@kanbanFocusStartedAnnouncement": {"placeholders": {"task": {"type": "String"}}},
+  "@kanbanFocusStartedAnnouncement": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanNoTasks": "No tasks yet",
   "navToday": "Today",
   "navUpcoming": "Upcoming",
@@ -293,11 +413,23 @@
   "settingsConnectedAgentsLoadError": "Could not load connected agents.",
   "settingsConnectedAgentsUnknownClient": "Agent",
   "settingsConnectedAgentsConnectedOn": "Connected on {date}",
-  "@settingsConnectedAgentsConnectedOn": {"placeholders": {"date": {"type": "String"}}},
+  "@settingsConnectedAgentsConnectedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "settingsConnectedAgentsRevoke": "Revoke access",
   "settingsConnectedAgentsRevokeConfirmTitle": "Revoke agent access?",
   "settingsConnectedAgentsRevokeConfirmMessage": "Revoke Pomodoist access for {clientName}?",
-  "@settingsConnectedAgentsRevokeConfirmMessage": {"placeholders": {"clientName": {"type": "String"}}},
+  "@settingsConnectedAgentsRevokeConfirmMessage": {
+    "placeholders": {
+      "clientName": {
+        "type": "String"
+      }
+    }
+  },
   "settingsConnectedAgentsRevokeError": "Could not revoke access. Try again.",
   "settingsLanguageTitle": "Language",
   "settingsLanguageSubtitle": "Choose the app language.",
@@ -318,7 +450,7 @@
   "settingsTimerVisualBar": "Bar",
   "settingsTimerVisualCircle": "Circle",
   "settingsReturnRemindersTitle": "Return reminders",
-  "settingsReturnRemindersSubtitle": "A gentle evening nudge if today has no focus or completed task.",
+  "settingsReturnRemindersSubtitle": "An evening reminder at 20:30 if you have not completed any tasks today.",
   "settingsDefaultTimedBlockTitle": "Default calendar block duration",
   "settingsDefaultTimedBlockSubtitle": "When only a time is entered, new tasks use this calendar duration.",
   "settingsDefaultTimedBlockCustomLabel": "Custom duration",
@@ -338,21 +470,51 @@
   "addTask": "Add task",
   "quickAddHint": "Write sync engine tomorrow p1 #App @coding 4p",
   "couldNotAddTask": "Could not add task: {error}",
-  "@couldNotAddTask": {"placeholders": {"error": {"type": "Object"}}},
+  "@couldNotAddTask": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "taskCreateFailed": "Could not create the task. Try again.",
   "couldNotAddProject": "Could not add project: {error}",
-  "@couldNotAddProject": {"placeholders": {"error": {"type": "Object"}}},
+  "@couldNotAddProject": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "tasksCreated": "{count, plural, =1{Added 1 task} other{Added {count} tasks}}",
-  "@tasksCreated": {"placeholders": {"count": {"type": "int"}}},
+  "@tasksCreated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "voiceQuickAdd": "Voice quick add",
   "voiceTitle": "Voice add",
   "voiceRecord": "Record",
   "voiceAgain": "Again",
   "voiceStop": "Stop",
   "voiceAddCount": "Add {count}",
-  "@voiceAddCount": {"placeholders": {"count": {"type": "int"}}},
+  "@voiceAddCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "voiceTaskLabel": "Task {index}",
-  "@voiceTaskLabel": {"placeholders": {"index": {"type": "int"}}},
+  "@voiceTaskLabel": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
   "voiceRemoveTask": "Remove",
   "voiceInstruction": "Tap record and dictate tasks.",
   "voiceStatusIdle": "Built-in microphone input only",
@@ -409,7 +571,13 @@
   "timelineZoomOut": "Zoom out",
   "timelineZoomIn": "Zoom in",
   "timelineAddTimedHint": "Task for {time}",
-  "@timelineAddTimedHint": {"placeholders": {"time": {"type": "String"}}},
+  "@timelineAddTimedHint": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "timelineAddAllDayHint": "All-day task",
   "timelineNoAllDayTasks": "No all-day tasks",
   "timelineNoTimedTasks": "No timed tasks",
@@ -420,22 +588,58 @@
   "upcomingNextPeriod": "Next period",
   "upcomingOpenDatePicker": "Open date picker",
   "upcomingTaskCount": "{count, plural, =0{No tasks} =1{1 task} other{{count} tasks}}",
-  "@upcomingTaskCount": {"placeholders": {"count": {"type": "int"}}},
+  "@upcomingTaskCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "screenTodayFocusSummary": "Focus load: {planned} intervals - Done: {completed} - Focus: {focus}",
-  "@screenTodayFocusSummary": {"placeholders": {"planned": {"type": "int"}, "completed": {"type": "int"}, "focus": {"type": "String"}}},
+  "@screenTodayFocusSummary": {
+    "placeholders": {
+      "planned": {
+        "type": "int"
+      },
+      "completed": {
+        "type": "int"
+      },
+      "focus": {
+        "type": "String"
+      }
+    }
+  },
   "screenUpcomingSubtitle": "Planned tasks after today.",
   "screenUpcomingSelectedSubtitle": "Tasks scheduled for {date}.",
-  "@screenUpcomingSelectedSubtitle": {"placeholders": {"date": {"type": "String"}}},
+  "@screenUpcomingSelectedSubtitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "noTasksHere": "No tasks here",
   "noUpcomingTasks": "No dated tasks",
   "noTasksForDay": "No tasks scheduled for this day",
   "failedToLoadTasks": "Failed to load tasks: {error}",
-  "@failedToLoadTasks": {"placeholders": {"error": {"type": "Object"}}},
+  "@failedToLoadTasks": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "searchTasks": "Search tasks",
   "searchStartTyping": "Start typing to search tasks",
   "searchNoMatches": "No matching tasks",
   "failedToSearchTasks": "Failed to search tasks: {error}",
-  "@failedToSearchTasks": {"placeholders": {"error": {"type": "Object"}}},
+  "@failedToSearchTasks": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "previousMonth": "Previous month",
   "nextMonth": "Next month",
   "clearDateFilter": "Clear date filter",
@@ -449,14 +653,26 @@
   "browseTitle": "Browse",
   "unifiedAccount": "Unified Account",
   "accountUnavailable": "Account unavailable: {error}",
-  "@accountUnavailable": {"placeholders": {"error": {"type": "Object"}}},
+  "@accountUnavailable": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "signOut": "Sign out",
   "deleteAccount": "Delete account",
   "deleteAccountConfirmation": "This permanently deletes your account, cloud data, and local tasks, projects, and focus history. This cannot be undone. Store subscriptions are not canceled automatically. If you used Sign in with Apple, revoke Pomodoist access separately in your Apple Account settings.",
   "manageSignInWithApple": "Manage Sign in with Apple",
   "deleteAccountFinalConfirmation": "Are you absolutely sure? This is your final confirmation.",
   "deleteAccountError": "Could not delete account: {error}",
-  "@deleteAccountError": {"placeholders": {"error": {"type": "Object"}}},
+  "@deleteAccountError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "accountDeleted": "Account deleted.",
   "accountDeletedLocalCleanupError": "Your account was deleted, but local data could not be cleared. Clear the app's data before using this device again.",
   "browseSevenDays": "7 days",
@@ -486,42 +702,114 @@
   "newLabel": "New label",
   "syncReadyQueue": "Sync-ready queue",
   "pendingLocalCommands": "{count, plural, =0{No pending local commands} =1{1 pending local command} other{{count} pending local commands}}",
-  "@pendingLocalCommands": {"placeholders": {"count": {"type": "int"}}},
+  "@pendingLocalCommands": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "failedToLoadProjects": "Failed to load projects: {error}",
-  "@failedToLoadProjects": {"placeholders": {"error": {"type": "Object"}}},
+  "@failedToLoadProjects": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "failedToLoadLabels": "Failed to load labels: {error}",
-  "@failedToLoadLabels": {"placeholders": {"error": {"type": "Object"}}},
+  "@failedToLoadLabels": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "addProject": "Add project",
   "projectName": "Project name",
   "addLabel": "Add label",
   "labelName": "Label name",
   "couldNotAddLabel": "Could not add label: {error}",
-  "@couldNotAddLabel": {"placeholders": {"error": {"type": "Object"}}},
+  "@couldNotAddLabel": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "projectsUnavailable": "Projects unavailable: {error}",
-  "@projectsUnavailable": {"placeholders": {"error": {"type": "Object"}}},
+  "@projectsUnavailable": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "projectsUnavailableShort": "Projects unavailable",
   "noProjects": "No projects",
   "searchProjects": "Search projects",
   "searchLabels": "Search labels",
   "archivedProjectsOnly": "Archived projects only",
   "projectsCount": "{count, plural, =1{1 project} other{{count} projects}}",
-  "@projectsCount": {"placeholders": {"count": {"type": "int"}}},
+  "@projectsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "noLabels": "No labels",
   "labelsCount": "{count, plural, =1{1 label} other{{count} labels}}",
-  "@labelsCount": {"placeholders": {"count": {"type": "int"}}},
+  "@labelsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "renameProject": "Rename project",
   "deleteProject": "Delete project",
   "deleteLabel": "Delete label",
   "deleteProjectConfirmation": "Delete \"{name}\"? Tasks in this project will move to Inbox.",
-  "@deleteProjectConfirmation": {"placeholders": {"name": {"type": "String"}}},
+  "@deleteProjectConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "deleteLabelConfirmation": "Delete \"{name}\"?",
-  "@deleteLabelConfirmation": {"placeholders": {"name": {"type": "String"}}},
+  "@deleteLabelConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "couldNotDeleteProject": "Could not delete project: {error}",
-  "@couldNotDeleteProject": {"placeholders": {"error": {"type": "Object"}}},
+  "@couldNotDeleteProject": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "couldNotDeleteLabel": "Could not delete label: {error}",
-  "@couldNotDeleteLabel": {"placeholders": {"error": {"type": "Object"}}},
+  "@couldNotDeleteLabel": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "projectsCountCompact": "Projects: {count}",
-  "@projectsCountCompact": {"placeholders": {"count": {"type": "int"}}},
+  "@projectsCountCompact": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "collapseProjects": "Collapse projects",
   "expandProjects": "Expand projects",
   "projectFallbackTitle": "Project",
@@ -532,20 +820,59 @@
   "reportsNextAchievement": "Next achievement",
   "viewAllAchievements": "View all achievements",
   "viewAllAchievementsCount": "View all {count}",
-  "@viewAllAchievementsCount": {"placeholders": {"count": {"type": "int"}}},
+  "@viewAllAchievementsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "allAchievementsUnlocked": "All achievements unlocked",
   "noAchievementsYet": "No achievements yet",
   "failedToLoadAchievements": "Failed to load achievements: {error}",
-  "@failedToLoadAchievements": {"placeholders": {"error": {"type": "Object"}}},
+  "@failedToLoadAchievements": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "backToReports": "Back to reports",
   "reportsIntervalProgressSemantics": "{completed} of {target} focus intervals completed",
-  "@reportsIntervalProgressSemantics": {"placeholders": {"completed": {"type": "int"}, "target": {"type": "int"}}},
+  "@reportsIntervalProgressSemantics": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "reportsIntervalCountSemantics": "{completed} focus intervals completed; no goal set",
-  "@reportsIntervalCountSemantics": {"placeholders": {"completed": {"type": "int"}}},
+  "@reportsIntervalCountSemantics": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      }
+    }
+  },
   "reportsWeeklyChartSemantics": "Focus time for the last 7 days: {summary}",
-  "@reportsWeeklyChartSemantics": {"placeholders": {"summary": {"type": "String"}}},
+  "@reportsWeeklyChartSemantics": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
   "failedToLoadReports": "Failed to load reports: {error}",
-  "@failedToLoadReports": {"placeholders": {"error": {"type": "Object"}}},
+  "@failedToLoadReports": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "taskNotFound": "Task not found",
   "taskTitleHint": "Task title",
   "taskComment": "Comment",
@@ -556,7 +883,13 @@
   "noSubtasks": "No sub-tasks yet.",
   "makeParentTask": "Make parent task",
   "couldNotMoveTask": "Could not move task: {error}",
-  "@couldNotMoveTask": {"placeholders": {"error": {"type": "Object"}}},
+  "@couldNotMoveTask": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "scheduleTitle": "Schedule",
   "allDay": "All-day",
   "timedBlock": "Timed block",
@@ -568,16 +901,43 @@
   "recurrenceUnitMonth": "Months",
   "recurrenceInvalidInterval": "Enter 1 to 999.",
   "recurrenceEveryDays": "{interval, plural, =1{every day} other{every {interval} days}}",
-  "@recurrenceEveryDays": {"placeholders": {"interval": {"type": "int"}}},
+  "@recurrenceEveryDays": {
+    "placeholders": {
+      "interval": {
+        "type": "int"
+      }
+    }
+  },
   "recurrenceEveryWeeks": "{interval, plural, =1{every week} other{every {interval} weeks}}",
-  "@recurrenceEveryWeeks": {"placeholders": {"interval": {"type": "int"}}},
+  "@recurrenceEveryWeeks": {
+    "placeholders": {
+      "interval": {
+        "type": "int"
+      }
+    }
+  },
   "recurrenceEveryMonths": "{interval, plural, =1{every month} other{every {interval} months}}",
-  "@recurrenceEveryMonths": {"placeholders": {"interval": {"type": "int"}}},
+  "@recurrenceEveryMonths": {
+    "placeholders": {
+      "interval": {
+        "type": "int"
+      }
+    }
+  },
   "noDate": "No date",
   "calendarNotLinked": "Calendar not linked",
   "calendarLinked": "Google Calendar linked",
   "focusProgress": "{completed}/{total} focus",
-  "@focusProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@focusProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "startFocus": "Start focus",
   "focusStarted": "Focus started",
   "taskReopened": "Task reopened",
@@ -591,22 +951,40 @@
   "markComplete": "Mark complete",
   "focusHistory": "Focus history",
   "failedToLoadTask": "Failed to load task: {error}",
-  "@failedToLoadTask": {"placeholders": {"error": {"type": "Object"}}},
+  "@failedToLoadTask": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "noFocusIntervals": "No focus intervals yet.",
   "today": "Today",
   "tomorrow": "Tomorrow",
   "yesterday": "Yesterday",
   "clearDate": "Clear date",
   "priority": "Priority {priority}",
-  "@priority": {"placeholders": {"priority": {"type": "int"}}},
+  "@priority": {
+    "placeholders": {
+      "priority": {
+        "type": "int"
+      }
+    }
+  },
   "focusTitle": "Focus",
   "focusLoadError": "Could not load focus: {error}",
-  "@focusLoadError": {"placeholders": {"error": {"type": "Object"}}},
+  "@focusLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "focusViewFull": "Full",
   "focusViewMinimal": "Minimal",
   "focusSwitchToFullView": "Switch to Full",
   "focusSwitchToMinimalView": "Switch to Minimal",
-  "focusActionFailed": "Unable to update focus. Please try again.",
+  "focusActionFailed": "Could not update Focus. Try again.",
   "noActiveSession": "No active session",
   "focusIdleSubtitle": "Start a standalone focus interval or launch focus from a task.",
   "noPreset": "No preset",
@@ -630,7 +1008,13 @@
   "focusCompletionDone": "Done",
   "focusCompletionNextTask": "Next scheduled task",
   "focusCompletionTaskError": "Could not complete task: {error}",
-  "@focusCompletionTaskError": {"placeholders": {"error": {"type": "Object"}}},
+  "@focusCompletionTaskError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "completeInterval": "Complete interval",
   "logDistraction": "Log distraction",
   "workInterval": "Work interval",
@@ -639,39 +1023,153 @@
   "breakLabel": "Break",
   "longBreak": "Long break",
   "readyLabel": "Ready: {label}",
-  "@readyLabel": {"placeholders": {"label": {"type": "String"}}},
+  "@readyLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "readyShort": "Ready",
   "focusTimerTotal": "of {duration}",
-  "@focusTimerTotal": {"placeholders": {"duration": {"type": "String"}}},
+  "@focusTimerTotal": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "focusSessionProgress": "Session {current} of {total}",
-  "@focusSessionProgress": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "@focusSessionProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "focusRhythmPreviewSummary": "Focus rhythm preview, {count} steps",
-  "@focusRhythmPreviewSummary": {"placeholders": {"count": {"type": "int"}}},
+  "@focusRhythmPreviewSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "focusRhythmSummary": "Focus rhythm, step {current} of {total}: {phase}, {status}",
-  "@focusRhythmSummary": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}, "phase": {"type": "String"}, "status": {"type": "String"}}},
+  "@focusRhythmSummary": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "phase": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "focusTimerSummary": "{phase}, {status}, {remaining} remaining, {total} total",
-  "@focusTimerSummary": {"placeholders": {"phase": {"type": "String"}, "status": {"type": "String"}, "remaining": {"type": "String"}, "total": {"type": "String"}}},
+  "@focusTimerSummary": {
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      },
+      "remaining": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "focusStatusRunning": "Running",
   "focusStatusPaused": "Paused",
   "focusWorkProgress": "{completed}/{total} work",
-  "@focusWorkProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@focusWorkProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "intervalNumber": "Interval {number}",
-  "@intervalNumber": {"placeholders": {"number": {"type": "int"}}},
+  "@intervalNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "focusIntervalSummary": "{completed}/{total} work - Interval {number}",
-  "@focusIntervalSummary": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}, "number": {"type": "int"}}},
+  "@focusIntervalSummary": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "pause": "Pause",
   "resume": "Resume",
   "presetForNextIntervals": "Preset for next intervals",
   "usePreset": "Use {name}",
-  "@usePreset": {"placeholders": {"name": {"type": "String"}}},
+  "@usePreset": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "minutesWork": "{minutes}m work",
-  "@minutesWork": {"placeholders": {"minutes": {"type": "int"}}},
+  "@minutesWork": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "minutesShort": "{minutes}m short",
-  "@minutesShort": {"placeholders": {"minutes": {"type": "int"}}},
+  "@minutesShort": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "minutesLong": "{minutes}m long",
-  "@minutesLong": {"placeholders": {"minutes": {"type": "int"}}},
+  "@minutesLong": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "longEvery": "Long every {count}",
-  "@longEvery": {"placeholders": {"count": {"type": "int"}}},
+  "@longEvery": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "autoBreaks": "Auto breaks",
   "autoWork": "Auto work",
   "noPause": "No pause",
@@ -700,9 +1198,21 @@
   "connect": "Connect",
   "disconnect": "Disconnect",
   "failedToLoadIntegration": "Failed to load integration: {error}",
-  "@failedToLoadIntegration": {"placeholders": {"error": {"type": "Object"}}},
+  "@failedToLoadIntegration": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "googleCalendarFailed": "Google Calendar failed: {message}",
-  "@googleCalendarFailed": {"placeholders": {"message": {"type": "String"}}},
+  "@googleCalendarFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
   "googleAuthRequired": "Google Calendar authorization is required. Sign in again and run Sync now.",
   "googleSignInNotConfigured": "Google Sign-In is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_REVERSED_CLIENT_ID for this iOS target.",
   "googleCallbackNotConfigured": "Google Sign-In callback is not configured. Set GOOGLE_REVERSED_CLIENT_ID in ios/Flutter/GoogleOAuth.xcconfig.",
@@ -717,15 +1227,42 @@
   "notCreated": "Not created",
   "never": "Never",
   "durationMinutes": "{minutes}m",
-  "@durationMinutes": {"placeholders": {"minutes": {"type": "int"}}},
+  "@durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "durationHoursMinutes": "{hours}h {minutes}m",
-  "@durationHoursMinutes": {"placeholders": {"hours": {"type": "int"}, "minutes": {"type": "int"}}},
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "projectIcon": "Project icon",
   "projectIconOption": "Icon {number}",
-  "@projectIconOption": {"placeholders": {"number": {"type": "int"}}},
+  "@projectIconOption": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "projectColor": "Project color",
   "projectColorOption": "Color {number}",
-  "@projectColorOption": {"placeholders": {"number": {"type": "int"}}},
+  "@projectColorOption": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "addProjectToFavorites": "Add project to favorites",
   "removeProjectFromFavorites": "Remove project from favorites",
   "timelineProjectsMenu": "Manage Timeline projects",
@@ -735,11 +1272,23 @@
   "timelineExpandProject": "Expand project branch",
   "timelineCurrentTime": "Current time",
   "couldNotUpdateProject": "Could not update project: {error}",
-  "@couldNotUpdateProject": {"placeholders": {"error": {"type": "Object"}}},
+  "@couldNotUpdateProject": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "commonDone": "Done",
   "taskSelect": "Select",
   "taskSelectedCount": "{count, plural, =0{0 selected} =1{1 selected} other{{count} selected}}",
-  "@taskSelectedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@taskSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "taskSelectAll": "Select all",
   "taskDeselectAll": "Deselect all",
   "taskDue": "Due",
@@ -763,7 +1312,13 @@
   "taskCompleteSelected": "Complete selected",
   "taskReopenSelected": "Reopen selected",
   "taskActionFailedCount": "{count, plural, =1{1 task could not be updated} other{{count} tasks could not be updated}}",
-  "@taskActionFailedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@taskActionFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "voiceCollapse": "Collapse voice panel",
   "voiceExpand": "Expand voice panel",
   "voiceMovePanel": "Move voice panel",
@@ -805,9 +1360,26 @@
   "todayFocusingOn": "Focusing on",
   "openFocus": "Open Focus",
   "todayCompletedTasks": "Completed today · {count}",
-  "focusActionFailed": "Could not update Focus. Try again.",
-  "@todayTaskSummary": {"placeholders": {"tasks": {"type": "int"}, "planned": {"type": "int"}, "time": {"type": "String"}}},
-  "@todayCompletedTasks": {"placeholders": {"count": {"type": "int"}}},
+  "@todayTaskSummary": {
+    "placeholders": {
+      "tasks": {
+        "type": "int"
+      },
+      "planned": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@todayCompletedTasks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sidebarDaily": "Daily",
   "sidebarViews": "Views",
   "quickAddResetDetails": "Use default",
@@ -914,7 +1486,116 @@
   "projectMoveUp": "Move up",
   "projectMoveDown": "Move down",
   "projectParentName": "Parent project: {name}",
-  "@projectParentName": {"placeholders": {"name": {"type": "String"}}},
+  "@projectParentName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "deleteProjectWithChildrenConfirmation": "Delete \"{name}\"? Its subprojects will move up one level. Only tasks in this project will move to Inbox.",
-  "@deleteProjectWithChildrenConfirmation": {"placeholders": {"name": {"type": "String"}}}
+  "@deleteProjectWithChildrenConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "accountNickname": "Nickname",
+  "accountChangeNickname": "Change nickname",
+  "accountNicknameSaveError": "Could not save your nickname. Please try again.",
+  "notificationTaskStarting": "Task starting",
+  "notificationReturnTitle": "Your tomato misses you",
+  "notificationReturnBody": "One focus or one checkmark is enough to save the day.",
+  "notificationFocusChannel": "Focus",
+  "notificationFocusDescription": "Focus interval completion notifications",
+  "notificationReturnChannel": "Return reminders",
+  "notificationReturnDescription": "Gentle reminders to return to Pomodoist",
+  "notificationTaskChannel": "Task start",
+  "notificationTaskDescription": "Task start notifications",
+  "notificationOpenApp": "Open Pomodoist",
+  "notificationFocusCompleted": "Focus interval completed",
+  "notificationLongBreakCompleted": "Long break completed",
+  "notificationBreakCompleted": "Break completed",
+  "updateTitle": "Pomodoist update",
+  "updateAction": "Update",
+  "updateCheck": "Check for updates",
+  "updateSettings": "Updates",
+  "updateReceiveRc": "Receive release candidates (RC)",
+  "updateStableChannel": "Channel: stable releases",
+  "updateRcChannel": "Channel: stable releases and RC",
+  "updateRcHelp": "RC releases may contain bugs. Alpha and beta versions are excluded.",
+  "updateRestart": "The app will restart. Your data will be preserved.",
+  "updateNotes": "Release notes",
+  "updateOwnerManaged": "This build is updated by its owner to preserve its server configuration. Ask them for the latest version.",
+  "updateUnsupported": "Automatic updates are available in the official Linux AppImage. Use your package manager for other builds.",
+  "updateVersion": "Version {value}",
+  "@updateVersion": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "updatePhaseIdle": "You can check at any time.",
+  "updatePhaseChecking": "Checking releases…",
+  "updatePhaseAvailable": "A new version is available",
+  "updatePhaseDownloading": "Downloading update…",
+  "updatePhaseVerifying": "Verifying integrity…",
+  "updatePhaseInstalling": "Preparing installation and restart…",
+  "updatePhaseUpToDate": "You have the latest compatible version.",
+  "updatePhaseFailed": "The update could not be completed",
+  "achievementFocusSubtitle": "{count, plural, =1{Complete 1 work focus} other{Complete {count} work focuses}}",
+  "@achievementFocusSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementTaskSubtitle": "{count, plural, =1{Complete 1 task} other{Complete {count} tasks}}",
+  "@achievementTaskSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementDayNotWastedSubtitle": "Finish a focus and a task in one day",
+  "achievementFocusPlusCheckSubtitle": "Finish 3 focuses and 3 tasks in one day",
+  "achievementNoFussSubtitle": "Finish 5 focuses in a day without stops",
+  "achievementCleanEntrySubtitle": "Complete a task after its linked focus",
+  "achievementTomatoClosedSubtitle": "Complete a task on the day of its work focus",
+  "achievementTitle": "{id, select, focus_1{First tomato} focus_5{Warm-up} focus_10{Focus caught} focus_25{Tomato shift} focus_50{Mode on} focus_100{Red belt} focus_250{Deep roots} focus_500{Timer authority} focus_1000{Thousandth tomato} focus_5000{Focus farmer} focus_10000{Attention plantation} focus_50000{Tomato empire} focus_100000{Red supermind} focus_1000000{Tomato singularity} task_1{First check} task_5{The list flinched} task_10{Happy checkbox} task_25{Clearing the pile} task_50{Checkmark master} task_100{Tail closer} task_250{List under control} task_500{Office knockout} task_1000{Thousand checks} task_5000{Victory archivist} task_10000{Checkbox machine} task_50000{Bureau of closed questions} task_100000{List ruler} task_1000000{Final check} combo_day_not_wasted{Day not wasted} combo_focus_plus_check{Focus + check} combo_no_fuss{No fuss} combo_clean_entry{Clean entry} combo_tomato_closed_question{Tomato closed it} other{Achievement}}",
+  "@achievementTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "focusPresetDeepWork": "Deep Work",
+  "focusPresetShortSprint": "Short Sprint",
+  "csvImportIssueRow": "Row {row}: {message}",
+  "@csvImportIssueRow": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "csvImportIssueMessage": "{code, select, fileTooLarge{CSV file exceeds 16 MiB.} invalidUtf8{CSV must be valid UTF-8.} missingHeader{CSV header is missing.} malformed{Malformed CSV.} unknownHeader{Unknown header \"{value}\".} duplicateHeader{Duplicate header \"{value}\".} contentHeaderRequired{content header is required.} tooManyTasks{CSV cannot contain more than 1000 tasks.} tooManyFields{Row has more fields than the header.} contentRequired{content is required.} invalidPriority{priority must be an integer from 1 to 4.} invalidDate{{value} must use YYYY-MM-DD.} mixedSchedule{Due date cannot be combined with a timed schedule.} timedFieldsRequired{A timed schedule requires start_at, end_at and time_zone.} invalidTimestamp{{value} must be RFC3339 with an explicit UTC offset.} invalidTimeZone{time_zone must be a valid IANA name.} endBeforeStart{end_at must be after start_at.} invalidRecurrence{recurrence must be day, week or month.} invalidInteger{{value} must be an integer from 1 to 999.} intervalWithoutRecurrence{recurrence_interval requires recurrence.} recurrenceWithoutSchedule{recurrence requires a schedule.} doneTask{Done tasks cannot be imported.} invalidKey{{value} has an invalid format.} empty{CSV contains no tasks.} duplicateKey{Duplicate key \"{value}\".} parentCycle{parent_key references form a cycle.} missingParent{parent_key \"{value}\" does not exist.} childProject{A child task must use the same project as its parent.} other{The file could not be imported.}}",
+  "@csvImportIssueMessage": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  }
 }

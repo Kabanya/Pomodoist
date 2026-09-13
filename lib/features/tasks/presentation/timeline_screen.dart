@@ -1,3 +1,4 @@
+import 'project_localizations.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -1581,7 +1582,7 @@ class _TimelineProjectHeader extends ConsumerWidget {
           const SizedBox(width: 4),
           Expanded(
             child: Text(
-              project.name,
+              project.displayName(context.l10n),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(
@@ -1636,7 +1637,7 @@ class _TimelineProjectMenuDialog extends ConsumerWidget {
                   color: effectiveProjectColor(project),
                   size: 16,
                 ),
-                title: Text(project.name),
+                title: Text(project.displayName(context.l10n)),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

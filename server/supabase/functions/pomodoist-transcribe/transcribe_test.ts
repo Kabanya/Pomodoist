@@ -66,6 +66,7 @@ function setup(options: {
   const deps: TranscriptionDeps = {
     env: { get: (key) => env[key as keyof typeof env] },
     authenticate: async () => options.user === false ? null : "user-1",
+    quota: async () => ({ allowed: true }),
     fetch: options.fetch ?? (async (url, init) => {
       calls.push({ url: String(url), init });
       return new Response(JSON.stringify(options.result ?? { text: "Купить молоко" }), {
@@ -89,6 +90,70 @@ Deno.test("transcribes with server credentials, default model and normalized loc
   });
   assert.equal(calls[0].init?.redirect, "error");
   assert.equal(response.headers.get("Cache-Control"), "no-store");
+});
+
+Deno.test("exhausted quota prevents provider work and returns its reset time", async () => {
+  const { deps, calls } = setup();
+  deps.quota = async () => ({ allowed: false, resetsAt: "2026-10-01T00:00:00Z" });
+  const response = await handleVoiceTranscription(request(), deps);
+  assert.equal(response.status, 429);
+  assert.deepEqual(await response.json(), {
+    ok: false, code: "voice_quota_exceeded", error: "Monthly voice transcription limit reached.",
+    retryable: false, resetsAt: "2026-10-01T00:00:00Z",
+  });
+  assert.equal(calls.length, 0);
+});
+
+Deno.test("quota is reserved after validation and charged only for usable transcripts", async () => {
+  for (const status of [200, 500]) {
+    const { deps } = setup({ status });
+    const actions: string[] = [];
+    const requests = new Set<string>();
+    deps.quota = async (action, userId, requestId) => {
+      assert.equal(userId, "user-1");
+      actions.push(action);
+      requests.add(requestId);
+      return { allowed: true };
+    };
+    assert.equal((await handleVoiceTranscription(request({}), deps)).status, 400);
+    assert.deepEqual(actions, []);
+    assert.equal((await handleVoiceTranscription(request(), deps)).status, status === 200 ? 200 : 502);
+    assert.deepEqual(actions, ["reserve", status === 200 ? "complete" : "release"]);
+    assert.equal(requests.size, 1);
+  }
+});
+
+Deno.test("quota service outages fail closed without exposing database errors", async () => {
+  const { deps, calls } = setup();
+  deps.quota = async () => { throw new Error("private database credentials"); };
+  const response = await handleVoiceTranscription(request(), deps);
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).code, "voice_quota_unavailable");
+  assert.equal(calls.length, 0);
+});
+
+Deno.test("provider errors stay recoverable when releasing quota fails", async () => {
+  const { deps } = setup({ status: 500 });
+  deps.quota = async (action) => {
+    if (action === "release") throw new Error("private database diagnostics");
+    return { allowed: true };
+  };
+  const response = await handleVoiceTranscription(request(), deps);
+  assert.equal(response.status, 502);
+  assert.equal((await response.json()).code, "transcription_failed");
+});
+
+Deno.test("a transcript is not returned until its usage has been recorded", async () => {
+  const { deps } = setup();
+  deps.quota = async (action) => {
+    if (action === "complete") throw new Error("private database diagnostics");
+    return { allowed: true };
+  };
+  const response = await handleVoiceTranscription(request(), deps);
+  assert.equal(response.status, 503);
+  const result = await response.json();
+  assert.equal(result.code, "voice_quota_unavailable");
+  assert.equal(result.text, undefined);
 });
 Deno.test("auth is required even when an API key is configured", async () => {
   for (const withHeader of [false, true]) {

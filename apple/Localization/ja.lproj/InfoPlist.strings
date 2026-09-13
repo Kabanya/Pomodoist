@@ -1,0 +1,2 @@
+"NSMicrophoneUsageDescription" = "Pomodoistはマイクを使用して、音声で入力されたクイック追加コマンドをタスクのテキストに変換します。";
+"NSSpeechRecognitionUsageDescription" = "Pomodoistは音声認識を使用して、音声で入力されたクイック追加コマンドを文字に起こします。";

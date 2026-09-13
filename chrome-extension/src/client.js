@@ -101,6 +101,8 @@ export class Client {
     const started = Date.now(), state = nonce();
     const redirect = identity.getRedirectURL('captcha-callback');
     const url = new URL('/auth/extension-challenge.html', this.config.webUrl);
+    const language = globalThis.chrome?.i18n?.getUILanguage()?.toLowerCase().split(/[-_]/)[0];
+    if (['pt', 'ja', 'ko'].includes(language)) url.searchParams.set('lang', language === 'pt' ? 'pt-BR' : language);
     url.searchParams.set('returnTo', redirect); url.hash = new URLSearchParams({ state }).toString();
     const result = await identity.launchWebAuthFlow({ url: url.href, interactive: true });
     if (Date.now() - started > 5 * 60000) throw new Error('Verification expired. Please retry.');

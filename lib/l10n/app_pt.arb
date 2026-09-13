@@ -1,0 +1,1601 @@
+{
+  "@@locale": "pt",
+  "settingsSectionGeneral": "Geral",
+  "settingsSectionAppearance": "Aparência",
+  "settingsSectionTasksFocus": "Tarefas e foco",
+  "settingsSectionIntegrations": "Integrações e dados",
+  "settingsSectionAccount": "Conta e Pro",
+  "settingsThemeColorsTab": "Cores",
+  "settingsThemeBackgroundsTab": "Planos de fundo",
+  "settingsRefreshAccount": "Atualizar conta",
+  "settingsSubscriptionActions": "Opções de assinatura",
+  "settingsSubscriptionError": "Não foi possível atualizar sua assinatura. O acesso confirmado anteriormente foi mantido.",
+  "settingsVersionError": "Não foi possível carregar a versão.",
+  "appTitle": "pomodoist",
+  "commonAdd": "Adicionar",
+  "commonCancel": "Cancelar",
+  "commonSave": "Salvar",
+  "commonDelete": "Excluir",
+  "commonUndo": "Desfazer",
+  "commonOpen": "Abrir",
+  "commonBack": "Voltar",
+  "commonClose": "Fechar",
+  "commonCreate": "Criar",
+  "commonClear": "Limpar",
+  "commonStop": "Parar",
+  "skip": "Pular",
+  "onboardingLanguageTitle": "Escolha o idioma",
+  "onboardingLanguageSubtitle": "Escolha o idioma do Pomodoist.",
+  "onboardingTimerTitle": "Escolha o estilo do timer",
+  "onboardingTimerSubtitle": "Escolha como exibir o progresso Pomodoro nas sessões de foco.",
+  "onboardingPaywallTitle": "Desbloqueie o Pomodoist",
+  "onboardingPaywallSubtitle": "A oferta vitalícia fica disponível por 24 horas toda semana.",
+  "onboardingAccountTitle": "Crie uma conta",
+  "onboardingAccountSubtitle": "Entre para sincronizar tarefas, histórico de foco e configurações entre dispositivos.",
+  "startupPreparingTasks": "Preparando suas tarefas",
+  "operationTakingLonger": "Está demorando mais que o normal. A operação ainda está em andamento.",
+  "onboardingContinue": "Continuar",
+  "onboardingMaybeLater": "Talvez depois",
+  "onboardingFinish": "Concluir",
+  "billingTitle": "Pomodoist Pro",
+  "billingSubtitle": "Dite tarefas em linguagem natural, e o Pomodoist transforma suas palavras em tarefas. O histórico de tarefas é salvo para sempre.",
+  "billingSubtitleHighlight": "linguagem natural",
+  "billingCancelAnytime": "Cancele quando quiser.",
+  "billingMonthlyTitle": "Mensal",
+  "billingAnnualTitle": "Anual",
+  "billingPricePerMonth": "{price}/mês",
+  "@billingPricePerMonth": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "billingPricePerYear": "{price}/ano",
+  "@billingPricePerYear": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "billingMonthlyIntroSubtitle": "Primeiros 3 meses, depois {price}.",
+  "@billingMonthlyIntroSubtitle": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "billingAnnualIntroSubtitle": "Depois {price}.",
+  "@billingAnnualIntroSubtitle": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "billingLifetimeTitle": "Vitalício",
+  "billingLifetimeSubtitle": "Um pagamento, para sempre.",
+  "billingBestValue": "Melhor custo-benefício",
+  "billingChoose": "Escolher",
+  "billingActive": "O Pomodoist Pro está ativo neste dispositivo.",
+  "billingActiveShort": "Ativo",
+  "billingRestore": "Restaurar compras",
+  "privacyPolicy": "Política de Privacidade",
+  "termsOfUse": "Termos de Uso",
+  "support": "Suporte",
+  "billingManageLink": "Gerenciar pelo Link",
+  "billingExternalBrowserTitle": "O pagamento abre no navegador",
+  "billingExternalBrowserMessage": "O Pomodoist abrirá o Stripe Checkout no Safari ou no navegador padrão. Permita a abertura da janela para continuar.",
+  "billingAppleOnly": "Compras disponíveis no iPhone, iPad e Mac.",
+  "billingStoreUnavailable": "A App Store não está disponível no momento.",
+  "billingStoreConnectionFailed": "Desative a VPN e tente novamente.",
+  "billingPurchaseError": "Erro na compra: {error}",
+  "@billingPurchaseError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "billingStripeAuthenticationRequired": "Entre no Pomodoist e tente novamente.",
+  "billingStripeDisabled": "Os pagamentos ainda não estão disponíveis. Tente novamente mais tarde.",
+  "billingStripeAlreadyEntitled": "O Pomodoist Pro já está ativo. Atualize o status da sua conta.",
+  "billingStripeOfferExpired": "Esta oferta expirou. Escolha outro plano disponível.",
+  "billingStripeManagedPaymentsUnavailable": "Os pagamentos pelo Stripe estão temporariamente indisponíveis. Tente mais tarde ou contate o suporte.",
+  "billingStripeCheckoutFailed": "Não foi possível iniciar o pagamento. Verifique sua conexão e tente novamente.",
+  "purchaseSuccessTitle": "Pro está ativo",
+  "purchaseSuccessMessage": "Obrigado por apoiar o Pomodoist. Todos os recursos Pro estão prontos para uso.",
+  "purchaseSuccessContinue": "Continuar",
+  "purchaseProcessingTitle": "Pagamento em processamento",
+  "purchaseProcessingMessage": "Seu pagamento está sendo confirmado. Se o Pro não aparecer em breve, atualize novamente mais tarde.",
+  "purchaseOpenApp": "Abrir Pomodoist",
+  "launchOfferEndsIn": "Restam {time} na oferta vitalícia",
+  "@launchOfferEndsIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "accountApple": "Apple",
+  "accountGoogle": "Google",
+  "accountEmail": "E-mail",
+  "loginTitle": "Entrar no Pomodoist",
+  "accountChecking": "Verificando sua conta",
+  "oauthConsentTitle": "Conectar um agente",
+  "oauthConsentLoading": "Verificando a solicitação de conexão",
+  "oauthConsentInvalidAuthorization": "Esta solicitação de conexão está ausente ou é inválida.",
+  "oauthConsentLoadError": "Não foi possível carregar a solicitação de conexão.",
+  "oauthConsentActionError": "Não foi possível concluir a solicitação. Tente novamente.",
+  "oauthConsentRedirectError": "O Pomodoist recebeu um endereço de retorno inseguro ou ausente. O acesso não foi concedido.",
+  "oauthConsentClientFallback": "Agente",
+  "oauthConsentClientRequest": "{clientName} quer acessar o Pomodoist",
+  "@oauthConsentClientRequest": {
+    "placeholders": {
+      "clientName": {
+        "type": "String"
+      }
+    }
+  },
+  "oauthConsentRedirectOrigin": "Endereço de retorno",
+  "oauthConsentCapabilitiesTitle": "Este agente pode",
+  "oauthConsentManagePlanning": "Ler e gerenciar tarefas, projetos, etiquetas do usuário e Kanban.",
+  "oauthConsentReadInsights": "Ler histórico de foco concluído, relatórios de produtividade e conquistas.",
+  "oauthConsentUnavailableTitle": "Este agente não pode",
+  "oauthConsentUnavailable": "Acessar sua conta ou cobrança, Google Agenda ou o timer de foco em andamento.",
+  "oauthConsentUnsupportedScopes": "Esta solicitação pede acesso não permitido à conta e não pode ser aprovada.",
+  "oauthConsentApprove": "Permitir",
+  "oauthConsentDeny": "Negar",
+  "oauthConsentApproving": "Permitindo acesso…",
+  "oauthConsentDenying": "Negando acesso…",
+  "oauthConsentRedirecting": "Voltando ao agente…",
+  "loginCreateAccountPrompt": "Ainda não tem conta?",
+  "loginCreateAccountAction": "Criar conta",
+  "registerTitle": "Criar uma conta",
+  "registerSubtitle": "Sincronize tarefas, histórico de foco e configurações entre dispositivos.",
+  "registerPassword": "Senha",
+  "registerSubmit": "Criar conta",
+  "registerSignInPrompt": "Já tem uma conta?",
+  "registerSignInAction": "Entrar",
+  "registerCheckEmailTitle": "Verifique seu e-mail",
+  "registerCheckEmailMessage": "Se este endereço precisar de confirmação, você receberá um e-mail com um link. Se já tem uma conta, entre ou redefina sua senha.",
+  "registerError": "Não foi possível criar a conta: {error}",
+  "@registerError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "authEmailSignInTitle": "Entrar com e-mail",
+  "authWelcomeTitle": "Entrar no Pomodoist",
+  "authWelcomeDescription": "Suas tarefas e seu foco, em todos os dispositivos.",
+  "authSignInWithLink": "Entrar com um link",
+  "authForgotPassword": "Esqueceu a senha?",
+  "authBackToSignIn": "Voltar para entrar",
+  "authNoAccount": "Ainda não tem conta?",
+  "authHaveAccount": "Já tem uma conta?",
+  "authShowPassword": "Mostrar senha",
+  "authHidePassword": "Ocultar senha",
+  "authResetTitle": "Redefinir sua senha",
+  "authResetDescription": "Digite o e-mail da sua conta. Enviaremos um link para alterar sua senha.",
+  "authResetEmailSentTitle": "Verifique seu e-mail",
+  "authResetEmailSent": "Se existir uma conta com este e-mail, você receberá um link para redefinir a senha.",
+  "authResetSendAgain": "Enviar novamente",
+  "authResetEditEmail": "Alterar e-mail",
+  "authNewPasswordTitle": "Escolha uma nova senha",
+  "authNewPasswordDescription": "Use uma senha que você não usa em outras contas.",
+  "authNewPassword": "Nova senha",
+  "authConfirmPassword": "Repita a senha",
+  "authSavePassword": "Salvar senha",
+  "authPasswordMismatch": "As senhas não coincidem.",
+  "authPasswordUnchanged": "Escolha uma senha diferente da atual.",
+  "authPasswordUpdatedTitle": "Senha atualizada",
+  "authPasswordUpdatedMessage": "Sua nova senha foi salva. Você pode continuar usando o Pomodoist.",
+  "authResetLinkExpired": "Este link para redefinir a senha é inválido ou expirou. Solicite um novo link.",
+  "authUnexpectedReset": "Não foi possível enviar o e-mail de redefinição de senha. Tente novamente.",
+  "authUnexpectedPasswordUpdate": "Não foi possível salvar sua nova senha. Tente novamente.",
+  "authCheckingResetLink": "Verificando seu link de redefinição de senha…",
+  "authSignInAction": "Entrar",
+  "authSendLink": "Enviar link",
+  "authMagicLinkSent": "Se existir uma conta com este endereço, você receberá um link para entrar. Verifique a caixa de entrada e o spam.",
+  "authAccountCreated": "Conta criada.",
+  "authSignedIn": "Você entrou.",
+  "authEmailRequired": "Digite seu e-mail.",
+  "authEmailInvalid": "Verifique o endereço de e-mail, por exemplo nome@example.com.",
+  "authPasswordRequired": "Digite sua senha.",
+  "authInvalidCredentials": "E-mail ou senha incorretos. Verifique o endereço, redefina a senha ou crie uma conta.",
+  "authEmailUnconfirmed": "Confirme seu e-mail pelo link enviado e entre novamente.",
+  "authWeakPassword": "Esta senha é fácil demais de adivinhar. Use uma senha mais longa e menos previsível.",
+  "authAccountMayExist": "Já pode existir uma conta com este e-mail. Entre ou redefina sua senha.",
+  "authRateLimited": "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+  "authEmailRateLimited": "Muitos e-mails foram solicitados. Aguarde alguns minutos antes de pedir outro.",
+  "authOffline": "Não foi possível acessar o serviço de contas. Verifique sua conexão com a internet e tente novamente.",
+  "authTimeout": "O serviço de contas está demorando para responder. Tente novamente.",
+  "authServiceUnavailable": "O serviço de contas está temporariamente indisponível. Tente mais tarde.",
+  "authCaptchaRequired": "Conclua a verificação de segurança para continuar.",
+  "authCaptchaExpired": "A verificação de segurança expirou. Faça-a novamente.",
+  "authCaptchaFailed": "A verificação de segurança falhou. Tente novamente.",
+  "authCaptchaCancelled": "A verificação de segurança foi cancelada. Reinicie-a para continuar.",
+  "authCaptchaUnavailable": "A verificação de segurança está indisponível. Verifique sua conexão e tente novamente.",
+  "authCaptchaOpenFailed": "O Pomodoist não conseguiu abrir a verificação de segurança no navegador. Verifique seu navegador padrão e tente novamente.",
+  "authProviderFallback": "este provedor",
+  "authProviderUnavailable": "Entrar com {provider} está indisponível. Tente novamente ou use outro método.",
+  "@authProviderUnavailable": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "authSignUpDisabled": "Criar contas com e-mail está temporariamente indisponível. Tente outro método de entrada.",
+  "authAccountRestricted": "Esta conta não pode entrar no momento. Contate o suporte se achar que é um erro.",
+  "authLinkExpired": "Este link de entrada é inválido ou expirou. Solicite um novo link.",
+  "authUnexpectedSignIn": "Não foi possível entrar. Tente novamente.",
+  "authUnexpectedSignUp": "Não foi possível criar a conta. Tente novamente.",
+  "authUnexpectedMagicLink": "Não foi possível enviar o link de entrada. Tente novamente.",
+  "authResendConfirmation": "Reenviar confirmação",
+  "authConfirmationSendFailed": "Não foi possível enviar o e-mail de confirmação. Tente mais tarde.",
+  "authRetryVerification": "Tentar verificação novamente",
+  "captchaSecurityLabel": "Verificação de segurança",
+  "captchaChallengeTitle": "Verificação de segurança do Pomodoist",
+  "captchaChallengePrompt": "Confirme que você é humano para continuar no Pomodoist.",
+  "captchaChallengeInvalid": "Este link de verificação de segurança é inválido. Volte ao Pomodoist e tente novamente.",
+  "captchaChallengeHandoffHelp": "Se o Pomodoist não abriu, use o botão abaixo. Se o app não estiver instalado, feche esta página e volte ao dispositivo onde começou.",
+  "captchaReturnToApp": "Voltar ao Pomodoist",
+  "navSearch": "Buscar",
+  "navInbox": "Entrada",
+  "navPriorityMatrix": "Matriz de prioridades",
+  "navTimeline": "Linha do tempo",
+  "navKanban": "Kanban",
+  "kanbanTitle": "Kanban",
+  "kanbanSubtitle": "Visualize seu fluxo de trabalho e foque no que importa agora.",
+  "kanbanDefaultBacklog": "Pendências",
+  "kanbanDefaultTodo": "A fazer",
+  "kanbanDefaultInProgress": "Em andamento",
+  "kanbanDefaultDone": "Concluído",
+  "kanbanSearchTooltip": "Buscar no Kanban",
+  "kanbanSearchHint": "Buscar tarefas ou projetos",
+  "kanbanHideDone": "Ocultar concluídos",
+  "kanbanShowDone": "Mostrar concluídos",
+  "kanbanProjectsTitle": "Projetos neste quadro",
+  "kanbanAddToStatus": "Adicionar a {status}",
+  "@kanbanAddToStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "kanbanTaskField": "Tarefa",
+  "kanbanProjectField": "Projeto",
+  "kanbanChooseProject": "Escolha um projeto.",
+  "kanbanTaskActions": "Ações da tarefa",
+  "kanbanDragTask": "Arrastar tarefa",
+  "kanbanMoveTo": "Mover para {status}",
+  "@kanbanMoveTo": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "kanbanRestoreBeforeFocus": "Restaure a tarefa antes de iniciar o foco.",
+  "kanbanCouldNotStartFocus": "Não foi possível iniciar o foco: {error}",
+  "@kanbanCouldNotStartFocus": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "kanbanCouldNotLoad": "Não foi possível carregar o Kanban: {error}",
+  "@kanbanCouldNotLoad": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "commonRetry": "Tentar novamente",
+  "commonContinueWaiting": "Continuar aguardando",
+  "kanbanTasksCount": "{count} tarefas",
+  "@kanbanTasksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kanbanSubtasksProgress": "{completed} de {total} subtarefas",
+  "@kanbanSubtasksProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "kanbanFocusIntervalsProgress": "{completed} de {total} intervalos de foco",
+  "@kanbanFocusIntervalsProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "kanbanActive": "Ativo",
+  "kanbanPriority": "Prioridade {priority}",
+  "@kanbanPriority": {
+    "placeholders": {
+      "priority": {
+        "type": "int"
+      }
+    }
+  },
+  "kanbanMoveAnnouncement": "Movido para {status}",
+  "@kanbanMoveAnnouncement": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "kanbanFocusStartedAnnouncement": "Foco iniciado em {task}",
+  "@kanbanFocusStartedAnnouncement": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "kanbanNoTasks": "Nenhuma tarefa ainda",
+  "navToday": "Hoje",
+  "navUpcoming": "Em breve",
+  "navBrowse": "Explorar",
+  "navIntegrations": "Integrações",
+  "navReports": "Relatórios",
+  "navFocus": "Foco",
+  "navProjects": "Projetos",
+  "navSettings": "Configurações",
+  "settingsTitle": "Configurações",
+  "settingsAboutTitle": "Sobre",
+  "settingsFocusCompletionCelebrationTitle": "Celebração ao concluir o foco",
+  "settingsFocusCompletionCelebrationSubtitle": "Mostrar uma celebração em tela cheia após a última pausa.",
+  "settingsVersionLabel": "Versão",
+  "settingsPlanLabel": "Plano",
+  "settingsPlanFree": "Gratuito",
+  "settingsPlanPro": "Pomodoist Pro",
+  "settingsShortcutsTitle": "Atalhos de teclado",
+  "settingsShortcutsSubtitle": "Personalize os comandos disponíveis em um teclado físico.",
+  "settingsShortcutsToggleSidebar": "Alternar barra lateral",
+  "settingsShortcutsGlobalQuickAdd": "Adição rápida global",
+  "settingsShortcutsGlobalQuickAddSubtitle": "Funciona mesmo quando o Pomodoist não está ativo.",
+  "settingsShortcutsRecordTitle": "Pressione um atalho",
+  "settingsShortcutsRecordPrompt": "Use uma tecla com Command, Control ou Alt. Pressione Esc para cancelar.",
+  "settingsShortcutsInvalid": "Inclua Command, Control ou Alt.",
+  "settingsShortcutsConflict": "Este atalho já está em uso.",
+  "settingsShortcutsGlobalError": "Este atalho global está indisponível. O atalho anterior continua ativo.",
+  "settingsShortcutsResetAll": "Redefinir tudo",
+  "settingsShortcutsResetDone": "Atalhos de teclado redefinidos.",
+  "csvImportTitle": "Importar tarefas de CSV",
+  "csvImportSubtitle": "Revise um arquivo CSV antes de criar tarefas, projetos, etiquetas e status de fluxo de trabalho.",
+  "csvImportSelectFile": "Escolher arquivo CSV",
+  "csvImportHumanGuideButton": "Guia para pessoas",
+  "csvImportAgentGuideButton": "Guia para agentes",
+  "csvImportHumanGuideTitle": "Como preparar um arquivo CSV",
+  "csvImportAgentGuideTitle": "Especificação CSV para agentes",
+  "csvImportCopy": "Copiar",
+  "csvImportCopied": "Copiado para a área de transferência.",
+  "csvImportPreviewTitle": "Revisar importação",
+  "csvImportPreviewTasks": "Tarefas",
+  "csvImportPreviewSubtasks": "Subtarefas",
+  "csvImportPreviewNewProjects": "Novos projetos",
+  "csvImportPreviewNewLabels": "Novas etiquetas",
+  "csvImportPreviewNewStatuses": "Novos status de fluxo de trabalho",
+  "csvImportNone": "Nenhum",
+  "csvImportDuplicateWarning": "Importar o mesmo arquivo novamente criará tarefas duplicadas.",
+  "csvImportConfirm": "Importar",
+  "csvImportSuccess": "Tarefas importadas",
+  "csvImportErrorTitle": "Falha ao importar CSV",
+  "csvImportUnexpectedError": "Não foi possível importar o arquivo.",
+  "csvImportHumanGuide": "1. Salve o arquivo como CSV UTF-8. Use vírgula (recomendado) ou ponto e vírgula como separador.\n\n2. A coluna content é obrigatória. Você também pode usar: key, description, project, labels, priority, due_date, start_at, end_at, time_zone, recurrence, recurrence_interval, deadline, estimate, kanban_status, parent_key.\n\n3. Coloque uma tarefa aberta por linha. Separe etiquetas com |. A prioridade vai de 1 a 4; vazio significa 4. Projeto vazio significa Entrada, e status vazio significa Pendências. Projetos, etiquetas e status abertos ausentes são criados automaticamente.\n\n4. Para uma tarefa de dia inteiro, use due_date no formato YYYY-MM-DD. Para uma tarefa com horário, preencha start_at e end_at no formato RFC3339 com deslocamento UTC e informe um time_zone IANA, como Europe/Moscow.\n\n5. Para criar subtarefas, dê à linha principal uma key única e use esse valor no parent_key da subtarefa. A tarefa principal pode aparecer depois no arquivo. A subtarefa deve usar o mesmo projeto da principal.\n\n6. O Pomodoist valida todo o arquivo e mostra uma prévia antes de importar. Nada é salvo se alguma linha for inválida. Reimportar cria tarefas duplicadas.",
+  "settingsConnectedAgentsTitle": "Agentes conectados",
+  "settingsConnectedAgentsLoading": "Carregando agentes conectados…",
+  "settingsConnectedAgentsEmpty": "Nenhum agente conectado.",
+  "settingsConnectedAgentsLoadError": "Não foi possível carregar os agentes conectados.",
+  "settingsConnectedAgentsUnknownClient": "Agente",
+  "settingsConnectedAgentsConnectedOn": "Conectado em {date}",
+  "@settingsConnectedAgentsConnectedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsConnectedAgentsRevoke": "Revogar acesso",
+  "settingsConnectedAgentsRevokeConfirmTitle": "Revogar acesso do agente?",
+  "settingsConnectedAgentsRevokeConfirmMessage": "Revogar o acesso de {clientName} ao Pomodoist?",
+  "@settingsConnectedAgentsRevokeConfirmMessage": {
+    "placeholders": {
+      "clientName": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsConnectedAgentsRevokeError": "Não foi possível revogar o acesso. Tente novamente.",
+  "settingsLanguageTitle": "Idioma",
+  "settingsLanguageSubtitle": "Escolha o idioma do app.",
+  "settingsLanguageSystem": "Padrão do sistema",
+  "settingsVoiceTranscriptionTitle": "Transcrição de voz",
+  "settingsVoiceTranscriptionSubtitle": "Escolha como as gravações são convertidas em texto neste dispositivo.",
+  "settingsVoiceTranscriptionSystem": "Sistema (Apple)",
+  "settingsVoiceTranscriptionCloud": "Nuvem",
+  "settingsVoiceTranscriptionCloudDescription": "A transcrição na nuvem envia áudio ao Pomodoist e requer conexão com a internet.",
+  "settingsVoiceTranscriptionCloudRequiresSignIn": "Entre para usar a transcrição na nuvem. Até lá, a transcrição do sistema permanece ativa.",
+  "settingsThemeTitle": "Tema",
+  "settingsThemeSubtitle": "Escolha a aparência do app.",
+  "settingsThemeSystem": "Sistema",
+  "settingsThemeLight": "Claro",
+  "settingsThemeDark": "Escuro",
+  "settingsTimerVisualTitle": "Timer Pomodoro",
+  "settingsTimerVisualSubtitle": "Escolha como o progresso aparece na tela de foco.",
+  "settingsTimerVisualBar": "Barra",
+  "settingsTimerVisualCircle": "Círculo",
+  "settingsReturnRemindersTitle": "Lembretes de retorno",
+  "settingsReturnRemindersSubtitle": "Um lembrete às 20:30 se você não concluiu nenhuma tarefa hoje.",
+  "settingsDefaultTimedBlockTitle": "Duração padrão do bloco no calendário",
+  "settingsDefaultTimedBlockSubtitle": "Ao informar apenas um horário, novas tarefas usam esta duração no calendário.",
+  "settingsDefaultTimedBlockCustomLabel": "Duração personalizada",
+  "settingsDefaultTimedBlockError": "Digite de 1 a 480 minutos.",
+  "settingsTaskTimeDisplayTitle": "Exibição de horário das tarefas",
+  "settingsTaskTimeDisplaySubtitle": "Escolha como exibir os horários das tarefas.",
+  "settingsTaskTimeDisplaySmart": "Inteligente",
+  "settingsTaskTimeDisplayRange": "Horário de início e fim",
+  "settingsTaskTimeDisplayStartOnly": "Apenas horário de início",
+  "taskTimeStatusFuture": "Em breve",
+  "taskTimeStatusFocused": "Em foco",
+  "taskTimeStatusCurrent": "Em andamento",
+  "taskTimeStatusOverdue": "Atrasada",
+  "taskTimeStatusCompleted": "Concluída",
+  "menuTooltip": "Menu",
+  "localUser": "Usuário local",
+  "addTask": "Adicionar tarefa",
+  "quickAddHint": "Criar sincronização amanhã p1 #App @coding 4p",
+  "couldNotAddTask": "Não foi possível adicionar a tarefa: {error}",
+  "@couldNotAddTask": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "taskCreateFailed": "Não foi possível criar a tarefa. Tente novamente.",
+  "couldNotAddProject": "Não foi possível adicionar o projeto: {error}",
+  "@couldNotAddProject": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "tasksCreated": "{count, plural, =1{1 tarefa adicionada} other{{count} tarefas adicionadas}}",
+  "@tasksCreated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "voiceQuickAdd": "Adição rápida por voz",
+  "voiceTitle": "Adicionar por voz",
+  "voiceRecord": "Gravar",
+  "voiceAgain": "Novamente",
+  "voiceStop": "Parar",
+  "voiceAddCount": "Adicionar {count}",
+  "@voiceAddCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "voiceTaskLabel": "Tarefa {index}",
+  "@voiceTaskLabel": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "voiceRemoveTask": "Remover",
+  "voiceInstruction": "Toque em gravar e dite as tarefas.",
+  "voiceStatusIdle": "Apenas entrada do microfone integrado",
+  "voiceStatusRequestingPermission": "Solicitando acesso",
+  "voiceStatusRecording": "Ouvindo pelo microfone integrado",
+  "voiceStatusTranscribing": "Transcrevendo gravação",
+  "voiceStatusCanceled": "Gravação cancelada",
+  "voiceStatusUnsupported": "Plataforma não compatível",
+  "voiceStatusError": "Não foi possível reconhecer a fala",
+  "voiceStatusAnalyzing": "Separando em tarefas",
+  "voiceStatusReview": "Revise as tarefas antes de adicionar",
+  "voiceStepRecord": "Gravar",
+  "voiceStepText": "Texto",
+  "voiceStepAnalyze": "Analisar",
+  "voiceStepReview": "Revisar",
+  "voiceAnalyzing": "O Pomodoist está separando a fala em tarefas",
+  "voiceFallbackError": "O Pomodoist não conseguiu processar a fala; um rascunho foi mantido para edição manual.",
+  "voiceMicrophoneUnavailable": "O microfone está indisponível. Encerre chamadas ou conversas por voz ativas e tente novamente.",
+  "voiceSmartMode": "Modo inteligente",
+  "voiceRetryTranscription": "Tentar transcrição novamente",
+  "voiceRecordingSaved": "Gravação salva neste dispositivo. Você pode tentar novamente sem regravar.",
+  "voiceAllowAccess": "Permitir acesso",
+  "voiceOpenMicrophoneSettings": "Abrir configurações do microfone",
+  "voiceOpenSpeechSettings": "Abrir configurações de reconhecimento de fala",
+  "voiceEnableDictation": "Ativar Ditado",
+  "voiceUseCloudTranscription": "Usar transcrição na nuvem",
+  "voiceMicrophoneDenied": "Permita o acesso ao microfone nas configurações do sistema.",
+  "voiceSpeechDenied": "Permita o reconhecimento de fala nas configurações do sistema.",
+  "voiceAccessRestricted": "O acesso está restrito pelo administrador ou pelo Tempo de Uso.",
+  "voiceDictationDisabled": "Ative Ditado em Ajustes do Sistema → Teclado → Ditado e selecione seu idioma. Depois tente novamente.",
+  "voiceServiceUnavailable": "O reconhecimento de fala está indisponível. Verifique sua conexão. No Mac, confira também Ajustes do Sistema → Teclado → Ditado e seu idioma.",
+  "voiceCloudServiceUnavailable": "A transcrição na nuvem falhou. Verifique a internet e tente transcrever a gravação salva novamente.",
+  "voiceLocaleUnsupported": "O reconhecimento de fala do sistema não oferece suporte ao idioma selecionado neste dispositivo.",
+  "voiceNetworkUnavailable": "O reconhecimento de fala precisa de internet para este idioma. Reconecte e tente novamente.",
+  "voiceSettingsFailed": "Não foi possível abrir as configurações. Abra-as manualmente e confira o acesso ao microfone e ao reconhecimento de fala. No Mac, confira também Teclado → Ditado.",
+  "voiceRetryAnalysis": "Tentar análise novamente",
+  "screenInboxSubtitle": "Registre tarefas antes de organizá-las.",
+  "priorityMatrixSubtitle": "Arraste tarefas entre prioridades. As datas apenas ordenam tarefas dentro de uma prioridade.",
+  "priorityMatrixP1Title": "Fazer agora",
+  "priorityMatrixP2Title": "Agendar",
+  "priorityMatrixP3Title": "Delegar",
+  "priorityMatrixP4Title": "Descartar",
+  "priorityMatrixAxisUrgent": "Urgente",
+  "priorityMatrixAxisNotUrgent": "Não urgente",
+  "priorityMatrixAxisImportant": "Importante",
+  "priorityMatrixAxisNotImportant": "Não importante",
+  "timelineSubtitle": "Planeje um dia em uma grade de horários.",
+  "timelineAllDay": "Dia inteiro",
+  "timelineBeforeHours": "Antes das horas visíveis",
+  "timelineAfterHours": "Após as horas visíveis",
+  "timelineVisibleHours": "Horas visíveis",
+  "timelineStartHour": "Início",
+  "timelineEndHour": "Fim",
+  "timelineZoomOut": "Diminuir zoom",
+  "timelineZoomIn": "Aumentar zoom",
+  "timelineAddTimedHint": "Tarefa para {time}",
+  "@timelineAddTimedHint": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineAddAllDayHint": "Tarefa de dia inteiro",
+  "timelineNoAllDayTasks": "Nenhuma tarefa de dia inteiro",
+  "timelineNoTimedTasks": "Nenhuma tarefa com horário",
+  "timelinePreviousDay": "Dia anterior",
+  "timelineNextDay": "Próximo dia",
+  "timelinePickDate": "Escolher data",
+  "upcomingPreviousPeriod": "Período anterior",
+  "upcomingNextPeriod": "Próximo período",
+  "upcomingOpenDatePicker": "Abrir seletor de data",
+  "upcomingTaskCount": "{count, plural, =0{Nenhuma tarefa} =1{1 tarefa} other{{count} tarefas}}",
+  "@upcomingTaskCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "screenTodayFocusSummary": "Carga de foco: {planned} intervalos - Concluídos: {completed} - Foco: {focus}",
+  "@screenTodayFocusSummary": {
+    "placeholders": {
+      "planned": {
+        "type": "int"
+      },
+      "completed": {
+        "type": "int"
+      },
+      "focus": {
+        "type": "String"
+      }
+    }
+  },
+  "screenUpcomingSubtitle": "Tarefas planejadas após hoje.",
+  "screenUpcomingSelectedSubtitle": "Tarefas agendadas para {date}.",
+  "@screenUpcomingSelectedSubtitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "noTasksHere": "Nenhuma tarefa aqui",
+  "noUpcomingTasks": "Nenhuma tarefa com data",
+  "noTasksForDay": "Nenhuma tarefa agendada para este dia",
+  "failedToLoadTasks": "Falha ao carregar tarefas: {error}",
+  "@failedToLoadTasks": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "searchTasks": "Buscar tarefas",
+  "searchStartTyping": "Comece a digitar para buscar tarefas",
+  "searchNoMatches": "Nenhuma tarefa encontrada",
+  "failedToSearchTasks": "Falha ao buscar tarefas: {error}",
+  "@failedToSearchTasks": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "previousMonth": "Mês anterior",
+  "nextMonth": "Próximo mês",
+  "clearDateFilter": "Limpar filtro de data",
+  "weekMon": "Seg",
+  "weekTue": "Ter",
+  "weekWed": "Qua",
+  "weekThu": "Qui",
+  "weekFri": "Sex",
+  "weekSat": "Sáb",
+  "weekSun": "Dom",
+  "browseTitle": "Explorar",
+  "unifiedAccount": "Conta unificada",
+  "accountUnavailable": "Conta indisponível: {error}",
+  "@accountUnavailable": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "signOut": "Sair",
+  "deleteAccount": "Excluir conta",
+  "deleteAccountConfirmation": "Isso exclui permanentemente sua conta, dados na nuvem e tarefas, projetos e histórico de foco locais. Esta ação não pode ser desfeita. Assinaturas das lojas não são canceladas automaticamente. Se usou Iniciar sessão com a Apple, revogue o acesso do Pomodoist separadamente nos ajustes da sua Conta Apple.",
+  "manageSignInWithApple": "Gerenciar Iniciar sessão com a Apple",
+  "deleteAccountFinalConfirmation": "Tem certeza absoluta? Esta é a confirmação final.",
+  "deleteAccountError": "Não foi possível excluir a conta: {error}",
+  "@deleteAccountError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "accountDeleted": "Conta excluída.",
+  "accountDeletedLocalCleanupError": "Sua conta foi excluída, mas não foi possível limpar os dados locais. Limpe os dados do app antes de usar este dispositivo novamente.",
+  "browseSevenDays": "7 dias",
+  "browseOpenNow": "Abertas agora",
+  "browseQueueLoading": "Carregando alterações pendentes…",
+  "browseQueueUnavailable": "Não foi possível carregar as alterações pendentes.",
+  "browseQueueExplanation": "Exibe alterações locais aguardando envio. Uma fila vazia não confirma que todos os dispositivos estão atualizados.",
+  "productivityTitle": "Produtividade",
+  "achievementsTitle": "Conquistas",
+  "allTimeLabel": "Todo o período",
+  "lastSevenDaysLabel": "Últimos 7 dias",
+  "noWeeklyStatsLabel": "Ainda não há dados de foco ou tarefas",
+  "completedFocuses": "Focos concluídos",
+  "completedTasks": "Tarefas concluídas",
+  "unlocked": "Desbloqueado",
+  "locked": "Bloqueado",
+  "progressLabel": "Progresso",
+  "focusAchievements": "Conquistas de foco",
+  "taskAchievements": "Conquistas de tarefas",
+  "comboAchievements": "Conquistas de combo",
+  "focusIntervals": "Intervalos de foco",
+  "focusTime": "Tempo de foco",
+  "openTasks": "Tarefas abertas",
+  "plannedIntervals": "Intervalos planejados",
+  "labelsTitle": "Etiquetas",
+  "newProject": "Novo projeto",
+  "newLabel": "Nova etiqueta",
+  "syncReadyQueue": "Fila pronta para sincronização",
+  "pendingLocalCommands": "{count, plural, =0{Nenhum comando local pendente} =1{1 comando local pendente} other{{count} comandos locais pendentes}}",
+  "@pendingLocalCommands": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedToLoadProjects": "Falha ao carregar projetos: {error}",
+  "@failedToLoadProjects": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "failedToLoadLabels": "Falha ao carregar etiquetas: {error}",
+  "@failedToLoadLabels": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "addProject": "Adicionar projeto",
+  "projectName": "Nome do projeto",
+  "addLabel": "Adicionar etiqueta",
+  "labelName": "Nome da etiqueta",
+  "couldNotAddLabel": "Não foi possível adicionar a etiqueta: {error}",
+  "@couldNotAddLabel": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "projectsUnavailable": "Projetos indisponíveis: {error}",
+  "@projectsUnavailable": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "projectsUnavailableShort": "Projetos indisponíveis",
+  "noProjects": "Nenhum projeto",
+  "searchProjects": "Buscar projetos",
+  "searchLabels": "Buscar etiquetas",
+  "archivedProjectsOnly": "Apenas projetos arquivados",
+  "projectsCount": "{count, plural, =1{1 projeto} other{{count} projetos}}",
+  "@projectsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noLabels": "Nenhuma etiqueta",
+  "labelsCount": "{count, plural, =1{1 etiqueta} other{{count} etiquetas}}",
+  "@labelsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "renameProject": "Renomear projeto",
+  "deleteProject": "Excluir projeto",
+  "deleteLabel": "Excluir etiqueta",
+  "deleteProjectConfirmation": "Excluir \"{name}\"? As tarefas deste projeto serão movidas para a Entrada.",
+  "@deleteProjectConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteLabelConfirmation": "Excluir \"{name}\"?",
+  "@deleteLabelConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotDeleteProject": "Não foi possível excluir o projeto: {error}",
+  "@couldNotDeleteProject": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "couldNotDeleteLabel": "Não foi possível excluir a etiqueta: {error}",
+  "@couldNotDeleteLabel": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "projectsCountCompact": "Projetos: {count}",
+  "@projectsCountCompact": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "collapseProjects": "Recolher projetos",
+  "expandProjects": "Expandir projetos",
+  "projectFallbackTitle": "Projeto",
+  "projectSubtitle": "Visualização em lista — quadro e calendário estão planejados.",
+  "reportsTitle": "Relatórios",
+  "reportsFocusedDay": "Um dia de foco até agora",
+  "reportsThisWeek": "Sua semana em foco",
+  "reportsNextAchievement": "Próxima conquista",
+  "viewAllAchievements": "Ver todas as conquistas",
+  "viewAllAchievementsCount": "Ver todas as {count}",
+  "@viewAllAchievementsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "allAchievementsUnlocked": "Todas as conquistas desbloqueadas",
+  "noAchievementsYet": "Nenhuma conquista ainda",
+  "failedToLoadAchievements": "Falha ao carregar conquistas: {error}",
+  "@failedToLoadAchievements": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "backToReports": "Voltar aos relatórios",
+  "reportsIntervalProgressSemantics": "{completed} de {target} intervalos de foco concluídos",
+  "@reportsIntervalProgressSemantics": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "reportsIntervalCountSemantics": "{completed} intervalos de foco concluídos; sem meta definida",
+  "@reportsIntervalCountSemantics": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      }
+    }
+  },
+  "reportsWeeklyChartSemantics": "Tempo de foco nos últimos 7 dias: {summary}",
+  "@reportsWeeklyChartSemantics": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadReports": "Falha ao carregar relatórios: {error}",
+  "@failedToLoadReports": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "taskNotFound": "Tarefa não encontrada",
+  "taskTitleHint": "Título da tarefa",
+  "taskComment": "Comentário",
+  "taskCommentHint": "Adicionar um comentário",
+  "subtasks": "Subtarefas",
+  "addSubtask": "Adicionar subtarefa",
+  "addSubtaskHint": "Adicionar uma subtarefa",
+  "noSubtasks": "Ainda não há subtarefas.",
+  "makeParentTask": "Tornar tarefa principal",
+  "couldNotMoveTask": "Não foi possível mover a tarefa: {error}",
+  "@couldNotMoveTask": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "scheduleTitle": "Agendamento",
+  "allDay": "Dia inteiro",
+  "timedBlock": "Bloco de horário",
+  "recurrenceTitle": "Repetir",
+  "recurrenceNeedsSchedule": "Adicione uma data ou horário antes de repetir.",
+  "recurrenceIntervalLabel": "Intervalo",
+  "recurrenceUnitDay": "Dias",
+  "recurrenceUnitWeek": "Semanas",
+  "recurrenceUnitMonth": "Meses",
+  "recurrenceInvalidInterval": "Digite de 1 a 999.",
+  "recurrenceEveryDays": "{interval, plural, =1{todos os dias} other{a cada {interval} dias}}",
+  "@recurrenceEveryDays": {
+    "placeholders": {
+      "interval": {
+        "type": "int"
+      }
+    }
+  },
+  "recurrenceEveryWeeks": "{interval, plural, =1{todas as semanas} other{a cada {interval} semanas}}",
+  "@recurrenceEveryWeeks": {
+    "placeholders": {
+      "interval": {
+        "type": "int"
+      }
+    }
+  },
+  "recurrenceEveryMonths": "{interval, plural, =1{todos os meses} other{a cada {interval} meses}}",
+  "@recurrenceEveryMonths": {
+    "placeholders": {
+      "interval": {
+        "type": "int"
+      }
+    }
+  },
+  "noDate": "Sem data",
+  "calendarNotLinked": "Calendário não vinculado",
+  "calendarLinked": "Google Agenda vinculado",
+  "focusProgress": "{completed}/{total} focos",
+  "@focusProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "startFocus": "Iniciar foco",
+  "focusStarted": "Foco iniciado",
+  "taskReopened": "Tarefa reaberta",
+  "taskCompleted": "Tarefa concluída",
+  "taskDeleted": "Tarefa excluída",
+  "recurringDeleteTitle": "Excluir tarefa recorrente?",
+  "recurringDeleteMessage": "Esta tarefa pertence a uma série recorrente.",
+  "recurringDeleteThis": "Excluir esta tarefa",
+  "recurringDeleteThisAndFollowing": "Excluir esta e as seguintes",
+  "markOpen": "Marcar como aberta",
+  "markComplete": "Marcar como concluída",
+  "focusHistory": "Histórico de foco",
+  "failedToLoadTask": "Falha ao carregar tarefa: {error}",
+  "@failedToLoadTask": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "noFocusIntervals": "Ainda não há intervalos de foco.",
+  "today": "Hoje",
+  "tomorrow": "Amanhã",
+  "yesterday": "Ontem",
+  "clearDate": "Limpar data",
+  "priority": "Prioridade {priority}",
+  "@priority": {
+    "placeholders": {
+      "priority": {
+        "type": "int"
+      }
+    }
+  },
+  "focusTitle": "Foco",
+  "focusLoadError": "Não foi possível carregar o foco: {error}",
+  "@focusLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "focusViewFull": "Completa",
+  "focusViewMinimal": "Minimalista",
+  "focusSwitchToFullView": "Mudar para completa",
+  "focusSwitchToMinimalView": "Mudar para minimalista",
+  "focusActionFailed": "Não foi possível atualizar o foco. Tente novamente.",
+  "noActiveSession": "Nenhuma sessão ativa",
+  "focusIdleSubtitle": "Inicie um intervalo de foco independente ou a partir de uma tarefa.",
+  "noPreset": "Nenhuma predefinição",
+  "preparingFocus": "Preparando foco",
+  "moreFocusOptions": "Mais opções de foco",
+  "moreFocusActions": "Mais ações de foco",
+  "preset": "Predefinição",
+  "newPreset": "Nova predefinição",
+  "customize": "Personalizar",
+  "customizePreset": "Personalizar predefinição",
+  "startInterval": "Iniciar intervalo",
+  "intervalStarted": "Intervalo iniciado",
+  "intervalCompleted": "Intervalo concluído",
+  "focusStopped": "Foco interrompido",
+  "focusCompletionTitle": "Ótimo trabalho!",
+  "focusCompletionLinkedSubtitle": "Todos os intervalos de foco planejados para esta tarefa foram concluídos.",
+  "focusCompletionStandaloneSubtitle": "Seu ciclo de foco foi concluído.",
+  "focusCompletionQuestion": "Pronto para concluir esta tarefa?",
+  "focusCompletionCompleteTask": "Concluir tarefa",
+  "focusCompletionKeepOpen": "Manter tarefa aberta",
+  "focusCompletionDone": "Concluído",
+  "focusCompletionNextTask": "Próxima tarefa agendada",
+  "focusCompletionTaskError": "Não foi possível concluir a tarefa: {error}",
+  "@focusCompletionTaskError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "completeInterval": "Concluir intervalo",
+  "logDistraction": "Registrar distração",
+  "workInterval": "Intervalo de trabalho",
+  "work": "Trabalho",
+  "shortBreak": "Pausa curta",
+  "breakLabel": "Pausa",
+  "longBreak": "Pausa longa",
+  "readyLabel": "Pronto: {label}",
+  "@readyLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "readyShort": "Pronto",
+  "focusTimerTotal": "de {duration}",
+  "@focusTimerTotal": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "focusSessionProgress": "Sessão {current} de {total}",
+  "@focusSessionProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "focusRhythmPreviewSummary": "Prévia do ritmo de foco, {count} etapas",
+  "@focusRhythmPreviewSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "focusRhythmSummary": "Ritmo de foco, etapa {current} de {total}: {phase}, {status}",
+  "@focusRhythmSummary": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "phase": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "focusTimerSummary": "{phase}, {status}, restam {remaining}, total {total}",
+  "@focusTimerSummary": {
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      },
+      "remaining": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "focusStatusRunning": "Em andamento",
+  "focusStatusPaused": "Pausado",
+  "focusWorkProgress": "{completed}/{total} trabalho",
+  "@focusWorkProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "intervalNumber": "Intervalo {number}",
+  "@intervalNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "focusIntervalSummary": "{completed}/{total} trabalho - Intervalo {number}",
+  "@focusIntervalSummary": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "pause": "Pausar",
+  "resume": "Retomar",
+  "presetForNextIntervals": "Predefinição para os próximos intervalos",
+  "usePreset": "Usar {name}",
+  "@usePreset": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "minutesWork": "{minutes}min trabalho",
+  "@minutesWork": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesShort": "{minutes}min curta",
+  "@minutesShort": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesLong": "{minutes}min longa",
+  "@minutesLong": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "longEvery": "Longa a cada {count}",
+  "@longEvery": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autoBreaks": "Pausas automáticas",
+  "autoWork": "Trabalho automático",
+  "noPause": "Sem pausa",
+  "focusPauseUnavailable": "Pausa indisponível nesta predefinição",
+  "strict": "Rígido",
+  "flexible": "Flexível",
+  "name": "Nome",
+  "workField": "Trabalho",
+  "shortField": "Curta",
+  "longField": "Longa",
+  "every": "A cada",
+  "minutesSuffix": "min",
+  "makeDefault": "Definir como padrão",
+  "autoStartBreaks": "Iniciar pausas automaticamente",
+  "autoStartWork": "Iniciar trabalho automaticamente",
+  "allowPause": "Permitir pausa",
+  "strictMode": "Modo rígido",
+  "nameRequired": "O nome é obrigatório",
+  "nameMustBeUnique": "O nome deve ser único",
+  "googleCalendarTitle": "Google Agenda",
+  "googleCalendarConnectedSubtitle": "A sincronização bidirecional está ativa para o calendário Pomodoist.",
+  "googleCalendarDisconnectedSubtitle": "Conecte uma conta Google para sincronizar tarefas agendadas.",
+  "googleCalendarConnectedOnAnotherDeviceSubtitle": "A sincronização do Google Agenda está em outro dispositivo. Os dados do Pomodoist continuam sincronizando aqui.",
+  "syncNow": "Sincronizar agora",
+  "useThisDevice": "Usar este dispositivo",
+  "connect": "Conectar",
+  "disconnect": "Desconectar",
+  "failedToLoadIntegration": "Falha ao carregar integração: {error}",
+  "@failedToLoadIntegration": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "googleCalendarFailed": "Falha no Google Agenda: {message}",
+  "@googleCalendarFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "googleAuthRequired": "É necessária autorização do Google Agenda. Entre novamente e execute Sincronizar agora.",
+  "googleSignInNotConfigured": "O login do Google não está configurado. Defina GOOGLE_CLIENT_ID e GOOGLE_REVERSED_CLIENT_ID para este destino iOS.",
+  "googleCallbackNotConfigured": "O callback de login do Google não está configurado. Defina GOOGLE_REVERSED_CLIENT_ID em ios/Flutter/GoogleOAuth.xcconfig.",
+  "googleWebButtonFirst": "Na web, clique primeiro no botão de login do Google e depois em Conectar.",
+  "googleAccessDenied": "O acesso ao Google foi negado. Adicione esta conta Google como usuário de teste OAuth ou publique e verifique o app OAuth.",
+  "status": "Status",
+  "account": "Conta",
+  "calendar": "Calendário",
+  "calendarId": "ID do calendário",
+  "lastSync": "Última sincronização",
+  "notConnected": "Não conectado",
+  "notCreated": "Não criado",
+  "never": "Nunca",
+  "durationMinutes": "{minutes}min",
+  "@durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}h {minutes}min",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "projectIcon": "Ícone do projeto",
+  "projectIconOption": "Ícone {number}",
+  "@projectIconOption": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "projectColor": "Cor do projeto",
+  "projectColorOption": "Cor {number}",
+  "@projectColorOption": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "addProjectToFavorites": "Adicionar projeto aos favoritos",
+  "removeProjectFromFavorites": "Remover projeto dos favoritos",
+  "timelineProjectsMenu": "Gerenciar projetos da linha do tempo",
+  "timelineShowProject": "Mostrar projeto na linha do tempo",
+  "timelineHideProject": "Ocultar projeto temporário",
+  "timelineCollapseProject": "Recolher ramificação do projeto",
+  "timelineExpandProject": "Expandir ramificação do projeto",
+  "timelineCurrentTime": "Hora atual",
+  "couldNotUpdateProject": "Não foi possível atualizar o projeto: {error}",
+  "@couldNotUpdateProject": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "commonDone": "Concluído",
+  "taskSelect": "Selecionar",
+  "taskSelectedCount": "{count, plural, =0{0 selecionadas} =1{1 selecionada} other{{count} selecionadas}}",
+  "@taskSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "taskSelectAll": "Selecionar todas",
+  "taskDeselectAll": "Desmarcar todas",
+  "taskDue": "Prazo",
+  "taskProject": "Projeto",
+  "taskLabels": "Etiquetas",
+  "taskPriority": "Prioridade",
+  "taskMore": "Mais",
+  "taskSchedule": "Agendar",
+  "taskMove": "Mover",
+  "taskDuplicate": "Duplicar",
+  "taskDuplicateTitle": "Duplicar tarefas",
+  "taskDuplicateSelectedOnly": "Apenas selecionadas",
+  "taskDuplicateWithSubtasks": "Com subtarefas",
+  "taskWeekend": "Este fim de semana",
+  "taskNextWeek": "Próxima semana",
+  "taskEnterDue": "Digite a data ou horário do prazo",
+  "taskInvalidDue": "Digite uma data ou horário válido",
+  "taskClearDue": "Limpar prazo",
+  "taskDeleteSelectedTitle": "Excluir tarefas selecionadas?",
+  "taskDeleteSelectedMessage": "Você pode desfazer esta ação por 7 segundos.",
+  "taskCompleteSelected": "Concluir selecionadas",
+  "taskReopenSelected": "Reabrir selecionadas",
+  "taskActionFailedCount": "{count, plural, =1{Não foi possível atualizar 1 tarefa} other{Não foi possível atualizar {count} tarefas}}",
+  "@taskActionFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "voiceCollapse": "Recolher painel de voz",
+  "voiceExpand": "Expandir painel de voz",
+  "voiceMovePanel": "Mover painel de voz",
+  "themeClassic": "Clássico",
+  "themeOcean": "Oceano",
+  "themeForest": "Floresta",
+  "themeCustomize": "Personalizar",
+  "themeEditorTitle": "Editar tema",
+  "themeLivePreview": "As alterações aparecem em todo o app. Cancelar restaura seu tema anterior.",
+  "themeSaveError": "Não foi possível salvar o tema. Suas alterações continuam aqui; tente novamente.",
+  "themeLoadError": "Não foi possível carregar seus temas.",
+  "themeColorsSurfaces": "Plano de fundo e superfícies",
+  "themeColorsText": "Texto",
+  "themeColorsAccent": "Destaque",
+  "themeColorsStatus": "Cores de status",
+  "themeInvalidHex": "Digite uma cor HEX de seis dígitos, como #2563EB.",
+  "themeLowContrast": "Baixo contraste: alguns textos podem ser difíceis de ler.",
+  "themePreviewTask": "Planeje seu dia",
+  "themePreviewSecondary": "Um pouco de foco, todos os dias.",
+  "themeColorCanvas": "Plano de fundo",
+  "themeColorSurface": "Superfície",
+  "themeColorSurfaceTint": "Superfície secundária",
+  "themeColorSurfaceHover": "Superfície ao passar o cursor",
+  "themeColorPrimaryText": "Texto principal",
+  "themeColorSecondaryText": "Texto secundário",
+  "themeColorMutedText": "Texto discreto",
+  "themeColorBorder": "Borda",
+  "themeColorAccent": "Texto e ícones de destaque",
+  "themeColorAccentFill": "Preenchimento de destaque",
+  "themeColorAccentTint": "Preenchimento de destaque suave",
+  "themeColorWarning": "Aviso",
+  "themeColorInfo": "Informação",
+  "themeColorSuccess": "Sucesso",
+  "themeColorError": "Erro",
+  "themeColorOverdue": "Atrasado",
+  "themeColorOnAccent": "Texto sobre destaque",
+  "themeColorOnError": "Texto sobre erro",
+  "todayTaskSummary": "{tasks, plural, one{1 tarefa} other{{tasks} tarefas}} · {planned, plural, one{1 sessão planejada} other{{planned} sessões planejadas}} · {time} de foco",
+  "@todayTaskSummary": {
+    "placeholders": {
+      "tasks": {
+        "type": "int"
+      },
+      "planned": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todayFocusingOn": "Focando em",
+  "openFocus": "Abrir foco",
+  "todayCompletedTasks": "Concluídas hoje · {count}",
+  "@todayCompletedTasks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sidebarDaily": "Diário",
+  "sidebarViews": "Visualizações",
+  "quickAddResetDetails": "Usar padrão",
+  "quickAddChangeTime": "Alterar horário",
+  "quickAddProjectNameUnsupported": "Este nome de projeto não pode ser inserido sem alterações.",
+  "themeSepia": "Sépia",
+  "themeGraphite": "Grafite",
+  "themeCustom": "Personalizado",
+  "themeResetToClassic": "Redefinir para Clássico",
+  "themeBackgroundKindTitle": "Plano de fundo",
+  "themeBackgroundColor": "Cor",
+  "themeBackgroundPhoto": "Foto",
+  "themeBackgroundGlass": "Vidro do macOS",
+  "themeBackgroundGlassHint": "Aplica-se a todo o app e à adição rápida. O macOS controla o desfoque; o controle ajusta a tonalidade da paleta.",
+  "themeBackgroundGlassUnavailable": "Disponível no app para macOS. Nesta plataforma, é usado um fundo sólido.",
+  "themeBackgroundTitle": "Imagem de fundo",
+  "themeBackgroundMainOnly": "Apenas área principal",
+  "themeBackgroundWholeApp": "Todo o app",
+  "themeBackgroundSeparate": "Fundos separados",
+  "themeBackgroundMain": "Área principal",
+  "themeBackgroundSidebar": "Barra lateral",
+  "themeBackgroundQuickAdd": "Adição rápida",
+  "themeBackgroundChoose": "Escolher foto",
+  "themeBackgroundReplace": "Substituir foto",
+  "themeBackgroundRemove": "Remover foto",
+  "themeBackgroundDim": "Escurecimento",
+  "themeBackgroundBlur": "Desfoque",
+  "themeBackgroundEmpty": "Sem foto",
+  "themeBackgroundImageError": "Não foi possível abrir esta imagem. Escolha outra foto.",
+  "themeBackgroundTooLarge": "Escolha uma imagem de até 50 MB.",
+  "themeBackgroundLoading": "Preparando imagem…",
+  "settingsTaskListStyle": "Estilo da linha de tarefa",
+  "settingsTaskListStyleDescription": "Escolha o novo layout ou mantenha as linhas clássicas.",
+  "settingsTaskListModern": "Moderno",
+  "settingsTaskListClassic": "Clássico",
+  "settingsTaskRowSpacing": "Espaçamento das tarefas",
+  "settingsTaskRowSpacingCompact": "Compacto",
+  "settingsTaskRowSpacingComfortable": "Confortável",
+  "settingsTaskRowSpacingSpacious": "Espaçoso",
+  "settingsSaveError": "Não foi possível salvar a configuração. Tente novamente.",
+  "focusCompletionCompleteAndNext": "Concluir e iniciar a próxima",
+  "focusCompletionStartNext": "Iniciar próxima tarefa",
+  "focusCompletionRetry": "Tentar novamente",
+  "searchAllProjects": "Todos os projetos",
+  "searchStatusOpen": "Abertas",
+  "searchStatusCompleted": "Concluídas",
+  "searchStatusAll": "Todos os status",
+  "searchClearFilters": "Limpar filtros",
+  "searchEmptyDescription": "Encontre uma tarefa pelo título ou descrição e filtre por projeto ou status.",
+  "searchNoMatchesDescription": "Tente outra expressão ou limpe os filtros. Você também pode transformar este texto em uma nova tarefa.",
+  "searchCreateTask": "Criar tarefa a partir do texto",
+  "taskListLoadError": "Não foi possível carregar as tarefas. Tente novamente.",
+  "inboxEmptyTitle": "Sua entrada está vazia",
+  "inboxEmptyDescription": "Registre uma ideia aqui e decida depois quando trabalhar nela.",
+  "todayEmptyTitle": "Nada agendado para hoje",
+  "todayEmptyDescription": "Adicione uma tarefa para começar o dia.",
+  "todayEmptyCompletedTitle": "A lista de hoje está em dia",
+  "todayEmptyCompletedDescription": "Suas tarefas concluídas estão salvas abaixo. Adicione outra quando estiver pronto.",
+  "projectEmptyTitle": "Ainda não há tarefas neste projeto",
+  "projectEmptyDescription": "Adicione o primeiro passo rumo ao objetivo do projeto.",
+  "commandSearchPlaceholder": "Buscar tarefas, projetos e ações",
+  "commandSearchTasks": "Tarefas",
+  "commandSearchActions": "Ações",
+  "commandSearchDictateTask": "Ditar tarefa",
+  "commandSearchAllResults": "Ver todos os resultados",
+  "commandSearchHint": "↑ ↓ Navegar · Enter Abrir · Esc Fechar",
+  "commandSearchNoMatches": "Nenhuma tarefa ou projeto encontrado.",
+  "overdueTitle": "Atrasadas",
+  "overdueTaskCount": "{count, plural, one{{count} tarefa atrasada} other{{count} tarefas atrasadas}}",
+  "@overdueTaskCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "overdueReview": "Revisar",
+  "overdueEmpty": "Nenhuma tarefa atrasada",
+  "taskFocusSwitchTitle": "Trocar foco?",
+  "taskFocusSwitchMessage": "A sessão atual será interrompida. Iniciar foco em “{task}”?",
+  "@taskFocusSwitchMessage": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "taskFocusSwitchConfirm": "Trocar",
+  "labelIcon": "Ícone da etiqueta",
+  "labelUpdateFailed": "Não foi possível atualizar a etiqueta. Tente novamente.",
+  "labelNotFound": "Etiqueta não encontrada",
+  "labelTasksSubtitle": "Tarefas com esta etiqueta em todos os projetos",
+  "labelIconOption": "{icon, select, tag{Etiqueta} bookmark{Marcador} flag{Bandeira} bolt{Raio} lightbulb{Lâmpada} clock{Relógio} bell{Sino} pin{Alfinete} phone{Telefone} mail{E-mail} link{Link} wrench{Chave inglesa} other{Etiqueta}}",
+  "@labelIconOption": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
+  "addSubproject": "Criar subprojeto",
+  "moveProject": "Mover projeto",
+  "projectTopLevel": "Nível superior",
+  "projectMoveUp": "Mover para cima",
+  "projectMoveDown": "Mover para baixo",
+  "projectParentName": "Projeto principal: {name}",
+  "@projectParentName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteProjectWithChildrenConfirmation": "Excluir \"{name}\"? Os subprojetos subirão um nível. Apenas as tarefas deste projeto serão movidas para a Entrada.",
+  "@deleteProjectWithChildrenConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "accountNickname": "Apelido",
+  "accountChangeNickname": "Alterar apelido",
+  "accountNicknameSaveError": "Não foi possível salvar seu apelido. Tente novamente.",
+  "notificationTaskStarting": "Hora da tarefa",
+  "notificationReturnTitle": "Seu tomate está com saudade",
+  "notificationReturnBody": "Um foco ou uma tarefa concluída já faz o dia valer a pena.",
+  "notificationFocusChannel": "Foco",
+  "notificationFocusDescription": "Notificações de conclusão de intervalos de foco",
+  "notificationReturnChannel": "Lembretes de retorno",
+  "notificationReturnDescription": "Lembretes gentis para voltar ao Pomodoist",
+  "notificationTaskChannel": "Início de tarefa",
+  "notificationTaskDescription": "Notificações de início de tarefas",
+  "notificationOpenApp": "Abrir Pomodoist",
+  "notificationFocusCompleted": "Intervalo de foco concluído",
+  "notificationLongBreakCompleted": "Pausa longa concluída",
+  "notificationBreakCompleted": "Pausa concluída",
+  "updateTitle": "Atualização do Pomodoist",
+  "updateAction": "Atualizar",
+  "updateCheck": "Verificar atualizações",
+  "updateSettings": "Atualizações",
+  "updateReceiveRc": "Receber versões candidatas (RC)",
+  "updateStableChannel": "Canal: versões estáveis",
+  "updateRcChannel": "Canal: versões estáveis e RC",
+  "updateRcHelp": "Versões RC podem conter erros. Versões alfa e beta não são incluídas.",
+  "updateRestart": "O app será reiniciado. Seus dados serão preservados.",
+  "updateNotes": "Notas da versão",
+  "updateOwnerManaged": "Esta compilação é atualizada pelo responsável para preservar a configuração do servidor. Solicite a versão mais recente a ele.",
+  "updateUnsupported": "Atualizações automáticas estão disponíveis no AppImage oficial para Linux. Use o gerenciador de pacotes para outras compilações.",
+  "updateVersion": "Versão {value}",
+  "@updateVersion": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "updatePhaseIdle": "Você pode verificar a qualquer momento.",
+  "updatePhaseChecking": "Verificando versões…",
+  "updatePhaseAvailable": "Uma nova versão está disponível",
+  "updatePhaseDownloading": "Baixando atualização…",
+  "updatePhaseVerifying": "Verificando integridade…",
+  "updatePhaseInstalling": "Preparando instalação e reinício…",
+  "updatePhaseUpToDate": "Você tem a versão compatível mais recente.",
+  "updatePhaseFailed": "Não foi possível concluir a atualização",
+  "achievementFocusSubtitle": "{count, plural, =1{Conclua 1 foco de trabalho} other{Conclua {count} focos de trabalho}}",
+  "@achievementFocusSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementTaskSubtitle": "{count, plural, =1{Conclua 1 tarefa} other{Conclua {count} tarefas}}",
+  "@achievementTaskSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementDayNotWastedSubtitle": "Conclua um foco e uma tarefa no mesmo dia",
+  "achievementFocusPlusCheckSubtitle": "Conclua 3 focos e 3 tarefas no mesmo dia",
+  "achievementNoFussSubtitle": "Conclua 5 focos no mesmo dia sem interrupções",
+  "achievementCleanEntrySubtitle": "Conclua uma tarefa após o foco vinculado a ela",
+  "achievementTomatoClosedSubtitle": "Conclua uma tarefa no dia do seu foco de trabalho",
+  "achievementTitle": "{id, select, focus_1{Primeiro tomate} focus_5{Aquecimento} focus_10{Foco encontrado} focus_25{Turno de tomates} focus_50{Modo ativado} focus_100{Faixa vermelha} focus_250{Raízes profundas} focus_500{Autoridade do timer} focus_1000{Milésimo tomate} focus_5000{Fazendeiro do foco} focus_10000{Plantação de atenção} focus_50000{Império do tomate} focus_100000{Supermente vermelha} focus_1000000{Singularidade do tomate} task_1{Primeira marca} task_5{A lista tremeu} task_10{Caixa feliz} task_25{Limpando a pilha} task_50{Mestre das marcas} task_100{Pontas soltas resolvidas} task_250{Lista sob controle} task_500{Nocaute no escritório} task_1000{Mil marcas} task_5000{Arquivista de vitórias} task_10000{Máquina de marcar} task_50000{Escritório de assuntos resolvidos} task_100000{Senhor das listas} task_1000000{Marca final} combo_day_not_wasted{Dia bem aproveitado} combo_focus_plus_check{Foco + marca} combo_no_fuss{Sem correria} combo_clean_entry{Entrada perfeita} combo_tomato_closed_question{O tomate resolveu} other{Conquista}}",
+  "@achievementTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "focusPresetDeepWork": "Trabalho profundo",
+  "focusPresetShortSprint": "Sprint curto",
+  "csvImportIssueRow": "Linha {row}: {message}",
+  "@csvImportIssueRow": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "csvImportIssueMessage": "{code, select, fileTooLarge{O arquivo CSV excede 16 MiB.} invalidUtf8{O CSV deve usar UTF-8 válido.} missingHeader{O cabeçalho CSV está ausente.} malformed{Formato CSV inválido.} unknownHeader{Cabeçalho desconhecido \"{value}\".} duplicateHeader{Cabeçalho duplicado \"{value}\".} contentHeaderRequired{O cabeçalho content é obrigatório.} tooManyTasks{O CSV não pode conter mais de 1000 tarefas.} tooManyFields{A linha tem mais campos que o cabeçalho.} contentRequired{content é obrigatório.} invalidPriority{priority deve ser um inteiro de 1 a 4.} invalidDate{{value} deve usar YYYY-MM-DD.} mixedSchedule{A data de vencimento não pode ser combinada com um horário.} timedFieldsRequired{Um horário exige start_at, end_at e time_zone.} invalidTimestamp{{value} deve ser RFC3339 com deslocamento UTC explícito.} invalidTimeZone{time_zone deve ser um nome IANA válido.} endBeforeStart{end_at deve ser posterior a start_at.} invalidRecurrence{recurrence deve ser day, week ou month.} invalidInteger{{value} deve ser um inteiro de 1 a 999.} intervalWithoutRecurrence{recurrence_interval exige recurrence.} recurrenceWithoutSchedule{recurrence exige um agendamento.} doneTask{Tarefas concluídas não podem ser importadas.} invalidKey{{value} tem formato inválido.} empty{O CSV não contém tarefas.} duplicateKey{Chave duplicada \"{value}\".} parentCycle{As referências parent_key formam um ciclo.} missingParent{parent_key \"{value}\" não existe.} childProject{A subtarefa deve usar o mesmo projeto da tarefa principal.} other{Não foi possível importar o arquivo.}}",
+  "@csvImportIssueMessage": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

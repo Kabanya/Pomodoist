@@ -1,3 +1,4 @@
+import 'project_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show LucideIcons, ShadButton, ShadInput;
@@ -153,7 +154,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                 DropdownMenuItem(
                                   value: project.id,
                                   child: Text(
-                                    project.name,
+                                    project.displayName(context.l10n),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),

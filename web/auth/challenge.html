@@ -94,6 +94,40 @@
         "use strict";
 
         const copies = {
+  "pt-BR": {
+    "title": "Verificação de segurança do Pomodoist",
+    "loading": "Carregando verificação…",
+    "prompt": "Confirme que você é uma pessoa para continuar o login.",
+    "invalid": "Este link de verificação é inválido. Volte ao Pomodoist e tente entrar novamente.",
+    "error": "Não foi possível carregar a verificação. Verifique sua conexão e tente novamente.",
+    "expired": "A verificação expirou. Tente novamente.",
+    "returning": "Verificação concluída. Voltando ao Pomodoist…",
+    "retry": "Tentar verificar novamente",
+    "back": "Voltar ao Pomodoist"
+  },
+  "ja": {
+    "title": "Pomodoistのセキュリティ確認",
+    "loading": "認証を読み込み中…",
+    "prompt": "ログインを続けるには、人間であることを確認してください。",
+    "invalid": "この認証リンクは無効です。Pomodoistに戻り、もう一度ログインしてください。",
+    "error": "認証を読み込めませんでした。接続を確認して再試行してください。",
+    "expired": "認証の有効期限が切れました。再試行してください。",
+    "returning": "認証が完了しました。Pomodoistに戻っています…",
+    "retry": "認証を再試行",
+    "back": "Pomodoistに戻る"
+  },
+  "ko": {
+    "title": "Pomodoist 보안 확인",
+    "loading": "인증을 불러오는 중…",
+    "prompt": "로그인을 계속하려면 사람임을 확인하세요.",
+    "invalid": "인증 링크가 올바르지 않습니다. Pomodoist로 돌아가 다시 로그인하세요.",
+    "error": "인증을 불러오지 못했습니다. 연결을 확인하고 다시 시도하세요.",
+    "expired": "인증이 만료되었습니다. 다시 시도하세요.",
+    "returning": "인증이 완료되었습니다. Pomodoist로 돌아가는 중…",
+    "retry": "인증 다시 시도",
+    "back": "Pomodoist로 돌아가기"
+  }
+,
           en: {
             title: "Pomodoist security check",
             loading: "Loading verification…",
@@ -172,8 +206,10 @@
             back: "返回 Pomodoist",
           },
         };
-        const language = (navigator.languages || [navigator.language])
-          .map((value) => String(value).toLowerCase().split("-")[0])
+        const requestedLanguage = new URLSearchParams(location.search).get("lang");
+        const language = [requestedLanguage, ...(navigator.languages || [navigator.language])]
+          .map((value) => String(value || '').toLowerCase().replaceAll('_', '-'))
+          .map((value) => value.split('-')[0] === 'pt' ? 'pt-BR' : value.split('-')[0])
           .find((value) => Object.hasOwn(copies, value)) || "en";
         const copy = copies[language];
         document.documentElement.lang = language;
@@ -212,7 +248,9 @@
           returnTarget.username === "" && returnTarget.password === "" &&
           returnTarget.search === "" && returnTarget.hash === "";
         const validRequest = location.pathname === "/auth/challenge" &&
-          queryKeys.length === 1 && queryKeys[0] === "returnTo" &&
+          queryKeys.every((key) => key === "returnTo" || key === "lang") &&
+          query.getAll("lang").length <= 1 &&
+          (!query.has("lang") || Object.hasOwn(copies, query.get("lang"))) &&
           query.getAll("returnTo").length === 1 &&
           validReturnTarget &&
           fragmentKeys.length === 1 && fragmentKeys[0] === "state" &&
@@ -224,6 +262,7 @@
         let callbackUrl;
         let widgetId;
 
+        document.title = copy.title;
         title.textContent = copy.title;
         retry.textContent = copy.retry;
         back.textContent = copy.back;
@@ -287,6 +326,7 @@
               setStatus("ready", copy.prompt);
               widgetId = window.turnstile.render(widget, {
                 sitekey: siteKey,
+                language,
                 callback: finish,
                 "expired-callback": () => showError(copy.expired),
                 "error-callback": () => showError(copy.error),

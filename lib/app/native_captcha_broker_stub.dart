@@ -11,7 +11,7 @@ class NativeCaptchaBroker {
     bool? useLoopback,
   });
 
-  Future<String> requestToken() {
+  Future<String> requestToken({String? locale}) {
     throw const NativeCaptchaException(NativeCaptchaFailureCode.unavailable);
   }
 

@@ -329,7 +329,7 @@ final class PomodoistWatchTests: XCTestCase {
     XCTAssertNil(store.errorMessage)
 
     store.receiveReply(["ok": false, "error": "Network failed"])
-    XCTAssertEqual(store.errorMessage, "Network failed")
+    XCTAssertEqual(store.errorMessage, String(localized: "error.iphoneUnavailable"))
   }
 }
 

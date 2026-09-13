@@ -11,6 +11,7 @@ bool isQuickAddProjectMarker(String marker) => marker == '#' || marker == '№';
 
 const _todayWords = {
   'today',
+  'hoje',
   'сегодня',
   'heute',
   'hoy',
@@ -23,6 +24,8 @@ const _todayWords = {
 
 const _tomorrowWords = {
   'tomorrow',
+  'amanhã',
+  'amanha',
   'завтра',
   'morgen',
   'mañana',
@@ -401,6 +404,10 @@ class QuickAddParser {
   }
 
   QuickAddTokenKind? _normalizedTemporalKind(String value, DateTime today) {
+    if (RegExp(r'^\d+(m|h)$').hasMatch(value) &&
+        int.parse(value.substring(0, value.length - 1)) > 0) {
+      return QuickAddTokenKind.duration;
+    }
     if (_parseIsoDate(value) != null ||
         _parseDueWord(value.toLowerCase(), today) != null) {
       return QuickAddTokenKind.date;
@@ -440,6 +447,18 @@ class QuickAddParser {
         break;
       }
       final start = index;
+      final localized = localizedQuickAddPattern.matchAsPrefix(input, index);
+      if (localized != null) {
+        index = localized.end;
+        tokens.add(
+          _QuickAddSourceToken(
+            text: localized.group(0)!,
+            start: start,
+            end: index,
+          ),
+        );
+        continue;
+      }
       final quotedMetadata =
           (isQuickAddProjectMarker(input[index]) || input[index] == '@') &&
           index + 1 < input.length &&
@@ -458,7 +477,16 @@ class QuickAddParser {
           index++;
         }
       } else {
+        final metadata =
+            isQuickAddProjectMarker(input[start]) ||
+            input[start] == '@' ||
+            input[start] == '/';
         while (index < input.length && input[index].trim().isNotEmpty) {
+          if (!metadata &&
+              index > start &&
+              localizedQuickAddPattern.matchAsPrefix(input, index) != null) {
+            break;
+          }
           index++;
         }
       }

@@ -20,6 +20,9 @@ export function telegramConfiguration(env) {
 const commands = {
   en: [['start', 'Open Pomodoist']],
   ru: [['start', 'Открыть Pomodoist']],
+  pt: [['start', 'Abrir Pomodoist']],
+  ja: [['start', 'Pomodoistを開く']],
+  ko: [['start', 'Pomodoist 열기']],
 };
 export function telegramApi(token, fetcher = fetch) {
   if (!/^\d+:[A-Za-z0-9_-]+$/.test(token ?? '')) throw new Error('POMODOIST_TELEGRAM_BOT_TOKEN is required.');
@@ -43,7 +46,7 @@ export async function configureTelegramBot(env, fetcher = fetch) {
       throw new Error('Bot token does not match POMODOIST_TELEGRAM_BOT_USERNAME. No settings changed.');
     }
   }
-  for (const language of ['en', 'ru']) await call('setMyCommands', { ...(language === 'ru' ? { language_code: 'ru' } : {}),
+  for (const language of Object.keys(commands)) await call('setMyCommands', { ...(language !== 'en' ? { language_code: language } : {}),
     commands: commands[language].map(([command, description]) => ({ command, description })) });
   await call('setChatMenuButton', { menu_button: { type: 'web_app', text: 'Pomodoist', web_app: { url: config.miniApp } } });
   await call('setWebhook', { url: config.webhook, secret_token: config.secret,

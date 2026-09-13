@@ -1,0 +1,338 @@
+{
+  "open_app": {
+    "message": "Open app ↗"
+  },
+  "your_tasks_one_click_away": {
+    "message": "Your tasks, one click away."
+  },
+  "sign_in_with_your_existing_pomodoist_account": {
+    "message": "Sign in with your existing Pomodoist account."
+  },
+  "email": {
+    "message": "Email"
+  },
+  "password": {
+    "message": "Password"
+  },
+  "sign_in": {
+    "message": "Sign in"
+  },
+  "google": {
+    "message": "Google"
+  },
+  "apple": {
+    "message": "Apple"
+  },
+  "use_the_web_app_to_create_an_account_or_reset_your_password_a_verification_window_may_open_when_signing_in": {
+    "message": "Use the web app to create an account or reset your password. A verification window may open when signing in."
+  },
+  "discard_unsynced_changes_and_sign_out": {
+    "message": "Discard unsynced changes and sign out"
+  },
+  "today": {
+    "message": "Today"
+  },
+  "upcoming": {
+    "message": "Upcoming"
+  },
+  "inbox": {
+    "message": "Inbox"
+  },
+  "done": {
+    "message": "Done"
+  },
+  "add": {
+    "message": "Add"
+  },
+  "add_current_tab": {
+    "message": "Add current tab"
+  },
+  "refresh": {
+    "message": "Refresh"
+  },
+  "no_tasks_here": {
+    "message": "No tasks here."
+  },
+  "edit_task": {
+    "message": "Edit task"
+  },
+  "title": {
+    "message": "Title"
+  },
+  "description": {
+    "message": "Description"
+  },
+  "date": {
+    "message": "Date"
+  },
+  "time": {
+    "message": "Time"
+  },
+  "duration_minutes": {
+    "message": "Duration (minutes)"
+  },
+  "priority": {
+    "message": "Priority"
+  },
+  "normal": {
+    "message": "Normal"
+  },
+  "medium": {
+    "message": "Medium"
+  },
+  "high": {
+    "message": "High"
+  },
+  "urgent": {
+    "message": "Urgent"
+  },
+  "existing_recurrence_is_preserved_manage_recurrence_rules_in_the_full_app": {
+    "message": "Existing recurrence is preserved. Manage recurrence rules in the full app."
+  },
+  "no_date": {
+    "message": "No date"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "save": {
+    "message": "Save"
+  },
+  "loading": {
+    "message": "Loading…"
+  },
+  "sign_out": {
+    "message": "Sign out"
+  },
+  "opening_your_tasks": {
+    "message": "Opening your tasks…"
+  },
+  "task_lists": {
+    "message": "Task lists"
+  },
+  "new_task_title": {
+    "message": "New task title"
+  },
+  "add_a_task": {
+    "message": "Add a task…"
+  },
+  "tasks": {
+    "message": "Tasks"
+  },
+  "session_expired_sign_in_again": {
+    "message": "Session expired. Sign in again."
+  },
+  "the_account_is_not_permitted_to_perform_this_action": {
+    "message": "The account is not permitted to perform this action."
+  },
+  "too_many_requests_wait_briefly_and_retry": {
+    "message": "Too many requests. Wait briefly and retry."
+  },
+  "sign_in_failed_check_your_credentials_verification_and_server_configuration": {
+    "message": "Sign-in failed. Check your credentials, verification and server configuration."
+  },
+  "server_request_failed_pending_changes_are_kept_retry_later": {
+    "message": "Server request failed. Pending changes are kept; retry later."
+  },
+  "cannot_reach_the_server_check_your_connection_and_retry": {
+    "message": "Cannot reach the server. Check your connection and retry."
+  },
+  "invalid_server_response": {
+    "message": "Invalid server response."
+  },
+  "sign_in_to_your_pomodoist_account": {
+    "message": "Sign in to your Pomodoist account."
+  },
+  "account_changed_during_session_refresh": {
+    "message": "Account changed during session refresh."
+  },
+  "session_expired_sign_in_again_to_sync_pending_changes": {
+    "message": "Session expired. Sign in again to sync pending changes."
+  },
+  "unsupported_api_call": {
+    "message": "Unsupported API call."
+  },
+  "unsupported_sign_in_provider": {
+    "message": "Unsupported sign-in provider."
+  },
+  "sign_in_expired_please_retry": {
+    "message": "Sign-in expired. Please retry."
+  },
+  "verification_expired_please_retry": {
+    "message": "Verification expired. Please retry."
+  },
+  "the_extension_did_not_respond_reopen_it_and_retry": {
+    "message": "The extension did not respond. Reopen it and retry."
+  },
+  "offline_or_sync_needs_attention": {
+    "message": "Offline or sync needs attention"
+  },
+  "live_sync": {
+    "message": "Live sync"
+  },
+  "synced_periodic_refresh": {
+    "message": "Synced · periodic refresh"
+  },
+  "loading_account_data": {
+    "message": "Loading account data…"
+  },
+  "plan_unavailable": {
+    "message": "Plan unavailable"
+  },
+  "account_access_active": {
+    "message": "Account access active"
+  },
+  "account_status_has_not_been_loaded": {
+    "message": "Account status has not been loaded."
+  },
+  "there_are_unsynced_changes_signing_out_will_discard_them_on_this_device_continue": {
+    "message": "There are unsynced changes. Signing out will discard them on this device. Continue?"
+  },
+  "remove_repeating_schedules_in_the_full_app": {
+    "message": "Remove repeating schedules in the full app."
+  },
+  "choose_a_date_before_setting_a_time": {
+    "message": "Choose a date before setting a time."
+  },
+  "invalid_calendar_date": {
+    "message": "Invalid calendar date."
+  },
+  "invalid_time": {
+    "message": "Invalid time."
+  },
+  "duration_must_be_between_1_and_10080_minutes": {
+    "message": "Duration must be between 1 and 10080 minutes."
+  },
+  "this_local_time_does_not_exist_choose_another_time": {
+    "message": "This local time does not exist. Choose another time."
+  },
+  "task_title_must_contain_1_2048_characters": {
+    "message": "Task title must contain 1–2048 characters."
+  },
+  "invalid_schedule": {
+    "message": "Invalid schedule."
+  },
+  "description_is_too_long": {
+    "message": "Description is too long."
+  },
+  "task_is_no_longer_available_refresh_the_list": {
+    "message": "Task is no longer available. Refresh the list."
+  },
+  "invalid_task_edit": {
+    "message": "Invalid task edit."
+  },
+  "unsupported_task_field": {
+    "message": "Unsupported task field."
+  },
+  "unknown_task_action": {
+    "message": "Unknown task action."
+  },
+  "this_tab_cannot_be_saved": {
+    "message": "This tab cannot be saved."
+  },
+  "only_ordinary_http_s_pages_can_be_saved": {
+    "message": "Only ordinary HTTP(S) pages can be saved."
+  },
+  "this_page_url_is_too_long_to_save": {
+    "message": "This page URL is too long to save."
+  },
+  "sign_in_was_cancelled": {
+    "message": "Sign-in was cancelled."
+  },
+  "invalid_sign_in_callback_please_retry": {
+    "message": "Invalid sign-in callback. Please retry."
+  },
+  "invalid_sign_in_response": {
+    "message": "Invalid sign-in response."
+  },
+  "sign_out_before_switching_accounts": {
+    "message": "Sign out before switching accounts."
+  },
+  "enter_your_email_and_password": {
+    "message": "Enter your email and password."
+  },
+  "signed_out_on_this_device_server_session_revocation_could_not_be_confirmed": {
+    "message": "Signed out on this device. Server session revocation could not be confirmed."
+  },
+  "unknown_extension_command": {
+    "message": "Unknown extension command."
+  },
+  "cannot_open_local_extension_storage": {
+    "message": "Cannot open local extension storage."
+  },
+  "the_operation_failed_please_retry": {
+    "message": "The operation failed. Please retry."
+  },
+  "the_server_returned_an_invalid_session": {
+    "message": "The server returned an invalid session."
+  },
+  "unsynced_tasks_belong_to_another_account_sign_out_explicitly_to_discard_them_first": {
+    "message": "Unsynced tasks belong to another account. Sign out explicitly to discard them first."
+  },
+  "unsynced_changes_remain_sync_first_or_confirm_discarding_them": {
+    "message": "Unsynced changes remain. Sync first or confirm discarding them."
+  },
+  "account_changed_reopen_the_extension_before_editing": {
+    "message": "Account changed. Reopen the extension before editing."
+  },
+  "too_many_pending_changes_sync_before_adding_more": {
+    "message": "Too many pending changes. Sync before adding more."
+  },
+  "invalid_sync_response": {
+    "message": "Invalid sync response."
+  },
+  "invalid_push_response_pending_changes_were_kept": {
+    "message": "Invalid push response. Pending changes were kept."
+  },
+  "more_history_is_available_press_refresh_to_continue_syncing": {
+    "message": "More history is available. Press Refresh to continue syncing."
+  },
+  "invalid_pull_response_cached_changes_were_kept": {
+    "message": "Invalid pull response. Cached changes were kept."
+  },
+  "server_cursor_keeps_resetting_retry_later": {
+    "message": "Server cursor keeps resetting. Retry later."
+  },
+  "server_cursor_did_not_advance_retry_later": {
+    "message": "Server cursor did not advance. Retry later."
+  },
+  "sync_failed_retry_when_online": {
+    "message": "Sync failed. Retry when online."
+  },
+  "syncing": {
+    "message": "Syncing…"
+  },
+  "pro": {
+    "message": "Pro"
+  },
+  "free": {
+    "message": "Free"
+  },
+  "cached": {
+    "message": " (cached)"
+  },
+  "restore": {
+    "message": "Restore"
+  },
+  "complete": {
+    "message": "Complete"
+  },
+  "repeating": {
+    "message": "Repeating"
+  },
+  "subtask": {
+    "message": "Subtask"
+  },
+  "project": {
+    "message": "Project"
+  },
+  "pending_changes": {
+    "message": "{count} changes saved locally · waiting to sync"
+  },
+  "account_checked": {
+    "message": "Account status checked {time}"
+  },
+  "extension_description": {
+    "message": "Quick access to your Pomodoist tasks: Today, Upcoming, scheduling and browser tab capture."
+  }
+}

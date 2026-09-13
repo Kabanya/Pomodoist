@@ -6,41 +6,41 @@
   <link rel="stylesheet" href="styles.css"><script type="module" src="src/popup.js"></script>
 </head>
 <body>
-  <header><strong>Pomodoist</strong><a id="open-app" target="_blank" rel="noopener noreferrer">Open app ↗</a></header>
+  <header><strong>Pomodoist</strong><a id="open-app" target="_blank" rel="noopener noreferrer"><span data-i18n="Open app ↗">Open app ↗</span></a></header>
   <p id="error" role="alert" hidden></p>
   <section id="auth" hidden>
-    <h1>Your tasks, one click away.</h1><p class="muted">Sign in with your existing Pomodoist account.</p>
-    <form id="login"><label>Email<input id="email" name="email" type="email" autocomplete="username" maxlength="320" required></label>
-      <label>Password<input id="password" name="password" type="password" autocomplete="current-password" maxlength="4096" required></label>
-      <button class="primary" type="submit">Sign in</button></form>
-    <div class="providers"><button id="google" type="button">Google</button><button id="apple" type="button">Apple</button></div>
-    <p class="muted small">Use the web app to create an account or reset your password. A verification window may open when signing in.</p>
-    <button id="clear-account" hidden type="button">Discard unsynced changes and sign out</button>
+    <h1><span data-i18n="Your tasks, one click away.">Your tasks, one click away.</span></h1><p class="muted"><span data-i18n="Sign in with your existing Pomodoist account.">Sign in with your existing Pomodoist account.</span></p>
+    <form id="login"><label><span data-i18n="Email">Email</span><input id="email" name="email" type="email" autocomplete="username" maxlength="320" required></label>
+      <label><span data-i18n="Password">Password</span><input id="password" name="password" type="password" autocomplete="current-password" maxlength="4096" required></label>
+      <button class="primary" type="submit"><span data-i18n="Sign in">Sign in</span></button></form>
+    <div class="providers"><button id="google" type="button"><span data-i18n="Google">Google</span></button><button id="apple" type="button"><span data-i18n="Apple">Apple</span></button></div>
+    <p class="muted small"><span data-i18n="Use the web app to create an account or reset your password. A verification window may open when signing in.">Use the web app to create an account or reset your password. A verification window may open when signing in.</span></p>
+    <button id="clear-account" hidden type="button"><span data-i18n="Discard unsynced changes and sign out">Discard unsynced changes and sign out</span></button>
   </section>
   <main id="app" hidden>
     <nav role="tablist" aria-label="Task lists">
-      <button role="tab" id="tab-today" data-view="today" aria-selected="true" aria-controls="task-panel">Today</button>
-      <button role="tab" id="tab-upcoming" data-view="upcoming" aria-selected="false" aria-controls="task-panel" tabindex="-1">Upcoming</button>
-      <button role="tab" id="tab-inbox" data-view="inbox" aria-selected="false" aria-controls="task-panel" tabindex="-1">Inbox</button>
-      <button role="tab" id="tab-completed" data-view="completed" aria-selected="false" aria-controls="task-panel" tabindex="-1">Done</button>
+      <button role="tab" id="tab-today" data-view="today" aria-selected="true" aria-controls="task-panel"><span data-i18n="Today">Today</span></button>
+      <button role="tab" id="tab-upcoming" data-view="upcoming" aria-selected="false" aria-controls="task-panel" tabindex="-1"><span data-i18n="Upcoming">Upcoming</span></button>
+      <button role="tab" id="tab-inbox" data-view="inbox" aria-selected="false" aria-controls="task-panel" tabindex="-1"><span data-i18n="Inbox">Inbox</span></button>
+      <button role="tab" id="tab-completed" data-view="completed" aria-selected="false" aria-controls="task-panel" tabindex="-1"><span data-i18n="Done">Done</span></button>
     </nav>
     <section id="task-panel" role="tabpanel" aria-labelledby="tab-today">
-      <form id="quick-add"><input id="new-title" aria-label="New task title" placeholder="Add a task…" maxlength="2048" required><button type="submit" class="primary">Add</button></form>
-      <div class="toolbar"><button id="save-tab" type="button">Add current tab</button><button id="refresh" type="button">Refresh</button></div>
-      <div id="task-scroll"><ul id="tasks" aria-label="Tasks"></ul><p id="empty" class="muted" hidden>No tasks here.</p></div>
+      <form id="quick-add"><input id="new-title" aria-label="New task title" placeholder="Add a task…" maxlength="2048" required><button type="submit" class="primary"><span data-i18n="Add">Add</span></button></form>
+      <div class="toolbar"><button id="save-tab" type="button"><span data-i18n="Add current tab">Add current tab</span></button><button id="refresh" type="button"><span data-i18n="Refresh">Refresh</span></button></div>
+      <div id="task-scroll"><ul id="tasks" aria-label="Tasks"></ul><p id="empty" class="muted" hidden><span data-i18n="No tasks here.">No tasks here.</span></p></div>
     </section>
     <section id="editor" hidden aria-labelledby="edit-heading">
-      <h2 id="edit-heading">Edit task</h2>
-      <form id="edit-form"><label>Title<input id="edit-title" maxlength="2048" required></label>
-        <label>Description<textarea id="edit-description" maxlength="8192" rows="2"></textarea></label>
-        <div class="schedule-grid"><label>Date<input id="edit-date" type="date"></label><label>Time<input id="edit-time" type="time"></label></div>
-        <div class="schedule-grid"><label>Duration (minutes)<input id="edit-minutes" type="number" min="1" max="10080" step="any" value="30"></label>
-          <label>Priority<select id="edit-priority"><option value="4">Normal</option><option value="3">Medium</option><option value="2">High</option><option value="1">Urgent</option></select></label></div>
-        <p id="recurrence-note" class="small muted" hidden>Existing recurrence is preserved. Manage recurrence rules in the full app.</p>
-        <div class="toolbar"><button id="clear-date" type="button">No date</button><span></span><button id="cancel-edit" type="button">Cancel</button><button class="primary" type="submit">Save</button></div>
+      <h2 id="edit-heading"><span data-i18n="Edit task">Edit task</span></h2>
+      <form id="edit-form"><label><span data-i18n="Title">Title</span><input id="edit-title" maxlength="2048" required></label>
+        <label><span data-i18n="Description">Description</span><textarea id="edit-description" maxlength="8192" rows="2"></textarea></label>
+        <div class="schedule-grid"><label><span data-i18n="Date">Date</span><input id="edit-date" type="date"></label><label><span data-i18n="Time">Time</span><input id="edit-time" type="time"></label></div>
+        <div class="schedule-grid"><label><span data-i18n="Duration (minutes)">Duration (minutes)</span><input id="edit-minutes" type="number" min="1" max="10080" step="any" value="30"></label>
+          <label><span data-i18n="Priority">Priority</span><select id="edit-priority"><option value="4" data-i18n="Normal">Normal</option><option value="3" data-i18n="Medium">Medium</option><option value="2" data-i18n="High">High</option><option value="1" data-i18n="Urgent">Urgent</option></select></label></div>
+        <p id="recurrence-note" class="small muted" hidden><span data-i18n="Existing recurrence is preserved. Manage recurrence rules in the full app.">Existing recurrence is preserved. Manage recurrence rules in the full app.</span></p>
+        <div class="toolbar"><button id="clear-date" type="button"><span data-i18n="No date">No date</span></button><span></span><button id="cancel-edit" type="button"><span data-i18n="Cancel">Cancel</span></button><button class="primary" type="submit"><span data-i18n="Save">Save</span></button></div>
       </form>
     </section>
-    <footer><div><span id="connection" role="status" aria-live="polite">Loading…</span><span id="account" class="small muted"></span></div><button id="logout" type="button">Sign out</button></footer>
+    <footer><div><span id="connection" role="status" aria-live="polite"><span data-i18n="Loading…">Loading…</span></span><span id="account" class="small muted"></span></div><button id="logout" type="button"><span data-i18n="Sign out">Sign out</span></button></footer>
   </main>
-  <p id="startup" role="status" class="muted">Opening your tasks…</p>
+  <p id="startup" role="status" class="muted"><span data-i18n="Opening your tasks…">Opening your tasks…</span></p>
 </body></html>

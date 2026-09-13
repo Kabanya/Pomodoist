@@ -14,9 +14,11 @@ import '../../../app/theme/app_theme.dart';
 import '../../../app/widgets/action_feedback.dart';
 import '../../tasks/domain/project_colors.dart';
 import '../../tasks/domain/task_models.dart';
+import '../../tasks/presentation/project_localizations.dart';
 import '../../tasks/presentation/widgets/project_color_picker.dart';
 import '../domain/focus_models.dart';
 import 'focus_rhythm.dart';
+import 'focus_preset_localizations.dart';
 import 'focus_rhythm_rail.dart';
 import 'focus_view_mode.dart';
 
@@ -139,7 +141,7 @@ class FocusIdleStage extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          preset?.name ?? l10n.noPreset,
+                          preset?.displayName(l10n) ?? l10n.noPreset,
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
@@ -224,7 +226,7 @@ class FocusIdleStage extends StatelessWidget {
                     key: ValueKey('preset-choice-${candidate.id}'),
                     selected: candidate.id == preset?.id,
                     onSelected: (_) => onPresetSelected(candidate.id),
-                    label: Text(candidate.name),
+                    label: Text(candidate.displayName(l10n)),
                     avatar: Icon(
                       candidate.id == preset?.id
                           ? LucideIcons.circleDot
@@ -287,7 +289,7 @@ class _MinimalPresetMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.appColors;
-    final title = selectedPreset?.name ?? l10n.noPreset;
+    final title = selectedPreset?.displayName(l10n) ?? l10n.noPreset;
 
     return MenuAnchor(
       style: MenuStyle(
@@ -312,7 +314,7 @@ class _MinimalPresetMenu extends StatelessWidget {
                 onSelected(preset.id);
               }
             },
-            child: Text(preset.name),
+            child: Text(preset.displayName(l10n)),
           ),
         if (presets.isNotEmpty) const Divider(height: 1),
         MenuItemButton(

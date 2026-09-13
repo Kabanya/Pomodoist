@@ -7,7 +7,7 @@ final class WatchCompanionStore: NSObject, ObservableObject {
   @Published var errorMessage: String?
   @Published var messageIsError = false
   @Published var busy = false
-  @Published var syncStatus = "Offline"
+  @Published var syncStatus = "sync.offline"
   @Published var selectedTab = 0
   @Published private(set) var pendingCommands = [WatchPendingCommand]()
 
@@ -52,7 +52,7 @@ final class WatchCompanionStore: NSObject, ObservableObject {
         do {
           let reply = try await accountClient.send(command: prepared, deviceId: deviceId())
           busy = false
-          syncStatus = "Synced"
+          syncStatus = "sync.synced"
           receiveReply(reply)
           completion?(reply)
         } catch {
@@ -188,7 +188,7 @@ final class WatchCompanionStore: NSObject, ObservableObject {
       persistPending()
       errorMessage = nil
       messageIsError = false
-      syncStatus = "Offline"
+      syncStatus = "sync.offline"
     }
     return false
   }
@@ -240,7 +240,7 @@ final class WatchCompanionStore: NSObject, ObservableObject {
       syncPendingCommands()
       errorMessage = nil
       messageIsError = false
-      syncStatus = "Queued"
+      syncStatus = "sync.statusQueued"
       completion?(["ok": true, "queued": true])
     } else {
       showMessage("error.openIphone", isError: true)
@@ -321,7 +321,7 @@ final class WatchCompanionStore: NSObject, ObservableObject {
       messageIsError = false
       return
     }
-    errorMessage = value ?? String(localized: "error.iphoneUnavailable")
+    errorMessage = String(localized: "error.iphoneUnavailable")
     messageIsError = true
   }
 

@@ -31,10 +31,39 @@ changing its code or environment. For hosted Supabase, deploy the new function
 using `server/supabase/config.toml`. Its handler validates the bearer token with
 Auth `getUser()` even though gateway `verify_jwt` is disabled for compatibility
 with asymmetric JWTs. Missing/invalid sessions, anonymous users and missing
-provider credentials cannot invoke OpenRouter. No service-role credential is
-used by this function. Protect provider spend with an OpenRouter key budget and
-deployment-level rate limits; this endpoint follows the existing authenticated
-voice backend boundary rather than introducing a separate billing system.
+provider credentials cannot invoke OpenRouter. The server-only
+`SUPABASE_SERVICE_ROLE_KEY` reserves and settles usage through
+`pomodoist_voice_quota`; it is never used to authenticate the caller or forwarded
+to OpenRouter. Apply the `pomodoist_core_voice_quota` migration before deploying
+the function. Protect provider spend with an OpenRouter key budget and
+deployment-level rate limits in addition to the monthly application quota.
+
+## Monthly quota
+
+One unit is one successfully recognized audio recording, regardless of duration
+or how many tasks the transcript contains. The existing definition in
+`public.quota_definitions` controls the per-account monthly limit (currently
+2,500 `voice_transcriptions`). All devices share the same counter. Native Apple
+Speech does not use this cloud quota. Months start at 00:00 UTC on the first day;
+the server determines the period and ignores client-supplied period boundaries.
+
+`public.usage_periods` stores `used`, `limit_value`, `period_start`, and `period_end`
+for each `user_id`, app, and quota. A new month's row is created on demand; previous
+months remain available. This counter does not meter the separate text-to-task
+LLM calls, token usage, or dollar cost.
+
+After validating the audio, the function reserves one slot before contacting the
+provider. Concurrent requests cannot reserve beyond the remaining limit. A usable
+transcript increments `usage_periods.used` exactly once for that server request;
+provider errors release the slot. Abandoned reservations expire after ten minutes,
+and a cron job removes expired request metadata. No audio or transcript is stored
+in the reservation table. A response lost after successful processing can still
+count; submitting the recording again starts a new request.
+
+An exhausted quota returns HTTP 429 with `code: voice_quota_exceeded`,
+`retryable: false` and `resetsAt`. A quota database outage fails closed with HTTP
+503 before provider work. The legacy `consume_quota` RPC cannot directly change
+voice usage; other quota writes also use the server's UTC month.
 
 Ensure any external reverse proxy allows at least **17 MiB JSON request bodies**
 and a request timeout of at least **75 seconds**. The client uses the existing

@@ -125,7 +125,7 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
         themeMode: themeMode.themeMode,
         themeAnimationDuration: AppMotion.duration(context, AppMotion.state),
         themeAnimationCurve: AppMotion.curve,
-        locale: language.locale,
+        locale: resolveAppLocale(language),
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalShadLocalizations.delegate,

@@ -1030,7 +1030,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsReturnRemindersSubtitle =>
-      'Un léger rappel le soir si aucun focus ou tâche n’a été terminé aujourd’hui.';
+      'Un rappel à 20 h 30 si vous n’avez terminé aucune tâche aujourd’hui.';
 
   @override
   String get settingsDefaultTimedBlockTitle =>
@@ -2845,5 +2845,264 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String deleteProjectWithChildrenConfirmation(String name) {
     return 'Supprimer « $name » ? Ses sous-projets remonteront d’un niveau. Seules les tâches de ce projet seront déplacées vers Inbox.';
+  }
+
+  @override
+  String get accountNickname => 'Pseudo';
+
+  @override
+  String get accountChangeNickname => 'Modifier le pseudo';
+
+  @override
+  String get accountNicknameSaveError =>
+      'Impossible d’enregistrer votre pseudo. Réessayez.';
+
+  @override
+  String get notificationTaskStarting => 'La tâche commence';
+
+  @override
+  String get notificationReturnTitle => 'Votre tomate pense à vous';
+
+  @override
+  String get notificationReturnBody =>
+      'Une séance de concentration ou une tâche cochée suffit pour réussir la journée.';
+
+  @override
+  String get notificationFocusChannel => 'Concentration';
+
+  @override
+  String get notificationFocusDescription =>
+      'Notifications de fin des intervalles de concentration';
+
+  @override
+  String get notificationReturnChannel => 'Rappels de retour';
+
+  @override
+  String get notificationReturnDescription =>
+      'Rappels discrets pour revenir à Pomodoist';
+
+  @override
+  String get notificationTaskChannel => 'Début de tâche';
+
+  @override
+  String get notificationTaskDescription => 'Notifications de début des tâches';
+
+  @override
+  String get notificationOpenApp => 'Ouvrir Pomodoist';
+
+  @override
+  String get notificationFocusCompleted =>
+      'Intervalle de concentration terminé';
+
+  @override
+  String get notificationLongBreakCompleted => 'Longue pause terminée';
+
+  @override
+  String get notificationBreakCompleted => 'Pause terminée';
+
+  @override
+  String get updateTitle => 'Mise à jour de Pomodoist';
+
+  @override
+  String get updateAction => 'Mettre à jour';
+
+  @override
+  String get updateCheck => 'Rechercher des mises à jour';
+
+  @override
+  String get updateSettings => 'Mises à jour';
+
+  @override
+  String get updateReceiveRc => 'Recevoir les versions candidates (RC)';
+
+  @override
+  String get updateStableChannel => 'Canal : versions stables';
+
+  @override
+  String get updateRcChannel => 'Canal : versions stables et RC';
+
+  @override
+  String get updateRcHelp =>
+      'Les versions RC peuvent contenir des bugs. Les versions alpha et bêta sont exclues.';
+
+  @override
+  String get updateRestart =>
+      'L’application va redémarrer. Vos données seront conservées.';
+
+  @override
+  String get updateNotes => 'Notes de version';
+
+  @override
+  String get updateOwnerManaged =>
+      'Cette version est mise à jour par son propriétaire pour préserver sa configuration serveur. Demandez-lui la dernière version.';
+
+  @override
+  String get updateUnsupported =>
+      'Les mises à jour automatiques sont disponibles dans l’AppImage Linux officielle. Utilisez votre gestionnaire de paquets pour les autres versions.';
+
+  @override
+  String updateVersion(String value) {
+    return 'Version $value';
+  }
+
+  @override
+  String get updatePhaseIdle => 'Vous pouvez vérifier à tout moment.';
+
+  @override
+  String get updatePhaseChecking => 'Vérification des versions…';
+
+  @override
+  String get updatePhaseAvailable => 'Une nouvelle version est disponible';
+
+  @override
+  String get updatePhaseDownloading => 'Téléchargement de la mise à jour…';
+
+  @override
+  String get updatePhaseVerifying => 'Vérification de l’intégrité…';
+
+  @override
+  String get updatePhaseInstalling =>
+      'Préparation de l’installation et du redémarrage…';
+
+  @override
+  String get updatePhaseUpToDate =>
+      'Vous disposez de la dernière version compatible.';
+
+  @override
+  String get updatePhaseFailed => 'La mise à jour n’a pas pu être terminée';
+
+  @override
+  String achievementFocusSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Terminer $count séances de concentration',
+      one: 'Terminer 1 séance de concentration',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String achievementTaskSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Terminer $count tâches',
+      one: 'Terminer 1 tâche',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get achievementDayNotWastedSubtitle =>
+      'Terminer une séance de concentration et une tâche en une journée';
+
+  @override
+  String get achievementFocusPlusCheckSubtitle =>
+      'Terminer 3 séances de concentration et 3 tâches en une journée';
+
+  @override
+  String get achievementNoFussSubtitle =>
+      'Terminer 5 séances de concentration en une journée sans arrêt';
+
+  @override
+  String get achievementCleanEntrySubtitle =>
+      'Terminer une tâche après sa séance de concentration associée';
+
+  @override
+  String get achievementTomatoClosedSubtitle =>
+      'Terminer une tâche le jour de sa séance de concentration';
+
+  @override
+  String achievementTitle(String id) {
+    String _temp0 = intl.Intl.selectLogic(id, {
+      'focus_1': 'Première tomate',
+      'focus_5': 'Échauffement',
+      'focus_10': 'Concentration trouvée',
+      'focus_25': 'Service de tomates',
+      'focus_50': 'Mode activé',
+      'focus_100': 'Ceinture rouge',
+      'focus_250': 'Racines profondes',
+      'focus_500': 'Maître du minuteur',
+      'focus_1000': 'Millième tomate',
+      'focus_5000': 'Cultivateur de concentration',
+      'focus_10000': 'Plantation d’attention',
+      'focus_50000': 'Empire de la tomate',
+      'focus_100000': 'Superesprit rouge',
+      'focus_1000000': 'Singularité de la tomate',
+      'task_1': 'Première coche',
+      'task_5': 'La liste a tremblé',
+      'task_10': 'Case heureuse',
+      'task_25': 'La pile diminue',
+      'task_50': 'Maître des coches',
+      'task_100': 'Derniers détails réglés',
+      'task_250': 'Liste sous contrôle',
+      'task_500': 'K.-O. au bureau',
+      'task_1000': 'Mille coches',
+      'task_5000': 'Archiviste des victoires',
+      'task_10000': 'Machine à cocher',
+      'task_50000': 'Bureau des affaires résolues',
+      'task_100000': 'Souverain des listes',
+      'task_1000000': 'Dernière coche',
+      'combo_day_not_wasted': 'Journée bien remplie',
+      'combo_focus_plus_check': 'Concentration + coche',
+      'combo_no_fuss': 'Sans agitation',
+      'combo_clean_entry': 'Entrée parfaite',
+      'combo_tomato_closed_question': 'La tomate a réglé l’affaire',
+      'other': 'Succès',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get focusPresetDeepWork => 'Travail en profondeur';
+
+  @override
+  String get focusPresetShortSprint => 'Sprint court';
+
+  @override
+  String csvImportIssueRow(int row, String message) {
+    return 'Ligne $row : $message';
+  }
+
+  @override
+  String csvImportIssueMessage(String code, String value) {
+    String _temp0 = intl.Intl.selectLogic(code, {
+      'fileTooLarge': 'Le fichier CSV dépasse 16 Mio.',
+      'invalidUtf8': 'Le CSV doit être encodé en UTF-8 valide.',
+      'missingHeader': 'L’en-tête CSV est manquant.',
+      'malformed': 'Format CSV incorrect.',
+      'unknownHeader': 'En-tête inconnu « $value ».',
+      'duplicateHeader': 'En-tête en double « $value ».',
+      'contentHeaderRequired': 'L’en-tête content est obligatoire.',
+      'tooManyTasks': 'Le CSV ne peut pas contenir plus de 1000 tâches.',
+      'tooManyFields': 'La ligne contient plus de champs que l’en-tête.',
+      'contentRequired': 'content est obligatoire.',
+      'invalidPriority': 'priority doit être un entier de 1 à 4.',
+      'invalidDate': '$value doit utiliser YYYY-MM-DD.',
+      'mixedSchedule':
+          'La date d’échéance ne peut pas être combinée à un horaire.',
+      'timedFieldsRequired':
+          'Un horaire nécessite start_at, end_at et time_zone.',
+      'invalidTimestamp':
+          '$value doit être en RFC3339 avec un décalage UTC explicite.',
+      'invalidTimeZone': 'time_zone doit être un nom IANA valide.',
+      'endBeforeStart': 'end_at doit être après start_at.',
+      'invalidRecurrence': 'recurrence doit être day, week ou month.',
+      'invalidInteger': '$value doit être un entier de 1 à 999.',
+      'intervalWithoutRecurrence': 'recurrence_interval nécessite recurrence.',
+      'recurrenceWithoutSchedule':
+          'recurrence nécessite une date ou un horaire.',
+      'doneTask': 'Les tâches terminées ne peuvent pas être importées.',
+      'invalidKey': 'Le format de $value est incorrect.',
+      'empty': 'Le CSV ne contient aucune tâche.',
+      'duplicateKey': 'Clé en double « $value ».',
+      'parentCycle': 'Les références parent_key forment un cycle.',
+      'missingParent': 'parent_key « $value » n’existe pas.',
+      'childProject':
+          'Une sous-tâche doit utiliser le même projet que sa tâche parente.',
+      'other': 'Le fichier n’a pas pu être importé.',
+    });
+    return '$_temp0';
   }
 }

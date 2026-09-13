@@ -1,3 +1,4 @@
+import 'project_localizations.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -252,7 +253,9 @@ class _BrowseProjects extends ConsumerWidget {
           Text(l10n.noProjects, style: Theme.of(context).textTheme.bodyMedium),
         for (final row in rows)
           Padding(
-            padding: EdgeInsetsDirectional.only(start: row.depth * 20.0),
+            padding: EdgeInsetsDirectional.only(
+              start: math.min(row.depth, 4) * 12.0,
+            ),
             child: ProjectContextMenu(
               key: ValueKey('browse-project-${row.project.id}'),
               project: row.project,
@@ -267,16 +270,16 @@ class _BrowseProjects extends ConsumerWidget {
                   hoverDuration: AppMotion.duration(context, AppMotion.hover),
                   onTap: () => context.go('/project/${row.project.id}'),
                   child: SizedBox(
-                    height: 48,
+                    height: 44,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Row(
                         children: [
                           ProjectIconView(project: row.project, size: 20),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              row.project.name,
+                              row.project.displayName(context.l10n),
                               maxLines: 1,
                               textAlign: TextAlign.start,
                               overflow: TextOverflow.ellipsis,
@@ -284,7 +287,7 @@ class _BrowseProjects extends ConsumerWidget {
                                   ?.copyWith(fontWeight: FontWeight.w500),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 8),
                           Semantics(
                             label: l10n.browseOpenNow,
                             child: Text(

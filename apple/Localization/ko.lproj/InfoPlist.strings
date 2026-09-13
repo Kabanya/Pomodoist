@@ -1,0 +1,2 @@
+"NSMicrophoneUsageDescription" = "Pomodoist는 마이크를 사용하여 음성으로 입력한 빠른 추가 명령을 작업 텍스트로 변환합니다.";
+"NSSpeechRecognitionUsageDescription" = "Pomodoist는 음성 인식을 사용하여 음성으로 입력한 빠른 추가 명령을 텍스트로 변환합니다.";

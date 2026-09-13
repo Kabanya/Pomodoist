@@ -114,6 +114,8 @@ void main() {
       240,
       scrollable: find.byType(Scrollable).first,
     );
+    await tester.ensureVisible(toggle);
+    await tester.pumpAndSettle();
     await tester.tap(toggle);
     await tester.pumpAndSettle();
 
@@ -179,6 +181,10 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
 
+    await tester.ensureVisible(
+      find.byKey(const Key('shortcut-binding-global')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('shortcut-binding-global')));
     await tester.pumpAndSettle();
     await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);

@@ -128,7 +128,7 @@ struct SystemSpeechTests {
     assert(SystemSpeechAccess.recognizer("zz-ZZ") == nil)
     assert(SystemSpeechAccess.recognizer("invalidlanguage") == nil)
     let supported = SFSpeechRecognizer.supportedLocales()
-    for language in ["en", "ru", "de", "fr", "es", "ar", "zh"] {
+    for language in ["en", "ru", "de", "fr", "es", "ar", "zh", "pt", "ja", "ko"] {
       if supported.contains(where: { $0.languageCode == language }) {
         let resolved = SystemSpeechAccess.recognizer(language)
         assert(resolved?.locale.languageCode == language, "Regionless UI language must resolve within that language: \(language)")

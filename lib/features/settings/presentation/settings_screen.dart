@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:app_account/app_account.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +34,7 @@ import 'settings_components.dart';
 import 'settings_navigation.dart';
 import 'settings_subscription.dart';
 import 'account_sign_out_button.dart';
+import 'account_nickname_dialog.dart';
 import 'app_info_card.dart';
 import 'csv_task_import_card.dart';
 import 'theme_settings_card.dart';
@@ -850,7 +853,7 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
             NativeCaptchaFailureCode.unavailable,
           );
         }
-        token = await broker.requestToken();
+        token = await broker.requestToken(locale: context.l10n.localeName);
       } else {
         token = null;
       }
@@ -1448,6 +1451,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               ),
             ),
           ],
+          if (signedIn && profile != null)
+            SettingsRow(
+              title: l10n.accountNickname,
+              subtitle: profile.displayName,
+              control: ShadButton.outline(
+                key: const Key('account-change-nickname'),
+                onPressed: () {
+                  final userId = account!.currentUserId!;
+                  showDialog<void>(
+                    context: context,
+                    barrierDismissible: false,
+                    animationStyle: AnimationStyle(
+                      duration: AppMotion.duration(context, AppMotion.popup),
+                      reverseDuration: AppMotion.duration(
+                        context,
+                        AppMotion.popup,
+                      ),
+                      curve: AppMotion.curve,
+                    ),
+                    builder: (_) => AccountNicknameDialog(
+                      nickname: profile.displayName ?? '',
+                      onSave: (name) async {
+                        await updateAccountNickname(
+                          Supabase.instance.client,
+                          userId,
+                          name,
+                        ).timeout(ref.read(accountRequestTimeoutProvider));
+                        if (context.mounted) {
+                          ref.invalidate(accountOverviewProvider);
+                        }
+                      },
+                    ),
+                  );
+                },
+                child: Text(l10n.accountChangeNickname),
+              ),
+            ),
           if (overview.hasError)
             _AccountErrorCard(
               key: const Key('account-overview-error'),

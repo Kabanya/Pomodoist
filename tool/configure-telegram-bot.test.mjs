@@ -12,7 +12,7 @@ test('setup preserves pending updates and verifies the webhook', async () => {
   const hook = requests.find(r => r.method === 'setWebhook').body;
   assert.equal(hook.drop_pending_updates, false); assert.deepEqual(hook.allowed_updates, ['message', 'callback_query']);
   assert.equal(hook.secret_token, env.POMODOIST_TELEGRAM_WEBHOOK_SECRET);
-  assert.equal(requests.filter(r => r.method === 'setMyCommands').length, 2);
+  assert.deepEqual(requests.filter(r => r.method === 'setMyCommands').map(r => r.body.language_code ?? 'en'), ['en', 'ru', 'pt', 'ja', 'ko']);
   for (const request of requests.filter(r => r.method === 'setMyCommands')) assert.deepEqual(request.body.commands.map(c => c.command), ['start']);
 });
 test('setup refuses insecure URLs and absent/weak secrets before network access', () => {

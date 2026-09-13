@@ -11,6 +11,7 @@ import 'package:pomodoist/app/account_providers.dart';
 import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/features/billing/billing.dart';
 import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
+import 'package:pomodoist/features/settings/presentation/settings_navigation.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -88,7 +89,7 @@ void main() {
     await _pumpSettings(tester, account: account);
 
     expect(find.byKey(const Key('connected-agents-error')), findsOneWidget);
-    expect(find.byKey(const Key('settings-language-select')), findsOneWidget);
+    expect(find.text('Google Calendar'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('connected-agents-retry')));
     await tester.pumpAndSettle();
@@ -356,7 +357,11 @@ Future<void> _pumpSettings(
           GlobalWidgetsLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const Scaffold(body: SettingsScreen()),
+        home: Scaffold(
+          body: SettingsScreen(
+            location: settingsLocation(SettingsSection.integrations),
+          ),
+        ),
       ),
     ),
   );

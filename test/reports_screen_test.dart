@@ -72,30 +72,15 @@ void main() {
       tester,
       const Size(390, 844),
       achievements: const [
-        _AchievementFixture(
-          id: 'warm_up',
-          title: 'Warm-up',
-          progress: 2,
-          target: 5,
-        ),
-        _AchievementFixture(
-          id: 'focus_caught',
-          title: 'Focus caught',
-          progress: 8,
-          target: 10,
-        ),
-        _AchievementFixture(
-          id: 'unlocked',
-          title: 'Already unlocked',
-          progress: 1,
-          target: 1,
-        ),
+        _AchievementFixture(id: 'focus_5', progress: 2, target: 5),
+        _AchievementFixture(id: 'focus_10', progress: 8, target: 10),
+        _AchievementFixture(id: 'focus_1', progress: 1, target: 1),
       ].map((fixture) => fixture.item).toList(),
     );
 
     expect(find.text('Focus caught'), findsOneWidget);
     expect(find.text('Warm-up'), findsNothing);
-    expect(find.text('Already unlocked'), findsNothing);
+    expect(find.text('First tomato'), findsNothing);
     expect(find.text('8/10'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -107,23 +92,13 @@ void main() {
       tester,
       const Size(390, 844),
       achievements: const [
-        _AchievementFixture(
-          id: 'first',
-          title: 'First tie',
-          progress: 2,
-          target: 4,
-        ),
-        _AchievementFixture(
-          id: 'second',
-          title: 'Second tie',
-          progress: 1,
-          target: 2,
-        ),
+        _AchievementFixture(id: 'focus_25', progress: 2, target: 4),
+        _AchievementFixture(id: 'focus_50', progress: 1, target: 2),
       ].map((fixture) => fixture.item).toList(),
     );
 
-    expect(find.text('First tie'), findsOneWidget);
-    expect(find.text('Second tie'), findsNothing);
+    expect(find.text('Tomato shift'), findsOneWidget);
+    expect(find.text('Mode on'), findsNothing);
   });
 
   testWidgets('empty achievements never claim everything is unlocked', (
@@ -238,7 +213,7 @@ void main() {
       tester,
       const Size(390, 844),
       achievements: const [
-        _AchievementFixture(id: 'done', title: 'Done', progress: 1, target: 1),
+        _AchievementFixture(id: 'focus_1', progress: 1, target: 1),
       ].map((fixture) => fixture.item).toList(),
     );
 
@@ -402,10 +377,6 @@ const _achievements = [
     id: 'focus_1',
     group: AchievementGroup.focus,
     presentation: AchievementPresentation.globalBanner,
-    titleRu: 'Первый помидор',
-    titleEn: 'First tomato',
-    subtitleRu: 'Завершить 1 work-фокус',
-    subtitleEn: 'Complete 1 work focus',
     progress: 1,
     target: 1,
   ),
@@ -413,10 +384,6 @@ const _achievements = [
     id: 'task_5',
     group: AchievementGroup.task,
     presentation: AchievementPresentation.globalBanner,
-    titleRu: 'Список дрогнул',
-    titleEn: 'The list flinched',
-    subtitleRu: 'Закрыть 5 задач',
-    subtitleEn: 'Complete 5 tasks',
     progress: 2,
     target: 5,
   ),
@@ -424,10 +391,6 @@ const _achievements = [
     id: 'combo_day_not_wasted',
     group: AchievementGroup.combo,
     presentation: AchievementPresentation.bottomPlaque,
-    titleRu: 'День не зря',
-    titleEn: 'Day not wasted',
-    subtitleRu: 'За день есть фокус и закрытая задача',
-    subtitleEn: 'Finish a focus and a task in one day',
     progress: 1,
     target: 1,
   ),
@@ -449,13 +412,11 @@ List<ProductivityDaySummary> _weeklyDays({bool empty = false}) {
 class _AchievementFixture {
   const _AchievementFixture({
     required this.id,
-    required this.title,
     required this.progress,
     required this.target,
   });
 
   final String id;
-  final String title;
   final int progress;
   final int target;
 
@@ -463,10 +424,6 @@ class _AchievementFixture {
     id: id,
     group: AchievementGroup.focus,
     presentation: AchievementPresentation.globalBanner,
-    titleRu: title,
-    titleEn: title,
-    subtitleRu: 'Complete $target work focuses',
-    subtitleEn: 'Complete $target work focuses',
     progress: progress,
     target: target,
   );

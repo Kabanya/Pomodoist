@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
+import '../../features/tasks/presentation/project_localizations.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -132,6 +133,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     if (menuController != null) {
       unawaited(
         menuController.sync(
+          locale: context.l10n.localeName,
           labels: {
             for (final command in AppShortcutCommand.values)
               command: appShortcutLabel(context.l10n, command),
@@ -1087,7 +1089,6 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
                                       row: row,
                                       child: _SidebarProjectTile(
                                         project: row.project,
-                                        depth: 0,
                                         count:
                                             projectTaskCounts[row.project.id] ??
                                             0,
@@ -1463,14 +1464,12 @@ class _SidebarProjectTile extends StatelessWidget {
     required this.project,
     required this.selected,
     required this.onTap,
-    required this.depth,
     required this.count,
   });
 
   final ProjectItem project;
   final bool selected;
   final VoidCallback onTap;
-  final int depth;
   final int count;
 
   @override
@@ -1488,19 +1487,14 @@ class _SidebarProjectTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           onTap: onTap,
           child: Padding(
-            padding: EdgeInsets.only(
-              left: 10.0 + depth * 18.0,
-              right: 10,
-              top: 8,
-              bottom: 8,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             child: Row(
               children: [
                 ProjectIconView(project: project, size: 18),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    project.name,
+                    project.displayName(context.l10n),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(

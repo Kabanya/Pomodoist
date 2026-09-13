@@ -1,3 +1,4 @@
+import '../project_localizations.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -334,7 +335,10 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
     final projectId = await _showChoice<String>(
       context,
       title: context.l10n.taskProject,
-      choices: [for (final project in projects) (project.id, project.name)],
+      choices: [
+        for (final project in projects)
+          (project.id, project.displayName(context.l10n)),
+      ],
     );
     if (projectId == null || !mounted) return;
     final tasksById = {

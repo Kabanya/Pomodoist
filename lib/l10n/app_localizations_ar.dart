@@ -1011,7 +1011,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsReturnRemindersSubtitle =>
-      'تنبيه مسائي لطيف إذا لم يكتمل أي تركيز أو مهمة اليوم.';
+      'تذكير في الساعة 20:30 إذا لم تكمل أي مهمة اليوم.';
 
   @override
   String get settingsDefaultTimedBlockTitle => 'مدة كتلة التقويم الافتراضية';
@@ -2800,5 +2800,255 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String deleteProjectWithChildrenConfirmation(String name) {
     return 'حذف «$name»؟ ستنتقل مشاريعه الفرعية إلى المستوى الأعلى. ستُنقل مهام هذا المشروع فقط إلى Inbox.';
+  }
+
+  @override
+  String get accountNickname => 'الاسم المستعار';
+
+  @override
+  String get accountChangeNickname => 'تغيير الاسم المستعار';
+
+  @override
+  String get accountNicknameSaveError =>
+      'تعذر حفظ الاسم المستعار. حاول مرة أخرى.';
+
+  @override
+  String get notificationTaskStarting => 'بدء المهمة';
+
+  @override
+  String get notificationReturnTitle => 'الطماطم تشتاق إليك';
+
+  @override
+  String get notificationReturnBody =>
+      'جلسة تركيز واحدة أو علامة إنجاز واحدة تكفي ليكون يومك مثمرًا.';
+
+  @override
+  String get notificationFocusChannel => 'التركيز';
+
+  @override
+  String get notificationFocusDescription => 'إشعارات إكمال فترات التركيز';
+
+  @override
+  String get notificationReturnChannel => 'تذكيرات العودة';
+
+  @override
+  String get notificationReturnDescription =>
+      'تذكيرات لطيفة للعودة إلى Pomodoist';
+
+  @override
+  String get notificationTaskChannel => 'بدء المهمة';
+
+  @override
+  String get notificationTaskDescription => 'إشعارات بدء المهام';
+
+  @override
+  String get notificationOpenApp => 'فتح Pomodoist';
+
+  @override
+  String get notificationFocusCompleted => 'اكتملت فترة التركيز';
+
+  @override
+  String get notificationLongBreakCompleted => 'انتهت الاستراحة الطويلة';
+
+  @override
+  String get notificationBreakCompleted => 'انتهت الاستراحة';
+
+  @override
+  String get updateTitle => 'تحديث Pomodoist';
+
+  @override
+  String get updateAction => 'تحديث';
+
+  @override
+  String get updateCheck => 'البحث عن تحديثات';
+
+  @override
+  String get updateSettings => 'التحديثات';
+
+  @override
+  String get updateReceiveRc => 'تلقي الإصدارات المرشحة (RC)';
+
+  @override
+  String get updateStableChannel => 'القناة: الإصدارات المستقرة';
+
+  @override
+  String get updateRcChannel => 'القناة: الإصدارات المستقرة والمرشحة';
+
+  @override
+  String get updateRcHelp =>
+      'قد تحتوي الإصدارات المرشحة على أخطاء. لا تشمل إصدارات ألفا وبيتا.';
+
+  @override
+  String get updateRestart => 'سيُعاد تشغيل التطبيق. ستُحفظ بياناتك.';
+
+  @override
+  String get updateNotes => 'ملاحظات الإصدار';
+
+  @override
+  String get updateOwnerManaged =>
+      'يحدّث مالك هذه النسخة التطبيق للحفاظ على إعدادات الخادم. اطلب منه أحدث إصدار.';
+
+  @override
+  String get updateUnsupported =>
+      'تتوفر التحديثات التلقائية في AppImage الرسمي لنظام Linux. استخدم مدير الحزم للنسخ الأخرى.';
+
+  @override
+  String updateVersion(String value) {
+    return 'الإصدار $value';
+  }
+
+  @override
+  String get updatePhaseIdle => 'يمكنك البحث عن تحديثات في أي وقت.';
+
+  @override
+  String get updatePhaseChecking => 'جارٍ التحقق من الإصدارات…';
+
+  @override
+  String get updatePhaseAvailable => 'يتوفر إصدار جديد';
+
+  @override
+  String get updatePhaseDownloading => 'جارٍ تنزيل التحديث…';
+
+  @override
+  String get updatePhaseVerifying => 'جارٍ التحقق من السلامة…';
+
+  @override
+  String get updatePhaseInstalling => 'جارٍ تجهيز التثبيت وإعادة التشغيل…';
+
+  @override
+  String get updatePhaseUpToDate => 'لديك أحدث إصدار متوافق.';
+
+  @override
+  String get updatePhaseFailed => 'تعذر إكمال التحديث';
+
+  @override
+  String achievementFocusSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'أكمل $count جلسات تركيز عمل',
+      one: 'أكمل جلسة تركيز عمل واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String achievementTaskSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'أكمل $count مهام',
+      one: 'أكمل مهمة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get achievementDayNotWastedSubtitle =>
+      'أكمل جلسة تركيز ومهمة في يوم واحد';
+
+  @override
+  String get achievementFocusPlusCheckSubtitle =>
+      'أكمل 3 جلسات تركيز و3 مهام في يوم واحد';
+
+  @override
+  String get achievementNoFussSubtitle =>
+      'أكمل 5 جلسات تركيز في يوم دون إيقافها';
+
+  @override
+  String get achievementCleanEntrySubtitle =>
+      'أكمل مهمة بعد جلسة التركيز المرتبطة بها';
+
+  @override
+  String get achievementTomatoClosedSubtitle =>
+      'أكمل مهمة في يوم جلسة تركيز العمل الخاصة بها';
+
+  @override
+  String achievementTitle(String id) {
+    String _temp0 = intl.Intl.selectLogic(id, {
+      'focus_1': 'أول طماطم',
+      'focus_5': 'الإحماء',
+      'focus_10': 'وجدت التركيز',
+      'focus_25': 'وردية الطماطم',
+      'focus_50': 'الوضع مفعّل',
+      'focus_100': 'الحزام الأحمر',
+      'focus_250': 'جذور عميقة',
+      'focus_500': 'خبير المؤقت',
+      'focus_1000': 'الطماطم الألف',
+      'focus_5000': 'مزارع التركيز',
+      'focus_10000': 'مزرعة الانتباه',
+      'focus_50000': 'إمبراطورية الطماطم',
+      'focus_100000': 'العقل الأحمر الخارق',
+      'focus_1000000': 'تفرّد الطماطم',
+      'task_1': 'أول علامة إنجاز',
+      'task_5': 'اهتزت القائمة',
+      'task_10': 'مربع سعيد',
+      'task_25': 'إزالة التراكم',
+      'task_50': 'خبير علامات الإنجاز',
+      'task_100': 'إنهاء الأمور العالقة',
+      'task_250': 'القائمة تحت السيطرة',
+      'task_500': 'ضربة قاضية مكتبية',
+      'task_1000': 'ألف علامة إنجاز',
+      'task_5000': 'أمين أرشيف الانتصارات',
+      'task_10000': 'آلة الإنجاز',
+      'task_50000': 'مكتب الأمور المنجزة',
+      'task_100000': 'سيد القوائم',
+      'task_1000000': 'علامة الإنجاز الأخيرة',
+      'combo_day_not_wasted': 'يوم لم يضع سدى',
+      'combo_focus_plus_check': 'تركيز + إنجاز',
+      'combo_no_fuss': 'بلا ضجيج',
+      'combo_clean_entry': 'بداية نظيفة',
+      'combo_tomato_closed_question': 'الطماطم أنجزتها',
+      'other': 'إنجاز',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get focusPresetDeepWork => 'عمل عميق';
+
+  @override
+  String get focusPresetShortSprint => 'دفعة قصيرة';
+
+  @override
+  String csvImportIssueRow(int row, String message) {
+    return 'الصف $row: $message';
+  }
+
+  @override
+  String csvImportIssueMessage(String code, String value) {
+    String _temp0 = intl.Intl.selectLogic(code, {
+      'fileTooLarge': 'يتجاوز ملف CSV حجم 16 ميبيبايت.',
+      'invalidUtf8': 'يجب أن يكون CSV بترميز UTF-8 صالح.',
+      'missingHeader': 'رأس CSV مفقود.',
+      'malformed': 'تنسيق CSV غير صحيح.',
+      'unknownHeader': 'رأس غير معروف \"$value\".',
+      'duplicateHeader': 'رأس مكرر \"$value\".',
+      'contentHeaderRequired': 'الرأس content مطلوب.',
+      'tooManyTasks': 'لا يمكن أن يحتوي CSV على أكثر من 1000 مهمة.',
+      'tooManyFields': 'يحتوي الصف على حقول أكثر من الرأس.',
+      'contentRequired': 'الحقل content مطلوب.',
+      'invalidPriority': 'يجب أن تكون priority عددًا صحيحًا من 1 إلى 4.',
+      'invalidDate': 'يجب أن يستخدم $value التنسيق YYYY-MM-DD.',
+      'mixedSchedule': 'لا يمكن الجمع بين تاريخ الاستحقاق وجدول بوقت محدد.',
+      'timedFieldsRequired':
+          'يتطلب الجدول بوقت محدد start_at وend_at وtime_zone.',
+      'invalidTimestamp': 'يجب أن يكون $value بصيغة RFC3339 مع فرق UTC صريح.',
+      'invalidTimeZone': 'يجب أن يكون time_zone اسم IANA صالحًا.',
+      'endBeforeStart': 'يجب أن يكون end_at بعد start_at.',
+      'invalidRecurrence': 'يجب أن تكون recurrence هي day أو week أو month.',
+      'invalidInteger': 'يجب أن يكون $value عددًا صحيحًا من 1 إلى 999.',
+      'intervalWithoutRecurrence': 'recurrence_interval يتطلب recurrence.',
+      'recurrenceWithoutSchedule': 'recurrence يتطلب جدولًا.',
+      'doneTask': 'لا يمكن استيراد المهام المكتملة.',
+      'invalidKey': 'تنسيق $value غير صالح.',
+      'empty': 'لا يحتوي CSV على مهام.',
+      'duplicateKey': 'مفتاح مكرر \"$value\".',
+      'parentCycle': 'تشكل مراجع parent_key حلقة.',
+      'missingParent': 'parent_key \"$value\" غير موجود.',
+      'childProject': 'يجب أن تستخدم المهمة الفرعية مشروع المهمة الأصلية نفسه.',
+      'other': 'تعذر استيراد الملف.',
+    });
+    return '$_temp0';
   }
 }

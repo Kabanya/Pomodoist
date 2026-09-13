@@ -412,10 +412,6 @@ const _globalAchievement = AchievementItem(
   id: 'focus-overlay',
   group: AchievementGroup.focus,
   presentation: AchievementPresentation.globalBanner,
-  titleRu: 'Фокус',
-  titleEn: 'Focus',
-  subtitleRu: 'Верхнее достижение',
-  subtitleEn: 'Top achievement',
   progress: 1,
   target: 1,
 );
@@ -424,10 +420,6 @@ const _bottomAchievement = AchievementItem(
   id: 'combo-overlay',
   group: AchievementGroup.combo,
   presentation: AchievementPresentation.bottomPlaque,
-  titleRu: 'Комбо',
-  titleEn: 'Combo',
-  subtitleRu: 'Нижнее достижение',
-  subtitleEn: 'Bottom achievement',
   progress: 1,
   target: 1,
 );

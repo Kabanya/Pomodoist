@@ -37,6 +37,10 @@
 		C30000000000000000000003 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C30000000000000000000013 /* PrivacyInfo.xcprivacy */; };
 		B50000000000000000000001 /* SystemSpeechTranscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50000000000000000000002 /* SystemSpeechTranscriber.swift */; };
 		B60000000000000000000001 /* StoreKitHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60000000000000000000002 /* StoreKitHost.swift */; };
+		8FF571977CE0106EEE36BA8C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8F4EFFB60B73926832DEC3EB /* Localizable.strings */; };
+		82B6177415505F785860A5D3 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8F4EFFB60B73926832DEC3EB /* Localizable.strings */; };
+		6784952060FD066E2FE2B9A4 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2F3F06722804DFFCB9186078 /* InfoPlist.strings */; };
+		6769A74B55C1AA4EADA7CE8D /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2F3F06722804DFFCB9186078 /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -146,6 +150,13 @@
 		C30000000000000000000013 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = PomodoistFocusWidget/PrivacyInfo.xcprivacy; sourceTree = SOURCE_ROOT; };
 		B50000000000000000000002 /* SystemSpeechTranscriber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SystemSpeechTranscriber.swift; path = ../apple/SystemSpeechTranscriber.swift; sourceTree = SOURCE_ROOT; };
 		B60000000000000000000002 /* StoreKitHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StoreKitHost.swift; path = ../apple/StoreKitHost.swift; sourceTree = SOURCE_ROOT; };
+		7A99EC6E1EF2F84788B653DF /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "../apple/Localization/pt-BR.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
+		EEF84D6F5F41B1AF968E7C22 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ja"; path = "../apple/Localization/ja.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
+		D9FF689B41FD395313D3136A /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ko"; path = "../apple/Localization/ko.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
+		CA2CCE81CC18AAF933426EB5 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en"; path = "../apple/Localization/en.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
+		489B5AC5AE04504A8A33E15B /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "../apple/Localization/pt-BR.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
+		EF19D8120472F6CEBC5A3B97 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ja"; path = "../apple/Localization/ja.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
+		841449DDAE0BF255F0AF9F04 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ko"; path = "../apple/Localization/ko.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -193,6 +204,8 @@
 		331C8082294A63A400263BE5 /* RunnerTests */ = {
 			isa = PBXGroup;
 			children = (
+				2F3F06722804DFFCB9186078 /* InfoPlist.strings */,
+				8F4EFFB60B73926832DEC3EB /* Localizable.strings */,
 				331C807B294A618700263BE5 /* RunnerTests.swift */,
 			);
 			path = RunnerTests;
@@ -453,7 +466,10 @@
 				fr,
 				ru,
 				zh,
-			);
+							"pt-BR",
+				"ja",
+				"ko",
+);
 			mainGroup = 97C146E51CF9000F007C117D;
 			packageReferences = (
 				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */,
@@ -483,6 +499,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6784952060FD066E2FE2B9A4 /* InfoPlist.strings in Resources */,
+				8FF571977CE0106EEE36BA8C /* Localizable.strings in Resources */,
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				C30000000000000000000001 /* PrivacyInfo.xcprivacy in Resources */,
@@ -512,6 +530,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6769A74B55C1AA4EADA7CE8D /* InfoPlist.strings in Resources */,
+				82B6177415505F785860A5D3 /* Localizable.strings in Resources */,
 				C30000000000000000000003 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -659,6 +679,27 @@
 				97C147001CF9000F007C117D /* Base */,
 			);
 			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		8F4EFFB60B73926832DEC3EB /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7A99EC6E1EF2F84788B653DF /* pt-BR */,
+				EEF84D6F5F41B1AF968E7C22 /* ja */,
+				D9FF689B41FD395313D3136A /* ko */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		2F3F06722804DFFCB9186078 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				CA2CCE81CC18AAF933426EB5 /* en */,
+				489B5AC5AE04504A8A33E15B /* pt-BR */,
+				EF19D8120472F6CEBC5A3B97 /* ja */,
+				841449DDAE0BF255F0AF9F04 /* ko */,
+			);
+			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

@@ -3,17 +3,59 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
+import '../../l10n/app_localizations.dart';
+import '../../l10n/app_localizations_en.dart';
 
 import 'android_alarm_policy.dart';
 
 class NotificationScheduler {
-  NotificationScheduler({FlutterLocalNotificationsPlugin? plugin})
-    : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
+  NotificationScheduler({
+    FlutterLocalNotificationsPlugin? plugin,
+    AppLocalizations Function()? localizations,
+  }) : _plugin = plugin ?? FlutterLocalNotificationsPlugin(),
+       _localizations = localizations ?? AppLocalizationsEn.new;
+
+  final AppLocalizations Function() _localizations;
+
+  String focusCompletedBody(String type) => switch (type) {
+    'work' => _localizations().notificationFocusCompleted,
+    'longBreak' => _localizations().notificationLongBreakCompleted,
+    _ => _localizations().notificationBreakCompleted,
+  };
+
+  NotificationDetails localizedDetails(NotificationDetails base) {
+    final copy = _localizations();
+    final channel = base.android!;
+    final (name, description) = switch (channel.channelId) {
+      'focus' => (
+        copy.notificationFocusChannel,
+        copy.notificationFocusDescription,
+      ),
+      'task_start' => (
+        copy.notificationTaskChannel,
+        copy.notificationTaskDescription,
+      ),
+      _ => (copy.notificationReturnChannel, copy.notificationReturnDescription),
+    };
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        channel.channelId,
+        name,
+        channelDescription: description,
+        importance: channel.importance,
+        priority: channel.priority,
+      ),
+      iOS: base.iOS,
+      macOS: base.macOS,
+      windows: base.windows,
+    );
+  }
 
   static const int focusNotificationId = 42;
   static const int reengagementNotificationId = 43;
-  static const int windowsReengagementNotificationBaseId = 43000;
-  static const int windowsReengagementReminderCount = 30;
+  static const int reengagementNotificationBaseId = 43000;
+  // ponytail: keep 30 days queued; refill on app activity instead of background jobs.
+  static const int reengagementReminderCount = 30;
   static const String taskStartPayloadPrefix = 'task.start:';
 
   static const InitializationSettings initializationSettings =
@@ -71,6 +113,36 @@ class NotificationScheduler {
   final FlutterLocalNotificationsPlugin _plugin;
   bool _initialized = false;
 
+  Future<void> refreshLanguage() async {
+    if (kIsWeb) return;
+    await initialize();
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      for (final details in [
+        focusDetails,
+        taskStartDetails,
+        reengagementDetails,
+      ]) {
+        final channel = localizedDetails(details).android!;
+        await android?.createNotificationChannel(
+          AndroidNotificationChannel(
+            channel.channelId,
+            channel.channelName,
+            description: channel.channelDescription,
+            importance: channel.importance,
+          ),
+        );
+      }
+    }
+    if (defaultTargetPlatform == TargetPlatform.linux) {
+      _initialized = false;
+      await initialize();
+    }
+  }
+
   Future<void> initialize() async {
     if (_initialized || kIsWeb) {
       _initialized = true;
@@ -80,7 +152,17 @@ class NotificationScheduler {
     tz_data.initializeTimeZones();
     final localTimeZone = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(localTimeZone.identifier));
-    await _plugin.initialize(settings: initializationSettings);
+    await _plugin.initialize(
+      settings: InitializationSettings(
+        android: initializationSettings.android,
+        iOS: initializationSettings.iOS,
+        macOS: initializationSettings.macOS,
+        windows: initializationSettings.windows,
+        linux: LinuxInitializationSettings(
+          defaultActionName: _localizations().notificationOpenApp,
+        ),
+      ),
+    );
     _initialized = true;
   }
 
@@ -91,8 +173,10 @@ class NotificationScheduler {
       await schedule(AndroidScheduleMode.inexactAllowWhileIdle);
       return;
     }
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await scheduleAndroidAlarm(
       canScheduleExact: () async => android?.canScheduleExactNotifications(),
       schedule: schedule,
@@ -110,15 +194,17 @@ class NotificationScheduler {
     }
 
     final scheduled = tz.TZDateTime.from(expectedEndAt.toLocal(), tz.local);
-    await _scheduleTimeSensitive((mode) => _plugin.zonedSchedule(
-      id: focusNotificationId,
-      title: title,
-      body: body,
-      scheduledDate: scheduled,
-      androidScheduleMode: mode,
-      notificationDetails: focusDetails,
-      payload: 'focus.interval.end',
-    ));
+    await _scheduleTimeSensitive(
+      (mode) => _plugin.zonedSchedule(
+        id: focusNotificationId,
+        title: title,
+        body: body,
+        scheduledDate: scheduled,
+        androidScheduleMode: mode,
+        notificationDetails: localizedDetails(focusDetails),
+        payload: 'focus.interval.end',
+      ),
+    );
   }
 
   Future<void> scheduleReengagementReminder({
@@ -132,31 +218,19 @@ class NotificationScheduler {
     }
 
     final scheduled = tz.TZDateTime.from(firstAt.toLocal(), tz.local);
-    if (defaultTargetPlatform == TargetPlatform.windows) {
-      await replaceWindowsReengagementReminders(
-        firstAt: scheduled,
-        cancel: (id) => _plugin.cancel(id: id),
-        schedule: (reminder) => _plugin.zonedSchedule(
-          id: reminder.id,
-          title: title,
-          body: body,
-          scheduledDate: reminder.scheduledDate,
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          notificationDetails: reengagementDetails,
-          payload: 'reengagement.daily',
-        ),
-      );
-      return;
-    }
-    await _plugin.zonedSchedule(
-      id: reengagementNotificationId,
-      title: title,
-      body: body,
-      scheduledDate: scheduled,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      notificationDetails: reengagementDetails,
-      payload: 'reengagement.daily',
-      matchDateTimeComponents: DateTimeComponents.time,
+    // Use dated requests: Apple's time-only repeats ignore a tomorrow start.
+    await replaceReengagementReminders(
+      firstAt: scheduled,
+      cancel: (id) => _plugin.cancel(id: id),
+      schedule: (reminder) => _plugin.zonedSchedule(
+        id: reminder.id,
+        title: title,
+        body: body,
+        scheduledDate: reminder.scheduledDate,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        notificationDetails: localizedDetails(reengagementDetails),
+        payload: 'reengagement.daily',
+      ),
     );
   }
 
@@ -173,15 +247,17 @@ class NotificationScheduler {
 
     final id = taskStartNotificationId(taskId);
     final scheduled = tz.TZDateTime.from(startAt.toLocal(), tz.local);
-    await _scheduleTimeSensitive((mode) => _plugin.zonedSchedule(
-      id: id,
-      title: title,
-      body: body,
-      scheduledDate: scheduled,
-      androidScheduleMode: mode,
-      notificationDetails: taskStartDetails,
-      payload: '$taskStartPayloadPrefix$taskId',
-    ));
+    await _scheduleTimeSensitive(
+      (mode) => _plugin.zonedSchedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: scheduled,
+        androidScheduleMode: mode,
+        notificationDetails: localizedDetails(taskStartDetails),
+        payload: '$taskStartPayloadPrefix$taskId',
+      ),
+    );
   }
 
   Future<void> requestNotificationPermissions() async {
@@ -220,11 +296,7 @@ class NotificationScheduler {
     if (kIsWeb) {
       return;
     }
-    if (defaultTargetPlatform == TargetPlatform.windows) {
-      await _cancelWindowsReengagementReminders();
-      return;
-    }
-    await _plugin.cancel(id: reengagementNotificationId);
+    await cancelReengagementReminders((id) => _plugin.cancel(id: id));
   }
 
   Future<void> cancelFocusNotification() async {
@@ -265,11 +337,12 @@ class NotificationScheduler {
     return 100000 + hash;
   }
 
-  static List<({int id, tz.TZDateTime scheduledDate})>
-  windowsReengagementReminders(tz.TZDateTime firstAt) {
-    return List.generate(windowsReengagementReminderCount, (index) {
+  static List<({int id, tz.TZDateTime scheduledDate})> reengagementReminders(
+    tz.TZDateTime firstAt,
+  ) {
+    return List.generate(reengagementReminderCount, (index) {
       return (
-        id: windowsReengagementNotificationBaseId + index,
+        id: reengagementNotificationBaseId + index,
         scheduledDate: tz.TZDateTime(
           firstAt.location,
           firstAt.year,
@@ -285,7 +358,7 @@ class NotificationScheduler {
     }, growable: false);
   }
 
-  static Future<void> replaceWindowsReengagementReminders({
+  static Future<void> replaceReengagementReminders({
     required tz.TZDateTime firstAt,
     required Future<void> Function(int id) cancel,
     required Future<void> Function(
@@ -293,22 +366,18 @@ class NotificationScheduler {
     )
     schedule,
   }) async {
-    await cancelWindowsReengagementReminders(cancel);
-    for (final reminder in windowsReengagementReminders(firstAt)) {
+    await cancelReengagementReminders(cancel);
+    for (final reminder in reengagementReminders(firstAt)) {
       await schedule(reminder);
     }
   }
 
-  static Future<void> cancelWindowsReengagementReminders(
+  static Future<void> cancelReengagementReminders(
     Future<void> Function(int id) cancel,
   ) async {
     await cancel(reengagementNotificationId);
-    for (var index = 0; index < windowsReengagementReminderCount; index++) {
-      await cancel(windowsReengagementNotificationBaseId + index);
+    for (var index = 0; index < reengagementReminderCount; index++) {
+      await cancel(reengagementNotificationBaseId + index);
     }
-  }
-
-  Future<void> _cancelWindowsReengagementReminders() async {
-    await cancelWindowsReengagementReminders((id) => _plugin.cancel(id: id));
   }
 }

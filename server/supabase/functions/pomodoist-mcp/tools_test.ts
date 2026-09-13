@@ -158,6 +158,53 @@ Deno.test("registers exactly the 23 Pomodoist V1 tools", async () => {
   });
 });
 
+Deno.test("achievement locales preserve IDs and progress and match app titles", async () => {
+  const calls: RpcCall[] = [];
+  await withClient(rpcFetcher(calls), async (client) => {
+    const read = async (locale: string) => {
+      const result = await client.callTool({
+        name: "get_achievements",
+        arguments: { date: "2026-07-30", time_zone: "UTC", locale },
+      });
+      assertSuccessParity(result);
+      return (result.structuredContent as {
+        data: Array<Record<string, unknown>>;
+      }).data;
+    };
+    const english = await read("en");
+    for (const locale of ["pt", "pt-BR", "ja", "ko"]) {
+      const localized = await read(locale);
+      const base = locale === "pt-BR" ? "pt" : locale;
+      const arb = JSON.parse(
+        await Deno.readTextFile(
+          new URL(`../../../../lib/l10n/app_${base}.arb`, import.meta.url),
+        ),
+      );
+      const titles = new Map(
+        [...arb.achievementTitle.matchAll(/(\w+)\{([^{}]+)\}/g)]
+          .map((match: RegExpMatchArray) => [match[1], match[2]]),
+      );
+      assertEquals(localized.length, 33);
+      for (let i = 0; i < localized.length; i++) {
+        const { title, subtitle, ...state } = localized[i];
+        const { title: enTitle, subtitle: enSubtitle, ...enState } = english[i];
+        assertEquals(state, enState);
+        assertEquals(title, titles.get(String(state.id)));
+        assert(title !== enTitle);
+        assert(typeof subtitle === "string" && subtitle.length > 0);
+        assert(subtitle !== enSubtitle);
+      }
+      if (locale === "pt-BR") assertEquals(localized, await read("pt"));
+    }
+    for (const call of calls) {
+      assertEquals(call.body.p_arguments, {
+        date: "2026-07-30",
+        time_zone: "UTC",
+      });
+    }
+  });
+});
+
 Deno.test("routes every read tool through the closed read dispatcher", async () => {
   const calls: RpcCall[] = [];
   let localizedAchievements: unknown;

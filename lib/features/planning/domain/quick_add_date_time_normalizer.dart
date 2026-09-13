@@ -1,3 +1,13 @@
+// Shared by normalization and source-span highlighting; metadata is excluded by callers.
+final localizedQuickAddPattern = RegExp(
+  r'(?:(?:[0-9０-９]{4})年)?[0-9０-９]{1,2}月[0-9０-９]{1,2}日'
+  r'|(?:(?:[0-9０-９]{4})년\s*)?[0-9０-９]{1,2}월\s*[0-9０-９]{1,2}일'
+  r'|(?:午前|午後)?[0-9０-９]{1,2}時(?!間)(?:[0-9０-９]{1,2}分|半)?'
+  r'|(?:(?:오전|오후)\s*)?[0-9０-９]{1,2}시(?!간)(?:\s*[0-9０-９]{1,2}분|\s*반)?'
+  r'|[0-9０-９]+(?:時間|시간|分|분)'
+  r'|(?:今日|明日|오늘|내일)(?=$|\s|[0-9０-９]|午前|午後|오전|오후)',
+);
+
 class NormalizedQuickAddDateTimeInput {
   const NormalizedQuickAddDateTimeInput({
     required this.text,
@@ -16,6 +26,17 @@ class QuickAddDateTimeNormalizer {
   String? _invalidDateReplacement;
 
   static const _monthNumbers = <String, int>{
+    'janeiro': 1,
+    'fevereiro': 2,
+    'março': 3,
+    'marco': 3,
+    'maio': 5,
+    'junho': 6,
+    'julho': 7,
+    'setembro': 9,
+    'outubro': 10,
+    'novembro': 11,
+    'dezembro': 12,
     'january': 1,
     'jan': 1,
     'январь': 1,
@@ -140,6 +161,9 @@ class QuickAddDateTimeNormalizer {
     var value = _normalizeDigits(
       protected,
     ).replaceAll('\u00a0', ' ').replaceAll('\u202f', ' ');
+    value = _replaceChineseTimes(value);
+    value = _replaceNewLanguageTokens(value);
+    value = _replacePortugueseTimes(value);
     value = _replaceSharedMeridiemRanges(value);
     value = _replaceChineseDates(value);
     value = _replaceNamedDates(value);
@@ -150,7 +174,6 @@ class QuickAddDateTimeNormalizer {
     value = _replaceGermanTimes(value);
     value = _replaceFrenchTimes(value);
     value = _replaceArabicTimes(value);
-    value = _replaceChineseTimes(value);
     value = _collapseTimeRanges(value);
     value = value.replaceAll(RegExp(r'\s+'), ' ').trim();
     value = value.replaceAllMapped(
@@ -162,6 +185,71 @@ class QuickAddDateTimeNormalizer {
       hasInvalidExplicitDate: _hasInvalidExplicitDate,
     );
   }
+
+  String _replaceNewLanguageTokens(String value) {
+    value = value.replaceAllMapped(localizedQuickAddPattern, (match) {
+      final token = match.group(0)!;
+      final relative = {
+        '今日': 'today',
+        '明日': 'tomorrow',
+        '오늘': 'today',
+        '내일': 'tomorrow',
+      }[token];
+      if (relative != null) return ' $relative ';
+      final date = RegExp(
+        r'^(?:(\d{4})[年년]\s*)?(\d{1,2})[月월]\s*(\d{1,2})[日일]$',
+      ).firstMatch(token);
+      if (date != null) {
+        final result = _dateToken(
+          day: int.parse(date[3]!),
+          month: int.parse(date[2]!),
+          year: date[1] == null ? null : int.parse(date[1]!),
+        );
+        if (result == null) _hasInvalidExplicitDate = true;
+        return ' ${result ?? _invalidDateReplacement ?? token} ';
+      }
+      final duration = RegExp(r'^(\d+)(時間|시간|分|분)$').firstMatch(token);
+      if (duration != null) {
+        return ' ${duration[1]}${duration[2] == '分' || duration[2] == '분' ? 'm' : 'h'} ';
+      }
+      final time = RegExp(
+        r'^(午前|午後|오전|오후)?\s*(\d{1,2})[時시](?:\s*(\d{1,2})[分분]|\s*(半|반))?$',
+      ).firstMatch(token);
+      if (time == null) return token;
+      final hour = time[1] == null
+          ? int.parse(time[2]!)
+          : _hourForMeridiem(
+              int.parse(time[2]!),
+              time[1] == '午後' || time[1] == '오후',
+            );
+      final minute = time[4] != null ? 30 : int.parse(time[3] ?? '0');
+      if (hour == null || hour > 23 || minute > 59) return token;
+      return ' ${_timeToken(hour, minute)} ';
+    });
+    return value.replaceAllMapped(
+      RegExp(
+        r'(^|\s)(\d+)\s+(minutos?|horas?)(?=$|[\s,.;!?])',
+        caseSensitive: false,
+      ),
+      (m) =>
+          '${m[1]}${m[2]}${m[3]!.toLowerCase().startsWith('min') ? 'm' : 'h'}',
+    );
+  }
+
+  String _replacePortugueseTimes(String value) => value.replaceAllMapped(
+    RegExp(
+      r'(^|\s)(?:(?:às|as|à|a)\s+)(\d{1,2})(?:(?::|h)(\d{2}))?(?:\s+(da\s+manhã|da\s+tarde|da\s+noite))?(?=$|[\s,.;!?–-])',
+      caseSensitive: false,
+    ),
+    (m) {
+      final period = m[4]?.toLowerCase();
+      final rawHour = int.parse(m[2]!);
+      final hour = period == null
+          ? (rawHour < 24 ? rawHour : null)
+          : _hourForMeridiem(rawHour, !period.contains('manhã'));
+      return _timeReplacement(m, hour: hour, minuteGroup: 3);
+    },
+  );
 
   String _normalizeDigits(String value) {
     const digits = <String, String>{

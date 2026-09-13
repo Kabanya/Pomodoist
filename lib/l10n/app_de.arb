@@ -199,34 +199,100 @@
   "kanbanShowDone": "Erledigte anzeigen",
   "kanbanProjectsTitle": "Projekte auf diesem Board",
   "kanbanAddToStatus": "Zu {status} hinzufügen",
-  "@kanbanAddToStatus": {"placeholders": {"status": {"type": "String"}}},
+  "@kanbanAddToStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanTaskField": "Aufgabe",
   "kanbanProjectField": "Projekt",
   "kanbanChooseProject": "Wähle ein Projekt.",
   "kanbanTaskActions": "Aufgabenaktionen",
   "kanbanDragTask": "Aufgabe ziehen",
   "kanbanMoveTo": "Nach {status} verschieben",
-  "@kanbanMoveTo": {"placeholders": {"status": {"type": "String"}}},
+  "@kanbanMoveTo": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanRestoreBeforeFocus": "Stelle die Aufgabe vor dem Fokusstart wieder her.",
   "kanbanCouldNotStartFocus": "Fokus konnte nicht gestartet werden: {error}",
-  "@kanbanCouldNotStartFocus": {"placeholders": {"error": {"type": "Object"}}},
+  "@kanbanCouldNotStartFocus": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "kanbanCouldNotLoad": "Kanban konnte nicht geladen werden: {error}",
-  "@kanbanCouldNotLoad": {"placeholders": {"error": {"type": "Object"}}},
+  "@kanbanCouldNotLoad": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "commonRetry": "Erneut versuchen",
   "commonContinueWaiting": "Weiter warten",
   "kanbanTasksCount": "{count} Aufgaben",
-  "@kanbanTasksCount": {"placeholders": {"count": {"type": "int"}}},
+  "@kanbanTasksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanSubtasksProgress": "{completed} von {total} Unteraufgaben",
-  "@kanbanSubtasksProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@kanbanSubtasksProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanFocusIntervalsProgress": "{completed} von {total} Fokusintervallen",
-  "@kanbanFocusIntervalsProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@kanbanFocusIntervalsProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanActive": "Aktiv",
   "kanbanPriority": "Priorität {priority}",
-  "@kanbanPriority": {"placeholders": {"priority": {"type": "int"}}},
+  "@kanbanPriority": {
+    "placeholders": {
+      "priority": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanMoveAnnouncement": "Nach {status} verschoben",
-  "@kanbanMoveAnnouncement": {"placeholders": {"status": {"type": "String"}}},
+  "@kanbanMoveAnnouncement": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanFocusStartedAnnouncement": "Fokus für {task} gestartet",
-  "@kanbanFocusStartedAnnouncement": {"placeholders": {"task": {"type": "String"}}},
+  "@kanbanFocusStartedAnnouncement": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanNoTasks": "Noch keine Aufgaben",
   "navToday": "Heute",
   "navUpcoming": "Bevorstehend",
@@ -307,7 +373,7 @@
   "settingsTimerVisualBar": "Leiste",
   "settingsTimerVisualCircle": "Kreis",
   "settingsReturnRemindersTitle": "Rückkehr-Erinnerungen",
-  "settingsReturnRemindersSubtitle": "Ein sanfter Abendhinweis, wenn heute kein Fokus oder keine Aufgabe abgeschlossen wurde.",
+  "settingsReturnRemindersSubtitle": "Eine Erinnerung um 20:30 Uhr, wenn du heute keine Aufgabe erledigt hast.",
   "settingsDefaultTimedBlockTitle": "Standarddauer für Kalenderblöcke",
   "settingsDefaultTimedBlockSubtitle": "Wenn nur eine Uhrzeit eingegeben wird, nutzen neue Aufgaben diese Kalenderdauer.",
   "settingsDefaultTimedBlockCustomLabel": "Eigene Dauer",
@@ -556,7 +622,7 @@
   "focusViewMinimal": "Minimal",
   "focusSwitchToFullView": "Zur Vollansicht wechseln",
   "focusSwitchToMinimalView": "Zur Minimalansicht wechseln",
-  "focusActionFailed": "Fokus konnte nicht aktualisiert werden. Bitte erneut versuchen.",
+  "focusActionFailed": "Focus konnte nicht aktualisiert werden. Versuche es erneut.",
   "noActiveSession": "Keine aktive Sitzung",
   "focusIdleSubtitle": "Starte ein eigenständiges Fokusintervall oder Fokus aus einer Aufgabe.",
   "noPreset": "Kein Preset",
@@ -580,7 +646,13 @@
   "focusCompletionDone": "Fertig",
   "focusCompletionNextTask": "Nächste geplante Aufgabe",
   "focusCompletionTaskError": "Aufgabe konnte nicht abgeschlossen werden: {error}",
-  "@focusCompletionTaskError": {"placeholders": {"error": {"type": "Object"}}},
+  "@focusCompletionTaskError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "completeInterval": "Intervall abschließen",
   "logDistraction": "Ablenkung protokollieren",
   "workInterval": "Arbeitsintervall",
@@ -732,7 +804,6 @@
   "todayFocusingOn": "Im Fokus",
   "openFocus": "Focus öffnen",
   "todayCompletedTasks": "Heute erledigt · {count}",
-  "focusActionFailed": "Focus konnte nicht aktualisiert werden. Versuche es erneut.",
   "sidebarDaily": "Täglich",
   "sidebarViews": "Ansichten",
   "quickAddResetDetails": "Standard verwenden",
@@ -818,5 +889,102 @@
   "projectMoveUp": "Nach oben",
   "projectMoveDown": "Nach unten",
   "projectParentName": "Übergeordnetes Projekt: {name}",
-  "deleteProjectWithChildrenConfirmation": "„{name}“ löschen? Unterprojekte werden eine Ebene höher verschoben. Nur Aufgaben dieses Projekts werden in den Eingang verschoben."
+  "deleteProjectWithChildrenConfirmation": "„{name}“ löschen? Unterprojekte werden eine Ebene höher verschoben. Nur Aufgaben dieses Projekts werden in den Eingang verschoben.",
+  "accountNickname": "Spitzname",
+  "accountChangeNickname": "Spitznamen ändern",
+  "accountNicknameSaveError": "Der Spitzname konnte nicht gespeichert werden. Bitte versuche es erneut.",
+  "notificationTaskStarting": "Aufgabe beginnt",
+  "notificationReturnTitle": "Deine Tomate vermisst dich",
+  "notificationReturnBody": "Eine Fokuseinheit oder ein Häkchen reicht, damit sich der Tag lohnt.",
+  "notificationFocusChannel": "Fokus",
+  "notificationFocusDescription": "Benachrichtigungen zum Abschluss von Fokusintervallen",
+  "notificationReturnChannel": "Rückkehrerinnerungen",
+  "notificationReturnDescription": "Sanfte Erinnerungen, zu Pomodoist zurückzukehren",
+  "notificationTaskChannel": "Aufgabenbeginn",
+  "notificationTaskDescription": "Benachrichtigungen zum Aufgabenbeginn",
+  "notificationOpenApp": "Pomodoist öffnen",
+  "notificationFocusCompleted": "Fokusintervall abgeschlossen",
+  "notificationLongBreakCompleted": "Lange Pause beendet",
+  "notificationBreakCompleted": "Pause beendet",
+  "updateTitle": "Pomodoist-Update",
+  "updateAction": "Aktualisieren",
+  "updateCheck": "Nach Updates suchen",
+  "updateSettings": "Updates",
+  "updateReceiveRc": "Release Candidates (RC) erhalten",
+  "updateStableChannel": "Kanal: stabile Versionen",
+  "updateRcChannel": "Kanal: stabile Versionen und RC",
+  "updateRcHelp": "RC-Versionen können Fehler enthalten. Alpha- und Betaversionen sind ausgeschlossen.",
+  "updateRestart": "Die App wird neu gestartet. Deine Daten bleiben erhalten.",
+  "updateNotes": "Versionshinweise",
+  "updateOwnerManaged": "Dieser Build wird vom Betreiber aktualisiert, um die Serverkonfiguration zu erhalten. Bitte ihn um die neueste Version.",
+  "updateUnsupported": "Automatische Updates sind im offiziellen Linux-AppImage verfügbar. Nutze für andere Builds deinen Paketmanager.",
+  "updateVersion": "Version {value}",
+  "@updateVersion": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "updatePhaseIdle": "Du kannst jederzeit nach Updates suchen.",
+  "updatePhaseChecking": "Versionen werden geprüft…",
+  "updatePhaseAvailable": "Eine neue Version ist verfügbar",
+  "updatePhaseDownloading": "Update wird heruntergeladen…",
+  "updatePhaseVerifying": "Integrität wird geprüft…",
+  "updatePhaseInstalling": "Installation und Neustart werden vorbereitet…",
+  "updatePhaseUpToDate": "Du hast die neueste kompatible Version.",
+  "updatePhaseFailed": "Das Update konnte nicht abgeschlossen werden",
+  "achievementFocusSubtitle": "{count, plural, =1{Schließe 1 Arbeitsfokus ab} other{Schließe {count} Arbeitsfokusse ab}}",
+  "@achievementFocusSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementTaskSubtitle": "{count, plural, =1{Schließe 1 Aufgabe ab} other{Schließe {count} Aufgaben ab}}",
+  "@achievementTaskSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementDayNotWastedSubtitle": "Schließe einen Fokus und eine Aufgabe an einem Tag ab",
+  "achievementFocusPlusCheckSubtitle": "Schließe 3 Fokusse und 3 Aufgaben an einem Tag ab",
+  "achievementNoFussSubtitle": "Schließe 5 Fokusse an einem Tag ohne Abbruch ab",
+  "achievementCleanEntrySubtitle": "Schließe eine Aufgabe nach dem zugehörigen Fokus ab",
+  "achievementTomatoClosedSubtitle": "Schließe eine Aufgabe am Tag ihres Arbeitsfokus ab",
+  "achievementTitle": "{id, select, focus_1{Erste Tomate} focus_5{Aufwärmen} focus_10{Fokus gefunden} focus_25{Tomatenschicht} focus_50{Modus an} focus_100{Roter Gürtel} focus_250{Tiefe Wurzeln} focus_500{Timer-Autorität} focus_1000{Tausendste Tomate} focus_5000{Fokusfarmer} focus_10000{Aufmerksamkeitsplantage} focus_50000{Tomatenimperium} focus_100000{Rotes Superhirn} focus_1000000{Tomatensingularität} task_1{Erstes Häkchen} task_5{Die Liste wackelt} task_10{Glückliches Kästchen} task_25{Den Stapel abarbeiten} task_50{Häkchenmeister} task_100{Lose Enden erledigt} task_250{Liste unter Kontrolle} task_500{Büro-Knockout} task_1000{Tausend Häkchen} task_5000{Siegesarchivar} task_10000{Häkchenmaschine} task_50000{Büro erledigter Fragen} task_100000{Herrscher der Listen} task_1000000{Letztes Häkchen} combo_day_not_wasted{Kein verlorener Tag} combo_focus_plus_check{Fokus + Häkchen} combo_no_fuss{Ohne Hektik} combo_clean_entry{Sauberer Start} combo_tomato_closed_question{Tomate hat es erledigt} other{Erfolg}}",
+  "@achievementTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "focusPresetDeepWork": "Konzentriertes Arbeiten",
+  "focusPresetShortSprint": "Kurzer Sprint",
+  "csvImportIssueRow": "Zeile {row}: {message}",
+  "@csvImportIssueRow": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "csvImportIssueMessage": "{code, select, fileTooLarge{Die CSV-Datei überschreitet 16 MiB.} invalidUtf8{CSV muss gültiges UTF-8 sein.} missingHeader{Die CSV-Kopfzeile fehlt.} malformed{Ungültiges CSV-Format.} unknownHeader{Unbekannte Kopfzeile „{value}“.} duplicateHeader{Doppelte Kopfzeile „{value}“.} contentHeaderRequired{Die Kopfzeile content ist erforderlich.} tooManyTasks{CSV darf höchstens 1000 Aufgaben enthalten.} tooManyFields{Die Zeile hat mehr Felder als die Kopfzeile.} contentRequired{content ist erforderlich.} invalidPriority{priority muss eine ganze Zahl von 1 bis 4 sein.} invalidDate{{value} muss YYYY-MM-DD verwenden.} mixedSchedule{Fälligkeitsdatum und zeitgebundener Termin sind nicht kombinierbar.} timedFieldsRequired{Ein zeitgebundener Termin erfordert start_at, end_at und time_zone.} invalidTimestamp{{value} muss RFC3339 mit explizitem UTC-Offset sein.} invalidTimeZone{time_zone muss ein gültiger IANA-Name sein.} endBeforeStart{end_at muss nach start_at liegen.} invalidRecurrence{recurrence muss day, week oder month sein.} invalidInteger{{value} muss eine ganze Zahl von 1 bis 999 sein.} intervalWithoutRecurrence{recurrence_interval erfordert recurrence.} recurrenceWithoutSchedule{recurrence erfordert einen Termin.} doneTask{Erledigte Aufgaben können nicht importiert werden.} invalidKey{{value} hat ein ungültiges Format.} empty{CSV enthält keine Aufgaben.} duplicateKey{Doppelter Schlüssel „{value}“.} parentCycle{parent_key-Verweise bilden einen Zyklus.} missingParent{parent_key „{value}“ existiert nicht.} childProject{Eine Unteraufgabe muss zum selben Projekt wie ihre übergeordnete Aufgabe gehören.} other{Die Datei konnte nicht importiert werden.}}",
+  "@csvImportIssueMessage": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  }
 }

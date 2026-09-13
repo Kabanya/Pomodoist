@@ -30,10 +30,12 @@ class MacOSAppMenuController {
   Future<void> sync({
     required Map<AppShortcutCommand, String> labels,
     required Map<AppShortcutCommand, AppShortcutBinding> bindings,
+    String? locale,
   }) async {
     if (_platform != TargetPlatform.macOS) return;
 
     final payload = {
+      'locale': ?locale,
       for (final command in AppShortcutCommand.values)
         command.name: {
           'label': labels[command]!,

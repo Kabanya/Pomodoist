@@ -132,7 +132,9 @@ class _GoogleCalendarSettingsScreenState
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(
-        context.l10n.failedToLoadIntegration(error),
+        context.l10n.failedToLoadIntegration(
+          _googleCalendarErrorMessage(context, error),
+        ),
         style: TextStyle(color: context.appColors.error),
       ),
       ShadButton.ghost(
@@ -189,7 +191,15 @@ class _GoogleCalendarSettingsScreenState
 }
 
 String _googleCalendarErrorMessage(BuildContext context, Object error) {
-  if (error is GoogleCalendarServerException) return error.message;
+  if (error is GoogleCalendarServerException &&
+      {
+        'auth_required',
+        'authorization_unavailable',
+        'invalid_grant',
+        'unauthorized',
+      }.contains(error.code)) {
+    return context.l10n.googleAuthRequired;
+  }
   return context.l10n.authServiceUnavailable;
 }
 
@@ -247,7 +257,7 @@ class _StatusRows extends StatelessWidget {
           const SizedBox(height: 12),
           _MessageBand(
             icon: LucideIcons.triangleAlert,
-            text: warning!,
+            text: context.l10n.googleAuthRequired,
             color: colors.warning,
           ),
         ],
@@ -255,7 +265,7 @@ class _StatusRows extends StatelessWidget {
           const SizedBox(height: 12),
           _MessageBand(
             icon: LucideIcons.circleAlert,
-            text: lastError!,
+            text: context.l10n.authServiceUnavailable,
             color: colors.error,
           ),
         ],

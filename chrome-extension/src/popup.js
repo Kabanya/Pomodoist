@@ -1,6 +1,8 @@
+import { text, localize } from './i18n.js';
 import { config } from './config.js';
 import { dateKey, dueDay, parseDue, schedule, scheduleFields, tabDraft, tasksFor } from './core.js';
 import { Realtime } from './realtime.js';
+localize(document);
 const $ = id => document.getElementById(id);
 let state, view = 'today', editing = null, dirty = new Set(), busy = 0, live = false, syncing = false;
 let owner = null, poll, hintTimer, refreshAgain = false;
@@ -10,10 +12,10 @@ const realtime = new Realtime(() => call('realtime'), () => {
 $('open-app').href = config.webUrl;
 async function call(type, payload = {}) {
   const result = await chrome.runtime.sendMessage({ type, payload });
-  if (!result?.ok) throw new Error(result?.error || 'The extension did not respond. Reopen it and retry.');
+  if (!result?.ok) throw new Error(result?.error || text("The extension did not respond. Reopen it and retry."));
   return result.value;
 }
-function error(message = '') { $('error').textContent = message; $('error').hidden = !message; }
+function error(message = '') { $('error').textContent = text(message); $('error').hidden = !message; }
 function lock() {
   for (const element of document.querySelectorAll('button,input,select,textarea')) element.disabled = busy > 0;
 }
@@ -25,19 +27,19 @@ async function run(action) {
 function status() {
   if (!state?.user) return;
   const pending = state.pending;
-  $('connection').textContent = pending ? `${pending} changes saved locally · waiting to sync` : syncing ? 'Syncing…' :
-    state.error ? 'Offline or sync needs attention' : state.lastSyncedAt ? (live ? 'Live sync' : 'Synced · periodic refresh') : 'Loading account data…';
+  $('connection').textContent = pending ? text('{count} changes saved locally · waiting to sync', { count: pending }) : syncing ? text("Syncing…") :
+    state.error ? text("Offline or sync needs attention") : state.lastSyncedAt ? (live ? text("Live sync") : text("Synced · periodic refresh")) : text("Loading account data…");
   const overview = state.overview, profile = overview?.profile;
   const app = overview?.apps?.find(item => (item.id ?? item.appId ?? item.app_id) === 'pomodoist');
-  let plan = 'Plan unavailable';
+  let plan = text("Plan unavailable");
   if (profile) {
     const active = app?.entitlements?.some(item => item.status === 'active' &&
       (!(item.validUntil ?? item.valid_until) || new Date(item.validUntil ?? item.valid_until).getTime() > Date.now()));
-    plan = (profile.pomodoistIsPro ?? profile.pomodoist_is_pro) ? 'Pro' : active ? 'Account access active' : 'Free';
-    if (Date.now() - state.overviewAt > 90000) plan += ' (cached)';
+    plan = (profile.pomodoistIsPro ?? profile.pomodoist_is_pro) ? text("Pro") : active ? text("Account access active") : text("Free");
+    if (Date.now() - state.overviewAt > 90000) plan += text(" (cached)");
   }
   $('account').textContent = `${state.user.email} · ${plan}`;
-  $('account').title = state.overviewAt ? `Account status checked ${new Date(state.overviewAt).toLocaleString()}` : 'Account status has not been loaded.';
+  $('account').title = state.overviewAt ? text('Account status checked {time}', { time: new Date(state.overviewAt).toLocaleString() }) : text("Account status has not been loaded.");
 }
 function render(next) {
   const previousOwner = owner;
@@ -61,7 +63,7 @@ function render(next) {
     const li = document.createElement('li'); li.className = `task${task.status === 'completed' ? ' completed' : ''}`;
     const check = document.createElement('input'); check.type = 'checkbox'; check.checked = task.status === 'completed';
     check.disabled = busy > 0; check.dataset.taskId = task.id;
-    check.setAttribute('aria-label', `${check.checked ? 'Restore' : 'Complete'} ${task.content}`);
+    check.setAttribute('aria-label', `${check.checked ? text("Restore") : text("Complete")} ${task.content}`);
     check.addEventListener('change', () => run(async () => render(await call('mutate', { owner, action: {
       kind: check.checked ? 'complete' : 'uncomplete', id: task.id,
     } }))));
@@ -71,9 +73,9 @@ function render(next) {
     const due = parseDue(task.dueJson), date = dueDay(task);
     const parts = [];
     if (date) parts.push(date + (due?.type === 'timed' ? ` · ${new Date(due.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''));
-    if (due?.recurrence || due?.recurrenceSeriesId) parts.push('Repeating');
-    if (task.parentId) parts.push('Subtask');
-    if (task.projectId !== 'inbox') parts.push(state.records[`project:${task.projectId}`]?.name || 'Project');
+    if (due?.recurrence || due?.recurrenceSeriesId) parts.push(text("Repeating"));
+    if (task.parentId) parts.push(text("Subtask"));
+    if (task.projectId !== 'inbox') parts.push(state.records[`project:${task.projectId}`]?.name || text("Project"));
     if (task.priority < 4) parts.push(`P${task.priority}`);
     meta.textContent = parts.join(' · ');
     if (date && date < dateKey() && task.status !== 'completed') meta.classList.add('overdue');
@@ -161,7 +163,7 @@ $('login').addEventListener('submit', event => {
 for (const provider of ['google', 'apple']) $(provider).addEventListener('click', () => run(async () => render(await call('oauth', { provider }))));
 async function logout() {
   const discard = state.pending > 0;
-  if (discard && !confirm('There are unsynced changes. Signing out will discard them on this device. Continue?')) return;
+  if (discard && !confirm(text("There are unsynced changes. Signing out will discard them on this device. Continue?"))) return;
   realtime.stop(); clearInterval(poll);
   render(await call('logout', { discard }));
 }

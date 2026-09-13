@@ -1,3 +1,4 @@
+import 'project_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,7 +24,7 @@ class ProjectScreen extends ConsumerWidget {
       }
     }
     return TaskListView(
-      title: project?.name ?? l10n.projectFallbackTitle,
+      title: project?.displayName(context.l10n) ?? l10n.projectFallbackTitle,
       subtitle: l10n.projectSubtitle,
       query: TaskQuery(kind: TaskQueryKind.project, projectId: projectId),
       quickAddProjectId: projectId,

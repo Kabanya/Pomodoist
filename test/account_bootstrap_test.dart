@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/account_providers.dart';
 import 'package:pomodoist/features/billing/billing.dart';
 import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
+import 'package:pomodoist/features/settings/presentation/settings_navigation.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -140,7 +141,11 @@ void main() {
             GlobalWidgetsLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(body: SettingsScreen()),
+          home: Scaffold(
+            body: SettingsScreen(
+              location: settingsLocation(SettingsSection.account),
+            ),
+          ),
         ),
       ),
     );
@@ -149,7 +154,7 @@ void main() {
 
     expect(find.byKey(const Key('account-bootstrap-error')), findsOneWidget);
     expect(find.byKey(const Key('account-bootstrap-retry')), findsOneWidget);
-    expect(find.byKey(const Key('billing-paywall')), findsOneWidget);
+    expect(find.text('Subscription options'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('account-bootstrap-retry')));
     await tester.pump(const Duration(milliseconds: 20));

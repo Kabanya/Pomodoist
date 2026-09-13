@@ -1,5 +1,7 @@
-import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton;
+import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton, ShadInput;
 import 'support/test_app.dart';
+import 'support/account_email_auth.dart';
+import 'package:pomodoist/app/email_auth.dart';
 import 'dart:async';
 import 'dart:ui' show Tristate;
 
@@ -510,19 +512,15 @@ void main() {
       'user@example.com',
     );
     await tester.pump();
-    await tester.tap(find.text('Send link'));
+    await tester.tap(find.text('Sign in with a link'));
     await tester.pumpAndSettle();
 
     expect(account.magicLinkRedirects, [loginRedirect]);
 
     await tester.tap(find.text('Email'));
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.descendant(
-        of: find.byKey(const Key('account-auth-mode')),
-        matching: find.text('Create account'),
-      ),
-    );
+    await tester.ensureVisible(find.byKey(const Key('account-auth-mode')));
+    await tester.tap(find.byKey(const Key('account-auth-mode')));
     await tester.pump();
     await tester.enterText(
       find.byKey(const Key('account-email-field')),
@@ -535,14 +533,14 @@ void main() {
     await tester.pump();
     expect(
       tester
-          .widget<TextField>(find.byKey(const Key('account-email-field')))
+          .widget<ShadInput>(find.byKey(const Key('account-email-field')))
           .controller
           ?.text,
       'user@example.com',
     );
     expect(
       tester
-          .widget<TextField>(find.byKey(const Key('account-password-field')))
+          .widget<ShadInput>(find.byKey(const Key('account-password-field')))
           .controller
           ?.text,
       'password',
@@ -586,6 +584,7 @@ Future<void> _pumpConsent(
     ProviderScope(
       overrides: [
         accountClientProvider.overrideWithValue(account),
+        emailAuthProvider.overrideWithValue(AccountEmailAuth(account)),
         accountAuthStateProvider.overrideWithValue(
           const AsyncData(
             AccountAuthState(
@@ -620,6 +619,7 @@ Future<void> _pumpLogin(
     ProviderScope(
       overrides: [
         accountClientProvider.overrideWithValue(account),
+        emailAuthProvider.overrideWithValue(AccountEmailAuth(account)),
         accountAuthStateProvider.overrideWithValue(
           const AsyncData(AccountAuthState(signedIn: false)),
         ),

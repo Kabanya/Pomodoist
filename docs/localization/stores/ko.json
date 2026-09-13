@@ -1,0 +1,57 @@
+{
+  "locale": "ko",
+  "status": "draft_not_published",
+  "appStore": {
+    "name": "Pomodoist",
+    "subtitle": "작업 관리와 포모도로 집중 타이머",
+    "promotionalText": "작업을 정리하고 내장 포모도로 타이머로 집중하세요. 이제 한국어, 브라질 포르투갈어, 일본어를 지원합니다.",
+    "keywords": "작업,집중,시간관리,일정,포모도로,생산성,계획",
+    "description": "떠오른 생각을 작업으로 만들고, 하루를 계획하며, 차분한 작업 공간에서 집중하세요. Pomodoist는 실용적인 작업 관리와 내장 포모도로 타이머를 결합하여 계획과 집중하는 시간을 연결합니다.\n\n작업 계획하기\n• 텍스트나 음성으로 작업을 빠르게 추가\n• 프로젝트, 라벨, 우선순위, 마감일로 정리\n• 오늘, 예정, 받은 편지함, 타임라인, 칸반, 우선순위 매트릭스로 확인\n• 작업 공간 전체를 빠르게 검색\n\n중요한 일에 집중하기\n• 모든 작업에서 포모도로 세션 시작\n• 전체 또는 간소화된 집중 모드 사용\n• 완료한 구간과 집중 시간 기록\n• 생산성 보고서와 주간 추세 확인\n\n여러 기기에서 작업하기\n• iPhone, iPad, Mac, Apple Watch에서 Pomodoist 사용\n• 필요할 때 로그인하여 기기 간 작업 동기화\n• Google Calendar를 연결하여 Pomodoist에서 만든 일정 계획\n• 계정 없이도 기기에서 계속 사용 가능\n\nPomodoist Pro는 월간 구독, 연간 구독 또는 한 번만 구매하는 평생 이용권으로 이용할 수 있습니다.\n\n결제와 구독 관리는 Apple에서 처리합니다.\n개인정보 처리방침: https://pomodoist.com/privacy/\n지원: pomodoist@placeq.com\n이용 약관(EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/",
+    "releaseNotes": "한국어, 브라질 포르투갈어, 일본어를 추가했습니다. 빠른 추가에서 이 언어로 입력한 날짜, 시간, 소요 시간을 인식합니다."
+  },
+  "macAppStore": {
+    "name": "Pomodoist",
+    "subtitle": "작업 관리와 포모도로 집중 타이머",
+    "promotionalText": "작업을 정리하고 내장 포모도로 타이머로 집중하세요. 이제 한국어, 브라질 포르투갈어, 일본어를 지원합니다.",
+    "keywords": "작업,집중,시간관리,일정,포모도로,생산성,계획",
+    "description": "떠오른 생각을 작업으로 만들고, 하루를 계획하며, 차분한 작업 공간에서 집중하세요. Pomodoist는 실용적인 작업 관리와 내장 포모도로 타이머를 결합하여 계획과 집중하는 시간을 연결합니다.\n\n작업 계획하기\n• 텍스트나 음성으로 작업을 빠르게 추가\n• 프로젝트, 라벨, 우선순위, 마감일로 정리\n• 오늘, 예정, 받은 편지함, 타임라인, 칸반, 우선순위 매트릭스로 확인\n• 작업 공간 전체를 빠르게 검색\n\n중요한 일에 집중하기\n• 모든 작업에서 포모도로 세션 시작\n• 전체 또는 간소화된 집중 모드 사용\n• 완료한 구간과 집중 시간 기록\n• 생산성 보고서와 주간 추세 확인\n\n여러 기기에서 작업하기\n• iPhone, iPad, Mac, Apple Watch에서 Pomodoist 사용\n• 필요할 때 로그인하여 기기 간 작업 동기화\n• Google Calendar를 연결하여 Pomodoist에서 만든 일정 계획\n• 계정 없이도 기기에서 계속 사용 가능\n\nPomodoist Pro는 월간 구독, 연간 구독 또는 한 번만 구매하는 평생 이용권으로 이용할 수 있습니다.\n\n결제와 구독 관리는 Apple에서 처리합니다.\n개인정보 처리방침: https://pomodoist.com/privacy/\n지원: pomodoist@placeq.com\n이용 약관(EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/",
+    "releaseNotes": "한국어, 브라질 포르투갈어, 일본어를 추가했습니다. 빠른 추가에서 이 언어로 입력한 날짜, 시간, 소요 시간을 인식합니다."
+  },
+  "googlePlay": {
+    "name": "Pomodoist",
+    "shortDescription": "작업을 정리하고 하루를 계획하며 포모도로 타이머로 집중하세요.",
+    "description": "떠오른 생각을 작업으로 만들고, 하루를 계획하며, 차분한 작업 공간에서 집중하세요. Pomodoist는 실용적인 작업 관리와 내장 포모도로 타이머를 결합하여 계획과 집중하는 시간을 연결합니다.\n\n작업 계획하기\n• 텍스트나 음성으로 작업을 빠르게 추가\n• 프로젝트, 라벨, 우선순위, 마감일로 정리\n• 오늘, 예정, 받은 편지함, 타임라인, 칸반, 우선순위 매트릭스로 확인\n• 작업 공간 전체를 빠르게 검색\n\n중요한 일에 집중하기\n• 모든 작업에서 포모도로 세션 시작\n• 전체 또는 간소화된 집중 모드 사용\n• 완료한 구간과 집중 시간 기록\n• 생산성 보고서와 주간 추세 확인\n\n필요할 때 로그인하여 기기 간 작업을 동기화하거나 계정 없이 기기에서 이용하세요. Google Calendar를 연결하면 Pomodoist에서 만든 일정을 계획할 수 있습니다.",
+    "releaseNotes": "한국어, 브라질 포르투갈어, 일본어를 추가했습니다. 빠른 추가에서 이 언어로 입력한 날짜, 시간, 소요 시간을 인식합니다."
+  },
+  "chromeWebStore": {
+    "name": "Pomodoist",
+    "shortDescription": "Chrome에서 Pomodoist에 페이지와 작업을 추가하고, 받은 편지함을 정리하며 동기화 상태를 확인하세요.",
+    "description": "웹을 탐색하면서 Pomodoist에 작업을 추가하세요. 현재 페이지를 작업으로 저장하고 오늘, 예정, 받은 편지함, 완료한 작업을 확인할 수 있습니다. 작업을 만들고 편집하며 날짜, 시간, 소요 시간, 우선순위를 설정하고 완료하거나 복원하세요. Pomodoist 계정으로 로그인하면 앱과 동기화됩니다. 이제 한국어, 브라질 포르투갈어, 일본어를 지원합니다."
+  },
+  "purchases": {
+    "pomodoist.pro.monthly": {
+      "name": "Pro 월간 구독",
+      "description": "월간 구독으로 Pomodoist Pro를 이용하세요."
+    },
+    "pomodoist.pro.annual": {
+      "name": "Pro 연간 구독",
+      "description": "연간 구독으로 Pomodoist Pro를 이용하세요."
+    },
+    "pomodoist.pro.lifetime": {
+      "name": "Pro 평생 이용권",
+      "description": "한 번의 구매로 Pomodoist Pro를 평생 이용하세요."
+    },
+    "pomodoist.pro.lifetime.launch": {
+      "name": "Pro 평생 이용권 — 출시 기념",
+      "description": "한 번의 구매로 Pomodoist Pro를 평생 이용하세요."
+    }
+  },
+  "imageCaptions": {
+    "today": "하루를 계획하세요",
+    "quick-add": "생각을 작업으로 만드세요",
+    "focus": "한 작업에 집중하세요",
+    "reports": "진행 상황을 확인하세요",
+    "chrome": "브라우저에서 작업을 추가하세요",
+    "telegram": "Telegram에서 작업을 확인하세요"
+  }
+}

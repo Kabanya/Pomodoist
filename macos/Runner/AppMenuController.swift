@@ -11,6 +11,7 @@ final class AppMenuController: NSObject {
 
   private let channel: FlutterMethodChannel
   private let mainMenu: NSMenu
+  private var originalTitles: [ObjectIdentifier: String] = [:]
 
   init(channel: FlutterMethodChannel, mainMenu: NSMenu) {
     self.channel = channel
@@ -68,6 +69,22 @@ final class AppMenuController: NSObject {
       }
       items.forEach(goMenu.addItem)
     }
+    localizeMenu(mainMenu, locale: values["locale"] as? String)
+  }
+
+  private func localizeMenu(_ menu: NSMenu, locale: String?) {
+    for item in menu.items {
+      let id = ObjectIdentifier(item)
+      let original = originalTitles[id] ?? item.title
+      let translated = pomodoistLocalized(original, locale: locale)
+      // Only cache native labels that this catalog actually translates.
+      if translated != original || originalTitles[id] != nil {
+        originalTitles[id] = original
+        item.title = translated
+        item.submenu?.title = translated
+      }
+      if let submenu = item.submenu { localizeMenu(submenu, locale: locale) }
+    }
   }
 
   private func topLevelMenu(
@@ -103,12 +120,15 @@ final class AppMenuController: NSObject {
   }
 
   private func installToggleSidebar(_ command: AppMenuCommand) {
-    let viewMenu = mainMenu.item(withTitle: "View")?.submenu
+    let viewIdentifier = NSUserInterfaceItemIdentifier("pomodoist.view")
+    let viewMenu = mainMenu.items.first(where: { $0.identifier == viewIdentifier })?.submenu
+      ?? mainMenu.item(withTitle: "View")?.submenu
       ?? topLevelMenu(
         title: "View",
         identifier: NSUserInterfaceItemIdentifier("pomodoist.view"),
         before: "Window"
       )
+    mainMenu.items.first(where: { $0.submenu === viewMenu })?.identifier = viewIdentifier
     let existing = viewMenu.items.first(where: {
       $0.identifier == Self.sidebarIdentifier
     })

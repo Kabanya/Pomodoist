@@ -26,6 +26,7 @@ export type StripeBillingAccountContext = {
 };
 
 export type StripeCheckoutSessionInput = {
+  locale?: string;
   customerId: string;
   userId: string;
   productId: string;
@@ -72,6 +73,7 @@ export function stripeCheckoutParams(
     product_id: input.productId,
   };
   return {
+    ...(input.locale == null ? {} : { locale: stripeCheckoutLocale(input.locale) }),
     customer: input.customerId,
     client_reference_id: input.userId,
     line_items: [{ price: input.priceId, quantity: 1 }],
@@ -89,6 +91,13 @@ export function stripeCheckoutParams(
     success_url: input.successUrl,
     cancel_url: input.cancelUrl,
   };
+}
+
+export function stripeCheckoutLocale(value: unknown): string {
+  if (typeof value !== "string" || !/^[a-z]{2,3}(?:[-_][a-z0-9]{2,8})*$/i.test(value)) return "auto";
+  const base = value.toLowerCase().split(/[-_]/)[0];
+  if (base === "pt") return "pt-BR";
+  return ["en", "ru", "de", "es", "fr", "zh", "ja", "ko"].includes(base) ? base : "auto";
 }
 
 const launchCycleMs = 7 * 24 * 60 * 60 * 1000;
@@ -251,6 +260,7 @@ export async function handlePomodoistStripeBilling(
     }
     const subscription = subscriptionProductIds.has(productId);
     const session = await deps.createCheckoutSession({
+      ...(parsed.value.locale == null ? {} : { locale: stripeCheckoutLocale(parsed.value.locale) }),
       customerId,
       userId: account.userId,
       productId,

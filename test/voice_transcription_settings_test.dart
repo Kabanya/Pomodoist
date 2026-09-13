@@ -1,3 +1,4 @@
+import 'support/test_app.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
@@ -21,17 +23,10 @@ void main() {
     await tester.pump();
 
     expect(find.text('Voice transcription'), findsOneWidget);
-    final disabled = tester.widget<SegmentedButton<VoiceTranscriptionMode>>(
-      find.byKey(const Key('settings-voice-transcription-mode')),
+    final disabled = tester.widget<ChoiceChip>(
+      find.widgetWithText(ChoiceChip, 'Cloud'),
     );
-    expect(
-      disabled.segments
-          .singleWhere(
-            (segment) => segment.value == VoiceTranscriptionMode.cloud,
-          )
-          .enabled,
-      isFalse,
-    );
+    expect(disabled.onSelected, isNull);
     expect(
       find.text(
         'Sign in to use cloud transcription. System transcription is active until then.',
@@ -47,17 +42,10 @@ void main() {
 
     await tester.pumpWidget(_app(signedIn: true));
     await tester.pump();
-    final enabled = tester.widget<SegmentedButton<VoiceTranscriptionMode>>(
-      find.byKey(const Key('settings-voice-transcription-mode')),
+    final enabled = tester.widget<ChoiceChip>(
+      find.widgetWithText(ChoiceChip, 'Cloud'),
     );
-    expect(
-      enabled.segments
-          .singleWhere(
-            (segment) => segment.value == VoiceTranscriptionMode.cloud,
-          )
-          .enabled,
-      isTrue,
-    );
+    expect(enabled.onSelected, isNotNull);
 
     await tester.tap(find.text('Cloud'));
     await tester.pump();
@@ -84,6 +72,7 @@ void main() {
 
 Widget _app({required bool signedIn}) => ProviderScope(
   child: MaterialApp(
+    builder: testAppBuilder,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(body: VoiceTranscriptionSettingsCard(signedIn: signedIn)),

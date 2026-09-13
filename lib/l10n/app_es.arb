@@ -199,34 +199,100 @@
   "kanbanShowDone": "Mostrar Hecho",
   "kanbanProjectsTitle": "Proyectos de este tablero",
   "kanbanAddToStatus": "Añadir a {status}",
-  "@kanbanAddToStatus": {"placeholders": {"status": {"type": "String"}}},
+  "@kanbanAddToStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanTaskField": "Tarea",
   "kanbanProjectField": "Proyecto",
   "kanbanChooseProject": "Elige un proyecto.",
   "kanbanTaskActions": "Acciones de tarea",
   "kanbanDragTask": "Arrastrar tarea",
   "kanbanMoveTo": "Mover a {status}",
-  "@kanbanMoveTo": {"placeholders": {"status": {"type": "String"}}},
+  "@kanbanMoveTo": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanRestoreBeforeFocus": "Restaura la tarea antes de iniciar el enfoque.",
   "kanbanCouldNotStartFocus": "No se pudo iniciar el enfoque: {error}",
-  "@kanbanCouldNotStartFocus": {"placeholders": {"error": {"type": "Object"}}},
+  "@kanbanCouldNotStartFocus": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "kanbanCouldNotLoad": "No se pudo cargar Kanban: {error}",
-  "@kanbanCouldNotLoad": {"placeholders": {"error": {"type": "Object"}}},
+  "@kanbanCouldNotLoad": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "commonRetry": "Reintentar",
   "commonContinueWaiting": "Seguir esperando",
   "kanbanTasksCount": "{count} tareas",
-  "@kanbanTasksCount": {"placeholders": {"count": {"type": "int"}}},
+  "@kanbanTasksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanSubtasksProgress": "{completed} de {total} subtareas",
-  "@kanbanSubtasksProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@kanbanSubtasksProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanFocusIntervalsProgress": "{completed} de {total} intervalos de enfoque",
-  "@kanbanFocusIntervalsProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@kanbanFocusIntervalsProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanActive": "Activo",
   "kanbanPriority": "Prioridad {priority}",
-  "@kanbanPriority": {"placeholders": {"priority": {"type": "int"}}},
+  "@kanbanPriority": {
+    "placeholders": {
+      "priority": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanMoveAnnouncement": "Movida a {status}",
-  "@kanbanMoveAnnouncement": {"placeholders": {"status": {"type": "String"}}},
+  "@kanbanMoveAnnouncement": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanFocusStartedAnnouncement": "Enfoque iniciado para {task}",
-  "@kanbanFocusStartedAnnouncement": {"placeholders": {"task": {"type": "String"}}},
+  "@kanbanFocusStartedAnnouncement": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanNoTasks": "Aún no hay tareas",
   "navToday": "Hoy",
   "navUpcoming": "Próximas",
@@ -307,7 +373,7 @@
   "settingsTimerVisualBar": "Barra",
   "settingsTimerVisualCircle": "Círculo",
   "settingsReturnRemindersTitle": "Recordatorios de regreso",
-  "settingsReturnRemindersSubtitle": "Un aviso suave por la tarde si hoy no hay enfoque ni tarea completada.",
+  "settingsReturnRemindersSubtitle": "Un recordatorio a las 20:30 si hoy no has completado ninguna tarea.",
   "settingsDefaultTimedBlockTitle": "Duración predeterminada del bloque de calendario",
   "settingsDefaultTimedBlockSubtitle": "Cuando solo se escribe una hora, las tareas nuevas usan esta duración en el calendario.",
   "settingsDefaultTimedBlockCustomLabel": "Duración personalizada",
@@ -556,7 +622,7 @@
   "focusViewMinimal": "Mínimo",
   "focusSwitchToFullView": "Cambiar a Completo",
   "focusSwitchToMinimalView": "Cambiar a Mínimo",
-  "focusActionFailed": "No se pudo actualizar el enfoque. Inténtalo de nuevo.",
+  "focusActionFailed": "No se pudo actualizar Focus. Inténtalo de nuevo.",
   "noActiveSession": "No hay sesión activa",
   "focusIdleSubtitle": "Inicia un intervalo de enfoque independiente o desde una tarea.",
   "noPreset": "Sin preset",
@@ -580,7 +646,13 @@
   "focusCompletionDone": "Listo",
   "focusCompletionNextTask": "Próxima tarea programada",
   "focusCompletionTaskError": "No se pudo completar la tarea: {error}",
-  "@focusCompletionTaskError": {"placeholders": {"error": {"type": "Object"}}},
+  "@focusCompletionTaskError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "completeInterval": "Completar intervalo",
   "logDistraction": "Registrar distracción",
   "workInterval": "Intervalo de trabajo",
@@ -732,7 +804,6 @@
   "todayFocusingOn": "Concentrándote en",
   "openFocus": "Abrir Focus",
   "todayCompletedTasks": "Completadas hoy · {count}",
-  "focusActionFailed": "No se pudo actualizar Focus. Inténtalo de nuevo.",
   "sidebarDaily": "Día a día",
   "sidebarViews": "Vistas",
   "quickAddResetDetails": "Usar valor predeterminado",
@@ -818,5 +889,102 @@
   "projectMoveUp": "Subir",
   "projectMoveDown": "Bajar",
   "projectParentName": "Proyecto principal: {name}",
-  "deleteProjectWithChildrenConfirmation": "¿Eliminar «{name}»? Sus subproyectos subirán un nivel. Solo las tareas de este proyecto se moverán a Inbox."
+  "deleteProjectWithChildrenConfirmation": "¿Eliminar «{name}»? Sus subproyectos subirán un nivel. Solo las tareas de este proyecto se moverán a Inbox.",
+  "accountNickname": "Apodo",
+  "accountChangeNickname": "Cambiar apodo",
+  "accountNicknameSaveError": "No se pudo guardar tu apodo. Inténtalo de nuevo.",
+  "notificationTaskStarting": "La tarea comienza",
+  "notificationReturnTitle": "Tu tomate te echa de menos",
+  "notificationReturnBody": "Una sesión de concentración o una tarea completada basta para aprovechar el día.",
+  "notificationFocusChannel": "Concentración",
+  "notificationFocusDescription": "Notificaciones al completar intervalos de concentración",
+  "notificationReturnChannel": "Recordatorios para volver",
+  "notificationReturnDescription": "Recordatorios suaves para volver a Pomodoist",
+  "notificationTaskChannel": "Inicio de tarea",
+  "notificationTaskDescription": "Notificaciones de inicio de tareas",
+  "notificationOpenApp": "Abrir Pomodoist",
+  "notificationFocusCompleted": "Intervalo de concentración completado",
+  "notificationLongBreakCompleted": "Descanso largo terminado",
+  "notificationBreakCompleted": "Descanso terminado",
+  "updateTitle": "Actualización de Pomodoist",
+  "updateAction": "Actualizar",
+  "updateCheck": "Buscar actualizaciones",
+  "updateSettings": "Actualizaciones",
+  "updateReceiveRc": "Recibir versiones candidatas (RC)",
+  "updateStableChannel": "Canal: versiones estables",
+  "updateRcChannel": "Canal: versiones estables y RC",
+  "updateRcHelp": "Las versiones RC pueden contener errores. Se excluyen las versiones alfa y beta.",
+  "updateRestart": "La aplicación se reiniciará. Tus datos se conservarán.",
+  "updateNotes": "Notas de la versión",
+  "updateOwnerManaged": "El propietario actualiza esta compilación para conservar la configuración del servidor. Pídele la última versión.",
+  "updateUnsupported": "Las actualizaciones automáticas están disponibles en la AppImage oficial de Linux. Usa el gestor de paquetes para otras compilaciones.",
+  "updateVersion": "Versión {value}",
+  "@updateVersion": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "updatePhaseIdle": "Puedes buscar actualizaciones en cualquier momento.",
+  "updatePhaseChecking": "Buscando versiones…",
+  "updatePhaseAvailable": "Hay una nueva versión disponible",
+  "updatePhaseDownloading": "Descargando actualización…",
+  "updatePhaseVerifying": "Verificando integridad…",
+  "updatePhaseInstalling": "Preparando instalación y reinicio…",
+  "updatePhaseUpToDate": "Tienes la última versión compatible.",
+  "updatePhaseFailed": "No se pudo completar la actualización",
+  "achievementFocusSubtitle": "{count, plural, =1{Completa 1 sesión de concentración} other{Completa {count} sesiones de concentración}}",
+  "@achievementFocusSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementTaskSubtitle": "{count, plural, =1{Completa 1 tarea} other{Completa {count} tareas}}",
+  "@achievementTaskSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementDayNotWastedSubtitle": "Completa una sesión de concentración y una tarea en un día",
+  "achievementFocusPlusCheckSubtitle": "Completa 3 sesiones de concentración y 3 tareas en un día",
+  "achievementNoFussSubtitle": "Completa 5 sesiones de concentración en un día sin detenerlas",
+  "achievementCleanEntrySubtitle": "Completa una tarea después de su sesión de concentración vinculada",
+  "achievementTomatoClosedSubtitle": "Completa una tarea el día de su sesión de concentración",
+  "achievementTitle": "{id, select, focus_1{Primer tomate} focus_5{Calentamiento} focus_10{Concentración lograda} focus_25{Turno de tomates} focus_50{Modo activado} focus_100{Cinturón rojo} focus_250{Raíces profundas} focus_500{Autoridad del temporizador} focus_1000{Milésimo tomate} focus_5000{Cultivador de concentración} focus_10000{Plantación de atención} focus_50000{Imperio del tomate} focus_100000{Supermente roja} focus_1000000{Singularidad del tomate} task_1{Primera marca} task_5{La lista tembló} task_10{Casilla feliz} task_25{Despejando la pila} task_50{Maestro de las marcas} task_100{Cabos cerrados} task_250{Lista bajo control} task_500{Nocaut de oficina} task_1000{Mil marcas} task_5000{Archivista de victorias} task_10000{Máquina de marcar} task_50000{Oficina de asuntos resueltos} task_100000{Soberano de las listas} task_1000000{Última marca} combo_day_not_wasted{Día aprovechado} combo_focus_plus_check{Concentración + marca} combo_no_fuss{Sin prisas} combo_clean_entry{Entrada limpia} combo_tomato_closed_question{El tomate lo resolvió} other{Logro}}",
+  "@achievementTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "focusPresetDeepWork": "Trabajo profundo",
+  "focusPresetShortSprint": "Sprint corto",
+  "csvImportIssueRow": "Fila {row}: {message}",
+  "@csvImportIssueRow": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "csvImportIssueMessage": "{code, select, fileTooLarge{El archivo CSV supera los 16 MiB.} invalidUtf8{El CSV debe usar UTF-8 válido.} missingHeader{Falta la cabecera CSV.} malformed{Formato CSV incorrecto.} unknownHeader{Cabecera desconocida «{value}».} duplicateHeader{Cabecera duplicada «{value}».} contentHeaderRequired{La cabecera content es obligatoria.} tooManyTasks{El CSV no puede contener más de 1000 tareas.} tooManyFields{La fila tiene más campos que la cabecera.} contentRequired{content es obligatorio.} invalidPriority{priority debe ser un entero de 1 a 4.} invalidDate{{value} debe usar YYYY-MM-DD.} mixedSchedule{No se puede combinar la fecha de vencimiento con un horario.} timedFieldsRequired{Un horario requiere start_at, end_at y time_zone.} invalidTimestamp{{value} debe usar RFC3339 con un desplazamiento UTC explícito.} invalidTimeZone{time_zone debe ser un nombre IANA válido.} endBeforeStart{end_at debe ser posterior a start_at.} invalidRecurrence{recurrence debe ser day, week o month.} invalidInteger{{value} debe ser un entero de 1 a 999.} intervalWithoutRecurrence{recurrence_interval requiere recurrence.} recurrenceWithoutSchedule{recurrence requiere una fecha u horario.} doneTask{No se pueden importar tareas completadas.} invalidKey{{value} tiene un formato incorrecto.} empty{El CSV no contiene tareas.} duplicateKey{Clave duplicada «{value}».} parentCycle{Las referencias parent_key forman un ciclo.} missingParent{parent_key «{value}» no existe.} childProject{Una subtarea debe usar el mismo proyecto que su tarea principal.} other{No se pudo importar el archivo.}}",
+  "@csvImportIssueMessage": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  }
 }

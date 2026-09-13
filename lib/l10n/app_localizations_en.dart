@@ -1020,7 +1020,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsReturnRemindersSubtitle =>
-      'A gentle evening nudge if today has no focus or completed task.';
+      'An evening reminder at 20:30 if you have not completed any tasks today.';
 
   @override
   String get settingsDefaultTimedBlockTitle =>
@@ -2843,5 +2843,257 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String deleteProjectWithChildrenConfirmation(String name) {
     return 'Delete \"$name\"? Its subprojects will move up one level. Only tasks in this project will move to Inbox.';
+  }
+
+  @override
+  String get accountNickname => 'Nickname';
+
+  @override
+  String get accountChangeNickname => 'Change nickname';
+
+  @override
+  String get accountNicknameSaveError =>
+      'Could not save your nickname. Please try again.';
+
+  @override
+  String get notificationTaskStarting => 'Task starting';
+
+  @override
+  String get notificationReturnTitle => 'Your tomato misses you';
+
+  @override
+  String get notificationReturnBody =>
+      'One focus or one checkmark is enough to save the day.';
+
+  @override
+  String get notificationFocusChannel => 'Focus';
+
+  @override
+  String get notificationFocusDescription =>
+      'Focus interval completion notifications';
+
+  @override
+  String get notificationReturnChannel => 'Return reminders';
+
+  @override
+  String get notificationReturnDescription =>
+      'Gentle reminders to return to Pomodoist';
+
+  @override
+  String get notificationTaskChannel => 'Task start';
+
+  @override
+  String get notificationTaskDescription => 'Task start notifications';
+
+  @override
+  String get notificationOpenApp => 'Open Pomodoist';
+
+  @override
+  String get notificationFocusCompleted => 'Focus interval completed';
+
+  @override
+  String get notificationLongBreakCompleted => 'Long break completed';
+
+  @override
+  String get notificationBreakCompleted => 'Break completed';
+
+  @override
+  String get updateTitle => 'Pomodoist update';
+
+  @override
+  String get updateAction => 'Update';
+
+  @override
+  String get updateCheck => 'Check for updates';
+
+  @override
+  String get updateSettings => 'Updates';
+
+  @override
+  String get updateReceiveRc => 'Receive release candidates (RC)';
+
+  @override
+  String get updateStableChannel => 'Channel: stable releases';
+
+  @override
+  String get updateRcChannel => 'Channel: stable releases and RC';
+
+  @override
+  String get updateRcHelp =>
+      'RC releases may contain bugs. Alpha and beta versions are excluded.';
+
+  @override
+  String get updateRestart =>
+      'The app will restart. Your data will be preserved.';
+
+  @override
+  String get updateNotes => 'Release notes';
+
+  @override
+  String get updateOwnerManaged =>
+      'This build is updated by its owner to preserve its server configuration. Ask them for the latest version.';
+
+  @override
+  String get updateUnsupported =>
+      'Automatic updates are available in the official Linux AppImage. Use your package manager for other builds.';
+
+  @override
+  String updateVersion(String value) {
+    return 'Version $value';
+  }
+
+  @override
+  String get updatePhaseIdle => 'You can check at any time.';
+
+  @override
+  String get updatePhaseChecking => 'Checking releases…';
+
+  @override
+  String get updatePhaseAvailable => 'A new version is available';
+
+  @override
+  String get updatePhaseDownloading => 'Downloading update…';
+
+  @override
+  String get updatePhaseVerifying => 'Verifying integrity…';
+
+  @override
+  String get updatePhaseInstalling => 'Preparing installation and restart…';
+
+  @override
+  String get updatePhaseUpToDate => 'You have the latest compatible version.';
+
+  @override
+  String get updatePhaseFailed => 'The update could not be completed';
+
+  @override
+  String achievementFocusSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Complete $count work focuses',
+      one: 'Complete 1 work focus',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String achievementTaskSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Complete $count tasks',
+      one: 'Complete 1 task',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get achievementDayNotWastedSubtitle =>
+      'Finish a focus and a task in one day';
+
+  @override
+  String get achievementFocusPlusCheckSubtitle =>
+      'Finish 3 focuses and 3 tasks in one day';
+
+  @override
+  String get achievementNoFussSubtitle =>
+      'Finish 5 focuses in a day without stops';
+
+  @override
+  String get achievementCleanEntrySubtitle =>
+      'Complete a task after its linked focus';
+
+  @override
+  String get achievementTomatoClosedSubtitle =>
+      'Complete a task on the day of its work focus';
+
+  @override
+  String achievementTitle(String id) {
+    String _temp0 = intl.Intl.selectLogic(id, {
+      'focus_1': 'First tomato',
+      'focus_5': 'Warm-up',
+      'focus_10': 'Focus caught',
+      'focus_25': 'Tomato shift',
+      'focus_50': 'Mode on',
+      'focus_100': 'Red belt',
+      'focus_250': 'Deep roots',
+      'focus_500': 'Timer authority',
+      'focus_1000': 'Thousandth tomato',
+      'focus_5000': 'Focus farmer',
+      'focus_10000': 'Attention plantation',
+      'focus_50000': 'Tomato empire',
+      'focus_100000': 'Red supermind',
+      'focus_1000000': 'Tomato singularity',
+      'task_1': 'First check',
+      'task_5': 'The list flinched',
+      'task_10': 'Happy checkbox',
+      'task_25': 'Clearing the pile',
+      'task_50': 'Checkmark master',
+      'task_100': 'Tail closer',
+      'task_250': 'List under control',
+      'task_500': 'Office knockout',
+      'task_1000': 'Thousand checks',
+      'task_5000': 'Victory archivist',
+      'task_10000': 'Checkbox machine',
+      'task_50000': 'Bureau of closed questions',
+      'task_100000': 'List ruler',
+      'task_1000000': 'Final check',
+      'combo_day_not_wasted': 'Day not wasted',
+      'combo_focus_plus_check': 'Focus + check',
+      'combo_no_fuss': 'No fuss',
+      'combo_clean_entry': 'Clean entry',
+      'combo_tomato_closed_question': 'Tomato closed it',
+      'other': 'Achievement',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get focusPresetDeepWork => 'Deep Work';
+
+  @override
+  String get focusPresetShortSprint => 'Short Sprint';
+
+  @override
+  String csvImportIssueRow(int row, String message) {
+    return 'Row $row: $message';
+  }
+
+  @override
+  String csvImportIssueMessage(String code, String value) {
+    String _temp0 = intl.Intl.selectLogic(code, {
+      'fileTooLarge': 'CSV file exceeds 16 MiB.',
+      'invalidUtf8': 'CSV must be valid UTF-8.',
+      'missingHeader': 'CSV header is missing.',
+      'malformed': 'Malformed CSV.',
+      'unknownHeader': 'Unknown header \"$value\".',
+      'duplicateHeader': 'Duplicate header \"$value\".',
+      'contentHeaderRequired': 'content header is required.',
+      'tooManyTasks': 'CSV cannot contain more than 1000 tasks.',
+      'tooManyFields': 'Row has more fields than the header.',
+      'contentRequired': 'content is required.',
+      'invalidPriority': 'priority must be an integer from 1 to 4.',
+      'invalidDate': '$value must use YYYY-MM-DD.',
+      'mixedSchedule': 'Due date cannot be combined with a timed schedule.',
+      'timedFieldsRequired':
+          'A timed schedule requires start_at, end_at and time_zone.',
+      'invalidTimestamp': '$value must be RFC3339 with an explicit UTC offset.',
+      'invalidTimeZone': 'time_zone must be a valid IANA name.',
+      'endBeforeStart': 'end_at must be after start_at.',
+      'invalidRecurrence': 'recurrence must be day, week or month.',
+      'invalidInteger': '$value must be an integer from 1 to 999.',
+      'intervalWithoutRecurrence': 'recurrence_interval requires recurrence.',
+      'recurrenceWithoutSchedule': 'recurrence requires a schedule.',
+      'doneTask': 'Done tasks cannot be imported.',
+      'invalidKey': '$value has an invalid format.',
+      'empty': 'CSV contains no tasks.',
+      'duplicateKey': 'Duplicate key \"$value\".',
+      'parentCycle': 'parent_key references form a cycle.',
+      'missingParent': 'parent_key \"$value\" does not exist.',
+      'childProject': 'A child task must use the same project as its parent.',
+      'other': 'The file could not be imported.',
+    });
+    return '$_temp0';
   }
 }

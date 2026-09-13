@@ -199,34 +199,100 @@
   "kanbanShowDone": "显示已完成",
   "kanbanProjectsTitle": "此看板中的项目",
   "kanbanAddToStatus": "添加到{status}",
-  "@kanbanAddToStatus": {"placeholders": {"status": {"type": "String"}}},
+  "@kanbanAddToStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanTaskField": "任务",
   "kanbanProjectField": "项目",
   "kanbanChooseProject": "请选择项目。",
   "kanbanTaskActions": "任务操作",
   "kanbanDragTask": "拖动任务",
   "kanbanMoveTo": "移动到{status}",
-  "@kanbanMoveTo": {"placeholders": {"status": {"type": "String"}}},
+  "@kanbanMoveTo": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanRestoreBeforeFocus": "开始专注前请先恢复任务。",
   "kanbanCouldNotStartFocus": "无法开始专注：{error}",
-  "@kanbanCouldNotStartFocus": {"placeholders": {"error": {"type": "Object"}}},
+  "@kanbanCouldNotStartFocus": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "kanbanCouldNotLoad": "无法加载看板：{error}",
-  "@kanbanCouldNotLoad": {"placeholders": {"error": {"type": "Object"}}},
+  "@kanbanCouldNotLoad": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "commonRetry": "重试",
   "commonContinueWaiting": "继续等待",
   "kanbanTasksCount": "{count} 个任务",
-  "@kanbanTasksCount": {"placeholders": {"count": {"type": "int"}}},
+  "@kanbanTasksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanSubtasksProgress": "子任务 {completed}/{total}",
-  "@kanbanSubtasksProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@kanbanSubtasksProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanFocusIntervalsProgress": "专注时段 {completed}/{total}",
-  "@kanbanFocusIntervalsProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@kanbanFocusIntervalsProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanActive": "进行中",
   "kanbanPriority": "优先级 {priority}",
-  "@kanbanPriority": {"placeholders": {"priority": {"type": "int"}}},
+  "@kanbanPriority": {
+    "placeholders": {
+      "priority": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanMoveAnnouncement": "已移动到{status}",
-  "@kanbanMoveAnnouncement": {"placeholders": {"status": {"type": "String"}}},
+  "@kanbanMoveAnnouncement": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanFocusStartedAnnouncement": "已为{task}开始专注",
-  "@kanbanFocusStartedAnnouncement": {"placeholders": {"task": {"type": "String"}}},
+  "@kanbanFocusStartedAnnouncement": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanNoTasks": "暂无任务",
   "navToday": "今天",
   "navUpcoming": "即将到来",
@@ -307,7 +373,7 @@
   "settingsTimerVisualBar": "进度条",
   "settingsTimerVisualCircle": "圆环",
   "settingsReturnRemindersTitle": "回归提醒",
-  "settingsReturnRemindersSubtitle": "如果今天没有完成专注或任务，晚上给你一个轻提醒。",
+  "settingsReturnRemindersSubtitle": "如果今天没有完成任何任务，将在20:30提醒你。",
   "settingsDefaultTimedBlockTitle": "默认日历块时长",
   "settingsDefaultTimedBlockSubtitle": "只输入时间时，新任务会使用这个日历时长。",
   "settingsDefaultTimedBlockCustomLabel": "自定义时长",
@@ -556,7 +622,7 @@
   "focusViewMinimal": "极简",
   "focusSwitchToFullView": "切换到完整模式",
   "focusSwitchToMinimalView": "切换到极简模式",
-  "focusActionFailed": "无法更新专注。请重试。",
+  "focusActionFailed": "无法更新 Focus，请重试。",
   "noActiveSession": "没有活动会话",
   "focusIdleSubtitle": "启动单独的专注间隔，或从任务启动专注。",
   "noPreset": "无预设",
@@ -580,7 +646,13 @@
   "focusCompletionDone": "完成",
   "focusCompletionNextTask": "下一个计划任务",
   "focusCompletionTaskError": "无法完成任务：{error}",
-  "@focusCompletionTaskError": {"placeholders": {"error": {"type": "Object"}}},
+  "@focusCompletionTaskError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "completeInterval": "完成间隔",
   "logDistraction": "记录分心",
   "workInterval": "工作间隔",
@@ -732,7 +804,6 @@
   "todayFocusingOn": "正在专注",
   "openFocus": "打开 Focus",
   "todayCompletedTasks": "今日已完成 · {count}",
-  "focusActionFailed": "无法更新 Focus，请重试。",
   "sidebarDaily": "日常",
   "sidebarViews": "视图",
   "quickAddResetDetails": "使用默认值",
@@ -818,5 +889,102 @@
   "projectMoveUp": "上移",
   "projectMoveDown": "下移",
   "projectParentName": "父项目：{name}",
-  "deleteProjectWithChildrenConfirmation": "删除“{name}”？其子项目将上移一级。只有此项目中的任务会移至 Inbox。"
+  "deleteProjectWithChildrenConfirmation": "删除“{name}”？其子项目将上移一级。只有此项目中的任务会移至 Inbox。",
+  "accountNickname": "昵称",
+  "accountChangeNickname": "修改昵称",
+  "accountNicknameSaveError": "无法保存昵称，请重试。",
+  "notificationTaskStarting": "任务开始",
+  "notificationReturnTitle": "你的番茄想你了",
+  "notificationReturnBody": "完成一次专注或勾选一个任务，今天就没有白过。",
+  "notificationFocusChannel": "专注",
+  "notificationFocusDescription": "专注时段完成通知",
+  "notificationReturnChannel": "回归提醒",
+  "notificationReturnDescription": "温和提醒你回到 Pomodoist",
+  "notificationTaskChannel": "任务开始",
+  "notificationTaskDescription": "任务开始通知",
+  "notificationOpenApp": "打开 Pomodoist",
+  "notificationFocusCompleted": "专注时段已完成",
+  "notificationLongBreakCompleted": "长休息已结束",
+  "notificationBreakCompleted": "休息已结束",
+  "updateTitle": "Pomodoist 更新",
+  "updateAction": "更新",
+  "updateCheck": "检查更新",
+  "updateSettings": "更新",
+  "updateReceiveRc": "接收候选版本（RC）",
+  "updateStableChannel": "渠道：稳定版本",
+  "updateRcChannel": "渠道：稳定版本和 RC",
+  "updateRcHelp": "RC 版本可能存在错误，不包含 Alpha 和 Beta 版本。",
+  "updateRestart": "应用将重新启动，你的数据会保留。",
+  "updateNotes": "更新说明",
+  "updateOwnerManaged": "此版本由其所有者更新，以保留服务器配置。请向其索取最新版本。",
+  "updateUnsupported": "自动更新适用于官方 Linux AppImage。其他版本请通过软件包管理器更新。",
+  "updateVersion": "版本 {value}",
+  "@updateVersion": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "updatePhaseIdle": "你可以随时检查更新。",
+  "updatePhaseChecking": "正在检查版本…",
+  "updatePhaseAvailable": "有新版本可用",
+  "updatePhaseDownloading": "正在下载更新…",
+  "updatePhaseVerifying": "正在验证完整性…",
+  "updatePhaseInstalling": "正在准备安装和重启…",
+  "updatePhaseUpToDate": "你已安装最新兼容版本。",
+  "updatePhaseFailed": "无法完成更新",
+  "achievementFocusSubtitle": "{count, plural, =1{完成 1 次工作专注} other{完成 {count} 次工作专注}}",
+  "@achievementFocusSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementTaskSubtitle": "{count, plural, =1{完成 1 个任务} other{完成 {count} 个任务}}",
+  "@achievementTaskSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementDayNotWastedSubtitle": "一天内完成一次专注和一个任务",
+  "achievementFocusPlusCheckSubtitle": "一天内完成 3 次专注和 3 个任务",
+  "achievementNoFussSubtitle": "一天内不中止地完成 5 次专注",
+  "achievementCleanEntrySubtitle": "在关联专注结束后完成任务",
+  "achievementTomatoClosedSubtitle": "在工作专注当天完成对应任务",
+  "achievementTitle": "{id, select, focus_1{第一颗番茄} focus_5{热身} focus_10{找到专注} focus_25{番茄班次} focus_50{模式开启} focus_100{红带} focus_250{深深扎根} focus_500{计时器权威} focus_1000{第一千颗番茄} focus_5000{专注农夫} focus_10000{注意力种植园} focus_50000{番茄帝国} focus_100000{红色超级大脑} focus_1000000{番茄奇点} task_1{第一个勾} task_5{清单动摇了} task_10{开心的复选框} task_25{清理积压} task_50{勾选大师} task_100{收尾能手} task_250{清单尽在掌握} task_500{办公室完胜} task_1000{一千个勾} task_5000{胜利档案员} task_10000{勾选机器} task_50000{问题解决局} task_100000{清单主宰} task_1000000{最后一个勾} combo_day_not_wasted{今天没白过} combo_focus_plus_check{专注 + 勾选} combo_no_fuss{从容不迫} combo_clean_entry{顺利完成} combo_tomato_closed_question{番茄解决了} other{成就}}",
+  "@achievementTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "focusPresetDeepWork": "深度工作",
+  "focusPresetShortSprint": "短时冲刺",
+  "csvImportIssueRow": "第 {row} 行：{message}",
+  "@csvImportIssueRow": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "csvImportIssueMessage": "{code, select, fileTooLarge{CSV 文件超过 16 MiB。} invalidUtf8{CSV 必须使用有效的 UTF-8 编码。} missingHeader{缺少 CSV 表头。} malformed{CSV 格式不正确。} unknownHeader{未知表头“{value}”。} duplicateHeader{表头“{value}”重复。} contentHeaderRequired{必须包含 content 表头。} tooManyTasks{CSV 最多包含 1000 个任务。} tooManyFields{此行字段数多于表头。} contentRequired{content 为必填项。} invalidPriority{priority 必须是 1 到 4 的整数。} invalidDate{{value} 必须使用 YYYY-MM-DD 格式。} mixedSchedule{不能同时指定到期日期和定时日程。} timedFieldsRequired{定时日程需要 start_at、end_at 和 time_zone。} invalidTimestamp{{value} 必须是带有明确 UTC 偏移的 RFC3339 时间。} invalidTimeZone{time_zone 必须是有效的 IANA 名称。} endBeforeStart{end_at 必须晚于 start_at。} invalidRecurrence{recurrence 必须是 day、week 或 month。} invalidInteger{{value} 必须是 1 到 999 的整数。} intervalWithoutRecurrence{recurrence_interval 需要 recurrence。} recurrenceWithoutSchedule{recurrence 需要日程。} doneTask{无法导入已完成的任务。} invalidKey{{value} 格式不正确。} empty{CSV 中没有任务。} duplicateKey{键“{value}”重复。} parentCycle{parent_key 引用形成循环。} missingParent{parent_key“{value}”不存在。} childProject{子任务必须与父任务属于同一项目。} other{无法导入该文件。}}",
+  "@csvImportIssueMessage": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -1,3 +1,4 @@
+import 'support/test_app.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -8,10 +9,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/legal_urls.dart';
 import 'package:pomodoist/features/billing/billing.dart';
 import 'package:pomodoist/features/settings/presentation/app_info_card.dart';
+import 'package:pomodoist/features/settings/presentation/settings_subscription.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(loadTestAppResources);
   const urlLauncherChannel = MethodChannel('plugins.flutter.io/url_launcher');
   final launchedUrls = <String>[];
 
@@ -49,6 +52,7 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(false),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -56,22 +60,26 @@ void main() {
             GlobalWidgetsLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: SettingsAppInfoCard()),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                children: [SettingsAppInfoCard(), SettingsSubscription()],
+              ),
+            ),
+          ),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('settings-app-info-card')), findsOneWidget);
-    expect(find.text('About'), findsOneWidget);
     expect(find.text('Version'), findsOneWidget);
     expect(find.text('2.4.1 (37)'), findsOneWidget);
-    expect(find.text('Plan'), findsOneWidget);
-    expect(find.text('Free'), findsOneWidget);
+    expect(find.text('Plan: Free'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('shows a dash when installed version loading fails', (
+  testWidgets('shows a retryable error when installed version loading fails', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -83,6 +91,7 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(false),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -90,18 +99,21 @@ void main() {
             GlobalWidgetsLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: SettingsAppInfoCard()),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                children: [SettingsAppInfoCard(), SettingsSubscription()],
+              ),
+            ),
+          ),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(
-      tester
-          .widget<Text>(find.byKey(const Key('settings-app-version-value')))
-          .data,
-      '—',
-    );
+    expect(find.byKey(const Key('settings-app-version-value')), findsNothing);
+    expect(find.text('Could not load the version.'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
   });
 
   testWidgets('launches permanent privacy, terms, and support links', (
@@ -114,6 +126,7 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(false),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -121,7 +134,13 @@ void main() {
             GlobalWidgetsLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: SettingsAppInfoCard()),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                children: [SettingsAppInfoCard(), SettingsSubscription()],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -139,7 +158,7 @@ void main() {
     }
   });
 
-  testWidgets('shows a dash while the installed version is loading', (
+  testWidgets('shows progress while the installed version is loading', (
     tester,
   ) async {
     final pendingVersion = Completer<String>();
@@ -150,6 +169,7 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(false),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -157,18 +177,23 @@ void main() {
             GlobalWidgetsLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: SettingsAppInfoCard()),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                children: [SettingsAppInfoCard(), SettingsSubscription()],
+              ),
+            ),
+          ),
         ),
       ),
     );
     await tester.pump();
 
-    expect(
-      tester
-          .widget<Text>(find.byKey(const Key('settings-app-version-value')))
-          .data,
-      '—',
-    );
+    expect(find.byKey(const Key('settings-app-version-value')), findsNothing);
+    expect(find.byType(LinearProgressIndicator), findsWidgets);
+    pendingVersion.complete('2.4.1 (37)');
+    await tester.pumpAndSettle();
+    expect(find.text('2.4.1 (37)'), findsOneWidget);
   });
 
   testWidgets('shows Monthly for an active monthly plan', (tester) async {
@@ -187,6 +212,7 @@ void main() {
           ),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -194,13 +220,19 @@ void main() {
             GlobalWidgetsLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: SettingsAppInfoCard()),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                children: [SettingsAppInfoCard(), SettingsSubscription()],
+              ),
+            ),
+          ),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Monthly'), findsOneWidget);
+    expect(find.text('Plan: Monthly'), findsOneWidget);
   });
 
   testWidgets('shows Annual for an active annual plan', (tester) async {
@@ -219,6 +251,7 @@ void main() {
           ),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -226,13 +259,19 @@ void main() {
             GlobalWidgetsLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: SettingsAppInfoCard()),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                children: [SettingsAppInfoCard(), SettingsSubscription()],
+              ),
+            ),
+          ),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Annual'), findsOneWidget);
+    expect(find.text('Plan: Annual'), findsOneWidget);
   });
 
   testWidgets('shows Lifetime for an active lifetime plan', (tester) async {
@@ -251,6 +290,7 @@ void main() {
           ),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -258,13 +298,19 @@ void main() {
             GlobalWidgetsLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: SettingsAppInfoCard()),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                children: [SettingsAppInfoCard(), SettingsSubscription()],
+              ),
+            ),
+          ),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Lifetime'), findsOneWidget);
+    expect(find.text('Plan: Lifetime'), findsOneWidget);
   });
 
   testWidgets('shows Pro without exposing an unknown active product id', (
@@ -286,6 +332,7 @@ void main() {
           ),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -293,13 +340,19 @@ void main() {
             GlobalWidgetsLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: SettingsAppInfoCard()),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                children: [SettingsAppInfoCard(), SettingsSubscription()],
+              ),
+            ),
+          ),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Pomodoist Pro'), findsOneWidget);
+    expect(find.text('Plan: Pomodoist Pro'), findsOneWidget);
     expect(find.text(unknownProductId), findsNothing);
   });
 
@@ -316,6 +369,7 @@ void main() {
           billingControllerProvider.overrideWith(() => billingController),
         ],
         child: const MaterialApp(
+          builder: testAppBuilder,
           localizationsDelegates: [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -323,12 +377,18 @@ void main() {
             GlobalWidgetsLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: SettingsAppInfoCard()),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                children: [SettingsAppInfoCard(), SettingsSubscription()],
+              ),
+            ),
+          ),
         ),
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Free'), findsOneWidget);
+    expect(find.text('Plan: Free'), findsOneWidget);
 
     billingController.replaceState(
       const BillingState(
@@ -339,8 +399,8 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Monthly'), findsOneWidget);
-    expect(find.text('Free'), findsNothing);
+    expect(find.text('Plan: Monthly'), findsOneWidget);
+    expect(find.text('Plan: Free'), findsNothing);
   });
 }
 

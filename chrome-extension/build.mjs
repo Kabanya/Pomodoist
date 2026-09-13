@@ -1,4 +1,4 @@
-import { mkdir, readFile, copyFile, writeFile, rm } from 'node:fs/promises';
+import { mkdir, readFile, cp, copyFile, writeFile, rm } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 const root = path.dirname(fileURLToPath(import.meta.url));
@@ -24,7 +24,7 @@ export function configuration(env) {
 export function manifestFor(config) {
   const socket = new URL(config.apiUrl); socket.protocol = socket.protocol === 'https:' ? 'wss:' : 'ws:';
   return { manifest_version: 3, name: 'Pomodoist', version: '0.1.0', minimum_chrome_version: '116',
-    description: 'Quick access to your Pomodoist tasks: Today, Upcoming, scheduling and browser tab capture.',
+    default_locale: 'en', description: '__MSG_extension_description__',
     action: { default_popup: 'popup.html', default_title: 'Pomodoist', default_icon: 'icon.png' },
     icons: { 16: 'icon.png', 32: 'icon.png', 48: 'icon.png', 128: 'icon.png' },
     background: { service_worker: 'src/background.js', type: 'module' },
@@ -38,10 +38,11 @@ export async function build(env = process.env, destination = path.join(root, 'di
   if (destination === path.parse(destination).root || destination === root || root.startsWith(destination + path.sep)) throw new Error('Build output must not contain the extension source.');
   await rm(destination, { recursive: true, force: true });
   await mkdir(path.join(destination, 'src'), { recursive: true });
-  for (const file of ['background.js', 'client.js', 'core.js', 'popup.js', 'realtime.js', 'sync.js']) {
+  for (const file of ['i18n.js', 'background.js', 'client.js', 'core.js', 'popup.js', 'realtime.js', 'sync.js']) {
     await copyFile(path.join(root, 'src', file), path.join(destination, 'src', file));
   }
   for (const file of ['popup.html', 'styles.css']) await copyFile(path.join(root, file), path.join(destination, file));
+  await cp(path.join(root, '_locales'), path.join(destination, '_locales'), { recursive: true });
   // Reuse the application's existing branded PNG; Chrome scales it for toolbar sizes.
   await copyFile(path.join(root, '../web/icons/Icon-192.png'), path.join(destination, 'icon.png'));
   await copyFile(path.join(root, '../LICENSE'), path.join(destination, 'LICENSE'));

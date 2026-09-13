@@ -24,6 +24,7 @@ class GoogleCalendarSyncController {
     if (url == null || url.scheme != 'https' || !await _openUrl(url)) {
       throw const GoogleCalendarServerException(
         'Could not open Google Calendar authorization.',
+        code: 'authorization_unavailable',
       );
     }
   }
@@ -46,6 +47,11 @@ class GoogleCalendarSyncController {
         data['error'] is String
             ? data['error']! as String
             : 'Google Calendar request failed.',
+        code: data['code'] is String
+            ? data['code']! as String
+            : response.status == 401
+            ? 'auth_required'
+            : 'service_unavailable',
       );
     }
     return data;
@@ -53,7 +59,12 @@ class GoogleCalendarSyncController {
 }
 
 class GoogleCalendarServerException implements Exception {
-  const GoogleCalendarServerException(this.message);
+  const GoogleCalendarServerException(
+    this.message, {
+    this.code = 'service_unavailable',
+  });
+
+  final String code;
 
   final String message;
 

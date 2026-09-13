@@ -25,6 +25,7 @@ import 'package:pomodoist/app/theme/app_theme.dart';
 import 'package:pomodoist/core/db/app_database.dart' hide FocusDailyStats;
 import 'package:pomodoist/core/time/clock.dart';
 import 'package:pomodoist/features/focus/domain/focus_models.dart';
+import 'package:pomodoist/features/billing/billing.dart';
 import 'package:pomodoist/features/focus/presentation/focus_screen.dart';
 import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
 import 'package:pomodoist/features/planning/data/quick_add_service.dart';
@@ -3788,6 +3789,7 @@ Future<_BrowseHarness> _pumpBrowseScreen(
     ProviderScope(
       retry: (_, _) => null,
       overrides: [
+        applePurchasesSupportedProvider.overrideWithValue(false),
         taskRepositoryProvider.overrideWithValue(_FakeTaskRepository(tasks)),
         focusRepositoryProvider.overrideWithValue(_FakeFocusRepository()),
         projectRepositoryProvider.overrideWithValue(projectRepository),
@@ -3850,6 +3852,7 @@ Future<_AppHarness> _pumpApp(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        applePurchasesSupportedProvider.overrideWithValue(false),
         appStartupProvider.overrideWith(
           (ref) => startupCompleter?.future ?? Future<void>.value(),
         ),
@@ -3926,6 +3929,7 @@ Future<void> _pumpFocusScreen(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        applePurchasesSupportedProvider.overrideWithValue(false),
         focusRepositoryProvider.overrideWithValue(focusRepository),
         focusTickerProvider.overrideWith((ref) => Stream.value(now)),
       ],

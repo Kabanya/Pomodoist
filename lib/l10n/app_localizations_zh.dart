@@ -950,7 +950,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsReturnRemindersTitle => '回归提醒';
 
   @override
-  String get settingsReturnRemindersSubtitle => '如果今天没有完成专注或任务，晚上给你一个轻提醒。';
+  String get settingsReturnRemindersSubtitle => '如果今天没有完成任何任务，将在20:30提醒你。';
 
   @override
   String get settingsDefaultTimedBlockTitle => '默认日历块时长';
@@ -2697,5 +2697,243 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String deleteProjectWithChildrenConfirmation(String name) {
     return '删除“$name”？其子项目将上移一级。只有此项目中的任务会移至 Inbox。';
+  }
+
+  @override
+  String get accountNickname => '昵称';
+
+  @override
+  String get accountChangeNickname => '修改昵称';
+
+  @override
+  String get accountNicknameSaveError => '无法保存昵称，请重试。';
+
+  @override
+  String get notificationTaskStarting => '任务开始';
+
+  @override
+  String get notificationReturnTitle => '你的番茄想你了';
+
+  @override
+  String get notificationReturnBody => '完成一次专注或勾选一个任务，今天就没有白过。';
+
+  @override
+  String get notificationFocusChannel => '专注';
+
+  @override
+  String get notificationFocusDescription => '专注时段完成通知';
+
+  @override
+  String get notificationReturnChannel => '回归提醒';
+
+  @override
+  String get notificationReturnDescription => '温和提醒你回到 Pomodoist';
+
+  @override
+  String get notificationTaskChannel => '任务开始';
+
+  @override
+  String get notificationTaskDescription => '任务开始通知';
+
+  @override
+  String get notificationOpenApp => '打开 Pomodoist';
+
+  @override
+  String get notificationFocusCompleted => '专注时段已完成';
+
+  @override
+  String get notificationLongBreakCompleted => '长休息已结束';
+
+  @override
+  String get notificationBreakCompleted => '休息已结束';
+
+  @override
+  String get updateTitle => 'Pomodoist 更新';
+
+  @override
+  String get updateAction => '更新';
+
+  @override
+  String get updateCheck => '检查更新';
+
+  @override
+  String get updateSettings => '更新';
+
+  @override
+  String get updateReceiveRc => '接收候选版本（RC）';
+
+  @override
+  String get updateStableChannel => '渠道：稳定版本';
+
+  @override
+  String get updateRcChannel => '渠道：稳定版本和 RC';
+
+  @override
+  String get updateRcHelp => 'RC 版本可能存在错误，不包含 Alpha 和 Beta 版本。';
+
+  @override
+  String get updateRestart => '应用将重新启动，你的数据会保留。';
+
+  @override
+  String get updateNotes => '更新说明';
+
+  @override
+  String get updateOwnerManaged => '此版本由其所有者更新，以保留服务器配置。请向其索取最新版本。';
+
+  @override
+  String get updateUnsupported => '自动更新适用于官方 Linux AppImage。其他版本请通过软件包管理器更新。';
+
+  @override
+  String updateVersion(String value) {
+    return '版本 $value';
+  }
+
+  @override
+  String get updatePhaseIdle => '你可以随时检查更新。';
+
+  @override
+  String get updatePhaseChecking => '正在检查版本…';
+
+  @override
+  String get updatePhaseAvailable => '有新版本可用';
+
+  @override
+  String get updatePhaseDownloading => '正在下载更新…';
+
+  @override
+  String get updatePhaseVerifying => '正在验证完整性…';
+
+  @override
+  String get updatePhaseInstalling => '正在准备安装和重启…';
+
+  @override
+  String get updatePhaseUpToDate => '你已安装最新兼容版本。';
+
+  @override
+  String get updatePhaseFailed => '无法完成更新';
+
+  @override
+  String achievementFocusSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '完成 $count 次工作专注',
+      one: '完成 1 次工作专注',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String achievementTaskSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '完成 $count 个任务',
+      one: '完成 1 个任务',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get achievementDayNotWastedSubtitle => '一天内完成一次专注和一个任务';
+
+  @override
+  String get achievementFocusPlusCheckSubtitle => '一天内完成 3 次专注和 3 个任务';
+
+  @override
+  String get achievementNoFussSubtitle => '一天内不中止地完成 5 次专注';
+
+  @override
+  String get achievementCleanEntrySubtitle => '在关联专注结束后完成任务';
+
+  @override
+  String get achievementTomatoClosedSubtitle => '在工作专注当天完成对应任务';
+
+  @override
+  String achievementTitle(String id) {
+    String _temp0 = intl.Intl.selectLogic(id, {
+      'focus_1': '第一颗番茄',
+      'focus_5': '热身',
+      'focus_10': '找到专注',
+      'focus_25': '番茄班次',
+      'focus_50': '模式开启',
+      'focus_100': '红带',
+      'focus_250': '深深扎根',
+      'focus_500': '计时器权威',
+      'focus_1000': '第一千颗番茄',
+      'focus_5000': '专注农夫',
+      'focus_10000': '注意力种植园',
+      'focus_50000': '番茄帝国',
+      'focus_100000': '红色超级大脑',
+      'focus_1000000': '番茄奇点',
+      'task_1': '第一个勾',
+      'task_5': '清单动摇了',
+      'task_10': '开心的复选框',
+      'task_25': '清理积压',
+      'task_50': '勾选大师',
+      'task_100': '收尾能手',
+      'task_250': '清单尽在掌握',
+      'task_500': '办公室完胜',
+      'task_1000': '一千个勾',
+      'task_5000': '胜利档案员',
+      'task_10000': '勾选机器',
+      'task_50000': '问题解决局',
+      'task_100000': '清单主宰',
+      'task_1000000': '最后一个勾',
+      'combo_day_not_wasted': '今天没白过',
+      'combo_focus_plus_check': '专注 + 勾选',
+      'combo_no_fuss': '从容不迫',
+      'combo_clean_entry': '顺利完成',
+      'combo_tomato_closed_question': '番茄解决了',
+      'other': '成就',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get focusPresetDeepWork => '深度工作';
+
+  @override
+  String get focusPresetShortSprint => '短时冲刺';
+
+  @override
+  String csvImportIssueRow(int row, String message) {
+    return '第 $row 行：$message';
+  }
+
+  @override
+  String csvImportIssueMessage(String code, String value) {
+    String _temp0 = intl.Intl.selectLogic(code, {
+      'fileTooLarge': 'CSV 文件超过 16 MiB。',
+      'invalidUtf8': 'CSV 必须使用有效的 UTF-8 编码。',
+      'missingHeader': '缺少 CSV 表头。',
+      'malformed': 'CSV 格式不正确。',
+      'unknownHeader': '未知表头“$value”。',
+      'duplicateHeader': '表头“$value”重复。',
+      'contentHeaderRequired': '必须包含 content 表头。',
+      'tooManyTasks': 'CSV 最多包含 1000 个任务。',
+      'tooManyFields': '此行字段数多于表头。',
+      'contentRequired': 'content 为必填项。',
+      'invalidPriority': 'priority 必须是 1 到 4 的整数。',
+      'invalidDate': '$value 必须使用 YYYY-MM-DD 格式。',
+      'mixedSchedule': '不能同时指定到期日期和定时日程。',
+      'timedFieldsRequired': '定时日程需要 start_at、end_at 和 time_zone。',
+      'invalidTimestamp': '$value 必须是带有明确 UTC 偏移的 RFC3339 时间。',
+      'invalidTimeZone': 'time_zone 必须是有效的 IANA 名称。',
+      'endBeforeStart': 'end_at 必须晚于 start_at。',
+      'invalidRecurrence': 'recurrence 必须是 day、week 或 month。',
+      'invalidInteger': '$value 必须是 1 到 999 的整数。',
+      'intervalWithoutRecurrence': 'recurrence_interval 需要 recurrence。',
+      'recurrenceWithoutSchedule': 'recurrence 需要日程。',
+      'doneTask': '无法导入已完成的任务。',
+      'invalidKey': '$value 格式不正确。',
+      'empty': 'CSV 中没有任务。',
+      'duplicateKey': '键“$value”重复。',
+      'parentCycle': 'parent_key 引用形成循环。',
+      'missingParent': 'parent_key“$value”不存在。',
+      'childProject': '子任务必须与父任务属于同一项目。',
+      'other': '无法导入该文件。',
+    });
+    return '$_temp0';
   }
 }

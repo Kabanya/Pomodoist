@@ -199,34 +199,100 @@
   "kanbanShowDone": "Показать готовые",
   "kanbanProjectsTitle": "Проекты на этой доске",
   "kanbanAddToStatus": "Добавить в «{status}»",
-  "@kanbanAddToStatus": {"placeholders": {"status": {"type": "String"}}},
+  "@kanbanAddToStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanTaskField": "Задача",
   "kanbanProjectField": "Проект",
   "kanbanChooseProject": "Выберите проект.",
   "kanbanTaskActions": "Действия с задачей",
   "kanbanDragTask": "Перетащить задачу",
   "kanbanMoveTo": "Переместить в «{status}»",
-  "@kanbanMoveTo": {"placeholders": {"status": {"type": "String"}}},
+  "@kanbanMoveTo": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanRestoreBeforeFocus": "Сначала восстановите задачу, затем запускайте фокус.",
   "kanbanCouldNotStartFocus": "Не удалось запустить фокус: {error}",
-  "@kanbanCouldNotStartFocus": {"placeholders": {"error": {"type": "Object"}}},
+  "@kanbanCouldNotStartFocus": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "kanbanCouldNotLoad": "Не удалось загрузить канбан: {error}",
-  "@kanbanCouldNotLoad": {"placeholders": {"error": {"type": "Object"}}},
+  "@kanbanCouldNotLoad": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "commonRetry": "Повторить",
   "commonContinueWaiting": "Продолжить ожидание",
   "kanbanTasksCount": "Задач: {count}",
-  "@kanbanTasksCount": {"placeholders": {"count": {"type": "int"}}},
+  "@kanbanTasksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanSubtasksProgress": "Подзадачи: {completed} из {total}",
-  "@kanbanSubtasksProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@kanbanSubtasksProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanFocusIntervalsProgress": "Фокус-интервалы: {completed} из {total}",
-  "@kanbanFocusIntervalsProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@kanbanFocusIntervalsProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanActive": "Активно",
   "kanbanPriority": "Приоритет {priority}",
-  "@kanbanPriority": {"placeholders": {"priority": {"type": "int"}}},
+  "@kanbanPriority": {
+    "placeholders": {
+      "priority": {
+        "type": "int"
+      }
+    }
+  },
   "kanbanMoveAnnouncement": "Перемещено в «{status}»",
-  "@kanbanMoveAnnouncement": {"placeholders": {"status": {"type": "String"}}},
+  "@kanbanMoveAnnouncement": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanFocusStartedAnnouncement": "Фокус запущен для задачи «{task}»",
-  "@kanbanFocusStartedAnnouncement": {"placeholders": {"task": {"type": "String"}}},
+  "@kanbanFocusStartedAnnouncement": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
   "kanbanNoTasks": "Задач пока нет",
   "navToday": "Сегодня",
   "navUpcoming": "Предстоящее",
@@ -307,7 +373,7 @@
   "settingsTimerVisualBar": "Полоса",
   "settingsTimerVisualCircle": "Круг",
   "settingsReturnRemindersTitle": "Напоминания о возвращении",
-  "settingsReturnRemindersSubtitle": "Мягкий вечерний пинок, если сегодня нет фокуса или закрытой задачи.",
+  "settingsReturnRemindersSubtitle": "Напоминание в 20:30, только если за сегодня не закрыто ни одной задачи.",
   "settingsDefaultTimedBlockTitle": "Длительность блока по умолчанию",
   "settingsDefaultTimedBlockSubtitle": "Если указано только время, новая задача займет столько минут в календаре.",
   "settingsDefaultTimedBlockCustomLabel": "Свое значение",
@@ -556,7 +622,7 @@
   "focusViewMinimal": "Минимальный",
   "focusSwitchToFullView": "Перейти в Full",
   "focusSwitchToMinimalView": "Перейти в Minimal",
-  "focusActionFailed": "Не удалось обновить фокус. Попробуйте ещё раз.",
+  "focusActionFailed": "Не удалось изменить состояние Focus. Попробуйте ещё раз.",
   "noActiveSession": "Нет активной сессии",
   "focusIdleSubtitle": "Запустите отдельный интервал фокуса или начните фокус из задачи.",
   "noPreset": "Нет пресета",
@@ -580,7 +646,13 @@
   "focusCompletionDone": "Готово",
   "focusCompletionNextTask": "Следующая запланированная задача",
   "focusCompletionTaskError": "Не удалось завершить задачу: {error}",
-  "@focusCompletionTaskError": {"placeholders": {"error": {"type": "Object"}}},
+  "@focusCompletionTaskError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "completeInterval": "Завершить интервал",
   "logDistraction": "Отметить отвлечение",
   "workInterval": "Рабочий интервал",
@@ -732,7 +804,6 @@
   "todayFocusingOn": "В фокусе",
   "openFocus": "Открыть Focus",
   "todayCompletedTasks": "Завершено сегодня · {count}",
-  "focusActionFailed": "Не удалось изменить состояние Focus. Попробуйте ещё раз.",
   "sidebarDaily": "На каждый день",
   "sidebarViews": "Представления",
   "quickAddResetDetails": "По умолчанию",
@@ -818,5 +889,102 @@
   "projectMoveUp": "Выше",
   "projectMoveDown": "Ниже",
   "projectParentName": "Родительский проект: {name}",
-  "deleteProjectWithChildrenConfirmation": "Удалить «{name}»? Подпроекты поднимутся на уровень выше. Только задачи этого проекта будут перенесены во Входящие."
+  "deleteProjectWithChildrenConfirmation": "Удалить «{name}»? Подпроекты поднимутся на уровень выше. Только задачи этого проекта будут перенесены во Входящие.",
+  "accountNickname": "Никнейм",
+  "accountChangeNickname": "Изменить никнейм",
+  "accountNicknameSaveError": "Не удалось сохранить никнейм. Попробуйте ещё раз.",
+  "notificationTaskStarting": "Время задачи",
+  "notificationReturnTitle": "Помидор скучает",
+  "notificationReturnBody": "Один фокус или одна галочка — и день уже не зря.",
+  "notificationFocusChannel": "Фокус",
+  "notificationFocusDescription": "Уведомления о завершении интервала фокуса",
+  "notificationReturnChannel": "Напоминания о возвращении",
+  "notificationReturnDescription": "Мягкие напоминания вернуться в Pomodoist",
+  "notificationTaskChannel": "Начало задачи",
+  "notificationTaskDescription": "Уведомления о начале задачи",
+  "notificationOpenApp": "Открыть Pomodoist",
+  "notificationFocusCompleted": "Фокус-интервал завершён",
+  "notificationLongBreakCompleted": "Длинный перерыв завершён",
+  "notificationBreakCompleted": "Перерыв завершён",
+  "updateTitle": "Обновление Pomodoist",
+  "updateAction": "Обновить",
+  "updateCheck": "Проверить обновления",
+  "updateSettings": "Обновления",
+  "updateReceiveRc": "Получать релиз-кандидаты (RC)",
+  "updateStableChannel": "Канал: стабильные релизы",
+  "updateRcChannel": "Канал: стабильные релизы и RC",
+  "updateRcHelp": "RC могут содержать ошибки. Альфа- и бета-версии исключены.",
+  "updateRestart": "Приложение перезапустится. Ваши данные сохранятся.",
+  "updateNotes": "Все изменения",
+  "updateOwnerManaged": "Эту сборку обновляет её владелец, чтобы сохранить настройки сервера. Запросите у него последнюю версию.",
+  "updateUnsupported": "Автообновление доступно в официальной Linux AppImage. Другие сборки обновляйте через менеджер пакетов.",
+  "updateVersion": "Версия {value}",
+  "@updateVersion": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "updatePhaseIdle": "Проверка доступна в любое время.",
+  "updatePhaseChecking": "Проверяем релизы…",
+  "updatePhaseAvailable": "Доступна новая версия",
+  "updatePhaseDownloading": "Скачиваем обновление…",
+  "updatePhaseVerifying": "Проверяем целостность…",
+  "updatePhaseInstalling": "Подготавливаем установку и перезапуск…",
+  "updatePhaseUpToDate": "Установлена последняя подходящая версия.",
+  "updatePhaseFailed": "Не удалось обновить приложение",
+  "achievementFocusSubtitle": "{count, plural, =1{Завершить 1 work-фокус} other{Завершить {count} work-фокусов}}",
+  "@achievementFocusSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementTaskSubtitle": "{count, plural, =1{Закрыть 1 задачу} other{Закрыть {count} задач}}",
+  "@achievementTaskSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementDayNotWastedSubtitle": "За день есть фокус и закрытая задача",
+  "achievementFocusPlusCheckSubtitle": "За день есть 3 фокуса и 3 задачи",
+  "achievementNoFussSubtitle": "5 фокусов за день без остановок",
+  "achievementCleanEntrySubtitle": "Закрыть задачу после связанного фокуса",
+  "achievementTomatoClosedSubtitle": "Закрыть задачу в день ее work-фокуса",
+  "achievementTitle": "{id, select, focus_1{Первый помидор} focus_5{Разогрев} focus_10{Фокус пойман} focus_25{Помидорная смена} focus_50{Режим включен} focus_100{Красный пояс} focus_250{Глубокая посадка} focus_500{Таймерный авторитет} focus_1000{Тысячный помидор} focus_5000{Фермер фокуса} focus_10000{Плантация внимания} focus_50000{Помидорная империя} focus_100000{Красный сверхразум} focus_1000000{Сингулярность помидора} task_1{Первая галочка} task_5{Список дрогнул} task_10{Чекбокс доволен} task_25{Разбор завалов} task_50{Мастер галочек} task_100{Закрыватель хвостов} task_250{Список под контролем} task_500{Канцелярский нокаут} task_1000{Тысяча галочек} task_5000{Архивариус побед} task_10000{Чекбокс-машина} task_50000{Бюро закрытых вопросов} task_100000{Повелитель списков} task_1000000{Последняя галочка} combo_day_not_wasted{День не зря} combo_focus_plus_check{Фокус + галочка} combo_no_fuss{Без суеты} combo_clean_entry{Чистый заход} combo_tomato_closed_question{Помидор закрыл вопрос} other{Достижение}}",
+  "@achievementTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "focusPresetDeepWork": "Глубокая работа",
+  "focusPresetShortSprint": "Короткий спринт",
+  "csvImportIssueRow": "Строка {row}: {message}",
+  "@csvImportIssueRow": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "csvImportIssueMessage": "{code, select, fileTooLarge{Файл CSV превышает 16 МиБ.} invalidUtf8{CSV должен быть в кодировке UTF-8.} missingHeader{Отсутствует заголовок CSV.} malformed{Некорректный формат CSV.} unknownHeader{Неизвестный заголовок «{value}».} duplicateHeader{Повторяющийся заголовок «{value}».} contentHeaderRequired{Заголовок content обязателен.} tooManyTasks{CSV не может содержать более 1000 задач.} tooManyFields{В строке больше полей, чем в заголовке.} contentRequired{Поле content обязательно.} invalidPriority{priority должен быть целым числом от 1 до 4.} invalidDate{{value} должен быть в формате YYYY-MM-DD.} mixedSchedule{Нельзя сочетать due_date с расписанием по времени.} timedFieldsRequired{Для расписания по времени нужны start_at, end_at и time_zone.} invalidTimestamp{{value} должен быть в формате RFC3339 с явным смещением UTC.} invalidTimeZone{time_zone должен быть корректным именем IANA.} endBeforeStart{end_at должен быть позже start_at.} invalidRecurrence{recurrence должен быть day, week или month.} invalidInteger{{value} должен быть целым числом от 1 до 999.} intervalWithoutRecurrence{Для recurrence_interval нужен recurrence.} recurrenceWithoutSchedule{Для recurrence нужно расписание.} doneTask{Нельзя импортировать завершённые задачи.} invalidKey{У {value} некорректный формат.} empty{CSV не содержит задач.} duplicateKey{Повторяющийся ключ «{value}».} parentCycle{Ссылки parent_key образуют цикл.} missingParent{parent_key «{value}» не существует.} childProject{Подзадача должна быть в том же проекте, что и родительская задача.} other{Не удалось импортировать файл.}}",
+  "@csvImportIssueMessage": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  }
 }

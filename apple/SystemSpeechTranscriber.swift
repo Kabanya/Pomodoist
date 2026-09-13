@@ -115,13 +115,13 @@ enum SystemSpeechAccess {
         return ["TW", "HK", "MO"].contains(locale.regionCode ?? "") ? "Hant" : "Hans"
       }
       return ["en": "Latn", "ru": "Cyrl", "de": "Latn", "fr": "Latn",
-              "es": "Latn", "ar": "Arab"][locale.languageCode ?? ""]
+              "es": "Latn", "ar": "Arab", "pt": "Latn", "ja": "Jpan", "ko": "Kore"][locale.languageCode ?? ""]
     }
     let candidates = supported.filter {
       $0.languageCode == language && (requested.scriptCode == nil || script($0) == requested.scriptCode)
     }.sorted { $0.identifier < $1.identifier }
     let defaultRegion = requested.scriptCode == "Hant" ? "TW" :
-      ["en": "US", "ru": "RU", "de": "DE", "fr": "FR", "es": "ES", "ar": "SA", "zh": "CN"][language]
+      ["en": "US", "ru": "RU", "de": "DE", "fr": "FR", "es": "ES", "ar": "SA", "zh": "CN", "pt": "BR", "ja": "JP", "ko": "KR"][language]
     return candidates.first(where: { $0.regionCode == region })
       ?? candidates.first(where: { $0.regionCode == defaultRegion }) ?? candidates.first
   }

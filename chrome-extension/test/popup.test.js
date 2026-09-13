@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import * as core from '../src/core.js';
+import { text } from '../src/i18n.js';
 
 test('Add current tab saves immediately without consuming a typed task draft', async () => {
   const elements = new Map(), messages = [];
@@ -16,7 +17,7 @@ test('Add current tab saves immediately without consuming a typed task draft', a
   // Run the actual popup handlers; replace only browser APIs and module imports.
   const source = (await readFile(new URL('../src/popup.js', import.meta.url), 'utf8')).replace(/^import .*;\n/gm, '');
   await vm.runInNewContext(`(async () => {${source}\n})()`, {
-    ...core, config: { webUrl: 'https://app.example.test' },
+    ...core, text, localize() {}, config: { webUrl: 'https://app.example.test' },
     Realtime: class { start() {} stop() {} },
     document: { hidden: true, activeElement: element(), getElementById: get, createElement: element,
       createDocumentFragment: element, addEventListener() {},

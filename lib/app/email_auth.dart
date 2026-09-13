@@ -3,11 +3,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'account_auth_feedback.dart';
 import 'account_providers.dart';
+import 'app_language.dart';
 
 final emailAuthProvider = Provider<EmailAuthController>((ref) {
   final account = ref.watch(accountClientProvider);
   return EmailAuthController(
     account == null ? null : Supabase.instance.client.auth,
+    locale: () =>
+        resolveAppLocale(ref.read(appLanguageProvider)).toLanguageTag(),
   );
 });
 
@@ -16,9 +19,11 @@ enum EmailAuthAction { signIn, signUp, magicLink, resendConfirmation }
 enum EmailAuthResult { signedIn, checkEmail }
 
 class EmailAuthController {
-  EmailAuthController(this._auth);
+  EmailAuthController(this._auth, {String Function()? locale})
+    : _locale = locale;
 
   final GoTrueClient? _auth;
+  final String Function()? _locale;
   bool _busy = false;
 
   Future<EmailAuthResult?> submit({
@@ -45,6 +50,11 @@ class EmailAuthController {
     }
     _busy = true;
     try {
+      final locale = _locale?.call();
+      final localizedRedirect = localizedAccountAuthRedirect(
+        redirectTo,
+        locale,
+      );
       final AuthResponse response;
       switch (action) {
         case EmailAuthAction.signIn:
@@ -57,13 +67,14 @@ class EmailAuthController {
           response = await auth.signUp(
             email: email.trim(),
             password: password,
-            emailRedirectTo: redirectTo,
+            emailRedirectTo: localizedRedirect,
+            data: locale == null ? null : {'pomodoist_locale': locale},
             captchaToken: captchaToken,
           );
         case EmailAuthAction.magicLink:
           await auth.signInWithOtp(
             email: email.trim(),
-            emailRedirectTo: redirectTo,
+            emailRedirectTo: localizedRedirect,
             shouldCreateUser: false,
             captchaToken: captchaToken,
           );
@@ -72,7 +83,7 @@ class EmailAuthController {
           await auth.resend(
             type: OtpType.signup,
             email: email.trim(),
-            emailRedirectTo: redirectTo,
+            emailRedirectTo: localizedRedirect,
             captchaToken: captchaToken,
           );
           return EmailAuthResult.checkEmail;

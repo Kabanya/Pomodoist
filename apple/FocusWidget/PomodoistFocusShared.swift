@@ -1,5 +1,18 @@
 import Foundation
 
+func pomodoistLocalized(_ key: String, locale: String? = nil) -> String {
+  let requested = locale.map { [$0] } ?? Locale.preferredLanguages
+  for tag in requested {
+    let base = tag.replacingOccurrences(of: "_", with: "-").lowercased().split(separator: "-").first.map(String.init) ?? "en"
+    let resource = base == "pt" ? "pt-BR" : base
+    if let path = Bundle.main.path(forResource: resource, ofType: "lproj"), let bundle = Bundle(path: path) {
+      return bundle.localizedString(forKey: key, value: key, table: nil)
+    }
+    if ["en", "ru", "de", "es", "fr", "ar", "zh"].contains(base) { return key }
+  }
+  return key
+}
+
 let pomodoistFocusAppGroupIdentifier = "group.com.pomodoist"
 let pomodoistFocusSnapshotDefaultsKey = "focus.snapshot.v1"
 let pomodoistFocusSnapshotFileName = "focus-snapshot-v1.json"
@@ -38,6 +51,7 @@ struct PomodoistSnapshot: Codable, Equatable {
   var version: Int
   var generatedAt: String?
   var focus: PomodoistFocusSnapshot
+  var locale: String? = nil
 
   static let empty = PomodoistSnapshot(
     version: 1,
@@ -234,27 +248,27 @@ enum PomodoistFocusDisplay {
     return String(format: "%02d:%02d", safeSeconds / 60, safeSeconds % 60)
   }
 
-  static func stateLabel(focus: PomodoistFocusSnapshot) -> String {
+  static func stateLabel(focus: PomodoistFocusSnapshot, locale: String? = nil) -> String {
     guard focus.isActive, let interval = focus.interval else {
-      return "Ready to focus"
+      return pomodoistLocalized("Ready to focus", locale: locale)
     }
     if interval.status == "paused" {
-      return "Paused"
+      return pomodoistLocalized("Paused", locale: locale)
     }
     if interval.status == "ready" {
-      return "Ready"
+      return pomodoistLocalized("Ready", locale: locale)
     }
-    return intervalLabel(interval.type)
+    return intervalLabel(interval.type, locale: locale)
   }
 
-  static func intervalLabel(_ type: String) -> String {
+  static func intervalLabel(_ type: String, locale: String? = nil) -> String {
     switch type {
     case "work":
-      return "Work"
+      return pomodoistLocalized("Work", locale: locale)
     case "longBreak":
-      return "Long break"
+      return pomodoistLocalized("Long break", locale: locale)
     default:
-      return "Break"
+      return pomodoistLocalized("Break", locale: locale)
     }
   }
 
@@ -264,11 +278,11 @@ enum PomodoistFocusDisplay {
     return "\(min(completed, target))/\(target)"
   }
 
-  static func nextIntervalLabel(focus: PomodoistFocusSnapshot) -> String {
+  static func nextIntervalLabel(focus: PomodoistFocusSnapshot, locale: String? = nil) -> String {
     guard focus.isActive, let interval = focus.interval else {
-      return "Next: work"
+      return pomodoistLocalized("Next: work", locale: locale)
     }
-    return interval.type == "work" ? "Next: break" : "Next: work"
+    return pomodoistLocalized(interval.type == "work" ? "Next: break" : "Next: work", locale: locale)
   }
 
   static func primaryStartCommand(focus: PomodoistFocusSnapshot) -> String? {

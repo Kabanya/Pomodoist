@@ -1,3 +1,4 @@
+import '../project_localizations.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
@@ -138,7 +139,7 @@ Future<void> showMoveProjectDialog(
                             start: 16 + math.min(row.depth, 4) * 12.0,
                             end: 16,
                           ),
-                          title: Text(row.project.name),
+                          title: Text(row.project.displayName(context.l10n)),
                           onTap: () => Navigator.pop(
                             context,
                             ProjectMoveTarget(row.project.id, null),
@@ -233,33 +234,26 @@ class _ProjectTreeRowState extends ConsumerState<ProjectTreeRow>
     Widget content = Row(
       children: [
         SizedBox(width: math.min(row.depth, 4) * 12.0),
-        SizedBox(
-          width: 28,
-          child: row.hasChildren
-              ? Semantics(
-                  expanded: !tree.collapsedIds.contains(row.project.id),
-                  label: row.project.name,
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 28,
-                      minHeight: 36,
-                    ),
-                    tooltip: tree.collapsedIds.contains(row.project.id)
-                        ? context.l10n.expandProjects
-                        : context.l10n.collapseProjects,
-                    onPressed: () => tree.toggle(row.project.id),
-                    icon: Icon(
-                      tree.collapsedIds.contains(row.project.id)
-                          ? LucideIcons.chevronRight
-                          : LucideIcons.chevronDown,
-                      size: 16,
-                    ),
-                  ),
-                )
-              : null,
-        ),
         Expanded(child: widget.child),
+        if (row.hasChildren)
+          Semantics(
+            expanded: !tree.collapsedIds.contains(row.project.id),
+            label: row.project.displayName(context.l10n),
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              tooltip: tree.collapsedIds.contains(row.project.id)
+                  ? context.l10n.expandProjects
+                  : context.l10n.collapseProjects,
+              onPressed: () => tree.toggle(row.project.id),
+              icon: Icon(
+                tree.collapsedIds.contains(row.project.id)
+                    ? LucideIcons.chevronRight
+                    : LucideIcons.chevronDown,
+                size: 16,
+              ),
+            ),
+          ),
       ],
     );
     if (enabled) {
@@ -295,7 +289,10 @@ class _ProjectTreeRowState extends ConsumerState<ProjectTreeRow>
             constraints: const BoxConstraints(maxWidth: 240),
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Text(row.project.name, overflow: TextOverflow.ellipsis),
+              child: Text(
+                row.project.displayName(context.l10n),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
         ),

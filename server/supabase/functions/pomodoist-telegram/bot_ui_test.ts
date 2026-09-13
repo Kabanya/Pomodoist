@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { copy, launcher } from './bot_ui.ts';
 import { taskPage, type JsonMap, type State } from './commands.ts';
 const test = Deno.test;
 const id = '11111111-1111-4111-8111-111111111111';
@@ -22,4 +23,14 @@ test('active focus task is available even outside the current list page', () => 
   const data = taskPage(s, now, {}) as JsonMap;
   assert.equal((data.focusTask as JsonMap)?.id, id); assert.equal((data.focusTask as JsonMap)?.isFocused, true);
   s.projects.set('another-project', { isArchived: true }); assert.equal((taskPage(s, now, {}) as JsonMap).focusTask, null);
+});
+
+test('new bot locales translate every reply and use Brazilian Portuguese for variants', () => {
+  for (const language of ['pt', 'pt-BR', 'pt-PT', 'ja-JP', 'ko-KR']) {
+    const messages = copy(language);
+    for (const key of Object.keys(copy('en')) as Array<keyof typeof messages>) assert.notEqual(messages[key], copy('en')[key]);
+    assert.equal(launcher(messages, 'https://app.example/telegram/').reply_markup.inline_keyboard[0][0].text, messages.open);
+  }
+  assert.equal(copy('pt').open, 'Abrir Pomodoist');
+  assert.equal(copy('xx'), copy('en'));
 });

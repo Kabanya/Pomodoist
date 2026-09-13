@@ -1,3 +1,4 @@
+import 'project_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show
@@ -207,6 +208,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                       itemBuilder: (context, index) {
                         if (index == 0) {
                           return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               _ProjectCountHeader(
                                 count: filteredProjects.length,
@@ -226,7 +228,6 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                               _searchController.text.trim().isEmpty,
                           child: _ProjectListTile(
                             project: row.project,
-                            depth: 0,
                             count: taskCounts[row.project.id] ?? 0,
                             onTap: () =>
                                 context.go('/project/${row.project.id}'),
@@ -309,7 +310,8 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       if (project.id == inboxProjectId || project.isArchived != _archivedOnly) {
         return false;
       }
-      return search.isEmpty || project.name.toLowerCase().contains(search);
+      return search.isEmpty ||
+          project.displayName(context.l10n).toLowerCase().contains(search);
     }).toList();
   }
 
@@ -388,7 +390,6 @@ class _ProjectCountHeader extends StatelessWidget {
 class _ProjectListTile extends StatelessWidget {
   const _ProjectListTile({
     required this.project,
-    required this.depth,
     required this.count,
     required this.onTap,
     required this.onColor,
@@ -396,7 +397,6 @@ class _ProjectListTile extends StatelessWidget {
   });
 
   final ProjectItem project;
-  final int depth;
   final int count;
   final VoidCallback onTap;
   final VoidCallback onColor;
@@ -420,24 +420,23 @@ class _ProjectListTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           onTap: onTap,
           child: Padding(
-            padding: EdgeInsets.only(
-              left: 10.0 + depth * 28.0,
-              right: 12,
-              top: 14,
-              bottom: 14,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Row(
               children: [
-                IconButton(
-                  key: ValueKey('project-color-${project.id}'),
-                  tooltip: context.l10n.projectColor,
-                  onPressed: onColor,
-                  icon: ProjectIconView(project: project),
+                Tooltip(
+                  message: context.l10n.projectColor,
+                  child: ShadIconButton.ghost(
+                    key: ValueKey('project-color-${project.id}'),
+                    onPressed: onColor,
+                    icon: ProjectIconView(project: project),
+                    width: 36,
+                    height: 36,
+                  ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    project.name,
+                    project.displayName(context.l10n),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: titleStyle,
@@ -451,7 +450,7 @@ class _ProjectListTile extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 Tooltip(
                   message: project.isFavorite
                       ? context.l10n.removeProjectFromFavorites
@@ -467,8 +466,8 @@ class _ProjectListTile extends StatelessWidget {
                             ? colors.accent
                             : colors.mutedText,
                       ),
-                      width: 40,
-                      height: 40,
+                      width: 36,
+                      height: 36,
                     ),
                   ),
                 ),

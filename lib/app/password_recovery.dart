@@ -9,19 +9,22 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'account_auth_feedback.dart';
 import 'account_providers.dart';
+import 'app_language.dart';
 import 'runtime_public_config.dart';
 
 final passwordRecoveryProvider =
     ChangeNotifierProvider<PasswordRecoveryController>((ref) {
       final baseUrl = ref.watch(runtimePublicConfigProvider).supabaseUrl;
       final controller = PasswordRecoveryController(
+        locale: () =>
+            resolveAppLocale(ref.read(appLanguageProvider)).toLanguageTag(),
         userEndpoint: baseUrl?.replace(
           path: '${baseUrl.path.replaceAll(RegExp(r'/+$'), '')}/auth/v1/user',
         ),
       );
       ref.listen(accountClientProvider, (_, account) {
         controller.attach(
-          account == null ? null : Supabase.instance.client.auth,
+          account == null || baseUrl == null ? null : Supabase.instance.client.auth,
         );
       }, fireImmediately: true);
       return controller;
@@ -32,12 +35,17 @@ enum PasswordRecoveryStage { idle, checking, ready, saving, updated, invalid }
 /// Only the SDK's verified recovery event grants permission to edit a password.
 /// URL parameters select a screen; they never grant recovery permission.
 class PasswordRecoveryController extends ChangeNotifier {
-  PasswordRecoveryController({Uri? userEndpoint, http.Client? httpClient})
-    : _userEndpoint = userEndpoint,
-      _httpClient = httpClient ?? http.Client(),
-      _ownsHttpClient = httpClient == null;
+  PasswordRecoveryController({
+    Uri? userEndpoint,
+    http.Client? httpClient,
+    String Function()? locale,
+  }) : _userEndpoint = userEndpoint,
+       _locale = locale,
+       _httpClient = httpClient ?? http.Client(),
+       _ownsHttpClient = httpClient == null;
 
   final Uri? _userEndpoint;
+  final String Function()? _locale;
   final http.Client _httpClient;
   final bool _ownsHttpClient;
   GoTrueClient? _auth;
@@ -179,7 +187,7 @@ class PasswordRecoveryController extends ChangeNotifier {
     try {
       await auth.resetPasswordForEmail(
         email.trim(),
-        redirectTo: redirectTo,
+        redirectTo: localizedAccountAuthRedirect(redirectTo, _locale?.call()),
         captchaToken: captchaToken,
       );
       return !_disposed;

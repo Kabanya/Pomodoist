@@ -7,6 +7,7 @@ import 'package:pomodoist/l10n/app_localizations.dart';
 
 import '../features/updates/update_widgets.dart';
 import 'app_language.dart';
+import 'account_providers.dart';
 import 'app_zoom.dart';
 import 'platform_quick_add.dart';
 import 'app_theme_mode.dart';
@@ -22,6 +23,7 @@ class PomodoistApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(accountLocaleSyncProvider);
     ref.watch(platformQuickAddControllerProvider);
     final router = ref.watch(routerProvider);
     final language = ref.watch(appLanguageProvider);
@@ -67,7 +69,7 @@ class PomodoistApp extends ConsumerWidget {
             ),
           ),
         ),
-        locale: language.locale,
+        locale: resolveAppLocale(language),
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalShadLocalizations.delegate,

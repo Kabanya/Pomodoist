@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:app_account/app_account.dart' show AccountSession;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'account_providers.dart';
+import 'app_language.dart';
 import '../core/db/app_database.dart';
 import '../features/focus/domain/focus_models.dart';
 import '../features/focus/presentation/focus_view_mode.dart';
@@ -36,6 +36,7 @@ final watchCompanionControllerProvider = Provider<WatchCompanionController>((
   ref.watch(accountAuthStateProvider);
   final selectedPresetId = ref.watch(lastFocusPresetIdProvider);
   final account = ref.watch(accountClientProvider);
+  final language = ref.watch(appLanguageProvider);
   final runtimeConfig = ref.watch(runtimePublicConfigProvider);
   final controller = WatchCompanionController(
     taskRepository: ref.watch(taskRepositoryProvider),
@@ -43,7 +44,7 @@ final watchCompanionControllerProvider = Provider<WatchCompanionController>((
     focusRepository: ref.watch(focusRepositoryProvider),
     quickAddService: ref.watch(quickAddServiceProvider),
     taskDecomposer: ref.watch(taskDecomposerProvider),
-    localeProvider: () => PlatformDispatcher.instance.locale.toLanguageTag(),
+    localeProvider: () => resolveAppLocale(language).toLanguageTag(),
     selectedFocusPresetIdProvider: () => selectedPresetId,
     accountSessionProvider: () {
       return watchAccountSessionPayload(account?.currentSession, runtimeConfig);
@@ -287,6 +288,7 @@ class WatchCompanionController {
     return {
       'version': 1,
       'generatedAt': now.toUtc().toIso8601String(),
+      'locale': _localeProvider(),
       'focus': _focusMap(run, interval, preset),
       'tasks': {
         'today': _taskList(todayTasks),

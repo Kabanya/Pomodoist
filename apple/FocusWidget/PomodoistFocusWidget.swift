@@ -113,11 +113,16 @@ struct PomodoistFocusWidgetView: View {
   }
 
   private var presetName: String {
-    focus.presetName ?? focus.preset?.name ?? "Pomodoist"
+    let name = focus.presetName ?? focus.preset?.name ?? "Pomodoist"
+    let id = focus.presetId ?? focus.preset?.id
+    if (id == "classic" && name == "Classic") || (id == "deep-work" && name == "Deep Work") || (id == "short-sprint" && name == "Short Sprint") {
+      return pomodoistLocalized(name, locale: entry.snapshot.locale)
+    }
+    return name
   }
 
   private var stateLabel: String {
-    PomodoistFocusDisplay.stateLabel(focus: focus)
+    PomodoistFocusDisplay.stateLabel(focus: focus, locale: entry.snapshot.locale)
   }
 
   private var small: some View {
@@ -176,12 +181,12 @@ struct PomodoistFocusWidgetView: View {
         ring(size: 128, lineWidth: 12, fontSize: 34)
         VStack(alignment: .leading, spacing: 12) {
           progressDots
-          Text(PomodoistFocusDisplay.nextIntervalLabel(focus: focus))
+          Text(PomodoistFocusDisplay.nextIntervalLabel(focus: focus, locale: entry.snapshot.locale))
             .font(.subheadline)
             .foregroundColor(.secondary)
             .lineLimit(1)
           if let preset = focus.preset {
-            Text("\(preset.workSeconds / 60)m work")
+            Text(String(format: pomodoistLocalized("%d min work", locale: entry.snapshot.locale), preset.workSeconds / 60))
               .font(.caption)
               .foregroundColor(.secondary)
           }
@@ -283,8 +288,8 @@ struct PomodoistFocusWidget: Widget {
     StaticConfiguration(kind: kind, provider: PomodoistFocusProvider()) { entry in
       PomodoistFocusWidgetView(entry: entry)
     }
-    .configurationDisplayName("Pomodoist Focus")
-    .description("Shows the current Pomodoist timer.")
+    .configurationDisplayName(pomodoistLocalized("Pomodoist Focus"))
+    .description(pomodoistLocalized("Shows the current Pomodoist timer."))
     .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
   }
 }

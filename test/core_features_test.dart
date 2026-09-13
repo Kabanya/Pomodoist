@@ -1068,19 +1068,34 @@ void main() {
       },
     );
 
-    test('coordinator schedules tomorrow after progress today', () async {
-      final scheduler = _FakeReengagementNotificationScheduler();
+    test(
+      'coordinator schedules tomorrow after a completed task today',
+      () async {
+        final scheduler = _FakeReengagementNotificationScheduler();
 
+        await syncReengagementReminder(
+          enabled: true,
+          summary: _productivitySummary(completedTasks: 1),
+          now: DateTime(2026, 5, 1, 19),
+          language: AppLanguage.ru,
+          scheduler: scheduler,
+        );
+
+        expect(scheduler.scheduledReengagementAt, DateTime(2026, 5, 2, 20, 30));
+        expect(scheduler.scheduledReengagementTitle, 'Помидор скучает');
+      },
+    );
+
+    test('focus alone does not suppress the evening reminder', () async {
+      final scheduler = _FakeReengagementNotificationScheduler();
       await syncReengagementReminder(
         enabled: true,
         summary: _productivitySummary(completedFocusIntervals: 1),
         now: DateTime(2026, 5, 1, 19),
-        language: AppLanguage.ru,
+        language: AppLanguage.en,
         scheduler: scheduler,
       );
-
-      expect(scheduler.scheduledReengagementAt, DateTime(2026, 5, 2, 20, 30));
-      expect(scheduler.scheduledReengagementTitle, 'Помидор скучает');
+      expect(scheduler.scheduledReengagementAt, DateTime(2026, 5, 1, 20, 30));
     });
 
     test(

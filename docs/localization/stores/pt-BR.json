@@ -1,0 +1,57 @@
+{
+  "locale": "pt-BR",
+  "status": "draft_not_published",
+  "appStore": {
+    "name": "Pomodoist",
+    "subtitle": "Tarefas e foco com Pomodoro",
+    "promotionalText": "Organize suas tarefas e concentre-se com o Pomodoro integrado. Agora também em português do Brasil, japonês e coreano.",
+    "keywords": "tarefas,pomodoro,foco,produtividade,planejador,agenda,lista,tempo",
+    "description": "Transforme ideias em tarefas, planeje seu dia e mantenha o foco em um espaço de trabalho tranquilo. O Pomodoist combina uma gestão prática de tarefas com um timer Pomodoro integrado para conectar planejamento e trabalho focado.\n\nPLANEJE SEU TRABALHO\n• Registre tarefas rapidamente por texto ou voz\n• Organize projetos, etiquetas, prioridades e datas de entrega\n• Acesse Hoje, Próximas, Caixa de entrada, Linha do tempo, Kanban e Matriz de prioridades\n• Busque instantaneamente em todo o seu espaço de trabalho\n\nCONCENTRE-SE NO QUE IMPORTA\n• Inicie sessões Pomodoro a partir de qualquer tarefa\n• Use os modos de foco completo ou mínimo\n• Acompanhe os intervalos concluídos e o tempo de foco\n• Consulte relatórios de produtividade e tendências semanais\n\nTRABALHE EM TODOS OS SEUS DISPOSITIVOS\n• Use o Pomodoist no iPhone, iPad, Mac e Apple Watch\n• Entre em uma conta, se quiser, para sincronizar tarefas entre dispositivos\n• Conecte o Google Calendar para planejar eventos criados pelo Pomodoist\n• Continue usando o app localmente sem uma conta\n\nO Pomodoist Pro está disponível em planos mensais, anuais ou por meio de uma compra única vitalícia.\n\nO pagamento e a gestão de assinaturas são feitos pela Apple.\nPolítica de privacidade: https://pomodoist.com/privacy/\nSuporte: pomodoist@placeq.com\nTermos de uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/",
+    "releaseNotes": "Adicionamos português do Brasil, japonês e coreano. A adição rápida reconhece datas, horários e durações nesses idiomas."
+  },
+  "macAppStore": {
+    "name": "Pomodoist",
+    "subtitle": "Tarefas e foco com Pomodoro",
+    "promotionalText": "Organize suas tarefas e concentre-se com o Pomodoro integrado. Agora também em português do Brasil, japonês e coreano.",
+    "keywords": "tarefas,pomodoro,foco,produtividade,planejador,agenda,lista,tempo",
+    "description": "Transforme ideias em tarefas, planeje seu dia e mantenha o foco em um espaço de trabalho tranquilo. O Pomodoist combina uma gestão prática de tarefas com um timer Pomodoro integrado para conectar planejamento e trabalho focado.\n\nPLANEJE SEU TRABALHO\n• Registre tarefas rapidamente por texto ou voz\n• Organize projetos, etiquetas, prioridades e datas de entrega\n• Acesse Hoje, Próximas, Caixa de entrada, Linha do tempo, Kanban e Matriz de prioridades\n• Busque instantaneamente em todo o seu espaço de trabalho\n\nCONCENTRE-SE NO QUE IMPORTA\n• Inicie sessões Pomodoro a partir de qualquer tarefa\n• Use os modos de foco completo ou mínimo\n• Acompanhe os intervalos concluídos e o tempo de foco\n• Consulte relatórios de produtividade e tendências semanais\n\nTRABALHE EM TODOS OS SEUS DISPOSITIVOS\n• Use o Pomodoist no iPhone, iPad, Mac e Apple Watch\n• Entre em uma conta, se quiser, para sincronizar tarefas entre dispositivos\n• Conecte o Google Calendar para planejar eventos criados pelo Pomodoist\n• Continue usando o app localmente sem uma conta\n\nO Pomodoist Pro está disponível em planos mensais, anuais ou por meio de uma compra única vitalícia.\n\nO pagamento e a gestão de assinaturas são feitos pela Apple.\nPolítica de privacidade: https://pomodoist.com/privacy/\nSuporte: pomodoist@placeq.com\nTermos de uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/",
+    "releaseNotes": "Adicionamos português do Brasil, japonês e coreano. A adição rápida reconhece datas, horários e durações nesses idiomas."
+  },
+  "googlePlay": {
+    "name": "Pomodoist",
+    "shortDescription": "Organize tarefas, planeje seu dia e mantenha o foco com o timer Pomodoro.",
+    "description": "Transforme ideias em tarefas, planeje seu dia e mantenha o foco em um espaço de trabalho tranquilo. O Pomodoist combina uma gestão prática de tarefas com um timer Pomodoro integrado para conectar planejamento e trabalho focado.\n\nPLANEJE SEU TRABALHO\n• Registre tarefas rapidamente por texto ou voz\n• Organize projetos, etiquetas, prioridades e datas de entrega\n• Acesse Hoje, Próximas, Caixa de entrada, Linha do tempo, Kanban e Matriz de prioridades\n• Busque instantaneamente em todo o seu espaço de trabalho\n\nCONCENTRE-SE NO QUE IMPORTA\n• Inicie sessões Pomodoro a partir de qualquer tarefa\n• Use os modos de foco completo ou mínimo\n• Acompanhe os intervalos concluídos e o tempo de foco\n• Consulte relatórios de produtividade e tendências semanais\n\nEntre em uma conta, se quiser, para sincronizar tarefas entre dispositivos, ou use o app localmente sem uma conta. Conecte o Google Calendar para planejar eventos criados pelo Pomodoist.",
+    "releaseNotes": "Adicionamos português do Brasil, japonês e coreano. A adição rápida reconhece datas, horários e durações nesses idiomas."
+  },
+  "chromeWebStore": {
+    "name": "Pomodoist",
+    "shortDescription": "Adicione páginas e tarefas ao Pomodoist, organize sua Caixa de entrada e acompanhe a sincronização direto no Chrome.",
+    "description": "Capture tarefas no Pomodoist enquanto navega. Salve a página atual como tarefa, consulte Hoje, Próximas, Caixa de entrada e tarefas concluídas. Crie e edite tarefas, escolha datas, horários, durações e prioridades, conclua ou restaure itens. Entre com sua conta Pomodoist para sincronizar com o app. Agora em português do Brasil, japonês e coreano."
+  },
+  "purchases": {
+    "pomodoist.pro.monthly": {
+      "name": "Pro mensal",
+      "description": "Pomodoist Pro: assinatura mensal."
+    },
+    "pomodoist.pro.annual": {
+      "name": "Pro anual",
+      "description": "Pomodoist Pro: assinatura anual."
+    },
+    "pomodoist.pro.lifetime": {
+      "name": "Pro vitalício",
+      "description": "Pomodoist Pro: acesso vitalício."
+    },
+    "pomodoist.pro.lifetime.launch": {
+      "name": "Pro vitalício — lançamento",
+      "description": "Pomodoist Pro: acesso vitalício."
+    }
+  },
+  "imageCaptions": {
+    "today": "Planeje seu dia",
+    "quick-add": "Transforme ideias em tarefas",
+    "focus": "Concentre-se em uma tarefa",
+    "reports": "Acompanhe seu progresso",
+    "chrome": "Leve suas tarefas para o navegador",
+    "telegram": "Acesse suas tarefas no Telegram"
+  }
+}

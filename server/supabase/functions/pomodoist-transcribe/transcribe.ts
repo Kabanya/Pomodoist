@@ -2,6 +2,7 @@
 export type TranscriptionDeps = {
   env: { get(key: string): string | undefined };
   authenticate(authorization: string): Promise<string | null>;
+  quota(action: "reserve" | "complete" | "release", userId: string, requestId: string): Promise<{ allowed: boolean; resetsAt?: string }>;
   fetch: typeof fetch;
 };
 
@@ -18,7 +19,7 @@ const defaultModel = "openai/whisper-large-v3-turbo";
 const formats = new Set(["wav"]);
 
 class VoiceHttpError extends Error {
-  constructor(readonly status: number, readonly code: string, message: string) {
+  constructor(readonly status: number, readonly code: string, message: string, readonly resetsAt?: string) {
     super(message);
   }
 }
@@ -220,15 +221,34 @@ export async function handleVoiceTranscription(req: Request, deps: Transcription
     }
     validateAudio(audio.data, audio.format, maxBytes, maxSeconds);
     const model = deps.env.get("OPENROUTER_TRANSCRIPTION_MODEL")?.trim() || defaultModel;
-    const text = await transcribe(deps, apiKey, {
-      model,
-      input_audio: { data: audio.data, format: audio.format },
-      ...(typeof locale === "string" ? { language: locale.split(/[-_]/)[0].toLowerCase() } : {}),
-    }, timeoutMs);
+    const requestId = crypto.randomUUID();
+    let reservation;
+    try { reservation = await deps.quota("reserve", userId, requestId); }
+    catch { throw new VoiceHttpError(503, "voice_quota_unavailable", "Voice usage verification is temporarily unavailable."); }
+    if (!reservation.allowed) {
+      throw new VoiceHttpError(429, "voice_quota_exceeded", "Monthly voice transcription limit reached.", reservation.resetsAt);
+    }
+    let text: string;
+    try {
+      text = await transcribe(deps, apiKey, {
+        model,
+        input_audio: { data: audio.data, format: audio.format },
+        ...(typeof locale === "string" ? { language: locale.split(/[-_]/)[0].toLowerCase() } : {}),
+      }, timeoutMs);
+    } catch (error) {
+      // An unavailable database cannot strand a slot: reservations expire.
+      try { await deps.quota("release", userId, requestId); } catch { /* expiry releases it */ }
+      throw error;
+    }
+    try { await deps.quota("complete", userId, requestId); }
+    catch { throw new VoiceHttpError(503, "voice_quota_unavailable", "Voice usage verification is temporarily unavailable."); }
     return json({ ok: true, text });
   } catch (error) {
     const failure = error instanceof VoiceHttpError ? error
       : new VoiceHttpError(502, "transcription_failed", "Voice transcription failed. Please retry the saved recording.");
-    return json({ ok: false, code: failure.code, error: failure.message, retryable: failure.status === 429 || failure.status >= 500 }, failure.status);
+    return json({ ok: false, code: failure.code, error: failure.message,
+      retryable: failure.code !== "voice_quota_exceeded" && (failure.status === 429 || failure.status >= 500),
+      ...(failure.resetsAt ? { resetsAt: failure.resetsAt } : {}),
+    }, failure.status);
   }
 }

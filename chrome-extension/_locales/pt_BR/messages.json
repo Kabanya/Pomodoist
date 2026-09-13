@@ -1,0 +1,338 @@
+{
+  "open_app": {
+    "message": "Abrir app ↗"
+  },
+  "your_tasks_one_click_away": {
+    "message": "Suas tarefas a um clique."
+  },
+  "sign_in_with_your_existing_pomodoist_account": {
+    "message": "Entre com sua conta do Pomodoist."
+  },
+  "email": {
+    "message": "E-mail"
+  },
+  "password": {
+    "message": "Senha"
+  },
+  "sign_in": {
+    "message": "Entrar"
+  },
+  "google": {
+    "message": "Google"
+  },
+  "apple": {
+    "message": "Apple"
+  },
+  "use_the_web_app_to_create_an_account_or_reset_your_password_a_verification_window_may_open_when_signing_in": {
+    "message": "Use o app web para criar uma conta ou redefinir sua senha. Uma janela de verificação pode abrir durante o login."
+  },
+  "discard_unsynced_changes_and_sign_out": {
+    "message": "Descartar alterações não sincronizadas e sair"
+  },
+  "today": {
+    "message": "Hoje"
+  },
+  "upcoming": {
+    "message": "Próximas"
+  },
+  "inbox": {
+    "message": "Caixa de entrada"
+  },
+  "done": {
+    "message": "Concluídas"
+  },
+  "add": {
+    "message": "Adicionar"
+  },
+  "add_current_tab": {
+    "message": "Adicionar aba atual"
+  },
+  "refresh": {
+    "message": "Atualizar"
+  },
+  "no_tasks_here": {
+    "message": "Nenhuma tarefa aqui."
+  },
+  "edit_task": {
+    "message": "Editar tarefa"
+  },
+  "title": {
+    "message": "Título"
+  },
+  "description": {
+    "message": "Descrição"
+  },
+  "date": {
+    "message": "Data"
+  },
+  "time": {
+    "message": "Hora"
+  },
+  "duration_minutes": {
+    "message": "Duração (minutos)"
+  },
+  "priority": {
+    "message": "Prioridade"
+  },
+  "normal": {
+    "message": "Normal"
+  },
+  "medium": {
+    "message": "Média"
+  },
+  "high": {
+    "message": "Alta"
+  },
+  "urgent": {
+    "message": "Urgente"
+  },
+  "existing_recurrence_is_preserved_manage_recurrence_rules_in_the_full_app": {
+    "message": "A repetição existente será mantida. Gerencie as regras de repetição no app completo."
+  },
+  "no_date": {
+    "message": "Sem data"
+  },
+  "cancel": {
+    "message": "Cancelar"
+  },
+  "save": {
+    "message": "Salvar"
+  },
+  "loading": {
+    "message": "Carregando…"
+  },
+  "sign_out": {
+    "message": "Sair"
+  },
+  "opening_your_tasks": {
+    "message": "Abrindo suas tarefas…"
+  },
+  "task_lists": {
+    "message": "Listas de tarefas"
+  },
+  "new_task_title": {
+    "message": "Título da nova tarefa"
+  },
+  "add_a_task": {
+    "message": "Adicionar tarefa…"
+  },
+  "tasks": {
+    "message": "Tarefas"
+  },
+  "session_expired_sign_in_again": {
+    "message": "A sessão expirou. Entre novamente."
+  },
+  "the_account_is_not_permitted_to_perform_this_action": {
+    "message": "A conta não tem permissão para realizar esta ação."
+  },
+  "too_many_requests_wait_briefly_and_retry": {
+    "message": "Muitas solicitações. Aguarde um pouco e tente novamente."
+  },
+  "sign_in_failed_check_your_credentials_verification_and_server_configuration": {
+    "message": "Falha no login. Verifique suas credenciais, a verificação e a configuração do servidor."
+  },
+  "server_request_failed_pending_changes_are_kept_retry_later": {
+    "message": "Falha na solicitação ao servidor. As alterações pendentes foram mantidas; tente novamente mais tarde."
+  },
+  "cannot_reach_the_server_check_your_connection_and_retry": {
+    "message": "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente."
+  },
+  "invalid_server_response": {
+    "message": "Resposta inválida do servidor."
+  },
+  "sign_in_to_your_pomodoist_account": {
+    "message": "Entre na sua conta do Pomodoist."
+  },
+  "account_changed_during_session_refresh": {
+    "message": "A conta mudou durante a atualização da sessão."
+  },
+  "session_expired_sign_in_again_to_sync_pending_changes": {
+    "message": "A sessão expirou. Entre novamente para sincronizar as alterações pendentes."
+  },
+  "unsupported_api_call": {
+    "message": "Chamada de API não compatível."
+  },
+  "unsupported_sign_in_provider": {
+    "message": "Provedor de login não compatível."
+  },
+  "sign_in_expired_please_retry": {
+    "message": "O login expirou. Tente novamente."
+  },
+  "verification_expired_please_retry": {
+    "message": "A verificação expirou. Tente novamente."
+  },
+  "the_extension_did_not_respond_reopen_it_and_retry": {
+    "message": "A extensão não respondeu. Reabra e tente novamente."
+  },
+  "offline_or_sync_needs_attention": {
+    "message": "Offline ou a sincronização precisa de atenção"
+  },
+  "live_sync": {
+    "message": "Sincronização em tempo real"
+  },
+  "synced_periodic_refresh": {
+    "message": "Sincronizado · atualização periódica"
+  },
+  "loading_account_data": {
+    "message": "Carregando dados da conta…"
+  },
+  "plan_unavailable": {
+    "message": "Plano indisponível"
+  },
+  "account_access_active": {
+    "message": "Acesso à conta ativo"
+  },
+  "account_status_has_not_been_loaded": {
+    "message": "O status da conta ainda não foi carregado."
+  },
+  "there_are_unsynced_changes_signing_out_will_discard_them_on_this_device_continue": {
+    "message": "Há alterações não sincronizadas. Ao sair, elas serão descartadas neste dispositivo. Continuar?"
+  },
+  "remove_repeating_schedules_in_the_full_app": {
+    "message": "Remova programações recorrentes no app completo."
+  },
+  "choose_a_date_before_setting_a_time": {
+    "message": "Escolha uma data antes de definir um horário."
+  },
+  "invalid_calendar_date": {
+    "message": "Data inválida."
+  },
+  "invalid_time": {
+    "message": "Horário inválido."
+  },
+  "duration_must_be_between_1_and_10080_minutes": {
+    "message": "A duração deve ser de 1 a 10080 minutos."
+  },
+  "this_local_time_does_not_exist_choose_another_time": {
+    "message": "Este horário local não existe. Escolha outro horário."
+  },
+  "task_title_must_contain_1_2048_characters": {
+    "message": "O título da tarefa deve ter de 1 a 2048 caracteres."
+  },
+  "invalid_schedule": {
+    "message": "Programação inválida."
+  },
+  "description_is_too_long": {
+    "message": "A descrição é muito longa."
+  },
+  "task_is_no_longer_available_refresh_the_list": {
+    "message": "A tarefa não está mais disponível. Atualize a lista."
+  },
+  "invalid_task_edit": {
+    "message": "Edição de tarefa inválida."
+  },
+  "unsupported_task_field": {
+    "message": "Campo de tarefa não compatível."
+  },
+  "unknown_task_action": {
+    "message": "Ação de tarefa desconhecida."
+  },
+  "this_tab_cannot_be_saved": {
+    "message": "Não é possível salvar esta aba."
+  },
+  "only_ordinary_http_s_pages_can_be_saved": {
+    "message": "Só é possível salvar páginas HTTP(S) comuns."
+  },
+  "this_page_url_is_too_long_to_save": {
+    "message": "O URL desta página é muito longo para salvar."
+  },
+  "sign_in_was_cancelled": {
+    "message": "O login foi cancelado."
+  },
+  "invalid_sign_in_callback_please_retry": {
+    "message": "Retorno de login inválido. Tente novamente."
+  },
+  "invalid_sign_in_response": {
+    "message": "Resposta de login inválida."
+  },
+  "sign_out_before_switching_accounts": {
+    "message": "Saia antes de trocar de conta."
+  },
+  "enter_your_email_and_password": {
+    "message": "Digite seu e-mail e senha."
+  },
+  "signed_out_on_this_device_server_session_revocation_could_not_be_confirmed": {
+    "message": "Você saiu neste dispositivo. Não foi possível confirmar a revogação da sessão no servidor."
+  },
+  "unknown_extension_command": {
+    "message": "Comando de extensão desconhecido."
+  },
+  "cannot_open_local_extension_storage": {
+    "message": "Não foi possível abrir o armazenamento local da extensão."
+  },
+  "the_operation_failed_please_retry": {
+    "message": "A operação falhou. Tente novamente."
+  },
+  "the_server_returned_an_invalid_session": {
+    "message": "O servidor retornou uma sessão inválida."
+  },
+  "unsynced_tasks_belong_to_another_account_sign_out_explicitly_to_discard_them_first": {
+    "message": "As tarefas não sincronizadas pertencem a outra conta. Saia explicitamente para descartá-las primeiro."
+  },
+  "unsynced_changes_remain_sync_first_or_confirm_discarding_them": {
+    "message": "Há alterações não sincronizadas. Sincronize primeiro ou confirme que deseja descartá-las."
+  },
+  "account_changed_reopen_the_extension_before_editing": {
+    "message": "A conta mudou. Reabra a extensão antes de editar."
+  },
+  "too_many_pending_changes_sync_before_adding_more": {
+    "message": "Muitas alterações pendentes. Sincronize antes de adicionar mais."
+  },
+  "invalid_sync_response": {
+    "message": "Resposta de sincronização inválida."
+  },
+  "invalid_push_response_pending_changes_were_kept": {
+    "message": "Resposta de envio inválida. As alterações pendentes foram mantidas."
+  },
+  "more_history_is_available_press_refresh_to_continue_syncing": {
+    "message": "Há mais histórico disponível. Clique em Atualizar para continuar a sincronização."
+  },
+  "invalid_pull_response_cached_changes_were_kept": {
+    "message": "Resposta de recebimento inválida. As alterações em cache foram mantidas."
+  },
+  "server_cursor_keeps_resetting_retry_later": {
+    "message": "O cursor do servidor continua sendo redefinido. Tente novamente mais tarde."
+  },
+  "server_cursor_did_not_advance_retry_later": {
+    "message": "O cursor do servidor não avançou. Tente novamente mais tarde."
+  },
+  "sync_failed_retry_when_online": {
+    "message": "A sincronização falhou. Tente novamente quando estiver online."
+  },
+  "syncing": {
+    "message": "Sincronizando…"
+  },
+  "pro": {
+    "message": "Pro"
+  },
+  "free": {
+    "message": "Grátis"
+  },
+  "cached": {
+    "message": " (em cache)"
+  },
+  "restore": {
+    "message": "Restaurar"
+  },
+  "complete": {
+    "message": "Concluir"
+  },
+  "repeating": {
+    "message": "Recorrente"
+  },
+  "subtask": {
+    "message": "Subtarefa"
+  },
+  "project": {
+    "message": "Projeto"
+  },
+  "pending_changes": {
+    "message": "{count} alterações salvas localmente · aguardando sincronização"
+  },
+  "account_checked": {
+    "message": "Status da conta verificado em {time}"
+  },
+  "extension_description": {
+    "message": "Acesso rápido às suas tarefas do Pomodoist: hoje, próximas, agendamento e captura de abas."
+  }
+}

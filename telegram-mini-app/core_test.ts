@@ -11,16 +11,46 @@ import {
 
 Deno.test("all requested Telegram locales resolve with English fallback", () => {
   assertEquals(
-    ["ar", "de", "en", "es", "fr", "ru", "zh"].map((locale) =>
-      textFor(locale).inbox
-    ).every(Boolean),
+    ["ar", "de", "en", "es", "fr", "ru", "zh", "pt-BR", "ja", "ko"].map((
+      locale,
+    ) => textFor(locale).inbox).every(Boolean),
     true,
   );
   assertEquals(localeFor("ru-RU"), "ru");
   assertEquals(localeFor("zh-Hans"), "zh");
-  assertEquals(localeFor("ja-JP"), "en");
+  assertEquals(localeFor("ja-JP"), "ja");
+  assertEquals(localeFor("ko-KR"), "ko");
+  for (const value of ["pt", "pt-BR", "pt-PT", "pt_BR"]) {
+    assertEquals(localeFor(value), "pt-BR");
+  }
+  assertEquals(localeFor("unknown"), "en");
+  for (const locale of ["pt-BR", "ja", "ko"]) {
+    const translated = textFor(locale);
+    for (const [key, value] of Object.entries(textFor("en"))) {
+      if (key !== "direction") {
+        assertEquals(translated[key] !== value, true, `${locale}.${key}`);
+      }
+    }
+    assertEquals(
+      new Intl.DateTimeFormat(localeFor(locale)).resolvedOptions().locale,
+      locale,
+    );
+  }
   assertEquals(textFor("ar").direction, "rtl");
-  for (const locale of ["ar", "de", "en", "es", "fr", "ru", "zh"]) {
+  for (
+    const locale of [
+      "ar",
+      "de",
+      "en",
+      "es",
+      "fr",
+      "ru",
+      "zh",
+      "pt-BR",
+      "ja",
+      "ko",
+    ]
+  ) {
     const text = textFor(locale);
     assertEquals(Boolean(text.all && text.refreshFailed), true);
     assertEquals(text.updatedAt.includes("{time}"), true);
@@ -28,19 +58,32 @@ Deno.test("all requested Telegram locales resolve with English fallback", () => 
 });
 
 Deno.test("All tasks keeps undated project tasks while applying pending edits", () => {
-  const task = { id: "work-task", content: "Read", projectId: "work", status: "open", day: "" };
+  const task = {
+    id: "work-task",
+    content: "Read",
+    projectId: "work",
+    status: "open",
+    day: "",
+  };
   const initial = { inbox: [], tasks: [task], view: "all", total: 1 };
   const edited = applyOptimisticCommand(initial, {
-    type: "task.update", taskId: task.id, patch: { content: "Edited" },
+    type: "task.update",
+    taskId: task.id,
+    patch: { content: "Edited" },
   });
   assertEquals(edited.tasks.length, 1);
   assertEquals(edited.tasks[0].content, "Edited");
   assertEquals(edited.inbox, []);
-  const completed = applyOptimisticCommand(edited, { type: "task.complete", taskId: task.id });
+  const completed = applyOptimisticCommand(edited, {
+    type: "task.complete",
+    taskId: task.id,
+  });
   assertEquals(completed.tasks, []);
   assertEquals(completed.total, 0);
   const restored = applyOptimisticCommand(completed, {
-    type: "task.uncomplete", taskId: task.id, optimisticTask: { ...task, status: "completed" },
+    type: "task.uncomplete",
+    taskId: task.id,
+    optimisticTask: { ...task, status: "completed" },
   });
   assertEquals(restored.tasks.length, 1);
   assertEquals(restored.tasks[0].id, task.id);

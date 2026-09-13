@@ -5,6 +5,8 @@ import 'package:app_voice/app_voice.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show Supabase, UserAttributes;
 
 import '../core/sync/account_sync_engine.dart';
 import '../core/sync/account_sync_lifecycle.dart';
@@ -20,6 +22,7 @@ import 'native_captcha_startup.dart';
 import 'native_link_coordinator.dart';
 import 'providers.dart';
 import 'runtime_public_config.dart';
+import 'app_language.dart';
 
 const _pomodoistNativeLoginRedirect = 'pomodoist://login-callback';
 
@@ -169,6 +172,37 @@ final accountConfiguredProvider = createAccountConfiguredProvider(
   accountClientProvider,
 );
 
+// Presentation preference only; failures must never block authentication.
+final accountLocaleSyncProvider = Provider<void>((ref) {
+  var disposed = false;
+  var pending = Future<void>.value();
+  ref.onDispose(() => disposed = true);
+  void sync() {
+    pending = pending
+        .then((_) async {
+          if (disposed ||
+              ref.read(accountAuthStateProvider).value?.signedIn != true) {
+            return;
+          }
+          final auth = Supabase.instance.client.auth;
+          final locale = resolveAppLocale(
+            ref.read(appLanguageProvider),
+          ).toLanguageTag();
+          if (auth.currentUser == null ||
+              auth.currentUser?.userMetadata?['pomodoist_locale'] == locale) {
+            return;
+          }
+          await auth.updateUser(
+            UserAttributes(data: {'pomodoist_locale': locale}),
+          );
+        })
+        .catchError((Object _) {});
+  }
+
+  ref.listen(appLanguageProvider, (_, _) => sync());
+  ref.listen(accountAuthStateProvider, (_, _) => sync(), fireImmediately: true);
+});
+
 final accountAuthStateProvider = StreamProvider<AccountAuthState>((ref) async* {
   final account = ref.watch(accountClientProvider);
   if (account == null) {
@@ -182,45 +216,45 @@ final accountAuthStateProvider = StreamProvider<AccountAuthState>((ref) async* {
   yield* account.accountAuthStateChanges();
 });
 
-final voiceRecognitionControllerProvider = Provider<VoiceRecognitionController>(
-  (ref) {
-    // Keep a live account reference without rebuilding an active recording on
-    // bootstrap/token changes. Disposal must not access an already-disposed Ref.
-    var account = ref.read(accountClientProvider);
-    var disposed = false;
-    ref.listen<AccountClient?>(accountClientProvider, (_, next) {
-      account = next;
-    });
-    final controller = createPomodoistVoiceController(
-      mode: effectiveVoiceTranscriptionMode(
-        isWeb: kIsWeb,
-        platform: defaultTargetPlatform,
-        preferred: ref.read(voiceTranscriptionModeProvider),
-        signedIn: account?.currentUserId != null,
-      ),
-      ownerId: () => account?.currentUserId,
-      invoke: (body) async {
-        final current = account;
-        if (disposed || current == null || current.currentUserId == null) {
-          throw const VoiceRecognitionException(
-            'speech_unavailable',
-            'Sign in to use voice transcription.',
-          );
-        }
-        final response = await current.invokeFunction(
-          'pomodoist-transcribe',
-          body: body,
+final voiceRecognitionControllerProvider = Provider<VoiceRecognitionController>((
+  ref,
+) {
+  // Keep a live account reference without rebuilding an active recording on
+  // bootstrap/token changes. Disposal must not access an already-disposed Ref.
+  var account = ref.read(accountClientProvider);
+  var disposed = false;
+  ref.listen<AccountClient?>(accountClientProvider, (_, next) {
+    account = next;
+  });
+  final controller = createPomodoistVoiceController(
+    mode: effectiveVoiceTranscriptionMode(
+      isWeb: kIsWeb,
+      platform: defaultTargetPlatform,
+      preferred: ref.read(voiceTranscriptionModeProvider),
+      signedIn: account?.currentUserId != null,
+    ),
+    ownerId: () => account?.currentUserId,
+    invoke: (body) async {
+      final current = account;
+      if (disposed || current == null || current.currentUserId == null) {
+        throw const VoiceRecognitionException(
+          'speech_unavailable',
+          'Sign in to use voice transcription.',
         );
-        return response.data;
-      },
-    );
-    ref.onDispose(() {
-      disposed = true;
-      controller.dispose();
-    });
-    return controller;
-  },
-);
+      }
+      final response = await current.invokeFunction(
+        'pomodoist-transcribe',
+        body: body,
+      );
+      return response.data;
+    },
+  );
+  ref.onDispose(() {
+    disposed = true;
+    controller.dispose();
+  });
+  return controller;
+});
 
 final taskDecomposerProvider = Provider<TaskDecomposer>((ref) {
   final account = ref.watch(accountClientProvider);

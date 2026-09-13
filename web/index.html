@@ -172,24 +172,102 @@
       const loader = document.getElementById('pomodoist-web-loader');
       const stage = document.getElementById('pomodoist-web-loader-stage');
       const reload = document.getElementById('pomodoist-web-loader-reload');
-      const russian = navigator.language.toLowerCase().startsWith('ru');
-      const copy = russian
-        ? {
-            bootstrap: 'Загружаем Pomodoist',
-            session: 'Проверяем сессию',
-            app: 'Открываем приложение',
-            slow: 'Первый запуск может занять немного больше времени',
-            failed: 'Не удалось запустить Pomodoist. Обновите страницу.',
-            reload: 'Обновить страницу',
-          }
-        : {
-            bootstrap: 'Loading Pomodoist',
-            session: 'Checking your session',
-            app: 'Opening the app',
-            slow: 'The first launch can take a little longer',
-            failed: 'Pomodoist could not start. Please reload the page.',
-            reload: 'Reload page',
-          };
+      const copies = {
+  "en": {
+    "bootstrap": "Loading Pomodoist",
+    "session": "Checking your session",
+    "app": "Opening the app",
+    "slow": "The first launch can take a little longer",
+    "failed": "Pomodoist could not start. Please reload the page.",
+    "reload": "Reload page"
+  },
+  "ru": {
+    "bootstrap": "Загружаем Pomodoist",
+    "session": "Проверяем сессию",
+    "app": "Открываем приложение",
+    "slow": "Первый запуск может занять немного больше времени",
+    "failed": "Не удалось запустить Pomodoist. Обновите страницу.",
+    "reload": "Обновить страницу"
+  },
+  "de": {
+    "bootstrap": "Pomodoist wird geladen",
+    "session": "Sitzung wird geprüft",
+    "app": "App wird geöffnet",
+    "slow": "Der erste Start kann etwas länger dauern",
+    "failed": "Pomodoist konnte nicht starten. Lade die Seite neu.",
+    "reload": "Seite neu laden"
+  },
+  "es": {
+    "bootstrap": "Cargando Pomodoist",
+    "session": "Comprobando tu sesión",
+    "app": "Abriendo la aplicación",
+    "slow": "El primer inicio puede tardar un poco más",
+    "failed": "Pomodoist no pudo iniciarse. Recarga la página.",
+    "reload": "Recargar página"
+  },
+  "fr": {
+    "bootstrap": "Chargement de Pomodoist",
+    "session": "Vérification de votre session",
+    "app": "Ouverture de l’application",
+    "slow": "Le premier lancement peut prendre un peu plus de temps",
+    "failed": "Pomodoist n’a pas pu démarrer. Rechargez la page.",
+    "reload": "Recharger la page"
+  },
+  "zh": {
+    "bootstrap": "正在加载 Pomodoist",
+    "session": "正在检查会话",
+    "app": "正在打开应用",
+    "slow": "首次启动可能需要稍长时间",
+    "failed": "无法启动 Pomodoist。请重新加载页面。",
+    "reload": "重新加载页面"
+  },
+  "ar": {
+    "bootstrap": "جارٍ تحميل Pomodoist",
+    "session": "جارٍ التحقق من جلستك",
+    "app": "جارٍ فتح التطبيق",
+    "slow": "قد يستغرق التشغيل الأول وقتًا أطول قليلًا",
+    "failed": "تعذر بدء Pomodoist. أعد تحميل الصفحة.",
+    "reload": "إعادة تحميل الصفحة"
+  },
+  "pt-BR": {
+    "bootstrap": "Carregando Pomodoist",
+    "session": "Verificando sua sessão",
+    "app": "Abrindo o app",
+    "slow": "A primeira abertura pode demorar um pouco mais",
+    "failed": "Não foi possível iniciar o Pomodoist. Recarregue a página.",
+    "reload": "Recarregar página"
+  },
+  "ja": {
+    "bootstrap": "Pomodoistを読み込み中",
+    "session": "セッションを確認中",
+    "app": "アプリを開いています",
+    "slow": "初回起動には少し時間がかかる場合があります",
+    "failed": "Pomodoistを起動できませんでした。ページを再読み込みしてください。",
+    "reload": "ページを再読み込み"
+  },
+  "ko": {
+    "bootstrap": "Pomodoist를 불러오는 중",
+    "session": "세션 확인 중",
+    "app": "앱을 여는 중",
+    "slow": "처음 실행할 때는 시간이 조금 더 걸릴 수 있습니다",
+    "failed": "Pomodoist를 시작하지 못했습니다. 페이지를 새로고침하세요.",
+    "reload": "페이지 새로고침"
+  }
+};
+      const query = new URLSearchParams(location.search);
+      const requested = query.getAll('lang').length === 1 && Object.hasOwn(copies, query.get('lang')) ? query.get('lang') : null;
+      let stored;
+      try {
+        stored = localStorage.getItem('flutter.app.language') ?? localStorage.getItem('app.language');
+        try { stored = JSON.parse(stored); } catch (_) {}
+      } catch (_) {}
+      const storedLocale = ({ ptBR: 'pt-BR', zhHans: 'zh' })[stored] || stored;
+      const browserLocale = (navigator.languages || [navigator.language]).map(value => String(value).toLowerCase().split(/[-_]/)[0])
+        .map(value => value === 'pt' ? 'pt-BR' : value).find(value => Object.hasOwn(copies, value));
+      const language = requested || (Object.hasOwn(copies, storedLocale) ? storedLocale : null) || browserLocale || 'en';
+      const copy = copies[language];
+      document.documentElement.lang = language;
+      document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
       let failed = false;
       const fallback = window.setTimeout(() => {
         stage.textContent = copy.slow;

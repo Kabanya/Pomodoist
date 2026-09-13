@@ -14,6 +14,7 @@ import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/features/billing/billing.dart';
 import 'package:pomodoist/features/settings/presentation/app_info_card.dart';
 import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
+import 'package:pomodoist/features/settings/presentation/settings_navigation.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -35,18 +36,19 @@ void main() {
     await db.ensureSeedData();
     await _pumpSettings(tester, account: account, db: db);
 
-    final settingsList = tester.widget<ListView>(
-      find.byKey(const Key('settings-list')),
-    );
-    final settingsChildren =
-        (settingsList.childrenDelegate as SliverChildListDelegate).children;
-    final keyedChildren = settingsChildren
-        .where((child) => child.key != null)
-        .toList();
-    expect(keyedChildren.last.key, const Key('account-delete-section'));
+    final deletionSection = find.byKey(const Key('account-delete-section'));
+    final accountColumn = tester
+        .widgetList<Column>(
+          find.ancestor(of: deletionSection, matching: find.byType(Column)),
+        )
+        .firstWhere(
+          (column) => column.children.any(
+            (child) => child.key == const Key('account-delete-section'),
+          ),
+        );
     expect(
-      keyedChildren[keyedChildren.length - 2].key,
-      const Key('settings-app-info-section'),
+      accountColumn.children.last.key,
+      const Key('account-delete-section'),
     );
 
     final firstConfirmation = find.byKey(const Key('account-delete-button'));
@@ -459,7 +461,7 @@ Future<void> _pumpSettings(
           (ref) => Stream.value(null),
         ),
       ],
-      child: const MaterialApp(
+      child: MaterialApp(
         builder: testAppBuilder,
         localizationsDelegates: [
           AppLocalizations.delegate,
@@ -468,7 +470,11 @@ Future<void> _pumpSettings(
           GlobalWidgetsLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(body: SettingsScreen()),
+        home: Scaffold(
+          body: SettingsScreen(
+            location: settingsLocation(SettingsSection.account),
+          ),
+        ),
       ),
     ),
   );

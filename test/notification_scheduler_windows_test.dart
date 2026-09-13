@@ -6,13 +6,11 @@ import 'package:timezone/timezone.dart' as tz;
 void main() {
   setUpAll(tz_data.initializeTimeZones);
 
-  test('Windows reengagement reminders cover 30 local calendar days', () {
+  test('Reengagement reminders cover 30 local calendar days', () {
     final berlin = tz.getLocation('Europe/Berlin');
     final firstAt = tz.TZDateTime(berlin, 2026, 3, 28, 20, 30);
 
-    final reminders = NotificationScheduler.windowsReengagementReminders(
-      firstAt,
-    );
+    final reminders = NotificationScheduler.reengagementReminders(firstAt);
 
     expect(reminders, hasLength(30));
     expect(reminders.map((reminder) => reminder.id).toSet(), hasLength(30));
@@ -37,6 +35,28 @@ void main() {
     expect(reminders[1].scheduledDate.timeZoneOffset, const Duration(hours: 2));
   });
 
+  test('completed day is excluded when replacing with tomorrow', () async {
+    final local = tz.getLocation('Europe/Moscow');
+    final tomorrow = tz.TZDateTime(local, 2026, 9, 14, 20, 30);
+    final canceled = <int>[];
+    final scheduled = <tz.TZDateTime>[];
+    await NotificationScheduler.replaceReengagementReminders(
+      firstAt: tomorrow,
+      cancel: (id) async => canceled.add(id),
+      schedule: (reminder) async => scheduled.add(reminder.scheduledDate),
+    );
+    expect(
+      canceled,
+      contains(NotificationScheduler.reengagementNotificationId),
+    );
+    expect(
+      canceled,
+      contains(NotificationScheduler.reengagementNotificationBaseId),
+    );
+    expect(scheduled.first, tomorrow);
+    expect(scheduled.every((date) => !date.isBefore(tomorrow)), isTrue);
+  });
+
   test('Windows notifications use the Pomodoist package identity', () {
     final windows = NotificationScheduler.initializationSettings.windows;
 
@@ -50,12 +70,12 @@ void main() {
     expect(NotificationScheduler.taskStartDetails.windows, isNotNull);
   });
 
-  test('Windows reminder replacement cancels the whole range first', () async {
+  test('Reminder replacement cancels the whole range first', () async {
     final berlin = tz.getLocation('Europe/Berlin');
     final firstAt = tz.TZDateTime(berlin, 2026, 10, 24, 20, 30);
     final events = <String>[];
 
-    await NotificationScheduler.replaceWindowsReengagementReminders(
+    await NotificationScheduler.replaceReengagementReminders(
       firstAt: firstAt,
       cancel: (id) async => events.add('cancel:$id'),
       schedule: (reminder) async => events.add('schedule:${reminder.id}'),

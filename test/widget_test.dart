@@ -1,6 +1,6 @@
 import 'support/test_app.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadSwitch;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +21,7 @@ import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
 import 'package:pomodoist/features/productivity/domain/achievement_models.dart';
 import 'package:pomodoist/features/productivity/presentation/achievement_announcements.dart';
 import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
+import 'package:pomodoist/features/settings/presentation/settings_navigation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -604,24 +605,20 @@ void main() {
             (ref) => Stream.value(null),
           ),
         ],
-        child: const MaterialApp(
+        child: MaterialApp(
           builder: testAppBuilder,
-          home: SettingsScreen(),
+          home: Scaffold(
+            body: SettingsScreen(
+              location: settingsLocation(SettingsSection.tasksFocus),
+            ),
+          ),
         ),
       ),
     );
     await tester.pump();
 
-    final timerVisualStyleSelect = find.byWidgetPredicate(
-      (widget) =>
-          widget is SegmentedButton<FocusTimerVisualStyle> &&
-          widget.key == const Key('settings-timer-visual-style-select'),
-    );
-    await tester.scrollUntilVisible(
-      timerVisualStyleSelect,
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
+    final timerVisualStyleSelect = find.widgetWithText(ChoiceChip, 'Bar');
+    await tester.ensureVisible(timerVisualStyleSelect);
     await tester.pumpAndSettle();
     expect(timerVisualStyleSelect, findsWidgets);
     expect(find.text('Pomodoro timer'), findsOneWidget);
@@ -649,9 +646,13 @@ void main() {
             (ref) => Stream.value(null),
           ),
         ],
-        child: const MaterialApp(
+        child: MaterialApp(
           builder: testAppBuilder,
-          home: SettingsScreen(),
+          home: Scaffold(
+            body: SettingsScreen(
+              location: settingsLocation(SettingsSection.tasksFocus),
+            ),
+          ),
         ),
       ),
     );
@@ -662,11 +663,7 @@ void main() {
           widget is TextField &&
           widget.key == const Key('settings-default-timed-block-minutes-input'),
     );
-    await tester.scrollUntilVisible(
-      defaultTimedBlockInput,
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await tester.ensureVisible(defaultTimedBlockInput);
     await tester.pumpAndSettle();
     final fortyFiveMinutes = find.byWidgetPredicate(
       (widget) =>
@@ -704,9 +701,13 @@ void main() {
             (ref) => Stream.value(null),
           ),
         ],
-        child: const MaterialApp(
+        child: MaterialApp(
           builder: testAppBuilder,
-          home: SettingsScreen(),
+          home: Scaffold(
+            body: SettingsScreen(
+              location: settingsLocation(SettingsSection.tasksFocus),
+            ),
+          ),
         ),
       ),
     );
@@ -715,10 +716,8 @@ void main() {
     final smart = find.byKey(
       const ValueKey('settings-task-time-display-smart'),
     );
-    await tester.scrollUntilVisible(
+    await tester.ensureVisible(
       find.byKey(const Key('settings-default-timed-block-minutes-input')),
-      300,
-      scrollable: find.byType(Scrollable).first,
     );
     await tester.pumpAndSettle();
     expect(smart, findsOneWidget);
@@ -749,17 +748,23 @@ void main() {
             (ref) => Stream.value(null),
           ),
         ],
-        child: const MaterialApp(
+        child: MaterialApp(
           builder: testAppBuilder,
-          home: SettingsScreen(),
+          home: Scaffold(
+            body: SettingsScreen(
+              location: settingsLocation(SettingsSection.general),
+            ),
+          ),
         ),
       ),
     );
     await tester.pump();
 
-    await tester.drag(find.byType(ListView).last, const Offset(0, -700));
+    await tester.ensureVisible(
+      find.byKey(const Key('settings-reengagement-notifications-switch')),
+    );
     await tester.pumpAndSettle();
-    final tile = tester.widget<SwitchListTile>(
+    final tile = tester.widget<ShadSwitch>(
       find.byKey(const Key('settings-reengagement-notifications-switch')),
     );
     expect(tile.value, isTrue);
@@ -776,15 +781,21 @@ void main() {
             (ref) => Stream.value(null),
           ),
         ],
-        child: const MaterialApp(
+        child: MaterialApp(
           builder: testAppBuilder,
-          home: SettingsScreen(),
+          home: Scaffold(
+            body: SettingsScreen(
+              location: settingsLocation(SettingsSection.general),
+            ),
+          ),
         ),
       ),
     );
     await tester.pump();
 
-    await tester.drag(find.byType(ListView).last, const Offset(0, -700));
+    await tester.ensureVisible(
+      find.byKey(const Key('settings-reengagement-notifications-switch')),
+    );
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const Key('settings-reengagement-notifications-switch')),
@@ -799,42 +810,39 @@ void main() {
     expect(scheduler.cancelReengagementCount, 1);
   });
 
-  testWidgets('SettingsScreen places completion celebration before About', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
-          googleCalendarConnectionProvider.overrideWith(
-            (ref) => Stream.value(null),
+  testWidgets(
+    'SettingsScreen groups completion celebration with the focus timer',
+    (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
+            googleCalendarConnectionProvider.overrideWith(
+              (ref) => Stream.value(null),
+            ),
+          ],
+          child: MaterialApp(
+            builder: testAppBuilder,
+            home: Scaffold(
+              body: SettingsScreen(
+                location: settingsLocation(SettingsSection.tasksFocus),
+              ),
+            ),
           ),
-        ],
-        child: const MaterialApp(
-          builder: testAppBuilder,
-          home: SettingsScreen(),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    final about = find.byKey(const Key('settings-app-info-section'));
-    await tester.scrollUntilVisible(
-      about,
-      400,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
-    final celebration = find.byKey(
-      const Key('settings-focus-completion-celebration-switch'),
-    );
-
-    expect(celebration, findsOneWidget);
-    expect(
-      tester.getTopLeft(celebration).dy,
-      lessThan(tester.getTopLeft(about).dy),
-    );
-  });
+      final celebration = find.byKey(
+        const Key('settings-focus-completion-celebration-switch'),
+      );
+      await tester.ensureVisible(celebration);
+      expect(celebration, findsOneWidget);
+      expect(find.text('Pomodoro timer'), findsOneWidget);
+      expect(find.byKey(const Key('settings-app-info-section')), findsNothing);
+      expect(tester.widget<ShadSwitch>(celebration).value, isTrue);
+    },
+  );
 
   testWidgets('SettingsScreen persists disabled completion celebration', (
     tester,
@@ -847,24 +855,22 @@ void main() {
             (ref) => Stream.value(null),
           ),
         ],
-        child: const MaterialApp(
+        child: MaterialApp(
           builder: testAppBuilder,
-          home: SettingsScreen(),
+          home: Scaffold(
+            body: SettingsScreen(
+              location: settingsLocation(SettingsSection.tasksFocus),
+            ),
+          ),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    final about = find.byKey(const Key('settings-app-info-section'));
-    await tester.scrollUntilVisible(
-      about,
-      400,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
     final celebration = find.byKey(
       const Key('settings-focus-completion-celebration-switch'),
     );
+    await tester.ensureVisible(celebration);
     expect(celebration, findsOneWidget);
     await tester.tap(celebration);
     await tester.pump();
@@ -1642,10 +1648,6 @@ const _focusAchievement = AchievementItem(
   id: 'focus_1',
   group: AchievementGroup.focus,
   presentation: AchievementPresentation.globalBanner,
-  titleRu: 'Первый помидор',
-  titleEn: 'First tomato',
-  subtitleRu: 'Завершить 1 work-фокус',
-  subtitleEn: 'Complete 1 work focus',
   progress: 1,
   target: 1,
 );
@@ -1654,10 +1656,6 @@ const _comboAchievement = AchievementItem(
   id: 'combo_day_not_wasted',
   group: AchievementGroup.combo,
   presentation: AchievementPresentation.bottomPlaque,
-  titleRu: 'День не зря',
-  titleEn: 'Day not wasted',
-  subtitleRu: 'За день есть фокус и закрытая задача',
-  subtitleEn: 'Finish a focus and a task in one day',
   progress: 1,
   target: 1,
 );

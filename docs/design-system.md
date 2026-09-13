@@ -220,7 +220,12 @@ children into its position; only the deleted project's tasks move to Inbox.
 The sidebar and Projects screen share tree controls. Branches start expanded,
 retain collapse state while the screen is mounted, and reveal the destination
 ancestors after creation or movement. Limit indentation to four visual steps
-without limiting hierarchy depth. Mouse dragging the middle half of a row
+without limiting hierarchy depth. Use 12 px per nesting step, without reserving
+an empty leading slot for expansion. Place branch toggles at the trailing edge.
+Keep Projects and Browse rows at a compact 44 px baseline, with 8 px horizontal
+padding and icon-to-title gaps; the sidebar uses 6 px vertical padding. Preserve
+text scaling, keyboard focus, and accessible action labels.
+Mouse dragging the middle half of a row
 nests a branch; the top and bottom quarters insert before and after the row.
 Show a parent highlight or insertion line, scroll at viewport edges, and show
 a Top level target during dragging. Disable dragging during search and archive

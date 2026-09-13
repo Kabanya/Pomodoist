@@ -15,6 +15,7 @@ import '../../../../app/widgets/app_context_menu_region.dart';
 import '../../../../app/providers.dart';
 import '../../domain/project_colors.dart';
 import '../../domain/task_models.dart';
+import '../project_localizations.dart';
 import 'create_project_dialog.dart';
 import 'project_color_picker.dart';
 import 'project_icon.dart';
@@ -157,7 +158,7 @@ class _ProjectContextMenuState extends ConsumerState<ProjectContextMenu> {
                 children: [
                   Expanded(child: widget.child),
                   Tooltip(
-                    message: '${l10n.taskMore}: ${project.name}',
+                    message: '${l10n.taskMore}: ${project.displayName(l10n)}',
                     child: ShadIconButton.ghost(
                       onPressed: _controller.show,
                       onSecondaryTapUp: (_) => _controller.show(),
@@ -214,8 +215,12 @@ Future<void> _confirmDeleteProject(
         (ref.read(projectsProvider).value ?? const <ProjectItem>[]).any(
               (p) => p.parentId == project.id && !p.isDeleted,
             )
-            ? context.l10n.deleteProjectWithChildrenConfirmation(project.name)
-            : context.l10n.deleteProjectConfirmation(project.name),
+            ? context.l10n.deleteProjectWithChildrenConfirmation(
+                project.displayName(context.l10n),
+              )
+            : context.l10n.deleteProjectConfirmation(
+                project.displayName(context.l10n),
+              ),
       ),
     ),
   );

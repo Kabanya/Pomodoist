@@ -695,7 +695,7 @@ class _PomodoistEmailAuthDialogState
             NativeCaptchaFailureCode.unavailable,
           );
         }
-        token = await broker.requestToken();
+        token = await broker.requestToken(locale: context.l10n.localeName);
       } else {
         token = null;
       }

@@ -4,6 +4,7 @@ import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import '../../../app/app_l10n.dart';
 import '../../../app/theme/app_theme.dart';
 import '../domain/achievement_models.dart';
+import 'achievement_localizations.dart';
 
 class AchievementGroupSection extends StatelessWidget {
   const AchievementGroupSection({
@@ -75,8 +76,8 @@ class AchievementTile extends StatelessWidget {
 
     return Semantics(
       label:
-          '${item.titleFor(l10n.localeName)}, '
-          '${item.subtitleFor(l10n.localeName)}, '
+          '${item.titleFor(l10n)}, '
+          '${item.subtitleFor(l10n)}, '
           '${unlocked ? l10n.unlocked : l10n.locked}, '
           '${l10n.progressLabel}: $progressLabel',
       readOnly: true,
@@ -108,7 +109,7 @@ class AchievementTile extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          item.titleFor(l10n.localeName),
+                          item.titleFor(l10n),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: textTheme.titleSmall?.copyWith(
@@ -127,7 +128,7 @@ class AchievementTile extends StatelessWidget {
                   const SizedBox(height: 10),
                   Expanded(
                     child: Text(
-                      item.subtitleFor(l10n.localeName),
+                      item.subtitleFor(l10n),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: textTheme.bodySmall,

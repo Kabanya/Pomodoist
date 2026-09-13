@@ -1,0 +1,338 @@
+{
+  "open_app": {
+    "message": "アプリを開く ↗"
+  },
+  "your_tasks_one_click_away": {
+    "message": "タスクにワンクリックでアクセス。"
+  },
+  "sign_in_with_your_existing_pomodoist_account": {
+    "message": "お使いのPomodoistアカウントでログインしてください。"
+  },
+  "email": {
+    "message": "メールアドレス"
+  },
+  "password": {
+    "message": "パスワード"
+  },
+  "sign_in": {
+    "message": "ログイン"
+  },
+  "google": {
+    "message": "Google"
+  },
+  "apple": {
+    "message": "Apple"
+  },
+  "use_the_web_app_to_create_an_account_or_reset_your_password_a_verification_window_may_open_when_signing_in": {
+    "message": "アカウントの作成やパスワードのリセットにはWebアプリをご利用ください。ログイン時に認証ウィンドウが開く場合があります。"
+  },
+  "discard_unsynced_changes_and_sign_out": {
+    "message": "未同期の変更を破棄してログアウト"
+  },
+  "today": {
+    "message": "今日"
+  },
+  "upcoming": {
+    "message": "今後の予定"
+  },
+  "inbox": {
+    "message": "受信トレイ"
+  },
+  "done": {
+    "message": "完了済み"
+  },
+  "add": {
+    "message": "追加"
+  },
+  "add_current_tab": {
+    "message": "現在のタブを追加"
+  },
+  "refresh": {
+    "message": "更新"
+  },
+  "no_tasks_here": {
+    "message": "タスクはありません。"
+  },
+  "edit_task": {
+    "message": "タスクを編集"
+  },
+  "title": {
+    "message": "タイトル"
+  },
+  "description": {
+    "message": "説明"
+  },
+  "date": {
+    "message": "日付"
+  },
+  "time": {
+    "message": "時刻"
+  },
+  "duration_minutes": {
+    "message": "時間（分）"
+  },
+  "priority": {
+    "message": "優先度"
+  },
+  "normal": {
+    "message": "通常"
+  },
+  "medium": {
+    "message": "中"
+  },
+  "high": {
+    "message": "高"
+  },
+  "urgent": {
+    "message": "緊急"
+  },
+  "existing_recurrence_is_preserved_manage_recurrence_rules_in_the_full_app": {
+    "message": "既存の繰り返しは維持されます。繰り返しルールはフルアプリで管理してください。"
+  },
+  "no_date": {
+    "message": "日付なし"
+  },
+  "cancel": {
+    "message": "キャンセル"
+  },
+  "save": {
+    "message": "保存"
+  },
+  "loading": {
+    "message": "読み込み中…"
+  },
+  "sign_out": {
+    "message": "ログアウト"
+  },
+  "opening_your_tasks": {
+    "message": "タスクを開いています…"
+  },
+  "task_lists": {
+    "message": "タスクリスト"
+  },
+  "new_task_title": {
+    "message": "新しいタスクのタイトル"
+  },
+  "add_a_task": {
+    "message": "タスクを追加…"
+  },
+  "tasks": {
+    "message": "タスク"
+  },
+  "session_expired_sign_in_again": {
+    "message": "セッションの有効期限が切れました。再度ログインしてください。"
+  },
+  "the_account_is_not_permitted_to_perform_this_action": {
+    "message": "このアカウントには操作の権限がありません。"
+  },
+  "too_many_requests_wait_briefly_and_retry": {
+    "message": "リクエストが多すぎます。少し待ってから再試行してください。"
+  },
+  "sign_in_failed_check_your_credentials_verification_and_server_configuration": {
+    "message": "ログインに失敗しました。ログイン情報、認証、サーバー設定を確認してください。"
+  },
+  "server_request_failed_pending_changes_are_kept_retry_later": {
+    "message": "サーバーへのリクエストに失敗しました。未同期の変更は保持されています。後でもう一度お試しください。"
+  },
+  "cannot_reach_the_server_check_your_connection_and_retry": {
+    "message": "サーバーに接続できません。接続を確認して再試行してください。"
+  },
+  "invalid_server_response": {
+    "message": "サーバーの応答が無効です。"
+  },
+  "sign_in_to_your_pomodoist_account": {
+    "message": "Pomodoistアカウントにログインしてください。"
+  },
+  "account_changed_during_session_refresh": {
+    "message": "セッションの更新中にアカウントが変わりました。"
+  },
+  "session_expired_sign_in_again_to_sync_pending_changes": {
+    "message": "セッションの有効期限が切れました。未同期の変更を同期するには再度ログインしてください。"
+  },
+  "unsupported_api_call": {
+    "message": "サポートされていないAPI呼び出しです。"
+  },
+  "unsupported_sign_in_provider": {
+    "message": "サポートされていないログインプロバイダーです。"
+  },
+  "sign_in_expired_please_retry": {
+    "message": "ログインの有効期限が切れました。再試行してください。"
+  },
+  "verification_expired_please_retry": {
+    "message": "認証の有効期限が切れました。再試行してください。"
+  },
+  "the_extension_did_not_respond_reopen_it_and_retry": {
+    "message": "拡張機能が応答しませんでした。開き直して再試行してください。"
+  },
+  "offline_or_sync_needs_attention": {
+    "message": "オフライン、または同期の確認が必要です"
+  },
+  "live_sync": {
+    "message": "リアルタイム同期"
+  },
+  "synced_periodic_refresh": {
+    "message": "同期済み · 定期更新"
+  },
+  "loading_account_data": {
+    "message": "アカウント情報を読み込み中…"
+  },
+  "plan_unavailable": {
+    "message": "プランを取得できません"
+  },
+  "account_access_active": {
+    "message": "アカウントのアクセス権は有効です"
+  },
+  "account_status_has_not_been_loaded": {
+    "message": "アカウントの状態はまだ読み込まれていません。"
+  },
+  "there_are_unsynced_changes_signing_out_will_discard_them_on_this_device_continue": {
+    "message": "未同期の変更があります。ログアウトするとこのデバイスの変更は破棄されます。続行しますか？"
+  },
+  "remove_repeating_schedules_in_the_full_app": {
+    "message": "繰り返しの予定はフルアプリで解除してください。"
+  },
+  "choose_a_date_before_setting_a_time": {
+    "message": "時刻を設定する前に日付を選択してください。"
+  },
+  "invalid_calendar_date": {
+    "message": "無効な日付です。"
+  },
+  "invalid_time": {
+    "message": "無効な時刻です。"
+  },
+  "duration_must_be_between_1_and_10080_minutes": {
+    "message": "時間は1〜10080分で指定してください。"
+  },
+  "this_local_time_does_not_exist_choose_another_time": {
+    "message": "この現地時刻は存在しません。別の時刻を選択してください。"
+  },
+  "task_title_must_contain_1_2048_characters": {
+    "message": "タスクのタイトルは1〜2048文字で入力してください。"
+  },
+  "invalid_schedule": {
+    "message": "無効な予定です。"
+  },
+  "description_is_too_long": {
+    "message": "説明が長すぎます。"
+  },
+  "task_is_no_longer_available_refresh_the_list": {
+    "message": "タスクは利用できなくなりました。リストを更新してください。"
+  },
+  "invalid_task_edit": {
+    "message": "タスクの編集内容が無効です。"
+  },
+  "unsupported_task_field": {
+    "message": "サポートされていないタスク項目です。"
+  },
+  "unknown_task_action": {
+    "message": "不明なタスク操作です。"
+  },
+  "this_tab_cannot_be_saved": {
+    "message": "このタブは保存できません。"
+  },
+  "only_ordinary_http_s_pages_can_be_saved": {
+    "message": "通常のHTTP(S)ページのみ保存できます。"
+  },
+  "this_page_url_is_too_long_to_save": {
+    "message": "ページのURLが長すぎるため保存できません。"
+  },
+  "sign_in_was_cancelled": {
+    "message": "ログインがキャンセルされました。"
+  },
+  "invalid_sign_in_callback_please_retry": {
+    "message": "ログインのコールバックが無効です。再試行してください。"
+  },
+  "invalid_sign_in_response": {
+    "message": "ログインの応答が無効です。"
+  },
+  "sign_out_before_switching_accounts": {
+    "message": "アカウントを切り替える前にログアウトしてください。"
+  },
+  "enter_your_email_and_password": {
+    "message": "メールアドレスとパスワードを入力してください。"
+  },
+  "signed_out_on_this_device_server_session_revocation_could_not_be_confirmed": {
+    "message": "このデバイスではログアウトしました。サーバー側のセッション失効は確認できませんでした。"
+  },
+  "unknown_extension_command": {
+    "message": "不明な拡張機能コマンドです。"
+  },
+  "cannot_open_local_extension_storage": {
+    "message": "拡張機能のローカルストレージを開けません。"
+  },
+  "the_operation_failed_please_retry": {
+    "message": "操作に失敗しました。再試行してください。"
+  },
+  "the_server_returned_an_invalid_session": {
+    "message": "サーバーから無効なセッションが返されました。"
+  },
+  "unsynced_tasks_belong_to_another_account_sign_out_explicitly_to_discard_them_first": {
+    "message": "未同期のタスクは別のアカウントに属しています。まず明示的にログアウトして破棄してください。"
+  },
+  "unsynced_changes_remain_sync_first_or_confirm_discarding_them": {
+    "message": "未同期の変更が残っています。先に同期するか、破棄を確認してください。"
+  },
+  "account_changed_reopen_the_extension_before_editing": {
+    "message": "アカウントが変わりました。編集する前に拡張機能を開き直してください。"
+  },
+  "too_many_pending_changes_sync_before_adding_more": {
+    "message": "未同期の変更が多すぎます。追加する前に同期してください。"
+  },
+  "invalid_sync_response": {
+    "message": "同期の応答が無効です。"
+  },
+  "invalid_push_response_pending_changes_were_kept": {
+    "message": "送信の応答が無効です。未同期の変更は保持されています。"
+  },
+  "more_history_is_available_press_refresh_to_continue_syncing": {
+    "message": "さらに履歴があります。「更新」を押して同期を続けてください。"
+  },
+  "invalid_pull_response_cached_changes_were_kept": {
+    "message": "受信の応答が無効です。キャッシュ内の変更は保持されています。"
+  },
+  "server_cursor_keeps_resetting_retry_later": {
+    "message": "サーバーカーソルが繰り返しリセットされています。後でもう一度お試しください。"
+  },
+  "server_cursor_did_not_advance_retry_later": {
+    "message": "サーバーカーソルが進みませんでした。後でもう一度お試しください。"
+  },
+  "sync_failed_retry_when_online": {
+    "message": "同期に失敗しました。オンラインになったら再試行してください。"
+  },
+  "syncing": {
+    "message": "同期中…"
+  },
+  "pro": {
+    "message": "Pro"
+  },
+  "free": {
+    "message": "無料"
+  },
+  "cached": {
+    "message": "（キャッシュ）"
+  },
+  "restore": {
+    "message": "元に戻す"
+  },
+  "complete": {
+    "message": "完了にする"
+  },
+  "repeating": {
+    "message": "繰り返し"
+  },
+  "subtask": {
+    "message": "サブタスク"
+  },
+  "project": {
+    "message": "プロジェクト"
+  },
+  "pending_changes": {
+    "message": "{count}件の変更をローカルに保存済み · 同期待ち"
+  },
+  "account_checked": {
+    "message": "アカウントの状態の確認日時：{time}"
+  },
+  "extension_description": {
+    "message": "Pomodoistのタスクにすばやくアクセス：今日、今後の予定、スケジュール設定、ブラウザータブの保存。"
+  }
+}

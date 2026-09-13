@@ -6,6 +6,7 @@ import 'package:multiview_desktop/multiview_desktop.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'app/account_providers.dart';
+import 'app/app_language.dart';
 import 'app/app_l10n.dart';
 import 'app/app.dart';
 import 'app/global_quick_add_window.dart';
@@ -152,6 +153,9 @@ Future<void> main() async {
                         'action': 'checkout',
                         'productId': productId,
                         'surface': surface.name,
+                        'locale': resolveAppLocale(
+                          ref.read(appLanguageProvider),
+                        ).toLanguageTag(),
                       },
                     );
                     if (response.status < 200 || response.status >= 300) {

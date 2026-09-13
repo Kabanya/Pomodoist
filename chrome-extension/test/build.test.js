@@ -31,3 +31,27 @@ test('captcha configuration follows the same public site key as the main web app
   assert.equal(configuration(env).captchaEnabled, false);
   assert.equal(configuration({ ...env, TURNSTILE_SITE_KEY: 'public-site-key' }).captchaEnabled, true);
 });
+
+test('packaged Chrome locales have complete native messages and the English fallback', async () => {
+  const { build } = await import('../build.mjs');
+  const { mkdtemp, readFile, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const path = await import('node:path');
+  const output = await mkdtemp(path.join(tmpdir(), 'pomodoist-locales-'));
+  try {
+    await build(env, output);
+    const manifest = JSON.parse(await readFile(path.join(output, 'manifest.json'), 'utf8'));
+    assert.equal(manifest.default_locale, 'en');
+    assert.equal(manifest.description, '__MSG_extension_description__');
+    const english = JSON.parse(await readFile(path.join(output, '_locales/en/messages.json'), 'utf8'));
+    for (const locale of ['pt_BR', 'ja', 'ko']) {
+      const messages = JSON.parse(await readFile(path.join(output, `_locales/${locale}/messages.json`), 'utf8'));
+      assert.deepEqual(Object.keys(messages), Object.keys(english));
+      for (const [key, value] of Object.entries(messages)) {
+        assert.ok(value.message.trim(), `${locale}.${key}`);
+        assert.deepEqual(value.message.match(/\{\w+\}/g), english[key].message.match(/\{\w+\}/g));
+      }
+    }
+    assert.match(await readFile(path.join(output, 'src/i18n.js'), 'utf8'), /chrome\?\.i18n\?\.getMessage/);
+  } finally { await rm(output, { recursive: true, force: true }); }
+});

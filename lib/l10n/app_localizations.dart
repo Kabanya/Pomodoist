@@ -10,6 +10,9 @@ import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
 import 'app_localizations_es.dart';
 import 'app_localizations_fr.dart';
+import 'app_localizations_ja.dart';
+import 'app_localizations_ko.dart';
+import 'app_localizations_pt.dart';
 import 'app_localizations_ru.dart';
 import 'app_localizations_zh.dart';
 
@@ -104,6 +107,10 @@ abstract class AppLocalizations {
     Locale('en'),
     Locale('es'),
     Locale('fr'),
+    Locale('ja'),
+    Locale('ko'),
+    Locale('pt'),
+    Locale('pt', 'BR'),
     Locale('ru'),
     Locale('zh'),
   ];
@@ -1893,7 +1900,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsReturnRemindersSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'A gentle evening nudge if today has no focus or completed task.'**
+  /// **'An evening reminder at 20:30 if you have not completed any tasks today.'**
   String get settingsReturnRemindersSubtitle;
 
   /// No description provided for @settingsDefaultTimedBlockTitle.
@@ -4959,6 +4966,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete \"{name}\"? Its subprojects will move up one level. Only tasks in this project will move to Inbox.'**
   String deleteProjectWithChildrenConfirmation(String name);
+
+  /// No description provided for @accountNickname.
+  ///
+  /// In en, this message translates to:
+  /// **'Nickname'**
+  String get accountNickname;
+
+  /// No description provided for @accountChangeNickname.
+  ///
+  /// In en, this message translates to:
+  /// **'Change nickname'**
+  String get accountChangeNickname;
+
+  /// No description provided for @accountNicknameSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save your nickname. Please try again.'**
+  String get accountNicknameSaveError;
+
+  /// No description provided for @notificationTaskStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Task starting'**
+  String get notificationTaskStarting;
+
+  /// No description provided for @notificationReturnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your tomato misses you'**
+  String get notificationReturnTitle;
+
+  /// No description provided for @notificationReturnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'One focus or one checkmark is enough to save the day.'**
+  String get notificationReturnBody;
+
+  /// No description provided for @notificationFocusChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus'**
+  String get notificationFocusChannel;
+
+  /// No description provided for @notificationFocusDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus interval completion notifications'**
+  String get notificationFocusDescription;
+
+  /// No description provided for @notificationReturnChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Return reminders'**
+  String get notificationReturnChannel;
+
+  /// No description provided for @notificationReturnDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Gentle reminders to return to Pomodoist'**
+  String get notificationReturnDescription;
+
+  /// No description provided for @notificationTaskChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Task start'**
+  String get notificationTaskChannel;
+
+  /// No description provided for @notificationTaskDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Task start notifications'**
+  String get notificationTaskDescription;
+
+  /// No description provided for @notificationOpenApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Pomodoist'**
+  String get notificationOpenApp;
+
+  /// No description provided for @notificationFocusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus interval completed'**
+  String get notificationFocusCompleted;
+
+  /// No description provided for @notificationLongBreakCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Long break completed'**
+  String get notificationLongBreakCompleted;
+
+  /// No description provided for @notificationBreakCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Break completed'**
+  String get notificationBreakCompleted;
+
+  /// No description provided for @updateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomodoist update'**
+  String get updateTitle;
+
+  /// No description provided for @updateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateAction;
+
+  /// No description provided for @updateCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get updateCheck;
+
+  /// No description provided for @updateSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates'**
+  String get updateSettings;
+
+  /// No description provided for @updateReceiveRc.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive release candidates (RC)'**
+  String get updateReceiveRc;
+
+  /// No description provided for @updateStableChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel: stable releases'**
+  String get updateStableChannel;
+
+  /// No description provided for @updateRcChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel: stable releases and RC'**
+  String get updateRcChannel;
+
+  /// No description provided for @updateRcHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'RC releases may contain bugs. Alpha and beta versions are excluded.'**
+  String get updateRcHelp;
+
+  /// No description provided for @updateRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'The app will restart. Your data will be preserved.'**
+  String get updateRestart;
+
+  /// No description provided for @updateNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Release notes'**
+  String get updateNotes;
+
+  /// No description provided for @updateOwnerManaged.
+  ///
+  /// In en, this message translates to:
+  /// **'This build is updated by its owner to preserve its server configuration. Ask them for the latest version.'**
+  String get updateOwnerManaged;
+
+  /// No description provided for @updateUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic updates are available in the official Linux AppImage. Use your package manager for other builds.'**
+  String get updateUnsupported;
+
+  /// No description provided for @updateVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {value}'**
+  String updateVersion(String value);
+
+  /// No description provided for @updatePhaseIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can check at any time.'**
+  String get updatePhaseIdle;
+
+  /// No description provided for @updatePhaseChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking releases…'**
+  String get updatePhaseChecking;
+
+  /// No description provided for @updatePhaseAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version is available'**
+  String get updatePhaseAvailable;
+
+  /// No description provided for @updatePhaseDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading update…'**
+  String get updatePhaseDownloading;
+
+  /// No description provided for @updatePhaseVerifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying integrity…'**
+  String get updatePhaseVerifying;
+
+  /// No description provided for @updatePhaseInstalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing installation and restart…'**
+  String get updatePhaseInstalling;
+
+  /// No description provided for @updatePhaseUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'You have the latest compatible version.'**
+  String get updatePhaseUpToDate;
+
+  /// No description provided for @updatePhaseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The update could not be completed'**
+  String get updatePhaseFailed;
+
+  /// No description provided for @achievementFocusSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Complete 1 work focus} other{Complete {count} work focuses}}'**
+  String achievementFocusSubtitle(int count);
+
+  /// No description provided for @achievementTaskSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Complete 1 task} other{Complete {count} tasks}}'**
+  String achievementTaskSubtitle(int count);
+
+  /// No description provided for @achievementDayNotWastedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish a focus and a task in one day'**
+  String get achievementDayNotWastedSubtitle;
+
+  /// No description provided for @achievementFocusPlusCheckSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish 3 focuses and 3 tasks in one day'**
+  String get achievementFocusPlusCheckSubtitle;
+
+  /// No description provided for @achievementNoFussSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish 5 focuses in a day without stops'**
+  String get achievementNoFussSubtitle;
+
+  /// No description provided for @achievementCleanEntrySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a task after its linked focus'**
+  String get achievementCleanEntrySubtitle;
+
+  /// No description provided for @achievementTomatoClosedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a task on the day of its work focus'**
+  String get achievementTomatoClosedSubtitle;
+
+  /// No description provided for @achievementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{id, select, focus_1{First tomato} focus_5{Warm-up} focus_10{Focus caught} focus_25{Tomato shift} focus_50{Mode on} focus_100{Red belt} focus_250{Deep roots} focus_500{Timer authority} focus_1000{Thousandth tomato} focus_5000{Focus farmer} focus_10000{Attention plantation} focus_50000{Tomato empire} focus_100000{Red supermind} focus_1000000{Tomato singularity} task_1{First check} task_5{The list flinched} task_10{Happy checkbox} task_25{Clearing the pile} task_50{Checkmark master} task_100{Tail closer} task_250{List under control} task_500{Office knockout} task_1000{Thousand checks} task_5000{Victory archivist} task_10000{Checkbox machine} task_50000{Bureau of closed questions} task_100000{List ruler} task_1000000{Final check} combo_day_not_wasted{Day not wasted} combo_focus_plus_check{Focus + check} combo_no_fuss{No fuss} combo_clean_entry{Clean entry} combo_tomato_closed_question{Tomato closed it} other{Achievement}}'**
+  String achievementTitle(String id);
+
+  /// No description provided for @focusPresetDeepWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Work'**
+  String get focusPresetDeepWork;
+
+  /// No description provided for @focusPresetShortSprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Short Sprint'**
+  String get focusPresetShortSprint;
+
+  /// No description provided for @csvImportIssueRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Row {row}: {message}'**
+  String csvImportIssueRow(int row, String message);
+
+  /// No description provided for @csvImportIssueMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{code, select, fileTooLarge{CSV file exceeds 16 MiB.} invalidUtf8{CSV must be valid UTF-8.} missingHeader{CSV header is missing.} malformed{Malformed CSV.} unknownHeader{Unknown header \"{value}\".} duplicateHeader{Duplicate header \"{value}\".} contentHeaderRequired{content header is required.} tooManyTasks{CSV cannot contain more than 1000 tasks.} tooManyFields{Row has more fields than the header.} contentRequired{content is required.} invalidPriority{priority must be an integer from 1 to 4.} invalidDate{{value} must use YYYY-MM-DD.} mixedSchedule{Due date cannot be combined with a timed schedule.} timedFieldsRequired{A timed schedule requires start_at, end_at and time_zone.} invalidTimestamp{{value} must be RFC3339 with an explicit UTC offset.} invalidTimeZone{time_zone must be a valid IANA name.} endBeforeStart{end_at must be after start_at.} invalidRecurrence{recurrence must be day, week or month.} invalidInteger{{value} must be an integer from 1 to 999.} intervalWithoutRecurrence{recurrence_interval requires recurrence.} recurrenceWithoutSchedule{recurrence requires a schedule.} doneTask{Done tasks cannot be imported.} invalidKey{{value} has an invalid format.} empty{CSV contains no tasks.} duplicateKey{Duplicate key \"{value}\".} parentCycle{parent_key references form a cycle.} missingParent{parent_key \"{value}\" does not exist.} childProject{A child task must use the same project as its parent.} other{The file could not be imported.}}'**
+  String csvImportIssueMessage(String code, String value);
 }
 
 class _AppLocalizationsDelegate
@@ -4977,6 +5278,9 @@ class _AppLocalizationsDelegate
     'en',
     'es',
     'fr',
+    'ja',
+    'ko',
+    'pt',
     'ru',
     'zh',
   ].contains(locale.languageCode);
@@ -4986,6 +5290,18 @@ class _AppLocalizationsDelegate
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when language+country codes are specified.
+  switch (locale.languageCode) {
+    case 'pt':
+      {
+        switch (locale.countryCode) {
+          case 'BR':
+            return AppLocalizationsPtBr();
+        }
+        break;
+      }
+  }
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
     case 'ar':
@@ -4998,6 +5314,12 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsEs();
     case 'fr':
       return AppLocalizationsFr();
+    case 'ja':
+      return AppLocalizationsJa();
+    case 'ko':
+      return AppLocalizationsKo();
+    case 'pt':
+      return AppLocalizationsPt();
     case 'ru':
       return AppLocalizationsRu();
     case 'zh':
