@@ -100,3 +100,32 @@ Restore stops client-facing services, loads the dump in one transaction, and sta
 Container versions are pinned in `compose.yaml` and the Dockerfiles. Read the upstream self-hosting changelog before changing them. PostgreSQL major versions require a documented database upgrade; changing the image tag alone cannot upgrade an existing data volume. Make a verified backup before any version update.
 
 This package intentionally omits Studio, Storage, image transformation, connection pooling, and log analytics because Pomodoist core does not need them. Add a service only when a deployed feature requires it.
+
+## Companion and AI endpoints
+
+`pomodoist-ai` accepts the existing `command.type: task.decomposeTranscript`
+request and returns the same task/error envelope as `pomodoist-watch`. Both call
+one shared provider and purchase-verification adapter. The AI endpoint permits
+StoreKit-only requests through the gateway, then verifies the signed purchase on
+the server; gateway JWT verification must remain disabled for this endpoint.
+Provider keys, model selection, fallback deadlines, and access policy are unchanged.
+
+Watch draft batches use an atomic command receipt. Retry with the same command ID
+after a lost response. Already accepted commands from older server versions are
+acknowledged without creating new tasks; this does not recover drafts lost before
+the upgrade. Apply all additive migrations before deploying the new functions.
+
+Companion snapshot reads page through every relevant task/project/label and active
+Focus state, excluding historical events. Page size never truncates task trees.
+The shared state, task, Focus, decomposition and projection helpers are listed in
+`core-manifest.json` so public/self-hosted packaging includes their full closure.
+
+The draft persistence integration test executes the TypeScript planner against a
+real disposable local database after migrations. The self-hosted CI workflow runs
+it after the database contracts:
+
+```sh
+POMODOIST_TEST_DB=pomodoist-selfhost-refactor-db deno test \
+  --config supabase/deno.json --allow-env --allow-run \
+  tests/database/task_drafts_database_test.ts
+```

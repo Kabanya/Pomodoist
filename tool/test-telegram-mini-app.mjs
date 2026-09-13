@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { taskPage, taskOperations, validateCommand, TelegramError } from '../server/supabase/functions/pomodoist-telegram/commands.ts';
-import { telegramEntityId } from '../telegram-mini-app/core.js';
+import { telegramEntityId } from '../apps/telegram-mini-app/core.js';
 const { chromium } = createRequire(import.meta.url)('playwright');
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 const context = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ru-RU', timezoneId: 'Europe/Moscow' });
@@ -51,7 +51,7 @@ await page.route('**/*', async route => {
   if (url.pathname === '/config.js') return route.fulfill({ contentType: 'text/javascript', body: 'window.pomodoistRuntimeConfig = {supabaseUrl: "https://mini.example", supabaseAnonKey:"fixture"};' });
   if (url.pathname.startsWith('/telegram/')) {
     const file = url.pathname.split('/').at(-1) || 'index.html';
-    return route.fulfill({ body: await readFile(new URL(`../telegram-mini-app/${file}`, import.meta.url)), contentType: file.endsWith('.js') ? 'text/javascript' : file.endsWith('.css') ? 'text/css' : 'text/html' });
+    return route.fulfill({ body: await readFile(new URL(`../apps/telegram-mini-app/${file}`, import.meta.url)), contentType: file.endsWith('.js') ? 'text/javascript' : file.endsWith('.css') ? 'text/css' : 'text/html' });
   }
   if (!url.pathname.endsWith('/pomodoist-telegram')) return route.fulfill({ status: 404, body: '' });
   const body = route.request().postDataJSON();

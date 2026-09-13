@@ -9,7 +9,7 @@ import { root, miniAppFiles, loadEnv, runtimeConfig, configScript, openUrl } fro
 import { telegramApi } from './configure-telegram-bot.mjs';
 
 const apiPath = '/functions/v1/pomodoist-telegram', limit = 48 * 1024;
-const source = path.join(root, 'telegram-mini-app');
+const source = path.join(root, 'apps', 'telegram-mini-app');
 
 export function createPreviewServer(config, { sourceDir = source, allowedOrigins = new Set(), fetcher = fetch } = {}) {
   const server = createServer(async (req, res) => {

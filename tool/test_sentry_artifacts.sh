@@ -17,7 +17,7 @@ trap cleanup EXIT INT TERM
 
 SENTRY_RELEASE=$release "$repo_root/tool/export_web_sourcemaps.sh" "$test_root/export"
 docker build \
-  --file "$repo_root/deploy/web/Dockerfile" \
+  --file "$repo_root/tool/deploy/web/Dockerfile" \
   --build-arg "RELEASE_SHA=$release" \
   --build-arg POMODOIST_BILLING_CHANNEL=stripe \
   --tag "$image" \
@@ -35,7 +35,7 @@ verification=$(python3 "$repo_root/tool/verify_sentry_artifacts.py" \
   "$test_root/runtime.js" \
   "$test_root/export/artifacts/main.dart.js" \
   "$test_root/export/artifacts/main.dart.js.map" \
-  "$repo_root")
+  "$repo_root/apps/flutter")
 printf '%s\n' "$verification"
 position=$(printf '%s\n' "$verification" | sed -n 's/^resolve-position=//p')
 line=${position%:*}

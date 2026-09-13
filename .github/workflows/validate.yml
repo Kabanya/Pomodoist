@@ -19,13 +19,20 @@ jobs:
           sudo apt-get install --yes --no-install-recommends \
             appstream desktop-file-utils
       - run: sh tool/test_public_boundary.sh
+      - run: python3 tool/check_architecture.py
+      - run: python3 -m unittest discover -s tool -p test_architecture.py
       - run: make test-linux-packaging
       - run: flutter pub get --enforce-lockfile
+        working-directory: apps/flutter
       - run: python3 -m unittest discover -s tool -p test_release_notes.py
       - run: flutter analyze
+        working-directory: apps/flutter
+      - run: dart analyze tool
       - run: flutter test
+        working-directory: apps/flutter
       - name: Test browser voice recording storage
         shell: bash
+        working-directory: apps/flutter
         run: |
           # Root-only CI runners cannot launch Chrome's sandbox. Keep normal
           # developer/non-root launches unchanged and scope this to this test.
@@ -37,4 +44,5 @@ jobs:
           fi
           flutter test --platform chrome test/web/voice_recording_store_test.dart
       - name: Compile web platform adapters
+        working-directory: apps/flutter
         run: flutter build web --debug

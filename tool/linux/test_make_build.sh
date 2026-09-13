@@ -65,4 +65,19 @@ grep -Eq '^flutter build linux --release ' "$command_log"
 ! grep -Eq '^flutter build linux .*--no-pub' "$command_log"
 test "$(sed -n '6p' "$command_log")" = 'build-appimage '
 
+# Check SDK selection/quoting and root-relative defines without running a build.
+spaced_repo="$test_root/repo with spaces"
+mkdir -p "$spaced_repo/.fvm/flutter_sdk/bin"
+spaced_repo="$(cd -- "$spaced_repo" && pwd -P)"
+cp "$project_root/Makefile" "$spaced_repo/Makefile"
+cp "$fake_flutter" "$spaced_repo/.fvm/flutter_sdk/bin/flutter"
+cp "$fake_dart" "$spaced_repo/.fvm/flutter_sdk/bin/dart"
+make --silent --no-print-directory -n -C "$spaced_repo" \
+  analyze setup-env linux-release \
+  POMODOIST_RELEASE=0123456789abcdef0123456789abcdef01234567 \
+  LINUX_CONFIG='config with spaces.json' > "$test_root/spaced-commands"
+grep -Fq "\"$spaced_repo/.fvm/flutter_sdk/bin/flutter\" analyze" "$test_root/spaced-commands"
+grep -Fq "\"$spaced_repo/.fvm/flutter_sdk/bin/dart\" tool/env_setup.dart" "$test_root/spaced-commands"
+grep -Fq -- "--dart-define-from-file=\"$spaced_repo/config with spaces.json\"" "$test_root/spaced-commands"
+
 echo 'Linux make build network contract passed.'

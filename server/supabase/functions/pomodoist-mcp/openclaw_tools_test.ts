@@ -100,3 +100,12 @@ Deno.test('Focus pause respects preset restrictions', async () => {
   assertEquals((response.structuredContent as { error: { code: string } }).error.code, 'forbidden');
   assert(!calls.some(call => call.args.p_operations));
 });
+
+Deno.test('missing task validation survives guarded planning without a commit', async () => {
+  const { invoke, calls } = fixture();
+  const response = await invoke('openclaw_update_task', {
+    request_id: uuid, arguments: { task_id: 'missing', content: 'Changed' },
+  });
+  assertEquals((response.structuredContent as { error: { code: string } }).error.code, 'not_found');
+  assert(!calls.some(call => call.args.p_operations));
+});

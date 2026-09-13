@@ -28,9 +28,12 @@ jobs:
       - name: Test Android packaging and public configuration
         run: python3 -m unittest discover -s tool/android -p 'test_*.py' -v
       - run: flutter pub get --enforce-lockfile
+        working-directory: apps/flutter
       - name: Test Android runtime contracts
+        working-directory: apps/flutter
         run: flutter test test/android_platform_test.dart
       - name: Prove release signing fails closed
+        working-directory: apps/flutter
         run: |
           if flutter build apk --release --target-platform android-arm64 \
               --dart-define=POMODOIST_BILLING_CHANNEL=storekit > "$RUNNER_TEMP/unsigned-build.log" 2>&1; then
@@ -58,6 +61,7 @@ jobs:
             echo "ANDROID_KEY_PASSWORD=$password"
           } >> "$GITHUB_ENV"
       - name: Compile release APK and AAB without production account access
+        working-directory: apps/flutter
         run: |
           common=(--release --dart-define=POMODOIST_ENVIRONMENT=local
             --dart-define=WEB_APP_URL=https://app.pomodoist.com
@@ -65,7 +69,7 @@ jobs:
             "--dart-define=POMODOIST_RELEASE=$GITHUB_SHA")
           flutter build apk "${common[@]}"
           flutter build appbundle "${common[@]}"
-          bash tool/android/verify_artifacts.sh
+          bash ../../tool/android/verify_artifacts.sh
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -84,8 +88,8 @@ jobs:
         with:
           name: android-validation-NOT-FOR-DISTRIBUTION
           path: |
-            build/app/outputs/flutter-apk/app-release.apk
-            build/app/outputs/bundle/release/app-release.aab
+            apps/flutter/build/app/outputs/flutter-apk/app-release.apk
+            apps/flutter/build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 3
       - name: Remove disposable signing material

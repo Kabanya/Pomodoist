@@ -19,3 +19,19 @@ screenlog.*
 
 server/.env
 server/backups
+
+# Relocated app caches and private native configuration.
+apps/flutter/web/GoogleOAuth.env
+**/.flutter-plugins*
+**/.gradle
+**/.kotlin
+**/Pods
+**/ephemeral
+**/local.properties
+**/key.properties
+**/*.jks
+**/*.keystore
+**/*.p12
+**/*.pfx
+**/AuthKey_*.p8
+.fvm

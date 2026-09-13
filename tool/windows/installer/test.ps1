@@ -107,12 +107,12 @@ exit /b 0
 
     $versionRepo = Join-Path $testRoot 'version-repository'
     $versionTools = Join-Path $versionRepo 'tool\windows\installer'
-    $versionResources = Join-Path $versionRepo 'windows\runner\resources'
+    $versionResources = Join-Path $versionRepo 'apps\flutter\windows\runner\resources'
     New-Item -ItemType Directory -Force $versionTools, $versionResources | Out-Null
     Copy-Item -LiteralPath $buildScript -Destination $versionTools
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Pomodoist.iss') -Destination $versionTools
-    Copy-Item -LiteralPath (Join-Path $repoRoot 'windows\runner\resources\app_icon.ico') -Destination $versionResources
-    Set-Content -LiteralPath (Join-Path $versionRepo 'pubspec.yaml') -Value 'version: 1.2.3-rc.1+91'
+    Copy-Item -LiteralPath (Join-Path $repoRoot 'apps\flutter\windows\runner\resources\app_icon.ico') -Destination $versionResources
+    Set-Content -LiteralPath (Join-Path $versionRepo 'apps\flutter\pubspec.yaml') -Value 'version: 1.2.3-rc.1+91'
     & (Join-Path $versionTools 'build.ps1') `
         -BuildDirectory $bundle `
         -OutputDirectory $output `

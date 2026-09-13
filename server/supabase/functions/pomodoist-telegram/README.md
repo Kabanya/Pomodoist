@@ -132,7 +132,7 @@ The CI workflow checks the deployed entry point with Deno and runs the new bot/a
 cd server/supabase
 deno check functions/pomodoist-telegram/index.ts
 deno test --allow-read --allow-env functions/pomodoist-telegram \
-  functions/pomodoist-watch/pomodoist_watch_test.ts ../../telegram-mini-app/core_test.ts
+  functions/pomodoist-watch/pomodoist_watch_test.ts ../../apps/telegram-mini-app/core_test.ts
 ```
 
 The new dependency-free tests also run offline via a Node.js adapter from the repository root (this is not a substitute for the Deno entry-point check):

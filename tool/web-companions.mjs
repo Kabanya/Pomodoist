@@ -3,7 +3,7 @@ import { parseEnv, parseArgs, promisify } from 'node:util';
 import { execFile } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
-import { build, configuration } from '../chrome-extension/build.mjs';
+import { build, configuration } from '../apps/chrome-extension/build.mjs';
 
 export const root = fileURLToPath(new URL('../', import.meta.url));
 export const miniAppFiles = ['index.html', 'app.js', 'core.js', 'styles.css'];
@@ -22,10 +22,10 @@ export async function buildMiniApp(env, destination) {
   const config = runtimeConfig(env);
   destination = path.resolve(destination);
   if (destination === path.parse(destination).root || destination === root.slice(0, -1) || root.startsWith(destination + path.sep) ||
-      destination === path.join(root, 'telegram-mini-app')) throw new Error('Build output must not contain the source.');
+      destination === path.join(root, 'apps', 'telegram-mini-app')) throw new Error('Build output must not contain the source.');
   await rm(destination, { recursive: true, force: true });
   await mkdir(path.join(destination, 'telegram'), { recursive: true });
-  for (const file of miniAppFiles) await copyFile(path.join(root, 'telegram-mini-app', file), path.join(destination, 'telegram', file));
+  for (const file of miniAppFiles) await copyFile(path.join(root, 'apps', 'telegram-mini-app', file), path.join(destination, 'telegram', file));
   await writeFile(path.join(destination, 'config.js'), configScript(config));
   return destination;
 }

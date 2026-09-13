@@ -55,3 +55,6 @@ verify_jwt = false
 [functions.pomodoist-transcribe]
 # The handler verifies the bearer token through Auth.getUser, including new JWT keys.
 verify_jwt = false
+
+[functions.pomodoist-ai]
+verify_jwt = false

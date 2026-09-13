@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import { readFile, mkdir, stat, writeFile } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
 import { createRequire } from 'node:module';
-import { build } from '../chrome-extension/build.mjs';
+import { build } from '../apps/chrome-extension/build.mjs';
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const root = resolve(import.meta.dirname, '..'), output = resolve(root, 'output/localization');
@@ -13,7 +13,7 @@ const mime = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/jav
 const server = createServer(async (req, res) => {
   try {
     const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-    const base = pathname.startsWith('/chrome/') ? 'build/localization-chrome' : pathname.startsWith('/telegram/') ? 'telegram-mini-app' : 'build/localization-demo';
+    const base = pathname.startsWith('/chrome/') ? 'build/localization-chrome' : pathname.startsWith('/telegram/') ? 'apps/telegram-mini-app' : 'build/localization-demo';
     const relative = base === 'build/localization-demo' ? pathname : pathname.replace(/^\/(chrome|telegram)/, '');
     let file = resolve(root, base, '.' + relative);
     if (!file.startsWith(resolve(root, base) + '/') && file !== resolve(root, base)) throw new Error('Invalid path');
@@ -49,7 +49,7 @@ try {
       results.push({locale, surface:name, errors, text: (await page.locator('body').innerText()).slice(0,3000)});
       await context.close();
     }
-    const messages = JSON.parse(await readFile(resolve(root, `chrome-extension/_locales/${locale === 'pt-BR' ? 'pt_BR' : locale}/messages.json`)));
+    const messages = JSON.parse(await readFile(resolve(root, `apps/chrome-extension/_locales/${locale === 'pt-BR' ? 'pt_BR' : locale}/messages.json`)));
     const context = await browser.newContext({locale,viewport:{width:420,height:620},deviceScaleFactor:2});
     await context.addInitScript(({locale,messages}) => {
       window.chrome = { i18n: { getUILanguage: () => locale, getMessage: (key, substitutions) => {

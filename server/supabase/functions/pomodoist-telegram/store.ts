@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
-import type { pomodoistState, telegramCommandOps, telegramSnapshot } from "../pomodoist-watch/pomodoist_watch.ts";
+import type { pomodoistState } from "../_shared/pomodoist_state.ts";
+import type { telegramCommandOps } from "../_shared/pomodoist_commands.ts";
+import type { telegramSnapshot } from "../_shared/pomodoist_snapshots.ts";
 import { TelegramError, type TelegramIdentity, type TelegramStore } from "./pomodoist_telegram.ts";
 import { type JsonMap, type SnapshotOptions, taskOperations, taskPage, validateCommand } from "./commands.ts";
 

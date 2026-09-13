@@ -46,9 +46,9 @@ jobs:
         id: version
         shell: bash
         run: |
-          pubspec_version=$(awk '/^version:/ {sub(/\r$/, ""); print $2; exit}' pubspec.yaml)
+          pubspec_version=$(awk '/^version:/ {sub(/\r$/, ""); print $2; exit}' apps/flutter/pubspec.yaml)
           if [[ ! "$pubspec_version" =~ ^.+\+([0-9]+)$ ]]; then
-            echo 'pubspec.yaml must contain a numeric build number after +.' >&2
+            echo 'apps/flutter/pubspec.yaml must contain a numeric build number after +.' >&2
             exit 64
           fi
           build_number="${BASH_REMATCH[1]}"
@@ -63,8 +63,8 @@ jobs:
             awk -v version="$release_version+$build_number" '
               /^version:/ {$0 = "version: " version}
               {sub(/\r$/, ""); print}
-            ' pubspec.yaml > pubspec.yaml.tmp
-            mv pubspec.yaml.tmp pubspec.yaml
+            ' apps/flutter/pubspec.yaml > apps/flutter/pubspec.yaml.tmp
+            mv apps/flutter/pubspec.yaml.tmp apps/flutter/pubspec.yaml
           fi
           echo "POMODOIST_VERSION=$release_version" >> "$GITHUB_ENV"
           echo "version=$release_version" >> "$GITHUB_OUTPUT"
@@ -72,6 +72,7 @@ jobs:
         with:
           flutter-version-file: .fvmrc
       - run: flutter pub get
+        working-directory: apps/flutter
       - name: Test installer packaging boundary
         run: >-
           powershell.exe -NoProfile -ExecutionPolicy Bypass
@@ -168,8 +169,8 @@ jobs:
         with:
           name: pomodoist-windows-exe
           path: |
-            build/windows/installer/Pomodoist-Setup.exe
-            build/windows/installer/Pomodoist-Setup.exe.sha256
+            apps/flutter/build/windows/installer/Pomodoist-Setup.exe
+            apps/flutter/build/windows/installer/Pomodoist-Setup.exe.sha256
           if-no-files-found: error
           retention-days: 14
 

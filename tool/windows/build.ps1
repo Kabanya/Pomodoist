@@ -10,12 +10,16 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 
+if (-not [string]::IsNullOrWhiteSpace($ConfigFile) -and -not [System.IO.Path]::IsPathRooted($ConfigFile)) {
+    $ConfigFile = Join-Path $repoRoot $ConfigFile
+}
+
 function Invoke-DesktopReleaseConfigValidation {
     param([Parameter(Mandatory = $true)][string]$Path)
 
     $maximumAttempts = 3
     for ($attempt = 1; $attempt -le $maximumAttempts; $attempt++) {
-        & dart tool/desktop_release_config.dart --config $Path
+        & dart (Join-Path $repoRoot 'tool\desktop_release_config.dart') --config $Path
         $validationExitCode = $LASTEXITCODE
         if ($validationExitCode -eq 0) {
             return
@@ -32,12 +36,12 @@ function Invoke-DesktopReleaseConfigValidation {
     }
 }
 
-Push-Location $repoRoot
+Push-Location (Join-Path $repoRoot 'apps\flutter')
 try {
     if ($Clean) {
         & flutter clean
         if ($LASTEXITCODE -ne 0) { throw 'flutter clean failed' }
-        $buildDirectory = Join-Path $repoRoot 'build'
+        $buildDirectory = Join-Path $repoRoot 'apps\flutter\build'
         if (Test-Path -LiteralPath $buildDirectory) {
             throw "flutter clean did not remove $buildDirectory. Close processes using the build directory and retry."
         }

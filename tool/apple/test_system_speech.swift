@@ -1,4 +1,4 @@
-// Run: swiftc apple/SystemSpeechTranscriber.swift tool/apple/test_system_speech.swift -o /tmp/test_system_speech && /tmp/test_system_speech
+// Run: swiftc apps/flutter/apple/SystemSpeechTranscriber.swift tool/apple/test_system_speech.swift -o /tmp/test_system_speech && /tmp/test_system_speech
 import AVFoundation
 import Foundation
 import Speech

@@ -13,7 +13,7 @@ ANDROID = '{http://schemas.android.com/apk/res/android}'
 
 class AndroidManifestTests(unittest.TestCase):
     def setUp(self):
-        self.manifest = ET.parse(ROOT / 'android/app/src/main/AndroidManifest.xml').getroot()
+        self.manifest = ET.parse(ROOT / 'apps/flutter/android/app/src/main/AndroidManifest.xml').getroot()
 
     def test_permissions_cover_existing_native_features(self):
         permissions = {item.get(ANDROID + 'name') for item in self.manifest.findall('uses-permission')}
@@ -42,14 +42,14 @@ class AndroidManifestTests(unittest.TestCase):
         self.assertEqual(app.get(ANDROID + 'usesCleartextTraffic'), 'false')
 
     def test_all_backup_domains_are_excluded_from_transfer(self):
-        rules = ET.parse(ROOT / 'android/app/src/main/res/xml/data_extraction_rules.xml').getroot()
+        rules = ET.parse(ROOT / 'apps/flutter/android/app/src/main/res/xml/data_extraction_rules.xml').getroot()
         required = {'root', 'file', 'database', 'sharedpref', 'external', 'device_root', 'device_file', 'device_database', 'device_sharedpref'}
         for mode in ('cloud-backup', 'device-transfer'):
             excluded = {item.get('domain') for item in rules.findall(mode + '/exclude') if item.get('path') == '.'}
             self.assertEqual(excluded, required)
 
     def test_only_debug_builds_opt_in_to_cleartext(self):
-        app = ET.parse(ROOT / 'android/app/src/debug/AndroidManifest.xml').getroot().find('application')
+        app = ET.parse(ROOT / 'apps/flutter/android/app/src/debug/AndroidManifest.xml').getroot().find('application')
         self.assertEqual(app.get(ANDROID + 'usesCleartextTraffic'), 'true')
         self.assertEqual(self.manifest.find('application').get(ANDROID + 'usesCleartextTraffic'), 'false')
 
@@ -61,7 +61,7 @@ class AndroidManifestTests(unittest.TestCase):
 
 class AndroidGradleTests(unittest.TestCase):
     def test_production_identity_and_desugaring(self):
-        text = (ROOT / 'android/app/build.gradle.kts').read_text()
+        text = (ROOT / 'apps/flutter/android/app/build.gradle.kts').read_text()
         self.assertNotIn('com.example.', text)
         self.assertIn('applicationId = "com.finchforge.pomodoist"', text)
         self.assertIn('namespace = "com.finchforge.pomodoist"', text)
@@ -69,7 +69,7 @@ class AndroidGradleTests(unittest.TestCase):
         self.assertIn('com.android.tools:desugar_jdk_libs:2.1.4', text)
 
     def test_release_never_falls_back_to_debug_signing(self):
-        text = (ROOT / 'android/app/build.gradle.kts').read_text()
+        text = (ROOT / 'apps/flutter/android/app/build.gradle.kts').read_text()
         self.assertNotIn('signingConfigs.getByName("debug")', text)
         self.assertIn('signingConfigs.getByName("release")', text)
         self.assertIn('Android Debug', text)

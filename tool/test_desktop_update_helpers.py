@@ -8,7 +8,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / 'lib/features/updates/update_install_scripts.dart'
+SCRIPTS = ROOT / 'apps/flutter/lib/features/updates/update_install_scripts.dart'
 
 
 def bundled_script(name):

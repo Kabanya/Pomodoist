@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "ai": {
+    "request": {
+      "command": {
+        "type": "task.decomposeTranscript",
+        "transcript": "Buy milk",
+        "locale": "en",
+        "currentLocalTime": "2026-09-13T10:00:00+00:00",
+        "smart": false
+      }
+    },
+    "providerResponse": {
+      "choices": [
+        {
+          "message": {
+            "content": "{\"tasks\":[{\"quickAdd\":\"Buy milk\"}]}"
+          }
+        }
+      ]
+    },
+    "response": {
+      "ok": true,
+      "tasks": [
+        {
+          "quickAdd": "Buy milk"
+        }
+      ]
+    }
+  },
+  "batch": {
+    "id": "draft-regression-command",
+    "type": "task.commitDrafts",
+    "tasks": [
+      {
+        "quickAdd": "First @shared"
+      },
+      {
+        "quickAdd": "Second @shared"
+      }
+    ]
+  },
+  "focus": {
+    "command": {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "type": "focus.startDefault"
+    },
+    "plannedSeconds": 1500,
+    "runStatus": "active",
+    "intervalStatus": "running"
+  },
+  "unauthorized": {
+    "request": {
+      "command": {
+        "type": "task.decomposeTranscript"
+      }
+    },
+    "status": 403,
+    "code": "purchase_verification_failed"
+  },
+  "sync": {
+    "opId": "sync-contract-operation",
+    "entityType": "task",
+    "entityId": "sync-contract-task",
+    "operation": "upsert",
+    "clientUpdatedAt": "2026-09-13T10:00:00.000Z",
+    "payload": {
+      "schemaVersion": 1,
+      "id": "sync-contract-task",
+      "userId": "local-user",
+      "content": "Buy milk",
+      "projectId": "inbox",
+      "priority": 4,
+      "status": "open",
+      "dueJson": null,
+      "updatedAt": "2026-09-13T10:00:00.000Z",
+      "commandType": "task.create"
+    }
+  }
+}

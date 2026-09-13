@@ -3,9 +3,9 @@
 Android uses the shared Flutter task, focus, account, voice and integration flows.
 The application ID and Kotlin namespace are `com.finchforge.pomodoist`. The minimum
 Android API is 24 (or Flutter's minimum, when higher); compile/target SDK and NDK
-come from the Flutter SDK pinned in `.fvmrc`. Keep that pin and `pubspec.lock` in
+come from the Flutter SDK pinned in `.fvmrc`. Keep that pin and `apps/flutter/pubspec.lock` in
 source control. Android Gradle Plugin 8.11.1, Kotlin 2.2.20, Java 17 and core
-library desugaring 2.1.4 are configured in `android/`.
+library desugaring 2.1.4 are configured in `apps/flutter/android/`.
 
 This guide is also the release checklist for issue #50. A successful build does
 **not** certify real-device functionality or Google Play approval. Complete the
@@ -26,7 +26,7 @@ make android
 `make setup-flutter` generates the ignored `.env.android` profile from the
 `ANDROID__` values in `.env.setup`. `make android` uses that profile, isolates
 Gradle state under `build/android/gradle-home`, and writes the debug APK to
-`build/app/outputs/flutter-apk/app-debug.apk` on Windows, macOS, and Linux.
+`apps/flutter/build/app/outputs/flutter-apk/app-debug.apk` on Windows, macOS, and Linux.
 Override `ANDROID_CONFIG` to use another dotenv or JSON dart-define file.
 
 Debug builds do not require a production key and can use HTTP development
@@ -48,12 +48,12 @@ keytool -genkeypair -v -storetype JKS -keyalg RSA -keysize 3072 \
 
 Let `keytool` prompt for passwords. Back up the key and credentials in a secure
 secret manager. Never commit a keystore or place credentials in dart-defines.
-Copy `android/key.properties.example` to ignored `android/key.properties`, then
+Copy `apps/flutter/android/key.properties.example` to ignored `apps/flutter/android/key.properties`, then
 set the absolute keystore path, store password, alias and key password. In Java
 properties, backslashes need escaping; forward slashes work for Windows paths.
 Alternatively supply the four environment variables below (environment wins):
 
-| Environment variable | `android/key.properties` property |
+| Environment variable | `apps/flutter/android/key.properties` property |
 | --- | --- |
 | `ANDROID_KEYSTORE_PATH` | `storeFile` |
 | `ANDROID_STORE_PASSWORD` | `storePassword` |
@@ -105,7 +105,7 @@ an additional local certificate check. Obtain it with `keytool -list -v` against
 the upload alias; it is not a password. Keep the matching Dart symbols for crash
 symbolication. The AAB is an upload artifact, not an APK that `adb install` accepts.
 
-`versionName` and `versionCode` default to the version in `pubspec.yaml`.
+`versionName` and `versionCode` default to the version in `apps/flutter/pubspec.yaml`.
 `ANDROID_BUILD_NAME`, `ANDROID_BUILD_NUMBER` and `POMODOIST_RELEASE` can override
 them. The release value must be a full Git SHA; versionCode must be a positive
 integer no greater than 2100000000 and must increase for each new Play upload.

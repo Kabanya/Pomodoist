@@ -11,7 +11,7 @@ recurrence and deadline metadata. Completion is available in the list. Deletion
 has an explicit confirmation; recurring-task and subtree limits remain enforced
 by the shared backend, with a route to the full app.
 
-The light/dark palettes mirror `lib/app/theme/app_theme.dart`; Telegram chooses
+The light/dark palettes mirror `apps/flutter/lib/app/theme/app_theme.dart`; Telegram chooses
 the mode. Controls use 8px corners, native form fields, system fonts, touch targets,
 visible keyboard focus and Telegram safe-area insets. The task sheet fits the
 keyboard-adjusted viewport. Telegram Back closes a sheet before returning to

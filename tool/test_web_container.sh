@@ -7,7 +7,7 @@ release=0123456789abcdef0123456789abcdef01234567
 containers=""
 test_root=$(mktemp -d "${TMPDIR:-/tmp}/pomodoist-web-container.XXXXXX")
 build_context="$test_root/context"
-oauth_source="$repo_root/web/GoogleOAuth.env"
+oauth_source="$repo_root/apps/flutter/web/GoogleOAuth.env"
 oauth_source_checksum=
 if [ -f "$oauth_source" ]; then
   oauth_source_checksum=$(cksum <"$oauth_source")
@@ -27,7 +27,7 @@ fail() {
   exit 1
 }
 
-challenge_source="$repo_root/web/auth/challenge.html"
+challenge_source="$repo_root/apps/flutter/web/auth/challenge.html"
 [ -f "$challenge_source" ] || fail 'static CAPTCHA challenge page is missing'
 challenge_size=$(wc -c <"$challenge_source" | tr -d ' ')
 [ "$challenge_size" -lt 30720 ] ||
@@ -85,9 +85,12 @@ mkdir -p "$build_context"
   --exclude='./.superpowers' \
   --exclude='./build' \
   --exclude='./.worktrees' \
-  --exclude='./web/GoogleOAuth.env' \
+  --exclude='./apps/flutter/web/GoogleOAuth.env' \
+  --exclude='./apps/flutter/build' \
+  --exclude='./apps/flutter/.dart_tool' \
+  --exclude='./.fvm' \
   -cf - .) | tar -xf - -C "$build_context"
-printf '%s\n' 'oauth-env-must-never-ship' >"$build_context/web/GoogleOAuth.env"
+printf '%s\n' 'oauth-env-must-never-ship' >"$build_context/apps/flutter/web/GoogleOAuth.env"
 
 assert_rejected_billing_channel() {
   channel=$1
@@ -97,7 +100,7 @@ assert_rejected_billing_channel() {
     channel_arg="--build-arg POMODOIST_BILLING_CHANNEL=$channel"
   fi
   if docker build \
-    --file "$build_context/deploy/web/Dockerfile" \
+    --file "$build_context/tool/deploy/web/Dockerfile" \
     --target builder \
     --build-arg "RELEASE_SHA=$release" \
     $channel_arg \
@@ -116,7 +119,7 @@ assert_rejected_billing_channel storekit
 # This is deliberately the only image build in this test. Both environments
 # below must run from the exact same image ID.
 docker build \
-  --file "$build_context/deploy/web/Dockerfile" \
+  --file "$build_context/tool/deploy/web/Dockerfile" \
   --build-arg "RELEASE_SHA=$release" \
   --build-arg POMODOIST_BILLING_CHANNEL=stripe \
   --tag "$image" \

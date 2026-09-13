@@ -17,7 +17,7 @@ if [ -d "$output" ] &&
 fi
 mkdir -p "$output"
 docker build \
-  --file "$repo_root/deploy/web/Dockerfile" \
+  --file "$repo_root/tool/deploy/web/Dockerfile" \
   --build-arg "RELEASE_SHA=$release" \
   --build-arg POMODOIST_BILLING_CHANNEL=stripe \
   --target sentry-source-maps \

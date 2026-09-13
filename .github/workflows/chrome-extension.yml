@@ -1,10 +1,10 @@
 name: Chrome extension
 on:
   pull_request:
-    paths: ['chrome-extension/**', 'web/auth/extension-challenge.*', '.github/workflows/chrome-extension.yml']
+    paths: ['apps/chrome-extension/**', 'apps/flutter/web/auth/extension-challenge.*', '.github/workflows/chrome-extension.yml']
   push:
     branches: [main]
-    paths: ['chrome-extension/**', 'web/auth/extension-challenge.*', '.github/workflows/chrome-extension.yml']
+    paths: ['apps/chrome-extension/**', 'apps/flutter/web/auth/extension-challenge.*', '.github/workflows/chrome-extension.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,13 +17,13 @@ jobs:
         with:
           node-version: '22'
       - name: Unit and protocol tests
-        working-directory: chrome-extension
+        working-directory: apps/chrome-extension
         run: |
           npm test
           TZ=America/Los_Angeles npm test
           TZ=Europe/Amsterdam npm test
       - name: Package a validation-only build (no production credentials)
-        working-directory: chrome-extension
+        working-directory: apps/chrome-extension
         env:
           SUPABASE_URL: https://api.example.test
           SUPABASE_ANON_KEY: sb_publishable_validation_only
@@ -35,5 +35,5 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: chrome-extension-validation-build
-          path: chrome-extension/pomodoist-chrome-validation.zip
+          path: apps/chrome-extension/pomodoist-chrome-validation.zip
           if-no-files-found: error

@@ -177,7 +177,7 @@ Deno.test("achievement locales preserve IDs and progress and match app titles", 
       const base = locale === "pt-BR" ? "pt" : locale;
       const arb = JSON.parse(
         await Deno.readTextFile(
-          new URL(`../../../../lib/l10n/app_${base}.arb`, import.meta.url),
+          new URL(`../../../../apps/flutter/lib/l10n/app_${base}.arb`, import.meta.url),
         ),
       );
       const titles = new Map(

@@ -78,6 +78,11 @@ Android, Linux, Windows, and the web.
 
 ## Build from source
 
+Run `make setup` and `make check` from the repository root. Flutter lives in
+`apps/flutter`; the pinned SDK and environment profiles remain at the root.
+See the [repository architecture](docs/architecture/repository.md) and
+[compatibility and release sequence](docs/architecture/compatibility.md).
+
 Detailed build, self-hosting, and platform-specific instructions are available in the documentation:
 
 - [Introduction](https://pomodoist.com/docs/): App overview, key features, and documentation navigation
@@ -88,8 +93,8 @@ Detailed build, self-hosting, and platform-specific instructions are available i
 - [Configuration reference](https://pomodoist.com/docs/configuration/reference/): Environment files and client configuration
 - [Developer guide](https://pomodoist.com/docs/developer-guide/): Repository layout, Make targets, testing, migrations, and contributing
 - [Email address operations](docs/email-addresses.md): Add incoming Cloudflare routes and outgoing Brevo senders
-- [Telegram Mini App development](telegram-mini-app/README.md): `make telegram-debug` with real staging accounts and `make telegram-release`
-- [Chrome extension development](chrome-extension/README.md#make-commands): `make chrome-debug` and `make chrome-release`
+- [Telegram Mini App development](apps/telegram-mini-app/README.md): `make telegram-debug` with real staging accounts and `make telegram-release`
+- [Chrome extension development](apps/chrome-extension/README.md#make-commands): `make chrome-debug` and `make chrome-release`
 
 ## Contributing
 

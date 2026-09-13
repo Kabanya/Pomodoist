@@ -2,7 +2,8 @@
 # Verify signatures and identity, not just the presence of output files.
 set -euo pipefail
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-cd "$repo_root"
+app_root="$repo_root/apps/flutter"
+cd "$app_root"
 sdk=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}
 if [[ -z "$sdk" || ! -d "$sdk/build-tools" ]]; then
   echo 'ANDROID_HOME or ANDROID_SDK_ROOT must point to an Android SDK.' >&2

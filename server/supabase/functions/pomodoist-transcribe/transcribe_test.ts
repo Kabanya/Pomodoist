@@ -326,7 +326,7 @@ Deno.test("never falls back to a generic OpenRouter key when the Pomodoist key i
 
 Deno.test("production web CSP explicitly permits recorded audio blob fetches", async () => {
   const template = await readFile(new URL(
-    "../../../../deploy/web/security-headers.conf.template", import.meta.url,
+    "../../../../tool/deploy/web/security-headers.conf.template", import.meta.url,
   ), "utf8");
   const sources = /connect-src\s+([^;]+);/.exec(template)?.[1].split(/\s+/) ?? [];
   assert.ok(sources.includes("blob:"), "connect-src must explicitly allow recorded audio blob URLs");

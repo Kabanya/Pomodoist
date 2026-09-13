@@ -22,13 +22,20 @@ jobs:
       - name: Check public boundary
         run: sh tool/test_public_boundary.sh
       - name: Test shared functions
-        run: deno test --config server/supabase/deno.json --allow-env --allow-net --allow-read server/supabase/functions
+        run: deno test --config server/supabase/deno.json --allow-env --allow-net --allow-read server/supabase/functions server/tests/contracts_test.ts
       - name: Generate an independent instance
         run: make -C server setup
       - name: Start fresh database and API
         run: make -C server core-up
       - name: Test schema, ownership, and synchronization
         run: make -C server test-db test-smoke
+      - name: Verify draft planners against durable receipts
+        working-directory: server
+        env:
+          POMODOIST_TEST_DB: pomodoist-selfhost-db
+        run: >-
+          deno test --config supabase/deno.json --allow-env --allow-run=docker
+          tests/database/task_drafts_database_test.ts
       - name: Build and start the complete self-hosted stack
         run: make -C server up
       - name: Show service status

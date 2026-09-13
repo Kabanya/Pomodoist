@@ -4,8 +4,9 @@ set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 project_root="$(cd -- "$script_dir/../.." && pwd -P)"
+app_root="$project_root/apps/flutter"
 
-bundle="${POMODOIST_LINUX_BUNDLE:-$project_root/build/linux/x64/release/bundle}"
+bundle="${POMODOIST_LINUX_BUNDLE:-$app_root/build/linux/x64/release/bundle}"
 data_home="${XDG_DATA_HOME:-${HOME:?HOME is required}/.local/share}"
 bin_home="${XDG_BIN_HOME:-${HOME:?HOME is required}/.local/bin}"
 install_dir="${POMODOIST_INSTALL_DIR:-$data_home/pomodoist}"
@@ -94,10 +95,10 @@ ln -sfn -- "$install_dir/pomodoist" "$bin_home/pomodoist"
 
 escaped_exec="$(printf '%s' "$install_dir/pomodoist" | sed 's/[&|\\]/\\&/g')"
 sed "s|@EXECUTABLE@|$escaped_exec|g" \
-  "$project_root/linux/packaging/$desktop_id.desktop.in" \
+  "$app_root/linux/packaging/$desktop_id.desktop.in" \
   > "$desktop_dir/$desktop_id.desktop"
 chmod 644 "$desktop_dir/$desktop_id.desktop"
-install -Dm644 "$project_root/web/icons/Icon-512.png" \
+install -Dm644 "$app_root/web/icons/Icon-512.png" \
   "$icon_dir/$desktop_id.png"
 
 if command -v update-desktop-database > /dev/null 2>&1; then

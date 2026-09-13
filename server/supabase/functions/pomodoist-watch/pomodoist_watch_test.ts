@@ -112,7 +112,10 @@ Deno.test("Telegram focus is one work interval and emits shared focus events", (
   );
 
   assertEquals(operations.map((operation) => operation.entityType), [
-    "focus_run", "focus_interval", "focus_event", "focus_event",
+    "focus_run",
+    "focus_interval",
+    "focus_event",
+    "focus_event",
   ]);
   assertEquals(operations[0].payload.targetWorkIntervals, 1);
   assertEquals(operations[1].payload.plannedSeconds, 1500);
@@ -1133,7 +1136,7 @@ function deps(args: {
       },
       rpc: async (functionName: string, rpcArgs: Record<string, unknown>) => {
         rpcCalls.push({ functionName, args: rpcArgs });
-        if (functionName === "pull_changes") {
+        if (functionName === "read_pomodoist_companion_state") {
           return {
             data: {
               nextCursor: 1,
@@ -1272,3 +1275,25 @@ function focusInterval(
     },
   };
 }
+
+Deno.test("draft batch uses distinct receipts and one shared label", async () => {
+  const rpcCalls: Array<
+    { functionName: string; args: Record<string, unknown> }
+  > = [];
+  const response = await handlePomodoistWatch(
+    request({
+      command: {
+        type: "task.commitDrafts",
+        id: "11111111-1111-4111-8111-111111111111",
+        tasks: [{ quickAdd: "First @shared @SHARED" }, { quickAdd: "Second @shared" }],
+      },
+    }),
+    deps({ rpcCalls }),
+  );
+  assertEquals(response.status, 200);
+  const push = rpcCalls.find((call) => call.args.p_operations != null)!;
+  const ops = push.args.p_operations as Array<Record<string, unknown>>;
+  assertEquals(new Set(ops.map((op) => op.opId)).size, ops.length);
+  assertEquals(ops.filter((op) => op.entityType === "task").length, 2);
+  assertEquals(ops.filter((op) => op.entityType === "label").length, 1);
+});

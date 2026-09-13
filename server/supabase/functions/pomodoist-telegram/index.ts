@@ -2,7 +2,10 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { handlePomodoistTelegram } from "./pomodoist_telegram.ts";
 import { createTelegramStore } from "./store.ts";
-import * as telegramRuntime from "../pomodoist-watch/pomodoist_watch.ts";
+import { pomodoistState } from "../_shared/pomodoist_state.ts";
+import { telegramCommandOps } from "../_shared/pomodoist_commands.ts";
+import { telegramSnapshot } from "../_shared/pomodoist_snapshots.ts";
+const telegramRuntime = { pomodoistState, telegramCommandOps, telegramSnapshot };
 import { createTelegramApi, handleTelegramWebhook, isTelegramWebhookRequest } from "./bot.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";

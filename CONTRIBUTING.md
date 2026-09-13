@@ -10,3 +10,7 @@ tokens, component boundaries, accessibility rules, and validation scope.
 Before a pull request can be accepted, its author must read [CLA.md](CLA.md)
 and check the CLA confirmation in the pull request template. Contributions
 and official client binaries remain available under `AGPL-3.0-only`.
+
+Run root `make check` for architecture boundaries, Flutter analysis and unit tests.
+Direct Flutter commands run from `apps/flutter`. Keep dependencies directed as
+described in the [repository architecture](docs/architecture/repository.md).

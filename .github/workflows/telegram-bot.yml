@@ -4,9 +4,9 @@ on:
   pull_request:
     paths:
       - 'server/supabase/**'
-      - 'telegram-mini-app/**'
-      - 'lib/l10n/app_en.arb'
-      - 'lib/l10n/app_ru.arb'
+      - 'apps/telegram-mini-app/**'
+      - 'apps/flutter/lib/l10n/app_en.arb'
+      - 'apps/flutter/lib/l10n/app_ru.arb'
       - 'server/compose.telegram.yaml'
       - 'tool/*telegram*'
       - '.github/workflows/telegram-bot.yml'
@@ -14,9 +14,9 @@ on:
     branches: [main, '9-issue/make-better-telegram']
     paths:
       - 'server/supabase/**'
-      - 'telegram-mini-app/**'
-      - 'lib/l10n/app_en.arb'
-      - 'lib/l10n/app_ru.arb'
+      - 'apps/telegram-mini-app/**'
+      - 'apps/flutter/lib/l10n/app_en.arb'
+      - 'apps/flutter/lib/l10n/app_ru.arb'
       - 'server/compose.telegram.yaml'
       - 'tool/*telegram*'
       - '.github/workflows/telegram-bot.yml'
@@ -48,7 +48,7 @@ jobs:
           deno test --allow-read --allow-env
           functions/pomodoist-telegram
           functions/pomodoist-watch/pomodoist_watch_test.ts
-          ../../telegram-mini-app/core_test.ts
+          ../../apps/telegram-mini-app/core_test.ts
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'

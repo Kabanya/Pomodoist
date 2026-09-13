@@ -1,7 +1,7 @@
 # Executes the exact helper bundled in Dart with real Windows fixture executables.
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$source = Get-Content -LiteralPath (Join-Path $root 'lib/features/updates/update_install_scripts.dart') -Raw
+$source = Get-Content -LiteralPath (Join-Path $root 'apps/flutter/lib/features/updates/update_install_scripts.dart') -Raw
 $match = [regex]::Match($source, "(?s)const windowsUpdateScript = r'''\r?\n(.*?)''';")
 if (-not $match.Success) { throw 'Could not extract bundled Windows helper.' }
 $base = Join-Path ([IO.Path]::GetTempPath()) ("Pomodoist updater's test " + [guid]::NewGuid().ToString('N'))

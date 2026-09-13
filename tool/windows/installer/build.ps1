@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$BuildDirectory = 'build\windows\x64\runner\Release',
-    [string]$OutputDirectory = 'build\windows\installer',
+    [string]$BuildDirectory = 'apps\flutter\build\windows\x64\runner\Release',
+    [string]$OutputDirectory = 'apps\flutter\build\windows\installer',
     [string]$CompilerPath,
     [string]$Version
 )
@@ -54,7 +54,7 @@ foreach ($relativePath in @('pomodoist.exe', 'flutter_windows.dll', 'data')) {
 $number = '(?:0|[1-9][0-9]*)'
 $versionPattern = "$number\.$number\.$number(?:-rc\.$number)?"
 if ([string]::IsNullOrWhiteSpace($Version)) {
-    $pubspecPath = Join-Path $repoRoot 'pubspec.yaml'
+    $pubspecPath = Join-Path $repoRoot 'apps\flutter\pubspec.yaml'
     $versionMatch = [regex]::Match(
         (Get-Content -Raw -LiteralPath $pubspecPath),
         "(?m)^version:[ \t]*($versionPattern)\+[0-9]+[ \t]*\r?$"
@@ -86,7 +86,7 @@ if ([string]::IsNullOrWhiteSpace($CompilerPath)) {
 }
 
 $sourcePath = Join-Path $PSScriptRoot 'Pomodoist.iss'
-$iconPath = Join-Path $repoRoot 'windows\runner\resources\app_icon.ico'
+$iconPath = Join-Path $repoRoot 'apps\flutter\windows\runner\resources\app_icon.ico'
 foreach ($requiredPath in @($sourcePath, $iconPath)) {
     if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
         throw "Installer input was not found: $requiredPath"

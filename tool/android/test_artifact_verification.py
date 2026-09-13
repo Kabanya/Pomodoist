@@ -28,7 +28,7 @@ class ArtifactVerificationTests(unittest.TestCase):
         (self.root / 'tool/android').mkdir(parents=True)
         shutil.copy(ROOT / 'tool/android/verify_artifacts.sh', self.root / 'tool/android')
         for name in ('flutter-apk/app-release.apk', 'bundle/release/app-release.aab'):
-            path = self.root / 'build/app/outputs' / name
+            path = self.root / 'apps/flutter/build/app/outputs' / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text('fixture, not a real signed artifact')
         self.tools = self.root / 'sdk/build-tools/36.0.0'

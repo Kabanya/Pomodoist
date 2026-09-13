@@ -7,11 +7,17 @@ ifeq ($(OS),Windows_NT)
 SHELL := C:/Program Files/Git/bin/bash.exe
 endif
 
+REPO_ROOT := $(CURDIR)
+# Make abspath splits paths at spaces; configuration paths are single values.
+repo_path = $(if $(or $(filter /%,$(firstword $(1))),$(findstring :/,$(firstword $(1)))),$(1),$(REPO_ROOT)/$(1))
+FLUTTER_ROOT := $(REPO_ROOT)/apps/flutter
+FLUTTER_BUILD := $(FLUTTER_ROOT)/build
+
 # Tools. Prefer the project-pinned FVM SDK when it has been bootstrapped.
-FVM_FLUTTER := .fvm/flutter_sdk/bin/flutter
-FLUTTER ?= $(if $(wildcard $(FVM_FLUTTER)),$(FVM_FLUTTER),flutter)
-FVM_DART := .fvm/flutter_sdk/bin/dart
-DART ?= $(if $(wildcard $(FVM_DART)),$(FVM_DART),dart)
+FVM_FLUTTER := $(REPO_ROOT)/.fvm/flutter_sdk/bin/flutter
+FLUTTER ?= $(if $(wildcard .fvm/flutter_sdk/bin/flutter),$(FVM_FLUTTER),flutter)
+FVM_DART := $(REPO_ROOT)/.fvm/flutter_sdk/bin/dart
+DART ?= $(if $(wildcard .fvm/flutter_sdk/bin/dart),$(FVM_DART),dart)
 
 # Runtime
 POMODOIST_BILLING_CHANNEL ?= stripe
@@ -19,7 +25,7 @@ IOS_SIMULATOR ?= iPhone 17 Pro
 IPAD_SIMULATOR ?= iPad Pro 13-inch (M5)
 WATCH_SIMULATOR ?= Apple Watch Series 11 (46mm)
 WATCH_BUILD_DIR ?= build/watch-simulator
-WATCH_BUILD_PATH = $(abspath $(WATCH_BUILD_DIR))
+WATCH_BUILD_PATH = $(call repo_path,$(WATCH_BUILD_DIR))
 
 # Linux release downloads use direct HTTPS. This prevents stale localhost
 # proxy variables from breaking reproducible local builds.
@@ -32,14 +38,14 @@ LINUX_CONFIG ?= .env.linux
 
 # Windows
 WINDOWS_CONFIG ?= .env.windows
-WINDOWS_RELEASE_DIR ?= build/windows/x64/runner/Release
+WINDOWS_RELEASE_DIR ?= $(FLUTTER_BUILD)/windows/x64/runner/Release
 
 # TestFlight credentials stay in the private env and are never Dart defines.
 PRIVATE_CONFIG ?= .env.private
-ASC_KEY_ID ?= $(shell $(DART) tool/env_setup.dart value --env "$(PRIVATE_CONFIG)" --key ASC_KEY_ID 2>/dev/null)
-ASC_ISSUER_ID ?= $(shell $(DART) tool/env_setup.dart value --env "$(PRIVATE_CONFIG)" --key ASC_ISSUER_ID 2>/dev/null)
-IOS_EXPORT_OPTIONS ?= ios/ExportOptions.plist
-IOS_IPA_PATH ?= build/ios/ipa/Pomodoist.ipa
+ASC_KEY_ID ?= $(shell "$(DART)" tool/env_setup.dart value --env "$(PRIVATE_CONFIG)" --key ASC_KEY_ID 2>/dev/null)
+ASC_ISSUER_ID ?= $(shell "$(DART)" tool/env_setup.dart value --env "$(PRIVATE_CONFIG)" --key ASC_ISSUER_ID 2>/dev/null)
+IOS_EXPORT_OPTIONS ?= $(FLUTTER_ROOT)/ios/ExportOptions.plist
+IOS_IPA_PATH ?= $(FLUTTER_BUILD)/ios/ipa/Pomodoist.ipa
 TESTFLIGHT_CONFIG ?= .env.testflight
 DEPLOY_CONFIG ?= .env.deploy
 TELEGRAM_ENV ?= staging
@@ -52,7 +58,7 @@ POMODOIST_RELEASE ?= $(shell git rev-parse HEAD)
 .PHONY: setup setup-env setup-flutter setup-linux run run-linux web
 .PHONY: setup-telegram telegram-configure
 .PHONY: telegram-debug telegram-release chrome-debug chrome-release
-.PHONY: analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-packaging check format
+.PHONY: architecture analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-packaging check format
 .PHONY: android web-debug web-profile web-release
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
 .PHONY: windows-debug windows-profile windows-release windows-installer
@@ -144,17 +150,17 @@ help:
 setup: setup-env setup-flutter
 
 setup-env:
-	$(DART) tool/env_setup.dart bootstrap
+	"$(DART)" tool/env_setup.dart bootstrap
 
 setup-flutter: setup-env
-	$(DART) tool/env_setup.dart sync
-	$(FLUTTER) pub get
+	"$(DART)" tool/env_setup.dart sync
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" pub get
 
 setup-linux: setup-env
 	./tool/linux/setup_arch.sh
 
 setup-telegram: setup-env
-	$(DART) tool/env_setup.dart sync
+	"$(DART)" tool/env_setup.dart sync
 
 # Register only after deploying the matching function and secrets.
 telegram-configure: setup-telegram
@@ -174,19 +180,20 @@ chrome-release:
 	node tool/web-companions.mjs chrome release --config "$(COMPANION_RELEASE_CONFIG)"
 
 run:
-	$(FLUTTER) run --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 run-linux:
-	$(FLUTTER) run -d linux --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d linux --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 web:
-	$(FLUTTER) run -d chrome --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d chrome --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
 analyze:
-	$(FLUTTER) analyze
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" analyze
+	"$(DART)" analyze tool
 
 test:
-	$(FLUTTER) test
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" test
 
 test-linux-installer:
 	./tool/linux/test_install.sh
@@ -199,35 +206,38 @@ test-linux-build-network:
 
 test-linux-packaging: test-linux-installer test-linux-appimage test-linux-build-network
 
-check: analyze test
+architecture:
+	python3 tool/check_architecture.py
+
+check: architecture analyze test
 
 format:
-	$(DART) format lib test tool
+	"$(DART)" format apps/flutter/lib apps/flutter/test apps/flutter/tool tool
 
 android:
-	GRADLE_USER_HOME="$(ANDROID_GRADLE_HOME)" $(FLUTTER) build apk --debug --dart-define-from-file="$(ANDROID_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=storekit
+	cd "$(FLUTTER_ROOT)" && GRADLE_USER_HOME="$(call repo_path,$(ANDROID_GRADLE_HOME))" "$(FLUTTER)" build apk --debug --dart-define-from-file="$(call repo_path,$(ANDROID_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=storekit
 
 web-debug:
-	$(FLUTTER) build web --debug --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build web --debug --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
 web-profile:
-	$(FLUTTER) build web --profile --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build web --profile --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
 web-release:
-	$(FLUTTER) build web --release --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build web --release --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
 linux-pub-get:
-	$(LINUX_BUILD_ENV) bash ./tool/linux/pub_get_with_retry.sh "$(FLUTTER)"
+	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) bash "$(REPO_ROOT)/tool/linux/pub_get_with_retry.sh" "$(FLUTTER)"
 
 linux-debug: linux-pub-get
-	$(LINUX_BUILD_ENV) $(FLUTTER) build linux --debug --dart-define-from-file="$(LINUX_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) "$(FLUTTER)" build linux --debug --dart-define-from-file="$(call repo_path,$(LINUX_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 linux-profile: linux-pub-get
-	$(LINUX_BUILD_ENV) $(FLUTTER) build linux --profile --dart-define-from-file="$(LINUX_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) "$(FLUTTER)" build linux --profile --dart-define-from-file="$(call repo_path,$(LINUX_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 linux-release: linux-pub-get
-	$(LINUX_BUILD_ENV) $(DART) tool/desktop_release_config.dart --config "$(LINUX_CONFIG)"
-	$(LINUX_BUILD_ENV) $(FLUTTER) build linux --release --dart-define-from-file="$(LINUX_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
+	$(LINUX_BUILD_ENV) "$(DART)" tool/desktop_release_config.dart --config "$(LINUX_CONFIG)"
+	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) "$(FLUTTER)" build linux --release --dart-define-from-file="$(call repo_path,$(LINUX_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
 
 linux-appimage: linux-release
 	$(LINUX_BUILD_ENV) $(POMODOIST_APPIMAGE_BUILDER)
@@ -250,20 +260,20 @@ windows-installer: windows-release
 macos-debug macos-profile: POMODOIST_BILLING_CHANNEL = storekit
 
 macos-debug:
-	$(FLUTTER) build macos --debug \
-		--dart-define-from-file="$(LOCAL_CONFIG)" \
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --debug \
+		--dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" \
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
 		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 macos-profile:
-	$(FLUTTER) build macos --profile \
-		--dart-define-from-file="$(LOCAL_CONFIG)" \
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --profile \
+		--dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" \
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
 		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 macos-release: testflight-preflight
-	$(FLUTTER) build macos --release \
-		--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --release \
+		--dart-define-from-file="$(call repo_path,$(TESTFLIGHT_CONFIG))" \
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
 		--dart-define=POMODOIST_BILLING_CHANNEL=storekit
 
@@ -298,14 +308,14 @@ ipad-debug ipad-profile: RUN_SIMULATOR = $(IPAD_SIMULATOR)
 ios-debug ios-profile ipad-debug ipad-profile:
 	xcrun simctl bootstatus "$(RUN_SIMULATOR)" -b
 	open -a Simulator
-	$(FLUTTER) run -d "$(RUN_SIMULATOR)" --debug --dart-define-from-file="$(LOCAL_CONFIG)" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=storekit
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d "$(RUN_SIMULATOR)" --debug --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=storekit
 
 watch-debug: WATCH_CONFIGURATION = Debug
 watch-profile: WATCH_CONFIGURATION = Profile
 watch-debug watch-profile:
 	xcrun simctl bootstatus "$(WATCH_SIMULATOR)" -b
 	open -a Simulator
-	xcodebuild -quiet -project ios/Runner.xcodeproj -target PomodoistWatch -configuration "$(WATCH_CONFIGURATION)" -sdk watchsimulator SYMROOT="$(WATCH_BUILD_PATH)" OBJROOT="$(WATCH_BUILD_PATH)/obj" build
+	xcodebuild -quiet -project "$(FLUTTER_ROOT)/ios/Runner.xcodeproj" -target PomodoistWatch -configuration "$(WATCH_CONFIGURATION)" -sdk watchsimulator SYMROOT="$(WATCH_BUILD_PATH)" OBJROOT="$(WATCH_BUILD_PATH)/obj" build
 	xcrun simctl install "$(WATCH_SIMULATOR)" "$(WATCH_BUILD_PATH)/$(WATCH_CONFIGURATION)-watchsimulator/PomodoistWatch.app"
 	xcrun simctl launch "$(WATCH_SIMULATOR)" com.finchforge.pomodoist.watchkitapp
 
@@ -313,8 +323,8 @@ testflight: testflight-ios testflight-macos
 
 deploy-staging deploy-production deploy-all:
 	@set -eu; \
-		runner="$$( $(DART) tool/env_setup.dart value --env "$(DEPLOY_CONFIG)" --key RUNNER )"; \
-		"$$runner" "$(patsubst deploy-%,%,$@)" "$(CURDIR)" "$(abspath $(DEPLOY_CONFIG))"
+		runner="$$( "$(DART)" tool/env_setup.dart value --env "$(DEPLOY_CONFIG)" --key RUNNER )"; \
+		"$$runner" "$(patsubst deploy-%,%,$@)" "$(CURDIR)" "$(call repo_path,$(DEPLOY_CONFIG))"
 	@if [ "$@" = deploy-all ]; then \
 			$(MAKE) telegram-configure TELEGRAM_ENV=staging; \
 			$(MAKE) telegram-configure TELEGRAM_ENV=production; \
@@ -335,19 +345,19 @@ testflight-auth:
 	@test -f "$(PRIVATE_CONFIG)" || (echo "Missing $(PRIVATE_CONFIG); run make setup-flutter" >&2; exit 1)
 	@test -n "$(ASC_KEY_ID)" || (echo "ASC_KEY_ID is missing in $(PRIVATE_CONFIG)" >&2; exit 1)
 	@test -n "$(ASC_ISSUER_ID)" || (echo "ASC_ISSUER_ID is missing in $(PRIVATE_CONFIG)" >&2; exit 1)
-	@$(DART) tool/env_setup.dart value --env "$(PRIVATE_CONFIG)" --key ASC_PRIVATE_KEY_BASE64 >/dev/null
+	@"$(DART)" tool/env_setup.dart value --env "$(PRIVATE_CONFIG)" --key ASC_PRIVATE_KEY_BASE64 >/dev/null
 
 testflight-ios: testflight-preflight testflight-auth
 	@set -eu; \
 		key_dir="$$(mktemp -d "$${TMPDIR:-/tmp}/pomodoist-testflight.XXXXXX")"; \
 		trap 'test -n "$$key_dir" && rm -rf -- "$$key_dir"' EXIT HUP INT TERM; \
 		key_path="$$key_dir/AuthKey_$(ASC_KEY_ID).p8"; \
-		$(DART) tool/env_setup.dart write-asc-key --env "$(PRIVATE_CONFIG)" --output "$$key_path"; \
-		$(FLUTTER) build ipa --release \
-			--export-options-plist="$(IOS_EXPORT_OPTIONS)" \
-			--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
+		"$(DART)" tool/env_setup.dart write-asc-key --env "$(PRIVATE_CONFIG)" --output "$$key_path"; \
+		(cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build ipa --release \
+			--export-options-plist="$(call repo_path,$(IOS_EXPORT_OPTIONS))" \
+			--dart-define-from-file="$(call repo_path,$(TESTFLIGHT_CONFIG))" \
 			--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
-			--dart-define=POMODOIST_BILLING_CHANNEL=storekit; \
+			--dart-define=POMODOIST_BILLING_CHANNEL=storekit); \
 		test -f "$(IOS_IPA_PATH)" || (echo "Missing $(IOS_IPA_PATH)" >&2; exit 1); \
 		xcrun altool --validate-app "$(IOS_IPA_PATH)" \
 			--api-key "$(ASC_KEY_ID)" \
@@ -367,13 +377,13 @@ testflight-macos: testflight-preflight testflight-auth
 		key_dir="$$(mktemp -d "$${TMPDIR:-/tmp}/pomodoist-testflight.XXXXXX")"; \
 		trap 'test -n "$$key_dir" && rm -rf -- "$$key_dir"' EXIT HUP INT TERM; \
 		key_path="$$key_dir/AuthKey_$(ASC_KEY_ID).p8"; \
-		$(DART) tool/env_setup.dart write-asc-key --env "$(PRIVATE_CONFIG)" --output "$$key_path"; \
-		$(FLUTTER) build macos --release \
-			--dart-define-from-file="$(TESTFLIGHT_CONFIG)" \
+		"$(DART)" tool/env_setup.dart write-asc-key --env "$(PRIVATE_CONFIG)" --output "$$key_path"; \
+		(cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --release \
+			--dart-define-from-file="$(call repo_path,$(TESTFLIGHT_CONFIG))" \
 			--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
-			--dart-define=POMODOIST_BILLING_CHANNEL=storekit; \
+			--dart-define=POMODOIST_BILLING_CHANNEL=storekit); \
 		rm -rf "$(MACOS_ARCHIVE_PATH)" "$(MACOS_EXPORT_PATH)"; \
-		xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner \
+		xcodebuild -workspace "$(FLUTTER_ROOT)/macos/Runner.xcworkspace" -scheme Runner \
 			-configuration Release -archivePath "$(MACOS_ARCHIVE_PATH)" archive \
 			-hideShellScriptEnvironment \
 			-allowProvisioningUpdates \
@@ -401,7 +411,7 @@ testflight-macos: testflight-preflight testflight-auth
 			--p8-file-path "$$key_path"
 
 devices:
-	$(FLUTTER) devices
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" devices
 
 clean:
-	$(FLUTTER) clean
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" clean

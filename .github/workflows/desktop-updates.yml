@@ -3,14 +3,14 @@ name: Desktop updater
 on:
   pull_request:
     paths:
-      - 'lib/**'
-      - 'test/**'
+      - 'apps/flutter/lib/**'
+      - 'apps/flutter/test/**'
       - 'tool/test_desktop_update*'
       - '.github/workflows/desktop-updates.yml'
-      - 'pubspec.*'
+      - 'apps/flutter/pubspec.*'
       - '.fvmrc'
-      - 'windows/**'
-      - 'linux/**'
+      - 'apps/flutter/windows/**'
+      - 'apps/flutter/linux/**'
 
 permissions:
   contents: read
@@ -53,7 +53,9 @@ jobs:
         shell: powershell
         run: .\tool\test_desktop_update_windows.ps1
       - run: flutter pub get --enforce-lockfile
+        working-directory: apps/flutter
       - name: Test channels, popup, controller and verified downloads
+        working-directory: apps/flutter
         run: >-
           flutter test
           test/desktop_update_release_test.dart
@@ -63,4 +65,5 @@ jobs:
           test/desktop_update_exit_test.dart
           test/desktop_update_provider_test.dart
       - name: Compile native desktop application
+        working-directory: apps/flutter
         run: flutter build ${{ matrix.platform }} --debug

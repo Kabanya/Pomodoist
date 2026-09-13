@@ -247,7 +247,7 @@ services:
     container_name: pomodoist-selfhost-web
     build:
       context: ..
-      dockerfile: deploy/web/Dockerfile
+      dockerfile: tool/deploy/web/Dockerfile
       args:
         POMODOIST_BILLING_CHANNEL: stripe
         RELEASE_SHA: ${POMODOIST_RELEASE:?run make setup first}

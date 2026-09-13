@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { build } from '../chrome-extension/build.mjs';
+import { build } from '../apps/chrome-extension/build.mjs';
 import { buildMiniApp, runtimeConfig } from './web-companions.mjs';
 import { createPreviewServer, activateDebugMenu, restoreDebugMenu, readTunnelUrl } from './telegram-debug.mjs';
 

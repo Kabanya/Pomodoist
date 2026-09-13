@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # SDK-level smoke test only: does not claim authenticated feature/device QA.
 set -euo pipefail
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+cd "$repo_root/apps/flutter"
 package=com.finchforge.pomodoist
 adb install -r build/app/outputs/flutter-apk/app-release.apk
 adb logcat -c

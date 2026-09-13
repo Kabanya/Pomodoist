@@ -9,13 +9,13 @@ fail() {
   exit 1
 }
 
-! grep -Eq '^[[:space:]]+source: path$' pubspec.lock ||
+! grep -Eq '^[[:space:]]+source: path$' apps/flutter/pubspec.lock ||
   fail 'pubspec.lock contains local path dependencies; disable local overrides and run flutter pub get before committing'
 
 version=$(awk '
   $0 == "  app_account:" { found = 1; next }
   found && $1 == "ref:" { print $2; exit }
-' pubspec.yaml)
+' apps/flutter/pubspec.yaml)
 printf '%s\n' "$version" | grep -Eq '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' ||
   fail 'app_account must use a versioned public release tag'
 url=https://github.com/Kabanya/app-client-platform.git
@@ -28,19 +28,19 @@ for package in app_account app_voice; do
     found && $0 == "      path: " package { has_path = 1 }
     found && /^  [^[:space:]]+:/ { exit(has_url && has_ref && has_path ? 0 : 1) }
     END { exit(has_url && has_ref && has_path ? 0 : 1) }
-  ' pubspec.yaml || fail "$package must use the pinned public Git dependency"
+  ' apps/flutter/pubspec.yaml || fail "$package must use the pinned public Git dependency"
 done
 
 [ ! -e .gitmodules ] || fail '.gitmodules must not be published'
 ! git ls-files account-sync-platform | grep -q . ||
   fail 'private account-sync-platform must not be published'
-[ -f test/fixtures/pomodoist_productivity_parity.json ] ||
+[ -f tool/tests/fixtures/pomodoist_productivity_parity.json ] ||
   fail 'productivity parity fixture must be local'
-! grep -q 'account-sync-platform' test/productivity_parity_test.dart ||
+! grep -q 'account-sync-platform' apps/flutter/test/productivity_parity_test.dart ||
   fail 'productivity test must not read the private checkout'
-! grep -q 'account-sync-platform' deploy/web/Dockerfile ||
+! grep -q 'account-sync-platform' tool/deploy/web/Dockerfile ||
   fail 'Docker build must not copy a private checkout'
-! grep -q 'account-sync-platform' tool/prepare_sentry_sourcemaps.dart ||
+! grep -q 'account-sync-platform' apps/flutter/tool/prepare_sentry_sourcemaps.dart ||
   fail 'Sentry embedding must be limited to lib/'
 ! grep -q 'account-sync-platform' tool/verify_sentry_artifacts.py ||
   fail 'Sentry verification must be limited to lib/'
@@ -63,7 +63,7 @@ grep -Fq 'FinchForge LLC' LICENSING.md ||
 grep -Fq '[licensing model](LICENSING.md)' README.md ||
   fail 'README must link to LICENSING.md'
 ! git grep -ni 'signpath' -- \
-  ':!tool/test_public_boundary.sh' ':!test/workflow_yaml_test.dart' >/dev/null ||
+  ':!tool/test_public_boundary.sh' ':!apps/flutter/test/workflow_yaml_test.dart' >/dev/null ||
   fail 'tracked public files must not require SignPath'
 if grep -Eiq 'Alternative commercial licenses are available|distributed under separate terms|sublicense, relicense|open-source, commercial, or other license terms|Apple Standard EULA' \
   README.md LICENSING.md CLA.md CONTRIBUTING.md; then

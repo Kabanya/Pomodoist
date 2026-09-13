@@ -4,9 +4,10 @@ set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 project_root="$(cd -- "$script_dir/../.." && pwd -P)"
+app_root="$project_root/apps/flutter"
 
-bundle="${POMODOIST_LINUX_BUNDLE:-$project_root/build/linux/x64/release/bundle}"
-appdir="${POMODOIST_APPDIR:-$project_root/build/linux/appimage/Pomodoist.AppDir}"
+bundle="${POMODOIST_LINUX_BUNDLE:-$app_root/build/linux/x64/release/bundle}"
+appdir="${POMODOIST_APPDIR:-$app_root/build/linux/appimage/Pomodoist.AppDir}"
 version="${POMODOIST_VERSION:-}"
 release_date="${POMODOIST_RELEASE_DATE:-}"
 plugin_dir="${POMODOIST_GSTREAMER_PLUGIN_DIR:-}"
@@ -22,7 +23,7 @@ if [[ ! -x "$bundle/pomodoist" || ! -d "$bundle/data" || ! -d "$bundle/lib" ]]; 
 fi
 
 if [[ -z "$version" ]]; then
-  version="$(awk '/^version:[[:space:]]*/ {sub(/^[^:]*:[[:space:]]*/, ""); sub(/\+.*/, ""); print; exit}' "$project_root/pubspec.yaml")"
+  version="$(awk '/^version:[[:space:]]*/ {sub(/^[^:]*:[[:space:]]*/, ""); sub(/\+.*/, ""); print; exit}' "$app_root/pubspec.yaml")"
 fi
 if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
   echo "Invalid Pomodoist version for AppImage metadata: $version" >&2
@@ -122,22 +123,22 @@ mkdir -p -- \
 
 cp -a -- "$bundle/." "$appdir/usr/lib/pomodoist/"
 ln -s -- '../lib/pomodoist/pomodoist' "$appdir/usr/bin/pomodoist"
-install -Dm755 "$project_root/linux/packaging/AppRun" "$appdir/AppRun"
+install -Dm755 "$app_root/linux/packaging/AppRun" "$appdir/AppRun"
 
 sed 's|@EXECUTABLE@|pomodoist|g' \
-  "$project_root/linux/packaging/$desktop_id.desktop.in" \
+  "$app_root/linux/packaging/$desktop_id.desktop.in" \
   > "$appdir/$desktop_id.desktop"
 install -Dm644 "$appdir/$desktop_id.desktop" \
   "$appdir/usr/share/applications/$desktop_id.desktop"
 
-install -Dm644 "$project_root/web/icons/Icon-512.png" \
+install -Dm644 "$app_root/web/icons/Icon-512.png" \
   "$appdir/$desktop_id.png"
-install -Dm644 "$project_root/web/icons/Icon-512.png" \
+install -Dm644 "$app_root/web/icons/Icon-512.png" \
   "$appdir/usr/share/icons/hicolor/512x512/apps/$desktop_id.png"
 ln -s -- "$desktop_id.png" "$appdir/.DirIcon"
 
 sed -e "s|@VERSION@|$version|g" -e "s|@RELEASE_DATE@|$release_date|g" \
-  "$project_root/linux/packaging/$desktop_id.metainfo.xml.in" \
+  "$app_root/linux/packaging/$desktop_id.metainfo.xml.in" \
   > "$appdir/usr/share/metainfo/$desktop_id.appdata.xml"
 
 for plugin in "${gstreamer_plugins[@]}"; do

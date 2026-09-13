@@ -70,9 +70,9 @@ jobs:
         id: version
         shell: bash
         run: |
-          pubspec_version=$(awk '/^version:/ {sub(/\r$/, ""); print $2; exit}' pubspec.yaml)
+          pubspec_version=$(awk '/^version:/ {sub(/\r$/, ""); print $2; exit}' apps/flutter/pubspec.yaml)
           if [[ ! "$pubspec_version" =~ ^.+\+([0-9]+)$ ]]; then
-            echo 'pubspec.yaml must contain a numeric build number after +.' >&2
+            echo 'apps/flutter/pubspec.yaml must contain a numeric build number after +.' >&2
             exit 64
           fi
           build_number="${BASH_REMATCH[1]}"
@@ -87,8 +87,8 @@ jobs:
             awk -v version="$release_version+$build_number" '
               /^version:/ {$0 = "version: " version}
               {sub(/\r$/, ""); print}
-            ' pubspec.yaml > pubspec.yaml.tmp
-            mv pubspec.yaml.tmp pubspec.yaml
+            ' apps/flutter/pubspec.yaml > apps/flutter/pubspec.yaml.tmp
+            mv apps/flutter/pubspec.yaml.tmp apps/flutter/pubspec.yaml
           fi
           echo "POMODOIST_VERSION=$release_version" >> "$GITHUB_ENV"
           echo "version=$release_version" >> "$GITHUB_OUTPUT"
@@ -101,6 +101,7 @@ jobs:
           git config --global --add safe.directory "$flutter_root"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Resolve Flutter dependencies
+        working-directory: apps/flutter
         run: |
           for attempt in 1 2 3; do
             if flutter pub get; then
@@ -149,14 +150,14 @@ jobs:
             POMODOIST_RELEASE="$GITHUB_SHA"
       - name: Verify AppImage checksum
         run: |
-          cd build/linux/appimage
+          cd apps/flutter/build/linux/appimage
           sha256sum --check Pomodoist-x86_64.AppImage.sha256
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: pomodoist-linux-appimage-x86_64
           path: |
-            build/linux/appimage/Pomodoist-x86_64.AppImage
-            build/linux/appimage/Pomodoist-x86_64.AppImage.sha256
+            apps/flutter/build/linux/appimage/Pomodoist-x86_64.AppImage
+            apps/flutter/build/linux/appimage/Pomodoist-x86_64.AppImage.sha256
           if-no-files-found: error
           retention-days: 14
       - name: Upload AppImage and publish complete desktop release
@@ -196,7 +197,7 @@ jobs:
             gh api --method POST \
               "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$release_id/assets?name=$asset" \
               --header 'Content-Type: application/octet-stream' \
-              --input "build/linux/appimage/$asset" \
+              --input "apps/flutter/build/linux/appimage/$asset" \
               --silent
           done
           required_assets=(

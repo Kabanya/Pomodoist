@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { ActionError } from "./openclaw_actions.ts";
 
 import {
   type PomodoistMcpAuth,
@@ -481,14 +482,45 @@ export function registerPomodoistTools(
     }),
   );
 
-  server.registerTool(
+  for (const definition of pomodoistMutationPlans(auth, dependencies)) {
+    server.registerTool(definition.name, definition.config, safe(async arguments_ => {
+      const plan = await definition.plan(arguments_);
+      return mutate(context, plan.operations, plan.result);
+    }));
+  }
+}
+
+type MutationPlan = { operations: Operation[]; result: RecordValue };
+type MutationDefinition = {
+  name: string;
+  config: { inputSchema: z.ZodType; outputSchema: z.ZodType; annotations: { openWorldHint: boolean; destructiveHint?: boolean } };
+  plan: (arguments_: unknown) => Promise<MutationPlan>;
+};
+
+export function pomodoistMutationPlans(auth: PomodoistMcpAuth, dependencies: PomodoistToolDependencies): MutationDefinition[] {
+  const context: Context = { auth, config: dependencies.config, fetcher: dependencies.fetch ?? fetch,
+    log: dependencies.log ?? (() => {}) };
+  const closedAnnotations = { openWorldHint: false };
+  const destructiveAnnotations = { destructiveHint: true, openWorldHint: false };
+  const definitions: MutationDefinition[] = [];
+  const define: DefineMutation = (name, config, build) => {
+    definitions.push({ name, config, plan: async arguments_ => {
+      try { return await build(config.inputSchema.parse(arguments_)); }
+      catch (error) {
+        if (error instanceof RpcFailure) throw new ActionError(rpcErrorCode(error.status),
+          error.status >= 500 ? "Pomodoist service failed." : "Pomodoist request failed.");
+        throw error;
+      }
+    } });
+  };
+  define(
     "create_task",
     {
       inputSchema: createTaskSchema,
       outputSchema: outputSchemas.mutation,
       annotations: closedAnnotations,
     },
-    safe(async (arguments_) => {
+    async (arguments_) => {
       const snapshot = await mutationSnapshot(context);
       const now = new Date().toISOString();
       const id = crypto.randomUUID();
@@ -531,18 +563,18 @@ export function registerPomodoistTools(
         assignment(id, backlogId, now),
         ...labelAdditions(snapshot, id, arguments_.label_names, now),
       ];
-      return mutate(context, operations, { id });
-    }),
+      return mutationPlan( operations, { id });
+    },
   );
 
-  server.registerTool(
+  define(
     "update_task",
     {
       inputSchema: updateTaskSchema,
       outputSchema: outputSchemas.mutation,
       annotations: closedAnnotations,
     },
-    safe(async (arguments_) => {
+    async (arguments_) => {
       const snapshot = await mutationSnapshot(context);
       const task = requireTask(snapshot, arguments_.task_id);
       const now = new Date().toISOString();
@@ -602,25 +634,25 @@ export function registerPomodoistTools(
           now,
         ),
       );
-      return mutate(context, operations, { id: task.id });
-    }),
+      return mutationPlan( operations, { id: task.id });
+    },
   );
 
-  registerTaskAction(
-    server,
+  taskAction(
+    define,
     "complete_task",
     closedAnnotations,
     context,
     completeOperations,
   );
-  registerTaskAction(
-    server,
+  taskAction(
+    define,
     "restore_task",
     closedAnnotations,
     context,
     restoreOperations,
   );
-  server.registerTool(
+  define(
     "delete_task",
     {
       inputSchema: z.object({
@@ -633,7 +665,7 @@ export function registerPomodoistTools(
       outputSchema: outputSchemas.mutation,
       annotations: destructiveAnnotations,
     },
-    safe(async ({ task_id, recurrence_scope }) => {
+    async ({ task_id, recurrence_scope }) => {
       const snapshot = await mutationSnapshot(context);
       const task = requireTask(snapshot, task_id);
       const now = new Date().toISOString();
@@ -643,18 +675,18 @@ export function registerPomodoistTools(
         recurrence_scope,
         now,
       );
-      return mutate(context, operations, { id: task.id });
-    }),
+      return mutationPlan( operations, { id: task.id });
+    },
   );
 
-  server.registerTool(
+  define(
     "create_project",
     {
       inputSchema: createProjectSchema,
       outputSchema: outputSchemas.mutation,
       annotations: closedAnnotations,
     },
-    safe(async (arguments_) => {
+    async (arguments_) => {
       const snapshot = await mutationSnapshot(context);
       if (
         snapshot.projects.some((project) =>
@@ -668,7 +700,7 @@ export function registerPomodoistTools(
       const id = crypto.randomUUID();
       const projectColor = arguments_.color ??
         nextProjectColor(snapshot.projects);
-      return mutate(context, [
+      return mutationPlan( [
         upsert("project", id, {
           schemaVersion: 1,
           commandType: "project.create",
@@ -686,23 +718,23 @@ export function registerPomodoistTools(
           updatedAt: now,
         }, now),
       ], { id });
-    }),
+    },
   );
-  server.registerTool(
+  define(
     "update_project",
     {
       inputSchema: updateProjectSchema,
       outputSchema: outputSchemas.mutation,
       annotations: closedAnnotations,
     },
-    safe(async (arguments_) => {
+    async (arguments_) => {
       if (arguments_.project_id === inboxId) {
         throw new ToolFailure("forbidden", "Inbox cannot be changed.");
       }
       const snapshot = await mutationSnapshot(context);
       const project = requireProject(snapshot, arguments_.project_id);
       const now = new Date().toISOString();
-      return mutate(context, [
+      return mutationPlan( [
         upsert("project", project.id, {
           ...project,
           commandType: "project.update",
@@ -715,16 +747,16 @@ export function registerPomodoistTools(
           updatedAt: now,
         }, now),
       ], { id: project.id });
-    }),
+    },
   );
-  server.registerTool(
+  define(
     "delete_project",
     {
       inputSchema: z.object({ project_id: entityId }).strict(),
       outputSchema: outputSchemas.mutation,
       annotations: destructiveAnnotations,
     },
-    safe(async ({ project_id }) => {
+    async ({ project_id }) => {
       if (project_id === inboxId) {
         throw new ToolFailure("forbidden", "Inbox cannot be deleted.");
       }
@@ -786,18 +818,18 @@ export function registerPomodoistTools(
         commandType: "project.delete",
         id: project.id,
       }, now));
-      return mutate(context, operations, { id: project.id });
-    }),
+      return mutationPlan( operations, { id: project.id });
+    },
   );
 
-  server.registerTool(
+  define(
     "create_label",
     {
       inputSchema: z.object({ name }).strict(),
       outputSchema: outputSchemas.mutation,
       annotations: closedAnnotations,
     },
-    safe(async ({ name }) => {
+    async ({ name }) => {
       const snapshot = await mutationSnapshot(context);
       if (
         snapshot.labels.some((label) =>
@@ -809,19 +841,19 @@ export function registerPomodoistTools(
       }
       const now = new Date().toISOString();
       const id = crypto.randomUUID();
-      return mutate(context, [
+      return mutationPlan( [
         upsert("label", id, userLabel(id, name, now), now),
       ], { id });
-    }),
+    },
   );
-  server.registerTool(
+  define(
     "delete_label",
     {
       inputSchema: z.object({ label_id: entityId }).strict(),
       outputSchema: outputSchemas.mutation,
       annotations: destructiveAnnotations,
     },
-    safe(async ({ label_id }) => {
+    async ({ label_id }) => {
       const snapshot = await mutationSnapshot(context);
       const label = requireLabel(snapshot, label_id, "user");
       const now = new Date().toISOString();
@@ -838,18 +870,18 @@ export function registerPomodoistTools(
         commandType: "label.delete",
         id: label.id,
       }, now));
-      return mutate(context, operations, { id: label.id });
-    }),
+      return mutationPlan( operations, { id: label.id });
+    },
   );
 
-  server.registerTool(
+  define(
     "create_kanban_status",
     {
       inputSchema: createStatusSchema,
       outputSchema: outputSchemas.mutation,
       annotations: closedAnnotations,
     },
-    safe(async ({ name, color }) => {
+    async ({ name, color }) => {
       const snapshot = await mutationSnapshot(context);
       ensureUniqueStatusName(snapshot, name);
       const now = new Date().toISOString();
@@ -869,17 +901,17 @@ export function registerPomodoistTools(
         updatedAt: now,
       });
       const operations = reorderStatuses(statuses, now, id);
-      return mutate(context, operations, { id });
-    }),
+      return mutationPlan( operations, { id });
+    },
   );
-  server.registerTool(
+  define(
     "update_kanban_status",
     {
       inputSchema: updateStatusSchema,
       outputSchema: outputSchemas.mutation,
       annotations: closedAnnotations,
     },
-    safe(async (arguments_) => {
+    async (arguments_) => {
       const snapshot = await mutationSnapshot(context);
       const status = requireLabel(
         snapshot,
@@ -915,7 +947,7 @@ export function registerPomodoistTools(
         }, now));
       }
       if (arguments_.target_index === undefined) {
-        return mutate(context, operations, {
+        return mutationPlan( operations, {
           id: status.id,
         });
       }
@@ -927,19 +959,19 @@ export function registerPomodoistTools(
         status,
       );
       operations.push(...reorderStatuses(statuses, now));
-      return mutate(context, operations, {
+      return mutationPlan( operations, {
         id: status.id,
       });
-    }),
+    },
   );
-  server.registerTool(
+  define(
     "delete_kanban_status",
     {
       inputSchema: z.object({ status_id: entityId }).strict(),
       outputSchema: outputSchemas.mutation,
       annotations: destructiveAnnotations,
     },
-    safe(async ({ status_id }) => {
+    async ({ status_id }) => {
       if (status_id === backlogId || status_id === doneId) {
         throw new ToolFailure(
           "forbidden",
@@ -971,10 +1003,10 @@ export function registerPomodoistTools(
         isDeleted: true,
         changedAt: now,
       }, now));
-      return mutate(context, operations, { id: status.id });
-    }),
+      return mutationPlan( operations, { id: status.id });
+    },
   );
-  server.registerTool(
+  define(
     "configure_kanban",
     {
       inputSchema: z.object({
@@ -989,7 +1021,7 @@ export function registerPomodoistTools(
       outputSchema: outputSchemas.mutation,
       annotations: closedAnnotations,
     },
-    safe(async ({ project_ids, focus_status_id }) => {
+    async ({ project_ids, focus_status_id }) => {
       const snapshot = await mutationSnapshot(context);
       const now = new Date().toISOString();
       const operations: Operation[] = [];
@@ -1020,10 +1052,10 @@ export function registerPomodoistTools(
           now,
         ));
       }
-      return mutate(context, operations, { id: settingsId });
-    }),
+      return mutationPlan( operations, { id: settingsId });
+    },
   );
-  server.registerTool(
+  define(
     "move_task_on_kanban",
     {
       inputSchema: z.object({
@@ -1034,7 +1066,7 @@ export function registerPomodoistTools(
       outputSchema: outputSchemas.mutation,
       annotations: closedAnnotations,
     },
-    safe(async ({ task_id, status_id, target_index }) => {
+    async ({ task_id, status_id, target_index }) => {
       const snapshot = await mutationSnapshot(context);
       const task = requireTask(snapshot, task_id);
       const status = requireLabel(snapshot, status_id, "kanbanStatus");
@@ -1062,9 +1094,21 @@ export function registerPomodoistTools(
         );
         if (row) operations.push(upsert("task", task.id, row, now));
       }
-      return mutate(context, operations, { id: task.id });
-    }),
+      return mutationPlan( operations, { id: task.id });
+    },
   );
+  return definitions;
+}
+
+type DefineMutation = <Schema extends z.ZodType>(
+  name: string,
+  config: { inputSchema: Schema; outputSchema: z.ZodType; annotations: { openWorldHint: boolean; destructiveHint?: boolean } },
+  plan: (arguments_: z.output<Schema>) => Promise<MutationPlan>,
+) => void;
+
+function mutationPlan(operations: Operation[], result: RecordValue): MutationPlan {
+  if (!operations.length) throw new ToolFailure("conflict", "Mutation has no effect.");
+  return { operations, result: { ...result, server_revision: null } };
 }
 
 type Context = {
@@ -1101,8 +1145,8 @@ function registerRead(
   );
 }
 
-function registerTaskAction(
-  server: McpServer,
+function taskAction(
+  define: DefineMutation,
   name: string,
   annotations: { openWorldHint: boolean },
   context: Context,
@@ -1112,19 +1156,19 @@ function registerTaskAction(
     now: string,
   ) => Operation[],
 ) {
-  server.registerTool(
+  define(
     name,
     {
       inputSchema: z.object({ task_id: entityId }).strict(),
       outputSchema: outputSchemas.mutation,
       annotations,
     },
-    safe(async ({ task_id }) => {
+    async ({ task_id }) => {
       const snapshot = await mutationSnapshot(context);
       const task = requireTask(snapshot, task_id);
       const now = new Date().toISOString();
-      return mutate(context, build(snapshot, task, now), { id: task.id });
-    }),
+      return mutationPlan( build(snapshot, task, now), { id: task.id });
+    },
   );
 }
 
@@ -1135,20 +1179,12 @@ function safe<Args>(
     try {
       return await handler(arguments_);
     } catch (error) {
-      if (error instanceof ToolFailure) {
-        return toolError(error.code, error.message);
+      if (error instanceof ActionError) {
+        return toolError(error.code as Parameters<typeof toolError>[0], error.message);
       }
       if (error instanceof RpcFailure) {
         return toolError(
-          error.status === 400
-            ? "invalid_argument"
-            : error.status === 401 || error.status === 403
-            ? "forbidden"
-            : error.status === 404
-            ? "not_found"
-            : error.status === 409
-            ? "conflict"
-            : "internal",
+          rpcErrorCode(error.status),
           error.status >= 500
             ? "Pomodoist service failed."
             : "Pomodoist request failed.",
@@ -1157,6 +1193,11 @@ function safe<Args>(
       return toolError("internal", "Pomodoist service failed.");
     }
   };
+}
+
+function rpcErrorCode(status: number) {
+  return status === 400 ? "invalid_argument" : status === 401 || status === 403 ? "forbidden"
+    : status === 404 ? "not_found" : status === 409 ? "conflict" : "internal";
 }
 
 async function readRpc(
@@ -2714,9 +2755,9 @@ function orderKey() {
   return String(Date.now() * 1000).padStart(20, "0");
 }
 
-class ToolFailure extends Error {
+class ToolFailure extends ActionError {
   constructor(
-    readonly code:
+    override readonly code:
       | "invalid_argument"
       | "not_found"
       | "conflict"
@@ -2725,7 +2766,7 @@ class ToolFailure extends Error {
       | "internal",
     message: string,
   ) {
-    super(message);
+    super(code, message);
   }
 }
 

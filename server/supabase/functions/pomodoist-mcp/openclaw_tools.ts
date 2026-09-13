@@ -1,9 +1,11 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { type PomodoistMcpAuth, type ToolErrorCode, toolError, toolSuccess } from './pomodoist_mcp.ts';
-import { registerPomodoistTools, type PomodoistToolDependencies } from './tools.ts';
-import { pomodoistState, telegramCommandOps, telegramSnapshot } from '../pomodoist-watch/pomodoist_watch.ts';
-import { ActionError, captureMutation, type JsonMap, type Plan, runGuardedAction } from './openclaw_actions.ts';
+import { pomodoistMutationPlans, type PomodoistToolDependencies } from './tools.ts';
+import { pomodoistState } from '../_shared/pomodoist_state.ts';
+import { telegramCommandOps } from '../_shared/pomodoist_commands.ts';
+import { telegramSnapshot } from '../_shared/pomodoist_snapshots.ts';
+import { ActionError, type JsonMap, type Plan, runGuardedAction } from './openclaw_actions.ts';
 
 const mutations = ['create_task', 'update_task', 'complete_task', 'restore_task', 'delete_task',
   'create_project', 'update_project', 'delete_project', 'create_label', 'delete_label'] as const;
@@ -27,18 +29,6 @@ const focusArgs = z.object({ action: z.enum(['start', 'pause', 'resume', 'comple
     context.addIssue({ code: 'custom', message: 'Stopping Focus requires confirmation.' });
   }
 });
-
-type Captured = { schema: z.ZodType; run: (args: JsonMap) => Promise<unknown> };
-// Capture existing registration callbacks, not private SDK fields. This keeps
-// task validation, recurrence, kanban updates and sync payloads in one runtime.
-function capture(auth: PomodoistMcpAuth, dependencies: PomodoistToolDependencies) {
-  const tools = new Map<string, Captured>();
-  const registrar = { registerTool(name: string, config: { inputSchema: z.ZodType }, run: Captured['run']) {
-    tools.set(name, { schema: config.inputSchema, run });
-  } };
-  registerPomodoistTools(registrar as unknown as McpServer, auth, dependencies);
-  return tools;
-}
 
 export function registerOpenClawTools(server: McpServer, auth: PomodoistMcpAuth, dependencies: PomodoistToolDependencies) {
   const fetcher = dependencies.fetch ?? fetch;
@@ -92,12 +82,9 @@ export function registerOpenClawTools(server: McpServer, auth: PomodoistMcpAuth,
       } catch (error) { return failure(error); }
     });
   }
-  for (const [name, tool] of capture(auth, dependencies)) {
-    if (!(mutations as readonly string[]).includes(name)) continue;
-    guarded(name, tool.schema, args => captureMutation(dependencies.config.supabaseUrl, fetcher, buffered => {
-      const delegate = capture(auth, { ...dependencies, fetch: buffered }).get(name)!;
-      return delegate.run(delegate.schema.parse(args) as JsonMap);
-    }));
+  for (const definition of pomodoistMutationPlans(auth, dependencies)) {
+    if (!(mutations as readonly string[]).includes(definition.name)) continue;
+    guarded(definition.name, definition.config.inputSchema, args => definition.plan(args));
   }
   guarded('set_task_details', details, async args => {
     const current = await state(String(args.task_id));

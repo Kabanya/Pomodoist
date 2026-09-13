@@ -4,6 +4,7 @@ set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 project_root="$(cd -- "$script_dir/../.." && pwd -P)"
+app_root="$project_root/apps/flutter"
 
 # shellcheck disable=SC1091
 source "$script_dir/appimage-tools.env"
@@ -20,14 +21,14 @@ for command_name in curl date find install realpath sha256sum; do
   fi
 done
 
-bundle="${POMODOIST_LINUX_BUNDLE:-$project_root/build/linux/x64/release/bundle}"
-output_dir="${POMODOIST_APPIMAGE_OUTPUT_DIR:-$project_root/build/linux/appimage}"
+bundle="${POMODOIST_LINUX_BUNDLE:-$app_root/build/linux/x64/release/bundle}"
+output_dir="${POMODOIST_APPIMAGE_OUTPUT_DIR:-$app_root/build/linux/appimage}"
 tool_dir="${POMODOIST_APPIMAGE_TOOL_DIR:-$project_root/build/appimage-tools}"
 version="${POMODOIST_VERSION:-}"
 release_date="${POMODOIST_RELEASE_DATE:-}"
 
 if [[ -z "$version" ]]; then
-  version="$(awk '/^version:[[:space:]]*/ {sub(/^[^:]*:[[:space:]]*/, ""); sub(/\+.*/, ""); print; exit}' "$project_root/pubspec.yaml")"
+  version="$(awk '/^version:[[:space:]]*/ {sub(/^[^:]*:[[:space:]]*/, ""); sub(/\+.*/, ""); print; exit}' "$app_root/pubspec.yaml")"
 fi
 if [[ -z "$release_date" ]]; then
   release_date="$(git -C "$project_root" show -s --format=%cs HEAD)"
