@@ -5260,6 +5260,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{code, select, fileTooLarge{CSV file exceeds 16 MiB.} invalidUtf8{CSV must be valid UTF-8.} missingHeader{CSV header is missing.} malformed{Malformed CSV.} unknownHeader{Unknown header \"{value}\".} duplicateHeader{Duplicate header \"{value}\".} contentHeaderRequired{content header is required.} tooManyTasks{CSV cannot contain more than 1000 tasks.} tooManyFields{Row has more fields than the header.} contentRequired{content is required.} invalidPriority{priority must be an integer from 1 to 4.} invalidDate{{value} must use YYYY-MM-DD.} mixedSchedule{Due date cannot be combined with a timed schedule.} timedFieldsRequired{A timed schedule requires start_at, end_at and time_zone.} invalidTimestamp{{value} must be RFC3339 with an explicit UTC offset.} invalidTimeZone{time_zone must be a valid IANA name.} endBeforeStart{end_at must be after start_at.} invalidRecurrence{recurrence must be day, week or month.} invalidInteger{{value} must be an integer from 1 to 999.} intervalWithoutRecurrence{recurrence_interval requires recurrence.} recurrenceWithoutSchedule{recurrence requires a schedule.} doneTask{Done tasks cannot be imported.} invalidKey{{value} has an invalid format.} empty{CSV contains no tasks.} duplicateKey{Duplicate key \"{value}\".} parentCycle{parent_key references form a cycle.} missingParent{parent_key \"{value}\" does not exist.} childProject{A child task must use the same project as its parent.} other{The file could not be imported.}}'**
   String csvImportIssueMessage(String code, String value);
+
+  /// No description provided for @billingOfferDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {1 day} other {{count} days}}'**
+  String billingOfferDays(int count);
+
+  /// No description provided for @billingOfferMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {1 month} other {{count} months}}'**
+  String billingOfferMonths(int count);
+
+  /// No description provided for @billingOfferYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {1 year} other {{count} years}}'**
+  String billingOfferYears(int count);
+
+  /// No description provided for @billingTrialFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free for {duration}'**
+  String billingTrialFree(String duration);
+
+  /// No description provided for @billingTrialRenewal.
+  ///
+  /// In en, this message translates to:
+  /// **'Then {price}. Renews automatically unless cancelled.'**
+  String billingTrialRenewal(String price);
+
+  /// No description provided for @billingReturnBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to Pro'**
+  String get billingReturnBadge;
+
+  /// No description provided for @billingReturnSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'For {duration}, then {price}. Renews automatically unless cancelled.'**
+  String billingReturnSubtitle(String duration, String price);
+
+  /// No description provided for @billingReturnPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Your discount is reserved until {date}. If the purchase was cancelled, you can retry after that time.'**
+  String billingReturnPending(String date);
+
+  /// No description provided for @billingReturnFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not verify your return offer. Retry to check the discount.'**
+  String get billingReturnFailed;
+
+  /// No description provided for @billingTryFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Try free'**
+  String get billingTryFree;
 }
 
 class _AppLocalizationsDelegate

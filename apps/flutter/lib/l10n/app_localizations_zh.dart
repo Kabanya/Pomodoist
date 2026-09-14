@@ -2936,4 +2936,48 @@ class AppLocalizationsZh extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String billingOfferDays(int count) {
+    return '$count 天';
+  }
+
+  @override
+  String billingOfferMonths(int count) {
+    return '$count 个月';
+  }
+
+  @override
+  String billingOfferYears(int count) {
+    return '$count 年';
+  }
+
+  @override
+  String billingTrialFree(String duration) {
+    return '免费试用 $duration';
+  }
+
+  @override
+  String billingTrialRenewal(String price) {
+    return '之后为 $price。除非取消，否则将自动续订。';
+  }
+
+  @override
+  String get billingReturnBadge => '重返 Pro';
+
+  @override
+  String billingReturnSubtitle(String duration, String price) {
+    return '优惠持续 $duration，之后为 $price。除非取消，否则将自动续订。';
+  }
+
+  @override
+  String billingReturnPending(String date) {
+    return '你的优惠已保留至 $date。如果取消了购买，可在此时间之后重试。';
+  }
+
+  @override
+  String get billingReturnFailed => '无法验证回归优惠。请重试以检查折扣。';
+
+  @override
+  String get billingTryFree => '免费试用';
 }

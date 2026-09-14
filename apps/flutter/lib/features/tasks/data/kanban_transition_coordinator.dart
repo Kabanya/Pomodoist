@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/db/app_database.dart';
+import '../../collaboration/data/shared_access.dart';
 import '../../../core/sync/sync_queue_repository.dart';
 
 const _backlogOrderKey = '00000000000000000000';
@@ -23,7 +24,7 @@ class KanbanTransitionCoordinator {
     required DateTime timestamp,
     List<SyncQueueCommand> precedingCommands = const [],
   }) async {
-    final statusId = await _validInitialStatusId(requestedStatusId);
+    final statusId = await _validInitialStatusId(taskId, requestedStatusId);
     await _replaceStatusAssignment(taskId, statusId, timestamp);
     await _syncQueue.enqueueBatch([
       ...precedingCommands,
@@ -36,6 +37,7 @@ class KanbanTransitionCoordinator {
     String rootId, {
     required DateTime timestamp,
   }) async {
+    await SharedAccess(_db).task(rootId);
     final rows = await _activeTaskRows();
     final commands = <SyncQueueCommand>[];
     for (final row in _subtreeRows(rootId, rows)) {
@@ -50,6 +52,7 @@ class KanbanTransitionCoordinator {
         TasksCompanion(
           status: const Value('completed'),
           completedAt: Value(timestamp),
+          completedBy: Value(await SharedAccess(_db).actorId()),
           updatedAt: Value(timestamp),
         ),
       );
@@ -65,7 +68,8 @@ class KanbanTransitionCoordinator {
               createdAt: timestamp,
             ),
           );
-      await _replaceStatusAssignment(row.id, kanbanStatusDoneId, timestamp);
+      final doneId = await _anchor(row.id, kanbanStatusDoneId);
+      await _replaceStatusAssignment(row.id, doneId, timestamp);
       commands.addAll([
         SyncQueueCommand(
           type: 'task.complete',
@@ -76,7 +80,7 @@ class KanbanTransitionCoordinator {
             'completedAt': timestamp.toIso8601String(),
           },
         ),
-        _statusCommand(row.id, kanbanStatusDoneId, timestamp),
+        _statusCommand(row.id, doneId, timestamp),
       ]);
     }
     await _syncQueue.enqueueBatch(commands, occurredAt: timestamp);
@@ -87,6 +91,7 @@ class KanbanTransitionCoordinator {
     required DateTime timestamp,
     String? explicitRootStatusId,
   }) async {
+    await SharedAccess(_db).task(rootId);
     if (explicitRootStatusId != null &&
         !await _isActiveNonDoneStatus(explicitRootStatusId)) {
       throw ArgumentError.value(
@@ -110,6 +115,7 @@ class KanbanTransitionCoordinator {
         TasksCompanion(
           status: const Value('open'),
           completedAt: const Value(null),
+          completedBy: const Value(null),
           updatedAt: Value(timestamp),
         ),
       );
@@ -131,6 +137,7 @@ class KanbanTransitionCoordinator {
     required String statusId,
     required DateTime timestamp,
   }) async {
+    await SharedAccess(_db).task(taskId);
     final status = await _activeStatus(statusId);
     if (status == null) {
       throw ArgumentError.value(statusId, 'statusId', 'Unknown Kanban status');
@@ -173,7 +180,7 @@ class KanbanTransitionCoordinator {
     final statusId = assignment?.labelId;
     return statusId != null && await _isActiveNonDoneStatus(statusId)
         ? statusId
-        : kanbanStatusBacklogId;
+        : await _anchor(taskId, kanbanStatusBacklogId);
   }
 
   Future<String> latestValidSnapshotStatusInTransaction(String taskId) async {
@@ -192,7 +199,7 @@ class KanbanTransitionCoordinator {
         return statusId;
       }
     }
-    return kanbanStatusBacklogId;
+    return _anchor(taskId, kanbanStatusBacklogId);
   }
 
   Future<String> copyRecurringStatusInTransaction({
@@ -219,6 +226,7 @@ class KanbanTransitionCoordinator {
     String taskId, {
     required DateTime timestamp,
   }) async {
+    await SharedAccess(_db).task(taskId);
     final task =
         await (_db.select(_db.tasks)..where(
               (row) => row.id.equals(taskId) & row.isDeleted.equals(false),
@@ -237,9 +245,10 @@ class KanbanTransitionCoordinator {
     final configuredStatusId = settings?.focusStatusLabelId;
     final statusId =
         configuredStatusId != null &&
-            await _isActiveNonDoneStatus(configuredStatusId)
+            await _isActiveNonDoneStatus(configuredStatusId) &&
+            await _sameScope(taskId, configuredStatusId)
         ? configuredStatusId
-        : await _fallbackFocusStatusId();
+        : await _fallbackFocusStatusId(taskId);
     await _assignStatusWithCommand(taskId, statusId, timestamp);
     return statusId;
   }
@@ -289,6 +298,8 @@ class KanbanTransitionCoordinator {
     };
     final commands = <SyncQueueCommand>[];
     for (final task in await _activeTaskRows()) {
+      // Shared scopes are repaired on the server, including for read-only clients.
+      if (task.scopeId != null) continue;
       final currentStatusId = assignmentByTask[task.id]?.labelId;
       final currentStatus = activeStatusById[currentStatusId];
       final expectedStatusId = task.status == 'completed'
@@ -406,6 +417,13 @@ class KanbanTransitionCoordinator {
     String statusId,
     DateTime timestamp,
   ) async {
+    if (!await _sameScope(taskId, statusId)) {
+      throw ArgumentError.value(
+        statusId,
+        'statusId',
+        'Kanban status belongs to another project scope',
+      );
+    }
     final current =
         await (_db.select(_db.taskLabels)..where(
               (row) =>
@@ -435,12 +453,16 @@ class KanbanTransitionCoordinator {
     return true;
   }
 
-  Future<String> _validInitialStatusId(String? requestedStatusId) async {
+  Future<String> _validInitialStatusId(
+    String taskId,
+    String? requestedStatusId,
+  ) async {
     if (requestedStatusId != null &&
-        await _isActiveNonDoneStatus(requestedStatusId)) {
+        await _isActiveNonDoneStatus(requestedStatusId) &&
+        await _sameScope(taskId, requestedStatusId)) {
       return requestedStatusId;
     }
-    return kanbanStatusBacklogId;
+    return _anchor(taskId, kanbanStatusBacklogId);
   }
 
   Future<bool> _isActiveNonDoneStatus(String id) async {
@@ -448,7 +470,7 @@ class KanbanTransitionCoordinator {
     return status != null && status.systemKey != kanbanSystemKeyDone;
   }
 
-  Future<String> _fallbackFocusStatusId() async {
+  Future<String> _fallbackFocusStatusId(String taskId) async {
     final statuses =
         await (_db.select(_db.labels)..where(
               (row) =>
@@ -461,12 +483,30 @@ class KanbanTransitionCoordinator {
       return order != 0 ? order : a.id.compareTo(b.id);
     });
     for (final status in statuses) {
-      if (status.systemKey != kanbanSystemKeyBacklog &&
+      if (await _sameScope(taskId, status.id) &&
+          status.systemKey != kanbanSystemKeyBacklog &&
           status.systemKey != kanbanSystemKeyDone) {
         return status.id;
       }
     }
-    return kanbanStatusBacklogId;
+    return _anchor(taskId, kanbanStatusBacklogId);
+  }
+
+  Future<String> _anchor(String taskId, String personalId) async {
+    final task = await (_db.select(
+      _db.tasks,
+    )..where((row) => row.id.equals(taskId))).getSingle();
+    return task.scopeId == null ? personalId : '${task.scopeId}:$personalId';
+  }
+
+  Future<bool> _sameScope(String taskId, String labelId) async {
+    final task = await (_db.select(
+      _db.tasks,
+    )..where((row) => row.id.equals(taskId))).getSingleOrNull();
+    final label = await (_db.select(
+      _db.labels,
+    )..where((row) => row.id.equals(labelId))).getSingleOrNull();
+    return task != null && label != null && task.scopeId == label.scopeId;
   }
 
   Future<LabelRow?> _activeStatus(String id) {

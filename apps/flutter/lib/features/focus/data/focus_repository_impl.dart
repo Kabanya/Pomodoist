@@ -1100,15 +1100,38 @@ class DriftFocusRepository implements FocusRepository {
                   interval.isDeleted.equals(false),
             ))
             .get();
-    final seconds = intervals.fold<int>(
+    var seconds = intervals.fold<int>(
       0,
       (sum, interval) => sum + _actualSeconds(interval),
     );
+    var count = intervals.length;
+    final task = await (_db.select(
+      _db.tasks,
+    )..where((row) => row.id.equals(taskId))).getSingleOrNull();
+    if (task?.scopeId != null) {
+      final localIds = intervals.map((row) => row.id).toSet();
+      final shared =
+          await (_db.select(_db.sharedEntities)..where(
+                (row) =>
+                    row.scopeId.equals(task!.scopeId!) &
+                    row.entityType.equals('focus_interval') &
+                    row.isDeleted.equals(false),
+              ))
+              .get();
+      for (final contribution in shared) {
+        final data = jsonDecode(contribution.dataJson) as Map<String, dynamic>;
+        if (data['taskId'] == taskId &&
+            !localIds.contains(contribution.entityId)) {
+          seconds += (data['durationSeconds'] as num?)?.toInt() ?? 0;
+          count++;
+        }
+      }
+    }
     await (_db.update(
       _db.tasks,
     )..where((task) => task.id.equals(taskId))).write(
       TasksCompanion(
-        completedFocusIntervals: Value(intervals.length),
+        completedFocusIntervals: Value(count),
         totalFocusSeconds: Value(seconds),
         updatedAt: Value(DateTime.now().toUtc()),
       ),

@@ -52,17 +52,28 @@
       "name": "Pomodoist Pro",
       "subscriptions": [
         {
-          "adHocOffers": [],
+          "adHocOffers": [
+            {
+              "internalID": "P1000008",
+              "offerID": "return_monthly_2026_v1",
+              "referenceName": "Return to Pro Monthly",
+              "displayPrice": "1.99",
+              "numberOfPeriods": 3,
+              "paymentMode": "payAsYouGo",
+              "subscriptionPeriod": "P1M"
+            }
+          ],
           "codeOffers": [],
-          "displayPrice": "5.99",
+          "displayPrice": "4.99",
           "familyShareable": false,
           "groupNumber": 1,
           "internalID": "P1000001",
           "introductoryOffer": {
-            "displayPrice": "2.99",
+            "displayPrice": "0",
             "internalID": "P1000005",
-            "paymentMode": "payAsYouGo",
-            "subscriptionPeriod": "P3M"
+            "paymentMode": "free",
+            "subscriptionPeriod": "P1W",
+            "numberOfPeriods": 1
           },
           "localizations": [
             {
@@ -78,17 +89,28 @@
           "type": "RecurringSubscription"
         },
         {
-          "adHocOffers": [],
+          "adHocOffers": [
+            {
+              "internalID": "P1000009",
+              "offerID": "return_annual_2026_v1",
+              "referenceName": "Return to Pro Annual",
+              "displayPrice": "14.99",
+              "numberOfPeriods": 1,
+              "paymentMode": "payUpFront",
+              "subscriptionPeriod": "P1Y"
+            }
+          ],
           "codeOffers": [],
-          "displayPrice": "39",
+          "displayPrice": "29.99",
           "familyShareable": false,
           "groupNumber": 1,
           "internalID": "P1000002",
           "introductoryOffer": {
-            "displayPrice": "19",
+            "displayPrice": "0",
             "internalID": "P1000006",
-            "paymentMode": "payUpFront",
-            "subscriptionPeriod": "P1Y"
+            "paymentMode": "free",
+            "subscriptionPeriod": "P1W",
+            "numberOfPeriods": 1
           },
           "localizations": [
             {

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:app_account/app_account.dart';
 import 'package:drift/drift.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import 'package:uuid/uuid.dart';
 
 import '../db/app_database.dart';
@@ -9,12 +10,16 @@ import '../../features/tasks/data/kanban_transition_coordinator.dart';
 import 'pomodoist_retention.dart';
 import 'account_sync_mapping.dart';
 import 'sync_queue_repository.dart';
+import '../../features/collaboration/data/collaboration_api.dart';
+import '../../features/collaboration/domain/collaboration_models.dart';
+part 'shared_account_sync.dart';
 
 class AccountSyncEngine {
   AccountSyncEngine({
     required AppDatabase db,
     required AccountClient account,
     required Uuid uuid,
+    CollaborationApi? collaboration,
     Future<AccountOverview?> Function()? overviewLoader,
     Future<bool> Function()? localPaidEntitlementLoader,
     KanbanTransitionCoordinator? kanbanTransitions,
@@ -22,6 +27,7 @@ class AccountSyncEngine {
   }) : _db = db,
        _account = account,
        _uuid = uuid,
+       _collaboration = collaboration,
        _overviewLoader = overviewLoader,
        _localPaidEntitlementLoader = localPaidEntitlementLoader,
        _requestTimeout = requestTimeout,
@@ -39,6 +45,7 @@ class AccountSyncEngine {
     'account-owner-transition',
   );
 
+  final CollaborationApi? _collaboration;
   final AppDatabase _db;
   final AccountClient _account;
   final Uuid _uuid;
@@ -56,7 +63,11 @@ class AccountSyncEngine {
       if (imported) {
         await _broadcastSyncHint();
       }
-      return <String>{...await pushPending(), ...await pullLatest()};
+      return <String>{
+        ...await this.syncShared(),
+        ...await pushPending(),
+        ...await pullLatest(),
+      };
     });
   }
 
@@ -114,6 +125,7 @@ class AccountSyncEngine {
       _db.syncState,
     )..where((row) => row.id.equals(_accountOwnerStateId))).getSingleOrNull();
     if (owner?.cursor == userId) {
+      await _db.backfillTaskCreators(accountUserId: userId);
       return false;
     }
     final importState = await (_db.select(
@@ -137,6 +149,7 @@ class AccountSyncEngine {
             updatedAt: now,
           ),
         );
+    await _db.backfillTaskCreators(accountUserId: userId);
     return reset;
   }
 
@@ -186,6 +199,7 @@ class AccountSyncEngine {
     final deferredTaskIds =
         (await (_db.select(_db.syncCommands)..where(
                   (row) =>
+                      row.scopeId.isNull() &
                       row.status.equals('pending') &
                       row.type.equals('task.delete') &
                       row.availableAt.isBiggerThanValue(readyAt),
@@ -198,6 +212,7 @@ class AccountSyncEngine {
         await (_db.select(_db.syncCommands)
               ..where(
                 (row) =>
+                    row.scopeId.isNull() &
                     row.status.equals('pending') &
                     (row.availableAt.isNull() |
                         row.availableAt.isSmallerOrEqualValue(readyAt)) &
@@ -425,12 +440,27 @@ class AccountSyncEngine {
     final operations = <AccountSyncOperation>[];
     final taskHistoryCutoff = await _taskHistoryCutoff();
 
+    final sharedProjects = (await (_db.select(
+      _db.projects,
+    )..where((p) => p.scopeId.isNotNull())).get()).map((p) => p.id).toSet();
+    final sharedTasks = (await (_db.select(
+      _db.tasks,
+    )..where((t) => t.scopeId.isNotNull())).get()).map((t) => t.id).toSet();
+    final sharedEntityIds = (await _db.select(_db.sharedEntities).get())
+        .map((e) => '${e.entityType}:${e.entityId}')
+        .toSet();
     void add(
       String entityType,
       String entityId,
       Map<String, dynamic> data,
       DateTime updatedAt,
     ) {
+      if (!entityType.startsWith('focus_') &&
+          (data['scopeId'] != null ||
+              sharedProjects.contains(data['projectId']) ||
+              sharedTasks.contains(data['taskId']) ||
+              sharedEntityIds.contains('$entityType:$entityId')))
+        return;
       operations.add(
         _operation(
           opId:
@@ -576,7 +606,7 @@ class AccountSyncEngine {
     final operations = <AccountSyncOperation>[];
     var rowPayload = operation == 'delete'
         ? payloadMap
-        : syncUsesCapturedPatch(commandType)
+        : (syncUsesCapturedPatch(commandType) || command.scopeId != null)
         ? syncCapturedPatchPayload(commandType, payloadMap, command.updatedAt)
         : await _rowPayload(entityType, entityId, payloadMap);
     if (entityType == 'focus_event' && !rowPayload.containsKey('id')) {
@@ -731,7 +761,22 @@ class AccountSyncEngine {
                   ? _account.getOverview()
                   : _overviewLoader())
               .timeout(_requestTimeout);
-      return pomodoistTaskHistoryCutoff(overview);
+      final policy =
+          await (_db.select(_db.sharedEntities)..where(
+                (row) =>
+                    row.scopeId.equals('_account') &
+                    row.entityType.equals('history') &
+                    row.entityId.equals('personal'),
+              ))
+              .getSingleOrNull();
+      final data = policy == null
+          ? <String, dynamic>{}
+          : jsonDecode(policy.dataJson) as Map<String, dynamic>;
+      return pomodoistTaskHistoryCutoff(
+        overview,
+        historyUnlimited: data['historyUnlimited'] == true,
+        graceEndsAt: DateTime.tryParse(data['graceEndsAt']?.toString() ?? ''),
+      );
     } catch (_) {
       // ponytail: server cleanup still enforces free retention; keep local data
       // syncing if entitlement lookup is temporarily unavailable.
@@ -801,13 +846,31 @@ class AccountSyncEngine {
       final end = index + batchSize > operations.length
           ? operations.length
           : index + batchSize;
+      await _pushBatch(deviceId, operations.sublist(index, end));
+    }
+  }
+
+  Future<void> _pushBatch(
+    String deviceId,
+    List<AccountSyncOperation> operations,
+  ) async {
+    try {
       await _account
           .pushChanges(
             appId: AccountAppId.pomodoist,
             deviceId: deviceId,
-            operations: operations.sublist(index, end),
+            operations: operations,
           )
           .timeout(_requestTimeout);
+    } on PostgrestException catch (error) {
+      if (!{'PT413', '413'}.contains(error.code) || operations.length <= 1) {
+        rethrow;
+      }
+      final middle = operations.length ~/ 2;
+      // Keep IDs and order: an acknowledged half can safely be replayed if the
+      // next half fails before the local command is marked as synchronized.
+      await _pushBatch(deviceId, operations.sublist(0, middle));
+      await _pushBatch(deviceId, operations.sublist(middle));
     }
   }
 
@@ -943,6 +1006,42 @@ class AccountSyncEngine {
 
     await _db.transaction(() async {
       for (final change in result.changes) {
+        if (change.entityType == 'task' &&
+            (await (_db.select(_db.tasks)
+                          ..where((r) => r.id.equals(change.entityId)))
+                        .getSingleOrNull())
+                    ?.scopeId !=
+                null)
+          continue;
+        if (change.entityType == 'project' &&
+            (await (_db.select(_db.projects)
+                          ..where((r) => r.id.equals(change.entityId)))
+                        .getSingleOrNull())
+                    ?.scopeId !=
+                null)
+          continue;
+        if (!change.entityType.startsWith('focus_')) {
+          final scoped =
+              await (_db.select(_db.sharedEntities)..where(
+                    (row) =>
+                        row.entityType.equals(change.entityType) &
+                        row.entityId.equals(change.entityId),
+                  ))
+                  .get();
+          if (scoped.any((row) => row.scopeId != '_account')) continue;
+          final taskId =
+              change.data['taskId'] as String? ??
+              (change.entityType == 'task_kanban_status'
+                  ? change.entityId
+                  : null);
+          if (taskId != null &&
+              (await (_db.select(_db.tasks)
+                            ..where((row) => row.id.equals(taskId)))
+                          .getSingleOrNull())
+                      ?.scopeId !=
+                  null)
+            continue;
+        }
         if (change.deleted) {
           await _applyDelete(change);
         } else {
@@ -1258,12 +1357,22 @@ class AccountSyncEngine {
       _db.tasks,
     )..where((row) => row.id.equals(id))).getSingleOrNull();
     final incomingUpdatedAt = syncDateTimeFromSyncValue(data['updatedAt']);
-    if (existing != null &&
+    if (data['scopeId'] == null &&
+        existing != null &&
         incomingUpdatedAt != null &&
         incomingUpdatedAt.isBefore(existing.updatedAt.toUtc())) {
       return;
     }
     final merged = syncMergeRow(existing?.toJson(), data);
+    merged.putIfAbsent('assigneeIdsJson', () => '[]');
+    merged['createdBy'] =
+        data['createdBy'] ??
+        existing?.createdBy ??
+        _account.currentUserId ??
+        localUserId;
+    if (merged['scopeId'] == null && merged['createdBy'] == localUserId) {
+      merged['createdBy'] = _account.currentUserId ?? localUserId;
+    }
     final hasPendingDelete =
         await (_db.select(_db.syncCommands)..where(
               (row) =>

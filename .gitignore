@@ -84,6 +84,7 @@ design/
 output/
 docs/*
 !docs/localization/
+!docs/subscription-offers.md
 !docs/email-addresses.md
 temp**/
 tmp/

@@ -13,6 +13,7 @@ import '../../app/theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 import 'billing_models.dart';
 import 'billing_controller.dart';
+import 'billing_offers.dart';
 
 String stripeBillingErrorMessage(AppLocalizations l10n, String code) {
   return switch (code) {
@@ -27,6 +28,7 @@ String stripeBillingErrorMessage(AppLocalizations l10n, String code) {
 }
 
 String storeKitBillingErrorMessage(AppLocalizations l10n, String error) {
+  if (error.startsWith('subscription_offer:')) return l10n.billingReturnFailed;
   if (error.contains('NSURLErrorDomain') ||
       error.contains('TimeoutException') ||
       error.contains('storekit_no_response') ||
@@ -79,6 +81,10 @@ class BillingPaywall extends ConsumerWidget {
         : storeKitBillingErrorMessage(l10n, displayedError);
     final colors = context.appColors;
     final textTheme = Theme.of(context).textTheme;
+    final returnOffers = channel == BillingChannel.storeKit
+        ? ref.watch(billingReturnOffersProvider)
+        : null;
+    final returnPending = returnOffers?.asData?.value.retryAfter;
     final collapsedActive = state.hasActiveEntitlement && !showPlansWhenActive;
     final plans = billingPlans.where(
       (plan) => launchOfferMode
@@ -155,15 +161,48 @@ class BillingPaywall extends ConsumerWidget {
           const SizedBox(height: 12),
         ],
         if (!collapsedActive) ...[
-          if (state.loading) ...[
+          if (state.loading || returnOffers?.isLoading == true) ...[
             const LinearProgressIndicator(minHeight: 2),
             const SizedBox(height: 10),
           ],
+          if (returnPending != null)
+            Text(
+              l10n.billingReturnPending(
+                intl.DateFormat.yMd(
+                  l10n.localeName,
+                ).add_jm().format(returnPending.toLocal()),
+              ),
+              style: textTheme.bodySmall?.copyWith(color: colors.secondaryText),
+            ),
+          if (returnOffers?.hasError == true) ...[
+            Text(l10n.billingReturnFailed, style: textTheme.bodySmall),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: ShadButton.ghost(
+                onPressed: () => ref.invalidate(billingReturnOffersProvider),
+                child: Text(l10n.commonRetry),
+              ),
+            ),
+          ],
+          if (returnPending != null)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: ShadButton.ghost(
+                onPressed: () => ref.invalidate(billingReturnOffersProvider),
+                child: Text(l10n.commonRetry),
+              ),
+            ),
           for (final plan in plans) ...[
             _BillingPlanTile(
               plan: plan,
               state: state,
+              returnOfferId:
+                  returnOffers?.asData?.value.offerIds[plan.productId],
+              offerCheckBlocked:
+                  plan.kind == BillingPlanKind.subscription &&
+                  billingReturnOfferBlocksPurchase(returnOffers),
               forceIntroductoryPrice:
+                  channel == BillingChannel.stripe &&
                   launchOfferMode &&
                   (plan.productId == pomodoistAnnualProductId ||
                       plan.productId == pomodoistMonthlyProductId),
@@ -475,8 +514,12 @@ class _BillingPlanTile extends ConsumerWidget {
     required this.forceIntroductoryPrice,
     this.compareAtPrice,
     this.launchOfferTimerLabel,
+    this.returnOfferId,
+    this.offerCheckBlocked = false,
   });
 
+  final String? returnOfferId;
+  final bool offerCheckBlocked;
   final BillingPlan plan;
   final BillingState state;
   final bool forceIntroductoryPrice;
@@ -498,21 +541,48 @@ class _BillingPlanTile extends ConsumerWidget {
     final border = highlighted
         ? colors.accent.withValues(alpha: 0.45)
         : colors.border;
-    final regularPrice = _regularPrice(l10n, plan, product);
+    final regularPrice = _regularPrice(l10n, plan, product, channel);
+    final offer = channel == BillingChannel.storeKit
+        ? billingStoreKitOffer(
+            product,
+            introductoryEligible: state.eligibleIntroductoryProductIds.contains(
+              plan.productId,
+            ),
+            returnOfferId: returnOfferId,
+          )
+        : null;
+    final trial =
+        offer?.paymentMode == SK2SubscriptionOfferPaymentMode.freeTrial;
+    final returning = offer?.type == SK2SubscriptionOfferType.promotional;
+    final offerBlocked =
+        offerCheckBlocked || (returnOfferId != null && !returning);
     final introductoryPrice =
         forceIntroductoryPrice ||
             state.eligibleIntroductoryProductIds.contains(plan.productId)
-        ? _introductoryPrice(context, l10n, plan, product)
+        ? channel == BillingChannel.storeKit && offer == null
+              ? null
+              : _introductoryPrice(context, l10n, plan, product)
         : null;
-    final displayedPrice = introductoryPrice ?? regularPrice;
-    final displayedCompareAtPrice =
-        compareAtPrice ?? (introductoryPrice == null ? null : regularPrice);
-    final subtitle = _planSubtitle(
-      l10n,
-      plan,
-      regularPrice,
-      hasIntroductoryPrice: introductoryPrice != null,
-    );
+    final displayedPrice = offer != null && product != null
+        ? billingOfferPrice(l10n, product, offer)
+        : introductoryPrice ?? regularPrice;
+    final displayedCompareAtPrice = trial
+        ? null
+        : compareAtPrice ??
+              (introductoryPrice == null && !returning ? null : regularPrice);
+    final subtitle = trial
+        ? l10n.billingTrialRenewal(regularPrice)
+        : returning
+        ? l10n.billingReturnSubtitle(
+            billingOfferDuration(l10n, offer!),
+            regularPrice,
+          )
+        : _planSubtitle(
+            l10n,
+            plan,
+            regularPrice,
+            hasIntroductoryPrice: introductoryPrice != null,
+          );
 
     return Card(
       key: ValueKey('billing-plan-${plan.productId}'),
@@ -540,6 +610,11 @@ class _BillingPlanTile extends ConsumerWidget {
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
+                      if (returning)
+                        _Badge(
+                          label: l10n.billingReturnBadge,
+                          color: colors.accent,
+                        ),
                       if (highlighted)
                         _Badge(
                           label: l10n.billingBestValue,
@@ -594,11 +669,13 @@ class _BillingPlanTile extends ConsumerWidget {
               key: ValueKey('billing-buy-${plan.productId}'),
               enabled:
                   !(active ||
+                      offerBlocked ||
                       pending ||
                       !state.canPurchase ||
                       (productRequired && product == null)),
               onPressed:
                   active ||
+                      offerBlocked ||
                       pending ||
                       !state.canPurchase ||
                       (productRequired && product == null)
@@ -635,7 +712,10 @@ class _BillingPlanTile extends ConsumerWidget {
                       }
                       await ref
                           .read(billingControllerProvider.notifier)
-                          .purchase(plan.productId);
+                          .purchase(
+                            plan.productId,
+                            returnOfferId: returning ? offer!.id : null,
+                          );
                     },
               child: pending
                   ? SizedBox.square(
@@ -645,7 +725,13 @@ class _BillingPlanTile extends ConsumerWidget {
                         color: Theme.of(context).colorScheme.onPrimary,
                       ),
                     )
-                  : Text(active ? l10n.billingActiveShort : l10n.billingChoose),
+                  : Text(
+                      active
+                          ? l10n.billingActiveShort
+                          : trial
+                          ? l10n.billingTryFree
+                          : l10n.billingChoose,
+                    ),
             ),
           ],
         ),
@@ -695,8 +781,16 @@ String _regularPrice(
   AppLocalizations l10n,
   BillingPlan plan,
   ProductDetails? product,
+  BillingChannel channel,
 ) {
   if (product == null) {
+    if (channel == BillingChannel.storeKit) {
+      return switch (plan.productId) {
+        pomodoistMonthlyProductId => l10n.billingPricePerMonth(r'$4.99'),
+        pomodoistAnnualProductId => l10n.billingPricePerYear(r'$29.99'),
+        _ => plan.fallbackPrice,
+      };
+    }
     return plan.fallbackPrice;
   }
   if (product.price == plan.fallbackPrice) {

@@ -1597,5 +1597,67 @@
         "type": "String"
       }
     }
-  }
+  },
+  "billingOfferDays": "{count, plural, one {1 day} other {{count} days}}",
+  "@billingOfferDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "billingOfferMonths": "{count, plural, one {1 month} other {{count} months}}",
+  "@billingOfferMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "billingOfferYears": "{count, plural, one {1 year} other {{count} years}}",
+  "@billingOfferYears": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "billingTrialFree": "Free for {duration}",
+  "@billingTrialFree": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "billingTrialRenewal": "Then {price}. Renews automatically unless cancelled.",
+  "@billingTrialRenewal": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "billingReturnBadge": "Return to Pro",
+  "billingReturnSubtitle": "For {duration}, then {price}. Renews automatically unless cancelled.",
+  "@billingReturnSubtitle": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "billingReturnPending": "Your discount is reserved until {date}. If the purchase was cancelled, you can retry after that time.",
+  "@billingReturnPending": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "billingReturnFailed": "Could not verify your return offer. Retry to check the discount.",
+  "billingTryFree": "Try free"
 }

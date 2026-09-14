@@ -3106,4 +3106,49 @@ class AppLocalizationsRu extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String billingOfferDays(int count) {
+    return '$count дн.';
+  }
+
+  @override
+  String billingOfferMonths(int count) {
+    return '$count мес.';
+  }
+
+  @override
+  String billingOfferYears(int count) {
+    return '$count г.';
+  }
+
+  @override
+  String billingTrialFree(String duration) {
+    return 'Бесплатно: $duration';
+  }
+
+  @override
+  String billingTrialRenewal(String price) {
+    return 'Затем $price. Автопродление, если не отменить подписку.';
+  }
+
+  @override
+  String get billingReturnBadge => 'Вернуться в Pro';
+
+  @override
+  String billingReturnSubtitle(String duration, String price) {
+    return 'На $duration, затем $price. Автопродление, если не отменить подписку.';
+  }
+
+  @override
+  String billingReturnPending(String date) {
+    return 'Скидка зарезервирована до $date. Если покупка отменена, повторить попытку можно после этого времени.';
+  }
+
+  @override
+  String get billingReturnFailed =>
+      'Не удалось проверить скидку на возвращение. Повторите проверку.';
+
+  @override
+  String get billingTryFree => 'Попробовать';
 }

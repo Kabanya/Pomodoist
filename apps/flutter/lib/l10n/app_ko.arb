@@ -1597,5 +1597,15 @@
         "type": "String"
       }
     }
-  }
+  },
+  "billingOfferDays": "{count}일",
+  "billingOfferMonths": "{count}개월",
+  "billingOfferYears": "{count}년",
+  "billingTrialFree": "{duration} 무료",
+  "billingTrialRenewal": "이후 {price}. 취소하지 않으면 자동 갱신됩니다.",
+  "billingReturnBadge": "Pro로 돌아가기",
+  "billingReturnSubtitle": "{duration} 동안 할인 후 {price}. 취소하지 않으면 자동 갱신됩니다.",
+  "billingReturnPending": "할인이 {date}까지 예약되어 있습니다. 구매를 취소했다면 이 시간 이후에 다시 시도할 수 있습니다.",
+  "billingReturnFailed": "재가입 혜택을 확인하지 못했습니다. 다시 시도해 주세요.",
+  "billingTryFree": "무료 체험"
 }

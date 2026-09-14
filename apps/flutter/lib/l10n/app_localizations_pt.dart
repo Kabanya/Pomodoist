@@ -3111,6 +3111,69 @@ class AppLocalizationsPt extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String billingOfferDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dias',
+      one: '1 dia',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String billingOfferMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count meses',
+      one: '1 mês',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String billingOfferYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count anos',
+      one: '1 ano',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String billingTrialFree(String duration) {
+    return 'Grátis por $duration';
+  }
+
+  @override
+  String billingTrialRenewal(String price) {
+    return 'Depois, $price. Renovação automática, salvo cancelamento.';
+  }
+
+  @override
+  String get billingReturnBadge => 'Voltar ao Pro';
+
+  @override
+  String billingReturnSubtitle(String duration, String price) {
+    return 'Por $duration; depois, $price. Renovação automática, salvo cancelamento.';
+  }
+
+  @override
+  String billingReturnPending(String date) {
+    return 'Seu desconto está reservado até $date. Se a compra foi cancelada, você poderá tentar novamente após esse horário.';
+  }
+
+  @override
+  String get billingReturnFailed =>
+      'Não foi possível verificar sua oferta de retorno. Tente novamente.';
+
+  @override
+  String get billingTryFree => 'Testar grátis';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).

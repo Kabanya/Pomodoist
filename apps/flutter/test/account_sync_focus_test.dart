@@ -5,6 +5,7 @@ import 'package:app_account/app_account.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/core/sync/account_sync_engine.dart';
 import 'package:pomodoist/core/sync/sync_queue_repository.dart';
@@ -368,6 +369,131 @@ void main() {
       },
     );
 
+    Future<void> enqueueSplitBatch() async {
+      final now = DateTime.utc(2026, 7, 11, 9);
+      await _insertRun(
+        db,
+        id: 'split-run',
+        status: 'completed',
+        now: now,
+        endedAt: now,
+      );
+      await _insertInterval(
+        db,
+        id: 'split-interval',
+        runId: 'split-run',
+        status: 'completed',
+        now: now,
+      );
+      for (var i = 0; i < 3; i++) {
+        await db
+            .into(db.focusEvents)
+            .insert(
+              FocusEventsCompanion.insert(
+                id: 'split-event-$i',
+                runId: 'split-run',
+                type: 'distraction',
+                occurredAt: now,
+                createdAt: now,
+              ),
+            );
+      }
+      await queue.enqueue(
+        type: 'focus.run.complete',
+        clientId: 'split-run',
+        payload: {'id': 'split-run'},
+      );
+    }
+
+    for (final code in ['PT413', '413']) {
+      test(
+        '$code splits a large batch without changing IDs or order',
+        () async {
+          await enqueueSplitBatch();
+          account.beforePush = (operations) {
+            if (operations.length > 2) {
+              throw PostgrestException(message: 'too large', code: code);
+            }
+          };
+          await engine.pushPending();
+          expect(account.pushBatches.map((batch) => batch.length), [
+            5,
+            2,
+            3,
+            1,
+            2,
+          ]);
+          expect(
+            account.pushed.map((op) => op.opId),
+            account.pushBatches.first.map((op) => op.opId),
+          );
+          expect(await db.select(db.syncCommands).get(), isEmpty);
+        },
+      );
+    }
+
+    test(
+      'one oversized operation stays pending without an infinite retry',
+      () async {
+        await enqueueSplitBatch();
+        account.beforePush = (_) =>
+            throw const PostgrestException(message: 'too large', code: 'PT413');
+        await expectLater(
+          engine.pushPending(),
+          throwsA(isA<PostgrestException>()),
+        );
+        expect(account.pushBatches.map((batch) => batch.length), [5, 2, 1]);
+        expect(account.pushed, isEmpty);
+        expect(
+          (await db.select(db.syncCommands).get()).single.status,
+          'pending',
+        );
+      },
+    );
+
+    test('validation errors do not split or acknowledge a batch', () async {
+      await enqueueSplitBatch();
+      account.beforePush = (_) =>
+          throw const PostgrestException(message: 'invalid', code: '22023');
+      await expectLater(
+        engine.pushPending(),
+        throwsA(isA<PostgrestException>()),
+      );
+      expect(account.pushBatches, hasLength(1));
+      expect((await db.select(db.syncCommands).get()).single.status, 'pending');
+    });
+
+    test(
+      'a failed later half is retried with the original operation IDs',
+      () async {
+        await enqueueSplitBatch();
+        var failNextHalf = true;
+        account.beforePush = (operations) {
+          if (operations.length > 2) {
+            throw const PostgrestException(message: 'too large', code: 'PT413');
+          }
+          if (account.pushed.isNotEmpty && failNextHalf) {
+            failNextHalf = false;
+            throw StateError('response lost');
+          }
+        };
+        await expectLater(engine.pushPending(), throwsStateError);
+        final originalIds = account.pushBatches.first
+            .map((op) => op.opId)
+            .toList();
+        expect(
+          (await db.select(db.syncCommands).get()).single.status,
+          'pending',
+        );
+        await engine.pushPending();
+        expect(
+          account.pushed.map((op) => op.opId).toSet(),
+          originalIds.toSet(),
+        );
+        expect(await db.select(db.syncCommands).get(), isEmpty);
+      },
+    );
+
     test('realtime hint failure does not fail a completed push', () async {
       final now = DateTime.utc(2026, 7, 11, 9);
       await _insertRun(
@@ -513,6 +639,7 @@ class _RecordingAccountClient implements AccountClient {
   Future<void>? pendingPush;
   Future<AccountSyncPullResult>? pendingPull;
   bool hintThrows = false;
+  void Function(List<AccountSyncOperation>)? beforePush;
   var _revision = 0;
 
   @override
@@ -523,6 +650,7 @@ class _RecordingAccountClient implements AccountClient {
   }) async {
     await pendingPush;
     pushBatches.add(List.of(operations));
+    beforePush?.call(operations);
     pushed.addAll(operations);
     for (final operation in operations) {
       _revision += 1;

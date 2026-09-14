@@ -3019,4 +3019,48 @@ class AppLocalizationsKo extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String billingOfferDays(int count) {
+    return '$count일';
+  }
+
+  @override
+  String billingOfferMonths(int count) {
+    return '$count개월';
+  }
+
+  @override
+  String billingOfferYears(int count) {
+    return '$count년';
+  }
+
+  @override
+  String billingTrialFree(String duration) {
+    return '$duration 무료';
+  }
+
+  @override
+  String billingTrialRenewal(String price) {
+    return '이후 $price. 취소하지 않으면 자동 갱신됩니다.';
+  }
+
+  @override
+  String get billingReturnBadge => 'Pro로 돌아가기';
+
+  @override
+  String billingReturnSubtitle(String duration, String price) {
+    return '$duration 동안 할인 후 $price. 취소하지 않으면 자동 갱신됩니다.';
+  }
+
+  @override
+  String billingReturnPending(String date) {
+    return '할인이 $date까지 예약되어 있습니다. 구매를 취소했다면 이 시간 이후에 다시 시도할 수 있습니다.';
+  }
+
+  @override
+  String get billingReturnFailed => '재가입 혜택을 확인하지 못했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get billingTryFree => '무료 체험';
 }

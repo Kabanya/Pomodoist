@@ -32,7 +32,7 @@ for locale in ['pt-BR', 'ja', 'ko']:
     native_sets.append(set(re.findall(r'^"(.*?)" = ', path.read_text(), re.M)))
     assert 'NSMicrophoneUsageDescription' in (resources / f'{locale}.lproj/InfoPlist.strings').read_text()
     for platform in ['ios', 'macos']:
-        assert f'{locale}.lproj/Localizable.strings' in (root / platform / 'Runner.xcodeproj/project.pbxproj').read_text()
+        assert f'{locale}.lproj/Localizable.strings' in (root / 'apps/flutter' / platform / 'Runner.xcodeproj/project.pbxproj').read_text()
 assert len(native_sets[0]) > 40 and all(value == native_sets[0] for value in native_sets)
 for locale in ['pt-BR', 'ja', 'ko']:
     data = json.loads((root / f'docs/localization/stores/{locale}.json').read_text())

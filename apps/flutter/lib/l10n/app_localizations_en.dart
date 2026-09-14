@@ -3096,4 +3096,67 @@ class AppLocalizationsEn extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String billingOfferDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String billingOfferMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count months',
+      one: '1 month',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String billingOfferYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count years',
+      one: '1 year',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String billingTrialFree(String duration) {
+    return 'Free for $duration';
+  }
+
+  @override
+  String billingTrialRenewal(String price) {
+    return 'Then $price. Renews automatically unless cancelled.';
+  }
+
+  @override
+  String get billingReturnBadge => 'Return to Pro';
+
+  @override
+  String billingReturnSubtitle(String duration, String price) {
+    return 'For $duration, then $price. Renews automatically unless cancelled.';
+  }
+
+  @override
+  String billingReturnPending(String date) {
+    return 'Your discount is reserved until $date. If the purchase was cancelled, you can retry after that time.';
+  }
+
+  @override
+  String get billingReturnFailed =>
+      'Could not verify your return offer. Retry to check the discount.';
+
+  @override
+  String get billingTryFree => 'Try free';
 }

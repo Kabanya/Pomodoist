@@ -284,6 +284,7 @@ void main() {
       final now = DateTime.utc(2026, 9, 3, 10);
       final later = now.add(const Duration(minutes: 1));
       final task = TaskRow(
+        assigneeIdsJson: '[]',
         id: 'task-1',
         userId: localUserId,
         content: 'Calendar task',

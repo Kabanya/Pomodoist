@@ -58,3 +58,11 @@ verify_jwt = false
 
 [functions.pomodoist-ai]
 verify_jwt = false
+
+[functions.pomodoist-subscription-offer]
+# Accountless requests are authorized by verified Apple signed transactions.
+verify_jwt = false
+
+[functions.pomodoist-collaboration]
+# The handler authenticates private actions; publicRead uses an isolated token projection.
+verify_jwt = false

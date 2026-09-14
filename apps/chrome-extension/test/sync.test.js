@@ -16,7 +16,7 @@ async function setup() {
 const pull = (changes = [], nextCursor = 0, hasMore = false) => ({ changes, nextCursor, hasMore });
 const change = (id, serverRevision, extra = {}) => ({ entityType: 'task', entityId: id, serverRevision,
   data: { id, content: id, projectId: 'inbox', status: 'open', ...extra } });
-const api = handler => ({ rpc: handler, broadcast: async () => {}, overview: async () => ({ profile: { pomodoistIsPro: true } }) });
+const api = handler => ({ rpc: handler, broadcast: async () => {}, registerInstall: async () => {}, overview: async () => ({ profile: { pomodoistIsPro: true } }) });
 
 test('outbox is durable before network and stable across worker restarts', async () => {
   const { disk, store } = await setup();
@@ -171,4 +171,92 @@ test('a committed push whose response was lost is retried with the same operatio
   await synchronize(store, client);
   assert.equal(received.size, 2); assert.equal(store.data.outbox.length, 0);
   assert.equal(Object.keys(store.data.records).filter(key => key.startsWith('task:')).length, 1);
+});
+test('HTTP 413 shrinks batches, preserves order and persists each acknowledged part', async () => {
+  const { store } = await setup();
+  for (let i = 0; i < 4; i++) await store.enqueue({ kind: 'create', content: 'Task ' + i }, 'user-a');
+  const original = store.data.outbox.map(op => op.opId), received = [], sizes = [];
+  await synchronize(store, api(async (name, body) => {
+    if (name !== 'push_changes') return pull();
+    sizes.push(body.p_operations.length);
+    if (body.p_operations.length > 2) throw Object.assign(new Error('too large'), { status: 413 });
+    received.push(...body.p_operations.map(op => op.opId));
+    return { serverRevision: received.length, applied: [] };
+  }));
+  assert.deepEqual(received, original);
+  assert.equal(sizes[0], original.length);
+  assert.equal(store.data.outbox.length, 0);
+});
+
+test('a single oversized operation is retained and other errors never split', async () => {
+  for (const status of [413, 400, 503]) {
+    const { store } = await setup();
+    await store.enqueue({ kind: 'create', content: 'Keep me' }, 'user-a');
+    const original = store.data.outbox.map(op => op.opId);
+    let calls = 0;
+    await assert.rejects(synchronize(store, api(async () => {
+      calls++; throw Object.assign(new Error('rejected'), { status });
+    })));
+    assert.deepEqual(store.data.outbox.map(op => op.opId), original);
+    assert.equal(calls, status === 413 ? 2 : 1);
+  }
+});
+
+test('a failure after a split keeps only unacknowledged operations for the next activation', async () => {
+  const { disk, store } = await setup();
+  for (let i = 0; i < 3; i++) await store.enqueue({ kind: 'create', content: 'Task ' + i }, 'user-a');
+  const original = store.data.outbox.map(op => op.opId), received = [];
+  let fail = true;
+  const client = api(async (name, body) => {
+    if (name !== 'push_changes') return pull();
+    if (body.p_operations.length > 2) throw Object.assign(new Error('too large'), { status: 413 });
+    if (received.length && fail) { fail = false; throw new Error('offline'); }
+    received.push(...body.p_operations.map(op => op.opId));
+    return { serverRevision: received.length, applied: [] };
+  });
+  await assert.rejects(synchronize(store, client));
+  const restarted = new Store(disk, 'https://api.example.test'); await restarted.init();
+  assert.deepEqual(restarted.data.outbox.map(op => op.opId), original.slice(received.length));
+  await synchronize(restarted, client);
+  assert.deepEqual(received, original);
+  assert.equal(restarted.data.outbox.length, 0);
+});
+
+test('installation upsert sends manifest version, platform and current account, retaining headers after refresh', async t => {
+  const { store } = await setup();
+  const priorChrome = globalThis.chrome;
+  globalThis.chrome = { runtime: { getManifest: () => ({ version: '0.2.3' }) } };
+  t.after(() => { globalThis.chrome = priorChrome; });
+  const writes = [];
+  const client = new Client(config, store, async (url, options) => {
+    if (url.includes('/token')) return response(session());
+    writes.push({ url, headers: options.headers, body: JSON.parse(options.body) });
+    return writes.length === 1 ? response({}, 401) : new Response(null, { status: 204 });
+  });
+  await client.registerInstall();
+  for (const write of writes) {
+    assert.match(write.url, /on_conflict=user_id,app_id,device_id/);
+    assert.equal(write.headers.Prefer, 'resolution=merge-duplicates,return=minimal');
+    assert.equal(write.body.user_id, 'user-a');
+    assert.equal(write.body.device_id, store.data.deviceId);
+    assert.equal(write.body.platform, 'chrome_extension');
+    assert.equal(write.body.app_version, '0.2.3');
+  }
+  await store.acceptSession(session('user-b'));
+  await client.registerInstall();
+  assert.equal(writes.at(-1).body.user_id, 'user-b');
+});
+
+test('installation metadata failure does not block sync or overview', async () => {
+  const { store } = await setup();
+  const client = api(async () => pull());
+  let registrations = 0, overviews = 0;
+  client.registerInstall = async () => { registrations++; throw new Error('offline'); };
+  client.overview = async () => { overviews++; return {}; };
+  await synchronize(store, client);
+  assert.equal(registrations, 1);
+  assert.equal(overviews, 1);
+  assert.equal(store.data.error, '');
+  await synchronize(store, client);
+  assert.equal(registrations, 1);
 });

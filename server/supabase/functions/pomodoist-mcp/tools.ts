@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { ActionError } from "./openclaw_actions.ts";
+import { registerCollaborationTool } from "./collaboration_tools.ts";
 
 import {
   type PomodoistMcpAuth,
@@ -25,6 +26,8 @@ export type PomodoistToolDependencies = {
   config: PomodoistMcpConfig;
   fetch?: PomodoistMcpFetch;
   log?: (entry: PomodoistMcpLog) => void;
+  webUrl?: string;
+  publicUrl?: string;
 };
 
 const localUserId = "local-user";
@@ -86,6 +89,10 @@ const schedule = z.discriminatedUnion("type", [
 const pagination = { limit, cursor: cursor.optional() };
 const publicTaskSchema = z.object({
   id: entityId,
+  createdBy: entityId.nullable().optional(),
+  completedBy: entityId.nullable().optional(),
+  scopeId: entityId.nullable().optional(),
+  assigneeIds: z.array(entityId).optional(),
   content: z.string().nullable(),
   description: z.string().nullable(),
   projectId: entityId.nullable(),
@@ -488,6 +495,7 @@ export function registerPomodoistTools(
       return mutate(context, plan.operations, plan.result);
     }));
   }
+  registerCollaborationTool(server, auth, dependencies, outputEnvelope(z.record(z.string(), z.unknown())));
 }
 
 type MutationPlan = { operations: Operation[]; result: RecordValue };

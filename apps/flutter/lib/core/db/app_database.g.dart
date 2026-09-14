@@ -366,6 +366,690 @@ class UsersCompanion extends UpdateCompanion<UserRow> {
   }
 }
 
+class $SharedScopesTable extends SharedScopes
+    with TableInfo<$SharedScopesTable, SharedScopeRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SharedScopesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dataJsonMeta = const VerificationMeta(
+    'dataJson',
+  );
+  @override
+  late final GeneratedColumn<String> dataJson = GeneratedColumn<String>(
+    'data_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cursorMeta = const VerificationMeta('cursor');
+  @override
+  late final GeneratedColumn<int> cursor = GeneratedColumn<int>(
+    'cursor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, dataJson, cursor];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'shared_scopes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SharedScopeRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('data_json')) {
+      context.handle(
+        _dataJsonMeta,
+        dataJson.isAcceptableOrUnknown(data['data_json']!, _dataJsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dataJsonMeta);
+    }
+    if (data.containsKey('cursor')) {
+      context.handle(
+        _cursorMeta,
+        cursor.isAcceptableOrUnknown(data['cursor']!, _cursorMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SharedScopeRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SharedScopeRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      dataJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}data_json'],
+      )!,
+      cursor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cursor'],
+      )!,
+    );
+  }
+
+  @override
+  $SharedScopesTable createAlias(String alias) {
+    return $SharedScopesTable(attachedDatabase, alias);
+  }
+}
+
+class SharedScopeRow extends DataClass implements Insertable<SharedScopeRow> {
+  final String id;
+  final String dataJson;
+  final int cursor;
+  const SharedScopeRow({
+    required this.id,
+    required this.dataJson,
+    required this.cursor,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['data_json'] = Variable<String>(dataJson);
+    map['cursor'] = Variable<int>(cursor);
+    return map;
+  }
+
+  SharedScopesCompanion toCompanion(bool nullToAbsent) {
+    return SharedScopesCompanion(
+      id: Value(id),
+      dataJson: Value(dataJson),
+      cursor: Value(cursor),
+    );
+  }
+
+  factory SharedScopeRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SharedScopeRow(
+      id: serializer.fromJson<String>(json['id']),
+      dataJson: serializer.fromJson<String>(json['dataJson']),
+      cursor: serializer.fromJson<int>(json['cursor']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'dataJson': serializer.toJson<String>(dataJson),
+      'cursor': serializer.toJson<int>(cursor),
+    };
+  }
+
+  SharedScopeRow copyWith({String? id, String? dataJson, int? cursor}) =>
+      SharedScopeRow(
+        id: id ?? this.id,
+        dataJson: dataJson ?? this.dataJson,
+        cursor: cursor ?? this.cursor,
+      );
+  SharedScopeRow copyWithCompanion(SharedScopesCompanion data) {
+    return SharedScopeRow(
+      id: data.id.present ? data.id.value : this.id,
+      dataJson: data.dataJson.present ? data.dataJson.value : this.dataJson,
+      cursor: data.cursor.present ? data.cursor.value : this.cursor,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SharedScopeRow(')
+          ..write('id: $id, ')
+          ..write('dataJson: $dataJson, ')
+          ..write('cursor: $cursor')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, dataJson, cursor);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SharedScopeRow &&
+          other.id == this.id &&
+          other.dataJson == this.dataJson &&
+          other.cursor == this.cursor);
+}
+
+class SharedScopesCompanion extends UpdateCompanion<SharedScopeRow> {
+  final Value<String> id;
+  final Value<String> dataJson;
+  final Value<int> cursor;
+  final Value<int> rowid;
+  const SharedScopesCompanion({
+    this.id = const Value.absent(),
+    this.dataJson = const Value.absent(),
+    this.cursor = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SharedScopesCompanion.insert({
+    required String id,
+    required String dataJson,
+    this.cursor = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       dataJson = Value(dataJson);
+  static Insertable<SharedScopeRow> custom({
+    Expression<String>? id,
+    Expression<String>? dataJson,
+    Expression<int>? cursor,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (dataJson != null) 'data_json': dataJson,
+      if (cursor != null) 'cursor': cursor,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SharedScopesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? dataJson,
+    Value<int>? cursor,
+    Value<int>? rowid,
+  }) {
+    return SharedScopesCompanion(
+      id: id ?? this.id,
+      dataJson: dataJson ?? this.dataJson,
+      cursor: cursor ?? this.cursor,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (dataJson.present) {
+      map['data_json'] = Variable<String>(dataJson.value);
+    }
+    if (cursor.present) {
+      map['cursor'] = Variable<int>(cursor.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SharedScopesCompanion(')
+          ..write('id: $id, ')
+          ..write('dataJson: $dataJson, ')
+          ..write('cursor: $cursor, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SharedEntitiesTable extends SharedEntities
+    with TableInfo<$SharedEntitiesTable, SharedEntityRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SharedEntitiesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _scopeIdMeta = const VerificationMeta(
+    'scopeId',
+  );
+  @override
+  late final GeneratedColumn<String> scopeId = GeneratedColumn<String>(
+    'scope_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entityTypeMeta = const VerificationMeta(
+    'entityType',
+  );
+  @override
+  late final GeneratedColumn<String> entityType = GeneratedColumn<String>(
+    'entity_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entityIdMeta = const VerificationMeta(
+    'entityId',
+  );
+  @override
+  late final GeneratedColumn<String> entityId = GeneratedColumn<String>(
+    'entity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dataJsonMeta = const VerificationMeta(
+    'dataJson',
+  );
+  @override
+  late final GeneratedColumn<String> dataJson = GeneratedColumn<String>(
+    'data_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _serverRevisionMeta = const VerificationMeta(
+    'serverRevision',
+  );
+  @override
+  late final GeneratedColumn<int> serverRevision = GeneratedColumn<int>(
+    'server_revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    scopeId,
+    entityType,
+    entityId,
+    dataJson,
+    serverRevision,
+    isDeleted,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'shared_entities';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SharedEntityRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('scope_id')) {
+      context.handle(
+        _scopeIdMeta,
+        scopeId.isAcceptableOrUnknown(data['scope_id']!, _scopeIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_scopeIdMeta);
+    }
+    if (data.containsKey('entity_type')) {
+      context.handle(
+        _entityTypeMeta,
+        entityType.isAcceptableOrUnknown(data['entity_type']!, _entityTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityTypeMeta);
+    }
+    if (data.containsKey('entity_id')) {
+      context.handle(
+        _entityIdMeta,
+        entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityIdMeta);
+    }
+    if (data.containsKey('data_json')) {
+      context.handle(
+        _dataJsonMeta,
+        dataJson.isAcceptableOrUnknown(data['data_json']!, _dataJsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dataJsonMeta);
+    }
+    if (data.containsKey('server_revision')) {
+      context.handle(
+        _serverRevisionMeta,
+        serverRevision.isAcceptableOrUnknown(
+          data['server_revision']!,
+          _serverRevisionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {scopeId, entityType, entityId};
+  @override
+  SharedEntityRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SharedEntityRow(
+      scopeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scope_id'],
+      )!,
+      entityType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_type'],
+      )!,
+      entityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_id'],
+      )!,
+      dataJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}data_json'],
+      )!,
+      serverRevision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}server_revision'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+    );
+  }
+
+  @override
+  $SharedEntitiesTable createAlias(String alias) {
+    return $SharedEntitiesTable(attachedDatabase, alias);
+  }
+}
+
+class SharedEntityRow extends DataClass implements Insertable<SharedEntityRow> {
+  final String scopeId;
+  final String entityType;
+  final String entityId;
+  final String dataJson;
+  final int serverRevision;
+  final bool isDeleted;
+  const SharedEntityRow({
+    required this.scopeId,
+    required this.entityType,
+    required this.entityId,
+    required this.dataJson,
+    required this.serverRevision,
+    required this.isDeleted,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['scope_id'] = Variable<String>(scopeId);
+    map['entity_type'] = Variable<String>(entityType);
+    map['entity_id'] = Variable<String>(entityId);
+    map['data_json'] = Variable<String>(dataJson);
+    map['server_revision'] = Variable<int>(serverRevision);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    return map;
+  }
+
+  SharedEntitiesCompanion toCompanion(bool nullToAbsent) {
+    return SharedEntitiesCompanion(
+      scopeId: Value(scopeId),
+      entityType: Value(entityType),
+      entityId: Value(entityId),
+      dataJson: Value(dataJson),
+      serverRevision: Value(serverRevision),
+      isDeleted: Value(isDeleted),
+    );
+  }
+
+  factory SharedEntityRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SharedEntityRow(
+      scopeId: serializer.fromJson<String>(json['scopeId']),
+      entityType: serializer.fromJson<String>(json['entityType']),
+      entityId: serializer.fromJson<String>(json['entityId']),
+      dataJson: serializer.fromJson<String>(json['dataJson']),
+      serverRevision: serializer.fromJson<int>(json['serverRevision']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'scopeId': serializer.toJson<String>(scopeId),
+      'entityType': serializer.toJson<String>(entityType),
+      'entityId': serializer.toJson<String>(entityId),
+      'dataJson': serializer.toJson<String>(dataJson),
+      'serverRevision': serializer.toJson<int>(serverRevision),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+    };
+  }
+
+  SharedEntityRow copyWith({
+    String? scopeId,
+    String? entityType,
+    String? entityId,
+    String? dataJson,
+    int? serverRevision,
+    bool? isDeleted,
+  }) => SharedEntityRow(
+    scopeId: scopeId ?? this.scopeId,
+    entityType: entityType ?? this.entityType,
+    entityId: entityId ?? this.entityId,
+    dataJson: dataJson ?? this.dataJson,
+    serverRevision: serverRevision ?? this.serverRevision,
+    isDeleted: isDeleted ?? this.isDeleted,
+  );
+  SharedEntityRow copyWithCompanion(SharedEntitiesCompanion data) {
+    return SharedEntityRow(
+      scopeId: data.scopeId.present ? data.scopeId.value : this.scopeId,
+      entityType: data.entityType.present
+          ? data.entityType.value
+          : this.entityType,
+      entityId: data.entityId.present ? data.entityId.value : this.entityId,
+      dataJson: data.dataJson.present ? data.dataJson.value : this.dataJson,
+      serverRevision: data.serverRevision.present
+          ? data.serverRevision.value
+          : this.serverRevision,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SharedEntityRow(')
+          ..write('scopeId: $scopeId, ')
+          ..write('entityType: $entityType, ')
+          ..write('entityId: $entityId, ')
+          ..write('dataJson: $dataJson, ')
+          ..write('serverRevision: $serverRevision, ')
+          ..write('isDeleted: $isDeleted')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    scopeId,
+    entityType,
+    entityId,
+    dataJson,
+    serverRevision,
+    isDeleted,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SharedEntityRow &&
+          other.scopeId == this.scopeId &&
+          other.entityType == this.entityType &&
+          other.entityId == this.entityId &&
+          other.dataJson == this.dataJson &&
+          other.serverRevision == this.serverRevision &&
+          other.isDeleted == this.isDeleted);
+}
+
+class SharedEntitiesCompanion extends UpdateCompanion<SharedEntityRow> {
+  final Value<String> scopeId;
+  final Value<String> entityType;
+  final Value<String> entityId;
+  final Value<String> dataJson;
+  final Value<int> serverRevision;
+  final Value<bool> isDeleted;
+  final Value<int> rowid;
+  const SharedEntitiesCompanion({
+    this.scopeId = const Value.absent(),
+    this.entityType = const Value.absent(),
+    this.entityId = const Value.absent(),
+    this.dataJson = const Value.absent(),
+    this.serverRevision = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SharedEntitiesCompanion.insert({
+    required String scopeId,
+    required String entityType,
+    required String entityId,
+    required String dataJson,
+    this.serverRevision = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : scopeId = Value(scopeId),
+       entityType = Value(entityType),
+       entityId = Value(entityId),
+       dataJson = Value(dataJson);
+  static Insertable<SharedEntityRow> custom({
+    Expression<String>? scopeId,
+    Expression<String>? entityType,
+    Expression<String>? entityId,
+    Expression<String>? dataJson,
+    Expression<int>? serverRevision,
+    Expression<bool>? isDeleted,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (scopeId != null) 'scope_id': scopeId,
+      if (entityType != null) 'entity_type': entityType,
+      if (entityId != null) 'entity_id': entityId,
+      if (dataJson != null) 'data_json': dataJson,
+      if (serverRevision != null) 'server_revision': serverRevision,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SharedEntitiesCompanion copyWith({
+    Value<String>? scopeId,
+    Value<String>? entityType,
+    Value<String>? entityId,
+    Value<String>? dataJson,
+    Value<int>? serverRevision,
+    Value<bool>? isDeleted,
+    Value<int>? rowid,
+  }) {
+    return SharedEntitiesCompanion(
+      scopeId: scopeId ?? this.scopeId,
+      entityType: entityType ?? this.entityType,
+      entityId: entityId ?? this.entityId,
+      dataJson: dataJson ?? this.dataJson,
+      serverRevision: serverRevision ?? this.serverRevision,
+      isDeleted: isDeleted ?? this.isDeleted,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (scopeId.present) {
+      map['scope_id'] = Variable<String>(scopeId.value);
+    }
+    if (entityType.present) {
+      map['entity_type'] = Variable<String>(entityType.value);
+    }
+    if (entityId.present) {
+      map['entity_id'] = Variable<String>(entityId.value);
+    }
+    if (dataJson.present) {
+      map['data_json'] = Variable<String>(dataJson.value);
+    }
+    if (serverRevision.present) {
+      map['server_revision'] = Variable<int>(serverRevision.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SharedEntitiesCompanion(')
+          ..write('scopeId: $scopeId, ')
+          ..write('entityType: $entityType, ')
+          ..write('entityId: $entityId, ')
+          ..write('dataJson: $dataJson, ')
+          ..write('serverRevision: $serverRevision, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $WorkspacesTable extends Workspaces
     with TableInfo<$WorkspacesTable, WorkspaceRow> {
   @override
@@ -779,6 +1463,17 @@ class $ProjectsTable extends Projects
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ProjectsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _scopeIdMeta = const VerificationMeta(
+    'scopeId',
+  );
+  @override
+  late final GeneratedColumn<String> scopeId = GeneratedColumn<String>(
+    'scope_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _iconMeta = const VerificationMeta('icon');
   @override
   late final GeneratedColumn<String> icon = GeneratedColumn<String>(
@@ -927,6 +1622,7 @@ class $ProjectsTable extends Projects
   );
   @override
   List<GeneratedColumn> get $columns => [
+    scopeId,
     icon,
     id,
     userId,
@@ -953,6 +1649,12 @@ class $ProjectsTable extends Projects
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('scope_id')) {
+      context.handle(
+        _scopeIdMeta,
+        scopeId.isAcceptableOrUnknown(data['scope_id']!, _scopeIdMeta),
+      );
+    }
     if (data.containsKey('icon')) {
       context.handle(
         _iconMeta,
@@ -1049,6 +1751,10 @@ class $ProjectsTable extends Projects
   ProjectRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ProjectRow(
+      scopeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scope_id'],
+      ),
       icon: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}icon'],
@@ -1111,6 +1817,7 @@ class $ProjectsTable extends Projects
 }
 
 class ProjectRow extends DataClass implements Insertable<ProjectRow> {
+  final String? scopeId;
   final String? icon;
   final String id;
   final String userId;
@@ -1125,6 +1832,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   final DateTime createdAt;
   final DateTime updatedAt;
   const ProjectRow({
+    this.scopeId,
     this.icon,
     required this.id,
     required this.userId,
@@ -1142,6 +1850,9 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (!nullToAbsent || scopeId != null) {
+      map['scope_id'] = Variable<String>(scopeId);
+    }
     if (!nullToAbsent || icon != null) {
       map['icon'] = Variable<String>(icon);
     }
@@ -1166,6 +1877,9 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
 
   ProjectsCompanion toCompanion(bool nullToAbsent) {
     return ProjectsCompanion(
+      scopeId: scopeId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(scopeId),
       icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
       id: Value(id),
       userId: Value(userId),
@@ -1192,6 +1906,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ProjectRow(
+      scopeId: serializer.fromJson<String?>(json['scopeId']),
       icon: serializer.fromJson<String?>(json['icon']),
       id: serializer.fromJson<String>(json['id']),
       userId: serializer.fromJson<String>(json['userId']),
@@ -1211,6 +1926,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'scopeId': serializer.toJson<String?>(scopeId),
       'icon': serializer.toJson<String?>(icon),
       'id': serializer.toJson<String>(id),
       'userId': serializer.toJson<String>(userId),
@@ -1228,6 +1944,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   }
 
   ProjectRow copyWith({
+    Value<String?> scopeId = const Value.absent(),
     Value<String?> icon = const Value.absent(),
     String? id,
     String? userId,
@@ -1242,6 +1959,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => ProjectRow(
+    scopeId: scopeId.present ? scopeId.value : this.scopeId,
     icon: icon.present ? icon.value : this.icon,
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -1258,6 +1976,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   );
   ProjectRow copyWithCompanion(ProjectsCompanion data) {
     return ProjectRow(
+      scopeId: data.scopeId.present ? data.scopeId.value : this.scopeId,
       icon: data.icon.present ? data.icon.value : this.icon,
       id: data.id.present ? data.id.value : this.id,
       userId: data.userId.present ? data.userId.value : this.userId,
@@ -1281,6 +2000,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   @override
   String toString() {
     return (StringBuffer('ProjectRow(')
+          ..write('scopeId: $scopeId, ')
           ..write('icon: $icon, ')
           ..write('id: $id, ')
           ..write('userId: $userId, ')
@@ -1300,6 +2020,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
 
   @override
   int get hashCode => Object.hash(
+    scopeId,
     icon,
     id,
     userId,
@@ -1318,6 +2039,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ProjectRow &&
+          other.scopeId == this.scopeId &&
           other.icon == this.icon &&
           other.id == this.id &&
           other.userId == this.userId &&
@@ -1334,6 +2056,7 @@ class ProjectRow extends DataClass implements Insertable<ProjectRow> {
 }
 
 class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
+  final Value<String?> scopeId;
   final Value<String?> icon;
   final Value<String> id;
   final Value<String> userId;
@@ -1349,6 +2072,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const ProjectsCompanion({
+    this.scopeId = const Value.absent(),
     this.icon = const Value.absent(),
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
@@ -1365,6 +2089,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
     this.rowid = const Value.absent(),
   });
   ProjectsCompanion.insert({
+    this.scopeId = const Value.absent(),
     this.icon = const Value.absent(),
     required String id,
     required String userId,
@@ -1386,6 +2111,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
   static Insertable<ProjectRow> custom({
+    Expression<String>? scopeId,
     Expression<String>? icon,
     Expression<String>? id,
     Expression<String>? userId,
@@ -1402,6 +2128,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (scopeId != null) 'scope_id': scopeId,
       if (icon != null) 'icon': icon,
       if (id != null) 'id': id,
       if (userId != null) 'user_id': userId,
@@ -1420,6 +2147,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
   }
 
   ProjectsCompanion copyWith({
+    Value<String?>? scopeId,
     Value<String?>? icon,
     Value<String>? id,
     Value<String>? userId,
@@ -1436,6 +2164,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
     Value<int>? rowid,
   }) {
     return ProjectsCompanion(
+      scopeId: scopeId ?? this.scopeId,
       icon: icon ?? this.icon,
       id: id ?? this.id,
       userId: userId ?? this.userId,
@@ -1456,6 +2185,9 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (scopeId.present) {
+      map['scope_id'] = Variable<String>(scopeId.value);
+    }
     if (icon.present) {
       map['icon'] = Variable<String>(icon.value);
     }
@@ -1504,6 +2236,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectRow> {
   @override
   String toString() {
     return (StringBuffer('ProjectsCompanion(')
+          ..write('scopeId: $scopeId, ')
           ..write('icon: $icon, ')
           ..write('id: $id, ')
           ..write('userId: $userId, ')
@@ -2096,6 +2829,51 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $TasksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _scopeIdMeta = const VerificationMeta(
+    'scopeId',
+  );
+  @override
+  late final GeneratedColumn<String> scopeId = GeneratedColumn<String>(
+    'scope_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _completedByMeta = const VerificationMeta(
+    'completedBy',
+  );
+  @override
+  late final GeneratedColumn<String> completedBy = GeneratedColumn<String>(
+    'completed_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _assigneeIdsJsonMeta = const VerificationMeta(
+    'assigneeIdsJson',
+  );
+  @override
+  late final GeneratedColumn<String> assigneeIdsJson = GeneratedColumn<String>(
+    'assignee_ids_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
@@ -2346,6 +3124,10 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
   );
   @override
   List<GeneratedColumn> get $columns => [
+    scopeId,
+    createdBy,
+    completedBy,
+    assigneeIdsJson,
     id,
     userId,
     content,
@@ -2381,6 +3163,36 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('scope_id')) {
+      context.handle(
+        _scopeIdMeta,
+        scopeId.isAcceptableOrUnknown(data['scope_id']!, _scopeIdMeta),
+      );
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    }
+    if (data.containsKey('completed_by')) {
+      context.handle(
+        _completedByMeta,
+        completedBy.isAcceptableOrUnknown(
+          data['completed_by']!,
+          _completedByMeta,
+        ),
+      );
+    }
+    if (data.containsKey('assignee_ids_json')) {
+      context.handle(
+        _assigneeIdsJsonMeta,
+        assigneeIdsJson.isAcceptableOrUnknown(
+          data['assignee_ids_json']!,
+          _assigneeIdsJsonMeta,
+        ),
+      );
+    }
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
@@ -2557,6 +3369,22 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
   TaskRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return TaskRow(
+      scopeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scope_id'],
+      ),
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      ),
+      completedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}completed_by'],
+      ),
+      assigneeIdsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}assignee_ids_json'],
+      )!,
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -2655,6 +3483,10 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
 }
 
 class TaskRow extends DataClass implements Insertable<TaskRow> {
+  final String? scopeId;
+  final String? createdBy;
+  final String? completedBy;
+  final String assigneeIdsJson;
   final String id;
   final String userId;
   final String content;
@@ -2678,6 +3510,10 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   final DateTime updatedAt;
   final DateTime? completedAt;
   const TaskRow({
+    this.scopeId,
+    this.createdBy,
+    this.completedBy,
+    required this.assigneeIdsJson,
     required this.id,
     required this.userId,
     required this.content,
@@ -2704,6 +3540,16 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (!nullToAbsent || scopeId != null) {
+      map['scope_id'] = Variable<String>(scopeId);
+    }
+    if (!nullToAbsent || createdBy != null) {
+      map['created_by'] = Variable<String>(createdBy);
+    }
+    if (!nullToAbsent || completedBy != null) {
+      map['completed_by'] = Variable<String>(completedBy);
+    }
+    map['assignee_ids_json'] = Variable<String>(assigneeIdsJson);
     map['id'] = Variable<String>(id);
     map['user_id'] = Variable<String>(userId);
     map['content'] = Variable<String>(content);
@@ -2749,6 +3595,16 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
 
   TasksCompanion toCompanion(bool nullToAbsent) {
     return TasksCompanion(
+      scopeId: scopeId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(scopeId),
+      createdBy: createdBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdBy),
+      completedBy: completedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedBy),
+      assigneeIdsJson: Value(assigneeIdsJson),
       id: Value(id),
       userId: Value(userId),
       content: Value(content),
@@ -2798,6 +3654,10 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return TaskRow(
+      scopeId: serializer.fromJson<String?>(json['scopeId']),
+      createdBy: serializer.fromJson<String?>(json['createdBy']),
+      completedBy: serializer.fromJson<String?>(json['completedBy']),
+      assigneeIdsJson: serializer.fromJson<String>(json['assigneeIdsJson']),
       id: serializer.fromJson<String>(json['id']),
       userId: serializer.fromJson<String>(json['userId']),
       content: serializer.fromJson<String>(json['content']),
@@ -2830,6 +3690,10 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'scopeId': serializer.toJson<String?>(scopeId),
+      'createdBy': serializer.toJson<String?>(createdBy),
+      'completedBy': serializer.toJson<String?>(completedBy),
+      'assigneeIdsJson': serializer.toJson<String>(assigneeIdsJson),
       'id': serializer.toJson<String>(id),
       'userId': serializer.toJson<String>(userId),
       'content': serializer.toJson<String>(content),
@@ -2860,6 +3724,10 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   }
 
   TaskRow copyWith({
+    Value<String?> scopeId = const Value.absent(),
+    Value<String?> createdBy = const Value.absent(),
+    Value<String?> completedBy = const Value.absent(),
+    String? assigneeIdsJson,
     String? id,
     String? userId,
     String? content,
@@ -2883,6 +3751,10 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     DateTime? updatedAt,
     Value<DateTime?> completedAt = const Value.absent(),
   }) => TaskRow(
+    scopeId: scopeId.present ? scopeId.value : this.scopeId,
+    createdBy: createdBy.present ? createdBy.value : this.createdBy,
+    completedBy: completedBy.present ? completedBy.value : this.completedBy,
+    assigneeIdsJson: assigneeIdsJson ?? this.assigneeIdsJson,
     id: id ?? this.id,
     userId: userId ?? this.userId,
     content: content ?? this.content,
@@ -2913,6 +3785,14 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   );
   TaskRow copyWithCompanion(TasksCompanion data) {
     return TaskRow(
+      scopeId: data.scopeId.present ? data.scopeId.value : this.scopeId,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      completedBy: data.completedBy.present
+          ? data.completedBy.value
+          : this.completedBy,
+      assigneeIdsJson: data.assigneeIdsJson.present
+          ? data.assigneeIdsJson.value
+          : this.assigneeIdsJson,
       id: data.id.present ? data.id.value : this.id,
       userId: data.userId.present ? data.userId.value : this.userId,
       content: data.content.present ? data.content.value : this.content,
@@ -2957,6 +3837,10 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   @override
   String toString() {
     return (StringBuffer('TaskRow(')
+          ..write('scopeId: $scopeId, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('completedBy: $completedBy, ')
+          ..write('assigneeIdsJson: $assigneeIdsJson, ')
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('content: $content, ')
@@ -2985,6 +3869,10 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
 
   @override
   int get hashCode => Object.hashAll([
+    scopeId,
+    createdBy,
+    completedBy,
+    assigneeIdsJson,
     id,
     userId,
     content,
@@ -3012,6 +3900,10 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is TaskRow &&
+          other.scopeId == this.scopeId &&
+          other.createdBy == this.createdBy &&
+          other.completedBy == this.completedBy &&
+          other.assigneeIdsJson == this.assigneeIdsJson &&
           other.id == this.id &&
           other.userId == this.userId &&
           other.content == this.content &&
@@ -3037,6 +3929,10 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
 }
 
 class TasksCompanion extends UpdateCompanion<TaskRow> {
+  final Value<String?> scopeId;
+  final Value<String?> createdBy;
+  final Value<String?> completedBy;
+  final Value<String> assigneeIdsJson;
   final Value<String> id;
   final Value<String> userId;
   final Value<String> content;
@@ -3061,6 +3957,10 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
   final Value<DateTime?> completedAt;
   final Value<int> rowid;
   const TasksCompanion({
+    this.scopeId = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.completedBy = const Value.absent(),
+    this.assigneeIdsJson = const Value.absent(),
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
     this.content = const Value.absent(),
@@ -3086,6 +3986,10 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     this.rowid = const Value.absent(),
   });
   TasksCompanion.insert({
+    this.scopeId = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.completedBy = const Value.absent(),
+    this.assigneeIdsJson = const Value.absent(),
     required String id,
     required String userId,
     required String content,
@@ -3117,6 +4021,10 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
   static Insertable<TaskRow> custom({
+    Expression<String>? scopeId,
+    Expression<String>? createdBy,
+    Expression<String>? completedBy,
+    Expression<String>? assigneeIdsJson,
     Expression<String>? id,
     Expression<String>? userId,
     Expression<String>? content,
@@ -3142,6 +4050,10 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (scopeId != null) 'scope_id': scopeId,
+      if (createdBy != null) 'created_by': createdBy,
+      if (completedBy != null) 'completed_by': completedBy,
+      if (assigneeIdsJson != null) 'assignee_ids_json': assigneeIdsJson,
       if (id != null) 'id': id,
       if (userId != null) 'user_id': userId,
       if (content != null) 'content': content,
@@ -3171,6 +4083,10 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
   }
 
   TasksCompanion copyWith({
+    Value<String?>? scopeId,
+    Value<String?>? createdBy,
+    Value<String?>? completedBy,
+    Value<String>? assigneeIdsJson,
     Value<String>? id,
     Value<String>? userId,
     Value<String>? content,
@@ -3196,6 +4112,10 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Value<int>? rowid,
   }) {
     return TasksCompanion(
+      scopeId: scopeId ?? this.scopeId,
+      createdBy: createdBy ?? this.createdBy,
+      completedBy: completedBy ?? this.completedBy,
+      assigneeIdsJson: assigneeIdsJson ?? this.assigneeIdsJson,
       id: id ?? this.id,
       userId: userId ?? this.userId,
       content: content ?? this.content,
@@ -3227,6 +4147,18 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (scopeId.present) {
+      map['scope_id'] = Variable<String>(scopeId.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (completedBy.present) {
+      map['completed_by'] = Variable<String>(completedBy.value);
+    }
+    if (assigneeIdsJson.present) {
+      map['assignee_ids_json'] = Variable<String>(assigneeIdsJson.value);
+    }
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
@@ -3306,6 +4238,10 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
   @override
   String toString() {
     return (StringBuffer('TasksCompanion(')
+          ..write('scopeId: $scopeId, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('completedBy: $completedBy, ')
+          ..write('assigneeIdsJson: $assigneeIdsJson, ')
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('content: $content, ')
@@ -3757,6 +4693,17 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, LabelRow> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $LabelsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _scopeIdMeta = const VerificationMeta(
+    'scopeId',
+  );
+  @override
+  late final GeneratedColumn<String> scopeId = GeneratedColumn<String>(
+    'scope_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
@@ -3894,6 +4841,7 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, LabelRow> {
   );
   @override
   List<GeneratedColumn> get $columns => [
+    scopeId,
     id,
     userId,
     name,
@@ -3919,6 +4867,12 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, LabelRow> {
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('scope_id')) {
+      context.handle(
+        _scopeIdMeta,
+        scopeId.isAcceptableOrUnknown(data['scope_id']!, _scopeIdMeta),
+      );
+    }
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
@@ -4009,6 +4963,10 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, LabelRow> {
   LabelRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return LabelRow(
+      scopeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scope_id'],
+      ),
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -4067,6 +5025,7 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, LabelRow> {
 }
 
 class LabelRow extends DataClass implements Insertable<LabelRow> {
+  final String? scopeId;
   final String id;
   final String userId;
   final String name;
@@ -4080,6 +5039,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
   final DateTime createdAt;
   final DateTime updatedAt;
   const LabelRow({
+    this.scopeId,
     required this.id,
     required this.userId,
     required this.name,
@@ -4096,6 +5056,9 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (!nullToAbsent || scopeId != null) {
+      map['scope_id'] = Variable<String>(scopeId);
+    }
     map['id'] = Variable<String>(id);
     map['user_id'] = Variable<String>(userId);
     map['name'] = Variable<String>(name);
@@ -4119,6 +5082,9 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
 
   LabelsCompanion toCompanion(bool nullToAbsent) {
     return LabelsCompanion(
+      scopeId: scopeId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(scopeId),
       id: Value(id),
       userId: Value(userId),
       name: Value(name),
@@ -4144,6 +5110,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LabelRow(
+      scopeId: serializer.fromJson<String?>(json['scopeId']),
       id: serializer.fromJson<String>(json['id']),
       userId: serializer.fromJson<String>(json['userId']),
       name: serializer.fromJson<String>(json['name']),
@@ -4162,6 +5129,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'scopeId': serializer.toJson<String?>(scopeId),
       'id': serializer.toJson<String>(id),
       'userId': serializer.toJson<String>(userId),
       'name': serializer.toJson<String>(name),
@@ -4178,6 +5146,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
   }
 
   LabelRow copyWith({
+    Value<String?> scopeId = const Value.absent(),
     String? id,
     String? userId,
     String? name,
@@ -4191,6 +5160,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => LabelRow(
+    scopeId: scopeId.present ? scopeId.value : this.scopeId,
     id: id ?? this.id,
     userId: userId ?? this.userId,
     name: name ?? this.name,
@@ -4206,6 +5176,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
   );
   LabelRow copyWithCompanion(LabelsCompanion data) {
     return LabelRow(
+      scopeId: data.scopeId.present ? data.scopeId.value : this.scopeId,
       id: data.id.present ? data.id.value : this.id,
       userId: data.userId.present ? data.userId.value : this.userId,
       name: data.name.present ? data.name.value : this.name,
@@ -4226,6 +5197,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
   @override
   String toString() {
     return (StringBuffer('LabelRow(')
+          ..write('scopeId: $scopeId, ')
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('name: $name, ')
@@ -4244,6 +5216,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
 
   @override
   int get hashCode => Object.hash(
+    scopeId,
     id,
     userId,
     name,
@@ -4261,6 +5234,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is LabelRow &&
+          other.scopeId == this.scopeId &&
           other.id == this.id &&
           other.userId == this.userId &&
           other.name == this.name &&
@@ -4276,6 +5250,7 @@ class LabelRow extends DataClass implements Insertable<LabelRow> {
 }
 
 class LabelsCompanion extends UpdateCompanion<LabelRow> {
+  final Value<String?> scopeId;
   final Value<String> id;
   final Value<String> userId;
   final Value<String> name;
@@ -4290,6 +5265,7 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const LabelsCompanion({
+    this.scopeId = const Value.absent(),
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
     this.name = const Value.absent(),
@@ -4305,6 +5281,7 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
     this.rowid = const Value.absent(),
   });
   LabelsCompanion.insert({
+    this.scopeId = const Value.absent(),
     required String id,
     required String userId,
     required String name,
@@ -4325,6 +5302,7 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
   static Insertable<LabelRow> custom({
+    Expression<String>? scopeId,
     Expression<String>? id,
     Expression<String>? userId,
     Expression<String>? name,
@@ -4340,6 +5318,7 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (scopeId != null) 'scope_id': scopeId,
       if (id != null) 'id': id,
       if (userId != null) 'user_id': userId,
       if (name != null) 'name': name,
@@ -4357,6 +5336,7 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
   }
 
   LabelsCompanion copyWith({
+    Value<String?>? scopeId,
     Value<String>? id,
     Value<String>? userId,
     Value<String>? name,
@@ -4372,6 +5352,7 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
     Value<int>? rowid,
   }) {
     return LabelsCompanion(
+      scopeId: scopeId ?? this.scopeId,
       id: id ?? this.id,
       userId: userId ?? this.userId,
       name: name ?? this.name,
@@ -4391,6 +5372,9 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (scopeId.present) {
+      map['scope_id'] = Variable<String>(scopeId.value);
+    }
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
@@ -4436,6 +5420,7 @@ class LabelsCompanion extends UpdateCompanion<LabelRow> {
   @override
   String toString() {
     return (StringBuffer('LabelsCompanion(')
+          ..write('scopeId: $scopeId, ')
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('name: $name, ')
@@ -10004,6 +10989,29 @@ class $SyncCommandsTable extends SyncCommands
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SyncCommandsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _scopeIdMeta = const VerificationMeta(
+    'scopeId',
+  );
+  @override
+  late final GeneratedColumn<String> scopeId = GeneratedColumn<String>(
+    'scope_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _baseRevisionMeta = const VerificationMeta(
+    'baseRevision',
+  );
+  @override
+  late final GeneratedColumn<int> baseRevision = GeneratedColumn<int>(
+    'base_revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
@@ -10122,6 +11130,8 @@ class $SyncCommandsTable extends SyncCommands
   );
   @override
   List<GeneratedColumn> get $columns => [
+    scopeId,
+    baseRevision,
     id,
     uuid,
     type,
@@ -10146,6 +11156,21 @@ class $SyncCommandsTable extends SyncCommands
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('scope_id')) {
+      context.handle(
+        _scopeIdMeta,
+        scopeId.isAcceptableOrUnknown(data['scope_id']!, _scopeIdMeta),
+      );
+    }
+    if (data.containsKey('base_revision')) {
+      context.handle(
+        _baseRevisionMeta,
+        baseRevision.isAcceptableOrUnknown(
+          data['base_revision']!,
+          _baseRevisionMeta,
+        ),
+      );
+    }
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
@@ -10236,6 +11261,14 @@ class $SyncCommandsTable extends SyncCommands
   SyncCommandRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SyncCommandRow(
+      scopeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scope_id'],
+      ),
+      baseRevision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}base_revision'],
+      )!,
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -10290,6 +11323,8 @@ class $SyncCommandsTable extends SyncCommands
 }
 
 class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
+  final String? scopeId;
+  final int baseRevision;
   final String id;
   final String uuid;
   final String type;
@@ -10302,6 +11337,8 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
   final DateTime? availableAt;
   final String? lastError;
   const SyncCommandRow({
+    this.scopeId,
+    required this.baseRevision,
     required this.id,
     required this.uuid,
     required this.type,
@@ -10317,6 +11354,10 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (!nullToAbsent || scopeId != null) {
+      map['scope_id'] = Variable<String>(scopeId);
+    }
+    map['base_revision'] = Variable<int>(baseRevision);
     map['id'] = Variable<String>(id);
     map['uuid'] = Variable<String>(uuid);
     map['type'] = Variable<String>(type);
@@ -10339,6 +11380,10 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
 
   SyncCommandsCompanion toCompanion(bool nullToAbsent) {
     return SyncCommandsCompanion(
+      scopeId: scopeId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(scopeId),
+      baseRevision: Value(baseRevision),
       id: Value(id),
       uuid: Value(uuid),
       type: Value(type),
@@ -10365,6 +11410,8 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SyncCommandRow(
+      scopeId: serializer.fromJson<String?>(json['scopeId']),
+      baseRevision: serializer.fromJson<int>(json['baseRevision']),
       id: serializer.fromJson<String>(json['id']),
       uuid: serializer.fromJson<String>(json['uuid']),
       type: serializer.fromJson<String>(json['type']),
@@ -10382,6 +11429,8 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'scopeId': serializer.toJson<String?>(scopeId),
+      'baseRevision': serializer.toJson<int>(baseRevision),
       'id': serializer.toJson<String>(id),
       'uuid': serializer.toJson<String>(uuid),
       'type': serializer.toJson<String>(type),
@@ -10397,6 +11446,8 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
   }
 
   SyncCommandRow copyWith({
+    Value<String?> scopeId = const Value.absent(),
+    int? baseRevision,
     String? id,
     String? uuid,
     String? type,
@@ -10409,6 +11460,8 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
     Value<DateTime?> availableAt = const Value.absent(),
     Value<String?> lastError = const Value.absent(),
   }) => SyncCommandRow(
+    scopeId: scopeId.present ? scopeId.value : this.scopeId,
+    baseRevision: baseRevision ?? this.baseRevision,
     id: id ?? this.id,
     uuid: uuid ?? this.uuid,
     type: type ?? this.type,
@@ -10423,6 +11476,10 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
   );
   SyncCommandRow copyWithCompanion(SyncCommandsCompanion data) {
     return SyncCommandRow(
+      scopeId: data.scopeId.present ? data.scopeId.value : this.scopeId,
+      baseRevision: data.baseRevision.present
+          ? data.baseRevision.value
+          : this.baseRevision,
       id: data.id.present ? data.id.value : this.id,
       uuid: data.uuid.present ? data.uuid.value : this.uuid,
       type: data.type.present ? data.type.value : this.type,
@@ -10444,6 +11501,8 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
   @override
   String toString() {
     return (StringBuffer('SyncCommandRow(')
+          ..write('scopeId: $scopeId, ')
+          ..write('baseRevision: $baseRevision, ')
           ..write('id: $id, ')
           ..write('uuid: $uuid, ')
           ..write('type: $type, ')
@@ -10461,6 +11520,8 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
 
   @override
   int get hashCode => Object.hash(
+    scopeId,
+    baseRevision,
     id,
     uuid,
     type,
@@ -10477,6 +11538,8 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SyncCommandRow &&
+          other.scopeId == this.scopeId &&
+          other.baseRevision == this.baseRevision &&
           other.id == this.id &&
           other.uuid == this.uuid &&
           other.type == this.type &&
@@ -10491,6 +11554,8 @@ class SyncCommandRow extends DataClass implements Insertable<SyncCommandRow> {
 }
 
 class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
+  final Value<String?> scopeId;
+  final Value<int> baseRevision;
   final Value<String> id;
   final Value<String> uuid;
   final Value<String> type;
@@ -10504,6 +11569,8 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
   final Value<String?> lastError;
   final Value<int> rowid;
   const SyncCommandsCompanion({
+    this.scopeId = const Value.absent(),
+    this.baseRevision = const Value.absent(),
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
     this.type = const Value.absent(),
@@ -10518,6 +11585,8 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
     this.rowid = const Value.absent(),
   });
   SyncCommandsCompanion.insert({
+    this.scopeId = const Value.absent(),
+    this.baseRevision = const Value.absent(),
     required String id,
     required String uuid,
     required String type,
@@ -10537,6 +11606,8 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
   static Insertable<SyncCommandRow> custom({
+    Expression<String>? scopeId,
+    Expression<int>? baseRevision,
     Expression<String>? id,
     Expression<String>? uuid,
     Expression<String>? type,
@@ -10551,6 +11622,8 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (scopeId != null) 'scope_id': scopeId,
+      if (baseRevision != null) 'base_revision': baseRevision,
       if (id != null) 'id': id,
       if (uuid != null) 'uuid': uuid,
       if (type != null) 'type': type,
@@ -10567,6 +11640,8 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
   }
 
   SyncCommandsCompanion copyWith({
+    Value<String?>? scopeId,
+    Value<int>? baseRevision,
     Value<String>? id,
     Value<String>? uuid,
     Value<String>? type,
@@ -10581,6 +11656,8 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
     Value<int>? rowid,
   }) {
     return SyncCommandsCompanion(
+      scopeId: scopeId ?? this.scopeId,
+      baseRevision: baseRevision ?? this.baseRevision,
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
       type: type ?? this.type,
@@ -10599,6 +11676,12 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (scopeId.present) {
+      map['scope_id'] = Variable<String>(scopeId.value);
+    }
+    if (baseRevision.present) {
+      map['base_revision'] = Variable<int>(baseRevision.value);
+    }
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
@@ -10641,6 +11724,8 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
   @override
   String toString() {
     return (StringBuffer('SyncCommandsCompanion(')
+          ..write('scopeId: $scopeId, ')
+          ..write('baseRevision: $baseRevision, ')
           ..write('id: $id, ')
           ..write('uuid: $uuid, ')
           ..write('type: $type, ')
@@ -12872,6 +13957,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $UsersTable users = $UsersTable(this);
+  late final $SharedScopesTable sharedScopes = $SharedScopesTable(this);
+  late final $SharedEntitiesTable sharedEntities = $SharedEntitiesTable(this);
   late final $WorkspacesTable workspaces = $WorkspacesTable(this);
   late final $ProjectsTable projects = $ProjectsTable(this);
   late final $SectionsTable sections = $SectionsTable(this);
@@ -12912,7 +13999,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final Index labelsUniqueKanbanSystemKey = Index(
     'labels_unique_kanban_system_key',
-    'CREATE UNIQUE INDEX labels_unique_kanban_system_key ON labels (system_key) WHERE kind = \'kanbanStatus\' AND system_key IS NOT NULL',
+    'CREATE UNIQUE INDEX labels_unique_kanban_system_key ON labels (COALESCE(scope_id, \'\'), system_key) WHERE kind = \'kanbanStatus\' AND system_key IS NOT NULL',
   );
   late final Index taskLabelsOneKanbanStatusPerTask = Index(
     'task_labels_one_kanban_status_per_task',
@@ -12924,6 +14011,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     users,
+    sharedScopes,
+    sharedEntities,
     workspaces,
     projects,
     sections,
@@ -13147,6 +14236,397 @@ typedef $$UsersTableProcessedTableManager =
       UserRow,
       PrefetchHooks Function()
     >;
+typedef $$SharedScopesTableCreateCompanionBuilder =
+    SharedScopesCompanion Function({
+      required String id,
+      required String dataJson,
+      Value<int> cursor,
+      Value<int> rowid,
+    });
+typedef $$SharedScopesTableUpdateCompanionBuilder =
+    SharedScopesCompanion Function({
+      Value<String> id,
+      Value<String> dataJson,
+      Value<int> cursor,
+      Value<int> rowid,
+    });
+
+class $$SharedScopesTableFilterComposer
+    extends Composer<_$AppDatabase, $SharedScopesTable> {
+  $$SharedScopesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dataJson => $composableBuilder(
+    column: $table.dataJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get cursor => $composableBuilder(
+    column: $table.cursor,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SharedScopesTableOrderingComposer
+    extends Composer<_$AppDatabase, $SharedScopesTable> {
+  $$SharedScopesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dataJson => $composableBuilder(
+    column: $table.dataJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get cursor => $composableBuilder(
+    column: $table.cursor,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SharedScopesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SharedScopesTable> {
+  $$SharedScopesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get dataJson =>
+      $composableBuilder(column: $table.dataJson, builder: (column) => column);
+
+  GeneratedColumn<int> get cursor =>
+      $composableBuilder(column: $table.cursor, builder: (column) => column);
+}
+
+class $$SharedScopesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SharedScopesTable,
+          SharedScopeRow,
+          $$SharedScopesTableFilterComposer,
+          $$SharedScopesTableOrderingComposer,
+          $$SharedScopesTableAnnotationComposer,
+          $$SharedScopesTableCreateCompanionBuilder,
+          $$SharedScopesTableUpdateCompanionBuilder,
+          (
+            SharedScopeRow,
+            BaseReferences<_$AppDatabase, $SharedScopesTable, SharedScopeRow>,
+          ),
+          SharedScopeRow,
+          PrefetchHooks Function()
+        > {
+  $$SharedScopesTableTableManager(_$AppDatabase db, $SharedScopesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SharedScopesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SharedScopesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SharedScopesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> dataJson = const Value.absent(),
+                Value<int> cursor = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SharedScopesCompanion(
+                id: id,
+                dataJson: dataJson,
+                cursor: cursor,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String dataJson,
+                Value<int> cursor = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SharedScopesCompanion.insert(
+                id: id,
+                dataJson: dataJson,
+                cursor: cursor,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SharedScopesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SharedScopesTable,
+      SharedScopeRow,
+      $$SharedScopesTableFilterComposer,
+      $$SharedScopesTableOrderingComposer,
+      $$SharedScopesTableAnnotationComposer,
+      $$SharedScopesTableCreateCompanionBuilder,
+      $$SharedScopesTableUpdateCompanionBuilder,
+      (
+        SharedScopeRow,
+        BaseReferences<_$AppDatabase, $SharedScopesTable, SharedScopeRow>,
+      ),
+      SharedScopeRow,
+      PrefetchHooks Function()
+    >;
+typedef $$SharedEntitiesTableCreateCompanionBuilder =
+    SharedEntitiesCompanion Function({
+      required String scopeId,
+      required String entityType,
+      required String entityId,
+      required String dataJson,
+      Value<int> serverRevision,
+      Value<bool> isDeleted,
+      Value<int> rowid,
+    });
+typedef $$SharedEntitiesTableUpdateCompanionBuilder =
+    SharedEntitiesCompanion Function({
+      Value<String> scopeId,
+      Value<String> entityType,
+      Value<String> entityId,
+      Value<String> dataJson,
+      Value<int> serverRevision,
+      Value<bool> isDeleted,
+      Value<int> rowid,
+    });
+
+class $$SharedEntitiesTableFilterComposer
+    extends Composer<_$AppDatabase, $SharedEntitiesTable> {
+  $$SharedEntitiesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get scopeId => $composableBuilder(
+    column: $table.scopeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityId => $composableBuilder(
+    column: $table.entityId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dataJson => $composableBuilder(
+    column: $table.dataJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get serverRevision => $composableBuilder(
+    column: $table.serverRevision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SharedEntitiesTableOrderingComposer
+    extends Composer<_$AppDatabase, $SharedEntitiesTable> {
+  $$SharedEntitiesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get scopeId => $composableBuilder(
+    column: $table.scopeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityId => $composableBuilder(
+    column: $table.entityId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dataJson => $composableBuilder(
+    column: $table.dataJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get serverRevision => $composableBuilder(
+    column: $table.serverRevision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SharedEntitiesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SharedEntitiesTable> {
+  $$SharedEntitiesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get scopeId =>
+      $composableBuilder(column: $table.scopeId, builder: (column) => column);
+
+  GeneratedColumn<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get entityId =>
+      $composableBuilder(column: $table.entityId, builder: (column) => column);
+
+  GeneratedColumn<String> get dataJson =>
+      $composableBuilder(column: $table.dataJson, builder: (column) => column);
+
+  GeneratedColumn<int> get serverRevision => $composableBuilder(
+    column: $table.serverRevision,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+}
+
+class $$SharedEntitiesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SharedEntitiesTable,
+          SharedEntityRow,
+          $$SharedEntitiesTableFilterComposer,
+          $$SharedEntitiesTableOrderingComposer,
+          $$SharedEntitiesTableAnnotationComposer,
+          $$SharedEntitiesTableCreateCompanionBuilder,
+          $$SharedEntitiesTableUpdateCompanionBuilder,
+          (
+            SharedEntityRow,
+            BaseReferences<
+              _$AppDatabase,
+              $SharedEntitiesTable,
+              SharedEntityRow
+            >,
+          ),
+          SharedEntityRow,
+          PrefetchHooks Function()
+        > {
+  $$SharedEntitiesTableTableManager(
+    _$AppDatabase db,
+    $SharedEntitiesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SharedEntitiesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SharedEntitiesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SharedEntitiesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> scopeId = const Value.absent(),
+                Value<String> entityType = const Value.absent(),
+                Value<String> entityId = const Value.absent(),
+                Value<String> dataJson = const Value.absent(),
+                Value<int> serverRevision = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SharedEntitiesCompanion(
+                scopeId: scopeId,
+                entityType: entityType,
+                entityId: entityId,
+                dataJson: dataJson,
+                serverRevision: serverRevision,
+                isDeleted: isDeleted,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String scopeId,
+                required String entityType,
+                required String entityId,
+                required String dataJson,
+                Value<int> serverRevision = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SharedEntitiesCompanion.insert(
+                scopeId: scopeId,
+                entityType: entityType,
+                entityId: entityId,
+                dataJson: dataJson,
+                serverRevision: serverRevision,
+                isDeleted: isDeleted,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SharedEntitiesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SharedEntitiesTable,
+      SharedEntityRow,
+      $$SharedEntitiesTableFilterComposer,
+      $$SharedEntitiesTableOrderingComposer,
+      $$SharedEntitiesTableAnnotationComposer,
+      $$SharedEntitiesTableCreateCompanionBuilder,
+      $$SharedEntitiesTableUpdateCompanionBuilder,
+      (
+        SharedEntityRow,
+        BaseReferences<_$AppDatabase, $SharedEntitiesTable, SharedEntityRow>,
+      ),
+      SharedEntityRow,
+      PrefetchHooks Function()
+    >;
 typedef $$WorkspacesTableCreateCompanionBuilder =
     WorkspacesCompanion Function({
       required String id,
@@ -13368,6 +14848,7 @@ typedef $$WorkspacesTableProcessedTableManager =
     >;
 typedef $$ProjectsTableCreateCompanionBuilder =
     ProjectsCompanion Function({
+      Value<String?> scopeId,
       Value<String?> icon,
       required String id,
       required String userId,
@@ -13385,6 +14866,7 @@ typedef $$ProjectsTableCreateCompanionBuilder =
     });
 typedef $$ProjectsTableUpdateCompanionBuilder =
     ProjectsCompanion Function({
+      Value<String?> scopeId,
       Value<String?> icon,
       Value<String> id,
       Value<String> userId,
@@ -13410,6 +14892,11 @@ class $$ProjectsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get scopeId => $composableBuilder(
+    column: $table.scopeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get icon => $composableBuilder(
     column: $table.icon,
     builder: (column) => ColumnFilters(column),
@@ -13485,6 +14972,11 @@ class $$ProjectsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get scopeId => $composableBuilder(
+    column: $table.scopeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get icon => $composableBuilder(
     column: $table.icon,
     builder: (column) => ColumnOrderings(column),
@@ -13560,6 +15052,9 @@ class $$ProjectsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get scopeId =>
+      $composableBuilder(column: $table.scopeId, builder: (column) => column);
+
   GeneratedColumn<String> get icon =>
       $composableBuilder(column: $table.icon, builder: (column) => column);
 
@@ -13635,6 +15130,7 @@ class $$ProjectsTableTableManager
               $$ProjectsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
+                Value<String?> scopeId = const Value.absent(),
                 Value<String?> icon = const Value.absent(),
                 Value<String> id = const Value.absent(),
                 Value<String> userId = const Value.absent(),
@@ -13650,6 +15146,7 @@ class $$ProjectsTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectsCompanion(
+                scopeId: scopeId,
                 icon: icon,
                 id: id,
                 userId: userId,
@@ -13667,6 +15164,7 @@ class $$ProjectsTableTableManager
               ),
           createCompanionCallback:
               ({
+                Value<String?> scopeId = const Value.absent(),
                 Value<String?> icon = const Value.absent(),
                 required String id,
                 required String userId,
@@ -13682,6 +15180,7 @@ class $$ProjectsTableTableManager
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
               }) => ProjectsCompanion.insert(
+                scopeId: scopeId,
                 icon: icon,
                 id: id,
                 userId: userId,
@@ -13998,6 +15497,10 @@ typedef $$SectionsTableProcessedTableManager =
     >;
 typedef $$TasksTableCreateCompanionBuilder =
     TasksCompanion Function({
+      Value<String?> scopeId,
+      Value<String?> createdBy,
+      Value<String?> completedBy,
+      Value<String> assigneeIdsJson,
       required String id,
       required String userId,
       required String content,
@@ -14024,6 +15527,10 @@ typedef $$TasksTableCreateCompanionBuilder =
     });
 typedef $$TasksTableUpdateCompanionBuilder =
     TasksCompanion Function({
+      Value<String?> scopeId,
+      Value<String?> createdBy,
+      Value<String?> completedBy,
+      Value<String> assigneeIdsJson,
       Value<String> id,
       Value<String> userId,
       Value<String> content,
@@ -14057,6 +15564,26 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get scopeId => $composableBuilder(
+    column: $table.scopeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get completedBy => $composableBuilder(
+    column: $table.completedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get assigneeIdsJson => $composableBuilder(
+    column: $table.assigneeIdsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
@@ -14177,6 +15704,26 @@ class $$TasksTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get scopeId => $composableBuilder(
+    column: $table.scopeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get completedBy => $composableBuilder(
+    column: $table.completedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get assigneeIdsJson => $composableBuilder(
+    column: $table.assigneeIdsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
@@ -14297,6 +15844,22 @@ class $$TasksTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get scopeId =>
+      $composableBuilder(column: $table.scopeId, builder: (column) => column);
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<String> get completedBy => $composableBuilder(
+    column: $table.completedBy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get assigneeIdsJson => $composableBuilder(
+    column: $table.assigneeIdsJson,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
@@ -14408,6 +15971,10 @@ class $$TasksTableTableManager
               $$TasksTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
+                Value<String?> scopeId = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<String?> completedBy = const Value.absent(),
+                Value<String> assigneeIdsJson = const Value.absent(),
                 Value<String> id = const Value.absent(),
                 Value<String> userId = const Value.absent(),
                 Value<String> content = const Value.absent(),
@@ -14432,6 +15999,10 @@ class $$TasksTableTableManager
                 Value<DateTime?> completedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TasksCompanion(
+                scopeId: scopeId,
+                createdBy: createdBy,
+                completedBy: completedBy,
+                assigneeIdsJson: assigneeIdsJson,
                 id: id,
                 userId: userId,
                 content: content,
@@ -14458,6 +16029,10 @@ class $$TasksTableTableManager
               ),
           createCompanionCallback:
               ({
+                Value<String?> scopeId = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<String?> completedBy = const Value.absent(),
+                Value<String> assigneeIdsJson = const Value.absent(),
                 required String id,
                 required String userId,
                 required String content,
@@ -14482,6 +16057,10 @@ class $$TasksTableTableManager
                 Value<DateTime?> completedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TasksCompanion.insert(
+                scopeId: scopeId,
+                createdBy: createdBy,
+                completedBy: completedBy,
+                assigneeIdsJson: assigneeIdsJson,
                 id: id,
                 userId: userId,
                 content: content,
@@ -14759,6 +16338,7 @@ typedef $$TaskCompletionsTableProcessedTableManager =
     >;
 typedef $$LabelsTableCreateCompanionBuilder =
     LabelsCompanion Function({
+      Value<String?> scopeId,
       required String id,
       required String userId,
       required String name,
@@ -14775,6 +16355,7 @@ typedef $$LabelsTableCreateCompanionBuilder =
     });
 typedef $$LabelsTableUpdateCompanionBuilder =
     LabelsCompanion Function({
+      Value<String?> scopeId,
       Value<String> id,
       Value<String> userId,
       Value<String> name,
@@ -14799,6 +16380,11 @@ class $$LabelsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get scopeId => $composableBuilder(
+    column: $table.scopeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
@@ -14869,6 +16455,11 @@ class $$LabelsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get scopeId => $composableBuilder(
+    column: $table.scopeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
@@ -14939,6 +16530,9 @@ class $$LabelsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get scopeId =>
+      $composableBuilder(column: $table.scopeId, builder: (column) => column);
+
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
@@ -15006,6 +16600,7 @@ class $$LabelsTableTableManager
               $$LabelsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
+                Value<String?> scopeId = const Value.absent(),
                 Value<String> id = const Value.absent(),
                 Value<String> userId = const Value.absent(),
                 Value<String> name = const Value.absent(),
@@ -15020,6 +16615,7 @@ class $$LabelsTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LabelsCompanion(
+                scopeId: scopeId,
                 id: id,
                 userId: userId,
                 name: name,
@@ -15036,6 +16632,7 @@ class $$LabelsTableTableManager
               ),
           createCompanionCallback:
               ({
+                Value<String?> scopeId = const Value.absent(),
                 required String id,
                 required String userId,
                 required String name,
@@ -15050,6 +16647,7 @@ class $$LabelsTableTableManager
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
               }) => LabelsCompanion.insert(
+                scopeId: scopeId,
                 id: id,
                 userId: userId,
                 name: name,
@@ -17788,6 +19386,8 @@ typedef $$FocusDailyStatsTableProcessedTableManager =
     >;
 typedef $$SyncCommandsTableCreateCompanionBuilder =
     SyncCommandsCompanion Function({
+      Value<String?> scopeId,
+      Value<int> baseRevision,
       required String id,
       required String uuid,
       required String type,
@@ -17803,6 +19403,8 @@ typedef $$SyncCommandsTableCreateCompanionBuilder =
     });
 typedef $$SyncCommandsTableUpdateCompanionBuilder =
     SyncCommandsCompanion Function({
+      Value<String?> scopeId,
+      Value<int> baseRevision,
       Value<String> id,
       Value<String> uuid,
       Value<String> type,
@@ -17826,6 +19428,16 @@ class $$SyncCommandsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get scopeId => $composableBuilder(
+    column: $table.scopeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get baseRevision => $composableBuilder(
+    column: $table.baseRevision,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
@@ -17891,6 +19503,16 @@ class $$SyncCommandsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get scopeId => $composableBuilder(
+    column: $table.scopeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get baseRevision => $composableBuilder(
+    column: $table.baseRevision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
@@ -17956,6 +19578,14 @@ class $$SyncCommandsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get scopeId =>
+      $composableBuilder(column: $table.scopeId, builder: (column) => column);
+
+  GeneratedColumn<int> get baseRevision => $composableBuilder(
+    column: $table.baseRevision,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
@@ -18025,6 +19655,8 @@ class $$SyncCommandsTableTableManager
               $$SyncCommandsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
+                Value<String?> scopeId = const Value.absent(),
+                Value<int> baseRevision = const Value.absent(),
                 Value<String> id = const Value.absent(),
                 Value<String> uuid = const Value.absent(),
                 Value<String> type = const Value.absent(),
@@ -18038,6 +19670,8 @@ class $$SyncCommandsTableTableManager
                 Value<String?> lastError = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SyncCommandsCompanion(
+                scopeId: scopeId,
+                baseRevision: baseRevision,
                 id: id,
                 uuid: uuid,
                 type: type,
@@ -18053,6 +19687,8 @@ class $$SyncCommandsTableTableManager
               ),
           createCompanionCallback:
               ({
+                Value<String?> scopeId = const Value.absent(),
+                Value<int> baseRevision = const Value.absent(),
                 required String id,
                 required String uuid,
                 required String type,
@@ -18066,6 +19702,8 @@ class $$SyncCommandsTableTableManager
                 Value<String?> lastError = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SyncCommandsCompanion.insert(
+                scopeId: scopeId,
+                baseRevision: baseRevision,
                 id: id,
                 uuid: uuid,
                 type: type,
@@ -19223,6 +20861,10 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$UsersTableTableManager get users =>
       $$UsersTableTableManager(_db, _db.users);
+  $$SharedScopesTableTableManager get sharedScopes =>
+      $$SharedScopesTableTableManager(_db, _db.sharedScopes);
+  $$SharedEntitiesTableTableManager get sharedEntities =>
+      $$SharedEntitiesTableTableManager(_db, _db.sharedEntities);
   $$WorkspacesTableTableManager get workspaces =>
       $$WorkspacesTableTableManager(_db, _db.workspaces);
   $$ProjectsTableTableManager get projects =>

@@ -986,5 +986,15 @@
         "type": "String"
       }
     }
-  }
+  },
+  "billingOfferDays": "{count, plural, one {1 Tag} other {{count} Tage}}",
+  "billingOfferMonths": "{count, plural, one {1 Monat} other {{count} Monate}}",
+  "billingOfferYears": "{count, plural, one {1 Jahr} other {{count} Jahre}}",
+  "billingTrialFree": "{duration} kostenlos",
+  "billingTrialRenewal": "Danach {price}. Automatische Verlängerung, sofern nicht gekündigt.",
+  "billingReturnBadge": "Zurück zu Pro",
+  "billingReturnSubtitle": "Für {duration}, danach {price}. Automatische Verlängerung, sofern nicht gekündigt.",
+  "billingReturnPending": "Dein Rabatt ist bis {date} reserviert. Bei einem Kaufabbruch kannst du es danach erneut versuchen.",
+  "billingReturnFailed": "Dein Rückkehrangebot konnte nicht geprüft werden. Versuche es erneut.",
+  "billingTryFree": "Gratis testen"
 }

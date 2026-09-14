@@ -1,6 +1,6 @@
 import 'package:app_account/app_account.dart';
 
-const pomodoistFreeTaskHistoryRetention = Duration(days: 90);
+const pomodoistFreeTaskHistoryRetention = Duration(days: 365);
 
 bool hasActivePomodoistPaidEntitlement(
   AccountOverview? overview, {
@@ -39,8 +39,13 @@ AccountEntitlement? activePomodoistPaidEntitlement(
 DateTime? pomodoistTaskHistoryCutoff(
   AccountOverview? overview, {
   DateTime? now,
+  DateTime? graceEndsAt,
+  bool historyUnlimited = false,
   bool hasLocalPaidEntitlement = false,
 }) {
+  if (historyUnlimited ||
+      (graceEndsAt?.toUtc().isAfter((now ?? DateTime.now()).toUtc()) ?? false))
+    return null;
   if (hasActivePomodoistPaidEntitlement(
     overview,
     now: now,

@@ -68,6 +68,34 @@ void main() {
     },
   );
 
+  test(
+    'history seed preserves expired subscription without granting access',
+    () async {
+      messenger.setMockMethodCallHandler(_channel, (call) async {
+        if (call.method == 'latestSubscriptionTransaction') {
+          return {
+            ..._nativeRow(productId: pomodoistMonthlyProductId),
+            'localVerificationData': '{"expiresDate":1000}',
+          };
+        }
+        return [];
+      });
+      final store = BillingStore();
+      expect(
+        (await store.latestSubscriptionTransaction())?.productId,
+        pomodoistMonthlyProductId,
+      );
+      expect(await store.refreshCurrentEntitlements(), isEmpty);
+      messenger.setMockMethodCallHandler(_channel, (_) async => null);
+      expect(await store.latestSubscriptionTransaction(), isNull);
+      messenger.setMockMethodCallHandler(_channel, (_) async => {'jws': ''});
+      await expectLater(
+        store.latestSubscriptionTransaction(),
+        throwsA(isA<FormatException>()),
+      );
+    },
+  );
+
   test('empty native snapshot completes successfully', () {
     fakeAsync((time) {
       messenger.setMockMethodCallHandler(_channel, (_) async => []);

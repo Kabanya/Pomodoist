@@ -3103,4 +3103,67 @@ class AppLocalizationsDe extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String billingOfferDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Tage',
+      one: '1 Tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String billingOfferMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Monate',
+      one: '1 Monat',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String billingOfferYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Jahre',
+      one: '1 Jahr',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String billingTrialFree(String duration) {
+    return '$duration kostenlos';
+  }
+
+  @override
+  String billingTrialRenewal(String price) {
+    return 'Danach $price. Automatische Verlängerung, sofern nicht gekündigt.';
+  }
+
+  @override
+  String get billingReturnBadge => 'Zurück zu Pro';
+
+  @override
+  String billingReturnSubtitle(String duration, String price) {
+    return 'Für $duration, danach $price. Automatische Verlängerung, sofern nicht gekündigt.';
+  }
+
+  @override
+  String billingReturnPending(String date) {
+    return 'Dein Rabatt ist bis $date reserviert. Bei einem Kaufabbruch kannst du es danach erneut versuchen.';
+  }
+
+  @override
+  String get billingReturnFailed =>
+      'Dein Rückkehrangebot konnte nicht geprüft werden. Versuche es erneut.';
+
+  @override
+  String get billingTryFree => 'Gratis testen';
 }

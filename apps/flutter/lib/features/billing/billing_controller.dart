@@ -11,6 +11,7 @@ import '../../core/time/clock_provider.dart';
 import '../focus/presentation/focus_view_mode.dart';
 import 'billing_models.dart';
 import 'billing_store.dart';
+import 'billing_offers.dart';
 
 bool _isTransientStoreKitError(Object error) {
   final message = '$error';
@@ -71,6 +72,38 @@ final billingChannelProvider = Provider<BillingChannel>(
 final billingStripeGatewayProvider = Provider<BillingStripeGateway?>(
   (ref) => null,
 );
+
+final billingOfferRequestProvider = Provider<BillingOfferRequest?>(
+  (ref) => null,
+);
+
+// Read history only while a paywall needs it; expired purchases never grant Pro.
+final billingReturnOffersProvider =
+    FutureProvider.autoDispose<BillingReturnOffers>((ref) async {
+      final channel = ref.watch(billingChannelProvider);
+      final access = ref.watch(
+        billingControllerProvider.select(
+          (state) => (state.hasActiveEntitlement, state.storeAvailable),
+        ),
+      );
+      ref.watch(billingAccountIdentityProvider);
+      final request = ref.watch(billingOfferRequestProvider);
+      if (channel != BillingChannel.storeKit ||
+          access.$1 ||
+          !access.$2 ||
+          request == null) {
+        return const BillingReturnOffers();
+      }
+      final proof = await ref
+          .read(billingStoreProvider)
+          .latestSubscriptionTransaction();
+      if (proof == null) return const BillingReturnOffers();
+      final response = await request({
+        'action': 'eligibility',
+        'transaction': proof.jws,
+      }).timeout(billingStoreTimeout);
+      return BillingReturnOffers.fromJson(response, proof.jws);
+    });
 
 final billingActiveAccountEntitlementProvider = Provider<AccountEntitlement?>(
   (ref) => null,
@@ -234,7 +267,7 @@ class BillingController extends Notifier<BillingState> {
     _catalogLoad = null;
   });
 
-  Future<void> purchase(String productId) async {
+  Future<void> purchase(String productId, {String? returnOfferId}) async {
     if (!state.canPurchase) {
       state = state.copyWith(
         error: 'Purchases are available on Apple devices.',
@@ -274,10 +307,53 @@ class BillingController extends Notifier<BillingState> {
         state = state.copyWith(pendingProductId: null);
         return;
       }
+      final store = ref.read(billingStoreProvider);
+      Future<bool> purchase;
+      if (returnOfferId != null) {
+        final offer = billingStoreKitOffer(
+          details,
+          returnOfferId: returnOfferId,
+        );
+        final request = ref.read(billingOfferRequestProvider);
+        final proof = await store.latestSubscriptionTransaction();
+        if (offer == null ||
+            request == null ||
+            proof == null ||
+            state.hasActiveEntitlement) {
+          throw const BillingOfferException('not_eligible');
+        }
+        final response = await _withTimeout(
+          request({
+            'action': 'sign',
+            'transaction': proof.jws,
+            'productId': productId,
+            'appAccountToken': ?appAccountToken,
+          }),
+          ref.read(billingStoreTimeoutProvider),
+        );
+        final signature = billingOfferSignature(response, returnOfferId);
+        if (!ref.mounted) return;
+        ref.read(billingAccountIdentityProvider);
+        if (accountGeneration != _accountGeneration ||
+            state.hasActiveEntitlement) {
+          throw const BillingOfferException('not_eligible');
+        }
+        purchase = store
+            .buyPromotional(
+              details,
+              offer,
+              signature,
+              appAccountToken: appAccountToken,
+            )
+            .then((result) async {
+              if (ref.mounted) await _handlePurchases([result]);
+              return true;
+            });
+      } else {
+        purchase = store.buy(details, appAccountToken: appAccountToken);
+      }
       final sent = await _withTimeout(
-        ref
-            .read(billingStoreProvider)
-            .buy(details, appAccountToken: appAccountToken),
+        purchase,
         ref.read(billingPurchaseTimeoutProvider),
       );
       if (!ref.mounted) {
@@ -298,8 +374,16 @@ class BillingController extends Notifier<BillingState> {
       _cancelPurchaseWatchdog();
       state = state.copyWith(
         pendingProductId: null,
-        error: _isStoreKitCancelled(error) ? null : '$error',
+        error: _isStoreKitCancelled(error)
+            ? null
+            : returnOfferId == null
+            ? '$error'
+            : 'subscription_offer:${error is BillingOfferException ? error.code : 'verification_failed'}',
       );
+    } finally {
+      if (returnOfferId != null && ref.mounted) {
+        ref.invalidate(billingReturnOffersProvider);
+      }
     }
   }
 
@@ -483,8 +567,8 @@ class BillingController extends Notifier<BillingState> {
   ) async {
     for (final product in products) {
       if (!ref.mounted) return;
-      if (billingPlanForProduct(product.id)?.introductoryFallbackPrice ==
-          null) {
+      if (billingPlanForProduct(product.id)?.kind !=
+          BillingPlanKind.subscription) {
         continue;
       }
       var eligible = false;

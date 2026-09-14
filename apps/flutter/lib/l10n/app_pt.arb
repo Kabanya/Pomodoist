@@ -1597,5 +1597,15 @@
         "type": "String"
       }
     }
-  }
+  },
+  "billingOfferDays": "{count, plural, one {1 dia} other {{count} dias}}",
+  "billingOfferMonths": "{count, plural, one {1 mês} other {{count} meses}}",
+  "billingOfferYears": "{count, plural, one {1 ano} other {{count} anos}}",
+  "billingTrialFree": "Grátis por {duration}",
+  "billingTrialRenewal": "Depois, {price}. Renovação automática, salvo cancelamento.",
+  "billingReturnBadge": "Voltar ao Pro",
+  "billingReturnSubtitle": "Por {duration}; depois, {price}. Renovação automática, salvo cancelamento.",
+  "billingReturnPending": "Seu desconto está reservado até {date}. Se a compra foi cancelada, você poderá tentar novamente após esse horário.",
+  "billingReturnFailed": "Não foi possível verificar sua oferta de retorno. Tente novamente.",
+  "billingTryFree": "Testar grátis"
 }

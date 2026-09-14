@@ -3,9 +3,11 @@ import 'dart:async';
 
 import 'package:app_account/app_account.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pomodoist/app/account_providers.dart';
 import 'package:pomodoist/features/billing/billing.dart';
 import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
@@ -162,6 +164,13 @@ void main() {
   });
 
   test('registerInstall failure does not block account overview', () async {
+    PackageInfo.setMockInitialValues(
+      appName: 'Pomodoist',
+      packageName: 'test',
+      version: '2.4.1',
+      buildNumber: '37',
+      buildSignature: '',
+    );
     final overview = AccountOverview(
       profile: const AccountProfile(id: 'user'),
       apps: const [],
@@ -189,6 +198,10 @@ void main() {
       await container.read(accountOverviewProvider.future),
       same(overview),
     );
+    await Future<void>.delayed(Duration.zero);
+    expect(account.recordedVersion, '2.4.1+37');
+    expect(account.recordedPlatform, defaultTargetPlatform.name.toLowerCase());
+    expect(account.recordedDeviceId, 'device');
   });
 
   testWidgets('account overview failure remains until login retry', (
@@ -268,6 +281,9 @@ class _OverviewAccountClient implements AccountClient {
 
   final Future<AccountOverview> Function() overview;
   final Future<void> Function() registerInstallCallback;
+  String? recordedVersion;
+  String? recordedPlatform;
+  String? recordedDeviceId;
 
   @override
   String? get currentUserId => 'user';
@@ -281,7 +297,12 @@ class _OverviewAccountClient implements AccountClient {
     required String deviceId,
     String? platform,
     String? appVersion,
-  }) => registerInstallCallback();
+  }) {
+    recordedVersion = appVersion;
+    recordedPlatform = platform;
+    recordedDeviceId = deviceId;
+    return registerInstallCallback();
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

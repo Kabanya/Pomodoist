@@ -130,6 +130,25 @@ Future<void> main() async {
                   }
                 };
               }),
+              billingOfferRequestProvider.overrideWith((ref) {
+                final account = ref.watch(accountClientProvider);
+                if (account == null) return null;
+                return (body) async {
+                  final response = await account.invokeFunction(
+                    'pomodoist-subscription-offer',
+                    body: body,
+                  );
+                  if (response.status < 200 || response.status >= 300) {
+                    final data = response.data;
+                    throw BillingOfferException(
+                      data is Map && data['code'] is String
+                          ? data['code'] as String
+                          : 'verification_failed',
+                    );
+                  }
+                  return response.data;
+                };
+              }),
               billingStripeGatewayProvider.overrideWith((ref) {
                 final account = ref.watch(accountClientProvider);
                 if (account == null) return null;

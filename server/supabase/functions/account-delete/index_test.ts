@@ -42,6 +42,15 @@ Deno.test("account-delete removes storage objects and deletes the auth user", as
   ]);
 });
 
+Deno.test("account-delete blocks an owner before removing any files", async () => {
+  const calls: TestCalls = { deletedUsers: [], removedPaths: [] };
+  const response = await handleAccountDelete(request(true, true), deps({ calls, owned: true }));
+  assertEquals(response.status, 409);
+  assertEquals((await response.json()).code, "shared_owner_must_transfer");
+  assertEquals(calls.deletedUsers, []);
+  assertEquals(calls.removedPaths, []);
+});
+
 type TestCalls = {
   deletedUsers: string[];
   removedPaths: string[];
@@ -57,9 +66,11 @@ function request(confirm: boolean, authorized = false) {
 
 function deps({
   signedIn = true,
+  owned = false,
   calls = { deletedUsers: [], removedPaths: [] },
 }: {
   signedIn?: boolean;
+  owned?: boolean;
   calls?: TestCalls;
 } = {}): AccountDeleteDeps {
   return {
@@ -72,6 +83,7 @@ function deps({
       },
     }),
     createAdminClient: () => ({
+      rpc: async () => ({ data: { ownedScopes: owned ? [{ scopeId: "scope", rootProjectId: "project" }] : [] }, error: null }),
       auth: {
         admin: {
           deleteUser: async (userId: string) => {

@@ -63,11 +63,19 @@ export async function synchronize(store, client, changed = () => {}) {
   if (!store.data.session) return;
   try {
     let pushed = false;
+    let batchSize = 100;
     // Limits are per activation; subsequent syncs resume from the durable cursor.
     for (let batch = 0; store.data.outbox.length && batch < 50; batch++) {
-      const operations = store.data.outbox.slice(0, 100);
-      const result = await client.rpc('push_changes', { p_app_id: APP_ID,
-        p_device_id: store.data.deviceId, p_operations: operations });
+      const operations = store.data.outbox.slice(0, batchSize);
+      let result;
+      try {
+        result = await client.rpc('push_changes', { p_app_id: APP_ID,
+          p_device_id: store.data.deviceId, p_operations: operations });
+      } catch (error) {
+        if (error.status !== 413 || operations.length <= 1) throw error;
+        batchSize = Math.floor(operations.length / 2);
+        continue;
+      }
       if (!result || !Array.isArray(result.applied) || !Number.isSafeInteger(Number(result.serverRevision ?? result.server_revision))) {
         throw new Error('Invalid push response. Pending changes were kept.');
       }
@@ -102,6 +110,7 @@ export async function synchronize(store, client, changed = () => {}) {
       try { await client.broadcast(); } catch { /* Durable sync succeeded; a hint is only an accelerator. */ }
     }
     if (Date.now() - store.data.overviewAt > 60000) {
+      try { await client.registerInstall(); } catch { /* Installation metadata is advisory. */ }
       try { await store.save({ overview: await client.overview(), overviewAt: Date.now() }); }
       catch (error) {
         if (!store.data.session) throw error;
