@@ -193,6 +193,7 @@ AccountSyncLifecycle _lifecycle({
 SyncCommandRow _command({DateTime? availableAt}) {
   final now = DateTime.now().toUtc();
   return SyncCommandRow(
+    baseRevision: 0,
     id: 'id',
     uuid: 'uuid',
     type: 'task.complete',

@@ -7,6 +7,8 @@ import 'package:uuid/uuid.dart';
 import '../../../core/db/app_database.dart' as db_schema;
 import '../../../core/sync/sync_queue_repository.dart';
 import '../domain/task_models.dart';
+import '../../collaboration/data/shared_access.dart';
+import '../../collaboration/domain/collaboration_models.dart';
 import 'kanban_transition_coordinator.dart';
 
 const _minimumOrderValue = 0;
@@ -46,6 +48,7 @@ class DriftKanbanRepository implements KanbanRepository {
             _db.kanbanSettings,
             _db.projects,
             _db.tasks,
+            _db.sharedScopes,
           },
         )
         .watch();
@@ -58,7 +61,18 @@ class DriftKanbanRepository implements KanbanRepository {
   Future<String> createStatus(String name, {String? color}) async {
     final normalizedName = _normalizedName(name);
     await _db.ensureKanbanData();
-    await _ensureUniqueStatusName(normalizedName);
+    final settings = await _settingsRow();
+    final selected =
+        await (_db.select(_db.projects)..where(
+              (row) => row.id.isIn(
+                _decodeProjectIds(settings.selectedProjectIdsJson),
+              ),
+            ))
+            .get();
+    final scopes = selected.map((row) => row.scopeId).toSet();
+    final scopeId = scopes.length == 1 ? scopes.single : null;
+    await SharedAccess(_db).requireEdit(scopeId);
+    await _ensureUniqueStatusName(normalizedName, scopeId: scopeId);
     final id = _uuid.v4();
     final now = DateTime.now().toUtc();
     await _db.transaction(() async {
@@ -67,6 +81,7 @@ class DriftKanbanRepository implements KanbanRepository {
           .insert(
             db_schema.LabelsCompanion.insert(
               id: id,
+              scopeId: Value(scopeId),
               userId: db_schema.localUserId,
               name: normalizedName,
               color: Value(color),
@@ -76,7 +91,7 @@ class DriftKanbanRepository implements KanbanRepository {
               updatedAt: now,
             ),
           );
-      final statuses = await _activeStatusRows();
+      final statuses = await _activeStatusRows(scopeId: scopeId);
       final created = statuses.singleWhere((status) => status.id == id);
       statuses.remove(created);
       final doneIndex = statuses.indexWhere(_isDoneRow);
@@ -112,7 +127,11 @@ class DriftKanbanRepository implements KanbanRepository {
     if (status == null) {
       throw ArgumentError.value(id, 'id', 'Unknown Kanban status');
     }
-    await _ensureUniqueStatusName(normalizedName, exceptId: id);
+    await _ensureUniqueStatusName(
+      normalizedName,
+      exceptId: id,
+      scopeId: status.scopeId,
+    );
     if (status.name == normalizedName) {
       return;
     }
@@ -141,7 +160,8 @@ class DriftKanbanRepository implements KanbanRepository {
   @override
   Future<void> reorderStatus(String id, int targetIndex) async {
     await _db.ensureKanbanData();
-    final statuses = await _activeStatusRows();
+    final source = await _activeStatusRow(id);
+    final statuses = await _activeStatusRows(scopeId: source?.scopeId);
     final currentIndex = statuses.indexWhere((status) => status.id == id);
     if (currentIndex < 0) {
       throw ArgumentError.value(id, 'id', 'Unknown Kanban status');
@@ -187,7 +207,9 @@ class DriftKanbanRepository implements KanbanRepository {
       for (final link in links) {
         await _kanbanTransitions.assignStatusInTransaction(
           link.taskId,
-          statusId: db_schema.kanbanStatusBacklogId,
+          statusId: status.scopeId == null
+              ? db_schema.kanbanStatusBacklogId
+              : '${status.scopeId}:${db_schema.kanbanStatusBacklogId}',
           timestamp: now,
         );
       }
@@ -340,7 +362,11 @@ class DriftKanbanRepository implements KanbanRepository {
   }
 
   Future<KanbanBoardSnapshot> _loadSnapshot() async {
-    final statusRows = await _activeStatusRows();
+    final shared = {
+      for (final row in await _db.select(_db.sharedScopes).get())
+        row.id: SharedScope.fromJson(jsonDecode(row.dataJson)),
+    };
+    final statusRows = await _activeStatusRows(all: true);
     final projectRows =
         await (_db.select(_db.projects)
               ..where(
@@ -355,6 +381,11 @@ class DriftKanbanRepository implements KanbanRepository {
     final settingsRow = await _settingsRow();
     final settings = _mapSettings(settingsRow);
     final selectedProjectIds = settings.selectedProjectIds;
+    final selectedScopes = projectRows
+        .where((row) => selectedProjectIds.contains(row.id))
+        .map((row) => row.scopeId)
+        .toSet();
+    statusRows.removeWhere((row) => !selectedScopes.contains(row.scopeId));
     final projectById = {for (final row in projectRows) row.id: row};
     final statusById = {for (final row in statusRows) row.id: row};
 
@@ -463,8 +494,8 @@ class DriftKanbanRepository implements KanbanRepository {
       final progress = subtaskProgressByParent[task.id];
       cardsByStatusId[root.statusId]!.add(
         KanbanCard(
-          task: _mapTask(task),
-          project: _mapProject(project),
+          task: _mapTask(task, scope: shared[task.scopeId]),
+          project: _mapProject(project, scope: shared[project.scopeId]),
           statusId: root.statusId,
           totalSubtasks: progress?.total ?? 0,
           completedSubtasks: progress?.completed ?? 0,
@@ -495,7 +526,9 @@ class DriftKanbanRepository implements KanbanRepository {
     return KanbanBoardSnapshot(
       statuses: statusRows.map(_mapStatus),
       settings: settings,
-      availableProjects: projectRows.map(_mapProject),
+      availableProjects: projectRows.map(
+        (row) => _mapProject(row, scope: shared[row.scopeId]),
+      ),
       cardsByStatusId: cardsByStatusId,
     );
   }
@@ -602,11 +635,19 @@ class DriftKanbanRepository implements KanbanRepository {
     return int.tryParse(value);
   }
 
-  Future<List<db_schema.LabelRow>> _activeStatusRows() async {
+  Future<List<db_schema.LabelRow>> _activeStatusRows({
+    String? scopeId,
+    bool all = false,
+  }) async {
     final rows =
         await (_db.select(_db.labels)..where(
               (row) =>
                   row.kind.equals(db_schema.labelKindKanbanStatus) &
+                  (all
+                      ? const Constant(true)
+                      : scopeId == null
+                      ? row.scopeId.isNull()
+                      : row.scopeId.equals(scopeId)) &
                   row.isDeleted.equals(false),
             ))
             .get();
@@ -696,11 +737,18 @@ class DriftKanbanRepository implements KanbanRepository {
     ];
   }
 
-  Future<void> _ensureUniqueStatusName(String name, {String? exceptId}) async {
+  Future<void> _ensureUniqueStatusName(
+    String name, {
+    String? exceptId,
+    String? scopeId,
+  }) async {
     final duplicate =
         await (_db.select(_db.labels)..where(
               (row) =>
                   row.kind.equals(db_schema.labelKindKanbanStatus) &
+                  (scopeId == null
+                      ? row.scopeId.isNull()
+                      : row.scopeId.equals(scopeId)) &
                   row.isDeleted.equals(false) &
                   row.name.lower().equals(name.toLowerCase()) &
                   (exceptId == null
@@ -777,23 +825,33 @@ class DriftKanbanRepository implements KanbanRepository {
     );
   }
 
-  ProjectItem _mapProject(db_schema.ProjectRow row) => ProjectItem(
-    id: row.id,
-    userId: row.userId,
-    name: row.name,
-    color: row.color,
-    icon: row.icon,
-    parentId: row.parentId,
-    viewStyle: row.viewStyle,
-    isFavorite: row.isFavorite,
-    isArchived: row.isArchived,
-    isDeleted: row.isDeleted,
-    orderKey: row.orderKey,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-  );
+  ProjectItem _mapProject(db_schema.ProjectRow row, {SharedScope? scope}) =>
+      ProjectItem(
+        scopeId: row.scopeId,
+        canEdit: row.scopeId == null || (scope?.canEdit ?? false),
+        canManage: row.scopeId == null || (scope?.canManage ?? false),
+        isOwner: row.scopeId == null,
+        id: row.id,
+        userId: row.userId,
+        name: row.name,
+        color: row.color,
+        icon: row.icon,
+        parentId: row.parentId,
+        viewStyle: row.viewStyle,
+        isFavorite: row.isFavorite,
+        isArchived: row.isArchived,
+        isDeleted: row.isDeleted,
+        orderKey: row.orderKey,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+      );
 
-  TaskItem _mapTask(db_schema.TaskRow row) => TaskItem(
+  TaskItem _mapTask(db_schema.TaskRow row, {SharedScope? scope}) => TaskItem(
+    scopeId: row.scopeId,
+    createdBy: row.createdBy,
+    completedBy: row.completedBy,
+    assigneeIds: collaborationIds(row.assigneeIdsJson),
+    canEdit: row.scopeId == null || (scope?.canEdit ?? false),
     id: row.id,
     userId: row.userId,
     content: row.content,

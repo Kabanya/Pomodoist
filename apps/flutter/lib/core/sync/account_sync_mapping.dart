@@ -40,6 +40,7 @@ bool syncHasRequired(Map<String, dynamic> data, List<String> keys) {
 }
 
 String syncEntityTypeForCommand(String commandType) {
+  if (commandType.startsWith('focus_contribution.')) return 'focus_interval';
   if (commandType == 'task.kanbanStatus.set') {
     return 'task_kanban_status';
   }

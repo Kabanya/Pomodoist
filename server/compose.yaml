@@ -210,6 +210,12 @@ services:
       SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY:?run make setup first}
       SUPABASE_DB_URL: postgresql://postgres:${POSTGRES_PASSWORD:?run make setup first}@db:5432/postgres
       ACCOUNT_STORAGE_BUCKETS: ""
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_SENDER_NAME: ${SMTP_SENDER_NAME:-Pomodoist}
       POMODOIST_WEB_URL: ${SITE_URL:?SITE_URL is required}
       POMODOIST_MCP_ISSUER: ${API_EXTERNAL_URL:?API_EXTERNAL_URL is required}
       POMODOIST_MCP_RESOURCE_URL: ${SUPABASE_PUBLIC_URL:?SUPABASE_PUBLIC_URL is required}/functions/v1/pomodoist-mcp

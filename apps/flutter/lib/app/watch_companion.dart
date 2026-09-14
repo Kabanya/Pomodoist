@@ -9,6 +9,7 @@ import 'app_language.dart';
 import '../features/focus/domain/focus_models.dart';
 import '../features/focus/presentation/focus_view_mode.dart';
 import '../features/planning/data/quick_add_service.dart';
+import '../features/planning/domain/quick_add_parser.dart';
 import '../features/planning/data/task_decomposer.dart';
 import '../features/tasks/domain/task_models.dart';
 import 'providers.dart';
@@ -149,10 +150,18 @@ class WatchCompanionController {
       return await _ok(appliedCommandId: commandId);
     }
     try {
+      if (type == watchTaskComplete || type == watchTaskUncomplete) {
+        await _requirePersonalTask(_requiredTaskId(command));
+      }
+      if (type is String && type.startsWith('focus.')) {
+        final taskId = type == watchFocusStartDefault ? _optionalString(command, 'taskId') :
+          (await _focusRepository.watchActiveRun().first)?.taskId;
+        if (taskId != null) await _requirePersonalTask(taskId);
+      }
       switch (type) {
         case watchTaskCreateQuickAdd:
           final input = _requiredString(command, 'input');
-          final id = await _quickAddService.createTask(input);
+          final id = await _createPersonalQuickAdd(input);
           return await _ok(extra: {'id': id}, appliedCommandId: commandId);
         case watchTaskDecomposeTranscript:
           return await _ok(
@@ -265,13 +274,15 @@ class WatchCompanionController {
       _projectRepository.watchProjects().first,
     ]);
 
-    final run = results[0] as FocusRunItem?;
-    final interval = results[1] as FocusIntervalItem?;
+    final activeRun = results[0] as FocusRunItem?;
+    final run = activeRun?.taskId != null &&
+        (await _taskRepository.watchTask(activeRun!.taskId!).first)?.scopeId != null ? null : activeRun;
+    final interval = run == null ? null : results[1] as FocusIntervalItem?;
     final presets = results[2] as List<FocusPresetItem>;
-    final todayTasks = results[3] as List<TaskItem>;
-    final upcomingTasks = results[4] as List<TaskItem>;
-    final inboxTasks = results[5] as List<TaskItem>;
-    final allTasks = results[6] as List<TaskItem>;
+    final todayTasks = (results[3] as List<TaskItem>).where((task) => task.scopeId == null).toList();
+    final upcomingTasks = (results[4] as List<TaskItem>).where((task) => task.scopeId == null).toList();
+    final inboxTasks = (results[5] as List<TaskItem>).where((task) => task.scopeId == null).toList();
+    final allTasks = (results[6] as List<TaskItem>).where((task) => task.scopeId == null).toList();
     final projects = results[7] as List<ProjectItem>;
     final preset = selectedFocusPresetOrDefault(
       presets,
@@ -281,7 +292,7 @@ class WatchCompanionController {
     final recent = [...allTasks]
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final visibleProjects = projects
-        .where((project) => project.id != inboxProjectId && !project.isArchived)
+        .where((project) => project.scopeId == null && project.id != inboxProjectId && !project.isArchived)
         .toList();
 
     return {
@@ -401,6 +412,19 @@ class WatchCompanionController {
     return drafts.map(_draftMap).toList();
   }
 
+  Future<void> _requirePersonalTask(String id) async {
+    final task = await _taskRepository.watchTask(id).first;
+    if (task?.scopeId != null) throw StateError('Shared tasks are unavailable on Watch');
+  }
+
+  Future<String> _createPersonalQuickAdd(String input, {String? description}) async {
+    final projectName = const QuickAddParser().parse(input, now: _now()).project;
+    if (projectName != null && (await _projectRepository.findByName(projectName))?.scopeId != null) {
+      throw StateError('Shared projects are unavailable on Watch');
+    }
+    return _quickAddService.createTask(input, description: description);
+  }
+
   Future<List<String>> _commitDrafts(Object? rawTasks) async {
     final ids = <String>[];
     for (final draft in _draftMaps(rawTasks)) {
@@ -410,7 +434,7 @@ class WatchCompanionController {
       }
       final description = draft['description']?.toString();
       ids.add(
-        await _quickAddService.createTask(quickAdd, description: description),
+        await _createPersonalQuickAdd(quickAdd, description: description),
       );
     }
     return ids;

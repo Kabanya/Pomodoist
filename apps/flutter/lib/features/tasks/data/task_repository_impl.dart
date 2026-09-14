@@ -6,6 +6,8 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/db/app_database.dart';
+import '../../collaboration/data/shared_access.dart';
+import '../../collaboration/domain/collaboration_models.dart';
 import '../../../core/sync/sync_queue_repository.dart';
 import '../domain/project_colors.dart';
 import '../domain/project_hierarchy.dart';
@@ -28,6 +30,7 @@ class DriftTaskRepository implements TaskRepository {
        _onUserTaskCreated = onUserTaskCreated;
 
   final AppDatabase _db;
+  SharedAccess get _access => SharedAccess(_db);
   final SyncQueueRepository _syncQueue;
   final Uuid _uuid;
   final KanbanTransitionCoordinator _kanbanTransitions;
@@ -68,31 +71,72 @@ class DriftTaskRepository implements TaskRepository {
         );
       statement.where((task) => task.id.isInQuery(links));
     }
-    return statement.watch().map((rows) {
-      final tasks = rows
-          .map(_mapTask)
-          .where((task) => _matchesQuery(task, query))
-          .toList();
-      tasks.sort((a, b) {
-        final dayOrderCompare = (a.dayOrder ?? 999999).compareTo(
-          b.dayOrder ?? 999999,
-        );
-        if (dayOrderCompare != 0) {
-          return dayOrderCompare;
-        }
-        return a.orderKey.compareTo(b.orderKey);
-      });
-      return tasks;
-    });
+    return statement
+        .join([
+          leftOuterJoin(
+            _db.sharedScopes,
+            _db.sharedScopes.id.equalsExp(_db.tasks.scopeId),
+          ),
+        ])
+        .watch()
+        .asyncMap((rows) async {
+          final actorId = await _access.actorId();
+          final tasks = rows
+              .map(
+                (result) => _mapTask(
+                  result.readTable(_db.tasks),
+                  scope: _scopeFromRow(
+                    result.readTableOrNull(_db.sharedScopes),
+                  ),
+                ),
+              )
+              .where(
+                (task) =>
+                    !{
+                      TaskQueryKind.today,
+                      TaskQueryKind.upcoming,
+                      TaskQueryKind.day,
+                    }.contains(query.kind) ||
+                    task.scopeId == null ||
+                    task.assigneeIds.contains(actorId),
+              )
+              .where((task) => _matchesQuery(task, query))
+              .toList();
+          tasks.sort((a, b) {
+            final dayOrderCompare = (a.dayOrder ?? 999999).compareTo(
+              b.dayOrder ?? 999999,
+            );
+            if (dayOrderCompare != 0) {
+              return dayOrderCompare;
+            }
+            return a.orderKey.compareTo(b.orderKey);
+          });
+          return tasks;
+        });
   }
 
   @override
   Stream<TaskItem?> watchTask(String id) {
     final statement = _db.select(_db.tasks)
       ..where((task) => task.id.equals(id));
-    return statement.watchSingleOrNull().map(
-      (row) => row == null ? null : _mapTask(row),
-    );
+    return statement
+        .join([
+          leftOuterJoin(
+            _db.sharedScopes,
+            _db.sharedScopes.id.equalsExp(_db.tasks.scopeId),
+          ),
+        ])
+        .watchSingleOrNull()
+        .map(
+          (result) => result == null
+              ? null
+              : _mapTask(
+                  result.readTable(_db.tasks),
+                  scope: _scopeFromRow(
+                    result.readTableOrNull(_db.sharedScopes),
+                  ),
+                ),
+        );
   }
 
   @override
@@ -100,6 +144,14 @@ class DriftTaskRepository implements TaskRepository {
     final id = _uuid.v4();
     final now = DateTime.now().toUtc();
     final projectId = input.projectId ?? inboxProjectId;
+    final scopeId = await _access.projectScope(projectId);
+    await _access.requireEdit(scopeId);
+    await _access.taskLocation(
+      projectId,
+      parentId: input.parentId,
+      sectionId: input.sectionId,
+    );
+    final creator = await _access.actorId();
     final schedule =
         input.schedule ??
         (input.dueDate == null ? null : TaskSchedule.allDay(input.dueDate!));
@@ -112,6 +164,8 @@ class DriftTaskRepository implements TaskRepository {
             TasksCompanion.insert(
               id: id,
               userId: localUserId,
+              scopeId: Value(scopeId),
+              createdBy: Value(creator),
               content: input.content,
               description: Value(input.description),
               projectId: projectId,
@@ -186,6 +240,9 @@ class DriftTaskRepository implements TaskRepository {
     if (taskIds.isEmpty) {
       return const [];
     }
+    for (final id in taskIds) {
+      await _access.task(id);
+    }
     final duplicateIds = <String>[];
     await _db.transaction(() async {
       final rows = await (_db.select(
@@ -233,6 +290,9 @@ class DriftTaskRepository implements TaskRepository {
               TasksCompanion.insert(
                 id: duplicateId,
                 userId: source.userId,
+                scopeId: Value(source.scopeId),
+                createdBy: Value(await _access.actorId()),
+                assigneeIdsJson: Value(source.assigneeIdsJson),
                 content: source.content,
                 description: Value(source.description),
                 projectId: source.projectId,
@@ -295,6 +355,16 @@ class DriftTaskRepository implements TaskRepository {
 
   @override
   Future<void> updateTask(String id, UpdateTaskPatch patch) async {
+    if (patch.content != null ||
+        patch.updateDescription ||
+        patch.priority != null ||
+        patch.dueDate != null ||
+        patch.schedule != null ||
+        patch.clearSchedule ||
+        patch.estimatedFocusIntervals != null ||
+        patch.labelNames != null) {
+      await _access.task(id);
+    }
     final now = DateTime.now().toUtc();
     final schedule =
         patch.schedule ??
@@ -365,6 +435,9 @@ class DriftTaskRepository implements TaskRepository {
       final childrenByParent = _childrenByParent(rows);
 
       for (final row in rows) {
+        if (row.scopeId != null &&
+            !((await _access.scope(row.scopeId))?.canEdit ?? false))
+          continue;
         final schedule = TaskSchedule.fromJsonString(row.dueJson);
         final recurrence = schedule?.recurrence;
         if (schedule == null || recurrence == null) {
@@ -402,6 +475,7 @@ class DriftTaskRepository implements TaskRepository {
     bool clearParentId = false,
     String? orderKey,
   }) async {
+    await _access.task(id, destinationProjectId: projectId);
     final now = DateTime.now().toUtc();
     await _db.transaction(() async {
       final rows = await (_db.select(
@@ -421,6 +495,14 @@ class DriftTaskRepository implements TaskRepository {
         );
       }
 
+      await _access.taskLocation(
+        projectId ?? task.projectId,
+        parentId: clearParentId ? null : parentId ?? task.parentId,
+        sectionId:
+            clearSectionId || projectId != null && projectId != task.projectId
+            ? sectionId
+            : sectionId ?? task.sectionId,
+      );
       final subtree = _subtreeRows(id, rows);
       final updateSection = clearSectionId || sectionId != null;
       final updateParent = clearParentId || parentId != null;
@@ -429,6 +511,8 @@ class DriftTaskRepository implements TaskRepository {
         final nextProjectId = projectId ?? row.projectId;
         final nextSectionId = updateSection
             ? (clearSectionId ? null : sectionId)
+            : nextProjectId != row.projectId
+            ? null
             : row.sectionId;
         final nextParentId = isRoot
             ? (updateParent ? (clearParentId ? null : parentId) : row.parentId)
@@ -474,6 +558,7 @@ class DriftTaskRepository implements TaskRepository {
     required TaskSchedule schedule,
     required String projectId,
   }) async {
+    await _access.task(id, destinationProjectId: projectId);
     final now = DateTime.now().toUtc();
     await _db.transaction(() async {
       final rows = await (_db.select(
@@ -540,6 +625,7 @@ class DriftTaskRepository implements TaskRepository {
 
   @override
   Future<void> completeTask(String id) async {
+    await _access.task(id);
     final now = DateTime.now().toUtc();
     await _db.transaction(() async {
       await _kanbanTransitions.completeSubtreeInTransaction(id, timestamp: now);
@@ -548,6 +634,7 @@ class DriftTaskRepository implements TaskRepository {
 
   @override
   Future<void> uncompleteTask(String id) async {
+    await _access.task(id);
     final now = DateTime.now().toUtc();
     await _db.transaction(() async {
       await _kanbanTransitions.restoreSubtreeInTransaction(id, timestamp: now);
@@ -559,6 +646,9 @@ class DriftTaskRepository implements TaskRepository {
 
   @override
   Future<DeletedTaskBatch> deleteTasks(Set<String> ids) async {
+    for (final id in ids) {
+      await _access.task(id);
+    }
     final now = DateTime.now().toUtc();
     final undoUntil = DateTime.fromMillisecondsSinceEpoch(
       (now.add(_deleteUndoWindow).millisecondsSinceEpoch ~/ 1000) * 1000,
@@ -590,6 +680,7 @@ class DriftTaskRepository implements TaskRepository {
     String id, {
     required bool includeFollowing,
   }) async {
+    await _access.task(id);
     final now = DateTime.now().toUtc();
     final localNow = now.toLocal();
     final undoUntil = DateTime.fromMillisecondsSinceEpoch(
@@ -674,6 +765,9 @@ class DriftTaskRepository implements TaskRepository {
 
   @override
   Future<bool> restoreDeletedTasks(DeletedTaskBatch batch) async {
+    for (final id in batch.taskIds) {
+      await _access.task(id);
+    }
     if (batch.taskIds.isEmpty ||
         DateTime.now().toUtc().isAfter(batch.undoUntil)) {
       return false;
@@ -1046,6 +1140,9 @@ class DriftTaskRepository implements TaskRepository {
             TasksCompanion.insert(
               id: idBySource[source.id]!,
               userId: source.userId,
+              scopeId: Value(source.scopeId),
+              createdBy: Value(source.createdBy),
+              assigneeIdsJson: Value(source.assigneeIdsJson),
               content: source.content,
               description: Value(source.description),
               projectId: source.projectId,
@@ -1075,7 +1172,11 @@ class DriftTaskRepository implements TaskRepository {
           SyncQueueCommand(
             type: 'task.create',
             clientId: idBySource[source.id],
-            payload: {'id': idBySource[source.id]},
+            payload: {
+              'id': idBySource[source.id],
+              if (source.scopeId != null) 'recurrenceSourceId': source.id,
+              if (source.scopeId != null) 'occurrenceKey': occurrenceKey,
+            },
           ),
         ],
       );
@@ -1234,6 +1335,10 @@ class DriftTaskRepository implements TaskRepository {
     List<String> labelNames,
     DateTime now,
   ) async {
+    final task = await (_db.select(
+      _db.tasks,
+    )..where((row) => row.id.equals(taskId))).getSingle();
+    final scopeId = task.scopeId;
     final seen = <String>{};
     for (final rawName in labelNames) {
       final name = rawName.trim();
@@ -1246,6 +1351,9 @@ class DriftTaskRepository implements TaskRepository {
                   (label) =>
                       label.name.equals(name) &
                       label.kind.equals(labelKindUser) &
+                      (scopeId == null
+                          ? label.scopeId.isNull()
+                          : label.scopeId.equals(scopeId)) &
                       label.isDeleted.equals(false),
                 )
                 ..limit(1))
@@ -1254,6 +1362,9 @@ class DriftTaskRepository implements TaskRepository {
           (await (_db.select(_db.labels)..where(
                     (label) =>
                         label.kind.equals(labelKindUser) &
+                        (scopeId == null
+                            ? label.scopeId.isNull()
+                            : label.scopeId.equals(scopeId)) &
                         label.isDeleted.equals(false),
                   ))
                   .get())
@@ -1268,6 +1379,7 @@ class DriftTaskRepository implements TaskRepository {
             .insert(
               LabelsCompanion.insert(
                 id: labelId,
+                scopeId: Value(scopeId),
                 userId: localUserId,
                 name: name,
                 kind: const Value(labelKindUser),
@@ -1287,6 +1399,15 @@ class DriftTaskRepository implements TaskRepository {
   }
 
   Future<void> _attachLabel(String taskId, String labelId, DateTime now) async {
+    await _access.task(taskId);
+    final task = await (_db.select(
+      _db.tasks,
+    )..where((row) => row.id.equals(taskId))).getSingle();
+    final label = await (_db.select(
+      _db.labels,
+    )..where((row) => row.id.equals(labelId))).getSingle();
+    if (task.scopeId != label.scopeId)
+      throw const CollaborationException('cross_scope_label');
     await _db
         .into(_db.taskLabels)
         .insertOnConflictUpdate(
@@ -1305,6 +1426,11 @@ class DriftTaskRepository implements TaskRepository {
   }
 
   bool _matchesQuery(TaskItem task, TaskQuery query) {
+    if (query.creatorId != null && task.createdBy != query.creatorId)
+      return false;
+    if (query.assigneeId != null &&
+        !task.assigneeIds.contains(query.assigneeId))
+      return false;
     final now = query.now ?? DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final due = task.dueDate;
@@ -1340,7 +1466,12 @@ class DriftTaskRepository implements TaskRepository {
     }
   }
 
-  TaskItem _mapTask(TaskRow row) => TaskItem(
+  TaskItem _mapTask(TaskRow row, {SharedScope? scope}) => TaskItem(
+    scopeId: row.scopeId,
+    createdBy: row.createdBy,
+    completedBy: row.completedBy,
+    assigneeIds: collaborationIds(row.assigneeIdsJson),
+    canEdit: row.scopeId == null || (scope?.canEdit ?? false),
     id: row.id,
     userId: row.userId,
     content: row.content,
@@ -1386,6 +1517,7 @@ class DriftProjectRepository implements ProjectRepository {
     : _uuid = uuid ?? const Uuid();
 
   final AppDatabase _db;
+  SharedAccess get _access => SharedAccess(_db);
   final SyncQueueRepository _syncQueue;
   final Uuid _uuid;
 
@@ -1397,7 +1529,28 @@ class DriftProjectRepository implements ProjectRepository {
         (project) => OrderingTerm.asc(project.orderKey),
         (project) => OrderingTerm.asc(project.id),
       ]);
-    return statement.watch().map((rows) => rows.map(_mapProject).toList());
+    return statement
+        .join([
+          leftOuterJoin(
+            _db.sharedScopes,
+            _db.sharedScopes.id.equalsExp(_db.projects.scopeId),
+          ),
+        ])
+        .watch()
+        .asyncMap((rows) async {
+          final actor = await _access.actorId();
+          return rows
+              .map(
+                (result) => _mapProject(
+                  result.readTable(_db.projects),
+                  scope: _scopeFromRow(
+                    result.readTableOrNull(_db.sharedScopes),
+                  ),
+                  actor: actor,
+                ),
+              )
+              .toList();
+        });
   }
 
   @override
@@ -1450,6 +1603,23 @@ class DriftProjectRepository implements ProjectRepository {
           updatedAt: Value(now),
         ),
       );
+      final scope = await _access.scope(project.scopeId);
+      if (scope?.rootProjectId == project.id) {
+        await _syncQueue.enqueue(
+          type: 'private.preferences',
+          clientId: scope!.id,
+          payload: {
+            'scopeId': scope.id,
+            'entityType': 'scope',
+            'entityId': scope.id,
+            'data': {
+              'rootParentId': parentId,
+              'viewPreferences': {'orderKey': key},
+            },
+          },
+        );
+        continue;
+      }
       await _syncQueue.enqueue(
         type: 'project.update',
         clientId: project.id,
@@ -1464,6 +1634,8 @@ class DriftProjectRepository implements ProjectRepository {
     String? color,
     String? parentId,
   }) => _db.transaction(() async {
+    final scopeId = await _access.projectScope(parentId);
+    await _access.requireEdit(scopeId);
     final trimmed = name.trim();
     if (trimmed.isEmpty) throw ArgumentError('Project name is empty');
     final items = await _projects();
@@ -1497,6 +1669,7 @@ class DriftProjectRepository implements ProjectRepository {
           ProjectsCompanion.insert(
             id: id,
             userId: localUserId,
+            scopeId: Value(scopeId),
             name: trimmed,
             color: Value(normalizedColor),
             parentId: Value(parentId),
@@ -1525,6 +1698,7 @@ class DriftProjectRepository implements ProjectRepository {
     required String? parentId,
     String? beforeProjectId,
   }) => _db.transaction(() async {
+    await _access.project(id, destinationId: parentId, moving: true);
     final items = await _projects();
     final project = items.firstWhereOrNull((p) => p.id == id);
     if (project == null || project.isArchived || id == inboxProjectId) {
@@ -1564,6 +1738,9 @@ class DriftProjectRepository implements ProjectRepository {
 
   @override
   Future<void> updateProject(String id, UpdateProjectPatch patch) async {
+    if (patch.name != null || patch.color != null || patch.icon != null) {
+      await _access.project(id);
+    }
     if (id == inboxProjectId) {
       throw ArgumentError.value(id, 'id', 'Inbox project cannot be changed');
     }
@@ -1645,6 +1822,7 @@ class DriftProjectRepository implements ProjectRepository {
 
   @override
   Future<void> deleteProject(String id) async {
+    await _access.project(id, deleting: true);
     if (id == inboxProjectId) {
       return;
     }
@@ -1687,7 +1865,9 @@ class DriftProjectRepository implements ProjectRepository {
           _db.tasks,
         )..where((row) => row.id.equals(task.id))).write(
           TasksCompanion(
-            projectId: const Value(inboxProjectId),
+            projectId: Value(
+              project.scopeId == null ? inboxProjectId : parentId!,
+            ),
             sectionId: const Value(null),
             updatedAt: Value(now),
           ),
@@ -1697,7 +1877,7 @@ class DriftProjectRepository implements ProjectRepository {
           clientId: task.id,
           payload: {
             'id': task.id,
-            'projectId': inboxProjectId,
+            'projectId': project.scopeId == null ? inboxProjectId : parentId!,
             'sectionId': null,
             'parentId': task.parentId,
             'orderKey': task.orderKey,
@@ -1749,7 +1929,15 @@ class DriftProjectRepository implements ProjectRepository {
     });
   }
 
-  ProjectItem _mapProject(ProjectRow row) => ProjectItem(
+  ProjectItem _mapProject(
+    ProjectRow row, {
+    SharedScope? scope,
+    String? actor,
+  }) => ProjectItem(
+    scopeId: row.scopeId,
+    canEdit: row.scopeId == null || (scope?.canEdit ?? false),
+    canManage: row.scopeId == null || (scope?.canManage ?? false),
+    isOwner: row.scopeId == null || (scope?.canDeleteRoot(actor) ?? false),
     id: row.id,
     userId: row.userId,
     name: row.name,
@@ -1771,6 +1959,7 @@ class DriftLabelRepository implements LabelRepository {
     : _uuid = uuid ?? const Uuid();
 
   final AppDatabase _db;
+  SharedAccess get _access => SharedAccess(_db);
   final SyncQueueRepository _syncQueue;
   final Uuid _uuid;
 
@@ -1779,7 +1968,9 @@ class DriftLabelRepository implements LabelRepository {
     final statement = _db.select(_db.labels)
       ..where(
         (label) =>
-            label.kind.equals(labelKindUser) & label.isDeleted.equals(false),
+            label.scopeId.isNull() &
+            label.kind.equals(labelKindUser) &
+            label.isDeleted.equals(false),
       )
       ..orderBy([(label) => OrderingTerm.asc(label.orderKey)]);
     return statement.watch().map((rows) => rows.map(_mapLabel).toList());
@@ -1791,6 +1982,7 @@ class DriftLabelRepository implements LabelRepository {
     final row =
         (await (_db.select(_db.labels)..where(
                   (label) =>
+                      label.scopeId.isNull() &
                       label.kind.equals(labelKindUser) &
                       label.isDeleted.equals(false),
                 ))
@@ -1875,6 +2067,7 @@ class DriftLabelRepository implements LabelRepository {
                 ..where(
                   (label) =>
                       label.id.equals(id) &
+                      label.scopeId.isNull() &
                       label.kind.equals(labelKindUser) &
                       label.isDeleted.equals(false),
                 )
@@ -1909,3 +2102,6 @@ class DriftLabelRepository implements LabelRepository {
     updatedAt: row.updatedAt,
   );
 }
+
+SharedScope? _scopeFromRow(SharedScopeRow? row) =>
+    row == null ? null : SharedScope.fromJson(jsonDecode(row.dataJson));

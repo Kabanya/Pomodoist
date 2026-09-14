@@ -42,6 +42,9 @@ type StorageBucketLike = {
 };
 
 type AdminClientLike = {
+  rpc: (name: string, args: Record<string, unknown>) => PromiseLike<{
+    data: unknown; error: { message: string } | null;
+  }>;
   auth: {
     admin: {
       deleteUser: (userId: string) => Promise<{
@@ -93,6 +96,12 @@ export async function handleAccountDelete(
   }
 
   const admin = deps.createAdminClient?.() ?? createAdminClient();
+  const ownership = await admin.rpc("pomodoist_account_deletion_check", { p_user_id: data.user.id });
+  if (ownership.error) return json({ error: "Account ownership check failed." }, 503);
+  const ownedScopes = (ownership.data as { ownedScopes?: unknown })?.ownedScopes;
+  if (!Array.isArray(ownedScopes)) return json({ error: "Invalid ownership response." }, 503);
+  if (ownedScopes.length) return json({ error: "Transfer ownership or delete your shared projects before deleting your account.",
+    code: "shared_owner_must_transfer", ownedScopes }, 409);
   let storageObjectsRemoved = 0;
   try {
     storageObjectsRemoved = await deleteAccountStorage(admin, data.user.id);
@@ -117,7 +126,7 @@ async function deleteAccountStorage(
 ) {
   let removed = 0;
   for (const bucketId of (Deno.env.get("ACCOUNT_STORAGE_BUCKETS") ?? "nottica-vaults")
-    .split(",").map((value) => value.trim()).filter(Boolean)) {
+    .split(",").map((value) => value.trim()).filter((value) => value && value !== "pomodoist-shared")) {
     const bucket = admin.storage.from(bucketId);
     const paths = await listObjectPaths(bucket, userId);
     for (let index = 0; index < paths.length; index += 100) {

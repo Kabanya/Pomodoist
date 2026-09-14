@@ -396,6 +396,11 @@ enum TaskRecurrenceUnit { day, week, month }
 
 class TaskItem {
   const TaskItem({
+    this.scopeId,
+    this.createdBy,
+    this.completedBy,
+    this.assigneeIds = const [],
+    this.canEdit = true,
     required this.id,
     required this.userId,
     required this.content,
@@ -420,6 +425,11 @@ class TaskItem {
     this.completedAt,
   });
 
+  final String? scopeId;
+  final String? createdBy;
+  final String? completedBy;
+  final List<String> assigneeIds;
+  final bool canEdit;
   final String id;
   final String userId;
   final String content;
@@ -478,6 +488,10 @@ enum ProjectIcon {
 
 class ProjectItem {
   const ProjectItem({
+    this.scopeId,
+    this.canEdit = true,
+    this.canManage = true,
+    this.isOwner = true,
     required this.id,
     required this.userId,
     required this.name,
@@ -493,6 +507,10 @@ class ProjectItem {
     this.isDeleted = false,
   });
 
+  final String? scopeId;
+  final bool canEdit;
+  final bool canManage;
+  final bool isOwner;
   final String id;
   final String userId;
   final String name;
@@ -654,6 +672,8 @@ class TaskQuery {
     this.projectId,
     this.labelId,
     this.search,
+    this.creatorId,
+    this.assigneeId,
     this.now,
     this.date,
   });
@@ -670,6 +690,8 @@ class TaskQuery {
   final String? projectId;
   final String? labelId;
   final String? search;
+  final String? creatorId;
+  final String? assigneeId;
   final DateTime? now;
   final DateTime? date;
 
@@ -681,12 +703,23 @@ class TaskQuery {
             other.projectId == projectId &&
             other.labelId == labelId &&
             other.search == search &&
+            other.creatorId == creatorId &&
+            other.assigneeId == assigneeId &&
             other.now == now &&
             other.date == date;
   }
 
   @override
-  int get hashCode => Object.hash(kind, projectId, labelId, search, now, date);
+  int get hashCode => Object.hash(
+    creatorId,
+    assigneeId,
+    kind,
+    projectId,
+    labelId,
+    search,
+    now,
+    date,
+  );
 }
 
 class CreateTaskInput {

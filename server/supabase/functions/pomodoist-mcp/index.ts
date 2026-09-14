@@ -12,7 +12,7 @@ Deno.serve(createPomodoistMcpHandler({
   config,
   log,
   registerTools: (server, auth) => {
-    registerPomodoistTools(server, auth, { config, log });
+    registerPomodoistTools(server, auth, { config, log, webUrl: Deno.env.get("POMODOIST_WEB_URL"), publicUrl: Deno.env.get("SUPABASE_PUBLIC_URL") });
     registerOpenClawTools(server, auth, { config, log });
   },
 }));

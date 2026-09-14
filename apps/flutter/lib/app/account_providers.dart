@@ -1,3 +1,4 @@
+import '../features/collaboration/data/collaboration_api.dart';
 import 'dart:async';
 
 import 'package:app_account/app_account.dart';
@@ -475,6 +476,7 @@ final accountSyncEngineProvider = Provider<AccountSyncEngine?>((ref) {
     db: ref.watch(appDatabaseProvider),
     account: account,
     uuid: const Uuid(),
+    collaboration: CollaborationApi.account(account),
     kanbanTransitions: ref.watch(kanbanTransitionCoordinatorProvider),
     localPaidEntitlementLoader: () async {
       return ref.read(runtimePublicConfigProvider).selfHostedFeaturesUnlocked ||
