@@ -77,8 +77,9 @@ class CollaborationRepository {
       outstanding = await _outstandingPersonalCommands();
       if (previousIds
           .difference(outstanding.map((row) => row.id).toSet())
-          .isEmpty)
+          .isEmpty) {
         break;
+      }
       if (outstanding.isEmpty) break;
     }
     subtreeIds.addAll(await _shareEntityIds(projectId));
@@ -146,15 +147,17 @@ class CollaborationRepository {
       final task = await (db.select(
         db.tasks,
       )..where((row) => row.id.equals(taskId))).getSingle();
-      if (task.scopeId == null)
+      if (task.scopeId == null) {
         throw const CollaborationException('shared_task_required');
+      }
       final scope = await access.scope(task.scopeId);
       final editors = scope!.members
           .where((m) => m['role'] != 'observer')
           .map((m) => m['userId'])
           .toSet();
-      if (!editors.containsAll(ids))
+      if (!editors.containsAll(ids)) {
         throw const CollaborationException('invalid_assignee');
+      }
       final previous = collaborationIds(task.assigneeIdsJson).toSet();
       final add = ids.difference(previous).toList();
       final remove = previous.difference(ids).toList();
@@ -185,15 +188,17 @@ class CollaborationRepository {
     List<String> mentions = const [],
   }) async {
     final body = text.trim();
-    if (body.isEmpty || body.length > 10000)
+    if (body.isEmpty || body.length > 10000) {
       throw const CollaborationException('invalid_comment');
+    }
     final access = SharedAccess(db);
     await access.task(taskId);
     final task = await (db.select(
       db.tasks,
     )..where((row) => row.id.equals(taskId))).getSingle();
-    if (task.scopeId != scopeId)
+    if (task.scopeId != scopeId) {
       throw const CollaborationException('cross_scope_comment');
+    }
     await access.requireEdit(scopeId);
     final actor = await access.actorId();
     final id = commentId ?? const Uuid().v4();

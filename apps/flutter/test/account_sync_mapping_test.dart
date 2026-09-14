@@ -422,6 +422,9 @@ class _PullOnlyAccountClient implements AccountClient {
   final AccountSyncPullResult result;
 
   @override
+  String? get currentUserId => 'remote-user';
+
+  @override
   Future<AccountSyncPullResult> pullChanges({
     required String appId,
     required String deviceId,

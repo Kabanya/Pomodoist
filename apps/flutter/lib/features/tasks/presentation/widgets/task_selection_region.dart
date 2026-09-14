@@ -747,6 +747,7 @@ Future<T?> showAdaptiveTaskPanel<T>(
   if (_usesTouchPanels) {
     return showModalBottomSheet<T>(
       context: context,
+      useRootNavigator: true,
       sheetAnimationStyle: AnimationStyle(
         duration: AppMotion.duration(context, AppMotion.panel),
         reverseDuration: AppMotion.duration(context, AppMotion.panel),
@@ -758,6 +759,7 @@ Future<T?> showAdaptiveTaskPanel<T>(
   }
   return showDialog<T>(
     context: context,
+    useRootNavigator: true,
     animationStyle: AnimationStyle(
       duration: AppMotion.duration(context, AppMotion.popup),
       reverseDuration: AppMotion.duration(context, AppMotion.popup),

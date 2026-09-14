@@ -3063,4 +3063,204 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get billingTryFree => '무료 체험';
+
+  @override
+  String get collaborationShareProject => '프로젝트 공유';
+
+  @override
+  String get collaborationShareIntro =>
+      '이 프로젝트를 함께 작업할 사람을 초대하세요. 멤버는 편집할 수 있고, 관찰자는 볼 수만 있습니다.';
+
+  @override
+  String get collaborationShareStart => '공유';
+
+  @override
+  String get collaborationMembers => '멤버';
+
+  @override
+  String get collaborationPendingInvitations => '대기 중인 초대';
+
+  @override
+  String get collaborationRevoke => '취소';
+
+  @override
+  String get collaborationPublicLink => '공개 링크';
+
+  @override
+  String get collaborationPublicLinkHint => '링크가 있는 누구나 이 프로젝트를 볼 수 있습니다';
+
+  @override
+  String get collaborationCopyLink => '링크 복사';
+
+  @override
+  String get collaborationConflicts => '동기화 충돌';
+
+  @override
+  String get collaborationLeaveProject => '프로젝트 나가기';
+
+  @override
+  String get collaborationDeleteSharedProject => '모두에게서 삭제';
+
+  @override
+  String get collaborationOwner => '소유자';
+
+  @override
+  String get collaborationTransferOwnership => '소유권 이전';
+
+  @override
+  String get collaborationRemoveMember => '멤버 제거';
+
+  @override
+  String get collaborationEmail => '이메일';
+
+  @override
+  String get collaborationInvite => '초대';
+
+  @override
+  String get collaborationConflictHint => '다른 멤버도 이 항목을 변경했습니다';
+
+  @override
+  String get collaborationConflictKeepLocal => '내 변경 유지';
+
+  @override
+  String get collaborationConflictUseServer => '서버 버전 사용';
+
+  @override
+  String get collaborationProjectShared => '프로젝트를 공유했습니다';
+
+  @override
+  String get collaborationInviteEmailFailed => '초대는 저장되었지만 이메일을 보내지 못했습니다';
+
+  @override
+  String collaborationInviteSent(String email) {
+    return '$email 님에게 초대를 보냈습니다';
+  }
+
+  @override
+  String get collaborationInvitationRevoked => '초대를 취소했습니다';
+
+  @override
+  String get collaborationRoleUpdated => '역할을 업데이트했습니다';
+
+  @override
+  String collaborationRemoveConfirm(String name) {
+    return '$name 님을 이 프로젝트에서 제거할까요?';
+  }
+
+  @override
+  String get collaborationMemberRemoved => '멤버를 제거했습니다';
+
+  @override
+  String collaborationTransferConfirm(String name) {
+    return '$name 님을 이 프로젝트의 소유자로 지정할까요?';
+  }
+
+  @override
+  String get collaborationOwnershipTransferred => '소유권을 이전했습니다';
+
+  @override
+  String get collaborationLeaveConfirm => '이 공유 프로젝트에서 나갈까요?';
+
+  @override
+  String get collaborationLeftProject => '프로젝트에서 나갔습니다';
+
+  @override
+  String get collaborationDeleteSharedConfirm =>
+      '이 공유 프로젝트를 모든 멤버에게서 삭제할까요? 되돌릴 수 없습니다.';
+
+  @override
+  String get collaborationSharedProjectDeleted => '공유 프로젝트를 삭제했습니다';
+
+  @override
+  String get collaborationLinkCopied => '링크를 복사했습니다';
+
+  @override
+  String get collaborationConflictResolved => '충돌을 해결했습니다';
+
+  @override
+  String get collaborationRoleAdministrator => '관리자';
+
+  @override
+  String get collaborationRoleMember => '멤버';
+
+  @override
+  String get collaborationRoleObserver => '관찰자';
+
+  @override
+  String get collaborationForbidden => '권한이 없습니다';
+
+  @override
+  String get collaborationSignedOut => '공유 프로젝트를 사용하려면 로그인하세요';
+
+  @override
+  String get collaborationError => '문제가 발생했습니다. 다시 시도하세요';
+
+  @override
+  String get collaborationSyncPending => '공유하기 전에 이 프로젝트의 동기화를 완료하세요';
+
+  @override
+  String get collaborationMemberFallback => '멤버';
+
+  @override
+  String get collaborationInboxTitle => '공유 프로젝트 및 초대';
+
+  @override
+  String get collaborationInboxSubtitle => '초대를 수락하고 공유 프로젝트 활동을 확인하세요';
+
+  @override
+  String get collaborationInvitations => '초대';
+
+  @override
+  String get collaborationNoInvitations => '대기 중인 초대가 없습니다';
+
+  @override
+  String get collaborationAccept => '수락';
+
+  @override
+  String get collaborationNotifications => '알림';
+
+  @override
+  String get collaborationMarkAllRead => '모두 읽음으로 표시';
+
+  @override
+  String get collaborationNoNotifications => '알림이 없습니다';
+
+  @override
+  String get collaborationNotificationInvitation => '공유 프로젝트 초대';
+
+  @override
+  String get collaborationNotificationDiscussion => '공유 프로젝트의 새 댓글';
+
+  @override
+  String get collaborationNotificationAssignment => '작업이 할당되었습니다';
+
+  @override
+  String get collaborationNotificationGeneric => '공유 프로젝트 활동';
+
+  @override
+  String get collaborationInvitationAccepted => '초대를 수락했습니다';
+
+  @override
+  String get collaborationAssignees => '담당자';
+
+  @override
+  String get collaborationEditAssignees => '담당자 편집';
+
+  @override
+  String get collaborationNoAssignees => '담당자 없음';
+
+  @override
+  String get collaborationComments => '댓글';
+
+  @override
+  String get collaborationCommentHint => '댓글 작성';
+
+  @override
+  String get collaborationCommentSend => '보내기';
+
+  @override
+  String get collaborationCommentDelete => '댓글 삭제';
+
+  @override
+  String get collaborationSharedBadge => '공유 프로젝트';
 }

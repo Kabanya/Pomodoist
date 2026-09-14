@@ -64,7 +64,7 @@ class AccountSyncEngine {
         await _broadcastSyncHint();
       }
       return <String>{
-        ...await this.syncShared(),
+        ...await syncShared(),
         ...await pushPending(),
         ...await pullLatest(),
       };
@@ -459,8 +459,9 @@ class AccountSyncEngine {
           (data['scopeId'] != null ||
               sharedProjects.contains(data['projectId']) ||
               sharedTasks.contains(data['taskId']) ||
-              sharedEntityIds.contains('$entityType:$entityId')))
+              sharedEntityIds.contains('$entityType:$entityId'))) {
         return;
+      }
       operations.add(
         _operation(
           opId:
@@ -1011,15 +1012,17 @@ class AccountSyncEngine {
                           ..where((r) => r.id.equals(change.entityId)))
                         .getSingleOrNull())
                     ?.scopeId !=
-                null)
+                null) {
           continue;
+        }
         if (change.entityType == 'project' &&
             (await (_db.select(_db.projects)
                           ..where((r) => r.id.equals(change.entityId)))
                         .getSingleOrNull())
                     ?.scopeId !=
-                null)
+                null) {
           continue;
+        }
         if (!change.entityType.startsWith('focus_')) {
           final scoped =
               await (_db.select(_db.sharedEntities)..where(
@@ -1039,8 +1042,9 @@ class AccountSyncEngine {
                             ..where((row) => row.id.equals(taskId)))
                           .getSingleOrNull())
                       ?.scopeId !=
-                  null)
+                  null) {
             continue;
+          }
         }
         if (change.deleted) {
           await _applyDelete(change);

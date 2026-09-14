@@ -3151,4 +3151,213 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get billingTryFree => 'Попробовать';
+
+  @override
+  String get collaborationShareProject => 'Поделиться проектом';
+
+  @override
+  String get collaborationShareIntro =>
+      'Пригласите людей работать над проектом вместе. Участники могут редактировать, наблюдатели — только просматривать.';
+
+  @override
+  String get collaborationShareStart => 'Поделиться';
+
+  @override
+  String get collaborationMembers => 'Участники';
+
+  @override
+  String get collaborationPendingInvitations => 'Ожидающие приглашения';
+
+  @override
+  String get collaborationRevoke => 'Отозвать';
+
+  @override
+  String get collaborationPublicLink => 'Публичная ссылка';
+
+  @override
+  String get collaborationPublicLinkHint =>
+      'Любой, у кого есть ссылка, может просматривать этот проект';
+
+  @override
+  String get collaborationCopyLink => 'Копировать ссылку';
+
+  @override
+  String get collaborationConflicts => 'Конфликты синхронизации';
+
+  @override
+  String get collaborationLeaveProject => 'Покинуть проект';
+
+  @override
+  String get collaborationDeleteSharedProject => 'Удалить для всех';
+
+  @override
+  String get collaborationOwner => 'Владелец';
+
+  @override
+  String get collaborationTransferOwnership => 'Передать владение';
+
+  @override
+  String get collaborationRemoveMember => 'Удалить участника';
+
+  @override
+  String get collaborationEmail => 'Эл. почта';
+
+  @override
+  String get collaborationInvite => 'Пригласить';
+
+  @override
+  String get collaborationConflictHint =>
+      'Другой участник тоже изменил этот элемент';
+
+  @override
+  String get collaborationConflictKeepLocal => 'Оставить моё';
+
+  @override
+  String get collaborationConflictUseServer => 'Версия сервера';
+
+  @override
+  String get collaborationProjectShared =>
+      'Проект открыт для совместной работы';
+
+  @override
+  String get collaborationInviteEmailFailed =>
+      'Приглашение сохранено, но письмо не отправилось';
+
+  @override
+  String collaborationInviteSent(String email) {
+    return 'Приглашение отправлено на $email';
+  }
+
+  @override
+  String get collaborationInvitationRevoked => 'Приглашение отозвано';
+
+  @override
+  String get collaborationRoleUpdated => 'Роль обновлена';
+
+  @override
+  String collaborationRemoveConfirm(String name) {
+    return 'Удалить $name из проекта?';
+  }
+
+  @override
+  String get collaborationMemberRemoved => 'Участник удалён';
+
+  @override
+  String collaborationTransferConfirm(String name) {
+    return 'Сделать $name владельцем проекта?';
+  }
+
+  @override
+  String get collaborationOwnershipTransferred => 'Владение передано';
+
+  @override
+  String get collaborationLeaveConfirm => 'Покинуть общий проект?';
+
+  @override
+  String get collaborationLeftProject => 'Вы покинули проект';
+
+  @override
+  String get collaborationDeleteSharedConfirm =>
+      'Удалить общий проект для всех участников? Это действие необратимо.';
+
+  @override
+  String get collaborationSharedProjectDeleted => 'Общий проект удалён';
+
+  @override
+  String get collaborationLinkCopied => 'Ссылка скопирована';
+
+  @override
+  String get collaborationConflictResolved => 'Конфликт разрешён';
+
+  @override
+  String get collaborationRoleAdministrator => 'Администратор';
+
+  @override
+  String get collaborationRoleMember => 'Участник';
+
+  @override
+  String get collaborationRoleObserver => 'Наблюдатель';
+
+  @override
+  String get collaborationForbidden => 'Недостаточно прав';
+
+  @override
+  String get collaborationSignedOut =>
+      'Войдите, чтобы использовать общие проекты';
+
+  @override
+  String get collaborationError => 'Что-то пошло не так. Попробуйте ещё раз';
+
+  @override
+  String get collaborationSyncPending =>
+      'Завершите синхронизацию проекта перед открытием доступа';
+
+  @override
+  String get collaborationMemberFallback => 'Участник';
+
+  @override
+  String get collaborationInboxTitle => 'Общие проекты и приглашения';
+
+  @override
+  String get collaborationInboxSubtitle =>
+      'Принимайте приглашения и следите за активностью общих проектов';
+
+  @override
+  String get collaborationInvitations => 'Приглашения';
+
+  @override
+  String get collaborationNoInvitations => 'Нет ожидающих приглашений';
+
+  @override
+  String get collaborationAccept => 'Принять';
+
+  @override
+  String get collaborationNotifications => 'Уведомления';
+
+  @override
+  String get collaborationMarkAllRead => 'Прочитать все';
+
+  @override
+  String get collaborationNoNotifications => 'Нет уведомлений';
+
+  @override
+  String get collaborationNotificationInvitation =>
+      'Приглашение в общий проект';
+
+  @override
+  String get collaborationNotificationDiscussion =>
+      'Новый комментарий в общем проекте';
+
+  @override
+  String get collaborationNotificationAssignment => 'Вам назначили задачу';
+
+  @override
+  String get collaborationNotificationGeneric => 'Активность в общем проекте';
+
+  @override
+  String get collaborationInvitationAccepted => 'Приглашение принято';
+
+  @override
+  String get collaborationAssignees => 'Исполнители';
+
+  @override
+  String get collaborationEditAssignees => 'Изменить исполнителей';
+
+  @override
+  String get collaborationNoAssignees => 'Нет исполнителей';
+
+  @override
+  String get collaborationComments => 'Комментарии';
+
+  @override
+  String get collaborationCommentHint => 'Написать комментарий';
+
+  @override
+  String get collaborationCommentSend => 'Отправить';
+
+  @override
+  String get collaborationCommentDelete => 'Удалить комментарий';
+
+  @override
+  String get collaborationSharedBadge => 'Общий проект';
 }

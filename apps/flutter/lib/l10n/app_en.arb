@@ -1659,5 +1659,90 @@
     }
   },
   "billingReturnFailed": "Could not verify your return offer. Retry to check the discount.",
-  "billingTryFree": "Try free"
+  "billingTryFree": "Try free",
+  "collaborationShareProject": "Share project",
+  "collaborationShareIntro": "Invite people to work on this project together. Members can edit, observers can view.",
+  "collaborationShareStart": "Share",
+  "collaborationMembers": "Members",
+  "collaborationPendingInvitations": "Pending invitations",
+  "collaborationRevoke": "Revoke",
+  "collaborationPublicLink": "Public link",
+  "collaborationPublicLinkHint": "Anyone with the link can view this project",
+  "collaborationCopyLink": "Copy link",
+  "collaborationConflicts": "Sync conflicts",
+  "collaborationLeaveProject": "Leave project",
+  "collaborationDeleteSharedProject": "Delete for everyone",
+  "collaborationOwner": "Owner",
+  "collaborationTransferOwnership": "Transfer ownership",
+  "collaborationRemoveMember": "Remove member",
+  "collaborationEmail": "Email",
+  "collaborationInvite": "Invite",
+  "collaborationConflictHint": "Another member also changed this item",
+  "collaborationConflictKeepLocal": "Keep mine",
+  "collaborationConflictUseServer": "Use server",
+  "collaborationProjectShared": "Project shared",
+  "collaborationInviteEmailFailed": "Invitation saved, but the email could not be sent",
+  "collaborationInviteSent": "Invitation sent to {email}",
+  "@collaborationInviteSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "collaborationInvitationRevoked": "Invitation revoked",
+  "collaborationRoleUpdated": "Role updated",
+  "collaborationRemoveConfirm": "Remove {name} from this project?",
+  "@collaborationRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "collaborationMemberRemoved": "Member removed",
+  "collaborationTransferConfirm": "Make {name} the owner of this project?",
+  "@collaborationTransferConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "collaborationOwnershipTransferred": "Ownership transferred",
+  "collaborationLeaveConfirm": "Leave this shared project?",
+  "collaborationLeftProject": "You left the project",
+  "collaborationDeleteSharedConfirm": "Delete this shared project for all members? This cannot be undone.",
+  "collaborationSharedProjectDeleted": "Shared project deleted",
+  "collaborationLinkCopied": "Link copied",
+  "collaborationConflictResolved": "Conflict resolved",
+  "collaborationRoleAdministrator": "Administrator",
+  "collaborationRoleMember": "Member",
+  "collaborationRoleObserver": "Observer",
+  "collaborationForbidden": "You don't have permission to do that",
+  "collaborationSignedOut": "Sign in to use shared projects",
+  "collaborationError": "Something went wrong. Try again",
+  "collaborationSyncPending": "Finish synchronizing this project before sharing",
+  "collaborationMemberFallback": "Member",
+  "collaborationInboxTitle": "Shared projects & invitations",
+  "collaborationInboxSubtitle": "Accept invitations and review shared project activity",
+  "collaborationInvitations": "Invitations",
+  "collaborationNoInvitations": "No pending invitations",
+  "collaborationAccept": "Accept",
+  "collaborationNotifications": "Notifications",
+  "collaborationMarkAllRead": "Mark all as read",
+  "collaborationNoNotifications": "No notifications",
+  "collaborationNotificationInvitation": "Invitation to a shared project",
+  "collaborationNotificationDiscussion": "New comment in a shared project",
+  "collaborationNotificationAssignment": "You were assigned a task",
+  "collaborationNotificationGeneric": "Shared project activity",
+  "collaborationInvitationAccepted": "Invitation accepted",
+  "collaborationAssignees": "Assignees",
+  "collaborationEditAssignees": "Edit assignees",
+  "collaborationNoAssignees": "No assignees",
+  "collaborationComments": "Comments",
+  "collaborationCommentHint": "Write a comment",
+  "collaborationCommentSend": "Send",
+  "collaborationCommentDelete": "Delete comment",
+  "collaborationSharedBadge": "Shared project"
 }

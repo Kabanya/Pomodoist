@@ -12,6 +12,7 @@ class SharedScope {
   bool get canManage => role == 'administrator';
   bool canDeleteRoot(String? userId) => canManage && ownerId == userId;
   bool get historyUnlimited => data['historyUnlimited'] == true;
+  String? get publicToken => data['publicToken'] as String?;
   DateTime? get graceEndsAt =>
       DateTime.tryParse(data['graceEndsAt'] as String? ?? '');
   DateTime? historyCutoff(DateTime now) =>

@@ -95,9 +95,13 @@ do $$ declare t text; begin
   end loop;
 end $$;
 
-insert into storage.buckets(id,name,public,file_size_limit)
-values ('pomodoist-shared','pomodoist-shared',false,20000000)
-on conflict(id) do update set public=false,file_size_limit=excluded.file_size_limit;
+do $$ begin
+  if to_regclass('storage.buckets') is not null then
+    insert into storage.buckets(id,name,public,file_size_limit)
+    values ('pomodoist-shared','pomodoist-shared',false,20000000)
+    on conflict(id) do update set public=false,file_size_limit=excluded.file_size_limit;
+  end if;
+end $$;
 -- No client Storage policies: only the Edge service can issue scoped signed URLs.
 
 create function private.pomodoist_collaboration_hint(p_scope uuid,p_user uuid default null)
@@ -186,7 +190,7 @@ begin
   if new.deleted_at is null and new.entity_type in ('task_label','task_kanban_status','task_completion')
     and exists(select 1 from private.pomodoist_transferred_entities where user_id=new.user_id and entity_type='task' and entity_id=new.data->>'taskId') then
     raise exception using errcode='42501',message='Personal content writes cannot target transferred tasks'; end if;
-  if new.entity_type='task' then
+  if new.entity_type='task' and jsonb_typeof(new.data)='object' then
     new.data:=jsonb_set(new.data,'{createdBy}',coalesce(case when tg_op='UPDATE' then old.data->'createdBy' end,to_jsonb(new.user_id::text)));
     if new.data->>'status'='completed' and (tg_op='INSERT' or old.data->>'status' is distinct from 'completed') then
       new.data:=new.data||jsonb_build_object('completedBy',new.user_id);
@@ -199,7 +203,7 @@ create trigger pomodoist_transfer_guard before insert or update on public.sync_e
 
 update public.sync_entities set data=jsonb_set(data,'{createdBy}',to_jsonb(user_id::text)),
   server_revision=nextval('public.sync_revision_seq'),updated_at=now()
-  where app_id='pomodoist' and entity_type='task' and not(data ? 'createdBy');
+  where app_id='pomodoist' and entity_type='task' and jsonb_typeof(data)='object' and not(data ? 'createdBy');
 
 create function private.pomodoist_members_json(p_scope uuid) returns jsonb language sql security definer set search_path='' as $$
   select coalesce(jsonb_agg(jsonb_build_object('userId',m.user_id,'role',m.role,'displayName',coalesce(p.display_name,'Member')) order by m.joined_at),'[]')
@@ -211,7 +215,8 @@ create function private.pomodoist_preferences_json(p_user uuid,p_scope uuid defa
 $$;
 create function private.pomodoist_scope_json(p_scope uuid,p_user uuid) returns jsonb language sql security definer set search_path='' as $$
   select jsonb_build_object('id',s.id,'rootProjectId',s.root_project_id,'ownerId',s.owner_id,'role',m.role,
-    'revision',s.revision,'historyUnlimited',s.history_unlimited,'graceEndsAt',s.grace_ends_at)
+    'revision',s.revision,'historyUnlimited',s.history_unlimited,'graceEndsAt',s.grace_ends_at,
+    'publicToken',case when m.role='administrator' then s.public_token end)
   from private.pomodoist_scopes s join private.pomodoist_members m on m.scope_id=s.id where s.id=p_scope and m.user_id=p_user;
 $$;
 
@@ -597,13 +602,13 @@ begin
     perform private.pomodoist_collaboration_event(s.id,actor,'shared',s.root_project_id);
     return jsonb_build_object('scope',private.pomodoist_scope_json(s.id,actor));
   elsif action='accept' then
-    select scope_id into scope from private.pomodoist_invitations where token=p_request->>'token';
+    select i.scope_id into scope from private.pomodoist_invitations i where i.token=p_request->>'token';
   else scope:=(p_request->>'scopeId')::uuid;
   end if;
   select * into s from private.pomodoist_scopes where id=scope for update;
   if not found then raise exception using errcode='42501',message='Shared scope is inaccessible'; end if;
   if action='accept' then
-    select * into invitation from private.pomodoist_invitations where token=p_request->>'token' and scope_id=scope for update;
+    select i.* into invitation from private.pomodoist_invitations i where i.token=p_request->>'token' and i.scope_id=scope for update;
     if invitation.revoked_at is not null or invitation.expires_at<=now() or
       (invitation.email is not null and not exists(select 1 from auth.users where id=actor and lower(email)=invitation.email and email_confirmed_at is not null))
       or (invitation.accepted_by is not null and invitation.accepted_by<>actor) then
@@ -942,10 +947,10 @@ do $$ declare f record; begin
     execute format('revoke all on function %s from public,anon,authenticated',f.signature);
   end loop;
 end $$;
-revoke all on function public.pomodoist_collaboration(jsonb) from public;
--- Anonymous callers can only execute the token-gated, redacted publicRead branch.
-grant usage on schema private to anon;
-grant execute on function private.pomodoist_collaboration(jsonb),public.pomodoist_collaboration(jsonb) to anon,authenticated,service_role;
+revoke all on function public.pomodoist_collaboration(jsonb) from public,anon,authenticated;
+-- Anonymous public-link reads stay behind the service-role Edge function; the
+-- private schema and its entrypoints must not be resolvable by anon.
+grant execute on function private.pomodoist_collaboration(jsonb),public.pomodoist_collaboration(jsonb) to authenticated,service_role;
 CREATE OR REPLACE FUNCTION private.pull_changes(p_app_id text, p_device_id text, p_since_revision bigint DEFAULT 0, p_limit integer DEFAULT 500)
  RETURNS jsonb
  LANGUAGE plpgsql

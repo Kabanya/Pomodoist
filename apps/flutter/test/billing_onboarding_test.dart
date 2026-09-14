@@ -1232,6 +1232,7 @@ void main() {
             _FakeBillingStore(eligibleProductIds: const {}),
           ),
           applePurchasesSupportedProvider.overrideWithValue(true),
+          billingChannelProvider.overrideWithValue(BillingChannel.stripe),
         ],
         child: MaterialApp(
           builder: testAppBuilder,
@@ -1881,6 +1882,7 @@ void main() {
         overrides: [
           billingStoreProvider.overrideWithValue(_FakeBillingStore()),
           applePurchasesSupportedProvider.overrideWithValue(true),
+          billingChannelProvider.overrideWithValue(BillingChannel.stripe),
           clockProvider.overrideWithValue(clock),
         ],
         child: const _OnboardingHarness(),
@@ -2113,6 +2115,21 @@ void main() {
         overrides: [
           billingStoreProvider.overrideWithValue(_FakeBillingStore()),
           applePurchasesSupportedProvider.overrideWithValue(true),
+          billingChannelProvider.overrideWithValue(BillingChannel.stripe),
+          billingSignedInProvider.overrideWithValue(true),
+          billingStripeGatewayProvider.overrideWithValue(
+            BillingStripeGateway(
+              loadCatalog: () async => const StripeBillingCatalog(
+                enabled: true,
+                introEligible: true,
+                prices: {pomodoistAnnualProductId: r'$39'},
+                launchOfferEligible: false,
+                launchOfferEndsAt: null,
+              ),
+              createCheckout: (_, _) => throw UnimplementedError(),
+              openCheckout: (_) async => true,
+            ),
+          ),
           clockProvider.overrideWithValue(
             FixedClock(DateTime.utc(2026, 1, 2, 11)),
           ),
@@ -2343,7 +2360,7 @@ void main() {
       find.byKey(const ValueKey('billing-plan-pomodoist.pro.monthly')),
       findsOneWidget,
     );
-    expect(find.text(r'$5.99/month'), findsOneWidget);
+    expect(find.text(r'$4.99/month'), findsOneWidget);
     expect(
       tester
           .widget<ShadButton>(

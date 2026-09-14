@@ -3174,6 +3174,216 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get billingTryFree => 'Testar grátis';
+
+  @override
+  String get collaborationShareProject => 'Compartilhar projeto';
+
+  @override
+  String get collaborationShareIntro =>
+      'Convide pessoas para trabalhar juntas neste projeto. Membros podem editar; observadores podem visualizar.';
+
+  @override
+  String get collaborationShareStart => 'Compartilhar';
+
+  @override
+  String get collaborationMembers => 'Membros';
+
+  @override
+  String get collaborationPendingInvitations => 'Convites pendentes';
+
+  @override
+  String get collaborationRevoke => 'Revogar';
+
+  @override
+  String get collaborationPublicLink => 'Link público';
+
+  @override
+  String get collaborationPublicLinkHint =>
+      'Qualquer pessoa com o link pode visualizar este projeto';
+
+  @override
+  String get collaborationCopyLink => 'Copiar link';
+
+  @override
+  String get collaborationConflicts => 'Conflitos de sincronização';
+
+  @override
+  String get collaborationLeaveProject => 'Sair do projeto';
+
+  @override
+  String get collaborationDeleteSharedProject => 'Excluir para todos';
+
+  @override
+  String get collaborationOwner => 'Proprietário';
+
+  @override
+  String get collaborationTransferOwnership => 'Transferir propriedade';
+
+  @override
+  String get collaborationRemoveMember => 'Remover membro';
+
+  @override
+  String get collaborationEmail => 'E-mail';
+
+  @override
+  String get collaborationInvite => 'Convidar';
+
+  @override
+  String get collaborationConflictHint =>
+      'Outro membro também alterou este item';
+
+  @override
+  String get collaborationConflictKeepLocal => 'Manter a minha';
+
+  @override
+  String get collaborationConflictUseServer => 'Versão do servidor';
+
+  @override
+  String get collaborationProjectShared => 'Projeto compartilhado';
+
+  @override
+  String get collaborationInviteEmailFailed =>
+      'Convite salvo, mas o e-mail não pôde ser enviado';
+
+  @override
+  String collaborationInviteSent(String email) {
+    return 'Convite enviado para $email';
+  }
+
+  @override
+  String get collaborationInvitationRevoked => 'Convite revogado';
+
+  @override
+  String get collaborationRoleUpdated => 'Função atualizada';
+
+  @override
+  String collaborationRemoveConfirm(String name) {
+    return 'Remover $name deste projeto?';
+  }
+
+  @override
+  String get collaborationMemberRemoved => 'Membro removido';
+
+  @override
+  String collaborationTransferConfirm(String name) {
+    return 'Tornar $name o proprietário deste projeto?';
+  }
+
+  @override
+  String get collaborationOwnershipTransferred => 'Propriedade transferida';
+
+  @override
+  String get collaborationLeaveConfirm => 'Sair deste projeto compartilhado?';
+
+  @override
+  String get collaborationLeftProject => 'Você saiu do projeto';
+
+  @override
+  String get collaborationDeleteSharedConfirm =>
+      'Excluir este projeto compartilhado para todos os membros? Não é possível desfazer.';
+
+  @override
+  String get collaborationSharedProjectDeleted =>
+      'Projeto compartilhado excluído';
+
+  @override
+  String get collaborationLinkCopied => 'Link copiado';
+
+  @override
+  String get collaborationConflictResolved => 'Conflito resolvido';
+
+  @override
+  String get collaborationRoleAdministrator => 'Administrador';
+
+  @override
+  String get collaborationRoleMember => 'Membro';
+
+  @override
+  String get collaborationRoleObserver => 'Observador';
+
+  @override
+  String get collaborationForbidden => 'Você não tem permissão para isso';
+
+  @override
+  String get collaborationSignedOut =>
+      'Entre para usar projetos compartilhados';
+
+  @override
+  String get collaborationError => 'Algo deu errado. Tente novamente';
+
+  @override
+  String get collaborationSyncPending =>
+      'Conclua a sincronização deste projeto antes de compartilhar';
+
+  @override
+  String get collaborationMemberFallback => 'Membro';
+
+  @override
+  String get collaborationInboxTitle => 'Projetos compartilhados e convites';
+
+  @override
+  String get collaborationInboxSubtitle =>
+      'Aceite convites e acompanhe a atividade de projetos compartilhados';
+
+  @override
+  String get collaborationInvitations => 'Convites';
+
+  @override
+  String get collaborationNoInvitations => 'Nenhum convite pendente';
+
+  @override
+  String get collaborationAccept => 'Aceitar';
+
+  @override
+  String get collaborationNotifications => 'Notificações';
+
+  @override
+  String get collaborationMarkAllRead => 'Marcar tudo como lido';
+
+  @override
+  String get collaborationNoNotifications => 'Nenhuma notificação';
+
+  @override
+  String get collaborationNotificationInvitation =>
+      'Convite para um projeto compartilhado';
+
+  @override
+  String get collaborationNotificationDiscussion =>
+      'Novo comentário em um projeto compartilhado';
+
+  @override
+  String get collaborationNotificationAssignment => 'Você recebeu uma tarefa';
+
+  @override
+  String get collaborationNotificationGeneric =>
+      'Atividade em projeto compartilhado';
+
+  @override
+  String get collaborationInvitationAccepted => 'Convite aceito';
+
+  @override
+  String get collaborationAssignees => 'Responsáveis';
+
+  @override
+  String get collaborationEditAssignees => 'Editar responsáveis';
+
+  @override
+  String get collaborationNoAssignees => 'Sem responsáveis';
+
+  @override
+  String get collaborationComments => 'Comentários';
+
+  @override
+  String get collaborationCommentHint => 'Escreva um comentário';
+
+  @override
+  String get collaborationCommentSend => 'Enviar';
+
+  @override
+  String get collaborationCommentDelete => 'Excluir comentário';
+
+  @override
+  String get collaborationSharedBadge => 'Projeto compartilhado';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).

@@ -513,16 +513,46 @@ class AppDatabase extends _$AppDatabase {
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
       if (from < 8) {
-        await m.createTable(sharedScopes);
-        await m.createTable(sharedEntities);
-        await m.addColumn(projects, projects.scopeId);
-        await m.addColumn(labels, labels.scopeId);
-        await m.addColumn(tasks, tasks.scopeId);
-        await m.addColumn(tasks, tasks.createdBy);
-        await m.addColumn(tasks, tasks.completedBy);
-        await m.addColumn(tasks, tasks.assigneeIdsJson);
-        await m.addColumn(syncCommands, syncCommands.scopeId);
-        await m.addColumn(syncCommands, syncCommands.baseRevision);
+        await _runResumableMigrationStep(
+          () => m.createTable(sharedScopes),
+          alreadyAppliedMessage: 'already exists',
+        );
+        await _runResumableMigrationStep(
+          () => m.createTable(sharedEntities),
+          alreadyAppliedMessage: 'already exists',
+        );
+        await _runResumableMigrationStep(
+          () => m.addColumn(projects, projects.scopeId),
+          alreadyAppliedMessage: 'duplicate column name: scope_id',
+        );
+        await _runResumableMigrationStep(
+          () => m.addColumn(labels, labels.scopeId),
+          alreadyAppliedMessage: 'duplicate column name: scope_id',
+        );
+        await _runResumableMigrationStep(
+          () => m.addColumn(tasks, tasks.scopeId),
+          alreadyAppliedMessage: 'duplicate column name: scope_id',
+        );
+        await _runResumableMigrationStep(
+          () => m.addColumn(tasks, tasks.createdBy),
+          alreadyAppliedMessage: 'duplicate column name: created_by',
+        );
+        await _runResumableMigrationStep(
+          () => m.addColumn(tasks, tasks.completedBy),
+          alreadyAppliedMessage: 'duplicate column name: completed_by',
+        );
+        await _runResumableMigrationStep(
+          () => m.addColumn(tasks, tasks.assigneeIdsJson),
+          alreadyAppliedMessage: 'duplicate column name: assignee_ids_json',
+        );
+        await _runResumableMigrationStep(
+          () => m.addColumn(syncCommands, syncCommands.scopeId),
+          alreadyAppliedMessage: 'duplicate column name: scope_id',
+        );
+        await _runResumableMigrationStep(
+          () => m.addColumn(syncCommands, syncCommands.baseRevision),
+          alreadyAppliedMessage: 'duplicate column name: base_revision',
+        );
       }
       if (from < 2) {
         await m.createTable(googleCalendarConnections);

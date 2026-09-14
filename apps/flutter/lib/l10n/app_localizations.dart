@@ -5320,6 +5320,390 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try free'**
   String get billingTryFree;
+
+  /// No description provided for @collaborationShareProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Share project'**
+  String get collaborationShareProject;
+
+  /// No description provided for @collaborationShareIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite people to work on this project together. Members can edit, observers can view.'**
+  String get collaborationShareIntro;
+
+  /// No description provided for @collaborationShareStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get collaborationShareStart;
+
+  /// No description provided for @collaborationMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get collaborationMembers;
+
+  /// No description provided for @collaborationPendingInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending invitations'**
+  String get collaborationPendingInvitations;
+
+  /// No description provided for @collaborationRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get collaborationRevoke;
+
+  /// No description provided for @collaborationPublicLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Public link'**
+  String get collaborationPublicLink;
+
+  /// No description provided for @collaborationPublicLinkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with the link can view this project'**
+  String get collaborationPublicLinkHint;
+
+  /// No description provided for @collaborationCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get collaborationCopyLink;
+
+  /// No description provided for @collaborationConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync conflicts'**
+  String get collaborationConflicts;
+
+  /// No description provided for @collaborationLeaveProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave project'**
+  String get collaborationLeaveProject;
+
+  /// No description provided for @collaborationDeleteSharedProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete for everyone'**
+  String get collaborationDeleteSharedProject;
+
+  /// No description provided for @collaborationOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get collaborationOwner;
+
+  /// No description provided for @collaborationTransferOwnership.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer ownership'**
+  String get collaborationTransferOwnership;
+
+  /// No description provided for @collaborationRemoveMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove member'**
+  String get collaborationRemoveMember;
+
+  /// No description provided for @collaborationEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get collaborationEmail;
+
+  /// No description provided for @collaborationInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite'**
+  String get collaborationInvite;
+
+  /// No description provided for @collaborationConflictHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Another member also changed this item'**
+  String get collaborationConflictHint;
+
+  /// No description provided for @collaborationConflictKeepLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep mine'**
+  String get collaborationConflictKeepLocal;
+
+  /// No description provided for @collaborationConflictUseServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Use server'**
+  String get collaborationConflictUseServer;
+
+  /// No description provided for @collaborationProjectShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Project shared'**
+  String get collaborationProjectShared;
+
+  /// No description provided for @collaborationInviteEmailFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation saved, but the email could not be sent'**
+  String get collaborationInviteEmailFailed;
+
+  /// No description provided for @collaborationInviteSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation sent to {email}'**
+  String collaborationInviteSent(String email);
+
+  /// No description provided for @collaborationInvitationRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation revoked'**
+  String get collaborationInvitationRevoked;
+
+  /// No description provided for @collaborationRoleUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Role updated'**
+  String get collaborationRoleUpdated;
+
+  /// No description provided for @collaborationRemoveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name} from this project?'**
+  String collaborationRemoveConfirm(String name);
+
+  /// No description provided for @collaborationMemberRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Member removed'**
+  String get collaborationMemberRemoved;
+
+  /// No description provided for @collaborationTransferConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Make {name} the owner of this project?'**
+  String collaborationTransferConfirm(String name);
+
+  /// No description provided for @collaborationOwnershipTransferred.
+  ///
+  /// In en, this message translates to:
+  /// **'Ownership transferred'**
+  String get collaborationOwnershipTransferred;
+
+  /// No description provided for @collaborationLeaveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave this shared project?'**
+  String get collaborationLeaveConfirm;
+
+  /// No description provided for @collaborationLeftProject.
+  ///
+  /// In en, this message translates to:
+  /// **'You left the project'**
+  String get collaborationLeftProject;
+
+  /// No description provided for @collaborationDeleteSharedConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this shared project for all members? This cannot be undone.'**
+  String get collaborationDeleteSharedConfirm;
+
+  /// No description provided for @collaborationSharedProjectDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared project deleted'**
+  String get collaborationSharedProjectDeleted;
+
+  /// No description provided for @collaborationLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get collaborationLinkCopied;
+
+  /// No description provided for @collaborationConflictResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflict resolved'**
+  String get collaborationConflictResolved;
+
+  /// No description provided for @collaborationRoleAdministrator.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrator'**
+  String get collaborationRoleAdministrator;
+
+  /// No description provided for @collaborationRoleMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get collaborationRoleMember;
+
+  /// No description provided for @collaborationRoleObserver.
+  ///
+  /// In en, this message translates to:
+  /// **'Observer'**
+  String get collaborationRoleObserver;
+
+  /// No description provided for @collaborationForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to do that'**
+  String get collaborationForbidden;
+
+  /// No description provided for @collaborationSignedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to use shared projects'**
+  String get collaborationSignedOut;
+
+  /// No description provided for @collaborationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Try again'**
+  String get collaborationError;
+
+  /// No description provided for @collaborationSyncPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish synchronizing this project before sharing'**
+  String get collaborationSyncPending;
+
+  /// No description provided for @collaborationMemberFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get collaborationMemberFallback;
+
+  /// No description provided for @collaborationInboxTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared projects & invitations'**
+  String get collaborationInboxTitle;
+
+  /// No description provided for @collaborationInboxSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept invitations and review shared project activity'**
+  String get collaborationInboxSubtitle;
+
+  /// No description provided for @collaborationInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitations'**
+  String get collaborationInvitations;
+
+  /// No description provided for @collaborationNoInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending invitations'**
+  String get collaborationNoInvitations;
+
+  /// No description provided for @collaborationAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get collaborationAccept;
+
+  /// No description provided for @collaborationNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get collaborationNotifications;
+
+  /// No description provided for @collaborationMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get collaborationMarkAllRead;
+
+  /// No description provided for @collaborationNoNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications'**
+  String get collaborationNoNotifications;
+
+  /// No description provided for @collaborationNotificationInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation to a shared project'**
+  String get collaborationNotificationInvitation;
+
+  /// No description provided for @collaborationNotificationDiscussion.
+  ///
+  /// In en, this message translates to:
+  /// **'New comment in a shared project'**
+  String get collaborationNotificationDiscussion;
+
+  /// No description provided for @collaborationNotificationAssignment.
+  ///
+  /// In en, this message translates to:
+  /// **'You were assigned a task'**
+  String get collaborationNotificationAssignment;
+
+  /// No description provided for @collaborationNotificationGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared project activity'**
+  String get collaborationNotificationGeneric;
+
+  /// No description provided for @collaborationInvitationAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation accepted'**
+  String get collaborationInvitationAccepted;
+
+  /// No description provided for @collaborationAssignees.
+  ///
+  /// In en, this message translates to:
+  /// **'Assignees'**
+  String get collaborationAssignees;
+
+  /// No description provided for @collaborationEditAssignees.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit assignees'**
+  String get collaborationEditAssignees;
+
+  /// No description provided for @collaborationNoAssignees.
+  ///
+  /// In en, this message translates to:
+  /// **'No assignees'**
+  String get collaborationNoAssignees;
+
+  /// No description provided for @collaborationComments.
+  ///
+  /// In en, this message translates to:
+  /// **'Comments'**
+  String get collaborationComments;
+
+  /// No description provided for @collaborationCommentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a comment'**
+  String get collaborationCommentHint;
+
+  /// No description provided for @collaborationCommentSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get collaborationCommentSend;
+
+  /// No description provided for @collaborationCommentDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete comment'**
+  String get collaborationCommentDelete;
+
+  /// No description provided for @collaborationSharedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared project'**
+  String get collaborationSharedBadge;
 }
 
 class _AppLocalizationsDelegate

@@ -3054,4 +3054,204 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get billingTryFree => '無料で試す';
+
+  @override
+  String get collaborationShareProject => 'プロジェクトを共有';
+
+  @override
+  String get collaborationShareIntro =>
+      'このプロジェクトを一緒に進める人を招待しましょう。メンバーは編集でき、オブザーバーは閲覧のみできます。';
+
+  @override
+  String get collaborationShareStart => '共有';
+
+  @override
+  String get collaborationMembers => 'メンバー';
+
+  @override
+  String get collaborationPendingInvitations => '保留中の招待';
+
+  @override
+  String get collaborationRevoke => '取り消す';
+
+  @override
+  String get collaborationPublicLink => '公開リンク';
+
+  @override
+  String get collaborationPublicLinkHint => 'リンクを知っている人は誰でもこのプロジェクトを閲覧できます';
+
+  @override
+  String get collaborationCopyLink => 'リンクをコピー';
+
+  @override
+  String get collaborationConflicts => '同期の競合';
+
+  @override
+  String get collaborationLeaveProject => 'プロジェクトから退出';
+
+  @override
+  String get collaborationDeleteSharedProject => '全員から削除';
+
+  @override
+  String get collaborationOwner => 'オーナー';
+
+  @override
+  String get collaborationTransferOwnership => '所有権を移譲';
+
+  @override
+  String get collaborationRemoveMember => 'メンバーを削除';
+
+  @override
+  String get collaborationEmail => 'メールアドレス';
+
+  @override
+  String get collaborationInvite => '招待';
+
+  @override
+  String get collaborationConflictHint => '別のメンバーもこの項目を変更しました';
+
+  @override
+  String get collaborationConflictKeepLocal => '自分の変更を残す';
+
+  @override
+  String get collaborationConflictUseServer => 'サーバー版を使う';
+
+  @override
+  String get collaborationProjectShared => 'プロジェクトを共有しました';
+
+  @override
+  String get collaborationInviteEmailFailed => '招待は保存されましたが、メールを送信できませんでした';
+
+  @override
+  String collaborationInviteSent(String email) {
+    return '$email に招待を送信しました';
+  }
+
+  @override
+  String get collaborationInvitationRevoked => '招待を取り消しました';
+
+  @override
+  String get collaborationRoleUpdated => 'ロールを更新しました';
+
+  @override
+  String collaborationRemoveConfirm(String name) {
+    return '$name をこのプロジェクトから削除しますか？';
+  }
+
+  @override
+  String get collaborationMemberRemoved => 'メンバーを削除しました';
+
+  @override
+  String collaborationTransferConfirm(String name) {
+    return '$name をこのプロジェクトのオーナーにしますか？';
+  }
+
+  @override
+  String get collaborationOwnershipTransferred => '所有権を移譲しました';
+
+  @override
+  String get collaborationLeaveConfirm => 'この共有プロジェクトから退出しますか？';
+
+  @override
+  String get collaborationLeftProject => 'プロジェクトから退出しました';
+
+  @override
+  String get collaborationDeleteSharedConfirm =>
+      'この共有プロジェクトを全メンバーから削除しますか？元に戻せません。';
+
+  @override
+  String get collaborationSharedProjectDeleted => '共有プロジェクトを削除しました';
+
+  @override
+  String get collaborationLinkCopied => 'リンクをコピーしました';
+
+  @override
+  String get collaborationConflictResolved => '競合を解決しました';
+
+  @override
+  String get collaborationRoleAdministrator => '管理者';
+
+  @override
+  String get collaborationRoleMember => 'メンバー';
+
+  @override
+  String get collaborationRoleObserver => 'オブザーバー';
+
+  @override
+  String get collaborationForbidden => '権限がありません';
+
+  @override
+  String get collaborationSignedOut => '共有プロジェクトを使うにはサインインしてください';
+
+  @override
+  String get collaborationError => '問題が発生しました。もう一度お試しください';
+
+  @override
+  String get collaborationSyncPending => '共有する前にこのプロジェクトの同期を完了してください';
+
+  @override
+  String get collaborationMemberFallback => 'メンバー';
+
+  @override
+  String get collaborationInboxTitle => '共有プロジェクトと招待';
+
+  @override
+  String get collaborationInboxSubtitle => '招待を承認し、共有プロジェクトのアクティビティを確認します';
+
+  @override
+  String get collaborationInvitations => '招待';
+
+  @override
+  String get collaborationNoInvitations => '保留中の招待はありません';
+
+  @override
+  String get collaborationAccept => '承認';
+
+  @override
+  String get collaborationNotifications => '通知';
+
+  @override
+  String get collaborationMarkAllRead => 'すべて既読にする';
+
+  @override
+  String get collaborationNoNotifications => '通知はありません';
+
+  @override
+  String get collaborationNotificationInvitation => '共有プロジェクトへの招待';
+
+  @override
+  String get collaborationNotificationDiscussion => '共有プロジェクトの新しいコメント';
+
+  @override
+  String get collaborationNotificationAssignment => 'タスクが割り当てられました';
+
+  @override
+  String get collaborationNotificationGeneric => '共有プロジェクトのアクティビティ';
+
+  @override
+  String get collaborationInvitationAccepted => '招待を承認しました';
+
+  @override
+  String get collaborationAssignees => '担当者';
+
+  @override
+  String get collaborationEditAssignees => '担当者を編集';
+
+  @override
+  String get collaborationNoAssignees => '担当者なし';
+
+  @override
+  String get collaborationComments => 'コメント';
+
+  @override
+  String get collaborationCommentHint => 'コメントを書く';
+
+  @override
+  String get collaborationCommentSend => '送信';
+
+  @override
+  String get collaborationCommentDelete => 'コメントを削除';
+
+  @override
+  String get collaborationSharedBadge => '共有プロジェクト';
 }

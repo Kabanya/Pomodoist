@@ -90,8 +90,10 @@ jq -e --arg entity "$entity_id" \
   "$work_dir/pull.json" >/dev/null
 
 code=$(request POST /rest/v1/rpc/pull_changes "$work_dir/anon-pull.json" "$anon_key" "$pull_body")
-[ "$code" = 400 ] || { echo "Anonymous sync was not rejected (HTTP $code)" >&2; exit 1; }
-jq -e '.message == "Authentication required"' "$work_dir/anon-pull.json" >/dev/null
+# The advisor-hardened wrappers are not executable by anon: PostgREST answers
+# 401 with SQLSTATE 42501 before the function's own authentication check runs.
+[ "$code" = 401 ] || { echo "Anonymous sync was not rejected (HTTP $code)" >&2; exit 1; }
+jq -e '.code == "42501"' "$work_dir/anon-pull.json" >/dev/null
 
 second_email="smoke-$stamp-b@example.invalid"
 second_signup=$(jq -nc --arg email "$second_email" --arg password "$password" \

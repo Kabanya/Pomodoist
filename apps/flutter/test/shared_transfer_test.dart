@@ -142,8 +142,9 @@ class _Account implements AccountClient {
   }) async {
     for (final op in operations) {
       revision++;
-      if (op.payload['name'] is String)
+      if (op.payload['name'] is String) {
         serverName = op.payload['name'] as String;
+      }
     }
     return AccountSyncPushResult(serverRevision: revision, applied: const []);
   }

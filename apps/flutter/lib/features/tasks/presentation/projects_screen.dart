@@ -19,6 +19,7 @@ import '../../../app/widgets/app_context_menu_region.dart';
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
 import '../domain/task_models.dart';
+import '../../collaboration/presentation/shared_project_badge.dart';
 import 'project_list_data.dart';
 import 'widgets/create_project_dialog.dart';
 import 'widgets/project_context_menu.dart';
@@ -441,6 +442,7 @@ class _ProjectListTile extends StatelessWidget {
                     style: titleStyle,
                   ),
                 ),
+                SharedProjectBadge(project: project),
                 if (count > 0)
                   Text(
                     '$count',

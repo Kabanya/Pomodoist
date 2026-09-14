@@ -417,7 +417,18 @@ class KanbanTransitionCoordinator {
     String statusId,
     DateTime timestamp,
   ) async {
-    if (!await _sameScope(taskId, statusId)) {
+    final task = await (_db.select(
+      _db.tasks,
+    )..where((row) => row.id.equals(taskId))).getSingleOrNull();
+    final status = await (_db.select(
+      _db.labels,
+    )..where((row) => row.id.equals(statusId))).getSingleOrNull();
+    if (task == null || status == null) {
+      // ponytail: missing kanban seed label degrades to "no status" instead of
+      // failing the whole task mutation; ensureSeedData normally guarantees it.
+      return false;
+    }
+    if (task.scopeId != status.scopeId) {
       throw ArgumentError.value(
         statusId,
         'statusId',

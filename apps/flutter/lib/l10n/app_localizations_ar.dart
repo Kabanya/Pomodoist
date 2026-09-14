@@ -3096,4 +3096,207 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get billingTryFree => 'جرّب مجانًا';
+
+  @override
+  String get collaborationShareProject => 'مشاركة المشروع';
+
+  @override
+  String get collaborationShareIntro =>
+      'ادعُ أشخاصًا للعمل معًا على هذا المشروع. يمكن للأعضاء التحرير بينما يمكن للمراقبين العرض فقط.';
+
+  @override
+  String get collaborationShareStart => 'مشاركة';
+
+  @override
+  String get collaborationMembers => 'الأعضاء';
+
+  @override
+  String get collaborationPendingInvitations => 'الدعوات المعلّقة';
+
+  @override
+  String get collaborationRevoke => 'إبطال';
+
+  @override
+  String get collaborationPublicLink => 'رابط عام';
+
+  @override
+  String get collaborationPublicLinkHint =>
+      'يمكن لأي شخص لديه الرابط عرض هذا المشروع';
+
+  @override
+  String get collaborationCopyLink => 'نسخ الرابط';
+
+  @override
+  String get collaborationConflicts => 'تعارضات المزامنة';
+
+  @override
+  String get collaborationLeaveProject => 'مغادرة المشروع';
+
+  @override
+  String get collaborationDeleteSharedProject => 'حذف للجميع';
+
+  @override
+  String get collaborationOwner => 'المالك';
+
+  @override
+  String get collaborationTransferOwnership => 'نقل الملكية';
+
+  @override
+  String get collaborationRemoveMember => 'إزالة العضو';
+
+  @override
+  String get collaborationEmail => 'البريد الإلكتروني';
+
+  @override
+  String get collaborationInvite => 'دعوة';
+
+  @override
+  String get collaborationConflictHint => 'قام عضو آخر بتعديل هذا العنصر أيضًا';
+
+  @override
+  String get collaborationConflictKeepLocal => 'الإبقاء على نسختي';
+
+  @override
+  String get collaborationConflictUseServer => 'استخدام نسخة الخادم';
+
+  @override
+  String get collaborationProjectShared => 'تمت مشاركة المشروع';
+
+  @override
+  String get collaborationInviteEmailFailed =>
+      'تم حفظ الدعوة لكن تعذّر إرسال البريد';
+
+  @override
+  String collaborationInviteSent(String email) {
+    return 'تم إرسال الدعوة إلى $email';
+  }
+
+  @override
+  String get collaborationInvitationRevoked => 'تم إبطال الدعوة';
+
+  @override
+  String get collaborationRoleUpdated => 'تم تحديث الدور';
+
+  @override
+  String collaborationRemoveConfirm(String name) {
+    return 'إزالة $name من هذا المشروع؟';
+  }
+
+  @override
+  String get collaborationMemberRemoved => 'تمت إزالة العضو';
+
+  @override
+  String collaborationTransferConfirm(String name) {
+    return 'تعيين $name مالكًا لهذا المشروع؟';
+  }
+
+  @override
+  String get collaborationOwnershipTransferred => 'تم نقل الملكية';
+
+  @override
+  String get collaborationLeaveConfirm => 'مغادرة هذا المشروع المشترك؟';
+
+  @override
+  String get collaborationLeftProject => 'لقد غادرت المشروع';
+
+  @override
+  String get collaborationDeleteSharedConfirm =>
+      'حذف هذا المشروع المشترك لجميع الأعضاء؟ لا يمكن التراجع عن ذلك.';
+
+  @override
+  String get collaborationSharedProjectDeleted => 'تم حذف المشروع المشترك';
+
+  @override
+  String get collaborationLinkCopied => 'تم نسخ الرابط';
+
+  @override
+  String get collaborationConflictResolved => 'تم حل التعارض';
+
+  @override
+  String get collaborationRoleAdministrator => 'مسؤول';
+
+  @override
+  String get collaborationRoleMember => 'عضو';
+
+  @override
+  String get collaborationRoleObserver => 'مراقب';
+
+  @override
+  String get collaborationForbidden => 'ليس لديك إذن للقيام بذلك';
+
+  @override
+  String get collaborationSignedOut => 'سجّل الدخول لاستخدام المشاريع المشتركة';
+
+  @override
+  String get collaborationError => 'حدث خطأ ما. حاول مرة أخرى';
+
+  @override
+  String get collaborationSyncPending => 'أكمل مزامنة هذا المشروع قبل مشاركته';
+
+  @override
+  String get collaborationMemberFallback => 'عضو';
+
+  @override
+  String get collaborationInboxTitle => 'المشاريع المشتركة والدعوات';
+
+  @override
+  String get collaborationInboxSubtitle =>
+      'اقبل الدعوات وتابع نشاط المشاريع المشتركة';
+
+  @override
+  String get collaborationInvitations => 'الدعوات';
+
+  @override
+  String get collaborationNoInvitations => 'لا توجد دعوات معلّقة';
+
+  @override
+  String get collaborationAccept => 'قبول';
+
+  @override
+  String get collaborationNotifications => 'الإشعارات';
+
+  @override
+  String get collaborationMarkAllRead => 'تعليم الكل كمقروء';
+
+  @override
+  String get collaborationNoNotifications => 'لا توجد إشعارات';
+
+  @override
+  String get collaborationNotificationInvitation => 'دعوة إلى مشروع مشترك';
+
+  @override
+  String get collaborationNotificationDiscussion => 'تعليق جديد في مشروع مشترك';
+
+  @override
+  String get collaborationNotificationAssignment => 'تم إسناد مهمة إليك';
+
+  @override
+  String get collaborationNotificationGeneric => 'نشاط مشروع مشترك';
+
+  @override
+  String get collaborationInvitationAccepted => 'تم قبول الدعوة';
+
+  @override
+  String get collaborationAssignees => 'المكلّفون';
+
+  @override
+  String get collaborationEditAssignees => 'تعديل المكلّفين';
+
+  @override
+  String get collaborationNoAssignees => 'لا يوجد مكلّفون';
+
+  @override
+  String get collaborationComments => 'التعليقات';
+
+  @override
+  String get collaborationCommentHint => 'اكتب تعليقًا';
+
+  @override
+  String get collaborationCommentSend => 'إرسال';
+
+  @override
+  String get collaborationCommentDelete => 'حذف التعليق';
+
+  @override
+  String get collaborationSharedBadge => 'مشروع مشترك';
 }

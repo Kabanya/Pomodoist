@@ -10,8 +10,9 @@ extension SharedAccountSync on AccountSyncEngine {
     } on CollaborationException catch (error) {
       // Older servers keep the existing personal API usable until this endpoint is installed.
       if (error.code == 'function_not_found' &&
-          (await _db.select(_db.sharedScopes).get()).isEmpty)
+          (await _db.select(_db.sharedScopes).get()).isEmpty) {
         return {};
+      }
       rethrow;
     }
     final scopes = collaborationMaps(state['scopes']);
@@ -284,8 +285,9 @@ extension SharedAccountSync on AccountSyncEngine {
       'task_label',
       'task_kanban_status',
       'task_completion',
-    }.contains(type))
+    }.contains(type)) {
       return;
+    }
     final pending =
         await (_db.select(_db.syncCommands)
               ..where(
@@ -296,8 +298,9 @@ extension SharedAccountSync on AccountSyncEngine {
               )
               ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]))
             .get();
-    if (type == 'task_completion' && data['userId'] != _account.currentUserId)
+    if (type == 'task_completion' && data['userId'] != _account.currentUserId) {
       return;
+    }
     final normalized = <String, dynamic>{
       'id': id,
       'userId': localUserId,
@@ -334,8 +337,9 @@ extension SharedAccountSync on AccountSyncEngine {
                   payload,
                   type,
                 ) !=
-                id)
+                id) {
           continue;
+        }
         if (command.type == 'task.assign') {
           final assignees =
               collaborationIds(normalized['assigneeIdsJson'] as String).toSet()
@@ -504,8 +508,9 @@ extension SharedAccountSync on AccountSyncEngine {
               !acceptedFields.containsAll(_sharedCommandPatch(next).keys) ||
               !command.type.endsWith('.create') &&
                   !command.type.endsWith('.update') ||
-              !next.type.endsWith('.update'))
+              !next.type.endsWith('.update')) {
             continue;
+          }
           final accepted = applied
               .where((item) => item['opId'] == command.uuid)
               .firstOrNull;

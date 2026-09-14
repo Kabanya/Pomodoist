@@ -57,11 +57,11 @@ void main() {
       'run-linux': '--dart-define-from-file="$_repoRoot/local.env"',
       'web': '--dart-define-from-file="$_repoRoot/local.env"',
       'web-release': '--dart-define-from-file="$_repoRoot/local.env"',
-      'linux-debug': '--dart-define-from-file="$_repoRoot/linux.env"',
+      'linux-debug': '--dart-define-from-file="$_repoRoot/staging.env"',
       'linux-release': '--dart-define-from-file="$_repoRoot/linux.env"',
-      'windows-debug': '-ConfigFile "C:/windows.env"',
+      'windows-debug': '-ConfigFile "staging.env"',
       'windows-release': '-ConfigFile "C:/windows.env"',
-      'macos-debug': '--dart-define-from-file="$_repoRoot/local.env"',
+      'macos-debug': '--dart-define-from-file="$_repoRoot/staging.env"',
       'macos-release': '--dart-define-from-file="$_repoRoot/testflight.env"',
     };
 
@@ -76,8 +76,44 @@ void main() {
         'ANDROID_CONFIG=android.env',
         'LINUX_CONFIG=linux.env',
         'WINDOWS_CONFIG=C:/windows.env',
+        'STAGING_CONFIG=staging.env',
         'TESTFLIGHT_CONFIG=testflight.env',
         'POMODOIST_RELEASE=0123456789abcdef0123456789abcdef01234567',
+      ], workingDirectory: _repoRoot);
+
+      expect(result.exitCode, 0, reason: '${entry.key}: ${result.stderr}');
+      expect(
+        result.stdout.toString(),
+        contains(entry.value),
+        reason: entry.key,
+      );
+    }
+  });
+
+  test('desktop build modes accept a per-target configuration override', () {
+    final expectedOutputs = <String, String>{
+      'macos-debug': '--dart-define-from-file="$_repoRoot/prod.env"',
+      'macos-profile': '--dart-define-from-file="$_repoRoot/prod.env"',
+      'macos-release': '--dart-define-from-file="$_repoRoot/prod.env"',
+      'linux-debug': '--dart-define-from-file="$_repoRoot/prod.env"',
+      'linux-profile': '--dart-define-from-file="$_repoRoot/prod.env"',
+      'linux-release': '--config "prod.env"',
+      'windows-debug': '-ConfigFile "C:/prod.env"',
+      'windows-profile': '-ConfigFile "C:/prod.env"',
+      'windows-release': '-ConfigFile "C:/prod.env"',
+    };
+
+    for (final entry in expectedOutputs.entries) {
+      final name = entry.key.toUpperCase().replaceAll('-', '_');
+      final value = entry.key.startsWith('windows') ? 'C:/prod.env' : 'prod.env';
+      final result = Process.runSync(_makeExecutable(), [
+        '--no-print-directory',
+        '--dry-run',
+        entry.key,
+        'FLUTTER=flutter-under-test',
+        'DART=dart-under-test',
+        'POMODOIST_RELEASE=0123456789abcdef0123456789abcdef01234567',
+        '${name}_CONFIG=$value',
       ], workingDirectory: _repoRoot);
 
       expect(result.exitCode, 0, reason: '${entry.key}: ${result.stderr}');

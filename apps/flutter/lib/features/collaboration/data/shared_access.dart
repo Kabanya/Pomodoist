@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:drift/drift.dart';
 import '../../../core/db/app_database.dart';
 import '../domain/collaboration_models.dart';
 
@@ -118,8 +117,9 @@ class SharedAccess {
     final scopeId = await projectScope(id);
     final access = await scope(scopeId);
     if (moving && access?.rootProjectId == id) {
-      if (await projectScope(destinationId) != null)
+      if (await projectScope(destinationId) != null) {
         throw const CollaborationException('cross_scope_move');
+      }
       return;
     }
     await requireEdit(scopeId);

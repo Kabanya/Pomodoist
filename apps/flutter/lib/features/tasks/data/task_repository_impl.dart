@@ -436,8 +436,9 @@ class DriftTaskRepository implements TaskRepository {
 
       for (final row in rows) {
         if (row.scopeId != null &&
-            !((await _access.scope(row.scopeId))?.canEdit ?? false))
+            !((await _access.scope(row.scopeId))?.canEdit ?? false)) {
           continue;
+        }
         final schedule = TaskSchedule.fromJsonString(row.dueJson);
         final recurrence = schedule?.recurrence;
         if (schedule == null || recurrence == null) {
@@ -1406,8 +1407,9 @@ class DriftTaskRepository implements TaskRepository {
     final label = await (_db.select(
       _db.labels,
     )..where((row) => row.id.equals(labelId))).getSingle();
-    if (task.scopeId != label.scopeId)
+    if (task.scopeId != label.scopeId) {
       throw const CollaborationException('cross_scope_label');
+    }
     await _db
         .into(_db.taskLabels)
         .insertOnConflictUpdate(
@@ -1426,11 +1428,13 @@ class DriftTaskRepository implements TaskRepository {
   }
 
   bool _matchesQuery(TaskItem task, TaskQuery query) {
-    if (query.creatorId != null && task.createdBy != query.creatorId)
+    if (query.creatorId != null && task.createdBy != query.creatorId) {
       return false;
+    }
     if (query.assigneeId != null &&
-        !task.assigneeIds.contains(query.assigneeId))
+        !task.assigneeIds.contains(query.assigneeId)) {
       return false;
+    }
     final now = query.now ?? DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final due = task.dueDate;
@@ -1959,7 +1963,6 @@ class DriftLabelRepository implements LabelRepository {
     : _uuid = uuid ?? const Uuid();
 
   final AppDatabase _db;
-  SharedAccess get _access => SharedAccess(_db);
   final SyncQueueRepository _syncQueue;
   final Uuid _uuid;
 

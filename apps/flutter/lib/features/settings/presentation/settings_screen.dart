@@ -32,6 +32,7 @@ import '../../integrations/google_calendar/presentation/google_calendar_settings
 import '../../voice/data/voice_transcription_mode.dart';
 import 'settings_components.dart';
 import 'settings_navigation.dart';
+import '../../collaboration/presentation/collaboration_inbox_dialog.dart';
 import 'settings_subscription.dart';
 import 'account_sign_out_button.dart';
 import 'account_nickname_dialog.dart';
@@ -1073,10 +1074,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     Icon(_icon(section), size: 18),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        _title(section),
-                        textAlign: TextAlign.start,
-                      ),
+                      child: Text(_title(section), textAlign: TextAlign.start),
                     ),
                     if (!wide) const Icon(LucideIcons.chevronRight, size: 16),
                   ],
@@ -1372,6 +1370,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               _ConnectedAgentsSection(
                 key: ValueKey(account!.currentUserId),
                 account: account,
+              ),
+              const SizedBox(height: 24),
+              SettingsRow(
+                title: l10n.collaborationInboxTitle,
+                subtitle: l10n.collaborationInboxSubtitle,
+                onTap: () => showCollaborationInboxDialog(context),
+                control: const Icon(LucideIcons.chevronRight, size: 18),
               ),
               const SizedBox(height: 24),
             ],

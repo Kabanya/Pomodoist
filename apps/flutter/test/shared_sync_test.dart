@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:uuid/uuid.dart';
 import 'package:app_account/app_account.dart';
-import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/core/db/app_database.dart';
@@ -94,7 +93,7 @@ void main() {
           pushes.add(request);
           final ops = (request['operations'] as List)
               .cast<Map<String, dynamic>>();
-          if (rejected)
+          if (rejected) {
             return {
               'applied': [],
               'conflicts': [],
@@ -102,6 +101,7 @@ void main() {
                 {'opId': ops.first['opId'], 'code': 'invalid_field'},
               ],
             };
+          }
           final fields = (ops.first['payload'] as Map).keys
               .where(
                 (key) =>
@@ -109,7 +109,7 @@ void main() {
                     (ops.first['baseRevision'] as int),
               )
               .toList();
-          if (conflict || fields.isNotEmpty)
+          if (conflict || fields.isNotEmpty) {
             return {
               'conflicts': [
                 {
@@ -122,14 +122,16 @@ void main() {
               'applied': [],
               'rejected': [],
             };
+          }
           for (final op in ops) {
             revision++;
             if (op['entityType'] == 'task') {
               task = {...task, ...(op['payload'] as Map<String, dynamic>)};
               taskRevision = revision;
               for (final key in ['content', 'description']) {
-                if ((op['payload'] as Map).containsKey(key))
+                if ((op['payload'] as Map).containsKey(key)) {
                   fieldRevisions[key] = revision;
+                }
               }
             } else {
               extraChanges.add({

@@ -16,6 +16,7 @@ import '../../features/productivity/domain/achievement_models.dart';
 import '../../features/productivity/presentation/achievement_announcements.dart';
 import '../../features/focus/presentation/focus_completion_celebration.dart';
 import '../../features/tasks/domain/task_models.dart';
+import '../../features/collaboration/presentation/shared_project_badge.dart';
 import '../../features/tasks/presentation/project_list_data.dart';
 import '../../features/tasks/presentation/widgets/create_project_dialog.dart';
 import '../../features/tasks/presentation/widgets/project_context_menu.dart';
@@ -1526,6 +1527,7 @@ class _SidebarProjectTile extends StatelessWidget {
                     ),
                   ),
                 ),
+                SharedProjectBadge(project: project),
                 if (count > 0)
                   Text(
                     '$count',

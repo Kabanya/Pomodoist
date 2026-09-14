@@ -2980,4 +2980,202 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get billingTryFree => '免费试用';
+
+  @override
+  String get collaborationShareProject => '共享项目';
+
+  @override
+  String get collaborationShareIntro => '邀请他人一起处理此项目。成员可以编辑，观察者只能查看。';
+
+  @override
+  String get collaborationShareStart => '共享';
+
+  @override
+  String get collaborationMembers => '成员';
+
+  @override
+  String get collaborationPendingInvitations => '待处理的邀请';
+
+  @override
+  String get collaborationRevoke => '撤销';
+
+  @override
+  String get collaborationPublicLink => '公开链接';
+
+  @override
+  String get collaborationPublicLinkHint => '任何拥有链接的人都可以查看此项目';
+
+  @override
+  String get collaborationCopyLink => '复制链接';
+
+  @override
+  String get collaborationConflicts => '同步冲突';
+
+  @override
+  String get collaborationLeaveProject => '退出项目';
+
+  @override
+  String get collaborationDeleteSharedProject => '为所有人删除';
+
+  @override
+  String get collaborationOwner => '所有者';
+
+  @override
+  String get collaborationTransferOwnership => '转移所有权';
+
+  @override
+  String get collaborationRemoveMember => '移除成员';
+
+  @override
+  String get collaborationEmail => '电子邮件';
+
+  @override
+  String get collaborationInvite => '邀请';
+
+  @override
+  String get collaborationConflictHint => '另一位成员也修改了此项';
+
+  @override
+  String get collaborationConflictKeepLocal => '保留我的版本';
+
+  @override
+  String get collaborationConflictUseServer => '使用服务器版本';
+
+  @override
+  String get collaborationProjectShared => '项目已共享';
+
+  @override
+  String get collaborationInviteEmailFailed => '邀请已保存，但邮件发送失败';
+
+  @override
+  String collaborationInviteSent(String email) {
+    return '邀请已发送至 $email';
+  }
+
+  @override
+  String get collaborationInvitationRevoked => '邀请已撤销';
+
+  @override
+  String get collaborationRoleUpdated => '角色已更新';
+
+  @override
+  String collaborationRemoveConfirm(String name) {
+    return '将 $name 移除此项目？';
+  }
+
+  @override
+  String get collaborationMemberRemoved => '成员已移除';
+
+  @override
+  String collaborationTransferConfirm(String name) {
+    return '将 $name 设为项目所有者？';
+  }
+
+  @override
+  String get collaborationOwnershipTransferred => '所有权已转移';
+
+  @override
+  String get collaborationLeaveConfirm => '退出此共享项目？';
+
+  @override
+  String get collaborationLeftProject => '你已退出项目';
+
+  @override
+  String get collaborationDeleteSharedConfirm => '为所有成员删除此共享项目？此操作无法撤销。';
+
+  @override
+  String get collaborationSharedProjectDeleted => '共享项目已删除';
+
+  @override
+  String get collaborationLinkCopied => '链接已复制';
+
+  @override
+  String get collaborationConflictResolved => '冲突已解决';
+
+  @override
+  String get collaborationRoleAdministrator => '管理员';
+
+  @override
+  String get collaborationRoleMember => '成员';
+
+  @override
+  String get collaborationRoleObserver => '观察者';
+
+  @override
+  String get collaborationForbidden => '你没有权限执行此操作';
+
+  @override
+  String get collaborationSignedOut => '登录后使用共享项目';
+
+  @override
+  String get collaborationError => '出现错误，请重试';
+
+  @override
+  String get collaborationSyncPending => '共享前请完成此项目的同步';
+
+  @override
+  String get collaborationMemberFallback => '成员';
+
+  @override
+  String get collaborationInboxTitle => '共享项目和邀请';
+
+  @override
+  String get collaborationInboxSubtitle => '接受邀请并查看共享项目动态';
+
+  @override
+  String get collaborationInvitations => '邀请';
+
+  @override
+  String get collaborationNoInvitations => '没有待处理的邀请';
+
+  @override
+  String get collaborationAccept => '接受';
+
+  @override
+  String get collaborationNotifications => '通知';
+
+  @override
+  String get collaborationMarkAllRead => '全部标为已读';
+
+  @override
+  String get collaborationNoNotifications => '没有通知';
+
+  @override
+  String get collaborationNotificationInvitation => '共享项目邀请';
+
+  @override
+  String get collaborationNotificationDiscussion => '共享项目中的新评论';
+
+  @override
+  String get collaborationNotificationAssignment => '你被分配了一项任务';
+
+  @override
+  String get collaborationNotificationGeneric => '共享项目动态';
+
+  @override
+  String get collaborationInvitationAccepted => '已接受邀请';
+
+  @override
+  String get collaborationAssignees => '负责人';
+
+  @override
+  String get collaborationEditAssignees => '编辑负责人';
+
+  @override
+  String get collaborationNoAssignees => '无负责人';
+
+  @override
+  String get collaborationComments => '评论';
+
+  @override
+  String get collaborationCommentHint => '写评论';
+
+  @override
+  String get collaborationCommentSend => '发送';
+
+  @override
+  String get collaborationCommentDelete => '删除评论';
+
+  @override
+  String get collaborationSharedBadge => '共享项目';
 }

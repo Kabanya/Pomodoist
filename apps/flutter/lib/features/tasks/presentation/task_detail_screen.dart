@@ -28,6 +28,7 @@ import '../../../app/theme/app_theme.dart';
 import '../../../app/widgets/action_feedback.dart';
 import '../../../app/widgets/app_date_time_picker.dart';
 import '../../focus/domain/focus_models.dart';
+import '../../collaboration/presentation/task_collaboration_section.dart';
 import '../../focus/presentation/focus_view_mode.dart';
 import '../../planning/domain/quick_add_parser.dart';
 import '../domain/task_focus_estimate.dart';
@@ -323,6 +324,8 @@ class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                             ),
                             const SizedBox(height: 20),
                             _SubtasksSection(task: item),
+                            const SizedBox(height: 16),
+                            TaskCollaborationSection(task: item),
                             const SizedBox(height: 16),
                             ExpansionTile(
                               tilePadding: EdgeInsets.zero,

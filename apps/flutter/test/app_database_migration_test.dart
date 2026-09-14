@@ -13,7 +13,7 @@ void main() {
   const inProgressId = 'kanban-status-in-progress-v1';
   const doneId = 'kanban-status-done-v1';
 
-  group('schema v7', () {
+  group('schema v8', () {
     late AppDatabase db;
     migrations.InitializedSchema? initializedV3;
 
@@ -41,15 +41,15 @@ void main() {
         (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
           'user_version',
         ),
-        7,
+        8,
       );
     });
 
     test('fresh database creates compact Kanban schema and index', () async {
       db = AppDatabase(NativeDatabase.memory());
 
-      expect(db.schemaVersion, 7);
-      if (db.schemaVersion != 7) {
+      expect(db.schemaVersion, 8);
+      if (db.schemaVersion != 8) {
         return;
       }
       await db
@@ -125,7 +125,7 @@ void main() {
         throwsA(
           predicate<Object>(
             (error) => error.toString().contains(
-              'UNIQUE constraint failed: labels.system_key',
+              "UNIQUE constraint failed: index 'labels_unique_kanban_system_key'",
             ),
           ),
         ),
@@ -148,8 +148,8 @@ void main() {
         final version = await db
             .customSelect('PRAGMA user_version')
             .getSingle();
-        expect(version.read<int>('user_version'), 7);
-        if (version.read<int>('user_version') != 7) {
+        expect(version.read<int>('user_version'), 8);
+        if (version.read<int>('user_version') != 8) {
           return;
         }
         final userLabels = await db
@@ -235,7 +235,7 @@ void main() {
 
       final version = await db.customSelect('PRAGMA user_version').getSingle();
 
-      expect(version.read<int>('user_version'), 7);
+      expect(version.read<int>('user_version'), 8);
       expect(
         await _columnNames(db, 'labels'),
         containsAll(['kind', 'system_key', 'icon']),
@@ -250,7 +250,7 @@ void main() {
       final retriedVersion = await db
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(retriedVersion.read<int>('user_version'), 7);
+      expect(retriedVersion.read<int>('user_version'), 8);
     });
   });
 

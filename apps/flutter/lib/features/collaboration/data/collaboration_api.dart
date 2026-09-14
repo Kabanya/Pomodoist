@@ -24,12 +24,14 @@ class CollaborationApi {
         data is Map ? data['error']?.toString() : null,
       );
     }
-    if (response.status == 404)
+    if (response.status == 404) {
       throw const CollaborationException('function_not_found');
+    }
     final data = response.data;
     if (data is! Map) throw const CollaborationException('invalid_response');
-    if (response.status >= 400 && data['error'] == null)
+    if (response.status >= 400 && data['error'] == null) {
       throw const CollaborationException('request_failed');
+    }
     return Map<String, dynamic>.from(data);
   });
   final Future<Map<String, dynamic>> Function(Map<String, dynamic> body) invoke;

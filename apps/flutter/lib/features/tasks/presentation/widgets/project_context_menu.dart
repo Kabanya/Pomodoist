@@ -17,6 +17,7 @@ import '../../domain/project_colors.dart';
 import '../../domain/task_models.dart';
 import '../project_localizations.dart';
 import 'create_project_dialog.dart';
+import '../../../collaboration/presentation/share_project_dialog.dart';
 import 'project_color_picker.dart';
 import 'project_icon.dart';
 import 'project_tree_controls.dart';
@@ -114,6 +115,12 @@ class _ProjectContextMenuState extends ConsumerState<ProjectContextMenu> {
                 child: Text(l10n.projectMoveDown),
               ),
           ],
+          if (!project.isArchived && project.id != inboxProjectId)
+            ShadContextMenuItem(
+              leading: const Icon(LucideIcons.users, size: 16),
+              onPressed: () => showShareProjectDialog(context, project),
+              child: Text(l10n.collaborationShareProject),
+            ),
           ShadContextMenuItem(
             leading: const Icon(LucideIcons.pencil, size: 16),
             onPressed: () => showRenameProjectDialog(

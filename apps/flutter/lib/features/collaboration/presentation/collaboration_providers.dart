@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/account_providers.dart';
 import '../../../app/providers.dart';
+import '../../../core/db/app_database.dart';
 import '../data/collaboration_api.dart';
 import '../data/collaboration_repository.dart';
+import '../data/shared_access.dart';
 import '../domain/collaboration_models.dart';
 
 final collaborationRepositoryProvider = Provider<CollaborationRepository?>((
@@ -41,3 +43,38 @@ final collaborationEntitiesProvider =
               ) ??
           Stream.value([]),
     );
+
+final collaborationActorIdProvider = FutureProvider<String>(
+  (ref) => SharedAccess(ref.watch(appDatabaseProvider)).actorId(),
+);
+
+final sharedScopeForProjectProvider = Provider.family<SharedScope?, String>((
+  ref,
+  projectId,
+) {
+  final scopes = ref.watch(sharedScopesProvider).value ?? const <SharedScope>[];
+  for (final scope in scopes) {
+    if (scope.rootProjectId == projectId) return scope;
+  }
+  return null;
+});
+
+final sharedScopeProvider = Provider.family<SharedScope?, String>((
+  ref,
+  scopeId,
+) {
+  final scopes = ref.watch(sharedScopesProvider).value ?? const <SharedScope>[];
+  for (final scope in scopes) {
+    if (scope.id == scopeId) return scope;
+  }
+  return null;
+});
+
+final scopeConflictsProvider =
+    StreamProvider.family<List<SyncCommandRow>, String>((ref, scopeId) {
+      final repository = ref.watch(collaborationRepositoryProvider);
+      if (repository == null) return Stream.value(const []);
+      return repository.watchConflicts().map(
+        (rows) => rows.where((row) => row.scopeId == scopeId).toList(),
+      );
+    });
