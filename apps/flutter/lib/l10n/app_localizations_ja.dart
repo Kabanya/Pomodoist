@@ -3010,4 +3010,48 @@ class AppLocalizationsJa extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String billingOfferDays(int count) {
+    return '$count日間';
+  }
+
+  @override
+  String billingOfferMonths(int count) {
+    return '$countか月間';
+  }
+
+  @override
+  String billingOfferYears(int count) {
+    return '$count年間';
+  }
+
+  @override
+  String billingTrialFree(String duration) {
+    return '$duration無料';
+  }
+
+  @override
+  String billingTrialRenewal(String price) {
+    return 'その後は$price。キャンセルしない限り自動更新されます。';
+  }
+
+  @override
+  String get billingReturnBadge => 'Proに戻る';
+
+  @override
+  String billingReturnSubtitle(String duration, String price) {
+    return '$durationの割引後は$price。キャンセルしない限り自動更新されます。';
+  }
+
+  @override
+  String billingReturnPending(String date) {
+    return '割引は$dateまで予約されています。購入をキャンセルした場合は、その後に再試行できます。';
+  }
+
+  @override
+  String get billingReturnFailed => '再加入オファーを確認できませんでした。もう一度お試しください。';
+
+  @override
+  String get billingTryFree => '無料で試す';
 }

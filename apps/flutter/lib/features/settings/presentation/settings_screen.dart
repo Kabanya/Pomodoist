@@ -1072,7 +1072,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   children: [
                     Icon(_icon(section), size: 18),
                     const SizedBox(width: 12),
-                    Expanded(child: Text(_title(section))),
+                    Expanded(
+                      child: Text(
+                        _title(section),
+                        textAlign: TextAlign.start,
+                      ),
+                    ),
                     if (!wide) const Icon(LucideIcons.chevronRight, size: 16),
                   ],
                 ),

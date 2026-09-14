@@ -201,6 +201,21 @@ export async function verifyAppleAppStoreNotificationJws(
   };
 }
 
+export async function verifyAppleRenewalInfoJws(
+  jws: string,
+  options: VerifyOptions,
+): Promise<Record<string, unknown>> {
+  const payload = await verifyAppleJwsPayload(jws, options, "Renewal info");
+  if (
+    !(options.allowedEnvironments ?? ["Production", "Sandbox"])
+      .includes(stringClaim(payload.environment))
+  ) {
+    throw new Error("Renewal environment is not allowed.");
+  }
+  stringClaim(payload.originalTransactionId);
+  return payload;
+}
+
 async function verifyAppleJwsPayload(
   jws: string,
   options: VerifyOptions,

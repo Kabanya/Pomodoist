@@ -4,6 +4,7 @@ import 'package:app_account/app_account.dart';
 import 'package:app_voice/app_voice.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
     show Supabase, UserAttributes, FunctionException;
@@ -307,11 +308,17 @@ final accountOverviewProvider = FutureProvider<AccountOverview?>((ref) async {
   unawaited(
     (() async {
       try {
+        final info = await PackageInfo.fromPlatform().timeout(timeout);
         await account
             .registerInstall(
               appId: AccountAppId.pomodoist,
               deviceId: await ref.read(pomodoistDeviceIdProvider.future),
-              platform: 'flutter',
+              platform: kIsWeb
+                  ? 'web'
+                  : defaultTargetPlatform.name.toLowerCase(),
+              appVersion: info.buildNumber.isEmpty
+                  ? info.version
+                  : '${info.version}+${info.buildNumber}',
             )
             .timeout(timeout);
       } on Object {

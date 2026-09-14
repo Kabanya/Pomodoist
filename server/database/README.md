@@ -35,6 +35,108 @@ The retired quota overload that accepted a client-supplied limit is absent. Prof
 
 ## Verification
 
+### Advisor warnings and RPC permissions
+
+Migration `20260913222604_pomodoist_advisor_rpc_security.sql`, applied to the hosted
+project, keeps the seven account/sync RPC signatures in
+`public` as `SECURITY INVOKER` wrappers. Their `SECURITY DEFINER` implementations
+live in `private`, derive the account from `auth.uid()`, and retain the UTC quota
+reader settings. `authenticated` and `service_role` can execute these entrypoints;
+`PUBLIC` and `anon` cannot. Schema `USAGE` for `authenticated` permits resolving
+those functions but grants no access to private tables or arbitrary-user helpers.
+Keep `private` out of the exposed Data API schemas.
+
+The migration also fixes the timestamp trigger's search path and evaluates the
+current user once per statement in the 11 account/sync RLS policies. The automated
+`pomodoist_advisor_security.test.sql` checks roles, tenant boundaries, private
+entrypoints, trigger behavior, and policy/function definitions.
+
+The expected hosted advisor result is one WARN: leaked password protection is
+disabled on the retained Free plan. Supabase requires Pro or above for that feature.
+INFO notices about indexes and intentionally closed RLS tables are outside this
+change. Do not grant access merely to silence those notices.
+
+Deployment verification confirmed one security WARN and no performance WARNs.
+All 456 SQL assertions across 18 test files passed on isolated PostgreSQL 17 with
+Supabase Auth migrations and a minimal Realtime fixture; no manual UI checks or
+Realtime service integration checks were performed for this database-only change.
+
+### Sync validation and client rollout
+
+`20260913211408_pomodoist_core_quota_integrity_sync_validation.sql` adds a positive
+usage-period interval and a composite reference to the quota definition. It
+validates existing rows atomically and does not rewrite usage. A definition with
+usage history cannot be deleted. Lowering a limit below already recorded usage
+remains valid.
+
+The shared sync writer checks the complete operation array, string identifiers,
+`upsert`/`delete` commands and object payloads before writing. SQL NULL/empty
+batches, snake_case aliases and the existing missing-command/payload defaults
+remain supported. Validation errors use SQLSTATE `22023` and do not echo task
+contents. Receipt replay, conflict handling and integration transactions remain
+unchanged.
+
+Client batch limits are deliberately **not enabled by the normal migration set**.
+The prepared script is
+`database/pending-migrations/20260913210628_pomodoist_core_client_sync_batch_limits.sql`.
+It replaces `private.push_changes`, behind the public invoker wrapper, to limit
+the client RPC to 1,000 operations and 8,388,608 bytes
+of `p_operations::text` (PostgreSQL's JSONB text representation, including UTF-8
+bytes). Larger batches return HTTP 413 / SQLSTATE `PT413`. Trusted integration
+writers retain their existing atomic batch behavior.
+
+Flutter and the extension keep their ordinary 100-operation batches and halve a
+rejected batch on HTTP 413. They preserve operation IDs and order. Other errors,
+or an oversized single operation, stop the attempt with pending data retained.
+Flutter replays already accepted halves safely through receipts; the extension
+persists each acknowledged part before sending the next one.
+
+Release checklist:
+
+- [x] Apply and automatically verify quota integrity and shared sync validation
+  on the hosted project (`20260913211408`); include the same migration in self-hosted releases.
+- [ ] Publish Flutter and extension releases containing automatic 413 splitting.
+- [ ] After publication, create a fresh migration with
+  `supabase migration new pomodoist_core_client_sync_batch_limits --workdir server`
+  and copy the prepared SQL into it. Apply that migration and verify the limits.
+- [ ] Once the migration is active in the normal migration set, remove the
+  pending-script include from `pomodoist_sync_batch_limits.test.sql` and delete
+  the pending script; the same assertions must then test the installed RPC.
+
+These steps do not require every user to update. Older clients can continue
+ordinary sync, but oversized requests require a client update. Local tests
+exercise the pending script inside a rolled-back transaction; passing those
+tests does not mean the production limit has been enabled.
+
+### Client versions
+
+Clients report their version and platform using the existing RLS-protected
+`user_app_installs` upsert keyed by account, app and device. Flutter sends
+`version+build` (or just the version when no build exists) and `android`, `ios`,
+`macos`, `windows`, `linux` or `web`. The extension sends its manifest version and
+`chrome_extension`. Registration is advisory: failure never blocks account reads
+or synchronization. The extension refreshes this metadata with its minute-cached
+overview; Flutter refreshes it when its account overview is reloaded.
+
+Old clients may have a missing version or the legacy `flutter` platform. Do not
+infer their versions, capabilities or access rights. Newly reported metadata
+only appears after updated clients connect. No version history, feature flags or
+automatic minimum-version enforcement is introduced.
+
+To inspect recently reported installations (not all integration identities):
+
+```sql
+select coalesce(nullif(platform, ''), 'unknown') as platform,
+       coalesce(nullif(app_version, ''), 'unknown') as app_version,
+       count(*) as installations, max(last_seen_at) as last_seen_at
+from public.user_app_installs
+where app_id = 'pomodoist' and last_seen_at >= now() - interval '7 days'
+group by 1, 2
+order by 1, 2;
+```
+
+### Automated database tests
+
 Against the explicitly selected **local** Docker database:
 
 ```sh

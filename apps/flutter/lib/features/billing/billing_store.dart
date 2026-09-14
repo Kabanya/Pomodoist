@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_storekit/store_kit_2_wrappers.dart';
+import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'billing_models.dart';
 
 class BillingStripeGateway {
@@ -106,15 +107,57 @@ class BillingStore {
         productDetails: [
           for (final plan in billingPlans)
             if (productIds.contains(plan.productId))
-              ProductDetails(
-                id: plan.productId,
-                title: plan.productId,
-                description: plan.productId,
-                price: plan.fallbackPrice,
-                rawPrice: 0,
-                currencyCode: 'USD',
-                currencySymbol: r'$',
-              ),
+              plan.kind == BillingPlanKind.subscription
+                  ? AppStoreProduct2Details.fromSK2Product(
+                      SK2Product(
+                        id: plan.productId,
+                        displayName: plan.productId,
+                        displayPrice:
+                            plan.productId == pomodoistMonthlyProductId
+                            ? r'$4.99'
+                            : r'$29.99',
+                        description: plan.productId,
+                        price: plan.productId == pomodoistMonthlyProductId
+                            ? 4.99
+                            : 29.99,
+                        type: SK2ProductType.autoRenewable,
+                        priceLocale: SK2PriceLocale(
+                          currencyCode: 'USD',
+                          currencySymbol: r'$',
+                        ),
+                        subscription: SK2SubscriptionInfo(
+                          subscriptionGroupID: '30000001',
+                          subscriptionPeriod: SK2SubscriptionPeriod(
+                            value: 1,
+                            unit: plan.productId == pomodoistMonthlyProductId
+                                ? SK2SubscriptionPeriodUnit.month
+                                : SK2SubscriptionPeriodUnit.year,
+                          ),
+                          promotionalOffers: [
+                            SK2SubscriptionOffer(
+                              price: 0,
+                              type: SK2SubscriptionOfferType.introductory,
+                              period: const SK2SubscriptionPeriod(
+                                value: 1,
+                                unit: SK2SubscriptionPeriodUnit.week,
+                              ),
+                              periodCount: 1,
+                              paymentMode:
+                                  SK2SubscriptionOfferPaymentMode.freeTrial,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : ProductDetails(
+                      id: plan.productId,
+                      title: plan.productId,
+                      description: plan.productId,
+                      price: plan.fallbackPrice,
+                      rawPrice: 0,
+                      currencyCode: 'USD',
+                      currencySymbol: r'$',
+                    ),
         ],
         notFoundIDs: [
           for (final productId in productIds)
@@ -127,8 +170,12 @@ class BillingStore {
 
   Future<bool> isIntroductoryOfferEligible(String productId) async {
     if (pomodoistLocalStoreKit) {
-      return billingPlanForProduct(productId)?.introductoryFallbackPrice !=
-          null;
+      return billingPlanForProduct(productId)?.kind ==
+              BillingPlanKind.subscription &&
+          !_localPurchasedProductIds.any(
+            (id) =>
+                billingPlanForProduct(id)?.kind == BillingPlanKind.subscription,
+          );
     }
     if (!applePurchasesSupported) {
       return false;
@@ -149,6 +196,54 @@ class BillingStore {
         productDetails: productDetails,
         applicationUserName: appAccountToken,
       ),
+    );
+  }
+
+  Future<BillingTransactionProof?> latestSubscriptionTransaction() async {
+    if (pomodoistLocalStoreKit || !applePurchasesSupported) return null;
+    final value = await _channel
+        .invokeMethod<Object?>('latestSubscriptionTransaction')
+        .timeout(billingStoreTimeout);
+    return value == null ? null : _decodeTransaction(value);
+  }
+
+  Future<PurchaseDetails> buyPromotional(
+    ProductDetails product,
+    SK2SubscriptionOffer offer,
+    String compactJws, {
+    String? appAccountToken,
+  }) async {
+    final value = await _channel
+        .invokeMapMethod<String, Object?>('purchasePromotionalOffer', {
+          'productId': product.id,
+          'offerId': offer.id,
+          'compactJws': compactJws,
+          'appAccountToken': ?appAccountToken,
+        });
+    if (value == null || !['pending', 'purchased'].contains(value['status'])) {
+      throw const FormatException('Invalid promotional purchase result.');
+    }
+    final proof = value['status'] == 'purchased'
+        ? _decodeTransaction(value)
+        : null;
+    if (proof != null && proof.productId != product.id) {
+      throw const FormatException('Mismatched promotional purchase.');
+    }
+    return SK2PurchaseDetails(
+      productID: product.id,
+      purchaseID: proof?.transactionId,
+      verificationData: PurchaseVerificationData(
+        localVerificationData: proof?.localVerificationData ?? '{}',
+        serverVerificationData: proof?.jws ?? '',
+        source: 'app_store',
+      ),
+      transactionDate: proof == null
+          ? null
+          : appleBillingDate(
+              (jsonDecode(proof.localVerificationData) as Map)['purchaseDate'],
+            )?.millisecondsSinceEpoch.toString(),
+      status: proof == null ? PurchaseStatus.pending : PurchaseStatus.purchased,
+      appAccountToken: appAccountToken,
     );
   }
 

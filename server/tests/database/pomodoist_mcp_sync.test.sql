@@ -110,12 +110,12 @@ select ok(
     'public.push_changes(text,text,jsonb)',
     'EXECUTE'
   )
-  and has_function_privilege(
+  and not has_function_privilege(
     'anon',
     'public.push_changes(text,text,jsonb)',
     'EXECUTE'
   ),
-  'existing push_changes grants remain wire-compatible'
+  'push_changes remains available to signed-in clients only'
 );
 
 select ok(

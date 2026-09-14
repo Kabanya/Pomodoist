@@ -9,15 +9,17 @@ $$;
 do $$
 declare
   v_name text;
+  v_schema text;
   v_source text;
 begin
   foreach v_name in array array['pomodoist_voice_quota', 'pomodoist_llm_quota',
                               'get_usage_period', 'get_account_overview'] loop
+    v_schema := case when v_name in ('get_usage_period', 'get_account_overview') then 'private' else 'public' end;
     select pg_get_functiondef(p.oid) into strict v_source
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-    where n.nspname = 'public' and p.proname = v_name;
+    where n.nspname = v_schema and p.proname = v_name;
     assert position('now()' in v_source) > 0, 'Test clock must replace the production clock';
-    execute replace(replace(v_source, 'FUNCTION public.' || v_name || '(',
+    execute replace(replace(v_source, 'FUNCTION ' || v_schema || '.' || v_name || '(',
                             'FUNCTION pg_temp.' || v_name || '('),
                     'now()', 'pg_temp.quota_now()');
   end loop;

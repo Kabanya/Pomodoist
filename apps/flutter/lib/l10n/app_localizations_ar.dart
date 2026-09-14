@@ -3051,4 +3051,49 @@ class AppLocalizationsAr extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String billingOfferDays(int count) {
+    return '$count يوم';
+  }
+
+  @override
+  String billingOfferMonths(int count) {
+    return '$count شهر';
+  }
+
+  @override
+  String billingOfferYears(int count) {
+    return '$count سنة';
+  }
+
+  @override
+  String billingTrialFree(String duration) {
+    return 'مجانًا لمدة $duration';
+  }
+
+  @override
+  String billingTrialRenewal(String price) {
+    return 'ثم $price. يتجدد تلقائيًا ما لم يُلغَ.';
+  }
+
+  @override
+  String get billingReturnBadge => 'العودة إلى Pro';
+
+  @override
+  String billingReturnSubtitle(String duration, String price) {
+    return 'لمدة $duration، ثم $price. يتجدد تلقائيًا ما لم يُلغَ.';
+  }
+
+  @override
+  String billingReturnPending(String date) {
+    return 'خصمك محجوز حتى $date. إذا ألغيت الشراء، يمكنك إعادة المحاولة بعد ذلك.';
+  }
+
+  @override
+  String get billingReturnFailed =>
+      'تعذّر التحقق من عرض العودة. أعد المحاولة للتحقق من الخصم.';
+
+  @override
+  String get billingTryFree => 'جرّب مجانًا';
 }

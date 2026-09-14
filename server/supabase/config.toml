@@ -58,3 +58,7 @@ verify_jwt = false
 
 [functions.pomodoist-ai]
 verify_jwt = false
+
+[functions.pomodoist-subscription-offer]
+# Accountless requests are authorized by verified Apple signed transactions.
+verify_jwt = false

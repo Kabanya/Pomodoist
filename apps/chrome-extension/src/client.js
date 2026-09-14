@@ -18,12 +18,12 @@ export class Client {
   constructor(config, store, fetcher = fetch.bind(globalThis)) {
     this.config = config; this.store = store; this.fetcher = fetcher; this.refreshing = null;
   }
-  async raw(path, body, token, auth = false) {
+  async raw(path, body, token, auth = false, prefer) {
     let response;
     try {
       response = await this.fetcher(`${this.config.apiUrl}${path}`, {
         method: 'POST', headers: { apikey: this.config.anonKey, 'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(prefer ? { Prefer: prefer } : {}) },
         body: JSON.stringify(body), signal: AbortSignal.timeout(12000), redirect: 'error', credentials: 'omit', cache: 'no-store',
       });
     } catch { throw new Error('Cannot reach the server. Check your connection and retry.'); }
@@ -62,11 +62,11 @@ export class Client {
       throw error;
     }
   }
-  async authorized(path, body) {
-    try { return await this.raw(path, body, await this.token()); }
+  async authorized(path, body, prefer) {
+    try { return await this.raw(path, body, await this.token(), false, prefer); }
     catch (error) {
       if (error.status !== 401) throw error;
-      try { return await this.raw(path, body, await this.token(true)); }
+      try { return await this.raw(path, body, await this.token(true), false, prefer); }
       catch (retryError) {
         if (retryError.status === 401) await this.store.save({ session: null });
         throw retryError;
@@ -78,6 +78,13 @@ export class Client {
     return this.authorized(`/rest/v1/rpc/${name}`, body);
   }
   overview() { return this.rpc('get_account_overview'); }
+  registerInstall() {
+    return this.authorized('/rest/v1/user_app_installs?on_conflict=user_id,app_id,device_id', {
+      user_id: this.store.data.owner, app_id: APP_ID, device_id: this.store.data.deviceId,
+      platform: 'chrome_extension', app_version: globalThis.chrome.runtime.getManifest().version,
+      last_seen_at: new Date().toISOString(),
+    }, 'resolution=merge-duplicates,return=minimal');
+  }
   async broadcast() {
     // A rejected best-effort hint must not invalidate the Auth session.
     return this.raw('/realtime/v1/api/broadcast', { messages: [{

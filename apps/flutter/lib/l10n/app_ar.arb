@@ -986,5 +986,15 @@
         "type": "String"
       }
     }
-  }
+  },
+  "billingOfferDays": "{count} يوم",
+  "billingOfferMonths": "{count} شهر",
+  "billingOfferYears": "{count} سنة",
+  "billingTrialFree": "مجانًا لمدة {duration}",
+  "billingTrialRenewal": "ثم {price}. يتجدد تلقائيًا ما لم يُلغَ.",
+  "billingReturnBadge": "العودة إلى Pro",
+  "billingReturnSubtitle": "لمدة {duration}، ثم {price}. يتجدد تلقائيًا ما لم يُلغَ.",
+  "billingReturnPending": "خصمك محجوز حتى {date}. إذا ألغيت الشراء، يمكنك إعادة المحاولة بعد ذلك.",
+  "billingReturnFailed": "تعذّر التحقق من عرض العودة. أعد المحاولة للتحقق من الخصم.",
+  "billingTryFree": "جرّب مجانًا"
 }

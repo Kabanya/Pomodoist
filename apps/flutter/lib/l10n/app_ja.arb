@@ -1597,5 +1597,15 @@
         "type": "String"
       }
     }
-  }
+  },
+  "billingOfferDays": "{count}日間",
+  "billingOfferMonths": "{count}か月間",
+  "billingOfferYears": "{count}年間",
+  "billingTrialFree": "{duration}無料",
+  "billingTrialRenewal": "その後は{price}。キャンセルしない限り自動更新されます。",
+  "billingReturnBadge": "Proに戻る",
+  "billingReturnSubtitle": "{duration}の割引後は{price}。キャンセルしない限り自動更新されます。",
+  "billingReturnPending": "割引は{date}まで予約されています。購入をキャンセルした場合は、その後に再試行できます。",
+  "billingReturnFailed": "再加入オファーを確認できませんでした。もう一度お試しください。",
+  "billingTryFree": "無料で試す"
 }

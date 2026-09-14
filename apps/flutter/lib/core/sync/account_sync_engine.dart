@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:app_account/app_account.dart';
 import 'package:drift/drift.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import 'package:uuid/uuid.dart';
 
 import '../db/app_database.dart';
@@ -801,13 +802,31 @@ class AccountSyncEngine {
       final end = index + batchSize > operations.length
           ? operations.length
           : index + batchSize;
+      await _pushBatch(deviceId, operations.sublist(index, end));
+    }
+  }
+
+  Future<void> _pushBatch(
+    String deviceId,
+    List<AccountSyncOperation> operations,
+  ) async {
+    try {
       await _account
           .pushChanges(
             appId: AccountAppId.pomodoist,
             deviceId: deviceId,
-            operations: operations.sublist(index, end),
+            operations: operations,
           )
           .timeout(_requestTimeout);
+    } on PostgrestException catch (error) {
+      if (!{'PT413', '413'}.contains(error.code) || operations.length <= 1) {
+        rethrow;
+      }
+      final middle = operations.length ~/ 2;
+      // Keep IDs and order: an acknowledged half can safely be replayed if the
+      // next half fails before the local command is marked as synchronized.
+      await _pushBatch(deviceId, operations.sublist(0, middle));
+      await _pushBatch(deviceId, operations.sublist(middle));
     }
   }
 

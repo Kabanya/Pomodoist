@@ -986,5 +986,15 @@
         "type": "String"
       }
     }
-  }
+  },
+  "billingOfferDays": "{count} дн.",
+  "billingOfferMonths": "{count} мес.",
+  "billingOfferYears": "{count} г.",
+  "billingTrialFree": "Бесплатно: {duration}",
+  "billingTrialRenewal": "Затем {price}. Автопродление, если не отменить подписку.",
+  "billingReturnBadge": "Вернуться в Pro",
+  "billingReturnSubtitle": "На {duration}, затем {price}. Автопродление, если не отменить подписку.",
+  "billingReturnPending": "Скидка зарезервирована до {date}. Если покупка отменена, повторить попытку можно после этого времени.",
+  "billingReturnFailed": "Не удалось проверить скидку на возвращение. Повторите проверку.",
+  "billingTryFree": "Попробовать"
 }

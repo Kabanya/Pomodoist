@@ -105,9 +105,9 @@ select throws_ok($$select public.pomodoist_google_calendar_service('get_account'
 set local role anon;
 set local request.jwt.claims = '{"role":"anon"}';
 select throws_ok($$select public.push_changes('pomodoist', 'unauthenticated', '[]'::jsonb)$$,
-  'P0001', 'Authentication required', 'selfhost mode does not allow anonymous sync');
+  '42501', 'permission denied for function push_changes', 'selfhost mode does not allow anonymous sync');
 select throws_ok($$select public.pull_changes('pomodoist', 'unauthenticated', 0, 500)$$,
-  'P0001', 'Authentication required', 'selfhost mode does not allow anonymous pulls');
+  '42501', 'permission denied for function pull_changes', 'selfhost mode does not allow anonymous pulls');
 reset role;
 select is((select count(*) from public.user_entitlements where source = 'selfhosted' and user_id in ('a0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000002')),
   2::bigint, 'profile retries did not duplicate local entitlements');
