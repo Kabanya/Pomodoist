@@ -9,6 +9,20 @@ DART_DIRECTIVE = re.compile(r'^\s*(?:import|export)\s+(.*?);', re.M | re.S)
 TS_IMPORT = re.compile(r'^\s*(?:import|export)\s+(?:[^;]*?\sfrom\s*)?[\'"]([^\'"]+)[\'"]', re.M)
 
 
+def dart_target(lib, path, name):
+    """Resolve a relative Dart URI the way the SDK does.
+
+    The SDK resolves relative URIs against the importing file's directory but
+    clamps the walk at the package `lib/` root: a leading `../` at the root
+    stays at the root instead of failing. An over-deep `../../../../app/x.dart`
+    therefore still names `lib/app/x.dart`.
+    """
+    relative = path.parent.relative_to(lib)
+    for part in Path(name).parts:
+        relative = relative.parent if part == '..' else relative / part
+    return lib / relative
+
+
 def dependencies(path):
     source = path.read_text()
     if path.suffix == '.dart':
@@ -64,6 +78,8 @@ def check(root):
         for name in dependencies(path):
             if name.startswith('package:pomodoist/'):
                 target = app / name.removeprefix('package:pomodoist/')
+            elif name.startswith('.') and path.is_relative_to(app):
+                target = dart_target(app, path, name)
             elif name.startswith('.'):
                 target = path.parent / name
             else:
