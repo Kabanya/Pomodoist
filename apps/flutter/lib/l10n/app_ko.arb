@@ -1648,6 +1648,7 @@
   "collaborationRoleObserver": "관찰자",
   "collaborationForbidden": "권한이 없습니다",
   "collaborationSignedOut": "공유 프로젝트를 사용하려면 로그인하세요",
+  "collaborationUnavailable": "공유 프로젝트를 지금은 사용할 수 없습니다",
   "collaborationError": "문제가 발생했습니다. 다시 시도하세요",
   "collaborationSyncPending": "공유하기 전에 이 프로젝트의 동기화를 완료하세요",
   "collaborationMemberFallback": "멤버",

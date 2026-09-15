@@ -3228,6 +3228,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get collaborationSignedOut => 'سجّل الدخول لاستخدام المشاريع المشتركة';
 
   @override
+  String get collaborationUnavailable => 'المشاريع المشتركة غير متاحة الآن';
+
+  @override
   String get collaborationError => 'حدث خطأ ما. حاول مرة أخرى';
 
   @override

@@ -1037,6 +1037,7 @@
   "collaborationRoleObserver": "Наблюдатель",
   "collaborationForbidden": "Недостаточно прав",
   "collaborationSignedOut": "Войдите, чтобы использовать общие проекты",
+  "collaborationUnavailable": "Общие проекты сейчас недоступны",
   "collaborationError": "Что-то пошло не так. Попробуйте ещё раз",
   "collaborationSyncPending": "Завершите синхронизацию проекта перед открытием доступа",
   "collaborationMemberFallback": "Участник",

@@ -3184,6 +3184,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get collaborationSignedOut => '共有プロジェクトを使うにはサインインしてください';
 
   @override
+  String get collaborationUnavailable => '共有プロジェクトは現在ご利用いただけません';
+
+  @override
   String get collaborationError => '問題が発生しました。もう一度お試しください';
 
   @override

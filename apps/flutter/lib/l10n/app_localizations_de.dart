@@ -3300,6 +3300,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Melden Sie sich an, um geteilte Projekte zu nutzen';
 
   @override
+  String get collaborationUnavailable =>
+      'Gemeinsame Projekte sind derzeit nicht verfügbar';
+
+  @override
   String get collaborationError =>
       'Etwas ist schiefgelaufen. Versuchen Sie es erneut';
 

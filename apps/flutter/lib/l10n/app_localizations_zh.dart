@@ -3108,6 +3108,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get collaborationSignedOut => '登录后使用共享项目';
 
   @override
+  String get collaborationUnavailable => '共享项目当前不可用';
+
+  @override
   String get collaborationError => '出现错误，请重试';
 
   @override

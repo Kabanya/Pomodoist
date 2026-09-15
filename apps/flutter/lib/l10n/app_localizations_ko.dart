@@ -3193,6 +3193,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get collaborationSignedOut => '공유 프로젝트를 사용하려면 로그인하세요';
 
   @override
+  String get collaborationUnavailable => '공유 프로젝트를 지금은 사용할 수 없습니다';
+
+  @override
   String get collaborationError => '문제가 발생했습니다. 다시 시도하세요';
 
   @override
