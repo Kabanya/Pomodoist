@@ -2,6 +2,7 @@ import { assert, assertEquals } from "@std/assert";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { existsSync } from "node:fs";
 
 import { registerPomodoistTools } from "./tools.ts";
 
@@ -43,7 +44,11 @@ Deno.test("registers personal tools and shared project collaboration", async () 
     for (const tool of listed.tools) {
       assertEquals(tool.inputSchema.additionalProperties, false, tool.name);
       assert(tool.outputSchema, `${tool.name} lacks outputSchema`);
-      assertEquals(tool.annotations?.openWorldHint, tool.name === "shared_projects", tool.name);
+      assertEquals(
+        tool.annotations?.openWorldHint,
+        tool.name === "shared_projects",
+        tool.name,
+      );
       const schema = JSON.stringify(tool.inputSchema);
       for (
         const excluded of [
@@ -159,51 +164,66 @@ Deno.test("registers personal tools and shared project collaboration", async () 
   });
 });
 
-Deno.test("achievement locales preserve IDs and progress and match app titles", async () => {
-  const calls: RpcCall[] = [];
-  await withClient(rpcFetcher(calls), async (client) => {
-    const read = async (locale: string) => {
-      const result = await client.callTool({
-        name: "get_achievements",
-        arguments: { date: "2026-07-30", time_zone: "UTC", locale },
-      });
-      assertSuccessParity(result);
-      return (result.structuredContent as {
-        data: Array<Record<string, unknown>>;
-      }).data;
-    };
-    const english = await read("en");
-    for (const locale of ["pt", "pt-BR", "ja", "ko"]) {
-      const localized = await read(locale);
-      const base = locale === "pt-BR" ? "pt" : locale;
-      const arb = JSON.parse(
-        await Deno.readTextFile(
-          new URL(`../../../../apps/flutter/lib/l10n/app_${base}.arb`, import.meta.url),
-        ),
-      );
-      const titles = new Map(
-        [...arb.achievementTitle.matchAll(/(\w+)\{([^{}]+)\}/g)]
-          .map((match: RegExpMatchArray) => [match[1], match[2]]),
-      );
-      assertEquals(localized.length, 33);
-      for (let i = 0; i < localized.length; i++) {
-        const { title, subtitle, ...state } = localized[i];
-        const { title: enTitle, subtitle: enSubtitle, ...enState } = english[i];
-        assertEquals(state, enState);
-        assertEquals(title, titles.get(String(state.id)));
-        assert(title !== enTitle);
-        assert(typeof subtitle === "string" && subtitle.length > 0);
-        assert(subtitle !== enSubtitle);
+// The app localizations live outside the public core, so a repository that only
+// consumes the core has no copy of them to compare against.
+const appLocalizations = new URL(
+  "../../../../apps/flutter/lib/l10n/",
+  import.meta.url,
+);
+
+Deno.test({
+  name: "achievement locales preserve IDs and progress and match app titles",
+  ignore: !existsSync(new URL("app_pt.arb", appLocalizations)),
+  fn: async () => {
+    const calls: RpcCall[] = [];
+    await withClient(rpcFetcher(calls), async (client) => {
+      const read = async (locale: string) => {
+        const result = await client.callTool({
+          name: "get_achievements",
+          arguments: { date: "2026-07-30", time_zone: "UTC", locale },
+        });
+        assertSuccessParity(result);
+        return (result.structuredContent as {
+          data: Array<Record<string, unknown>>;
+        }).data;
+      };
+      const english = await read("en");
+      for (const locale of ["pt", "pt-BR", "ja", "ko"]) {
+        const localized = await read(locale);
+        const base = locale === "pt-BR" ? "pt" : locale;
+        const arb = JSON.parse(
+          await Deno.readTextFile(
+            new URL(
+              `../../../../apps/flutter/lib/l10n/app_${base}.arb`,
+              import.meta.url,
+            ),
+          ),
+        );
+        const titles = new Map(
+          [...arb.achievementTitle.matchAll(/(\w+)\{([^{}]+)\}/g)]
+            .map((match: RegExpMatchArray) => [match[1], match[2]]),
+        );
+        assertEquals(localized.length, 33);
+        for (let i = 0; i < localized.length; i++) {
+          const { title, subtitle, ...state } = localized[i];
+          const { title: enTitle, subtitle: enSubtitle, ...enState } =
+            english[i];
+          assertEquals(state, enState);
+          assertEquals(title, titles.get(String(state.id)));
+          assert(title !== enTitle);
+          assert(typeof subtitle === "string" && subtitle.length > 0);
+          assert(subtitle !== enSubtitle);
+        }
+        if (locale === "pt-BR") assertEquals(localized, await read("pt"));
       }
-      if (locale === "pt-BR") assertEquals(localized, await read("pt"));
-    }
-    for (const call of calls) {
-      assertEquals(call.body.p_arguments, {
-        date: "2026-07-30",
-        time_zone: "UTC",
-      });
-    }
-  });
+      for (const call of calls) {
+        assertEquals(call.body.p_arguments, {
+          date: "2026-07-30",
+          time_zone: "UTC",
+        });
+      }
+    });
+  },
 });
 
 Deno.test("routes every read tool through the closed read dispatcher", async () => {
