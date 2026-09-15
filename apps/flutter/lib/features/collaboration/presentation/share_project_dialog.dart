@@ -15,6 +15,7 @@ import 'package:shadcn_ui/shadcn_ui.dart'
         ShadSelect,
         ShadSwitch;
 
+import '../../../../app/account_providers.dart';
 import '../../../../app/app_l10n.dart';
 import '../../../../core/db/app_database.dart';
 import '../../../../app/runtime_public_config.dart';
@@ -402,8 +403,21 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
     bool close = false,
     String? success,
   }) async {
+    if (_busy) return;
     final repository = ref.read(collaborationRepositoryProvider);
-    if (repository == null || _busy) return;
+    if (repository == null) {
+      final signedIn =
+          ref.read(accountAuthStateProvider).value?.signedIn ??
+          (ref.read(accountClientProvider)?.currentUserId != null);
+      if (mounted) {
+        _snack(
+          signedIn
+              ? context.l10n.collaborationUnavailable
+              : context.l10n.collaborationSignedOut,
+        );
+      }
+      return;
+    }
     setState(() => _busy = true);
     try {
       await action(repository);
