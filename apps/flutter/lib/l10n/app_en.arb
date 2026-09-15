@@ -1721,6 +1721,7 @@
   "collaborationRoleObserver": "Observer",
   "collaborationForbidden": "You don't have permission to do that",
   "collaborationSignedOut": "Sign in to use shared projects",
+  "collaborationUnavailable": "Shared projects are unavailable right now",
   "collaborationError": "Something went wrong. Try again",
   "collaborationSyncPending": "Finish synchronizing this project before sharing",
   "collaborationMemberFallback": "Member",

@@ -1037,6 +1037,7 @@
   "collaborationRoleObserver": "Beobachter",
   "collaborationForbidden": "Sie haben keine Berechtigung dafür",
   "collaborationSignedOut": "Melden Sie sich an, um geteilte Projekte zu nutzen",
+  "collaborationUnavailable": "Gemeinsame Projekte sind derzeit nicht verfügbar",
   "collaborationError": "Etwas ist schiefgelaufen. Versuchen Sie es erneut",
   "collaborationSyncPending": "Schließen Sie die Synchronisierung dieses Projekts vor dem Teilen ab",
   "collaborationMemberFallback": "Mitglied",

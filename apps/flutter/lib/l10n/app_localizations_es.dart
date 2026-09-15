@@ -3296,6 +3296,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Inicia sesión para usar proyectos compartidos';
 
   @override
+  String get collaborationUnavailable =>
+      'Los proyectos compartidos no están disponibles en este momento';
+
+  @override
   String get collaborationError => 'Algo salió mal. Inténtalo de nuevo';
 
   @override

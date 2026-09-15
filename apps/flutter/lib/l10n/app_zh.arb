@@ -1037,6 +1037,7 @@
   "collaborationRoleObserver": "观察者",
   "collaborationForbidden": "你没有权限执行此操作",
   "collaborationSignedOut": "登录后使用共享项目",
+  "collaborationUnavailable": "共享项目当前不可用",
   "collaborationError": "出现错误，请重试",
   "collaborationSyncPending": "共享前请完成此项目的同步",
   "collaborationMemberFallback": "成员",

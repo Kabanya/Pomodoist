@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import { handleVoiceTranscription, type TranscriptionDeps } from "./transcribe.ts";
 
@@ -324,12 +325,21 @@ Deno.test("never falls back to a generic OpenRouter key when the Pomodoist key i
   }
 });
 
-Deno.test("production web CSP explicitly permits recorded audio blob fetches", async () => {
-  const template = await readFile(new URL(
-    "../../../../tool/deploy/web/security-headers.conf.template", import.meta.url,
-  ), "utf8");
-  const sources = /connect-src\s+([^;]+);/.exec(template)?.[1].split(/\s+/) ?? [];
-  assert.ok(sources.includes("blob:"), "connect-src must explicitly allow recorded audio blob URLs");
-  assert.ok(sources.includes("'self'"));
-  assert.ok(!sources.includes("*"), "do not broadly loosen network destinations");
+// The web security headers live outside the public core, so a repository that
+// only consumes the core has no copy of this template to check.
+const webSecurityHeaders = new URL(
+  "../../../../tool/deploy/web/security-headers.conf.template",
+  import.meta.url,
+);
+
+Deno.test({
+  name: "production web CSP explicitly permits recorded audio blob fetches",
+  ignore: !existsSync(webSecurityHeaders),
+  fn: async () => {
+    const template = await readFile(webSecurityHeaders, "utf8");
+    const sources = /connect-src\s+([^;]+);/.exec(template)?.[1].split(/\s+/) ?? [];
+    assert.ok(sources.includes("blob:"), "connect-src must explicitly allow recorded audio blob URLs");
+    assert.ok(sources.includes("'self'"));
+    assert.ok(!sources.includes("*"), "do not broadly loosen network destinations");
+  },
 });

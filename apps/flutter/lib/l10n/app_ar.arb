@@ -1037,6 +1037,7 @@
   "collaborationRoleObserver": "مراقب",
   "collaborationForbidden": "ليس لديك إذن للقيام بذلك",
   "collaborationSignedOut": "سجّل الدخول لاستخدام المشاريع المشتركة",
+  "collaborationUnavailable": "المشاريع المشتركة غير متاحة الآن",
   "collaborationError": "حدث خطأ ما. حاول مرة أخرى",
   "collaborationSyncPending": "أكمل مزامنة هذا المشروع قبل مشاركته",
   "collaborationMemberFallback": "عضو",
