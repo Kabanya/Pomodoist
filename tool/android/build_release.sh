@@ -43,6 +43,9 @@ cp build/app/outputs/bundle/release/app-release.aab "$output/Pomodoist-Android.a
   cd "$output"
   sha256sum Pomodoist-Android.apk Pomodoist-Android.aab > SHA256SUMS
   sha256sum --check SHA256SUMS
+  sha256sum Pomodoist-Android.apk > Pomodoist-Android.apk.sha256
+  sha256sum Pomodoist-Android.aab > Pomodoist-Android.aab.sha256
+  sha256sum --check Pomodoist-Android.apk.sha256 Pomodoist-Android.aab.sha256
 )
 python3 - "$output/release.json" "$version" "$build_number" "$release" <<'PY'
 import json

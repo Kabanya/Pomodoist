@@ -93,7 +93,9 @@ compares their signing fingerprints and writes:
 
 ```text
 build/android/release/Pomodoist-Android.apk
+build/android/release/Pomodoist-Android.apk.sha256
 build/android/release/Pomodoist-Android.aab
+build/android/release/Pomodoist-Android.aab.sha256
 build/android/release/SHA256SUMS
 build/android/release/release.json
 build/android/symbols/apk/

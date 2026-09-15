@@ -205,13 +205,15 @@ jobs:
             Pomodoist-x86_64.AppImage.sha256
             Pomodoist-Setup.exe
             Pomodoist-Setup.exe.sha256
+            Pomodoist-Android.apk
+            Pomodoist-Android.apk.sha256
           )
           asset_names=$(gh api \
             "repos/$GITHUB_REPOSITORY/releases/$release_id/assets" \
             --jq '.[].name')
           for required_asset in "${required_assets[@]}"; do
             if ! grep -Fqx -- "$required_asset" <<< "$asset_names"; then
-              echo 'Release remains draft until all desktop assets are present.'
+              echo 'Release remains draft until all release assets are present.'
               exit 0
             fi
           done
