@@ -11,7 +11,7 @@ def fail(message: str) -> None:
 
 
 if len(sys.argv) != 2:
-    fail("expected a path to the production env file")
+    fail("expected a path to the TestFlight env file")
 
 path = Path(sys.argv[1])
 if not path.is_file():
@@ -29,15 +29,25 @@ for line in path.read_text(encoding="utf-8").splitlines():
         fail(f"duplicate {name}")
     values[name] = value
 
-expected = {
-    "POMODOIST_ENVIRONMENT": "production",
-    "WEB_APP_URL": "https://app.pomodoist.com",
-    "POMODOIST_REGISTRATION_URL": "https://app.pomodoist.com/auth/challenge",
-    "SUPABASE_URL": "https://ewauihswbwduvklrozke.supabase.co",
+environments = {
+    "production": {
+        "WEB_APP_URL": "https://app.pomodoist.com",
+        "POMODOIST_REGISTRATION_URL": "https://app.pomodoist.com/auth/challenge",
+        "SUPABASE_URL": "https://ewauihswbwduvklrozke.supabase.co",
+    },
+    "staging": {
+        "WEB_APP_URL": "https://app-test.pomodoist.com",
+        "POMODOIST_REGISTRATION_URL": "https://app-test.pomodoist.com/auth/challenge",
+        "SUPABASE_URL": "https://supabase-test.pomodoist.com",
+    },
 }
+environment = values.get("POMODOIST_ENVIRONMENT")
+expected = environments.get(environment)
+if expected is None:
+    fail("POMODOIST_ENVIRONMENT must be production or staging")
 for name, value in expected.items():
     if values.get(name) != value:
-        fail(f"{name} must be {value}")
+        fail(f"{name} must be {value} for {environment}")
 
 for name in ("SUPABASE_ANON_KEY", "TURNSTILE_SITE_KEY"):
     if not values.get(name):

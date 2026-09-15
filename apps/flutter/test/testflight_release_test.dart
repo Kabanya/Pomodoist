@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
-    'TestFlight preflight accepts only a production client config',
+    'TestFlight preflight accepts matching production or staging config',
     () async {
       if (Platform.isWindows) return;
 
@@ -13,17 +13,22 @@ void main() {
         'testflight-env-',
       );
       addTearDown(() => directory.delete(recursive: true));
-      final config = File('${directory.path}/production.env');
+      final config = File('${directory.path}/client.env');
 
-      Future<ProcessResult> check(String role) async {
+      Future<ProcessResult> check({
+        required String environment,
+        required String webAppUrl,
+        required String supabaseUrl,
+        String role = 'anon',
+      }) async {
         final payload = base64Url
             .encode(utf8.encode(jsonEncode({'role': role})))
             .replaceAll('=', '');
         await config.writeAsString('''
-POMODOIST_ENVIRONMENT=production
-WEB_APP_URL=https://app.pomodoist.com
-POMODOIST_REGISTRATION_URL=https://app.pomodoist.com/auth/challenge
-SUPABASE_URL=https://ewauihswbwduvklrozke.supabase.co
+POMODOIST_ENVIRONMENT=$environment
+WEB_APP_URL=$webAppUrl
+POMODOIST_REGISTRATION_URL=$webAppUrl/auth/challenge
+SUPABASE_URL=$supabaseUrl
 SUPABASE_ANON_KEY=header.$payload.signature
 TURNSTILE_SITE_KEY=public-site-key
 SENTRY_DSN=
@@ -34,10 +39,65 @@ SENTRY_DSN=
         ]);
       }
 
-      expect((await check('anon')).exitCode, 0);
-      expect((await check('service_role')).exitCode, isNot(0));
+      const productionWebUrl = 'https://app.pomodoist.com';
+      const stagingWebUrl = 'https://app-test.pomodoist.com';
+
+      expect(
+        (await check(
+          environment: 'production',
+          webAppUrl: productionWebUrl,
+          supabaseUrl: 'https://ewauihswbwduvklrozke.supabase.co',
+        )).exitCode,
+        0,
+      );
+      expect(
+        (await check(
+          environment: 'staging',
+          webAppUrl: stagingWebUrl,
+          supabaseUrl: 'https://supabase-test.pomodoist.com',
+        )).exitCode,
+        0,
+      );
+      expect(
+        (await check(
+          environment: 'production',
+          webAppUrl: stagingWebUrl,
+          supabaseUrl: 'https://supabase-test.pomodoist.com',
+        )).exitCode,
+        isNot(0),
+      );
+      expect(
+        (await check(
+          environment: 'production',
+          webAppUrl: productionWebUrl,
+          supabaseUrl: 'https://ewauihswbwduvklrozke.supabase.co',
+          role: 'service_role',
+        )).exitCode,
+        isNot(0),
+      );
     },
   );
+
+  test('TestFlight builds can switch to the staging config', () async {
+    if (Platform.isWindows) return;
+
+    final result = await Process.run('make', [
+      '-n',
+      'testflight-macos',
+      'TESTFLIGHT_ENV=staging',
+      'ASC_KEY_ID=test',
+      'ASC_ISSUER_ID=test',
+      'PRIVATE_CONFIG=apps/flutter/pubspec.yaml',
+    ], workingDirectory: _repoRoot);
+    expect(result.exitCode, 0, reason: result.stderr.toString());
+
+    final output = result.stdout.toString();
+    expect(output, contains('check_testflight_env.py ".env.staging"'));
+    expect(
+      output,
+      contains('--dart-define-from-file="$_repoRoot/.env.staging"'),
+    );
+  });
 
   test('TestFlight builds one fully configured IPA before upload', () async {
     if (Platform.isWindows) return;
