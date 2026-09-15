@@ -30,10 +30,18 @@ jobs:
         env:
           INPUT_BUILD_NUMBER: ${{ inputs.build_number }}
         run: |
-          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
+          if [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$ ]]; then
+            # Release candidates may ship from develop before the final merge to main.
+            git fetch --no-tags origin main develop
+            git merge-base --is-ancestor "$GITHUB_SHA" origin/main ||
+              git merge-base --is-ancestor "$GITHUB_SHA" origin/develop || {
+                echo 'Release candidates must come from a commit already in main or develop.' >&2
+                exit 1
+              }
+          elif ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
             echo 'Production Android builds must come from a commit already in main.' >&2
             exit 1
-          }
+          fi
           if [[ "$GITHUB_REF_TYPE" == tag ]]; then
             [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]] || exit 1
             echo "ANDROID_BUILD_NAME=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
