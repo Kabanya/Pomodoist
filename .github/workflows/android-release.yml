@@ -106,7 +106,7 @@ jobs:
           name: pomodoist-android-${{ github.sha }}
           path: apps/flutter/build/android/release/
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 90
       - name: Save Dart symbols for crash symbolication
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -121,7 +121,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           RELEASE_NOTES_API_KEY: ${{ secrets.RELEASE_NOTES_API_KEY }}
         run: |
-          release_notes='Official Pomodoist mobile release: a signed APK for direct installation and an AAB for Google Play.'
+          release_notes='Official Pomodoist mobile release: a signed APK for direct installation. The Google Play bundle is attached to this workflow run as an artifact.'
           prerelease=false
           latest=true
           if [[ "$GITHUB_REF_NAME" == *-rc.* ]]; then
@@ -143,8 +143,6 @@ jobs:
           gh release upload "$GITHUB_REF_NAME" \
             apps/flutter/build/android/release/Pomodoist-Android.apk \
             apps/flutter/build/android/release/Pomodoist-Android.apk.sha256 \
-            apps/flutter/build/android/release/Pomodoist-Android.aab \
-            apps/flutter/build/android/release/Pomodoist-Android.aab.sha256 \
             --clobber
           release_id=$(gh api --paginate \
             "repos/$GITHUB_REPOSITORY/releases" \

@@ -12,7 +12,8 @@ TAG = re.compile(r'v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-rc\.(0|
 MODEL = 'openai/gpt-oss-120b'
 FOOTER = ('Linux: portable x86_64 AppImage. Windows: unsigned EXE installer; '
           'Microsoft Defender SmartScreen may show a warning. '
-          'Android: signed APK for sideloading and an AAB for Google Play.')
+          'Android: signed APK for sideloading; the Google Play bundle ships as a '
+          'workflow artifact instead of a release asset.')
 
 
 def version(tag):

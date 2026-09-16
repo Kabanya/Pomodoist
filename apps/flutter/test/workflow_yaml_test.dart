@@ -108,12 +108,7 @@ void main() {
         path: '../../.github/workflows/android-release.yml',
         job: 'signed-apk-and-bundle',
         step: 'Publish Android artifacts to the GitHub release',
-        assets: [
-          'Pomodoist-Android.apk',
-          'Pomodoist-Android.apk.sha256',
-          'Pomodoist-Android.aab',
-          'Pomodoist-Android.aab.sha256',
-        ],
+        assets: ['Pomodoist-Android.apk', 'Pomodoist-Android.apk.sha256'],
         legacyGh: 'false',
       ),
     ];
@@ -449,14 +444,21 @@ void main() {
     for (final asset in <String>[
       'Pomodoist-Android.apk',
       'Pomodoist-Android.apk.sha256',
-      'Pomodoist-Android.aab',
-      'Pomodoist-Android.aab.sha256',
     ]) {
       expect(script, contains(asset));
     }
+    expect(script, isNot(contains('Pomodoist-Android.aab')));
     expect(script, contains('gh release upload'));
     expect(script, contains('--clobber'));
     expect(script, contains('required_assets=('));
+
+    final bundle = (job['steps'] as YamlList).cast<YamlMap>().singleWhere(
+      (step) => step['name'] == 'Save signed release artifacts',
+    );
+    final artifact = bundle['with'] as YamlMap;
+    expect(artifact['name'], r'pomodoist-android-${{ github.sha }}');
+    expect(artifact['path'], 'apps/flutter/build/android/release/');
+    expect(artifact['retention-days'], 90);
   });
 
   test('Windows production builds configure native CAPTCHA', () {
