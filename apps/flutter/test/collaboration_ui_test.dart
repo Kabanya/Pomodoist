@@ -358,7 +358,7 @@ void main() {
                   'id': 'inv-1',
                   'email': 'dana@example.test',
                   'role': 'member',
-                  'expiresAt': '2026-09-20T10:00:00Z',
+                  'expiresAt': '2999-01-01T00:00:00Z',
                 },
             ],
           },
@@ -409,6 +409,287 @@ void main() {
         find.widgetWithText(ListTile, 'dana@example.test'),
         findsOneWidget,
       );
+      await _drainSnackBarsAndDispose(tester);
+    });
+
+    testWidgets('lists an accepted invitation as a member, not as pending', (
+      tester,
+    ) async {
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      const joined = 'joined@example.test';
+      final harness = await _pumpCollaborationApp(
+        tester,
+        handler: (action, args) async => switch (action) {
+          'members' => {
+            'members': const [],
+            'invitations': [
+              {
+                'id': 'inv-joined',
+                'email': joined,
+                'role': 'member',
+                'expiresAt': '2999-01-01T00:00:00Z',
+                'revokedAt': null,
+                'acceptedAt': '2026-09-16T02:58:29Z',
+              },
+            ],
+          },
+          _ => {'ok': true},
+        },
+        build: (context) => Center(
+          child: ElevatedButton(
+            key: const Key('open-share'),
+            onPressed: () => showShareProjectDialog(context, _project()),
+            child: const Text('open'),
+          ),
+        ),
+      );
+      await harness.db
+          .into(harness.db.sharedScopes)
+          .insertOnConflictUpdate(
+            SharedScopesCompanion.insert(
+              id: _scopeId,
+              dataJson: jsonEncode({
+                ..._scopeJson(),
+                'members': [
+                  {
+                    'userId': _actor,
+                    'role': 'administrator',
+                    'displayName': 'Owner Name',
+                  },
+                  {
+                    'userId': _memberId,
+                    'role': 'member',
+                    'displayName': joined,
+                  },
+                ],
+              }),
+            ),
+          );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('open-share')));
+      await tester.pumpAndSettle();
+
+      // The address stays in the member list and is no longer pending.
+      expect(find.widgetWithText(ListTile, joined), findsOneWidget);
+      expect(
+        find.byKey(const Key('collaboration-revoke-inv-joined')),
+        findsNothing,
+      );
+      expect(find.text(l10n.collaborationPendingInvitations), findsNothing);
+      await _drainSnackBarsAndDispose(tester);
+    });
+
+    testWidgets('hides a revoked invitation', (tester) async {
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      final harness = await _pumpCollaborationApp(
+        tester,
+        handler: (action, args) async => switch (action) {
+          'members' => {
+            'members': const [],
+            'invitations': [
+              {
+                'id': 'inv-pending',
+                'email': 'waiting@example.test',
+                'role': 'member',
+                'expiresAt': '2999-01-01T00:00:00Z',
+                'revokedAt': null,
+                'acceptedAt': null,
+              },
+              {
+                'id': 'inv-revoked',
+                'email': 'gone@example.test',
+                'role': 'member',
+                'expiresAt': '2999-01-01T00:00:00Z',
+                'revokedAt': '2026-09-16T19:17:28Z',
+                'acceptedAt': null,
+              },
+            ],
+          },
+          _ => {'ok': true},
+        },
+        build: (context) => Center(
+          child: ElevatedButton(
+            key: const Key('open-share'),
+            onPressed: () => showShareProjectDialog(context, _project()),
+            child: const Text('open'),
+          ),
+        ),
+      );
+      await _seedScope(harness.db);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('open-share')));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.collaborationPendingInvitations), findsOne);
+      expect(
+        find.byKey(const Key('collaboration-revoke-inv-pending')),
+        findsOne,
+      );
+      expect(find.text('gone@example.test'), findsNothing);
+      expect(
+        find.byKey(const Key('collaboration-revoke-inv-revoked')),
+        findsNothing,
+      );
+      await _drainSnackBarsAndDispose(tester);
+    });
+
+    testWidgets('hides an expired invitation', (tester) async {
+      final harness = await _pumpCollaborationApp(
+        tester,
+        handler: (action, args) async => switch (action) {
+          'members' => {
+            'members': const [],
+            'invitations': [
+              {
+                'id': 'inv-pending',
+                'email': 'waiting@example.test',
+                'role': 'member',
+                'expiresAt': '2999-01-01T00:00:00Z',
+                'revokedAt': null,
+                'acceptedAt': null,
+              },
+              {
+                'id': 'inv-expired',
+                'email': 'stale@example.test',
+                'role': 'member',
+                'expiresAt': '2020-01-01T00:00:00Z',
+                'revokedAt': null,
+                'acceptedAt': null,
+              },
+            ],
+          },
+          _ => {'ok': true},
+        },
+        build: (context) => Center(
+          child: ElevatedButton(
+            key: const Key('open-share'),
+            onPressed: () => showShareProjectDialog(context, _project()),
+            child: const Text('open'),
+          ),
+        ),
+      );
+      await _seedScope(harness.db);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('open-share')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('collaboration-revoke-inv-pending')),
+        findsOne,
+      );
+      expect(find.text('stale@example.test'), findsNothing);
+      expect(
+        find.byKey(const Key('collaboration-revoke-inv-expired')),
+        findsNothing,
+      );
+      await _drainSnackBarsAndDispose(tester);
+    });
+
+    testWidgets('keeps one row per address and revokes it', (tester) async {
+      final harness = await _pumpCollaborationApp(
+        tester,
+        handler: (action, args) async => switch (action) {
+          'members' => {
+            'members': const [],
+            'invitations': [
+              {
+                'id': 'inv-old',
+                'email': 'dup@example.test',
+                'role': 'member',
+                'expiresAt': '2999-02-01T00:00:00Z',
+                'revokedAt': null,
+                'acceptedAt': null,
+              },
+              {
+                'id': 'inv-new',
+                'email': 'dup@example.test',
+                'role': 'member',
+                'expiresAt': '2999-03-01T00:00:00Z',
+                'revokedAt': null,
+                'acceptedAt': null,
+              },
+            ],
+          },
+          _ => {'ok': true},
+        },
+        build: (context) => Center(
+          child: ElevatedButton(
+            key: const Key('open-share'),
+            onPressed: () => showShareProjectDialog(context, _project()),
+            child: const Text('open'),
+          ),
+        ),
+      );
+      await _seedScope(harness.db);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('open-share')));
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(ListTile, 'dup@example.test'), findsOneWidget);
+      expect(find.byKey(const Key('collaboration-revoke-inv-new')), findsOne);
+      expect(
+        find.byKey(const Key('collaboration-revoke-inv-old')),
+        findsNothing,
+      );
+
+      await tester.tap(find.byKey(const Key('collaboration-revoke-inv-new')));
+      await tester.pumpAndSettle();
+
+      final revoke = harness.callsFor('invite').single;
+      expect(revoke['invitationId'], 'inv-new');
+      expect(revoke['revoke'], 'true');
+      expect(revoke['scopeId'], _scopeId);
+      await _drainSnackBarsAndDispose(tester);
+    });
+
+    testWidgets('drops a pending invitation once the server revokes it', (
+      tester,
+    ) async {
+      var revoked = false;
+      final harness = await _pumpCollaborationApp(
+        tester,
+        handler: (action, args) async => switch (action) {
+          'members' => {
+            'members': const [],
+            'invitations': [
+              {
+                'id': 'inv-1',
+                'email': 'waiting@example.test',
+                'role': 'member',
+                'expiresAt': '2999-01-01T00:00:00Z',
+                'revokedAt': revoked ? '2026-09-16T19:17:28Z' : null,
+                'acceptedAt': null,
+              },
+            ],
+          },
+          _ => {'ok': true},
+        },
+        build: (context) => Center(
+          child: ElevatedButton(
+            key: const Key('open-share'),
+            onPressed: () => showShareProjectDialog(context, _project()),
+            child: const Text('open'),
+          ),
+        ),
+      );
+      await _seedScope(harness.db);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('open-share')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('collaboration-revoke-inv-1')), findsOne);
+
+      revoked = true;
+      await tester.tap(find.byKey(const Key('collaboration-revoke-inv-1')));
+      await tester.pumpAndSettle();
+
+      expect(harness.callsFor('invite').single['revoke'], 'true');
+      expect(find.byKey(const Key('collaboration-revoke-inv-1')), findsNothing);
+      expect(find.text('waiting@example.test'), findsNothing);
       await _drainSnackBarsAndDispose(tester);
     });
 

@@ -478,11 +478,42 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
     if (repository == null || scope == null || !scope.canManage) return;
     try {
       final result = await repository.action('members', {'scopeId': scope.id});
-      final invitations = collaborationMaps(result['invitations']);
+      final invitations = _pendingInvitations(
+        collaborationMaps(result['invitations']),
+      );
       if (mounted) setState(() => _invitations = invitations);
     } catch (_) {
       // Pending invitations are auxiliary; the member list stays usable.
     }
+  }
+
+  // The server lists every invitation, accepted and revoked ones included, so
+  // keep only the ones still waiting for an answer: not revoked, not accepted,
+  // not expired, and one row per email.
+  List<Map<String, dynamic>> _pendingInvitations(
+    List<Map<String, dynamic>> rows,
+  ) {
+    final byEmail = <String, Map<String, dynamic>>{};
+    for (final invitation in rows) {
+      if (invitation['revokedAt'] != null) continue;
+      if (invitation['acceptedAt'] != null) continue;
+      final expiresAt = _invitationExpiry(invitation);
+      if (expiresAt == null || !expiresAt.isAfter(DateTime.now().toUtc())) {
+        continue;
+      }
+      final email = invitation['email'] as String? ?? '';
+      final kept = byEmail[email];
+      final keptExpiry = kept == null ? null : _invitationExpiry(kept);
+      if (keptExpiry == null || !keptExpiry.isAfter(expiresAt)) {
+        byEmail[email] = invitation;
+      }
+    }
+    return byEmail.values.toList();
+  }
+
+  DateTime? _invitationExpiry(Map<String, dynamic> invitation) {
+    final raw = invitation['expiresAt'];
+    return raw is String ? DateTime.tryParse(raw)?.toUtc() : null;
   }
 
   Future<void> _invite() async {
