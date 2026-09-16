@@ -3386,4 +3386,45 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get collaborationSharedBadge => 'Projet partagé';
+
+  @override
+  String get collaborationJoinTitle => 'Invitation à un projet';
+
+  @override
+  String get collaborationJoinDescription =>
+      'Vous avez été invité à rejoindre un projet partagé. Acceptez l\'invitation pour l\'ajouter à vos projets.';
+
+  @override
+  String get collaborationJoinRole => 'Votre rôle';
+
+  @override
+  String get collaborationJoinAccept => 'Accepter l\'invitation';
+
+  @override
+  String get collaborationJoinOpenProject => 'Ouvrir le projet';
+
+  @override
+  String get collaborationJoinInvalid =>
+      'Ce lien d\'invitation n\'est pas valide';
+
+  @override
+  String get collaborationJoinUnavailable =>
+      'Cette invitation n\'est plus disponible pour votre compte';
+
+  @override
+  String get collaborationPublicNotice =>
+      'Vue en lecture seule partagée par un membre Pomodoist';
+
+  @override
+  String get collaborationPublicUnavailable =>
+      'Ce lien partagé n\'est plus disponible';
+
+  @override
+  String get collaborationPublicEmpty => 'Rien n\'a encore été partagé';
+
+  @override
+  String get collaborationPublicOpen => 'Ouvrir Pomodoist';
+
+  @override
+  String get collaborationPublicTasks => 'Tâches';
 }

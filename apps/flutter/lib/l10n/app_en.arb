@@ -1746,5 +1746,17 @@
   "collaborationCommentHint": "Write a comment",
   "collaborationCommentSend": "Send",
   "collaborationCommentDelete": "Delete comment",
-  "collaborationSharedBadge": "Shared project"
+  "collaborationSharedBadge": "Shared project",
+  "collaborationJoinTitle": "Project invitation",
+  "collaborationJoinDescription": "You have been invited to join a shared project. Accept the invitation to add it to your projects.",
+  "collaborationJoinRole": "Your role",
+  "collaborationJoinAccept": "Accept invitation",
+  "collaborationJoinOpenProject": "Open project",
+  "collaborationJoinInvalid": "This invitation link is not valid",
+  "collaborationJoinUnavailable": "This invitation is no longer available for your account",
+  "collaborationPublicNotice": "Read-only view shared by a Pomodoist member",
+  "collaborationPublicUnavailable": "This shared link is no longer available",
+  "collaborationPublicEmpty": "Nothing has been shared yet",
+  "collaborationPublicOpen": "Open Pomodoist",
+  "collaborationPublicTasks": "Tasks"
 }

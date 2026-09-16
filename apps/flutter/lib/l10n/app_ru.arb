@@ -1062,5 +1062,17 @@
   "collaborationCommentHint": "Написать комментарий",
   "collaborationCommentSend": "Отправить",
   "collaborationCommentDelete": "Удалить комментарий",
-  "collaborationSharedBadge": "Общий проект"
+  "collaborationSharedBadge": "Общий проект",
+  "collaborationJoinTitle": "Приглашение в проект",
+  "collaborationJoinDescription": "Вас пригласили присоединиться к общему проекту. Примите приглашение, чтобы добавить его в свои проекты.",
+  "collaborationJoinRole": "Ваша роль",
+  "collaborationJoinAccept": "Принять приглашение",
+  "collaborationJoinOpenProject": "Открыть проект",
+  "collaborationJoinInvalid": "Эта ссылка-приглашение недействительна",
+  "collaborationJoinUnavailable": "Это приглашение больше недоступно для вашего аккаунта",
+  "collaborationPublicNotice": "Просмотр только для чтения, которым поделился участник Pomodoist",
+  "collaborationPublicUnavailable": "Эта общая ссылка больше недоступна",
+  "collaborationPublicEmpty": "Пока ничего не опубликовано",
+  "collaborationPublicOpen": "Открыть Pomodoist",
+  "collaborationPublicTasks": "Задачи"
 }

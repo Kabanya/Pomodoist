@@ -1673,5 +1673,17 @@
   "collaborationCommentHint": "Escreva um comentário",
   "collaborationCommentSend": "Enviar",
   "collaborationCommentDelete": "Excluir comentário",
-  "collaborationSharedBadge": "Projeto compartilhado"
+  "collaborationSharedBadge": "Projeto compartilhado",
+  "collaborationJoinTitle": "Convite para um projeto",
+  "collaborationJoinDescription": "Você foi convidado a participar de um projeto compartilhado. Aceite o convite para adicioná-lo aos seus projetos.",
+  "collaborationJoinRole": "Seu papel",
+  "collaborationJoinAccept": "Aceitar convite",
+  "collaborationJoinOpenProject": "Abrir projeto",
+  "collaborationJoinInvalid": "Este link de convite não é válido",
+  "collaborationJoinUnavailable": "Este convite não está mais disponível para sua conta",
+  "collaborationPublicNotice": "Visualização somente leitura compartilhada por um membro do Pomodoist",
+  "collaborationPublicUnavailable": "Este link compartilhado não está mais disponível",
+  "collaborationPublicEmpty": "Nada foi compartilhado ainda",
+  "collaborationPublicOpen": "Abrir o Pomodoist",
+  "collaborationPublicTasks": "Tarefas"
 }

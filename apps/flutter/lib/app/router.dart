@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/billing/purchase_success_screen.dart';
+import '../features/collaboration/presentation/collaboration_join_screen.dart';
+import '../features/collaboration/presentation/public_project_screen.dart';
 import '../features/focus/presentation/focus_screen.dart';
 import '../features/integrations/google_calendar/presentation/google_calendar_settings_screen.dart';
 import '../features/onboarding/onboarding_gate.dart';
@@ -136,6 +138,22 @@ final routerProvider = Provider<GoRouter>((ref) {
                     RuntimeEnvironment.production
                 ? 'pomodoist_bot'
                 : 'pomodoist_test_bot',
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/shared/join/:token',
+        pageBuilder: (context, state) => NoTransitionPage(
+          child: CollaborationJoinScreen(
+            token: state.pathParameters['token'] ?? '',
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/shared/public/:token',
+        pageBuilder: (context, state) => NoTransitionPage(
+          child: PublicProjectScreen(
+            token: state.pathParameters['token'] ?? '',
           ),
         ),
       ),
@@ -426,6 +444,10 @@ String? webAppRedirectFor({
 }
 
 bool _requiresWebAccount(String path) {
+  // A public project link is deliberately readable without an account.
+  if (path == '/shared/public' || path.startsWith('/shared/public/')) {
+    return false;
+  }
   return path != '/login' &&
       path != '/register' &&
       path != '/login-callback' &&

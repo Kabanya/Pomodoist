@@ -1673,5 +1673,17 @@
   "collaborationCommentHint": "コメントを書く",
   "collaborationCommentSend": "送信",
   "collaborationCommentDelete": "コメントを削除",
-  "collaborationSharedBadge": "共有プロジェクト"
+  "collaborationSharedBadge": "共有プロジェクト",
+  "collaborationJoinTitle": "プロジェクトへの招待",
+  "collaborationJoinDescription": "共有プロジェクトへの参加に招待されています。招待を承認するとプロジェクトに追加されます。",
+  "collaborationJoinRole": "あなたの役割",
+  "collaborationJoinAccept": "招待を承認",
+  "collaborationJoinOpenProject": "プロジェクトを開く",
+  "collaborationJoinInvalid": "この招待リンクは無効です",
+  "collaborationJoinUnavailable": "この招待はお使いのアカウントでは利用できません",
+  "collaborationPublicNotice": "Pomodoist メンバーが共有した閲覧専用のビュー",
+  "collaborationPublicUnavailable": "この共有リンクは利用できなくなりました",
+  "collaborationPublicEmpty": "まだ何も共有されていません",
+  "collaborationPublicOpen": "Pomodoist を開く",
+  "collaborationPublicTasks": "タスク"
 }

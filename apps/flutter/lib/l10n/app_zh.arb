@@ -1062,5 +1062,17 @@
   "collaborationCommentHint": "写评论",
   "collaborationCommentSend": "发送",
   "collaborationCommentDelete": "删除评论",
-  "collaborationSharedBadge": "共享项目"
+  "collaborationSharedBadge": "共享项目",
+  "collaborationJoinTitle": "项目邀请",
+  "collaborationJoinDescription": "你已被邀请加入一个共享项目。接受邀请即可将其添加到你的项目。",
+  "collaborationJoinRole": "你的角色",
+  "collaborationJoinAccept": "接受邀请",
+  "collaborationJoinOpenProject": "打开项目",
+  "collaborationJoinInvalid": "此邀请链接无效",
+  "collaborationJoinUnavailable": "此邀请已不适用于你的账户",
+  "collaborationPublicNotice": "由 Pomodoist 成员共享的只读视图",
+  "collaborationPublicUnavailable": "此共享链接已不可用",
+  "collaborationPublicEmpty": "尚未共享任何内容",
+  "collaborationPublicOpen": "打开 Pomodoist",
+  "collaborationPublicTasks": "任务"
 }

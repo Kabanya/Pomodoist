@@ -148,5 +148,6 @@ docs/superpowers/plans/*
 docs/superpowers/specs/*
 !docs/superpowers/plans/2026-09-13-repository-refactor-options.md
 !docs/superpowers/specs/2026-09-13-two-minor-release-refactor-design.md
+.kimi-code
 
 !apps/chrome-extension/.gitignore

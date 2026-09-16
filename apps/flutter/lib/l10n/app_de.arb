@@ -1062,5 +1062,17 @@
   "collaborationCommentHint": "Kommentar schreiben",
   "collaborationCommentSend": "Senden",
   "collaborationCommentDelete": "Kommentar löschen",
-  "collaborationSharedBadge": "Geteiltes Projekt"
+  "collaborationSharedBadge": "Geteiltes Projekt",
+  "collaborationJoinTitle": "Projekteinladung",
+  "collaborationJoinDescription": "Sie wurden eingeladen, einem geteilten Projekt beizutreten. Nehmen Sie die Einladung an, um es Ihren Projekten hinzuzufügen.",
+  "collaborationJoinRole": "Ihre Rolle",
+  "collaborationJoinAccept": "Einladung annehmen",
+  "collaborationJoinOpenProject": "Projekt öffnen",
+  "collaborationJoinInvalid": "Dieser Einladungslink ist ungültig",
+  "collaborationJoinUnavailable": "Diese Einladung ist für Ihr Konto nicht mehr verfügbar",
+  "collaborationPublicNotice": "Schreibgeschützte Ansicht, geteilt von einem Pomodoist-Mitglied",
+  "collaborationPublicUnavailable": "Dieser geteilte Link ist nicht mehr verfügbar",
+  "collaborationPublicEmpty": "Es wurde noch nichts geteilt",
+  "collaborationPublicOpen": "Pomodoist öffnen",
+  "collaborationPublicTasks": "Aufgaben"
 }

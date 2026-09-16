@@ -3392,6 +3392,46 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get collaborationSharedBadge => 'Projeto compartilhado';
+
+  @override
+  String get collaborationJoinTitle => 'Convite para um projeto';
+
+  @override
+  String get collaborationJoinDescription =>
+      'Você foi convidado a participar de um projeto compartilhado. Aceite o convite para adicioná-lo aos seus projetos.';
+
+  @override
+  String get collaborationJoinRole => 'Seu papel';
+
+  @override
+  String get collaborationJoinAccept => 'Aceitar convite';
+
+  @override
+  String get collaborationJoinOpenProject => 'Abrir projeto';
+
+  @override
+  String get collaborationJoinInvalid => 'Este link de convite não é válido';
+
+  @override
+  String get collaborationJoinUnavailable =>
+      'Este convite não está mais disponível para sua conta';
+
+  @override
+  String get collaborationPublicNotice =>
+      'Visualização somente leitura compartilhada por um membro do Pomodoist';
+
+  @override
+  String get collaborationPublicUnavailable =>
+      'Este link compartilhado não está mais disponível';
+
+  @override
+  String get collaborationPublicEmpty => 'Nada foi compartilhado ainda';
+
+  @override
+  String get collaborationPublicOpen => 'Abrir o Pomodoist';
+
+  @override
+  String get collaborationPublicTasks => 'Tarefas';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).

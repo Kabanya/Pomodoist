@@ -3269,4 +3269,41 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get collaborationSharedBadge => '공유 프로젝트';
+
+  @override
+  String get collaborationJoinTitle => '프로젝트 초대';
+
+  @override
+  String get collaborationJoinDescription =>
+      '공유 프로젝트에 초대되었습니다. 초대를 수락하면 프로젝트 목록에 추가됩니다.';
+
+  @override
+  String get collaborationJoinRole => '내 역할';
+
+  @override
+  String get collaborationJoinAccept => '초대 수락';
+
+  @override
+  String get collaborationJoinOpenProject => '프로젝트 열기';
+
+  @override
+  String get collaborationJoinInvalid => '이 초대 링크는 유효하지 않습니다';
+
+  @override
+  String get collaborationJoinUnavailable => '이 초대는 더 이상 계정에서 사용할 수 없습니다';
+
+  @override
+  String get collaborationPublicNotice => 'Pomodoist 멤버가 공유한 읽기 전용 보기';
+
+  @override
+  String get collaborationPublicUnavailable => '이 공유 링크는 더 이상 사용할 수 없습니다';
+
+  @override
+  String get collaborationPublicEmpty => '아직 공유된 내용이 없습니다';
+
+  @override
+  String get collaborationPublicOpen => 'Pomodoist 열기';
+
+  @override
+  String get collaborationPublicTasks => '작업';
 }

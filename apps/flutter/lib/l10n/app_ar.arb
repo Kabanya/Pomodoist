@@ -1062,5 +1062,17 @@
   "collaborationCommentHint": "اكتب تعليقًا",
   "collaborationCommentSend": "إرسال",
   "collaborationCommentDelete": "حذف التعليق",
-  "collaborationSharedBadge": "مشروع مشترك"
+  "collaborationSharedBadge": "مشروع مشترك",
+  "collaborationJoinTitle": "دعوة إلى مشروع",
+  "collaborationJoinDescription": "تمت دعوتك للانضمام إلى مشروع مشترك. اقبل الدعوة لإضافته إلى مشاريعك.",
+  "collaborationJoinRole": "دورك",
+  "collaborationJoinAccept": "قبول الدعوة",
+  "collaborationJoinOpenProject": "فتح المشروع",
+  "collaborationJoinInvalid": "رابط الدعوة غير صالح",
+  "collaborationJoinUnavailable": "هذه الدعوة لم تعد متاحة لحسابك",
+  "collaborationPublicNotice": "عرض للقراءة فقط شاركه أحد أعضاء Pomodoist",
+  "collaborationPublicUnavailable": "هذا الرابط المشترك لم يعد متاحاً",
+  "collaborationPublicEmpty": "لم تتم مشاركة أي شيء بعد",
+  "collaborationPublicOpen": "افتح Pomodoist",
+  "collaborationPublicTasks": "المهام"
 }

@@ -5716,6 +5716,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shared project'**
   String get collaborationSharedBadge;
+
+  /// No description provided for @collaborationJoinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Project invitation'**
+  String get collaborationJoinTitle;
+
+  /// No description provided for @collaborationJoinDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'You have been invited to join a shared project. Accept the invitation to add it to your projects.'**
+  String get collaborationJoinDescription;
+
+  /// No description provided for @collaborationJoinRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Your role'**
+  String get collaborationJoinRole;
+
+  /// No description provided for @collaborationJoinAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept invitation'**
+  String get collaborationJoinAccept;
+
+  /// No description provided for @collaborationJoinOpenProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Open project'**
+  String get collaborationJoinOpenProject;
+
+  /// No description provided for @collaborationJoinInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation link is not valid'**
+  String get collaborationJoinInvalid;
+
+  /// No description provided for @collaborationJoinUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation is no longer available for your account'**
+  String get collaborationJoinUnavailable;
+
+  /// No description provided for @collaborationPublicNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only view shared by a Pomodoist member'**
+  String get collaborationPublicNotice;
+
+  /// No description provided for @collaborationPublicUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This shared link is no longer available'**
+  String get collaborationPublicUnavailable;
+
+  /// No description provided for @collaborationPublicEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has been shared yet'**
+  String get collaborationPublicEmpty;
+
+  /// No description provided for @collaborationPublicOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Pomodoist'**
+  String get collaborationPublicOpen;
+
+  /// No description provided for @collaborationPublicTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get collaborationPublicTasks;
 }
 
 class _AppLocalizationsDelegate

@@ -3184,4 +3184,40 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get collaborationSharedBadge => '共享项目';
+
+  @override
+  String get collaborationJoinTitle => '项目邀请';
+
+  @override
+  String get collaborationJoinDescription => '你已被邀请加入一个共享项目。接受邀请即可将其添加到你的项目。';
+
+  @override
+  String get collaborationJoinRole => '你的角色';
+
+  @override
+  String get collaborationJoinAccept => '接受邀请';
+
+  @override
+  String get collaborationJoinOpenProject => '打开项目';
+
+  @override
+  String get collaborationJoinInvalid => '此邀请链接无效';
+
+  @override
+  String get collaborationJoinUnavailable => '此邀请已不适用于你的账户';
+
+  @override
+  String get collaborationPublicNotice => '由 Pomodoist 成员共享的只读视图';
+
+  @override
+  String get collaborationPublicUnavailable => '此共享链接已不可用';
+
+  @override
+  String get collaborationPublicEmpty => '尚未共享任何内容';
+
+  @override
+  String get collaborationPublicOpen => '打开 Pomodoist';
+
+  @override
+  String get collaborationPublicTasks => '任务';
 }

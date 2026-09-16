@@ -8,6 +8,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pomodoist/app/account_providers.dart';
 import 'package:pomodoist/app/router.dart';
+import 'package:pomodoist/features/collaboration/presentation/collaboration_join_screen.dart';
+import 'package:pomodoist/features/collaboration/presentation/collaboration_providers.dart';
+import 'package:pomodoist/features/collaboration/presentation/public_project_screen.dart';
+import 'package:pomodoist/l10n/app_localizations.dart';
 
 void main() {
   setUpAll(loadTestAppResources);
@@ -307,6 +311,165 @@ void main() {
       isNull,
     );
   });
+
+  test('signed-out shared public links stay readable', () {
+    expect(
+      webAppRedirectFor(
+        isWeb: true,
+        signedIn: false,
+        uri: Uri.parse('/shared/public/$_publicToken'),
+      ),
+      isNull,
+    );
+  });
+
+  test('signed-out invitation links return to their join path', () {
+    expect(
+      webAppRedirectFor(
+        isWeb: true,
+        signedIn: false,
+        uri: Uri.parse('/shared/join/$_invitationToken'),
+      ),
+      '/login?returnTo=%2Fshared%2Fjoin%2F$_invitationToken',
+    );
+  });
+
+  test('web startup keeps a shared link path', () {
+    expect(
+      initialAppLocationFor(
+        isWeb: true,
+        baseUri: Uri.parse(
+          'https://pomodoist.test/shared/join/$_invitationToken',
+        ),
+      ),
+      '/shared/join/$_invitationToken',
+    );
+  });
+
+  testWidgets('an invitation link opens the join screen instead of a 404', (
+    tester,
+  ) async {
+    final account = _MutableAccountClient()..userId = 'user';
+    final container = ProviderContainer(
+      overrides: [
+        accountClientProvider.overrideWithValue(account),
+        accountAuthStateProvider.overrideWithValue(
+          const AsyncData(
+            AccountAuthState(
+              signedIn: true,
+              session: AccountSession(userId: 'user'),
+            ),
+          ),
+        ),
+        collaborationRepositoryProvider.overrideWithValue(null),
+      ],
+    );
+    final subscription = container.listen(routerProvider, (_, _) {});
+    addTearDown(() {
+      subscription.close();
+      container.dispose();
+    });
+    final router = container.read(routerProvider);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(
+          builder: testAppBuilder,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+
+    router.go('/shared/join/$_invitationToken');
+    await tester.pumpAndSettle();
+
+    expect(_routerUri(router), '/shared/join/$_invitationToken');
+    expect(find.byType(CollaborationJoinScreen), findsOneWidget);
+  });
+
+  testWidgets('a public link renders shared content without an account', (
+    tester,
+  ) async {
+    final account = _AnonymousAccountClient();
+    final container = ProviderContainer(
+      overrides: [
+        accountClientProvider.overrideWithValue(account),
+        accountAuthStateProvider.overrideWithValue(
+          const AsyncData(AccountAuthState(signedIn: false)),
+        ),
+      ],
+    );
+    final subscription = container.listen(routerProvider, (_, _) {});
+    addTearDown(() {
+      subscription.close();
+      container.dispose();
+    });
+    final router = container.read(routerProvider);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(
+          builder: testAppBuilder,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+
+    router.go('/shared/public/$_publicToken');
+    await tester.pumpAndSettle();
+
+    expect(_routerUri(router), '/shared/public/$_publicToken');
+    expect(find.byType(PublicProjectScreen), findsOneWidget);
+    expect(account.calls, [
+      {
+        'function': 'pomodoist-collaboration',
+        'action': 'publicRead',
+        'token': _publicToken,
+      },
+    ]);
+    expect(find.text('Launch plan'), findsOneWidget);
+  });
+}
+
+final _invitationToken = List.filled(64, 'a').join();
+final _publicToken = List.filled(64, 'b').join();
+
+/// A visitor without a session: the public link must not require one.
+class _AnonymousAccountClient implements AccountClient {
+  final calls = <Map<String, dynamic>>[];
+
+  @override
+  String? get currentUserId => null;
+
+  @override
+  Future<AccountFunctionResponse> invokeFunction(
+    String functionName, {
+    Map<String, String>? headers,
+    Object? body,
+    Map<String, dynamic>? queryParameters,
+    String? region,
+  }) async {
+    final arguments = Map<String, dynamic>.from(body! as Map);
+    calls.add({'function': functionName, ...arguments});
+    return const AccountFunctionResponse(
+      status: 200,
+      data: {
+        'scope': {'id': 'scope-1', 'rootProjectId': 'project-1'},
+        'projects': [
+          {'id': 'project-1', 'name': 'Launch plan'},
+        ],
+        'tasks': <Map<String, dynamic>>[],
+        'comments': <Map<String, dynamic>>[],
+      },
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 String _routerUri(GoRouter router) =>

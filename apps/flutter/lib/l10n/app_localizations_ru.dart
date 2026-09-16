@@ -3367,4 +3367,45 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get collaborationSharedBadge => 'Общий проект';
+
+  @override
+  String get collaborationJoinTitle => 'Приглашение в проект';
+
+  @override
+  String get collaborationJoinDescription =>
+      'Вас пригласили присоединиться к общему проекту. Примите приглашение, чтобы добавить его в свои проекты.';
+
+  @override
+  String get collaborationJoinRole => 'Ваша роль';
+
+  @override
+  String get collaborationJoinAccept => 'Принять приглашение';
+
+  @override
+  String get collaborationJoinOpenProject => 'Открыть проект';
+
+  @override
+  String get collaborationJoinInvalid =>
+      'Эта ссылка-приглашение недействительна';
+
+  @override
+  String get collaborationJoinUnavailable =>
+      'Это приглашение больше недоступно для вашего аккаунта';
+
+  @override
+  String get collaborationPublicNotice =>
+      'Просмотр только для чтения, которым поделился участник Pomodoist';
+
+  @override
+  String get collaborationPublicUnavailable =>
+      'Эта общая ссылка больше недоступна';
+
+  @override
+  String get collaborationPublicEmpty => 'Пока ничего не опубликовано';
+
+  @override
+  String get collaborationPublicOpen => 'Открыть Pomodoist';
+
+  @override
+  String get collaborationPublicTasks => 'Задачи';
 }
