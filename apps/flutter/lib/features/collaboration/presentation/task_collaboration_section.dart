@@ -210,30 +210,51 @@ class _TaskCollaborationSectionState
               child: Text(context.l10n.commonSave),
             ),
           ],
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final member in editors)
-                CheckboxListTile(
-                  key: Key('task-assignee-option-${member['userId']}'),
-                  value: selected.contains(member['userId']),
-                  title: Text(
-                    collaborationMemberLabel(
-                      l10n,
-                      scope,
-                      member['userId'] as String? ?? '',
-                    ),
-                  ),
-                  onChanged: (checked) => setState(() {
-                    final userId = member['userId'] as String? ?? '';
-                    if (checked == true) {
-                      selected.add(userId);
-                    } else {
-                      selected.remove(userId);
-                    }
-                  }),
-                ),
-            ],
+          child: SizedBox(
+            width: 460,
+            child: Material(
+              type: MaterialType.transparency,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 320),
+                child: editors.isEmpty
+                    ? Padding(
+                        key: const Key('task-assignees-empty'),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(l10n.collaborationNoAssignees),
+                      )
+                    : SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (final member in editors)
+                              CheckboxListTile(
+                                key: Key(
+                                  'task-assignee-option-${member['userId']}',
+                                ),
+                                value: selected.contains(member['userId']),
+                                title: Text(
+                                  collaborationMemberLabel(
+                                    l10n,
+                                    scope,
+                                    member['userId'] as String? ?? '',
+                                  ),
+                                ),
+                                onChanged: (checked) => setState(() {
+                                  final userId =
+                                      member['userId'] as String? ?? '';
+                                  if (checked == true) {
+                                    selected.add(userId);
+                                  } else {
+                                    selected.remove(userId);
+                                  }
+                                }),
+                              ),
+                          ],
+                        ),
+                      ),
+              ),
+            ),
           ),
         ),
       ),

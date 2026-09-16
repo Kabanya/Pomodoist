@@ -614,6 +614,18 @@ and comments. Center it within the Browse content width.
   behavior and density. Do not create a universal wrapper for every component.
 - Existing Material components may use the shared theme. Mixed dialog content
   must retain the Material ancestors its widgets require.
+- Shadcn overlay surfaces (`ShadDialog`, `ShadSheet`, `ShadPopover`, and
+  similar) do not insert a `Material` ancestor. Any Material widget placed
+  inside one that calls `Material.of` — `ListTile`, `CheckboxListTile`,
+  `SwitchListTile`, `InkWell`, `Ink` — must be wrapped in
+  `Material(type: MaterialType.transparency)`, as
+  `collaboration_inbox_dialog.dart` and `share_project_dialog.dart` in
+  `apps/flutter/lib/features/collaboration/presentation/` do.
+- Missing that wrapper fails during build: a debug build reports "No Material
+  widget found."; a release build strips the debug assert and instead throws a
+  null check inside `Material.of`. The framework replaces the widget with an
+  `ErrorWidget`, which a release build paints as a large featureless grey box
+  with no text, so the dialog looks like a blank panel rather than an error.
 - Task rows, smart Quick Add, the calendar, Timeline, Kanban, timers, and
   resizable windows retain their specialized implementations. Do not rewrite
   them merely to make widget names consistent.

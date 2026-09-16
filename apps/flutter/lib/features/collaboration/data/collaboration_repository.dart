@@ -178,13 +178,15 @@ class CollaborationRepository {
           .where((m) => m['role'] != 'observer')
           .map((m) => m['userId'])
           .toSet();
-      if (!editors.containsAll(ids)) {
-        throw const CollaborationException('invalid_assignee');
-      }
       final previous = collaborationIds(task.assigneeIdsJson).toSet();
       final add = ids.difference(previous).toList();
       final remove = previous.difference(ids).toList();
       if (add.isEmpty && remove.isEmpty) return;
+      // The server validates only the added users, so an id that is merely
+      // retained does not block a removal.
+      if (!editors.containsAll(add)) {
+        throw const CollaborationException('invalid_assignee');
+      }
       await (db.update(db.tasks)..where((row) => row.id.equals(taskId))).write(
         TasksCompanion(
           assigneeIdsJson: Value(jsonEncode(ids.toList()..sort())),

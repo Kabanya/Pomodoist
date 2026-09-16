@@ -24,6 +24,7 @@ import 'support/test_app.dart';
 
 const _actor = localUserId;
 const _memberId = 'member-2';
+const _observerId = 'viewer-3';
 const _scopeId = 'scope-1';
 const _projectId = 'project-1';
 const _taskId = 'task-1';
@@ -43,6 +44,7 @@ Map<String, dynamic> _scopeJson({
   String role = 'administrator',
   String ownerId = _actor,
   String? publicToken,
+  List<Map<String, dynamic>>? members,
 }) => {
   'id': _scopeId,
   'rootProjectId': _projectId,
@@ -51,10 +53,16 @@ Map<String, dynamic> _scopeJson({
   'revision': 4,
   'historyUnlimited': true,
   'publicToken': ?publicToken,
-  'members': [
-    {'userId': ownerId, 'role': 'administrator', 'displayName': 'Owner Name'},
-    {'userId': _memberId, 'role': 'member', 'displayName': 'Alice'},
-  ],
+  'members':
+      members ??
+      [
+        {
+          'userId': ownerId,
+          'role': 'administrator',
+          'displayName': 'Owner Name',
+        },
+        {'userId': _memberId, 'role': 'member', 'displayName': 'Alice'},
+      ],
 };
 
 ProjectItem _project() => ProjectItem(
@@ -88,13 +96,19 @@ Future<void> _seedScope(
   String role = 'administrator',
   String ownerId = _actor,
   String? publicToken,
+  List<Map<String, dynamic>>? members,
 }) => db
     .into(db.sharedScopes)
     .insertOnConflictUpdate(
       SharedScopesCompanion.insert(
         id: _scopeId,
         dataJson: jsonEncode(
-          _scopeJson(role: role, ownerId: ownerId, publicToken: publicToken),
+          _scopeJson(
+            role: role,
+            ownerId: ownerId,
+            publicToken: publicToken,
+            members: members,
+          ),
         ),
       ),
     );
@@ -1130,6 +1144,109 @@ void main() {
         find.byKey(const Key('task-comment-delete-comment-1')),
         findsNothing,
       );
+      await _drainSnackBarsAndDispose(tester);
+    });
+
+    testWidgets('edits assignees from the member list', (tester) async {
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      final previousSize = tester.view.physicalSize;
+      final previousDevicePixelRatio = tester.view.devicePixelRatio;
+      tester.view
+        ..physicalSize = const Size(483, 800)
+        ..devicePixelRatio = 1;
+      addTearDown(() {
+        tester.view
+          ..physicalSize = previousSize
+          ..devicePixelRatio = previousDevicePixelRatio;
+      });
+      final harness = await _pumpCollaborationApp(
+        tester,
+        handler: (action, args) async => {'ok': true},
+        build: (context) => SingleChildScrollView(
+          child: TaskCollaborationSection(task: _task()),
+        ),
+      );
+      await _seedScope(
+        harness.db,
+        members: [
+          {'userId': _actor, 'role': 'administrator', 'displayName': 'Owner'},
+          {'userId': _memberId, 'role': 'member', 'displayName': 'Alice'},
+          {'userId': _observerId, 'role': 'observer', 'displayName': 'Vera'},
+        ],
+      );
+      await _seedSharedTask(harness.db);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('task-assignees-edit')));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.collaborationEditAssignees), findsOne);
+      expect(find.byKey(const Key('task-assignee-option-$_actor')), findsOne);
+      expect(
+        find.byKey(const Key('task-assignee-option-$_memberId')),
+        findsOne,
+      );
+      expect(
+        find.byKey(const Key('task-assignee-option-$_observerId')),
+        findsNothing,
+      );
+      expect(find.byType(ErrorWidget), findsNothing);
+
+      await tester.tap(
+        find.byKey(const Key('task-assignee-option-$_memberId')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('task-assignees-save')));
+      await tester.pumpAndSettle();
+
+      final task = await (harness.db.select(
+        harness.db.tasks,
+      )..where((row) => row.id.equals(_taskId))).getSingle();
+      expect(jsonDecode(task.assigneeIdsJson), [_memberId]);
+      final assign = (await harness.db.select(harness.db.syncCommands).get())
+          .singleWhere((row) => row.type == 'task.assign');
+      expect(jsonDecode(assign.payloadJson), {
+        'scopeId': _scopeId,
+        'id': _taskId,
+        'add': [_memberId],
+        'remove': <String>[],
+      });
+      await _drainSnackBarsAndDispose(tester);
+    });
+
+    testWidgets('shows an empty state when nobody can be assigned', (
+      tester,
+    ) async {
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      final harness = await _pumpCollaborationApp(
+        tester,
+        handler: (action, args) async => {'ok': true},
+        build: (context) => SingleChildScrollView(
+          child: TaskCollaborationSection(task: _task()),
+        ),
+      );
+      await _seedScope(
+        harness.db,
+        members: [
+          {'userId': _actor, 'role': 'observer', 'displayName': 'Owner'},
+        ],
+      );
+      await _seedSharedTask(harness.db);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('task-assignees-edit')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('task-assignees-empty')), findsOne);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('task-assignees-empty')),
+          matching: find.text(l10n.collaborationNoAssignees),
+        ),
+        findsOne,
+      );
+      expect(find.byType(CheckboxListTile), findsNothing);
+      expect(find.byType(ErrorWidget), findsNothing);
       await _drainSnackBarsAndDispose(tester);
     });
   });
