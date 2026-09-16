@@ -576,6 +576,33 @@ Never log recovery tokens or passwords. Route
 cold-start and warm-app callbacks through the same handler so each valid callback
 is processed once and invalid or expired links return to a recoverable state.
 
+### Shared project links
+
+The collaboration backend builds two web addresses from the application URL: an
+invitation link (`/shared/join/<token>`, sent by email) and a public read-only
+link (`/shared/public/<token>`, copied from the share dialog). Both are
+standalone routes outside the application shell. Neither may fall through to the
+router's not-found page, and both validate the token shape before any request.
+
+An invitation link requires an account. A signed-out web visitor signs in and
+returns to the exact link; the screen then names the pending role and joins only
+on an explicit Accept action, opening the joined project afterwards. Use one
+compact **440 px** card with its loading, failure and accepted states. The server
+decides whether the invitation is acceptable, so report its refusal as an
+unavailable invitation rather than as a signed-out or generic error.
+
+Because these routes mount outside the application shell, they must read what
+they show straight from the server instead of through a local synchronization: a
+database that is not open yet must not change what a standalone screen claims.
+Never present a value the screen failed to read as a known one — state the role
+only when the server named it, since a guessed role tells a member they can only
+watch.
+
+A public link never requires an account and never offers editing affordances. It
+renders only what the server's read-only projection returns: project and task
+content, completed state, due information, author and assignee display names,
+and comments. Center it within the Browse content width.
+
 ## Components and independence
 
 - Current direct dependencies: **`shadcn_ui 0.56.3`** and

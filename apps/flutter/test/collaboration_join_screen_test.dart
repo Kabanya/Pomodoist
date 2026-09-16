@@ -56,6 +56,7 @@ Future<_Harness> _pumpJoinScreen(
     Map<String, dynamic> args,
   )?
   handler,
+  Future<void> Function()? synchronize,
   bool withoutRepository = false,
 }) async {
   final db = AppDatabase(NativeDatabase.memory());
@@ -72,7 +73,7 @@ Future<_Harness> _pumpJoinScreen(
           : handler(action, args);
     }),
     queue: DriftSyncQueueRepository(db),
-    synchronize: () async {},
+    synchronize: synchronize ?? () async {},
   );
   await tester.pumpWidget(
     ProviderScope(
@@ -118,6 +119,7 @@ void main() {
     expect(find.text(l10n.collaborationJoinTitle), findsOne);
     expect(find.text(l10n.collaborationJoinRole), findsOne);
     expect(find.text(l10n.collaborationRoleMember), findsOne);
+    expect(find.byKey(const Key('collaboration-join-role')), findsOne);
 
     await tester.tap(find.byKey(const Key('collaboration-join-accept')));
     await tester.pumpAndSettle();
@@ -129,6 +131,70 @@ void main() {
     expect(find.byKey(const Key('collaboration-join-open')), findsOne);
     expect(find.byKey(const Key('collaboration-join-accept')), findsNothing);
   });
+
+  testWidgets(
+    'a cold start never fabricates an observer role for a member invitation',
+    (tester) async {
+      await _pumpJoinScreen(
+        tester,
+        token: _token,
+        synchronize: () async => throw StateError('local database is not open'),
+        handler: (action, args) async => switch (action) {
+          'state' => {
+            'invitations': [_invitation(role: 'member')],
+          },
+          _ => {'ok': true},
+        },
+      );
+
+      expect(find.text(l10n.collaborationJoinTitle), findsOne);
+      expect(find.text(l10n.collaborationRoleObserver), findsNothing);
+      expect(find.text(l10n.collaborationRoleMember), findsOne);
+    },
+  );
+
+  testWidgets('an unreadable listing leaves the role unknown', (tester) async {
+    await _pumpJoinScreen(
+      tester,
+      token: _token,
+      synchronize: () async => throw StateError('local database is not open'),
+      handler: (action, args) async {
+        if (action == 'state') throw StateError('collaboration unavailable');
+        return {'ok': true};
+      },
+    );
+
+    expect(find.text(l10n.collaborationJoinTitle), findsOne);
+    expect(find.byKey(const Key('collaboration-join-role')), findsNothing);
+    expect(find.text(l10n.collaborationJoinRole), findsNothing);
+    expect(find.text(l10n.collaborationRoleObserver), findsNothing);
+    expect(find.byKey(const Key('collaboration-join-accept')), findsOne);
+  });
+
+  testWidgets(
+    'an accepted invitation is reported even when synchronization fails',
+    (tester) async {
+      final harness = await _pumpJoinScreen(
+        tester,
+        token: _token,
+        synchronize: () async => throw StateError('local database is not open'),
+        handler: (action, args) async => switch (action) {
+          'state' => {
+            'invitations': [_invitation()],
+          },
+          'accept' => {'scope': _scopeJson()},
+          _ => {'ok': true},
+        },
+      );
+
+      await tester.tap(find.byKey(const Key('collaboration-join-accept')));
+      await tester.pumpAndSettle();
+
+      expect(harness.callsFor('accept'), hasLength(1));
+      expect(find.text(l10n.collaborationInvitationAccepted), findsOne);
+      expect(find.byKey(const Key('collaboration-join-error')), findsNothing);
+    },
+  );
 
   testWidgets('shows progress while the acceptance is in flight', (
     tester,
@@ -285,5 +351,67 @@ void main() {
 
     expect(find.text(l10n.collaborationUnavailable), findsOne);
     expect(find.text(l10n.commonRetry), findsOne);
+  });
+
+  group('collaboration repository', () {
+    late AppDatabase db;
+    late CollaborationRepository repository;
+    var synchronizations = 0;
+    var failSynchronization = false;
+
+    setUp(() {
+      db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      synchronizations = 0;
+      failSynchronization = false;
+      repository = CollaborationRepository(
+        db: db,
+        api: CollaborationApi(
+          (body) async => switch (body['action']) {
+            'state' => {'invitations': const []},
+            'publicLink' => const {
+              'url': 'https://web.test/shared/public/token',
+            },
+            _ => {'scope': _scopeJson()},
+          },
+        ),
+        queue: DriftSyncQueueRepository(db),
+        synchronize: () async {
+          synchronizations++;
+          if (failSynchronization) {
+            throw StateError('local database is not open');
+          }
+        },
+      );
+    });
+
+    test('reads the state without synchronizing', () async {
+      // A failing synchronization would surface here if the read reached it.
+      failSynchronization = true;
+
+      expect(await repository.state(), {'invitations': const []});
+      expect(synchronizations, 0);
+    });
+
+    test(
+      'a mutation keeps the server answer when synchronization fails',
+      () async {
+        failSynchronization = true;
+
+        expect(await repository.mutate('publicLink', {'enabled': true}), {
+          'url': 'https://web.test/shared/public/token',
+        });
+        expect(await repository.acceptInvitation('token-1'), {
+          'scope': _scopeJson(),
+        });
+        expect(synchronizations, 2);
+      },
+    );
+
+    test('a mutation synchronizes after the server applied it', () async {
+      await repository.mutate('publicLink', {'enabled': true});
+
+      expect(synchronizations, 1);
+    });
   });
 }

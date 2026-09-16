@@ -68,6 +68,28 @@ class CollaborationRepository {
     return result;
   }
 
+  // Reads the collaboration state without touching the local database, which
+  // may not be open yet while the invitation screen loads.
+  Future<Map<String, dynamic>> state() => api.call('state');
+
+  // The server already applied the change, so a failing local synchronization
+  // must not turn it into an error reported to the user.
+  Future<Map<String, dynamic>> mutate(
+    String action,
+    Map<String, dynamic> args,
+  ) async {
+    final result = await api.call(action, args);
+    try {
+      await synchronize();
+    } catch (_) {
+      /* The server has already applied the change. */
+    }
+    return result;
+  }
+
+  Future<Map<String, dynamic>> acceptInvitation(String token) =>
+      mutate('accept', {'token': token});
+
   Future<Map<String, dynamic>> share(String projectId) async {
     final subtreeIds = await _shareEntityIds(projectId);
     var outstanding = await _outstandingPersonalCommands();

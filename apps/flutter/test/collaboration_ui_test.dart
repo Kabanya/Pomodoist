@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/providers.dart';
@@ -490,6 +491,63 @@ void main() {
       await _drainSnackBarsAndDispose(tester);
     });
 
+    testWidgets('copies the public link when synchronization fails', (
+      tester,
+    ) async {
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      final clipboard = <String>[];
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'Clipboard.setData') {
+          clipboard.add(
+            (call.arguments as Map<Object?, Object?>)['text']! as String,
+          );
+        }
+        return null;
+      });
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
+      );
+
+      final harness = await _pumpCollaborationApp(
+        tester,
+        handler: (action, args) async => switch (action) {
+          'members' => {
+            'members': _scopeJson()['members'],
+            'invitations': const [],
+          },
+          'publicLink' => {
+            'token': _publicToken,
+            'url': 'https://web.test/shared/public/$_publicToken',
+          },
+          _ => {'ok': true},
+        },
+        onSynchronize: (db) async => throw StateError('database is not open'),
+        build: (context) => Center(
+          child: ElevatedButton(
+            key: const Key('open-share'),
+            onPressed: () => showShareProjectDialog(context, _project()),
+            child: const Text('open'),
+          ),
+        ),
+      );
+      await _seedScope(harness.db);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('open-share')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const Key('collaboration-public-link-switch')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(harness.callsFor('publicLink').single['enabled'], isTrue);
+      expect(clipboard, ['https://web.test/shared/public/$_publicToken']);
+      expect(find.text(l10n.collaborationLinkCopied), findsOne);
+      await _drainSnackBarsAndDispose(tester);
+    });
+
     testWidgets('member leaves the shared project', (tester) async {
       final harness = await _pumpCollaborationApp(
         tester,
@@ -605,6 +663,103 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(harness.callsFor('accept').single['token'], 'token-1');
+      expect(
+        find.byKey(const Key('collaboration-invitation-inv-1')),
+        findsNothing,
+      );
+      await _drainSnackBarsAndDispose(tester);
+    });
+
+    testWidgets('renders the inbox when synchronization fails', (tester) async {
+      await _pumpCollaborationApp(
+        tester,
+        handler: (action, args) async => switch (action) {
+          'state' => {
+            'invitations': [
+              {
+                'id': 'inv-1',
+                'scopeId': _scopeId,
+                'role': 'member',
+                'token': 'token-1',
+                'expiresAt': '2026-09-20T10:00:00Z',
+              },
+            ],
+            'notifications': [
+              {
+                'id': 'note-1',
+                'kind': 'invitation',
+                'readAt': null,
+                'createdAt': '2026-09-14T10:00:00Z',
+              },
+            ],
+          },
+          _ => {'ok': true},
+        },
+        onSynchronize: (db) async => throw StateError('database is not open'),
+        build: (context) => Center(
+          child: ElevatedButton(
+            key: const Key('open-inbox'),
+            onPressed: () => showCollaborationInboxDialog(context),
+            child: const Text('open'),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('open-inbox')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('collaboration-invitation-inv-1')), findsOne);
+      expect(find.text('Invitation to a shared project'), findsOne);
+      await _drainSnackBarsAndDispose(tester);
+    });
+
+    testWidgets('accepts an invitation when synchronization fails', (
+      tester,
+    ) async {
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      var accepted = false;
+      final harness = await _pumpCollaborationApp(
+        tester,
+        handler: (action, args) async => switch (action) {
+          'state' => {
+            'invitations': accepted
+                ? const []
+                : [
+                    {
+                      'id': 'inv-1',
+                      'scopeId': _scopeId,
+                      'role': 'member',
+                      'token': 'token-1',
+                      'expiresAt': '2026-09-20T10:00:00Z',
+                    },
+                  ],
+            'notifications': const [],
+          },
+          'accept' => {'scope': _scopeJson()},
+          _ => {'ok': true},
+        },
+        onSynchronize: (db) async => throw StateError('database is not open'),
+        build: (context) => Center(
+          child: ElevatedButton(
+            key: const Key('open-inbox'),
+            onPressed: () => showCollaborationInboxDialog(context),
+            child: const Text('open'),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('open-inbox')));
+      await tester.pumpAndSettle();
+
+      accepted = true;
+      await tester.tap(
+        find.byKey(const Key('collaboration-inbox-accept-inv-1')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(harness.callsFor('accept').single['token'], 'token-1');
+      expect(find.text(l10n.collaborationInvitationAccepted), findsOne);
+      expect(find.text(l10n.collaborationError), findsNothing);
       expect(
         find.byKey(const Key('collaboration-invitation-inv-1')),
         findsNothing,

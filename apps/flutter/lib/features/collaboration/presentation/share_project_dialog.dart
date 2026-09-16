@@ -604,7 +604,7 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
     final scope = ref.read(sharedScopeForProjectProvider(widget.project.id));
     if (scope == null) return;
     await _run((repository) async {
-      final result = await repository.action('publicLink', {
+      final result = await repository.mutate('publicLink', {
         'scopeId': scope.id,
         'enabled': enabled,
       });

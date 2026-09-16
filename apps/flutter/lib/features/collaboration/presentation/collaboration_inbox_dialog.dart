@@ -176,7 +176,7 @@ class _CollaborationInboxDialogState
       return;
     }
     try {
-      final result = await repository.action('state');
+      final result = await repository.state();
       if (!mounted) return;
       setState(() {
         _invitations = collaborationMaps(result['invitations']);
@@ -193,7 +193,7 @@ class _CollaborationInboxDialogState
   Future<void> _accept(String token) async {
     if (token.isEmpty) return;
     await _run(
-      (repository) => repository.action('accept', {'token': token}),
+      (repository) => repository.acceptInvitation(token),
       success: context.l10n.collaborationInvitationAccepted,
     );
   }

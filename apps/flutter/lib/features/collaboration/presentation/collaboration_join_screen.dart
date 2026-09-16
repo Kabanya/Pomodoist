@@ -29,7 +29,7 @@ class CollaborationJoinScreen extends ConsumerStatefulWidget {
 class _CollaborationJoinScreenState
     extends ConsumerState<CollaborationJoinScreen> {
   _JoinPhase _phase = _JoinPhase.loading;
-  String _role = 'observer';
+  String? _role;
   String? _projectId;
   String? _errorMessage;
   var _canRetry = false;
@@ -149,24 +149,27 @@ class _CollaborationJoinScreenState
         textAlign: TextAlign.center,
       ),
       const SizedBox(height: 20),
-      Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            l10n.collaborationJoinRole,
-            style: textTheme.bodyMedium?.copyWith(color: colors.secondaryText),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            collaborationRoleLabel(l10n, _role),
-            key: const Key('collaboration-join-role'),
-            style: textTheme.bodyMedium?.copyWith(
-              color: colors.primaryText,
-              fontWeight: FontWeight.w600,
+      if (_role != null)
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.collaborationJoinRole,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colors.secondaryText,
+              ),
             ),
-          ),
-        ],
-      ),
+            const SizedBox(width: 8),
+            Text(
+              collaborationRoleLabel(l10n, _role!),
+              key: const Key('collaboration-join-role'),
+              style: textTheme.bodyMedium?.copyWith(
+                color: colors.primaryText,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       const SizedBox(height: 24),
       ShadButton(
         key: const Key('collaboration-join-accept'),
@@ -267,7 +270,7 @@ class _CollaborationJoinScreenState
     final repository = ref.read(collaborationRepositoryProvider);
     if (repository == null || !mounted) return;
     try {
-      final state = await repository.action('state');
+      final state = await repository.state();
       for (final invitation in collaborationMaps(state['invitations'])) {
         if (invitation['token'] != widget.token) continue;
         final role = invitation['role'];
@@ -276,7 +279,8 @@ class _CollaborationJoinScreenState
       }
     } catch (_) {
       // The server validates the invitation when it is accepted, so a missing
-      // or unreadable listing must not block the invitation screen.
+      // or unreadable listing must not block the invitation screen. The role
+      // stays unknown rather than being guessed.
     }
     if (mounted) setState(() => _phase = _JoinPhase.ready);
   }
@@ -297,7 +301,7 @@ class _CollaborationJoinScreenState
       _errorMessage = null;
     });
     try {
-      final result = await repository.action('accept', {'token': widget.token});
+      final result = await repository.acceptInvitation(widget.token);
       final scope = result['scope'];
       final projectId = scope is Map
           ? scope['rootProjectId']?.toString()
