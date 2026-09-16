@@ -45,6 +45,7 @@ class _ShareProjectDialog extends ConsumerStatefulWidget {
 class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
   final _email = TextEditingController();
   var _busy = false;
+  var _sharedJustNow = false;
   var _inviteRole = 'member';
   List<Map<String, dynamic>> _invitations = const [];
   String? _invitationsScopeId;
@@ -108,6 +109,18 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
               : const Icon(LucideIcons.users, size: 16),
           child: Text(l10n.collaborationShareStart),
         ),
+        if (_busy) ...[
+          const SizedBox(height: 12),
+          const LinearProgressIndicator(),
+          const SizedBox(height: 8),
+          Text(
+            l10n.collaborationShareInProgress,
+            key: const Key('collaboration-share-progress'),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -122,6 +135,17 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (_sharedJustNow) ...[
+          Row(
+            key: const Key('collaboration-share-confirmed'),
+            children: [
+              const Icon(LucideIcons.circleCheck, size: 16),
+              const SizedBox(width: 8),
+              Expanded(child: Text(l10n.collaborationProjectShared)),
+            ],
+          ),
+          const SizedBox(height: 12),
+        ],
         Text(
           l10n.collaborationMembers,
           style: Theme.of(context).textTheme.titleMedium,
@@ -407,8 +431,8 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
     final repository = ref.read(collaborationRepositoryProvider);
     if (repository == null) {
       final signedIn =
-          ref.read(accountAuthStateProvider).value?.signedIn ??
-          (ref.read(accountClientProvider)?.currentUserId != null);
+          (ref.read(accountAuthStateProvider).value?.signedIn ?? false) ||
+          ref.read(accountClientProvider)?.currentUserId != null;
       if (mounted) {
         _snack(
           signedIn
@@ -445,7 +469,7 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
 
   Future<void> _share() => _run((repository) async {
     await repository.share(widget.project.id);
-    if (mounted) _snack(context.l10n.collaborationProjectShared);
+    if (mounted) setState(() => _sharedJustNow = true);
   });
 
   Future<void> _loadInvitations() async {

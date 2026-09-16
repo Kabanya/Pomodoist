@@ -3075,6 +3075,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get collaborationShareStart => '공유';
 
   @override
+  String get collaborationShareInProgress => '공유 중… 최근 변경 사항을 동기화하는 중';
+
+  @override
   String get collaborationMembers => '멤버';
 
   @override

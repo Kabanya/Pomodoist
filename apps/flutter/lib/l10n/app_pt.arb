@@ -1611,6 +1611,7 @@
   "collaborationShareProject": "Compartilhar projeto",
   "collaborationShareIntro": "Convide pessoas para trabalhar juntas neste projeto. Membros podem editar; observadores podem visualizar.",
   "collaborationShareStart": "Compartilhar",
+  "collaborationShareInProgress": "Compartilhando… sincronizando as últimas alterações",
   "collaborationMembers": "Membros",
   "collaborationPendingInvitations": "Convites pendentes",
   "collaborationRevoke": "Revogar",

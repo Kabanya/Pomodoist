@@ -2991,6 +2991,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get collaborationShareStart => '共享';
 
   @override
+  String get collaborationShareInProgress => '正在共享…同步最近的更改';
+
+  @override
   String get collaborationMembers => '成员';
 
   @override

@@ -101,12 +101,13 @@ class CollaborationRepository {
         'Finish synchronizing this project and resolve pending or deferred changes before sharing.',
       );
     }
-    final state = await (db.select(
-      db.syncState,
-    )..where((row) => row.id.equals('pomodoist'))).getSingleOrNull();
+    final state = await api.call('state');
+    final revision = state['personalRevision'];
     return action('share', {
       'rootProjectId': projectId,
-      'expectedRevision': int.tryParse(state?.cursor ?? '') ?? 0,
+      'expectedRevision': revision is num
+          ? revision.toInt()
+          : int.tryParse('$revision') ?? 0,
     });
   }
 

@@ -3108,6 +3108,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get collaborationShareStart => 'مشاركة';
 
   @override
+  String get collaborationShareInProgress =>
+      'جارٍ المشاركة… تتم مزامنة أحدث التغييرات';
+
+  @override
   String get collaborationMembers => 'الأعضاء';
 
   @override

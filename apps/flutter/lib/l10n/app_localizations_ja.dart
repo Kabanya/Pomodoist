@@ -3066,6 +3066,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get collaborationShareStart => '共有';
 
   @override
+  String get collaborationShareInProgress => '共有しています…最新の変更を同期中';
+
+  @override
   String get collaborationMembers => 'メンバー';
 
   @override

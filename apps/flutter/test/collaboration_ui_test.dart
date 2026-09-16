@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/drift.dart' hide isNotNull, isNull;
@@ -227,6 +228,55 @@ void main() {
       expect(find.byKey(const Key('collaboration-invite-email')), findsOne);
       expect(find.text('Alice'), findsOne);
       expect(find.text('Owner Name'), findsOne);
+      expect(find.byKey(const Key('collaboration-share-confirmed')), findsOne);
+      await _drainSnackBarsAndDispose(tester);
+    });
+
+    testWidgets('shows progress while the share request is in flight', (
+      tester,
+    ) async {
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      final gate = Completer<Map<String, dynamic>>();
+      final harness = await _pumpCollaborationApp(
+        tester,
+        handler: (action, args) async => switch (action) {
+          'share' => gate.future,
+          _ => {'ok': true},
+        },
+        build: (context) => Center(
+          child: ElevatedButton(
+            key: const Key('open-share'),
+            onPressed: () => showShareProjectDialog(context, _project()),
+            child: const Text('open'),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('open-share')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('collaboration-share-progress')),
+        findsNothing,
+      );
+
+      await tester.tap(find.byKey(const Key('collaboration-share-start')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(harness.callsFor('share'), hasLength(1));
+      expect(find.byKey(const Key('collaboration-share-progress')), findsOne);
+      expect(find.text(l10n.collaborationShareInProgress), findsOne);
+      expect(find.byType(LinearProgressIndicator), findsOne);
+
+      gate.complete({'scope': _scopeJson()});
+      await tester.pumpAndSettle();
+
+      expect(harness.callsFor('share'), hasLength(1));
+      expect(
+        find.byKey(const Key('collaboration-share-progress')),
+        findsNothing,
+      );
       await _drainSnackBarsAndDispose(tester);
     });
 

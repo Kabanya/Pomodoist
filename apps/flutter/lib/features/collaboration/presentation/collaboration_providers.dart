@@ -12,7 +12,8 @@ final collaborationRepositoryProvider = Provider<CollaborationRepository?>((
 ) {
   final account = ref.watch(accountClientProvider);
   final authState = ref.watch(accountAuthStateProvider).value;
-  final signedIn = authState?.signedIn ?? (account?.currentUserId != null);
+  final signedIn =
+      (authState?.signedIn ?? false) || account?.currentUserId != null;
   if (account == null || !signedIn) return null;
   return CollaborationRepository(
     db: ref.watch(appDatabaseProvider),

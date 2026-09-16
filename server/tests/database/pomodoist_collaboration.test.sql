@@ -56,6 +56,11 @@ create temporary table owner_revision as
   select coalesce(max(server_revision),0) as revision from public.sync_entities
   where user_id='c1000000-0000-4000-8000-000000000001'::uuid;
 
+select is(
+  (select pg_temp.collab(jsonb_build_object('action','state'))->>'personalRevision'),
+  (select revision::text from owner_revision),
+  'state exposes the personal revision a client shares against');
+
 set local role authenticated;
 select pg_temp.act_as('c1000000-0000-4000-8000-000000000001','d1000000-0000-4000-8000-000000000001');
 
@@ -63,7 +68,7 @@ select throws_ok($$select pg_temp.collab(jsonb_build_object('action','share','ro
   '22023','Inbox cannot be shared','inbox cannot be shared');
 select throws_ok(format('select pg_temp.collab(%L::jsonb)',
   jsonb_build_object('action','share','rootProjectId','project-a','expectedRevision',999999)::text),
-  '40001','Complete personal sync before sharing','stale revision rejects share');
+  '22023','Complete personal sync before sharing','stale revision rejects share');
 
 create temporary table shared_scope as select pg_temp.collab(
   jsonb_build_object('action','share','rootProjectId','project-a','expectedRevision',(select revision from owner_revision))) as value;

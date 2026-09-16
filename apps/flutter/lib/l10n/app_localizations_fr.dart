@@ -3180,6 +3180,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get collaborationShareStart => 'Partager';
 
   @override
+  String get collaborationShareInProgress =>
+      'Partage… synchronisation des derniers changements';
+
+  @override
   String get collaborationMembers => 'Membres';
 
   @override

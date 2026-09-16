@@ -3163,6 +3163,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get collaborationShareStart => 'Поделиться';
 
   @override
+  String get collaborationShareInProgress =>
+      'Открываем доступ… синхронизируем последние изменения';
+
+  @override
   String get collaborationMembers => 'Участники';
 
   @override

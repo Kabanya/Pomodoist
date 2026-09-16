@@ -469,7 +469,7 @@ final accountSyncEngineProvider = Provider<AccountSyncEngine?>((ref) {
   final account = ref.watch(accountClientProvider);
   final authState = ref.watch(accountAuthStateProvider).value;
   if (account == null ||
-      !(authState?.signedIn ?? (account.currentUserId != null))) {
+      !((authState?.signedIn ?? false) || account.currentUserId != null)) {
     return null;
   }
   return AccountSyncEngine(

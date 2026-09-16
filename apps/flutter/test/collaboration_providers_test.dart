@@ -47,6 +47,49 @@ void main() {
       expect(container.read(collaborationRepositoryProvider), isNotNull);
     },
   );
+
+  test(
+    'collaboration repository survives a stale signed-out auth state',
+    () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      final account = _MutableAuthAccountClient();
+      addTearDown(account.close);
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          accountClientProvider.overrideWithValue(account),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final repositoryReady = Completer<void>();
+      container.listen(
+        collaborationRepositoryProvider,
+        (previous, next) {
+          if (next != null && !repositoryReady.isCompleted) {
+            repositoryReady.complete();
+          }
+        },
+        fireImmediately: true,
+      );
+
+      await container.read(accountAuthStateProvider.future);
+      await Future<void>.delayed(Duration.zero);
+
+      account.signIn('user-1');
+      await repositoryReady.future;
+
+      // The auth stream can report a stale signed-out snapshot while the live
+      // session is intact, so a later share tap must still find the repository.
+      account.reportSignedOut();
+      await Future<void>.delayed(Duration.zero);
+      expect(container.read(accountAuthStateProvider).value?.signedIn, isFalse);
+
+      expect(container.read(collaborationRepositoryProvider), isNotNull);
+      expect(container.read(accountSyncEngineProvider), isNotNull);
+    },
+  );
 }
 
 class _MutableAuthAccountClient implements AccountClient {
@@ -67,6 +110,10 @@ class _MutableAuthAccountClient implements AccountClient {
   void signIn(String id) {
     userId = id;
     _authStates.add(AccountAuthState(signedIn: true, session: currentSession));
+  }
+
+  void reportSignedOut() {
+    _authStates.add(const AccountAuthState(signedIn: false));
   }
 
   Future<void> close() => _authStates.close();

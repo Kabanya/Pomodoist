@@ -1000,6 +1000,7 @@
   "collaborationShareProject": "Поделиться проектом",
   "collaborationShareIntro": "Пригласите людей работать над проектом вместе. Участники могут редактировать, наблюдатели — только просматривать.",
   "collaborationShareStart": "Поделиться",
+  "collaborationShareInProgress": "Открываем доступ… синхронизируем последние изменения",
   "collaborationMembers": "Участники",
   "collaborationPendingInvitations": "Ожидающие приглашения",
   "collaborationRevoke": "Отозвать",

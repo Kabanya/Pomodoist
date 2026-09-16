@@ -1663,6 +1663,7 @@
   "collaborationShareProject": "Share project",
   "collaborationShareIntro": "Invite people to work on this project together. Members can edit, observers can view.",
   "collaborationShareStart": "Share",
+  "collaborationShareInProgress": "Sharing… syncing your latest changes",
   "collaborationMembers": "Members",
   "collaborationPendingInvitations": "Pending invitations",
   "collaborationRevoke": "Revoke",

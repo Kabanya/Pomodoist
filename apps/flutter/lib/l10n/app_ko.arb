@@ -1611,6 +1611,7 @@
   "collaborationShareProject": "프로젝트 공유",
   "collaborationShareIntro": "이 프로젝트를 함께 작업할 사람을 초대하세요. 멤버는 편집할 수 있고, 관찰자는 볼 수만 있습니다.",
   "collaborationShareStart": "공유",
+  "collaborationShareInProgress": "공유 중… 최근 변경 사항을 동기화하는 중",
   "collaborationMembers": "멤버",
   "collaborationPendingInvitations": "대기 중인 초대",
   "collaborationRevoke": "취소",

@@ -5339,6 +5339,12 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get collaborationShareStart;
 
+  /// No description provided for @collaborationShareInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing… syncing your latest changes'**
+  String get collaborationShareInProgress;
+
   /// No description provided for @collaborationMembers.
   ///
   /// In en, this message translates to:

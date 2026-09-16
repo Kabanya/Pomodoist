@@ -1000,6 +1000,7 @@
   "collaborationShareProject": "Partager le projet",
   "collaborationShareIntro": "Invitez des personnes à travailler ensemble sur ce projet. Les membres peuvent modifier, les observateurs peuvent consulter.",
   "collaborationShareStart": "Partager",
+  "collaborationShareInProgress": "Partage… synchronisation des derniers changements",
   "collaborationMembers": "Membres",
   "collaborationPendingInvitations": "Invitations en attente",
   "collaborationRevoke": "Révoquer",

@@ -1000,6 +1000,7 @@
   "collaborationShareProject": "مشاركة المشروع",
   "collaborationShareIntro": "ادعُ أشخاصًا للعمل معًا على هذا المشروع. يمكن للأعضاء التحرير بينما يمكن للمراقبين العرض فقط.",
   "collaborationShareStart": "مشاركة",
+  "collaborationShareInProgress": "جارٍ المشاركة… تتم مزامنة أحدث التغييرات",
   "collaborationMembers": "الأعضاء",
   "collaborationPendingInvitations": "الدعوات المعلّقة",
   "collaborationRevoke": "إبطال",

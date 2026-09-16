@@ -1611,6 +1611,7 @@
   "collaborationShareProject": "プロジェクトを共有",
   "collaborationShareIntro": "このプロジェクトを一緒に進める人を招待しましょう。メンバーは編集でき、オブザーバーは閲覧のみできます。",
   "collaborationShareStart": "共有",
+  "collaborationShareInProgress": "共有しています…最新の変更を同期中",
   "collaborationMembers": "メンバー",
   "collaborationPendingInvitations": "保留中の招待",
   "collaborationRevoke": "取り消す",

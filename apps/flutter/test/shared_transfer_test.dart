@@ -45,6 +45,9 @@ void main() {
       db: db,
       queue: queue,
       api: CollaborationApi((args) async {
+        if (args['action'] == 'state') {
+          return {'personalRevision': account.revision};
+        }
         expect(args['action'], 'share');
         shares.add({...args, 'serverRevision': account.revision});
         return {'scopeId': 'scope'};

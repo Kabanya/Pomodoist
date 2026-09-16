@@ -1000,6 +1000,7 @@
   "collaborationShareProject": "共享项目",
   "collaborationShareIntro": "邀请他人一起处理此项目。成员可以编辑，观察者只能查看。",
   "collaborationShareStart": "共享",
+  "collaborationShareInProgress": "正在共享…同步最近的更改",
   "collaborationMembers": "成员",
   "collaborationPendingInvitations": "待处理的邀请",
   "collaborationRevoke": "撤销",
