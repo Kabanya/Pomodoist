@@ -20,7 +20,8 @@ String collaborationErrorMessage(AppLocalizations l10n, Object error) {
     'invalid_comment' ||
     'shared_task_required' ||
     'shared_root_requires_server_delete' => l10n.collaborationForbidden,
-    'unauthenticated' || 'function_not_found' => l10n.collaborationSignedOut,
+    'unauthenticated' => l10n.collaborationSignedOut,
+    'function_not_found' => l10n.collaborationUnavailable,
     _ => l10n.collaborationError,
   };
 }

@@ -139,13 +139,12 @@ jobs:
           $compiler = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
           powershell.exe -NoProfile -ExecutionPolicy Bypass `
             -File .\tool\windows\installer\build.ps1 `
-            -BuildDirectory build\windows\x64\runner\Release `
             -CompilerPath $compiler
       - name: Verify versions, unsigned boundary, and checksum
         run: |
-          $installer = Resolve-Path build\windows\installer\Pomodoist-Setup.exe
+          $installer = Resolve-Path apps\flutter\build\windows\installer\Pomodoist-Setup.exe
           $installerInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($installer)
-          $appPath = (Resolve-Path build\windows\x64\runner\Release\pomodoist.exe).Path
+          $appPath = (Resolve-Path apps\flutter\build\windows\x64\runner\Release\pomodoist.exe).Path
           $appInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($appPath)
           if ($installerInfo.ProductVersion.Trim() -cne $env:POMODOIST_VERSION -or
               $appInfo.ProductVersion.Split('+')[0] -cne $env:POMODOIST_VERSION) {
@@ -229,13 +228,15 @@ jobs:
             Pomodoist-x86_64.AppImage.sha256
             Pomodoist-Setup.exe
             Pomodoist-Setup.exe.sha256
+            Pomodoist-Android.apk
+            Pomodoist-Android.apk.sha256
           )
           asset_names=$(gh api \
             "repos/$GITHUB_REPOSITORY/releases/$release_id/assets" \
             --jq '.[].name')
           for required_asset in "${required_assets[@]}"; do
             if ! grep -Fqx -- "$required_asset" <<< "$asset_names"; then
-              echo 'Release remains draft until all desktop assets are present.'
+              echo 'Release remains draft until all release assets are present.'
               exit 0
             fi
           done

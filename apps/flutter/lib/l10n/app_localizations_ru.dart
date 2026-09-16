@@ -3286,6 +3286,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Войдите, чтобы использовать общие проекты';
 
   @override
+  String get collaborationUnavailable => 'Общие проекты сейчас недоступны';
+
+  @override
   String get collaborationError => 'Что-то пошло не так. Попробуйте ещё раз';
 
   @override

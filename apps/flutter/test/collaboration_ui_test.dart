@@ -230,6 +230,68 @@ void main() {
       await _drainSnackBarsAndDispose(tester);
     });
 
+    testWidgets('reports unavailability when the function is not deployed', (
+      tester,
+    ) async {
+      await _pumpCollaborationApp(
+        tester,
+        handler: (action, args) async => switch (action) {
+          'share' => {
+            'error': 'Requested function was not found',
+            'code': 'function_not_found',
+          },
+          _ => {'ok': true},
+        },
+        build: (context) => Center(
+          child: ElevatedButton(
+            key: const Key('open-share'),
+            onPressed: () => showShareProjectDialog(context, _project()),
+            child: const Text('open'),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('open-share')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('collaboration-share-start')));
+      await tester.pumpAndSettle();
+
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      expect(find.text(l10n.collaborationUnavailable), findsOne);
+      expect(find.text(l10n.collaborationSignedOut), findsNothing);
+      await _drainSnackBarsAndDispose(tester);
+    });
+
+    testWidgets('asks to sign in when the session is rejected', (tester) async {
+      await _pumpCollaborationApp(
+        tester,
+        handler: (action, args) async => switch (action) {
+          'share' => {
+            'error': 'Authentication required',
+            'code': 'unauthenticated',
+          },
+          _ => {'ok': true},
+        },
+        build: (context) => Center(
+          child: ElevatedButton(
+            key: const Key('open-share'),
+            onPressed: () => showShareProjectDialog(context, _project()),
+            child: const Text('open'),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('open-share')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('collaboration-share-start')));
+      await tester.pumpAndSettle();
+
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      expect(find.text(l10n.collaborationSignedOut), findsOne);
+      expect(find.text(l10n.collaborationUnavailable), findsNothing);
+      await _drainSnackBarsAndDispose(tester);
+    });
+
     testWidgets('invites by email and lists pending invitations', (
       tester,
     ) async {

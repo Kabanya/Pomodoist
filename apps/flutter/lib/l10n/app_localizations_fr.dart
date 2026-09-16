@@ -3302,6 +3302,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Connectez-vous pour utiliser les projets partagés';
 
   @override
+  String get collaborationUnavailable =>
+      'Les projets partagés sont indisponibles pour le moment';
+
+  @override
   String get collaborationError => 'Une erreur est survenue. Réessayez';
 
   @override

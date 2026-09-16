@@ -255,7 +255,7 @@ Deno.test("quota RPC retries preserve identity, use server credentials and sanit
   };
   const quota = createLlmQuota(
     env,
-    (async (input, init) => {
+    (async (input: string | URL | Request, init?: RequestInit) => {
       assertEquals(
         input,
         "https://database.test/rest/v1/rpc/pomodoist_llm_quota",

@@ -93,7 +93,9 @@ compares their signing fingerprints and writes:
 
 ```text
 build/android/release/Pomodoist-Android.apk
+build/android/release/Pomodoist-Android.apk.sha256
 build/android/release/Pomodoist-Android.aab
+build/android/release/Pomodoist-Android.aab.sha256
 build/android/release/SHA256SUMS
 build/android/release/release.json
 build/android/symbols/apk/
@@ -104,6 +106,8 @@ Set `ANDROID_SIGNING_CERT_SHA256` to the expected certificate fingerprint for
 an additional local certificate check. Obtain it with `keytool -list -v` against
 the upload alias; it is not a password. Keep the matching Dart symbols for crash
 symbolication. The AAB is an upload artifact, not an APK that `adb install` accepts.
+It stays out of the GitHub release and ships only as the
+`pomodoist-android-<sha>` workflow artifact.
 
 `versionName` and `versionCode` default to the version in `apps/flutter/pubspec.yaml`.
 `ANDROID_BUILD_NAME`, `ANDROID_BUILD_NUMBER` and `POMODOIST_RELEASE` can override

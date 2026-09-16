@@ -1502,7 +1502,6 @@ class _SidebarProjectTile extends StatelessWidget {
     final foreground = selected ? colors.accent : colors.primaryText;
     return ProjectContextMenu(
       project: project,
-      showMenuButton: true,
       child: Material(
         key: ValueKey('sidebar-project-${project.id}'),
         color: selected ? colors.accentTint : Colors.transparent,

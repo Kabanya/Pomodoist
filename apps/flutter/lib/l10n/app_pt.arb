@@ -1648,6 +1648,7 @@
   "collaborationRoleObserver": "Observador",
   "collaborationForbidden": "Você não tem permissão para isso",
   "collaborationSignedOut": "Entre para usar projetos compartilhados",
+  "collaborationUnavailable": "Os projetos compartilhados estão indisponíveis no momento",
   "collaborationError": "Algo deu errado. Tente novamente",
   "collaborationSyncPending": "Conclua a sincronização deste projeto antes de compartilhar",
   "collaborationMemberFallback": "Membro",

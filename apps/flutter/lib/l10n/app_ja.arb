@@ -1648,6 +1648,7 @@
   "collaborationRoleObserver": "オブザーバー",
   "collaborationForbidden": "権限がありません",
   "collaborationSignedOut": "共有プロジェクトを使うにはサインインしてください",
+  "collaborationUnavailable": "共有プロジェクトは現在ご利用いただけません",
   "collaborationError": "問題が発生しました。もう一度お試しください",
   "collaborationSyncPending": "共有する前にこのプロジェクトの同期を完了してください",
   "collaborationMemberFallback": "メンバー",

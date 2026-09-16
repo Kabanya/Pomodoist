@@ -19,6 +19,7 @@
     "apple_app_transaction.ts",
     "apple_app_transaction_test.ts",
     "limited_json.ts",
+    "llm_quota.ts",
     "pomodoist_collaboration.ts",
     "pomodoist_collaboration_mail.ts",
     "pomodoist_collaboration_runtime.ts",

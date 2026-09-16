@@ -22,6 +22,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     environment: android-production
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -30,10 +32,18 @@ jobs:
         env:
           INPUT_BUILD_NUMBER: ${{ inputs.build_number }}
         run: |
-          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
+          if [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$ ]]; then
+            # Release candidates may ship from develop before the final merge to main.
+            git fetch --no-tags origin main develop
+            git merge-base --is-ancestor "$GITHUB_SHA" origin/main ||
+              git merge-base --is-ancestor "$GITHUB_SHA" origin/develop || {
+                echo 'Release candidates must come from a commit already in main or develop.' >&2
+                exit 1
+              }
+          elif ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
             echo 'Production Android builds must come from a commit already in main.' >&2
             exit 1
-          }
+          fi
           if [[ "$GITHUB_REF_TYPE" == tag ]]; then
             [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]] || exit 1
             echo "ANDROID_BUILD_NAME=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
@@ -96,7 +106,7 @@ jobs:
           name: pomodoist-android-${{ github.sha }}
           path: apps/flutter/build/android/release/
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 90
       - name: Save Dart symbols for crash symbolication
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -104,6 +114,63 @@ jobs:
           path: apps/flutter/build/android/symbols/
           if-no-files-found: error
           retention-days: 90
+      - name: Publish Android artifacts to the GitHub release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_NOTES_API_KEY: ${{ secrets.RELEASE_NOTES_API_KEY }}
+        run: |
+          release_notes='Official Pomodoist mobile release: a signed APK for direct installation. The Google Play bundle is attached to this workflow run as an artifact.'
+          prerelease=false
+          latest=true
+          if [[ "$GITHUB_REF_NAME" == *-rc.* ]]; then
+            prerelease=true
+            latest=false
+          fi
+          if ! gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            if generated_notes=$(python3 tool/release_notes.py); then
+              release_notes="$generated_notes"
+            fi
+            gh release create "$GITHUB_REF_NAME" \
+              --draft \
+              --prerelease="$prerelease" \
+              --target "$GITHUB_SHA" \
+              --title "Pomodoist $GITHUB_REF_NAME" \
+              --notes "$release_notes" || \
+              gh release view "$GITHUB_REF_NAME" > /dev/null
+          fi
+          gh release upload "$GITHUB_REF_NAME" \
+            apps/flutter/build/android/release/Pomodoist-Android.apk \
+            apps/flutter/build/android/release/Pomodoist-Android.apk.sha256 \
+            --clobber
+          release_id=$(gh api --paginate \
+            "repos/$GITHUB_REPOSITORY/releases" \
+            --jq ".[] | select(.tag_name == \"$GITHUB_REF_NAME\") | .id")
+          required_assets=(
+            Pomodoist-x86_64.AppImage
+            Pomodoist-x86_64.AppImage.sha256
+            Pomodoist-Setup.exe
+            Pomodoist-Setup.exe.sha256
+            Pomodoist-Android.apk
+            Pomodoist-Android.apk.sha256
+          )
+          asset_names=$(gh api \
+            "repos/$GITHUB_REPOSITORY/releases/$release_id/assets" \
+            --jq '.[].name')
+          for required_asset in "${required_assets[@]}"; do
+            if ! grep -Fqx -- "$required_asset" <<< "$asset_names"; then
+              echo 'Release remains draft until all release assets are present.'
+              exit 0
+            fi
+          done
+          gh api --method PATCH \
+            "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+            --raw-field tag_name="$GITHUB_REF_NAME" \
+            --field draft=false \
+            --field prerelease="$prerelease" \
+            --raw-field make_latest="$latest" \
+            --silent
       - name: Remove signing material and configuration
         if: always()
         run: rm -f "$RUNNER_TEMP/android-release.jks" "$RUNNER_TEMP/android-production.json"

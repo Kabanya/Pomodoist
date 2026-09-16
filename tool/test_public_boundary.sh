@@ -46,7 +46,7 @@ done
   fail 'Sentry verification must be limited to lib/'
 ! grep -Eiq 'account-sync-platform|coolify|service.?role|deployment webhook' Makefile ||
   fail 'Makefile must be client-only'
-grep -Fq 'DEPLOY_CONFIG ?= .env.deploy' Makefile ||
+grep -Eq 'DEPLOY_CONFIG[[:space:]]+\?= .env.deploy' Makefile ||
   fail 'Makefile must use the ignored deploy environment file'
 for target in deploy-staging deploy-production deploy-all; do
   grep -Eq "^[^:]*\\b${target}\\b[^:]*:" Makefile || fail "Makefile is missing ${target}"

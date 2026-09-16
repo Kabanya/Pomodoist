@@ -1,0 +1,44 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  coolify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debounce rapid pushes
+        run: sleep 30
+
+      - name: Check this is still the branch head
+        id: head
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest=$(gh api "repos/${{ github.repository }}/commits/${{ github.ref_name }}" --jq .sha)
+          if [ "$latest" = "${{ github.sha }}" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy production
+        if: github.ref_name == 'main' && steps.head.outputs.deploy == 'true'
+        env:
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          WEBHOOK: ${{ secrets.COOLIFY_PRODUCTION_WEBHOOK }}
+        run: |
+          curl --fail-with-body --silent --show-error --retry 3 --max-time 30 --header "Authorization: Bearer $COOLIFY_TOKEN" "$WEBHOOK"
+
+      - name: Deploy staging
+        if: github.ref_name == 'develop' && steps.head.outputs.deploy == 'true'
+        env:
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          WEBHOOK: ${{ secrets.COOLIFY_STAGING_WEBHOOK }}
+        run: |
+          curl --fail-with-body --silent --show-error --retry 3 --max-time 30 --header "Authorization: Bearer $COOLIFY_TOKEN" "$WEBHOOK"

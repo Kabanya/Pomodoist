@@ -1037,6 +1037,7 @@
   "collaborationRoleObserver": "Observateur",
   "collaborationForbidden": "Vous n'avez pas la permission",
   "collaborationSignedOut": "Connectez-vous pour utiliser les projets partagés",
+  "collaborationUnavailable": "Les projets partagés sont indisponibles pour le moment",
   "collaborationError": "Une erreur est survenue. Réessayez",
   "collaborationSyncPending": "Terminez la synchronisation de ce projet avant de le partager",
   "collaborationMemberFallback": "Membre",

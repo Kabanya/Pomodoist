@@ -3292,6 +3292,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collaborationSignedOut => 'Sign in to use shared projects';
 
   @override
+  String get collaborationUnavailable =>
+      'Shared projects are unavailable right now';
+
+  @override
   String get collaborationError => 'Something went wrong. Try again';
 
   @override

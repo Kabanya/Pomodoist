@@ -3,7 +3,9 @@ name: Validate
 on:
   pull_request:
   push:
-    branches: [main]
+    # Release candidates are cut from develop, so its test suite has to be
+    # validated before a tag is pushed.
+    branches: [main, develop]
 
 jobs:
   validate:

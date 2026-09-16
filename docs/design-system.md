@@ -223,15 +223,18 @@ and their header, matching task titles. Group captions, counts, and shortcut
 hints keep their smaller text styles.
 
 Project rows share their context menu between the sidebar and Projects screen.
-Secondary click and touch long press expose renaming, icon and color selection,
-favorites, and confirmed deletion. Project icons are synchronized project data;
+Secondary click, touch long press, and the Context Menu / Shift+F10 keys expose
+renaming, icon and color selection, favorites, and confirmed deletion. Sidebar
+rows show no menu button; the Projects screen keeps its ellipsis button for
+keyboard and touch access. Project icons are synchronized project data;
 existing projects retain the hash icon until changed.
 
 Projects support arbitrary nesting with globally unique names. The shared menu
 offers Create subproject, Move project, and Move up/down among siblings. Keep
-the menu button visible for keyboard and touch access. A project and its task
-count include only its own tasks. Deleting a parent promotes its immediate
-children into its position; only the deleted project's tasks move to Inbox.
+the Projects screen menu button visible for keyboard and touch access. A project
+and its task count include only its own tasks. Deleting a parent promotes its
+immediate children into its position; only the deleted project's tasks move to
+Inbox.
 
 The sidebar and Projects screen share tree controls. Branches start expanded,
 retain collapse state while the screen is mounted, and reveal the destination

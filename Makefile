@@ -9,15 +9,15 @@ endif
 
 REPO_ROOT := $(CURDIR)
 # Make abspath splits paths at spaces; configuration paths are single values.
-repo_path = $(if $(or $(filter /%,$(firstword $(1))),$(findstring :/,$(firstword $(1)))),$(1),$(REPO_ROOT)/$(1))
-FLUTTER_ROOT := $(REPO_ROOT)/apps/flutter
+repo_path      = $(if $(or $(filter /%,$(firstword $(1))),$(findstring :/,$(firstword $(1)))),$(1),$(REPO_ROOT)/$(1))
+FLUTTER_ROOT  := $(REPO_ROOT)/apps/flutter
 FLUTTER_BUILD := $(FLUTTER_ROOT)/build
 
 # Tools. Prefer the project-pinned FVM SDK when it has been bootstrapped.
 FVM_FLUTTER := $(REPO_ROOT)/.fvm/flutter_sdk/bin/flutter
-FLUTTER ?= $(if $(wildcard .fvm/flutter_sdk/bin/flutter),$(FVM_FLUTTER),flutter)
-FVM_DART := $(REPO_ROOT)/.fvm/flutter_sdk/bin/dart
-DART ?= $(if $(wildcard .fvm/flutter_sdk/bin/dart),$(FVM_DART),dart)
+FLUTTER     ?= $(if $(wildcard .fvm/flutter_sdk/bin/flutter),$(FVM_FLUTTER),flutter)
+FVM_DART    := $(REPO_ROOT)/.fvm/flutter_sdk/bin/dart
+DART        ?= $(if $(wildcard .fvm/flutter_sdk/bin/dart),$(FVM_DART),dart)
 
 # Runtime defaults
 POMODOIST_BILLING_CHANNEL ?= stripe
@@ -38,10 +38,13 @@ POMODOIST_APPIMAGE_BUILDER ?= ./tool/linux/build_appimage.sh
 # platform files carry production values.
 LOCAL_CONFIG ?= .env.local
 STAGING_CONFIG ?= .env.staging
-TESTFLIGHT_CONFIG ?= .env.testflight
-ANDROID_CONFIG ?= .env.android
-LINUX_CONFIG ?= .env.linux
+# TestFlight uploads production by default; TESTFLIGHT_ENV=staging uploads a
+# staging client.
+TESTFLIGHT_ENV    ?= production
+TESTFLIGHT_CONFIG ?= $(if $(filter staging,$(TESTFLIGHT_ENV)),$(STAGING_CONFIG),.env.testflight)
+LINUX_CONFIG   ?= .env.linux
 WINDOWS_CONFIG ?= .env.windows
+ANDROID_CONFIG ?= .env.android
 
 # Build output locations
 ANDROID_GRADLE_HOME ?= $(abspath build/android/gradle-home)

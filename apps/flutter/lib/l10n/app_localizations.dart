@@ -5561,6 +5561,12 @@ abstract class AppLocalizations {
   /// **'Sign in to use shared projects'**
   String get collaborationSignedOut;
 
+  /// No description provided for @collaborationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared projects are unavailable right now'**
+  String get collaborationUnavailable;
+
   /// No description provided for @collaborationError.
   ///
   /// In en, this message translates to:
