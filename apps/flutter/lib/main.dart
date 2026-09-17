@@ -63,7 +63,8 @@ Future<void> main() async {
               ),
               billingSignedInProvider.overrideWith((ref) {
                 final account = ref.watch(accountClientProvider);
-                return ref.watch(accountAuthStateProvider).value?.signedIn ??
+                final authState = ref.watch(accountAuthStateProvider).value;
+                return (authState?.signedIn ?? false) ||
                     account?.currentUserId != null;
               }),
               billingAccountRefreshTokenProvider.overrideWith((ref) {
@@ -85,8 +86,9 @@ Future<void> main() async {
               }),
               billingPurchaseLinkerProvider.overrideWith((ref) {
                 final account = ref.watch(accountClientProvider);
+                final authState = ref.watch(accountAuthStateProvider).value;
                 final signedIn =
-                    ref.watch(accountAuthStateProvider).value?.signedIn ??
+                    (authState?.signedIn ?? false) ||
                     account?.currentUserId != null;
                 if (account == null || !signedIn) {
                   return null;

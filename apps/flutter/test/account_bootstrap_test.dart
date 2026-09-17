@@ -204,6 +204,41 @@ void main() {
     expect(account.recordedDeviceId, 'device');
   });
 
+  test(
+    'account overview loads through a stale signed-out auth state',
+    () async {
+      final overview = AccountOverview(
+        profile: const AccountProfile(id: 'user'),
+        apps: const [],
+        generatedAt: DateTime.utc(2026, 7, 11),
+      );
+      final account = _OverviewAccountClient(
+        overview: () async => overview,
+        registerInstallCallback: () async {},
+      );
+      final container = ProviderContainer(
+        overrides: [
+          accountClientProvider.overrideWithValue(account),
+          // The auth stream can report a stale signed-out snapshot while the
+          // live session is intact, so the profile must still load.
+          accountAuthStateProvider.overrideWithValue(
+            const AsyncData(AccountAuthState(signedIn: false)),
+          ),
+          pomodoistDeviceIdProvider.overrideWith((ref) async => 'device'),
+          accountRequestTimeoutProvider.overrideWithValue(
+            const Duration(milliseconds: 10),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      expect(
+        await container.read(accountOverviewProvider.future),
+        same(overview),
+      );
+    },
+  );
+
   testWidgets('account overview failure remains until login retry', (
     tester,
   ) async {

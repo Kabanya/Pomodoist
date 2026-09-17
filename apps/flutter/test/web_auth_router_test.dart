@@ -92,6 +92,49 @@ void main() {
     );
   });
 
+  testWidgets('login redirect honors a live session over a stale snapshot', (
+    tester,
+  ) async {
+    final account = _MutableAccountClient()..userId = 'user';
+    final container = ProviderContainer(
+      overrides: [
+        accountClientProvider.overrideWithValue(account),
+        // The auth stream can report a stale signed-out snapshot while the
+        // live session is intact, so the router must still see a signed-in
+        // user and leave the login route for the requested destination.
+        accountAuthStateProvider.overrideWithValue(
+          const AsyncData(AccountAuthState(signedIn: false)),
+        ),
+      ],
+    );
+    final subscription = container.listen(routerProvider, (_, _) {});
+    addTearDown(() {
+      subscription.close();
+      container.dispose();
+    });
+    final router = container.read(routerProvider);
+
+    router.go(
+      '/login?returnTo=%2Foauth%2Fconsent%3Fauthorization_id%3D'
+      'a%252Fb%252Bc%252520d',
+    );
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(
+          builder: testAppBuilder,
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      _routerUri(router),
+      '/oauth/consent?authorization_id=a%2Fb%2Bc%2520d',
+    );
+  });
+
   testWidgets(
     'same consent route reloads and submits the current authorization',
     (tester) async {

@@ -41,7 +41,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   bool signedIn() {
     final authState = ref.read(accountAuthStateProvider).value;
     final account = ref.read(accountClientProvider);
-    return authState?.signedIn ?? (account?.currentUserId != null);
+    return (authState?.signedIn ?? false) || account?.currentUserId != null;
   }
 
   final nativeLinkCoordinator = ref.read(nativeLinkCoordinatorProvider);
