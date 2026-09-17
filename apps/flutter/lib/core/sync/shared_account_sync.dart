@@ -452,7 +452,9 @@ extension SharedAccountSync on AccountSyncEngine {
             ..remove('isFavorite')
             ..remove('isCollapsed')
             ..remove('dayOrder')
-            ..remove('viewStyle');
+            ..remove('viewStyle')
+            // The shared scope accepts entity fields only; schemaVersion is envelope metadata.
+            ..remove('schemaVersion');
           if (data['assigneeIdsJson'] is String) {
             data['assigneeIds'] = jsonDecode(
               data.remove('assigneeIdsJson') as String,

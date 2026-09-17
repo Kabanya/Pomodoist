@@ -153,12 +153,27 @@ select is((pg_temp.collab(format('{"action":"role","scopeId":%s,"userId":"c10000
 select pg_temp.act_as('c1000000-0000-4000-8000-000000000004','d1000000-0000-4000-8000-000000000004');
 create temporary table member_push as select pg_temp.call_op((select id from scope_id),pg_temp.shared_task_op('task-from-member','Member task')) as value;
 select is(jsonb_array_length((select value->'applied' from member_push)),1,'members can push shared mutations');
+create temporary table comment_push as select pg_temp.call_op((select id from scope_id),jsonb_build_object(
+  'opId','op-comment','entityType','comment','entityId','comment-from-member','operation','upsert',
+  'payload',jsonb_build_object('schemaVersion',1,'id','comment-from-member','taskId','task-from-member',
+    'body','Member comment','mentions',jsonb_build_array()),
+  'baseRevision',0,'clientUpdatedAt','2026-09-14T12:00:02Z')) as value;
+select is(jsonb_array_length((select value->'applied' from comment_push)),1,
+  'comments accept the schemaVersion envelope every sync client sends');
+select is((select value->'applied'->0->'data'->>'taskId' from comment_push),'task-from-member',
+  'an applied comment keeps the task it answers');
 create temporary table member_pull as select pg_temp.collab(
   jsonb_build_object('action','pull','scopeId',(select id from scope_id))) as value;
 select ok(jsonb_array_length((select value->'changes' from member_pull))>=3,'members pull shared entities');
 select ok(((select value->>'nextCursor' from member_pull)::bigint)>0,'pull returns a revision cursor');
 select is(jsonb_array_length((pg_temp.collab(format('{"action":"pull","scopeId":%s,"sinceRevision":999999}',
   to_json((select id from scope_id))::text)::jsonb))->'changes'),0,'pull ahead of the cursor returns no changes');
+select pg_temp.act_as('c1000000-0000-4000-8000-000000000001','d1000000-0000-4000-8000-000000000001');
+select ok(exists(select 1 from jsonb_array_elements((pg_temp.collab(jsonb_build_object('action','pull',
+  'scopeId',(select id from scope_id)))->'changes')) c where c->>'entityType'='comment'
+  and c->'data'->>'createdBy'='c1000000-0000-4000-8000-000000000004' and c->'data'->>'taskId'='task-from-member'
+  and c->'data'->>'body'='Member comment'),'another member receives the comment with its task in a pull delta');
+select pg_temp.act_as('c1000000-0000-4000-8000-000000000004','d1000000-0000-4000-8000-000000000004');
 create temporary table member_export as select pg_temp.collab(
   jsonb_build_object('action','export','scopeId',(select id from scope_id))) as value;
 select ok((select value ? 'changes' and value ? 'members' from member_export),'export returns scope contents');

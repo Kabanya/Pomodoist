@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:app_account/app_account.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/providers.dart';
 import 'package:pomodoist/app/theme/app_theme.dart';
 import 'package:pomodoist/core/db/app_database.dart';
+import 'package:pomodoist/core/sync/account_sync_engine.dart';
 import 'package:pomodoist/core/sync/sync_queue_repository.dart';
 import 'package:pomodoist/features/collaboration/data/collaboration_api.dart';
 import 'package:pomodoist/features/collaboration/data/collaboration_repository.dart';
@@ -19,6 +21,7 @@ import 'package:pomodoist/features/collaboration/presentation/share_project_dial
 import 'package:pomodoist/features/collaboration/presentation/task_collaboration_section.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:uuid/uuid.dart';
 
 import 'support/test_app.dart';
 
@@ -1125,6 +1128,111 @@ void main() {
       await _drainSnackBarsAndDispose(tester);
     });
 
+    testWidgets(
+      'renders a comment another member wrote through the pull path',
+      (tester) async {
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(db.close);
+        await db.ensureSeedData();
+        final api = CollaborationApi(
+          (request) async => switch (request['action']) {
+            'state' => {
+              'scopes': [_scopeJson(role: 'member', ownerId: _memberId)],
+            },
+            'pull' => {
+              'changes':
+                  [
+                        {
+                          'entityType': 'project',
+                          'entityId': _projectId,
+                          'serverRevision': 1,
+                          'updatedAt': '2026-09-14T00:00:00Z',
+                          'data': {'id': _projectId, 'name': 'Shared project'},
+                        },
+                        {
+                          'entityType': 'task',
+                          'entityId': _taskId,
+                          'serverRevision': 2,
+                          'updatedAt': '2026-09-14T00:00:00Z',
+                          'data': {
+                            'id': _taskId,
+                            'projectId': _projectId,
+                            'content': 'Shared task',
+                            'status': 'open',
+                            'assigneeIds': <String>[],
+                          },
+                        },
+                        {
+                          'entityType': 'comment',
+                          'entityId': 'comment-remote',
+                          'serverRevision': 3,
+                          'updatedAt': '2026-09-14T01:00:00Z',
+                          'data': {
+                            'id': 'comment-remote',
+                            'scopeId': _scopeId,
+                            'taskId': _taskId,
+                            'body': 'Comment from Alice',
+                            'mentions': <String>[],
+                            'createdBy': _memberId,
+                            'createdAt': '2026-09-14T01:00:00Z',
+                            'updatedAt': '2026-09-14T01:00:00Z',
+                          },
+                        },
+                      ]
+                      .where(
+                        (change) =>
+                            (change['serverRevision'] as int) >
+                            (request['sinceRevision'] as int),
+                      )
+                      .toList(),
+              'nextCursor': 3,
+              'hasMore': false,
+              'members': _scopeJson()['members'],
+            },
+            _ => {'ok': true},
+          },
+        );
+        await AccountSyncEngine(
+          db: db,
+          uuid: const Uuid(),
+          account: _Account(),
+          collaboration: api,
+        ).syncShared();
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              appDatabaseProvider.overrideWithValue(db),
+              collaborationRepositoryProvider.overrideWithValue(
+                CollaborationRepository(
+                  db: db,
+                  api: api,
+                  queue: DriftSyncQueueRepository(db),
+                  synchronize: () async {},
+                ),
+              ),
+            ],
+            child: MaterialApp(
+              builder: testAppBuilder,
+              theme: AppTheme.light(),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: SingleChildScrollView(
+                  child: TaskCollaborationSection(task: _task()),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Comment from Alice'), findsOne);
+        expect(find.text('Alice'), findsOne);
+        await _drainSnackBarsAndDispose(tester);
+      },
+    );
+
     testWidgets('observers cannot edit assignees or comments', (tester) async {
       final harness = await _pumpCollaborationApp(
         tester,
@@ -1250,4 +1358,11 @@ void main() {
       await _drainSnackBarsAndDispose(tester);
     });
   });
+}
+
+class _Account implements AccountClient {
+  @override
+  String? get currentUserId => _actor;
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

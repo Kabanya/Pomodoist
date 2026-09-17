@@ -359,6 +359,79 @@ void main() {
     },
   );
 
+  test('a posted comment carries only fields the scope accepts', () async {
+    const scopeFields = {
+      'id',
+      'taskId',
+      'body',
+      'mentions',
+      'createdAt',
+      'updatedAt',
+      'createdBy',
+      'scopeId',
+    };
+    const envelopeFields = {
+      'commandType',
+      'isFavorite',
+      'isCollapsed',
+      'dayOrder',
+      'viewStyle',
+      'completedFocusIntervals',
+      'totalFocusSeconds',
+      'schemaVersion',
+    };
+    await collaboration.comment('scope', 'task', 'Hello from me');
+    await engine.syncShared();
+    final operation =
+        (pushes.single['operations'] as List).single as Map<String, dynamic>;
+    expect(operation['entityType'], 'comment');
+    expect(operation['operation'], 'upsert');
+    final payload = operation['payload'] as Map<String, dynamic>;
+    expect(payload['taskId'], 'task');
+    expect(payload['body'], 'Hello from me');
+    expect(payload.keys, isNot(contains('schemaVersion')));
+    expect(
+      payload.keys.where(
+        (key) => !scopeFields.contains(key) && !envelopeFields.contains(key),
+      ),
+      isEmpty,
+    );
+  });
+
+  test('a comment another member writes reaches this member', () async {
+    revision = 3;
+    extraChanges.add({
+      'entityType': 'comment',
+      'entityId': 'comment-remote',
+      'serverRevision': 3,
+      'updatedAt': '2026-09-14T01:00:00Z',
+      'data': {
+        'id': 'comment-remote',
+        'scopeId': 'scope',
+        'taskId': 'task',
+        'body': 'Remote comment',
+        'mentions': <String>[],
+        'createdBy': 'owner',
+        'createdAt': '2026-09-14T01:00:00Z',
+        'updatedAt': '2026-09-14T01:00:00Z',
+      },
+    });
+    await engine.syncShared();
+    final comments = await collaboration
+        .watchEntities('scope', 'comment', taskId: 'task')
+        .first;
+    expect(comments.single['body'], 'Remote comment');
+    expect(comments.single['createdBy'], 'owner');
+    // The cursor now sits on the comment revision: a later pull must not drop it.
+    await engine.syncShared();
+    expect(
+      await collaboration
+          .watchEntities('scope', 'comment', taskId: 'task')
+          .first,
+      hasLength(1),
+    );
+  });
+
   test(
     'observers cannot be assigned and rejected selection leaves local state intact',
     () async {
