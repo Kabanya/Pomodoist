@@ -28,6 +28,9 @@ import '../../../app/theme/app_theme.dart';
 import '../../../app/widgets/action_feedback.dart';
 import '../../../app/widgets/app_date_time_picker.dart';
 import '../../focus/domain/focus_models.dart';
+import '../../collaboration/domain/collaboration_models.dart';
+import '../../collaboration/presentation/collaboration_copy.dart';
+import '../../collaboration/presentation/collaboration_providers.dart';
 import '../../collaboration/presentation/task_collaboration_section.dart';
 import '../../focus/presentation/focus_view_mode.dart';
 import '../../planning/domain/quick_add_parser.dart';
@@ -335,7 +338,7 @@ class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                             ExpansionTile(
                               tilePadding: EdgeInsets.zero,
                               title: Text(l10n.focusHistory),
-                              children: [_FocusHistory(taskId: item.id)],
+                              children: [_FocusHistory(task: item)],
                             ),
                           ],
                         ),
@@ -1405,38 +1408,68 @@ Color _priorityColor(int priority, AppThemePalette colors) {
 }
 
 class _FocusHistory extends ConsumerWidget {
-  const _FocusHistory({required this.taskId});
+  const _FocusHistory({required this.task});
 
-  final String taskId;
+  final TaskItem task;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scopeId = task.scopeId;
+    final scope = scopeId == null
+        ? null
+        : ref.watch(sharedScopeProvider(scopeId));
+    // Members' completed sessions live in the shared cache, not in this
+    // device's focus tables, which hold only the local user's own intervals.
+    final contributions = scopeId == null
+        ? const <Map<String, dynamic>>[]
+        : ref
+                  .watch(
+                    collaborationEntitiesProvider((
+                      scopeId: scopeId,
+                      type: 'focus_interval',
+                      taskId: task.id,
+                    )),
+                  )
+                  .value ??
+              const <Map<String, dynamic>>[];
     return StreamBuilder<List<FocusIntervalItem>>(
-      stream: ref.watch(focusRepositoryProvider).watchIntervalsForTask(taskId),
+      stream: ref.watch(focusRepositoryProvider).watchIntervalsForTask(task.id),
       builder: (context, snapshot) {
-        final intervals = snapshot.data ?? const [];
-        if (intervals.isEmpty) {
-          return Text(context.l10n.noFocusIntervals);
+        final local = snapshot.data ?? const <FocusIntervalItem>[];
+        final localIds = {for (final interval in local) interval.id};
+        final entries = <_FocusHistoryEntry>[
+          for (final interval in local)
+            _FocusHistoryEntry(
+              key: 'focus-history-interval-${interval.id}',
+              type: interval.type,
+              status: interval.status,
+              startedAt: interval.startedAt,
+              subtitle: formatLocalDate(context, interval.startedAt.toLocal()),
+              seconds: interval.plannedSeconds,
+            ),
+          for (final contribution in contributions)
+            if (!localIds.contains(contribution['id']))
+              ?_sharedFocusEntry(context, scope, contribution),
+        ];
+        if (entries.isEmpty) {
+          return Text(l10n.noFocusIntervals);
         }
+        entries.sort((a, b) => b.startedAt.compareTo(a.startedAt));
         return Column(
           children: [
-            for (final interval in intervals.take(20))
+            for (final entry in entries.take(20))
               ListTile(
+                key: Key(entry.key),
                 leading: Icon(
-                  interval.type == 'work'
-                      ? LucideIcons.timer
-                      : LucideIcons.coffee,
+                  entry.type == 'work' ? LucideIcons.timer : LucideIcons.coffee,
                 ),
                 title: Text(
-                  '${focusIntervalTypeLabel(context.l10n, interval.type)} · '
-                  '${focusIntervalStatusLabel(context.l10n, interval.status)}',
+                  '${focusIntervalTypeLabel(l10n, entry.type)} · '
+                  '${focusIntervalStatusLabel(l10n, entry.status)}',
                 ),
-                subtitle: Text(
-                  formatLocalDate(context, interval.startedAt.toLocal()),
-                ),
-                trailing: Text(
-                  formatFocusTime(context, interval.plannedSeconds),
-                ),
+                subtitle: Text(entry.subtitle),
+                trailing: Text(formatFocusTime(context, entry.seconds)),
               ),
           ],
         );
@@ -1444,3 +1477,55 @@ class _FocusHistory extends ConsumerWidget {
     );
   }
 }
+
+class _FocusHistoryEntry {
+  const _FocusHistoryEntry({
+    required this.key,
+    required this.type,
+    required this.status,
+    required this.startedAt,
+    required this.subtitle,
+    required this.seconds,
+  });
+
+  final String key;
+  final String type;
+  final String status;
+  final DateTime startedAt;
+  final String subtitle;
+  final int seconds;
+}
+
+_FocusHistoryEntry? _sharedFocusEntry(
+  BuildContext context,
+  SharedScope? scope,
+  Map<String, dynamic> contribution,
+) {
+  final startedAt = _focusContributionTime(contribution['startedAt']);
+  if (startedAt == null) return null;
+  final author =
+      (contribution['createdBy'] ?? contribution['userId'])?.toString() ?? '';
+  final date = formatLocalDate(context, startedAt.toLocal());
+  return _FocusHistoryEntry(
+    key: 'focus-history-shared-${contribution['id']}',
+    type: contribution['type'] as String? ?? 'work',
+    status: contribution['status'] as String? ?? 'completed',
+    startedAt: startedAt,
+    subtitle: scope == null
+        ? date
+        : '${collaborationMemberLabel(context.l10n, scope, author)} · $date',
+    seconds:
+        (contribution['durationSeconds'] as num?)?.toInt() ??
+        (contribution['plannedSeconds'] as num?)?.toInt() ??
+        0,
+  );
+}
+
+DateTime? _focusContributionTime(Object? value) => switch (value) {
+  final String text => DateTime.tryParse(text)?.toUtc(),
+  final num milliseconds => DateTime.fromMillisecondsSinceEpoch(
+    milliseconds.toInt(),
+    isUtc: true,
+  ),
+  _ => null,
+};
