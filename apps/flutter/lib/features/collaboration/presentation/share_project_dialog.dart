@@ -1,9 +1,6 @@
 import 'dart:convert';
 
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show
@@ -12,13 +9,11 @@ import 'package:shadcn_ui/shadcn_ui.dart'
         ShadDialog,
         ShadInput,
         ShadOption,
-        ShadSelect,
-        ShadSwitch;
+        ShadSelect;
 
 import '../../../../app/account_providers.dart';
 import '../../../../app/app_l10n.dart';
 import '../../../../core/db/app_database.dart';
-import '../../../../app/runtime_public_config.dart';
 import '../domain/collaboration_models.dart';
 import '../../tasks/domain/task_models.dart';
 import '../data/collaboration_repository.dart';
@@ -195,35 +190,6 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
                 ),
               ),
           ],
-          const SizedBox(height: 12),
-          Text(
-            l10n.collaborationPublicLink,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l10n.collaborationPublicLinkHint,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          Row(
-            children: [
-              ShadSwitch(
-                key: const Key('collaboration-public-link-switch'),
-                value: scope.publicToken != null,
-                onChanged: _busy ? null : _togglePublicLink,
-              ),
-              const SizedBox(width: 8),
-              if (scope.publicToken != null)
-                ShadButton.ghost(
-                  key: const Key('collaboration-copy-link'),
-                  onPressed: _copyPublicLink,
-                  leading: const Icon(LucideIcons.copy, size: 16),
-                  child: Text(l10n.collaborationCopyLink),
-                ),
-            ],
-          ),
         ],
         if (conflicts.isNotEmpty) ...[
           const SizedBox(height: 12),
@@ -461,13 +427,6 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
     }
   }
 
-  void _copyToClipboard(String value) {
-    // Clipboard access is optional and must never block the share panel.
-    unawaited(
-      Clipboard.setData(ClipboardData(text: value)).catchError((Object _) {}),
-    );
-  }
-
   void _snack(String message) {
     ScaffoldMessenger.of(
       context,
@@ -652,30 +611,6 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
       close: true,
       success: context.l10n.collaborationProjectMadePrivate,
     );
-  }
-
-  Future<void> _togglePublicLink(bool enabled) async {
-    final scope = ref.read(sharedScopeForProjectProvider(widget.project.id));
-    if (scope == null) return;
-    await _run((repository) async {
-      final result = await repository.mutate('publicLink', {
-        'scopeId': scope.id,
-        'enabled': enabled,
-      });
-      if (enabled && result['url'] != null && mounted) {
-        _copyToClipboard(result['url'].toString());
-        _snack(context.l10n.collaborationLinkCopied);
-      }
-    });
-  }
-
-  Future<void> _copyPublicLink() async {
-    final scope = ref.read(sharedScopeForProjectProvider(widget.project.id));
-    final token = scope?.publicToken;
-    if (token == null) return;
-    final webUrl = ref.read(runtimePublicConfigProvider).webAppUrl;
-    _copyToClipboard('$webUrl/shared/public/$token');
-    if (mounted) _snack(context.l10n.collaborationLinkCopied);
   }
 
   Future<void> _resolveConflict(

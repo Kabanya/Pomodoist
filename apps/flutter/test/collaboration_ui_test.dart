@@ -5,7 +5,6 @@ import 'package:app_account/app_account.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/app/providers.dart';
@@ -31,7 +30,6 @@ const _observerId = 'viewer-3';
 const _scopeId = 'scope-1';
 const _projectId = 'project-1';
 const _taskId = 'task-1';
-final _publicToken = List.filled(64, 'a').join();
 
 class _Harness {
   _Harness(this.db, this.calls);
@@ -46,7 +44,6 @@ class _Harness {
 Map<String, dynamic> _scopeJson({
   String role = 'administrator',
   String ownerId = _actor,
-  String? publicToken,
   List<Map<String, dynamic>>? members,
 }) => {
   'id': _scopeId,
@@ -55,7 +52,6 @@ Map<String, dynamic> _scopeJson({
   'role': role,
   'revision': 4,
   'historyUnlimited': true,
-  'publicToken': ?publicToken,
   'members':
       members ??
       [
@@ -98,7 +94,6 @@ Future<void> _seedScope(
   AppDatabase db, {
   String role = 'administrator',
   String ownerId = _actor,
-  String? publicToken,
   List<Map<String, dynamic>>? members,
 }) => db
     .into(db.sharedScopes)
@@ -109,7 +104,6 @@ Future<void> _seedScope(
           _scopeJson(
             role: role,
             ownerId: ownerId,
-            publicToken: publicToken,
             members: members,
           ),
         ),
@@ -747,102 +741,6 @@ void main() {
       final remove = harness.callsFor('remove').single;
       expect(remove['scopeId'], _scopeId);
       expect(remove['userId'], _memberId);
-      await _drainSnackBarsAndDispose(tester);
-    });
-
-    testWidgets('toggles the public link and copies the capability url', (
-      tester,
-    ) async {
-      final harness = await _pumpCollaborationApp(
-        tester,
-        handler: (action, args) async => switch (action) {
-          'members' => {
-            'members': _scopeJson()['members'],
-            'invitations': const [],
-          },
-          'publicLink' => {
-            'token': _publicToken,
-            'url': 'https://web.test/shared/public/$_publicToken',
-          },
-          _ => {'ok': true},
-        },
-        build: (context) => Center(
-          child: ElevatedButton(
-            key: const Key('open-share'),
-            onPressed: () => showShareProjectDialog(context, _project()),
-            child: const Text('open'),
-          ),
-        ),
-      );
-      await _seedScope(harness.db);
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byKey(const Key('open-share')));
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.byKey(const Key('collaboration-public-link-switch')),
-      );
-      await tester.pumpAndSettle();
-
-      expect(harness.callsFor('publicLink').single['enabled'], isTrue);
-      expect(find.text('Link copied'), findsOne);
-      await _drainSnackBarsAndDispose(tester);
-    });
-
-    testWidgets('copies the public link when synchronization fails', (
-      tester,
-    ) async {
-      final l10n = lookupAppLocalizations(const Locale('en'));
-      final clipboard = <String>[];
-      final messenger =
-          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-      messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
-        if (call.method == 'Clipboard.setData') {
-          clipboard.add(
-            (call.arguments as Map<Object?, Object?>)['text']! as String,
-          );
-        }
-        return null;
-      });
-      addTearDown(
-        () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
-      );
-
-      final harness = await _pumpCollaborationApp(
-        tester,
-        handler: (action, args) async => switch (action) {
-          'members' => {
-            'members': _scopeJson()['members'],
-            'invitations': const [],
-          },
-          'publicLink' => {
-            'token': _publicToken,
-            'url': 'https://web.test/shared/public/$_publicToken',
-          },
-          _ => {'ok': true},
-        },
-        onSynchronize: (db) async => throw StateError('database is not open'),
-        build: (context) => Center(
-          child: ElevatedButton(
-            key: const Key('open-share'),
-            onPressed: () => showShareProjectDialog(context, _project()),
-            child: const Text('open'),
-          ),
-        ),
-      );
-      await _seedScope(harness.db);
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byKey(const Key('open-share')));
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.byKey(const Key('collaboration-public-link-switch')),
-      );
-      await tester.pumpAndSettle();
-
-      expect(harness.callsFor('publicLink').single['enabled'], isTrue);
-      expect(clipboard, ['https://web.test/shared/public/$_publicToken']);
-      expect(find.text(l10n.collaborationLinkCopied), findsOne);
       await _drainSnackBarsAndDispose(tester);
     });
 

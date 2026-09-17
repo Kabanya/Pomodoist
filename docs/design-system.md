@@ -581,9 +581,14 @@ is processed once and invalid or expired links return to a recoverable state.
 
 The collaboration backend builds two web addresses from the application URL: an
 invitation link (`/shared/join/<token>`, sent by email) and a public read-only
-link (`/shared/public/<token>`, copied from the share dialog). Both are
-standalone routes outside the application shell. Neither may fall through to the
-router's not-found page, and both validate the token shape before any request.
+link (`/shared/public/<token>`). Both are standalone routes outside the
+application shell. Neither may fall through to the router's not-found page, and
+both validate the token shape before any request.
+
+The share dialog no longer shows or copies the public link: creating one is
+temporarily withdrawn from the UI, while the backend action and the read-only
+route stay in place so already issued links keep working and the switch can be
+restored in one change.
 
 An invitation link requires an account. A signed-out web visitor signs in and
 returns to the exact link; the screen then names the pending role and joins only
