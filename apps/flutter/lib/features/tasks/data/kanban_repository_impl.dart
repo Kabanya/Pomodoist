@@ -413,10 +413,9 @@ class DriftKanbanRepository implements KanbanRepository {
     // The focused label resolves through the same column identity that places
     // cards, so a status that is only a member of a merged column still focuses
     // the column the board renders.
-    final focusRow = statusById[settings.focusStatusLabelId];
-    final focusedStatusId = focusRow == null
-        ? settings.focusStatusLabelId
-        : columns.columnIdFor(focusRow) ?? settings.focusStatusLabelId;
+    final focusedStatusId =
+        columns.columnIdFor(settings.focusStatusLabelId) ??
+        settings.focusStatusLabelId;
 
     final openRoots = selectedProjectIds.isEmpty
         ? <db_schema.TaskRow>[]
@@ -470,13 +469,21 @@ class DriftKanbanRepository implements KanbanRepository {
 
     final renderedRoots = <({db_schema.TaskRow task, String statusId})>[];
     for (final task in candidateRoots) {
-      final statusId = statusIdByTask[task.id];
-      final status = statusById[statusId];
-      if (status == null ||
-          (task.status == 'completed') != _isDoneRow(status)) {
+      final storedStatusId = statusIdByTask[task.id];
+      if (storedStatusId == null) {
         continue;
       }
-      final columnId = columns.columnIdFor(status) ?? fallbackStatusId;
+      final status = statusById[storedStatusId];
+      // A card whose status label row is not loaded identifies its column
+      // through the mirrored label id, so only a card that matches no column at
+      // all falls back to the first one.
+      final column = columns.columnForLabel(storedStatusId, row: status);
+      final columnStatus = column?.representative ?? status;
+      if (columnStatus == null ||
+          (task.status == 'completed') != _isDoneRow(columnStatus)) {
+        continue;
+      }
+      final columnId = column?.representative.id ?? fallbackStatusId;
       if (columnId == null) {
         continue;
       }
@@ -703,7 +710,7 @@ class DriftKanbanRepository implements KanbanRepository {
     final columns = _KanbanStatusColumns.build(
       await _activeStatusRows(all: true),
     );
-    return columns.columnFor(statusId)?.memberIds ?? {statusId};
+    return columns.columnForLabel(statusId)?.memberIds ?? {statusId};
   }
 
   Future<List<({String id, String orderKey})>> _writeStatusOrder(
@@ -967,6 +974,7 @@ class _KanbanStatusColumns {
       column.members.add(row);
       _byIdentityKey.putIfAbsent(identityKey, () => column);
       _byStatusId[row.id] = column;
+      _byStatusIdSuffix.putIfAbsent(_statusIdSuffix(row.id), () => column);
       if (row.systemKey == null) {
         _byCustomStatusName.putIfAbsent(nameKey, () => column);
       }
@@ -982,21 +990,29 @@ class _KanbanStatusColumns {
   final List<_KanbanStatusColumn> columns = [];
   final Map<String, _KanbanStatusColumn> _byIdentityKey = {};
   final Map<String, _KanbanStatusColumn> _byStatusId = {};
+  final Map<String, _KanbanStatusColumn> _byStatusIdSuffix = {};
   final Map<String, _KanbanStatusColumn> _byCustomStatusName = {};
 
-  _KanbanStatusColumn? columnFor(String statusId) => _byStatusId[statusId];
-
-  /// The column a status label belongs to. A card whose stored label is not on
-  /// the board still lands in the column it matches instead of being dropped.
-  String? columnIdFor(db_schema.LabelRow row) {
-    final column =
-        _byStatusId[row.id] ??
-        _byIdentityKey[_statusIdentityKey(row)] ??
-        (row.systemKey == null
-            ? _byCustomStatusName[_statusNameKey(row)]
-            : null);
-    return column?.representative.id;
+  /// The column a stored status label belongs to, with its row when that row is
+  /// loaded. A label that is not on the board still resolves through the status
+  /// it matches, and one whose row has not been pulled yet through the id it was
+  /// mirrored under, so its card lands in a column instead of being dropped.
+  _KanbanStatusColumn? columnForLabel(
+    String statusId, {
+    db_schema.LabelRow? row,
+  }) {
+    return _byStatusId[statusId] ??
+        _byStatusIdSuffix[_statusIdSuffix(statusId)] ??
+        (row == null
+            ? null
+            : _byIdentityKey[_statusIdentityKey(row)] ??
+                  (row.systemKey == null
+                      ? _byCustomStatusName[_statusNameKey(row)]
+                      : null));
   }
+
+  String? columnIdFor(String statusId) =>
+      columnForLabel(statusId)?.representative.id;
 }
 
 String _statusIdentityKey(db_schema.LabelRow row) =>

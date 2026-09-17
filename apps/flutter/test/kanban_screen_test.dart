@@ -136,6 +136,55 @@ void main() {
     expect(find.text('Shared root'), findsOneWidget);
   });
 
+  testWidgets('renders the shared card before its status labels are loaded', (
+    tester,
+  ) async {
+    final board = await _mixedScopeBoard(tester, mirrorStatusLabels: false);
+
+    await _pumpKanban(tester, width: 1200, snapshot: board);
+
+    expect(board.statuses, hasLength(4));
+    expect(find.text('Shared root'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(Key('kanban-column-$kanbanStatusInProgressId')),
+        matching: find.text('Shared root'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('selecting only a shared project without status labels shows an '
+      'empty board', (tester) async {
+    final board = await _mixedScopeBoard(
+      tester,
+      mirrorStatusLabels: false,
+      selectPersonalProject: false,
+    );
+    expect(board.statuses, isEmpty);
+
+    await _pumpKanban(tester, width: 390, snapshot: board);
+
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const Key('kanban-empty-board')), findsOneWidget);
+    expect(
+      find.byWidgetPredicate((widget) {
+        final key = widget.key;
+        return key is ValueKey<String> &&
+            key.value.startsWith('kanban-column-');
+      }),
+      findsNothing,
+    );
+
+    // The board has no Backlog column to add into, so the control that needs one
+    // stays disabled instead of dereferencing a status that is not there.
+    await tester.tap(find.byKey(const Key('kanban-global-add')));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const Key('kanban-add-input')), findsNothing);
+  });
+
   testWidgets('highlights a merged column focused through a member status', (
     tester,
   ) async {
@@ -469,10 +518,14 @@ Future<_KanbanHarness> _pumpKanban(
 }
 
 /// A board over the seeded personal project and a shared one, so that every
-/// status is a merged column whose representative is the personal label.
+/// status is a merged column whose representative is the personal label. The
+/// shared scope's mirrored status labels, and the personal project itself, can
+/// be left out to build the board a client sees before they are pulled.
 Future<KanbanBoardSnapshot> _mixedScopeBoard(
   WidgetTester tester, {
   String? focusStatusLabelId,
+  bool mirrorStatusLabels = true,
+  bool selectPersonalProject = true,
 }) async {
   final db = AppDatabase(NativeDatabase.memory());
   addTearDown(db.close);
@@ -507,17 +560,19 @@ Future<KanbanBoardSnapshot> _mixedScopeBoard(
             }),
           ),
         );
-    for (final label in await (db.select(
-      db.labels,
-    )..where((row) => row.scopeId.isNull())).get()) {
-      await db
-          .into(db.labels)
-          .insert(
-            label.copyWith(
-              id: 'scope:${label.id}',
-              scopeId: const Value('scope'),
-            ),
-          );
+    if (mirrorStatusLabels) {
+      for (final label in await (db.select(
+        db.labels,
+      )..where((row) => row.scopeId.isNull())).get()) {
+        await db
+            .into(db.labels)
+            .insert(
+              label.copyWith(
+                id: 'scope:${label.id}',
+                scopeId: const Value('scope'),
+              ),
+            );
+      }
     }
     for (final task in const [
       (
@@ -561,7 +616,10 @@ Future<KanbanBoardSnapshot> _mixedScopeBoard(
           );
     }
     final repository = DriftKanbanRepository(db);
-    await repository.setSelectedProjectIds({inboxProjectId, 'project-shared'});
+    await repository.setSelectedProjectIds({
+      if (selectPersonalProject) inboxProjectId,
+      'project-shared',
+    });
     if (focusStatusLabelId != null) {
       await repository.setFocusStatus(focusStatusLabelId);
     }

@@ -103,11 +103,16 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
         .where((status) => !_hideDone || !status.isDone)
         .toList(growable: false);
     final focusStatusId = board.focusedStatusId;
+    final backlogStatusId = _backlogId(board);
+    // A board whose selected scopes define no status yet renders no column, so
+    // the expanded section stays unset instead of falling back to a first one.
     final expandedStatusId =
         statuses.any((status) => status.id == _expandedStatusId)
-        ? _expandedStatusId!
+        ? _expandedStatusId
         : statuses.any((status) => status.id == focusStatusId)
         ? focusStatusId
+        : statuses.isEmpty
+        ? null
         : statuses.first.id;
     if (_expandedStatusId != expandedStatusId) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -156,8 +161,12 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
                       onToggleDone: () =>
                           setState(() => _hideDone = !_hideDone),
                       onSelectProjects: () => _selectProjects(board),
-                      onAdd: () =>
-                          _openAddDialog(board, statusId: _backlogId(board)),
+                      onAdd: backlogStatusId == null
+                          ? null
+                          : () => _openAddDialog(
+                              board,
+                              statusId: backlogStatusId,
+                            ),
                     ),
                     if (boardValue.isLoading)
                       const LinearProgressIndicator(
@@ -165,7 +174,18 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
                         minHeight: 2,
                       ),
                     Expanded(
-                      child: wide
+                      child: statuses.isEmpty
+                          ? Center(
+                              key: const Key('kanban-empty-board'),
+                              child: Text(
+                                context.l10n.noTasksHere,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: context.appColors.secondaryText,
+                                    ),
+                              ),
+                            )
+                          : wide
                           ? _DesktopKanbanBoard(
                               statuses: statuses,
                               allStatuses: board.statuses,
@@ -226,8 +246,15 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
     };
   }
 
-  String _backlogId(KanbanBoardSnapshot board) {
-    return board.statuses.firstWhere((status) => status.isBacklog).id;
+  /// The status a new card starts in, or null on a board whose selected scopes
+  /// define no Backlog column yet.
+  String? _backlogId(KanbanBoardSnapshot board) {
+    for (final status in board.statuses) {
+      if (status.isBacklog) {
+        return status.id;
+      }
+    }
+    return null;
   }
 
   Future<void> _moveTask(
@@ -404,7 +431,7 @@ class _KanbanHeader extends StatelessWidget {
   final ValueChanged<String> onQueryChanged;
   final VoidCallback onToggleDone;
   final VoidCallback onSelectProjects;
-  final VoidCallback onAdd;
+  final VoidCallback? onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -731,7 +758,7 @@ class _MobileKanbanBoard extends StatelessWidget {
   final List<KanbanStatus> statuses;
   final List<KanbanStatus> allStatuses;
   final String focusStatusId;
-  final String expandedStatusId;
+  final String? expandedStatusId;
   final Map<String, List<KanbanCard>> cardsByStatus;
   final ValueChanged<String> onExpanded;
   final Future<void> Function(String, String, {int? targetIndex}) onMove;

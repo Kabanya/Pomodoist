@@ -277,6 +277,72 @@ void main() {
       },
     );
 
+    test(
+      'places a shared card whose status label is not loaded locally',
+      () async {
+        await _insertProject(
+          db,
+          id: 'project-shared',
+          name: 'Shared',
+          orderKey: '2',
+        );
+        await _insertTask(
+          db,
+          id: 'task-shared',
+          content: 'Shared root',
+          projectId: 'project-shared',
+          orderKey: '2',
+          scopeId: 'scope',
+        );
+        await _insertTask(
+          db,
+          id: 'task-shared-done',
+          content: 'Shared done',
+          projectId: 'project-shared',
+          orderKey: '3',
+          status: 'completed',
+          completedAt: DateTime.utc(2026, 7, 10, 12),
+          scopeId: 'scope',
+        );
+        // The scope link and the card arrive before the scope's mirrored
+        // status labels do, so only the personal label set is on the board.
+        await _shareScopeWithoutLabels(
+          db,
+          scopeId: 'scope',
+          rootProjectId: 'project-shared',
+        );
+        await _assignStatus(
+          db,
+          taskId: 'task-shared',
+          statusId: 'scope:$kanbanStatusInProgressId',
+        );
+        await _assignStatus(
+          db,
+          taskId: 'task-shared-done',
+          statusId: 'scope:$kanbanStatusDoneId',
+        );
+
+        await repository.setSelectedProjectIds({
+          inboxProjectId,
+          'project-shared',
+        });
+        final snapshot = await repository.watchBoard().first;
+
+        expect(snapshot.statuses.map((status) => status.name).toList(), [
+          'Backlog',
+          'To do',
+          'In progress',
+          'Done',
+        ]);
+        expect(_cardTaskIds(snapshot, kanbanStatusInProgressId), [
+          'task-shared',
+        ]);
+        expect(_cardTaskIds(snapshot, kanbanStatusDoneId), [
+          'task-shared-done',
+        ]);
+      },
+    );
+
     test('keeps one column per status for two shared projects', () async {
       await _insertProject(
         db,
@@ -1149,6 +1215,30 @@ Future<void> _shareScope(
   required String scopeId,
   required String rootProjectId,
 }) async {
+  await _shareScopeWithoutLabels(
+    db,
+    scopeId: scopeId,
+    rootProjectId: rootProjectId,
+  );
+  final labels = await (db.select(
+    db.labels,
+  )..where((row) => row.scopeId.isNull())).get();
+  for (final label in labels) {
+    await db
+        .into(db.labels)
+        .insert(
+          label.copyWith(id: '$scopeId:${label.id}', scopeId: Value(scopeId)),
+        );
+  }
+}
+
+/// Links the project into a scope without the mirrored status labels a member
+/// receives separately from the project and its cards.
+Future<void> _shareScopeWithoutLabels(
+  AppDatabase db, {
+  required String scopeId,
+  required String rootProjectId,
+}) async {
   await db
       .into(db.sharedScopes)
       .insert(
@@ -1164,16 +1254,6 @@ Future<void> _shareScope(
       );
   await (db.update(db.projects)..where((row) => row.id.equals(rootProjectId)))
       .write(ProjectsCompanion(scopeId: Value(scopeId)));
-  final labels = await (db.select(
-    db.labels,
-  )..where((row) => row.scopeId.isNull())).get();
-  for (final label in labels) {
-    await db
-        .into(db.labels)
-        .insert(
-          label.copyWith(id: '$scopeId:${label.id}', scopeId: Value(scopeId)),
-        );
-  }
 }
 
 Future<void> _assignStatus(
