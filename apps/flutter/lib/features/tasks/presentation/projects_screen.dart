@@ -435,14 +435,21 @@ class _ProjectListTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    project.displayName(context.l10n),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: titleStyle,
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          project.displayName(context.l10n),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: titleStyle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      SharedProjectBadge(project: project),
+                    ],
                   ),
                 ),
-                SharedProjectBadge(project: project),
                 if (count > 0)
                   Text(
                     '$count',

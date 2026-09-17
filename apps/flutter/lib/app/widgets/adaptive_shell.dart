@@ -1516,17 +1516,27 @@ class _SidebarProjectTile extends StatelessWidget {
                 ProjectIconView(project: project, size: 18),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    project.displayName(context.l10n),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: foreground,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    ),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          project.displayName(context.l10n),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: foreground,
+                                fontWeight: selected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                              ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      SharedProjectBadge(project: project),
+                    ],
                   ),
                 ),
-                SharedProjectBadge(project: project),
                 if (count > 0)
                   Text(
                     '$count',

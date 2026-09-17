@@ -227,7 +227,8 @@ Secondary click, touch long press, and the Context Menu / Shift+F10 keys expose
 renaming, icon and color selection, favorites, and confirmed deletion. Sidebar
 rows show no menu button; the Projects screen keeps its ellipsis button for
 keyboard and touch access. Project icons are synchronized project data;
-existing projects retain the hash icon until changed.
+existing projects retain the hash icon until changed. The shared-project badge
+follows the project name in both rows, before the task count.
 
 Projects support arbitrary nesting with globally unique names. The shared menu
 offers Create subproject, Move project, and Move up/down among siblings. Keep
