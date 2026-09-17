@@ -99,54 +99,57 @@ Future<void> showMoveProjectDialog(
         final projects = ref.watch(projectsProvider);
         return ShadDialog(
           title: Text(context.l10n.moveProject),
-          child: SizedBox(
-            width: 420,
-            height: 360,
-            child: projects.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) =>
-                  Text(context.l10n.projectsUnavailable(error)),
-              data: (items) {
-                final rows = projectRows(
-                  items
-                      .where(
-                        (p) =>
-                            p.id != inboxProjectId &&
-                            !p.isArchived &&
-                            !p.isDeleted,
-                      )
-                      .toList(),
-                );
-                return ListView(
-                  children: [
-                    ListTile(
-                      leading: const Icon(LucideIcons.folders),
-                      title: Text(context.l10n.projectTopLevel),
-                      onTap: () => Navigator.pop(
-                        context,
-                        const ProjectMoveTarget(null, null),
-                      ),
-                    ),
-                    for (final row in rows)
-                      if (canParentProject(
-                        items,
-                        projectId: project.id,
-                        parentId: row.project.id,
-                      ))
-                        ListTile(
-                          contentPadding: EdgeInsetsDirectional.only(
-                            start: 16 + math.min(row.depth, 4) * 12.0,
-                            end: 16,
-                          ),
-                          title: Text(row.project.displayName(context.l10n)),
-                          onTap: () => Navigator.pop(
-                            context,
-                            ProjectMoveTarget(row.project.id, null),
-                          ),
+          child: Material(
+            type: MaterialType.transparency,
+            child: SizedBox(
+              width: 420,
+              height: 360,
+              child: projects.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, _) =>
+                    Text(context.l10n.projectsUnavailable(error)),
+                data: (items) {
+                  final rows = projectRows(
+                    items
+                        .where(
+                          (p) =>
+                              p.id != inboxProjectId &&
+                              !p.isArchived &&
+                              !p.isDeleted,
+                        )
+                        .toList(),
+                  );
+                  return ListView(
+                    children: [
+                      ListTile(
+                        leading: const Icon(LucideIcons.folders),
+                        title: Text(context.l10n.projectTopLevel),
+                        onTap: () => Navigator.pop(
+                          context,
+                          const ProjectMoveTarget(null, null),
                         ),
-                  ],
-                );
-              },
+                      ),
+                      for (final row in rows)
+                        if (canParentProject(
+                          items,
+                          projectId: project.id,
+                          parentId: row.project.id,
+                        ))
+                          ListTile(
+                            contentPadding: EdgeInsetsDirectional.only(
+                              start: 16 + math.min(row.depth, 4) * 12.0,
+                              end: 16,
+                            ),
+                            title: Text(row.project.displayName(context.l10n)),
+                            onTap: () => Navigator.pop(
+                              context,
+                              ProjectMoveTarget(row.project.id, null),
+                            ),
+                          ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         );
