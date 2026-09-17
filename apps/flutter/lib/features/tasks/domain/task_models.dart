@@ -635,6 +635,7 @@ class KanbanBoardSnapshot {
   KanbanBoardSnapshot({
     required Iterable<KanbanStatus> statuses,
     required this.settings,
+    required this.focusedStatusId,
     required Iterable<ProjectItem> availableProjects,
     required Map<String, List<KanbanCard>> cardsByStatusId,
   }) : statuses = List.unmodifiable(statuses),
@@ -646,6 +647,13 @@ class KanbanBoardSnapshot {
 
   final List<KanbanStatus> statuses;
   final KanbanSettings settings;
+
+  /// The rendered column the board highlights, which is
+  /// [KanbanSettings.focusStatusLabelId] resolved to the column that holds it so
+  /// that a status which is only a member of a merged column still focuses that
+  /// column. It keeps the stored label id when no column holds it.
+  final String focusedStatusId;
+
   final List<ProjectItem> availableProjects;
   final Map<String, List<KanbanCard>> cardsByStatusId;
 

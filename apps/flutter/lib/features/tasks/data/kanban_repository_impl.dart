@@ -410,6 +410,13 @@ class DriftKanbanRepository implements KanbanRepository {
     final fallbackStatusId = statusRows.isEmpty ? null : statusRows.first.id;
     final projectById = {for (final row in projectRows) row.id: row};
     final statusById = {for (final row in activeStatusRows) row.id: row};
+    // The focused label resolves through the same column identity that places
+    // cards, so a status that is only a member of a merged column still focuses
+    // the column the board renders.
+    final focusRow = statusById[settings.focusStatusLabelId];
+    final focusedStatusId = focusRow == null
+        ? settings.focusStatusLabelId
+        : columns.columnIdFor(focusRow) ?? settings.focusStatusLabelId;
 
     final openRoots = selectedProjectIds.isEmpty
         ? <db_schema.TaskRow>[]
@@ -552,6 +559,7 @@ class DriftKanbanRepository implements KanbanRepository {
     return KanbanBoardSnapshot(
       statuses: statusRows.map(_mapStatus),
       settings: settings,
+      focusedStatusId: focusedStatusId,
       availableProjects: projectRows.map(
         (row) => _mapProject(row, scope: shared[row.scopeId]),
       ),
@@ -808,25 +816,6 @@ class DriftKanbanRepository implements KanbanRepository {
     return normalized;
   }
 
-  int _compareStatusRows(db_schema.LabelRow a, db_schema.LabelRow b) {
-    final rankCompare = _statusRank(a).compareTo(_statusRank(b));
-    if (rankCompare != 0) {
-      return rankCompare;
-    }
-    final orderCompare = a.orderKey.compareTo(b.orderKey);
-    return orderCompare != 0 ? orderCompare : a.id.compareTo(b.id);
-  }
-
-  int _statusRank(db_schema.LabelRow row) {
-    if (row.systemKey == db_schema.kanbanSystemKeyBacklog) {
-      return 0;
-    }
-    if (row.systemKey == db_schema.kanbanSystemKeyDone) {
-      return 2;
-    }
-    return 1;
-  }
-
   bool _isProtectedRow(db_schema.LabelRow row) {
     return row.systemKey == db_schema.kanbanSystemKeyBacklog ||
         row.systemKey == db_schema.kanbanSystemKeyDone;
@@ -982,6 +971,12 @@ class _KanbanStatusColumns {
         _byCustomStatusName.putIfAbsent(nameKey, () => column);
       }
     }
+    // The rendered order follows each column's representative, so reordering
+    // the label the board renders moves the column even when other scopes hold
+    // mirror labels with order keys of their own.
+    columns.sort(
+      (a, b) => _compareStatusRows(a.representative, b.representative),
+    );
   }
 
   final List<_KanbanStatusColumn> columns = [];
@@ -1006,6 +1001,25 @@ class _KanbanStatusColumns {
 
 String _statusIdentityKey(db_schema.LabelRow row) =>
     row.systemKey ?? _statusIdSuffix(row.id);
+
+int _compareStatusRows(db_schema.LabelRow a, db_schema.LabelRow b) {
+  final rankCompare = _statusRank(a).compareTo(_statusRank(b));
+  if (rankCompare != 0) {
+    return rankCompare;
+  }
+  final orderCompare = a.orderKey.compareTo(b.orderKey);
+  return orderCompare != 0 ? orderCompare : a.id.compareTo(b.id);
+}
+
+int _statusRank(db_schema.LabelRow row) {
+  if (row.systemKey == db_schema.kanbanSystemKeyBacklog) {
+    return 0;
+  }
+  if (row.systemKey == db_schema.kanbanSystemKeyDone) {
+    return 2;
+  }
+  return 1;
+}
 
 String _statusIdSuffix(String id) {
   final separator = id.indexOf(':');

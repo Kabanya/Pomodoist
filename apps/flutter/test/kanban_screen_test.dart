@@ -108,101 +108,9 @@ void main() {
   testWidgets('renders one column per status with two projects on the board', (
     tester,
   ) async {
-    final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
-    // Drift streams only emit off the test's fake clock, so the board has to be
-    // read in the real async zone before pumping the screen.
-    final board = await tester.runAsync(() async {
-      await db.ensureSeedData();
-      final now = DateTime.utc(2026, 7, 10, 9);
-      await db
-          .into(db.projects)
-          .insert(
-            ProjectsCompanion.insert(
-              id: 'project-shared',
-              userId: localUserId,
-              name: 'Shared',
-              scopeId: const Value('scope'),
-              orderKey: '2',
-              createdAt: now,
-              updatedAt: now,
-            ),
-          );
-      await db
-          .into(db.sharedScopes)
-          .insert(
-            SharedScopesCompanion.insert(
-              id: 'scope',
-              dataJson: jsonEncode({
-                'id': 'scope',
-                'rootProjectId': 'project-shared',
-                'ownerId': 'owner',
-                'role': 'administrator',
-              }),
-            ),
-          );
-      for (final label in await (db.select(
-        db.labels,
-      )..where((row) => row.scopeId.isNull())).get()) {
-        await db
-            .into(db.labels)
-            .insert(
-              label.copyWith(
-                id: 'scope:${label.id}',
-                scopeId: const Value('scope'),
-              ),
-            );
-      }
-      for (final task in const [
-        (
-          id: 'task-personal',
-          content: 'Personal root',
-          projectId: inboxProjectId,
-          statusId: kanbanStatusBacklogId,
-          scopeId: null,
-        ),
-        (
-          id: 'task-shared',
-          content: 'Shared root',
-          projectId: 'project-shared',
-          statusId: 'scope:$kanbanStatusInProgressId',
-          scopeId: 'scope',
-        ),
-      ]) {
-        await db
-            .into(db.tasks)
-            .insert(
-              TasksCompanion.insert(
-                id: task.id,
-                userId: localUserId,
-                content: task.content,
-                projectId: task.projectId,
-                scopeId: Value(task.scopeId),
-                orderKey: task.id,
-                createdAt: now,
-                updatedAt: now,
-              ),
-            );
-        await db
-            .into(db.taskLabels)
-            .insert(
-              TaskLabelsCompanion.insert(
-                taskId: task.id,
-                labelId: task.statusId,
-                kind: const Value(labelKindKanbanStatus),
-                createdAt: now,
-              ),
-            );
-      }
-      final repository = DriftKanbanRepository(db);
-      await repository.setSelectedProjectIds({
-        inboxProjectId,
-        'project-shared',
-      });
-      return repository.watchBoard().first;
-    });
+    final board = await _mixedScopeBoard(tester);
 
-    await _pumpKanban(tester, width: 1200, snapshot: board!);
+    await _pumpKanban(tester, width: 1200, snapshot: board);
 
     expect(board.statuses, hasLength(4));
     for (final statusId in const [
@@ -226,6 +134,46 @@ void main() {
     );
     expect(find.text('Personal root'), findsOneWidget);
     expect(find.text('Shared root'), findsOneWidget);
+  });
+
+  testWidgets('highlights a merged column focused through a member status', (
+    tester,
+  ) async {
+    final board = await _mixedScopeBoard(
+      tester,
+      focusStatusLabelId: 'scope:$kanbanStatusInProgressId',
+    );
+    expect(
+      board.settings.focusStatusLabelId,
+      'scope:$kanbanStatusInProgressId',
+    );
+
+    await _pumpKanban(tester, width: 1200, snapshot: board);
+
+    final focused = _columnBackground(tester, kanbanStatusInProgressId);
+    for (final statusId in const [
+      kanbanStatusBacklogId,
+      kanbanStatusTodoId,
+      kanbanStatusDoneId,
+    ]) {
+      expect(_columnBackground(tester, statusId), isNot(focused));
+    }
+  });
+
+  testWidgets('expands the merged column that holds a member focus status', (
+    tester,
+  ) async {
+    final board = await _mixedScopeBoard(
+      tester,
+      focusStatusLabelId: 'scope:$kanbanStatusInProgressId',
+    );
+
+    await _pumpKanban(tester, width: 390, snapshot: board);
+
+    expect(
+      find.byKey(const Key('kanban-add-kanban-status-in-progress-v1')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('hiding Done keeps card completion available', (tester) async {
@@ -520,6 +468,117 @@ Future<_KanbanHarness> _pumpKanban(
   return _KanbanHarness(kanban: kanban, tasks: tasks);
 }
 
+/// A board over the seeded personal project and a shared one, so that every
+/// status is a merged column whose representative is the personal label.
+Future<KanbanBoardSnapshot> _mixedScopeBoard(
+  WidgetTester tester, {
+  String? focusStatusLabelId,
+}) async {
+  final db = AppDatabase(NativeDatabase.memory());
+  addTearDown(db.close);
+  // Drift streams only emit off the test's fake clock, so the board has to be
+  // read in the real async zone before pumping the screen.
+  final board = await tester.runAsync(() async {
+    await db.ensureSeedData();
+    final now = DateTime.utc(2026, 7, 10, 9);
+    await db
+        .into(db.projects)
+        .insert(
+          ProjectsCompanion.insert(
+            id: 'project-shared',
+            userId: localUserId,
+            name: 'Shared',
+            scopeId: const Value('scope'),
+            orderKey: '2',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    await db
+        .into(db.sharedScopes)
+        .insert(
+          SharedScopesCompanion.insert(
+            id: 'scope',
+            dataJson: jsonEncode({
+              'id': 'scope',
+              'rootProjectId': 'project-shared',
+              'ownerId': 'owner',
+              'role': 'administrator',
+            }),
+          ),
+        );
+    for (final label in await (db.select(
+      db.labels,
+    )..where((row) => row.scopeId.isNull())).get()) {
+      await db
+          .into(db.labels)
+          .insert(
+            label.copyWith(
+              id: 'scope:${label.id}',
+              scopeId: const Value('scope'),
+            ),
+          );
+    }
+    for (final task in const [
+      (
+        id: 'task-personal',
+        content: 'Personal root',
+        projectId: inboxProjectId,
+        statusId: kanbanStatusBacklogId,
+        scopeId: null,
+      ),
+      (
+        id: 'task-shared',
+        content: 'Shared root',
+        projectId: 'project-shared',
+        statusId: 'scope:$kanbanStatusInProgressId',
+        scopeId: 'scope',
+      ),
+    ]) {
+      await db
+          .into(db.tasks)
+          .insert(
+            TasksCompanion.insert(
+              id: task.id,
+              userId: localUserId,
+              content: task.content,
+              projectId: task.projectId,
+              scopeId: Value(task.scopeId),
+              orderKey: task.id,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+      await db
+          .into(db.taskLabels)
+          .insert(
+            TaskLabelsCompanion.insert(
+              taskId: task.id,
+              labelId: task.statusId,
+              kind: const Value(labelKindKanbanStatus),
+              createdAt: now,
+            ),
+          );
+    }
+    final repository = DriftKanbanRepository(db);
+    await repository.setSelectedProjectIds({inboxProjectId, 'project-shared'});
+    if (focusStatusLabelId != null) {
+      await repository.setFocusStatus(focusStatusLabelId);
+    }
+    return repository.watchBoard().first;
+  });
+  return board!;
+}
+
+Color _columnBackground(WidgetTester tester, String statusId) {
+  final decoration =
+      tester
+              .widget<DecoratedBox>(find.byKey(Key('kanban-column-$statusId')))
+              .decoration
+          as BoxDecoration;
+  return decoration.color!;
+}
+
 FocusRunItem _activeRun() {
   final now = DateTime.utc(2026, 7, 10, 10);
   return FocusRunItem(
@@ -607,6 +666,7 @@ KanbanBoardSnapshot _snapshot({
       createdAt: now,
       updatedAt: now,
     ),
+    focusedStatusId: kanbanStatusInProgressId,
     availableProjects: projects,
     cardsByStatusId: {
       kanbanStatusBacklogId: const [],

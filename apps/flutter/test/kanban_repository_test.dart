@@ -414,6 +414,39 @@ void main() {
       ]);
     });
 
+    test('reordering a merged column moves it on a board with a personal and a '
+        'shared project', () async {
+      await _insertProject(
+        db,
+        id: 'project-shared',
+        name: 'Shared',
+        orderKey: '2',
+      );
+      await _shareScope(db, scopeId: 'scope', rootProjectId: 'project-shared');
+      await repository.setSelectedProjectIds({
+        inboxProjectId,
+        'project-shared',
+      });
+
+      var snapshot = await repository.watchBoard().first;
+      expect(snapshot.statuses.map((status) => status.id).toList(), [
+        kanbanStatusBacklogId,
+        kanbanStatusTodoId,
+        kanbanStatusInProgressId,
+        kanbanStatusDoneId,
+      ]);
+
+      await repository.reorderStatus(kanbanStatusInProgressId, 1);
+
+      snapshot = await repository.watchBoard().first;
+      expect(snapshot.statuses.map((status) => status.id).toList(), [
+        kanbanStatusBacklogId,
+        kanbanStatusInProgressId,
+        kanbanStatusTodoId,
+        kanbanStatusDoneId,
+      ]);
+    });
+
     test('creating a card in a column assigns its project status', () async {
       await _insertProject(
         db,

@@ -102,7 +102,7 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
     final statuses = board.statuses
         .where((status) => !_hideDone || !status.isDone)
         .toList(growable: false);
-    final focusStatusId = board.settings.focusStatusLabelId;
+    final focusStatusId = board.focusedStatusId;
     final expandedStatusId =
         statuses.any((status) => status.id == _expandedStatusId)
         ? _expandedStatusId!
