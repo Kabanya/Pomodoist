@@ -343,17 +343,32 @@ class DriftKanbanRepository implements KanbanRepository {
     if (task == null) {
       throw ArgumentError.value(taskId, 'taskId', 'Unknown task');
     }
+    final targetStatusId = await _kanbanTransitions.resolveStatusInTaskScope(
+      taskId,
+      statusId,
+    );
+    if (targetStatusId == null) {
+      throw ArgumentError.value(
+        statusId,
+        'statusId',
+        'Kanban status belongs to another project scope',
+      );
+    }
+    final columnStatusIds = {
+      ...await _columnStatusIds(statusId),
+      targetStatusId,
+    };
     final now = DateTime.now().toUtc();
     await _db.transaction(() async {
       await _kanbanTransitions.moveTaskInTransaction(
         taskId,
-        statusId: statusId,
+        statusId: targetStatusId,
         timestamp: now,
       );
       if (!_isDoneRow(status)) {
         await _reorderTask(
           task,
-          statusId: statusId,
+          statusIds: columnStatusIds,
           targetIndex: targetIndex,
           now: now,
         );
@@ -366,7 +381,7 @@ class DriftKanbanRepository implements KanbanRepository {
       for (final row in await _db.select(_db.sharedScopes).get())
         row.id: SharedScope.fromJson(jsonDecode(row.dataJson)),
     };
-    final statusRows = await _activeStatusRows(all: true);
+    final activeStatusRows = await _activeStatusRows(all: true);
     final projectRows =
         await (_db.select(_db.projects)
               ..where(
@@ -385,9 +400,16 @@ class DriftKanbanRepository implements KanbanRepository {
         .where((row) => selectedProjectIds.contains(row.id))
         .map((row) => row.scopeId)
         .toSet();
-    statusRows.removeWhere((row) => !selectedScopes.contains(row.scopeId));
+    final columns = _KanbanStatusColumns.build([
+      for (final row in activeStatusRows)
+        if (selectedScopes.contains(row.scopeId)) row,
+    ]);
+    final statusRows = [
+      for (final column in columns.columns) column.representative,
+    ];
+    final fallbackStatusId = statusRows.isEmpty ? null : statusRows.first.id;
     final projectById = {for (final row in projectRows) row.id: row};
-    final statusById = {for (final row in statusRows) row.id: row};
+    final statusById = {for (final row in activeStatusRows) row.id: row};
 
     final openRoots = selectedProjectIds.isEmpty
         ? <db_schema.TaskRow>[]
@@ -447,7 +469,11 @@ class DriftKanbanRepository implements KanbanRepository {
           (task.status == 'completed') != _isDoneRow(status)) {
         continue;
       }
-      renderedRoots.add((task: task, statusId: status.id));
+      final columnId = columns.columnIdFor(status) ?? fallbackStatusId;
+      if (columnId == null) {
+        continue;
+      }
+      renderedRoots.add((task: task, statusId: columnId));
     }
 
     final subtaskProgressByParent = <String, ({int total, int completed})>{};
@@ -535,7 +561,7 @@ class DriftKanbanRepository implements KanbanRepository {
 
   Future<void> _reorderTask(
     db_schema.TaskRow task, {
-    required String statusId,
+    required Set<String> statusIds,
     required int? targetIndex,
     required DateTime now,
   }) async {
@@ -547,7 +573,7 @@ class DriftKanbanRepository implements KanbanRepository {
         await (_db.select(_db.taskLabels)..where(
               (row) =>
                   row.kind.equals(db_schema.labelKindKanbanStatus) &
-                  row.labelId.equals(statusId),
+                  row.labelId.isIn(statusIds),
             ))
             .get();
     final taskIds = links.map((link) => link.taskId).toSet();
@@ -663,6 +689,13 @@ class DriftKanbanRepository implements KanbanRepository {
               row.isDeleted.equals(false),
         ))
         .getSingleOrNull();
+  }
+
+  Future<Set<String>> _columnStatusIds(String statusId) async {
+    final columns = _KanbanStatusColumns.build(
+      await _activeStatusRows(all: true),
+    );
+    return columns.columnFor(statusId)?.memberIds ?? {statusId};
   }
 
   Future<List<({String id, String orderKey})>> _writeStatusOrder(
@@ -906,3 +939,77 @@ class DriftKanbanRepository implements KanbanRepository {
 String _formatOrderValue(int value) {
   return value.toString().padLeft(_orderKeyWidth, '0');
 }
+
+/// One board column: the statuses every project scope on the board defines for
+/// the same Kanban status, collapsed into the label the board renders.
+class _KanbanStatusColumn {
+  final List<db_schema.LabelRow> members = [];
+
+  /// The default status label when a personal project is on the board, so the
+  /// column keeps the identity the rest of the app already knows.
+  db_schema.LabelRow get representative {
+    for (final member in members) {
+      if (member.scopeId == null) {
+        return member;
+      }
+    }
+    return members.first;
+  }
+
+  Set<String> get memberIds => {for (final member in members) member.id};
+}
+
+/// Collapses the status labels of every scope on the board into one column per
+/// status. Scopes mirror the shared status set under `<scopeId>:<labelId>` ids,
+/// so the label identity is the status system key and, for statuses without
+/// one, the original label id behind that scope prefix.
+class _KanbanStatusColumns {
+  _KanbanStatusColumns.build(Iterable<db_schema.LabelRow> rows) {
+    for (final row in rows) {
+      final identityKey = _statusIdentityKey(row);
+      final nameKey = _statusNameKey(row);
+      final existing =
+          _byIdentityKey[identityKey] ??
+          (row.systemKey == null ? _byCustomStatusName[nameKey] : null);
+      final column = existing ?? _KanbanStatusColumn();
+      if (existing == null) {
+        columns.add(column);
+      }
+      column.members.add(row);
+      _byIdentityKey.putIfAbsent(identityKey, () => column);
+      _byStatusId[row.id] = column;
+      if (row.systemKey == null) {
+        _byCustomStatusName.putIfAbsent(nameKey, () => column);
+      }
+    }
+  }
+
+  final List<_KanbanStatusColumn> columns = [];
+  final Map<String, _KanbanStatusColumn> _byIdentityKey = {};
+  final Map<String, _KanbanStatusColumn> _byStatusId = {};
+  final Map<String, _KanbanStatusColumn> _byCustomStatusName = {};
+
+  _KanbanStatusColumn? columnFor(String statusId) => _byStatusId[statusId];
+
+  /// The column a status label belongs to. A card whose stored label is not on
+  /// the board still lands in the column it matches instead of being dropped.
+  String? columnIdFor(db_schema.LabelRow row) {
+    final column =
+        _byStatusId[row.id] ??
+        _byIdentityKey[_statusIdentityKey(row)] ??
+        (row.systemKey == null
+            ? _byCustomStatusName[_statusNameKey(row)]
+            : null);
+    return column?.representative.id;
+  }
+}
+
+String _statusIdentityKey(db_schema.LabelRow row) =>
+    row.systemKey ?? _statusIdSuffix(row.id);
+
+String _statusIdSuffix(String id) {
+  final separator = id.indexOf(':');
+  return separator < 0 ? id : id.substring(separator + 1);
+}
+
+String _statusNameKey(db_schema.LabelRow row) => row.name.trim().toLowerCase();

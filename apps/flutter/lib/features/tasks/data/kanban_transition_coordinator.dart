@@ -469,9 +469,14 @@ class KanbanTransitionCoordinator {
     String? requestedStatusId,
   ) async {
     if (requestedStatusId != null &&
-        await _isActiveNonDoneStatus(requestedStatusId) &&
-        await _sameScope(taskId, requestedStatusId)) {
-      return requestedStatusId;
+        await _isActiveNonDoneStatus(requestedStatusId)) {
+      final resolved = await resolveStatusInTaskScope(
+        taskId,
+        requestedStatusId,
+      );
+      if (resolved != null) {
+        return resolved;
+      }
     }
     return _anchor(taskId, kanbanStatusBacklogId);
   }
@@ -479,6 +484,56 @@ class KanbanTransitionCoordinator {
   Future<bool> _isActiveNonDoneStatus(String id) async {
     final status = await _activeStatus(id);
     return status != null && status.systemKey != kanbanSystemKeyDone;
+  }
+
+  /// The status of the same project scope as [taskId] that [statusId] stands
+  /// for. Scopes mirror the shared status set, so a board column points at the
+  /// matching status of the card's own scope. Returns `null` when that scope
+  /// defines no such status.
+  Future<String?> resolveStatusInTaskScope(
+    String taskId,
+    String statusId,
+  ) async {
+    final status = await _activeStatus(statusId);
+    final task = await (_db.select(
+      _db.tasks,
+    )..where((row) => row.id.equals(taskId))).getSingleOrNull();
+    if (status == null || task == null) {
+      return null;
+    }
+    if (status.scopeId == task.scopeId) {
+      return status.id;
+    }
+    final candidates =
+        await (_db.select(_db.labels)..where(
+              (row) =>
+                  row.kind.equals(labelKindKanbanStatus) &
+                  row.isDeleted.equals(false) &
+                  (task.scopeId == null
+                      ? row.scopeId.isNull()
+                      : row.scopeId.equals(task.scopeId!)),
+            ))
+            .get();
+    candidates.sort((a, b) {
+      final order = a.orderKey.compareTo(b.orderKey);
+      return order != 0 ? order : a.id.compareTo(b.id);
+    });
+    if (status.systemKey != null) {
+      for (final candidate in candidates) {
+        if (candidate.systemKey == status.systemKey) {
+          return candidate.id;
+        }
+      }
+      return null;
+    }
+    final name = status.name.trim().toLowerCase();
+    for (final candidate in candidates) {
+      if (candidate.systemKey == null &&
+          candidate.name.trim().toLowerCase() == name) {
+        return candidate.id;
+      }
+    }
+    return null;
   }
 
   Future<String> _fallbackFocusStatusId(String taskId) async {

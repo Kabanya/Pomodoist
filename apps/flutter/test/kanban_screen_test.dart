@@ -1,6 +1,9 @@
 import 'support/test_app.dart';
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:drift/drift.dart' hide isNotNull, isNull;
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +14,7 @@ import 'package:pomodoist/core/db/app_database.dart' hide KanbanSettings;
 import 'package:pomodoist/features/focus/domain/focus_models.dart';
 import 'package:pomodoist/features/planning/data/quick_add_service.dart';
 import 'package:pomodoist/features/planning/domain/quick_add_parser.dart';
+import 'package:pomodoist/features/tasks/data/kanban_repository_impl.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/features/tasks/presentation/kanban/kanban_board_controller.dart';
 import 'package:pomodoist/features/tasks/presentation/kanban/kanban_screen.dart';
@@ -99,6 +103,129 @@ void main() {
     expect(harness.tasks.created.single.content, 'Added in Todo');
     expect(harness.tasks.created.single.kanbanStatusId, kanbanStatusTodoId);
     expect(harness.tasks.created.single.projectId, inboxProjectId);
+  });
+
+  testWidgets('renders one column per status with two projects on the board', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    // Drift streams only emit off the test's fake clock, so the board has to be
+    // read in the real async zone before pumping the screen.
+    final board = await tester.runAsync(() async {
+      await db.ensureSeedData();
+      final now = DateTime.utc(2026, 7, 10, 9);
+      await db
+          .into(db.projects)
+          .insert(
+            ProjectsCompanion.insert(
+              id: 'project-shared',
+              userId: localUserId,
+              name: 'Shared',
+              scopeId: const Value('scope'),
+              orderKey: '2',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+      await db
+          .into(db.sharedScopes)
+          .insert(
+            SharedScopesCompanion.insert(
+              id: 'scope',
+              dataJson: jsonEncode({
+                'id': 'scope',
+                'rootProjectId': 'project-shared',
+                'ownerId': 'owner',
+                'role': 'administrator',
+              }),
+            ),
+          );
+      for (final label in await (db.select(
+        db.labels,
+      )..where((row) => row.scopeId.isNull())).get()) {
+        await db
+            .into(db.labels)
+            .insert(
+              label.copyWith(
+                id: 'scope:${label.id}',
+                scopeId: const Value('scope'),
+              ),
+            );
+      }
+      for (final task in const [
+        (
+          id: 'task-personal',
+          content: 'Personal root',
+          projectId: inboxProjectId,
+          statusId: kanbanStatusBacklogId,
+          scopeId: null,
+        ),
+        (
+          id: 'task-shared',
+          content: 'Shared root',
+          projectId: 'project-shared',
+          statusId: 'scope:$kanbanStatusInProgressId',
+          scopeId: 'scope',
+        ),
+      ]) {
+        await db
+            .into(db.tasks)
+            .insert(
+              TasksCompanion.insert(
+                id: task.id,
+                userId: localUserId,
+                content: task.content,
+                projectId: task.projectId,
+                scopeId: Value(task.scopeId),
+                orderKey: task.id,
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+        await db
+            .into(db.taskLabels)
+            .insert(
+              TaskLabelsCompanion.insert(
+                taskId: task.id,
+                labelId: task.statusId,
+                kind: const Value(labelKindKanbanStatus),
+                createdAt: now,
+              ),
+            );
+      }
+      final repository = DriftKanbanRepository(db);
+      await repository.setSelectedProjectIds({
+        inboxProjectId,
+        'project-shared',
+      });
+      return repository.watchBoard().first;
+    });
+
+    await _pumpKanban(tester, width: 1200, snapshot: board!);
+
+    expect(board.statuses, hasLength(4));
+    for (final statusId in const [
+      kanbanStatusBacklogId,
+      kanbanStatusTodoId,
+      kanbanStatusInProgressId,
+      kanbanStatusDoneId,
+    ]) {
+      expect(find.byKey(Key('kanban-column-$statusId')), findsOneWidget);
+    }
+    expect(
+      find.byKey(const Key('kanban-column-scope:kanban-status-backlog-v1')),
+      findsNothing,
+    );
+    expect(
+      find.byWidgetPredicate((widget) {
+        final key = widget.key;
+        return key is ValueKey<String> && key.value.contains('scope:');
+      }),
+      findsNothing,
+    );
+    expect(find.text('Personal root'), findsOneWidget);
+    expect(find.text('Shared root'), findsOneWidget);
   });
 
   testWidgets('hiding Done keeps card completion available', (tester) async {

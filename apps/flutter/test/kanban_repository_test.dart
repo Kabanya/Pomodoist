@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -118,6 +120,403 @@ void main() {
         expect(settingsRow.selectedProjectIdsJson, '["project-a","project-b"]');
       },
     );
+
+    test(
+      'keeps one column per status for a personal and a shared project',
+      () async {
+        await _insertProject(
+          db,
+          id: 'project-personal',
+          name: 'Personal',
+          orderKey: '1',
+        );
+        await _insertProject(
+          db,
+          id: 'project-shared',
+          name: 'Shared',
+          orderKey: '2',
+        );
+        await _insertTask(
+          db,
+          id: 'task-personal',
+          content: 'Personal root',
+          projectId: 'project-personal',
+          orderKey: '1',
+        );
+        await _insertTask(
+          db,
+          id: 'task-shared',
+          content: 'Shared root',
+          projectId: 'project-shared',
+          orderKey: '2',
+          scopeId: 'scope',
+        );
+        await _shareScope(
+          db,
+          scopeId: 'scope',
+          rootProjectId: 'project-shared',
+        );
+        await _assignStatus(
+          db,
+          taskId: 'task-personal',
+          statusId: kanbanStatusBacklogId,
+        );
+        await _assignStatus(
+          db,
+          taskId: 'task-shared',
+          statusId: 'scope:$kanbanStatusInProgressId',
+        );
+
+        await repository.setSelectedProjectIds({
+          'project-personal',
+          'project-shared',
+        });
+        final snapshot = await repository.watchBoard().first;
+
+        expect(snapshot.statuses.map((status) => status.id).toList(), [
+          kanbanStatusBacklogId,
+          kanbanStatusTodoId,
+          kanbanStatusInProgressId,
+          kanbanStatusDoneId,
+        ]);
+        expect(
+          snapshot.statuses.map((status) => status.name).toSet(),
+          hasLength(snapshot.statuses.length),
+        );
+        expect(_cardTaskIds(snapshot, kanbanStatusBacklogId), [
+          'task-personal',
+        ]);
+        expect(_cardTaskIds(snapshot, kanbanStatusInProgressId), [
+          'task-shared',
+        ]);
+        expect(
+          snapshot.cardsByStatusId.values
+              .expand((cards) => cards)
+              .map((card) => card.statusId),
+          everyElement(
+            isIn(snapshot.statuses.map((status) => status.id).toList()),
+          ),
+        );
+      },
+    );
+
+    test(
+      'keeps a shared completed card in the merged Done column and restores it',
+      () async {
+        await _insertProject(
+          db,
+          id: 'project-personal',
+          name: 'Personal',
+          orderKey: '1',
+        );
+        await _insertProject(
+          db,
+          id: 'project-shared',
+          name: 'Shared',
+          orderKey: '2',
+        );
+        await _insertTask(
+          db,
+          id: 'task-shared',
+          content: 'Shared root',
+          projectId: 'project-shared',
+          orderKey: '2',
+          scopeId: 'scope',
+        );
+        await _insertTask(
+          db,
+          id: 'task-shared-done',
+          content: 'Shared done',
+          projectId: 'project-shared',
+          orderKey: '3',
+          scopeId: 'scope',
+          status: 'completed',
+          completedAt: DateTime.utc(2026, 7, 10, 12),
+        );
+        await _shareScope(
+          db,
+          scopeId: 'scope',
+          rootProjectId: 'project-shared',
+        );
+        await _assignStatus(
+          db,
+          taskId: 'task-shared',
+          statusId: 'scope:$kanbanStatusInProgressId',
+        );
+        await _assignStatus(
+          db,
+          taskId: 'task-shared-done',
+          statusId: 'scope:$kanbanStatusDoneId',
+        );
+        await repository.setSelectedProjectIds({
+          'project-personal',
+          'project-shared',
+        });
+
+        var snapshot = await repository.watchBoard().first;
+        expect(_cardTaskIds(snapshot, kanbanStatusDoneId), [
+          'task-shared-done',
+        ]);
+
+        await repository.moveTask(
+          'task-shared-done',
+          statusId: kanbanStatusInProgressId,
+          targetIndex: 0,
+        );
+
+        expect(
+          await _statusLabelId(db, 'task-shared-done'),
+          'scope:$kanbanStatusInProgressId',
+        );
+        snapshot = await repository.watchBoard().first;
+        expect(_cardTaskIds(snapshot, kanbanStatusInProgressId), [
+          'task-shared-done',
+          'task-shared',
+        ]);
+        expect(_cardTaskIds(snapshot, kanbanStatusDoneId), isEmpty);
+      },
+    );
+
+    test('keeps one column per status for two shared projects', () async {
+      await _insertProject(
+        db,
+        id: 'project-a',
+        name: 'Shared A',
+        orderKey: '1',
+      );
+      await _insertProject(
+        db,
+        id: 'project-b',
+        name: 'Shared B',
+        orderKey: '2',
+      );
+      await _insertTask(
+        db,
+        id: 'task-a',
+        content: 'A root',
+        projectId: 'project-a',
+        orderKey: '1',
+        scopeId: 'scope-a',
+      );
+      await _insertTask(
+        db,
+        id: 'task-b',
+        content: 'B root',
+        projectId: 'project-b',
+        orderKey: '2',
+        scopeId: 'scope-b',
+      );
+      await _shareScope(db, scopeId: 'scope-a', rootProjectId: 'project-a');
+      await _shareScope(db, scopeId: 'scope-b', rootProjectId: 'project-b');
+      await _assignStatus(
+        db,
+        taskId: 'task-a',
+        statusId: 'scope-a:$kanbanStatusInProgressId',
+      );
+      await _assignStatus(
+        db,
+        taskId: 'task-b',
+        statusId: 'scope-b:$kanbanStatusInProgressId',
+      );
+
+      await repository.setSelectedProjectIds({'project-a', 'project-b'});
+      final snapshot = await repository.watchBoard().first;
+
+      expect(snapshot.statuses.map((status) => status.name).toList(), [
+        'Backlog',
+        'To do',
+        'In progress',
+        'Done',
+      ]);
+      final inProgressId = _columnId(snapshot, 'In progress');
+      expect(_cardTaskIds(snapshot, inProgressId), ['task-a', 'task-b']);
+
+      await repository.moveTask('task-b', statusId: inProgressId);
+      expect(
+        await _statusLabelId(db, 'task-b'),
+        'scope-b:$kanbanStatusInProgressId',
+      );
+
+      await repository.moveTask(
+        'task-b',
+        statusId: _columnId(snapshot, 'To do'),
+      );
+      expect(await _statusLabelId(db, 'task-b'), 'scope-b:$kanbanStatusTodoId');
+      final moved = await repository.watchBoard().first;
+      expect(_cardTaskIds(moved, _columnId(moved, 'To do')), ['task-b']);
+    });
+
+    test('orders a merged column across the project scopes it holds', () async {
+      await _insertProject(
+        db,
+        id: 'project-a',
+        name: 'Shared A',
+        orderKey: '1',
+      );
+      await _insertProject(
+        db,
+        id: 'project-b',
+        name: 'Shared B',
+        orderKey: '2',
+      );
+      const orderKeys = {
+        'task-a1': '00000000000000000100',
+        'task-b1': '00000000000000000200',
+        'task-b2': '00000000000000000250',
+        'task-a2': '00000000000000000300',
+      };
+      for (final entry in orderKeys.entries) {
+        final shared = entry.key == 'task-a1' || entry.key == 'task-a2';
+        await _insertTask(
+          db,
+          id: entry.key,
+          content: entry.key,
+          projectId: shared ? 'project-a' : 'project-b',
+          orderKey: entry.value,
+          scopeId: shared ? 'scope-a' : 'scope-b',
+        );
+      }
+      await _shareScope(db, scopeId: 'scope-a', rootProjectId: 'project-a');
+      await _shareScope(db, scopeId: 'scope-b', rootProjectId: 'project-b');
+      for (final taskId in const ['task-a1', 'task-a2']) {
+        await _assignStatus(
+          db,
+          taskId: taskId,
+          statusId: 'scope-a:$kanbanStatusTodoId',
+        );
+      }
+      for (final taskId in const ['task-b1', 'task-b2']) {
+        await _assignStatus(
+          db,
+          taskId: taskId,
+          statusId: 'scope-b:$kanbanStatusTodoId',
+        );
+      }
+
+      await repository.setSelectedProjectIds({'project-a', 'project-b'});
+      var snapshot = await repository.watchBoard().first;
+      final todoId = _columnId(snapshot, 'To do');
+      expect(_cardTaskIds(snapshot, todoId), [
+        'task-a1',
+        'task-b1',
+        'task-b2',
+        'task-a2',
+      ]);
+
+      await repository.moveTask('task-b2', statusId: todoId, targetIndex: 1);
+
+      snapshot = await repository.watchBoard().first;
+      expect(_cardTaskIds(snapshot, _columnId(snapshot, 'To do')), [
+        'task-a1',
+        'task-b2',
+        'task-b1',
+        'task-a2',
+      ]);
+    });
+
+    test('creating a card in a column assigns its project status', () async {
+      await _insertProject(
+        db,
+        id: 'project-shared',
+        name: 'Shared',
+        orderKey: '1',
+      );
+      await _shareScope(db, scopeId: 'scope', rootProjectId: 'project-shared');
+      final tasks = DriftTaskRepository(db, DriftSyncQueueRepository(db));
+
+      final taskId = await tasks.createTask(
+        const CreateTaskInput(
+          content: 'From the board',
+          projectId: 'project-shared',
+          kanbanStatusId: kanbanStatusInProgressId,
+        ),
+      );
+
+      expect(
+        await _statusLabelId(db, taskId),
+        'scope:$kanbanStatusInProgressId',
+      );
+    });
+
+    test('shares a status only one project scope defines and refuses the drop '
+        'when the target scope lacks it', () async {
+      await _insertProject(
+        db,
+        id: 'project-a',
+        name: 'Shared A',
+        orderKey: '1',
+      );
+      await _insertProject(
+        db,
+        id: 'project-b',
+        name: 'Shared B',
+        orderKey: '2',
+      );
+      await _insertTask(
+        db,
+        id: 'task-a',
+        content: 'A root',
+        projectId: 'project-a',
+        orderKey: '1',
+        scopeId: 'scope-a',
+      );
+      await _insertTask(
+        db,
+        id: 'task-b',
+        content: 'B root',
+        projectId: 'project-b',
+        orderKey: '2',
+        scopeId: 'scope-b',
+      );
+      await _shareScope(db, scopeId: 'scope-a', rootProjectId: 'project-a');
+      await _shareScope(db, scopeId: 'scope-b', rootProjectId: 'project-b');
+      final now = DateTime.utc(2026, 7, 10, 9);
+      await db
+          .into(db.labels)
+          .insert(
+            LabelsCompanion.insert(
+              id: 'scope-a:review-v1',
+              userId: localUserId,
+              scopeId: const Value('scope-a'),
+              name: 'Review',
+              kind: const Value(labelKindKanbanStatus),
+              orderKey: '00000000000000003000',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+      await _assignStatus(db, taskId: 'task-a', statusId: 'scope-a:review-v1');
+      await _assignStatus(
+        db,
+        taskId: 'task-b',
+        statusId: 'scope-b:$kanbanStatusBacklogId',
+      );
+
+      await repository.setSelectedProjectIds({'project-a', 'project-b'});
+      final snapshot = await repository.watchBoard().first;
+
+      expect(snapshot.statuses.map((status) => status.name).toList(), [
+        'Backlog',
+        'To do',
+        'In progress',
+        'Review',
+        'Done',
+      ]);
+      final reviewId = _columnId(snapshot, 'Review');
+      expect(_cardTaskIds(snapshot, reviewId), ['task-a']);
+
+      await expectLater(
+        repository.moveTask('task-b', statusId: reviewId),
+        throwsArgumentError,
+      );
+      expect(
+        await _statusLabelId(db, 'task-b'),
+        'scope-b:$kanbanStatusBacklogId',
+      );
+
+      await repository.moveTask('task-a', statusId: reviewId);
+      expect(await _statusLabelId(db, 'task-a'), 'scope-a:review-v1');
+    });
 
     test('board SQL scopes roots, Done, links, and subtasks', () async {
       await _insertProject(
@@ -688,6 +1087,7 @@ Future<void> _insertTask(
   required String orderKey,
   String? parentId,
   String status = 'open',
+  String? scopeId,
   DateTime? completedAt,
   DateTime? updatedAt,
 }) async {
@@ -700,6 +1100,7 @@ Future<void> _insertTask(
           userId: localUserId,
           content: content,
           projectId: projectId,
+          scopeId: Value(scopeId),
           parentId: Value(parentId),
           status: Value(status),
           orderKey: orderKey,
@@ -708,4 +1109,77 @@ Future<void> _insertTask(
           completedAt: Value(completedAt),
         ),
       );
+}
+
+Future<void> _shareScope(
+  AppDatabase db, {
+  required String scopeId,
+  required String rootProjectId,
+}) async {
+  await db
+      .into(db.sharedScopes)
+      .insert(
+        SharedScopesCompanion.insert(
+          id: scopeId,
+          dataJson: jsonEncode({
+            'id': scopeId,
+            'rootProjectId': rootProjectId,
+            'ownerId': 'owner',
+            'role': 'administrator',
+          }),
+        ),
+      );
+  await (db.update(db.projects)..where((row) => row.id.equals(rootProjectId)))
+      .write(ProjectsCompanion(scopeId: Value(scopeId)));
+  final labels = await (db.select(
+    db.labels,
+  )..where((row) => row.scopeId.isNull())).get();
+  for (final label in labels) {
+    await db
+        .into(db.labels)
+        .insert(
+          label.copyWith(id: '$scopeId:${label.id}', scopeId: Value(scopeId)),
+        );
+  }
+}
+
+Future<void> _assignStatus(
+  AppDatabase db, {
+  required String taskId,
+  required String statusId,
+}) async {
+  await (db.delete(db.taskLabels)..where(
+        (row) =>
+            row.taskId.equals(taskId) & row.kind.equals(labelKindKanbanStatus),
+      ))
+      .go();
+  await db
+      .into(db.taskLabels)
+      .insert(
+        TaskLabelsCompanion.insert(
+          taskId: taskId,
+          labelId: statusId,
+          kind: const Value(labelKindKanbanStatus),
+          createdAt: DateTime.utc(2026, 7, 10, 9),
+        ),
+      );
+}
+
+Future<String> _statusLabelId(AppDatabase db, String taskId) async {
+  final link =
+      await (db.select(db.taskLabels)..where(
+            (row) =>
+                row.taskId.equals(taskId) &
+                row.kind.equals(labelKindKanbanStatus),
+          ))
+          .getSingle();
+  return link.labelId;
+}
+
+String _columnId(KanbanBoardSnapshot snapshot, String name) {
+  return snapshot.statuses.singleWhere((status) => status.name == name).id;
+}
+
+List<String> _cardTaskIds(KanbanBoardSnapshot snapshot, String statusId) {
+  return snapshot.cardsForStatus(statusId).map((card) => card.task.id).toList();
 }
