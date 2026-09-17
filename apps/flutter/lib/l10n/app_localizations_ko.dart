@@ -3105,6 +3105,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get collaborationDeleteSharedProject => '모두에게서 삭제';
 
   @override
+  String get collaborationMakePrivate => '비공개로 전환';
+
+  @override
   String get collaborationOwner => '소유자';
 
   @override
@@ -3173,6 +3176,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get collaborationSharedProjectDeleted => '공유 프로젝트를 삭제했습니다';
+
+  @override
+  String get collaborationMakePrivateConfirm => '이 프로젝트 공유를 중지할까요?';
+
+  @override
+  String get collaborationMakePrivateDescription =>
+      '프로젝트와 콘텐츠가 개인 계정으로 돌아갑니다. 다른 참여자는 즉시 접근할 수 없게 됩니다.';
+
+  @override
+  String get collaborationProjectMadePrivate => '프로젝트가 다시 비공개가 되었습니다';
 
   @override
   String get collaborationLinkCopied => '링크를 복사했습니다';

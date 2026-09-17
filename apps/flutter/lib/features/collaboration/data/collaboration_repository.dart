@@ -90,6 +90,9 @@ class CollaborationRepository {
   Future<Map<String, dynamic>> acceptInvitation(String token) =>
       mutate('accept', {'token': token});
 
+  Future<Map<String, dynamic>> unshare(String scopeId) =>
+      mutate('unshare', {'scopeId': scopeId});
+
   Future<Map<String, dynamic>> share(String projectId) async {
     final subtreeIds = await _shareEntityIds(projectId);
     var outstanding = await _outstandingPersonalCommands();

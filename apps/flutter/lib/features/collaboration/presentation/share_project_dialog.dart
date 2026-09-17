@@ -246,6 +246,13 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
               ),
             const Spacer(),
             if (scope.canDeleteRoot(actorId))
+              ShadButton.ghost(
+                key: const Key('collaboration-make-private'),
+                onPressed: _busy ? null : _unshare,
+                leading: const Icon(LucideIcons.lock, size: 16),
+                child: Text(l10n.collaborationMakePrivate),
+              ),
+            if (scope.canDeleteRoot(actorId))
               ShadButton.destructive(
                 key: const Key('collaboration-delete'),
                 onPressed: _busy ? null : _delete,
@@ -628,6 +635,22 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
       (repository) => repository.action('delete', {'scopeId': scope.id}),
       close: true,
       success: context.l10n.collaborationSharedProjectDeleted,
+    );
+  }
+
+  Future<void> _unshare() async {
+    final scope = ref.read(sharedScopeForProjectProvider(widget.project.id));
+    if (scope == null) return;
+    final confirmed = await _confirm(
+      context.l10n.collaborationMakePrivateConfirm,
+      context.l10n.collaborationMakePrivateDescription,
+      context.l10n.collaborationMakePrivate,
+    );
+    if (confirmed != true || !mounted) return;
+    await _run(
+      (repository) => repository.unshare(scope.id),
+      close: true,
+      success: context.l10n.collaborationProjectMadePrivate,
     );
   }
 

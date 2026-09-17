@@ -5399,6 +5399,12 @@ abstract class AppLocalizations {
   /// **'Delete for everyone'**
   String get collaborationDeleteSharedProject;
 
+  /// No description provided for @collaborationMakePrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Make private'**
+  String get collaborationMakePrivate;
+
   /// No description provided for @collaborationOwner.
   ///
   /// In en, this message translates to:
@@ -5524,6 +5530,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shared project deleted'**
   String get collaborationSharedProjectDeleted;
+
+  /// No description provided for @collaborationMakePrivateConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop sharing this project?'**
+  String get collaborationMakePrivateConfirm;
+
+  /// No description provided for @collaborationMakePrivateDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The project and its content return to your personal account. Other participants lose access immediately.'**
+  String get collaborationMakePrivateDescription;
+
+  /// No description provided for @collaborationProjectMadePrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Project is private again'**
+  String get collaborationProjectMadePrivate;
 
   /// No description provided for @collaborationLinkCopied.
   ///

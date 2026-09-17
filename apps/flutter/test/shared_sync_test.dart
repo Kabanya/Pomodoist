@@ -16,6 +16,7 @@ void main() {
   late AccountSyncEngine engine;
   late DriftSyncQueueRepository queue;
   late CollaborationRepository collaboration;
+  late _Account account;
   final scope = {
     'id': 'scope',
     'rootProjectId': 'project',
@@ -155,10 +156,11 @@ void main() {
           throw StateError('Unexpected action ${request['action']}');
       }
     });
+    account = _Account();
     engine = AccountSyncEngine(
       db: db,
       uuid: const Uuid(),
-      account: _Account(),
+      account: account,
       collaboration: api,
     );
     collaboration = CollaborationRepository(
@@ -216,6 +218,66 @@ void main() {
       expect(jsonDecode(draft.payloadJson), {'content': 'Own draft'});
     },
   );
+
+  test('unshared project returns as a personal row on the next pull', () async {
+    active = false;
+    await engine.syncShared();
+    account.changes.addAll([
+      AccountSyncEntity.fromJson({
+        'entityType': 'project',
+        'entityId': 'project',
+        'serverRevision': 3,
+        'updatedAt': '2026-09-15T00:00:00Z',
+        'data': {
+          'id': 'project',
+          'userId': 'me',
+          'name': 'Project',
+          'viewStyle': 'list',
+          'isFavorite': false,
+          'isArchived': false,
+          'isDeleted': false,
+          'orderKey': 'a',
+          'createdAt': '2026-09-14T00:00:00Z',
+          'updatedAt': '2026-09-15T00:00:00Z',
+        },
+      }),
+      AccountSyncEntity.fromJson({
+        'entityType': 'task',
+        'entityId': 'task',
+        'serverRevision': 3,
+        'updatedAt': '2026-09-15T00:00:00Z',
+        'data': {
+          'id': 'task',
+          'userId': 'me',
+          'content': 'Shared',
+          'projectId': 'project',
+          'priority': 4,
+          'status': 'open',
+          'completedFocusIntervals': 0,
+          'totalFocusSeconds': 0,
+          'orderKey': 'a',
+          'isCollapsed': false,
+          'isDeleted': false,
+          'assigneeIds': ['me'],
+          'createdAt': '2026-09-14T00:00:00Z',
+          'updatedAt': '2026-09-15T00:00:00Z',
+        },
+      }),
+    ]);
+    await engine.pullLatest();
+    expect(
+      (await (db.select(
+        db.projects,
+      )..where((r) => r.id.equals('project'))).getSingle()).scopeId,
+      isNull,
+    );
+    expect(
+      (await (db.select(
+        db.tasks,
+      )..where((r) => r.id.equals('task'))).getSingle()).scopeId,
+      isNull,
+    );
+  });
 
   test('conflicting text stays visible until explicit server choice', () async {
     await DriftTaskRepository(
@@ -451,8 +513,17 @@ void main() {
 }
 
 class _Account implements AccountClient {
+  List<AccountSyncEntity> changes = [];
   @override
   String? get currentUserId => 'me';
+  @override
+  Future<AccountSyncPullResult> pullChanges({
+    required String appId,
+    required String deviceId,
+    required int sinceRevision,
+    int limit = 500,
+  }) async =>
+      AccountSyncPullResult(nextCursor: 2, hasMore: false, changes: changes);
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

@@ -906,6 +906,61 @@ void main() {
       expect(harness.callsFor('delete').single['scopeId'], _scopeId);
       await _drainSnackBarsAndDispose(tester);
     });
+
+    testWidgets('owner makes the shared project private again', (tester) async {
+      final harness = await _pumpCollaborationApp(
+        tester,
+        handler: (action, args) async => switch (action) {
+          'members' => {'members': const [], 'invitations': const []},
+          _ => {'ok': true},
+        },
+        build: (context) => Center(
+          child: ElevatedButton(
+            key: const Key('open-share'),
+            onPressed: () => showShareProjectDialog(context, _project()),
+            child: const Text('open'),
+          ),
+        ),
+      );
+      await _seedScope(harness.db);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('open-share')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('collaboration-make-private')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('collaboration-confirm')));
+      await tester.pumpAndSettle();
+
+      expect(harness.callsFor('unshare').single['scopeId'], _scopeId);
+      await _drainSnackBarsAndDispose(tester);
+    });
+
+    testWidgets('member cannot make the shared project private', (tester) async {
+      final harness = await _pumpCollaborationApp(
+        tester,
+        handler: (action, args) async => switch (action) {
+          'members' => {'members': const [], 'invitations': const []},
+          _ => {'ok': true},
+        },
+        build: (context) => Center(
+          child: ElevatedButton(
+            key: const Key('open-share'),
+            onPressed: () => showShareProjectDialog(context, _project()),
+            child: const Text('open'),
+          ),
+        ),
+      );
+      await _seedScope(harness.db, role: 'member', ownerId: _memberId);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('open-share')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('collaboration-make-private')), findsNothing);
+      expect(harness.callsFor('unshare'), isEmpty);
+      await _drainSnackBarsAndDispose(tester);
+    });
   });
 
   group('collaboration inbox', () {

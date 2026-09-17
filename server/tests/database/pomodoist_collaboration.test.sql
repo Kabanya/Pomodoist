@@ -270,5 +270,161 @@ select pg_temp.act_as('c1000000-0000-4000-8000-000000000001','e1000000-0000-4000
 select throws_ok($$select pg_temp.collab(jsonb_build_object('action','state'))$$,
   '42501','An active authenticated session is required','revoked sessions cannot use collaboration');
 
+set local role authenticated;
+select pg_temp.act_as('c1000000-0000-4000-8000-000000000001','d1000000-0000-4000-8000-000000000001');
+create temporary table owner_push_b as select public.push_changes('pomodoist','collab-device-b',jsonb_build_array(
+  jsonb_build_object('opId','unshare-project','entityType','project','entityId','project-b','operation','upsert',
+    'payload',jsonb_build_object('id','project-b','userId','local-user','name','Project B','orderKey','1',
+      'isFavorite',true,'viewStyle','board'),
+    'clientUpdatedAt','2026-09-17T10:00:00Z'),
+  jsonb_build_object('opId','unshare-task','entityType','task','entityId','task-b','operation','upsert',
+    'payload',jsonb_build_object('id','task-b','userId','local-user','content','Personal task B','projectId','project-b',
+      'status','open','priority',1),
+    'clientUpdatedAt','2026-09-17T10:00:01Z'),
+  jsonb_build_object('opId','unshare-label','entityType','label','entityId','label-b','operation','upsert',
+    'payload',jsonb_build_object('id','label-b','userId','local-user','name','Label B','color','blue'),
+    'clientUpdatedAt','2026-09-17T10:00:02Z'),
+  jsonb_build_object('opId','unshare-task-label','entityType','task_label','entityId','task-label-b','operation','upsert',
+    'payload',jsonb_build_object('id','task-label-b','userId','local-user','taskId','task-b','labelId','label-b'),
+    'clientUpdatedAt','2026-09-17T10:00:03Z'))) as value;
+select is(jsonb_array_length((select value->'applied' from owner_push_b)),4,'the owner seeds four personal entities before sharing');
+
+create temporary table owner_revision_b as
+  select coalesce(max(server_revision),0) as revision from public.sync_entities
+  where user_id='c1000000-0000-4000-8000-000000000001'::uuid;
+
+create temporary table shared_scope_b as select pg_temp.collab(
+  jsonb_build_object('action','share','rootProjectId','project-b','expectedRevision',(select revision from owner_revision_b))) as value;
+create temporary table scope_b as select (select value->'scope'->>'id' from shared_scope_b)::uuid as id;
+select is((select value->'scope'->>'role' from shared_scope_b),'administrator','the owner administrates the second scope');
+
+reset role;
+select is((select count(*) from private.pomodoist_transferred_entities where scope_id=(select id from scope_b)),3::bigint,
+  'the second scope transfers the project, the task and the task label');
+
+set local role authenticated;
+select pg_temp.act_as('c1000000-0000-4000-8000-000000000001','d1000000-0000-4000-8000-000000000001');
+create temporary table member_invite_b as select pg_temp.collab(
+  jsonb_build_object('action','invite','scopeId',(select id from scope_b),'email','collab-member@example.test','role','member')) as value;
+
+select pg_temp.act_as('c1000000-0000-4000-8000-000000000002','d1000000-0000-4000-8000-000000000002');
+create temporary table member_accept_b as select pg_temp.collab(
+  jsonb_build_object('action','accept','token',(select value->>'token' from member_invite_b))) as value;
+select is((select value->'scope'->>'role' from member_accept_b),'member','the invited member joins the second scope');
+select throws_ok(format('select pg_temp.collab(%L::jsonb)',
+  jsonb_build_object('action','unshare','scopeId',(select id from scope_b))::text),
+  '42501','Only the owner may make the project private','members cannot make a shared root private');
+
+select pg_temp.act_as('c1000000-0000-4000-8000-000000000001','d1000000-0000-4000-8000-000000000001');
+select is((pg_temp.collab(format('{"action":"role","scopeId":%s,"userId":"c1000000-0000-4000-8000-000000000002","role":"administrator"}',
+  to_json((select id from scope_b))::text)::jsonb))->>'ok','true','owners can promote a member in the second scope');
+
+select pg_temp.act_as('c1000000-0000-4000-8000-000000000002','d1000000-0000-4000-8000-000000000002');
+select throws_ok(format('select pg_temp.collab(%L::jsonb)',
+  jsonb_build_object('action','unshare','scopeId',(select id from scope_b))::text),
+  '42501','Only the owner may make the project private','administrators cannot make a shared root private');
+create temporary table member_pull_b as select pg_temp.collab(
+  jsonb_build_object('action','pull','scopeId',(select id from scope_b))) as value;
+create temporary table member_push_b as select pg_temp.call_op((select id from scope_b),jsonb_build_object(
+  'opId','unshare-shared-edit','entityType','task','entityId','task-b','operation','upsert',
+  'payload',jsonb_build_object('id','task-b','content','Shared task B','projectId','project-b','status','open'),
+  'baseRevision',(select (value->>'nextCursor')::bigint from member_pull_b),'clientUpdatedAt','2026-09-17T11:00:00Z')) as value;
+select is(jsonb_array_length((select value->'applied' from member_push_b)),1,'members can edit the task after sharing');
+select is((select value->'applied'->0->'data'->>'content' from member_push_b),'Shared task B','the shared edit is stored on the shared copy');
+
+select pg_temp.act_as('c1000000-0000-4000-8000-000000000001','d1000000-0000-4000-8000-000000000001');
+create temporary table unshare_result as select pg_temp.collab(
+  jsonb_build_object('action','unshare','scopeId',(select id from scope_b))) as value;
+select is((select value->>'ok' from unshare_result),'true','owners can make a shared root personal again');
+select is((select value->>'restored' from unshare_result),'3','unshare restores the project, the task and the task label');
+select is((select value->>'rootProjectId' from unshare_result),'project-b','unshare reports the restored root');
+
+reset role;
+select is((select count(*) from private.pomodoist_transferred_entities where scope_id=(select id from scope_b)),0::bigint,
+  'unshare releases every transferred entity');
+select ok(not exists(select 1 from private.pomodoist_scopes where id=(select id from scope_b)),'unshared scopes are gone');
+select ok(not exists(select 1 from private.pomodoist_shared_entities where scope_id=(select id from scope_b)),
+  'shared copies cascade with the unshared scope');
+select ok((select deleted_at is null from public.sync_entities where user_id='c1000000-0000-4000-8000-000000000001'
+    and entity_type='project' and entity_id='project-b'),'the personal project is live again');
+select ok((select deleted_at is null from public.sync_entities where user_id='c1000000-0000-4000-8000-000000000001'
+    and entity_type='task' and entity_id='task-b'),'the personal task is live again');
+select is((select data->>'isFavorite' from public.sync_entities where user_id='c1000000-0000-4000-8000-000000000001'
+    and entity_type='project' and entity_id='project-b'),'true','personal-only project fields survive the round trip');
+select is((select data->>'viewStyle' from public.sync_entities where user_id='c1000000-0000-4000-8000-000000000001'
+    and entity_type='project' and entity_id='project-b'),'board','personal view preferences survive the round trip');
+select is((select data->>'content' from public.sync_entities where user_id='c1000000-0000-4000-8000-000000000001'
+    and entity_type='task' and entity_id='task-b'),'Shared task B','the newest shared edit wins over the tombstone copy');
+select is((select data->>'labelId' from public.sync_entities where user_id='c1000000-0000-4000-8000-000000000001'
+    and entity_type='task_label' and entity_id='task-label-b'),'label-b','unshare strips the scope prefix from the restored label reference');
+select is((select data->>'id' from public.sync_entities where user_id='c1000000-0000-4000-8000-000000000001'
+    and entity_type='task_label' and entity_id='task-label-b'),'task-label-b','the restored task label keeps its personal identity');
+select ok((select deleted_at is null and data->>'name'='Label B' from public.sync_entities
+    where user_id='c1000000-0000-4000-8000-000000000001' and entity_type='label' and entity_id='label-b'),
+  'personal labels were never transferred by sharing');
+
+set local role authenticated;
+select pg_temp.act_as('c1000000-0000-4000-8000-000000000001','d1000000-0000-4000-8000-000000000001');
+select lives_ok($$select public.push_changes('pomodoist','collab-device-b',jsonb_build_array(
+  jsonb_build_object('opId','unshare-recheck','entityType','task','entityId','task-b-restored','operation','upsert',
+    'payload',jsonb_build_object('id','task-b-restored','userId','local-user','content','Back in personal','projectId','project-b'),
+    'clientUpdatedAt','2026-09-17T12:00:00Z')))$$,
+  'personal writes reach the restored project again');
+reset role;
+select ok(exists(select 1 from public.sync_entities where user_id='c1000000-0000-4000-8000-000000000001'
+    and entity_type='task' and entity_id='task-b-restored' and deleted_at is null),
+  'the restored project accepts new personal tasks');
+
+set local role authenticated;
+select pg_temp.act_as('c1000000-0000-4000-8000-000000000002','d1000000-0000-4000-8000-000000000002');
+select throws_ok(format('select pg_temp.collab(%L::jsonb)',
+  jsonb_build_object('action','pull','scopeId',(select id from scope_b))::text),
+  '42501','Shared scope is inaccessible','unshared scopes lose every member');
+select ok(exists(select 1 from jsonb_array_elements((pg_temp.collab(jsonb_build_object('action','notifications'))->'notifications')) n
+    where n->'data'->>'scopeId'=(select id::text from scope_b) and n->>'scopeId' is null and n->>'kind'='access.unshare'),
+  'the removed member is notified without keeping a reference to the deleted scope');
+
+select pg_temp.act_as('c1000000-0000-4000-8000-000000000001','d1000000-0000-4000-8000-000000000001');
+create temporary table owner_push_c as select public.push_changes('pomodoist','collab-device-c',jsonb_build_array(
+  jsonb_build_object('opId','nested-parent','entityType','project','entityId','project-parent-c','operation','upsert',
+    'payload',jsonb_build_object('id','project-parent-c','userId','local-user','name','Parent C','orderKey','3'),
+    'clientUpdatedAt','2026-09-17T13:00:00Z'),
+  jsonb_build_object('opId','nested-child','entityType','project','entityId','project-nested-c','operation','upsert',
+    'payload',jsonb_build_object('id','project-nested-c','userId','local-user','name','Nested C','orderKey','0',
+      'parentId','project-parent-c'),
+    'clientUpdatedAt','2026-09-17T13:00:01Z'))) as value;
+select is(jsonb_array_length((select value->'applied' from owner_push_c)),2,
+  'the owner seeds a project nested inside another personal project');
+
+create temporary table owner_revision_c as
+  select coalesce(max(server_revision),0) as revision from public.sync_entities
+  where user_id='c1000000-0000-4000-8000-000000000001'::uuid;
+
+create temporary table shared_scope_c as select pg_temp.collab(
+  jsonb_build_object('action','share','rootProjectId','project-nested-c','expectedRevision',(select revision from owner_revision_c))) as value;
+create temporary table scope_c as select (select value->'scope'->>'id' from shared_scope_c)::uuid as id;
+
+reset role;
+select is((select data->>'parentId' from private.pomodoist_shared_entities
+    where scope_id=(select id from scope_c) and entity_type='project' and entity_id='project-nested-c'),null::text,
+  'sharing detaches the shared root from its personal parent');
+select is((select data->>'rootParentId' from private.pomodoist_shared_preferences
+    where scope_id=(select id from scope_c) and entity_type='scope' and entity_id=(select id::text from scope_c)),
+  'project-parent-c','sharing remembers the personal parent of the root');
+
+set local role authenticated;
+select pg_temp.act_as('c1000000-0000-4000-8000-000000000001','d1000000-0000-4000-8000-000000000001');
+create temporary table unshare_result_c as select pg_temp.collab(
+  jsonb_build_object('action','unshare','scopeId',(select id from scope_c))) as value;
+select is((select value->>'restored' from unshare_result_c),'1','a nested shared root restores on its own');
+
+reset role;
+select is((select data->>'parentId' from public.sync_entities where user_id='c1000000-0000-4000-8000-000000000001'
+    and app_id='pomodoist' and entity_type='project' and entity_id='project-nested-c'),'project-parent-c',
+  'a shared root returns to the personal parent it was nested in');
+select ok((select deleted_at is null from public.sync_entities where user_id='c1000000-0000-4000-8000-000000000001'
+    and app_id='pomodoist' and entity_type='project' and entity_id='project-nested-c'),
+  'the nested personal project is live again');
+
 select * from finish();
 rollback;

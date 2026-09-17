@@ -3021,6 +3021,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get collaborationDeleteSharedProject => '为所有人删除';
 
   @override
+  String get collaborationMakePrivate => '设为私有';
+
+  @override
   String get collaborationOwner => '所有者';
 
   @override
@@ -3088,6 +3091,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get collaborationSharedProjectDeleted => '共享项目已删除';
+
+  @override
+  String get collaborationMakePrivateConfirm => '停止共享此项目？';
+
+  @override
+  String get collaborationMakePrivateDescription =>
+      '项目及其内容将回到你的个人账户，其他参与者会立即失去访问权限。';
+
+  @override
+  String get collaborationProjectMadePrivate => '项目已恢复为私有';
 
   @override
   String get collaborationLinkCopied => '链接已复制';

@@ -13,7 +13,7 @@ export type CollaborationDependencies = {
 export class CollaborationError extends Error {
   constructor(message: string, readonly code = "invalid_request", readonly status = 400) { super(message); }
 }
-const actions = new Set(["state", "share", "pull", "push", "invite", "accept", "members", "role", "remove", "leave", "transfer", "delete", "publicLink", "publicRead", "notifications", "readNotification", "reserveUpload", "finishUpload", "deleteAttachment", "download", "export", "preferences"]);
+const actions = new Set(["state", "share", "pull", "push", "invite", "accept", "members", "role", "remove", "leave", "transfer", "delete", "unshare", "publicLink", "publicRead", "notifications", "readNotification", "reserveUpload", "finishUpload", "deleteAttachment", "download", "export", "preferences"]);
 const noScope = new Set(["state", "share", "accept", "publicRead", "notifications", "readNotification"]);
 function required(map: Json, key: string, limit = 200): string {
   const value = map[key];
@@ -113,7 +113,7 @@ export async function handleCollaboration(request: Request, deps: CollaborationD
       return reply(publicCollaborationProjection(result));
     }
     // Cleanup is best effort after authorization; durable SQL records retry the work.
-    if (["deleteAttachment", "delete", "state", "finishUpload"].includes(action)) { try { await deps.cleanup(); } catch { /* Retained in the SQL deletion queue. */ } }
+    if (["deleteAttachment", "delete", "unshare", "state", "finishUpload"].includes(action)) { try { await deps.cleanup(); } catch { /* Retained in the SQL deletion queue. */ } }
     const { objectPath: _path, ...safe } = result;
     return reply(safe);
   } catch (error) {

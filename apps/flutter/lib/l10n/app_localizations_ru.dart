@@ -3195,6 +3195,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get collaborationDeleteSharedProject => 'Удалить для всех';
 
   @override
+  String get collaborationMakePrivate => 'Сделать личным';
+
+  @override
   String get collaborationOwner => 'Владелец';
 
   @override
@@ -3266,6 +3269,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get collaborationSharedProjectDeleted => 'Общий проект удалён';
+
+  @override
+  String get collaborationMakePrivateConfirm =>
+      'Прекратить совместный доступ к проекту?';
+
+  @override
+  String get collaborationMakePrivateDescription =>
+      'Проект и его содержимое вернутся в вашу личную учётную запись. Остальные участники сразу потеряют доступ.';
+
+  @override
+  String get collaborationProjectMadePrivate => 'Проект снова личный';
 
   @override
   String get collaborationLinkCopied => 'Ссылка скопирована';

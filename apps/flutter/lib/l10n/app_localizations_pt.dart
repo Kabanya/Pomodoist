@@ -3218,6 +3218,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get collaborationDeleteSharedProject => 'Excluir para todos';
 
   @override
+  String get collaborationMakePrivate => 'Tornar privado';
+
+  @override
   String get collaborationOwner => 'Proprietário';
 
   @override
@@ -3289,6 +3292,18 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get collaborationSharedProjectDeleted =>
       'Projeto compartilhado excluído';
+
+  @override
+  String get collaborationMakePrivateConfirm =>
+      'Parar de compartilhar este projeto?';
+
+  @override
+  String get collaborationMakePrivateDescription =>
+      'O projeto e o conteúdo voltam para a sua conta pessoal. Os outros participantes perdem o acesso imediatamente.';
+
+  @override
+  String get collaborationProjectMadePrivate =>
+      'O projeto voltou a ser privado';
 
   @override
   String get collaborationLinkCopied => 'Link copiado';
