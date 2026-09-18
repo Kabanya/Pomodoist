@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../app/app_l10n.dart';
-import '../../../app/providers.dart';
+import '../../../app/config/app_l10n.dart';
+import '../../../app/config/providers.dart';
 import '../../../app/widgets/action_feedback.dart';
 import '../domain/task_models.dart';
 import 'widgets/task_motion.dart';

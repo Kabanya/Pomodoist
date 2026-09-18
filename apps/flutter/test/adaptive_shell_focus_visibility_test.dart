@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/providers.dart';
+import 'package:pomodoist/app/config/providers.dart';
 import 'package:pomodoist/app/theme/app_theme.dart';
 import 'package:pomodoist/app/widgets/adaptive_shell.dart';
 import 'package:pomodoist/app/widgets/task_details_host.dart';

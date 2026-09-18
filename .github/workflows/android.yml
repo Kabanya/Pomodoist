@@ -63,7 +63,8 @@ jobs:
       - name: Compile release APK and AAB without production account access
         working-directory: apps/flutter
         run: |
-          common=(--release --dart-define=POMODOIST_ENVIRONMENT=local
+          common=(--release --target lib/main_development.dart
+            --dart-define=POMODOIST_ENVIRONMENT=local
             --dart-define=WEB_APP_URL=https://app.pomodoist.com
             --dart-define=POMODOIST_BILLING_CHANNEL=storekit
             "--dart-define=POMODOIST_RELEASE=$GITHUB_SHA")

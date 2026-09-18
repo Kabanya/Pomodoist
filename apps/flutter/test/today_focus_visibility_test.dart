@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/providers.dart';
+import 'package:pomodoist/app/config/providers.dart';
 import 'package:pomodoist/features/focus/domain/focus_models.dart';
 
 void main() {

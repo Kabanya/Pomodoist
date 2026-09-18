@@ -4,49 +4,42 @@ import 'package:app_account/app_account.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/account_providers.dart';
-import 'package:pomodoist/app/providers.dart';
+import 'package:pomodoist/app/config/account_providers.dart';
+import 'package:pomodoist/app/config/providers.dart';
 import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/features/collaboration/presentation/collaboration_providers.dart';
 
 void main() {
-  test(
-    'collaboration repository appears once the account signs in',
-    () async {
-      final db = AppDatabase(NativeDatabase.memory());
-      addTearDown(db.close);
-      final account = _MutableAuthAccountClient();
-      addTearDown(account.close);
-      final container = ProviderContainer(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          accountClientProvider.overrideWithValue(account),
-        ],
-      );
-      addTearDown(container.dispose);
+  test('collaboration repository appears once the account signs in', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final account = _MutableAuthAccountClient();
+    addTearDown(account.close);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        accountClientProvider.overrideWithValue(account),
+      ],
+    );
+    addTearDown(container.dispose);
 
-      final repositoryReady = Completer<void>();
-      container.listen(
-        collaborationRepositoryProvider,
-        (previous, next) {
-          if (next != null && !repositoryReady.isCompleted) {
-            repositoryReady.complete();
-          }
-        },
-        fireImmediately: true,
-      );
+    final repositoryReady = Completer<void>();
+    container.listen(collaborationRepositoryProvider, (previous, next) {
+      if (next != null && !repositoryReady.isCompleted) {
+        repositoryReady.complete();
+      }
+    }, fireImmediately: true);
 
-      expect(container.read(collaborationRepositoryProvider), isNull);
+    expect(container.read(collaborationRepositoryProvider), isNull);
 
-      await container.read(accountAuthStateProvider.future);
-      await Future<void>.delayed(Duration.zero);
+    await container.read(accountAuthStateProvider.future);
+    await Future<void>.delayed(Duration.zero);
 
-      account.signIn('user-1');
-      await repositoryReady.future;
+    account.signIn('user-1');
+    await repositoryReady.future;
 
-      expect(container.read(collaborationRepositoryProvider), isNotNull);
-    },
-  );
+    expect(container.read(collaborationRepositoryProvider), isNotNull);
+  });
 
   test(
     'collaboration repository survives a stale signed-out auth state',
@@ -64,15 +57,11 @@ void main() {
       addTearDown(container.dispose);
 
       final repositoryReady = Completer<void>();
-      container.listen(
-        collaborationRepositoryProvider,
-        (previous, next) {
-          if (next != null && !repositoryReady.isCompleted) {
-            repositoryReady.complete();
-          }
-        },
-        fireImmediately: true,
-      );
+      container.listen(collaborationRepositoryProvider, (previous, next) {
+        if (next != null && !repositoryReady.isCompleted) {
+          repositoryReady.complete();
+        }
+      }, fireImmediately: true);
 
       await container.read(accountAuthStateProvider.future);
       await Future<void>.delayed(Duration.zero);

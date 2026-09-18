@@ -95,7 +95,9 @@ void main() {
       '../../tool/windows/build.ps1',
     ).copySync('${scriptDirectory.path}${Platform.pathSeparator}build.ps1');
 
-    Directory('${testRoot.path}/apps/flutter/build').createSync(recursive: true);
+    Directory(
+      '${testRoot.path}/apps/flutter/build',
+    ).createSync(recursive: true);
     Directory('${testRoot.path}/apps/flutter').createSync(recursive: true);
     final configFile = File(
       '${testRoot.path}${Platform.pathSeparator}production.json',

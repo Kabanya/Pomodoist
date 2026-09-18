@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
-import '../../../app/account_providers.dart';
-import '../../../app/app_l10n.dart';
-import '../../../app/formatters.dart';
+import '../../../app/config/account_providers.dart';
+import '../../../app/config/app_l10n.dart';
+import '../../../app/config/formatters.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../tasks/domain/task_models.dart';
 import '../data/collaboration_api.dart';

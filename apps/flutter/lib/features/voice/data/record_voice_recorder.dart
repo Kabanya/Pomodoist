@@ -14,7 +14,11 @@ class RecordVoiceRecorder implements VoiceRecorder {
       _recorder.hasPermission(request: request);
   @override
   Future<void> start(String path) => _recorder.start(
-    const RecordConfig(encoder: AudioEncoder.wav, sampleRate: 16000, numChannels: 1),
+    const RecordConfig(
+      encoder: AudioEncoder.wav,
+      sampleRate: 16000,
+      numChannels: 1,
+    ),
     path: path,
   );
   @override

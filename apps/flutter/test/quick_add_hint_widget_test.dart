@@ -2,7 +2,7 @@ import 'support/test_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/providers.dart';
+import 'package:pomodoist/app/config/providers.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
 import 'package:pomodoist/features/tasks/presentation/widgets/quick_add_bar.dart';
 import 'package:pomodoist/features/tasks/presentation/widgets/quick_add_text_controller.dart';

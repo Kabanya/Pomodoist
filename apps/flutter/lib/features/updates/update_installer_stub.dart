@@ -12,7 +12,9 @@ class _UnsupportedUpdateInstaller implements UpdateInstaller {
   Future<String?> acknowledgeStartup() async => null;
   @override
   Future<void> install(UpdateOffer offer, UpdateProgress progress) async =>
-      throw const UpdateFailure('Desktop updates are not supported on this platform.');
+      throw const UpdateFailure(
+        'Desktop updates are not supported on this platform.',
+      );
   @override
   void dispose() {}
 }

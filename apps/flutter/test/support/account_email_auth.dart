@@ -1,5 +1,5 @@
 import 'package:app_account/app_account.dart';
-import 'package:pomodoist/app/email_auth.dart';
+import 'package:pomodoist/app/auth/email_auth.dart';
 
 /// UI tests control the auth boundary; email_auth_test covers the GoTrue adapter.
 class AccountEmailAuth extends EmailAuthController {
@@ -16,14 +16,29 @@ class AccountEmailAuth extends EmailAuthController {
   }) async {
     switch (action) {
       case EmailAuthAction.signIn:
-        await account.signInWithPassword(email: email.trim(), password: password, captchaToken: captchaToken);
+        await account.signInWithPassword(
+          email: email.trim(),
+          password: password,
+          captchaToken: captchaToken,
+        );
         return EmailAuthResult.signedIn;
       case EmailAuthAction.signUp:
-        await account.signUpWithPassword(email: email.trim(), password: password, redirectTo: redirectTo, captchaToken: captchaToken);
-        return account.currentUserId == null ? EmailAuthResult.checkEmail : EmailAuthResult.signedIn;
+        await account.signUpWithPassword(
+          email: email.trim(),
+          password: password,
+          redirectTo: redirectTo,
+          captchaToken: captchaToken,
+        );
+        return account.currentUserId == null
+            ? EmailAuthResult.checkEmail
+            : EmailAuthResult.signedIn;
       case EmailAuthAction.magicLink:
       case EmailAuthAction.resendConfirmation:
-        await account.signInWithEmail(email.trim(), redirectTo: redirectTo, captchaToken: captchaToken);
+        await account.signInWithEmail(
+          email.trim(),
+          redirectTo: redirectTo,
+          captchaToken: captchaToken,
+        );
         return EmailAuthResult.checkEmail;
     }
   }

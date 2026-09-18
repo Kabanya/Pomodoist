@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show LucideIcons, ShadButton, ShadDialog, ShadInput;
 
-import '../../../../app/app_l10n.dart';
+import '../../../app/config/app_l10n.dart';
 import '../domain/collaboration_models.dart';
 import '../../tasks/domain/task_models.dart';
 import 'collaboration_copy.dart';

@@ -9,8 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' as intl;
 
-import '../../../../app/app_l10n.dart';
-import '../../../../app/providers.dart';
+import '../../../../app/config/app_l10n.dart';
+import '../../../../app/config/providers.dart';
 import '../../../../app/widgets/action_feedback.dart';
 import '../../../planning/domain/quick_add_parser.dart';
 import '../../domain/task_models.dart';

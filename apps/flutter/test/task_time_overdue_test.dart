@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/providers.dart';
-import 'package:pomodoist/app/task_time.dart';
+import 'package:pomodoist/app/config/providers.dart';
+import 'package:pomodoist/app/config/task_time.dart';
 import 'package:pomodoist/core/time/clock.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
 

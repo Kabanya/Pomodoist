@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/native_account_startup.dart';
-import 'package:pomodoist/app/native_link_coordinator_core.dart';
+import 'package:pomodoist/app/auth/native_account_startup.dart';
+import 'package:pomodoist/app/platform/native_link_coordinator_core.dart';
 
 void main() {
   test(

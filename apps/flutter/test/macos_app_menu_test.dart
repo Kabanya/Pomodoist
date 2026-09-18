@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/keyboard_shortcuts.dart';
-import 'package:pomodoist/app/macos_app_menu.dart';
+import 'package:pomodoist/app/config/keyboard_shortcuts.dart';
+import 'package:pomodoist/app/platform/macos_app_menu.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

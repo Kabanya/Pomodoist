@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../app/app_l10n.dart';
+import '../../../app/config/app_l10n.dart';
 import '../domain/task_models.dart';
 import 'widgets/task_list_view.dart';
 

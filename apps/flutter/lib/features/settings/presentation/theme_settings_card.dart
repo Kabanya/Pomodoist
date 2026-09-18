@@ -4,10 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../../app/app_l10n.dart';
+import '../../../app/config/app_l10n.dart';
 import '../../../app/theme/app_motion.dart';
 import 'settings_components.dart';
-import '../../../app/app_theme_mode.dart';
+import '../../../app/config/app_theme_mode.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_theme_settings.dart';
 import '../../../app/theme/theme_background.dart';

@@ -6,12 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 
 import '../features/updates/update_widgets.dart';
-import 'app_language.dart';
-import 'account_providers.dart';
-import 'app_zoom.dart';
-import 'platform_quick_add.dart';
-import 'app_theme_mode.dart';
-import 'router.dart';
+import 'config/app_language.dart';
+import 'config/account_providers.dart';
+import 'config/app_zoom.dart';
+import 'platform/platform_quick_add.dart';
+import 'config/app_theme_mode.dart';
+import 'routing/router.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_theme_settings.dart';
 import 'theme/app_motion.dart';

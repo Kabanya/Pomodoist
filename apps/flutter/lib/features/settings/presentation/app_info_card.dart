@@ -5,8 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
-import '../../../app/app_l10n.dart';
-import '../../../app/legal_urls.dart';
+import '../../../app/config/app_l10n.dart';
+import '../../../app/config/legal_urls.dart';
 import 'settings_components.dart';
 import '../../updates/update_widgets.dart';
 

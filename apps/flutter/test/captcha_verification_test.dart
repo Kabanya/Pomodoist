@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/captcha_security.dart';
-import 'package:pomodoist/app/captcha_verification.dart';
+import 'package:pomodoist/app/auth/captcha_security.dart';
+import 'package:pomodoist/app/auth/captcha_verification.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';
 
 void main() {

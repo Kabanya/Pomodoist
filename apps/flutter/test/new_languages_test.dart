@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/app_language.dart';
+import 'package:pomodoist/app/config/app_language.dart';
 import 'package:pomodoist/features/planning/domain/quick_add_parser.dart';
 
 void main() {

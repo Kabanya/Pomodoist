@@ -29,7 +29,7 @@ if [[ ! "$build_number" =~ ^[1-9][0-9]{0,9}$ ]] || (( build_number > 2100000000 
   exit 64
 fi
 flutter pub get --enforce-lockfile
-common=(--release --obfuscate "--build-name=$version" "--build-number=$build_number"
+common=(--release --obfuscate "--target=lib/main.dart" "--build-name=$version" "--build-number=$build_number"
   "--dart-define-from-file=$config" "--dart-define=POMODOIST_RELEASE=$release"
   --dart-define=POMODOIST_BILLING_CHANNEL=storekit)
 flutter build apk "${common[@]}" --split-debug-info=build/android/symbols/apk

@@ -6,12 +6,11 @@ import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/app_language.dart';
-import 'package:pomodoist/app/providers.dart';
-import 'package:pomodoist/app/task_time.dart';
+import 'package:pomodoist/app/config/app_language.dart';
+import 'package:pomodoist/app/config/providers.dart';
+import 'package:pomodoist/app/config/task_time.dart';
 import 'package:pomodoist/core/audio/focus_sound_player.dart';
 import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/demo/demo_seed_data.dart';
 import 'package:pomodoist/core/notifications/notification_scheduler.dart';
 import 'package:pomodoist/core/sync/pomodoist_retention.dart';
 import 'package:pomodoist/core/sync/sync_queue_repository.dart';
@@ -3648,54 +3647,6 @@ void main() {
       expect(interval!.status, 'running');
       expect(interval.type, 'work');
       expect(completions, isEmpty);
-    });
-
-    test('demo seed data is idempotent and avoids sync commands', () async {
-      await db.ensureDemoSeedData();
-      await db.ensureDemoSeedData();
-
-      final projects = await db.select(db.projects).get();
-      final tasks = await db.select(db.tasks).get();
-      final labels = await db.select(db.labels).get();
-      final taskLabels = await db.select(db.taskLabels).get();
-      final completions = await db.select(db.taskCompletions).get();
-      final focusIntervals = await db.select(db.focusIntervals).get();
-      final syncCommands = await db.select(db.syncCommands).get();
-      final user = await (db.select(
-        db.users,
-      )..where((row) => row.id.equals(localUserId))).getSingle();
-
-      expect(user.email, 'emily.parker@example.com');
-      expect(user.displayName, 'Emily Parker');
-      expect(
-        projects.where((project) => project.id.startsWith('demo-project')),
-        hasLength(5),
-      );
-      expect(
-        labels.where((label) => label.id.startsWith('demo-label')),
-        hasLength(12),
-      );
-      expect(
-        tasks.where((task) => task.id.startsWith('demo-task')),
-        hasLength(33),
-      );
-      expect(
-        tasks.map((task) => task.content),
-        contains('Review Google Calendar sync edge cases'),
-      );
-      expect(
-        completions.where((row) => row.id.startsWith('demo-completion')),
-        hasLength(7),
-      );
-      expect(
-        focusIntervals.where((row) => row.id.startsWith('demo-focus-interval')),
-        hasLength(7),
-      );
-      expect(
-        taskLabels.map((link) => '${link.taskId}:${link.labelId}').toSet(),
-        hasLength(taskLabels.length),
-      );
-      expect(syncCommands, isEmpty);
     });
   });
 

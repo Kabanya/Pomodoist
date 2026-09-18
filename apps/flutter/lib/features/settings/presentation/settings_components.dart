@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_theme.dart';
-import '../../../app/app_l10n.dart';
+import '../../../app/config/app_l10n.dart';
 
 /// Shared geometry for Settings and its existing nested routes.
 class SettingsSurface extends StatelessWidget {

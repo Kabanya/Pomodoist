@@ -2,7 +2,7 @@ import '../../../app/theme/app_theme_settings.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../app/app_l10n.dart';
+import '../../../app/config/app_l10n.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/theme_background.dart';
 import '../../../app/widgets/app_date_time_picker.dart';

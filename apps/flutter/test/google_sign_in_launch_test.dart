@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:app_account/app_account.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/account_auth_feedback.dart';
-import 'package:pomodoist/app/native_link_coordinator_core.dart';
-import 'package:pomodoist/app/password_recovery.dart';
+import 'package:pomodoist/app/auth/account_auth_feedback.dart';
+import 'package:pomodoist/app/platform/native_link_coordinator_core.dart';
+import 'package:pomodoist/app/auth/password_recovery.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

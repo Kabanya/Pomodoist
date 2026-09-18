@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
-import '../../app/account_providers.dart';
-import '../../app/app_language.dart';
-import '../../app/app_l10n.dart';
-import '../../app/providers.dart';
-import '../../app/runtime_public_config.dart';
+import '../../app/config/account_providers.dart';
+import '../../app/config/app_language.dart';
+import '../../app/config/app_l10n.dart';
+import '../../app/config/providers.dart';
+import '../../app/config/runtime_public_config.dart';
 import '../../app/theme/app_theme.dart';
 import '../billing/billing.dart';
 import '../focus/presentation/focus_view_mode.dart';

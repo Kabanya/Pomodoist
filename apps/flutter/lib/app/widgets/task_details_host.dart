@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../features/tasks/presentation/task_detail_screen.dart';
-import '../task_detail_navigation.dart';
+import '../routing/task_detail_navigation.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_theme.dart';
 

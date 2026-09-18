@@ -44,7 +44,8 @@ DateTime? pomodoistTaskHistoryCutoff(
   bool hasLocalPaidEntitlement = false,
 }) {
   if (historyUnlimited ||
-      (graceEndsAt?.toUtc().isAfter((now ?? DateTime.now()).toUtc()) ?? false)) {
+      (graceEndsAt?.toUtc().isAfter((now ?? DateTime.now()).toUtc()) ??
+          false)) {
     return null;
   }
   if (hasActivePomodoistPaidEntitlement(

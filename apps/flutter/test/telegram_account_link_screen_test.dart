@@ -3,8 +3,8 @@ import 'package:app_account/app_account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/account_providers.dart';
-import 'package:pomodoist/app/router.dart';
+import 'package:pomodoist/app/config/account_providers.dart';
+import 'package:pomodoist/app/routing/router.dart';
 import 'package:pomodoist/features/settings/presentation/telegram_account_link_screen.dart';
 
 void main() {

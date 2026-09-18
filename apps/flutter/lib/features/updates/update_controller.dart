@@ -14,8 +14,10 @@ class SharedUpdatePreferences implements UpdatePreferences {
   @override
   Future<SavedUpdatePreferences> load() async => SavedUpdatePreferences(
     channel: await _preferences.getString(_channelKey) == 'rc'
-        ? UpdateChannel.rc : UpdateChannel.stable,
-    seenTags: (await _preferences.getStringList(_seenKey) ?? const <String>[]).toSet(),
+        ? UpdateChannel.rc
+        : UpdateChannel.stable,
+    seenTags: (await _preferences.getStringList(_seenKey) ?? const <String>[])
+        .toSet(),
   );
   @override
   Future<void> setChannel(UpdateChannel channel) =>
@@ -26,9 +28,14 @@ class SharedUpdatePreferences implements UpdatePreferences {
 }
 
 class DesktopUpdateController extends ChangeNotifier {
-  DesktopUpdateController({required this.source, required this.installer,
-    required this.preferences, required this.installedVersion,
-    this.automaticChecks = true, this.officialUpdatesAllowed = false});
+  DesktopUpdateController({
+    required this.source,
+    required this.installer,
+    required this.preferences,
+    required this.installedVersion,
+    this.automaticChecks = true,
+    this.officialUpdatesAllowed = false,
+  });
 
   final UpdateSource source;
   final UpdateInstaller installer;
@@ -52,14 +59,24 @@ class DesktopUpdateController extends ChangeNotifier {
   Timer? _periodicTimer;
 
   bool get isDesktop => installer.target != null;
-  bool get enabled => officialUpdatesAllowed && isDesktop && installer.unavailableReason == null;
-  bool get busy => const {UpdatePhase.checking, UpdatePhase.downloading,
-    UpdatePhase.verifying, UpdatePhase.installing}.contains(phase);
+  bool get enabled =>
+      officialUpdatesAllowed &&
+      isDesktop &&
+      installer.unavailableReason == null;
+  bool get busy => const {
+    UpdatePhase.checking,
+    UpdatePhase.downloading,
+    UpdatePhase.verifying,
+    UpdatePhase.installing,
+  }.contains(phase);
 
   Future<void> _ensureLoaded() async {
     if (_loaded) return;
     final pending = _loading;
-    if (pending != null) { await pending; return; }
+    if (pending != null) {
+      await pending;
+      return;
+    }
     final load = () async {
       final saved = await preferences.load();
       if (_disposed) return;
@@ -68,7 +85,11 @@ class DesktopUpdateController extends ChangeNotifier {
       _loaded = true;
     }();
     _loading = load;
-    try { await load; } finally { _loading = null; }
+    try {
+      await load;
+    } finally {
+      _loading = null;
+    }
   }
 
   Future<void> start() async {
@@ -78,8 +99,13 @@ class DesktopUpdateController extends ChangeNotifier {
     // account or database contents are changed as part of this handshake.
     try {
       final warning = await installer.acknowledgeStartup();
-      if (warning != null) { error = warning; phase = UpdatePhase.failed; }
-    } catch (_) { /* Helper will roll back if startup cannot be acknowledged. */ }
+      if (warning != null) {
+        error = warning;
+        phase = UpdatePhase.failed;
+      }
+    } catch (_) {
+      /* Helper will roll back if startup cannot be acknowledged. */
+    }
     if (!enabled || _disposed) return;
     try {
       await _ensureLoaded();
@@ -90,14 +116,21 @@ class DesktopUpdateController extends ChangeNotifier {
     if (_disposed) return;
     notifyListeners();
     if (automaticChecks) {
-      _startupTimer = Timer(const Duration(seconds: 10), () => unawaited(check()));
-      _periodicTimer = Timer.periodic(const Duration(hours: 6), (_) => unawaited(check()));
+      _startupTimer = Timer(
+        const Duration(seconds: 10),
+        () => unawaited(check()),
+      );
+      _periodicTimer = Timer.periodic(
+        const Duration(hours: 6),
+        (_) => unawaited(check()),
+      );
     }
   }
 
   void onResume() {
     if (!automaticChecks || !_started || _disposed) return;
-    if (lastChecked == null || DateTime.now().difference(lastChecked!) >= const Duration(hours: 1)) {
+    if (lastChecked == null ||
+        DateTime.now().difference(lastChecked!) >= const Duration(hours: 1)) {
       unawaited(check());
     }
   }
@@ -113,8 +146,11 @@ class DesktopUpdateController extends ChangeNotifier {
       if (_disposed) return;
       final current = UpdateVersion.parse(await installedVersion());
       if (_disposed) return;
-      final next = await source.findUpdate(current: current,
-        target: installer.target!, channel: channel);
+      final next = await source.findUpdate(
+        current: current,
+        target: installer.target!,
+        channel: channel,
+      );
       if (_disposed) return;
       offer = next;
       lastChecked = DateTime.now();
@@ -171,7 +207,10 @@ class DesktopUpdateController extends ChangeNotifier {
 
   Future<void> update() async {
     final selected = offer;
-    if (!enabled || busy || _disposed || selected == null ||
+    if (!enabled ||
+        busy ||
+        _disposed ||
+        selected == null ||
         (channel == UpdateChannel.stable && !selected.version.isStable)) {
       return;
     }

@@ -1,7 +1,7 @@
 import 'support/test_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/captcha_security.dart';
+import 'package:pomodoist/app/auth/captcha_security.dart';
 import 'package:pomodoist/features/settings/presentation/captcha_challenge_screen.dart';
 
 void main() {

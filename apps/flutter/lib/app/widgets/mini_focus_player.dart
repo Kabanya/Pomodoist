@@ -8,9 +8,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/focus/domain/focus_models.dart';
 import '../../features/focus/presentation/focus_view_mode.dart';
-import '../app_l10n.dart';
-import '../formatters.dart';
-import '../providers.dart';
+import '../config/app_l10n.dart';
+import '../config/formatters.dart';
+import '../config/providers.dart';
 import '../theme/app_theme.dart';
 import 'action_feedback.dart';
 

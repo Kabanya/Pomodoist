@@ -5,6 +5,7 @@
     "jsr:@std/assert@1": "1.0.19",
     "jsr:@std/internal@^1.0.12": "1.0.14",
     "jsr:@supabase/functions-js@*": "2.115.0",
+    "jsr:@supabase/functions-js@2.110.8": "2.110.8",
     "npm:@modelcontextprotocol/sdk@1.25.3": "1.25.3_zod@4.1.13_hono@4.13.7",
     "npm:@peculiar/x509@2.1.0": "2.1.0",
     "npm:@supabase/supabase-js@2": "2.115.0",
@@ -23,6 +24,12 @@
     },
     "@std/internal@1.0.14": {
       "integrity": "291516b3d4c35024d6ffbc0a9df5bf4c64116e05b50012cf846710152d2ffdf7"
+    },
+    "@supabase/functions-js@2.110.8": {
+      "integrity": "79de9d9de83149576cce2ff4b4d1bf2e1f40df472c04de413c67dc1ce1549220",
+      "dependencies": [
+        "npm:openai"
+      ]
     },
     "@supabase/functions-js@2.115.0": {
       "integrity": "984e0cdd775854e4d7b2777fb1c29d601bae8366ef21406911360ae18fff2a77",

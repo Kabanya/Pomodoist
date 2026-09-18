@@ -14,10 +14,10 @@ import 'package:shadcn_ui/shadcn_ui.dart'
         ShadTab,
         ShadTabs;
 
-import '../../../app/account_providers.dart';
-import '../../../app/app_l10n.dart';
-import '../../../app/formatters.dart';
-import '../../../app/providers.dart';
+import '../../../app/config/account_providers.dart';
+import '../../../app/config/app_l10n.dart';
+import '../../../app/config/formatters.dart';
+import '../../../app/config/providers.dart';
 import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/sync/pomodoist_retention.dart';

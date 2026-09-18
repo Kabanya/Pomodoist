@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/providers.dart';
+import 'package:pomodoist/app/config/providers.dart';
 import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // Replace disk writes to exercise the same persistence failure path as themes.

@@ -7,7 +7,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/providers.dart';
+import 'package:pomodoist/app/config/providers.dart';
 import 'package:pomodoist/app/theme/app_theme.dart';
 import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/core/sync/account_sync_engine.dart';
@@ -101,11 +101,7 @@ Future<void> _seedScope(
       SharedScopesCompanion.insert(
         id: _scopeId,
         dataJson: jsonEncode(
-          _scopeJson(
-            role: role,
-            ownerId: ownerId,
-            members: members,
-          ),
+          _scopeJson(role: role, ownerId: ownerId, members: members),
         ),
       ),
     );
@@ -834,7 +830,9 @@ void main() {
       await _drainSnackBarsAndDispose(tester);
     });
 
-    testWidgets('member cannot make the shared project private', (tester) async {
+    testWidgets('member cannot make the shared project private', (
+      tester,
+    ) async {
       final harness = await _pumpCollaborationApp(
         tester,
         handler: (action, args) async => switch (action) {

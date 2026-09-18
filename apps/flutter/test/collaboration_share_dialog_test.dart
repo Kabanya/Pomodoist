@@ -3,8 +3,8 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/account_providers.dart';
-import 'package:pomodoist/app/providers.dart';
+import 'package:pomodoist/app/config/account_providers.dart';
+import 'package:pomodoist/app/config/providers.dart';
 import 'package:pomodoist/app/theme/app_theme.dart';
 import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/features/collaboration/presentation/collaboration_providers.dart';
@@ -104,21 +104,22 @@ void main() {
     await _drainSnackBarsAndDispose(tester);
   });
 
-  testWidgets('reports unavailability when the signed-in user has no repository', (
-    tester,
-  ) async {
-    await _pumpShareDialog(
-      tester,
-      account: _SignedInAccount(),
-      withoutRepository: true,
-    );
+  testWidgets(
+    'reports unavailability when the signed-in user has no repository',
+    (tester) async {
+      await _pumpShareDialog(
+        tester,
+        account: _SignedInAccount(),
+        withoutRepository: true,
+      );
 
-    await tester.tap(find.byKey(const Key('collaboration-share-start')));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('collaboration-share-start')));
+      await tester.pumpAndSettle();
 
-    final l10n = lookupAppLocalizations(const Locale('en'));
-    expect(find.text(l10n.collaborationUnavailable), findsOne);
-    expect(find.text(l10n.collaborationSignedOut), findsNothing);
-    await _drainSnackBarsAndDispose(tester);
-  });
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      expect(find.text(l10n.collaborationUnavailable), findsOne);
+      expect(find.text(l10n.collaborationSignedOut), findsNothing);
+      await _drainSnackBarsAndDispose(tester);
+    },
+  );
 }

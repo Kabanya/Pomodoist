@@ -9,17 +9,17 @@ import 'package:shadcn_ui/shadcn_ui.dart'
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/account_auth_feedback.dart';
-import '../../../app/account_providers.dart';
-import '../../../app/email_auth.dart';
-import '../../../app/password_recovery.dart';
+import '../../../app/auth/account_auth_feedback.dart';
+import '../../../app/config/account_providers.dart';
+import '../../../app/auth/email_auth.dart';
+import '../../../app/auth/password_recovery.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_motion.dart';
-import '../../../app/app_l10n.dart';
-import '../../../app/captcha_security.dart';
-import '../../../app/captcha_verification.dart';
-import '../../../app/native_captcha_broker.dart';
-import '../../../app/runtime_public_config.dart';
+import '../../../app/config/app_l10n.dart';
+import '../../../app/auth/captcha_security.dart';
+import '../../../app/auth/captcha_verification.dart';
+import '../../../app/platform/native_captcha_broker.dart';
+import '../../../app/config/runtime_public_config.dart';
 
 List<Widget> pomodoistAccountSignInActions({
   required BuildContext context,

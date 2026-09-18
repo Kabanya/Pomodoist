@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pomodoist/app/account_providers.dart';
+import 'package:pomodoist/app/config/account_providers.dart';
 import 'package:pomodoist/app/app.dart';
-import 'package:pomodoist/app/app_startup_gate.dart';
-import 'package:pomodoist/app/providers.dart';
-import 'package:pomodoist/app/router.dart';
+import 'package:pomodoist/app/routing/app_startup_gate.dart';
+import 'package:pomodoist/app/config/providers.dart';
+import 'package:pomodoist/app/routing/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

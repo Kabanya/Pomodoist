@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
-import '../../../app/app_l10n.dart';
-import '../../../app/providers.dart';
+import '../../../app/config/app_l10n.dart';
+import '../../../app/config/providers.dart';
 import '../domain/task_models.dart';
 import 'widgets/label_icon.dart';
 import 'widgets/task_list_view.dart';

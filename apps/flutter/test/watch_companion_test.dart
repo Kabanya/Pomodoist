@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/runtime_public_config.dart';
-import 'package:pomodoist/app/watch_companion.dart';
+import 'package:pomodoist/app/config/runtime_public_config.dart';
+import 'package:pomodoist/app/platform/watch_companion.dart';
 import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/core/notifications/notification_scheduler.dart';
 import 'package:pomodoist/core/sync/sync_queue_repository.dart';
@@ -55,20 +55,53 @@ void main() {
 
   tearDown(() => db.close());
 
-  test('Watch exposes personal tasks only and rejects shared task commands', () async {
-    final created = await controller.handleCommand({'type': watchTaskCreateQuickAdd, 'input': 'Shared task #Shared'});
-    final id = created['id'] as String;
-    final task = await taskRepository.watchTask(id).first;
-    await db.into(db.sharedScopes).insert(SharedScopesCompanion.insert(id: 'scope',
-      dataJson: jsonEncode({'id': 'scope', 'rootProjectId': task!.projectId, 'ownerId': localUserId, 'role': 'member'})));
-    await (db.update(db.tasks)..where((row) => row.id.equals(id))).write(const TasksCompanion(scopeId: Value('scope')));
-    await (db.update(db.projects)..where((row) => row.id.equals(task.projectId))).write(const ProjectsCompanion(scopeId: Value('scope')));
-    final snapshot = await controller.buildSnapshot();
-    expect(snapshot['projects'], isEmpty);
-    expect((snapshot['tasks'] as Map)['recentAdded'], isEmpty);
-    expect((await controller.handleCommand({'type': watchTaskComplete, 'taskId': id}))['ok'], isFalse);
-    expect((await controller.handleCommand({'type': watchTaskCreateQuickAdd, 'input': 'Another #Shared'}))['ok'], isFalse);
-  });
+  test(
+    'Watch exposes personal tasks only and rejects shared task commands',
+    () async {
+      final created = await controller.handleCommand({
+        'type': watchTaskCreateQuickAdd,
+        'input': 'Shared task #Shared',
+      });
+      final id = created['id'] as String;
+      final task = await taskRepository.watchTask(id).first;
+      await db
+          .into(db.sharedScopes)
+          .insert(
+            SharedScopesCompanion.insert(
+              id: 'scope',
+              dataJson: jsonEncode({
+                'id': 'scope',
+                'rootProjectId': task!.projectId,
+                'ownerId': localUserId,
+                'role': 'member',
+              }),
+            ),
+          );
+      await (db.update(db.tasks)..where((row) => row.id.equals(id))).write(
+        const TasksCompanion(scopeId: Value('scope')),
+      );
+      await (db.update(db.projects)
+            ..where((row) => row.id.equals(task.projectId)))
+          .write(const ProjectsCompanion(scopeId: Value('scope')));
+      final snapshot = await controller.buildSnapshot();
+      expect(snapshot['projects'], isEmpty);
+      expect((snapshot['tasks'] as Map)['recentAdded'], isEmpty);
+      expect(
+        (await controller.handleCommand({
+          'type': watchTaskComplete,
+          'taskId': id,
+        }))['ok'],
+        isFalse,
+      );
+      expect(
+        (await controller.handleCommand({
+          'type': watchTaskCreateQuickAdd,
+          'input': 'Another #Shared',
+        }))['ok'],
+        isFalse,
+      );
+    },
+  );
 
   test('watch account payload uses the resolved runtime backend', () {
     final config = RuntimePublicConfig.fromBuildTimeValues(

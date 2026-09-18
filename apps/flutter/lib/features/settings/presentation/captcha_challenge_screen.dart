@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton;
 
-import '../../../app/app_l10n.dart';
-import '../../../app/captcha_handoff.dart';
-import '../../../app/captcha_security.dart';
-import '../../../app/captcha_verification.dart';
-import '../../../app/runtime_public_config.dart';
+import '../../../app/config/app_l10n.dart';
+import '../../../app/auth/captcha_handoff.dart';
+import '../../../app/auth/captcha_security.dart';
+import '../../../app/auth/captcha_verification.dart';
+import '../../../app/config/runtime_public_config.dart';
 
 class CaptchaChallengeScreen extends ConsumerStatefulWidget {
   const CaptchaChallengeScreen({

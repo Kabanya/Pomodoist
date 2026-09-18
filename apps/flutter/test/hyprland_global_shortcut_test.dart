@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/hyprland_global_shortcut.dart';
+import 'package:pomodoist/app/platform/hyprland_global_shortcut.dart';
 
 void main() {
   test('replace installs the requested global action', () async {

@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
-import '../../../app/account_providers.dart';
-import '../../../app/app_l10n.dart';
-import '../../../app/captcha_handoff.dart';
+import '../../../app/config/account_providers.dart';
+import '../../../app/config/app_l10n.dart';
+import '../../../app/auth/captcha_handoff.dart';
 
 enum _ConsentAction { idle, approving, denying, redirecting }
 

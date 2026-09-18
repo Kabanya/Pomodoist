@@ -2,7 +2,11 @@ import 'dart:typed_data';
 
 /// A device-local recording. Account ownership prevents cross-account retries.
 class VoiceRecording {
-  const VoiceRecording({required this.path, required this.ownerId, this.locale});
+  const VoiceRecording({
+    required this.path,
+    required this.ownerId,
+    this.locale,
+  });
   final String path;
   final String ownerId;
   final String? locale;

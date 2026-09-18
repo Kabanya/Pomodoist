@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
-import '../../../app/account_providers.dart';
+import '../../../app/config/account_providers.dart';
 
 typedef TelegramAccountLinkCompleter =
     Future<void> Function(AccountClient account, String token);

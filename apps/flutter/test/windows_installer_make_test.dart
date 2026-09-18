@@ -105,7 +105,9 @@ void main() {
 
     for (final entry in expectedOutputs.entries) {
       final name = entry.key.toUpperCase().replaceAll('-', '_');
-      final value = entry.key.startsWith('windows') ? 'C:/prod.env' : 'prod.env';
+      final value = entry.key.startsWith('windows')
+          ? 'C:/prod.env'
+          : 'prod.env';
       final result = Process.runSync(_makeExecutable(), [
         '--no-print-directory',
         '--dry-run',
@@ -149,6 +151,51 @@ void main() {
       expect(
         output,
         contains('--dart-define=POMODOIST_BILLING_CHANNEL=storekit'),
+      );
+    },
+  );
+
+  test(
+    'Android entry point follows the environment in its dart-define file',
+    () {
+      final profiles = Directory.systemTemp.createTempSync(
+        'pomodoist-android-target-',
+      );
+      addTearDown(() => profiles.deleteSync(recursive: true));
+
+      final expectedTargets = <String, String>{
+        'local.env': 'lib/main_development.dart',
+        'staging.env': 'lib/main_staging.dart',
+        'production.env': 'lib/main.dart',
+        'selfhosted.env': 'lib/main.dart',
+        // A JSON dart-define file is not readable as dotenv, so the resolver
+        // yields nothing and the pair falls back to the production entry point.
+        'production.json': 'lib/main.dart',
+        'missing.env': 'lib/main.dart',
+      };
+      for (final entry in expectedTargets.entries) {
+        final profile = File('${profiles.path}/${entry.key}');
+        final environment = entry.key.split('.').first;
+        profile.writeAsStringSync(
+          entry.key.endsWith('.json')
+              ? '{"POMODOIST_ENVIRONMENT": "$environment"}\n'
+              : 'POMODOIST_ENVIRONMENT=$environment\n',
+        );
+
+        expect(
+          _androidTarget(profile.path),
+          '--target "${entry.value}"',
+          reason: entry.key,
+        );
+      }
+
+      expect(
+        _androidTarget(
+          File('${profiles.path}/production.env').path,
+          extraArguments: const ['ANDROID_TARGET=lib/main_staging.dart'],
+        ),
+        '--target "lib/main_staging.dart"',
+        reason: 'an explicit ANDROID_TARGET still wins',
       );
     },
   );
@@ -206,6 +253,7 @@ void main() {
           'xcrun simctl bootstatus "${entry.value}" -b',
           'open -a Simulator',
           'cd "$_repoRoot/apps/flutter" && "flutter-under-test" run -d "${entry.value}" --debug '
+              '--target "lib/main_development.dart" '
               '--dart-define-from-file="$_repoRoot/pubspec.yaml" '
               '--dart-define=POMODOIST_RELEASE='
               '"0123456789abcdef0123456789abcdef01234567" '
@@ -281,6 +329,7 @@ void main() {
       'powershell.exe -NoProfile -ExecutionPolicy Bypass '
       '-File ./tool/windows/build.ps1 -Configuration Release -Clean '
       '-ConfigFile "C:/secure config/pomodoist-windows-production.json" '
+      '-Target "lib/main.dart" '
       '-ReleaseSha "0123456789abcdef0123456789abcdef01234567"',
     );
     expect(
@@ -327,6 +376,33 @@ String _makeExecutable() {
   }
 
   throw StateError('GNU Make is required for this test.');
+}
+
+/// Resolves `make --dry-run android` for [config] and returns its `--target`
+/// argument, so the test exercises the real dotenv reader in the Makefile.
+String _androidTarget(String config, {List<String> extraArguments = const []}) {
+  final result = Process.runSync(_makeExecutable(), [
+    '--no-print-directory',
+    '--dry-run',
+    'android',
+    'FLUTTER=flutter-under-test',
+    'DART=${_dartExecutable()}',
+    'ANDROID_CONFIG=$config',
+    'POMODOIST_RELEASE=0123456789abcdef0123456789abcdef01234567',
+    ...extraArguments,
+  ], workingDirectory: _repoRoot);
+
+  expect(result.exitCode, 0, reason: '$config: ${result.stderr}');
+  final match = RegExp(
+    r'--target "([^"]*)"',
+  ).firstMatch(result.stdout.toString());
+  expect(match, isNotNull, reason: '$config produced no --target');
+  return match!.group(0)!;
+}
+
+String _dartExecutable() {
+  final pinned = File('../../.fvm/flutter_sdk/bin/dart');
+  return pinned.existsSync() ? pinned.absolute.path : 'dart';
 }
 
 String get _repoRoot =>

@@ -3,6 +3,7 @@ param(
     [ValidateSet('Debug', 'Profile', 'Release')]
     [string]$Configuration = 'Debug',
     [string]$ConfigFile,
+    [string]$Target = 'lib/main.dart',
     [string]$ReleaseSha,
     [switch]$Clean
 )
@@ -52,7 +53,7 @@ try {
         $resolvedConfig = (Resolve-Path $ConfigFile).Path
     }
 
-    $flutterArgs = @('build', 'windows', "--$($Configuration.ToLowerInvariant())")
+    $flutterArgs = @('build', 'windows', "--$($Configuration.ToLowerInvariant())", '--target', $Target)
     if ($null -ne $resolvedConfig) {
         $flutterArgs += "--dart-define-from-file=$resolvedConfig"
     }

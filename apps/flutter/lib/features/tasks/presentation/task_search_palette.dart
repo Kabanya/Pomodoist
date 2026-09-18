@@ -6,11 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadInput;
 
-import '../../../app/app_l10n.dart';
+import '../../../app/config/app_l10n.dart';
 import '../../../l10n/app_localizations.dart';
 import 'project_localizations.dart';
-import '../../../app/providers.dart';
-import '../../../app/task_detail_navigation.dart';
+import '../../../app/config/providers.dart';
+import '../../../app/routing/task_detail_navigation.dart';
 import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_theme.dart';
 import 'quick_add_dialog.dart';

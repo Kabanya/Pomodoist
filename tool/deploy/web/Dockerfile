@@ -28,6 +28,31 @@ WORKDIR /src/apps/flutter
 ARG POMODOIST_BILLING_CHANNEL
 RUN [ "$POMODOIST_BILLING_CHANNEL" = stripe ] \
     || (echo 'POMODOIST_BILLING_CHANNEL must be stripe' >&2; exit 1)
+
+# The image is built once for staging, production and self-hosted; everything
+# that differs between them arrives as a container environment variable at
+# runtime. Coolify injects a build argument for every environment variable that
+# its dashboard marks as "buildtime", and a build argument a stage reads is
+# baked into the image, so an injected value would freeze one environment into
+# it. Declaring each name is what lets printenv tell an injected value from an
+# undeclared variable; any non-empty value fails the build loudly. Keep this
+# list equal to RUNTIME_ONLY in tool/deploy/web/check_build_contract.py.
+ARG POMODOIST_ENVIRONMENT
+ARG POMODOIST_RELEASE
+ARG POMODOIST_WEB_URL
+ARG SUPABASE_URL
+ARG SUPABASE_ANON_KEY
+ARG TURNSTILE_SITE_KEY
+ARG SENTRY_DSN
+RUN for name in POMODOIST_ENVIRONMENT POMODOIST_RELEASE POMODOIST_WEB_URL \
+      SUPABASE_URL SUPABASE_ANON_KEY TURNSTILE_SITE_KEY SENTRY_DSN; do \
+      value="$(printenv "$name" || true)"; \
+      if [ -n "$value" ]; then \
+        echo "build argument $name must stay a runtime environment variable" >&2; \
+        exit 1; \
+      fi; \
+    done
+
 COPY apps/flutter/pubspec.yaml apps/flutter/pubspec.lock apps/flutter/l10n.yaml ./
 COPY apps/flutter/lib/l10n/ ./lib/l10n/
 RUN --mount=type=cache,target=/root/.pub-cache,sharing=locked \

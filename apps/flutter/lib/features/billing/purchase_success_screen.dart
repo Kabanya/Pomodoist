@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../app/app_l10n.dart';
+import '../../app/config/app_l10n.dart';
 import '../../app/theme/app_theme.dart';
 import 'billing.dart';
 import '../onboarding/onboarding_gate.dart';

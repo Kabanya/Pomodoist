@@ -1,6 +1,15 @@
 import 'update_release.dart';
 
-enum UpdatePhase { idle, checking, available, downloading, verifying, installing, upToDate, failed }
+enum UpdatePhase {
+  idle,
+  checking,
+  available,
+  downloading,
+  verifying,
+  installing,
+  upToDate,
+  failed,
+}
 
 typedef UpdateProgress = void Function(UpdatePhase phase, double? fraction);
 
@@ -12,8 +21,11 @@ class UpdateFailure implements Exception {
 }
 
 abstract class UpdateSource {
-  Future<UpdateOffer?> findUpdate({required UpdateVersion current,
-    required UpdateTarget target, required UpdateChannel channel});
+  Future<UpdateOffer?> findUpdate({
+    required UpdateVersion current,
+    required UpdateTarget target,
+    required UpdateChannel channel,
+  });
   void dispose();
 }
 
@@ -26,8 +38,10 @@ abstract class UpdateInstaller {
 }
 
 class SavedUpdatePreferences {
-  const SavedUpdatePreferences({this.channel = UpdateChannel.stable,
-    this.seenTags = const {}});
+  const SavedUpdatePreferences({
+    this.channel = UpdateChannel.stable,
+    this.seenTags = const {},
+  });
   final UpdateChannel channel;
   final Set<String> seenTags;
 }

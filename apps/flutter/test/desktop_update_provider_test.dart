@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/runtime_public_config.dart';
+import 'package:pomodoist/app/config/runtime_public_config.dart';
 import 'package:pomodoist/features/updates/update_providers.dart';
 import 'package:pomodoist/features/updates/update_release.dart';
 

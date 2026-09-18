@@ -14,9 +14,9 @@ import 'package:shadcn_ui/shadcn_ui.dart'
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/app_l10n.dart';
+import '../../../app/config/app_l10n.dart';
 import '../../../app/widgets/app_context_menu_region.dart';
-import '../../../app/providers.dart';
+import '../../../app/config/providers.dart';
 import '../../../app/theme/app_theme.dart';
 import '../domain/task_models.dart';
 import '../../collaboration/presentation/shared_project_badge.dart';

@@ -3,7 +3,7 @@ import 'package:shadcn_ui/shadcn_ui.dart'
     show LucideIcons, ShadButton, ShadIconButton;
 import 'package:flutter/services.dart';
 
-import '../../../../app/app_l10n.dart';
+import '../../../../app/config/app_l10n.dart';
 import '../../../../app/theme/app_motion.dart';
 import '../../../../app/theme/app_theme.dart';
 

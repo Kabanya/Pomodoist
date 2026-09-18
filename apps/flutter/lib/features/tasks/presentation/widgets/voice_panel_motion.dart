@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
-import '../../../../app/app_l10n.dart';
+import '../../../../app/config/app_l10n.dart';
 import '../../../../app/theme/app_motion.dart';
 
 /// Shared displacement and one-action-per-gesture tracking for touch/trackpads.

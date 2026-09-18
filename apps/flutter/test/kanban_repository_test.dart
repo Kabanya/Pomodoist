@@ -4,7 +4,7 @@ import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/providers.dart';
+import 'package:pomodoist/app/config/providers.dart';
 import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/core/sync/sync_queue_repository.dart';
 import 'package:pomodoist/features/tasks/data/kanban_repository_impl.dart';

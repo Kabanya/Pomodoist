@@ -29,27 +29,37 @@ VoiceRecognitionController createPomodoistVoiceController({
   )) {
     return VoiceRecognitionController(); // Preserve Apple's implementation.
   }
-  return BackendVoiceController(BackendVoiceRecognizer(
-    recorder: RecordVoiceRecorder(),
-    store: createVoiceRecordingStore(),
-    ownerId: ownerId,
-    invoke: invoke,
-  ));
+  return BackendVoiceController(
+    BackendVoiceRecognizer(
+      recorder: RecordVoiceRecorder(),
+      store: createVoiceRecordingStore(),
+      ownerId: ownerId,
+      invoke: invoke,
+    ),
+  );
 }
 
 /// Remote transcription needs microphone permission, not Apple Speech access.
 class BackendVoiceController extends VoiceRecognitionController {
-  BackendVoiceController(this.recognizer) : super(
-    recordedRecognizer: recognizer,
-    platformSupport: const VoicePlatformSupport(supportsRecordedSystem: true),
-  );
+  BackendVoiceController(this.recognizer)
+    : super(
+        recordedRecognizer: recognizer,
+        platformSupport: const VoicePlatformSupport(
+          supportsRecordedSystem: true,
+        ),
+      );
   final BackendVoiceRecognizer recognizer;
 
   @override
-  Future<Map<String, Object?>> checkAccess({String? locale, bool request = false}) async {
+  Future<Map<String, Object?>> checkAccess({
+    String? locale,
+    bool request = false,
+  }) async {
     final granted = await recognizer.hasPermission(request: request);
     return {
-      'microphone': granted ? 'authorized' : (request ? 'denied' : 'notDetermined'),
+      'microphone': granted
+          ? 'authorized'
+          : (request ? 'denied' : 'notDetermined'),
       'speech': 'authorized',
     };
   }
@@ -58,8 +68,10 @@ class BackendVoiceController extends VoiceRecognitionController {
   Future<bool> openSettings(VoiceSettingsDestination destination) async {
     if (kIsWeb) return recognizer.hasPermission(request: true);
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return await const MethodChannel('pomodoist/voice_settings')
-          .invokeMethod<bool>('openMicrophoneSettings') ?? false;
+      return await const MethodChannel(
+            'pomodoist/voice_settings',
+          ).invokeMethod<bool>('openMicrophoneSettings') ??
+          false;
     }
     if (defaultTargetPlatform == TargetPlatform.windows) {
       return launchUrl(Uri.parse('ms-settings:privacy-microphone'));

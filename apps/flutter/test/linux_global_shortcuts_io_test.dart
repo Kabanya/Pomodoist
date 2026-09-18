@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:dbus/dbus.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/linux_global_shortcuts_io.dart';
+import 'package:pomodoist/app/platform/linux_global_shortcuts_io.dart';
 
 void main() {
   test('registers the host app before creating a shortcut session', () async {

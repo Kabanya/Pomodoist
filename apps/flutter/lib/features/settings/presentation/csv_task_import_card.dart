@@ -5,11 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
-import '../../../app/app_l10n.dart';
+import '../../../app/config/app_l10n.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../app/theme/app_motion.dart';
 import 'settings_components.dart';
-import '../../../app/providers.dart';
+import '../../../app/config/providers.dart';
 import '../../tasks/data/csv_task_import.dart';
 
 bool isCsvTaskImportSupported({bool? web, TargetPlatform? platform}) =>

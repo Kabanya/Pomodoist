@@ -3,16 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
-    show
-        LucideIcons,
-        ShadButton,
-        ShadDialog,
-        ShadInput,
-        ShadOption,
-        ShadSelect;
+    show LucideIcons, ShadButton, ShadDialog, ShadInput, ShadOption, ShadSelect;
 
-import '../../../../app/account_providers.dart';
-import '../../../../app/app_l10n.dart';
+import '../../../app/config/account_providers.dart';
+import '../../../app/config/app_l10n.dart';
 import '../../../../core/db/app_database.dart';
 import '../domain/collaboration_models.dart';
 import '../../tasks/domain/task_models.dart';

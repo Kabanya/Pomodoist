@@ -6,10 +6,17 @@ import 'package:pomodoist/features/updates/update_controller.dart';
 import 'package:pomodoist/features/updates/update_release.dart';
 
 UpdateOffer testOffer([String tag = 'v1.1.0']) => UpdateOffer(
-  tag: tag, version: UpdateVersion.parse(tag), notes: 'Faster task lists.',
-  asset: UpdateAsset(name: 'Pomodoist-x86_64.AppImage', size: 12,
+  tag: tag,
+  version: UpdateVersion.parse(tag),
+  notes: 'Faster task lists.',
+  asset: UpdateAsset(
+    name: 'Pomodoist-x86_64.AppImage',
+    size: 12,
     sha256: 'a' * 64,
-    url: Uri.parse('https://github.com/Kabanya/Pomodoist/releases/download/$tag/Pomodoist-x86_64.AppImage')),
+    url: Uri.parse(
+      'https://github.com/Kabanya/Pomodoist/releases/download/$tag/Pomodoist-x86_64.AppImage',
+    ),
+  ),
 );
 
 class MemoryUpdatePreferences implements UpdatePreferences {
@@ -24,6 +31,7 @@ class MemoryUpdatePreferences implements UpdatePreferences {
     if (failWrites) throw StateError('Storage unavailable');
     channel = value;
   }
+
   @override
   Future<void> markSeen(Set<String> tags) async {
     if (failWrites) throw StateError('Storage unavailable');
@@ -38,14 +46,18 @@ class FakeUpdateSource implements UpdateSource {
   Completer<void>? gate;
   bool fail = false;
   @override
-  Future<UpdateOffer?> findUpdate({required UpdateVersion current,
-    required UpdateTarget target, required UpdateChannel channel}) async {
+  Future<UpdateOffer?> findUpdate({
+    required UpdateVersion current,
+    required UpdateTarget target,
+    required UpdateChannel channel,
+  }) async {
     calls++;
     lastChannel = channel;
     await gate?.future;
     if (fail) throw const UpdateFailure('Network unavailable');
     return offer;
   }
+
   @override
   void dispose() {}
 }
@@ -61,7 +73,11 @@ class FakeUpdateInstaller implements UpdateInstaller {
   @override
   String? unavailableReason;
   @override
-  Future<String?> acknowledgeStartup() async { acknowledgements++; return null; }
+  Future<String?> acknowledgeStartup() async {
+    acknowledgements++;
+    return null;
+  }
+
   @override
   Future<void> install(UpdateOffer offer, UpdateProgress progress) async {
     installs++;
@@ -72,42 +88,55 @@ class FakeUpdateInstaller implements UpdateInstaller {
     progress(UpdatePhase.verifying, null);
     progress(UpdatePhase.installing, null);
   }
+
   @override
   void dispose() {}
 }
 
-DesktopUpdateController testController({FakeUpdateSource? source,
-  FakeUpdateInstaller? installer, MemoryUpdatePreferences? preferences,
-  bool automaticChecks = false, bool officialUpdatesAllowed = true}) => DesktopUpdateController(
-    source: source ?? FakeUpdateSource(), installer: installer ?? FakeUpdateInstaller(),
-    preferences: preferences ?? MemoryUpdatePreferences(),
-    installedVersion: () async => '1.0.0+94', automaticChecks: automaticChecks,
-    officialUpdatesAllowed: officialUpdatesAllowed);
+DesktopUpdateController testController({
+  FakeUpdateSource? source,
+  FakeUpdateInstaller? installer,
+  MemoryUpdatePreferences? preferences,
+  bool automaticChecks = false,
+  bool officialUpdatesAllowed = true,
+}) => DesktopUpdateController(
+  source: source ?? FakeUpdateSource(),
+  installer: installer ?? FakeUpdateInstaller(),
+  preferences: preferences ?? MemoryUpdatePreferences(),
+  installedVersion: () async => '1.0.0+94',
+  automaticChecks: automaticChecks,
+  officialUpdatesAllowed: officialUpdatesAllowed,
+);
 
 void main() {
-  test('official updates are denied by default, including manual actions', () async {
-    final source = FakeUpdateSource();
-    final installer = FakeUpdateInstaller();
-    final preferences = MemoryUpdatePreferences();
-    final controller = DesktopUpdateController(
-      source: source, installer: installer, preferences: preferences,
-      installedVersion: () async => '1.0.0',
-    );
-    addTearDown(controller.dispose);
-    await controller.start();
-    controller.onResume();
-    await controller.check();
-    await controller.check(manual: true);
-    await controller.setChannel(UpdateChannel.rc);
-    controller.offer = testOffer();
-    await controller.update();
-    expect(installer.acknowledgements, 1);
-    expect(controller.enabled, isFalse);
-    expect(source.calls, 0);
-    expect(installer.installs, 0);
-    expect(preferences.channel, UpdateChannel.stable);
-    expect(preferences.seen, isEmpty);
-  });
+  test(
+    'official updates are denied by default, including manual actions',
+    () async {
+      final source = FakeUpdateSource();
+      final installer = FakeUpdateInstaller();
+      final preferences = MemoryUpdatePreferences();
+      final controller = DesktopUpdateController(
+        source: source,
+        installer: installer,
+        preferences: preferences,
+        installedVersion: () async => '1.0.0',
+      );
+      addTearDown(controller.dispose);
+      await controller.start();
+      controller.onResume();
+      await controller.check();
+      await controller.check(manual: true);
+      await controller.setChannel(UpdateChannel.rc);
+      controller.offer = testOffer();
+      await controller.update();
+      expect(installer.acknowledgements, 1);
+      expect(controller.enabled, isFalse);
+      expect(source.calls, 0);
+      expect(installer.installs, 0);
+      expect(preferences.channel, UpdateChannel.stable);
+      expect(preferences.seen, isEmpty);
+    },
+  );
 
   test('preferences construction does not require a platform plugin', () {
     expect(SharedUpdatePreferences.new, returnsNormally);
@@ -124,23 +153,26 @@ void main() {
     expect(prefs.seen, {'v1.1.0'});
   });
 
-  test('dismissal does not install or repeat after restart; manual check reopens', () async {
-    final prefs = MemoryUpdatePreferences();
-    final installer = FakeUpdateInstaller();
-    final first = testController(preferences: prefs, installer: installer);
-    await first.check();
-    first.dismiss();
-    await first.check();
-    expect(first.popupVisible, isFalse);
-    expect(installer.installs, 0);
-    first.dispose();
-    final restarted = testController(preferences: prefs);
-    addTearDown(restarted.dispose);
-    await restarted.check();
-    expect(restarted.popupVisible, isFalse);
-    await restarted.check(manual: true);
-    expect(restarted.popupVisible, isTrue);
-  });
+  test(
+    'dismissal does not install or repeat after restart; manual check reopens',
+    () async {
+      final prefs = MemoryUpdatePreferences();
+      final installer = FakeUpdateInstaller();
+      final first = testController(preferences: prefs, installer: installer);
+      await first.check();
+      first.dismiss();
+      await first.check();
+      expect(first.popupVisible, isFalse);
+      expect(installer.installs, 0);
+      first.dispose();
+      final restarted = testController(preferences: prefs);
+      addTearDown(restarted.dispose);
+      await restarted.check();
+      expect(restarted.popupVisible, isFalse);
+      await restarted.check(manual: true);
+      expect(restarted.popupVisible, isTrue);
+    },
+  );
 
   test('a distinct release gets its own automatic popup', () async {
     final source = FakeUpdateSource();
@@ -187,20 +219,23 @@ void main() {
     expect(source.calls, 1);
   });
 
-  test('failed download remains retryable and does not repeat installation', () async {
-    final installer = FakeUpdateInstaller()..fail = true;
-    final controller = testController(installer: installer);
-    addTearDown(controller.dispose);
-    await controller.check();
-    await controller.update();
-    expect(controller.phase, UpdatePhase.failed);
-    expect(controller.error, contains('Checksum'));
-    expect(controller.offer, isNotNull);
-    installer.fail = false;
-    await controller.update();
-    expect(installer.installs, 2);
-    expect(controller.phase, UpdatePhase.installing);
-  });
+  test(
+    'failed download remains retryable and does not repeat installation',
+    () async {
+      final installer = FakeUpdateInstaller()..fail = true;
+      final controller = testController(installer: installer);
+      addTearDown(controller.dispose);
+      await controller.check();
+      await controller.update();
+      expect(controller.phase, UpdatePhase.failed);
+      expect(controller.error, contains('Checksum'));
+      expect(controller.offer, isNotNull);
+      installer.fail = false;
+      await controller.update();
+      expect(installer.installs, 2);
+      expect(controller.phase, UpdatePhase.installing);
+    },
+  );
 
   test('duplicate Update clicks cannot start concurrent installers', () async {
     final installer = FakeUpdateInstaller()..gate = Completer<void>();
@@ -214,15 +249,18 @@ void main() {
     await updating;
   });
 
-  test('stable channel refuses even an incorrectly injected RC offer', () async {
-    final source = FakeUpdateSource()..offer = testOffer('v2.0.0-rc.1');
-    final installer = FakeUpdateInstaller();
-    final controller = testController(source: source, installer: installer);
-    addTearDown(controller.dispose);
-    await controller.check();
-    await controller.update();
-    expect(installer.installs, 0);
-  });
+  test(
+    'stable channel refuses even an incorrectly injected RC offer',
+    () async {
+      final source = FakeUpdateSource()..offer = testOffer('v2.0.0-rc.1');
+      final installer = FakeUpdateInstaller();
+      final controller = testController(source: source, installer: installer);
+      addTearDown(controller.dispose);
+      await controller.check();
+      await controller.update();
+      expect(installer.installs, 0);
+    },
+  );
 
   test('offline checks are quiet automatically and visible manually', () async {
     final source = FakeUpdateSource()..fail = true;
@@ -247,10 +285,16 @@ void main() {
     expect(controller.isDesktop, isFalse);
   });
 
-  testWidgets('automatic checks start after startup delay and recur', (tester) async {
+  testWidgets('automatic checks start after startup delay and recur', (
+    tester,
+  ) async {
     final source = FakeUpdateSource();
     final installer = FakeUpdateInstaller();
-    final controller = testController(source: source, installer: installer, automaticChecks: true);
+    final controller = testController(
+      source: source,
+      installer: installer,
+      automaticChecks: true,
+    );
     await controller.start();
     expect(installer.acknowledgements, 1);
     expect(source.calls, 0);

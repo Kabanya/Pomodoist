@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/task_time.dart';
+import 'package:pomodoist/app/config/task_time.dart';
 import 'package:pomodoist/app/theme/app_theme.dart';
 import 'package:pomodoist/features/tasks/domain/task_models.dart';
 

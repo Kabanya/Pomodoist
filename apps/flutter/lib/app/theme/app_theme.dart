@@ -4,7 +4,7 @@ import 'package:shadcn_ui/shadcn_ui.dart' as shad;
 
 import 'app_motion.dart';
 
-import '../task_time.dart';
+import '../config/task_time.dart';
 
 enum AppThemeColor {
   canvas,

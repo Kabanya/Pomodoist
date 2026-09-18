@@ -27,7 +27,16 @@ make android
 `ANDROID__` values in `.env.setup`. `make android` uses that profile, isolates
 Gradle state under `build/android/gradle-home`, and writes the debug APK to
 `apps/flutter/build/app/outputs/flutter-apk/app-debug.apk` on Windows, macOS, and Linux.
-Override `ANDROID_CONFIG` to use another dotenv or JSON dart-define file.
+Override `ANDROID_CONFIG` to build against another dotenv or JSON dart-define file.
+
+The entry point follows the profile: `make android` reads `POMODOIST_ENVIRONMENT`
+back from the dart-define file and picks `lib/main_development.dart` for `local`,
+`lib/main_staging.dart` for `staging`, and `lib/main.dart` for everything else —
+production, selfhosted, and any file whose environment cannot be read, such as the
+release-only `.env.android.json`. That keeps the configuration and its entry point
+in step, because a mismatched pair stops the app at startup with
+`Entrypoint/config mismatch`. Set `ANDROID_TARGET` only to force a specific entry
+point, for example `make android ANDROID_TARGET=lib/main_staging.dart`.
 
 Debug builds do not require a production key and can use HTTP development
 servers. Only the debug manifest permits cleartext traffic; release/profile use

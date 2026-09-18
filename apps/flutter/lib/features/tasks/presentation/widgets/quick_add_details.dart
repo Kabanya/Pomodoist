@@ -8,8 +8,8 @@ import 'package:shadcn_ui/shadcn_ui.dart'
         ShadPopover,
         ShadPopoverController;
 
-import '../../../../app/app_l10n.dart';
-import '../../../../app/providers.dart';
+import '../../../../app/config/app_l10n.dart';
+import '../../../../app/config/providers.dart';
 import '../../../../app/widgets/app_date_time_picker.dart';
 import '../../../planning/domain/quick_add_parser.dart';
 import '../../domain/task_models.dart';

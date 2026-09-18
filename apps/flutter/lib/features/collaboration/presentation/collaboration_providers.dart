@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../app/account_providers.dart';
-import '../../../app/providers.dart';
+import '../../../app/config/account_providers.dart';
+import '../../../app/config/providers.dart';
 import '../../../core/db/app_database.dart';
 import '../data/collaboration_api.dart';
 import '../data/collaboration_repository.dart';

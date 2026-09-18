@@ -1,4 +1,5 @@
-// Automated demo-only captures. Run after building lib/main_demo.dart into build/localization-demo.
+// Automated localization captures. Build the development entry point first:
+//   flutter build web --debug --target lib/main_development.dart -o build/localization-development
 import { createServer } from 'node:http';
 import { readFile, mkdir, stat, writeFile } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
@@ -13,11 +14,11 @@ const mime = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/jav
 const server = createServer(async (req, res) => {
   try {
     const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-    const base = pathname.startsWith('/chrome/') ? 'build/localization-chrome' : pathname.startsWith('/telegram/') ? 'apps/telegram-mini-app' : 'build/localization-demo';
-    const relative = base === 'build/localization-demo' ? pathname : pathname.replace(/^\/(chrome|telegram)/, '');
+    const base = pathname.startsWith('/chrome/') ? 'build/localization-chrome' : pathname.startsWith('/telegram/') ? 'apps/telegram-mini-app' : 'build/localization-development';
+    const relative = base === 'build/localization-development' ? pathname : pathname.replace(/^\/(chrome|telegram)/, '');
     let file = resolve(root, base, '.' + relative);
     if (!file.startsWith(resolve(root, base) + '/') && file !== resolve(root, base)) throw new Error('Invalid path');
-    if (pathname === '/config.js') { res.writeHead(200, {'Content-Type':'text/javascript'}); res.end('// Local demo: use the built-in local runtime configuration.'); return; }
+    if (pathname === '/config.js') { res.writeHead(200, {'Content-Type':'text/javascript'}); res.end('// Local run: use the built-in local runtime configuration.'); return; }
     try { if ((await stat(file)).isDirectory()) file += '/index.html'; } catch { file = resolve(root, base, 'index.html'); }
     res.writeHead(200, { 'Content-Type': mime[extname(file)] || 'application/octet-stream' }); res.end(await readFile(file));
   } catch { res.writeHead(404); res.end(); }
@@ -41,7 +42,7 @@ try {
       await page.locator('flutter-view').waitFor({timeout:60000});
       await page.locator('#pomodoist-web-loader').waitFor({state:'hidden',timeout:60000});
       await page.waitForTimeout(2500);
-      if (errors.length) throw new Error('Flutter demo startup failed: '+errors.join('\n')); 
+      if (errors.length) throw new Error('Flutter localization startup failed: '+errors.join('\n')); 
       const semantics = page.locator('flt-semantics-placeholder');
       if (await semantics.count()) await semantics.evaluate(e => e.click());
       await page.waitForTimeout(500);
@@ -68,5 +69,5 @@ try {
     await context.close();
   }
   await writeFile(`${output}/capture-results.json`, JSON.stringify(results,null,2)+'\n');
-  console.log(`Captured ${results.length} demo-only surfaces in ${output}`);
+  console.log(`Captured ${results.length} localization surfaces in ${output}`);
 } finally { await browser.close(); server.close(); }

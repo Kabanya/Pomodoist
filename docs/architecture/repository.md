@@ -94,7 +94,11 @@ run `../../.fvm/flutter_sdk/bin/dart tool/prepare_sentry_sourcemaps.dart ...`.
 Root Dart scripts use only the Dart standard library; `make analyze` also checks
 these scripts with `dart analyze tool`.
 The web Docker build keeps the repository and Flutter roots distinct and emits
-the same final runtime/source-map artifact locations.
+the same final runtime/source-map artifact locations. The image is built once
+for staging, production and self-hosted; the environment arrives at runtime, and
+the Dockerfile fails the build when a builder injects one of those runtime
+values as a build argument. Its build-argument contract is documented and
+checked in [tool/deploy/web/README.md](../../tool/deploy/web/README.md).
 
 ## Automated boundaries
 

@@ -29,11 +29,11 @@ export '../../features/tasks/presentation/quick_add_dialog.dart'
 import '../../features/tasks/presentation/widgets/voice_panel_clearance.dart';
 import '../../features/tasks/presentation/widgets/quick_add_bar.dart'
     show voiceQuickAddActiveOf;
-import '../account_providers.dart';
-import '../app_l10n.dart';
-import '../keyboard_shortcuts.dart';
-import '../macos_app_menu.dart';
-import '../providers.dart';
+import '../config/account_providers.dart';
+import '../config/app_l10n.dart';
+import '../config/keyboard_shortcuts.dart';
+import '../platform/macos_app_menu.dart';
+import '../config/providers.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_theme_settings.dart';
 import '../theme/theme_background.dart';

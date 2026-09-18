@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
-import '../../../app/app_l10n.dart';
+import '../../../app/config/app_l10n.dart';
 
 class AccountSignOutButton extends StatefulWidget {
   const AccountSignOutButton({

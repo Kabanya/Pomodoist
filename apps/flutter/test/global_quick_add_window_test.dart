@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:pomodoist/app/global_quick_add_window.dart';
-import 'package:pomodoist/app/account_providers.dart';
+import 'package:pomodoist/app/platform/global_quick_add_window.dart';
+import 'package:pomodoist/app/config/account_providers.dart';
 import 'package:pomodoist/features/billing/billing.dart';
-import 'package:pomodoist/app/providers.dart';
+import 'package:pomodoist/app/config/providers.dart';
 import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/features/tasks/presentation/widgets/quick_add_bar.dart';
 

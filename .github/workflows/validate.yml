@@ -22,7 +22,9 @@ jobs:
             appstream desktop-file-utils
       - run: sh tool/test_public_boundary.sh
       - run: python3 tool/check_architecture.py
+      - run: python3 tool/deploy/web/check_build_contract.py
       - run: python3 -m unittest discover -s tool -p test_architecture.py
+      - run: python3 -m unittest discover -s tool -p test_web_build_contract.py
       - run: make test-linux-packaging
       - run: flutter pub get --enforce-lockfile
         working-directory: apps/flutter
@@ -47,4 +49,4 @@ jobs:
           flutter test --platform chrome test/web/voice_recording_store_test.dart
       - name: Compile web platform adapters
         working-directory: apps/flutter
-        run: flutter build web --debug
+        run: flutter build web --debug --target lib/main_development.dart

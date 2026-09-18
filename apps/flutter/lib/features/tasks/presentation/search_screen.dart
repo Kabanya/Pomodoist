@@ -4,9 +4,9 @@ import 'package:shadcn_ui/shadcn_ui.dart'
     show LucideIcons, ShadButton, ShadInput;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../app/account_providers.dart';
-import '../../../app/app_l10n.dart';
-import '../../../app/providers.dart';
+import '../../../app/config/account_providers.dart';
+import '../../../app/config/app_l10n.dart';
+import '../../../app/config/providers.dart';
 import '../../../app/widgets/adaptive_shell.dart' show showQuickAddDialog;
 import '../../../core/sync/pomodoist_retention.dart';
 import '../../billing/billing.dart';

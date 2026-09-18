@@ -183,7 +183,10 @@ void main() {
           expect(publication, contains('--raw-field tag_name=$tag'));
           expect(publication, contains('--field draft=false'));
           expect(publication, contains('--field prerelease=$prerelease'));
-          expect(publication, contains('--raw-field make_latest=${!prerelease}'));
+          expect(
+            publication,
+            contains('--raw-field make_latest=${!prerelease}'),
+          );
           expect(
             log.where(
               (line) =>
@@ -308,11 +311,7 @@ void main() {
       expect(workflow, contains('Pomodoist-Setup.exe'), reason: path);
       expect(workflow, contains('Pomodoist-Setup.exe.sha256'), reason: path);
       expect(workflow, contains('Pomodoist-Android.apk'), reason: path);
-      expect(
-        workflow,
-        contains('Pomodoist-Android.apk.sha256'),
-        reason: path,
-      );
+      expect(workflow, contains('Pomodoist-Android.apk.sha256'), reason: path);
       expect(
         workflow,
         contains('Release remains draft until all release assets are present.'),
@@ -436,7 +435,8 @@ void main() {
     expect((job['permissions'] as YamlMap)['contents'], 'write');
 
     final publish = (job['steps'] as YamlList).cast<YamlMap>().singleWhere(
-      (step) => step['name'] == 'Publish Android artifacts to the GitHub release',
+      (step) =>
+          step['name'] == 'Publish Android artifacts to the GitHub release',
     );
     expect(publish['if'], "github.ref_type == 'tag'");
 

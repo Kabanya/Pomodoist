@@ -19,12 +19,12 @@ import 'package:shadcn_ui/shadcn_ui.dart'
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/semantics.dart';
 
-import '../../../../app/app_l10n.dart';
-import '../../../../app/task_detail_navigation.dart';
+import '../../../../app/config/app_l10n.dart';
+import '../../../../app/routing/task_detail_navigation.dart';
 import '../../../../app/theme/app_motion.dart';
-import '../../../../app/formatters.dart';
-import '../../../../app/providers.dart';
-import '../../../../app/task_time.dart';
+import '../../../../app/config/formatters.dart';
+import '../../../../app/config/providers.dart';
+import '../../../../app/config/task_time.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../../app/theme/theme_background.dart';
 import '../../../../app/widgets/action_feedback.dart';

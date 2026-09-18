@@ -4,7 +4,7 @@ import 'package:app_account/app_account.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/account_providers.dart';
+import 'package:pomodoist/app/config/account_providers.dart';
 
 void main() {
   for (final initial in <List<AccountOAuthGrant>?>[

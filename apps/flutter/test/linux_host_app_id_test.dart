@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/linux_host_app_id.dart';
+import 'package:pomodoist/app/platform/linux_host_app_id.dart';
 
 void main() {
   test('uses the installed desktop id for the current AppImage', () async {

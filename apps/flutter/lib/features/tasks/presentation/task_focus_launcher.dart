@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../app/providers.dart';
+import '../../../app/config/providers.dart';
 import '../../focus/domain/focus_models.dart';
 import '../domain/task_focus_estimate.dart';
 import '../domain/task_models.dart';

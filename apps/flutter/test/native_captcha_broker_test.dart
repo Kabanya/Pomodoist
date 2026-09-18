@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/captcha_security.dart';
-import 'package:pomodoist/app/native_captcha_broker.dart';
+import 'package:pomodoist/app/auth/captcha_security.dart';
+import 'package:pomodoist/app/platform/native_captcha_broker.dart';
 
 void main() {
   test('native broker accepts the matching callback exactly once', () async {

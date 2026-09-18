@@ -10,10 +10,10 @@ import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show LucideIcons, ShadButton, ShadSwitch;
 
-import '../../../app/app_l10n.dart';
+import '../../../app/config/app_l10n.dart';
 import 'settings_components.dart';
-import '../../../app/keyboard_shortcuts.dart';
-import '../../../app/platform_quick_add.dart';
+import '../../../app/config/keyboard_shortcuts.dart';
+import '../../../app/platform/platform_quick_add.dart';
 import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_theme.dart';
 

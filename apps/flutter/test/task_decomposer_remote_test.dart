@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
 import 'package:app_account/app_account.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/account_providers.dart';
+import 'package:pomodoist/app/config/account_providers.dart';
 import 'package:pomodoist/features/billing/billing.dart';
 import 'package:pomodoist/features/planning/data/task_decomposer.dart';
 

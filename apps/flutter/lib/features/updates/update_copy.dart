@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import '../../app/app_l10n.dart';
+import '../../app/config/app_l10n.dart';
 import '../../l10n/app_localizations.dart';
 import 'update_contracts.dart';
 

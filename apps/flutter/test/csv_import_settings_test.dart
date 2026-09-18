@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/providers.dart';
+import 'package:pomodoist/app/config/providers.dart';
 import 'package:pomodoist/core/db/app_database.dart';
 import 'package:pomodoist/features/settings/presentation/csv_task_import_card.dart';
 import 'package:pomodoist/l10n/app_localizations.dart';

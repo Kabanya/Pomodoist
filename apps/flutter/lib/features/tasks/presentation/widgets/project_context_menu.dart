@@ -10,9 +10,9 @@ import 'package:shadcn_ui/shadcn_ui.dart'
         ShadDialog,
         ShadIconButton;
 
-import '../../../../app/app_l10n.dart';
+import '../../../../app/config/app_l10n.dart';
 import '../../../../app/widgets/app_context_menu_region.dart';
-import '../../../../app/providers.dart';
+import '../../../../app/config/providers.dart';
 import '../../domain/project_colors.dart';
 import '../../domain/task_models.dart';
 import '../project_localizations.dart';

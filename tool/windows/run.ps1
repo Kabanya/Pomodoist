@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$ConfigFile
+    [string]$ConfigFile,
+    [string]$Target = 'lib/main.dart'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -9,7 +10,7 @@ if (-not [string]::IsNullOrWhiteSpace($ConfigFile) -and -not [System.IO.Path]::I
     $ConfigFile = Join-Path $repoRoot $ConfigFile
 }
 
-$flutterArgs = @('run', '-d', 'windows')
+$flutterArgs = @('run', '-d', 'windows', '--target', $Target)
 if (-not [string]::IsNullOrWhiteSpace($ConfigFile)) {
     $flutterArgs += "--dart-define-from-file=$((Resolve-Path $ConfigFile).Path)"
 }
