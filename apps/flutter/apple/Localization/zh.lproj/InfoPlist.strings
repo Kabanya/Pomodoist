@@ -1,0 +1,2 @@
+"NSMicrophoneUsageDescription" = "Pomodoist 使用麦克风将语音快速添加命令转换为任务文本。";
+"NSSpeechRecognitionUsageDescription" = "Pomodoist 使用语音识别将语音快速添加命令转写为文字。";

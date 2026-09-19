@@ -19,6 +19,12 @@ struct FocusLocalizationTests {
       assert(pomodoistLocalized("Pause", locale: "pt") == "Pausar")
       assert(pomodoistLocalized("Pause", locale: "pt-PT") == "Pausar")
       assert(pomodoistLocalized("Pause", locale: "xx") == "Pause")
+      assert(pomodoistLocalized("Close", locale: "de") == "Schließen")
+      assert(pomodoistLocalized("Close", locale: "es") == "Cerrar")
+      assert(pomodoistLocalized("Close", locale: "fr") == "Fermer")
+      assert(pomodoistLocalized("Close", locale: "ar") == "إغلاق")
+      assert(pomodoistLocalized("Close", locale: "ru") == "Закрыть")
+      assert(pomodoistLocalized("Close", locale: "zh") == "关闭")
     } else {
       fatalError("Localization resource bundle is required")
     }

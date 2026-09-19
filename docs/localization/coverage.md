@@ -1,7 +1,15 @@
-# Portuguese (Brazil), Japanese and Korean localization
+# Localization across ten locales: en (base), ru, de, es, fr, ar, zh, pt-BR, ja, ko
 
 Source: user-approved implementation plan, 2026-09-13. Translation and editorial
 model: GPT-6 Astra, high reasoning. No runtime model changes.
+
+Portuguese (Brazil), Japanese and Korean shipped first. The native Apple surfaces were
+then extended to `de`, `es`, `fr`, `ar`, `ru` and `zh`: each locale gained a
+`Localizable.strings` (55 keys, reusing Flutter catalog wording wherever a matching ARB
+key exists) and an `InfoPlist.strings` (2 permission strings) under
+`apps/flutter/apple/Localization`, and both Runner projects gained the matching variant
+group children. The Flutter catalog already covered these six locales, so only the
+native Apple surfaces below changed.
 
 Manual testing and Computer Use are excluded by explicit user instruction.
 Visual acceptance and native-speaker review are not claimed. No deployments,
@@ -13,7 +21,7 @@ commits, messages, store submissions or live bot configuration are authorized.
 | Quick Add parsing and source highlights | Implemented | Implemented | Implemented | 18 parser/locale tests passed |
 | Achievements and updater | Implemented | Implemented | Implemented | Flutter suite |
 | Notifications and system channels | Implemented | Implemented | Implemented | Flutter suite |
-| Apple Watch, widgets, native menus and permissions | Implemented | Implemented | Implemented | macOS/iOS/Watch builds; two Swift checks |
+| Apple Watch, widgets, native menus and permissions | Implemented | Implemented | Implemented | All ten locales; macOS/iOS/Watch builds; two Swift checks; nine native locale catalogs |
 | Speech locale routing | Implemented | Implemented | Implemented | Swift and Flutter tests |
 | Telegram Mini App and bot | Implemented | Implemented | Implemented | Deno tests; bot configuration remains unapplied |
 | Chrome extension | Implemented | Implemented | Implemented | 45 Node tests and production build |
@@ -28,7 +36,7 @@ commits, messages, store submissions or live bot configuration are authorized.
 ## Invariants
 
 - Preserve user content, IDs, storage values and current unrelated changes.
-- Canonical locale tags: pt-BR, ja, ko; website prefixes: pt-br, ja, ko.
+- Canonical locale tags: en (base), ru, de, es, fr, ar, zh, pt-BR, ja, ko; website prefixes: pt-br, ja, ko.
 - Portuguese fallback uses Brazilian copy. No separate European translation.
 - Preserve placeholders, dates, prices, URLs, claims and command syntax.
 - Existing English documentation URLs remain valid.

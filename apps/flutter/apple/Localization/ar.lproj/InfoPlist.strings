@@ -1,0 +1,2 @@
+"NSMicrophoneUsageDescription" = "يستخدم Pomodoist الميكروفون لتحويل أوامر الإضافة السريعة المنطوقة إلى نص المهام.";
+"NSSpeechRecognitionUsageDescription" = "يستخدم Pomodoist التعرّف على الكلام لنسخ أوامر الإضافة السريعة المنطوقة كتابيًا.";

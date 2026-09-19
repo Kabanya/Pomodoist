@@ -151,3 +151,4 @@ docs/superpowers/specs/*
 .kimi-code
 
 !apps/chrome-extension/.gitignore
+apps/flutter/assets/branding/app_icons/plan.md

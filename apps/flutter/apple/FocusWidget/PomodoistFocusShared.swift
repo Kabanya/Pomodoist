@@ -8,7 +8,6 @@ func pomodoistLocalized(_ key: String, locale: String? = nil) -> String {
     if let path = Bundle.main.path(forResource: resource, ofType: "lproj"), let bundle = Bundle(path: path) {
       return bundle.localizedString(forKey: key, value: key, table: nil)
     }
-    if ["en", "ru", "de", "es", "fr", "ar", "zh"].contains(base) { return key }
   }
   return key
 }

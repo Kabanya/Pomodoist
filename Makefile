@@ -257,6 +257,9 @@ test-linux-build-network:
 
 test-linux-packaging: test-linux-installer test-linux-appimage test-linux-build-network
 
+test-xcode-warnings:
+	sh tool/test_xcode_warnings.sh
+
 architecture:
 	python3 tool/check_architecture.py
 

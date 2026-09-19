@@ -27,7 +27,7 @@ for key, record in watch.items():
         assert record['localizations'][locale]['stringUnit']['value'].strip(), (key, locale)
 resources = root / 'apps/flutter/apple/Localization'
 native_sets = []
-for locale in ['pt-BR', 'ja', 'ko']:
+for locale in ['pt-BR', 'ja', 'ko', 'de', 'es', 'fr', 'ar', 'ru', 'zh']:
     path = resources / f'{locale}.lproj/Localizable.strings'
     native_sets.append(set(re.findall(r'^"(.*?)" = ', path.read_text(), re.M)))
     assert 'NSMicrophoneUsageDescription' in (resources / f'{locale}.lproj/InfoPlist.strings').read_text()
@@ -45,4 +45,4 @@ for locale in ['pt-BR', 'ja', 'ko']:
     assert len(data['chromeWebStore']['shortDescription']) <= 132, locale
     for product in data['purchases'].values():
         assert len(product['name']) <= 30 and len(product['description']) <= 45, (locale, product)
-print(f'Localization contracts passed: {len(keys)} ARB keys, {len(watch)} Watch keys, {len(native_sets[0])} native keys, 3 store packages.')
+print(f'Localization contracts passed: {len(keys)} ARB keys, {len(watch)} Watch keys, {len(native_sets[0])} native keys, {len(native_sets)} native catalog locales, 3 store packages.')

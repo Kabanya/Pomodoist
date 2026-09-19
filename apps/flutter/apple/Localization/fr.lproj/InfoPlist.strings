@@ -1,0 +1,2 @@
+"NSMicrophoneUsageDescription" = "Pomodoist utilise le microphone pour transformer les commandes d’ajout rapide dictées en texte de tâche.";
+"NSSpeechRecognitionUsageDescription" = "Pomodoist utilise la reconnaissance vocale pour transcrire les commandes d’ajout rapide dictées.";
