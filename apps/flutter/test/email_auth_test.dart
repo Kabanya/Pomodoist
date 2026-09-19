@@ -1,11 +1,12 @@
+import 'package:pomodoist/domain/models/account/email_auth.dart';
+import 'package:pomodoist/data/services/auth/email_auth_service.dart';
 import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:pomodoist/app/auth/account_auth_feedback.dart';
-import 'package:pomodoist/app/auth/email_auth.dart';
+import 'package:pomodoist/domain/models/account/account_auth_failure.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {

@@ -1,3 +1,10 @@
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/domain/models/settings/app_language.dart';
+import 'package:pomodoist/config/task_preferences_dependencies.dart';
+import 'package:pomodoist/domain/models/settings/task_preferences.dart';
+import 'package:pomodoist/ui/settings/view_models/settings_view_model.dart';
+import 'package:pomodoist/data/repositories/projects/project_repository_impl.dart';
+import 'package:pomodoist/data/repositories/labels/label_repository_impl.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -6,32 +13,31 @@ import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/app_language.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/config/task_time.dart';
-import 'package:pomodoist/core/audio/focus_sound_player.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/notifications/notification_scheduler.dart';
-import 'package:pomodoist/core/sync/pomodoist_retention.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/core/time/clock.dart';
-import 'package:pomodoist/core/time/timer_engine.dart';
-import 'package:pomodoist/features/filters/domain/filter_parser.dart';
-import 'package:pomodoist/features/focus/data/focus_repository_impl.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
-import 'package:pomodoist/features/planning/data/quick_add_service.dart';
-import 'package:pomodoist/features/planning/data/task_decomposer.dart';
-import 'package:pomodoist/features/planning/domain/quick_add_parser.dart';
-import 'package:pomodoist/features/productivity/data/achievement_repository_impl.dart';
-import 'package:pomodoist/features/productivity/domain/achievement_models.dart';
-import 'package:pomodoist/features/productivity/data/productivity_repository_impl.dart';
-import 'package:pomodoist/features/productivity/domain/productivity_models.dart';
-import 'package:pomodoist/features/tasks/data/task_repository_impl.dart';
-import 'package:pomodoist/features/tasks/data/kanban_transition_coordinator.dart';
-import 'package:pomodoist/features/tasks/domain/task_focus_estimate.dart';
-import 'package:pomodoist/features/tasks/domain/project_colors.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/domain/models/tasks/task_time.dart';
+import 'package:pomodoist/data/services/audio/focus_sound_player.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
+import 'package:pomodoist/domain/models/account/account_overview.dart';
+import 'package:pomodoist/domain/use_cases/account/pomodoist_retention.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/utils/clock.dart';
+import 'package:pomodoist/utils/timer_engine.dart';
+import 'package:pomodoist/domain/models/filters/filter_parser.dart';
+import 'package:pomodoist/data/repositories/focus/focus_repository_impl.dart';
+import 'package:pomodoist/config/focus_dependencies.dart';
+import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
+import 'package:pomodoist/data/services/planning/task_decomposer.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
+import 'package:pomodoist/data/repositories/achievements/achievement_repository_impl.dart';
+import 'package:pomodoist/domain/models/productivity/achievement_models.dart';
+import 'package:pomodoist/data/repositories/productivity/productivity_repository_impl.dart';
+import 'package:pomodoist/domain/models/productivity/productivity_models.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
+import 'package:pomodoist/data/services/local/kanban_transition_coordinator.dart';
+import 'package:pomodoist/domain/models/tasks/task_focus_estimate.dart';
+import 'package:pomodoist/domain/models/tasks/project_colors.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -790,9 +796,9 @@ void main() {
           intervals: [_achievementInterval('old-work', now)],
         );
 
-        final firstPending = await repository.takePendingAnnouncements(
-          baselineItems,
-        );
+        final firstPending = await repository
+            .takePendingAnnouncements(baselineItems)
+            .then((result) => result.getOrThrow());
 
         expect(firstPending, isEmpty);
 
@@ -804,12 +810,12 @@ void main() {
           intervals: [_achievementInterval('old-work', now)],
         );
 
-        final secondPending = await repository.takePendingAnnouncements(
-          futureItems,
-        );
-        final thirdPending = await repository.takePendingAnnouncements(
-          futureItems,
-        );
+        final secondPending = await repository
+            .takePendingAnnouncements(futureItems)
+            .then((result) => result.getOrThrow());
+        final thirdPending = await repository
+            .takePendingAnnouncements(futureItems)
+            .then((result) => result.getOrThrow());
 
         expect(secondPending.map((item) => item.id), ['task_5']);
         expect(thirdPending, isEmpty);
@@ -820,24 +826,24 @@ void main() {
   group('pomodoist task retention', () {
     test('local or account Pro disables task history cutoff', () {
       final now = DateTime.utc(2026, 7, 7);
-      final freeOverview = AccountOverview(
-        profile: const AccountProfile(id: 'free'),
-        apps: const [
-          AccountAppSummary(
+      final freeOverview = PomodoistAccountOverview(
+        profile: const PomodoistAccountProfile(id: 'free'),
+        apps: [
+          PomodoistAccountAppSummary(
             id: AccountAppId.pomodoist,
             displayName: 'Pomodoist',
           ),
         ],
         generatedAt: now,
       );
-      final paidOverview = AccountOverview(
-        profile: const AccountProfile(id: 'paid', pomodoistIsPro: true),
-        apps: const [
-          AccountAppSummary(
+      final paidOverview = PomodoistAccountOverview(
+        profile: const PomodoistAccountProfile(id: 'paid', isPro: true),
+        apps: [
+          PomodoistAccountAppSummary(
             id: AccountAppId.pomodoist,
             displayName: 'Pomodoist',
             entitlements: [
-              AccountEntitlement(
+              PomodoistAccountEntitlement(
                 appId: AccountAppId.pomodoist,
                 entitlementId: 'pomodoist_plus',
                 status: 'active',
@@ -908,14 +914,14 @@ void main() {
           expected: false,
         ),
       ]) {
-        final overview = AccountOverview(
-          profile: const AccountProfile(id: 'user'),
+        final overview = PomodoistAccountOverview(
+          profile: const PomodoistAccountProfile(id: 'user'),
           apps: [
-            AccountAppSummary(
+            PomodoistAccountAppSummary(
               id: fixture.appId,
               displayName: fixture.appId,
               entitlements: [
-                AccountEntitlement(
+                PomodoistAccountEntitlement(
                   appId: fixture.appId,
                   entitlementId: 'fixture',
                   status: fixture.status,
@@ -937,19 +943,19 @@ void main() {
 
     test('profile Pro is the canonical account fallback', () {
       final now = DateTime.utc(2026, 7, 7);
-      final profilePro = AccountOverview(
-        profile: const AccountProfile(id: 'pro', pomodoistIsPro: true),
+      final profilePro = PomodoistAccountOverview(
+        profile: const PomodoistAccountProfile(id: 'pro', isPro: true),
         apps: const [],
         generatedAt: now,
       );
-      final legacyEntitlementOnly = AccountOverview(
-        profile: const AccountProfile(id: 'legacy'),
-        apps: const [
-          AccountAppSummary(
+      final legacyEntitlementOnly = PomodoistAccountOverview(
+        profile: const PomodoistAccountProfile(id: 'legacy'),
+        apps: [
+          PomodoistAccountAppSummary(
             id: AccountAppId.pomodoist,
             displayName: 'Pomodoist',
             entitlements: [
-              AccountEntitlement(
+              PomodoistAccountEntitlement(
                 appId: AccountAppId.pomodoist,
                 entitlementId: 'legacy',
                 status: 'active',
@@ -1003,8 +1009,8 @@ void main() {
       addTearDown(container.dispose);
 
       await container
-          .read(reengagementNotificationsEnabledProvider.notifier)
-          .setEnabled(false);
+          .read(settingsViewModelProvider.notifier)
+          .setReengagement(false);
       final prefs = await SharedPreferences.getInstance();
 
       expect(
@@ -1166,15 +1172,15 @@ void main() {
         expect(container.read(quickAddDefaultTimedBlockMinutesProvider), 45);
 
         await container
-            .read(quickAddDefaultTimedBlockMinutesProvider.notifier)
-            .setMinutes(90);
+            .read(taskPreferencesRepositoryProvider)
+            .setQuickAddMinutes(90);
         final prefs = await SharedPreferences.getInstance();
 
         expect(prefs.getInt(quickAddDefaultTimedBlockMinutesPreferenceKey), 90);
 
         await container
-            .read(quickAddDefaultTimedBlockMinutesProvider.notifier)
-            .setMinutes(maxQuickAddTimedBlockMinutes + 1);
+            .read(taskPreferencesRepositoryProvider)
+            .setQuickAddMinutes(maxQuickAddTimedBlockMinutes + 1);
 
         expect(container.read(quickAddDefaultTimedBlockMinutesProvider), 90);
         expect(prefs.getInt(quickAddDefaultTimedBlockMinutesPreferenceKey), 90);
@@ -1223,8 +1229,8 @@ void main() {
         );
 
         await container
-            .read(taskTimeDisplayModeProvider.notifier)
-            .setMode(TaskTimeDisplayMode.startOnly);
+            .read(taskPreferencesRepositoryProvider)
+            .setTimeDisplayMode(TaskTimeDisplayMode.startOnly);
         final prefs = await SharedPreferences.getInstance();
 
         expect(prefs.getString(taskTimeDisplayModePreferenceKey), 'startOnly');
@@ -1352,7 +1358,7 @@ void main() {
 
   group('drift repositories', () {
     late AppDatabase db;
-    late DriftSyncQueueRepository syncQueue;
+    late DriftOutboxService syncQueue;
     late DriftTaskRepository taskRepository;
     late DriftProjectRepository projectRepository;
     late DriftLabelRepository labelRepository;
@@ -1362,7 +1368,7 @@ void main() {
     setUp(() async {
       db = AppDatabase(NativeDatabase.memory());
       await db.ensureSeedData();
-      syncQueue = DriftSyncQueueRepository(db);
+      syncQueue = DriftOutboxService(db);
       kanbanTransitions = KanbanTransitionCoordinator(db, syncQueue);
       taskRepository = DriftTaskRepository(
         db,
@@ -1387,7 +1393,9 @@ void main() {
         final now = DateTime(2026, 9, 13, 12);
         final today = DateTime(2026, 9, 13);
         final tomorrow = today.add(const Duration(days: 1));
-        final project = await projectRepository.createProject('Query project');
+        final project = await projectRepository
+            .createProject('Query project')
+            .then((result) => result.getOrThrow());
         Future<String> seed(
           String title, {
           String status = 'open',
@@ -1396,9 +1404,9 @@ void main() {
           bool deleted = false,
           int? dayOrder,
         }) async {
-          final id = await taskRepository.createTask(
-            CreateTaskInput(content: title, projectId: projectId),
-          );
+          final id = await taskRepository
+              .createTask(CreateTaskInput(content: title, projectId: projectId))
+              .then((result) => result.getOrThrow());
           await (db.update(db.tasks)..where((row) => row.id.equals(id))).write(
             TasksCompanion(
               status: Value(status),
@@ -1476,16 +1484,18 @@ void main() {
     );
 
     test('project icons persist, sync and survive unrelated edits', () async {
-      final id = await projectRepository.createProject('Work');
-      await projectRepository.updateProject(
-        id,
-        const UpdateProjectPatch(icon: 'briefcase'),
-      );
-      await projectRepository.updateProject(
-        id,
-        const UpdateProjectPatch(name: 'Office'),
-      );
-      final project = await projectRepository.findByName('Office');
+      final id = await projectRepository
+          .createProject('Work')
+          .then((result) => result.getOrThrow());
+      await projectRepository
+          .updateProject(id, const UpdateProjectPatch(icon: 'briefcase'))
+          .then((result) => result.getOrThrow());
+      await projectRepository
+          .updateProject(id, const UpdateProjectPatch(name: 'Office'))
+          .then((result) => result.getOrThrow());
+      final project = await projectRepository
+          .findByName('Office')
+          .then((result) => result.getOrThrow());
       expect(project!.icon, 'briefcase');
       final row = await (db.select(
         db.projects,
@@ -1502,30 +1512,40 @@ void main() {
         'briefcase',
       );
       await expectLater(
-        projectRepository.updateProject(
-          id,
-          const UpdateProjectPatch(icon: 'unknown'),
-        ),
+        projectRepository
+            .updateProject(id, const UpdateProjectPatch(icon: 'unknown'))
+            .then((result) => result.getOrThrow()),
         throwsArgumentError,
       );
-      expect((await projectRepository.findByName('Office'))!.icon, 'briefcase');
-      await projectRepository.updateProject(
-        id,
-        const UpdateProjectPatch(icon: 'hash'),
+      expect(
+        (await projectRepository
+                .findByName('Office')
+                .then((result) => result.getOrThrow()))!
+            .icon,
+        'briefcase',
       );
-      expect((await projectRepository.findByName('Office'))!.icon, 'hash');
+      await projectRepository
+          .updateProject(id, const UpdateProjectPatch(icon: 'hash'))
+          .then((result) => result.getOrThrow());
+      expect(
+        (await projectRepository
+                .findByName('Office')
+                .then((result) => result.getOrThrow()))!
+            .icon,
+        'hash',
+      );
     });
 
     test('quick add creates project, task, label, and sync commands', () async {
-      final service = QuickAddService(
+      final service = QuickAddUseCase(
         parser: const QuickAddParser(),
         taskRepository: taskRepository,
         projectRepository: projectRepository,
       );
 
-      final taskId = await service.createTask(
-        'Подготовить релиз today p1 #Work @coding 4p',
-      );
+      final taskId = await service
+          .createTask('Подготовить релиз today p1 #Work @coding 4p')
+          .then((result) => result.getOrThrow());
       final task = await taskRepository.watchTask(taskId).first;
       final commands = await syncQueue.watchPending().first;
 
@@ -1544,14 +1564,22 @@ void main() {
     test(
       'task updates append labels without duplicating their relations',
       () async {
-        final existingLabelId = await labelRepository.createLabel('existing');
-        final taskId = await taskRepository.createTask(
-          const CreateTaskInput(content: 'Task with edited labels'),
-        );
+        final existingLabelId = await labelRepository
+            .createLabel('existing')
+            .then((result) => result.getOrThrow());
+        final taskId = await taskRepository
+            .createTask(
+              const CreateTaskInput(content: 'Task with edited labels'),
+            )
+            .then((result) => result.getOrThrow());
 
         const patch = UpdateTaskPatch(labelNames: ['existing', 'new']);
-        await taskRepository.updateTask(taskId, patch);
-        await taskRepository.updateTask(taskId, patch);
+        await taskRepository
+            .updateTask(taskId, patch)
+            .then((result) => result.getOrThrow());
+        await taskRepository
+            .updateTask(taskId, patch)
+            .then((result) => result.getOrThrow());
 
         final labels = await db.select(db.labels).get();
         final taskLabels = await (db.select(
@@ -1579,29 +1607,34 @@ void main() {
           seriesId: 'source-series',
         ),
       );
-      final rootId = await taskRepository.createTask(
-        CreateTaskInput(
-          content: 'Duplicate root',
-          description: 'Copied description',
-          sectionId: 'section-1',
-          priority: 1,
-          schedule: schedule,
-          deadline: DateTime(2026, 8, 30),
-          durationSeconds: 3600,
-          estimatedFocusIntervals: 3,
-          labelNames: const ['copied'],
-          kanbanStatusId: kanbanStatusTodoId,
-        ),
-      );
-      final childId = await taskRepository.createTask(
-        CreateTaskInput(content: 'Duplicate child', parentId: rootId),
-      );
-      await taskRepository.completeTask(rootId);
+      final rootId = await taskRepository
+          .createTask(
+            CreateTaskInput(
+              content: 'Duplicate root',
+              description: 'Copied description',
+              sectionId: 'section-1',
+              priority: 1,
+              schedule: schedule,
+              deadline: DateTime(2026, 8, 30),
+              durationSeconds: 3600,
+              estimatedFocusIntervals: 3,
+              labelNames: const ['copied'],
+              kanbanStatusId: kanbanStatusTodoId,
+            ),
+          )
+          .then((result) => result.getOrThrow());
+      final childId = await taskRepository
+          .createTask(
+            CreateTaskInput(content: 'Duplicate child', parentId: rootId),
+          )
+          .then((result) => result.getOrThrow());
+      await taskRepository
+          .completeTask(rootId)
+          .then((result) => result.getOrThrow());
 
-      final duplicateIds = await taskRepository.duplicateTasks({
-        rootId,
-        childId,
-      }, includeSubtasks: true);
+      final duplicateIds = await taskRepository
+          .duplicateTasks({rootId, childId}, includeSubtasks: true)
+          .then((result) => result.getOrThrow());
 
       expect(duplicateIds, hasLength(2));
       final copies = [
@@ -1645,16 +1678,18 @@ void main() {
     test(
       'duplicates only explicitly selected tasks without descendants',
       () async {
-        final rootId = await taskRepository.createTask(
-          const CreateTaskInput(content: 'Selected root'),
-        );
-        await taskRepository.createTask(
-          CreateTaskInput(content: 'Unselected child', parentId: rootId),
-        );
+        final rootId = await taskRepository
+            .createTask(const CreateTaskInput(content: 'Selected root'))
+            .then((result) => result.getOrThrow());
+        await taskRepository
+            .createTask(
+              CreateTaskInput(content: 'Unselected child', parentId: rootId),
+            )
+            .then((result) => result.getOrThrow());
 
-        final duplicateIds = await taskRepository.duplicateTasks({
-          rootId,
-        }, includeSubtasks: false);
+        final duplicateIds = await taskRepository
+            .duplicateTasks({rootId}, includeSubtasks: false)
+            .then((result) => result.getOrThrow());
 
         expect(duplicateIds, hasLength(1));
         final copy = await taskRepository.watchTask(duplicateIds.single).first;
@@ -1671,11 +1706,12 @@ void main() {
     );
 
     test('projects assign update and sync palette colors', () async {
-      final automaticId = await projectRepository.createProject('Automatic');
-      final explicitId = await projectRepository.createProject(
-        'Explicit',
-        color: projectColorPalette[4],
-      );
+      final automaticId = await projectRepository
+          .createProject('Automatic')
+          .then((result) => result.getOrThrow());
+      final explicitId = await projectRepository
+          .createProject('Explicit', color: projectColorPalette[4])
+          .then((result) => result.getOrThrow());
 
       var projects = await projectRepository.watchProjects().first;
       final automatic = projects.singleWhere(
@@ -1687,10 +1723,12 @@ void main() {
       expect(automatic.color, projectColorPalette.first);
       expect(explicit.color, projectColorPalette[4]);
 
-      await projectRepository.updateProject(
-        automaticId,
-        UpdateProjectPatch(color: projectColorPalette[7], isFavorite: true),
-      );
+      await projectRepository
+          .updateProject(
+            automaticId,
+            UpdateProjectPatch(color: projectColorPalette[7], isFavorite: true),
+          )
+          .then((result) => result.getOrThrow());
 
       projects = await projectRepository.watchProjects().first;
       final updated = projects.singleWhere(
@@ -1704,19 +1742,33 @@ void main() {
       expect(payload['color'], projectColorPalette[7]);
       expect(payload['isFavorite'], isTrue);
       await expectLater(
-        projectRepository.updateProject(
-          inboxProjectId,
-          UpdateProjectPatch(color: projectColorPalette[1]),
-        ),
+        projectRepository
+            .updateProject(
+              inboxProjectId,
+              UpdateProjectPatch(color: projectColorPalette[1]),
+            )
+            .then((result) => result.getOrThrow()),
         throwsArgumentError,
       );
     });
 
     test('project creation reuses Cyrillic names case-insensitively', () async {
-      final projectId = await projectRepository.createProject('Работа');
+      final projectId = await projectRepository
+          .createProject('Работа')
+          .then((result) => result.getOrThrow());
 
-      expect(await projectRepository.createProject('Работа'), projectId);
-      expect(await projectRepository.createProject('работа'), projectId);
+      expect(
+        await projectRepository
+            .createProject('Работа')
+            .then((result) => result.getOrThrow()),
+        projectId,
+      );
+      expect(
+        await projectRepository
+            .createProject('работа')
+            .then((result) => result.getOrThrow()),
+        projectId,
+      );
 
       final projects = await projectRepository.watchProjects().first;
       expect(
@@ -1731,12 +1783,16 @@ void main() {
     });
 
     test('project rename trims the name and syncs it', () async {
-      final projectId = await projectRepository.createProject('Original');
+      final projectId = await projectRepository
+          .createProject('Original')
+          .then((result) => result.getOrThrow());
 
-      await projectRepository.updateProject(
-        projectId,
-        const UpdateProjectPatch(name: '  Renamed  '),
-      );
+      await projectRepository
+          .updateProject(
+            projectId,
+            const UpdateProjectPatch(name: '  Renamed  '),
+          )
+          .then((result) => result.getOrThrow());
 
       final projects = await projectRepository.watchProjects().first;
       expect(
@@ -1753,15 +1809,21 @@ void main() {
     test(
       'project rename rejects duplicates without queuing an update',
       () async {
-        final projectId = await projectRepository.createProject('Original');
-        await projectRepository.createProject('Existing');
+        final projectId = await projectRepository
+            .createProject('Original')
+            .then((result) => result.getOrThrow());
+        await projectRepository
+            .createProject('Existing')
+            .then((result) => result.getOrThrow());
         final pendingBefore = await syncQueue.watchPending().first;
 
         await expectLater(
-          projectRepository.updateProject(
-            projectId,
-            const UpdateProjectPatch(name: ' existing '),
-          ),
+          projectRepository
+              .updateProject(
+                projectId,
+                const UpdateProjectPatch(name: ' existing '),
+              )
+              .then((result) => result.getOrThrow()),
           throwsArgumentError,
         );
 
@@ -1778,40 +1840,48 @@ void main() {
     );
 
     test('places a task branch on the timeline atomically', () async {
-      final targetProjectId = await projectRepository.createProject('Target');
-      final externalParentId = await taskRepository.createTask(
-        const CreateTaskInput(content: 'External parent'),
-      );
-      final rootId = await taskRepository.createTask(
-        CreateTaskInput(
-          content: 'Move root',
-          parentId: externalParentId,
-          sectionId: 'old-root-section',
-          schedule: TaskSchedule.allDay(DateTime(2026, 7, 9)),
-        ),
-      );
+      final targetProjectId = await projectRepository
+          .createProject('Target')
+          .then((result) => result.getOrThrow());
+      final externalParentId = await taskRepository
+          .createTask(const CreateTaskInput(content: 'External parent'))
+          .then((result) => result.getOrThrow());
+      final rootId = await taskRepository
+          .createTask(
+            CreateTaskInput(
+              content: 'Move root',
+              parentId: externalParentId,
+              sectionId: 'old-root-section',
+              schedule: TaskSchedule.allDay(DateTime(2026, 7, 9)),
+            ),
+          )
+          .then((result) => result.getOrThrow());
       final childSchedule = TaskSchedule.timed(
         start: DateTime(2026, 7, 9, 8),
         end: DateTime(2026, 7, 9, 8, 30),
       );
-      final childId = await taskRepository.createTask(
-        CreateTaskInput(
-          content: 'Move child',
-          parentId: rootId,
-          sectionId: 'old-child-section',
-          schedule: childSchedule,
-        ),
-      );
+      final childId = await taskRepository
+          .createTask(
+            CreateTaskInput(
+              content: 'Move child',
+              parentId: rootId,
+              sectionId: 'old-child-section',
+              schedule: childSchedule,
+            ),
+          )
+          .then((result) => result.getOrThrow());
       final targetSchedule = TaskSchedule.timed(
         start: DateTime(2026, 7, 9, 14),
         end: DateTime(2026, 7, 9, 14, 45),
       );
 
-      await taskRepository.placeTaskOnTimeline(
-        rootId,
-        schedule: targetSchedule,
-        projectId: targetProjectId,
-      );
+      await taskRepository
+          .placeTaskOnTimeline(
+            rootId,
+            schedule: targetSchedule,
+            projectId: targetProjectId,
+          )
+          .then((result) => result.getOrThrow());
 
       final root = await taskRepository.watchTask(rootId).first;
       final child = await taskRepository.watchTask(childId).first;
@@ -1843,27 +1913,38 @@ void main() {
     test(
       'timeline placement keeps a parent already in the target project',
       () async {
-        final targetProjectId = await projectRepository.createProject('Target');
-        final targetParentId = await taskRepository.createTask(
-          CreateTaskInput(content: 'Target parent', projectId: targetProjectId),
-        );
-        final rootId = await taskRepository.createTask(
-          CreateTaskInput(
-            content: 'Move root',
-            parentId: targetParentId,
-            schedule: TaskSchedule.allDay(DateTime(2026, 7, 9)),
-          ),
-        );
+        final targetProjectId = await projectRepository
+            .createProject('Target')
+            .then((result) => result.getOrThrow());
+        final targetParentId = await taskRepository
+            .createTask(
+              CreateTaskInput(
+                content: 'Target parent',
+                projectId: targetProjectId,
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        final rootId = await taskRepository
+            .createTask(
+              CreateTaskInput(
+                content: 'Move root',
+                parentId: targetParentId,
+                schedule: TaskSchedule.allDay(DateTime(2026, 7, 9)),
+              ),
+            )
+            .then((result) => result.getOrThrow());
         final targetSchedule = TaskSchedule.timed(
           start: DateTime(2026, 7, 9, 14),
           end: DateTime(2026, 7, 9, 14, 30),
         );
 
-        await taskRepository.placeTaskOnTimeline(
-          rootId,
-          schedule: targetSchedule,
-          projectId: targetProjectId,
-        );
+        await taskRepository
+            .placeTaskOnTimeline(
+              rootId,
+              schedule: targetSchedule,
+              projectId: targetProjectId,
+            )
+            .then((result) => result.getOrThrow());
 
         final root = await taskRepository.watchTask(rootId).first;
         expect(root!.parentId, targetParentId);
@@ -1875,24 +1956,21 @@ void main() {
     test(
       'quick add default priority yields to explicit priority token',
       () async {
-        final service = QuickAddService(
+        final service = QuickAddUseCase(
           parser: const QuickAddParser(),
           taskRepository: taskRepository,
           projectRepository: projectRepository,
         );
 
-        final defaultPriorityId = await service.createTask(
-          'Default matrix task',
-          priority: 2,
-        );
-        final explicitPriorityId = await service.createTask(
-          'Explicit matrix task p1',
-          priority: 3,
-        );
-        final aliasPriorityId = await service.createTask(
-          'Alias matrix task !!3',
-          priority: 2,
-        );
+        final defaultPriorityId = await service
+            .createTask('Default matrix task', priority: 2)
+            .then((result) => result.getOrThrow());
+        final explicitPriorityId = await service
+            .createTask('Explicit matrix task p1', priority: 3)
+            .then((result) => result.getOrThrow());
+        final aliasPriorityId = await service
+            .createTask('Alias matrix task !!3', priority: 2)
+            .then((result) => result.getOrThrow());
 
         final defaultPriority = await taskRepository
             .watchTask(defaultPriorityId)
@@ -1912,7 +1990,7 @@ void main() {
     );
 
     test('quick add default schedule yields to explicit schedule', () async {
-      final service = QuickAddService(
+      final service = QuickAddUseCase(
         parser: const QuickAddParser(),
         taskRepository: taskRepository,
         projectRepository: projectRepository,
@@ -1922,14 +2000,18 @@ void main() {
         end: DateTime(2026, 5, 4, 10, 30),
       );
 
-      final defaultScheduleId = await service.createTask(
-        'Timeline default slot task',
-        defaultSchedule: defaultSchedule,
-      );
-      final explicitScheduleId = await service.createTask(
-        'Timeline explicit task today 18:00',
-        defaultSchedule: defaultSchedule,
-      );
+      final defaultScheduleId = await service
+          .createTask(
+            'Timeline default slot task',
+            defaultSchedule: defaultSchedule,
+          )
+          .then((result) => result.getOrThrow());
+      final explicitScheduleId = await service
+          .createTask(
+            'Timeline explicit task today 18:00',
+            defaultSchedule: defaultSchedule,
+          )
+          .then((result) => result.getOrThrow());
 
       final defaultTask = await taskRepository
           .watchTask(defaultScheduleId)
@@ -1947,21 +2029,22 @@ void main() {
     test(
       'quick add forwards default date through both creation APIs',
       () async {
-        final service = QuickAddService(
+        final service = QuickAddUseCase(
           parser: const QuickAddParser(),
           taskRepository: taskRepository,
           projectRepository: projectRepository,
         );
         final defaultDate = DateTime(2026, 5, 5, 18);
 
-        final allDayId = await service.createTask(
-          'Contextual all-day task',
-          defaultDate: defaultDate,
-        );
-        final timedContext = await service.createTaskWithContext(
-          'Contextual timed task 09:15',
-          defaultDate: defaultDate,
-        );
+        final allDayId = await service
+            .createTask('Contextual all-day task', defaultDate: defaultDate)
+            .then((result) => result.getOrThrow());
+        final timedContext = await service
+            .createTaskWithContext(
+              'Contextual timed task 09:15',
+              defaultDate: defaultDate,
+            )
+            .then((result) => result.getOrThrow());
 
         final allDay = await taskRepository.watchTask(allDayId).first;
         final timed = await taskRepository.watchTask(timedContext.id).first;
@@ -1974,7 +2057,7 @@ void main() {
     test(
       'quick add schedule precedence is explicit then date then schedule',
       () async {
-        final service = QuickAddService(
+        final service = QuickAddUseCase(
           parser: const QuickAddParser(),
           taskRepository: taskRepository,
           projectRepository: projectRepository,
@@ -1985,20 +2068,26 @@ void main() {
         );
         final defaultDate = DateTime(2026, 5, 5);
 
-        final scheduleOnlyId = await service.createTask(
-          'Default schedule task',
-          defaultSchedule: defaultSchedule,
-        );
-        final contextualId = await service.createTask(
-          'Contextual date task',
-          defaultDate: defaultDate,
-          defaultSchedule: defaultSchedule,
-        );
-        final explicitId = await service.createTask(
-          'Explicit date task 2026-05-06 11:00',
-          defaultDate: defaultDate,
-          defaultSchedule: defaultSchedule,
-        );
+        final scheduleOnlyId = await service
+            .createTask(
+              'Default schedule task',
+              defaultSchedule: defaultSchedule,
+            )
+            .then((result) => result.getOrThrow());
+        final contextualId = await service
+            .createTask(
+              'Contextual date task',
+              defaultDate: defaultDate,
+              defaultSchedule: defaultSchedule,
+            )
+            .then((result) => result.getOrThrow());
+        final explicitId = await service
+            .createTask(
+              'Explicit date task 2026-05-06 11:00',
+              defaultDate: defaultDate,
+              defaultSchedule: defaultSchedule,
+            )
+            .then((result) => result.getOrThrow());
 
         final scheduleOnly = await taskRepository
             .watchTask(scheduleOnlyId)
@@ -2015,16 +2104,22 @@ void main() {
     test(
       'deleting a project moves its tasks to inbox and syncs delete',
       () async {
-        final projectId = await projectRepository.createProject('Delete me');
-        final taskId = await taskRepository.createTask(
-          CreateTaskInput(
-            content: 'Move me',
-            projectId: projectId,
-            sectionId: 'section-1',
-          ),
-        );
+        final projectId = await projectRepository
+            .createProject('Delete me')
+            .then((result) => result.getOrThrow());
+        final taskId = await taskRepository
+            .createTask(
+              CreateTaskInput(
+                content: 'Move me',
+                projectId: projectId,
+                sectionId: 'section-1',
+              ),
+            )
+            .then((result) => result.getOrThrow());
 
-        await projectRepository.deleteProject(projectId);
+        await projectRepository
+            .deleteProject(projectId)
+            .then((result) => result.getOrThrow());
 
         final projects = await projectRepository.watchProjects().first;
         final task = await taskRepository.watchTask(taskId).first;
@@ -2043,17 +2138,21 @@ void main() {
           commands.where((command) => command.type == 'project.delete'),
           isNotEmpty,
         );
-        final replacementProjectId = await projectRepository.createProject(
-          'Delete me',
-        );
+        final replacementProjectId = await projectRepository
+            .createProject('Delete me')
+            .then((result) => result.getOrThrow());
         expect(replacementProjectId, isNot(projectId));
       },
     );
 
     test('deleting a label hides it and syncs delete', () async {
-      final labelId = await labelRepository.createLabel('obsolete');
+      final labelId = await labelRepository
+          .createLabel('obsolete')
+          .then((result) => result.getOrThrow());
 
-      await labelRepository.deleteLabel(labelId);
+      await labelRepository
+          .deleteLabel(labelId)
+          .then((result) => result.getOrThrow());
 
       final labels = await labelRepository.watchLabels().first;
       final commands = await syncQueue.watchPending().first;
@@ -2063,12 +2162,14 @@ void main() {
         commands.where((command) => command.type == 'label.delete'),
         isNotEmpty,
       );
-      final replacementLabelId = await labelRepository.createLabel('obsolete');
+      final replacementLabelId = await labelRepository
+          .createLabel('obsolete')
+          .then((result) => result.getOrThrow());
       expect(replacementLabelId, isNot(labelId));
     });
 
     test('quick add estimates timed tasks from the focus preset', () async {
-      final service = QuickAddService(
+      final service = QuickAddUseCase(
         parser: const QuickAddParser(),
         taskRepository: taskRepository,
         projectRepository: projectRepository,
@@ -2080,7 +2181,9 @@ void main() {
         ),
       );
 
-      final taskId = await service.createTask('Планирование today 10:00 1h');
+      final taskId = await service
+          .createTask('Планирование today 10:00 1h')
+          .then((result) => result.getOrThrow());
       final task = await taskRepository.watchTask(taskId).first;
 
       expect(task!.durationSeconds, 60 * 60);
@@ -2088,7 +2191,7 @@ void main() {
     });
 
     test('quick add uses default timed block duration', () async {
-      final service = QuickAddService(
+      final service = QuickAddUseCase(
         parser: const QuickAddParser(
           defaultTimedBlockDuration: Duration(minutes: 45),
         ),
@@ -2096,7 +2199,9 @@ void main() {
         projectRepository: projectRepository,
       );
 
-      final taskId = await service.createTask('Планирование today 10:00');
+      final taskId = await service
+          .createTask('Планирование today 10:00')
+          .then((result) => result.getOrThrow());
       final task = await taskRepository.watchTask(taskId).first;
 
       expect(task!.durationSeconds, 45 * 60);
@@ -2105,25 +2210,29 @@ void main() {
     test(
       'changing a timed schedule updates stored and queued duration',
       () async {
-        final taskId = await taskRepository.createTask(
-          CreateTaskInput(
-            content: 'Resize block',
-            schedule: TaskSchedule.timed(
-              start: DateTime.utc(2026, 5, 1, 10),
-              end: DateTime.utc(2026, 5, 1, 10, 30),
-            ),
-          ),
-        );
+        final taskId = await taskRepository
+            .createTask(
+              CreateTaskInput(
+                content: 'Resize block',
+                schedule: TaskSchedule.timed(
+                  start: DateTime.utc(2026, 5, 1, 10),
+                  end: DateTime.utc(2026, 5, 1, 10, 30),
+                ),
+              ),
+            )
+            .then((result) => result.getOrThrow());
 
-        await taskRepository.updateTask(
-          taskId,
-          UpdateTaskPatch(
-            schedule: TaskSchedule.timed(
-              start: DateTime.utc(2026, 5, 1, 10),
-              end: DateTime.utc(2026, 5, 1, 11, 30),
-            ),
-          ),
-        );
+        await taskRepository
+            .updateTask(
+              taskId,
+              UpdateTaskPatch(
+                schedule: TaskSchedule.timed(
+                  start: DateTime.utc(2026, 5, 1, 10),
+                  end: DateTime.utc(2026, 5, 1, 11, 30),
+                ),
+              ),
+            )
+            .then((result) => result.getOrThrow());
 
         final task = await taskRepository.watchTask(taskId).first;
         final commands = await syncQueue.watchPending().first;
@@ -2136,24 +2245,28 @@ void main() {
     test(
       'quick add can create subtasks with inherited project and section',
       () async {
-        final service = QuickAddService(
+        final service = QuickAddUseCase(
           parser: const QuickAddParser(),
           taskRepository: taskRepository,
           projectRepository: projectRepository,
         );
 
-        final childId = await service.createTask(
-          'Написать бриф tomorrow p1 @research',
-          parentId: 'parent-1',
-          projectId: 'project-1',
-          sectionId: 'section-1',
-        );
-        final explicitProjectId = await service.createTask(
-          'Заказать мерч #Marketing',
-          parentId: 'parent-1',
-          projectId: 'project-1',
-          sectionId: 'section-1',
-        );
+        final childId = await service
+            .createTask(
+              'Написать бриф tomorrow p1 @research',
+              parentId: 'parent-1',
+              projectId: 'project-1',
+              sectionId: 'section-1',
+            )
+            .then((result) => result.getOrThrow());
+        final explicitProjectId = await service
+            .createTask(
+              'Заказать мерч #Marketing',
+              parentId: 'parent-1',
+              projectId: 'project-1',
+              sectionId: 'section-1',
+            )
+            .then((result) => result.getOrThrow());
 
         final child = await taskRepository.watchTask(childId).first;
         final explicitProject = await taskRepository
@@ -2172,30 +2285,33 @@ void main() {
     );
 
     test('task descriptions create update sync and clear', () async {
-      final taskId = await taskRepository.createTask(
-        const CreateTaskInput(
-          content: 'Task with comment',
-          description: 'Initial comment',
-        ),
-      );
+      final taskId = await taskRepository
+          .createTask(
+            const CreateTaskInput(
+              content: 'Task with comment',
+              description: 'Initial comment',
+            ),
+          )
+          .then((result) => result.getOrThrow());
 
       var task = await taskRepository.watchTask(taskId).first;
       expect(task!.description, 'Initial comment');
 
-      await taskRepository.updateTask(
-        taskId,
-        const UpdateTaskPatch(
-          description: 'Updated comment',
-          updateDescription: true,
-        ),
-      );
+      await taskRepository
+          .updateTask(
+            taskId,
+            const UpdateTaskPatch(
+              description: 'Updated comment',
+              updateDescription: true,
+            ),
+          )
+          .then((result) => result.getOrThrow());
       task = await taskRepository.watchTask(taskId).first;
       expect(task!.description, 'Updated comment');
 
-      await taskRepository.updateTask(
-        taskId,
-        const UpdateTaskPatch(updateDescription: true),
-      );
+      await taskRepository
+          .updateTask(taskId, const UpdateTaskPatch(updateDescription: true))
+          .then((result) => result.getOrThrow());
       task = await taskRepository.watchTask(taskId).first;
       expect(task!.description, isNull);
 
@@ -2222,24 +2338,30 @@ void main() {
     test(
       'moves tasks into parents and keeps subtree project in sync',
       () async {
-        final projectId = await projectRepository.createProject('Work');
-        final parentId = await taskRepository.createTask(
-          const CreateTaskInput(content: 'Parent task'),
-        );
-        final childId = await taskRepository.createTask(
-          const CreateTaskInput(content: 'Child task'),
-        );
-        final grandchildId = await taskRepository.createTask(
-          CreateTaskInput(content: 'Grandchild task', parentId: childId),
-        );
+        final projectId = await projectRepository
+            .createProject('Work')
+            .then((result) => result.getOrThrow());
+        final parentId = await taskRepository
+            .createTask(const CreateTaskInput(content: 'Parent task'))
+            .then((result) => result.getOrThrow());
+        final childId = await taskRepository
+            .createTask(const CreateTaskInput(content: 'Child task'))
+            .then((result) => result.getOrThrow());
+        final grandchildId = await taskRepository
+            .createTask(
+              CreateTaskInput(content: 'Grandchild task', parentId: childId),
+            )
+            .then((result) => result.getOrThrow());
 
-        await taskRepository.moveTask(
-          childId,
-          projectId: projectId,
-          clearSectionId: true,
-          parentId: parentId,
-          orderKey: '999',
-        );
+        await taskRepository
+            .moveTask(
+              childId,
+              projectId: projectId,
+              clearSectionId: true,
+              parentId: parentId,
+              orderKey: '999',
+            )
+            .then((result) => result.getOrThrow());
 
         final child = await taskRepository.watchTask(childId).first;
         final grandchild = await taskRepository.watchTask(grandchildId).first;
@@ -2257,33 +2379,40 @@ void main() {
           containsAll([childId, grandchildId]),
         );
         await expectLater(
-          taskRepository.moveTask(parentId, parentId: grandchildId),
+          taskRepository
+              .moveTask(parentId, parentId: grandchildId)
+              .then((result) => result.getOrThrow()),
           throwsArgumentError,
         );
       },
     );
 
     test('updates collapse state and cascades completion lifecycle', () async {
-      final parentId = await taskRepository.createTask(
-        const CreateTaskInput(content: 'Parent lifecycle'),
-      );
-      final childId = await taskRepository.createTask(
-        CreateTaskInput(content: 'Child lifecycle', parentId: parentId),
-      );
-      final grandchildId = await taskRepository.createTask(
-        CreateTaskInput(content: 'Grandchild lifecycle', parentId: childId),
-      );
+      final parentId = await taskRepository
+          .createTask(const CreateTaskInput(content: 'Parent lifecycle'))
+          .then((result) => result.getOrThrow());
+      final childId = await taskRepository
+          .createTask(
+            CreateTaskInput(content: 'Child lifecycle', parentId: parentId),
+          )
+          .then((result) => result.getOrThrow());
+      final grandchildId = await taskRepository
+          .createTask(
+            CreateTaskInput(content: 'Grandchild lifecycle', parentId: childId),
+          )
+          .then((result) => result.getOrThrow());
 
-      await taskRepository.updateTask(
-        parentId,
-        const UpdateTaskPatch(isCollapsed: true),
-      );
+      await taskRepository
+          .updateTask(parentId, const UpdateTaskPatch(isCollapsed: true))
+          .then((result) => result.getOrThrow());
       expect(
         (await taskRepository.watchTask(parentId).first)!.isCollapsed,
         true,
       );
 
-      await taskRepository.completeTask(parentId);
+      await taskRepository
+          .completeTask(parentId)
+          .then((result) => result.getOrThrow());
       expect(
         (await taskRepository.watchTask(parentId).first)!.isCompleted,
         true,
@@ -2297,7 +2426,9 @@ void main() {
         true,
       );
 
-      await taskRepository.uncompleteTask(parentId);
+      await taskRepository
+          .uncompleteTask(parentId)
+          .then((result) => result.getOrThrow());
       expect(
         (await taskRepository.watchTask(parentId).first)!.isCompleted,
         false,
@@ -2311,7 +2442,9 @@ void main() {
         false,
       );
 
-      await taskRepository.deleteTask(parentId);
+      await taskRepository
+          .deleteTask(parentId)
+          .then((result) => result.getOrThrow());
       final openIds =
           (await taskRepository.watchTasks(const TaskQuery.all()).first).map(
             (task) => task.id,
@@ -2322,15 +2455,19 @@ void main() {
     });
 
     test('delete returns the exact subtree and Undo restores it', () async {
-      final parentId = await taskRepository.createTask(
-        const CreateTaskInput(content: 'Undo parent'),
-      );
-      final childId = await taskRepository.createTask(
-        CreateTaskInput(content: 'Undo child', parentId: parentId),
-      );
+      final parentId = await taskRepository
+          .createTask(const CreateTaskInput(content: 'Undo parent'))
+          .then((result) => result.getOrThrow());
+      final childId = await taskRepository
+          .createTask(
+            CreateTaskInput(content: 'Undo child', parentId: parentId),
+          )
+          .then((result) => result.getOrThrow());
       await db.delete(db.syncCommands).go();
 
-      final batch = await taskRepository.deleteTask(parentId);
+      final batch = await taskRepository
+          .deleteTask(parentId)
+          .then((result) => result.getOrThrow());
 
       expect(batch.taskIds, {parentId, childId});
       expect(batch.undoUntil.isAfter(DateTime.now().toUtc()), isTrue);
@@ -2341,7 +2478,12 @@ void main() {
         everyElement(batch.undoUntil),
       );
 
-      expect(await taskRepository.restoreDeletedTasks(batch), isTrue);
+      expect(
+        await taskRepository
+            .restoreDeletedTasks(batch)
+            .then((result) => result.getOrThrow()),
+        isTrue,
+      );
       expect(
         (await taskRepository.watchTask(parentId).first)!.isDeleted,
         false,
@@ -2351,69 +2493,94 @@ void main() {
     });
 
     test('Undo survives repository restart and expires honestly', () async {
-      final taskId = await taskRepository.createTask(
-        const CreateTaskInput(content: 'Persistent Undo'),
-      );
+      final taskId = await taskRepository
+          .createTask(const CreateTaskInput(content: 'Persistent Undo'))
+          .then((result) => result.getOrThrow());
       await db.delete(db.syncCommands).go();
-      final batch = await taskRepository.deleteTask(taskId);
+      final batch = await taskRepository
+          .deleteTask(taskId)
+          .then((result) => result.getOrThrow());
       final restartedRepository = DriftTaskRepository(db, syncQueue);
 
-      expect(await restartedRepository.restoreDeletedTasks(batch), isTrue);
-
-      final secondBatch = await restartedRepository.deleteTask(taskId);
       expect(
-        await restartedRepository.restoreDeletedTasks(
-          DeletedTaskBatch(
-            taskIds: secondBatch.taskIds,
-            undoUntil: DateTime.now().toUtc().subtract(
-              const Duration(seconds: 1),
-            ),
-          ),
-        ),
+        await restartedRepository
+            .restoreDeletedTasks(batch)
+            .then((result) => result.getOrThrow()),
+        isTrue,
+      );
+
+      final secondBatch = await restartedRepository
+          .deleteTask(taskId)
+          .then((result) => result.getOrThrow());
+      expect(
+        await restartedRepository
+            .restoreDeletedTasks(
+              DeletedTaskBatch(
+                taskIds: secondBatch.taskIds,
+                undoUntil: DateTime.now().toUtc().subtract(
+                  const Duration(seconds: 1),
+                ),
+              ),
+            )
+            .then((result) => result.getOrThrow()),
         isFalse,
       );
     });
 
     test('day query returns only open tasks scheduled for that date', () async {
       final selectedDay = DateTime(2026, 5, 4);
-      final allDayId = await taskRepository.createTask(
-        CreateTaskInput(
-          content: 'All-day selected',
-          schedule: TaskSchedule.allDay(selectedDay),
-        ),
-      );
-      final timedId = await taskRepository.createTask(
-        CreateTaskInput(
-          content: 'Timed selected',
-          schedule: TaskSchedule.timed(
-            start: DateTime(2026, 5, 4, 10),
-            end: DateTime(2026, 5, 4, 11),
-          ),
-        ),
-      );
-      final otherDayId = await taskRepository.createTask(
-        CreateTaskInput(
-          content: 'Other day',
-          schedule: TaskSchedule.allDay(
-            selectedDay.add(const Duration(days: 1)),
-          ),
-        ),
-      );
-      final completedId = await taskRepository.createTask(
-        CreateTaskInput(
-          content: 'Completed selected',
-          schedule: TaskSchedule.allDay(selectedDay),
-        ),
-      );
-      final deletedId = await taskRepository.createTask(
-        CreateTaskInput(
-          content: 'Deleted selected',
-          schedule: TaskSchedule.allDay(selectedDay),
-        ),
-      );
+      final allDayId = await taskRepository
+          .createTask(
+            CreateTaskInput(
+              content: 'All-day selected',
+              schedule: TaskSchedule.allDay(selectedDay),
+            ),
+          )
+          .then((result) => result.getOrThrow());
+      final timedId = await taskRepository
+          .createTask(
+            CreateTaskInput(
+              content: 'Timed selected',
+              schedule: TaskSchedule.timed(
+                start: DateTime(2026, 5, 4, 10),
+                end: DateTime(2026, 5, 4, 11),
+              ),
+            ),
+          )
+          .then((result) => result.getOrThrow());
+      final otherDayId = await taskRepository
+          .createTask(
+            CreateTaskInput(
+              content: 'Other day',
+              schedule: TaskSchedule.allDay(
+                selectedDay.add(const Duration(days: 1)),
+              ),
+            ),
+          )
+          .then((result) => result.getOrThrow());
+      final completedId = await taskRepository
+          .createTask(
+            CreateTaskInput(
+              content: 'Completed selected',
+              schedule: TaskSchedule.allDay(selectedDay),
+            ),
+          )
+          .then((result) => result.getOrThrow());
+      final deletedId = await taskRepository
+          .createTask(
+            CreateTaskInput(
+              content: 'Deleted selected',
+              schedule: TaskSchedule.allDay(selectedDay),
+            ),
+          )
+          .then((result) => result.getOrThrow());
 
-      await taskRepository.completeTask(completedId);
-      await taskRepository.deleteTask(deletedId);
+      await taskRepository
+          .completeTask(completedId)
+          .then((result) => result.getOrThrow());
+      await taskRepository
+          .deleteTask(deletedId)
+          .then((result) => result.getOrThrow());
 
       final tasks = await taskRepository
           .watchTasks(TaskQuery.day(selectedDay))
@@ -2428,33 +2595,37 @@ void main() {
     });
 
     test('materializes due recurring task subtree once', () async {
-      final rootId = await taskRepository.createTask(
-        CreateTaskInput(
-          content: 'Daily root',
-          labelNames: const ['habit'],
-          schedule: TaskSchedule.timed(
-            start: DateTime(2026, 7, 1, 10),
-            end: DateTime(2026, 7, 1, 11),
-            recurrence: const TaskRecurrence(
-              interval: 1,
-              unit: TaskRecurrenceUnit.day,
-              seriesId: 'daily-series',
+      final rootId = await taskRepository
+          .createTask(
+            CreateTaskInput(
+              content: 'Daily root',
+              labelNames: const ['habit'],
+              schedule: TaskSchedule.timed(
+                start: DateTime(2026, 7, 1, 10),
+                end: DateTime(2026, 7, 1, 11),
+                recurrence: const TaskRecurrence(
+                  interval: 1,
+                  unit: TaskRecurrenceUnit.day,
+                  seriesId: 'daily-series',
+                ),
+              ),
             ),
-          ),
-        ),
-      );
-      final childId = await taskRepository.createTask(
-        CreateTaskInput(
-          content: 'Daily child',
-          parentId: rootId,
-          labelNames: const ['child'],
-          schedule: TaskSchedule.allDay(DateTime(2026, 7, 1)),
-        ),
-      );
+          )
+          .then((result) => result.getOrThrow());
+      final childId = await taskRepository
+          .createTask(
+            CreateTaskInput(
+              content: 'Daily child',
+              parentId: rootId,
+              labelNames: const ['child'],
+              schedule: TaskSchedule.allDay(DateTime(2026, 7, 1)),
+            ),
+          )
+          .then((result) => result.getOrThrow());
 
-      await taskRepository.materializeDueRecurringTasks(
-        now: DateTime(2026, 7, 2, 9),
-      );
+      await taskRepository
+          .materializeDueRecurringTasks(now: DateTime(2026, 7, 2, 9))
+          .then((result) => result.getOrThrow());
 
       final oldRoot = await taskRepository.watchTask(rootId).first;
       final oldChild = await taskRepository.watchTask(childId).first;
@@ -2489,9 +2660,9 @@ void main() {
         hasLength(2),
       );
 
-      await taskRepository.materializeDueRecurringTasks(
-        now: DateTime(2026, 7, 2, 9),
-      );
+      await taskRepository
+          .materializeDueRecurringTasks(now: DateTime(2026, 7, 2, 9))
+          .then((result) => result.getOrThrow());
       expect(
         await (db.select(
           db.tasks,
@@ -2503,24 +2674,28 @@ void main() {
     test(
       'completed future recurring task materializes after its date',
       () async {
-        final taskId = await taskRepository.createTask(
-          CreateTaskInput(
-            content: 'Completed early',
-            schedule: TaskSchedule.allDay(
-              DateTime(2026, 7, 5),
-              recurrence: const TaskRecurrence(
-                interval: 1,
-                unit: TaskRecurrenceUnit.day,
-                seriesId: 'early-series',
+        final taskId = await taskRepository
+            .createTask(
+              CreateTaskInput(
+                content: 'Completed early',
+                schedule: TaskSchedule.allDay(
+                  DateTime(2026, 7, 5),
+                  recurrence: const TaskRecurrence(
+                    interval: 1,
+                    unit: TaskRecurrenceUnit.day,
+                    seriesId: 'early-series',
+                  ),
+                ),
               ),
-            ),
-          ),
-        );
-        await taskRepository.completeTask(taskId);
+            )
+            .then((result) => result.getOrThrow());
+        await taskRepository
+            .completeTask(taskId)
+            .then((result) => result.getOrThrow());
 
-        await taskRepository.materializeDueRecurringTasks(
-          now: DateTime(2026, 7, 1, 9),
-        );
+        await taskRepository
+            .materializeDueRecurringTasks(now: DateTime(2026, 7, 1, 9))
+            .then((result) => result.getOrThrow());
 
         final tasks = await taskRepository
             .watchTasks(const TaskQuery.all())
@@ -2539,24 +2714,25 @@ void main() {
     );
 
     test('delete only recurring occurrence creates next copy first', () async {
-      final taskId = await taskRepository.createTask(
-        CreateTaskInput(
-          content: 'Delete one',
-          schedule: TaskSchedule.allDay(
-            DateTime(2030, 1, 1),
-            recurrence: const TaskRecurrence(
-              interval: 1,
-              unit: TaskRecurrenceUnit.day,
-              seriesId: 'delete-one-series',
+      final taskId = await taskRepository
+          .createTask(
+            CreateTaskInput(
+              content: 'Delete one',
+              schedule: TaskSchedule.allDay(
+                DateTime(2030, 1, 1),
+                recurrence: const TaskRecurrence(
+                  interval: 1,
+                  unit: TaskRecurrenceUnit.day,
+                  seriesId: 'delete-one-series',
+                ),
+              ),
             ),
-          ),
-        ),
-      );
+          )
+          .then((result) => result.getOrThrow());
 
-      await taskRepository.deleteRecurringOccurrence(
-        taskId,
-        includeFollowing: false,
-      );
+      await taskRepository
+          .deleteRecurringOccurrence(taskId, includeFollowing: false)
+          .then((result) => result.getOrThrow());
 
       expect((await taskRepository.watchTask(taskId).first)!.isDeleted, isTrue);
       final tasks = await taskRepository
@@ -2569,26 +2745,32 @@ void main() {
     });
 
     test('Undo recurring deletion removes its speculative next copy', () async {
-      final taskId = await taskRepository.createTask(
-        CreateTaskInput(
-          content: 'Undo recurring',
-          schedule: TaskSchedule.allDay(
-            DateTime(2030, 1, 1),
-            recurrence: const TaskRecurrence(
-              interval: 1,
-              unit: TaskRecurrenceUnit.day,
-              seriesId: 'undo-recurring-series',
+      final taskId = await taskRepository
+          .createTask(
+            CreateTaskInput(
+              content: 'Undo recurring',
+              schedule: TaskSchedule.allDay(
+                DateTime(2030, 1, 1),
+                recurrence: const TaskRecurrence(
+                  interval: 1,
+                  unit: TaskRecurrenceUnit.day,
+                  seriesId: 'undo-recurring-series',
+                ),
+              ),
             ),
-          ),
-        ),
-      );
+          )
+          .then((result) => result.getOrThrow());
       await db.delete(db.syncCommands).go();
 
-      final batch = await taskRepository.deleteRecurringOccurrence(
-        taskId,
-        includeFollowing: false,
+      final batch = await taskRepository
+          .deleteRecurringOccurrence(taskId, includeFollowing: false)
+          .then((result) => result.getOrThrow());
+      expect(
+        await taskRepository
+            .restoreDeletedTasks(batch)
+            .then((result) => result.getOrThrow()),
+        isTrue,
       );
-      expect(await taskRepository.restoreDeletedTasks(batch), isTrue);
 
       final matches =
           (await taskRepository.watchTasks(const TaskQuery.all()).first)
@@ -2600,46 +2782,55 @@ void main() {
     });
 
     test('delete following recurring occurrences keeps earlier ones', () async {
-      final previousId = await taskRepository.createTask(
-        CreateTaskInput(
-          content: 'Previous occurrence',
-          schedule: TaskSchedule.allDay(
-            DateTime(2029, 12, 31),
-            recurrenceSeriesId: 'delete-following-series',
-          ),
-        ),
-      );
-      final selectedId = await taskRepository.createTask(
-        CreateTaskInput(
-          content: 'Selected occurrence',
-          schedule: TaskSchedule.allDay(
-            DateTime(2030, 1, 1),
-            recurrenceSeriesId: 'delete-following-series',
-          ),
-        ),
-      );
-      final futureId = await taskRepository.createTask(
-        CreateTaskInput(
-          content: 'Future occurrence',
-          schedule: TaskSchedule.allDay(
-            DateTime(2030, 1, 2),
-            recurrence: const TaskRecurrence(
-              interval: 1,
-              unit: TaskRecurrenceUnit.day,
-              seriesId: 'delete-following-series',
+      final previousId = await taskRepository
+          .createTask(
+            CreateTaskInput(
+              content: 'Previous occurrence',
+              schedule: TaskSchedule.allDay(
+                DateTime(2029, 12, 31),
+                recurrenceSeriesId: 'delete-following-series',
+              ),
             ),
-          ),
-        ),
-      );
-      final childId = await taskRepository.createTask(
-        CreateTaskInput(content: 'Future child', parentId: futureId),
-      );
-      await taskRepository.completeTask(futureId);
+          )
+          .then((result) => result.getOrThrow());
+      final selectedId = await taskRepository
+          .createTask(
+            CreateTaskInput(
+              content: 'Selected occurrence',
+              schedule: TaskSchedule.allDay(
+                DateTime(2030, 1, 1),
+                recurrenceSeriesId: 'delete-following-series',
+              ),
+            ),
+          )
+          .then((result) => result.getOrThrow());
+      final futureId = await taskRepository
+          .createTask(
+            CreateTaskInput(
+              content: 'Future occurrence',
+              schedule: TaskSchedule.allDay(
+                DateTime(2030, 1, 2),
+                recurrence: const TaskRecurrence(
+                  interval: 1,
+                  unit: TaskRecurrenceUnit.day,
+                  seriesId: 'delete-following-series',
+                ),
+              ),
+            ),
+          )
+          .then((result) => result.getOrThrow());
+      final childId = await taskRepository
+          .createTask(
+            CreateTaskInput(content: 'Future child', parentId: futureId),
+          )
+          .then((result) => result.getOrThrow());
+      await taskRepository
+          .completeTask(futureId)
+          .then((result) => result.getOrThrow());
 
-      await taskRepository.deleteRecurringOccurrence(
-        selectedId,
-        includeFollowing: true,
-      );
+      await taskRepository
+          .deleteRecurringOccurrence(selectedId, includeFollowing: true)
+          .then((result) => result.getOrThrow());
 
       expect(
         (await taskRepository.watchTask(previousId).first)!.isDeleted,
@@ -2658,10 +2849,9 @@ void main() {
         isTrue,
       );
 
-      await taskRepository.deleteRecurringOccurrence(
-        selectedId,
-        includeFollowing: true,
-      );
+      await taskRepository
+          .deleteRecurringOccurrence(selectedId, includeFollowing: true)
+          .then((result) => result.getOrThrow());
       expect(
         (await taskRepository.watchTask(previousId).first)!.isDeleted,
         isFalse,
@@ -2669,17 +2859,21 @@ void main() {
     });
 
     test('focus interval completion updates task focus aggregates', () async {
-      final taskId = await taskRepository.createTask(
-        const CreateTaskInput(
-          content: 'Write sync engine',
-          estimatedFocusIntervals: 2,
-        ),
-      );
+      final taskId = await taskRepository
+          .createTask(
+            const CreateTaskInput(
+              content: 'Write sync engine',
+              estimatedFocusIntervals: 2,
+            ),
+          )
+          .then((result) => result.getOrThrow());
 
-      await focusRepository.startRun(
-        StartFocusRunInput(taskId: taskId, targetWorkIntervals: 2),
+      await focusRepository
+          .startRun(StartFocusRunInput(taskId: taskId, targetWorkIntervals: 2))
+          .then((result) => result.getOrThrow());
+      await focusRepository.completeActiveInterval().then(
+        (result) => result.getOrThrow(),
       );
-      await focusRepository.completeActiveInterval();
       final task = await taskRepository.watchTask(taskId).first;
       final activeInterval = await focusRepository.watchActiveInterval().first;
 
@@ -2850,9 +3044,9 @@ void main() {
     test(
       'linked Focus start moves the task to configured focus status',
       () async {
-        final taskId = await taskRepository.createTask(
-          const CreateTaskInput(content: 'Focus this task'),
-        );
+        final taskId = await taskRepository
+            .createTask(const CreateTaskInput(content: 'Focus this task'))
+            .then((result) => result.getOrThrow());
         await db
             .update(db.kanbanSettings)
             .write(
@@ -2862,10 +3056,12 @@ void main() {
             );
         await db.delete(db.syncCommands).go();
 
-        await focusRepository.startRun(
-          StartFocusRunInput(taskId: taskId),
-          now: DateTime.utc(2026, 7, 10, 9),
-        );
+        await focusRepository
+            .startRun(
+              StartFocusRunInput(taskId: taskId),
+              now: DateTime.utc(2026, 7, 10, 9),
+            )
+            .then((result) => result.getOrThrow());
 
         final assignment =
             (await (db.select(
@@ -2882,20 +3078,26 @@ void main() {
     );
 
     test('completed linked Focus rejection preserves the active run', () async {
-      final activeRunId = await focusRepository.startRun(
-        const StartFocusRunInput(),
-        now: DateTime.utc(2026, 7, 10, 8),
-      );
-      final completedTaskId = await taskRepository.createTask(
-        const CreateTaskInput(content: 'Already complete'),
-      );
-      await taskRepository.completeTask(completedTaskId);
+      final activeRunId = await focusRepository
+          .startRun(
+            const StartFocusRunInput(),
+            now: DateTime.utc(2026, 7, 10, 8),
+          )
+          .then((result) => result.getOrThrow());
+      final completedTaskId = await taskRepository
+          .createTask(const CreateTaskInput(content: 'Already complete'))
+          .then((result) => result.getOrThrow());
+      await taskRepository
+          .completeTask(completedTaskId)
+          .then((result) => result.getOrThrow());
 
       await expectLater(
-        focusRepository.startRun(
-          StartFocusRunInput(taskId: completedTaskId),
-          now: DateTime.utc(2026, 7, 10, 9),
-        ),
+        focusRepository
+            .startRun(
+              StartFocusRunInput(taskId: completedTaskId),
+              now: DateTime.utc(2026, 7, 10, 9),
+            )
+            .then((result) => result.getOrThrow()),
         throwsStateError,
       );
 
@@ -3060,14 +3262,18 @@ void main() {
     test(
       'final work interval still creates a break before completing run',
       () async {
-        await focusRepository.startRun(
-          const StartFocusRunInput(
-            presetId: defaultPresetId,
-            targetWorkIntervals: 1,
-          ),
-        );
+        await focusRepository
+            .startRun(
+              const StartFocusRunInput(
+                presetId: defaultPresetId,
+                targetWorkIntervals: 1,
+              ),
+            )
+            .then((result) => result.getOrThrow());
 
-        await focusRepository.completeActiveInterval();
+        await focusRepository.completeActiveInterval().then(
+          (result) => result.getOrThrow(),
+        );
 
         var run = await focusRepository.watchActiveRun().first;
         var interval = await focusRepository.watchActiveInterval().first;
@@ -3077,8 +3283,12 @@ void main() {
         expect(interval!.type, 'shortBreak');
         expect(interval.status, 'ready');
 
-        await focusRepository.startReadyInterval();
-        await focusRepository.completeActiveInterval();
+        await focusRepository.startReadyInterval().then(
+          (result) => result.getOrThrow(),
+        );
+        await focusRepository.completeActiveInterval().then(
+          (result) => result.getOrThrow(),
+        );
 
         run = await focusRepository.watchActiveRun().first;
         interval = await focusRepository.watchActiveInterval().first;
@@ -3098,24 +3308,34 @@ void main() {
           kanbanTransitions: kanbanTransitions,
           onRunCompleted: completions.add,
         );
-        final taskId = await taskRepository.createTask(
-          const CreateTaskInput(content: 'Ship celebration'),
-        );
+        final taskId = await taskRepository
+            .createTask(const CreateTaskInput(content: 'Ship celebration'))
+            .then((result) => result.getOrThrow());
         final completedAt = DateTime.utc(2026, 8, 19, 12);
-        final runId = await repository.startRun(
-          StartFocusRunInput(
-            taskId: taskId,
-            presetId: defaultPresetId,
-            targetWorkIntervals: 1,
-          ),
-        );
+        final runId = await repository
+            .startRun(
+              StartFocusRunInput(
+                taskId: taskId,
+                presetId: defaultPresetId,
+                targetWorkIntervals: 1,
+              ),
+            )
+            .then((result) => result.getOrThrow());
 
-        await repository.completeActiveInterval();
+        await repository.completeActiveInterval().then(
+          (result) => result.getOrThrow(),
+        );
         expect(completions, isEmpty);
 
-        await repository.startReadyInterval();
-        await repository.completeActiveInterval(now: completedAt);
-        await repository.completeActiveInterval(now: completedAt);
+        await repository.startReadyInterval().then(
+          (result) => result.getOrThrow(),
+        );
+        await repository
+            .completeActiveInterval(now: completedAt)
+            .then((result) => result.getOrThrow());
+        await repository
+            .completeActiveInterval(now: completedAt)
+            .then((result) => result.getOrThrow());
 
         expect(completions, hasLength(1));
         expect(completions.single.runId, runId);
@@ -3134,16 +3354,24 @@ void main() {
         _NoopNotificationScheduler(),
         onRunCompleted: (_) => throw StateError('presentation failed'),
       );
-      await repository.startRun(
-        const StartFocusRunInput(
-          presetId: defaultPresetId,
-          targetWorkIntervals: 1,
-        ),
+      await repository
+          .startRun(
+            const StartFocusRunInput(
+              presetId: defaultPresetId,
+              targetWorkIntervals: 1,
+            ),
+          )
+          .then((result) => result.getOrThrow());
+      await repository.completeActiveInterval().then(
+        (result) => result.getOrThrow(),
       );
-      await repository.completeActiveInterval();
-      await repository.startReadyInterval();
+      await repository.startReadyInterval().then(
+        (result) => result.getOrThrow(),
+      );
 
-      await repository.completeActiveInterval();
+      await repository.completeActiveInterval().then(
+        (result) => result.getOrThrow(),
+      );
 
       expect(await repository.watchActiveRun().first, isNull);
       expect(await repository.watchActiveInterval().first, isNull);
@@ -3152,24 +3380,38 @@ void main() {
     test(
       'focus sync queue stays empty until the whole run completes',
       () async {
-        final runId = await focusRepository.startRun(
-          const StartFocusRunInput(
-            presetId: defaultPresetId,
-            targetWorkIntervals: 1,
-          ),
+        final runId = await focusRepository
+            .startRun(
+              const StartFocusRunInput(
+                presetId: defaultPresetId,
+                targetWorkIntervals: 1,
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        await focusRepository.pauseActiveInterval().then(
+          (result) => result.getOrThrow(),
         );
-        await focusRepository.pauseActiveInterval();
-        await focusRepository.resumeActiveInterval();
-        await focusRepository.logDistraction(runId: runId, note: 'Ping');
-        await focusRepository.completeActiveInterval();
-        await focusRepository.startReadyInterval();
+        await focusRepository.resumeActiveInterval().then(
+          (result) => result.getOrThrow(),
+        );
+        await focusRepository
+            .logDistraction(runId: runId, note: 'Ping')
+            .then((result) => result.getOrThrow());
+        await focusRepository.completeActiveInterval().then(
+          (result) => result.getOrThrow(),
+        );
+        await focusRepository.startReadyInterval().then(
+          (result) => result.getOrThrow(),
+        );
 
         var focusCommands = (await syncQueue.watchPending().first)
             .where((command) => command.type.startsWith('focus.'))
             .toList();
         expect(focusCommands, isEmpty);
 
-        await focusRepository.completeActiveInterval();
+        await focusRepository.completeActiveInterval().then(
+          (result) => result.getOrThrow(),
+        );
 
         focusCommands = (await syncQueue.watchPending().first)
             .where((command) => command.type.startsWith('focus.'))
@@ -3182,12 +3424,16 @@ void main() {
     );
 
     test('stopping focus queues only one terminal run command', () async {
-      final runId = await focusRepository.startRun(
-        const StartFocusRunInput(targetWorkIntervals: 2),
+      final runId = await focusRepository
+          .startRun(const StartFocusRunInput(targetWorkIntervals: 2))
+          .then((result) => result.getOrThrow());
+      await focusRepository.pauseActiveInterval().then(
+        (result) => result.getOrThrow(),
       );
-      await focusRepository.pauseActiveInterval();
 
-      await focusRepository.stopActiveRun(reason: StopFocusReason.stopped);
+      await focusRepository
+          .stopActiveRun(reason: StopFocusReason.stopped)
+          .then((result) => result.getOrThrow());
 
       final focusCommands = (await syncQueue.watchPending().first)
           .where((command) => command.type.startsWith('focus.'))
@@ -3206,10 +3452,12 @@ void main() {
       );
 
       for (final reason in StopFocusReason.values) {
-        await repository.startRun(
-          const StartFocusRunInput(targetWorkIntervals: 1),
-        );
-        await repository.stopActiveRun(reason: reason);
+        await repository
+            .startRun(const StartFocusRunInput(targetWorkIntervals: 1))
+            .then((result) => result.getOrThrow());
+        await repository
+            .stopActiveRun(reason: reason)
+            .then((result) => result.getOrThrow());
       }
 
       expect(completions, isEmpty);
@@ -3218,30 +3466,38 @@ void main() {
     test(
       'focus run target follows explicit task and cadence precedence',
       () async {
-        final cadencePresetId = await focusRepository.createPreset(
-          const CreateFocusPresetInput(
-            name: 'Three-step cadence',
-            workSeconds: 25 * 60,
-            shortBreakSeconds: 5 * 60,
-            longBreakSeconds: 15 * 60,
-            intervalsBeforeLongBreak: 3,
-          ),
-        );
-        final estimatedTaskId = await taskRepository.createTask(
-          const CreateTaskInput(
-            content: 'Estimated focus task',
-            estimatedFocusIntervals: 5,
-          ),
-        );
-        final unestimatedTaskId = await taskRepository.createTask(
-          const CreateTaskInput(content: 'Unestimated focus task'),
-        );
+        final cadencePresetId = await focusRepository
+            .createPreset(
+              const CreateFocusPresetInput(
+                name: 'Three-step cadence',
+                workSeconds: 25 * 60,
+                shortBreakSeconds: 5 * 60,
+                longBreakSeconds: 15 * 60,
+                intervalsBeforeLongBreak: 3,
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        final estimatedTaskId = await taskRepository
+            .createTask(
+              const CreateTaskInput(
+                content: 'Estimated focus task',
+                estimatedFocusIntervals: 5,
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        final unestimatedTaskId = await taskRepository
+            .createTask(
+              const CreateTaskInput(content: 'Unestimated focus task'),
+            )
+            .then((result) => result.getOrThrow());
 
         Future<void> expectTarget(
           StartFocusRunInput input,
           int expected,
         ) async {
-          await focusRepository.startRun(input);
+          await focusRepository
+              .startRun(input)
+              .then((result) => result.getOrThrow());
           expect(
             (await focusRepository.watchActiveRun().first)!.targetWorkIntervals,
             expected,
@@ -3275,12 +3531,14 @@ void main() {
     );
 
     test('starts a run with the selected preset', () async {
-      await focusRepository.startRun(
-        const StartFocusRunInput(
-          presetId: deepWorkPresetId,
-          targetWorkIntervals: 2,
-        ),
-      );
+      await focusRepository
+          .startRun(
+            const StartFocusRunInput(
+              presetId: deepWorkPresetId,
+              targetWorkIntervals: 2,
+            ),
+          )
+          .then((result) => result.getOrThrow());
 
       final run = await focusRepository.watchActiveRun().first;
       final interval = await focusRepository.watchActiveInterval().first;
@@ -3291,18 +3549,24 @@ void main() {
     });
 
     test('switches active run preset for future intervals only', () async {
-      await focusRepository.startRun(
-        const StartFocusRunInput(
-          presetId: defaultPresetId,
-          targetWorkIntervals: 2,
-        ),
-      );
+      await focusRepository
+          .startRun(
+            const StartFocusRunInput(
+              presetId: defaultPresetId,
+              targetWorkIntervals: 2,
+            ),
+          )
+          .then((result) => result.getOrThrow());
 
-      await focusRepository.changeActiveRunPreset(deepWorkPresetId);
+      await focusRepository
+          .changeActiveRunPreset(deepWorkPresetId)
+          .then((result) => result.getOrThrow());
       var interval = await focusRepository.watchActiveInterval().first;
       expect(interval!.plannedSeconds, 25 * 60);
 
-      await focusRepository.completeActiveInterval();
+      await focusRepository.completeActiveInterval().then(
+        (result) => result.getOrThrow(),
+      );
       interval = await focusRepository.watchActiveInterval().first;
 
       expect(interval!.type, 'shortBreak');
@@ -3317,32 +3581,38 @@ void main() {
         final deepWork = presets.firstWhere(
           (preset) => preset.id == deepWorkPresetId,
         );
-        await focusRepository.startRun(
-          const StartFocusRunInput(
-            presetId: deepWorkPresetId,
-            targetWorkIntervals: 2,
-          ),
-        );
+        await focusRepository
+            .startRun(
+              const StartFocusRunInput(
+                presetId: deepWorkPresetId,
+                targetWorkIntervals: 2,
+              ),
+            )
+            .then((result) => result.getOrThrow());
 
-        await focusRepository.updatePreset(
-          deepWorkPresetId,
-          UpdateFocusPresetInput(
-            name: deepWork.name,
-            workSeconds: 40 * 60,
-            shortBreakSeconds: 11 * 60,
-            longBreakSeconds: deepWork.longBreakSeconds,
-            intervalsBeforeLongBreak: deepWork.intervalsBeforeLongBreak,
-            autoStartBreaks: deepWork.autoStartBreaks,
-            autoStartWork: deepWork.autoStartWork,
-            allowPause: deepWork.allowPause,
-            strictMode: deepWork.strictMode,
-          ),
-        );
+        await focusRepository
+            .updatePreset(
+              deepWorkPresetId,
+              UpdateFocusPresetInput(
+                name: deepWork.name,
+                workSeconds: 40 * 60,
+                shortBreakSeconds: 11 * 60,
+                longBreakSeconds: deepWork.longBreakSeconds,
+                intervalsBeforeLongBreak: deepWork.intervalsBeforeLongBreak,
+                autoStartBreaks: deepWork.autoStartBreaks,
+                autoStartWork: deepWork.autoStartWork,
+                allowPause: deepWork.allowPause,
+                strictMode: deepWork.strictMode,
+              ),
+            )
+            .then((result) => result.getOrThrow());
 
         var interval = await focusRepository.watchActiveInterval().first;
         expect(interval!.plannedSeconds, 50 * 60);
 
-        await focusRepository.completeActiveInterval();
+        await focusRepository.completeActiveInterval().then(
+          (result) => result.getOrThrow(),
+        );
         interval = await focusRepository.watchActiveInterval().first;
 
         expect(interval!.type, 'shortBreak');
@@ -3351,53 +3621,69 @@ void main() {
     );
 
     test('ready intervals wait when auto-start is disabled', () async {
-      await focusRepository.startRun(
-        const StartFocusRunInput(
-          presetId: defaultPresetId,
-          targetWorkIntervals: 2,
-        ),
+      await focusRepository
+          .startRun(
+            const StartFocusRunInput(
+              presetId: defaultPresetId,
+              targetWorkIntervals: 2,
+            ),
+          )
+          .then((result) => result.getOrThrow());
+      await focusRepository.completeActiveInterval().then(
+        (result) => result.getOrThrow(),
       );
-      await focusRepository.completeActiveInterval();
 
       var interval = await focusRepository.watchActiveInterval().first;
       expect(interval!.status, 'ready');
       expect(interval.plannedSeconds, 5 * 60);
 
-      await focusRepository.startReadyInterval();
+      await focusRepository.startReadyInterval().then(
+        (result) => result.getOrThrow(),
+      );
       interval = await focusRepository.watchActiveInterval().first;
       expect(interval!.status, 'running');
     });
 
     test('allowPause false blocks pausing', () async {
-      final presetId = await focusRepository.createPreset(
-        const CreateFocusPresetInput(
-          name: 'No Pause',
-          workSeconds: 25 * 60,
-          shortBreakSeconds: 5 * 60,
-          longBreakSeconds: 15 * 60,
-          intervalsBeforeLongBreak: 4,
-          allowPause: false,
-        ),
-      );
+      final presetId = await focusRepository
+          .createPreset(
+            const CreateFocusPresetInput(
+              name: 'No Pause',
+              workSeconds: 25 * 60,
+              shortBreakSeconds: 5 * 60,
+              longBreakSeconds: 15 * 60,
+              intervalsBeforeLongBreak: 4,
+              allowPause: false,
+            ),
+          )
+          .then((result) => result.getOrThrow());
 
-      await focusRepository.startRun(
-        StartFocusRunInput(presetId: presetId, targetWorkIntervals: 2),
+      await focusRepository
+          .startRun(
+            StartFocusRunInput(presetId: presetId, targetWorkIntervals: 2),
+          )
+          .then((result) => result.getOrThrow());
+      await focusRepository.pauseActiveInterval().then(
+        (result) => result.getOrThrow(),
       );
-      await focusRepository.pauseActiveInterval();
 
       final interval = await focusRepository.watchActiveInterval().first;
       expect(interval!.status, 'running');
     });
 
     test('pause active interval marks interval and run paused', () async {
-      await focusRepository.startRun(
-        const StartFocusRunInput(
-          presetId: defaultPresetId,
-          targetWorkIntervals: 2,
-        ),
-      );
+      await focusRepository
+          .startRun(
+            const StartFocusRunInput(
+              presetId: defaultPresetId,
+              targetWorkIntervals: 2,
+            ),
+          )
+          .then((result) => result.getOrThrow());
 
-      await focusRepository.pauseActiveInterval();
+      await focusRepository.pauseActiveInterval().then(
+        (result) => result.getOrThrow(),
+      );
 
       final interval = await focusRepository.watchActiveInterval().first;
       final run = await focusRepository.watchActiveRun().first;
@@ -3417,20 +3703,34 @@ void main() {
           soundPlayer: sounds,
         );
 
-        await repository.pauseActiveInterval();
-        await repository.resumeActiveInterval();
-        await repository.completeActiveInterval();
+        await repository.pauseActiveInterval().then(
+          (result) => result.getOrThrow(),
+        );
+        await repository.resumeActiveInterval().then(
+          (result) => result.getOrThrow(),
+        );
+        await repository.completeActiveInterval().then(
+          (result) => result.getOrThrow(),
+        );
         expect(sounds.cues, isEmpty);
 
-        await repository.startRun(
-          const StartFocusRunInput(
-            presetId: defaultPresetId,
-            targetWorkIntervals: 2,
-          ),
+        await repository
+            .startRun(
+              const StartFocusRunInput(
+                presetId: defaultPresetId,
+                targetWorkIntervals: 2,
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        await repository.pauseActiveInterval().then(
+          (result) => result.getOrThrow(),
         );
-        await repository.pauseActiveInterval();
-        await repository.resumeActiveInterval();
-        await repository.completeActiveInterval();
+        await repository.resumeActiveInterval().then(
+          (result) => result.getOrThrow(),
+        );
+        await repository.completeActiveInterval().then(
+          (result) => result.getOrThrow(),
+        );
 
         expect(sounds.cues, [
           FocusSoundCue.start,
@@ -3452,22 +3752,28 @@ void main() {
           notifications,
           soundPlayer: sounds,
         );
-        final presetId = await repository.createPreset(
-          const CreateFocusPresetInput(
-            name: 'Auto breaks',
-            workSeconds: 25 * 60,
-            shortBreakSeconds: 5 * 60,
-            longBreakSeconds: 15 * 60,
-            intervalsBeforeLongBreak: 1,
-            autoStartBreaks: true,
-          ),
-        );
-        final runId = await repository.startRun(
-          StartFocusRunInput(presetId: presetId, targetWorkIntervals: 1),
-        );
+        final presetId = await repository
+            .createPreset(
+              const CreateFocusPresetInput(
+                name: 'Auto breaks',
+                workSeconds: 25 * 60,
+                shortBreakSeconds: 5 * 60,
+                longBreakSeconds: 15 * 60,
+                intervalsBeforeLongBreak: 1,
+                autoStartBreaks: true,
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        final runId = await repository
+            .startRun(
+              StartFocusRunInput(presetId: presetId, targetWorkIntervals: 1),
+            )
+            .then((result) => result.getOrThrow());
         notifications.scheduledBodies.clear();
 
-        await repository.skipActiveInterval();
+        await repository.skipActiveInterval().then(
+          (result) => result.getOrThrow(),
+        );
 
         final run = await repository.watchActiveRun().first;
         final intervals = await repository.watchIntervalsForRun(runId).first;
@@ -3496,23 +3802,31 @@ void main() {
         notifications,
         soundPlayer: sounds,
       );
-      final presetId = await repository.createPreset(
-        const CreateFocusPresetInput(
-          name: 'Auto work',
-          workSeconds: 25 * 60,
-          shortBreakSeconds: 5 * 60,
-          longBreakSeconds: 15 * 60,
-          intervalsBeforeLongBreak: 4,
-          autoStartWork: true,
-        ),
+      final presetId = await repository
+          .createPreset(
+            const CreateFocusPresetInput(
+              name: 'Auto work',
+              workSeconds: 25 * 60,
+              shortBreakSeconds: 5 * 60,
+              longBreakSeconds: 15 * 60,
+              intervalsBeforeLongBreak: 4,
+              autoStartWork: true,
+            ),
+          )
+          .then((result) => result.getOrThrow());
+      final runId = await repository
+          .startRun(
+            StartFocusRunInput(presetId: presetId, targetWorkIntervals: 2),
+          )
+          .then((result) => result.getOrThrow());
+      await repository.completeActiveInterval().then(
+        (result) => result.getOrThrow(),
       );
-      final runId = await repository.startRun(
-        StartFocusRunInput(presetId: presetId, targetWorkIntervals: 2),
-      );
-      await repository.completeActiveInterval();
       notifications.scheduledBodies.clear();
 
-      await repository.skipActiveInterval();
+      await repository.skipActiveInterval().then(
+        (result) => result.getOrThrow(),
+      );
 
       final run = await repository.watchActiveRun().first;
       final intervals = await repository.watchIntervalsForRun(runId).first;
@@ -3533,15 +3847,21 @@ void main() {
     });
 
     test('skipping the final break completes the focus run', () async {
-      final runId = await focusRepository.startRun(
-        const StartFocusRunInput(
-          presetId: defaultPresetId,
-          targetWorkIntervals: 1,
-        ),
+      final runId = await focusRepository
+          .startRun(
+            const StartFocusRunInput(
+              presetId: defaultPresetId,
+              targetWorkIntervals: 1,
+            ),
+          )
+          .then((result) => result.getOrThrow());
+      await focusRepository.completeActiveInterval().then(
+        (result) => result.getOrThrow(),
       );
-      await focusRepository.completeActiveInterval();
 
-      await focusRepository.skipActiveInterval();
+      await focusRepository.skipActiveInterval().then(
+        (result) => result.getOrThrow(),
+      );
 
       expect(await focusRepository.watchActiveRun().first, isNull);
       expect(await focusRepository.watchActiveInterval().first, isNull);
@@ -3567,16 +3887,24 @@ void main() {
         onRunCompleted: completions.add,
       );
       final completedAt = DateTime.utc(2026, 8, 19, 13);
-      final runId = await repository.startRun(
-        const StartFocusRunInput(
-          presetId: defaultPresetId,
-          targetWorkIntervals: 1,
-        ),
+      final runId = await repository
+          .startRun(
+            const StartFocusRunInput(
+              presetId: defaultPresetId,
+              targetWorkIntervals: 1,
+            ),
+          )
+          .then((result) => result.getOrThrow());
+      await repository.completeActiveInterval().then(
+        (result) => result.getOrThrow(),
       );
-      await repository.completeActiveInterval();
 
-      await repository.skipActiveInterval(now: completedAt);
-      await repository.skipActiveInterval(now: completedAt);
+      await repository
+          .skipActiveInterval(now: completedAt)
+          .then((result) => result.getOrThrow());
+      await repository
+          .skipActiveInterval(now: completedAt)
+          .then((result) => result.getOrThrow());
 
       expect(completions, hasLength(1));
       expect(completions.single.runId, runId);
@@ -3595,15 +3923,21 @@ void main() {
         _NoopNotificationScheduler(),
         soundPlayer: sounds,
       );
-      await repository.startRun(
-        const StartFocusRunInput(
-          presetId: defaultPresetId,
-          targetWorkIntervals: 1,
-        ),
+      await repository
+          .startRun(
+            const StartFocusRunInput(
+              presetId: defaultPresetId,
+              targetWorkIntervals: 1,
+            ),
+          )
+          .then((result) => result.getOrThrow());
+      await repository.completeActiveInterval().then(
+        (result) => result.getOrThrow(),
       );
-      await repository.completeActiveInterval();
 
-      await repository.skipActiveInterval();
+      await repository.skipActiveInterval().then(
+        (result) => result.getOrThrow(),
+      );
 
       expect(sounds.cues, [
         FocusSoundCue.start,
@@ -3620,28 +3954,36 @@ void main() {
         _NoopNotificationScheduler(),
         onRunCompleted: completions.add,
       );
-      final presetId = await focusRepository.createPreset(
-        const CreateFocusPresetInput(
-          name: 'Strict',
-          workSeconds: 25 * 60,
-          shortBreakSeconds: 5 * 60,
-          longBreakSeconds: 15 * 60,
-          intervalsBeforeLongBreak: 4,
-          strictMode: true,
-        ),
-      );
+      final presetId = await focusRepository
+          .createPreset(
+            const CreateFocusPresetInput(
+              name: 'Strict',
+              workSeconds: 25 * 60,
+              shortBreakSeconds: 5 * 60,
+              longBreakSeconds: 15 * 60,
+              intervalsBeforeLongBreak: 4,
+              strictMode: true,
+            ),
+          )
+          .then((result) => result.getOrThrow());
 
-      final runId = await repository.startRun(
-        StartFocusRunInput(presetId: presetId, targetWorkIntervals: 2),
+      final runId = await repository
+          .startRun(
+            StartFocusRunInput(presetId: presetId, targetWorkIntervals: 2),
+          )
+          .then((result) => result.getOrThrow());
+      await repository.skipActiveInterval().then(
+        (result) => result.getOrThrow(),
       );
-      await repository.skipActiveInterval();
 
       var interval = await repository.watchActiveInterval().first;
       expect(interval!.status, 'running');
       expect(interval.type, 'work');
       expect(await repository.watchIntervalsForRun(runId).first, hasLength(1));
 
-      await repository.completeActiveInterval();
+      await repository.completeActiveInterval().then(
+        (result) => result.getOrThrow(),
+      );
 
       interval = await repository.watchActiveInterval().first;
       expect(interval!.status, 'running');

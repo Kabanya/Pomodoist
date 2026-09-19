@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/billing/billing.dart';
-import 'package:pomodoist/features/settings/presentation/settings_subscription.dart';
+import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_subscription.dart';
 
 void main() {
   test('loading and failed lookups do not claim a Free subscription', () {

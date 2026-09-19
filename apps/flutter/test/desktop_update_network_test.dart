@@ -6,10 +6,10 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/updates/github_update_source.dart';
-import 'package:pomodoist/features/updates/update_contracts.dart';
-import 'package:pomodoist/features/updates/update_downloader_io.dart';
-import 'package:pomodoist/features/updates/update_release.dart';
+import 'package:pomodoist/data/services/updates/github_update_source.dart';
+import 'package:pomodoist/domain/models/updates/update_contracts.dart';
+import 'package:pomodoist/data/services/updates/update_downloader_io.dart';
+import 'package:pomodoist/domain/models/updates/update_release.dart';
 
 import 'desktop_update_release_test.dart' as fixtures;
 

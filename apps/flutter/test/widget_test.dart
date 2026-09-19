@@ -1,27 +1,34 @@
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/data/repositories/focus/focus_preferences.dart';
+import 'package:pomodoist/utils/result.dart';
+import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
 import 'support/test_app.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadSwitch;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pomodoist/app/app.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/app/config/app_theme_mode.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/widgets/action_feedback.dart';
-import 'package:pomodoist/app/widgets/adaptive_shell.dart';
-import 'package:pomodoist/app/widgets/mini_focus_player.dart';
-import 'package:pomodoist/app/widgets/resizable_dialog.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/core/db/app_database.dart' hide FocusDailyStats;
-import 'package:pomodoist/core/notifications/notification_scheduler.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/focus/presentation/focus_screen.dart';
-import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
-import 'package:pomodoist/features/productivity/domain/achievement_models.dart';
-import 'package:pomodoist/features/productivity/presentation/achievement_announcements.dart';
-import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
-import 'package:pomodoist/features/settings/presentation/settings_navigation.dart';
+import 'package:pomodoist/ui/core/widgets/pomodoist_app.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/ui/core/view_models/app_theme_mode_view_model.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/config/productivity_dependencies.dart';
+import 'package:pomodoist/domain/models/settings/task_preferences.dart';
+import 'package:pomodoist/ui/core/widgets/action_feedback.dart';
+import 'package:pomodoist/ui/core/widgets/adaptive_shell.dart';
+import 'package:pomodoist/ui/core/widgets/mini_focus_player.dart';
+import 'package:pomodoist/ui/core/widgets/resizable_dialog.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart'
+    hide FocusDailyStats;
+import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
+import 'package:pomodoist/ui/focus/widgets/focus_screen.dart';
+import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
+import 'package:pomodoist/config/focus_dependencies.dart';
+import 'package:pomodoist/domain/models/productivity/achievement_models.dart';
+import 'package:pomodoist/ui/productivity/widgets/achievement_announcements.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_screen.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_navigation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -282,8 +289,9 @@ void main() {
         child: _AchievementAnnouncementHarness(item: _focusAchievement),
       ),
     );
-    await tester.pump();
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     expect(find.byKey(const Key('achievement-global-banner')), findsOneWidget);
     expect(find.byKey(const Key('achievement-bottom-plaque')), findsNothing);
@@ -296,8 +304,9 @@ void main() {
         child: _AchievementAnnouncementHarness(item: _comboAchievement),
       ),
     );
-    await tester.pump();
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     expect(find.byKey(const Key('achievement-bottom-plaque')), findsOneWidget);
     expect(find.byKey(const Key('achievement-global-banner')), findsNothing);
@@ -316,7 +325,9 @@ void main() {
         child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     expect(find.text('Focus'), findsOneWidget);
     expect(find.text('No active session'), findsOneWidget);
@@ -342,7 +353,9 @@ void main() {
         child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     await tester.tap(find.byKey(ValueKey('preset-choice-$deepWorkPresetId')));
     await tester.pump();
@@ -363,7 +376,9 @@ void main() {
         child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     await tester.tap(find.byKey(ValueKey('preset-choice-$deepWorkPresetId')));
     await tester.pumpAndSettle();
@@ -386,7 +401,9 @@ void main() {
         child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     expect(find.text('No active session'), findsNothing);
     expect(find.byKey(const Key('minimal-preset-menu')), findsOneWidget);
@@ -463,7 +480,9 @@ void main() {
         child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     await tester.tap(find.byKey(const Key('minimal-preset-menu')));
     await tester.pumpAndSettle();
@@ -486,7 +505,9 @@ void main() {
         child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     expect(find.byKey(const Key('focus-load-error')), findsOneWidget);
     expect(find.textContaining('presets failed'), findsOneWidget);
@@ -509,7 +530,9 @@ void main() {
         child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     expect(find.byKey(const Key('focus-loading')), findsNothing);
     expect(find.byType(LinearProgressIndicator), findsNothing);
@@ -547,8 +570,8 @@ void main() {
       expect(firstContainer.read(focusViewModeProvider), FocusViewMode.minimal);
 
       await firstContainer
-          .read(focusViewModeProvider.notifier)
-          .setMode(FocusViewMode.full);
+          .read(focusPreferencesRepositoryProvider)
+          .setViewMode(FocusViewMode.full);
       firstContainer.dispose();
 
       final secondContainer = ProviderContainer();
@@ -575,8 +598,8 @@ void main() {
       );
 
       await firstContainer
-          .read(focusTimerVisualStyleProvider.notifier)
-          .setStyle(FocusTimerVisualStyle.bar);
+          .read(focusPreferencesRepositoryProvider)
+          .setTimerStyle(FocusTimerVisualStyle.bar);
       firstContainer.dispose();
 
       final secondContainer = ProviderContainer();
@@ -1130,8 +1153,9 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     expect(remaining, Duration.zero);
     expect(fake.completeCount, 1);
@@ -1255,7 +1279,9 @@ void main() {
         child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     await tester.tap(find.text('New preset'));
     await tester.pumpAndSettle();
@@ -1282,7 +1308,9 @@ void main() {
         child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     await tester.tap(find.text('Customize'));
     await tester.pumpAndSettle();
@@ -1306,7 +1334,9 @@ void main() {
         child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     await tester.tap(find.text('New preset'));
     await tester.pumpAndSettle();
@@ -1377,8 +1407,9 @@ void main() {
         child: const MaterialApp(builder: testAppBuilder, home: FocusScreen()),
       ),
     );
-    await tester.pump();
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
     await tester.pump();
 
     final menu = find.byKey(const Key('focus-details-menu'));
@@ -1616,7 +1647,7 @@ class _AchievementAnnouncementHarnessState
       if (!mounted) {
         return;
       }
-      ref.read(achievementAnnouncementControllerProvider.notifier).enqueue([
+      ref.read(achievementAnnouncementRepositoryProvider).enqueue([
         widget.item,
       ]);
     });
@@ -1738,63 +1769,74 @@ class _FakeFocusRepository implements FocusRepository {
   }
 
   @override
-  Future<String> createPreset(CreateFocusPresetInput input) async {
-    createdPreset = input;
-    return 'created';
-  }
+  Future<Result<String>> createPreset(CreateFocusPresetInput input) =>
+      Result.capture<String>(() async {
+        createdPreset = input;
+        return 'created';
+      });
 
   @override
-  Future<void> updatePreset(String id, UpdateFocusPresetInput input) async {}
+  Future<Result<void>> updatePreset(String id, UpdateFocusPresetInput input) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> deletePreset(String id) async {}
+  Future<Result<void>> deletePreset(String id) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> setDefaultPreset(String id) async {}
+  Future<Result<void>> setDefaultPreset(String id) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> changeActiveRunPreset(String presetId) async {
-    changedPresetId = presetId;
-  }
+  Future<Result<void>> changeActiveRunPreset(String presetId) =>
+      Result.capture<void>(() async {
+        changedPresetId = presetId;
+      });
 
   @override
-  Future<String> startRun(StartFocusRunInput input, {DateTime? now}) async =>
-      'run';
+  Future<Result<String>> startRun(StartFocusRunInput input, {DateTime? now}) =>
+      Result.capture<String>(() async => 'run');
 
   @override
-  Future<void> startReadyInterval() async {
+  Future<Result<void>> startReadyInterval() => Result.capture<void>(() async {
     startReadyCount++;
-  }
+  });
 
   @override
-  Future<void> pauseActiveInterval({DateTime? now}) async {
-    pauseCount++;
-  }
+  Future<Result<void>> pauseActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {
+        pauseCount++;
+      });
 
   @override
-  Future<void> resumeActiveInterval({DateTime? now}) async {}
+  Future<Result<void>> resumeActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> restartActiveInterval({DateTime? now}) async {}
+  Future<Result<void>> restartActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> completeActiveInterval({DateTime? now}) async {
-    completeCount++;
-  }
+  Future<Result<void>> completeActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {
+        completeCount++;
+      });
 
   @override
-  Future<void> skipActiveInterval({DateTime? now}) async {}
+  Future<Result<void>> skipActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> stopActiveRun({
+  Future<Result<void>> stopActiveRun({
     required StopFocusReason reason,
     DateTime? now,
-  }) async {
+  }) => Result.capture<void>(() async {
     stopReasons.add(reason);
-  }
+  });
 
   @override
-  Future<void> logDistraction({required String runId, String? note}) async {}
+  Future<Result<void>> logDistraction({required String runId, String? note}) =>
+      Result.capture<void>(() async {});
 }
 
 final _defaultPresets = [

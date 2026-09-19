@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/runtime_public_config.dart';
-import 'package:pomodoist/features/updates/update_providers.dart';
-import 'package:pomodoist/features/updates/update_release.dart';
+import 'package:pomodoist/config/runtime_public_config.dart';
+import 'package:pomodoist/config/update_dependencies.dart';
+import 'package:pomodoist/domain/models/updates/update_release.dart';
 
 import 'desktop_update_controller_test.dart' as support;
 

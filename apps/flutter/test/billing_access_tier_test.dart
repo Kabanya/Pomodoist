@@ -1,6 +1,6 @@
 import 'package:app_account/app_account.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/billing/billing.dart';
+import 'package:pomodoist/config/billing_dependencies.dart';
 
 void main() {
   group('billingAccessTier', () {
@@ -25,7 +25,7 @@ void main() {
         billingAccessTier(
           const BillingState(
             accountEntitlementActive: true,
-            activeAccountEntitlement: AccountEntitlement(
+            activeAccountEntitlement: BillingEntitlement(
               appId: AccountAppId.pomodoist,
               entitlementId: 'stripe:annual',
               status: 'active',
@@ -44,7 +44,7 @@ void main() {
         billingAccessTier(
           const BillingState(
             accountEntitlementActive: true,
-            activeAccountEntitlement: AccountEntitlement(
+            activeAccountEntitlement: BillingEntitlement(
               appId: AccountAppId.pomodoist,
               entitlementId: 'manual:lifetime',
               status: 'active',
@@ -62,7 +62,7 @@ void main() {
         billingAccessTier(
           const BillingState(
             accountEntitlementActive: true,
-            activeAccountEntitlement: AccountEntitlement(
+            activeAccountEntitlement: BillingEntitlement(
               appId: AccountAppId.pomodoist,
               entitlementId: 'stripe:legacy',
               status: 'active',

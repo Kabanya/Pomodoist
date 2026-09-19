@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/runtime_public_config.dart';
+import 'package:pomodoist/config/runtime_public_config.dart';
 
 const _release = '0123456789abcdef0123456789abcdef01234567';
 

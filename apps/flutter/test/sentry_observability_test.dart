@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/runtime_public_config.dart';
-import 'package:pomodoist/app/config/sentry_observability.dart';
+import 'package:pomodoist/config/runtime_public_config.dart';
+import 'package:pomodoist/config/sentry_observability.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 void main() {

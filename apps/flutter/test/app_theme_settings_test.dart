@@ -4,9 +4,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/app/theme/app_theme_settings.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/ui/settings/view_models/theme_settings_view_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pomodoist/data/repositories/settings/preferences_repository.dart';
+import 'package:pomodoist/data/services/local/preferences_service.dart';
 // Replace only disk writes to exercise persistence failures.
 // ignore: depend_on_referenced_packages
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
@@ -257,7 +259,11 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           appThemePreferencesProvider.overrideWithValue(
-            () => fail ? pending.future : SharedPreferences.getInstance(),
+            PreferencesRepository(
+              PreferencesService(
+                () => fail ? pending.future : SharedPreferences.getInstance(),
+              ),
+            ),
           ),
         ],
       );

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/tasks/presentation/widgets/voice_quick_add_session.dart';
+import 'package:pomodoist/ui/tasks/widgets/voice_quick_add_session.dart';
 
 void main() {
   test(

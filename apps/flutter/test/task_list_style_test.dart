@@ -1,9 +1,10 @@
+import 'package:pomodoist/config/task_preferences_dependencies.dart';
+import 'package:pomodoist/domain/models/settings/task_preferences.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
+import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -26,8 +27,8 @@ void main() {
           stored == 'classic' ? TaskListStyle.classic : TaskListStyle.modern,
         );
         await container
-            .read(taskListStyleProvider.notifier)
-            .setStyle(TaskListStyle.classic);
+            .read(taskPreferencesRepositoryProvider)
+            .setListStyle(TaskListStyle.classic);
         expect(
           (await SharedPreferences.getInstance()).getString(
             taskListStylePreferenceKey,
@@ -51,8 +52,8 @@ void main() {
     addTearDown(container.dispose);
     container.read(taskListStyleProvider);
     final save = container
-        .read(taskListStyleProvider.notifier)
-        .setStyle(TaskListStyle.modern);
+        .read(taskPreferencesRepositoryProvider)
+        .setListStyle(TaskListStyle.modern);
     loading.complete(await SharedPreferences.getInstance());
     await save;
     expect(container.read(taskListStyleProvider), TaskListStyle.modern);

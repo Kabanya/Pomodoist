@@ -195,7 +195,7 @@ function achievementCopy(
   };
 }
 
-// Keep localized copy aligned with lib/l10n/app_{locale}.arb; IDs remain shared.
+// Keep localized copy aligned with lib/ui/core/localization/app_{locale}.arb; IDs remain shared.
 const achievementTranslations: Record<"pt" | "ja" | "ko", {
   titles: Record<string, string>;
   focusSubtitle: (count: number) => string;

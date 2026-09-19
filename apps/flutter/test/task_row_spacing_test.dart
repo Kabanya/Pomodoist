@@ -1,9 +1,10 @@
+import 'package:pomodoist/config/task_preferences_dependencies.dart';
+import 'package:pomodoist/domain/models/settings/task_preferences.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
+import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // Replace disk writes to exercise the same persistence failure path as themes.
 // ignore: depend_on_referenced_packages
@@ -48,8 +49,8 @@ void main() {
       final container = await loadedContainer();
       for (final spacing in TaskRowSpacing.values) {
         await container
-            .read(taskRowSpacingProvider.notifier)
-            .setSpacing(spacing);
+            .read(taskPreferencesRepositoryProvider)
+            .setRowSpacing(spacing);
         expect(container.read(taskRowSpacingProvider), spacing);
         expect(
           (await SharedPreferences.getInstance()).getString(
@@ -77,8 +78,8 @@ void main() {
       addTearDown(container.dispose);
       container.read(taskRowSpacingProvider);
       final save = container
-          .read(taskRowSpacingProvider.notifier)
-          .setSpacing(TaskRowSpacing.comfortable);
+          .read(taskPreferencesRepositoryProvider)
+          .setRowSpacing(TaskRowSpacing.comfortable);
       loading.complete(await SharedPreferences.getInstance());
       await save;
       expect(
@@ -98,13 +99,13 @@ void main() {
     'spacing and row style remain independent when changed and restored',
     () async {
       final container = await loadedContainer();
-      final styles = container.read(taskListStyleProvider.notifier);
-      await styles.setStyle(TaskListStyle.classic);
+      final styles = container.read(taskPreferencesRepositoryProvider);
+      await styles.setListStyle(TaskListStyle.classic);
       await container
-          .read(taskRowSpacingProvider.notifier)
-          .setSpacing(TaskRowSpacing.spacious);
+          .read(taskPreferencesRepositoryProvider)
+          .setRowSpacing(TaskRowSpacing.spacious);
       expect(container.read(taskListStyleProvider), TaskListStyle.classic);
-      await styles.setStyle(TaskListStyle.modern);
+      await styles.setListStyle(TaskListStyle.modern);
       expect(container.read(taskRowSpacingProvider), TaskRowSpacing.spacious);
       final restored = await loadedContainer();
       restored.read(taskListStyleProvider);
@@ -124,10 +125,12 @@ void main() {
       addTearDown(
         () => SharedPreferencesStorePlatform.instance = originalStore,
       );
-      final controller = container.read(taskRowSpacingProvider.notifier);
+      final controller = container.read(taskPreferencesRepositoryProvider);
 
       await expectLater(
-        controller.setSpacing(TaskRowSpacing.compact),
+        controller
+            .setRowSpacing(TaskRowSpacing.compact)
+            .then((result) => result.getOrThrow()),
         throwsStateError,
       );
       expect(container.read(taskRowSpacingProvider), TaskRowSpacing.compact);
@@ -136,7 +139,7 @@ void main() {
         isNull,
       );
       store.fail = false;
-      await controller.setSpacing(TaskRowSpacing.compact);
+      await controller.setRowSpacing(TaskRowSpacing.compact);
       expect(
         (await store.getAll())['flutter.$taskRowSpacingPreferenceKey'],
         'compact',
@@ -150,8 +153,8 @@ void main() {
     );
     addTearDown(container.dispose);
     await container
-        .read(taskRowSpacingProvider.notifier)
-        .setSpacing(TaskRowSpacing.spacious);
+        .read(taskPreferencesRepositoryProvider)
+        .setRowSpacing(TaskRowSpacing.spacious);
     expect(container.read(taskRowSpacingProvider), TaskRowSpacing.spacious);
   });
 
@@ -174,8 +177,9 @@ void main() {
       );
       await expectLater(
         container
-            .read(taskRowSpacingProvider.notifier)
-            .setSpacing(TaskRowSpacing.spacious),
+            .read(taskPreferencesRepositoryProvider)
+            .setRowSpacing(TaskRowSpacing.spacious)
+            .then((result) => result.getOrThrow()),
         throwsStateError,
       );
       expect(container.read(taskRowSpacingProvider), TaskRowSpacing.spacious);

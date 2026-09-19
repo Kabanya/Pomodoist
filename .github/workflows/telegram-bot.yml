@@ -5,8 +5,8 @@ on:
     paths:
       - 'server/supabase/**'
       - 'apps/telegram-mini-app/**'
-      - 'apps/flutter/lib/l10n/app_en.arb'
-      - 'apps/flutter/lib/l10n/app_ru.arb'
+      - 'apps/flutter/lib/ui/core/localization/app_en.arb'
+      - 'apps/flutter/lib/ui/core/localization/app_ru.arb'
       - 'server/compose.telegram.yaml'
       - 'tool/*telegram*'
       - '.github/workflows/telegram-bot.yml'
@@ -15,8 +15,8 @@ on:
     paths:
       - 'server/supabase/**'
       - 'apps/telegram-mini-app/**'
-      - 'apps/flutter/lib/l10n/app_en.arb'
-      - 'apps/flutter/lib/l10n/app_ru.arb'
+      - 'apps/flutter/lib/ui/core/localization/app_en.arb'
+      - 'apps/flutter/lib/ui/core/localization/app_ru.arb'
       - 'server/compose.telegram.yaml'
       - 'tool/*telegram*'
       - '.github/workflows/telegram-bot.yml'

@@ -3,10 +3,18 @@ import 'dart:convert';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/features/tasks/data/csv_task_import.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/data/repositories/kanban/kanban_repository_impl.dart';
+import 'package:pomodoist/data/repositories/labels/label_repository_impl.dart';
+import 'package:pomodoist/data/repositories/projects/project_repository_impl.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
+import 'package:pomodoist/data/services/local/kanban_transition_coordinator.dart';
+import 'package:pomodoist/domain/models/tasks/csv_task_import.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/domain/use_cases/tasks/csv_task_import_use_case.dart';
+import 'package:pomodoist/utils/result.dart';
+import 'package:uuid/uuid.dart';
 
 void main() {
   test('parses the complete pomodoist_csv_v1 contract', () {
@@ -186,12 +194,12 @@ content,priority,due_date,start_at,end_at,time_zone,recurrence,recurrence_interv
 
   group('CsvTaskImporter', () {
     late AppDatabase db;
-    late DriftSyncQueueRepository syncQueue;
+    late DriftOutboxService syncQueue;
 
     setUp(() async {
       db = AppDatabase(NativeDatabase.memory());
       await db.ensureSeedData();
-      syncQueue = DriftSyncQueueRepository(db);
+      syncQueue = DriftOutboxService(db);
     });
 
     tearDown(() => db.close());
@@ -199,14 +207,14 @@ content,priority,due_date,start_at,end_at,time_zone,recurrence,recurrence_interv
     test(
       'previews and atomically imports projects, labels and statuses',
       () async {
-        final importer = CsvTaskImporter(db, syncQueue);
-        final preview = await importer.prepare(
+        final importer = _importer(db, syncQueue);
+        final preview = (await importer.prepare(
           utf8.encode(
             'key,content,project,labels,kanban_status,parent_key,recurrence,due_date\n'
             'child,Child,,Urgent,Waiting,parent,,\n'
             'parent,Parent,Work,Planning|urgent,Waiting,,week,2026-08-10\n',
           ),
-        );
+        )).getOrThrow();
 
         expect(preview.taskCount, 2);
         expect(preview.subtaskCount, 1);
@@ -215,7 +223,7 @@ content,priority,due_date,start_at,end_at,time_zone,recurrence,recurrence_interv
         expect(preview.newKanbanStatuses, ['Waiting']);
         expect(await db.select(db.tasks).get(), isEmpty);
 
-        final result = await importer.commit(preview);
+        final result = (await importer.commit(preview)).getOrThrow();
         expect(result.taskIds, hasLength(2));
         final rows = await db.select(db.tasks).get();
         expect(rows, hasLength(2));
@@ -246,18 +254,20 @@ content,priority,due_date,start_at,end_at,time_zone,recurrence,recurrence_interv
     );
 
     test('rolls back every database write when an import fails', () async {
-      final importer = CsvTaskImporter(
+      final importer = _importer(
         db,
         _FailingSyncQueue(syncQueue, failOnCall: 5),
       );
-      final preview = await importer.prepare(
+      final preview = (await importer.prepare(
         utf8.encode(
           'content,project,labels,kanban_status\n'
           'Task,Work,Urgent,Waiting\n',
         ),
-      );
+      )).getOrThrow();
 
-      await expectLater(() => importer.commit(preview), throwsStateError);
+      final failed = await importer.commit(preview);
+      expect(failed, isA<Failure<CsvTaskImportResult>>());
+      expect((failed as Failure<CsvTaskImportResult>).error, isA<StateError>());
 
       expect(await db.select(db.tasks).get(), isEmpty);
       expect(
@@ -288,13 +298,13 @@ content,priority,due_date,start_at,end_at,time_zone,recurrence,recurrence_interv
               updatedAt: now,
             ),
           );
-      final importer = CsvTaskImporter(db, syncQueue);
-      final preview = await importer.prepare(
+      final importer = _importer(db, syncQueue);
+      final preview = (await importer.prepare(
         utf8.encode('content,labels\nTask,ärger\n'),
-      );
+      )).getOrThrow();
 
       expect(preview.newLabels, isEmpty);
-      final result = await importer.commit(preview);
+      final result = (await importer.commit(preview)).getOrThrow();
       final attached =
           await (db.select(db.taskLabels)..where(
                 (row) =>
@@ -313,10 +323,27 @@ content,priority,due_date,start_at,end_at,time_zone,recurrence,recurrence_interv
   });
 }
 
-class _FailingSyncQueue implements SyncQueueRepository {
+CsvTaskImportUseCase _importer(AppDatabase db, OutboxService outbox) {
+  final transitions = KanbanTransitionCoordinator(db, outbox);
+  return CsvTaskImportUseCase(
+    projects: DriftProjectRepository(db, outbox),
+    labels: DriftLabelRepository(db, outbox),
+    kanban: DriftKanbanRepository(
+      db,
+      syncQueue: outbox,
+      kanbanTransitions: transitions,
+    ),
+    tasks: DriftTaskRepository(db, outbox, kanbanTransitions: transitions),
+    runAtomically: db.transaction,
+    ensureSeedData: db.ensureSeedData,
+    newId: const Uuid().v4,
+  );
+}
+
+class _FailingSyncQueue implements OutboxService {
   _FailingSyncQueue(this.delegate, {required this.failOnCall});
 
-  final SyncQueueRepository delegate;
+  final OutboxService delegate;
   final int failOnCall;
   int _calls = 0;
 

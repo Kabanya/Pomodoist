@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
-import 'package:pomodoist/app/theme/theme_image_store_io.dart';
+import 'package:pomodoist/data/services/local/theme_image_store_io.dart';
 
 void main() {
   late Directory support;

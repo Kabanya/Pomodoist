@@ -1,10 +1,13 @@
+import 'package:pomodoist/domain/models/settings/app_language.dart';
+import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/auth/account_auth_feedback.dart';
-import 'package:pomodoist/app/config/app_language.dart';
-import 'package:pomodoist/core/notifications/notification_scheduler.dart';
-import 'package:pomodoist/features/planning/domain/quick_add_parser.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/domain/models/account/account_auth_failure.dart';
+import 'package:pomodoist/config/app_language.dart';
+import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
+import 'package:pomodoist/ui/core/localization/notification_copy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -19,7 +22,8 @@ void main() {
       ]) {
         SharedPreferences.setMockInitialValues({});
         final first = ProviderContainer();
-        await first.read(appLanguageProvider.notifier).setLanguage(language);
+        (await first.read(languageRepositoryProvider).setLanguage(language))
+            .getOrThrow();
         first.dispose();
         final second = ProviderContainer();
         second.read(appLanguageProvider);
@@ -28,7 +32,9 @@ void main() {
         second.dispose();
         final locale = language.locale!;
         final l10n = lookupAppLocalizations(locale);
-        final notifications = NotificationScheduler(localizations: () => l10n);
+        final notifications = NotificationScheduler(
+          localizations: () => l10n.notificationCopy,
+        );
         final details = notifications.localizedDetails(
           NotificationScheduler.taskStartDetails,
         );

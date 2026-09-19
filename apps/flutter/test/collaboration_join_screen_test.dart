@@ -4,15 +4,16 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/features/collaboration/data/collaboration_api.dart';
-import 'package:pomodoist/features/collaboration/data/collaboration_repository.dart';
-import 'package:pomodoist/features/collaboration/presentation/collaboration_join_screen.dart';
-import 'package:pomodoist/features/collaboration/presentation/collaboration_providers.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
+import 'package:pomodoist/data/repositories/collaboration/collaboration_repository.dart';
+import 'package:pomodoist/data/repositories/collaboration/drift_collaboration_repository.dart';
+import 'package:pomodoist/ui/collaboration/widgets/collaboration_join_screen.dart';
+import 'package:pomodoist/config/collaboration_dependencies.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 
 import 'support/test_app.dart';
 
@@ -62,7 +63,7 @@ Future<_Harness> _pumpJoinScreen(
   final db = AppDatabase(NativeDatabase.memory());
   addTearDown(db.close);
   final calls = <Map<String, dynamic>>[];
-  final repository = CollaborationRepository(
+  final repository = DriftCollaborationRepository(
     db: db,
     api: CollaborationApi((body) async {
       final action = body['action'] as String? ?? '';
@@ -72,7 +73,7 @@ Future<_Harness> _pumpJoinScreen(
           ? <String, dynamic>{'ok': true}
           : handler(action, args);
     }),
-    queue: DriftSyncQueueRepository(db),
+    queue: DriftOutboxService(db),
     synchronize: synchronize ?? () async {},
   );
   await tester.pumpWidget(
@@ -364,7 +365,7 @@ void main() {
       addTearDown(db.close);
       synchronizations = 0;
       failSynchronization = false;
-      repository = CollaborationRepository(
+      repository = DriftCollaborationRepository(
         db: db,
         api: CollaborationApi(
           (body) async => switch (body['action']) {
@@ -375,7 +376,7 @@ void main() {
             _ => {'scope': _scopeJson()},
           },
         ),
-        queue: DriftSyncQueueRepository(db),
+        queue: DriftOutboxService(db),
         synchronize: () async {
           synchronizations++;
           if (failSynchronization) {
@@ -389,7 +390,9 @@ void main() {
       // A failing synchronization would surface here if the read reached it.
       failSynchronization = true;
 
-      expect(await repository.state(), {'invitations': const []});
+      expect((await repository.state()).getOrThrow(), {
+        'invitations': const [],
+      });
       expect(synchronizations, 0);
     });
 
@@ -398,10 +401,13 @@ void main() {
       () async {
         failSynchronization = true;
 
-        expect(await repository.mutate('publicLink', {'enabled': true}), {
-          'url': 'https://web.test/shared/public/token',
-        });
-        expect(await repository.acceptInvitation('token-1'), {
+        expect(
+          (await repository.action('publicLink', {
+            'enabled': true,
+          })).getOrThrow(),
+          {'url': 'https://web.test/shared/public/token'},
+        );
+        expect((await repository.acceptInvitation('token-1')).getOrThrow(), {
           'scope': _scopeJson(),
         });
         expect(synchronizations, 2);
@@ -409,7 +415,7 @@ void main() {
     );
 
     test('a mutation synchronizes after the server applied it', () async {
-      await repository.mutate('publicLink', {'enabled': true});
+      (await repository.action('publicLink', {'enabled': true})).getOrThrow();
 
       expect(synchronizations, 1);
     });

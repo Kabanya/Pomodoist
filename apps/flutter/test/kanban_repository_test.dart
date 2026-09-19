@@ -1,16 +1,18 @@
+import 'package:pomodoist/data/repositories/projects/project_repository_impl.dart';
+import 'package:pomodoist/data/repositories/labels/label_repository_impl.dart';
 import 'dart:convert';
 
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/features/tasks/data/kanban_repository_impl.dart';
-import 'package:pomodoist/features/tasks/data/kanban_transition_coordinator.dart';
-import 'package:pomodoist/features/tasks/data/task_repository_impl.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/data/repositories/kanban/kanban_repository_impl.dart';
+import 'package:pomodoist/data/services/local/kanban_transition_coordinator.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
 
 void main() {
   group('DriftKanbanRepository', () {
@@ -94,7 +96,9 @@ void main() {
           orderKey: '4',
         );
 
-        await repository.setSelectedProjectIds({'project-b', 'project-a'});
+        await repository
+            .setSelectedProjectIds({'project-b', 'project-a'})
+            .then((result) => result.getOrThrow());
         final snapshot = await repository.watchBoard().first;
         final backlogCards = snapshot.cardsForStatus(kanbanStatusBacklogId);
 
@@ -167,10 +171,9 @@ void main() {
           statusId: 'scope:$kanbanStatusInProgressId',
         );
 
-        await repository.setSelectedProjectIds({
-          'project-personal',
-          'project-shared',
-        });
+        await repository
+            .setSelectedProjectIds({'project-personal', 'project-shared'})
+            .then((result) => result.getOrThrow());
         final snapshot = await repository.watchBoard().first;
 
         expect(snapshot.statuses.map((status) => status.id).toList(), [
@@ -248,21 +251,22 @@ void main() {
           taskId: 'task-shared-done',
           statusId: 'scope:$kanbanStatusDoneId',
         );
-        await repository.setSelectedProjectIds({
-          'project-personal',
-          'project-shared',
-        });
+        await repository
+            .setSelectedProjectIds({'project-personal', 'project-shared'})
+            .then((result) => result.getOrThrow());
 
         var snapshot = await repository.watchBoard().first;
         expect(_cardTaskIds(snapshot, kanbanStatusDoneId), [
           'task-shared-done',
         ]);
 
-        await repository.moveTask(
-          'task-shared-done',
-          statusId: kanbanStatusInProgressId,
-          targetIndex: 0,
-        );
+        await repository
+            .moveTask(
+              'task-shared-done',
+              statusId: kanbanStatusInProgressId,
+              targetIndex: 0,
+            )
+            .then((result) => result.getOrThrow());
 
         expect(
           await _statusLabelId(db, 'task-shared-done'),
@@ -322,10 +326,9 @@ void main() {
           statusId: 'scope:$kanbanStatusDoneId',
         );
 
-        await repository.setSelectedProjectIds({
-          inboxProjectId,
-          'project-shared',
-        });
+        await repository
+            .setSelectedProjectIds({inboxProjectId, 'project-shared'})
+            .then((result) => result.getOrThrow());
         final snapshot = await repository.watchBoard().first;
 
         expect(snapshot.statuses.map((status) => status.name).toList(), [
@@ -385,7 +388,9 @@ void main() {
         statusId: 'scope-b:$kanbanStatusInProgressId',
       );
 
-      await repository.setSelectedProjectIds({'project-a', 'project-b'});
+      await repository
+          .setSelectedProjectIds({'project-a', 'project-b'})
+          .then((result) => result.getOrThrow());
       final snapshot = await repository.watchBoard().first;
 
       expect(snapshot.statuses.map((status) => status.name).toList(), [
@@ -397,16 +402,17 @@ void main() {
       final inProgressId = _columnId(snapshot, 'In progress');
       expect(_cardTaskIds(snapshot, inProgressId), ['task-a', 'task-b']);
 
-      await repository.moveTask('task-b', statusId: inProgressId);
+      await repository
+          .moveTask('task-b', statusId: inProgressId)
+          .then((result) => result.getOrThrow());
       expect(
         await _statusLabelId(db, 'task-b'),
         'scope-b:$kanbanStatusInProgressId',
       );
 
-      await repository.moveTask(
-        'task-b',
-        statusId: _columnId(snapshot, 'To do'),
-      );
+      await repository
+          .moveTask('task-b', statusId: _columnId(snapshot, 'To do'))
+          .then((result) => result.getOrThrow());
       expect(await _statusLabelId(db, 'task-b'), 'scope-b:$kanbanStatusTodoId');
       final moved = await repository.watchBoard().first;
       expect(_cardTaskIds(moved, _columnId(moved, 'To do')), ['task-b']);
@@ -459,7 +465,9 @@ void main() {
         );
       }
 
-      await repository.setSelectedProjectIds({'project-a', 'project-b'});
+      await repository
+          .setSelectedProjectIds({'project-a', 'project-b'})
+          .then((result) => result.getOrThrow());
       var snapshot = await repository.watchBoard().first;
       final todoId = _columnId(snapshot, 'To do');
       expect(_cardTaskIds(snapshot, todoId), [
@@ -469,7 +477,9 @@ void main() {
         'task-a2',
       ]);
 
-      await repository.moveTask('task-b2', statusId: todoId, targetIndex: 1);
+      await repository
+          .moveTask('task-b2', statusId: todoId, targetIndex: 1)
+          .then((result) => result.getOrThrow());
 
       snapshot = await repository.watchBoard().first;
       expect(_cardTaskIds(snapshot, _columnId(snapshot, 'To do')), [
@@ -489,10 +499,9 @@ void main() {
         orderKey: '2',
       );
       await _shareScope(db, scopeId: 'scope', rootProjectId: 'project-shared');
-      await repository.setSelectedProjectIds({
-        inboxProjectId,
-        'project-shared',
-      });
+      await repository
+          .setSelectedProjectIds({inboxProjectId, 'project-shared'})
+          .then((result) => result.getOrThrow());
 
       var snapshot = await repository.watchBoard().first;
       expect(snapshot.statuses.map((status) => status.id).toList(), [
@@ -502,7 +511,9 @@ void main() {
         kanbanStatusDoneId,
       ]);
 
-      await repository.reorderStatus(kanbanStatusInProgressId, 1);
+      await repository
+          .reorderStatus(kanbanStatusInProgressId, 1)
+          .then((result) => result.getOrThrow());
 
       snapshot = await repository.watchBoard().first;
       expect(snapshot.statuses.map((status) => status.id).toList(), [
@@ -521,15 +532,17 @@ void main() {
         orderKey: '1',
       );
       await _shareScope(db, scopeId: 'scope', rootProjectId: 'project-shared');
-      final tasks = DriftTaskRepository(db, DriftSyncQueueRepository(db));
+      final tasks = DriftTaskRepository(db, DriftOutboxService(db));
 
-      final taskId = await tasks.createTask(
-        const CreateTaskInput(
-          content: 'From the board',
-          projectId: 'project-shared',
-          kanbanStatusId: kanbanStatusInProgressId,
-        ),
-      );
+      final taskId = await tasks
+          .createTask(
+            const CreateTaskInput(
+              content: 'From the board',
+              projectId: 'project-shared',
+              kanbanStatusId: kanbanStatusInProgressId,
+            ),
+          )
+          .then((result) => result.getOrThrow());
 
       expect(
         await _statusLabelId(db, taskId),
@@ -591,7 +604,9 @@ void main() {
         statusId: 'scope-b:$kanbanStatusBacklogId',
       );
 
-      await repository.setSelectedProjectIds({'project-a', 'project-b'});
+      await repository
+          .setSelectedProjectIds({'project-a', 'project-b'})
+          .then((result) => result.getOrThrow());
       final snapshot = await repository.watchBoard().first;
 
       expect(snapshot.statuses.map((status) => status.name).toList(), [
@@ -605,7 +620,9 @@ void main() {
       expect(_cardTaskIds(snapshot, reviewId), ['task-a']);
 
       await expectLater(
-        repository.moveTask('task-b', statusId: reviewId),
+        repository
+            .moveTask('task-b', statusId: reviewId)
+            .then((result) => result.getOrThrow()),
         throwsArgumentError,
       );
       expect(
@@ -613,7 +630,9 @@ void main() {
         'scope-b:$kanbanStatusBacklogId',
       );
 
-      await repository.moveTask('task-a', statusId: reviewId);
+      await repository
+          .moveTask('task-a', statusId: reviewId)
+          .then((result) => result.getOrThrow());
       expect(await _statusLabelId(db, 'task-a'), 'scope-a:review-v1');
     });
 
@@ -661,7 +680,9 @@ void main() {
         projectId: 'project-unselected',
         orderKey: '4',
       );
-      await repository.setSelectedProjectIds({'project-selected'});
+      await repository
+          .setSelectedProjectIds({'project-selected'})
+          .then((result) => result.getOrThrow());
       recorder.selects.clear();
       recorder.taskPlans.clear();
 
@@ -730,11 +751,21 @@ void main() {
         );
         await db.ensureKanbanData();
 
-        await repository.renameStatus(kanbanStatusBacklogId, 'Ideas');
-        await repository.renameStatus(kanbanStatusTodoId, 'Ready');
-        final reviewId = await repository.createStatus('Review');
-        await repository.reorderStatus(reviewId, 1);
-        await repository.moveTask('task-1', statusId: reviewId, targetIndex: 0);
+        await repository
+            .renameStatus(kanbanStatusBacklogId, 'Ideas')
+            .then((result) => result.getOrThrow());
+        await repository
+            .renameStatus(kanbanStatusTodoId, 'Ready')
+            .then((result) => result.getOrThrow());
+        final reviewId = await repository
+            .createStatus('Review')
+            .then((result) => result.getOrThrow());
+        await repository
+            .reorderStatus(reviewId, 1)
+            .then((result) => result.getOrThrow());
+        await repository
+            .moveTask('task-1', statusId: reviewId, targetIndex: 0)
+            .then((result) => result.getOrThrow());
 
         var snapshot = await repository.watchBoard().first;
         expect(snapshot.statuses.first.id, kanbanStatusBacklogId);
@@ -744,15 +775,21 @@ void main() {
         expect(snapshot.cardsForStatus(reviewId).single.task.id, 'task-1');
 
         await expectLater(
-          repository.deleteStatus(kanbanStatusBacklogId),
+          repository
+              .deleteStatus(kanbanStatusBacklogId)
+              .then((result) => result.getOrThrow()),
           throwsA(isA<StateError>()),
         );
         await expectLater(
-          repository.reorderStatus(kanbanStatusDoneId, 1),
+          repository
+              .reorderStatus(kanbanStatusDoneId, 1)
+              .then((result) => result.getOrThrow()),
           throwsA(isA<StateError>()),
         );
 
-        await repository.deleteStatus(reviewId);
+        await repository
+            .deleteStatus(reviewId)
+            .then((result) => result.getOrThrow());
         snapshot = await repository.watchBoard().first;
         expect(
           snapshot.statuses.map((status) => status.id),
@@ -780,10 +817,18 @@ void main() {
           name: 'Fallback',
           orderKey: '0',
         );
-        await repository.setSelectedProjectIds({'project-b', 'project-a'});
-        await repository.setSelectedProjectIds(const <String>{});
-        final focusId = await repository.createStatus('Focus now');
-        await repository.setFocusStatus(focusId);
+        await repository
+            .setSelectedProjectIds({'project-b', 'project-a'})
+            .then((result) => result.getOrThrow());
+        await repository
+            .setSelectedProjectIds(const <String>{})
+            .then((result) => result.getOrThrow());
+        final focusId = await repository
+            .createStatus('Focus now')
+            .then((result) => result.getOrThrow());
+        await repository
+            .setFocusStatus(focusId)
+            .then((result) => result.getOrThrow());
 
         var snapshot = await repository.watchBoard().first;
         expect(snapshot.settings.selectedProjectIds, [
@@ -792,10 +837,12 @@ void main() {
         ]);
         expect(snapshot.settings.focusStatusLabelId, focusId);
 
-        final projectSyncQueue = DriftSyncQueueRepository(db);
+        final projectSyncQueue = DriftOutboxService(db);
         final projectRepository = DriftProjectRepository(db, projectSyncQueue);
         await db.delete(db.syncCommands).go();
-        await projectRepository.deleteProject('project-a');
+        await projectRepository
+            .deleteProject('project-a')
+            .then((result) => result.getOrThrow());
 
         var persistedSettings = await db.select(db.kanbanSettings).getSingle();
         expect(persistedSettings.selectedProjectIdsJson, '["project-b"]');
@@ -808,7 +855,9 @@ void main() {
           contains('kanban.settings.projects.set'),
         );
 
-        await projectRepository.deleteProject('project-b');
+        await projectRepository
+            .deleteProject('project-b')
+            .then((result) => result.getOrThrow());
 
         persistedSettings = await db.select(db.kanbanSettings).getSingle();
         expect(
@@ -819,13 +868,17 @@ void main() {
         expect(snapshot.settings.selectedProjectIds, ['project-fallback']);
         expect(snapshot.settings.focusStatusLabelId, focusId);
 
-        await repository.deleteStatus(focusId);
+        await repository
+            .deleteStatus(focusId)
+            .then((result) => result.getOrThrow());
 
         snapshot = await repository.watchBoard().first;
         expect(snapshot.settings.selectedProjectIds, ['project-fallback']);
         expect(snapshot.settings.focusStatusLabelId, kanbanStatusTodoId);
         await expectLater(
-          repository.setFocusStatus(kanbanStatusDoneId),
+          repository
+              .setFocusStatus(kanbanStatusDoneId)
+              .then((result) => result.getOrThrow()),
           throwsA(isA<ArgumentError>()),
         );
       },
@@ -892,26 +945,18 @@ void main() {
           );
         }
         await db.ensureKanbanData();
-        await repository.moveTask(
-          'task-a',
-          statusId: kanbanStatusTodoId,
-          targetIndex: 0,
-        );
-        await repository.moveTask(
-          'task-b',
-          statusId: kanbanStatusTodoId,
-          targetIndex: 1,
-        );
-        await repository.moveTask(
-          'task-c',
-          statusId: kanbanStatusTodoId,
-          targetIndex: 2,
-        );
-        await repository.moveTask(
-          'task-c',
-          statusId: kanbanStatusTodoId,
-          targetIndex: 0,
-        );
+        await repository
+            .moveTask('task-a', statusId: kanbanStatusTodoId, targetIndex: 0)
+            .then((result) => result.getOrThrow());
+        await repository
+            .moveTask('task-b', statusId: kanbanStatusTodoId, targetIndex: 1)
+            .then((result) => result.getOrThrow());
+        await repository
+            .moveTask('task-c', statusId: kanbanStatusTodoId, targetIndex: 2)
+            .then((result) => result.getOrThrow());
+        await repository
+            .moveTask('task-c', statusId: kanbanStatusTodoId, targetIndex: 0)
+            .then((result) => result.getOrThrow());
 
         var snapshot = await repository.watchBoard().first;
         expect(
@@ -938,13 +983,19 @@ void main() {
           everyElement(lessThanOrEqualTo(4503599627370496)),
         );
 
-        await repository.moveTask(
-          'task-b',
-          statusId: kanbanStatusInProgressId,
-          targetIndex: 0,
-        );
-        final reviewId = await repository.createStatus('Review');
-        await repository.reorderStatus(reviewId, 1);
+        await repository
+            .moveTask(
+              'task-b',
+              statusId: kanbanStatusInProgressId,
+              targetIndex: 0,
+            )
+            .then((result) => result.getOrThrow());
+        final reviewId = await repository
+            .createStatus('Review')
+            .then((result) => result.getOrThrow());
+        await repository
+            .reorderStatus(reviewId, 1)
+            .then((result) => result.getOrThrow());
         snapshot = await repository.watchBoard().first;
         expect(snapshot.statuses.first.id, kanbanStatusBacklogId);
         expect(snapshot.statuses[1].id, reviewId);
@@ -969,24 +1020,35 @@ void main() {
     test(
       'ordinary label APIs hide and cannot delete Kanban statuses',
       () async {
-        final syncQueue = DriftSyncQueueRepository(db);
+        final syncQueue = DriftOutboxService(db);
         final labels = DriftLabelRepository(db, syncQueue);
         final tasks = DriftTaskRepository(db, syncQueue);
 
         expect(await labels.watchLabels().first, isEmpty);
-        expect(await labels.findByName('Backlog'), isNull);
-        final userBacklogId = await labels.createLabel('Backlog');
+        expect(
+          await labels
+              .findByName('Backlog')
+              .then((result) => result.getOrThrow()),
+          isNull,
+        );
+        final userBacklogId = await labels
+            .createLabel('Backlog')
+            .then((result) => result.getOrThrow());
         expect(userBacklogId, isNot(kanbanStatusBacklogId));
 
-        await labels.deleteLabel(kanbanStatusBacklogId);
+        await labels
+            .deleteLabel(kanbanStatusBacklogId)
+            .then((result) => result.getOrThrow());
         final anchor = await (db.select(
           db.labels,
         )..where((row) => row.id.equals(kanbanStatusBacklogId))).getSingle();
         expect(anchor.isDeleted, isFalse);
 
-        final taskId = await tasks.createTask(
-          const CreateTaskInput(content: 'Task', labelNames: ['Backlog']),
-        );
+        final taskId = await tasks
+            .createTask(
+              const CreateTaskInput(content: 'Task', labelNames: ['Backlog']),
+            )
+            .then((result) => result.getOrThrow());
         final links = await (db.select(
           db.taskLabels,
         )..where((row) => row.taskId.equals(taskId))).get();
@@ -1000,22 +1062,24 @@ void main() {
     test(
       'recurring ordinary-label copying excludes Kanban assignments',
       () async {
-        final syncQueue = DriftSyncQueueRepository(db);
+        final syncQueue = DriftOutboxService(db);
         final tasks = DriftTaskRepository(db, syncQueue);
-        final sourceId = await tasks.createTask(
-          CreateTaskInput(
-            content: 'Recurring task',
-            labelNames: const ['habit'],
-            schedule: TaskSchedule.allDay(
-              DateTime(2026, 7, 1),
-              recurrence: const TaskRecurrence(
-                interval: 1,
-                unit: TaskRecurrenceUnit.day,
-                seriesId: 'kanban-copy-filter',
+        final sourceId = await tasks
+            .createTask(
+              CreateTaskInput(
+                content: 'Recurring task',
+                labelNames: const ['habit'],
+                schedule: TaskSchedule.allDay(
+                  DateTime(2026, 7, 1),
+                  recurrence: const TaskRecurrence(
+                    interval: 1,
+                    unit: TaskRecurrenceUnit.day,
+                    seriesId: 'kanban-copy-filter',
+                  ),
+                ),
               ),
-            ),
-          ),
-        );
+            )
+            .then((result) => result.getOrThrow());
         await db.ensureKanbanData();
         final sourceStatus =
             await (db.select(db.taskLabels)..where(
@@ -1025,7 +1089,9 @@ void main() {
                 ))
                 .getSingle();
 
-        await tasks.materializeDueRecurringTasks(now: DateTime(2026, 7, 2, 9));
+        await tasks
+            .materializeDueRecurringTasks(now: DateTime(2026, 7, 2, 9))
+            .then((result) => result.getOrThrow());
 
         final copiedTask = (await db.select(db.tasks).get()).singleWhere(
           (row) => row.content == 'Recurring task' && row.id != sourceId,
@@ -1055,7 +1121,7 @@ void main() {
     test(
       'queues Kanban status, settings, assignment, and order mutations',
       () async {
-        final syncQueue = DriftSyncQueueRepository(db);
+        final syncQueue = DriftOutboxService(db);
         final transitions = KanbanTransitionCoordinator(db, syncQueue);
         final syncedRepository = DriftKanbanRepository(
           db,
@@ -1078,17 +1144,27 @@ void main() {
         await db.ensureKanbanData();
         await db.delete(db.syncCommands).go();
 
-        final statusId = await syncedRepository.createStatus('Review');
-        await syncedRepository.renameStatus(statusId, 'Ready for review');
-        await syncedRepository.reorderStatus(statusId, 1);
-        await syncedRepository.setSelectedProjectIds({'selected-project'});
-        await syncedRepository.setFocusStatus(statusId);
-        await syncedRepository.moveTask(
-          'ordered-task',
-          statusId: statusId,
-          targetIndex: 0,
-        );
-        await syncedRepository.deleteStatus(statusId);
+        final statusId = await syncedRepository
+            .createStatus('Review')
+            .then((result) => result.getOrThrow());
+        await syncedRepository
+            .renameStatus(statusId, 'Ready for review')
+            .then((result) => result.getOrThrow());
+        await syncedRepository
+            .reorderStatus(statusId, 1)
+            .then((result) => result.getOrThrow());
+        await syncedRepository
+            .setSelectedProjectIds({'selected-project'})
+            .then((result) => result.getOrThrow());
+        await syncedRepository
+            .setFocusStatus(statusId)
+            .then((result) => result.getOrThrow());
+        await syncedRepository
+            .moveTask('ordered-task', statusId: statusId, targetIndex: 0)
+            .then((result) => result.getOrThrow());
+        await syncedRepository
+            .deleteStatus(statusId)
+            .then((result) => result.getOrThrow());
 
         final commands = await syncQueue.watchPending().first;
         final types = commands.map((command) => command.type);

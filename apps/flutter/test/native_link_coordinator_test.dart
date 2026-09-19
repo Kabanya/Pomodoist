@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/platform/native_link_coordinator.dart';
+import 'package:pomodoist/data/services/platform/native_link_coordinator.dart';
 
 void main() {
   test('fingerprints canonical URI bytes without retaining raw secrets', () {

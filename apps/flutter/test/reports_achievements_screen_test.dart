@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/core/time/clock.dart';
-import 'package:pomodoist/features/productivity/domain/achievement_models.dart';
-import 'package:pomodoist/features/productivity/domain/productivity_models.dart';
-import 'package:pomodoist/features/productivity/presentation/achievements_screen.dart';
-import 'package:pomodoist/features/productivity/presentation/reports_screen.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/utils/clock.dart';
+import 'package:pomodoist/domain/models/productivity/achievement_models.dart';
+import 'package:pomodoist/domain/models/productivity/productivity_models.dart';
+import 'package:pomodoist/ui/productivity/widgets/achievements_screen.dart';
+import 'package:pomodoist/ui/productivity/widgets/reports_screen.dart';
 
 void main() {
   setUpAll(loadTestAppResources);

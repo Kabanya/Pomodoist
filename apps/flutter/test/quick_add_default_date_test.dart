@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/planning/domain/quick_add_parser.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 
 void main() {
   test('localized explicit date overrides a conflicting default date', () {

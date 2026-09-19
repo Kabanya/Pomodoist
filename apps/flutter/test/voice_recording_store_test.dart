@@ -2,8 +2,8 @@ import 'dart:io';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/voice/data/voice_recording.dart';
-import 'package:pomodoist/features/voice/data/voice_recording_store_io.dart';
+import 'package:pomodoist/data/services/voice/voice_recording.dart';
+import 'package:pomodoist/data/services/voice/voice_recording_store_io.dart';
 
 void main() {
   late Directory temporary;

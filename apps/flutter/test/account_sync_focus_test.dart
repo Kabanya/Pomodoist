@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'dart:async';
 import 'dart:collection';
 
@@ -6,9 +7,9 @@ import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/account_sync_engine.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:uuid/uuid.dart';
 
 void main() {
@@ -27,14 +28,14 @@ void main() {
 
   group('Focus account sync', () {
     late AppDatabase db;
-    late DriftSyncQueueRepository queue;
+    late DriftOutboxService queue;
     late _RecordingAccountClient account;
     late AccountSyncEngine engine;
 
     setUp(() async {
       db = AppDatabase(NativeDatabase.memory());
       await db.ensureSeedData();
-      queue = DriftSyncQueueRepository(db);
+      queue = DriftOutboxService(db);
       account = _RecordingAccountClient();
       engine = AccountSyncEngine(
         db: db,

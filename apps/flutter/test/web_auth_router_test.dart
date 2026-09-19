@@ -6,12 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/app/routing/router.dart';
-import 'package:pomodoist/features/collaboration/presentation/collaboration_join_screen.dart';
-import 'package:pomodoist/features/collaboration/presentation/collaboration_providers.dart';
-import 'package:pomodoist/features/collaboration/presentation/public_project_screen.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/routing/router.dart';
+import 'package:pomodoist/ui/collaboration/widgets/collaboration_join_screen.dart';
+import 'package:pomodoist/config/collaboration_dependencies.dart';
+import 'package:pomodoist/ui/collaboration/widgets/public_project_screen.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 
 void main() {
   setUpAll(loadTestAppResources);

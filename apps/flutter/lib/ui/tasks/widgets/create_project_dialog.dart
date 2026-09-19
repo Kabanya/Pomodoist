@@ -1,0 +1,289 @@
+import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show LucideIcons, ShadButton, ShadInput;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/tasks/view_models/named_item_view_model.dart';
+import 'package:pomodoist/ui/core/widgets/resizable_dialog.dart';
+import 'package:pomodoist/ui/tasks/widgets/project_color_picker.dart';
+import 'package:pomodoist/ui/tasks/widgets/label_icon.dart';
+import 'package:pomodoist/ui/tasks/widgets/project_tree_controls.dart';
+
+Future<void> showCreateProjectDialog(BuildContext context, {String? parentId}) {
+  final tree = ProjectTreeScope.of(context);
+  final projects = ProviderScope.containerOf(
+    context,
+  ).read(projectCreationViewModelProvider).projects;
+  return showDialog<void>(
+    context: context,
+    builder: (_) => CreateProjectDialog(
+      parentId: parentId,
+      onCreated: () => tree?.reveal(parentId, projects),
+    ),
+  );
+}
+
+Future<void> showRenameProjectDialog(
+  BuildContext context, {
+  required String projectId,
+  required String projectName,
+}) {
+  return showDialog<void>(
+    context: context,
+    builder: (context) =>
+        _RenameProjectDialog(projectId: projectId, projectName: projectName),
+  );
+}
+
+Future<void> showCreateLabelDialog(BuildContext context) {
+  return showDialog<void>(
+    context: context,
+    builder: (context) => const CreateLabelDialog(),
+  );
+}
+
+class CreateProjectDialog extends ConsumerWidget {
+  const CreateProjectDialog({this.parentId, this.onCreated, super.key});
+  final String? parentId;
+  final VoidCallback? onCreated;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final viewState = ref.watch(projectCreationViewModelProvider);
+    final projects = viewState.projects;
+    final parent = projects.where((p) => p.id == parentId).firstOrNull;
+    return _NamedItemDialog(
+      title: parentId == null ? l10n.addProject : l10n.addSubproject,
+      description: parent == null ? null : l10n.projectParentName(parent.name),
+      hintText: l10n.projectName,
+      inputKey: const Key('project-create-input'),
+      submitKey: const Key('project-create-submit'),
+      icon: LucideIcons.folder,
+      submitIcon: LucideIcons.plus,
+      submitLabel: l10n.commonAdd,
+      initialColor: viewState.color,
+      kind: NamedItemKind.project,
+      parentId: parentId,
+      onSaved: onCreated,
+      errorText: (context, error) => context.l10n.couldNotAddProject(error),
+    );
+  }
+}
+
+class _RenameProjectDialog extends StatelessWidget {
+  const _RenameProjectDialog({
+    required this.projectId,
+    required this.projectName,
+  });
+
+  final String projectId;
+  final String projectName;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return _NamedItemDialog(
+      title: l10n.renameProject,
+      hintText: l10n.projectName,
+      inputKey: const Key('project-rename-input'),
+      submitKey: const Key('project-rename-submit'),
+      icon: LucideIcons.pencil,
+      submitIcon: LucideIcons.save,
+      submitLabel: l10n.commonSave,
+      initialName: projectName,
+      kind: NamedItemKind.renameProject,
+      projectId: projectId,
+      errorText: (context, error) => context.l10n.couldNotUpdateProject(error),
+    );
+  }
+}
+
+class CreateLabelDialog extends StatelessWidget {
+  const CreateLabelDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return _NamedItemDialog(
+      title: l10n.addLabel,
+      hintText: l10n.labelName,
+      selectLabelIcon: true,
+      inputKey: const Key('label-create-input'),
+      submitKey: const Key('label-create-submit'),
+      icon: LucideIcons.tag,
+      submitIcon: LucideIcons.plus,
+      submitLabel: l10n.commonAdd,
+      kind: NamedItemKind.label,
+      errorText: (context, error) => context.l10n.couldNotAddLabel(error),
+    );
+  }
+}
+
+class _NamedItemDialog extends ConsumerStatefulWidget {
+  const _NamedItemDialog({
+    required this.title,
+    required this.hintText,
+    required this.inputKey,
+    required this.submitKey,
+    required this.icon,
+    required this.submitIcon,
+    required this.submitLabel,
+    required this.kind,
+    this.parentId,
+    this.projectId,
+    this.onSaved,
+    required this.errorText,
+    this.initialName = '',
+    this.description,
+    this.initialColor,
+    this.selectLabelIcon = false,
+  });
+
+  final String title;
+  final String hintText;
+  final Key inputKey;
+  final Key submitKey;
+  final IconData icon;
+  final IconData submitIcon;
+  final String submitLabel;
+  final NamedItemKind kind;
+  final String? parentId;
+  final String? projectId;
+  final VoidCallback? onSaved;
+  final String Function(BuildContext context, Object error) errorText;
+  final String initialName;
+  final String? description;
+  final String? initialColor;
+  final bool selectLabelIcon;
+
+  @override
+  ConsumerState<_NamedItemDialog> createState() => _NamedItemDialogState();
+}
+
+class _NamedItemDialogState extends ConsumerState<_NamedItemDialog> {
+  late final TextEditingController _controller;
+  final _identity = Object();
+  bool get _busy => ref.read(namedItemViewModelProvider(_identity)).isLoading;
+  String _selectedIcon = 'tag';
+  late String? _selectedColor;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialName);
+    _selectedColor = widget.initialColor;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.watch(namedItemViewModelProvider(_identity));
+    final l10n = context.l10n;
+    return ResizableDialog(
+      title: Text(widget.title),
+      initialSize: Size(560, widget.initialColor == null ? 260 : 370),
+      minSize: Size(320, widget.initialColor == null ? 220 : 340),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (widget.description != null) ...[
+            Text(
+              widget.description!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+          ],
+          ShadInput(
+            key: widget.inputKey,
+            controller: _controller,
+            autofocus: true,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _submit(),
+            placeholder: Text(widget.hintText),
+            leading: widget.selectLabelIcon
+                ? IconButton(
+                    tooltip: l10n.labelIcon,
+                    onPressed: _busy
+                        ? null
+                        : () async {
+                            final icon = await showLabelIconPicker(
+                              context,
+                              selectedIcon: _selectedIcon,
+                            );
+                            if (icon != null && mounted) {
+                              setState(() => _selectedIcon = icon);
+                            }
+                          },
+                    icon: Icon(labelIconData(_selectedIcon)),
+                  )
+                : Icon(widget.icon),
+          ),
+          if (_selectedColor != null) ...[
+            const SizedBox(height: 20),
+            ProjectColorPalettePicker(
+              selectedColor: _selectedColor!,
+              onSelected: (color) => setState(() => _selectedColor = color),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        ShadButton.ghost(
+          onPressed: _busy ? null : () => Navigator.of(context).pop(),
+          enabled: !(_busy),
+          child: Text(l10n.commonCancel),
+        ),
+        ShadButton(
+          key: widget.submitKey,
+          onPressed: _busy ? null : _submit,
+          enabled: !(_busy),
+          leading: _busy
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(widget.submitIcon),
+          child: Text(widget.submitLabel),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _submit() async {
+    final name = _controller.text.trim();
+    if (name.isEmpty || _busy) {
+      return;
+    }
+    final saved = await ref
+        .read(namedItemViewModelProvider(_identity).notifier)
+        .submit(
+          kind: widget.kind,
+          name: name,
+          color: _selectedColor,
+          icon: widget.selectLabelIcon ? _selectedIcon : null,
+          parentId: widget.parentId,
+          projectId: widget.projectId,
+        );
+    if (!mounted) return;
+    if (saved) {
+      widget.onSaved?.call();
+      Navigator.of(context).pop();
+    } else {
+      final error = ref.read(namedItemViewModelProvider(_identity)).error;
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(widget.errorText(context, error))),
+        );
+      }
+    }
+  }
+}

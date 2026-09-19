@@ -1,7 +1,7 @@
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton, ShadInput;
 import 'support/test_app.dart';
 import 'support/account_email_auth.dart';
-import 'package:pomodoist/app/auth/email_auth.dart';
+import 'package:pomodoist/config/auth/email_auth.dart';
 import 'dart:async';
 import 'dart:ui' show Tristate;
 
@@ -10,10 +10,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/features/settings/presentation/oauth_consent_screen.dart';
-import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/ui/settings/widgets/oauth_consent_screen.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_screen.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 
 void main() {
   setUpAll(loadTestAppResources);

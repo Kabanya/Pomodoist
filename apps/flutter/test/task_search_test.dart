@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/features/tasks/presentation/task_search.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/tasks/view_models/task_search.dart';
 
 void main() {
   final cutoff = DateTime.utc(2026, 6, 1);

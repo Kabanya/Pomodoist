@@ -7,8 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:in_app_purchase_storekit/store_kit_2_wrappers.dart';
-import 'package:pomodoist/features/billing/billing.dart';
-import 'package:pomodoist/l10n/app_localizations_en.dart';
+import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/ui/billing/widgets/billing_offer_copy.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations_en.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final _promo = SK2SubscriptionOffer(
@@ -66,12 +67,18 @@ void main() {
 
   test('trial and return presentation uses Apple metadata and eligibility', () {
     final l10n = AppLocalizationsEn();
+    final product = billingProductFromStore(_product);
+    final trial = billingOfferForProduct(product, introductoryEligible: true)!;
+    final promotion = billingOfferForProduct(
+      product,
+      returnOfferId: _promo.id,
+    )!;
     expect(billingStoreKitOffer(_product), isNull);
     expect(
       billingStoreKitOffer(_product, introductoryEligible: true),
       same(_trial),
     );
-    expect(billingOfferPrice(l10n, _product, _trial), 'Free for 7 days');
+    expect(billingOfferPrice(l10n, product, trial), 'Free for 7 days');
     expect(
       billingStoreKitOffer(
         _product,
@@ -80,11 +87,11 @@ void main() {
       ),
       same(_promo),
     );
-    expect(billingOfferPrice(l10n, _product, _promo), r'$1.99/month');
-    expect(billingOfferDuration(l10n, _promo), '3 months');
+    expect(billingOfferPrice(l10n, product, promotion), r'$1.99/month');
+    expect(billingOfferDuration(l10n, promotion), '3 months');
     expect(billingStoreKitOffer(_product, returnOfferId: 'unknown'), isNull);
     expect(
-      billingReturnOfferMatchesProduct(pomodoistAnnualProductId, _promo),
+      billingReturnOfferMatchesProduct(pomodoistAnnualProductId, promotion),
       isFalse,
     );
     expect(
@@ -279,10 +286,10 @@ void main() {
             container.dispose();
             store.events.close();
           });
-          container.read(billingControllerProvider);
+          container.read(billingViewModelProvider);
           time.flushMicrotasks();
           container
-              .read(billingControllerProvider.notifier)
+              .read(billingViewModelProvider.notifier)
               .purchase(pomodoistMonthlyProductId, returnOfferId: _promo.id);
           time.flushMicrotasks();
           expect(signs, 1);
@@ -291,7 +298,7 @@ void main() {
             store.promoBuys,
             ['success', 'pending', 'cancelled'].contains(result) ? 1 : 0,
           );
-          final state = container.read(billingControllerProvider);
+          final state = container.read(billingViewModelProvider);
           if (result == 'cancelled') {
             expect(state.error, isNull);
             expect(state.pendingProductId, isNull);

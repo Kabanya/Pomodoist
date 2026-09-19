@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/task_time.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/domain/models/tasks/task_time.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
 
 void main() {
   final schedule = TaskSchedule.timed(

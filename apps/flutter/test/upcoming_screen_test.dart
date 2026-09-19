@@ -1,3 +1,7 @@
+import 'package:pomodoist/utils/result.dart';
+import 'package:pomodoist/data/repositories/projects/project_repository.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
+import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton;
 import 'support/test_app.dart';
 import 'dart:async';
@@ -6,17 +10,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/core/time/clock.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/planning/data/quick_add_service.dart';
-import 'package:pomodoist/features/planning/domain/quick_add_parser.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/features/tasks/presentation/upcoming_screen.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
-import 'package:pomodoist/l10n/app_localizations_ar.dart';
-import 'package:pomodoist/l10n/app_localizations_ru.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/utils/clock.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/tasks/widgets/upcoming_screen.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations_ar.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations_ru.dart';
 
 void main() {
   setUpAll(loadTestAppResources);
@@ -801,7 +805,7 @@ Future<_Harness> _pumpUpcoming(
 }) async {
   final taskRepository = _FakeTaskRepository();
   final projectRepository = _FakeProjectRepository();
-  final quickAddService = QuickAddService(
+  final quickAddService = QuickAddUseCase(
     parser: const QuickAddParser(),
     taskRepository: taskRepository,
     projectRepository: projectRepository,
@@ -954,10 +958,11 @@ class _FakeTaskRepository implements TaskRepository {
   final List<CreateTaskInput> created = <CreateTaskInput>[];
 
   @override
-  Future<String> createTask(CreateTaskInput input) async {
-    created.add(input);
-    return 'created-${created.length}';
-  }
+  Future<Result<String>> createTask(CreateTaskInput input) =>
+      Result.capture<String>(() async {
+        created.add(input);
+        return 'created-${created.length}';
+      });
 
   @override
   dynamic noSuchMethod(Invocation invocation) =>

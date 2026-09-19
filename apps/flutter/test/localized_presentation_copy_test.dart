@@ -1,20 +1,20 @@
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/focus/presentation/focus_preset_localizations.dart';
-import 'package:pomodoist/features/productivity/data/achievement_repository_impl.dart';
-import 'package:pomodoist/features/productivity/presentation/achievement_localizations.dart';
-import 'package:pomodoist/features/settings/presentation/csv_task_import_card.dart';
-import 'package:pomodoist/features/tasks/data/csv_task_import.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/features/tasks/presentation/project_localizations.dart';
-import 'package:pomodoist/features/tasks/presentation/task_search_palette.dart';
-import 'package:pomodoist/features/updates/update_contracts.dart';
-import 'package:pomodoist/features/updates/update_copy.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/ui/focus/widgets/focus_preset_localizations.dart';
+import 'package:pomodoist/data/repositories/achievements/achievement_repository_impl.dart';
+import 'package:pomodoist/ui/productivity/widgets/achievement_localizations.dart';
+import 'package:pomodoist/ui/settings/widgets/csv_task_import_card.dart';
+import 'package:pomodoist/domain/models/tasks/csv_task_import.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
+import 'package:pomodoist/ui/tasks/widgets/task_search_palette.dart';
+import 'package:pomodoist/domain/models/updates/update_contracts.dart';
+import 'package:pomodoist/ui/updates/widgets/update_copy.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 
 void main() {
   test(

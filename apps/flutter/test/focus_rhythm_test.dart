@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/focus/presentation/focus_rhythm.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/ui/focus/widgets/focus_rhythm.dart';
 
 void main() {
   group('focus rhythm projection', () {

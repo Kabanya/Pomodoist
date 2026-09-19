@@ -1,3 +1,4 @@
+import 'package:pomodoist/data/repositories/labels/label_repository_impl.dart';
 import 'dart:collection';
 import 'dart:convert';
 
@@ -5,18 +6,18 @@ import 'package:app_account/app_account.dart';
 import 'package:drift/drift.dart' hide isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/account_sync_engine.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/features/tasks/data/kanban_repository_impl.dart';
-import 'package:pomodoist/features/tasks/data/task_repository_impl.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/data/repositories/kanban/kanban_repository_impl.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:uuid/uuid.dart';
 
 void main() {
   group('Kanban account sync mapping', () {
     late AppDatabase db;
-    late DriftSyncQueueRepository queue;
+    late DriftOutboxService queue;
     late DriftTaskRepository tasks;
     late DriftKanbanRepository kanban;
     late _RecordingAccountClient account;
@@ -25,7 +26,7 @@ void main() {
     setUp(() async {
       db = AppDatabase(NativeDatabase.memory());
       await db.ensureSeedData();
-      queue = DriftSyncQueueRepository(db);
+      queue = DriftOutboxService(db);
       tasks = DriftTaskRepository(db, queue);
       kanban = DriftKanbanRepository(db, syncQueue: queue);
       account = _RecordingAccountClient();
@@ -41,8 +42,12 @@ void main() {
 
     test('user label icon updates are included in outbound sync', () async {
       final labels = DriftLabelRepository(db, queue);
-      final id = await labels.createLabel('Review', icon: 'bookmark');
-      await labels.updateLabelIcon(id, 'bolt');
+      final id = await labels
+          .createLabel('Review', icon: 'bookmark')
+          .then((result) => result.getOrThrow());
+      await labels
+          .updateLabelIcon(id, 'bolt')
+          .then((result) => result.getOrThrow());
       await engine.pushPending();
       final operations = account.pushed
           .where((op) => op.entityType == 'label' && op.entityId == id)
@@ -55,12 +60,14 @@ void main() {
     test(
       'snapshot separates user labels, stable status assignment, and settings',
       () async {
-        final taskId = await tasks.createTask(
-          const CreateTaskInput(
-            content: 'Snapshot task',
-            kanbanStatusId: kanbanStatusTodoId,
-          ),
-        );
+        final taskId = await tasks
+            .createTask(
+              const CreateTaskInput(
+                content: 'Snapshot task',
+                kanbanStatusId: kanbanStatusTodoId,
+              ),
+            )
+            .then((result) => result.getOrThrow());
         final now = DateTime.utc(2026, 7, 10, 9);
         await db
             .into(db.labels)
@@ -132,15 +139,23 @@ void main() {
     );
 
     test('mutation commands emit stable patch-specific operations', () async {
-      final taskId = await tasks.createTask(
-        const CreateTaskInput(content: 'Patch task'),
-      );
+      final taskId = await tasks
+          .createTask(const CreateTaskInput(content: 'Patch task'))
+          .then((result) => result.getOrThrow());
       await db.delete(db.syncCommands).go();
 
-      await kanban.renameStatus(kanbanStatusTodoId, 'Ready');
-      await kanban.reorderStatus(kanbanStatusTodoId, 2);
-      await kanban.setFocusStatus(kanbanStatusTodoId);
-      await kanban.moveTask(taskId, statusId: kanbanStatusTodoId);
+      await kanban
+          .renameStatus(kanbanStatusTodoId, 'Ready')
+          .then((result) => result.getOrThrow());
+      await kanban
+          .reorderStatus(kanbanStatusTodoId, 2)
+          .then((result) => result.getOrThrow());
+      await kanban
+          .setFocusStatus(kanbanStatusTodoId)
+          .then((result) => result.getOrThrow());
+      await kanban
+          .moveTask(taskId, statusId: kanbanStatusTodoId)
+          .then((result) => result.getOrThrow());
 
       await engine.pushPending();
 
@@ -186,23 +201,24 @@ void main() {
     test(
       'keeps partial task edits ordered while compacting reorders',
       () async {
-        final taskId = await tasks.createTask(
-          const CreateTaskInput(content: 'Initial'),
-        );
+        final taskId = await tasks
+            .createTask(const CreateTaskInput(content: 'Initial'))
+            .then((result) => result.getOrThrow());
         await db.delete(db.syncCommands).go();
-        await tasks.updateTask(
-          taskId,
-          const UpdateTaskPatch(content: 'First edit'),
-        );
-        await tasks.updateTask(
-          taskId,
-          UpdateTaskPatch(
-            schedule: TaskSchedule.timed(
-              start: DateTime.utc(2026, 9, 3, 12),
-              end: DateTime.utc(2026, 9, 3, 13),
-            ),
-          ),
-        );
+        await tasks
+            .updateTask(taskId, const UpdateTaskPatch(content: 'First edit'))
+            .then((result) => result.getOrThrow());
+        await tasks
+            .updateTask(
+              taskId,
+              UpdateTaskPatch(
+                schedule: TaskSchedule.timed(
+                  start: DateTime.utc(2026, 9, 3, 12),
+                  end: DateTime.utc(2026, 9, 3, 13),
+                ),
+              ),
+            )
+            .then((result) => result.getOrThrow());
         await queue.enqueue(
           type: 'task.reorder',
           clientId: taskId,
@@ -270,15 +286,17 @@ void main() {
     );
 
     test('task completion operations contain only completion fields', () async {
-      final taskId = await tasks.createTask(
-        CreateTaskInput(
-          content: 'Complete without stale schedule',
-          schedule: TaskSchedule.allDay(DateTime.utc(2026, 9, 3)),
-        ),
-      );
+      final taskId = await tasks
+          .createTask(
+            CreateTaskInput(
+              content: 'Complete without stale schedule',
+              schedule: TaskSchedule.allDay(DateTime.utc(2026, 9, 3)),
+            ),
+          )
+          .then((result) => result.getOrThrow());
       await db.delete(db.syncCommands).go();
 
-      await tasks.completeTask(taskId);
+      await tasks.completeTask(taskId).then((result) => result.getOrThrow());
       await engine.pushPending();
 
       final operation = account.pushed.singleWhere(
@@ -315,9 +333,9 @@ void main() {
         await (db.update(db.syncCommands)
               ..where((row) => row.clientId.equals('old-compacted')))
             .write(const SyncCommandsCompanion(status: Value('compacted')));
-        final taskId = await tasks.createTask(
-          const CreateTaskInput(content: 'Sync me once'),
-        );
+        final taskId = await tasks
+            .createTask(const CreateTaskInput(content: 'Sync me once'))
+            .then((result) => result.getOrThrow());
 
         final entityTypes = await engine.syncNow();
 
@@ -340,10 +358,10 @@ void main() {
     );
 
     test('elides a never-attempted task create followed by delete', () async {
-      final taskId = await tasks.createTask(
-        const CreateTaskInput(content: 'Never uploaded'),
-      );
-      await tasks.deleteTask(taskId);
+      final taskId = await tasks
+          .createTask(const CreateTaskInput(content: 'Never uploaded'))
+          .then((result) => result.getOrThrow());
+      await tasks.deleteTask(taskId).then((result) => result.getOrThrow());
       await (db.update(
         db.syncCommands,
       )..where((row) => row.type.equals('task.delete'))).write(
@@ -361,13 +379,13 @@ void main() {
     });
 
     test('keeps a tombstone after an attempted task create', () async {
-      final taskId = await tasks.createTask(
-        const CreateTaskInput(content: 'Possibly uploaded'),
-      );
+      final taskId = await tasks
+          .createTask(const CreateTaskInput(content: 'Possibly uploaded'))
+          .then((result) => result.getOrThrow());
       await (db.update(db.syncCommands)
             ..where((row) => row.clientId.equals(taskId)))
           .write(const SyncCommandsCompanion(attempts: Value(1)));
-      await tasks.deleteTask(taskId);
+      await tasks.deleteTask(taskId).then((result) => result.getOrThrow());
       await (db.update(
         db.syncCommands,
       )..where((row) => row.type.equals('task.delete'))).write(
@@ -425,11 +443,13 @@ void main() {
     });
 
     test('remote upsert preserves a pending local delete', () async {
-      final taskId = await tasks.createTask(
-        const CreateTaskInput(content: 'Delete locally'),
-      );
+      final taskId = await tasks
+          .createTask(const CreateTaskInput(content: 'Delete locally'))
+          .then((result) => result.getOrThrow());
       await db.delete(db.syncCommands).go();
-      final batch = await tasks.deleteTask(taskId);
+      final batch = await tasks
+          .deleteTask(taskId)
+          .then((result) => result.getOrThrow());
       final stored = await (db.select(
         db.tasks,
       )..where((row) => row.id.equals(taskId))).getSingle();
@@ -459,7 +479,12 @@ void main() {
       )..where((row) => row.id.equals(taskId))).getSingle();
       expect(updated.content, 'Updated remotely');
       expect(updated.isDeleted, isTrue);
-      expect(await tasks.restoreDeletedTasks(batch), isTrue);
+      expect(
+        await tasks
+            .restoreDeletedTasks(batch)
+            .then((result) => result.getOrThrow()),
+        isTrue,
+      );
     });
 
     test(
@@ -471,13 +496,20 @@ void main() {
           end: day.add(Duration(hours: hour + 1)),
         );
 
-        final taskId = await tasks.createTask(
-          CreateTaskInput(content: 'Keep latest time', schedule: scheduleAt(9)),
-        );
+        final taskId = await tasks
+            .createTask(
+              CreateTaskInput(
+                content: 'Keep latest time',
+                schedule: scheduleAt(9),
+              ),
+            )
+            .then((result) => result.getOrThrow());
         await db.delete(db.syncCommands).go();
 
         final firstLocal = scheduleAt(11);
-        await tasks.updateTask(taskId, UpdateTaskPatch(schedule: firstLocal));
+        await tasks
+            .updateTask(taskId, UpdateTaskPatch(schedule: firstLocal))
+            .then((result) => result.getOrThrow());
         final firstLocalUpdatedAt = DateTime.utc(2026, 9, 3, 12);
         await (db.update(db.tasks)..where((row) => row.id.equals(taskId)))
             .write(TasksCompanion(updatedAt: Value(firstLocalUpdatedAt)));
@@ -522,7 +554,9 @@ void main() {
         );
 
         final secondLocal = scheduleAt(14);
-        await tasks.updateTask(taskId, UpdateTaskPatch(schedule: secondLocal));
+        await tasks
+            .updateTask(taskId, UpdateTaskPatch(schedule: secondLocal))
+            .then((result) => result.getOrThrow());
         await (db.update(
           db.tasks,
         )..where((row) => row.id.equals(taskId))).write(
@@ -573,9 +607,14 @@ void main() {
         end: day.add(Duration(hours: hour + 1)),
       );
 
-      final taskId = await tasks.createTask(
-        CreateTaskInput(content: 'Accept server time', schedule: scheduleAt(9)),
-      );
+      final taskId = await tasks
+          .createTask(
+            CreateTaskInput(
+              content: 'Accept server time',
+              schedule: scheduleAt(9),
+            ),
+          )
+          .then((result) => result.getOrThrow());
       await db.delete(db.syncCommands).go();
       final localUpdatedAt = DateTime.utc(2026, 9, 3, 10);
       await (db.update(db.tasks)..where((row) => row.id.equals(taskId))).write(
@@ -632,11 +671,13 @@ void main() {
     });
 
     test('remote delete cancels local Undo', () async {
-      final taskId = await tasks.createTask(
-        const CreateTaskInput(content: 'Deleted everywhere'),
-      );
+      final taskId = await tasks
+          .createTask(const CreateTaskInput(content: 'Deleted everywhere'))
+          .then((result) => result.getOrThrow());
       await db.delete(db.syncCommands).go();
-      final batch = await tasks.deleteTask(taskId);
+      final batch = await tasks
+          .deleteTask(taskId)
+          .then((result) => result.getOrThrow());
       account.pullResults.add(
         AccountSyncPullResult(
           nextCursor: 1,
@@ -656,24 +697,35 @@ void main() {
       await engine.pullLatest();
 
       expect(await queue.watchPending().first, isEmpty);
-      expect(await tasks.restoreDeletedTasks(batch), isFalse);
+      expect(
+        await tasks
+            .restoreDeletedTasks(batch)
+            .then((result) => result.getOrThrow()),
+        isFalse,
+      );
     });
 
     test(
       'offline completion commands retain their captured completion',
       () async {
-        final taskId = await tasks.createTask(
-          const CreateTaskInput(
-            content: 'Complete twice',
-            kanbanStatusId: kanbanStatusTodoId,
-          ),
-        );
+        final taskId = await tasks
+            .createTask(
+              const CreateTaskInput(
+                content: 'Complete twice',
+                kanbanStatusId: kanbanStatusTodoId,
+              ),
+            )
+            .then((result) => result.getOrThrow());
         await db.delete(db.syncCommands).go();
 
-        await tasks.completeTask(taskId);
-        await tasks.uncompleteTask(taskId);
-        await kanban.moveTask(taskId, statusId: kanbanStatusInProgressId);
-        await tasks.completeTask(taskId);
+        await tasks.completeTask(taskId).then((result) => result.getOrThrow());
+        await tasks
+            .uncompleteTask(taskId)
+            .then((result) => result.getOrThrow());
+        await kanban
+            .moveTask(taskId, statusId: kanbanStatusInProgressId)
+            .then((result) => result.getOrThrow());
+        await tasks.completeTask(taskId).then((result) => result.getOrThrow());
 
         await engine.pushPending();
 
@@ -700,15 +752,17 @@ void main() {
     test(
       'final pull imports Kanban entities and repairs invariants once',
       () async {
-        final assignedTaskId = await tasks.createTask(
-          const CreateTaskInput(content: 'Remote assignment'),
-        );
-        final completedTaskId = await tasks.createTask(
-          const CreateTaskInput(
-            content: 'Repair completed',
-            kanbanStatusId: kanbanStatusTodoId,
-          ),
-        );
+        final assignedTaskId = await tasks
+            .createTask(const CreateTaskInput(content: 'Remote assignment'))
+            .then((result) => result.getOrThrow());
+        final completedTaskId = await tasks
+            .createTask(
+              const CreateTaskInput(
+                content: 'Repair completed',
+                kanbanStatusId: kanbanStatusTodoId,
+              ),
+            )
+            .then((result) => result.getOrThrow());
         final now = DateTime.utc(2026, 7, 10, 10);
         await (db.update(
           db.tasks,
@@ -784,9 +838,9 @@ void main() {
     );
 
     test('repair waits for the final pull page', () async {
-      final taskId = await tasks.createTask(
-        const CreateTaskInput(content: 'Paged assignment'),
-      );
+      final taskId = await tasks
+          .createTask(const CreateTaskInput(content: 'Paged assignment'))
+          .then((result) => result.getOrThrow());
       await db.delete(db.syncCommands).go();
       final now = DateTime.utc(2026, 7, 10, 11);
       const customStatusId = 'custom-status';

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/platform/windows_native_link_source.dart';
+import 'package:pomodoist/data/services/platform/windows_native_link_source.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

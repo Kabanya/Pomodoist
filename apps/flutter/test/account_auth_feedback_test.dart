@@ -2,16 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/auth/account_auth_feedback.dart';
-import 'package:pomodoist/app/auth/captcha_security.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
-import 'package:pomodoist/l10n/app_localizations_ar.dart';
-import 'package:pomodoist/l10n/app_localizations_de.dart';
-import 'package:pomodoist/l10n/app_localizations_en.dart';
-import 'package:pomodoist/l10n/app_localizations_es.dart';
-import 'package:pomodoist/l10n/app_localizations_fr.dart';
-import 'package:pomodoist/l10n/app_localizations_ru.dart';
-import 'package:pomodoist/l10n/app_localizations_zh.dart';
+import 'package:pomodoist/domain/models/account/account_auth_failure.dart';
+import 'package:pomodoist/data/services/auth/account_auth_errors.dart';
+import 'package:pomodoist/ui/auth/widgets/account_auth_feedback.dart';
+import 'package:pomodoist/domain/models/account/captcha_security.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations_ar.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations_de.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations_en.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations_es.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations_fr.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations_ru.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations_zh.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {

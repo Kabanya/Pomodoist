@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/auth/captcha_security.dart';
+import 'package:pomodoist/domain/models/account/captcha_security.dart';
 
 void main() {
   group('CaptchaTokenController', () {

@@ -8,10 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/features/settings/presentation/csv_task_import_card.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/ui/settings/widgets/csv_task_import_card.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 
 void main() {
   setUpAll(loadTestAppResources);
@@ -81,6 +81,9 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('csv-import-select-file')));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
     await _pumpUntilFound(
       tester,
       find.byKey(const Key('csv-import-preview-dialog')),
@@ -89,6 +92,9 @@ void main() {
     expect(find.textContaining('Work'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('csv-import-confirm')));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
     await tester.pumpAndSettle();
     expect((await db.select(db.tasks).get()).single.content, 'Imported');
   });

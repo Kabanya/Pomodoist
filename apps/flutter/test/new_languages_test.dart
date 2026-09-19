@@ -1,7 +1,8 @@
+import 'package:pomodoist/domain/models/settings/app_language.dart';
+import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/app_language.dart';
-import 'package:pomodoist/features/planning/domain/quick_add_parser.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

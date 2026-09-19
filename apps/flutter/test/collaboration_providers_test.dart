@@ -4,10 +4,10 @@ import 'package:app_account/app_account.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/features/collaboration/presentation/collaboration_providers.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/config/collaboration_dependencies.dart';
 
 void main() {
   test('collaboration repository appears once the account signs in', () async {

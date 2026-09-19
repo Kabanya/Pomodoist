@@ -8,14 +8,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/features/billing/billing.dart';
-import 'package:pomodoist/features/settings/presentation/app_info_card.dart';
-import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
-import 'package:pomodoist/features/settings/presentation/settings_navigation.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/domain/models/account/account_overview.dart';
+import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/ui/settings/widgets/app_info_card.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_screen.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_navigation.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -429,7 +430,7 @@ Future<void> _pumpSettings(
   WidgetTester tester, {
   required _RecordingAccountClient account,
   required AppDatabase db,
-  AccountOverview? overview,
+  PomodoistAccountOverview? overview,
   Object? overviewError,
   Duration requestTimeout = const Duration(seconds: 15),
 }) async {
@@ -451,7 +452,8 @@ Future<void> _pumpSettings(
           if (overviewError != null) throw overviewError;
           return account.currentUserId == null
               ? null
-              : overview ?? AccountOverview.empty(account.currentUserId!);
+              : overview ??
+                    PomodoistAccountOverview.empty(account.currentUserId!);
         }),
         accountRequestTimeoutProvider.overrideWithValue(requestTimeout),
         applePurchasesSupportedProvider.overrideWithValue(false),

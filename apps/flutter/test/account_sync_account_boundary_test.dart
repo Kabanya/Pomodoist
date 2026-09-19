@@ -1,3 +1,4 @@
+import 'package:pomodoist/data/repositories/focus/focus_preferences.dart';
 import 'dart:async';
 
 import 'package:app_account/app_account.dart';
@@ -6,11 +7,12 @@ import 'package:drift/native.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/account_sync_engine.dart';
-import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
+import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
@@ -590,17 +592,17 @@ AccountSyncEntity _focusPresetEntity(String id) {
 Future<void> _loadFocusPreferences(ProviderContainer container) async {
   await container.read(sharedPreferencesProvider.future);
   await container
-      .read(focusViewModeProvider.notifier)
-      .setMode(FocusViewMode.full);
+      .read(focusPreferencesRepositoryProvider)
+      .setViewMode(FocusViewMode.full);
   await container
-      .read(focusTimerVisualStyleProvider.notifier)
-      .setStyle(FocusTimerVisualStyle.bar);
+      .read(focusPreferencesRepositoryProvider)
+      .setTimerStyle(FocusTimerVisualStyle.bar);
   await container
-      .read(lastFocusPresetIdProvider.notifier)
+      .read(focusPreferencesRepositoryProvider)
       .setPresetId('custom-preset');
   await container
-      .read(focusCompletionCelebrationEnabledProvider.notifier)
-      .setEnabled(false);
+      .read(focusPreferencesRepositoryProvider)
+      .setCelebrationEnabled(false);
   expect(container.read(focusViewModeProvider), FocusViewMode.full);
   expect(
     container.read(focusTimerVisualStyleProvider),

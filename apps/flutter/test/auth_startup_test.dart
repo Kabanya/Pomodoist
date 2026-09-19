@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/app/app.dart';
-import 'package:pomodoist/app/routing/app_startup_gate.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/routing/router.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/ui/core/widgets/pomodoist_app.dart';
+import 'package:pomodoist/ui/core/widgets/app_startup_gate.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/routing/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -71,7 +71,9 @@ void main() {
           accountStartupCalls += 1;
           return accountStartup.future;
         }),
-        appStartupLifecycleProvider.overrideWith((ref) {}),
+        recurringTaskMaterializationProvider.overrideWith((ref) {}),
+        taskStartNotificationCoordinatorProvider.overrideWith((ref) {}),
+        reengagementNotificationCoordinatorProvider.overrideWith((ref) {}),
       ],
     );
     addTearDown(container.dispose);
@@ -121,7 +123,9 @@ void main() {
             return startup.future;
           }),
           accountSyncStartupProvider.overrideWith((ref) async {}),
-          appStartupLifecycleProvider.overrideWith((ref) {}),
+          recurringTaskMaterializationProvider.overrideWith((ref) {}),
+          taskStartNotificationCoordinatorProvider.overrideWith((ref) {}),
+          reengagementNotificationCoordinatorProvider.overrideWith((ref) {}),
         ],
         child: const MaterialApp(
           home: AppStartupGate(

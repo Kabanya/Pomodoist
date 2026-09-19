@@ -1,0 +1,87 @@
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+
+enum TaskTimeState { completed, focused, future, current, overdue }
+
+enum TaskTimeDisplayMode {
+  smart('smart'),
+  range('range'),
+  startOnly('startOnly');
+
+  const TaskTimeDisplayMode(this.storageValue);
+
+  final String storageValue;
+
+  static TaskTimeDisplayMode fromStorageValue(String? value) {
+    return switch (value) {
+      'range' => TaskTimeDisplayMode.range,
+      'startOnly' => TaskTimeDisplayMode.startOnly,
+      _ => TaskTimeDisplayMode.smart,
+    };
+  }
+}
+
+TaskTimeState classifyTaskTimeState({
+  required bool isCompleted,
+  required String taskId,
+  required TaskSchedule schedule,
+  required DateTime now,
+  String? activeFocusTaskId,
+}) {
+  if (isCompleted) {
+    return TaskTimeState.completed;
+  }
+  if (activeFocusTaskId == taskId) {
+    return TaskTimeState.focused;
+  }
+  final currentTime = now.toUtc();
+  if (currentTime.isBefore(schedule.start!)) {
+    return TaskTimeState.future;
+  }
+  if (currentTime.isBefore(schedule.end!)) {
+    return TaskTimeState.current;
+  }
+  return TaskTimeState.overdue;
+}
+
+bool shouldShowTaskTimeRange(
+  TaskSchedule schedule,
+  TaskTimeDisplayMode displayMode, {
+  required int defaultTimedBlockMinutes,
+}) {
+  return switch (displayMode) {
+    TaskTimeDisplayMode.range => true,
+    TaskTimeDisplayMode.startOnly => false,
+    TaskTimeDisplayMode.smart =>
+      schedule.duration != Duration(minutes: defaultTimedBlockMinutes),
+  };
+}
+
+TaskTimeState? taskTimeStateForTask({
+  required TaskItem task,
+  required DateTime now,
+  String? activeFocusTaskId,
+}) {
+  final schedule = task.schedule;
+  if (schedule == null || !schedule.isTimed) {
+    return null;
+  }
+  return classifyTaskTimeState(
+    isCompleted: task.isCompleted,
+    taskId: task.id,
+    schedule: schedule,
+    now: now,
+    activeFocusTaskId: activeFocusTaskId,
+  );
+}
+
+/// Actual lateness is independent of the visual state of an active Focus task.
+bool isTaskOverdue(TaskItem task, DateTime now) {
+  if (task.isCompleted || task.isDeleted) return false;
+  final schedule = task.schedule;
+  if (schedule == null) return false;
+  if (schedule.isTimed) return !schedule.end!.isAfter(now);
+  final localNow = now.toLocal();
+  return schedule.date!.isBefore(
+    DateTime(localNow.year, localNow.month, localNow.day),
+  );
+}

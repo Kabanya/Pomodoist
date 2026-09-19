@@ -1,3 +1,7 @@
+import 'package:pomodoist/config/focus_dependencies.dart';
+import 'package:pomodoist/utils/result.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
+import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
 import 'support/test_app.dart';
 import 'dart:async';
 
@@ -5,23 +9,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/core/time/clock.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/focus/presentation/focus_completion_celebration.dart';
-import 'package:pomodoist/features/focus/presentation/focus_completion_celebration_controller.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/utils/clock.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/ui/focus/widgets/focus_completion_celebration.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 
 void main() {
   setUpAll(loadTestAppResources);
   testWidgets('standalone completion stays visible until Done', (tester) async {
     final container = _container();
     addTearDown(container.dispose);
-    container
-        .read(focusRunCompletionControllerProvider.notifier)
-        .present(_completion());
+    container.read(focusCompletionRepositoryProvider).present(_completion());
 
     await _pumpCelebration(tester, container: container);
 
@@ -48,7 +49,7 @@ void main() {
     final container = _container(taskRepository: taskRepository);
     addTearDown(container.dispose);
     container
-        .read(focusRunCompletionControllerProvider.notifier)
+        .read(focusCompletionRepositoryProvider)
         .present(_completion(taskId: 'task-1', taskTitle: 'Ship celebration'));
 
     await _pumpCelebration(tester, container: container);
@@ -78,7 +79,7 @@ void main() {
     final container = _container(taskRepository: taskRepository);
     addTearDown(container.dispose);
     container
-        .read(focusRunCompletionControllerProvider.notifier)
+        .read(focusCompletionRepositoryProvider)
         .present(_completion(taskId: 'task-1', taskTitle: 'Ship celebration'));
     await _pumpCelebration(tester, container: container);
     await tester.pump(const Duration(seconds: 2));
@@ -110,7 +111,7 @@ void main() {
     final container = _container(taskRepository: taskRepository);
     addTearDown(container.dispose);
     container
-        .read(focusRunCompletionControllerProvider.notifier)
+        .read(focusCompletionRepositoryProvider)
         .present(_completion(taskId: 'task-1', taskTitle: 'Ship celebration'));
     await _pumpCelebration(tester, container: container);
     await tester.pump(const Duration(seconds: 2));
@@ -131,7 +132,7 @@ void main() {
     for (final task in [_task(status: 'completed'), _task(isDeleted: true)]) {
       final container = _container(taskRepository: _TaskRepository(task));
       container
-          .read(focusRunCompletionControllerProvider.notifier)
+          .read(focusCompletionRepositoryProvider)
           .present(
             _completion(
               runId: 'run-${task.status}-${task.isDeleted}',
@@ -215,7 +216,7 @@ void main() {
     );
     addTearDown(container.dispose);
     container
-        .read(focusRunCompletionControllerProvider.notifier)
+        .read(focusCompletionRepositoryProvider)
         .present(
           _completion(
             taskId: 'current',
@@ -262,7 +263,7 @@ void main() {
     );
     addTearDown(container.dispose);
     container
-        .read(focusRunCompletionControllerProvider.notifier)
+        .read(focusCompletionRepositoryProvider)
         .present(
           _completion(
             taskId: 'current',
@@ -304,7 +305,7 @@ void main() {
     final container = _container(tasks: [next], now: now);
     addTearDown(container.dispose);
     container
-        .read(focusRunCompletionControllerProvider.notifier)
+        .read(focusCompletionRepositoryProvider)
         .present(_completion(completedAt: now));
 
     await _pumpCelebration(
@@ -362,7 +363,7 @@ void main() {
     );
     addTearDown(container.dispose);
     container
-        .read(focusRunCompletionControllerProvider.notifier)
+        .read(focusCompletionRepositoryProvider)
         .present(
           _completion(
             taskId: 'current',
@@ -393,9 +394,7 @@ void main() {
   ) async {
     final container = _container();
     addTearDown(container.dispose);
-    container
-        .read(focusRunCompletionControllerProvider.notifier)
-        .present(_completion());
+    container.read(focusCompletionRepositoryProvider).present(_completion());
 
     await _pumpCelebration(tester, container: container);
 
@@ -424,9 +423,7 @@ void main() {
     (tester) async {
       final container = _container();
       addTearDown(container.dispose);
-      container
-          .read(focusRunCompletionControllerProvider.notifier)
-          .present(_completion());
+      container.read(focusCompletionRepositoryProvider).present(_completion());
 
       await _pumpCelebration(
         tester,
@@ -458,9 +455,7 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    container
-        .read(focusRunCompletionControllerProvider.notifier)
-        .present(_completion());
+    container.read(focusCompletionRepositoryProvider).present(_completion());
 
     await _pumpCelebration(
       tester,
@@ -531,7 +526,7 @@ void main() {
     final container = _container(taskRepository: taskRepository);
     addTearDown(container.dispose);
     container
-        .read(focusRunCompletionControllerProvider.notifier)
+        .read(focusCompletionRepositoryProvider)
         .present(_completion(taskId: 'task-1', taskTitle: 'Ship celebration'));
 
     await _pumpCelebration(tester, container: container);
@@ -701,17 +696,19 @@ class _TaskRepository implements TaskRepository {
   Stream<TaskItem?> watchTask(String id) => Stream.value(task);
 
   @override
-  Future<void> completeTask(String id) async {
-    completeCount++;
-    if (completeError case final error?) {
-      throw error;
-    }
-  }
+  Future<Result<void>> completeTask(String id) =>
+      Result.capture<void>(() async {
+        completeCount++;
+        if (completeError case final error?) {
+          throw error;
+        }
+      });
 
   @override
-  Future<void> uncompleteTask(String id) async {
-    uncompleteCount++;
-  }
+  Future<Result<void>> uncompleteTask(String id) =>
+      Result.capture<void>(() async {
+        uncompleteCount++;
+      });
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -723,7 +720,8 @@ class _DelayedTaskRepository implements TaskRepository {
 
   void add(TaskItem? task) => _controller.add(task);
 
-  Future<void> dispose() => _controller.close();
+  Future<Result<void>> dispose() =>
+      Result.capture<void>(() async => _controller.close());
 
   @override
   Stream<TaskItem?> watchTask(String id) => _controller.stream;
@@ -739,13 +737,14 @@ class _FocusRepository implements FocusRepository {
   final List<StartFocusRunInput> startInputs = [];
 
   @override
-  Future<String> startRun(StartFocusRunInput input, {DateTime? now}) async {
-    startInputs.add(input);
-    if (startError case final error?) {
-      throw error;
-    }
-    return 'new-run';
-  }
+  Future<Result<String>> startRun(StartFocusRunInput input, {DateTime? now}) =>
+      Result.capture<String>(() async {
+        startInputs.add(input);
+        if (startError case final error?) {
+          throw error;
+        }
+        return 'new-run';
+      });
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:app_account/app_account.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/account_sync_lifecycle.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/sync/account_sync_lifecycle.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +35,7 @@ void main() {
   });
 
   test('pending local command schedules sync quickly', () async {
-    final queue = _FakeSyncQueueRepository();
+    final queue = _FakeOutboxService();
     var syncs = 0;
     final lifecycle = _lifecycle(queue: queue, syncNow: () async => syncs += 1)
       ..start();
@@ -54,7 +54,7 @@ void main() {
   });
 
   test('deferred command schedules sync when it becomes available', () async {
-    final queue = _FakeSyncQueueRepository();
+    final queue = _FakeOutboxService();
     final hints = StreamController<AccountSyncHint>();
     var syncs = 0;
     final lifecycle = _lifecycle(
@@ -85,7 +85,7 @@ void main() {
   });
 
   test('sync failure schedules retry', () async {
-    final queue = _FakeSyncQueueRepository();
+    final queue = _FakeOutboxService();
     var syncs = 0;
     final lifecycle = _lifecycle(
       queue: queue,
@@ -107,7 +107,7 @@ void main() {
   });
 
   test('hint stream error resubscribes and future hints still sync', () async {
-    final queue = _FakeSyncQueueRepository();
+    final queue = _FakeOutboxService();
     final hintStreams = <StreamController<AccountSyncHint>>[];
     var syncs = 0;
     final lifecycle = _lifecycle(
@@ -148,7 +148,7 @@ void main() {
   });
 
   test('successful sync forwards received entity types', () async {
-    final queue = _FakeSyncQueueRepository();
+    final queue = _FakeOutboxService();
     Set<String>? received;
     final lifecycle = _lifecycle(
       queue: queue,
@@ -168,7 +168,7 @@ void main() {
 }
 
 AccountSyncLifecycle _lifecycle({
-  required _FakeSyncQueueRepository queue,
+  required _FakeOutboxService queue,
   required Future<void> Function() syncNow,
   Stream<AccountSyncHint> Function()? syncHints,
   Set<String> entityTypes = const {},
@@ -207,7 +207,7 @@ SyncCommandRow _command({DateTime? availableAt}) {
   );
 }
 
-class _FakeSyncQueueRepository implements SyncQueueRepository {
+class _FakeOutboxService implements OutboxService {
   final _controller = StreamController<List<SyncCommandRow>>.broadcast();
 
   @override

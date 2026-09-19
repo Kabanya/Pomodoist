@@ -1,3 +1,6 @@
+import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
+import 'package:pomodoist/data/repositories/planning/task_decomposition_repository.dart';
+import 'package:pomodoist/utils/result.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadSwitch, LucideIcons;
 import 'support/test_app.dart';
 import 'dart:async';
@@ -16,22 +19,22 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/time/clock.dart';
-import 'package:pomodoist/features/billing/billing.dart';
-import 'package:pomodoist/features/onboarding/onboarding_gate.dart';
-import 'package:pomodoist/features/planning/data/task_decomposer.dart';
-import 'package:pomodoist/features/planning/data/quick_add_service.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/features/tasks/presentation/task_search_palette.dart';
-import 'package:pomodoist/features/tasks/presentation/widgets/quick_add_bar.dart';
-import 'package:pomodoist/features/tasks/presentation/widgets/task_list_view.dart';
-import 'package:pomodoist/features/voice/data/pomodoist_voice_controller.dart';
-import 'package:pomodoist/features/voice/data/voice_transcription_mode.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/utils/clock.dart';
+import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/ui/onboarding/widgets/onboarding_gate.dart';
+import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/tasks/widgets/task_search_palette.dart';
+import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart';
+import 'package:pomodoist/ui/tasks/widgets/task_list_view.dart';
+import 'package:pomodoist/data/services/voice/pomodoist_voice_controller.dart';
+import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
+import 'package:pomodoist/config/voice_preferences_dependencies.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadTheme;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -139,7 +142,7 @@ void main() {
         ),
       ],
     );
-    await signedIn.read(voiceTranscriptionModeProvider.notifier).ready;
+    await signedIn.read(voicePreferencesRepositoryProvider).ready;
     expect(
       signedIn.read(voiceRecognitionControllerProvider),
       isA<BackendVoiceController>(),
@@ -153,7 +156,7 @@ void main() {
         ),
       ],
     );
-    await signedOut.read(voiceTranscriptionModeProvider.notifier).ready;
+    await signedOut.read(voicePreferencesRepositoryProvider).ready;
     expect(
       signedOut.read(voiceRecognitionControllerProvider),
       isNot(isA<BackendVoiceController>()),
@@ -484,7 +487,7 @@ void main() {
         tester.element(find.byType(QuickAddBar)),
       );
       await container
-          .read(voiceTranscriptionModeProvider.notifier)
+          .read(voicePreferencesRepositoryProvider)
           .setMode(VoiceTranscriptionMode.system);
       await tester.tap(find.byKey(const Key('voice-expand')));
       await tester.pumpAndSettle();
@@ -1316,6 +1319,9 @@ void main() {
       DecomposedTaskDraft(quickAdd: 'Buy coffee'),
     ]);
     await tester.pumpAndSettle();
+    for (var pump = 0; pump < 4; pump++) {
+      await tester.pump();
+    }
     expect(find.byKey(const Key('voice-mini-ready')), findsOneWidget);
     expect(
       find.descendant(
@@ -2594,13 +2600,13 @@ void main() {
   }
 }
 
-class _QuickAddMotionService implements QuickAddService {
+class _QuickAddMotionService implements QuickAddUseCase {
   const _QuickAddMotionService(this.create);
 
   final Future<String> Function() create;
 
   @override
-  Future<String> createTask(
+  Future<Result<String>> createTask(
     String input, {
     String? description,
     String? parentId,
@@ -2611,14 +2617,14 @@ class _QuickAddMotionService implements QuickAddService {
     TaskSchedule? defaultSchedule,
     String? kanbanStatusId,
     String? labelId,
-  }) => create();
+  }) => Result.capture<String>(() async => create());
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 Widget _quickAddMotionApp(
-  QuickAddService service, {
+  QuickAddUseCase service, {
   bool disableAnimations = false,
   ValueChanged<List<String>>? onTaskCreated,
 }) {

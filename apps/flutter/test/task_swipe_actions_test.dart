@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/tasks/presentation/widgets/task_swipe_actions.dart';
+import 'package:pomodoist/ui/tasks/widgets/task_swipe_actions.dart';
 
 void main() {
   test(

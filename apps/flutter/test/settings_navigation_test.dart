@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/settings/presentation/settings_navigation.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_navigation.dart';
 
 void main() {
   test('section URLs round-trip and ignore unrelated parameters', () {

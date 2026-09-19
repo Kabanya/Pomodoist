@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/planning/data/quick_add_hint.dart';
+import 'package:pomodoist/data/services/planning/quick_add_hint.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/sync/pomodoist_retention.dart';
-import 'package:pomodoist/features/collaboration/domain/collaboration_models.dart';
+import 'package:pomodoist/domain/use_cases/account/pomodoist_retention.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
 
 void main() {
   test(

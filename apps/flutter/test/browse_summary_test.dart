@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/productivity/domain/productivity_models.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/features/tasks/presentation/browse_summary.dart';
-import 'package:pomodoist/features/tasks/presentation/project_list_data.dart';
+import 'package:pomodoist/domain/models/productivity/productivity_models.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/tasks/view_models/browse_summary.dart';
+import 'package:pomodoist/domain/use_cases/tasks/project_list_data.dart';
 
 void main() {
   test('periods use daily totals and keep the current open count', () {

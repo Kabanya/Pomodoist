@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
 
 void main() {
   test('Today replaces the mini player only for a coherent ready session', () {

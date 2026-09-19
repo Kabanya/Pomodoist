@@ -1,11 +1,11 @@
+import 'package:pomodoist/domain/models/calendar/calendar_models.dart';
 import 'dart:async';
 
 import 'package:app_account/app_account.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/features/integrations/google_calendar/data/google_calendar_sync_controller.dart';
-import 'package:pomodoist/features/integrations/google_calendar/data/google_calendar_sync_lifecycle.dart';
+import 'package:pomodoist/data/services/google_calendar/google_calendar_sync_controller.dart';
+import 'package:pomodoist/data/services/google_calendar/google_calendar_sync_lifecycle.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -13,7 +13,7 @@ void main() {
   testWidgets('connected calendar syncs once per foreground session', (
     tester,
   ) async {
-    final connections = StreamController<GoogleCalendarConnectionRow?>();
+    final connections = StreamController<GoogleCalendarConnection?>();
     var syncs = 0;
     final lifecycle = GoogleCalendarSyncLifecycle(
       connections: connections.stream,
@@ -52,13 +52,13 @@ void main() {
   });
 }
 
-GoogleCalendarConnectionRow _connection({
+GoogleCalendarConnection _connection({
   String status = 'connected',
   String? calendarId = 'calendar-1',
   DateTime? updatedAt,
 }) {
   final now = updatedAt ?? DateTime.utc(2026, 8, 31, 10);
-  return GoogleCalendarConnectionRow(
+  return GoogleCalendarConnection(
     id: 'primary',
     accountEmail: 'user@example.com',
     calendarId: calendarId,

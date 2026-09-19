@@ -4,11 +4,11 @@ import 'package:app_account/app_account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/features/integrations/google_calendar/data/google_calendar_sync_controller.dart';
-import 'package:pomodoist/features/integrations/google_calendar/presentation/google_calendar_settings_screen.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/domain/models/calendar/calendar_models.dart';
+import 'package:pomodoist/data/services/google_calendar/google_calendar_sync_controller.dart';
+import 'package:pomodoist/ui/google_calendar/widgets/google_calendar_settings_screen.dart';
 
 void main() {
   setUpAll(loadTestAppResources);
@@ -36,7 +36,7 @@ void main() {
           googleCalendarSyncControllerProvider.overrideWithValue(controller),
           googleCalendarConnectionProvider.overrideWith(
             (ref) => Stream.value(
-              GoogleCalendarConnectionRow(
+              GoogleCalendarConnection(
                 id: 'primary',
                 accountEmail: 'user@example.com',
                 calendarId: 'calendar-1',
@@ -87,7 +87,7 @@ void main() {
           googleCalendarSyncControllerProvider.overrideWithValue(controller),
           googleCalendarConnectionProvider.overrideWith(
             (ref) => Stream.value(
-              GoogleCalendarConnectionRow(
+              GoogleCalendarConnection(
                 id: 'primary',
                 accountEmail: 'user@example.com',
                 calendarId: 'calendar-1',

@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
 
 void main() {
   test(
@@ -13,7 +13,7 @@ void main() {
       final db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
       await db.ensureSeedData();
-      final queue = DriftSyncQueueRepository(db);
+      final queue = DriftOutboxService(db);
       final occurredAt = DateTime.utc(2026, 7, 10, 9);
 
       await queue.enqueueBatch(const [
@@ -76,7 +76,7 @@ void main() {
       final db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
       await db.ensureSeedData();
-      final queue = DriftSyncQueueRepository(db);
+      final queue = DriftOutboxService(db);
       final second = DateTime.utc(2026, 7, 10, 9);
 
       await queue.enqueueBatch(const [
@@ -99,7 +99,7 @@ void main() {
       final db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
       await db.ensureSeedData();
-      final queue = DriftSyncQueueRepository(db);
+      final queue = DriftOutboxService(db);
       final availableAt = DateTime.utc(2026, 7, 10, 9, 0, 7);
 
       await queue.enqueueBatch([
@@ -126,7 +126,7 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
     await db.ensureSeedData();
-    final queue = DriftSyncQueueRepository(db);
+    final queue = DriftOutboxService(db);
 
     await queue.enqueue(
       type: 'task.update',
@@ -164,7 +164,7 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
     await db.ensureSeedData();
-    final queue = DriftSyncQueueRepository(db);
+    final queue = DriftOutboxService(db);
 
     await queue.enqueue(
       type: 'google_calendar.connection.upsert',

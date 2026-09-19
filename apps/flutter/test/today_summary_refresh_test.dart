@@ -1,8 +1,10 @@
+import 'package:pomodoist/utils/result.dart';
+import 'package:pomodoist/data/repositories/productivity/productivity_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/features/productivity/domain/productivity_models.dart';
-import 'package:pomodoist/l10n/app_localizations_fr.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/domain/models/productivity/productivity_models.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations_fr.dart';
 
 void main() {
   test('daily summary refreshes at midnight, not every timer tick', () {
@@ -49,5 +51,6 @@ class _DailyRepository implements ProductivityRepository {
   }
 
   @override
-  Future<void> recalculateDailyStats(DateTime localDate) async {}
+  Future<Result<void>> recalculateDailyStats(DateTime localDate) =>
+      Result.capture<void>(() async {});
 }

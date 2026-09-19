@@ -5,6 +5,106 @@ from check_architecture import check, cycles, dart_target, dependencies
 
 
 class ArchitectureTests(unittest.TestCase):
+    def test_mvvm_boundaries_reject_data_access_from_views(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            files = {
+                'server/core-manifest.json': '{"helpers":[],"functions":[]}',
+                'apps/flutter/lib/data/repositories/tasks/task_repository.dart': '',
+                'apps/flutter/lib/data/repositories/focus/focus_repository.dart':
+                    "import '../tasks/task_repository.dart';",
+                'apps/flutter/lib/config/dependencies.dart': '',
+                'apps/flutter/lib/ui/tasks/widgets/task_screen.dart':
+                    "import 'package:pomodoist/data/repositories/tasks/task_repository.dart';\n"
+                    "import 'package:pomodoist/config/dependencies.dart';",
+                'apps/flutter/lib/data/services/api.dart':
+                    "import 'package:pomodoist/ui/tasks/widgets/task_screen.dart';",
+            }
+            for name, source in files.items():
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(source)
+            (root / 'server/supabase/functions').mkdir(parents=True)
+            failures = '\n'.join(check(root))
+            self.assertIn('view depends on data/composition', failures)
+            self.assertIn('repository depends on another repository', failures)
+            self.assertIn('data depends on UI/composition', failures)
+
+    def test_mvvm_boundaries_reject_hidden_and_reverse_dependencies(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            files = {
+                'server/core-manifest.json': '{"helpers":[],"functions":[]}',
+                'apps/flutter/lib/data/repositories/tasks/task_repository.dart': '',
+                'apps/flutter/lib/data/services/local/database.dart':
+                    "import '../../repositories/tasks/task_repository.dart';",
+                'apps/flutter/lib/data/repositories/tasks/drift_tasks.dart':
+                    "import 'package:flutter_riverpod/flutter_riverpod.dart';",
+                'apps/flutter/lib/ui/tasks/view_models/task_vm.dart': '',
+                'apps/flutter/lib/ui/search/view_models/search_vm.dart':
+                    "export '../../tasks/view_models/task_vm.dart';\n"
+                    "import 'package:shared_preferences/shared_preferences.dart';\n"
+                    "import '../../../data/services/local/database.dart';",
+                'apps/flutter/lib/ui/tasks/widgets/task_screen.dart':
+                    "part 'task_screen_actions.dart';",
+                'apps/flutter/lib/ui/tasks/widgets/task_screen_actions.dart':
+                    "part of 'task_screen.dart';",
+                'apps/flutter/lib/utils/hidden_ui.dart':
+                    "export '../ui/tasks/widgets/task_screen.dart';",
+            }
+            for name, source in files.items():
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(source)
+            (root / 'server/supabase/functions').mkdir(parents=True)
+            failures = '\n'.join(check(root))
+            self.assertIn('service depends on repository', failures)
+            self.assertIn('lower layer depends on Riverpod', failures)
+            self.assertIn('view model depends on another view model', failures)
+            self.assertIn('view model depends on infrastructure', failures)
+            self.assertIn('utility depends on application/framework', failures)
+            self.assertNotIn('missing import task_screen.dart', failures)
+            graph_dependencies = dependencies(
+                root / 'apps/flutter/lib/ui/tasks/widgets/task_screen.dart',
+            )
+            self.assertEqual(graph_dependencies, ['task_screen_actions.dart'])
+
+    def test_repository_contracts_do_not_expose_infrastructure(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            files = {
+                'server/core-manifest.json': '{"helpers":[],"functions":[]}',
+                'apps/flutter/lib/data/services/local/database.dart': '',
+                'apps/flutter/lib/data/repositories/tasks/task_repository.dart':
+                    "import 'package:drift/drift.dart';\n"
+                    "import '../../services/local/database.dart';\n"
+                    'abstract interface class TaskRepository {}',
+            }
+            for name, source in files.items():
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(source)
+            (root / 'server/supabase/functions').mkdir(parents=True)
+            failures = '\n'.join(check(root))
+            self.assertIn('repository contract depends on infrastructure', failures)
+
+    def test_use_cases_may_depend_on_repository_contracts(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            files = {
+                'server/core-manifest.json': '{"helpers":[],"functions":[]}',
+                'apps/flutter/lib/data/repositories/tasks/task_repository.dart': '',
+                'apps/flutter/lib/domain/use_cases/complete_task.dart':
+                    "import '../../data/repositories/tasks/task_repository.dart';",
+                'apps/flutter/lib/domain/models/task.dart': '',
+            }
+            for name, source in files.items():
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(source)
+            (root / 'server/supabase/functions').mkdir(parents=True)
+            self.assertEqual(check(root), [])
+
     def test_cycles_include_exports_and_self_imports(self):
         self.assertEqual(cycles({'a': {'b'}, 'b': {'a'}, 'c': {'c'}, 'd': set()}), [['a', 'b'], ['c']])
 
@@ -69,7 +169,7 @@ class ArchitectureTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             root = Path(directory)
             files = {
-                'apps/flutter/lib/features/tasks/domain/model.dart': "import 'package:flutter/widgets.dart';",
+                'apps/flutter/lib/domain/models/tasks/model.dart': "import 'package:flutter/widgets.dart';",
                 'server/supabase/functions/_shared/shared.ts': 'export { run } from "../endpoint/index.ts";',
                 'server/supabase/functions/endpoint/index.ts': 'import "../_shared/omitted.ts"; export const run = 1;',
                 'server/supabase/functions/_shared/omitted.ts': 'export const omitted = true;',
@@ -84,7 +184,7 @@ class ArchitectureTests(unittest.TestCase):
             self.assertIn('shared code imports adapter', failures)
             self.assertIn('missing manifest helper', failures)
             self.assertIn('Manifest omits omitted.ts required by endpoint/index.ts', failures)
-            (root / 'apps/flutter/lib/features/tasks/domain/model.dart').unlink()
+            (root / 'apps/flutter/lib/domain/models/tasks/model.dart').unlink()
             (root / 'apps/flutter/lib').rename(root / 'moved-lib')
             self.assertIn('Missing source directory: apps/flutter/lib', check(root))
 

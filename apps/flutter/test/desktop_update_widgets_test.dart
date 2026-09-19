@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pomodoist/features/updates/update_contracts.dart';
-import 'package:pomodoist/features/updates/update_providers.dart';
-import 'package:pomodoist/features/updates/update_widgets.dart';
-import 'package:pomodoist/features/updates/update_release.dart';
+import 'package:pomodoist/domain/models/updates/update_contracts.dart';
+import 'package:pomodoist/config/update_dependencies.dart';
+import 'package:pomodoist/ui/updates/widgets/update_widgets.dart';
+import 'package:pomodoist/domain/models/updates/update_release.dart';
 
 import 'desktop_update_controller_test.dart' as support;
 
@@ -150,9 +150,14 @@ void main() {
       final controller = support.testController(installer: installer);
       await controller.check();
       await tester.pumpWidget(
-        MaterialApp(
-          builder: testAppBuilder,
-          home: Scaffold(body: DesktopUpdatePopup(controller: controller)),
+        ProviderScope(
+          overrides: [
+            desktopUpdateControllerProvider.overrideWithValue(controller),
+          ],
+          child: const MaterialApp(
+            builder: testAppBuilder,
+            home: Scaffold(body: DesktopUpdatePopup()),
+          ),
         ),
       );
       await tester.tap(find.byKey(const Key('desktop-update-install')));
@@ -212,14 +217,19 @@ void main() {
       await controller.check();
       controller.phase = UpdatePhase.verifying;
       await tester.pumpWidget(
-        MaterialApp(
-          builder: testAppBuilder,
-          home: MediaQuery(
-            data: const MediaQueryData(
-              size: Size(360, 640),
-              disableAnimations: true,
+        ProviderScope(
+          overrides: [
+            desktopUpdateControllerProvider.overrideWithValue(controller),
+          ],
+          child: const MaterialApp(
+            builder: testAppBuilder,
+            home: MediaQuery(
+              data: MediaQueryData(
+                size: Size(360, 640),
+                disableAnimations: true,
+              ),
+              child: Scaffold(body: DesktopUpdatePopup()),
             ),
-            child: Scaffold(body: DesktopUpdatePopup(controller: controller)),
           ),
         ),
       );

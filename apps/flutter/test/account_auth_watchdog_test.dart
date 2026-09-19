@@ -1,7 +1,7 @@
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton, ShadInput;
 import 'support/test_app.dart';
 import 'support/account_email_auth.dart';
-import 'package:pomodoist/app/auth/email_auth.dart';
+import 'package:pomodoist/config/auth/email_auth.dart';
 import 'dart:async';
 
 import 'package:app_account/app_account.dart';
@@ -12,11 +12,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/app/auth/captcha_verification.dart';
-import 'package:pomodoist/app/config/runtime_public_config.dart';
-import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/ui/auth/widgets/captcha_verification.dart';
+import 'package:pomodoist/config/runtime_public_config.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_screen.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
     show AuthApiException, AuthRetryableFetchException;
 

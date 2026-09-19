@@ -5,10 +5,10 @@ import 'package:app_voice/app_voice.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/voice/data/backend_voice_recognizer.dart';
-import 'package:pomodoist/features/voice/data/pomodoist_voice_controller.dart';
-import 'package:pomodoist/features/voice/data/voice_recording.dart';
-import 'package:pomodoist/features/voice/data/voice_transcription_mode.dart';
+import 'package:pomodoist/data/services/voice/backend_voice_recognizer.dart';
+import 'package:pomodoist/data/services/voice/pomodoist_voice_controller.dart';
+import 'package:pomodoist/data/services/voice/voice_recording.dart';
+import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

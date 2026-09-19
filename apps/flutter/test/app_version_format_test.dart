@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/settings/presentation/app_info_card.dart';
+import 'package:pomodoist/ui/settings/widgets/app_info_card.dart';
 
 void main() {
   test('formatAppVersion includes a non-empty build number', () {

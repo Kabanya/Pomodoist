@@ -1,18 +1,19 @@
+import 'package:pomodoist/data/repositories/projects/project_repository_impl.dart';
 import 'dart:io';
 import 'package:app_account/app_account.dart';
 import 'package:uuid/uuid.dart';
-import 'package:pomodoist/core/sync/account_sync_engine.dart';
-import 'package:pomodoist/features/tasks/presentation/widgets/project_tree_controls.dart';
-import 'package:pomodoist/features/tasks/presentation/timeline_project_layout.dart';
+import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'package:pomodoist/ui/tasks/widgets/project_tree_controls.dart';
+import 'package:pomodoist/ui/tasks/view_models/timeline_project_layout.dart';
 import 'package:drift/drift.dart' show Value, driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/features/tasks/data/task_repository_impl.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/features/tasks/domain/project_hierarchy.dart';
-import 'package:pomodoist/features/tasks/presentation/project_list_data.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/domain/models/tasks/project_hierarchy.dart';
+import 'package:pomodoist/domain/use_cases/tasks/project_list_data.dart';
 
 void main() {
   late AppDatabase db;
@@ -20,7 +21,7 @@ void main() {
   setUp(() async {
     db = AppDatabase(NativeDatabase.memory());
     await db.ensureSeedData();
-    projects = DriftProjectRepository(db, DriftSyncQueueRepository(db));
+    projects = DriftProjectRepository(db, DriftOutboxService(db));
   });
   tearDown(() => db.close());
 
@@ -44,33 +45,40 @@ void main() {
     'create and move preserve the branch and reject cycles atomically',
     () async {
       final repository = projects;
-      final parent = await projects.createProject('Parent');
-      final String child = await repository.createProject(
-        'Child',
-        parentId: parent,
-      );
-      final String grandchild = await repository.createProject(
-        'Grandchild',
-        parentId: child,
-      );
+      final parent = await projects
+          .createProject('Parent')
+          .then((result) => result.getOrThrow());
+      final String child = await repository
+          .createProject('Child', parentId: parent)
+          .then((result) => result.getOrThrow());
+      final String grandchild = await repository
+          .createProject('Grandchild', parentId: child)
+          .then((result) => result.getOrThrow());
       await expectLater(
-        repository.moveProject(parent, parentId: grandchild),
-        throwsArgumentError,
-      );
-      await expectLater(repository.createProject('Child'), throwsArgumentError);
-      await expectLater(
-        repository.moveProject(child, parentId: inboxProjectId),
+        repository
+            .moveProject(parent, parentId: grandchild)
+            .then((result) => result.getOrThrow()),
         throwsArgumentError,
       );
       await expectLater(
-        repository.moveProject(child, parentId: 'missing'),
+        repository.createProject('Child').then((result) => result.getOrThrow()),
         throwsArgumentError,
       );
-      await repository.moveProject(
-        child,
-        parentId: null,
-        beforeProjectId: parent,
+      await expectLater(
+        repository
+            .moveProject(child, parentId: inboxProjectId)
+            .then((result) => result.getOrThrow()),
+        throwsArgumentError,
       );
+      await expectLater(
+        repository
+            .moveProject(child, parentId: 'missing')
+            .then((result) => result.getOrThrow()),
+        throwsArgumentError,
+      );
+      await repository
+          .moveProject(child, parentId: null, beforeProjectId: parent)
+          .then((result) => result.getOrThrow());
       final rows = await projects.watchProjects().first;
       expect(rows.singleWhere((p) => p.id == child).parentId, isNull);
       expect(rows.singleWhere((p) => p.id == grandchild).parentId, child);
@@ -113,14 +121,22 @@ void main() {
   });
 
   test('invalid changes leave projects and sync commands unchanged', () async {
-    final parent = await projects.createProject('Parent');
-    final child = await projects.createProject('Child', parentId: parent);
-    final archived = await projects.createProject('Archived');
+    final parent = await projects
+        .createProject('Parent')
+        .then((result) => result.getOrThrow());
+    final child = await projects
+        .createProject('Child', parentId: parent)
+        .then((result) => result.getOrThrow());
+    final archived = await projects
+        .createProject('Archived')
+        .then((result) => result.getOrThrow());
     await (db.update(db.projects)..where((p) => p.id.equals(archived))).write(
       const ProjectsCompanion(isArchived: Value(true)),
     );
-    final deleted = await projects.createProject('Deleted');
-    await projects.deleteProject(deleted);
+    final deleted = await projects
+        .createProject('Deleted')
+        .then((result) => result.getOrThrow());
+    await projects.deleteProject(deleted).then((result) => result.getOrThrow());
     final before = (await db.select(db.projects).get())
         .map((p) => p.toJson())
         .toList();
@@ -133,31 +149,46 @@ void main() {
       'missing',
     ]) {
       await expectLater(
-        projects.moveProject(parent, parentId: parentId),
+        projects
+            .moveProject(parent, parentId: parentId)
+            .then((result) => result.getOrThrow()),
         throwsArgumentError,
       );
     }
     await expectLater(
-      projects.moveProject(parent, parentId: null, beforeProjectId: child),
+      projects
+          .moveProject(parent, parentId: null, beforeProjectId: child)
+          .then((result) => result.getOrThrow()),
       throwsArgumentError,
     );
     await expectLater(
-      projects.moveProject(archived, parentId: null),
+      projects
+          .moveProject(archived, parentId: null)
+          .then((result) => result.getOrThrow()),
       throwsArgumentError,
     );
     await expectLater(
-      projects.moveProject(deleted, parentId: null),
+      projects
+          .moveProject(deleted, parentId: null)
+          .then((result) => result.getOrThrow()),
       throwsArgumentError,
     );
     await expectLater(
-      projects.moveProject(inboxProjectId, parentId: null),
+      projects
+          .moveProject(inboxProjectId, parentId: null)
+          .then((result) => result.getOrThrow()),
       throwsArgumentError,
     );
     await expectLater(
-      projects.createProject('Invalid', parentId: archived),
+      projects
+          .createProject('Invalid', parentId: archived)
+          .then((result) => result.getOrThrow()),
       throwsArgumentError,
     );
-    await expectLater(projects.createProject('  '), throwsArgumentError);
+    await expectLater(
+      projects.createProject('  ').then((result) => result.getOrThrow()),
+      throwsArgumentError,
+    );
     expect(
       (await db.select(db.projects).get()).map((p) => p.toJson()).toList(),
       before,
@@ -238,9 +269,15 @@ void main() {
       addTearDown(
         () => driftRuntimeOptions.dontWarnAboutMultipleDatabases = warn,
       );
-      final root = await projects.createProject('Root');
-      final child = await projects.createProject('Child', parentId: root);
-      final sibling = await projects.createProject('Sibling');
+      final root = await projects
+          .createProject('Root')
+          .then((result) => result.getOrThrow());
+      final child = await projects
+          .createProject('Child', parentId: root)
+          .then((result) => result.getOrThrow());
+      final sibling = await projects
+          .createProject('Sibling')
+          .then((result) => result.getOrThrow());
       final account = _SyncClient();
       final engine = AccountSyncEngine(
         db: db,
@@ -267,7 +304,9 @@ void main() {
             .parentId,
         root,
       );
-      await projects.moveProject(child, parentId: null, beforeProjectId: root);
+      await projects
+          .moveProject(child, parentId: null, beforeProjectId: root)
+          .then((result) => result.getOrThrow());
       await engine.pushPending();
       await AccountSyncEngine(
         db: target,
@@ -279,7 +318,7 @@ void main() {
       try {
         final remote = DriftProjectRepository(
           target,
-          DriftSyncQueueRepository(target),
+          DriftOutboxService(target),
         );
         final rows = await remote.watchProjects().first;
         expect(rows.singleWhere((p) => p.id == child).parentId, isNull);
@@ -296,21 +335,29 @@ void main() {
   );
 
   test('deletion promotes children at the deleted project position', () async {
-    final a = await projects.createProject('Before');
-    final parent = await projects.createProject('Parent');
-    final b = await projects.createProject('After');
-    final child = await projects.createProject('Child');
-    final tasks = DriftTaskRepository(db, DriftSyncQueueRepository(db));
-    final ownTask = await tasks.createTask(
-      CreateTaskInput(content: 'Own', projectId: parent),
-    );
-    final childTask = await tasks.createTask(
-      CreateTaskInput(content: 'Nested', projectId: child),
-    );
+    final a = await projects
+        .createProject('Before')
+        .then((result) => result.getOrThrow());
+    final parent = await projects
+        .createProject('Parent')
+        .then((result) => result.getOrThrow());
+    final b = await projects
+        .createProject('After')
+        .then((result) => result.getOrThrow());
+    final child = await projects
+        .createProject('Child')
+        .then((result) => result.getOrThrow());
+    final tasks = DriftTaskRepository(db, DriftOutboxService(db));
+    final ownTask = await tasks
+        .createTask(CreateTaskInput(content: 'Own', projectId: parent))
+        .then((result) => result.getOrThrow());
+    final childTask = await tasks
+        .createTask(CreateTaskInput(content: 'Nested', projectId: child))
+        .then((result) => result.getOrThrow());
     await (db.update(db.projects)..where((row) => row.id.equals(child))).write(
       ProjectsCompanion(parentId: Value(parent)),
     );
-    await projects.deleteProject(parent);
+    await projects.deleteProject(parent).then((result) => result.getOrThrow());
     expect((await tasks.watchTask(ownTask).first)!.projectId, inboxProjectId);
     expect((await tasks.watchTask(childTask).first)!.projectId, child);
     final rows = await projects.watchProjects().first;

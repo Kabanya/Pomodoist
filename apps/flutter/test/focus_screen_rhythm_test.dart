@@ -1,3 +1,8 @@
+import 'package:pomodoist/data/repositories/focus/focus_preferences.dart';
+import 'package:pomodoist/utils/result.dart';
+import 'package:pomodoist/data/repositories/projects/project_repository.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
+import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
 import 'support/test_app.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'dart:async';
@@ -8,17 +13,17 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/app/theme/app_motion.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/focus/presentation/focus_screen.dart';
-import 'package:pomodoist/features/focus/presentation/focus_rhythm.dart';
-import 'package:pomodoist/features/focus/presentation/focus_rhythm_rail.dart';
-import 'package:pomodoist/features/focus/presentation/focus_stage.dart';
-import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/ui/core/themes/app_motion.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/ui/focus/widgets/focus_screen.dart';
+import 'package:pomodoist/ui/focus/widgets/focus_rhythm.dart';
+import 'package:pomodoist/ui/focus/widgets/focus_rhythm_rail.dart';
+import 'package:pomodoist/ui/focus/widgets/focus_stage.dart';
+import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -1421,8 +1426,9 @@ void main() {
     await tester.pump();
 
     activeSequence.value = 13;
-    await tester.pump();
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
     final target = find.byKey(const ValueKey('focus-rhythm-step-13'));
     final host = find.byKey(const Key('animated-recenter-host'));
     final initialDistance =
@@ -1492,8 +1498,9 @@ void main() {
     );
 
     activeSequence.value = 13;
-    await tester.pump();
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     expect(
       tester
@@ -2134,7 +2141,9 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     expect(find.textContaining('تعذر تحميل التركيز'), findsOneWidget);
     expect(find.textContaining('boom'), findsOneWidget);
@@ -2182,7 +2191,9 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
+    for (var pump = 0; pump < 8; pump++) {
+      await tester.pump();
+    }
 
     expect(find.byKey(const Key('focus-load-error')), findsOneWidget);
     expect(find.byKey(const Key('focus-heading')), findsOneWidget);
@@ -2333,7 +2344,7 @@ Widget _focusActiveStageHarness({
       timerVisualStyle: style,
       compact: false,
       viewMode: mode,
-      repository: focusRepository,
+      actions: _focusActions(focusRepository),
       onViewModeChanged: (mode) {
         viewMode?.value = mode;
       },
@@ -2384,6 +2395,22 @@ Widget _focusActiveStageHarness({
   );
 }
 
+FocusStageActions _focusActions(FocusRepository repository) =>
+    FocusStageActions(
+      startReadyInterval: () async =>
+          (await repository.startReadyInterval()).getOrThrow(),
+      pauseActiveInterval: () async =>
+          (await repository.pauseActiveInterval()).getOrThrow(),
+      resumeActiveInterval: () async =>
+          (await repository.resumeActiveInterval()).getOrThrow(),
+      completeActiveInterval: () async =>
+          (await repository.completeActiveInterval()).getOrThrow(),
+      skipActiveInterval: () async =>
+          (await repository.skipActiveInterval()).getOrThrow(),
+      stopActiveRun: ({required reason}) async =>
+          (await repository.stopActiveRun(reason: reason)).getOrThrow(),
+    );
+
 Future<void> _pumpFocusScreen(
   WidgetTester tester, {
   required _FocusRepository repository,
@@ -2422,8 +2449,9 @@ Future<void> _pumpFocusScreen(
   );
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 100));
-  await tester.pump();
-  await tester.pump();
+  for (var pump = 0; pump < 8; pump++) {
+    await tester.pump();
+  }
 }
 
 Future<void> _pumpLinkedFocusScreen(
@@ -2459,8 +2487,9 @@ Future<void> _pumpLinkedFocusScreen(
   );
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 100));
-  await tester.pump();
-  await tester.pump();
+  for (var pump = 0; pump < 8; pump++) {
+    await tester.pump();
+  }
 }
 
 class _FocusRepository implements FocusRepository {
@@ -2495,21 +2524,23 @@ class _FocusRepository implements FocusRepository {
       Stream.value(intervals);
 
   @override
-  Future<String> startRun(StartFocusRunInput input, {DateTime? now}) async =>
-      'run-1';
+  Future<Result<String>> startRun(StartFocusRunInput input, {DateTime? now}) =>
+      Result.capture<String>(() async => 'run-1');
 
   @override
-  Future<void> pauseActiveInterval({DateTime? now}) async {
-    if (failPause) {
-      throw StateError('database down');
-    }
-    pauseCount++;
-  }
+  Future<Result<void>> pauseActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {
+        if (failPause) {
+          throw StateError('database down');
+        }
+        pauseCount++;
+      });
 
   @override
-  Future<void> resumeActiveInterval({DateTime? now}) async {
-    resumeCount++;
-  }
+  Future<Result<void>> resumeActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {
+        resumeCount++;
+      });
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

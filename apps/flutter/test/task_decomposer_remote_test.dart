@@ -1,14 +1,18 @@
+import 'package:pomodoist/data/services/voice/voice_capture_service.dart';
+import 'package:pomodoist/domain/models/voice/voice_quick_add_state.dart';
+import 'package:pomodoist/data/repositories/planning/remote_task_decomposer.dart';
+import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 import 'dart:async';
 import 'package:app_voice/app_voice.dart';
-import 'package:pomodoist/features/voice/application/voice_quick_add_controller.dart';
-import 'package:pomodoist/features/voice/data/voice_transcription_mode.dart';
+import 'package:pomodoist/data/repositories/voice/voice_quick_add_repository.dart';
+import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
 import 'package:app_account/app_account.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/features/billing/billing.dart';
-import 'package:pomodoist/features/planning/data/task_decomposer.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/data/services/planning/task_decomposer.dart';
 
 void main() {
   test('AI endpoint selector follows the build and rejects invalid values', () {
@@ -40,26 +44,44 @@ void main() {
         addTearDown(container.dispose);
         final finished = Completer<void>();
         List<DecomposedTaskDraft> drafts = [];
-        final controller = VoiceQuickAddController(
-          initialController: _UnusedVoice(),
+        final controller = VoiceQuickAddRepository(
+          initialController: AppVoiceCaptureService(_UnusedVoice()),
           waitForMode: () async {},
           effectiveMode: () => VoiceTranscriptionMode.cloud,
           replaceController: () => throw StateError('No automatic recording'),
           setMode: (_) async {},
           signedIn: () => true,
           preferences: () async => null,
-          decomposer: () => container.read(taskDecomposerProvider),
-          locale: () => 'ru-RU',
-          onDrafts: (value) => drafts = value,
-          onAnalysisStart: () {},
-          onAnalysisFinish: () async {
-            finished.complete();
-          },
+          decomposer:
+              (
+                transcript, {
+                required now,
+                required locale,
+                smartMode = false,
+              }) => container
+                  .read(taskDecomposerProvider)
+                  .decompose(
+                    transcript,
+                    now: now,
+                    locale: locale,
+                    smartMode: smartMode,
+                  ),
         );
+        controller.locale = 'ru-RU';
+        var analysisStarted = false;
+        controller.addListener(() {
+          drafts = controller.drafts;
+          analysisStarted |= controller.analyzing;
+          if (analysisStarted &&
+              !controller.analyzing &&
+              !finished.isCompleted) {
+            finished.complete();
+          }
+        });
         addTearDown(controller.dispose);
         controller.handleEvent(
-          const VoiceRecognitionEvent(
-            status: VoiceRecognitionStatus.completed,
+          const VoiceCaptureEvent(
+            status: VoiceCaptureStatus.completed,
             finalText: 'Купить молоко',
           ),
         );

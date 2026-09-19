@@ -1,9 +1,9 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/features/tasks/data/task_repository_impl.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
 
 void main() {
   test(
@@ -15,20 +15,22 @@ void main() {
       var notifications = 0;
       final repository = DriftTaskRepository(
         db,
-        DriftSyncQueueRepository(db),
+        DriftOutboxService(db),
         onUserTaskCreated: () async => notifications++,
       );
 
-      await repository.createTask(
-        const CreateTaskInput(content: 'Manual task'),
-      );
-      await repository.createTaskFromCalendar(
-        RemoteCalendarTaskInput(
-          content: 'Calendar task',
-          schedule: TaskSchedule.allDay(DateTime(2026, 7, 9)),
-          updatedAt: DateTime.utc(2026, 7, 9),
-        ),
-      );
+      await repository
+          .createTask(const CreateTaskInput(content: 'Manual task'))
+          .then((result) => result.getOrThrow());
+      await repository
+          .createTaskFromCalendar(
+            RemoteCalendarTaskInput(
+              content: 'Calendar task',
+              schedule: TaskSchedule.allDay(DateTime(2026, 7, 9)),
+              updatedAt: DateTime.utc(2026, 7, 9),
+            ),
+          )
+          .then((result) => result.getOrThrow());
 
       expect(notifications, 1);
     },

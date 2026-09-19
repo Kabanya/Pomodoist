@@ -8,10 +8,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/keyboard_shortcuts.dart';
-import 'package:pomodoist/app/platform/platform_quick_add.dart';
-import 'package:pomodoist/features/settings/presentation/keyboard_shortcuts_screen.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/keyboard_shortcuts.dart';
+import 'package:pomodoist/config/platform/platform_quick_add.dart';
+import 'package:pomodoist/ui/settings/widgets/keyboard_shortcuts_screen.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

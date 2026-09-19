@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/focus/presentation/focus_stage.dart';
-import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/ui/focus/widgets/focus_stage.dart';
+import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
 
 import 'task_motion_profile_result_stub.dart'
     if (dart.library.js_interop) 'task_motion_profile_result_web.dart';
@@ -22,7 +22,6 @@ class _FocusMotionProfile extends StatefulWidget {
 }
 
 class _FocusMotionProfileState extends State<_FocusMotionProfile> {
-  final _repository = _ProfileFocusRepository();
   final _timings = <FrameTiming>[];
   final _results = <String>[];
   late final TimingsCallback _timingsCallback;
@@ -63,7 +62,14 @@ class _FocusMotionProfileState extends State<_FocusMotionProfile> {
             timerVisualStyle: FocusTimerVisualStyle.circle,
             compact: false,
             viewMode: _full ? FocusViewMode.full : FocusViewMode.minimal,
-            repository: _repository,
+            actions: FocusStageActions(
+              startReadyInterval: () async {},
+              pauseActiveInterval: () async {},
+              resumeActiveInterval: () async {},
+              completeActiveInterval: () async {},
+              skipActiveInterval: () async {},
+              stopActiveRun: ({required reason}) async {},
+            ),
             onViewModeChanged: (_) {},
             onPresetChanged: (_) {},
             onCustomizePreset: (_) {},
@@ -185,11 +191,6 @@ class _FocusMotionProfileState extends State<_FocusMotionProfile> {
     values.sort();
     return values[((values.length - 1) * 0.95).ceil()];
   }
-}
-
-class _ProfileFocusRepository implements FocusRepository {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 final _preset = FocusPresetItem(

@@ -1,3 +1,14 @@
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/data/repositories/focus/focus_preferences.dart';
+import 'package:pomodoist/config/task_preferences_dependencies.dart';
+import 'package:pomodoist/domain/models/settings/task_preferences.dart';
+import 'package:pomodoist/domain/models/calendar/calendar_models.dart';
+import 'package:pomodoist/utils/result.dart';
+import 'package:pomodoist/data/repositories/labels/label_repository.dart';
+import 'package:pomodoist/data/repositories/projects/project_repository.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
+import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
+import 'package:pomodoist/data/repositories/achievements/achievement_repository.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show
         ShadButton,
@@ -17,29 +28,28 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/app/routing/app_startup_gate.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/routing/router.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/core/db/app_database.dart' hide FocusDailyStats;
-import 'package:pomodoist/core/time/clock.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/billing/billing.dart';
-import 'package:pomodoist/features/focus/presentation/focus_screen.dart';
-import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
-import 'package:pomodoist/features/planning/data/quick_add_service.dart';
-import 'package:pomodoist/features/planning/domain/quick_add_parser.dart';
-import 'package:pomodoist/features/productivity/domain/achievement_models.dart';
-import 'package:pomodoist/features/productivity/domain/productivity_models.dart';
-import 'package:pomodoist/features/onboarding/onboarding_gate.dart';
-import 'package:pomodoist/features/tasks/domain/project_colors.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/features/tasks/presentation/browse_screen.dart';
-import 'package:pomodoist/features/tasks/presentation/widgets/task_motion.dart';
-import 'package:pomodoist/features/tasks/presentation/widgets/task_selection_region.dart';
-import 'package:pomodoist/features/integrations/google_calendar/data/google_calendar_repository.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/routing/router.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart'
+    hide FocusDailyStats;
+import 'package:pomodoist/utils/clock.dart';
+import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/ui/focus/widgets/focus_screen.dart';
+import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
+import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
+import 'package:pomodoist/domain/models/productivity/achievement_models.dart';
+import 'package:pomodoist/domain/models/productivity/productivity_models.dart';
+import 'package:pomodoist/ui/onboarding/widgets/onboarding_gate.dart';
+import 'package:pomodoist/domain/models/tasks/project_colors.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/tasks/widgets/browse_screen.dart';
+import 'package:pomodoist/ui/tasks/widgets/task_motion.dart';
+import 'package:pomodoist/ui/tasks/widgets/task_selection_region.dart';
+import 'package:pomodoist/data/repositories/calendar/google_calendar_repository.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -3066,7 +3076,7 @@ void main() {
     addTearDown(container.dispose);
 
     await container
-        .read(timelineVisibleHoursProvider.notifier)
+        .read(taskPreferencesRepositoryProvider)
         .setVisibleHours(8 * 60, 18 * 60);
     final prefs = await SharedPreferences.getInstance();
 
@@ -3093,15 +3103,11 @@ void main() {
       addTearDown(container.dispose);
 
       expect(container.read(timelineHourWidthProvider), 192);
-      await container.read(timelineHourWidthProvider.notifier).zoomIn();
+      await container.read(taskPreferencesRepositoryProvider).zoomIn();
       expect(container.read(timelineHourWidthProvider), 288);
-      await container
-          .read(timelineHourWidthProvider.notifier)
-          .setHourWidth(384);
+      await container.read(taskPreferencesRepositoryProvider).setHourWidth(384);
       expect(container.read(timelineHourWidthProvider), 384);
-      await container
-          .read(timelineHourWidthProvider.notifier)
-          .setHourWidth(123);
+      await container.read(taskPreferencesRepositoryProvider).setHourWidth(123);
       expect(container.read(timelineHourWidthProvider), 384);
       expect(
         (await SharedPreferences.getInstance()).getInt(
@@ -3137,8 +3143,8 @@ void main() {
       addTearDown(container.dispose);
 
       await container
-          .read(timelineCollapsedProjectIdsProvider.notifier)
-          .toggle('project-1');
+          .read(taskPreferencesRepositoryProvider)
+          .toggleCollapsedProject('project-1');
       final prefs = await SharedPreferences.getInstance();
 
       expect(prefs.getStringList(timelineCollapsedProjectIdsPreferenceKey), [
@@ -3856,7 +3862,6 @@ Future<_AppHarness> _pumpApp(
         appStartupProvider.overrideWith(
           (ref) => startupCompleter?.future ?? Future<void>.value(),
         ),
-        appStartupLifecycleProvider.overrideWith((ref) {}),
         taskStartNotificationCoordinatorProvider.overrideWith((ref) {}),
         reengagementNotificationCoordinatorProvider.overrideWith((ref) {}),
         clockProvider.overrideWithValue(
@@ -3871,7 +3876,7 @@ Future<_AppHarness> _pumpApp(
         projectRepositoryProvider.overrideWithValue(projectRepository),
         labelRepositoryProvider.overrideWithValue(labelRepository),
         quickAddServiceProvider.overrideWithValue(
-          QuickAddService(
+          QuickAddUseCase(
             parser: const QuickAddParser(),
             taskRepository: taskRepository,
             projectRepository: projectRepository,
@@ -4442,53 +4447,58 @@ class _FakeTaskRepository implements TaskRepository {
   Stream<TaskItem?> watchTask(String id) => Stream.value(_tasks[id]);
 
   @override
-  Future<String> createTask(CreateTaskInput input) async {
-    createdInputs.add(input);
-    return 'created-${createdInputs.length}';
-  }
+  Future<Result<String>> createTask(CreateTaskInput input) =>
+      Result.capture<String>(() async {
+        createdInputs.add(input);
+        return 'created-${createdInputs.length}';
+      });
 
   @override
-  Future<List<String>> duplicateTasks(
+  Future<Result<List<String>>> duplicateTasks(
     Set<String> taskIds, {
     required bool includeSubtasks,
-  }) async {
+  }) => Result.capture<List<String>>(() async {
     duplicatedTaskIds.add(taskIds);
     duplicateIncludeSubtasks.add(includeSubtasks);
     return [for (final id in taskIds) 'copy-$id'];
-  }
+  });
 
   @override
-  Future<void> updateTask(String id, UpdateTaskPatch patch) async {
-    if (updateErrorTaskIds.contains(id)) {
-      throw StateError('update failed');
-    }
-    updatePatches.add(patch);
-    final task = _tasks[id];
-    if (task == null) {
-      return;
-    }
-    final schedule =
-        patch.schedule ??
-        (patch.dueDate == null ? null : TaskSchedule.allDay(patch.dueDate!));
-    _tasks[id] = _copyTask(
-      task,
-      content: patch.content,
-      description: patch.description,
-      updateDescription: patch.updateDescription,
-      priority: patch.priority,
-      dueJson: patch.clearSchedule ? null : schedule?.toJsonString(),
-      updateDueJson: patch.clearSchedule || schedule != null,
-      estimatedFocusIntervals: patch.estimatedFocusIntervals,
-      updateEstimatedFocusIntervals: patch.estimatedFocusIntervals != null,
-      isCollapsed: patch.isCollapsed,
-    );
-  }
+  Future<Result<void>> updateTask(String id, UpdateTaskPatch patch) =>
+      Result.capture<void>(() async {
+        if (updateErrorTaskIds.contains(id)) {
+          throw StateError('update failed');
+        }
+        updatePatches.add(patch);
+        final task = _tasks[id];
+        if (task == null) {
+          return;
+        }
+        final schedule =
+            patch.schedule ??
+            (patch.dueDate == null
+                ? null
+                : TaskSchedule.allDay(patch.dueDate!));
+        _tasks[id] = _copyTask(
+          task,
+          content: patch.content,
+          description: patch.description,
+          updateDescription: patch.updateDescription,
+          priority: patch.priority,
+          dueJson: patch.clearSchedule ? null : schedule?.toJsonString(),
+          updateDueJson: patch.clearSchedule || schedule != null,
+          estimatedFocusIntervals: patch.estimatedFocusIntervals,
+          updateEstimatedFocusIntervals: patch.estimatedFocusIntervals != null,
+          isCollapsed: patch.isCollapsed,
+        );
+      });
 
   @override
-  Future<void> materializeDueRecurringTasks({DateTime? now}) async {}
+  Future<Result<void>> materializeDueRecurringTasks({DateTime? now}) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> moveTask(
+  Future<Result<void>> moveTask(
     String id, {
     String? projectId,
     String? sectionId,
@@ -4496,7 +4506,7 @@ class _FakeTaskRepository implements TaskRepository {
     String? parentId,
     bool clearParentId = false,
     String? orderKey,
-  }) async {
+  }) => Result.capture<void>(() async {
     if (moveError != null) {
       throw moveError!;
     }
@@ -4515,14 +4525,14 @@ class _FakeTaskRepository implements TaskRepository {
         orderKey: orderKey,
       );
     }
-  }
+  });
 
   @override
-  Future<void> placeTaskOnTimeline(
+  Future<Result<void>> placeTaskOnTimeline(
     String id, {
     required TaskSchedule schedule,
     required String projectId,
-  }) async {
+  }) => Result.capture<void>(() async {
     placedTaskIds.add(id);
     placedSchedules.add(schedule);
     placedProjectIds.add(projectId);
@@ -4536,91 +4546,101 @@ class _FakeTaskRepository implements TaskRepository {
         updateDueJson: true,
       );
     }
-  }
+  });
 
   @override
-  Future<void> completeTask(String id) async {
-    for (final taskId in _subtreeIds(id)) {
-      completedTaskIds.add(taskId);
-      final task = _tasks[taskId];
-      if (task != null) {
-        _tasks[taskId] = _copyTask(
-          task,
-          status: 'completed',
-          completedAt: DateTime.utc(2026, 1, 2),
+  Future<Result<void>> completeTask(String id) =>
+      Result.capture<void>(() async {
+        for (final taskId in _subtreeIds(id)) {
+          completedTaskIds.add(taskId);
+          final task = _tasks[taskId];
+          if (task != null) {
+            _tasks[taskId] = _copyTask(
+              task,
+              status: 'completed',
+              completedAt: DateTime.utc(2026, 1, 2),
+            );
+          }
+        }
+      });
+
+  @override
+  Future<Result<void>> uncompleteTask(String id) =>
+      Result.capture<void>(() async {
+        for (final taskId in _subtreeIds(id)) {
+          uncompletedTaskIds.add(taskId);
+          final task = _tasks[taskId];
+          if (task != null) {
+            _tasks[taskId] = _copyTask(task, status: 'open', completedAt: null);
+          }
+        }
+      });
+
+  @override
+  Future<Result<DeletedTaskBatch>> deleteTask(String id) =>
+      Result.capture<DeletedTaskBatch>(
+        () async => deleteTasks({id}).then((result) => result.getOrThrow()),
+      );
+
+  @override
+  Future<Result<DeletedTaskBatch>> deleteTasks(Set<String> ids) =>
+      Result.capture<DeletedTaskBatch>(() async {
+        final deletedIds = <String>{};
+        for (final id in ids) {
+          deletedIds.addAll(_subtreeIds(id));
+        }
+        for (final taskId in deletedIds) {
+          deletedTaskIds.add(taskId);
+          final task = _tasks[taskId];
+          if (task != null) {
+            _tasks[taskId] = _copyTask(task, isDeleted: true);
+          }
+        }
+        return DeletedTaskBatch(
+          taskIds: deletedIds,
+          undoUntil: DateTime.now().toUtc().add(const Duration(seconds: 7)),
         );
-      }
-    }
-  }
+      });
 
   @override
-  Future<void> uncompleteTask(String id) async {
-    for (final taskId in _subtreeIds(id)) {
-      uncompletedTaskIds.add(taskId);
-      final task = _tasks[taskId];
-      if (task != null) {
-        _tasks[taskId] = _copyTask(task, status: 'open', completedAt: null);
-      }
-    }
-  }
-
-  @override
-  Future<DeletedTaskBatch> deleteTask(String id) => deleteTasks({id});
-
-  @override
-  Future<DeletedTaskBatch> deleteTasks(Set<String> ids) async {
-    final deletedIds = <String>{};
-    for (final id in ids) {
-      deletedIds.addAll(_subtreeIds(id));
-    }
-    for (final taskId in deletedIds) {
-      deletedTaskIds.add(taskId);
-      final task = _tasks[taskId];
-      if (task != null) {
-        _tasks[taskId] = _copyTask(task, isDeleted: true);
-      }
-    }
-    return DeletedTaskBatch(
-      taskIds: deletedIds,
-      undoUntil: DateTime.now().toUtc().add(const Duration(seconds: 7)),
-    );
-  }
-
-  @override
-  Future<DeletedTaskBatch> deleteRecurringOccurrence(
+  Future<Result<DeletedTaskBatch>> deleteRecurringOccurrence(
     String id, {
     required bool includeFollowing,
-  }) async {
+  }) => Result.capture<DeletedTaskBatch>(() async {
     recurringDeleteTaskIds.add(id);
     recurringDeleteIncludeFollowing.add(includeFollowing);
-    return deleteTask(id);
-  }
+    return deleteTask(id).then((result) => result.getOrThrow());
+  });
 
   @override
-  Future<bool> restoreDeletedTasks(DeletedTaskBatch batch) async {
-    restoredBatches.add(batch);
-    for (final id in batch.taskIds) {
-      final task = _tasks[id];
-      if (task != null) {
-        _tasks[id] = _copyTask(task, isDeleted: false);
-      }
-    }
-    return true;
-  }
+  Future<Result<bool>> restoreDeletedTasks(DeletedTaskBatch batch) =>
+      Result.capture<bool>(() async {
+        restoredBatches.add(batch);
+        for (final id in batch.taskIds) {
+          final task = _tasks[id];
+          if (task != null) {
+            _tasks[id] = _copyTask(task, isDeleted: false);
+          }
+        }
+        return true;
+      });
 
   @override
-  Future<void> updateFocusAggregates(String id) async {}
+  Future<Result<void>> updateFocusAggregates(String id) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<String> createTaskFromCalendar(RemoteCalendarTaskInput input) async {
+  Future<Result<String>> createTaskFromCalendar(
+    RemoteCalendarTaskInput input,
+  ) => Result.capture<String>(() async {
     return 'remote-task';
-  }
+  });
 
   @override
-  Future<void> applyRemoteCalendarPatch(
+  Future<Result<void>> applyRemoteCalendarPatch(
     String id,
     RemoteCalendarTaskPatch patch,
-  ) async {}
+  ) => Result.capture<void>(() async {});
 
   List<String> _subtreeIds(String rootId) {
     final result = <String>[];
@@ -4713,68 +4733,80 @@ class _FakeFocusRepository implements FocusRepository {
   }
 
   @override
-  Future<String> startRun(StartFocusRunInput input, {DateTime? now}) async {
-    startInputs.add(input);
-    return 'run-${startInputs.length}';
-  }
+  Future<Result<String>> startRun(StartFocusRunInput input, {DateTime? now}) =>
+      Result.capture<String>(() async {
+        startInputs.add(input);
+        return 'run-${startInputs.length}';
+      });
 
   @override
-  Future<String> createPreset(CreateFocusPresetInput input) async => 'preset';
+  Future<Result<String>> createPreset(CreateFocusPresetInput input) =>
+      Result.capture<String>(() async => 'preset');
 
   @override
-  Future<void> updatePreset(String id, UpdateFocusPresetInput input) async {}
+  Future<Result<void>> updatePreset(String id, UpdateFocusPresetInput input) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> deletePreset(String id) async {}
+  Future<Result<void>> deletePreset(String id) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> setDefaultPreset(String id) async {}
+  Future<Result<void>> setDefaultPreset(String id) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> changeActiveRunPreset(String presetId) async {
-    changedPresetIds.add(presetId);
-  }
+  Future<Result<void>> changeActiveRunPreset(String presetId) =>
+      Result.capture<void>(() async {
+        changedPresetIds.add(presetId);
+      });
 
   @override
-  Future<void> startReadyInterval() async {
+  Future<Result<void>> startReadyInterval() => Result.capture<void>(() async {
     startReadyCount++;
-  }
+  });
 
   @override
-  Future<void> pauseActiveInterval({DateTime? now}) async {
-    pauseCount++;
-  }
+  Future<Result<void>> pauseActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {
+        pauseCount++;
+      });
 
   @override
-  Future<void> resumeActiveInterval({DateTime? now}) async {
-    resumeCount++;
-  }
+  Future<Result<void>> resumeActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {
+        resumeCount++;
+      });
 
   @override
-  Future<void> restartActiveInterval({DateTime? now}) async {}
+  Future<Result<void>> restartActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> completeActiveInterval({DateTime? now}) async {
-    completeCount++;
-  }
+  Future<Result<void>> completeActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {
+        completeCount++;
+      });
 
   @override
-  Future<void> skipActiveInterval({DateTime? now}) async {
-    skipCount++;
-  }
+  Future<Result<void>> skipActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {
+        skipCount++;
+      });
 
   @override
-  Future<void> stopActiveRun({
+  Future<Result<void>> stopActiveRun({
     required StopFocusReason reason,
     DateTime? now,
-  }) async {
+  }) => Result.capture<void>(() async {
     stopReasons.add(reason);
-  }
+  });
 
   @override
-  Future<void> logDistraction({required String runId, String? note}) async {
-    distractionRunIds.add(runId);
-  }
+  Future<Result<void>> logDistraction({required String runId, String? note}) =>
+      Result.capture<void>(() async {
+        distractionRunIds.add(runId);
+      });
 }
 
 class _FakeProjectRepository implements ProjectRepository {
@@ -4802,36 +4834,39 @@ class _FakeProjectRepository implements ProjectRepository {
   Stream<List<ProjectItem>> watchProjects() => Stream.value(_projects);
 
   @override
-  Future<ProjectItem?> findByName(String name) async => null;
+  Future<Result<ProjectItem?>> findByName(String name) =>
+      Result.capture<ProjectItem?>(() async => null);
 
   @override
-  Future<String> createProject(
+  Future<Result<String>> createProject(
     String name, {
     String? color,
     String? parentId,
-  }) async {
+  }) => Result.capture<String>(() async {
     createdProjectNames.add(name);
     createdProjectColors.add(color);
     return 'project-${createdProjectNames.length}';
-  }
+  });
 
   @override
-  Future<void> updateProject(String id, UpdateProjectPatch patch) async {
-    updatedProjectIds.add(id);
-    updateProjectPatches.add(patch);
-  }
+  Future<Result<void>> updateProject(String id, UpdateProjectPatch patch) =>
+      Result.capture<void>(() async {
+        updatedProjectIds.add(id);
+        updateProjectPatches.add(patch);
+      });
 
   @override
-  Future<void> moveProject(
+  Future<Result<void>> moveProject(
     String id, {
     required String? parentId,
     String? beforeProjectId,
-  }) async {}
+  }) => Result.capture<void>(() async {});
 
   @override
-  Future<void> deleteProject(String id) async {
-    deletedProjectIds.add(id);
-  }
+  Future<Result<void>> deleteProject(String id) =>
+      Result.capture<void>(() async {
+        deletedProjectIds.add(id);
+      });
 }
 
 class _FakeLabelRepository implements LabelRepository {
@@ -4851,21 +4886,24 @@ class _FakeLabelRepository implements LabelRepository {
   ]);
 
   @override
-  Future<LabelItem?> findByName(String name) async => null;
+  Future<Result<LabelItem?>> findByName(String name) =>
+      Result.capture<LabelItem?>(() async => null);
 
   @override
-  Future<String> createLabel(String name, {String? icon}) async {
-    createdLabelNames.add(name);
-    return 'label-${createdLabelNames.length}';
-  }
+  Future<Result<String>> createLabel(String name, {String? icon}) =>
+      Result.capture<String>(() async {
+        createdLabelNames.add(name);
+        return 'label-${createdLabelNames.length}';
+      });
 
   @override
-  Future<void> updateLabelIcon(String id, String icon) async {}
+  Future<Result<void>> updateLabelIcon(String id, String icon) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> deleteLabel(String id) async {
+  Future<Result<void>> deleteLabel(String id) => Result.capture<void>(() async {
     deletedLabelIds.add(id);
-  }
+  });
 }
 
 class _FakeAchievementRepository implements AchievementRepository {
@@ -4874,17 +4912,19 @@ class _FakeAchievementRepository implements AchievementRepository {
       Stream.value(const <AchievementItem>[]);
 
   @override
-  Future<List<AchievementItem>> takePendingAnnouncements(
+  Future<Result<List<AchievementItem>>> takePendingAnnouncements(
     List<AchievementItem> items,
-  ) async => const <AchievementItem>[];
+  ) => Result.capture<List<AchievementItem>>(
+    () async => const <AchievementItem>[],
+  );
 }
 
 class _FakeCalendarIntegrationRepository
     implements CalendarIntegrationRepository {
   @override
-  Stream<GoogleCalendarConnectionRow?> watchConnection() => Stream.value(null);
+  Stream<GoogleCalendarConnection?> watchConnection() => Stream.value(null);
 
   @override
-  Stream<GoogleCalendarEventLinkRow?> watchLinkForTask(String taskId) =>
+  Stream<GoogleCalendarEventLink?> watchLinkForTask(String taskId) =>
       Stream.value(null);
 }

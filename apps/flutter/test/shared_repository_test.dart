@@ -1,12 +1,13 @@
+import 'package:pomodoist/data/repositories/projects/project_repository_impl.dart';
 import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/features/collaboration/domain/collaboration_models.dart';
-import 'package:pomodoist/features/tasks/data/task_repository_impl.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
 
 void main() {
   late AppDatabase db;
@@ -17,13 +18,15 @@ void main() {
   setUp(() async {
     db = AppDatabase(NativeDatabase.memory());
     await db.ensureSeedData();
-    final queue = DriftSyncQueueRepository(db);
+    final queue = DriftOutboxService(db);
     tasks = DriftTaskRepository(db, queue);
     projects = DriftProjectRepository(db, queue);
-    projectId = await projects.createProject('Shared');
-    taskId = await tasks.createTask(
-      CreateTaskInput(content: 'Original', projectId: projectId),
-    );
+    projectId = await projects
+        .createProject('Shared')
+        .then((result) => result.getOrThrow());
+    taskId = await tasks
+        .createTask(CreateTaskInput(content: 'Original', projectId: projectId))
+        .then((result) => result.getOrThrow());
     await db.delete(db.syncCommands).go();
     await db
         .into(db.sharedScopes)
@@ -66,7 +69,9 @@ void main() {
 
   test('observer writes fail before local content or queue changes', () async {
     await expectLater(
-      tasks.updateTask(taskId, const UpdateTaskPatch(content: 'Forbidden')),
+      tasks
+          .updateTask(taskId, const UpdateTaskPatch(content: 'Forbidden'))
+          .then((result) => result.getOrThrow()),
       throwsA(isA<CollaborationException>()),
     );
     expect((await tasks.watchTask(taskId).first)!.content, 'Original');
@@ -77,7 +82,9 @@ void main() {
   test(
     'observer display preferences queue privately without changing shared content',
     () async {
-      await tasks.updateTask(taskId, const UpdateTaskPatch(isCollapsed: true));
+      await tasks
+          .updateTask(taskId, const UpdateTaskPatch(isCollapsed: true))
+          .then((result) => result.getOrThrow());
       final row = await (db.select(
         db.tasks,
       )..where((row) => row.id.equals(taskId))).getSingle();
@@ -93,9 +100,13 @@ void main() {
   test(
     'an observer can place the shared root under a private project',
     () async {
-      final private = await projects.createProject('Private');
+      final private = await projects
+          .createProject('Private')
+          .then((result) => result.getOrThrow());
       await db.delete(db.syncCommands).go();
-      await projects.moveProject(projectId, parentId: private);
+      await projects
+          .moveProject(projectId, parentId: private)
+          .then((result) => result.getOrThrow());
       final row = await (db.select(
         db.projects,
       )..where((row) => row.id.equals(projectId))).getSingle();
@@ -183,7 +194,9 @@ void main() {
       ),
     );
     await expectLater(
-      tasks.moveTask(taskId, projectId: inboxProjectId),
+      tasks
+          .moveTask(taskId, projectId: inboxProjectId)
+          .then((result) => result.getOrThrow()),
       throwsA(isA<CollaborationException>()),
     );
     expect((await tasks.watchTask(taskId).first)!.projectId, projectId);
@@ -205,10 +218,14 @@ void main() {
           ),
         ),
       );
-      final id = await tasks.createTask(
-        CreateTaskInput(content: 'Created text', projectId: projectId),
-      );
-      await tasks.updateTask(id, const UpdateTaskPatch(content: 'Later text'));
+      final id = await tasks
+          .createTask(
+            CreateTaskInput(content: 'Created text', projectId: projectId),
+          )
+          .then((result) => result.getOrThrow());
+      await tasks
+          .updateTask(id, const UpdateTaskPatch(content: 'Later text'))
+          .then((result) => result.getOrThrow());
       final create = await (db.select(
         db.syncCommands,
       )..where((row) => row.type.equals('task.create'))).getSingle();
@@ -237,7 +254,7 @@ void main() {
           ),
         ),
       );
-      await tasks.completeTask(taskId);
+      await tasks.completeTask(taskId).then((result) => result.getOrThrow());
       final row = await (db.select(
         db.tasks,
       )..where((t) => t.id.equals(taskId))).getSingle();

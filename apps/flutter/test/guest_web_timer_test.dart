@@ -1,3 +1,5 @@
+import 'package:pomodoist/utils/result.dart';
+import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
 import 'support/test_app.dart';
 import 'dart:async';
 
@@ -6,13 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/widgets/adaptive_shell.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/focus/presentation/focus_screen.dart';
-import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/ui/core/widgets/adaptive_shell.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/ui/focus/widgets/focus_screen.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_screen.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -377,50 +379,62 @@ class _GuestFocusRepository implements FocusRepository {
   );
 
   @override
-  Future<String> createPreset(CreateFocusPresetInput input) async => 'created';
+  Future<Result<String>> createPreset(CreateFocusPresetInput input) =>
+      Result.capture<String>(() async => 'created');
 
   @override
-  Future<void> updatePreset(String id, UpdateFocusPresetInput input) async {}
+  Future<Result<void>> updatePreset(String id, UpdateFocusPresetInput input) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> deletePreset(String id) async {}
+  Future<Result<void>> deletePreset(String id) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> setDefaultPreset(String id) async {}
+  Future<Result<void>> setDefaultPreset(String id) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> changeActiveRunPreset(String presetId) async {}
+  Future<Result<void>> changeActiveRunPreset(String presetId) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<String> startRun(StartFocusRunInput input, {DateTime? now}) async =>
-      'run';
+  Future<Result<String>> startRun(StartFocusRunInput input, {DateTime? now}) =>
+      Result.capture<String>(() async => 'run');
 
   @override
-  Future<void> startReadyInterval() async {}
+  Future<Result<void>> startReadyInterval() =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> pauseActiveInterval({DateTime? now}) async {}
+  Future<Result<void>> pauseActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> resumeActiveInterval({DateTime? now}) async {}
+  Future<Result<void>> resumeActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> restartActiveInterval({DateTime? now}) async {}
+  Future<Result<void>> restartActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> completeActiveInterval({DateTime? now}) async {}
+  Future<Result<void>> completeActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> skipActiveInterval({DateTime? now}) async {}
+  Future<Result<void>> skipActiveInterval({DateTime? now}) =>
+      Result.capture<void>(() async {});
 
   @override
-  Future<void> stopActiveRun({
+  Future<Result<void>> stopActiveRun({
     required StopFocusReason reason,
     DateTime? now,
-  }) async {}
+  }) => Result.capture<void>(() async {});
 
   @override
-  Future<void> logDistraction({required String runId, String? note}) async {}
+  Future<Result<void>> logDistraction({required String runId, String? note}) =>
+      Result.capture<void>(() async {});
 }
 
 final _presets = [

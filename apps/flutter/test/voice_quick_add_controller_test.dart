@@ -1,11 +1,15 @@
+import 'package:pomodoist/data/services/voice/voice_capture_service.dart';
+import 'package:pomodoist/domain/models/voice/voice_quick_add_state.dart';
+import 'package:pomodoist/data/repositories/planning/remote_task_decomposer.dart';
+import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
+import 'package:pomodoist/data/repositories/planning/task_decomposition_repository.dart';
 import 'dart:async';
 
 import 'package:app_voice/app_voice.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/planning/data/task_decomposer.dart';
-import 'package:pomodoist/features/voice/application/voice_quick_add_controller.dart';
-import 'package:pomodoist/features/voice/data/voice_transcription_mode.dart';
+import 'package:pomodoist/data/repositories/voice/voice_quick_add_repository.dart';
+import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -48,7 +52,7 @@ void main() {
       final stopped = Completer<void>();
       voice.stopped = stopped.future;
       final controller = _controller(voice);
-      controller.status = VoiceRecognitionStatus.recording;
+      controller.status = VoiceCaptureStatus.recording;
       controller.captureActive = true;
       final first = controller.stop();
       await controller.stop();
@@ -61,8 +65,8 @@ void main() {
 
       final discarded = _Voice();
       final closing = _controller(discarded);
-      closing.status = VoiceRecognitionStatus.transcribing;
-      expect(await closing.closeVoice(), isTrue);
+      closing.status = VoiceCaptureStatus.transcribing;
+      expect((await closing.closeVoice()).getOrThrow(), isTrue);
       closing.dispose();
       expect(discarded.cancels, 1);
       expect(discarded.aborts, 0);
@@ -122,27 +126,36 @@ void main() {
   );
 }
 
-VoiceQuickAddController _controller(
+VoiceQuickAddRepository _controller(
   _Voice voice, {
   Future<void> Function()? waitForMode,
   VoiceRecognitionController Function()? replace,
   Future<SharedPreferences?> Function()? preferences,
   TaskDecomposer? decomposer,
   void Function(List<DecomposedTaskDraft>)? onDrafts,
-}) => VoiceQuickAddController(
-  initialController: voice,
-  waitForMode: waitForMode ?? () async {},
-  effectiveMode: () => VoiceTranscriptionMode.cloud,
-  replaceController: replace ?? () => voice,
-  setMode: (_) async {},
-  signedIn: () => true,
-  preferences: preferences ?? () async => null,
-  decomposer: () => decomposer ?? (throw StateError('Unexpected analysis')),
-  locale: () => 'en',
-  onDrafts: onDrafts ?? (_) {},
-  onAnalysisStart: () {},
-  onAnalysisFinish: () async {},
-);
+}) {
+  final repository = VoiceQuickAddRepository(
+    initialController: AppVoiceCaptureService(voice),
+    waitForMode: waitForMode ?? () async {},
+    effectiveMode: () => VoiceTranscriptionMode.cloud,
+    replaceController: () => AppVoiceCaptureService((replace ?? () => voice)()),
+    setMode: (_) async {},
+    signedIn: () => true,
+    preferences: preferences ?? () async => null,
+    decomposer:
+        (transcript, {required now, required locale, smartMode = false}) =>
+            (decomposer ?? (throw StateError('Unexpected analysis'))).decompose(
+              transcript,
+              now: now,
+              locale: locale,
+              smartMode: smartMode,
+            ),
+  );
+  if (onDrafts != null) {
+    repository.addListener(() => onDrafts(repository.drafts));
+  }
+  return repository;
+}
 
 class _Voice implements VoiceRecognitionController {
   int cancels = 0;

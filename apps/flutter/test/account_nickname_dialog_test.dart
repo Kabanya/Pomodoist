@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:pomodoist/features/settings/presentation/account_nickname_dialog.dart';
+import 'package:pomodoist/data/services/auth/account_profile_service.dart';
+import 'package:pomodoist/ui/settings/widgets/account_nickname_dialog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'support/test_app.dart';
@@ -112,7 +113,9 @@ void main() {
       );
       addTearDown(client.dispose);
       await expectLater(
-        updateAccountNickname(client, 'user-1', 'Name'),
+        AccountProfileService(
+          client,
+        ).updateNickname('user-1', 'Name').then((value) => value.getOrThrow()),
         throwsStateError,
       );
       await client.auth.signInWithPassword(
@@ -121,15 +124,21 @@ void main() {
       );
       requests.clear();
       await expectLater(
-        updateAccountNickname(client, 'user-2', 'Name'),
+        AccountProfileService(
+          client,
+        ).updateNickname('user-2', 'Name').then((value) => value.getOrThrow()),
         throwsStateError,
       );
       await expectLater(
-        updateAccountNickname(client, 'user-1', '   '),
+        AccountProfileService(
+          client,
+        ).updateNickname('user-1', '   ').then((value) => value.getOrThrow()),
         throwsArgumentError,
       );
       expect(requests, isEmpty);
-      await updateAccountNickname(client, 'user-1', '  Новый ник  ');
+      (await AccountProfileService(
+        client,
+      ).updateNickname('user-1', '  Новый ник  ')).getOrThrow();
       expect(requests.single.method, 'PATCH');
       expect(requests.single.url.path, '/rest/v1/profiles');
       expect(requests.single.url.queryParameters['id'], 'eq.user-1');

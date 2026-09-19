@@ -1,3 +1,8 @@
+import 'package:pomodoist/domain/models/settings/task_preferences.dart';
+import 'package:pomodoist/utils/result.dart';
+import 'package:pomodoist/data/repositories/kanban/kanban_repository.dart';
+import 'package:pomodoist/data/repositories/projects/project_repository.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
 import 'support/test_app.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -7,18 +12,19 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/core/time/clock.dart';
-import 'package:pomodoist/core/db/app_database.dart' hide KanbanSettings;
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/planning/data/quick_add_service.dart';
-import 'package:pomodoist/features/planning/domain/quick_add_parser.dart';
-import 'package:pomodoist/features/tasks/data/kanban_repository_impl.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/features/tasks/presentation/kanban/kanban_board_controller.dart';
-import 'package:pomodoist/features/tasks/presentation/kanban/kanban_screen.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/utils/clock.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart'
+    hide KanbanSettings;
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
+import 'package:pomodoist/data/repositories/kanban/kanban_repository_impl.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/tasks/view_models/kanban_board_controller.dart';
+import 'package:pomodoist/ui/tasks/widgets/kanban_screen.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -472,7 +478,7 @@ Future<_KanbanHarness> _pumpKanban(
   final kanban = _FakeKanbanRepository(board);
   final tasks = _FakeTaskRepository();
   final projects = _FakeProjectRepository(board.availableProjects);
-  final quickAdd = QuickAddService(
+  final quickAdd = QuickAddUseCase(
     parser: const QuickAddParser(),
     taskRepository: tasks,
     projectRepository: projects,
@@ -616,12 +622,16 @@ Future<KanbanBoardSnapshot> _mixedScopeBoard(
           );
     }
     final repository = DriftKanbanRepository(db);
-    await repository.setSelectedProjectIds({
-      if (selectPersonalProject) inboxProjectId,
-      'project-shared',
-    });
+    await repository
+        .setSelectedProjectIds({
+          if (selectPersonalProject) inboxProjectId,
+          'project-shared',
+        })
+        .then((result) => result.getOrThrow());
     if (focusStatusLabelId != null) {
-      await repository.setFocusStatus(focusStatusLabelId);
+      await repository
+          .setFocusStatus(focusStatusLabelId)
+          .then((result) => result.getOrThrow());
     }
     return repository.watchBoard().first;
   });
@@ -798,13 +808,13 @@ class _FakeKanbanRepository implements KanbanRepository {
   Stream<KanbanBoardSnapshot> watchBoard() => Stream.value(snapshot);
 
   @override
-  Future<void> moveTask(
+  Future<Result<void>> moveTask(
     String taskId, {
     required String statusId,
     int? targetIndex,
-  }) async {
+  }) => Result.capture<void>(() async {
     moves.add(_Move(taskId, statusId, targetIndex));
-  }
+  });
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -814,15 +824,15 @@ class _ControlledKanbanRepository implements KanbanRepository {
   final completers = <Completer<void>>[];
 
   @override
-  Future<void> moveTask(
+  Future<Result<void>> moveTask(
     String taskId, {
     required String statusId,
     int? targetIndex,
-  }) {
+  }) => Result.capture<void>(() async {
     final completer = Completer<void>();
     completers.add(completer);
     return completer.future;
-  }
+  });
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -832,10 +842,11 @@ class _FakeTaskRepository implements TaskRepository {
   final created = <CreateTaskInput>[];
 
   @override
-  Future<String> createTask(CreateTaskInput input) async {
-    created.add(input);
-    return 'created-${created.length}';
-  }
+  Future<Result<String>> createTask(CreateTaskInput input) =>
+      Result.capture<String>(() async {
+        created.add(input);
+        return 'created-${created.length}';
+      });
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -850,13 +861,13 @@ class _FakeProjectRepository implements ProjectRepository {
   Stream<List<ProjectItem>> watchProjects() => Stream.value(projects);
 
   @override
-  Future<String> createProject(
+  Future<Result<String>> createProject(
     String name, {
     String? color,
     String? parentId,
-  }) async {
+  }) => Result.capture<String>(() async {
     return projects.first.id;
-  }
+  });
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

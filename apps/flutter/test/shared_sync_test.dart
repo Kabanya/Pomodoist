@@ -3,18 +3,20 @@ import 'package:uuid/uuid.dart';
 import 'package:app_account/app_account.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/account_sync_engine.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/features/collaboration/data/collaboration_api.dart';
-import 'package:pomodoist/features/collaboration/data/collaboration_repository.dart';
-import 'package:pomodoist/features/tasks/data/task_repository_impl.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
+import 'package:pomodoist/data/repositories/collaboration/collaboration_repository.dart';
+import 'package:pomodoist/data/repositories/collaboration/drift_collaboration_repository.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_conflict.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
 
 void main() {
   late AppDatabase db;
   late AccountSyncEngine engine;
-  late DriftSyncQueueRepository queue;
+  late DriftOutboxService queue;
   late CollaborationRepository collaboration;
   late _Account account;
   final scope = {
@@ -35,7 +37,7 @@ void main() {
   setUp(() async {
     db = AppDatabase(NativeDatabase.memory());
     await db.ensureSeedData();
-    queue = DriftSyncQueueRepository(db);
+    queue = DriftOutboxService(db);
     active = true;
     revision = 2;
     conflict = false;
@@ -163,7 +165,7 @@ void main() {
       account: account,
       collaboration: api,
     );
-    collaboration = CollaborationRepository(
+    collaboration = DriftCollaborationRepository(
       db: db,
       api: api,
       queue: queue,
@@ -184,10 +186,9 @@ void main() {
       expect(row.scopeId, 'scope');
       expect(row.createdBy, 'owner');
       expect(jsonDecode(row.assigneeIdsJson), ['me']);
-      await DriftTaskRepository(
-        db,
-        queue,
-      ).updateTask('task', const UpdateTaskPatch(content: 'My edit'));
+      await DriftTaskRepository(db, queue)
+          .updateTask('task', const UpdateTaskPatch(content: 'My edit'))
+          .then((result) => result.getOrThrow());
       final command = await db.select(db.syncCommands).getSingle();
       expect(command.scopeId, 'scope');
       expect(command.baseRevision, 2);
@@ -201,10 +202,9 @@ void main() {
   test(
     'revocation discards shared snapshots and retains only own unsent text',
     () async {
-      await DriftTaskRepository(
-        db,
-        queue,
-      ).updateTask('task', const UpdateTaskPatch(content: 'Own draft'));
+      await DriftTaskRepository(db, queue)
+          .updateTask('task', const UpdateTaskPatch(content: 'Own draft'))
+          .then((result) => result.getOrThrow());
       active = false;
       await engine.syncShared();
       expect(
@@ -280,10 +280,9 @@ void main() {
   });
 
   test('conflicting text stays visible until explicit server choice', () async {
-    await DriftTaskRepository(
-      db,
-      queue,
-    ).updateTask('task', const UpdateTaskPatch(content: 'Local text'));
+    await DriftTaskRepository(db, queue)
+        .updateTask('task', const UpdateTaskPatch(content: 'Local text'))
+        .then((result) => result.getOrThrow());
     task['content'] = 'Remote text';
     revision = taskRevision = 3;
     conflict = true;
@@ -296,7 +295,17 @@ void main() {
       )..where((t) => t.id.equals('task'))).getSingle()).content,
       'Local text',
     );
-    await collaboration.resolveConflict(draft, keepLocal: false);
+    (await collaboration.resolveConflict(
+      CollaborationConflict(
+        id: draft.id,
+        scopeId: draft.scopeId!,
+        type: draft.type,
+        clientId: draft.clientId,
+        lastError: draft.lastError,
+        baseRevision: draft.baseRevision,
+      ),
+      keepLocal: false,
+    )).getOrThrow();
     expect(
       (await (db.select(
         db.tasks,
@@ -309,17 +318,18 @@ void main() {
     'accepting content never rebases an unseen remote description conflict',
     () async {
       final tasks = DriftTaskRepository(db, queue);
-      await tasks.updateTask(
-        'task',
-        const UpdateTaskPatch(content: 'Local content'),
-      );
-      await tasks.updateTask(
-        'task',
-        const UpdateTaskPatch(
-          description: 'Local description',
-          updateDescription: true,
-        ),
-      );
+      await tasks
+          .updateTask('task', const UpdateTaskPatch(content: 'Local content'))
+          .then((result) => result.getOrThrow());
+      await tasks
+          .updateTask(
+            'task',
+            const UpdateTaskPatch(
+              description: 'Local description',
+              updateDescription: true,
+            ),
+          )
+          .then((result) => result.getOrThrow());
       task['description'] = 'Remote description';
       revision = taskRevision = 3;
       fieldRevisions['description'] = 3;
@@ -341,8 +351,12 @@ void main() {
     'sequential edits to an accepted field do not conflict with themselves',
     () async {
       final tasks = DriftTaskRepository(db, queue);
-      await tasks.updateTask('task', const UpdateTaskPatch(content: 'First'));
-      await tasks.updateTask('task', const UpdateTaskPatch(content: 'Second'));
+      await tasks
+          .updateTask('task', const UpdateTaskPatch(content: 'First'))
+          .then((result) => result.getOrThrow());
+      await tasks
+          .updateTask('task', const UpdateTaskPatch(content: 'Second'))
+          .then((result) => result.getOrThrow());
       task['description'] = 'Remote description';
       revision = taskRevision = 3;
       fieldRevisions['description'] = 3;
@@ -360,10 +374,9 @@ void main() {
     'relation acknowledgement cannot strand canonical task fields behind the cursor',
     () async {
       final tasks = DriftTaskRepository(db, queue);
-      await tasks.updateTask(
-        'task',
-        const UpdateTaskPatch(content: 'Local content'),
-      );
+      await tasks
+          .updateTask('task', const UpdateTaskPatch(content: 'Local content'))
+          .then((result) => result.getOrThrow());
       await queue.enqueue(
         type: 'task.kanbanStatus.set',
         clientId: 'task',
@@ -384,10 +397,9 @@ void main() {
     'rejection restores cached canonical text even without a new server revision',
     () async {
       final tasks = DriftTaskRepository(db, queue);
-      await tasks.updateTask(
-        'task',
-        const UpdateTaskPatch(content: 'Rejected edit'),
-      );
+      await tasks
+          .updateTask('task', const UpdateTaskPatch(content: 'Rejected edit'))
+          .then((result) => result.getOrThrow());
       rejected = true;
       await engine.syncShared();
       expect((await db.select(db.syncCommands).getSingle()).status, 'rejected');
@@ -498,7 +510,9 @@ void main() {
     'observers cannot be assigned and rejected selection leaves local state intact',
     () async {
       await expectLater(
-        collaboration.setAssignees('task', {'reader'}),
+        collaboration
+            .setAssignees('task', {'reader'})
+            .then((result) => result.getOrThrow()),
         throwsException,
       );
       expect(await db.select(db.syncCommands).get(), isEmpty);

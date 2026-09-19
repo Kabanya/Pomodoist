@@ -4,7 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/settings/presentation/account_sign_out_button.dart';
+import 'package:pomodoist/ui/settings/widgets/account_sign_out_button.dart';
 
 void main() {
   setUpAll(loadTestAppResources);

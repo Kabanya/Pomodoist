@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/planning/presentation/today_tasks.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/ui/planning/view_models/today_tasks.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
 
 void main() {
   test('completed today uses local completion date and legacy fallback', () {

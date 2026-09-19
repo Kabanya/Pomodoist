@@ -1,21 +1,22 @@
+import 'package:pomodoist/data/repositories/projects/project_repository_impl.dart';
 import 'dart:convert';
 
 import 'package:drift/drift.dart' hide isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/features/planning/data/quick_add_service.dart';
-import 'package:pomodoist/features/planning/domain/quick_add_parser.dart';
-import 'package:pomodoist/features/tasks/data/kanban_repository_impl.dart';
-import 'package:pomodoist/features/tasks/data/kanban_transition_coordinator.dart';
-import 'package:pomodoist/features/tasks/data/task_repository_impl.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
+import 'package:pomodoist/data/repositories/kanban/kanban_repository_impl.dart';
+import 'package:pomodoist/data/services/local/kanban_transition_coordinator.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
 
 void main() {
   group('Kanban lifecycle', () {
     late AppDatabase db;
-    late DriftSyncQueueRepository syncQueue;
+    late DriftOutboxService syncQueue;
     late KanbanTransitionCoordinator transitions;
     late DriftTaskRepository tasks;
     late DriftKanbanRepository kanban;
@@ -23,7 +24,7 @@ void main() {
     setUp(() async {
       db = AppDatabase(NativeDatabase.memory());
       await db.ensureSeedData();
-      syncQueue = DriftSyncQueueRepository(db);
+      syncQueue = DriftOutboxService(db);
       transitions = KanbanTransitionCoordinator(db, syncQueue);
       tasks = DriftTaskRepository(
         db,
@@ -42,27 +43,33 @@ void main() {
     test(
       'creation assigns Backlog unless an active non-Done status is valid',
       () async {
-        final defaultId = await tasks.createTask(
-          const CreateTaskInput(content: 'Default'),
-        );
-        final explicitId = await tasks.createTask(
-          const CreateTaskInput(
-            content: 'Explicit',
-            kanbanStatusId: kanbanStatusTodoId,
-          ),
-        );
-        final doneId = await tasks.createTask(
-          const CreateTaskInput(
-            content: 'Done is invalid for create',
-            kanbanStatusId: kanbanStatusDoneId,
-          ),
-        );
-        final unknownId = await tasks.createTask(
-          const CreateTaskInput(
-            content: 'Unknown is invalid for create',
-            kanbanStatusId: 'missing-status',
-          ),
-        );
+        final defaultId = await tasks
+            .createTask(const CreateTaskInput(content: 'Default'))
+            .then((result) => result.getOrThrow());
+        final explicitId = await tasks
+            .createTask(
+              const CreateTaskInput(
+                content: 'Explicit',
+                kanbanStatusId: kanbanStatusTodoId,
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        final doneId = await tasks
+            .createTask(
+              const CreateTaskInput(
+                content: 'Done is invalid for create',
+                kanbanStatusId: kanbanStatusDoneId,
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        final unknownId = await tasks
+            .createTask(
+              const CreateTaskInput(
+                content: 'Unknown is invalid for create',
+                kanbanStatusId: 'missing-status',
+              ),
+            )
+            .then((result) => result.getOrThrow());
 
         expect(await _statusId(db, defaultId), kanbanStatusBacklogId);
         expect(await _statusId(db, explicitId), kanbanStatusTodoId);
@@ -92,25 +99,31 @@ void main() {
     test(
       'checkbox completion snapshots and restores every subtree status',
       () async {
-        final rootId = await tasks.createTask(
-          const CreateTaskInput(
-            content: 'Root',
-            kanbanStatusId: kanbanStatusTodoId,
-          ),
-        );
-        final childId = await tasks.createTask(
-          CreateTaskInput(
-            content: 'Child',
-            parentId: rootId,
-            kanbanStatusId: kanbanStatusInProgressId,
-          ),
-        );
-        final grandchildId = await tasks.createTask(
-          CreateTaskInput(content: 'Grandchild', parentId: childId),
-        );
+        final rootId = await tasks
+            .createTask(
+              const CreateTaskInput(
+                content: 'Root',
+                kanbanStatusId: kanbanStatusTodoId,
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        final childId = await tasks
+            .createTask(
+              CreateTaskInput(
+                content: 'Child',
+                parentId: rootId,
+                kanbanStatusId: kanbanStatusInProgressId,
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        final grandchildId = await tasks
+            .createTask(
+              CreateTaskInput(content: 'Grandchild', parentId: childId),
+            )
+            .then((result) => result.getOrThrow());
         await db.delete(db.syncCommands).go();
 
-        await tasks.completeTask(rootId);
+        await tasks.completeTask(rootId).then((result) => result.getOrThrow());
 
         for (final id in [rootId, childId, grandchildId]) {
           final task = await _task(db, id);
@@ -137,7 +150,9 @@ void main() {
         ]);
 
         await db.delete(db.syncCommands).go();
-        await tasks.uncompleteTask(rootId);
+        await tasks
+            .uncompleteTask(rootId)
+            .then((result) => result.getOrThrow());
 
         expect(await _statusId(db, rootId), kanbanStatusTodoId);
         expect(await _statusId(db, childId), kanbanStatusInProgressId);
@@ -160,25 +175,33 @@ void main() {
     test(
       'Kanban Done transition completes and explicit target restores root',
       () async {
-        final rootId = await tasks.createTask(
-          const CreateTaskInput(
-            content: 'Root',
-            kanbanStatusId: kanbanStatusInProgressId,
-          ),
-        );
-        final childId = await tasks.createTask(
-          CreateTaskInput(
-            content: 'Child',
-            parentId: rootId,
-            kanbanStatusId: kanbanStatusTodoId,
-          ),
-        );
+        final rootId = await tasks
+            .createTask(
+              const CreateTaskInput(
+                content: 'Root',
+                kanbanStatusId: kanbanStatusInProgressId,
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        final childId = await tasks
+            .createTask(
+              CreateTaskInput(
+                content: 'Child',
+                parentId: rootId,
+                kanbanStatusId: kanbanStatusTodoId,
+              ),
+            )
+            .then((result) => result.getOrThrow());
 
-        await kanban.moveTask(rootId, statusId: kanbanStatusDoneId);
+        await kanban
+            .moveTask(rootId, statusId: kanbanStatusDoneId)
+            .then((result) => result.getOrThrow());
         expect((await _task(db, rootId)).status, 'completed');
         expect((await _task(db, childId)).status, 'completed');
 
-        await kanban.moveTask(rootId, statusId: kanbanStatusBacklogId);
+        await kanban
+            .moveTask(rootId, statusId: kanbanStatusBacklogId)
+            .then((result) => result.getOrThrow());
 
         expect((await _task(db, rootId)).status, 'open');
         expect((await _task(db, childId)).status, 'open');
@@ -190,31 +213,37 @@ void main() {
     test(
       'recurring copies inherit each source workflow status, never Done',
       () async {
-        final rootId = await tasks.createTask(
-          CreateTaskInput(
-            content: 'Recurring root',
-            kanbanStatusId: kanbanStatusInProgressId,
-            schedule: TaskSchedule.allDay(
-              DateTime(2026, 7, 1),
-              recurrence: const TaskRecurrence(
-                interval: 1,
-                unit: TaskRecurrenceUnit.day,
-                seriesId: 'lifecycle-copy',
+        final rootId = await tasks
+            .createTask(
+              CreateTaskInput(
+                content: 'Recurring root',
+                kanbanStatusId: kanbanStatusInProgressId,
+                schedule: TaskSchedule.allDay(
+                  DateTime(2026, 7, 1),
+                  recurrence: const TaskRecurrence(
+                    interval: 1,
+                    unit: TaskRecurrenceUnit.day,
+                    seriesId: 'lifecycle-copy',
+                  ),
+                ),
               ),
-            ),
-          ),
-        );
-        final childId = await tasks.createTask(
-          CreateTaskInput(
-            content: 'Recurring child',
-            parentId: rootId,
-            kanbanStatusId: kanbanStatusTodoId,
-          ),
-        );
-        await tasks.completeTask(rootId);
+            )
+            .then((result) => result.getOrThrow());
+        final childId = await tasks
+            .createTask(
+              CreateTaskInput(
+                content: 'Recurring child',
+                parentId: rootId,
+                kanbanStatusId: kanbanStatusTodoId,
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        await tasks.completeTask(rootId).then((result) => result.getOrThrow());
         await db.delete(db.syncCommands).go();
 
-        await tasks.materializeDueRecurringTasks(now: DateTime(2026, 7, 2, 9));
+        await tasks
+            .materializeDueRecurringTasks(now: DateTime(2026, 7, 2, 9))
+            .then((result) => result.getOrThrow());
 
         final copiedRoot = (await db.select(db.tasks).get()).singleWhere(
           (row) => row.content == 'Recurring root' && row.id != rootId,
@@ -243,21 +272,25 @@ void main() {
       'Calendar creation uses Backlog and snapshots it when completed',
       () async {
         final timestamp = DateTime.utc(2026, 7, 10, 9);
-        final openId = await tasks.createTaskFromCalendar(
-          RemoteCalendarTaskInput(
-            content: 'Open event',
-            schedule: TaskSchedule.allDay(DateTime(2026, 7, 11)),
-            updatedAt: timestamp,
-          ),
-        );
-        final completedId = await tasks.createTaskFromCalendar(
-          RemoteCalendarTaskInput(
-            content: 'Completed event',
-            schedule: TaskSchedule.allDay(DateTime(2026, 7, 12)),
-            isCompleted: true,
-            updatedAt: timestamp.add(const Duration(minutes: 1)),
-          ),
-        );
+        final openId = await tasks
+            .createTaskFromCalendar(
+              RemoteCalendarTaskInput(
+                content: 'Open event',
+                schedule: TaskSchedule.allDay(DateTime(2026, 7, 11)),
+                updatedAt: timestamp,
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        final completedId = await tasks
+            .createTaskFromCalendar(
+              RemoteCalendarTaskInput(
+                content: 'Completed event',
+                schedule: TaskSchedule.allDay(DateTime(2026, 7, 12)),
+                isCompleted: true,
+                updatedAt: timestamp.add(const Duration(minutes: 1)),
+              ),
+            )
+            .then((result) => result.getOrThrow());
 
         expect((await _task(db, openId)).status, 'open');
         expect(await _statusId(db, openId), kanbanStatusBacklogId);
@@ -292,44 +325,54 @@ void main() {
     test(
       'Calendar completion edges create events and restore snapshots',
       () async {
-        final taskId = await tasks.createTask(
-          const CreateTaskInput(
-            content: 'Calendar linked',
-            kanbanStatusId: kanbanStatusTodoId,
-          ),
-        );
+        final taskId = await tasks
+            .createTask(
+              const CreateTaskInput(
+                content: 'Calendar linked',
+                kanbanStatusId: kanbanStatusTodoId,
+              ),
+            )
+            .then((result) => result.getOrThrow());
 
-        await tasks.applyRemoteCalendarPatch(
-          taskId,
-          RemoteCalendarTaskPatch(
-            isCompleted: true,
-            updatedAt: DateTime.utc(2026, 7, 10, 10),
-          ),
-        );
-        await tasks.applyRemoteCalendarPatch(
-          taskId,
-          RemoteCalendarTaskPatch(
-            isCompleted: false,
-            updatedAt: DateTime.utc(2026, 7, 10, 11),
-          ),
-        );
+        await tasks
+            .applyRemoteCalendarPatch(
+              taskId,
+              RemoteCalendarTaskPatch(
+                isCompleted: true,
+                updatedAt: DateTime.utc(2026, 7, 10, 10),
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        await tasks
+            .applyRemoteCalendarPatch(
+              taskId,
+              RemoteCalendarTaskPatch(
+                isCompleted: false,
+                updatedAt: DateTime.utc(2026, 7, 10, 11),
+              ),
+            )
+            .then((result) => result.getOrThrow());
         expect((await _task(db, taskId)).status, 'open');
         expect(await _statusId(db, taskId), kanbanStatusTodoId);
 
-        await tasks.applyRemoteCalendarPatch(
-          taskId,
-          RemoteCalendarTaskPatch(
-            isCompleted: true,
-            updatedAt: DateTime.utc(2026, 7, 10, 12),
-          ),
-        );
-        await tasks.applyRemoteCalendarPatch(
-          taskId,
-          RemoteCalendarTaskPatch(
-            isCompleted: true,
-            updatedAt: DateTime.utc(2026, 7, 10, 13),
-          ),
-        );
+        await tasks
+            .applyRemoteCalendarPatch(
+              taskId,
+              RemoteCalendarTaskPatch(
+                isCompleted: true,
+                updatedAt: DateTime.utc(2026, 7, 10, 12),
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        await tasks
+            .applyRemoteCalendarPatch(
+              taskId,
+              RemoteCalendarTaskPatch(
+                isCompleted: true,
+                updatedAt: DateTime.utc(2026, 7, 10, 13),
+              ),
+            )
+            .then((result) => result.getOrThrow());
 
         final completions =
             await (db.select(db.taskCompletions)
@@ -349,18 +392,22 @@ void main() {
     test(
       'Quick Add propagates a column status independently of project parsing',
       () async {
-        final quickAdd = QuickAddService(
+        final quickAdd = QuickAddUseCase(
           parser: const QuickAddParser(),
           taskRepository: tasks,
           projectRepository: DriftProjectRepository(db, syncQueue),
         );
 
-        final globalId = await quickAdd.createTask('Global task');
-        final columnId = await quickAdd.createTask(
-          'Column task #Work',
-          projectId: 'ignored-project',
-          kanbanStatusId: kanbanStatusTodoId,
-        );
+        final globalId = await quickAdd
+            .createTask('Global task')
+            .then((result) => result.getOrThrow());
+        final columnId = await quickAdd
+            .createTask(
+              'Column task #Work',
+              projectId: 'ignored-project',
+              kanbanStatusId: kanbanStatusTodoId,
+            )
+            .then((result) => result.getOrThrow());
 
         expect(await _statusId(db, globalId), kanbanStatusBacklogId);
         expect(await _statusId(db, columnId), kanbanStatusTodoId);
@@ -371,13 +418,15 @@ void main() {
     test(
       'restore skips malformed newer snapshots and uses latest valid status',
       () async {
-        final taskId = await tasks.createTask(
-          const CreateTaskInput(
-            content: 'Malformed snapshot',
-            kanbanStatusId: kanbanStatusTodoId,
-          ),
-        );
-        await tasks.completeTask(taskId);
+        final taskId = await tasks
+            .createTask(
+              const CreateTaskInput(
+                content: 'Malformed snapshot',
+                kanbanStatusId: kanbanStatusTodoId,
+              ),
+            )
+            .then((result) => result.getOrThrow());
+        await tasks.completeTask(taskId).then((result) => result.getOrThrow());
         final invalidSnapshots = [
           '{"version":1,"kanban":{"previousStatusLabelId":42}}',
           '{"version":1,"kanban":{"previousStatusLabelId":[]}}',
@@ -399,7 +448,9 @@ void main() {
               );
         }
 
-        await tasks.uncompleteTask(taskId);
+        await tasks
+            .uncompleteTask(taskId)
+            .then((result) => result.getOrThrow());
 
         expect(await _statusId(db, taskId), kanbanStatusTodoId);
         expect((await _task(db, taskId)).status, 'open');
@@ -409,17 +460,23 @@ void main() {
     test(
       'offline completion cycles capture distinct immutable completion IDs',
       () async {
-        final taskId = await tasks.createTask(
-          const CreateTaskInput(
-            content: 'Complete twice',
-            kanbanStatusId: kanbanStatusTodoId,
-          ),
-        );
+        final taskId = await tasks
+            .createTask(
+              const CreateTaskInput(
+                content: 'Complete twice',
+                kanbanStatusId: kanbanStatusTodoId,
+              ),
+            )
+            .then((result) => result.getOrThrow());
 
-        await tasks.completeTask(taskId);
-        await tasks.uncompleteTask(taskId);
-        await kanban.moveTask(taskId, statusId: kanbanStatusInProgressId);
-        await tasks.completeTask(taskId);
+        await tasks.completeTask(taskId).then((result) => result.getOrThrow());
+        await tasks
+            .uncompleteTask(taskId)
+            .then((result) => result.getOrThrow());
+        await kanban
+            .moveTask(taskId, statusId: kanbanStatusInProgressId)
+            .then((result) => result.getOrThrow());
+        await tasks.completeTask(taskId).then((result) => result.getOrThrow());
 
         final rows =
             await (db.select(db.taskCompletions)

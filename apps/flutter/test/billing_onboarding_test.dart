@@ -1,3 +1,6 @@
+import 'package:pomodoist/domain/models/settings/app_language.dart';
+import 'package:pomodoist/ui/core/localization/app_locale.dart';
+import 'package:pomodoist/data/repositories/focus/focus_preferences.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton;
 import 'support/test_app.dart';
 import 'dart:async';
@@ -13,17 +16,17 @@ import 'package:go_router/go_router.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:in_app_purchase_storekit/store_kit_2_wrappers.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/app/config/app_language.dart';
-import 'package:pomodoist/app/config/app_theme_mode.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/core/time/clock.dart';
-import 'package:pomodoist/features/billing/billing.dart';
-import 'package:pomodoist/features/billing/purchase_success_screen.dart';
-import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
-import 'package:pomodoist/features/onboarding/onboarding_gate.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/app_language.dart';
+import 'package:pomodoist/ui/core/view_models/app_theme_mode_view_model.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/utils/clock.dart';
+import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/ui/billing/widgets/purchase_success_screen.dart';
+import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
+import 'package:pomodoist/ui/onboarding/widgets/onboarding_gate.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -185,9 +188,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.read(billingControllerProvider);
+      container.read(billingViewModelProvider);
       await _settle();
-      final catalog = container.read(billingControllerProvider);
+      final catalog = container.read(billingViewModelProvider);
       expect(catalog.storeAvailable, isTrue);
       expect(catalog.eligibleIntroductoryProductIds, {
         pomodoistMonthlyProductId,
@@ -200,24 +203,21 @@ void main() {
       );
 
       await container
-          .read(billingControllerProvider.notifier)
+          .read(billingViewModelProvider.notifier)
           .purchase(pomodoistAnnualProductId);
 
       expect(requestedProductId, pomodoistAnnualProductId);
       expect(requestedSurface, BillingCheckoutSurface.native);
       expect(openedUrl?.host, 'checkout.stripe.com');
       expect(
-        container.read(billingControllerProvider).hasActiveEntitlement,
+        container.read(billingViewModelProvider).hasActiveEntitlement,
         false,
       );
       expect(
-        container.read(billingControllerProvider).purchaseSuccessProductId,
+        container.read(billingViewModelProvider).purchaseSuccessProductId,
         isNull,
       );
-      expect(
-        container.read(billingControllerProvider).pendingProductId,
-        isNull,
-      );
+      expect(container.read(billingViewModelProvider).pendingProductId, isNull);
     },
   );
 
@@ -515,23 +515,20 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    container.read(billingControllerProvider);
+    container.read(billingViewModelProvider);
     await _settle();
 
     expect(
-      container.read(billingControllerProvider).hasActiveEntitlement,
+      container.read(billingViewModelProvider).hasActiveEntitlement,
       false,
     );
     account.setActive(true);
     await _settle();
-    expect(
-      container.read(billingControllerProvider).hasActiveEntitlement,
-      true,
-    );
+    expect(container.read(billingViewModelProvider).hasActiveEntitlement, true);
     account.setActive(false);
     await _settle();
     expect(
-      container.read(billingControllerProvider).hasActiveEntitlement,
+      container.read(billingViewModelProvider).hasActiveEntitlement,
       false,
     );
   });
@@ -548,10 +545,10 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.read(billingControllerProvider);
+      container.read(billingViewModelProvider);
       await _settle();
 
-      final state = container.read(billingControllerProvider);
+      final state = container.read(billingViewModelProvider);
       expect(state.hasActiveEntitlement, isTrue);
       expect(state.hasLocalStoreKitEntitlement, isFalse);
       expect(state.accountEntitlementActive, isFalse);
@@ -567,7 +564,7 @@ void main() {
           activeStoreKitProductIds: {pomodoistAnnualProductId},
           activeProductId: pomodoistAnnualProductId,
           accountEntitlementActive: true,
-          activeAccountEntitlement: AccountEntitlement(
+          activeAccountEntitlement: BillingEntitlement(
             appId: AccountAppId.pomodoist,
             entitlementId: 'stripe:lifetime',
             status: 'active',
@@ -597,7 +594,7 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      container.read(billingControllerProvider);
+      container.read(billingViewModelProvider);
       await _settle();
 
       account.setActive(true);
@@ -608,7 +605,7 @@ void main() {
       account.setActive(false);
       await _settle();
 
-      final state = container.read(billingControllerProvider);
+      final state = container.read(billingViewModelProvider);
       expect(state.accountEntitlementActive, isFalse);
       expect(state.activeStoreKitProductIds, {pomodoistAnnualProductId});
       expect(state.hasActiveEntitlement, isTrue);
@@ -675,10 +672,10 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    container.read(billingControllerProvider);
+    container.read(billingViewModelProvider);
     await _settle();
 
-    final state = container.read(billingControllerProvider);
+    final state = container.read(billingViewModelProvider);
     expect(store.refreshCount, 1);
     expect(state.activeStoreKitProductIds, {pomodoistLifetimeProductId});
     expect(state.purchaseSuccessProductId, isNull);
@@ -696,11 +693,11 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    container.read(billingControllerProvider);
+    container.read(billingViewModelProvider);
     await _settle();
-    expect(container.read(billingControllerProvider).loading, isTrue);
+    expect(container.read(billingViewModelProvider).loading, isTrue);
     expect(
-      container.read(billingControllerProvider).hasActiveEntitlement,
+      container.read(billingViewModelProvider).hasActiveEntitlement,
       isTrue,
     );
 
@@ -710,21 +707,21 @@ void main() {
       message: 'NSURLErrorDomain error -1008.',
     );
     store.catalogWaiter!.complete();
-    await container.read(billingControllerProvider.notifier).reload();
-    final state = container.read(billingControllerProvider);
+    await container.read(billingViewModelProvider.notifier).reload();
+    final state = container.read(billingViewModelProvider);
     expect(state.storeAvailable, isFalse);
     expect(state.activeStoreKitProductIds, {pomodoistLifetimeProductId});
     expect(state.activeProductId, pomodoistLifetimeProductId);
     expect(state.purchaseSuccessProductId, isNull);
 
-    await container.read(billingControllerProvider.notifier).restorePurchases();
+    await container.read(billingViewModelProvider.notifier).restorePurchases();
     await _settle();
     expect(store.restoreCount, 1);
     expect(
-      container.read(billingControllerProvider).purchaseSuccessProductId,
+      container.read(billingViewModelProvider).purchaseSuccessProductId,
       pomodoistLifetimeProductId,
     );
-    expect(container.read(billingControllerProvider).activeStoreKitProductIds, {
+    expect(container.read(billingViewModelProvider).activeStoreKitProductIds, {
       pomodoistLifetimeProductId,
       pomodoistAnnualProductId,
     });
@@ -746,15 +743,15 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      container.read(billingControllerProvider);
+      container.read(billingViewModelProvider);
       await _settle();
       store.catalogError = null;
       await _waitFor(
-        () => container.read(billingControllerProvider).canPurchase,
+        () => container.read(billingViewModelProvider).canPurchase,
         'automatic StoreKit recovery',
       );
       expect(store.catalogRequests, 2);
-      expect(container.read(billingControllerProvider).error, isNull);
+      expect(container.read(billingViewModelProvider).error, isNull);
     },
   );
 
@@ -777,15 +774,15 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      container.read(billingControllerProvider);
+      container.read(billingViewModelProvider);
       await _settle();
 
       await container
-          .read(billingControllerProvider.notifier)
+          .read(billingViewModelProvider.notifier)
           .purchase(pomodoistAnnualProductId);
       await _settle();
 
-      final state = container.read(billingControllerProvider);
+      final state = container.read(billingViewModelProvider);
       expect(store.lastAppAccountToken, '22222222-2222-4222-8222-222222222222');
       expect(linked, ['server-$pomodoistAnnualProductId']);
       expect(state.activeStoreKitProductIds, {pomodoistAnnualProductId});
@@ -806,15 +803,15 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      container.read(billingControllerProvider);
+      container.read(billingViewModelProvider);
       await _settle();
 
       await container
-          .read(billingControllerProvider.notifier)
+          .read(billingViewModelProvider.notifier)
           .purchase(pomodoistAnnualProductId);
       await _settle();
 
-      final state = container.read(billingControllerProvider);
+      final state = container.read(billingViewModelProvider);
       expect(state.activeStoreKitProductIds, {pomodoistAnnualProductId});
       expect(state.purchaseSuccessProductId, pomodoistAnnualProductId);
       expect(state.error, isNull);
@@ -837,13 +834,13 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    container.read(billingControllerProvider);
+    container.read(billingViewModelProvider);
     await _settle();
 
-    await container.read(billingControllerProvider.notifier).restorePurchases();
+    await container.read(billingViewModelProvider.notifier).restorePurchases();
     await _settle();
 
-    final state = container.read(billingControllerProvider);
+    final state = container.read(billingViewModelProvider);
     expect(store.restoreCount, 1);
     expect(state.restoring, isFalse);
     expect(state.purchaseSuccessProductId, pomodoistLifetimeLaunchProductId);
@@ -874,12 +871,12 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      container.read(billingControllerProvider);
+      container.read(billingViewModelProvider);
       await _waitFor(
         () =>
             store.refreshCount >= 1 &&
             container
-                .read(billingControllerProvider)
+                .read(billingViewModelProvider)
                 .activeStoreKitProductIds
                 .contains(pomodoistLifetimeProductId),
         'startup StoreKit refresh',
@@ -887,7 +884,7 @@ void main() {
       expect(store.refreshCount, 1);
       expect(attempts, 0);
       expect(container.read(billingSignedInProvider), isFalse);
-      expect(container.read(billingControllerProvider).storeAvailable, isTrue);
+      expect(container.read(billingViewModelProvider).storeAvailable, isTrue);
 
       container.read(_fakeSignedInProvider.notifier).setValue(true);
       expect(container.read(_fakeSignedInProvider), isTrue);
@@ -902,7 +899,7 @@ void main() {
       expect(store.refreshCount, 2);
       expect(attempts, 1);
       expect(
-        container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+        container.read(billingViewModelProvider).hasLocalStoreKitEntitlement,
         isTrue,
       );
 
@@ -944,15 +941,15 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    container.read(billingControllerProvider);
+    container.read(billingViewModelProvider);
     await _settle();
 
     await container
-        .read(billingControllerProvider.notifier)
+        .read(billingViewModelProvider.notifier)
         .purchase(pomodoistLifetimeProductId);
     await _settle();
 
-    final state = container.read(billingControllerProvider);
+    final state = container.read(billingViewModelProvider);
     expect(state.hasLocalStoreKitEntitlement, isTrue);
     expect(state.hasActiveEntitlement, isTrue);
     expect(state.error, isNull);
@@ -970,7 +967,7 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      container.read(billingControllerProvider);
+      container.read(billingViewModelProvider);
       await _settle();
 
       store.emit([
@@ -987,7 +984,7 @@ void main() {
       ]);
       await _settle();
       expect(
-        container.read(billingControllerProvider).activeStoreKitProductIds,
+        container.read(billingViewModelProvider).activeStoreKitProductIds,
         {pomodoistLifetimeProductId},
       );
 
@@ -999,7 +996,7 @@ void main() {
         ),
       ]);
       await _settle();
-      final state = container.read(billingControllerProvider);
+      final state = container.read(billingViewModelProvider);
       expect(state.activeStoreKitProductIds, isEmpty);
       expect(state.hasActiveEntitlement, isTrue);
     },
@@ -1018,11 +1015,11 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      container.read(billingControllerProvider);
+      container.read(billingViewModelProvider);
       await _settle();
 
       expect(
-        container.read(billingControllerProvider).hasActiveEntitlement,
+        container.read(billingViewModelProvider).hasActiveEntitlement,
         pomodoistDevUnlock,
       );
     },
@@ -1076,10 +1073,10 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.read(billingControllerProvider);
+      container.read(billingViewModelProvider);
       await _settle();
 
-      final state = container.read(billingControllerProvider);
+      final state = container.read(billingViewModelProvider);
       expect(state.storeAvailable, isTrue);
       expect(state.error, isNull);
       expect(state.eligibleIntroductoryProductIds, {pomodoistMonthlyProductId});
@@ -1338,7 +1335,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.read(onboardingControllerProvider);
+      container.read(onboardingViewModelProvider);
       await _settle();
 
       var prefs = await SharedPreferences.getInstance();
@@ -1356,7 +1353,7 @@ void main() {
       );
       addTearDown(nextYearContainer.dispose);
 
-      nextYearContainer.read(onboardingControllerProvider);
+      nextYearContainer.read(onboardingViewModelProvider);
       await _settle();
 
       prefs = await SharedPreferences.getInstance();
@@ -1377,12 +1374,12 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    container.read(billingControllerProvider);
+    container.read(billingViewModelProvider);
     await _settle();
-    expect(container.read(billingControllerProvider).storeAvailable, isTrue);
+    expect(container.read(billingViewModelProvider).storeAvailable, isTrue);
 
     await container
-        .read(billingControllerProvider.notifier)
+        .read(billingViewModelProvider.notifier)
         .purchase(pomodoistAnnualProductId);
     await _settle();
 
@@ -1393,21 +1390,21 @@ void main() {
     );
     expect(store.completedProductIds, [pomodoistAnnualProductId]);
     expect(
-      container.read(billingControllerProvider).hasActiveEntitlement,
+      container.read(billingViewModelProvider).hasActiveEntitlement,
       isTrue,
     );
     expect(
-      container.read(billingControllerProvider).purchaseSuccessProductId,
+      container.read(billingViewModelProvider).purchaseSuccessProductId,
       pomodoistAnnualProductId,
     );
 
-    container.read(billingControllerProvider.notifier).clearPurchaseSuccess();
+    container.read(billingViewModelProvider.notifier).clearPurchaseSuccess();
     expect(
-      container.read(billingControllerProvider).purchaseSuccessProductId,
+      container.read(billingViewModelProvider).purchaseSuccessProductId,
       isNull,
     );
     expect(
-      container.read(billingControllerProvider).hasActiveEntitlement,
+      container.read(billingViewModelProvider).hasActiveEntitlement,
       isTrue,
     );
   });
@@ -1423,20 +1420,20 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.read(billingControllerProvider);
+      container.read(billingViewModelProvider);
       await _settle();
 
-      expect(container.read(billingControllerProvider).storeAvailable, isTrue);
+      expect(container.read(billingViewModelProvider).storeAvailable, isTrue);
       expect(
         container
-            .read(billingControllerProvider)
+            .read(billingViewModelProvider)
             .productDetailsById[pomodoistLifetimeLaunchProductId]
             ?.price,
         r'$89.99',
       );
 
       await container
-          .read(billingControllerProvider.notifier)
+          .read(billingViewModelProvider.notifier)
           .purchase(pomodoistLifetimeLaunchProductId);
       await _settle();
 
@@ -1446,20 +1443,20 @@ void main() {
         pomodoistLifetimeLaunchProductId,
       );
       expect(
-        container.read(billingControllerProvider).hasActiveEntitlement,
+        container.read(billingViewModelProvider).hasActiveEntitlement,
         isTrue,
       );
       expect(
-        container.read(billingControllerProvider).purchaseSuccessProductId,
+        container.read(billingViewModelProvider).purchaseSuccessProductId,
         pomodoistLifetimeLaunchProductId,
       );
-      container.read(billingControllerProvider.notifier).clearPurchaseSuccess();
+      container.read(billingViewModelProvider.notifier).clearPurchaseSuccess();
       expect(
-        container.read(billingControllerProvider).purchaseSuccessProductId,
+        container.read(billingViewModelProvider).purchaseSuccessProductId,
         isNull,
       );
       expect(
-        container.read(billingControllerProvider).hasActiveEntitlement,
+        container.read(billingViewModelProvider).hasActiveEntitlement,
         isTrue,
       );
     },
@@ -1480,10 +1477,10 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.read(billingControllerProvider);
+      container.read(billingViewModelProvider);
       await _settle();
       await container
-          .read(billingControllerProvider.notifier)
+          .read(billingViewModelProvider.notifier)
           .purchase(productId);
       await _settle();
 
@@ -1491,7 +1488,7 @@ void main() {
       expect(prefs.getString(billingActiveProductIdPreferenceKey), productId);
       expect(store.completedProductIds, [productId]);
       expect(
-        container.read(billingControllerProvider).hasActiveEntitlement,
+        container.read(billingViewModelProvider).hasActiveEntitlement,
         isTrue,
       );
     }
@@ -1507,17 +1504,17 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    container.read(billingControllerProvider);
+    container.read(billingViewModelProvider);
     await _settle();
 
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString(billingActiveProductIdPreferenceKey), isNull);
     expect(
-      container.read(billingControllerProvider).activeProductId,
+      container.read(billingViewModelProvider).activeProductId,
       pomodoistDevUnlock ? pomodoistLifetimeProductId : isNull,
     );
     expect(
-      container.read(billingControllerProvider).hasActiveEntitlement,
+      container.read(billingViewModelProvider).hasActiveEntitlement,
       pomodoistDevUnlock,
     );
   });
@@ -1537,11 +1534,11 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.read(billingControllerProvider);
+      container.read(billingViewModelProvider);
       await _settle();
 
       await container
-          .read(billingControllerProvider.notifier)
+          .read(billingViewModelProvider.notifier)
           .restorePurchases();
       await _settle();
 
@@ -1553,20 +1550,20 @@ void main() {
       // Reading current entitlements does not finish transactions again.
       expect(store.completedProductIds, isEmpty);
       expect(
-        container.read(billingControllerProvider).hasActiveEntitlement,
+        container.read(billingViewModelProvider).hasActiveEntitlement,
         isTrue,
       );
       expect(
-        container.read(billingControllerProvider).purchaseSuccessProductId,
+        container.read(billingViewModelProvider).purchaseSuccessProductId,
         pomodoistLifetimeLaunchProductId,
       );
-      container.read(billingControllerProvider.notifier).clearPurchaseSuccess();
+      container.read(billingViewModelProvider.notifier).clearPurchaseSuccess();
       expect(
-        container.read(billingControllerProvider).purchaseSuccessProductId,
+        container.read(billingViewModelProvider).purchaseSuccessProductId,
         isNull,
       );
       expect(
-        container.read(billingControllerProvider).hasActiveEntitlement,
+        container.read(billingViewModelProvider).hasActiveEntitlement,
         isTrue,
       );
     },
@@ -1609,22 +1606,22 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      container.read(billingControllerProvider);
-      await container.read(billingControllerProvider.notifier).reload();
-      expect(container.read(billingControllerProvider).canPurchase, isFalse);
+      container.read(billingViewModelProvider);
+      await container.read(billingViewModelProvider.notifier).reload();
+      expect(container.read(billingViewModelProvider).canPurchase, isFalse);
       expect(store.catalogRequests, 3);
       expect(
-        container.read(billingControllerProvider).catalogError,
+        container.read(billingViewModelProvider).catalogError,
         contains('-1008'),
       );
 
       store.catalogError = null;
       final waiter = store.catalogWaiter = Completer<void>();
-      final controller = container.read(billingControllerProvider.notifier);
+      final controller = container.read(billingViewModelProvider.notifier);
       final retry = controller.reload();
       final duplicate = controller.reload();
       await _settle();
-      final loading = container.read(billingControllerProvider);
+      final loading = container.read(billingViewModelProvider);
       expect(loading.loading, isTrue);
       expect(loading.error, isNull);
       expect(loading.canPurchase, isFalse);
@@ -1632,7 +1629,7 @@ void main() {
 
       waiter.complete();
       await Future.wait([retry, duplicate]);
-      final ready = container.read(billingControllerProvider);
+      final ready = container.read(billingViewModelProvider);
       expect(ready.loading, isFalse);
       expect(ready.error, isNull);
       expect(ready.canPurchase, isTrue);
@@ -1656,10 +1653,10 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      container.read(billingControllerProvider);
-      await container.read(billingControllerProvider.notifier).reload();
+      container.read(billingViewModelProvider);
+      await container.read(billingViewModelProvider.notifier).reload();
       expect(store.catalogRequests, 1);
-      expect(container.read(billingControllerProvider).canPurchase, isFalse);
+      expect(container.read(billingViewModelProvider).canPurchase, isFalse);
 
       store.catalogError = null;
       WidgetsBinding.instance.handleAppLifecycleStateChanged(
@@ -1669,11 +1666,11 @@ void main() {
         AppLifecycleState.resumed,
       );
       await _waitFor(
-        () => container.read(billingControllerProvider).canPurchase,
+        () => container.read(billingViewModelProvider).canPurchase,
         'StoreKit recovery on resume',
       );
       expect(store.catalogRequests, 2);
-      expect(container.read(billingControllerProvider).error, isNull);
+      expect(container.read(billingViewModelProvider).error, isNull);
     },
   );
 
@@ -1689,13 +1686,13 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    container.read(billingControllerProvider);
+    container.read(billingViewModelProvider);
     await _waitFor(
-      () => !container.read(billingControllerProvider).loading,
+      () => !container.read(billingViewModelProvider).loading,
       'billing catalog timeout',
     );
 
-    final state = container.read(billingControllerProvider);
+    final state = container.read(billingViewModelProvider);
     expect(state.loading, isFalse);
     expect(state.storeAvailable, isFalse);
     expect(state.catalogError, contains('TimeoutException'));
@@ -1713,12 +1710,12 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    container.read(billingControllerProvider);
+    container.read(billingViewModelProvider);
     await _settle();
 
-    await container.read(billingControllerProvider.notifier).restorePurchases();
+    await container.read(billingViewModelProvider.notifier).restorePurchases();
 
-    expect(container.read(billingControllerProvider).restoring, isFalse);
+    expect(container.read(billingViewModelProvider).restoring, isFalse);
   });
 
   test('restore timeout clears restoring state and reports error', () async {
@@ -1732,12 +1729,12 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    container.read(billingControllerProvider);
+    container.read(billingViewModelProvider);
     await _settle();
 
-    await container.read(billingControllerProvider.notifier).restorePurchases();
+    await container.read(billingViewModelProvider.notifier).restorePurchases();
 
-    final state = container.read(billingControllerProvider);
+    final state = container.read(billingViewModelProvider);
     expect(state.restoring, isFalse);
     expect(state.error, contains('TimeoutException'));
   });
@@ -1754,15 +1751,15 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    container.read(billingControllerProvider);
+    container.read(billingViewModelProvider);
     await _settle();
 
     await container
-        .read(billingControllerProvider.notifier)
+        .read(billingViewModelProvider.notifier)
         .purchase(pomodoistAnnualProductId);
     await Future<void>.delayed(const Duration(milliseconds: 20));
 
-    final state = container.read(billingControllerProvider);
+    final state = container.read(billingViewModelProvider);
     expect(state.pendingProductId, isNull);
     expect(state.error, contains('timed out'));
   });
@@ -1778,14 +1775,14 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    container.read(billingControllerProvider);
+    container.read(billingViewModelProvider);
     await _settle();
 
     await container
-        .read(billingControllerProvider.notifier)
+        .read(billingViewModelProvider.notifier)
         .purchase(pomodoistAnnualProductId);
 
-    final state = container.read(billingControllerProvider);
+    final state = container.read(billingViewModelProvider);
     expect(state.pendingProductId, isNull);
     expect(state.error, contains('timed out'));
   });
@@ -1800,14 +1797,14 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    container.read(billingControllerProvider);
+    container.read(billingViewModelProvider);
     await _settle();
 
     await container
-        .read(billingControllerProvider.notifier)
+        .read(billingViewModelProvider.notifier)
         .purchase(pomodoistAnnualProductId);
 
-    final state = container.read(billingControllerProvider);
+    final state = container.read(billingViewModelProvider);
     expect(state.pendingProductId, isNull);
     expect(state.error, isNull);
   });
@@ -1824,16 +1821,16 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    container.read(billingControllerProvider);
+    container.read(billingViewModelProvider);
     await _settle();
 
     await container
-        .read(billingControllerProvider.notifier)
+        .read(billingViewModelProvider.notifier)
         .purchase(pomodoistAnnualProductId);
     await _settle();
     await Future<void>.delayed(const Duration(milliseconds: 20));
 
-    final state = container.read(billingControllerProvider);
+    final state = container.read(billingViewModelProvider);
     expect(state.pendingProductId, isNull);
     expect(state.activeProductId, pomodoistAnnualProductId);
     expect(state.error, isNull);
@@ -1851,11 +1848,11 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    container.read(billingControllerProvider);
+    container.read(billingViewModelProvider);
     await _settle();
 
     await container
-        .read(billingControllerProvider.notifier)
+        .read(billingViewModelProvider.notifier)
         .purchase(pomodoistAnnualProductId);
     store.emit([
       _purchase(pomodoistLifetimeProductId, PurchaseStatus.restored),
@@ -1863,11 +1860,11 @@ void main() {
     await _settle();
 
     expect(
-      container.read(billingControllerProvider).pendingProductId,
+      container.read(billingViewModelProvider).pendingProductId,
       pomodoistAnnualProductId,
     );
     await Future<void>.delayed(const Duration(milliseconds: 40));
-    final state = container.read(billingControllerProvider);
+    final state = container.read(billingViewModelProvider);
     expect(state.pendingProductId, isNull);
     expect(state.error, contains('timed out'));
     expect(state.activeProductId, pomodoistLifetimeProductId);
@@ -2279,7 +2276,7 @@ void main() {
           billingChannelProvider.overrideWithValue(BillingChannel.stripe),
           billingSignedInProvider.overrideWithValue(true),
           billingActiveAccountEntitlementProvider.overrideWithValue(
-            const AccountEntitlement(
+            const BillingEntitlement(
               appId: AccountAppId.pomodoist,
               entitlementId: 'stripe:sub_test',
               status: 'active',
@@ -2611,7 +2608,7 @@ class _FakeBillingStore extends BillingStore {
     refreshCount += 1;
     return [
       for (final purchase in _verifiedPurchases.values)
-        BillingTransactionProof.fromPurchase(purchase),
+        billingTransactionProofFromPurchase(purchase),
     ];
   }
 

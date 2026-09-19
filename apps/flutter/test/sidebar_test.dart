@@ -1,3 +1,5 @@
+import 'package:pomodoist/domain/models/settings/app_language.dart';
+import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show ShadSelect, ShadButton, LucideIcons;
 import 'support/test_app.dart';
@@ -12,38 +14,38 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/app/config/app_language.dart';
-import 'package:pomodoist/app/routing/app_startup_gate.dart';
-import 'package:pomodoist/app/config/app_theme_mode.dart';
-import 'package:pomodoist/app/config/keyboard_shortcuts.dart';
-import 'package:pomodoist/app/platform/macos_app_menu.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/routing/router.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/app/widgets/resizable_dialog.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/time/clock.dart';
-import 'package:pomodoist/features/billing/billing.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/focus/presentation/focus_screen.dart';
-import 'package:pomodoist/features/onboarding/onboarding_gate.dart';
-import 'package:pomodoist/features/planning/presentation/today_screen.dart';
-import 'package:pomodoist/features/productivity/domain/achievement_models.dart';
-import 'package:pomodoist/features/productivity/domain/productivity_models.dart';
-import 'package:pomodoist/features/productivity/presentation/reports_screen.dart';
-import 'package:pomodoist/features/settings/presentation/keyboard_shortcuts_screen.dart';
-import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/features/tasks/presentation/browse_screen.dart';
-import 'package:pomodoist/features/tasks/presentation/inbox_screen.dart';
-import 'package:pomodoist/features/tasks/presentation/kanban/kanban_screen.dart';
-import 'package:pomodoist/features/tasks/presentation/priority_matrix_screen.dart';
-import 'package:pomodoist/features/tasks/presentation/search_screen.dart';
-import 'package:pomodoist/features/tasks/presentation/timeline_screen.dart';
-import 'package:pomodoist/features/tasks/presentation/upcoming_screen.dart';
-import 'package:pomodoist/features/tasks/presentation/widgets/quick_add_bar.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/app_language.dart';
+import 'package:pomodoist/ui/core/widgets/app_startup_gate.dart';
+import 'package:pomodoist/ui/core/view_models/app_theme_mode_view_model.dart';
+import 'package:pomodoist/config/keyboard_shortcuts.dart';
+import 'package:pomodoist/ui/core/platform/macos_app_menu.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/routing/router.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/ui/core/widgets/resizable_dialog.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/utils/clock.dart';
+import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/ui/focus/widgets/focus_screen.dart';
+import 'package:pomodoist/ui/onboarding/widgets/onboarding_gate.dart';
+import 'package:pomodoist/ui/planning/widgets/today_screen.dart';
+import 'package:pomodoist/domain/models/productivity/achievement_models.dart';
+import 'package:pomodoist/domain/models/productivity/productivity_models.dart';
+import 'package:pomodoist/ui/productivity/widgets/reports_screen.dart';
+import 'package:pomodoist/ui/settings/widgets/keyboard_shortcuts_screen.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_screen.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/tasks/widgets/browse_screen.dart';
+import 'package:pomodoist/ui/tasks/widgets/inbox_screen.dart';
+import 'package:pomodoist/ui/tasks/widgets/kanban_screen.dart';
+import 'package:pomodoist/ui/tasks/widgets/priority_matrix_screen.dart';
+import 'package:pomodoist/ui/tasks/widgets/search_screen.dart';
+import 'package:pomodoist/ui/tasks/widgets/timeline_screen.dart';
+import 'package:pomodoist/ui/tasks/widgets/upcoming_screen.dart';
+import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _wideSidebarFrameKey = Key('wide-sidebar-frame');
@@ -1337,7 +1339,7 @@ Future<_SidebarHarness> _pumpApp(
     ProviderScope(
       overrides: [
         appStartupProvider.overrideWith((ref) => Future<void>.value()),
-        appStartupLifecycleProvider.overrideWith((ref) {}),
+        appStartupViewModelProvider.overrideWith(_ReadyAppStartupViewModel.new),
         shortcutTargetPlatformProvider.overrideWithValue(TargetPlatform.macOS),
         taskStartNotificationCoordinatorProvider.overrideWith((ref) {}),
         reengagementNotificationCoordinatorProvider.overrideWith((ref) {}),
@@ -1534,7 +1536,9 @@ double _wideSidebarWidth(WidgetTester tester) {
 Future<void> _pumpFrames(WidgetTester tester) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 250));
-  await tester.pump();
+  for (var pump = 0; pump < 8; pump++) {
+    await tester.pump();
+  }
 }
 
 Future<void> _disposeApp(WidgetTester tester) async {
@@ -1592,4 +1596,9 @@ FocusIntervalItem _activeInterval(DateTime now) {
     createdAt: now,
     updatedAt: now,
   );
+}
+
+class _ReadyAppStartupViewModel extends AppStartupViewModel {
+  @override
+  Future<void> build() async {}
 }

@@ -1,8 +1,8 @@
+import 'package:pomodoist/data/repositories/planning/remote_task_decomposer.dart';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/planning/data/task_decomposer.dart';
 
 void main() {
   test('shared AI fixture preserves the command and editable result', () async {

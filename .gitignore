@@ -140,6 +140,8 @@ ios/build/
 docs/architecture/*
 !docs/architecture/repository.md
 !docs/architecture/compatibility.md
+!docs/architecture/mvvm-implementation.md
+!docs/architecture/flutter-app-architecture.md
 !docs/superpowers/
 docs/superpowers/*
 !docs/superpowers/plans/

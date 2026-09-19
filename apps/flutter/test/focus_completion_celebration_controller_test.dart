@@ -1,13 +1,13 @@
+import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/core/audio/focus_sound_player.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/notifications/notification_scheduler.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/focus/presentation/focus_completion_celebration_controller.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/data/services/audio/focus_sound_player.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -18,21 +18,19 @@ void main() {
   test('a completed run is presented at most once', () {
     final container = ProviderContainer();
     addTearDown(container.dispose);
-    final controller = container.read(
-      focusRunCompletionControllerProvider.notifier,
-    );
+    final controller = container.read(focusCompletionRepositoryProvider);
     final first = _completion(runId: 'run-1', completedWorkIntervals: 4);
     final duplicate = _completion(runId: 'run-1', completedWorkIntervals: 99);
 
     controller.present(first);
     controller.present(duplicate);
 
-    expect(container.read(focusRunCompletionControllerProvider), same(first));
+    expect(container.read(focusCompletionEventProvider), same(first));
 
     controller.dismiss();
     controller.present(duplicate);
 
-    expect(container.read(focusRunCompletionControllerProvider), isNull);
+    expect(container.read(focusCompletionEventProvider), isNull);
   });
 
   test(
@@ -41,7 +39,7 @@ void main() {
       final db = AppDatabase(NativeDatabase.memory());
       await db.ensureSeedData();
       addTearDown(db.close);
-      final syncQueue = DriftSyncQueueRepository(db);
+      final syncQueue = DriftOutboxService(db);
       final container = ProviderContainer(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
@@ -54,18 +52,21 @@ void main() {
       );
       addTearDown(container.dispose);
       final repository = container.read(focusRepositoryProvider);
-      final runId = await repository.startRun(
-        const StartFocusRunInput(targetWorkIntervals: 1),
+      final runId = await repository
+          .startRun(const StartFocusRunInput(targetWorkIntervals: 1))
+          .then((result) => result.getOrThrow());
+      await repository.completeActiveInterval().then(
+        (result) => result.getOrThrow(),
       );
-      await repository.completeActiveInterval();
-      await repository.startReadyInterval();
-
-      await repository.completeActiveInterval();
-
-      expect(
-        container.read(focusRunCompletionControllerProvider)?.runId,
-        runId,
+      await repository.startReadyInterval().then(
+        (result) => result.getOrThrow(),
       );
+
+      await repository.completeActiveInterval().then(
+        (result) => result.getOrThrow(),
+      );
+
+      expect(container.read(focusCompletionEventProvider)?.runId, runId);
     },
   );
 
@@ -74,9 +75,7 @@ void main() {
     () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
-      final controller = container.read(
-        focusRunCompletionControllerProvider.notifier,
-      );
+      final controller = container.read(focusCompletionRepositoryProvider);
       controller.present(
         _completion(runId: 'first', completedWorkIntervals: 1),
       );
@@ -87,10 +86,7 @@ void main() {
       expect(controller.tryBeginAction('first'), isTrue);
       controller.present(_completion(runId: 'next', completedWorkIntervals: 1));
       controller.dismiss(runId: 'first');
-      expect(
-        container.read(focusRunCompletionControllerProvider)?.runId,
-        'next',
-      );
+      expect(container.read(focusCompletionEventProvider)?.runId, 'next');
       expect(controller.tryBeginAction('next'), isFalse);
       controller.endAction('first');
       expect(controller.tryBeginAction('next'), isTrue);
@@ -109,7 +105,7 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     await db.ensureSeedData();
     addTearDown(db.close);
-    final syncQueue = DriftSyncQueueRepository(db);
+    final syncQueue = DriftOutboxService(db);
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
@@ -124,13 +120,19 @@ void main() {
     final repository = container.read(focusRepositoryProvider);
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
-    await repository.startRun(const StartFocusRunInput(targetWorkIntervals: 1));
-    await repository.completeActiveInterval();
-    await repository.startReadyInterval();
+    await repository
+        .startRun(const StartFocusRunInput(targetWorkIntervals: 1))
+        .then((result) => result.getOrThrow());
+    await repository.completeActiveInterval().then(
+      (result) => result.getOrThrow(),
+    );
+    await repository.startReadyInterval().then((result) => result.getOrThrow());
 
-    await repository.completeActiveInterval();
+    await repository.completeActiveInterval().then(
+      (result) => result.getOrThrow(),
+    );
 
-    expect(container.read(focusRunCompletionControllerProvider), isNull);
+    expect(container.read(focusCompletionEventProvider), isNull);
   });
 }
 

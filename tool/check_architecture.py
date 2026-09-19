@@ -5,7 +5,10 @@ import argparse
 import json
 import re
 
-DART_DIRECTIVE = re.compile(r'^\s*(?:import|export)\s+(.*?);', re.M | re.S)
+DART_DIRECTIVE = re.compile(
+    r'^\s*(?:import|export|part(?!\s+of\b))\s+(.*?);',
+    re.M | re.S,
+)
 TS_IMPORT = re.compile(r'^\s*(?:import|export)\s+(?:[^;]*?\sfrom\s*)?[\'"]([^\'"]+)[\'"]', re.M)
 
 
@@ -71,10 +74,11 @@ def check(root):
             errors.append(f'Missing source directory: {directory.relative_to(root)}')
     paths = list(app.rglob('*.dart')) + list(server.rglob('*.ts'))
     paths = [p for p in paths if not p.name.endswith(('.g.dart', '_test.ts'))
-             and not p.match('*/l10n/app_localizations*.dart')]
+             and not p.match('*/localization/app_localizations*.dart')]
     for path in paths:
         graph[path] = set()
     for path in paths:
+        source_text = path.read_text()
         for name in dependencies(path):
             if name.startswith('package:pomodoist/'):
                 target = app / name.removeprefix('package:pomodoist/')
@@ -90,11 +94,75 @@ def check(root):
                     errors.append(f'{path.relative_to(root)}: missing import {name}')
                 if target in graph:
                     graph[path].add(target)
-            if path.is_relative_to(app) and 'domain' in path.relative_to(app).parts:
+            if path.is_relative_to(app):
+                source = path.relative_to(app)
+                destination = target.relative_to(app) if target and target.is_relative_to(app) else None
+                source_parts = source.parts
+                target_parts = destination.parts if destination else ()
+                view = source_parts[0] == 'ui' and 'view_models' not in source_parts
+                view_model = source_parts[0] == 'ui' and 'view_models' in source_parts
+                infrastructure = name.startswith((
+                    'package:drift/', 'package:supabase_flutter/',
+                    'package:app_account/', 'package:app_voice/',
+                    'package:dio/', 'package:http/', 'package:shared_preferences/',
+                    'package:in_app_purchase/', 'package:record/',
+                ))
+                repository_contract = (
+                    source_parts[:2] == ('data', 'repositories')
+                    and re.search(
+                        r'abstract\s+(?:interface\s+)?class\s+\w*Repository\b',
+                        source_text,
+                    ) is not None
+                )
+                if view and (infrastructure or target_parts[:1] in [('data',), ('config',)]):
+                    errors.append(f'{path.relative_to(root)}: view depends on data/composition: {name}')
+                if (view_model
+                        and (infrastructure
+                             or target_parts[:2] == ('data', 'services'))):
+                    errors.append(f'{path.relative_to(root)}: view model depends on infrastructure: {name}')
+                if (repository_contract
+                        and (infrastructure
+                             or target_parts[:2] == ('data', 'services'))):
+                    errors.append(f'{path.relative_to(root)}: repository contract depends on infrastructure: {name}')
+                if source_parts[0] == 'data' and target_parts[:1] in [('ui',), ('config',), ('routing',)]:
+                    errors.append(f'{path.relative_to(root)}: data depends on UI/composition: {name}')
+                if (source_parts[:2] == ('data', 'services')
+                        and target_parts[:2] == ('data', 'repositories')):
+                    errors.append(f'{path.relative_to(root)}: service depends on repository: {name}')
+                if source_parts[0] == 'data' and name.startswith('package:flutter_riverpod/'):
+                    errors.append(f'{path.relative_to(root)}: lower layer depends on Riverpod: {name}')
+                if (source_parts[0] == 'utils'
+                        and ((destination is not None
+                              and target_parts[:1] != ('utils',))
+                             or (destination is None
+                                 and not name.startswith('dart:')))):
+                    errors.append(f'{path.relative_to(root)}: utility depends on application/framework: {name}')
+                if (source_parts[:2] == ('data', 'repositories')
+                        and target_parts[:2] == ('data', 'repositories')
+                        and source_parts[2] != target_parts[2]):
+                    errors.append(f'{path.relative_to(root)}: repository depends on another repository: {name}')
+                if (source_parts[:2] == ('ui', source_parts[1] if len(source_parts) > 1 else '')
+                        and 'view_models' in source_parts
+                        and target_parts[:1] == ('ui',)
+                        and 'view_models' in target_parts
+                        and destination != source):
+                    errors.append(f'{path.relative_to(root)}: view model depends on another view model: {name}')
+            if path.is_relative_to(app) and path.relative_to(app).parts[:1] == ('domain',):
+                domain_parts = path.relative_to(app).parts
                 forbidden = name.startswith(('package:flutter/', 'package:flutter_riverpod/', 'package:drift/', 'package:app_account/'))
                 if target and target.is_relative_to(app):
                     rel = target.relative_to(app)
-                    forbidden |= rel.parts[0] == 'app' or str(rel).startswith('core/db/') or any(p in rel.parts for p in ['data', 'presentation'])
+                    repository_contract = (
+                        domain_parts[:2] == ('domain', 'use_cases')
+                        and rel.parts[:2] == ('data', 'repositories')
+                        and rel.name.endswith('_repository.dart')
+                    )
+                    forbidden |= (
+                        rel.parts[0] == 'app'
+                        or str(rel).startswith('core/db/')
+                        or ('data' in rel.parts and not repository_contract)
+                        or 'presentation' in rel.parts
+                    )
                 if forbidden:
                     errors.append(f'{path.relative_to(root)}: domain depends on infrastructure/UI: {name}')
             if path.parent == server / '_shared' and target and target.is_relative_to(server) and target.parent != server / '_shared':

@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/runtime_public_config.dart';
-import 'package:pomodoist/app/config/runtime_public_config_loader_core.dart';
+import 'package:pomodoist/config/runtime_public_config.dart';
+import 'package:pomodoist/config/runtime_public_config_loader_core.dart';
 
 void main() {
   test('parses a preloaded window config through the public model', () {

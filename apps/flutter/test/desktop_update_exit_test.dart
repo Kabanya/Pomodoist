@@ -3,7 +3,7 @@ import 'dart:ui' show AppExitResponse, AppExitType;
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/updates/update_installer_io.dart';
+import 'package:pomodoist/data/services/updates/update_installer_io.dart';
 
 class _ExitTestBinding extends AutomatedTestWidgetsFlutterBinding {
   final exitRequests = <(AppExitType, int)>[];

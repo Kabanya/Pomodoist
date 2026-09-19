@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/updates/update_release.dart';
+import 'package:pomodoist/domain/models/updates/update_release.dart';
 
 Map<String, Object?> releaseFixture(
   String tag, {

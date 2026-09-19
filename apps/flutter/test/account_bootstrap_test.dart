@@ -8,11 +8,11 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/features/billing/billing.dart';
-import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
-import 'package:pomodoist/features/settings/presentation/settings_navigation.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_screen.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_navigation.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -194,10 +194,9 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    expect(
-      await container.read(accountOverviewProvider.future),
-      same(overview),
-    );
+    final loaded = await container.read(accountOverviewProvider.future);
+    expect(loaded?.profile.id, overview.profile.id);
+    expect(loaded?.generatedAt, overview.generatedAt);
     await Future<void>.delayed(Duration.zero);
     expect(account.recordedVersion, '2.4.1+37');
     expect(account.recordedPlatform, defaultTargetPlatform.name.toLowerCase());
@@ -232,10 +231,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      expect(
-        await container.read(accountOverviewProvider.future),
-        same(overview),
-      );
+      final loaded = await container.read(accountOverviewProvider.future);
+      expect(loaded?.profile.id, overview.profile.id);
+      expect(loaded?.generatedAt, overview.generatedAt);
     },
   );
 

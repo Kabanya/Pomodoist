@@ -1,0 +1,617 @@
+import 'dart:convert';
+import 'package:csv/csv.dart';
+import 'package:timezone/data/latest.dart' as time_zone_data;
+import 'package:timezone/timezone.dart' as time_zone;
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+
+const pomodoistCsvContractVersion = 'pomodoist_csv_v1';
+const pomodoistCsvHeaders = <String>[
+  'key',
+  'content',
+  'description',
+  'project',
+  'labels',
+  'priority',
+  'due_date',
+  'start_at',
+  'end_at',
+  'time_zone',
+  'recurrence',
+  'recurrence_interval',
+  'deadline',
+  'estimate',
+  'kanban_status',
+  'parent_key',
+];
+const pomodoistCsvHeader =
+    'key,content,description,project,labels,priority,due_date,start_at,end_at,'
+    'time_zone,recurrence,recurrence_interval,deadline,estimate,'
+    'kanban_status,parent_key';
+const pomodoistCsvAgentInstructions =
+    '''
+Pomodoist CSV import contract: pomodoist_csv_v1
+
+Create UTF-8 CSV files with this canonical header:
+$pomodoistCsvHeader
+
+Rules:
+- Use comma as the canonical delimiter. Pomodoist also accepts semicolon. A UTF-8 BOM is allowed. Quote fields that contain a delimiter, quote, or newline; escape a quote by doubling it.
+- Maximum file size: 16 MiB. Maximum tasks: 1000. Header order is flexible, unused known headers may be omitted, content is required, and unknown or duplicate headers are invalid.
+- One row creates one open task. Re-importing the same file creates duplicates intentionally. Completed tasks, sections, internal IDs, focus statistics, and duration are not imported.
+- content: required text. description: optional text. project: optional; empty means Inbox. Missing projects are created and existing names are reused case-insensitively.
+- labels: optional names separated by |. Missing labels are created and existing names are reused case-insensitively.
+- priority: 1, 2, 3, or 4; empty means 4.
+- Schedule: use due_date as YYYY-MM-DD for an all-day task, or use all three of start_at, end_at, and time_zone for a timed task. start_at and end_at must be RFC3339 with an explicit UTC offset, end_at must be later, and time_zone must be an IANA name such as Europe/Moscow. Do not combine due_date with timed fields.
+- recurrence: day, week, or month. recurrence_interval: integer 1..999, default 1. Recurrence requires a schedule.
+- deadline: optional YYYY-MM-DD. estimate: optional integer 1..999 Pomodoro intervals.
+- kanban_status: optional open workflow status; empty means Backlog. Missing statuses are created and existing names are reused case-insensitively. Done is invalid.
+- key: optional case-sensitive row key matching [A-Za-z0-9][A-Za-z0-9._:-]{0,199}. Keys must be unique. parent_key references another row key anywhere in the file. References must exist and must not form cycles. A child with an empty project inherits its parent's project; an explicit child project must match its parent's project case-insensitively.
+
+Example:
+key,content,project,labels,priority,due_date,kanban_status,parent_key
+launch,Plan launch,Work,planning|urgent,1,2026-08-10,In progress,
+venue,Book venue,Work,calls,2,2026-08-08,Backlog,launch
+''';
+
+class CsvTaskImportIssue {
+  const CsvTaskImportIssue({
+    required this.row,
+    required this.message,
+    required this.code,
+    this.value = '',
+  });
+
+  final int row;
+  final String message;
+  final String code;
+  final String value;
+}
+
+class CsvTaskImportException implements Exception {
+  const CsvTaskImportException(this.issues);
+
+  final List<CsvTaskImportIssue> issues;
+
+  @override
+  String toString() => issues.map((issue) => issue.message).join('\n');
+}
+
+class CsvTaskImportDraft {
+  const CsvTaskImportDraft({
+    required this.rowNumber,
+    required this.content,
+    required this.labelNames,
+    required this.priority,
+    required this.recurrenceInterval,
+    this.key,
+    this.description,
+    this.projectName,
+    this.schedule,
+    this.recurrenceUnit,
+    this.deadline,
+    this.estimatedFocusIntervals,
+    this.kanbanStatusName,
+    this.parentKey,
+  });
+
+  final int rowNumber;
+  final String? key;
+  final String content;
+  final String? description;
+  final String? projectName;
+  final List<String> labelNames;
+  final int priority;
+  final TaskSchedule? schedule;
+  final TaskRecurrenceUnit? recurrenceUnit;
+  final int recurrenceInterval;
+  final DateTime? deadline;
+  final int? estimatedFocusIntervals;
+  final String? kanbanStatusName;
+  final String? parentKey;
+
+  CsvTaskImportDraft withProjectName(String? value) => CsvTaskImportDraft(
+    rowNumber: rowNumber,
+    key: key,
+    content: content,
+    description: description,
+    projectName: value,
+    labelNames: labelNames,
+    priority: priority,
+    schedule: schedule,
+    recurrenceUnit: recurrenceUnit,
+    recurrenceInterval: recurrenceInterval,
+    deadline: deadline,
+    estimatedFocusIntervals: estimatedFocusIntervals,
+    kanbanStatusName: kanbanStatusName,
+    parentKey: parentKey,
+  );
+}
+
+class CsvTaskImportDocument {
+  const CsvTaskImportDocument(this.tasks);
+
+  static const maximumBytes = 16 * 1024 * 1024;
+  static const maximumTasks = 1000;
+
+  final List<CsvTaskImportDraft> tasks;
+
+  factory CsvTaskImportDocument.parse(List<int> bytes) {
+    if (bytes.length > maximumBytes) {
+      throw const CsvTaskImportException([
+        CsvTaskImportIssue(
+          row: 0,
+          code: 'fileTooLarge',
+          message: 'CSV file exceeds 16 MiB.',
+        ),
+      ]);
+    }
+    final String text;
+    try {
+      text = utf8.decode(bytes).trim();
+    } on FormatException {
+      throw const CsvTaskImportException([
+        CsvTaskImportIssue(
+          row: 0,
+          code: 'invalidUtf8',
+          message: 'CSV must be valid UTF-8.',
+        ),
+      ]);
+    }
+    if (text.isEmpty) {
+      throw const CsvTaskImportException([
+        CsvTaskImportIssue(
+          row: 1,
+          code: 'missingHeader',
+          message: 'CSV header is missing.',
+        ),
+      ]);
+    }
+    final List<List<dynamic>> rows;
+    try {
+      final commaRows = Csv(
+        fieldDelimiter: ',',
+        autoDetect: false,
+      ).decode(text);
+      final semicolonRows = Csv(
+        fieldDelimiter: ';',
+        autoDetect: false,
+      ).decode(text);
+      rows = semicolonRows.first.length > commaRows.first.length
+          ? semicolonRows
+          : commaRows;
+    } on FormatException catch (error) {
+      throw CsvTaskImportException([
+        CsvTaskImportIssue(
+          row: 0,
+          code: 'malformed',
+          message: 'Malformed CSV: $error',
+        ),
+      ]);
+    }
+    if (rows.isEmpty) {
+      throw const CsvTaskImportException([
+        CsvTaskImportIssue(
+          row: 1,
+          code: 'missingHeader',
+          message: 'CSV header is missing.',
+        ),
+      ]);
+    }
+    final headers = rows.first
+        .map((value) => '$value'.trim().replaceFirst('\ufeff', ''))
+        .toList();
+    final issues = <CsvTaskImportIssue>[];
+    final index = <String, int>{};
+    for (var i = 0; i < headers.length; i++) {
+      final header = headers[i];
+      if (!pomodoistCsvHeaders.contains(header)) {
+        issues.add(
+          CsvTaskImportIssue(
+            row: 1,
+            code: 'unknownHeader',
+            value: header,
+            message: 'Unknown header "$header".',
+          ),
+        );
+      } else if (index.containsKey(header)) {
+        issues.add(
+          CsvTaskImportIssue(
+            row: 1,
+            code: 'duplicateHeader',
+            value: header,
+            message: 'Duplicate header "$header".',
+          ),
+        );
+      } else {
+        index[header] = i;
+      }
+    }
+    if (!index.containsKey('content')) {
+      issues.add(
+        const CsvTaskImportIssue(
+          row: 1,
+          code: 'contentHeaderRequired',
+          message: 'content header is required.',
+        ),
+      );
+    }
+    if (issues.isNotEmpty) {
+      throw CsvTaskImportException(List.unmodifiable(issues));
+    }
+    if (rows.length - 1 > maximumTasks) {
+      throw const CsvTaskImportException([
+        CsvTaskImportIssue(
+          row: 0,
+          code: 'tooManyTasks',
+          message: 'CSV cannot contain more than 1000 tasks.',
+        ),
+      ]);
+    }
+    final tasks = <CsvTaskImportDraft>[];
+    for (var i = 1; i < rows.length; i++) {
+      final row = rows[i];
+      final rowNumber = i + 1;
+      if (row.length > headers.length) {
+        issues.add(
+          CsvTaskImportIssue(
+            row: rowNumber,
+            code: 'tooManyFields',
+            message: 'Row has more fields than the header.',
+          ),
+        );
+      }
+      String cell(String name) {
+        final column = index[name];
+        return column == null || column >= row.length
+            ? ''
+            : '${row[column]}'.trim();
+      }
+
+      void issue(String code, String message, {String value = ''}) =>
+          issues.add(
+            CsvTaskImportIssue(
+              row: rowNumber,
+              message: message,
+              code: code,
+              value: value,
+            ),
+          );
+
+      final content = cell('content');
+      if (content.isEmpty) issue('contentRequired', 'content is required.');
+
+      final priorityRaw = cell('priority');
+      final priority = priorityRaw.isEmpty ? 4 : int.tryParse(priorityRaw);
+      if (priority == null || priority < 1 || priority > 4) {
+        issue('invalidPriority', 'priority must be an integer from 1 to 4.');
+      }
+
+      final dueRaw = cell('due_date');
+      final dueDate = _validatedDate(dueRaw);
+      if (dueRaw.isNotEmpty && dueDate == null) {
+        issue(
+          'invalidDate',
+          'due_date must use YYYY-MM-DD.',
+          value: 'due_date',
+        );
+      }
+      final startRaw = cell('start_at');
+      final endRaw = cell('end_at');
+      final zone = cell('time_zone');
+      final hasTimedValue =
+          startRaw.isNotEmpty || endRaw.isNotEmpty || zone.isNotEmpty;
+      if (dueRaw.isNotEmpty && hasTimedValue) {
+        issue(
+          'mixedSchedule',
+          'due_date cannot be combined with a timed schedule.',
+        );
+      }
+      DateTime? startAt;
+      DateTime? endAt;
+      var zoneIsValid = false;
+      if (hasTimedValue) {
+        if (startRaw.isEmpty || endRaw.isEmpty || zone.isEmpty) {
+          issue(
+            'timedFieldsRequired',
+            'A timed schedule requires start_at, end_at and time_zone.',
+          );
+        }
+        startAt = _validatedDateTime(startRaw);
+        endAt = _validatedDateTime(endRaw);
+        if (startRaw.isNotEmpty && startAt == null) {
+          issue(
+            'invalidTimestamp',
+            'start_at must be RFC3339 with an explicit UTC offset.',
+            value: 'start_at',
+          );
+        }
+        if (endRaw.isNotEmpty && endAt == null) {
+          issue(
+            'invalidTimestamp',
+            'end_at must be RFC3339 with an explicit UTC offset.',
+            value: 'end_at',
+          );
+        }
+        if (zone.isNotEmpty) {
+          zoneIsValid = _isValidTimeZone(zone);
+          if (!zoneIsValid) {
+            issue('invalidTimeZone', 'time_zone must be a valid IANA name.');
+          }
+        }
+      }
+      TaskSchedule? schedule;
+      if (dueDate != null && !hasTimedValue) {
+        schedule = TaskSchedule.allDay(dueDate);
+      } else if (startAt != null && endAt != null && zoneIsValid) {
+        if (endAt.isAfter(startAt)) {
+          schedule = TaskSchedule.timed(
+            start: startAt,
+            end: endAt,
+            timeZone: zone,
+          );
+        } else {
+          issue('endBeforeStart', 'end_at must be after start_at.');
+        }
+      }
+
+      final recurrenceRaw = cell('recurrence');
+      TaskRecurrenceUnit? recurrenceUnit;
+      if (recurrenceRaw.isNotEmpty) {
+        recurrenceUnit = switch (recurrenceRaw) {
+          'day' => TaskRecurrenceUnit.day,
+          'week' => TaskRecurrenceUnit.week,
+          'month' => TaskRecurrenceUnit.month,
+          _ => null,
+        };
+        if (recurrenceUnit == null) {
+          issue('invalidRecurrence', 'recurrence must be day, week or month.');
+        }
+      }
+      final intervalRaw = cell('recurrence_interval');
+      final interval = intervalRaw.isEmpty ? 1 : int.tryParse(intervalRaw);
+      if (interval == null || interval < 1 || interval > 999) {
+        issue(
+          'invalidInteger',
+          'recurrence_interval must be an integer from 1 to 999.',
+          value: 'recurrence_interval',
+        );
+      }
+      if (intervalRaw.isNotEmpty && recurrenceRaw.isEmpty) {
+        issue(
+          'intervalWithoutRecurrence',
+          'recurrence_interval requires recurrence.',
+        );
+      }
+      if (recurrenceRaw.isNotEmpty && schedule == null) {
+        issue('recurrenceWithoutSchedule', 'recurrence requires a schedule.');
+      }
+
+      final deadlineRaw = cell('deadline');
+      final deadline = _validatedDate(deadlineRaw);
+      if (deadlineRaw.isNotEmpty && deadline == null) {
+        issue(
+          'invalidDate',
+          'deadline must use YYYY-MM-DD.',
+          value: 'deadline',
+        );
+      }
+      final estimateRaw = cell('estimate');
+      final estimate = estimateRaw.isEmpty ? null : int.tryParse(estimateRaw);
+      if (estimateRaw.isNotEmpty &&
+          (estimate == null || estimate < 1 || estimate > 999)) {
+        issue(
+          'invalidInteger',
+          'estimate must be an integer from 1 to 999.',
+          value: 'estimate',
+        );
+      }
+
+      final status = _nullable(cell('kanban_status')) ?? 'Backlog';
+      if (status.toLowerCase() == 'done') {
+        issue('doneTask', 'Done tasks cannot be imported.');
+      }
+      final key = _nullable(cell('key'));
+      final parentKey = _nullable(cell('parent_key'));
+      if (key != null && !_keyPattern.hasMatch(key)) {
+        issue('invalidKey', 'key has an invalid format.', value: 'key');
+      }
+      if (parentKey != null && !_keyPattern.hasMatch(parentKey)) {
+        issue(
+          'invalidKey',
+          'parent_key has an invalid format.',
+          value: 'parent_key',
+        );
+      }
+
+      tasks.add(
+        CsvTaskImportDraft(
+          rowNumber: rowNumber,
+          key: key,
+          content: content,
+          description: _nullable(cell('description')),
+          projectName: _nullable(cell('project')),
+          labelNames: csvUniqueNames(cell('labels').split('|')),
+          priority: priority ?? 4,
+          schedule: schedule,
+          recurrenceUnit: recurrenceUnit,
+          recurrenceInterval: interval ?? 1,
+          deadline: deadline,
+          estimatedFocusIntervals: estimate,
+          kanbanStatusName: status,
+          parentKey: parentKey,
+        ),
+      );
+    }
+    if (tasks.isEmpty) {
+      issues.add(
+        const CsvTaskImportIssue(
+          row: 0,
+          code: 'empty',
+          message: 'CSV contains no tasks.',
+        ),
+      );
+    }
+    final ordered = _resolveRelationships(tasks, issues);
+    if (issues.isNotEmpty) {
+      throw CsvTaskImportException(List.unmodifiable(issues));
+    }
+    return CsvTaskImportDocument(List.unmodifiable(ordered));
+  }
+}
+
+class CsvTaskImportPreview {
+  const CsvTaskImportPreview({
+    required this.document,
+    required this.newProjects,
+    required this.newLabels,
+    required this.newKanbanStatuses,
+  });
+
+  final CsvTaskImportDocument document;
+  final List<String> newProjects;
+  final List<String> newLabels;
+  final List<String> newKanbanStatuses;
+
+  int get taskCount => document.tasks.length;
+  int get subtaskCount =>
+      document.tasks.where((task) => task.parentKey != null).length;
+}
+
+class CsvTaskImportResult {
+  const CsvTaskImportResult(this.taskIds);
+
+  final List<String> taskIds;
+}
+
+String? _nullable(String value) => value.isEmpty ? null : value;
+
+final _keyPattern = RegExp(r'^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$');
+
+DateTime? _validatedDate(String value) {
+  if (value.isEmpty) return null;
+  final match = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(value);
+  if (match == null) return null;
+  final year = int.parse(match.group(1)!);
+  final month = int.parse(match.group(2)!);
+  final day = int.parse(match.group(3)!);
+  final date = DateTime(year, month, day);
+  return date.year == year && date.month == month && date.day == day
+      ? date
+      : null;
+}
+
+DateTime? _validatedDateTime(String value) {
+  if (!RegExp(
+    r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$',
+  ).hasMatch(value)) {
+    return null;
+  }
+  return DateTime.tryParse(value);
+}
+
+bool _timeZonesInitialized = false;
+
+bool _isValidTimeZone(String value) {
+  if (!_timeZonesInitialized) {
+    time_zone_data.initializeTimeZones();
+    _timeZonesInitialized = true;
+  }
+  try {
+    time_zone.getLocation(value);
+    return true;
+  } on time_zone.LocationNotFoundException {
+    return false;
+  }
+}
+
+List<String> csvUniqueNames(Iterable<String> values) {
+  final seen = <String>{};
+  return [
+    for (final value in values)
+      if (value.trim().isNotEmpty && seen.add(value.trim().toLowerCase()))
+        value.trim(),
+  ];
+}
+
+List<CsvTaskImportDraft> _resolveRelationships(
+  List<CsvTaskImportDraft> tasks,
+  List<CsvTaskImportIssue> issues,
+) {
+  final byKey = <String, CsvTaskImportDraft>{};
+  for (final task in tasks) {
+    final key = task.key;
+    if (key != null && byKey.containsKey(key)) {
+      issues.add(
+        CsvTaskImportIssue(
+          row: task.rowNumber,
+          code: 'duplicateKey',
+          value: key,
+          message: 'Duplicate key "$key".',
+        ),
+      );
+    } else if (key != null) {
+      byKey[key] = task;
+    }
+  }
+
+  final ordered = <CsvTaskImportDraft>[];
+  final visiting = <CsvTaskImportDraft>{};
+  final resolved = <CsvTaskImportDraft, CsvTaskImportDraft>{};
+
+  CsvTaskImportDraft visit(CsvTaskImportDraft task) {
+    final done = resolved[task];
+    if (done != null) return done;
+    if (!visiting.add(task)) {
+      issues.add(
+        CsvTaskImportIssue(
+          row: task.rowNumber,
+          code: 'parentCycle',
+          message: 'parent_key references form a cycle.',
+        ),
+      );
+      return task;
+    }
+
+    var result = task;
+    final parentKey = task.parentKey;
+    if (parentKey != null) {
+      final parent = byKey[parentKey];
+      if (parent == null) {
+        issues.add(
+          CsvTaskImportIssue(
+            row: task.rowNumber,
+            code: 'missingParent',
+            value: parentKey,
+            message: 'parent_key "$parentKey" does not exist.',
+          ),
+        );
+      } else {
+        final resolvedParent = visit(parent);
+        final parentProject = resolvedParent.projectName;
+        if (task.projectName == null) {
+          result = task.withProjectName(parentProject);
+        } else if (_projectIdentity(parentProject) !=
+            _projectIdentity(task.projectName)) {
+          issues.add(
+            CsvTaskImportIssue(
+              row: task.rowNumber,
+              code: 'childProject',
+              message: 'A child task must use the same project as its parent.',
+            ),
+          );
+        }
+      }
+    }
+    visiting.remove(task);
+    resolved[task] = result;
+    ordered.add(result);
+    return result;
+  }
+
+  for (final task in tasks) {
+    visit(task);
+  }
+  return ordered;
+}
+
+String _projectIdentity(String? name) => (name ?? 'Inbox').trim().toLowerCase();

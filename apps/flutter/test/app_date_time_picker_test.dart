@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/widgets/app_date_time_picker.dart';
+import 'package:pomodoist/ui/core/widgets/app_date_time_picker.dart';
 
 void main() {
   test('picker uses the roomier side within the visible overlay', () {

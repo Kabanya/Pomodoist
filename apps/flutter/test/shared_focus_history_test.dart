@@ -1,3 +1,5 @@
+import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
+import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -8,19 +10,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/account_sync_engine.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/core/time/clock.dart';
-import 'package:pomodoist/features/collaboration/data/collaboration_api.dart';
-import 'package:pomodoist/features/collaboration/data/collaboration_repository.dart';
-import 'package:pomodoist/features/collaboration/presentation/collaboration_providers.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/features/tasks/presentation/task_detail_screen.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/utils/clock.dart';
+import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
+import 'package:pomodoist/data/repositories/collaboration/drift_collaboration_repository.dart';
+import 'package:pomodoist/config/collaboration_dependencies.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/tasks/widgets/task_detail_screen.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 
 import 'support/test_app.dart';
@@ -269,10 +271,10 @@ Future<_Harness> _pumpSharedTask(
     createdAt: now,
     updatedAt: now,
   );
-  final repository = CollaborationRepository(
+  final repository = DriftCollaborationRepository(
     db: db,
     api: CollaborationApi((request) async => <String, dynamic>{}),
-    queue: DriftSyncQueueRepository(db),
+    queue: DriftOutboxService(db),
     synchronize: () async {},
   );
   await tester.pumpWidget(

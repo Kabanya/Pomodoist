@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/features/settings/presentation/theme_settings_card.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/ui/settings/widgets/theme_settings_card.dart';
 
 void main() {
   test('saving rejects invalid colors in either palette', () {

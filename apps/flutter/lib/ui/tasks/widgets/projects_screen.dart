@@ -1,0 +1,552 @@
+import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
+import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart'
+    show
+        LucideIcons,
+        ShadButton,
+        ShadContextMenuItem,
+        ShadDialog,
+        ShadIconButton,
+        ShadInput,
+        ShadSwitch,
+        ShadTab,
+        ShadTabs;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/app_context_menu_region.dart';
+import 'package:pomodoist/ui/tasks/view_models/projects_view_model.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/collaboration/widgets/shared_project_badge.dart';
+import 'package:pomodoist/domain/use_cases/tasks/project_list_data.dart';
+import 'package:pomodoist/ui/tasks/widgets/create_project_dialog.dart';
+import 'package:pomodoist/ui/tasks/widgets/project_context_menu.dart';
+import 'package:pomodoist/ui/tasks/widgets/project_icon.dart';
+import 'package:pomodoist/ui/tasks/widgets/project_tree_controls.dart';
+import 'package:pomodoist/ui/tasks/widgets/label_icon.dart';
+
+class ProjectsScreen extends ConsumerStatefulWidget {
+  const ProjectsScreen({this.showLabels = false, super.key});
+
+  final bool showLabels;
+
+  @override
+  ConsumerState<ProjectsScreen> createState() => _ProjectsScreenState();
+}
+
+class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
+  final _searchController = TextEditingController();
+  _ProjectsMode _mode = _ProjectsMode.projects;
+  final _identity = Object();
+  ProjectsViewModel get _viewModel =>
+      ref.read(projectsViewModelProvider(_identity).notifier);
+  final _projectTree = ProjectTreeController();
+  void _treeChanged() => setState(() {});
+
+  @override
+  void initState() {
+    super.initState();
+    _projectTree.addListener(_treeChanged);
+    if (widget.showLabels) _mode = _ProjectsMode.labels;
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _projectTree.dispose();
+    _searchController
+      ..removeListener(_onSearchChanged)
+      ..dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.appColors;
+    final viewState = ref.watch(projectsViewModelProvider(_identity));
+    final projects = viewState.projects;
+    final labels = viewState.labels;
+    final taskCounts = viewState.taskCounts;
+    final archivedOnly = viewState.archivedOnly;
+    final projectMode = _mode == _ProjectsMode.projects;
+
+    return SafeArea(
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        l10n.navProjects,
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                      IntrinsicWidth(
+                        child: ShadTabs<_ProjectsMode>(
+                          key: const Key('projects-mode-segmented-button'),
+                          value: _mode,
+                          tabs: [
+                            ShadTab(
+                              value: _ProjectsMode.projects,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(LucideIcons.folder),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.navProjects),
+                                ],
+                              ),
+                            ),
+                            ShadTab(
+                              value: _ProjectsMode.labels,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(LucideIcons.tag),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.labelsTitle),
+                                ],
+                              ),
+                            ),
+                          ],
+                          onChanged: (mode) => setState(() => _mode = mode),
+                          gap: 0,
+                        ),
+                      ),
+                      Tooltip(
+                        message: projectMode ? l10n.addProject : l10n.addLabel,
+                        child: ShadIconButton(
+                          key: Key(
+                            projectMode
+                                ? 'projects-add-button'
+                                : 'labels-add-button',
+                          ),
+                          onPressed: projectMode
+                              ? () => showCreateProjectDialog(context)
+                              : () => showCreateLabelDialog(context),
+                          icon: const Icon(LucideIcons.plus),
+                          foregroundColor: colors.accent,
+                          backgroundColor: colors.accentTint,
+                          height: 42,
+                          width: 42,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  ShadInput(
+                    key: const Key('projects-search-field'),
+                    controller: _searchController,
+                    placeholder: Text(
+                      projectMode ? l10n.searchProjects : l10n.searchLabels,
+                    ),
+                    leading: const Icon(LucideIcons.search),
+                  ),
+                  if (projectMode) ...[
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.archivedProjectsOnly,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  color: colors.secondaryText,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                        ),
+                        ShadSwitch(
+                          key: const Key('projects-archived-switch'),
+                          value: archivedOnly,
+                          onChanged: (value) =>
+                              _viewModel.setArchivedOnly(value),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          if (projectMode)
+            projects.when(
+              data: (items) {
+                final filteredProjects = items;
+                final rows = projectRows(
+                  filteredProjects,
+                  collapsedIds: _searchController.text.trim().isEmpty
+                      ? _projectTree.collapsedIds
+                      : const {},
+                );
+                if (rows.isEmpty) {
+                  return SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Text(
+                        l10n.noProjects,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                  );
+                }
+                return ProjectTreeScope(
+                  controller: _projectTree,
+                  child: SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                    sliver: SliverList.separated(
+                      itemCount: rows.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _ProjectCountHeader(
+                                count: filteredProjects.length,
+                              ),
+                              if (!archivedOnly &&
+                                  _searchController.text.trim().isEmpty)
+                                const ProjectTreeRootTarget(),
+                            ],
+                          );
+                        }
+                        final row = rows[index - 1];
+                        return ProjectTreeRow(
+                          key: ValueKey('project-tree-${row.project.id}'),
+                          row: row,
+                          dragEnabled:
+                              !archivedOnly &&
+                              _searchController.text.trim().isEmpty,
+                          child: _ProjectListTile(
+                            project: row.project,
+                            count: taskCounts[row.project.id] ?? 0,
+                            onTap: () =>
+                                context.go('/project/${row.project.id}'),
+                            onColor: () =>
+                                changeProjectColor(context, ref, row.project),
+                            onFavorite: () => toggleProjectFavorite(
+                              context,
+                              ref,
+                              row.project,
+                            ),
+                          ),
+                        );
+                      },
+                      separatorBuilder: (context, index) => Divider(
+                        height: 1,
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                  ),
+                );
+              },
+              loading: () => const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (error, stackTrace) => SliverFillRemaining(
+                child: Center(child: Text(l10n.projectsUnavailable(error))),
+              ),
+            )
+          else
+            labels.when(
+              data: (items) {
+                final filteredLabels = items;
+                if (filteredLabels.isEmpty) {
+                  return SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Text(
+                        l10n.noLabels,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                  );
+                }
+                return SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                  sliver: SliverList.separated(
+                    itemCount: filteredLabels.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        return _LabelCountHeader(count: filteredLabels.length);
+                      }
+                      final label = filteredLabels[index - 1];
+                      return _LabelListTile(
+                        label: label,
+                        onDelete: () => _confirmDeleteLabel(label),
+                      );
+                    },
+                    separatorBuilder: (context, index) => Divider(
+                      height: 1,
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                );
+              },
+              loading: () => const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (error, stackTrace) => SliverFillRemaining(
+                child: Center(child: Text(l10n.failedToLoadLabels(error))),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmDeleteLabel(LabelItem label) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => ShadDialog(
+        title: Text(context.l10n.deleteLabel),
+        actions: [
+          ShadButton.ghost(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(context.l10n.commonCancel),
+          ),
+          ShadButton.destructive(
+            key: const Key('confirm-delete-label-button'),
+            onPressed: () => Navigator.of(context).pop(true),
+            leading: const Icon(LucideIcons.trash2),
+            child: Text(context.l10n.commonDelete),
+          ),
+        ],
+        child: Text(context.l10n.deleteLabelConfirmation(label.name)),
+      ),
+    );
+    if (confirmed != true) {
+      return;
+    }
+    try {
+      await _viewModel.deleteLabel(label.id);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.couldNotDeleteLabel(error))),
+        );
+      }
+    }
+  }
+
+  void _onSearchChanged() => _viewModel.search(_searchController.text);
+}
+
+enum _ProjectsMode { projects, labels }
+
+class _ProjectCountHeader extends StatelessWidget {
+  const _ProjectCountHeader({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        context.l10n.projectsCount(count),
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: colors.primaryText,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _ProjectListTile extends StatelessWidget {
+  const _ProjectListTile({
+    required this.project,
+    required this.count,
+    required this.onTap,
+    required this.onColor,
+    required this.onFavorite,
+  });
+
+  final ProjectItem project;
+  final int count;
+  final VoidCallback onTap;
+  final VoidCallback onColor;
+  final VoidCallback onFavorite;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+      color: colors.primaryText,
+      fontWeight: FontWeight.w500,
+    );
+    return ProjectContextMenu(
+      key: ValueKey('projects-screen-project-${project.id}'),
+      project: project,
+      showMenuButton: true,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              children: [
+                Tooltip(
+                  message: context.l10n.projectColor,
+                  child: ShadIconButton.ghost(
+                    key: ValueKey('project-color-${project.id}'),
+                    onPressed: onColor,
+                    icon: ProjectIconView(project: project),
+                    width: 36,
+                    height: 36,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          project.displayName(context.l10n),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: titleStyle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      SharedProjectBadge(project: project),
+                    ],
+                  ),
+                ),
+                if (count > 0)
+                  Text(
+                    '$count',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: colors.mutedText,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: project.isFavorite
+                      ? context.l10n.removeProjectFromFavorites
+                      : context.l10n.addProjectToFavorites,
+                  child: Semantics(
+                    toggled: project.isFavorite,
+                    child: ShadIconButton.ghost(
+                      key: ValueKey('project-favorite-${project.id}'),
+                      onPressed: onFavorite,
+                      icon: Icon(
+                        LucideIcons.star,
+                        color: project.isFavorite
+                            ? colors.accent
+                            : colors.mutedText,
+                      ),
+                      width: 36,
+                      height: 36,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LabelCountHeader extends StatelessWidget {
+  const _LabelCountHeader({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        context.l10n.labelsCount(count),
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: colors.primaryText,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _LabelListTile extends ConsumerWidget {
+  const _LabelListTile({required this.label, required this.onDelete});
+
+  final LabelItem label;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.appColors;
+    return AppContextMenuRegion(
+      key: ValueKey('projects-screen-label-${label.id}'),
+      items: [
+        ShadContextMenuItem(
+          leading: Icon(labelIconData(label.icon), size: 16),
+          onPressed: () => editLabelIcon(context, ref, label),
+          child: Text(context.l10n.labelIcon),
+        ),
+        ShadContextMenuItem(
+          leading: Icon(
+            LucideIcons.trash2,
+            size: 16,
+            color: Theme.of(context).colorScheme.error,
+          ),
+          onPressed: onDelete,
+          child: Text(context.l10n.deleteLabel),
+        ),
+      ],
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: () => context.push('/label/${label.id}'),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: Row(
+              children: [
+                Icon(labelIconData(label.icon), color: colors.mutedText),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    '@${label.name}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: colors.primaryText,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: context.l10n.labelIcon,
+                  onPressed: () => editLabelIcon(context, ref, label),
+                  icon: const Icon(LucideIcons.pencil, size: 16),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

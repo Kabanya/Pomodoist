@@ -1,3 +1,7 @@
+import 'package:pomodoist/config/task_preferences_dependencies.dart';
+import 'package:pomodoist/domain/models/settings/task_preferences.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
+import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
 import 'support/test_app.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,13 +12,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/core/time/clock.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/features/tasks/presentation/widgets/task_list_item.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/utils/clock.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/tasks/widgets/task_list_item.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 
 void main() {
   setUpAll(loadTestAppResources);
@@ -94,8 +98,8 @@ void main() {
       tester.element(find.byType(TaskListItem)),
     );
     await container
-        .read(taskListStyleProvider.notifier)
-        .setStyle(TaskListStyle.classic);
+        .read(taskPreferencesRepositoryProvider)
+        .setListStyle(TaskListStyle.classic);
     await tester.pumpAndSettle();
 
     expect(

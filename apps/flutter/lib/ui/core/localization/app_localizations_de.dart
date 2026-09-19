@@ -1,0 +1,3442 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for German (`de`).
+class AppLocalizationsDe extends AppLocalizations {
+  AppLocalizationsDe([String locale = 'de']) : super(locale);
+
+  @override
+  String get settingsSectionGeneral => 'Allgemein';
+
+  @override
+  String get settingsSectionAppearance => 'Darstellung';
+
+  @override
+  String get settingsSectionTasksFocus => 'Aufgaben und Fokus';
+
+  @override
+  String get settingsSectionIntegrations => 'Integrationen und Daten';
+
+  @override
+  String get settingsSectionAccount => 'Konto und Pro';
+
+  @override
+  String get settingsThemeColorsTab => 'Farben';
+
+  @override
+  String get settingsThemeBackgroundsTab => 'Hintergründe';
+
+  @override
+  String get settingsRefreshAccount => 'Konto aktualisieren';
+
+  @override
+  String get settingsSubscriptionActions => 'Abo verwalten';
+
+  @override
+  String get settingsSubscriptionError =>
+      'Das Abo konnte nicht aktualisiert werden. Bereits bestätigter Zugriff bleibt erhalten.';
+
+  @override
+  String get settingsVersionError => 'Die Version konnte nicht geladen werden.';
+
+  @override
+  String get appTitle => 'pomodoist';
+
+  @override
+  String get commonAdd => 'Hinzufügen';
+
+  @override
+  String get commonCancel => 'Abbrechen';
+
+  @override
+  String get commonSave => 'Speichern';
+
+  @override
+  String get commonDelete => 'Löschen';
+
+  @override
+  String get commonUndo => 'Rückgängig';
+
+  @override
+  String get commonOpen => 'Öffnen';
+
+  @override
+  String get commonBack => 'Zurück';
+
+  @override
+  String get commonClose => 'Schließen';
+
+  @override
+  String get commonCreate => 'Erstellen';
+
+  @override
+  String get commonClear => 'Leeren';
+
+  @override
+  String get commonStop => 'Stopp';
+
+  @override
+  String get skip => 'Überspringen';
+
+  @override
+  String get onboardingLanguageTitle => 'Sprache wählen';
+
+  @override
+  String get onboardingLanguageSubtitle =>
+      'Wähle die Sprache, die Pomodoist verwenden soll.';
+
+  @override
+  String get onboardingTimerTitle => 'Timer-Stil wählen';
+
+  @override
+  String get onboardingTimerSubtitle =>
+      'Wähle die Pomodoro-Fortschrittsanzeige für Fokussitzungen.';
+
+  @override
+  String get onboardingPaywallTitle => 'Pomodoist freischalten';
+
+  @override
+  String get onboardingPaywallSubtitle =>
+      'Das Lifetime-Angebot ist jede Woche 24 Stunden lang verfügbar.';
+
+  @override
+  String get onboardingAccountTitle => 'Konto erstellen';
+
+  @override
+  String get onboardingAccountSubtitle =>
+      'Melde dich an, um Aufgaben, Fokusverlauf und Einstellungen zwischen Geräten zu synchronisieren.';
+
+  @override
+  String get startupPreparingTasks => 'Deine Aufgaben werden vorbereitet';
+
+  @override
+  String get operationTakingLonger =>
+      'Der Vorgang dauert länger als üblich, wird aber weiterhin ausgeführt.';
+
+  @override
+  String get onboardingContinue => 'Weiter';
+
+  @override
+  String get onboardingMaybeLater => 'Vielleicht später';
+
+  @override
+  String get onboardingFinish => 'Fertig';
+
+  @override
+  String get billingTitle => 'Pomodoist Pro';
+
+  @override
+  String get billingSubtitle =>
+      'Diktiere Aufgaben in natürlicher Sprache, und Pomodoist macht daraus Aufgaben. Der Aufgabenverlauf bleibt dauerhaft gespeichert.';
+
+  @override
+  String get billingSubtitleHighlight => 'natürlicher Sprache';
+
+  @override
+  String get billingCancelAnytime => 'Jederzeit kündbar.';
+
+  @override
+  String get billingMonthlyTitle => 'Monatlich';
+
+  @override
+  String get billingAnnualTitle => 'Jährlich';
+
+  @override
+  String billingPricePerMonth(String price) {
+    return '$price/Monat';
+  }
+
+  @override
+  String billingPricePerYear(String price) {
+    return '$price/Jahr';
+  }
+
+  @override
+  String billingMonthlyIntroSubtitle(String price) {
+    return 'Die ersten 3 Monate, danach $price.';
+  }
+
+  @override
+  String billingAnnualIntroSubtitle(String price) {
+    return 'Danach $price.';
+  }
+
+  @override
+  String get billingLifetimeTitle => 'Lebenslang';
+
+  @override
+  String get billingLifetimeSubtitle => 'Einmal zahlen, für immer nutzen.';
+
+  @override
+  String get billingBestValue => 'Bester Wert';
+
+  @override
+  String get billingChoose => 'Wählen';
+
+  @override
+  String get billingActive => 'Pomodoist Pro ist auf diesem Gerät aktiv.';
+
+  @override
+  String get billingActiveShort => 'Aktiv';
+
+  @override
+  String get billingRestore => 'Käufe wiederherstellen';
+
+  @override
+  String get privacyPolicy => 'Datenschutzrichtlinie';
+
+  @override
+  String get termsOfUse => 'Nutzungsbedingungen';
+
+  @override
+  String get support => 'Support';
+
+  @override
+  String get billingManageLink => 'Über Link verwalten';
+
+  @override
+  String get billingExternalBrowserTitle =>
+      'Die Zahlung wird im Browser geöffnet';
+
+  @override
+  String get billingExternalBrowserMessage =>
+      'Pomodoist öffnet Stripe Checkout in Safari oder deinem Standardbrowser. Erlaube das Browserfenster, um fortzufahren.';
+
+  @override
+  String get billingAppleOnly =>
+      'Käufe sind auf iPhone, iPad und Mac verfügbar.';
+
+  @override
+  String get billingStoreUnavailable =>
+      'Der App Store ist momentan nicht verfügbar.';
+
+  @override
+  String get billingStoreConnectionFailed =>
+      'Deaktiviere dein VPN und versuche es erneut.';
+
+  @override
+  String billingPurchaseError(String error) {
+    return 'Kauffehler: $error';
+  }
+
+  @override
+  String get billingStripeAuthenticationRequired =>
+      'Melden Sie sich bei Pomodoist an und versuchen Sie es erneut.';
+
+  @override
+  String get billingStripeDisabled =>
+      'Zahlungen sind noch nicht verfügbar. Versuchen Sie es später erneut.';
+
+  @override
+  String get billingStripeAlreadyEntitled =>
+      'Pomodoist Pro ist bereits aktiv. Aktualisieren Sie Ihren Kontostatus.';
+
+  @override
+  String get billingStripeOfferExpired =>
+      'Dieses Angebot ist abgelaufen. Wählen Sie einen anderen verfügbaren Tarif.';
+
+  @override
+  String get billingStripeManagedPaymentsUnavailable =>
+      'Stripe-Zahlungen sind vorübergehend nicht verfügbar. Versuchen Sie es später erneut oder kontaktieren Sie den Support.';
+
+  @override
+  String get billingStripeCheckoutFailed =>
+      'Die Zahlung konnte nicht gestartet werden. Prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.';
+
+  @override
+  String get purchaseSuccessTitle => 'Pro ist aktiv';
+
+  @override
+  String get purchaseSuccessMessage =>
+      'Danke, dass du Pomodoist unterstützt. Alle Pro-Funktionen sind jetzt verfügbar.';
+
+  @override
+  String get purchaseSuccessContinue => 'Weiter';
+
+  @override
+  String get purchaseProcessingTitle => 'Zahlung wird verarbeitet';
+
+  @override
+  String get purchaseProcessingMessage =>
+      'Die Zahlung wird bestätigt. Falls Pro nicht bald erscheint, aktualisiere später erneut.';
+
+  @override
+  String get purchaseOpenApp => 'Pomodoist öffnen';
+
+  @override
+  String launchOfferEndsIn(String time) {
+    return '$time bis zum Ende des Lifetime-Angebots';
+  }
+
+  @override
+  String get accountApple => 'Apple';
+
+  @override
+  String get accountGoogle => 'Google';
+
+  @override
+  String get accountEmail => 'E-Mail';
+
+  @override
+  String get loginTitle => 'Bei Pomodoist anmelden';
+
+  @override
+  String get accountChecking => 'Konto wird überprüft';
+
+  @override
+  String get oauthConsentTitle => 'Agenten verbinden';
+
+  @override
+  String get oauthConsentLoading => 'Verbindungsanfrage wird geprüft';
+
+  @override
+  String get oauthConsentInvalidAuthorization =>
+      'Diese Verbindungsanfrage fehlt oder ist ungültig.';
+
+  @override
+  String get oauthConsentLoadError =>
+      'Die Verbindungsanfrage konnte nicht geladen werden.';
+
+  @override
+  String get oauthConsentActionError =>
+      'Die Anfrage konnte nicht abgeschlossen werden. Versuche es erneut.';
+
+  @override
+  String get oauthConsentRedirectError =>
+      'Pomodoist hat eine unsichere oder fehlende Rücksprungadresse erhalten. Der Zugriff wurde nicht übergeben.';
+
+  @override
+  String get oauthConsentClientFallback => 'Agent';
+
+  @override
+  String oauthConsentClientRequest(String clientName) {
+    return '$clientName möchte auf Pomodoist zugreifen';
+  }
+
+  @override
+  String get oauthConsentRedirectOrigin => 'Rücksprungadresse';
+
+  @override
+  String get oauthConsentCapabilitiesTitle => 'Dieser Agent kann';
+
+  @override
+  String get oauthConsentManagePlanning =>
+      'Aufgaben, Projekte, eigene Labels und Kanban lesen und verwalten.';
+
+  @override
+  String get oauthConsentReadInsights =>
+      'Abgeschlossenen Fokusverlauf, Produktivitätsberichte und Erfolge lesen.';
+
+  @override
+  String get oauthConsentUnavailableTitle => 'Dieser Agent kann nicht';
+
+  @override
+  String get oauthConsentUnavailable =>
+      'Auf dein Konto oder Zahlungen, Google Kalender oder den laufenden Fokus-Timer zugreifen.';
+
+  @override
+  String get oauthConsentUnsupportedScopes =>
+      'Diese Anfrage verlangt nicht unterstützten Kontozugriff und kann nicht genehmigt werden.';
+
+  @override
+  String get oauthConsentApprove => 'Erlauben';
+
+  @override
+  String get oauthConsentDeny => 'Ablehnen';
+
+  @override
+  String get oauthConsentApproving => 'Zugriff wird erlaubt…';
+
+  @override
+  String get oauthConsentDenying => 'Anfrage wird abgelehnt…';
+
+  @override
+  String get oauthConsentRedirecting => 'Zurück zum Agenten…';
+
+  @override
+  String get loginCreateAccountPrompt => 'Noch kein Konto?';
+
+  @override
+  String get loginCreateAccountAction => 'Konto erstellen';
+
+  @override
+  String get registerTitle => 'Konto erstellen';
+
+  @override
+  String get registerSubtitle =>
+      'Synchronisiere Aufgaben, Fokusverlauf und Einstellungen zwischen Geräten.';
+
+  @override
+  String get registerPassword => 'Passwort';
+
+  @override
+  String get registerSubmit => 'Konto erstellen';
+
+  @override
+  String get registerSignInPrompt => 'Schon ein Konto?';
+
+  @override
+  String get registerSignInAction => 'Anmelden';
+
+  @override
+  String get registerCheckEmailTitle => 'Prüfe deine E-Mail';
+
+  @override
+  String get registerCheckEmailMessage =>
+      'Falls diese Adresse bestätigt werden muss, erhalten Sie eine E-Mail mit einem Link. Wenn Sie bereits ein Konto haben, melden Sie sich an oder setzen Sie Ihr Passwort zurück.';
+
+  @override
+  String registerError(Object error) {
+    return 'Konto konnte nicht erstellt werden: $error';
+  }
+
+  @override
+  String get authEmailSignInTitle => 'Mit E-Mail anmelden';
+
+  @override
+  String get authWelcomeTitle => 'Bei Pomodoist anmelden';
+
+  @override
+  String get authWelcomeDescription =>
+      'Deine Aufgaben und dein Fokus auf jedem Gerät.';
+
+  @override
+  String get authSignInWithLink => 'Mit einem Link anmelden';
+
+  @override
+  String get authForgotPassword => 'Passwort vergessen?';
+
+  @override
+  String get authBackToSignIn => 'Zurück zur Anmeldung';
+
+  @override
+  String get authNoAccount => 'Noch kein Konto?';
+
+  @override
+  String get authHaveAccount => 'Schon ein Konto?';
+
+  @override
+  String get authShowPassword => 'Passwort anzeigen';
+
+  @override
+  String get authHidePassword => 'Passwort ausblenden';
+
+  @override
+  String get authResetTitle => 'Passwort zurücksetzen';
+
+  @override
+  String get authResetDescription =>
+      'Gib die E-Mail-Adresse deines Kontos ein. Wir senden dir einen Link zum Ändern deines Passworts.';
+
+  @override
+  String get authResetEmailSentTitle => 'Prüfe deine E-Mail';
+
+  @override
+  String get authResetEmailSent =>
+      'Wenn ein Konto mit dieser E-Mail-Adresse existiert, erhältst du einen Link zum Zurücksetzen des Passworts.';
+
+  @override
+  String get authResetSendAgain => 'Erneut senden';
+
+  @override
+  String get authResetEditEmail => 'E-Mail-Adresse ändern';
+
+  @override
+  String get authNewPasswordTitle => 'Neues Passwort wählen';
+
+  @override
+  String get authNewPasswordDescription =>
+      'Verwende ein Passwort, das du nicht für andere Konten nutzt.';
+
+  @override
+  String get authNewPassword => 'Neues Passwort';
+
+  @override
+  String get authConfirmPassword => 'Passwort wiederholen';
+
+  @override
+  String get authSavePassword => 'Passwort speichern';
+
+  @override
+  String get authPasswordMismatch => 'Die Passwörter stimmen nicht überein.';
+
+  @override
+  String get authPasswordUnchanged =>
+      'Wähle ein anderes Passwort als dein aktuelles.';
+
+  @override
+  String get authPasswordUpdatedTitle => 'Passwort aktualisiert';
+
+  @override
+  String get authPasswordUpdatedMessage =>
+      'Dein neues Passwort wurde gespeichert. Du kannst Pomodoist weiter verwenden.';
+
+  @override
+  String get authResetLinkExpired =>
+      'Dieser Link zum Zurücksetzen des Passworts ist ungültig oder abgelaufen. Fordere einen neuen Link an.';
+
+  @override
+  String get authUnexpectedReset =>
+      'Die E-Mail zum Zurücksetzen des Passworts konnte nicht gesendet werden. Versuche es erneut.';
+
+  @override
+  String get authUnexpectedPasswordUpdate =>
+      'Dein neues Passwort konnte nicht gespeichert werden. Versuche es erneut.';
+
+  @override
+  String get authCheckingResetLink =>
+      'Link zum Zurücksetzen des Passworts wird geprüft…';
+
+  @override
+  String get authSignInAction => 'Anmelden';
+
+  @override
+  String get authSendLink => 'Link senden';
+
+  @override
+  String get authMagicLinkSent =>
+      'Falls ein Konto mit dieser Adresse existiert, erhalten Sie einen Anmeldelink. Prüfen Sie Ihren Posteingang und Spam-Ordner.';
+
+  @override
+  String get authAccountCreated => 'Konto erstellt.';
+
+  @override
+  String get authSignedIn => 'Angemeldet.';
+
+  @override
+  String get authEmailRequired => 'Gib deine E-Mail-Adresse ein.';
+
+  @override
+  String get authEmailInvalid =>
+      'Prüfe die E-Mail-Adresse, zum Beispiel name@example.com.';
+
+  @override
+  String get authPasswordRequired => 'Gib dein Passwort ein.';
+
+  @override
+  String get authInvalidCredentials =>
+      'E-Mail-Adresse oder Passwort ist falsch. Prüfen Sie die Adresse, setzen Sie Ihr Passwort zurück oder erstellen Sie ein Konto.';
+
+  @override
+  String get authEmailUnconfirmed =>
+      'Bestätige deine E-Mail über den gesendeten Link und melde dich danach erneut an.';
+
+  @override
+  String get authWeakPassword =>
+      'Dieses Passwort ist zu leicht zu erraten. Verwende ein längeres, weniger vorhersehbares Passwort.';
+
+  @override
+  String get authAccountMayExist =>
+      'Möglicherweise besteht bereits ein Konto mit dieser E-Mail-Adresse. Melden Sie sich an oder setzen Sie Ihr Passwort zurück.';
+
+  @override
+  String get authRateLimited =>
+      'Zu viele Versuche. Warte einige Minuten und versuche es erneut.';
+
+  @override
+  String get authEmailRateLimited =>
+      'Zu viele E-Mails wurden angefordert. Warte einige Minuten vor der nächsten Anfrage.';
+
+  @override
+  String get authOffline =>
+      'Der Kontodienst ist nicht erreichbar. Prüfe deine Internetverbindung und versuche es erneut.';
+
+  @override
+  String get authTimeout =>
+      'Der Kontodienst braucht zu lange für eine Antwort. Versuche es erneut.';
+
+  @override
+  String get authServiceUnavailable =>
+      'Der Kontodienst ist vorübergehend nicht verfügbar. Versuche es später erneut.';
+
+  @override
+  String get authCaptchaRequired =>
+      'Führe die Sicherheitsprüfung durch, um fortzufahren.';
+
+  @override
+  String get authCaptchaExpired =>
+      'Die Sicherheitsprüfung ist abgelaufen. Führe sie erneut durch.';
+
+  @override
+  String get authCaptchaFailed =>
+      'Die Sicherheitsprüfung ist fehlgeschlagen. Versuche sie erneut.';
+
+  @override
+  String get authCaptchaCancelled =>
+      'Die Sicherheitsprüfung wurde abgebrochen. Starte sie erneut, um fortzufahren.';
+
+  @override
+  String get authCaptchaUnavailable =>
+      'Die Sicherheitsprüfung ist gerade nicht verfügbar. Prüfe deine Verbindung und versuche es erneut.';
+
+  @override
+  String get authCaptchaOpenFailed =>
+      'Pomodoist konnte die Sicherheitsprüfung nicht im Browser öffnen. Prüfe deinen Standardbrowser und versuche es erneut.';
+
+  @override
+  String get authProviderFallback => 'diesem Anbieter';
+
+  @override
+  String authProviderUnavailable(String provider) {
+    return 'Die Anmeldung mit $provider ist gerade nicht verfügbar. Versuche es erneut oder wähle eine andere Methode.';
+  }
+
+  @override
+  String get authSignUpDisabled =>
+      'Die Kontoerstellung per E-Mail ist vorübergehend nicht verfügbar. Wähle eine andere Anmeldemethode.';
+
+  @override
+  String get authAccountRestricted =>
+      'Dieses Konto kann derzeit nicht angemeldet werden. Kontaktiere den Support, wenn du einen Fehler vermutest.';
+
+  @override
+  String get authLinkExpired =>
+      'Dieser Anmeldelink ist ungültig oder abgelaufen. Fordere einen neuen Link an.';
+
+  @override
+  String get authUnexpectedSignIn =>
+      'Anmeldung fehlgeschlagen. Versuche es erneut.';
+
+  @override
+  String get authUnexpectedSignUp =>
+      'Konto konnte nicht erstellt werden. Versuche es erneut.';
+
+  @override
+  String get authUnexpectedMagicLink =>
+      'Der Anmeldelink konnte nicht gesendet werden. Versuche es erneut.';
+
+  @override
+  String get authResendConfirmation => 'Bestätigung erneut senden';
+
+  @override
+  String get authConfirmationSendFailed =>
+      'Die Bestätigungs-E-Mail konnte nicht gesendet werden. Versuchen Sie es später erneut.';
+
+  @override
+  String get authRetryVerification => 'Prüfung erneut versuchen';
+
+  @override
+  String get captchaSecurityLabel => 'Sicherheitsprüfung';
+
+  @override
+  String get captchaChallengeTitle => 'Pomodoist-Sicherheitsprüfung';
+
+  @override
+  String get captchaChallengePrompt =>
+      'Bestätige, dass du ein Mensch bist, um in Pomodoist fortzufahren.';
+
+  @override
+  String get captchaChallengeInvalid =>
+      'Dieser Link zur Sicherheitsprüfung ist ungültig. Kehre zu Pomodoist zurück und versuche es erneut.';
+
+  @override
+  String get captchaChallengeHandoffHelp =>
+      'Falls Pomodoist nicht geöffnet wurde, verwende die Schaltfläche unten. Wenn die App nicht installiert ist, schließe diese Seite und kehre zum ursprünglichen Gerät zurück.';
+
+  @override
+  String get captchaReturnToApp => 'Zurück zu Pomodoist';
+
+  @override
+  String get navSearch => 'Suche';
+
+  @override
+  String get navInbox => 'Eingang';
+
+  @override
+  String get navPriorityMatrix => 'Prioritätsmatrix';
+
+  @override
+  String get navTimeline => 'Zeitleiste';
+
+  @override
+  String get navKanban => 'Kanban';
+
+  @override
+  String get kanbanTitle => 'Kanban';
+
+  @override
+  String get kanbanSubtitle =>
+      'Visualisiere deinen Ablauf und konzentriere dich auf das Wesentliche.';
+
+  @override
+  String get kanbanDefaultBacklog => 'Backlog';
+
+  @override
+  String get kanbanDefaultTodo => 'Zu erledigen';
+
+  @override
+  String get kanbanDefaultInProgress => 'In Arbeit';
+
+  @override
+  String get kanbanDefaultDone => 'Erledigt';
+
+  @override
+  String get kanbanSearchTooltip => 'Kanban durchsuchen';
+
+  @override
+  String get kanbanSearchHint => 'Aufgaben oder Projekte suchen';
+
+  @override
+  String get kanbanHideDone => 'Erledigte ausblenden';
+
+  @override
+  String get kanbanShowDone => 'Erledigte anzeigen';
+
+  @override
+  String get kanbanProjectsTitle => 'Projekte auf diesem Board';
+
+  @override
+  String kanbanAddToStatus(String status) {
+    return 'Zu $status hinzufügen';
+  }
+
+  @override
+  String get kanbanTaskField => 'Aufgabe';
+
+  @override
+  String get kanbanProjectField => 'Projekt';
+
+  @override
+  String get kanbanChooseProject => 'Wähle ein Projekt.';
+
+  @override
+  String get kanbanTaskActions => 'Aufgabenaktionen';
+
+  @override
+  String get kanbanDragTask => 'Aufgabe ziehen';
+
+  @override
+  String kanbanMoveTo(String status) {
+    return 'Nach $status verschieben';
+  }
+
+  @override
+  String get kanbanRestoreBeforeFocus =>
+      'Stelle die Aufgabe vor dem Fokusstart wieder her.';
+
+  @override
+  String kanbanCouldNotStartFocus(Object error) {
+    return 'Fokus konnte nicht gestartet werden: $error';
+  }
+
+  @override
+  String kanbanCouldNotLoad(Object error) {
+    return 'Kanban konnte nicht geladen werden: $error';
+  }
+
+  @override
+  String get commonRetry => 'Erneut versuchen';
+
+  @override
+  String get commonContinueWaiting => 'Weiter warten';
+
+  @override
+  String kanbanTasksCount(int count) {
+    return '$count Aufgaben';
+  }
+
+  @override
+  String kanbanSubtasksProgress(int completed, int total) {
+    return '$completed von $total Unteraufgaben';
+  }
+
+  @override
+  String kanbanFocusIntervalsProgress(int completed, int total) {
+    return '$completed von $total Fokusintervallen';
+  }
+
+  @override
+  String get kanbanActive => 'Aktiv';
+
+  @override
+  String kanbanPriority(int priority) {
+    return 'Priorität $priority';
+  }
+
+  @override
+  String kanbanMoveAnnouncement(String status) {
+    return 'Nach $status verschoben';
+  }
+
+  @override
+  String kanbanFocusStartedAnnouncement(String task) {
+    return 'Fokus für $task gestartet';
+  }
+
+  @override
+  String get kanbanNoTasks => 'Noch keine Aufgaben';
+
+  @override
+  String get navToday => 'Heute';
+
+  @override
+  String get navUpcoming => 'Bevorstehend';
+
+  @override
+  String get navBrowse => 'Durchsuchen';
+
+  @override
+  String get navIntegrations => 'Integrationen';
+
+  @override
+  String get navReports => 'Berichte';
+
+  @override
+  String get navFocus => 'Fokus';
+
+  @override
+  String get navProjects => 'Projekte';
+
+  @override
+  String get navSettings => 'Einstellungen';
+
+  @override
+  String get settingsTitle => 'Einstellungen';
+
+  @override
+  String get settingsAboutTitle => 'Über die App';
+
+  @override
+  String get settingsFocusCompletionCelebrationTitle =>
+      'Feier zum Fokusabschluss';
+
+  @override
+  String get settingsFocusCompletionCelebrationSubtitle =>
+      'Nach der letzten Pause eine Vollbild-Feier anzeigen.';
+
+  @override
+  String get settingsVersionLabel => 'Version';
+
+  @override
+  String get settingsPlanLabel => 'Tarif';
+
+  @override
+  String get settingsPlanFree => 'Kostenlos';
+
+  @override
+  String get settingsPlanPro => 'Pomodoist Pro';
+
+  @override
+  String get settingsShortcutsTitle => 'Tastaturkurzbefehle';
+
+  @override
+  String get settingsShortcutsSubtitle =>
+      'Passe Befehle für eine Hardwaretastatur an.';
+
+  @override
+  String get settingsShortcutsToggleSidebar => 'Seitenleiste ein-/ausblenden';
+
+  @override
+  String get settingsShortcutsGlobalQuickAdd => 'Globales schnelles Hinzufügen';
+
+  @override
+  String get settingsShortcutsGlobalQuickAddSubtitle =>
+      'Funktioniert auch, wenn Pomodoist nicht aktiv ist.';
+
+  @override
+  String get settingsShortcutsRecordTitle => 'Tastenkürzel drücken';
+
+  @override
+  String get settingsShortcutsRecordPrompt =>
+      'Verwende eine Taste mit Command, Control oder Alt. Esc bricht ab.';
+
+  @override
+  String get settingsShortcutsInvalid =>
+      'Command, Control oder Alt muss enthalten sein.';
+
+  @override
+  String get settingsShortcutsConflict =>
+      'Dieses Tastenkürzel wird bereits verwendet.';
+
+  @override
+  String get settingsShortcutsGlobalError =>
+      'Dieses globale Tastenkürzel ist nicht verfügbar. Das vorherige bleibt aktiv.';
+
+  @override
+  String get settingsShortcutsResetAll => 'Alle zurücksetzen';
+
+  @override
+  String get settingsShortcutsResetDone =>
+      'Tastaturkurzbefehle wurden zurückgesetzt.';
+
+  @override
+  String get csvImportTitle => 'Aufgaben aus CSV importieren';
+
+  @override
+  String get csvImportSubtitle =>
+      'Prüfe eine CSV-Datei, bevor Aufgaben, Projekte, Labels und Status erstellt werden.';
+
+  @override
+  String get csvImportSelectFile => 'CSV-Datei auswählen';
+
+  @override
+  String get csvImportHumanGuideButton => 'Anleitung für Menschen';
+
+  @override
+  String get csvImportAgentGuideButton => 'Anleitung für Agenten';
+
+  @override
+  String get csvImportHumanGuideTitle => 'CSV-Datei vorbereiten';
+
+  @override
+  String get csvImportAgentGuideTitle => 'CSV-Vertrag für Agenten';
+
+  @override
+  String get csvImportCopy => 'Kopieren';
+
+  @override
+  String get csvImportCopied => 'In die Zwischenablage kopiert.';
+
+  @override
+  String get csvImportPreviewTitle => 'Import prüfen';
+
+  @override
+  String get csvImportPreviewTasks => 'Aufgaben';
+
+  @override
+  String get csvImportPreviewSubtasks => 'Unteraufgaben';
+
+  @override
+  String get csvImportPreviewNewProjects => 'Neue Projekte';
+
+  @override
+  String get csvImportPreviewNewLabels => 'Neue Labels';
+
+  @override
+  String get csvImportPreviewNewStatuses => 'Neue Status';
+
+  @override
+  String get csvImportNone => 'Keine';
+
+  @override
+  String get csvImportDuplicateWarning =>
+      'Ein erneuter Import derselben Datei erstellt doppelte Aufgaben.';
+
+  @override
+  String get csvImportConfirm => 'Importieren';
+
+  @override
+  String get csvImportSuccess => 'Importierte Aufgaben';
+
+  @override
+  String get csvImportErrorTitle => 'CSV-Import fehlgeschlagen';
+
+  @override
+  String get csvImportUnexpectedError =>
+      'Die Datei konnte nicht importiert werden.';
+
+  @override
+  String get csvImportHumanGuide =>
+      '1. Speichere die Datei als UTF-8-CSV. Verwende ein Komma (empfohlen) oder Semikolon als Trennzeichen.\n\n2. Die Spalte content ist erforderlich. Außerdem sind verfügbar: key, description, project, labels, priority, due_date, start_at, end_at, time_zone, recurrence, recurrence_interval, deadline, estimate, kanban_status, parent_key.\n\n3. Jede Zeile erstellt eine offene Aufgabe. Trenne Labels mit |. Die Priorität liegt zwischen 1 und 4; leer bedeutet 4. Ein leeres Projekt bedeutet Inbox, ein leerer Status Backlog. Fehlende Projekte, Labels und offene Status werden automatisch erstellt.\n\n4. Für ganztägige Aufgaben verwende due_date im Format YYYY-MM-DD. Für Aufgaben mit Uhrzeit fülle start_at und end_at als RFC3339-Werte mit UTC-Versatz aus und gib eine IANA-time_zone wie Europe/Berlin an.\n\n5. Für Unteraufgaben gib der Elternzeile einen eindeutigen key und trage ihn beim Kind als parent_key ein. Eltern dürfen später in der Datei stehen. Das Projekt des Kindes muss dem Elternprojekt entsprechen.\n\n6. Pomodoist prüft die gesamte Datei und zeigt vor dem Import eine Vorschau. Ist eine Zeile ungültig, wird nichts gespeichert. Ein erneuter Import erstellt Duplikate.';
+
+  @override
+  String get settingsConnectedAgentsTitle => 'Verbundene Agenten';
+
+  @override
+  String get settingsConnectedAgentsLoading =>
+      'Verbundene Agenten werden geladen…';
+
+  @override
+  String get settingsConnectedAgentsEmpty => 'Keine Agenten verbunden.';
+
+  @override
+  String get settingsConnectedAgentsLoadError =>
+      'Verbundene Agenten konnten nicht geladen werden.';
+
+  @override
+  String get settingsConnectedAgentsUnknownClient => 'Agent';
+
+  @override
+  String settingsConnectedAgentsConnectedOn(String date) {
+    return 'Verbunden am $date';
+  }
+
+  @override
+  String get settingsConnectedAgentsRevoke => 'Zugriff widerrufen';
+
+  @override
+  String get settingsConnectedAgentsRevokeConfirmTitle =>
+      'Agentenzugriff widerrufen?';
+
+  @override
+  String settingsConnectedAgentsRevokeConfirmMessage(String clientName) {
+    return 'Pomodoist-Zugriff für „$clientName“ widerrufen?';
+  }
+
+  @override
+  String get settingsConnectedAgentsRevokeError =>
+      'Zugriff konnte nicht widerrufen werden. Versuche es erneut.';
+
+  @override
+  String get settingsLanguageTitle => 'Sprache';
+
+  @override
+  String get settingsLanguageSubtitle => 'Wähle die App-Sprache.';
+
+  @override
+  String get settingsLanguageSystem => 'Systemstandard';
+
+  @override
+  String get settingsVoiceTranscriptionTitle => 'Sprachtranskription';
+
+  @override
+  String get settingsVoiceTranscriptionSubtitle =>
+      'Wähle aus, wie Aufnahmen auf diesem Gerät in Text umgewandelt werden.';
+
+  @override
+  String get settingsVoiceTranscriptionSystem => 'System (Apple)';
+
+  @override
+  String get settingsVoiceTranscriptionCloud => 'Cloud';
+
+  @override
+  String get settingsVoiceTranscriptionCloudDescription =>
+      'Die Cloud-Transkription sendet Audio an Pomodoist und benötigt eine Internetverbindung.';
+
+  @override
+  String get settingsVoiceTranscriptionCloudRequiresSignIn =>
+      'Melde dich an, um die Cloud-Transkription zu verwenden. Bis dahin ist die Systemtranskription aktiv.';
+
+  @override
+  String get settingsThemeTitle => 'Design';
+
+  @override
+  String get settingsThemeSubtitle => 'Wähle das Erscheinungsbild der App.';
+
+  @override
+  String get settingsThemeSystem => 'System';
+
+  @override
+  String get settingsThemeLight => 'Hell';
+
+  @override
+  String get settingsThemeDark => 'Dunkel';
+
+  @override
+  String get settingsTimerVisualTitle => 'Pomodoro-Timer';
+
+  @override
+  String get settingsTimerVisualSubtitle =>
+      'Wähle, wie der Fortschritt auf dem Fokusbildschirm angezeigt wird.';
+
+  @override
+  String get settingsTimerVisualBar => 'Leiste';
+
+  @override
+  String get settingsTimerVisualCircle => 'Kreis';
+
+  @override
+  String get settingsReturnRemindersTitle => 'Rückkehr-Erinnerungen';
+
+  @override
+  String get settingsReturnRemindersSubtitle =>
+      'Eine Erinnerung um 20:30 Uhr, wenn du heute keine Aufgabe erledigt hast.';
+
+  @override
+  String get settingsDefaultTimedBlockTitle =>
+      'Standarddauer für Kalenderblöcke';
+
+  @override
+  String get settingsDefaultTimedBlockSubtitle =>
+      'Wenn nur eine Uhrzeit eingegeben wird, nutzen neue Aufgaben diese Kalenderdauer.';
+
+  @override
+  String get settingsDefaultTimedBlockCustomLabel => 'Eigene Dauer';
+
+  @override
+  String get settingsDefaultTimedBlockError => 'Gib 1 bis 480 Minuten ein.';
+
+  @override
+  String get settingsTaskTimeDisplayTitle => 'Anzeige der Aufgabenzeit';
+
+  @override
+  String get settingsTaskTimeDisplaySubtitle =>
+      'Lege fest, wie zeitgebundene Aufgaben angezeigt werden.';
+
+  @override
+  String get settingsTaskTimeDisplaySmart => 'Intelligent';
+
+  @override
+  String get settingsTaskTimeDisplayRange => 'Start- und Endzeit';
+
+  @override
+  String get settingsTaskTimeDisplayStartOnly => 'Nur Startzeit';
+
+  @override
+  String get taskTimeStatusFuture => 'Bevorstehend';
+
+  @override
+  String get taskTimeStatusFocused => 'Im Fokus';
+
+  @override
+  String get taskTimeStatusCurrent => 'In Bearbeitung';
+
+  @override
+  String get taskTimeStatusOverdue => 'Überfällig';
+
+  @override
+  String get taskTimeStatusCompleted => 'Abgeschlossen';
+
+  @override
+  String get menuTooltip => 'Menü';
+
+  @override
+  String get localUser => 'Lokaler Benutzer';
+
+  @override
+  String get addTask => 'Aufgabe hinzufügen';
+
+  @override
+  String get quickAddHint => 'Schreibe sync engine morgen p1 #App @coding 4p';
+
+  @override
+  String couldNotAddTask(Object error) {
+    return 'Aufgabe konnte nicht hinzugefügt werden: $error';
+  }
+
+  @override
+  String get taskCreateFailed =>
+      'Die Aufgabe konnte nicht erstellt werden. Versuche es erneut.';
+
+  @override
+  String couldNotAddProject(Object error) {
+    return 'Projekt konnte nicht hinzugefügt werden: $error';
+  }
+
+  @override
+  String tasksCreated(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufgaben hinzugefügt',
+      one: '1 Aufgabe hinzugefügt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get voiceQuickAdd => 'Spracheingabe';
+
+  @override
+  String get voiceTitle => 'Per Sprache hinzufügen';
+
+  @override
+  String get voiceRecord => 'Aufnehmen';
+
+  @override
+  String get voiceAgain => 'Erneut';
+
+  @override
+  String get voiceStop => 'Stopp';
+
+  @override
+  String voiceAddCount(int count) {
+    return '$count hinzufügen';
+  }
+
+  @override
+  String voiceTaskLabel(int index) {
+    return 'Aufgabe $index';
+  }
+
+  @override
+  String get voiceRemoveTask => 'Entfernen';
+
+  @override
+  String get voiceInstruction => 'Tippe auf Aufnahme und diktiere Aufgaben.';
+
+  @override
+  String get voiceStatusIdle => 'Nur Eingabe über eingebautes Mikrofon';
+
+  @override
+  String get voiceStatusRequestingPermission => 'Zugriff wird angefordert';
+
+  @override
+  String get voiceStatusRecording => 'Eingebautes Mikrofon hört zu';
+
+  @override
+  String get voiceStatusTranscribing => 'Aufnahme wird transkribiert';
+
+  @override
+  String get voiceStatusCanceled => 'Aufnahme abgebrochen';
+
+  @override
+  String get voiceStatusUnsupported => 'Plattform wird nicht unterstützt';
+
+  @override
+  String get voiceStatusError => 'Sprache konnte nicht erkannt werden';
+
+  @override
+  String get voiceStatusAnalyzing => 'Wird in Aufgaben aufgeteilt';
+
+  @override
+  String get voiceStatusReview => 'Prüfe die Aufgaben vor dem Hinzufügen';
+
+  @override
+  String get voiceStepRecord => 'Aufnahme';
+
+  @override
+  String get voiceStepText => 'Text';
+
+  @override
+  String get voiceStepAnalyze => 'Analyse';
+
+  @override
+  String get voiceStepReview => 'Prüfung';
+
+  @override
+  String get voiceAnalyzing => 'Pomodoist teilt Sprache in Aufgaben auf';
+
+  @override
+  String get voiceFallbackError =>
+      'Pomodoist konnte die Sprache nicht verarbeiten, Entwurf bleibt zur manuellen Bearbeitung.';
+
+  @override
+  String get voiceMicrophoneUnavailable =>
+      'Das Mikrofon ist derzeit nicht verfügbar. Beende den aktiven Anruf oder Sprachchat und versuche es erneut.';
+
+  @override
+  String get voiceSmartMode => 'Intelligenter Modus';
+
+  @override
+  String get voiceRetryTranscription => 'Transkription wiederholen';
+
+  @override
+  String get voiceRecordingSaved =>
+      'Die Aufnahme ist auf diesem Gerät gespeichert. Sie können es ohne neue Aufnahme erneut versuchen.';
+
+  @override
+  String get voiceAllowAccess => 'Zugriff erlauben';
+
+  @override
+  String get voiceOpenMicrophoneSettings => 'Mikrofoneinstellungen öffnen';
+
+  @override
+  String get voiceOpenSpeechSettings =>
+      'Einstellungen zur Spracherkennung öffnen';
+
+  @override
+  String get voiceEnableDictation => 'Diktierfunktion aktivieren';
+
+  @override
+  String get voiceUseCloudTranscription => 'Cloud-Transkription verwenden';
+
+  @override
+  String get voiceMicrophoneDenied =>
+      'Erlauben Sie den Mikrofonzugriff in den Systemeinstellungen.';
+
+  @override
+  String get voiceSpeechDenied =>
+      'Erlauben Sie die Spracherkennung in den Systemeinstellungen.';
+
+  @override
+  String get voiceAccessRestricted =>
+      'Der Zugriff wird durch die Administration oder Bildschirmzeit eingeschränkt.';
+
+  @override
+  String get voiceDictationDisabled =>
+      'Aktivieren Sie die Diktierfunktion unter Systemeinstellungen → Tastatur → Diktierfunktion und wählen Sie Ihre Sprache. Versuchen Sie es dann erneut.';
+
+  @override
+  String get voiceServiceUnavailable =>
+      'Die Spracherkennung ist nicht verfügbar. Prüfen Sie Ihre Verbindung. Prüfen Sie auf dem Mac auch Systemeinstellungen → Tastatur → Diktierfunktion und Ihre Sprache.';
+
+  @override
+  String get voiceCloudServiceUnavailable =>
+      'Die Cloud-Transkription ist fehlgeschlagen. Prüfen Sie Ihre Internetverbindung und versuchen Sie, die gespeicherte Aufnahme erneut zu transkribieren.';
+
+  @override
+  String get voiceLocaleUnsupported =>
+      'Die systemeigene Spracherkennung unterstützt die gewählte Sprache auf diesem Gerät nicht.';
+
+  @override
+  String get voiceNetworkUnavailable =>
+      'Für diese Sprache benötigt die Spracherkennung eine Internetverbindung. Stellen Sie die Verbindung wieder her und versuchen Sie es erneut.';
+
+  @override
+  String get voiceSettingsFailed =>
+      'Die Einstellungen konnten nicht geöffnet werden. Prüfen Sie Mikrofon und Spracherkennung manuell in den Systemeinstellungen, auf dem Mac auch Tastatur → Diktierfunktion.';
+
+  @override
+  String get voiceRetryAnalysis => 'Analyse wiederholen';
+
+  @override
+  String get screenInboxSubtitle =>
+      'Aufgaben sammeln, bevor du sie organisierst.';
+
+  @override
+  String get priorityMatrixSubtitle =>
+      'Ziehe Aufgaben zwischen Prioritäten. Termine sortieren nur innerhalb einer Priorität.';
+
+  @override
+  String get priorityMatrixP1Title => 'Jetzt erledigen';
+
+  @override
+  String get priorityMatrixP2Title => 'Planen';
+
+  @override
+  String get priorityMatrixP3Title => 'Delegieren';
+
+  @override
+  String get priorityMatrixP4Title => 'Streichen';
+
+  @override
+  String get priorityMatrixAxisUrgent => 'Dringend';
+
+  @override
+  String get priorityMatrixAxisNotUrgent => 'Nicht dringend';
+
+  @override
+  String get priorityMatrixAxisImportant => 'Wichtig';
+
+  @override
+  String get priorityMatrixAxisNotImportant => 'Nicht wichtig';
+
+  @override
+  String get timelineSubtitle => 'Plane einen Tag auf einem Zeitraster.';
+
+  @override
+  String get timelineAllDay => 'Ganztägig';
+
+  @override
+  String get timelineBeforeHours => 'Vor sichtbaren Stunden';
+
+  @override
+  String get timelineAfterHours => 'Nach sichtbaren Stunden';
+
+  @override
+  String get timelineVisibleHours => 'Sichtbare Stunden';
+
+  @override
+  String get timelineStartHour => 'Start';
+
+  @override
+  String get timelineEndHour => 'Ende';
+
+  @override
+  String get timelineZoomOut => 'Verkleinern';
+
+  @override
+  String get timelineZoomIn => 'Vergrößern';
+
+  @override
+  String timelineAddTimedHint(String time) {
+    return 'Aufgabe um $time';
+  }
+
+  @override
+  String get timelineAddAllDayHint => 'Ganztägige Aufgabe';
+
+  @override
+  String get timelineNoAllDayTasks => 'Keine ganztägigen Aufgaben';
+
+  @override
+  String get timelineNoTimedTasks => 'Keine Aufgaben mit Uhrzeit';
+
+  @override
+  String get timelinePreviousDay => 'Vorheriger Tag';
+
+  @override
+  String get timelineNextDay => 'Nächster Tag';
+
+  @override
+  String get timelinePickDate => 'Datum wählen';
+
+  @override
+  String get upcomingPreviousPeriod => 'Vorheriger Zeitraum';
+
+  @override
+  String get upcomingNextPeriod => 'Nächster Zeitraum';
+
+  @override
+  String get upcomingOpenDatePicker => 'Datumsauswahl öffnen';
+
+  @override
+  String upcomingTaskCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufgaben',
+      one: '1 Aufgabe',
+      zero: 'Keine Aufgaben',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String screenTodayFocusSummary(int planned, int completed, String focus) {
+    return 'Fokuslast: $planned Intervalle - Erledigt: $completed - Fokus: $focus';
+  }
+
+  @override
+  String get screenUpcomingSubtitle => 'Geplante Aufgaben nach heute.';
+
+  @override
+  String screenUpcomingSelectedSubtitle(String date) {
+    return 'Aufgaben geplant für $date.';
+  }
+
+  @override
+  String get noTasksHere => 'Hier sind keine Aufgaben';
+
+  @override
+  String get noUpcomingTasks => 'Keine datierten Aufgaben';
+
+  @override
+  String get noTasksForDay => 'Für diesen Tag sind keine Aufgaben geplant';
+
+  @override
+  String failedToLoadTasks(Object error) {
+    return 'Aufgaben konnten nicht geladen werden: $error';
+  }
+
+  @override
+  String get searchTasks => 'Aufgaben suchen';
+
+  @override
+  String get searchStartTyping => 'Tippe, um Aufgaben zu suchen';
+
+  @override
+  String get searchNoMatches => 'Keine passenden Aufgaben';
+
+  @override
+  String failedToSearchTasks(Object error) {
+    return 'Aufgaben konnten nicht gesucht werden: $error';
+  }
+
+  @override
+  String get previousMonth => 'Vorheriger Monat';
+
+  @override
+  String get nextMonth => 'Nächster Monat';
+
+  @override
+  String get clearDateFilter => 'Datumsfilter löschen';
+
+  @override
+  String get weekMon => 'Mo';
+
+  @override
+  String get weekTue => 'Di';
+
+  @override
+  String get weekWed => 'Mi';
+
+  @override
+  String get weekThu => 'Do';
+
+  @override
+  String get weekFri => 'Fr';
+
+  @override
+  String get weekSat => 'Sa';
+
+  @override
+  String get weekSun => 'So';
+
+  @override
+  String get browseTitle => 'Durchsuchen';
+
+  @override
+  String get unifiedAccount => 'Einheitliches Konto';
+
+  @override
+  String accountUnavailable(Object error) {
+    return 'Konto nicht verfügbar: $error';
+  }
+
+  @override
+  String get signOut => 'Abmelden';
+
+  @override
+  String get deleteAccount => 'Konto löschen';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'Dadurch werden dein Konto, deine Cloud-Daten sowie lokale Aufgaben, Projekte und der Fokusverlauf dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden. Store-Abonnements werden nicht automatisch gekündigt. Wenn du dich mit Apple angemeldet hast, widerrufe den Pomodoist-Zugriff zusätzlich in deinen Apple-Account-Einstellungen.';
+
+  @override
+  String get manageSignInWithApple => 'Mit Apple anmelden verwalten';
+
+  @override
+  String get deleteAccountFinalConfirmation =>
+      'Bist du dir wirklich sicher? Dies ist die letzte Bestätigung.';
+
+  @override
+  String deleteAccountError(Object error) {
+    return 'Konto konnte nicht gelöscht werden: $error';
+  }
+
+  @override
+  String get accountDeleted => 'Konto gelöscht.';
+
+  @override
+  String get accountDeletedLocalCleanupError =>
+      'Dein Konto wurde gelöscht, aber die lokalen Daten konnten nicht gelöscht werden. Lösche die App-Daten, bevor du dieses Gerät weiter verwendest.';
+
+  @override
+  String get browseSevenDays => '7 Tage';
+
+  @override
+  String get browseOpenNow => 'Aktuell offen';
+
+  @override
+  String get browseQueueLoading => 'Ausstehende Änderungen werden geladen…';
+
+  @override
+  String get browseQueueUnavailable =>
+      'Ausstehende Änderungen konnten nicht geladen werden.';
+
+  @override
+  String get browseQueueExplanation =>
+      'Hier stehen lokale Änderungen, die noch gesendet werden müssen. Eine leere Warteschlange bestätigt nicht, dass alle Geräte auf dem neuesten Stand sind.';
+
+  @override
+  String get productivityTitle => 'Produktivität';
+
+  @override
+  String get achievementsTitle => 'Erfolge';
+
+  @override
+  String get allTimeLabel => 'Gesamt';
+
+  @override
+  String get lastSevenDaysLabel => 'Letzte 7 Tage';
+
+  @override
+  String get noWeeklyStatsLabel => 'Noch keine Fokus- oder Aufgabendaten';
+
+  @override
+  String get completedFocuses => 'Abgeschlossene Fokusintervalle';
+
+  @override
+  String get completedTasks => 'Erledigte Aufgaben';
+
+  @override
+  String get unlocked => 'Freigeschaltet';
+
+  @override
+  String get locked => 'Gesperrt';
+
+  @override
+  String get progressLabel => 'Fortschritt';
+
+  @override
+  String get focusAchievements => 'Fokus-Erfolge';
+
+  @override
+  String get taskAchievements => 'Aufgaben-Erfolge';
+
+  @override
+  String get comboAchievements => 'Kombi-Erfolge';
+
+  @override
+  String get focusIntervals => 'Fokusintervalle';
+
+  @override
+  String get focusTime => 'Fokuszeit';
+
+  @override
+  String get openTasks => 'Offene Aufgaben';
+
+  @override
+  String get plannedIntervals => 'Geplante Intervalle';
+
+  @override
+  String get labelsTitle => 'Labels';
+
+  @override
+  String get newProject => 'Neues Projekt';
+
+  @override
+  String get newLabel => 'Neues Label';
+
+  @override
+  String get syncReadyQueue => 'Sync-bereite Warteschlange';
+
+  @override
+  String pendingLocalCommands(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ausstehende lokale Befehle',
+      one: '1 ausstehender lokaler Befehl',
+      zero: 'Keine ausstehenden lokalen Befehle',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String failedToLoadProjects(Object error) {
+    return 'Projekte konnten nicht geladen werden: $error';
+  }
+
+  @override
+  String failedToLoadLabels(Object error) {
+    return 'Labels konnten nicht geladen werden: $error';
+  }
+
+  @override
+  String get addProject => 'Projekt hinzufügen';
+
+  @override
+  String get projectName => 'Projektname';
+
+  @override
+  String get addLabel => 'Label hinzufügen';
+
+  @override
+  String get labelName => 'Labelname';
+
+  @override
+  String couldNotAddLabel(Object error) {
+    return 'Label konnte nicht hinzugefügt werden: $error';
+  }
+
+  @override
+  String projectsUnavailable(Object error) {
+    return 'Projekte nicht verfügbar: $error';
+  }
+
+  @override
+  String get projectsUnavailableShort => 'Projekte nicht verfügbar';
+
+  @override
+  String get noProjects => 'Keine Projekte';
+
+  @override
+  String get searchProjects => 'Projekte suchen';
+
+  @override
+  String get searchLabels => 'Labels suchen';
+
+  @override
+  String get archivedProjectsOnly => 'Nur archivierte Projekte';
+
+  @override
+  String projectsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Projekte',
+      one: '1 Projekt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noLabels => 'Keine Labels';
+
+  @override
+  String labelsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Labels',
+      one: '1 Label',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get renameProject => 'Projekt umbenennen';
+
+  @override
+  String get deleteProject => 'Projekt löschen';
+
+  @override
+  String get deleteLabel => 'Label löschen';
+
+  @override
+  String deleteProjectConfirmation(String name) {
+    return '\"$name\" löschen? Aufgaben in diesem Projekt werden in den Eingang verschoben.';
+  }
+
+  @override
+  String deleteLabelConfirmation(String name) {
+    return '\"$name\" löschen?';
+  }
+
+  @override
+  String couldNotDeleteProject(Object error) {
+    return 'Projekt konnte nicht gelöscht werden: $error';
+  }
+
+  @override
+  String couldNotDeleteLabel(Object error) {
+    return 'Label konnte nicht gelöscht werden: $error';
+  }
+
+  @override
+  String projectsCountCompact(int count) {
+    return 'Projekte: $count';
+  }
+
+  @override
+  String get collapseProjects => 'Projekte einklappen';
+
+  @override
+  String get expandProjects => 'Projekte ausklappen';
+
+  @override
+  String get projectFallbackTitle => 'Projekt';
+
+  @override
+  String get projectSubtitle =>
+      'Listenansicht - Board und Kalender sind geplant.';
+
+  @override
+  String get reportsTitle => 'Berichte';
+
+  @override
+  String get reportsFocusedDay => 'Ein fokussierter Tag bisher';
+
+  @override
+  String get reportsThisWeek => 'Deine Woche im Fokus';
+
+  @override
+  String get reportsNextAchievement => 'Nächster Erfolg';
+
+  @override
+  String get viewAllAchievements => 'Alle Erfolge anzeigen';
+
+  @override
+  String viewAllAchievementsCount(int count) {
+    return 'Alle $count anzeigen';
+  }
+
+  @override
+  String get allAchievementsUnlocked => 'Alle Erfolge freigeschaltet';
+
+  @override
+  String get noAchievementsYet => 'Noch keine Erfolge';
+
+  @override
+  String failedToLoadAchievements(Object error) {
+    return 'Erfolge konnten nicht geladen werden: $error';
+  }
+
+  @override
+  String get backToReports => 'Zurück zu den Berichten';
+
+  @override
+  String reportsIntervalProgressSemantics(int completed, int target) {
+    return '$completed von $target Fokusintervallen abgeschlossen';
+  }
+
+  @override
+  String reportsIntervalCountSemantics(int completed) {
+    return '$completed Fokusintervalle abgeschlossen; kein Ziel gesetzt';
+  }
+
+  @override
+  String reportsWeeklyChartSemantics(String summary) {
+    return 'Fokuszeit der letzten 7 Tage: $summary';
+  }
+
+  @override
+  String failedToLoadReports(Object error) {
+    return 'Berichte konnten nicht geladen werden: $error';
+  }
+
+  @override
+  String get taskNotFound => 'Aufgabe nicht gefunden';
+
+  @override
+  String get taskTitleHint => 'Aufgabentitel';
+
+  @override
+  String get taskComment => 'Kommentar';
+
+  @override
+  String get taskCommentHint => 'Kommentar hinzufügen';
+
+  @override
+  String get subtasks => 'Unteraufgaben';
+
+  @override
+  String get addSubtask => 'Unteraufgabe hinzufügen';
+
+  @override
+  String get addSubtaskHint => 'Unteraufgabe hinzufügen';
+
+  @override
+  String get noSubtasks => 'Noch keine Unteraufgaben.';
+
+  @override
+  String get makeParentTask => 'Zur Hauptaufgabe machen';
+
+  @override
+  String couldNotMoveTask(Object error) {
+    return 'Aufgabe konnte nicht verschoben werden: $error';
+  }
+
+  @override
+  String get scheduleTitle => 'Zeitplan';
+
+  @override
+  String get allDay => 'Ganztägig';
+
+  @override
+  String get timedBlock => 'Zeitblock';
+
+  @override
+  String get recurrenceTitle => 'Repeat';
+
+  @override
+  String get recurrenceNeedsSchedule => 'Add a date or time before repeating.';
+
+  @override
+  String get recurrenceIntervalLabel => 'Interval';
+
+  @override
+  String get recurrenceUnitDay => 'Days';
+
+  @override
+  String get recurrenceUnitWeek => 'Weeks';
+
+  @override
+  String get recurrenceUnitMonth => 'Months';
+
+  @override
+  String get recurrenceInvalidInterval => 'Enter 1 to 999.';
+
+  @override
+  String recurrenceEveryDays(int interval) {
+    String _temp0 = intl.Intl.pluralLogic(
+      interval,
+      locale: localeName,
+      other: 'every $interval days',
+      one: 'every day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurrenceEveryWeeks(int interval) {
+    String _temp0 = intl.Intl.pluralLogic(
+      interval,
+      locale: localeName,
+      other: 'every $interval weeks',
+      one: 'every week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurrenceEveryMonths(int interval) {
+    String _temp0 = intl.Intl.pluralLogic(
+      interval,
+      locale: localeName,
+      other: 'every $interval months',
+      one: 'every month',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noDate => 'Kein Datum';
+
+  @override
+  String get calendarNotLinked => 'Kalender nicht verknüpft';
+
+  @override
+  String get calendarLinked => 'Google Kalender verknüpft';
+
+  @override
+  String focusProgress(int completed, int total) {
+    return '$completed/$total Fokus';
+  }
+
+  @override
+  String get startFocus => 'Fokus starten';
+
+  @override
+  String get focusStarted => 'Fokus gestartet';
+
+  @override
+  String get taskReopened => 'Aufgabe wieder geöffnet';
+
+  @override
+  String get taskCompleted => 'Aufgabe erledigt';
+
+  @override
+  String get taskDeleted => 'Aufgabe gelöscht';
+
+  @override
+  String get recurringDeleteTitle => 'Delete recurring task?';
+
+  @override
+  String get recurringDeleteMessage =>
+      'This task belongs to a recurring series.';
+
+  @override
+  String get recurringDeleteThis => 'Delete this task';
+
+  @override
+  String get recurringDeleteThisAndFollowing => 'Delete this and following';
+
+  @override
+  String get markOpen => 'Als offen markieren';
+
+  @override
+  String get markComplete => 'Als erledigt markieren';
+
+  @override
+  String get focusHistory => 'Fokusverlauf';
+
+  @override
+  String failedToLoadTask(Object error) {
+    return 'Aufgabe konnte nicht geladen werden: $error';
+  }
+
+  @override
+  String get noFocusIntervals => 'Noch keine Fokusintervalle.';
+
+  @override
+  String get today => 'Heute';
+
+  @override
+  String get tomorrow => 'Morgen';
+
+  @override
+  String get yesterday => 'Gestern';
+
+  @override
+  String get clearDate => 'Datum löschen';
+
+  @override
+  String priority(int priority) {
+    return 'Priorität $priority';
+  }
+
+  @override
+  String get focusTitle => 'Fokus';
+
+  @override
+  String focusLoadError(Object error) {
+    return 'Fokus konnte nicht geladen werden: $error';
+  }
+
+  @override
+  String get focusViewFull => 'Voll';
+
+  @override
+  String get focusViewMinimal => 'Minimal';
+
+  @override
+  String get focusSwitchToFullView => 'Zur Vollansicht wechseln';
+
+  @override
+  String get focusSwitchToMinimalView => 'Zur Minimalansicht wechseln';
+
+  @override
+  String get focusActionFailed =>
+      'Focus konnte nicht aktualisiert werden. Versuche es erneut.';
+
+  @override
+  String get noActiveSession => 'Keine aktive Sitzung';
+
+  @override
+  String get focusIdleSubtitle =>
+      'Starte ein eigenständiges Fokusintervall oder Fokus aus einer Aufgabe.';
+
+  @override
+  String get noPreset => 'Kein Preset';
+
+  @override
+  String get preparingFocus => 'Fokus wird vorbereitet';
+
+  @override
+  String get moreFocusOptions => 'Weitere Fokusoptionen';
+
+  @override
+  String get moreFocusActions => 'Weitere Fokusaktionen';
+
+  @override
+  String get preset => 'Preset';
+
+  @override
+  String get newPreset => 'Neues Preset';
+
+  @override
+  String get customize => 'Anpassen';
+
+  @override
+  String get customizePreset => 'Preset anpassen';
+
+  @override
+  String get startInterval => 'Intervall starten';
+
+  @override
+  String get intervalStarted => 'Intervall gestartet';
+
+  @override
+  String get intervalCompleted => 'Intervall abgeschlossen';
+
+  @override
+  String get focusStopped => 'Fokus gestoppt';
+
+  @override
+  String get focusCompletionTitle => 'Großartige Arbeit!';
+
+  @override
+  String get focusCompletionLinkedSubtitle =>
+      'Alle geplanten Fokusintervalle für diese Aufgabe sind abgeschlossen.';
+
+  @override
+  String get focusCompletionStandaloneSubtitle =>
+      'Dein Fokuszyklus ist abgeschlossen.';
+
+  @override
+  String get focusCompletionQuestion =>
+      'Möchtest du diese Aufgabe abschließen?';
+
+  @override
+  String get focusCompletionCompleteTask => 'Aufgabe abschließen';
+
+  @override
+  String get focusCompletionKeepOpen => 'Aufgabe offen lassen';
+
+  @override
+  String get focusCompletionDone => 'Fertig';
+
+  @override
+  String get focusCompletionNextTask => 'Nächste geplante Aufgabe';
+
+  @override
+  String focusCompletionTaskError(Object error) {
+    return 'Aufgabe konnte nicht abgeschlossen werden: $error';
+  }
+
+  @override
+  String get completeInterval => 'Intervall abschließen';
+
+  @override
+  String get logDistraction => 'Ablenkung protokollieren';
+
+  @override
+  String get workInterval => 'Arbeitsintervall';
+
+  @override
+  String get work => 'Arbeit';
+
+  @override
+  String get shortBreak => 'Kurze Pause';
+
+  @override
+  String get breakLabel => 'Pause';
+
+  @override
+  String get longBreak => 'Lange Pause';
+
+  @override
+  String readyLabel(String label) {
+    return 'Bereit: $label';
+  }
+
+  @override
+  String get readyShort => 'Bereit';
+
+  @override
+  String focusTimerTotal(String duration) {
+    return 'von $duration';
+  }
+
+  @override
+  String focusSessionProgress(int current, int total) {
+    return 'Sitzung $current von $total';
+  }
+
+  @override
+  String focusRhythmPreviewSummary(int count) {
+    return 'Fokusrhythmus-Vorschau, $count Schritte';
+  }
+
+  @override
+  String focusRhythmSummary(
+    int current,
+    int total,
+    String phase,
+    String status,
+  ) {
+    return 'Fokusrhythmus, Schritt $current von $total: $phase, $status';
+  }
+
+  @override
+  String focusTimerSummary(
+    String phase,
+    String status,
+    String remaining,
+    String total,
+  ) {
+    return '$phase, $status, $remaining verbleibend, $total gesamt';
+  }
+
+  @override
+  String get focusStatusRunning => 'Läuft';
+
+  @override
+  String get focusStatusPaused => 'Pausiert';
+
+  @override
+  String focusWorkProgress(int completed, int total) {
+    return '$completed/$total Arbeit';
+  }
+
+  @override
+  String intervalNumber(int number) {
+    return 'Intervall $number';
+  }
+
+  @override
+  String focusIntervalSummary(int completed, int total, int number) {
+    return '$completed/$total Arbeit - Intervall $number';
+  }
+
+  @override
+  String get pause => 'Pause';
+
+  @override
+  String get resume => 'Fortsetzen';
+
+  @override
+  String get presetForNextIntervals => 'Preset für nächste Intervalle';
+
+  @override
+  String usePreset(String name) {
+    return '$name verwenden';
+  }
+
+  @override
+  String minutesWork(int minutes) {
+    return '${minutes}m Arbeit';
+  }
+
+  @override
+  String minutesShort(int minutes) {
+    return '${minutes}m kurz';
+  }
+
+  @override
+  String minutesLong(int minutes) {
+    return '${minutes}m lang';
+  }
+
+  @override
+  String longEvery(int count) {
+    return 'Lang alle $count';
+  }
+
+  @override
+  String get autoBreaks => 'Auto-Pausen';
+
+  @override
+  String get autoWork => 'Auto-Arbeit';
+
+  @override
+  String get noPause => 'Keine Pause';
+
+  @override
+  String get focusPauseUnavailable =>
+      'Pause ist für dieses Preset nicht verfügbar';
+
+  @override
+  String get strict => 'Strikt';
+
+  @override
+  String get flexible => 'Flexibel';
+
+  @override
+  String get name => 'Name';
+
+  @override
+  String get workField => 'Arbeit';
+
+  @override
+  String get shortField => 'Kurz';
+
+  @override
+  String get longField => 'Lang';
+
+  @override
+  String get every => 'Alle';
+
+  @override
+  String get minutesSuffix => 'min';
+
+  @override
+  String get makeDefault => 'Als Standard';
+
+  @override
+  String get autoStartBreaks => 'Pausen automatisch starten';
+
+  @override
+  String get autoStartWork => 'Arbeit automatisch starten';
+
+  @override
+  String get allowPause => 'Pause erlauben';
+
+  @override
+  String get strictMode => 'Strikter Modus';
+
+  @override
+  String get nameRequired => 'Name ist erforderlich';
+
+  @override
+  String get nameMustBeUnique => 'Name muss eindeutig sein';
+
+  @override
+  String get googleCalendarTitle => 'Google Kalender';
+
+  @override
+  String get googleCalendarConnectedSubtitle =>
+      'Zwei-Wege-Sync ist für den Pomodoist-Kalender aktiv.';
+
+  @override
+  String get googleCalendarDisconnectedSubtitle =>
+      'Verbinde ein Google-Konto, um geplante Aufgaben zu synchronisieren.';
+
+  @override
+  String get googleCalendarConnectedOnAnotherDeviceSubtitle =>
+      'Die Google Kalender-Synchronisierung läuft auf einem anderen Gerät. Pomodoist-Daten werden hier weiterhin synchronisiert.';
+
+  @override
+  String get syncNow => 'Jetzt synchronisieren';
+
+  @override
+  String get useThisDevice => 'Dieses Gerät verwenden';
+
+  @override
+  String get connect => 'Verbinden';
+
+  @override
+  String get disconnect => 'Trennen';
+
+  @override
+  String failedToLoadIntegration(Object error) {
+    return 'Integration konnte nicht geladen werden: $error';
+  }
+
+  @override
+  String googleCalendarFailed(String message) {
+    return 'Google Kalender fehlgeschlagen: $message';
+  }
+
+  @override
+  String get googleAuthRequired =>
+      'Google Kalender-Autorisierung ist erforderlich. Melde dich erneut an und starte Jetzt synchronisieren.';
+
+  @override
+  String get googleSignInNotConfigured =>
+      'Google Sign-In ist nicht konfiguriert. Setze GOOGLE_CLIENT_ID und GOOGLE_REVERSED_CLIENT_ID für dieses iOS-Target.';
+
+  @override
+  String get googleCallbackNotConfigured =>
+      'Google Sign-In-Callback ist nicht konfiguriert. Setze GOOGLE_REVERSED_CLIENT_ID in ios/Flutter/GoogleOAuth.xcconfig.';
+
+  @override
+  String get googleWebButtonFirst =>
+      'Im Web zuerst die Google-Anmeldeschaltfläche klicken, dann Verbinden.';
+
+  @override
+  String get googleAccessDenied =>
+      'Google-Zugriff wurde verweigert. Füge dieses Google-Konto als OAuth-Testnutzer hinzu oder veröffentliche und verifiziere die OAuth-App.';
+
+  @override
+  String get status => 'Status';
+
+  @override
+  String get account => 'Konto';
+
+  @override
+  String get calendar => 'Kalender';
+
+  @override
+  String get calendarId => 'Kalender-ID';
+
+  @override
+  String get lastSync => 'Letzter Sync';
+
+  @override
+  String get notConnected => 'Nicht verbunden';
+
+  @override
+  String get notCreated => 'Nicht erstellt';
+
+  @override
+  String get never => 'Nie';
+
+  @override
+  String durationMinutes(int minutes) {
+    return '${minutes}m';
+  }
+
+  @override
+  String durationHoursMinutes(int hours, int minutes) {
+    return '${hours}h ${minutes}m';
+  }
+
+  @override
+  String get projectIcon => 'Projektsymbol';
+
+  @override
+  String projectIconOption(int number) {
+    return 'Symbol $number';
+  }
+
+  @override
+  String get projectColor => 'Projektfarbe';
+
+  @override
+  String projectColorOption(int number) {
+    return 'Farbe $number';
+  }
+
+  @override
+  String get addProjectToFavorites => 'Projekt zu Favoriten hinzufügen';
+
+  @override
+  String get removeProjectFromFavorites => 'Projekt aus Favoriten entfernen';
+
+  @override
+  String get timelineProjectsMenu => 'Timeline-Projekte verwalten';
+
+  @override
+  String get timelineShowProject => 'Projekt in Timeline anzeigen';
+
+  @override
+  String get timelineHideProject => 'Temporäres Projekt ausblenden';
+
+  @override
+  String get timelineCollapseProject => 'Projektzweig einklappen';
+
+  @override
+  String get timelineExpandProject => 'Projektzweig ausklappen';
+
+  @override
+  String get timelineCurrentTime => 'Aktuelle Uhrzeit';
+
+  @override
+  String couldNotUpdateProject(Object error) {
+    return 'Projekt konnte nicht aktualisiert werden: $error';
+  }
+
+  @override
+  String get commonDone => 'Fertig';
+
+  @override
+  String get taskSelect => 'Auswählen';
+
+  @override
+  String taskSelectedCount(int count) {
+    return '$count ausgewählt';
+  }
+
+  @override
+  String get taskSelectAll => 'Alle auswählen';
+
+  @override
+  String get taskDeselectAll => 'Auswahl aufheben';
+
+  @override
+  String get taskDue => 'Fällig';
+
+  @override
+  String get taskProject => 'Projekt';
+
+  @override
+  String get taskLabels => 'Labels';
+
+  @override
+  String get taskPriority => 'Priorität';
+
+  @override
+  String get taskMore => 'Mehr';
+
+  @override
+  String get taskSchedule => 'Planen';
+
+  @override
+  String get taskMove => 'Verschieben';
+
+  @override
+  String get taskDuplicate => 'Duplizieren';
+
+  @override
+  String get taskDuplicateTitle => 'Aufgaben duplizieren';
+
+  @override
+  String get taskDuplicateSelectedOnly => 'Nur ausgewählte';
+
+  @override
+  String get taskDuplicateWithSubtasks => 'Mit Unteraufgaben';
+
+  @override
+  String get taskWeekend => 'Am Wochenende';
+
+  @override
+  String get taskNextWeek => 'Nächste Woche';
+
+  @override
+  String get taskEnterDue => 'Fälligkeit oder Uhrzeit eingeben';
+
+  @override
+  String get taskInvalidDue => 'Gültiges Datum oder Uhrzeit eingeben';
+
+  @override
+  String get taskClearDue => 'Fälligkeit löschen';
+
+  @override
+  String get taskDeleteSelectedTitle => 'Ausgewählte Aufgaben löschen?';
+
+  @override
+  String get taskDeleteSelectedMessage =>
+      'Du kannst diese Aktion 7 Sekunden lang rückgängig machen.';
+
+  @override
+  String get taskCompleteSelected => 'Ausgewählte erledigen';
+
+  @override
+  String get taskReopenSelected => 'Ausgewählte wieder öffnen';
+
+  @override
+  String taskActionFailedCount(int count) {
+    return '$count Aufgaben konnten nicht aktualisiert werden';
+  }
+
+  @override
+  String get voiceCollapse => 'Sprachbereich einklappen';
+
+  @override
+  String get voiceExpand => 'Sprachbereich ausklappen';
+
+  @override
+  String get voiceMovePanel => 'Sprachbereich verschieben';
+
+  @override
+  String get themeClassic => 'Klassisch';
+
+  @override
+  String get themeOcean => 'Ozean';
+
+  @override
+  String get themeForest => 'Wald';
+
+  @override
+  String get themeCustomize => 'Anpassen';
+
+  @override
+  String get themeEditorTitle => 'Design bearbeiten';
+
+  @override
+  String get themeLivePreview =>
+      'Änderungen sind in der ganzen App sichtbar. Abbrechen stellt dein vorheriges Design wieder her.';
+
+  @override
+  String get themeSaveError =>
+      'Das Design konnte nicht gespeichert werden. Deine Änderungen sind noch da; versuche es erneut.';
+
+  @override
+  String get themeLoadError => 'Deine Designs konnten nicht geladen werden.';
+
+  @override
+  String get themeColorsSurfaces => 'Hintergrund und Flächen';
+
+  @override
+  String get themeColorsText => 'Text';
+
+  @override
+  String get themeColorsAccent => 'Akzent';
+
+  @override
+  String get themeColorsStatus => 'Statusfarben';
+
+  @override
+  String get themeInvalidHex =>
+      'Gib eine sechsstellige HEX-Farbe ein, zum Beispiel #2563EB.';
+
+  @override
+  String get themeLowContrast =>
+      'Geringer Kontrast: Einige Texte sind möglicherweise schwer lesbar.';
+
+  @override
+  String get themePreviewTask => 'Plane deinen Tag';
+
+  @override
+  String get themePreviewSecondary => 'Jeden Tag ein wenig Fokus.';
+
+  @override
+  String get themeColorCanvas => 'Hintergrund';
+
+  @override
+  String get themeColorSurface => 'Fläche';
+
+  @override
+  String get themeColorSurfaceTint => 'Sekundäre Fläche';
+
+  @override
+  String get themeColorSurfaceHover => 'Fläche beim Darüberfahren';
+
+  @override
+  String get themeColorPrimaryText => 'Primärer Text';
+
+  @override
+  String get themeColorSecondaryText => 'Sekundärer Text';
+
+  @override
+  String get themeColorMutedText => 'Gedämpfter Text';
+
+  @override
+  String get themeColorBorder => 'Rahmen';
+
+  @override
+  String get themeColorAccent => 'Akzenttext und Symbole';
+
+  @override
+  String get themeColorAccentFill => 'Akzentfüllung';
+
+  @override
+  String get themeColorAccentTint => 'Dezente Akzentfüllung';
+
+  @override
+  String get themeColorWarning => 'Warnung';
+
+  @override
+  String get themeColorInfo => 'Information';
+
+  @override
+  String get themeColorSuccess => 'Erfolg';
+
+  @override
+  String get themeColorError => 'Fehler';
+
+  @override
+  String get themeColorOverdue => 'Überfällig';
+
+  @override
+  String get themeColorOnAccent => 'Text auf Akzentfüllung';
+
+  @override
+  String get themeColorOnError => 'Text auf Fehlerfüllung';
+
+  @override
+  String todayTaskSummary(int tasks, int planned, String time) {
+    String _temp0 = intl.Intl.pluralLogic(
+      tasks,
+      locale: localeName,
+      other: '$tasks Aufgaben',
+      one: '1 Aufgabe',
+    );
+    return '$_temp0 · Geplante Sitzungen: $planned · Fokus: $time';
+  }
+
+  @override
+  String get todayFocusingOn => 'Im Fokus';
+
+  @override
+  String get openFocus => 'Focus öffnen';
+
+  @override
+  String todayCompletedTasks(int count) {
+    return 'Heute erledigt · $count';
+  }
+
+  @override
+  String get sidebarDaily => 'Täglich';
+
+  @override
+  String get sidebarViews => 'Ansichten';
+
+  @override
+  String get quickAddResetDetails => 'Standard verwenden';
+
+  @override
+  String get quickAddChangeTime => 'Zeit ändern';
+
+  @override
+  String get quickAddProjectNameUnsupported =>
+      'Dieser Projektname kann nicht unverändert eingefügt werden.';
+
+  @override
+  String get themeSepia => 'Sepia';
+
+  @override
+  String get themeGraphite => 'Graphit';
+
+  @override
+  String get themeCustom => 'Custom';
+
+  @override
+  String get themeResetToClassic => 'Auf Klassisch zurücksetzen';
+
+  @override
+  String get themeBackgroundKindTitle => 'Hintergrund';
+
+  @override
+  String get themeBackgroundColor => 'Farbe';
+
+  @override
+  String get themeBackgroundPhoto => 'Foto';
+
+  @override
+  String get themeBackgroundGlass => 'macOS-Glas';
+
+  @override
+  String get themeBackgroundGlassHint =>
+      'Gilt für die gesamte App und Schnelles Hinzufügen. macOS steuert die Unschärfe; der Regler passt die Palettentönung an.';
+
+  @override
+  String get themeBackgroundGlassUnavailable =>
+      'Verfügbar in der macOS-App. Auf dieser Plattform wird ein einfarbiger Hintergrund verwendet.';
+
+  @override
+  String get themeBackgroundTitle => 'Hintergrundbild';
+
+  @override
+  String get themeBackgroundMainOnly => 'Nur Hauptbereich';
+
+  @override
+  String get themeBackgroundWholeApp => 'Gesamte App';
+
+  @override
+  String get themeBackgroundSeparate => 'Separate Hintergründe';
+
+  @override
+  String get themeBackgroundMain => 'Hauptbereich';
+
+  @override
+  String get themeBackgroundSidebar => 'Seitenleiste';
+
+  @override
+  String get themeBackgroundQuickAdd => 'Schnelles Hinzufügen';
+
+  @override
+  String get themeBackgroundChoose => 'Foto auswählen';
+
+  @override
+  String get themeBackgroundReplace => 'Foto ersetzen';
+
+  @override
+  String get themeBackgroundRemove => 'Foto entfernen';
+
+  @override
+  String get themeBackgroundDim => 'Abdunkelung';
+
+  @override
+  String get themeBackgroundBlur => 'Unschärfe';
+
+  @override
+  String get themeBackgroundEmpty => 'Kein Foto';
+
+  @override
+  String get themeBackgroundImageError =>
+      'Dieses Bild konnte nicht geöffnet werden. Wähle ein anderes Foto.';
+
+  @override
+  String get themeBackgroundTooLarge => 'Wähle ein Bild mit höchstens 50 MB.';
+
+  @override
+  String get themeBackgroundLoading => 'Bild wird vorbereitet…';
+
+  @override
+  String get settingsTaskListStyle => 'Stil der Aufgabenzeilen';
+
+  @override
+  String get settingsTaskListStyleDescription =>
+      'Wähle das neue Layout oder die vertrauten klassischen Zeilen.';
+
+  @override
+  String get settingsTaskListModern => 'Modern';
+
+  @override
+  String get settingsTaskListClassic => 'Klassisch';
+
+  @override
+  String get settingsTaskRowSpacing => 'Abstand zwischen Aufgaben';
+
+  @override
+  String get settingsTaskRowSpacingCompact => 'Kompakt';
+
+  @override
+  String get settingsTaskRowSpacingComfortable => 'Komfortabel';
+
+  @override
+  String get settingsTaskRowSpacingSpacious => 'Großzügig';
+
+  @override
+  String get settingsSaveError =>
+      'Die Einstellung konnte nicht gespeichert werden. Versuche es erneut.';
+
+  @override
+  String get focusCompletionCompleteAndNext =>
+      'Abschließen und nächste starten';
+
+  @override
+  String get focusCompletionStartNext => 'Nächste Aufgabe starten';
+
+  @override
+  String get focusCompletionRetry => 'Erneut versuchen';
+
+  @override
+  String get searchAllProjects => 'Alle Projekte';
+
+  @override
+  String get searchStatusOpen => 'Offen';
+
+  @override
+  String get searchStatusCompleted => 'Erledigt';
+
+  @override
+  String get searchStatusAll => 'Alle Status';
+
+  @override
+  String get searchClearFilters => 'Filter zurücksetzen';
+
+  @override
+  String get searchEmptyDescription =>
+      'Suche nach Titel oder Beschreibung und grenze nach Projekt oder Status ein.';
+
+  @override
+  String get searchNoMatchesDescription =>
+      'Versuche einen anderen Suchtext oder setze die Filter zurück. Du kannst daraus auch eine Aufgabe erstellen.';
+
+  @override
+  String get searchCreateTask => 'Aufgabe aus Text erstellen';
+
+  @override
+  String get taskListLoadError =>
+      'Aufgaben konnten nicht geladen werden. Versuche es erneut.';
+
+  @override
+  String get inboxEmptyTitle => 'Dein Eingang ist leer';
+
+  @override
+  String get inboxEmptyDescription =>
+      'Halte eine Idee fest und entscheide später, wann du daran arbeitest.';
+
+  @override
+  String get todayEmptyTitle => 'Für heute ist nichts geplant';
+
+  @override
+  String get todayEmptyDescription =>
+      'Füge eine Aufgabe als Startpunkt für heute hinzu.';
+
+  @override
+  String get todayEmptyCompletedTitle => 'Die heutige Liste ist leer';
+
+  @override
+  String get todayEmptyCompletedDescription =>
+      'Deine erledigten Aufgaben stehen unten. Füge eine weitere hinzu, wenn du bereit bist.';
+
+  @override
+  String get projectEmptyTitle => 'Dieses Projekt hat noch keine Aufgaben';
+
+  @override
+  String get projectEmptyDescription =>
+      'Füge den ersten Schritt zum Projektziel hinzu.';
+
+  @override
+  String get commandSearchPlaceholder =>
+      'Aufgaben, Projekte und Aktionen suchen';
+
+  @override
+  String get commandSearchTasks => 'Aufgaben';
+
+  @override
+  String get commandSearchActions => 'Aktionen';
+
+  @override
+  String get commandSearchDictateTask => 'Aufgabe diktieren';
+
+  @override
+  String get commandSearchAllResults => 'Alle Ergebnisse';
+
+  @override
+  String get commandSearchHint =>
+      '↑ ↓ Navigieren · Enter Öffnen · Esc Schließen';
+
+  @override
+  String get commandSearchNoMatches =>
+      'Keine passenden Aufgaben oder Projekte.';
+
+  @override
+  String get overdueTitle => 'Überfällig';
+
+  @override
+  String overdueTaskCount(int count) {
+    return '$count überfällige Aufgaben';
+  }
+
+  @override
+  String get overdueReview => 'Durchsehen';
+
+  @override
+  String get overdueEmpty => 'Keine überfälligen Aufgaben';
+
+  @override
+  String get taskFocusSwitchTitle => 'Fokus wechseln?';
+
+  @override
+  String taskFocusSwitchMessage(String task) {
+    return 'Die aktuelle Sitzung wird beendet. Fokus für „$task“ starten?';
+  }
+
+  @override
+  String get taskFocusSwitchConfirm => 'Wechseln';
+
+  @override
+  String get labelIcon => 'Etikett-Symbol';
+
+  @override
+  String get labelUpdateFailed =>
+      'Etikett konnte nicht aktualisiert werden. Bitte erneut versuchen.';
+
+  @override
+  String get labelNotFound => 'Etikett nicht gefunden';
+
+  @override
+  String get labelTasksSubtitle =>
+      'Aufgaben mit diesem Etikett aus allen Projekten';
+
+  @override
+  String labelIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'tag': 'Etikett',
+      'bookmark': 'Lesezeichen',
+      'flag': 'Flagge',
+      'bolt': 'Bolzen',
+      'lightbulb': 'Glühbirne',
+      'clock': 'Uhr',
+      'bell': 'Glocke',
+      'pin': 'Stecknadel',
+      'phone': 'Telefon',
+      'mail': 'Brief',
+      'link': 'Link',
+      'wrench': 'Schraubenschlüssel',
+      'other': 'Etikett',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get addSubproject => 'Unterprojekt erstellen';
+
+  @override
+  String get moveProject => 'Projekt verschieben';
+
+  @override
+  String get projectTopLevel => 'Oberste Ebene';
+
+  @override
+  String get projectMoveUp => 'Nach oben';
+
+  @override
+  String get projectMoveDown => 'Nach unten';
+
+  @override
+  String projectParentName(String name) {
+    return 'Übergeordnetes Projekt: $name';
+  }
+
+  @override
+  String deleteProjectWithChildrenConfirmation(String name) {
+    return '„$name“ löschen? Unterprojekte werden eine Ebene höher verschoben. Nur Aufgaben dieses Projekts werden in den Eingang verschoben.';
+  }
+
+  @override
+  String get accountNickname => 'Spitzname';
+
+  @override
+  String get accountChangeNickname => 'Spitznamen ändern';
+
+  @override
+  String get accountNicknameSaveError =>
+      'Der Spitzname konnte nicht gespeichert werden. Bitte versuche es erneut.';
+
+  @override
+  String get notificationTaskStarting => 'Aufgabe beginnt';
+
+  @override
+  String get notificationReturnTitle => 'Deine Tomate vermisst dich';
+
+  @override
+  String get notificationReturnBody =>
+      'Eine Fokuseinheit oder ein Häkchen reicht, damit sich der Tag lohnt.';
+
+  @override
+  String get notificationFocusChannel => 'Fokus';
+
+  @override
+  String get notificationFocusDescription =>
+      'Benachrichtigungen zum Abschluss von Fokusintervallen';
+
+  @override
+  String get notificationReturnChannel => 'Rückkehrerinnerungen';
+
+  @override
+  String get notificationReturnDescription =>
+      'Sanfte Erinnerungen, zu Pomodoist zurückzukehren';
+
+  @override
+  String get notificationTaskChannel => 'Aufgabenbeginn';
+
+  @override
+  String get notificationTaskDescription =>
+      'Benachrichtigungen zum Aufgabenbeginn';
+
+  @override
+  String get notificationOpenApp => 'Pomodoist öffnen';
+
+  @override
+  String get notificationFocusCompleted => 'Fokusintervall abgeschlossen';
+
+  @override
+  String get notificationLongBreakCompleted => 'Lange Pause beendet';
+
+  @override
+  String get notificationBreakCompleted => 'Pause beendet';
+
+  @override
+  String get updateTitle => 'Pomodoist-Update';
+
+  @override
+  String get updateAction => 'Aktualisieren';
+
+  @override
+  String get updateCheck => 'Nach Updates suchen';
+
+  @override
+  String get updateSettings => 'Updates';
+
+  @override
+  String get updateReceiveRc => 'Release Candidates (RC) erhalten';
+
+  @override
+  String get updateStableChannel => 'Kanal: stabile Versionen';
+
+  @override
+  String get updateRcChannel => 'Kanal: stabile Versionen und RC';
+
+  @override
+  String get updateRcHelp =>
+      'RC-Versionen können Fehler enthalten. Alpha- und Betaversionen sind ausgeschlossen.';
+
+  @override
+  String get updateRestart =>
+      'Die App wird neu gestartet. Deine Daten bleiben erhalten.';
+
+  @override
+  String get updateNotes => 'Versionshinweise';
+
+  @override
+  String get updateOwnerManaged =>
+      'Dieser Build wird vom Betreiber aktualisiert, um die Serverkonfiguration zu erhalten. Bitte ihn um die neueste Version.';
+
+  @override
+  String get updateUnsupported =>
+      'Automatische Updates sind im offiziellen Linux-AppImage verfügbar. Nutze für andere Builds deinen Paketmanager.';
+
+  @override
+  String updateVersion(String value) {
+    return 'Version $value';
+  }
+
+  @override
+  String get updatePhaseIdle => 'Du kannst jederzeit nach Updates suchen.';
+
+  @override
+  String get updatePhaseChecking => 'Versionen werden geprüft…';
+
+  @override
+  String get updatePhaseAvailable => 'Eine neue Version ist verfügbar';
+
+  @override
+  String get updatePhaseDownloading => 'Update wird heruntergeladen…';
+
+  @override
+  String get updatePhaseVerifying => 'Integrität wird geprüft…';
+
+  @override
+  String get updatePhaseInstalling =>
+      'Installation und Neustart werden vorbereitet…';
+
+  @override
+  String get updatePhaseUpToDate => 'Du hast die neueste kompatible Version.';
+
+  @override
+  String get updatePhaseFailed =>
+      'Das Update konnte nicht abgeschlossen werden';
+
+  @override
+  String achievementFocusSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Schließe $count Arbeitsfokusse ab',
+      one: 'Schließe 1 Arbeitsfokus ab',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String achievementTaskSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Schließe $count Aufgaben ab',
+      one: 'Schließe 1 Aufgabe ab',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get achievementDayNotWastedSubtitle =>
+      'Schließe einen Fokus und eine Aufgabe an einem Tag ab';
+
+  @override
+  String get achievementFocusPlusCheckSubtitle =>
+      'Schließe 3 Fokusse und 3 Aufgaben an einem Tag ab';
+
+  @override
+  String get achievementNoFussSubtitle =>
+      'Schließe 5 Fokusse an einem Tag ohne Abbruch ab';
+
+  @override
+  String get achievementCleanEntrySubtitle =>
+      'Schließe eine Aufgabe nach dem zugehörigen Fokus ab';
+
+  @override
+  String get achievementTomatoClosedSubtitle =>
+      'Schließe eine Aufgabe am Tag ihres Arbeitsfokus ab';
+
+  @override
+  String achievementTitle(String id) {
+    String _temp0 = intl.Intl.selectLogic(id, {
+      'focus_1': 'Erste Tomate',
+      'focus_5': 'Aufwärmen',
+      'focus_10': 'Fokus gefunden',
+      'focus_25': 'Tomatenschicht',
+      'focus_50': 'Modus an',
+      'focus_100': 'Roter Gürtel',
+      'focus_250': 'Tiefe Wurzeln',
+      'focus_500': 'Timer-Autorität',
+      'focus_1000': 'Tausendste Tomate',
+      'focus_5000': 'Fokusfarmer',
+      'focus_10000': 'Aufmerksamkeitsplantage',
+      'focus_50000': 'Tomatenimperium',
+      'focus_100000': 'Rotes Superhirn',
+      'focus_1000000': 'Tomatensingularität',
+      'task_1': 'Erstes Häkchen',
+      'task_5': 'Die Liste wackelt',
+      'task_10': 'Glückliches Kästchen',
+      'task_25': 'Den Stapel abarbeiten',
+      'task_50': 'Häkchenmeister',
+      'task_100': 'Lose Enden erledigt',
+      'task_250': 'Liste unter Kontrolle',
+      'task_500': 'Büro-Knockout',
+      'task_1000': 'Tausend Häkchen',
+      'task_5000': 'Siegesarchivar',
+      'task_10000': 'Häkchenmaschine',
+      'task_50000': 'Büro erledigter Fragen',
+      'task_100000': 'Herrscher der Listen',
+      'task_1000000': 'Letztes Häkchen',
+      'combo_day_not_wasted': 'Kein verlorener Tag',
+      'combo_focus_plus_check': 'Fokus + Häkchen',
+      'combo_no_fuss': 'Ohne Hektik',
+      'combo_clean_entry': 'Sauberer Start',
+      'combo_tomato_closed_question': 'Tomate hat es erledigt',
+      'other': 'Erfolg',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get focusPresetDeepWork => 'Konzentriertes Arbeiten';
+
+  @override
+  String get focusPresetShortSprint => 'Kurzer Sprint';
+
+  @override
+  String csvImportIssueRow(int row, String message) {
+    return 'Zeile $row: $message';
+  }
+
+  @override
+  String csvImportIssueMessage(String code, String value) {
+    String _temp0 = intl.Intl.selectLogic(code, {
+      'fileTooLarge': 'Die CSV-Datei überschreitet 16 MiB.',
+      'invalidUtf8': 'CSV muss gültiges UTF-8 sein.',
+      'missingHeader': 'Die CSV-Kopfzeile fehlt.',
+      'malformed': 'Ungültiges CSV-Format.',
+      'unknownHeader': 'Unbekannte Kopfzeile „$value“.',
+      'duplicateHeader': 'Doppelte Kopfzeile „$value“.',
+      'contentHeaderRequired': 'Die Kopfzeile content ist erforderlich.',
+      'tooManyTasks': 'CSV darf höchstens 1000 Aufgaben enthalten.',
+      'tooManyFields': 'Die Zeile hat mehr Felder als die Kopfzeile.',
+      'contentRequired': 'content ist erforderlich.',
+      'invalidPriority': 'priority muss eine ganze Zahl von 1 bis 4 sein.',
+      'invalidDate': '$value muss YYYY-MM-DD verwenden.',
+      'mixedSchedule':
+          'Fälligkeitsdatum und zeitgebundener Termin sind nicht kombinierbar.',
+      'timedFieldsRequired':
+          'Ein zeitgebundener Termin erfordert start_at, end_at und time_zone.',
+      'invalidTimestamp': '$value muss RFC3339 mit explizitem UTC-Offset sein.',
+      'invalidTimeZone': 'time_zone muss ein gültiger IANA-Name sein.',
+      'endBeforeStart': 'end_at muss nach start_at liegen.',
+      'invalidRecurrence': 'recurrence muss day, week oder month sein.',
+      'invalidInteger': '$value muss eine ganze Zahl von 1 bis 999 sein.',
+      'intervalWithoutRecurrence': 'recurrence_interval erfordert recurrence.',
+      'recurrenceWithoutSchedule': 'recurrence erfordert einen Termin.',
+      'doneTask': 'Erledigte Aufgaben können nicht importiert werden.',
+      'invalidKey': '$value hat ein ungültiges Format.',
+      'empty': 'CSV enthält keine Aufgaben.',
+      'duplicateKey': 'Doppelter Schlüssel „$value“.',
+      'parentCycle': 'parent_key-Verweise bilden einen Zyklus.',
+      'missingParent': 'parent_key „$value“ existiert nicht.',
+      'childProject':
+          'Eine Unteraufgabe muss zum selben Projekt wie ihre übergeordnete Aufgabe gehören.',
+      'other': 'Die Datei konnte nicht importiert werden.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String billingOfferDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Tage',
+      one: '1 Tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String billingOfferMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Monate',
+      one: '1 Monat',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String billingOfferYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Jahre',
+      one: '1 Jahr',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String billingTrialFree(String duration) {
+    return '$duration kostenlos';
+  }
+
+  @override
+  String billingTrialRenewal(String price) {
+    return 'Danach $price. Automatische Verlängerung, sofern nicht gekündigt.';
+  }
+
+  @override
+  String get billingReturnBadge => 'Zurück zu Pro';
+
+  @override
+  String billingReturnSubtitle(String duration, String price) {
+    return 'Für $duration, danach $price. Automatische Verlängerung, sofern nicht gekündigt.';
+  }
+
+  @override
+  String billingReturnPending(String date) {
+    return 'Dein Rabatt ist bis $date reserviert. Bei einem Kaufabbruch kannst du es danach erneut versuchen.';
+  }
+
+  @override
+  String get billingReturnFailed =>
+      'Dein Rückkehrangebot konnte nicht geprüft werden. Versuche es erneut.';
+
+  @override
+  String get billingTryFree => 'Gratis testen';
+
+  @override
+  String get collaborationShareProject => 'Projekt teilen';
+
+  @override
+  String get collaborationShareIntro =>
+      'Laden Sie Personen ein, gemeinsam an diesem Projekt zu arbeiten. Mitglieder können bearbeiten, Beobachter nur ansehen.';
+
+  @override
+  String get collaborationShareStart => 'Teilen';
+
+  @override
+  String get collaborationShareInProgress =>
+      'Teilen… letzte Änderungen werden synchronisiert';
+
+  @override
+  String get collaborationMembers => 'Mitglieder';
+
+  @override
+  String get collaborationPendingInvitations => 'Ausstehende Einladungen';
+
+  @override
+  String get collaborationRevoke => 'Widerrufen';
+
+  @override
+  String get collaborationPublicLink => 'Öffentlicher Link';
+
+  @override
+  String get collaborationPublicLinkHint =>
+      'Jeder mit dem Link kann dieses Projekt ansehen';
+
+  @override
+  String get collaborationCopyLink => 'Link kopieren';
+
+  @override
+  String get collaborationConflicts => 'Synchronisierungskonflikte';
+
+  @override
+  String get collaborationLeaveProject => 'Projekt verlassen';
+
+  @override
+  String get collaborationDeleteSharedProject => 'Für alle löschen';
+
+  @override
+  String get collaborationMakePrivate => 'Privat machen';
+
+  @override
+  String get collaborationOwner => 'Eigentümer';
+
+  @override
+  String get collaborationTransferOwnership => 'Eigentum übertragen';
+
+  @override
+  String get collaborationRemoveMember => 'Mitglied entfernen';
+
+  @override
+  String get collaborationEmail => 'E-Mail';
+
+  @override
+  String get collaborationInvite => 'Einladen';
+
+  @override
+  String get collaborationConflictHint =>
+      'Ein anderes Mitglied hat dieses Element ebenfalls geändert';
+
+  @override
+  String get collaborationConflictKeepLocal => 'Meine Version behalten';
+
+  @override
+  String get collaborationConflictUseServer => 'Serverversion';
+
+  @override
+  String get collaborationProjectShared => 'Projekt geteilt';
+
+  @override
+  String get collaborationInviteEmailFailed =>
+      'Einladung gespeichert, aber die E-Mail konnte nicht gesendet werden';
+
+  @override
+  String collaborationInviteSent(String email) {
+    return 'Einladung an $email gesendet';
+  }
+
+  @override
+  String get collaborationInvitationRevoked => 'Einladung widerrufen';
+
+  @override
+  String get collaborationRoleUpdated => 'Rolle aktualisiert';
+
+  @override
+  String collaborationRemoveConfirm(String name) {
+    return '$name aus diesem Projekt entfernen?';
+  }
+
+  @override
+  String get collaborationMemberRemoved => 'Mitglied entfernt';
+
+  @override
+  String collaborationTransferConfirm(String name) {
+    return '$name zum Eigentümer dieses Projekts machen?';
+  }
+
+  @override
+  String get collaborationOwnershipTransferred => 'Eigentum übertragen';
+
+  @override
+  String get collaborationLeaveConfirm => 'Dieses geteilte Projekt verlassen?';
+
+  @override
+  String get collaborationLeftProject => 'Sie haben das Projekt verlassen';
+
+  @override
+  String get collaborationDeleteSharedConfirm =>
+      'Dieses geteilte Projekt für alle Mitglieder löschen? Das kann nicht rückgängig gemacht werden.';
+
+  @override
+  String get collaborationSharedProjectDeleted => 'Geteiltes Projekt gelöscht';
+
+  @override
+  String get collaborationMakePrivateConfirm =>
+      'Dieses Projekt nicht mehr teilen?';
+
+  @override
+  String get collaborationMakePrivateDescription =>
+      'Das Projekt und seine Inhalte kehren in Ihr persönliches Konto zurück. Andere Teilnehmer verlieren sofort den Zugriff.';
+
+  @override
+  String get collaborationProjectMadePrivate => 'Projekt ist wieder privat';
+
+  @override
+  String get collaborationLinkCopied => 'Link kopiert';
+
+  @override
+  String get collaborationConflictResolved => 'Konflikt gelöst';
+
+  @override
+  String get collaborationRoleAdministrator => 'Administrator';
+
+  @override
+  String get collaborationRoleMember => 'Mitglied';
+
+  @override
+  String get collaborationRoleObserver => 'Beobachter';
+
+  @override
+  String get collaborationForbidden => 'Sie haben keine Berechtigung dafür';
+
+  @override
+  String get collaborationSignedOut =>
+      'Melden Sie sich an, um geteilte Projekte zu nutzen';
+
+  @override
+  String get collaborationUnavailable =>
+      'Gemeinsame Projekte sind derzeit nicht verfügbar';
+
+  @override
+  String get collaborationError =>
+      'Etwas ist schiefgelaufen. Versuchen Sie es erneut';
+
+  @override
+  String get collaborationSyncPending =>
+      'Schließen Sie die Synchronisierung dieses Projekts vor dem Teilen ab';
+
+  @override
+  String get collaborationMemberFallback => 'Mitglied';
+
+  @override
+  String get collaborationInboxTitle => 'Geteilte Projekte & Einladungen';
+
+  @override
+  String get collaborationInboxSubtitle =>
+      'Einladungen annehmen und Aktivitäten geteilter Projekte verfolgen';
+
+  @override
+  String get collaborationInvitations => 'Einladungen';
+
+  @override
+  String get collaborationNoInvitations => 'Keine ausstehenden Einladungen';
+
+  @override
+  String get collaborationAccept => 'Annehmen';
+
+  @override
+  String get collaborationNotifications => 'Benachrichtigungen';
+
+  @override
+  String get collaborationMarkAllRead => 'Alle als gelesen markieren';
+
+  @override
+  String get collaborationNoNotifications => 'Keine Benachrichtigungen';
+
+  @override
+  String get collaborationNotificationInvitation =>
+      'Einladung zu einem geteilten Projekt';
+
+  @override
+  String get collaborationNotificationDiscussion =>
+      'Neuer Kommentar in einem geteilten Projekt';
+
+  @override
+  String get collaborationNotificationAssignment =>
+      'Ihnen wurde eine Aufgabe zugewiesen';
+
+  @override
+  String get collaborationNotificationGeneric =>
+      'Aktivität in geteilten Projekten';
+
+  @override
+  String get collaborationInvitationAccepted => 'Einladung angenommen';
+
+  @override
+  String get collaborationAssignees => 'Zugewiesene';
+
+  @override
+  String get collaborationEditAssignees => 'Zugewiesene bearbeiten';
+
+  @override
+  String get collaborationNoAssignees => 'Keine Zugewiesenen';
+
+  @override
+  String get collaborationComments => 'Kommentare';
+
+  @override
+  String get collaborationCommentHint => 'Kommentar schreiben';
+
+  @override
+  String get collaborationCommentSend => 'Senden';
+
+  @override
+  String get collaborationCommentDelete => 'Kommentar löschen';
+
+  @override
+  String get collaborationSharedBadge => 'Geteiltes Projekt';
+
+  @override
+  String get collaborationJoinTitle => 'Projekteinladung';
+
+  @override
+  String get collaborationJoinDescription =>
+      'Sie wurden eingeladen, einem geteilten Projekt beizutreten. Nehmen Sie die Einladung an, um es Ihren Projekten hinzuzufügen.';
+
+  @override
+  String get collaborationJoinRole => 'Ihre Rolle';
+
+  @override
+  String get collaborationJoinAccept => 'Einladung annehmen';
+
+  @override
+  String get collaborationJoinOpenProject => 'Projekt öffnen';
+
+  @override
+  String get collaborationJoinInvalid => 'Dieser Einladungslink ist ungültig';
+
+  @override
+  String get collaborationJoinUnavailable =>
+      'Diese Einladung ist für Ihr Konto nicht mehr verfügbar';
+
+  @override
+  String get collaborationPublicNotice =>
+      'Schreibgeschützte Ansicht, geteilt von einem Pomodoist-Mitglied';
+
+  @override
+  String get collaborationPublicUnavailable =>
+      'Dieser geteilte Link ist nicht mehr verfügbar';
+
+  @override
+  String get collaborationPublicEmpty => 'Es wurde noch nichts geteilt';
+
+  @override
+  String get collaborationPublicOpen => 'Pomodoist öffnen';
+
+  @override
+  String get collaborationPublicTasks => 'Aufgaben';
+}

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/tasks/presentation/widgets/voice_panel_motion.dart';
+import 'package:pomodoist/ui/tasks/widgets/voice_panel_motion.dart';
 
 void main() {
   test('panel swipes require deliberate vertical movement and fire once', () {

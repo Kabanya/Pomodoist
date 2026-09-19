@@ -1,5 +1,6 @@
+import 'package:pomodoist/domain/models/account/email_auth.dart';
+import 'package:pomodoist/data/services/auth/email_auth_service.dart';
 import 'package:app_account/app_account.dart';
-import 'package:pomodoist/app/auth/email_auth.dart';
 
 /// UI tests control the auth boundary; email_auth_test covers the GoTrue adapter.
 class AccountEmailAuth extends EmailAuthController {

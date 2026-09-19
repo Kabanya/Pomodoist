@@ -1,0 +1,650 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
+
+import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/focus/view_models/focus_view_model.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/ui/core/themes/theme_background.dart';
+import 'package:pomodoist/ui/core/widgets/action_feedback.dart';
+import 'package:pomodoist/ui/core/widgets/resizable_dialog.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/ui/focus/widgets/focus_stage.dart';
+import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
+
+class FocusScreen extends ConsumerStatefulWidget {
+  const FocusScreen({this.embedded = false, this.fixedViewMode, super.key});
+
+  final bool embedded;
+  final FocusViewMode? fixedViewMode;
+
+  @override
+  ConsumerState<FocusScreen> createState() => _FocusScreenState();
+}
+
+class _FocusScreenState extends ConsumerState<FocusScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(focusViewModelProvider);
+    final run = state.run;
+    final interval = state.interval;
+    final presets = state.presets;
+    final intervals = state.intervals;
+    final remaining = state.remaining;
+    final viewMode = widget.fixedViewMode ?? state.viewMode;
+    final timerVisualStyle = state.timerVisualStyle;
+    final effectivePreset = state.effectivePreset;
+    final activePreset = state.activePreset;
+    final loading = state.loading;
+    final loadError = state.loadError;
+    final viewModel = ref.read(focusViewModelProvider.notifier);
+    final actions = FocusStageActions(
+      startReadyInterval: viewModel.startReadyInterval,
+      pauseActiveInterval: viewModel.pauseActiveInterval,
+      resumeActiveInterval: viewModel.resumeActiveInterval,
+      completeActiveInterval: viewModel.completeActiveInterval,
+      skipActiveInterval: viewModel.skipActiveInterval,
+      stopActiveRun: viewModel.stopActiveRun,
+    );
+
+    final content = LayoutBuilder(
+      builder: (context, constraints) {
+        final desktop = constraints.maxWidth >= 720;
+        final stage = Align(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 920),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const _FocusHeader(),
+                SizedBox(height: desktop ? 24 : 20),
+                loadError != null
+                    ? _FocusLoadError(error: loadError)
+                    : loading
+                    ? const _FocusLoading()
+                    : run == null && interval == null
+                    ? FocusIdleStage(
+                        presets: presets,
+                        selectedPreset: effectivePreset,
+                        timerVisualStyle: timerVisualStyle,
+                        compact: !desktop,
+                        viewMode: viewMode,
+                        showViewModeMenu: widget.fixedViewMode == null,
+                        onViewModeChanged: _setViewMode,
+                        onPresetSelected: _selectPreset,
+                        onStart: effectivePreset == null
+                            ? null
+                            : () => _startFocus(effectivePreset),
+                        onCustomize: effectivePreset == null
+                            ? null
+                            : () => _showPresetDialog(effectivePreset, presets),
+                        onCreate: () => _showPresetDialog(null, presets),
+                      )
+                    : run == null ||
+                          interval == null ||
+                          interval.runId != run.id ||
+                          remaining == null
+                    ? const _FocusTransition()
+                    : FocusActiveStage(
+                        run: run,
+                        interval: interval,
+                        intervals: intervals,
+                        remaining: remaining,
+                        presets: presets,
+                        selectedPreset: activePreset,
+                        timerVisualStyle: timerVisualStyle,
+                        compact: !desktop,
+                        viewMode: viewMode,
+                        showViewModeMenu: widget.fixedViewMode == null,
+                        actions: actions,
+                        onViewModeChanged: _setViewMode,
+                        onPresetChanged: (presetId) =>
+                            _changeActiveRunPreset(run, presetId),
+                        onCustomizePreset: (preset) =>
+                            _showPresetDialog(preset, presets),
+                        onCreatePreset: () => _showPresetDialog(
+                          null,
+                          presets,
+                          onCreated: (id) => _changeActiveRunPreset(run, id),
+                        ),
+                      ),
+              ],
+            ),
+          ),
+        );
+        if (widget.embedded) {
+          return KeyedSubtree(
+            key: Key(desktop ? 'focus-layout-desktop' : 'focus-layout-compact'),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                desktop ? 32 : 16,
+                desktop ? 28 : 18,
+                desktop ? 32 : 16,
+                32,
+              ),
+              child: stage,
+            ),
+          );
+        }
+        return KeyedSubtree(
+          key: Key(desktop ? 'focus-layout-desktop' : 'focus-layout-compact'),
+          child: ListView(
+            key: const Key('focus-stage-scroll'),
+            padding: EdgeInsets.fromLTRB(
+              desktop ? 32 : 16,
+              desktop ? 28 : 18,
+              desktop ? 32 : 16,
+              32,
+            ),
+            children: [stage],
+          ),
+        );
+      },
+    );
+    if (widget.embedded) {
+      return content;
+    }
+    return Material(
+      color: ThemeBackground.hasBackdrop(context)
+          ? Colors.transparent
+          : context.appColors.canvas,
+      child: SafeArea(child: content),
+    );
+  }
+
+  Future<void> _showPresetDialog(
+    FocusPresetItem? preset,
+    List<FocusPresetItem> presets, {
+    ValueChanged<String>? onCreated,
+  }) async {
+    final result = await showDialog<_PresetDialogResult>(
+      context: context,
+      builder: (context) => _PresetFormDialog(preset: preset, presets: presets),
+    );
+    if (result == null) {
+      return;
+    }
+
+    final repository = ref.read(focusViewModelProvider.notifier);
+    switch (result.action) {
+      case _PresetDialogAction.save:
+        final data = result.data!;
+        if (preset == null) {
+          final id = await repository.createPreset(data.toCreateInput());
+          if (mounted) {
+            (onCreated ?? _selectPreset)(id);
+          }
+        } else {
+          await repository.updatePreset(preset.id, data.toUpdateInput());
+        }
+      case _PresetDialogAction.delete:
+        if (preset != null) {
+          await repository.deletePreset(preset.id);
+          if (!mounted) {
+            return;
+          }
+        }
+      case _PresetDialogAction.setDefault:
+        if (preset != null) {
+          await repository.setDefaultPreset(preset.id);
+        }
+    }
+  }
+
+  Future<void> _startFocus(FocusPresetItem preset) async {
+    try {
+      await ref.read(focusViewModelProvider.notifier).startFocus(preset);
+    } catch (_) {
+      if (mounted) {
+        showActionFeedback(
+          context,
+          message: context.l10n.focusActionFailed,
+          icon: LucideIcons.circleAlert,
+          sound: ActionFeedbackSound.none,
+          haptic: AppHapticCue.none,
+        );
+      }
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+    showActionFeedback(
+      context,
+      message: context.l10n.focusStarted,
+      icon: LucideIcons.circlePlay,
+      haptic: AppHapticCue.none,
+    );
+  }
+
+  void _selectPreset(String id) =>
+      ref.read(focusViewModelProvider.notifier).selectPreset(id);
+  void _setViewMode(FocusViewMode mode) =>
+      ref.read(focusViewModelProvider.notifier).setViewMode(mode);
+  void _changeActiveRunPreset(FocusRunItem run, String presetId) {
+    unawaited(
+      ref
+          .read(focusViewModelProvider.notifier)
+          .changeActiveRunPreset(run, presetId),
+    );
+  }
+}
+
+class _FocusLoading extends StatelessWidget {
+  const _FocusLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 80),
+        child: CircularProgressIndicator(key: Key('focus-loading')),
+      ),
+    );
+  }
+}
+
+class _FocusLoadError extends StatelessWidget {
+  const _FocusLoadError({required this.error});
+
+  final Object error;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
+        child: Text(
+          context.l10n.focusLoadError(error),
+          key: const Key('focus-load-error'),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
+
+class _FocusTransition extends StatelessWidget {
+  const _FocusTransition();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      key: const Key('focus-state-transition'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 80),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox.square(
+              dimension: 28,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
+            const SizedBox(height: 16),
+            Text(context.l10n.preparingFocus),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FocusHeader extends StatelessWidget {
+  const _FocusHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      key: const Key('focus-heading'),
+      header: true,
+      child: Text(
+        context.l10n.focusTitle,
+        style: Theme.of(context).textTheme.headlineMedium,
+      ),
+    );
+  }
+}
+
+class _PresetFormDialog extends StatefulWidget {
+  const _PresetFormDialog({required this.preset, required this.presets});
+
+  final FocusPresetItem? preset;
+  final List<FocusPresetItem> presets;
+
+  @override
+  State<_PresetFormDialog> createState() => _PresetFormDialogState();
+}
+
+class _PresetFormDialogState extends State<_PresetFormDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nameController;
+  late final TextEditingController _workController;
+  late final TextEditingController _shortBreakController;
+  late final TextEditingController _longBreakController;
+  late final TextEditingController _cadenceController;
+  late bool _autoStartBreaks;
+  late bool _autoStartWork;
+  late bool _allowPause;
+  late bool _strictMode;
+
+  @override
+  void initState() {
+    super.initState();
+    final preset = widget.preset;
+    _nameController = TextEditingController(text: preset?.name ?? '');
+    _workController = TextEditingController(
+      text: _minutesText(preset?.workSeconds ?? 25 * 60),
+    );
+    _shortBreakController = TextEditingController(
+      text: _minutesText(preset?.shortBreakSeconds ?? 5 * 60),
+    );
+    _longBreakController = TextEditingController(
+      text: _minutesText(preset?.longBreakSeconds ?? 15 * 60),
+    );
+    _cadenceController = TextEditingController(
+      text: '${preset?.intervalsBeforeLongBreak ?? 4}',
+    );
+    _autoStartBreaks = preset?.autoStartBreaks ?? false;
+    _autoStartWork = preset?.autoStartWork ?? false;
+    _allowPause = preset?.allowPause ?? true;
+    _strictMode = preset?.strictMode ?? false;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _workController.dispose();
+    _shortBreakController.dispose();
+    _longBreakController.dispose();
+    _cadenceController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final preset = widget.preset;
+    return ResizableDialog(
+      title: Text(preset == null ? l10n.newPreset : l10n.customizePreset),
+      initialSize: const Size(680, 620),
+      minSize: const Size(360, 420),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              key: const Key('preset-name-field'),
+              controller: _nameController,
+              decoration: InputDecoration(
+                labelText: l10n.name,
+                prefixIcon: const Icon(LucideIcons.tag),
+              ),
+              textInputAction: TextInputAction.next,
+              validator: _validateName,
+            ),
+            const SizedBox(height: 12),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final twoColumns = constraints.maxWidth >= 440;
+                final fieldWidth = twoColumns
+                    ? (constraints.maxWidth - 12) / 2
+                    : constraints.maxWidth;
+
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    SizedBox(
+                      width: fieldWidth,
+                      child: _MinutesField(
+                        fieldKey: const Key('preset-work-minutes-field'),
+                        controller: _workController,
+                        label: l10n.workField,
+                      ),
+                    ),
+                    SizedBox(
+                      width: fieldWidth,
+                      child: _MinutesField(
+                        fieldKey: const Key('preset-short-break-minutes-field'),
+                        controller: _shortBreakController,
+                        label: l10n.shortField,
+                      ),
+                    ),
+                    SizedBox(
+                      width: fieldWidth,
+                      child: _MinutesField(
+                        fieldKey: const Key('preset-long-break-minutes-field'),
+                        controller: _longBreakController,
+                        label: l10n.longField,
+                      ),
+                    ),
+                    SizedBox(
+                      width: fieldWidth,
+                      child: TextFormField(
+                        key: const Key('preset-cadence-field'),
+                        controller: _cadenceController,
+                        style: AppTheme.monoTextStyle,
+                        decoration: InputDecoration(
+                          labelText: l10n.every,
+                          suffixText: l10n.work,
+                        ),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        validator: (value) =>
+                            _validateRange(value, min: 1, max: 12),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _autoStartBreaks,
+              onChanged: (value) => setState(() => _autoStartBreaks = value),
+              title: Text(l10n.autoStartBreaks),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _autoStartWork,
+              onChanged: (value) => setState(() => _autoStartWork = value),
+              title: Text(l10n.autoStartWork),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _allowPause,
+              onChanged: (value) => setState(() => _allowPause = value),
+              title: Text(l10n.allowPause),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _strictMode,
+              onChanged: (value) => setState(() => _strictMode = value),
+              title: Text(l10n.strictMode),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        if (preset != null && !preset.isDefault)
+          ShadButton.ghost(
+            onPressed: () =>
+                Navigator.of(context).pop(const _PresetDialogResult.delete()),
+            child: Text(l10n.commonDelete),
+          ),
+        if (preset != null && !preset.isDefault)
+          ShadButton.ghost(
+            onPressed: () => Navigator.of(
+              context,
+            ).pop(const _PresetDialogResult.setDefault()),
+            child: Text(l10n.makeDefault),
+          ),
+        ShadButton.ghost(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.commonCancel),
+        ),
+        ShadButton(
+          key: const Key('preset-save-button'),
+          onPressed: _save,
+          child: Text(l10n.commonSave),
+        ),
+      ],
+    );
+  }
+
+  void _save() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    Navigator.of(context).pop(
+      _PresetDialogResult.save(
+        _PresetFormData(
+          name: _nameController.text.trim(),
+          workSeconds: _parseMinutes(_workController) * 60,
+          shortBreakSeconds: _parseMinutes(_shortBreakController) * 60,
+          longBreakSeconds: _parseMinutes(_longBreakController) * 60,
+          intervalsBeforeLongBreak: int.parse(_cadenceController.text),
+          autoStartBreaks: _autoStartBreaks,
+          autoStartWork: _autoStartWork,
+          allowPause: _allowPause,
+          strictMode: _strictMode,
+        ),
+      ),
+    );
+  }
+
+  String? _validateName(String? value) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return context.l10n.nameRequired;
+    }
+    final duplicate = widget.presets.any(
+      (preset) =>
+          preset.id != widget.preset?.id &&
+          preset.name.trim().toLowerCase() == trimmed.toLowerCase(),
+    );
+    if (duplicate) {
+      return context.l10n.nameMustBeUnique;
+    }
+    return null;
+  }
+
+  static String? _validateRange(
+    String? value, {
+    required int min,
+    required int max,
+  }) {
+    final parsed = int.tryParse(value ?? '');
+    if (parsed == null || parsed < min || parsed > max) {
+      return '$min-$max';
+    }
+    return null;
+  }
+
+  static int _parseMinutes(TextEditingController controller) {
+    return int.parse(controller.text);
+  }
+
+  static String _minutesText(int seconds) => '${(seconds / 60).round()}';
+}
+
+class _MinutesField extends StatelessWidget {
+  const _MinutesField({
+    required this.fieldKey,
+    required this.controller,
+    required this.label,
+  });
+
+  final Key fieldKey;
+  final TextEditingController controller;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      key: fieldKey,
+      controller: controller,
+      style: AppTheme.monoTextStyle,
+      decoration: InputDecoration(
+        labelText: label,
+        suffixText: context.l10n.minutesSuffix,
+      ),
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      validator: (value) =>
+          _PresetFormDialogState._validateRange(value, min: 1, max: 180),
+    );
+  }
+}
+
+enum _PresetDialogAction { save, delete, setDefault }
+
+class _PresetDialogResult {
+  const _PresetDialogResult._(this.action, this.data);
+
+  const _PresetDialogResult.save(_PresetFormData data)
+    : this._(_PresetDialogAction.save, data);
+
+  const _PresetDialogResult.delete() : this._(_PresetDialogAction.delete, null);
+
+  const _PresetDialogResult.setDefault()
+    : this._(_PresetDialogAction.setDefault, null);
+
+  final _PresetDialogAction action;
+  final _PresetFormData? data;
+}
+
+class _PresetFormData {
+  const _PresetFormData({
+    required this.name,
+    required this.workSeconds,
+    required this.shortBreakSeconds,
+    required this.longBreakSeconds,
+    required this.intervalsBeforeLongBreak,
+    required this.autoStartBreaks,
+    required this.autoStartWork,
+    required this.allowPause,
+    required this.strictMode,
+  });
+
+  final String name;
+  final int workSeconds;
+  final int shortBreakSeconds;
+  final int longBreakSeconds;
+  final int intervalsBeforeLongBreak;
+  final bool autoStartBreaks;
+  final bool autoStartWork;
+  final bool allowPause;
+  final bool strictMode;
+
+  CreateFocusPresetInput toCreateInput() => CreateFocusPresetInput(
+    name: name,
+    workSeconds: workSeconds,
+    shortBreakSeconds: shortBreakSeconds,
+    longBreakSeconds: longBreakSeconds,
+    intervalsBeforeLongBreak: intervalsBeforeLongBreak,
+    autoStartBreaks: autoStartBreaks,
+    autoStartWork: autoStartWork,
+    allowPause: allowPause,
+    strictMode: strictMode,
+  );
+
+  UpdateFocusPresetInput toUpdateInput() => UpdateFocusPresetInput(
+    name: name,
+    workSeconds: workSeconds,
+    shortBreakSeconds: shortBreakSeconds,
+    longBreakSeconds: longBreakSeconds,
+    intervalsBeforeLongBreak: intervalsBeforeLongBreak,
+    autoStartBreaks: autoStartBreaks,
+    autoStartWork: autoStartWork,
+    allowPause: allowPause,
+    strictMode: strictMode,
+  );
+}

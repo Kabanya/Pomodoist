@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('standalone registration remains CAPTCHA-aware', () async {
     final source = await File(
-      'lib/features/settings/presentation/register_screen.dart',
+      'lib/ui/settings/widgets/register_screen.dart',
     ).readAsString();
 
     expect(source, contains('CaptchaVerification('));
@@ -16,12 +16,12 @@ void main() {
     'CAPTCHA sources do not log or persist token and state values',
     () async {
       final files = [
-        'lib/app/auth/captcha_security.dart',
-        'lib/app/platform/native_captcha_broker_io.dart',
-        'lib/app/platform/native_link_coordinator_core.dart',
-        'lib/app/auth/turnstile_widget_web.dart',
-        'lib/features/settings/presentation/captcha_challenge_screen.dart',
-        'lib/features/settings/presentation/pomodoist_account_actions.dart',
+        'lib/domain/models/account/captcha_security.dart',
+        'lib/data/services/platform/native_captcha_broker_io.dart',
+        'lib/data/services/platform/native_link_coordinator_core.dart',
+        'lib/ui/auth/widgets/turnstile_widget_web.dart',
+        'lib/ui/settings/widgets/captcha_challenge_screen.dart',
+        'lib/ui/settings/widgets/pomodoist_account_actions.dart',
         'web/auth/challenge.html',
       ];
       final source = (await Future.wait(
@@ -76,7 +76,7 @@ void main() {
       contains('turnstile_origin=https://challenges.cloudflare.com'),
     );
     final widget = await File(
-      'lib/app/auth/turnstile_widget_web.dart',
+      'lib/ui/auth/widgets/turnstile_widget_web.dart',
     ).readAsString();
     expect(
       widget,
@@ -118,7 +118,7 @@ void main() {
 
   test('email auth dialog mounts and forwards Cloudflare CAPTCHA', () async {
     final source = await File(
-      'lib/features/settings/presentation/pomodoist_account_actions.dart',
+      'lib/ui/settings/widgets/pomodoist_account_actions.dart',
     ).readAsString();
 
     expect(source, contains('CaptchaVerification('));
@@ -128,8 +128,8 @@ void main() {
   test('remaining web CAPTCHA surfaces require a user-clicked retry', () async {
     final sources = await Future.wait(
       [
-        'lib/features/settings/presentation/captcha_challenge_screen.dart',
-        'lib/features/settings/presentation/register_screen.dart',
+        'lib/ui/settings/widgets/captcha_challenge_screen.dart',
+        'lib/ui/settings/widgets/register_screen.dart',
       ].map((path) => File(path).readAsString()),
     );
 
@@ -137,7 +137,7 @@ void main() {
       expect(source, contains('CaptchaVerification('));
     }
     final shared = await File(
-      'lib/app/auth/captcha_verification.dart',
+      'lib/ui/auth/widgets/captcha_verification.dart',
     ).readAsString();
     expect(shared, contains('authRetryVerification'));
     expect(shared, contains('controller.reset()'));
@@ -158,10 +158,10 @@ void main() {
 
   test('native challenge keeps callback transports in the client', () async {
     final broker = await File(
-      'lib/app/platform/native_captcha_broker_io.dart',
+      'lib/data/services/platform/native_captcha_broker_io.dart',
     ).readAsString();
     final config = await File(
-      'lib/app/auth/captcha_security.dart',
+      'lib/domain/models/account/captcha_security.dart',
     ).readAsString();
 
     expect(broker, contains("uri.scheme != 'pomodoist'"));
@@ -175,15 +175,15 @@ void main() {
     'iOS delegates all deep links to one early AppLinks coordinator',
     () async {
       final plist = await File('ios/Runner/Info.plist').readAsString();
-      final main = await File('lib/app/bootstrap.dart').readAsString();
+      final main = await File('lib/config/bootstrap.dart').readAsString();
       final accountProviders = await File(
-        'lib/app/config/account_providers.dart',
+        'lib/config/account_providers.dart',
       ).readAsString();
       final broker = await File(
-        'lib/app/platform/native_captcha_broker_io.dart',
+        'lib/data/services/platform/native_captcha_broker_io.dart',
       ).readAsString();
       final coordinator = await File(
-        'lib/app/platform/native_link_coordinator_core.dart',
+        'lib/data/services/platform/native_link_coordinator_core.dart',
       ).readAsString();
 
       expect(plist, contains('<key>FlutterDeepLinkingEnabled</key>'));
@@ -213,7 +213,7 @@ void main() {
     'Sentry drops challenge-route events, transactions, and breadcrumbs',
     () async {
       final source = await File(
-        'lib/app/config/sentry_observability.dart',
+        'lib/config/sentry_observability.dart',
       ).readAsString();
 
       expect(

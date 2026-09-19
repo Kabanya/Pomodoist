@@ -7,12 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/account_providers.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/features/billing/billing.dart';
-import 'package:pomodoist/features/settings/presentation/settings_screen.dart';
-import 'package:pomodoist/features/settings/presentation/settings_navigation.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/domain/models/account/account_overview.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_screen.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_navigation.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -278,7 +279,7 @@ Future<void> _updateSettingsAccount(
       ),
     ),
     accountOverviewProvider.overrideWith(
-      (ref) async => AccountOverview.empty(account.currentUserId!),
+      (ref) async => PomodoistAccountOverview.empty(account.currentUserId!),
     ),
     applePurchasesSupportedProvider.overrideWithValue(false),
     pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
@@ -339,7 +340,7 @@ Future<void> _pumpSettings(
         accountOverviewProvider.overrideWith(
           (ref) async => account.currentUserId == null
               ? null
-              : AccountOverview.empty(account.currentUserId!),
+              : PomodoistAccountOverview.empty(account.currentUserId!),
         ),
         applePurchasesSupportedProvider.overrideWithValue(false),
         pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),

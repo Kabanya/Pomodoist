@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/task_time.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/app/theme/app_theme_settings.dart';
+import 'package:pomodoist/domain/models/tasks/task_time.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/ui/settings/view_models/theme_settings_view_model.dart';
 
 void main() {
   test(

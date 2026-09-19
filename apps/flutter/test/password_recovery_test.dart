@@ -1,3 +1,6 @@
+import 'package:pomodoist/domain/models/account/password_recovery.dart';
+import 'package:pomodoist/data/repositories/account/password_recovery_repository.dart';
+import 'package:pomodoist/data/services/auth/password_recovery_service.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -5,8 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:pomodoist/app/auth/account_auth_feedback.dart';
-import 'package:pomodoist/app/auth/password_recovery.dart';
+import 'package:pomodoist/domain/models/account/account_auth_failure.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
@@ -21,7 +23,7 @@ void main() {
           allowedDuringSignIn = fixture.recovery.canSave;
         }
       });
-      fixture.recovery.attach(fixture.auth);
+      fixture.recovery.attach(fixture.service);
       await fixture.recover();
       await fixture.signIn();
       expect(allowedDuringSignIn, isFalse);
@@ -55,7 +57,7 @@ void main() {
     () async {
       final fixture = _Fixture(attach: false, pkce: true);
       addTearDown(fixture.dispose);
-      fixture.recovery.attach(fixture.auth);
+      fixture.recovery.attach(fixture.service);
       expect(
         await fixture.recovery.requestEmail(
           'person@example.com',
@@ -69,7 +71,7 @@ void main() {
       await fixture.auth.getSessionFromUrl(
         Uri.parse('pomodoist://login-callback?code=verified-code'),
       );
-      fixture.recovery.attach(fixture.auth);
+      fixture.recovery.attach(fixture.service);
       await pumpEventQueue();
       expect(fixture.recovery.canSave, isTrue);
       expect(
@@ -81,7 +83,7 @@ void main() {
 
   test('a callback that never verifies leaves a usable invalid-link state', () {
     fakeAsync((async) {
-      final controller = PasswordRecoveryController();
+      final controller = PasswordRecoveryRepository();
       controller.beginCallback();
       expect(controller.stage, PasswordRecoveryStage.checking);
       expect(controller.canSave, isFalse);
@@ -146,7 +148,7 @@ void main() {
       final fixture = _Fixture(attach: false);
       addTearDown(fixture.dispose);
       await fixture.recover();
-      fixture.recovery.attach(fixture.auth);
+      fixture.recovery.attach(fixture.service);
       await pumpEventQueue();
       expect(fixture.recovery.canSave, isTrue);
       expect(
@@ -409,14 +411,17 @@ class _Fixture {
       autoRefreshToken: false,
       httpClient: client,
     );
-    recovery = PasswordRecoveryController(
+    service = PasswordRecoveryService(
+      auth: auth,
       userEndpoint: Uri.parse('https://account.test/auth/v1/user'),
       httpClient: client,
     );
-    if (attach) recovery.attach(auth);
+    recovery = PasswordRecoveryRepository();
+    if (attach) recovery.attach(service);
   }
   late final GoTrueClient auth;
-  late final PasswordRecoveryController recovery;
+  late final PasswordRecoveryService service;
+  late final PasswordRecoveryRepository recovery;
   final updates = <String>[];
   final updateRequests = <http.Request>[];
   final emails = <(Map<String, dynamic>, String?)>[];
@@ -469,6 +474,7 @@ class _Fixture {
 
   Future<void> dispose() async {
     recovery.dispose();
+    service.dispose();
     auth.dispose();
   }
 }

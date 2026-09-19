@@ -22,14 +22,14 @@ consistent details, rather than larger elements or more effects.
 
 | Purpose | Source |
 |---|---|
-| Palette, typography, Material and Shadcn themes | [app_theme.dart](../apps/flutter/lib/app/theme/app_theme.dart) |
-| Built-in themes, local copies, selection and live preview | [app_theme_settings.dart](../apps/flutter/lib/app/theme/app_theme_settings.dart) |
-| Shared durations, curve, and Reduce Motion | [app_motion.dart](../apps/flutter/lib/app/theme/app_motion.dart) |
-| Main application integration | [app.dart](../apps/flutter/lib/app/app.dart) |
-| Separate Quick Add window integration | [global_quick_add_window.dart](../apps/flutter/lib/app/global_quick_add_window.dart) |
-| Task row events and effects | [task_motion.dart](../apps/flutter/lib/features/tasks/presentation/widgets/task_motion.dart) |
-| Voice panel motion | [voice_panel_motion.dart](../apps/flutter/lib/features/tasks/presentation/widgets/voice_panel_motion.dart) |
-| Focus completion | [focus_completion_celebration.dart](../apps/flutter/lib/features/focus/presentation/focus_completion_celebration.dart) |
+| Palette, typography, Material and Shadcn themes | [app_theme.dart](../apps/flutter/lib/ui/core/themes/app_theme.dart) |
+| Built-in themes, local copies, selection and live preview | [app_theme_settings.dart](../apps/flutter/lib/ui/core/themes/app_theme_settings.dart) |
+| Shared durations, curve, and Reduce Motion | [app_motion.dart](../apps/flutter/lib/ui/core/themes/app_motion.dart) |
+| Main application integration | [app.dart](../apps/flutter/lib/ui/core/widgets/pomodoist_app.dart) |
+| Separate Quick Add window integration | [global_quick_add_window.dart](../apps/flutter/lib/ui/quick_add/widgets/global_quick_add_window.dart) |
+| Task row events and effects | [task_motion.dart](../apps/flutter/lib/ui/tasks/widgets/task_motion.dart) |
+| Voice panel motion | [voice_panel_motion.dart](../apps/flutter/lib/ui/tasks/widgets/voice_panel_motion.dart) |
+| Focus completion | [focus_completion_celebration.dart](../apps/flutter/lib/ui/focus/widgets/focus_completion_celebration.dart) |
 
 `AppThemePalette` is the single source of colors. In widgets, use
 `context.appColors`, `Theme.of(context).textTheme`, and `AppTheme.monoTextStyle`.

@@ -2,7 +2,7 @@ import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:drift_dev/api/migrations_native.dart' as migrations;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/db/app_database.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
 
 import 'drift_schema/schema.dart' as v3_schema;
 

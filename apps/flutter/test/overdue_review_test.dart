@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/config/task_time.dart';
-import 'package:pomodoist/core/time/clock.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/features/tasks/presentation/task_scheduling.dart';
-import 'package:pomodoist/features/tasks/presentation/widgets/task_selection_region.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/domain/models/tasks/task_time.dart';
+import 'package:pomodoist/utils/clock.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/domain/use_cases/tasks/task_scheduling.dart';
+import 'package:pomodoist/ui/tasks/widgets/task_selection_region.dart';
 
 void main() {
   final midnight = DateTime(2026, 9, 10);

@@ -4,12 +4,12 @@ import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/features/productivity/presentation/achievement_localizations.dart';
-import 'package:pomodoist/l10n/app_localizations_en.dart';
-import 'package:pomodoist/l10n/app_localizations_ru.dart';
-import 'package:pomodoist/features/productivity/data/achievement_repository_impl.dart';
-import 'package:pomodoist/features/productivity/data/productivity_repository_impl.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/ui/productivity/widgets/achievement_localizations.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations_en.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations_ru.dart';
+import 'package:pomodoist/data/repositories/achievements/achievement_repository_impl.dart';
+import 'package:pomodoist/data/repositories/productivity/productivity_repository_impl.dart';
 import 'package:timezone/data/latest.dart' as time_zone_data;
 import 'package:timezone/timezone.dart' as time_zone;
 
@@ -147,7 +147,9 @@ void main() {
           ),
         );
 
-    await DriftProductivityRepository(db).recalculateDailyStats(today);
+    await DriftProductivityRepository(
+      db,
+    ).recalculateDailyStats(today).then((result) => result.getOrThrow());
 
     final row = await db.select(db.focusDailyStats).getSingle();
     expect(

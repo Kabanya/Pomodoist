@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/routing/task_detail_navigation.dart';
+import 'package:pomodoist/routing/task_detail_navigation.dart';
 
 void main() {
   test('opening and closing details preserves the background query', () {

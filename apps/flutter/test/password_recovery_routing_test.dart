@@ -1,9 +1,9 @@
+import 'package:pomodoist/domain/models/account/account_auth_failure.dart';
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/platform/native_link_coordinator.dart';
-import 'package:pomodoist/app/auth/password_recovery.dart';
-import 'package:pomodoist/app/routing/router.dart';
+import 'package:pomodoist/data/services/platform/native_link_coordinator.dart';
+import 'package:pomodoist/routing/router.dart';
 
 void main() {
   test('reset destination stays public without an ordinary session', () {

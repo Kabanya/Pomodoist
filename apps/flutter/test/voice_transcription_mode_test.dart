@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/voice/data/voice_transcription_mode.dart';
+import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
+import 'package:pomodoist/data/services/voice/voice_transcription_policy.dart';
+import 'package:pomodoist/config/voice_preferences_dependencies.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -160,7 +162,7 @@ void main() {
         saved.read(voiceTranscriptionModeProvider),
         VoiceTranscriptionMode.system,
       );
-      await saved.read(voiceTranscriptionModeProvider.notifier).ready;
+      await saved.read(voicePreferencesRepositoryProvider).ready;
       expect(
         saved.read(voiceTranscriptionModeProvider),
         VoiceTranscriptionMode.cloud,
@@ -172,7 +174,7 @@ void main() {
       final invalid = ProviderContainer();
       addTearDown(invalid.dispose);
       invalid.read(voiceTranscriptionModeProvider);
-      await invalid.read(voiceTranscriptionModeProvider.notifier).ready;
+      await invalid.read(voicePreferencesRepositoryProvider).ready;
       expect(
         invalid.read(voiceTranscriptionModeProvider),
         VoiceTranscriptionMode.system,
@@ -185,7 +187,7 @@ void main() {
     addTearDown(container.dispose);
 
     await container
-        .read(voiceTranscriptionModeProvider.notifier)
+        .read(voicePreferencesRepositoryProvider)
         .setMode(VoiceTranscriptionMode.cloud);
 
     expect(
@@ -203,7 +205,7 @@ void main() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
-    await container.read(voiceTranscriptionModeProvider.notifier).ready;
+    await container.read(voicePreferencesRepositoryProvider).ready;
 
     expect(
       container.read(voiceTranscriptionModeProvider),

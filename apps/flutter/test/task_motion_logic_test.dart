@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/theme/app_motion.dart';
-import 'package:pomodoist/features/tasks/presentation/widgets/task_motion.dart';
+import 'package:pomodoist/ui/core/themes/app_motion.dart';
+import 'package:pomodoist/ui/tasks/widgets/task_motion.dart';
 
 void main() {
   test('changing the checkmark color invalidates the completion painter', () {

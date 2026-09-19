@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/theme/theme_image_preparation.dart';
+import 'package:pomodoist/ui/core/themes/theme_image_preparation.dart';
 
 void main() {
   test(

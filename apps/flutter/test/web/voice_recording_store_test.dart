@@ -6,8 +6,8 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:web/web.dart' as web;
-import 'package:pomodoist/features/voice/data/voice_recording.dart';
-import 'package:pomodoist/features/voice/data/voice_recording_store_web.dart';
+import 'package:pomodoist/data/services/voice/voice_recording.dart';
+import 'package:pomodoist/data/services/voice/voice_recording_store_web.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

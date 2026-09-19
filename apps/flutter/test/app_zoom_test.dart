@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/app_zoom.dart';
-import 'package:pomodoist/app/config/keyboard_shortcuts.dart';
-import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
+import 'package:pomodoist/ui/core/view_models/app_zoom_view_model.dart';
+import 'package:pomodoist/config/keyboard_shortcuts.dart';
+import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

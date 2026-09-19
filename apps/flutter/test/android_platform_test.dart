@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/notifications/android_alarm_policy.dart';
-import 'package:pomodoist/features/billing/billing.dart';
-import 'package:pomodoist/features/focus/presentation/focus_view_mode.dart';
+import 'package:pomodoist/data/services/notifications/android_alarm_policy.dart';
+import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/config/focus_dependencies.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -93,9 +93,9 @@ void main() {
         );
         addTearDown(container.dispose);
         expect(applePurchasesSupported, isFalse);
-        container.read(billingControllerProvider);
+        container.read(billingViewModelProvider);
         await tester.pump();
-        final state = container.read(billingControllerProvider);
+        final state = container.read(billingViewModelProvider);
         expect(state.loading, isFalse);
         expect(state.canPurchase, isFalse);
         expect(state.accountEntitlementActive, isTrue);

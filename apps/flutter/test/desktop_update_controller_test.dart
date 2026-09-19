@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/updates/update_contracts.dart';
-import 'package:pomodoist/features/updates/update_controller.dart';
-import 'package:pomodoist/features/updates/update_release.dart';
+import 'package:pomodoist/domain/models/updates/update_contracts.dart';
+import 'package:pomodoist/data/repositories/updates/update_controller.dart';
+import 'package:pomodoist/domain/models/updates/update_release.dart';
 
 UpdateOffer testOffer([String tag = 'v1.1.0']) => UpdateOffer(
   tag: tag,

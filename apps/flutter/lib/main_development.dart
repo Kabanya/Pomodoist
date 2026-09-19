@@ -1,4 +1,4 @@
-import 'app/app_environment.dart';
-import 'app/bootstrap.dart';
+import 'package:pomodoist/config/app_environment.dart';
+import 'package:pomodoist/config/bootstrap.dart';
 
 Future<void> main() => bootstrapPomodoist(AppEnvironment.development);

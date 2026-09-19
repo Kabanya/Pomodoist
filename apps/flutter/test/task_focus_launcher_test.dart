@@ -1,9 +1,11 @@
+import 'package:pomodoist/utils/result.dart';
+import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/features/tasks/presentation/task_focus_launcher.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/domain/use_cases/focus/task_focus_launcher.dart';
 
 void main() {
   test(
@@ -192,12 +194,13 @@ class _FocusRepository implements FocusRepository {
   Stream<FocusRunItem?> watchActiveRun() => Stream.value(active);
 
   @override
-  Future<String> startRun(StartFocusRunInput input, {DateTime? now}) async {
-    starts.add(input);
-    await beforeStart?.call();
-    active = _run('new', input.taskId);
-    return 'new';
-  }
+  Future<Result<String>> startRun(StartFocusRunInput input, {DateTime? now}) =>
+      Result.capture<String>(() async {
+        starts.add(input);
+        await beforeStart?.call();
+        active = _run('new', input.taskId);
+        return 'new';
+      });
 
   @override
   dynamic noSuchMethod(Invocation invocation) =>

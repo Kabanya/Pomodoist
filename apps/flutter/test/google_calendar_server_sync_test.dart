@@ -1,6 +1,6 @@
 import 'package:app_account/app_account.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/integrations/google_calendar/data/google_calendar_sync_controller.dart';
+import 'package:pomodoist/data/services/google_calendar/google_calendar_sync_controller.dart';
 
 void main() {
   test(

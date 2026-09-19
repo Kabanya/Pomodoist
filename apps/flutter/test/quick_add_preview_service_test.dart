@@ -1,10 +1,11 @@
+import 'package:pomodoist/data/repositories/projects/project_repository_impl.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/features/planning/data/quick_add_service.dart';
-import 'package:pomodoist/features/planning/domain/quick_add_parser.dart';
-import 'package:pomodoist/features/tasks/data/task_repository_impl.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
 
 void main() {
   test(
@@ -13,15 +14,17 @@ void main() {
       final db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
       await db.ensureSeedData();
-      final queue = DriftSyncQueueRepository(db);
+      final queue = DriftOutboxService(db);
       final tasks = DriftTaskRepository(db, queue);
       final projects = DriftProjectRepository(db, queue);
-      final projectId = await projects.createProject('Release');
+      final projectId = await projects
+          .createProject('Release')
+          .then((result) => result.getOrThrow());
       final now = DateTime(2035, 12, 31, 23, 59);
       const parser = QuickAddParser(
         defaultTimedBlockDuration: Duration(minutes: 45),
       );
-      final service = QuickAddService(
+      final service = QuickAddUseCase(
         parser: parser,
         taskRepository: tasks,
         projectRepository: projects,
@@ -36,12 +39,14 @@ void main() {
         final preview = parser
             .analyze(source, now: now, defaultDate: inheritedDate)
             .parsed;
-        final id = await service.createTask(
-          source,
-          projectId: preview.project == null ? projectId : inboxProjectId,
-          priority: 3,
-          defaultDate: inheritedDate,
-        );
+        final id = await service
+            .createTask(
+              source,
+              projectId: preview.project == null ? projectId : inboxProjectId,
+              priority: 3,
+              defaultDate: inheritedDate,
+            )
+            .then((result) => result.getOrThrow());
         final saved = (await tasks.watchTask(id).first)!;
         expect(saved.content, preview.content);
         expect(saved.projectId, projectId);

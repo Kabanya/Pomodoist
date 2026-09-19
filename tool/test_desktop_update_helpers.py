@@ -5,10 +5,11 @@ from pathlib import Path
 import re
 import subprocess
 import tempfile
+import time
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / 'apps/flutter/lib/features/updates/update_install_scripts.dart'
+SCRIPTS = ROOT / 'apps/flutter/lib/data/services/updates/update_install_scripts.dart'
 
 
 def bundled_script(name):
@@ -75,6 +76,9 @@ class AppImageUpdateTests(unittest.TestCase):
         result = self.run_helper()
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(self.target.read_text(), self.old)
+        deadline = time.monotonic() + 2
+        while not self.marker.exists() and time.monotonic() < deadline:
+            time.sleep(0.01)
         self.assertEqual(self.marker.read_text(), 'old')
         self.assertEqual((self.stage / 'result').read_text().strip(), 'failed')
 

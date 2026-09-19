@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/features/collaboration/presentation/collaboration_providers.dart';
-import 'package:pomodoist/features/collaboration/presentation/shared_project_badge.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_conflict.dart';
+import 'package:pomodoist/config/collaboration_dependencies.dart';
+import 'package:pomodoist/ui/collaboration/widgets/shared_project_badge.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 
 import 'support/test_app.dart';
@@ -22,23 +23,19 @@ ProjectItem _project({String? scopeId}) => ProjectItem(
   updatedAt: DateTime.utc(2026),
 );
 
-SyncCommandRow _conflict() => SyncCommandRow(
+CollaborationConflict _conflict() => const CollaborationConflict(
   scopeId: _scopeId,
   baseRevision: 1,
-  attempts: 0,
   id: 'command-1',
-  uuid: 'command-1',
   type: 'task.update',
-  payloadJson: '{}',
-  status: 'conflict',
-  createdAt: DateTime.utc(2026),
-  updatedAt: DateTime.utc(2026),
+  clientId: null,
+  lastError: null,
 );
 
 Future<void> _pumpBadge(
   WidgetTester tester, {
   required ProjectItem project,
-  List<SyncCommandRow> conflicts = const [],
+  List<CollaborationConflict> conflicts = const [],
 }) async {
   await tester.pumpWidget(
     ProviderScope(

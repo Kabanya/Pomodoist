@@ -2,7 +2,7 @@ import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/widgets/keyboard_dismiss_region.dart';
+import 'package:pomodoist/ui/core/widgets/keyboard_dismiss_region.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

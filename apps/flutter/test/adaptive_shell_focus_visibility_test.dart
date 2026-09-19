@@ -1,21 +1,26 @@
+import 'package:pomodoist/config/focus_dependencies.dart';
+import 'package:pomodoist/config/productivity_dependencies.dart';
+import 'package:pomodoist/domain/models/calendar/calendar_models.dart';
+import 'package:pomodoist/utils/result.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
+import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
+import 'package:pomodoist/data/repositories/achievements/achievement_repository.dart';
 import 'package:go_router/go_router.dart';
 import 'support/test_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
-import 'package:pomodoist/app/widgets/adaptive_shell.dart';
-import 'package:pomodoist/app/widgets/task_details_host.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/features/focus/domain/focus_models.dart';
-import 'package:pomodoist/features/focus/presentation/focus_completion_celebration_controller.dart';
-import 'package:pomodoist/features/integrations/google_calendar/data/google_calendar_repository.dart';
-import 'package:pomodoist/features/productivity/domain/achievement_models.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/features/tasks/presentation/task_detail_screen.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/ui/core/widgets/adaptive_shell.dart';
+import 'package:pomodoist/ui/core/widgets/task_details_host.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/data/repositories/calendar/google_calendar_repository.dart';
+import 'package:pomodoist/domain/models/productivity/achievement_models.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/tasks/widgets/task_detail_screen.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -77,9 +82,9 @@ void main() {
             tester.element(find.byType(AdaptiveShell)),
           );
 
-          container
-              .read(achievementAnnouncementControllerProvider.notifier)
-              .enqueue([announcement.item]);
+          container.read(achievementAnnouncementRepositoryProvider).enqueue([
+            announcement.item,
+          ]);
           await tester.pump();
 
           expect(find.byKey(announcement.visibleKey), findsOneWidget);
@@ -155,7 +160,7 @@ void main() {
     );
     final context = tester.element(find.byType(AdaptiveShell));
     ProviderScope.containerOf(context)
-        .read(focusRunCompletionControllerProvider.notifier)
+        .read(focusCompletionRepositoryProvider)
         .present(
           FocusRunCompletionEvent(
             runId: 'completed-run',
@@ -183,7 +188,7 @@ void main() {
     );
     final context = tester.element(find.byType(AdaptiveShell));
     ProviderScope.containerOf(context)
-        .read(focusRunCompletionControllerProvider.notifier)
+        .read(focusCompletionRepositoryProvider)
         .present(
           FocusRunCompletionEvent(
             runId: 'linked-run',
@@ -391,9 +396,9 @@ class _NoopAchievementRepository implements AchievementRepository {
   Stream<List<AchievementItem>> watchAchievements() => Stream.value(const []);
 
   @override
-  Future<List<AchievementItem>> takePendingAnnouncements(
+  Future<Result<List<AchievementItem>>> takePendingAnnouncements(
     List<AchievementItem> items,
-  ) async => const [];
+  ) => Result.capture<List<AchievementItem>>(() async => const []);
 }
 
 class _NoopCalendarIntegrationRepository
@@ -401,10 +406,10 @@ class _NoopCalendarIntegrationRepository
   const _NoopCalendarIntegrationRepository();
 
   @override
-  Stream<GoogleCalendarConnectionRow?> watchConnection() => Stream.value(null);
+  Stream<GoogleCalendarConnection?> watchConnection() => Stream.value(null);
 
   @override
-  Stream<GoogleCalendarEventLinkRow?> watchLinkForTask(String taskId) =>
+  Stream<GoogleCalendarEventLink?> watchLinkForTask(String taskId) =>
       Stream.value(null);
 }
 
@@ -452,12 +457,14 @@ class _TaskRepository implements TaskRepository {
   Stream<TaskItem?> watchTask(String id) => Stream.value(task);
 
   @override
-  Future<void> completeTask(String id) async {
-    completeCount++;
-  }
+  Future<Result<void>> completeTask(String id) =>
+      Result.capture<void>(() async {
+        completeCount++;
+      });
 
   @override
-  Future<void> uncompleteTask(String id) async {}
+  Future<Result<void>> uncompleteTask(String id) =>
+      Result.capture<void>(() async {});
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

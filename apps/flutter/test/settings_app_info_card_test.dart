@@ -6,11 +6,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/legal_urls.dart';
-import 'package:pomodoist/features/billing/billing.dart';
-import 'package:pomodoist/features/settings/presentation/app_info_card.dart';
-import 'package:pomodoist/features/settings/presentation/settings_subscription.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/ui/core/platform/legal_urls.dart';
+import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/ui/settings/widgets/app_info_card.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_subscription.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -201,8 +201,8 @@ void main() {
       ProviderScope(
         overrides: [
           appVersionProvider.overrideWith((ref) async => '2.4.1 (37)'),
-          billingControllerProvider.overrideWith(
-            () => _StaticBillingController(
+          billingViewModelProvider.overrideWith(
+            () => _StaticBillingViewModel(
               const BillingState(
                 loading: false,
                 activeProductId: pomodoistMonthlyProductId,
@@ -240,8 +240,8 @@ void main() {
       ProviderScope(
         overrides: [
           appVersionProvider.overrideWith((ref) async => '2.4.1 (37)'),
-          billingControllerProvider.overrideWith(
-            () => _StaticBillingController(
+          billingViewModelProvider.overrideWith(
+            () => _StaticBillingViewModel(
               const BillingState(
                 loading: false,
                 activeProductId: pomodoistAnnualProductId,
@@ -279,8 +279,8 @@ void main() {
       ProviderScope(
         overrides: [
           appVersionProvider.overrideWith((ref) async => '2.4.1 (37)'),
-          billingControllerProvider.overrideWith(
-            () => _StaticBillingController(
+          billingViewModelProvider.overrideWith(
+            () => _StaticBillingViewModel(
               const BillingState(
                 loading: false,
                 activeProductId: pomodoistLifetimeProductId,
@@ -321,8 +321,8 @@ void main() {
       ProviderScope(
         overrides: [
           appVersionProvider.overrideWith((ref) async => '2.4.1 (37)'),
-          billingControllerProvider.overrideWith(
-            () => _StaticBillingController(
+          billingViewModelProvider.overrideWith(
+            () => _StaticBillingViewModel(
               const BillingState(
                 loading: false,
                 activeProductId: unknownProductId,
@@ -359,14 +359,14 @@ void main() {
   testWidgets('updates the displayed plan when billing state changes', (
     tester,
   ) async {
-    final billingController = _StaticBillingController(
+    final billingController = _StaticBillingViewModel(
       const BillingState(loading: false),
     );
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           appVersionProvider.overrideWith((ref) async => '2.4.1 (37)'),
-          billingControllerProvider.overrideWith(() => billingController),
+          billingViewModelProvider.overrideWith(() => billingController),
         ],
         child: const MaterialApp(
           builder: testAppBuilder,
@@ -404,8 +404,8 @@ void main() {
   });
 }
 
-class _StaticBillingController extends BillingController {
-  _StaticBillingController(this.initialState);
+class _StaticBillingViewModel extends BillingViewModel {
+  _StaticBillingViewModel(this.initialState);
 
   final BillingState initialState;
 

@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/theme/app_theme_settings.dart';
-import 'package:pomodoist/app/theme/macos_glass.dart';
+import 'package:pomodoist/ui/settings/view_models/theme_settings_view_model.dart';
+import 'package:pomodoist/ui/core/themes/macos_glass.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

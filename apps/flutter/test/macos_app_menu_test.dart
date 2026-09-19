@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/keyboard_shortcuts.dart';
-import 'package:pomodoist/app/platform/macos_app_menu.dart';
+import 'package:pomodoist/config/keyboard_shortcuts.dart';
+import 'package:pomodoist/ui/core/platform/macos_app_menu.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -33,8 +33,10 @@ void main() {
       };
 
       await controller.sync(
-        labels: labels,
-        bindings: defaultAppShortcutBindings(TargetPlatform.macOS),
+        commands: _commands(
+          labels,
+          defaultAppShortcutBindings(TargetPlatform.macOS),
+        ),
       );
 
       expect(calls, hasLength(1));
@@ -57,11 +59,14 @@ void main() {
   test(
     'selected callback accepts known commands and ignores malformed input',
     () async {
-      final selected = <AppShortcutCommand>[];
+      final selected = <String>[];
       final controller = MacOSAppMenuController(
         channel: channel,
         platform: TargetPlatform.macOS,
         onSelected: selected.add,
+        allowedCommandIds: {
+          for (final command in AppShortcutCommand.values) command.name,
+        },
       );
       addTearDown(controller.dispose);
 
@@ -76,7 +81,7 @@ void main() {
       );
       await controller.handleMethodCall(const MethodCall('unknown', 'inbox'));
 
-      expect(selected, [AppShortcutCommand.today]);
+      expect(selected, [AppShortcutCommand.today.name]);
     },
   );
 
@@ -96,21 +101,20 @@ void main() {
     };
     final bindings = defaultAppShortcutBindings(TargetPlatform.macOS);
 
-    await controller.sync(labels: labels, bindings: bindings);
-    await controller.sync(labels: labels, bindings: bindings);
+    await controller.sync(commands: _commands(labels, bindings));
+    await controller.sync(commands: _commands(labels, bindings));
     await controller.sync(
-      labels: labels,
-      bindings: {
+      commands: _commands(labels, {
         ...bindings,
         AppShortcutCommand.quickAdd: const AppShortcutBinding(
           physicalKeyId: 0x0007000d,
           keyLabel: 'J',
           meta: true,
         ),
-      },
+      }),
     );
     final localizedLabels = {...labels, AppShortcutCommand.today: 'Сегодня'};
-    await controller.sync(labels: localizedLabels, bindings: bindings);
+    await controller.sync(commands: _commands(localizedLabels, bindings));
 
     expect(calls, hasLength(3));
     final localizedCommands = Map<String, Object?>.from(
@@ -126,3 +130,19 @@ void main() {
     });
   });
 }
+
+List<MacOSMenuCommand> _commands(
+  Map<AppShortcutCommand, String> labels,
+  Map<AppShortcutCommand, AppShortcutBinding> bindings,
+) => [
+  for (final command in AppShortcutCommand.values)
+    MacOSMenuCommand(
+      id: command.name,
+      label: labels[command]!,
+      keyLabel: bindings[command]!.keyLabel,
+      meta: bindings[command]!.meta,
+      control: bindings[command]!.control,
+      alt: bindings[command]!.alt,
+      shift: bindings[command]!.shift,
+    ),
+];

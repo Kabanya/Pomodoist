@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/formatters.dart';
-import 'package:pomodoist/app/config/task_time.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/ui/core/localization/formatters.dart';
+import 'package:pomodoist/domain/models/tasks/task_time.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 
 void main() {
   testWidgets('formatTaskListSchedule formats English relative dates', (

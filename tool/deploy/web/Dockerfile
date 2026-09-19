@@ -54,7 +54,7 @@ RUN for name in POMODOIST_ENVIRONMENT POMODOIST_RELEASE POMODOIST_WEB_URL \
     done
 
 COPY apps/flutter/pubspec.yaml apps/flutter/pubspec.lock apps/flutter/l10n.yaml ./
-COPY apps/flutter/lib/l10n/ ./lib/l10n/
+COPY apps/flutter/lib/ui/core/localization/ ./lib/ui/core/localization/
 RUN --mount=type=cache,target=/root/.pub-cache,sharing=locked \
     flutter pub get --enforce-lockfile
 COPY apps/flutter/lib/ ./lib/

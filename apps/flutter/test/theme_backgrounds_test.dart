@@ -6,9 +6,8 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/theme/app_theme_settings.dart';
-import 'package:pomodoist/app/theme/theme_image_store.dart';
-import 'package:pomodoist/app/theme/theme_image_preparation.dart';
+import 'package:pomodoist/ui/settings/view_models/theme_settings_view_model.dart';
+import 'package:pomodoist/ui/core/themes/theme_image_preparation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // Replace disk writes only; no widget binding or app is mounted.
 // ignore: depend_on_referenced_packages
@@ -188,7 +187,7 @@ void main() {
       images = _ImageStore(events);
       container = ProviderContainer(
         overrides: [
-          themeImageStoreProvider.overrideWithValue(images),
+          themeImageRepositoryProvider.overrideWithValue(images),
           themeImagePreparerProvider.overrideWithValue((bytes) async => bytes),
         ],
       );
@@ -449,7 +448,7 @@ void main() {
         final started = Completer<void>();
         final other = ProviderContainer(
           overrides: [
-            themeImageStoreProvider.overrideWithValue(images),
+            themeImageRepositoryProvider.overrideWithValue(images),
             themeImagePreparerProvider.overrideWithValue((bytes) {
               started.complete();
               return prepared.future;
@@ -581,7 +580,7 @@ void main() {
         await choose();
         await controller.savePreview();
         final stale = ProviderContainer(
-          overrides: [themeImageStoreProvider.overrideWithValue(images)],
+          overrides: [themeImageRepositoryProvider.overrideWithValue(images)],
         );
         addTearDown(stale.dispose);
         final staleController = stale.read(appThemeSettingsProvider.notifier);
@@ -608,7 +607,7 @@ void main() {
         await choose();
         await controller.savePreview();
         final stale = ProviderContainer(
-          overrides: [themeImageStoreProvider.overrideWithValue(images)],
+          overrides: [themeImageRepositoryProvider.overrideWithValue(images)],
         );
         addTearDown(stale.dispose);
         final staleController = stale.read(appThemeSettingsProvider.notifier);
@@ -655,7 +654,7 @@ void main() {
   });
 }
 
-class _ImageStore extends ThemeImageStore {
+class _ImageStore extends ThemeImageRepository {
   _ImageStore(this.events);
   final List<String> events;
   final Map<String, Uint8List> data = {};

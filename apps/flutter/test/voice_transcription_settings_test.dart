@@ -3,9 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/settings/presentation/voice_transcription_settings_card.dart';
-import 'package:pomodoist/features/voice/data/voice_transcription_mode.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/ui/settings/widgets/voice_transcription_settings_card.dart';
+import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

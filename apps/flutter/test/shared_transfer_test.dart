@@ -1,20 +1,22 @@
+import 'package:pomodoist/data/repositories/projects/project_repository_impl.dart';
 import 'package:app_account/app_account.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uuid/uuid.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/account_sync_engine.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/features/collaboration/data/collaboration_api.dart';
-import 'package:pomodoist/features/collaboration/data/collaboration_repository.dart';
-import 'package:pomodoist/features/collaboration/domain/collaboration_models.dart';
-import 'package:pomodoist/features/tasks/data/task_repository_impl.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
+import 'package:pomodoist/data/repositories/collaboration/collaboration_repository.dart';
+import 'package:pomodoist/data/repositories/collaboration/drift_collaboration_repository.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
 
 void main() {
   late AppDatabase db;
-  late DriftSyncQueueRepository queue;
+  late DriftOutboxService queue;
   late _Account account;
   late CollaborationRepository repository;
   late String root;
@@ -24,14 +26,17 @@ void main() {
   setUp(() async {
     db = AppDatabase(NativeDatabase.memory());
     await db.ensureSeedData();
-    queue = DriftSyncQueueRepository(db);
+    queue = DriftOutboxService(db);
     final projects = DriftProjectRepository(db, queue);
-    root = await projects.createProject('Root');
-    child = await projects.createProject('Child', parentId: root);
-    task = await DriftTaskRepository(
-      db,
-      queue,
-    ).createTask(CreateTaskInput(content: 'Task', projectId: child));
+    root = await projects
+        .createProject('Root')
+        .then((result) => result.getOrThrow());
+    child = await projects
+        .createProject('Child', parentId: root)
+        .then((result) => result.getOrThrow());
+    task = await DriftTaskRepository(db, queue)
+        .createTask(CreateTaskInput(content: 'Task', projectId: child))
+        .then((result) => result.getOrThrow());
     await db.delete(db.syncCommands).go();
     account = _Account();
     shares.clear();
@@ -41,7 +46,7 @@ void main() {
       account: account,
       overviewLoader: () async => null,
     );
-    repository = CollaborationRepository(
+    repository = DriftCollaborationRepository(
       db: db,
       queue: queue,
       api: CollaborationApi((args) async {
@@ -96,7 +101,7 @@ void main() {
               .write(SyncCommandsCompanion(status: Value(status)));
         }
         await expectLater(
-          repository.share(root),
+          repository.share(root).then((result) => result.getOrThrow()),
           throwsA(
             isA<CollaborationException>().having(
               (e) => e.code,
@@ -114,10 +119,9 @@ void main() {
   test(
     'unrelated deferred personal task does not block a fully synchronized subtree',
     () async {
-      final other = await DriftTaskRepository(
-        db,
-        queue,
-      ).createTask(const CreateTaskInput(content: 'Other'));
+      final other = await DriftTaskRepository(db, queue)
+          .createTask(const CreateTaskInput(content: 'Other'))
+          .then((result) => result.getOrThrow());
       await db.delete(db.syncCommands).go();
       await queue.enqueue(
         type: 'task.delete',
@@ -125,7 +129,7 @@ void main() {
         payload: {'id': other},
         availableAt: DateTime.now().add(const Duration(days: 1)),
       );
-      await repository.share(root);
+      (await repository.share(root)).getOrThrow();
       expect(shares, hasLength(1));
       expect(await db.select(db.syncCommands).get(), hasLength(1));
     },

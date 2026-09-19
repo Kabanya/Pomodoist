@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/app/config/task_time.dart';
-import 'package:pomodoist/core/time/clock.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/domain/models/tasks/task_time.dart';
+import 'package:pomodoist/utils/clock.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
 
 void main() {
   group('taskTimeStateProvider all-day schedules', () {

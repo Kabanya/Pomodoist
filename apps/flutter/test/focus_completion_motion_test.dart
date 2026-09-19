@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/focus/presentation/focus_completion_celebration.dart';
+import 'package:pomodoist/ui/focus/widgets/focus_completion_celebration.dart';
 
 void main() {
   test('the completion mark settles while the particles finish', () {

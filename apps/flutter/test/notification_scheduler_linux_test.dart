@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/core/notifications/notification_scheduler.dart';
+import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
 
 void main() {
   test('Linux notifications provide the required initialization settings', () {

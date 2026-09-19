@@ -6,12 +6,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/misc.dart';
-import 'package:pomodoist/app/config/providers.dart';
-import 'package:pomodoist/core/time/clock.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/utils/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:pomodoist/features/billing/billing.dart';
+import 'package:pomodoist/config/billing_dependencies.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -34,10 +34,10 @@ void main() {
         };
       final container = _ready(store, time);
       expect(
-        container.read(billingControllerProvider).needsCatalogRetry,
+        container.read(billingViewModelProvider).needsCatalogRetry,
         isTrue,
       );
-      container.read(billingControllerProvider.notifier).reload();
+      container.read(billingViewModelProvider.notifier).reload();
       time.flushMicrotasks();
       expect(requests, 2);
       snapshot.complete([]);
@@ -60,15 +60,13 @@ void main() {
         requests++;
         return _catalog({pomodoistLifetimeProductId});
       };
-      container.read(billingControllerProvider.notifier).reload();
+      container.read(billingViewModelProvider.notifier).reload();
       time.flushMicrotasks();
       expect(requests, 2);
       eligibility.complete(true);
       time.flushMicrotasks();
       expect(
-        container
-            .read(billingControllerProvider)
-            .eligibleIntroductoryProductIds,
+        container.read(billingViewModelProvider).eligibleIntroductoryProductIds,
         isEmpty,
       );
     });
@@ -93,24 +91,24 @@ void main() {
 
         store.snapshot = null;
         store.finish = (_) async => throw StateError('finish unavailable');
-        container.read(billingControllerProvider.notifier).reload();
+        container.read(billingViewModelProvider.notifier).reload();
         time.flushMicrotasks();
         expect(
-          container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+          container.read(billingViewModelProvider).hasLocalStoreKitEntitlement,
           isTrue,
         );
         expect(store.finished, [purchase.purchaseID]);
 
         final finish = Completer<void>();
         store.finish = (_) => finish.future;
-        container.read(billingControllerProvider.notifier).reload();
+        container.read(billingViewModelProvider.notifier).reload();
         time.flushMicrotasks();
         store.emit([purchase, purchase]);
         time.flushMicrotasks();
         expect(store.finished, [purchase.purchaseID, purchase.purchaseID]);
         finish.complete();
         time.flushMicrotasks();
-        container.read(billingControllerProvider.notifier).reload();
+        container.read(billingViewModelProvider.notifier).reload();
         time.flushMicrotasks();
         expect(store.finished, hasLength(2));
       });
@@ -127,21 +125,21 @@ void main() {
       );
       final store = _Store()..restore = nativeStore.restorePurchases;
       final container = _ready(store, time);
-      container.read(billingControllerProvider.notifier).restorePurchases();
+      container.read(billingViewModelProvider.notifier).restorePurchases();
       time.elapse(const Duration(seconds: 20));
       sync.complete();
       time.flushMicrotasks();
       time.elapse(const Duration(seconds: 20));
-      expect(container.read(billingControllerProvider).restoring, isTrue);
+      expect(container.read(billingViewModelProvider).restoring, isTrue);
       snapshot.complete([
-        BillingTransactionProof.fromPurchase(
+        billingTransactionProofFromPurchase(
           _purchase(pomodoistLifetimeProductId),
         ),
       ]);
       time.flushMicrotasks();
-      expect(container.read(billingControllerProvider).error, isNull);
+      expect(container.read(billingViewModelProvider).error, isNull);
       expect(
-        container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+        container.read(billingViewModelProvider).hasLocalStoreKitEntitlement,
         isTrue,
       );
     });
@@ -159,7 +157,7 @@ void main() {
       time.flushMicrotasks();
       expect(store.finished, [purchase.purchaseID]);
       expect(
-        container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+        container.read(billingViewModelProvider).hasLocalStoreKitEntitlement,
         isFalse,
       );
     });
@@ -172,14 +170,14 @@ void main() {
       store.emit([_purchase(pomodoistLifetimeProductId)]);
       time.flushMicrotasks();
       expect(
-        container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+        container.read(billingViewModelProvider).hasLocalStoreKitEntitlement,
         isTrue,
       );
       store.failRefresh = true;
-      container.read(billingControllerProvider.notifier).reload();
+      container.read(billingViewModelProvider.notifier).reload();
       time.flushMicrotasks();
       expect(
-        container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+        container.read(billingViewModelProvider).hasLocalStoreKitEntitlement,
         isTrue,
       );
     });
@@ -193,7 +191,7 @@ void main() {
       store.emit([_purchase(pomodoistAnnualProductId)]);
       time.flushMicrotasks();
       expect(
-        container.read(billingControllerProvider).activeStoreKitProductIds,
+        container.read(billingViewModelProvider).activeStoreKitProductIds,
         {pomodoistLifetimeProductId, pomodoistAnnualProductId},
       );
     });
@@ -202,7 +200,7 @@ void main() {
   test('empty catalog remains unavailable so the customer can retry', () {
     fakeAsync((time) {
       final container = _ready(_Store(emptyCatalog: true), time);
-      expect(container.read(billingControllerProvider).storeAvailable, isFalse);
+      expect(container.read(billingViewModelProvider).storeAvailable, isFalse);
     });
   });
 
@@ -233,14 +231,14 @@ void main() {
           ..transactions = [_purchase(pomodoistLifetimeProductId)];
         final container = _ready(store, time);
         expect(
-          container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+          container.read(billingViewModelProvider).hasLocalStoreKitEntitlement,
           isTrue,
         );
         store.transactions = [];
-        container.read(billingControllerProvider.notifier).reload();
+        container.read(billingViewModelProvider.notifier).reload();
         time.flushMicrotasks();
         expect(
-          container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+          container.read(billingViewModelProvider).hasLocalStoreKitEntitlement,
           isFalse,
         );
         SharedPreferences.getInstance().then((prefs) {
@@ -274,7 +272,7 @@ void main() {
         clock.value = expires;
         time.elapse(const Duration(minutes: 1));
         expect(
-          container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+          container.read(billingViewModelProvider).hasLocalStoreKitEntitlement,
           isFalse,
         );
         expect(store.refreshRequests, 1);
@@ -307,7 +305,7 @@ void main() {
       );
       time.flushMicrotasks();
       expect(
-        container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+        container.read(billingViewModelProvider).hasLocalStoreKitEntitlement,
         isFalse,
       );
       expect(store.refreshRequests, 2);
@@ -321,18 +319,18 @@ void main() {
       final container = _ready(store, time);
       final snapshot = Completer<List<BillingTransactionProof>>();
       store.snapshot = () => snapshot.future;
-      container.read(billingControllerProvider.notifier).reload();
+      container.read(billingViewModelProvider.notifier).reload();
       time.flushMicrotasks();
       store.emit([_purchase(pomodoistLifetimeProductId, revoked: true)]);
       time.flushMicrotasks();
       expect(
-        container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+        container.read(billingViewModelProvider).hasLocalStoreKitEntitlement,
         isFalse,
       );
       snapshot.completeError(StateError('offline'));
       time.flushMicrotasks();
       expect(
-        container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+        container.read(billingViewModelProvider).hasLocalStoreKitEntitlement,
         isFalse,
       );
     });
@@ -351,18 +349,18 @@ void main() {
       stale.complete([]);
       time.flushMicrotasks();
       expect(
-        container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+        container.read(billingViewModelProvider).hasLocalStoreKitEntitlement,
         isFalse,
       );
       expect(store.refreshRequests, 2);
       fresh.complete([
-        BillingTransactionProof.fromPurchase(
+        billingTransactionProofFromPurchase(
           _purchase(pomodoistLifetimeProductId),
         ),
       ]);
       time.flushMicrotasks();
       expect(
-        container.read(billingControllerProvider).activeProductId,
+        container.read(billingViewModelProvider).activeProductId,
         pomodoistLifetimeProductId,
       );
       expect(store.refreshRequests, 2);
@@ -394,7 +392,7 @@ void main() {
           store.emit([_purchase(id)]);
         }
         time.flushMicrotasks();
-        final state = container.read(billingControllerProvider);
+        final state = container.read(billingViewModelProvider);
         expect(state.activeProductId, pomodoistLifetimeProductId);
         expect(state.activeStoreKitProductIds, {
           pomodoistMonthlyProductId,
@@ -405,7 +403,7 @@ void main() {
         store.emit([_purchase(pomodoistLifetimeProductId, revoked: true)]);
         time.flushMicrotasks();
         expect(
-          container.read(billingControllerProvider).activeProductId,
+          container.read(billingViewModelProvider).activeProductId,
           pomodoistAnnualProductId,
         );
       });
@@ -432,7 +430,7 @@ void main() {
         store.emit([_purchase(pomodoistLifetimeProductId)]);
         time.flushMicrotasks();
         expect(
-          container.read(billingControllerProvider).activeProductId,
+          container.read(billingViewModelProvider).activeProductId,
           pomodoistLifetimeProductId,
         );
         SharedPreferences.getInstance().then(
@@ -454,7 +452,7 @@ void main() {
       fakeAsync((time) {
         final store = _Store()..catalogIds = {pomodoistAnnualProductId};
         final container = _ready(store, time);
-        var state = container.read(billingControllerProvider);
+        var state = container.read(billingViewModelProvider);
         expect(state.canPurchase, isTrue);
         expect(state.needsCatalogRetry, isTrue);
         expect(
@@ -463,20 +461,20 @@ void main() {
         );
         final catalog = Completer<ProductDetailsResponse>();
         store.catalog = () => catalog.future;
-        container.read(billingControllerProvider.notifier).reload();
+        container.read(billingViewModelProvider.notifier).reload();
         time.flushMicrotasks();
-        state = container.read(billingControllerProvider);
+        state = container.read(billingViewModelProvider);
         expect(state.loading, isFalse);
         expect(state.productDetailsById.keys, [pomodoistAnnualProductId]);
         container
-            .read(billingControllerProvider.notifier)
+            .read(billingViewModelProvider.notifier)
             .purchase(pomodoistAnnualProductId);
         time.flushMicrotasks();
         expect(store.bought, [pomodoistAnnualProductId]);
         catalog.complete(_catalog(billingProductIds));
         time.flushMicrotasks();
         expect(
-          container.read(billingControllerProvider).needsCatalogRetry,
+          container.read(billingViewModelProvider).needsCatalogRetry,
           isFalse,
         );
       });
@@ -488,18 +486,18 @@ void main() {
       final store = _Store();
       final container = _ready(store, time);
       store.catalog = () async => throw StateError('catalog unavailable');
-      container.read(billingControllerProvider.notifier).reload();
+      container.read(billingViewModelProvider.notifier).reload();
       time.flushMicrotasks();
-      final state = container.read(billingControllerProvider);
+      final state = container.read(billingViewModelProvider);
       expect(state.productDetailsById.keys.toSet(), billingProductIds);
       expect(state.canPurchase, isTrue);
       expect(state.catalogError, contains('catalog unavailable'));
       expect(state.error, isNull);
       store.catalog = null;
-      container.read(billingControllerProvider.notifier).reload();
+      container.read(billingViewModelProvider.notifier).reload();
       time.flushMicrotasks();
       expect(
-        container.read(billingControllerProvider).needsCatalogRetry,
+        container.read(billingViewModelProvider).needsCatalogRetry,
         isFalse,
       );
     });
@@ -514,18 +512,18 @@ void main() {
         code: 'storekit2_failed_to_sync_to_app_store',
         details: 'StoreKitError.userCancelled',
       );
-      container.read(billingControllerProvider.notifier).restorePurchases();
+      container.read(billingViewModelProvider.notifier).restorePurchases();
       time.flushMicrotasks();
-      final state = container.read(billingControllerProvider);
+      final state = container.read(billingViewModelProvider);
       expect(state.restoring, isFalse);
       expect(state.error, isNull);
       expect(state.hasLocalStoreKitEntitlement, isTrue);
       store.restore = () async => [];
-      container.read(billingControllerProvider.notifier).restorePurchases();
+      container.read(billingViewModelProvider.notifier).restorePurchases();
       time.flushMicrotasks();
       expect(store.restoreRequests, 2);
       expect(
-        container.read(billingControllerProvider).hasLocalStoreKitEntitlement,
+        container.read(billingViewModelProvider).hasLocalStoreKitEntitlement,
         isFalse,
       );
     });
@@ -552,17 +550,17 @@ void main() {
       expect(links.single.length, 2);
       final result = Completer<List<BillingTransactionProof>>();
       store.restore = () => result.future;
-      final controller = container.read(billingControllerProvider.notifier);
+      final controller = container.read(billingViewModelProvider.notifier);
       controller.restorePurchases();
       controller.restorePurchases();
       expect(store.restoreRequests, 1);
       result.complete(
-        store.transactions.map(BillingTransactionProof.fromPurchase).toList(),
+        store.transactions.map(billingTransactionProofFromPurchase).toList(),
       );
       time.flushMicrotasks();
       expect(links.length, 2);
       expect(links.last.toSet(), links.first.toSet());
-      expect(container.read(billingControllerProvider).restoring, isFalse);
+      expect(container.read(billingViewModelProvider).restoring, isFalse);
     });
   });
 
@@ -590,7 +588,7 @@ void main() {
       container.read(_identityProvider.notifier).change('account-b');
       time.flushMicrotasks();
       old.complete([
-        BillingTransactionProof.fromPurchase(
+        billingTransactionProofFromPurchase(
           _purchase(pomodoistLifetimeProductId),
         ),
       ]);
@@ -598,7 +596,7 @@ void main() {
       expect(links, isEmpty);
       expect(store.refreshRequests, 2);
       fresh.complete([
-        BillingTransactionProof.fromPurchase(
+        billingTransactionProofFromPurchase(
           _purchase(pomodoistAnnualProductId),
         ),
       ]);
@@ -622,7 +620,7 @@ void main() {
         ],
       );
       container
-          .read(billingControllerProvider.notifier)
+          .read(billingViewModelProvider.notifier)
           .purchase(pomodoistLifetimeProductId);
       time.flushMicrotasks();
       store.snapshot = () async =>
@@ -632,7 +630,7 @@ void main() {
         _purchase(pomodoistLifetimeProductId)..pendingCompletePurchase = true,
       ]);
       time.flushMicrotasks();
-      final state = container.read(billingControllerProvider);
+      final state = container.read(billingViewModelProvider);
       expect(state.hasLocalStoreKitEntitlement, isFalse);
       expect(state.purchaseSuccessProductId, isNull);
       expect(state.error, contains('storekit_unverified_transaction'));
@@ -666,7 +664,7 @@ void main() {
         store.snapshot = () =>
             store.refreshRequests == 2 ? old.future : fresh.future;
         store.restore = () => synced.future;
-        final controller = container.read(billingControllerProvider.notifier);
+        final controller = container.read(billingViewModelProvider.notifier);
         controller.reload();
         time.flushMicrotasks();
         controller.restorePurchases();
@@ -676,7 +674,7 @@ void main() {
         old.complete([]);
         time.flushMicrotasks();
         synced.complete([
-          BillingTransactionProof.fromPurchase(
+          billingTransactionProofFromPurchase(
             _purchase(pomodoistLifetimeProductId),
           ),
         ]);
@@ -684,7 +682,7 @@ void main() {
         expect(links, isEmpty);
         expect(store.refreshRequests, 3);
         fresh.complete([
-          BillingTransactionProof.fromPurchase(
+          billingTransactionProofFromPurchase(
             _purchase(pomodoistAnnualProductId),
           ),
         ]);
@@ -704,23 +702,23 @@ void main() {
         final fresh = Completer<List<BillingTransactionProof>>();
         store.restore = () => restored.future;
         store.snapshot = () => fresh.future;
-        container.read(billingControllerProvider.notifier).restorePurchases();
+        container.read(billingViewModelProvider.notifier).restorePurchases();
         store.emit([_purchase(pomodoistAnnualProductId)]);
         time.flushMicrotasks();
         restored.complete([]);
         time.flushMicrotasks();
         expect(
-          container.read(billingControllerProvider).purchaseSuccessProductId,
+          container.read(billingViewModelProvider).purchaseSuccessProductId,
           isNull,
         );
         fresh.complete([
-          BillingTransactionProof.fromPurchase(
+          billingTransactionProofFromPurchase(
             _purchase(pomodoistAnnualProductId),
           ),
         ]);
         time.flushMicrotasks();
         expect(
-          container.read(billingControllerProvider).purchaseSuccessProductId,
+          container.read(billingViewModelProvider).purchaseSuccessProductId,
           pomodoistAnnualProductId,
         );
       });
@@ -744,17 +742,14 @@ void main() {
         ],
       );
       container
-          .read(billingControllerProvider.notifier)
+          .read(billingViewModelProvider.notifier)
           .purchase(pomodoistAnnualProductId);
       container.read(_identityProvider.notifier).change('account-b');
       time.flushMicrotasks();
       token.complete('old-account-token');
       time.flushMicrotasks();
       expect(store.bought, isEmpty);
-      expect(
-        container.read(billingControllerProvider).pendingProductId,
-        isNull,
-      );
+      expect(container.read(billingViewModelProvider).pendingProductId, isNull);
     });
   });
 
@@ -777,7 +772,7 @@ void main() {
         );
         container.dispose();
         snapshot.complete([
-          BillingTransactionProof.fromPurchase(
+          billingTransactionProofFromPurchase(
             _purchase(pomodoistLifetimeProductId),
           ),
         ]);
@@ -811,7 +806,7 @@ ProviderContainer _ready(
     container.dispose();
     store.events.close();
   });
-  container.read(billingControllerProvider);
+  container.read(billingViewModelProvider);
   time.flushMicrotasks();
   return container;
 }
@@ -878,7 +873,7 @@ class _Store extends BillingStore {
     refreshRequests += 1;
     if (snapshot != null) return snapshot!();
     if (failRefresh) throw StateError('StoreKit unavailable');
-    return transactions.map(BillingTransactionProof.fromPurchase).toList();
+    return transactions.map(billingTransactionProofFromPurchase).toList();
   }
 
   @override

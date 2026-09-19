@@ -167,7 +167,7 @@ Deno.test("registers personal tools and shared project collaboration", async () 
 // The app localizations live outside the public core, so a repository that only
 // consumes the core has no copy of them to compare against.
 const appLocalizations = new URL(
-  "../../../../apps/flutter/lib/l10n/",
+  "../../../../apps/flutter/lib/ui/core/localization/",
   import.meta.url,
 );
 
@@ -194,7 +194,7 @@ Deno.test({
         const arb = JSON.parse(
           await Deno.readTextFile(
             new URL(
-              `../../../../apps/flutter/lib/l10n/app_${base}.arb`,
+              `../../../../apps/flutter/lib/ui/core/localization/app_${base}.arb`,
               import.meta.url,
             ),
           ),

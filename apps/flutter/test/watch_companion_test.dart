@@ -1,24 +1,27 @@
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
+import 'package:pomodoist/data/repositories/planning/task_decomposition_repository.dart';
+import 'package:pomodoist/data/repositories/projects/project_repository_impl.dart';
 import 'package:app_account/app_account.dart';
 import 'dart:convert';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/app/config/runtime_public_config.dart';
-import 'package:pomodoist/app/platform/watch_companion.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/notifications/notification_scheduler.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/features/focus/data/focus_repository_impl.dart';
-import 'package:pomodoist/features/planning/data/quick_add_service.dart';
-import 'package:pomodoist/features/planning/data/task_decomposer.dart';
-import 'package:pomodoist/features/planning/domain/quick_add_parser.dart';
-import 'package:pomodoist/features/tasks/data/task_repository_impl.dart';
+import 'package:pomodoist/config/runtime_public_config.dart';
+import 'package:pomodoist/config/platform/watch_companion.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/data/repositories/focus/focus_repository_impl.dart';
+import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late AppDatabase db;
-  late DriftSyncQueueRepository syncQueue;
+  late DriftOutboxService syncQueue;
   late DriftTaskRepository taskRepository;
   late DriftProjectRepository projectRepository;
   late DriftFocusRepository focusRepository;
@@ -29,7 +32,7 @@ void main() {
     selectedPresetId = null;
     db = AppDatabase(NativeDatabase.memory());
     await db.ensureSeedData();
-    syncQueue = DriftSyncQueueRepository(db);
+    syncQueue = DriftOutboxService(db);
     taskRepository = DriftTaskRepository(db, syncQueue);
     projectRepository = DriftProjectRepository(db, syncQueue);
     focusRepository = DriftFocusRepository(
@@ -41,7 +44,7 @@ void main() {
       taskRepository: taskRepository,
       projectRepository: projectRepository,
       focusRepository: focusRepository,
-      quickAddService: QuickAddService(
+      quickAddService: QuickAddUseCase(
         parser: const QuickAddParser(),
         taskRepository: taskRepository,
         projectRepository: projectRepository,

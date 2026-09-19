@@ -1,27 +1,29 @@
+import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
+import 'package:pomodoist/data/repositories/projects/project_repository_impl.dart';
+import 'package:pomodoist/data/repositories/labels/label_repository_impl.dart';
 import 'dart:async';
 
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/features/planning/data/task_decomposer.dart';
-import 'package:pomodoist/features/tasks/presentation/widgets/quick_add_bar.dart';
-import 'package:pomodoist/features/tasks/presentation/widgets/label_icon.dart';
-import 'package:pomodoist/core/db/app_database.dart';
-import 'package:pomodoist/core/sync/sync_queue_repository.dart';
-import 'package:pomodoist/features/tasks/data/task_repository_impl.dart';
-import 'package:pomodoist/features/tasks/domain/task_models.dart';
-import 'package:pomodoist/features/planning/data/quick_add_service.dart';
-import 'package:pomodoist/features/planning/domain/quick_add_parser.dart';
+import 'package:pomodoist/ui/tasks/widgets/label_icon.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
+import 'package:pomodoist/domain/use_cases/quick_add/voice_quick_add_use_case.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 
 void main() {
   late AppDatabase db;
   late DriftTaskRepository tasks;
   late DriftLabelRepository labels;
-  late DriftSyncQueueRepository queue;
+  late DriftOutboxService queue;
   setUp(() async {
     db = AppDatabase(NativeDatabase.memory());
     await db.ensureSeedData();
-    queue = DriftSyncQueueRepository(db);
+    queue = DriftOutboxService(db);
     tasks = DriftTaskRepository(db, queue);
     labels = DriftLabelRepository(db, queue);
   });
@@ -30,21 +32,25 @@ void main() {
   test(
     'label query reacts to links, completion and deletion across projects',
     () async {
-      final id = await labels.createLabel('Review');
+      final id = await labels
+          .createLabel('Review')
+          .then((result) => result.getOrThrow());
       final project = await DriftProjectRepository(
         db,
         queue,
-      ).createProject('Work');
-      final first = await tasks.createTask(
-        const CreateTaskInput(content: 'First'),
-      );
-      final second = await tasks.createTask(
-        CreateTaskInput(
-          content: 'Second',
-          projectId: project,
-          labelNames: ['Review'],
-        ),
-      );
+      ).createProject('Work').then((result) => result.getOrThrow());
+      final first = await tasks
+          .createTask(const CreateTaskInput(content: 'First'))
+          .then((result) => result.getOrThrow());
+      final second = await tasks
+          .createTask(
+            CreateTaskInput(
+              content: 'Second',
+              projectId: project,
+              labelNames: ['Review'],
+            ),
+          )
+          .then((result) => result.getOrThrow());
       final stream = StreamIterator(
         tasks.watchTasks(TaskQuery(kind: TaskQueryKind.label, labelId: id)),
       );
@@ -81,11 +87,11 @@ void main() {
         db.taskLabels,
       )..where((r) => r.taskId.equals(first) & r.labelId.equals(id))).go();
       await expectIds({second});
-      await tasks.completeTask(second);
+      await tasks.completeTask(second).then((result) => result.getOrThrow());
       await expectIds({});
-      await tasks.uncompleteTask(second);
+      await tasks.uncompleteTask(second).then((result) => result.getOrThrow());
       await expectIds({second});
-      await labels.deleteLabel(id);
+      await labels.deleteLabel(id).then((result) => result.getOrThrow());
       await expectIds({});
     },
   );
@@ -93,16 +99,17 @@ void main() {
   test(
     'quick add keeps context label by ID with explicit labels and project',
     () async {
-      final id = await labels.createLabel('Review');
-      final service = QuickAddService(
+      final id = await labels
+          .createLabel('Review')
+          .then((result) => result.getOrThrow());
+      final service = QuickAddUseCase(
         parser: const QuickAddParser(),
         taskRepository: tasks,
         projectRepository: DriftProjectRepository(db, queue),
       );
-      final task = await service.createTask(
-        'Check #Work @Review @Extra',
-        labelId: id,
-      );
+      final task = await service
+          .createTask('Check #Work @Review @Extra', labelId: id)
+          .then((result) => result.getOrThrow());
       final links =
           await (db.select(db.taskLabels)..where(
                 (r) => r.taskId.equals(task) & r.kind.equals(labelKindUser),
@@ -114,9 +121,11 @@ void main() {
         (await tasks.watchTask(task).first)!.projectId,
         isNot(inboxProjectId),
       );
-      await labels.deleteLabel(id);
+      await labels.deleteLabel(id).then((result) => result.getOrThrow());
       await expectLater(
-        service.createTask('Must not create', labelId: id),
+        service
+            .createTask('Must not create', labelId: id)
+            .then((result) => result.getOrThrow()),
         throwsStateError,
       );
       expect(await db.select(db.tasks).get(), hasLength(1));
@@ -126,8 +135,10 @@ void main() {
   test(
     'voice drafts and subtasks inherit the label without losing metadata',
     () async {
-      final id = await labels.createLabel('Review');
-      final service = QuickAddService(
+      final id = await labels
+          .createLabel('Review')
+          .then((result) => result.getOrThrow());
+      final service = QuickAddUseCase(
         parser: const QuickAddParser(),
         taskRepository: tasks,
         projectRepository: DriftProjectRepository(db, queue),
@@ -169,10 +180,26 @@ void main() {
   test(
     'label icons persist and enqueue updates without editing Kanban',
     () async {
-      final id = await labels.createLabel('Review', icon: 'bookmark');
-      expect((await labels.findByName('Review'))!.icon, 'bookmark');
-      await labels.updateLabelIcon(id, 'bolt');
-      expect((await labels.findByName('Review'))!.icon, 'bolt');
+      final id = await labels
+          .createLabel('Review', icon: 'bookmark')
+          .then((result) => result.getOrThrow());
+      expect(
+        (await labels
+                .findByName('Review')
+                .then((result) => result.getOrThrow()))!
+            .icon,
+        'bookmark',
+      );
+      await labels
+          .updateLabelIcon(id, 'bolt')
+          .then((result) => result.getOrThrow());
+      expect(
+        (await labels
+                .findByName('Review')
+                .then((result) => result.getOrThrow()))!
+            .icon,
+        'bolt',
+      );
       expect(
         (await queue.watchPending().first).where(
           (c) => c.type == 'label.update',
@@ -183,11 +210,15 @@ void main() {
         db.labels,
       )..where((r) => r.kind.equals(labelKindKanbanStatus))).get();
       await expectLater(
-        labels.updateLabelIcon(status.first.id, 'bolt'),
+        labels
+            .updateLabelIcon(status.first.id, 'bolt')
+            .then((result) => result.getOrThrow()),
         throwsStateError,
       );
       await expectLater(
-        labels.updateLabelIcon(id, 'folder'),
+        labels
+            .updateLabelIcon(id, 'folder')
+            .then((result) => result.getOrThrow()),
         throwsArgumentError,
       );
     },

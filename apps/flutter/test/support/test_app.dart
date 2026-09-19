@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/l10n/app_localizations.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:flutter/foundation.dart';
-import 'package:pomodoist/app/theme/app_theme.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 /// Matches the mixed Material/Shadcn environment used by both app roots.
