@@ -10,6 +10,7 @@ class QuickAddComposer extends ConsumerStatefulWidget {
     this.labelId,
     this.onVoiceModeChanged,
     this.onVoiceSessionChanged,
+    this.compact = false,
     super.key,
   });
 
@@ -21,6 +22,7 @@ class QuickAddComposer extends ConsumerStatefulWidget {
   final String? labelId;
   final ValueChanged<bool>? onVoiceModeChanged;
   final ValueChanged<bool>? onVoiceSessionChanged;
+  final bool compact;
 
   @override
   ConsumerState<QuickAddComposer> createState() => _QuickAddComposerState();
@@ -29,6 +31,7 @@ class QuickAddComposer extends ConsumerStatefulWidget {
 class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
   final _controller = QuickAddTextController();
   final _identity = Object();
+  final _inputKey = GlobalKey();
   bool get _busy => ref.read(quickAddViewModelProvider(_identity)).isLoading;
 
   @override
@@ -50,67 +53,202 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
   Widget build(BuildContext context) {
     ref.watch(quickAddViewModelProvider(_identity));
     final l10n = context.l10n;
+    final input = QuickAddInput(
+      key: _inputKey,
+      textFieldKey: const Key('sidebar-quick-add-input'),
+      controller: _controller,
+      enabled: !_busy,
+      autofocus: true,
+      maxLines: 4,
+      style: Theme.of(context).textTheme.headlineSmall,
+      textInputAction: TextInputAction.done,
+      decoration: InputDecoration(
+        hintText: l10n.quickAddHint,
+        hintStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
+          color: context.appColors.secondaryText,
+        ),
+        hintMaxLines: 2,
+        filled: true,
+        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: context.appColors.accent),
+        ),
+        disabledBorder: InputBorder.none,
+      ),
+      onSubmitted: (_) => _submit(),
+    );
+    final details = QuickAddDetails(
+      controller: _controller,
+      defaultDate: widget.defaultDate,
+      projectId: widget.projectId,
+      enabled: !_busy,
+      touchTargets: widget.compact,
+      desktop: !widget.compact,
+    );
+    final submit = ShadButton(
+      key: const Key('sidebar-quick-add-submit'),
+      height: widget.compact ? 48 : 40,
+      enabled: !_busy,
+      onPressed: _busy ? null : _submit,
+      leading: _busy
+          ? SizedBox.square(
+              dimension: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: context.appColors.onAccent,
+              ),
+            )
+          : const Icon(LucideIcons.plus),
+      trailing: widget.compact
+          ? null
+          : const Icon(LucideIcons.cornerDownLeft, size: 16),
+      child: Text(l10n.commonAdd),
+    );
     return CallbackShortcuts(
       bindings: {const SingleActivator(LogicalKeyboardKey.escape): _cancel},
       child: Focus(
-        autofocus: true,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            QuickAddInput(
-              textFieldKey: const Key('sidebar-quick-add-input'),
-              controller: _controller,
-              enabled: !_busy,
-              autofocus: true,
-              textInputAction: TextInputAction.done,
-              decoration: InputDecoration(
-                hintText: l10n.quickAddHint,
-                prefixIcon: const Icon(LucideIcons.listPlus),
-                suffixIcon: IconButton(
-                  key: const Key('sidebar-quick-add-voice'),
-                  tooltip: l10n.voiceQuickAdd,
-                  onPressed: _busy ? null : _openVoiceSheet,
-                  icon: const Icon(LucideIcons.mic),
+        child: widget.compact
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Center(
+                            child: Container(
+                              width: 36,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: context.appColors.border,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Semantics(
+                                  namesRoute: true,
+                                  header: true,
+                                  child: Text(
+                                    l10n.addTask,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: l10n.commonClose,
+                                onPressed: _busy ? null : _cancel,
+                                constraints: const BoxConstraints.tightFor(
+                                  width: 48,
+                                  height: 48,
+                                ),
+                                icon: const Icon(LucideIcons.x),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          input,
+                          details,
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                        Tooltip(
+                          message: l10n.voiceQuickAdd,
+                          child: ShadButton.secondary(
+                            key: const Key('sidebar-quick-add-voice'),
+                            width: 48,
+                            height: 48,
+                            padding: EdgeInsets.zero,
+                            enabled: !_busy,
+                            onPressed: _busy ? null : _openVoiceSheet,
+                            child: Icon(
+                              LucideIcons.mic,
+                              semanticLabel: l10n.voiceQuickAdd,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(child: submit),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+            : Semantics(
+                scopesRoute: true,
+                namesRoute: true,
+                explicitChildNodes: true,
+                label: l10n.addTask,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              LucideIcons.listPlus,
+                              color: context.appColors.secondaryText,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(child: input),
+                            const SizedBox(width: 16),
+                            Tooltip(
+                              message: l10n.voiceQuickAdd,
+                              child: ShadButton.outline(
+                                key: const Key('sidebar-quick-add-voice'),
+                                width: 40,
+                                height: 40,
+                                padding: EdgeInsets.zero,
+                                enabled: !_busy,
+                                onPressed: _busy ? null : _openVoiceSheet,
+                                child: Icon(
+                                  LucideIcons.mic,
+                                  semanticLabel: l10n.voiceQuickAdd,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Divider(height: 1, color: context.appColors.border),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      child: OverflowBar(
+                        alignment: MainAxisAlignment.spaceBetween,
+                        overflowAlignment: OverflowBarAlignment.end,
+                        spacing: 12,
+                        overflowSpacing: 12,
+                        children: [details, submit],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              onSubmitted: (_) => _submit(),
-            ),
-            QuickAddDetails(
-              controller: _controller,
-              defaultDate: widget.defaultDate,
-              projectId: widget.projectId,
-              enabled: !_busy,
-            ),
-            const SizedBox(height: 20),
-            OverflowBar(
-              alignment: MainAxisAlignment.end,
-              spacing: 8,
-              children: [
-                ShadButton.ghost(
-                  enabled: !_busy,
-                  onPressed: _busy ? null : _cancel,
-                  child: Text(l10n.commonCancel),
-                ),
-                ShadButton(
-                  key: const Key('sidebar-quick-add-submit'),
-                  enabled: !_busy,
-                  onPressed: _busy ? null : _submit,
-                  leading: _busy
-                      ? SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: context.appColors.onAccent,
-                          ),
-                        )
-                      : const Icon(LucideIcons.plus),
-                  child: Text(l10n.commonAdd),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

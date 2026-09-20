@@ -26,7 +26,7 @@ make android
 `make setup-flutter` generates the ignored `.env.android` profile from the
 `ANDROID__` values in `.env.setup`. `make android` uses that profile, isolates
 Gradle state under `build/android/gradle-home`, and writes the debug APK to
-`apps/flutter/build/app/outputs/flutter-apk/app-debug.apk` on Windows, macOS, and Linux.
+`build/flutter/app/outputs/flutter-apk/app-debug.apk` on Windows, macOS, and Linux.
 Override `ANDROID_CONFIG` to build against another dotenv or JSON dart-define file.
 
 The entry point follows the profile: `make android` reads `POMODOIST_ENVIRONMENT`

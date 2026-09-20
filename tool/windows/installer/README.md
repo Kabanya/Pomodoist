@@ -23,7 +23,7 @@ The installer:
 - creates a current-user Start Menu shortcut and an uninstall entry;
 - launches Pomodoist after a successful interactive installation;
 - has no welcome, directory, program-group, ready, or finish pages;
-- produces `apps\flutter\build\windows\installer\Pomodoist-Setup.exe` and its
+- produces `build\flutter\windows\installer\Pomodoist-Setup.exe` and its
   SHA-256 checksum.
 
 The installer contains the x64 Flutter build. It runs natively on x64 Windows

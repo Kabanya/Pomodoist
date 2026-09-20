@@ -11,7 +11,29 @@ REPO_ROOT := $(CURDIR)
 # Make abspath splits paths at spaces; configuration paths are single values.
 repo_path      = $(if $(or $(filter /%,$(firstword $(1))),$(findstring :/,$(firstword $(1)))),$(1),$(REPO_ROOT)/$(1))
 FLUTTER_ROOT  := $(REPO_ROOT)/apps/flutter
-FLUTTER_BUILD := $(FLUTTER_ROOT)/build
+# Flutter always writes to <project>/build and keeps its compile cache in
+# <project>/.dart_tool. Both paths are symlinks to the repository-root build
+# directory. Every generated artifact lands under build/, including the Dart
+# tool state, and nothing is left next to the sources.
+FLUTTER_BUILD     := $(REPO_ROOT)/build/flutter
+FLUTTER_DART_TOOL := $(REPO_ROOT)/build/dart_tool
+FLUTTER_LINK      := $(FLUTTER_ROOT)/build
+DART_TOOL_LINK    := $(FLUTTER_ROOT)/.dart_tool
+# Git Bash cannot create junctions, so Windows delegates to the same script
+# tool/windows/build.ps1 runs; PowerShell is available on every supported setup.
+ifeq ($(OS),Windows_NT)
+LINK_FLUTTER_BUILD = powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(REPO_ROOT)/tool/windows/link-build.ps1"
+else
+LINK_FLUTTER_BUILD = mkdir -p "$(FLUTTER_BUILD)" "$(FLUTTER_DART_TOOL)" && \
+	{ [ -L "$(FLUTTER_LINK)" ] || { rm -rf "$(FLUTTER_LINK)"; ln -s ../../build/flutter "$(FLUTTER_LINK)"; }; } && \
+	{ [ -L "$(DART_TOOL_LINK)" ] || { rm -rf "$(DART_TOOL_LINK)"; ln -s ../../build/dart_tool "$(DART_TOOL_LINK)"; }; }
+endif
+
+# Restores the build and .dart_tool symlinks after flutter clean removes them
+# or a Flutter process replaces them with real directories.
+.PHONY: flutter-build-link
+flutter-build-link:
+	@$(LINK_FLUTTER_BUILD)
 
 # Tools. Prefer the project-pinned FVM SDK when it has been bootstrapped.
 FVM_FLUTTER := $(REPO_ROOT)/.fvm/flutter_sdk/bin/flutter
@@ -203,7 +225,7 @@ setup: setup-env setup-flutter
 setup-env:
 	"$(DART)" tool/env_setup.dart bootstrap
 
-setup-flutter: setup-env
+setup-flutter: setup-env flutter-build-link
 	"$(DART)" tool/env_setup.dart sync
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" pub get
 
@@ -230,20 +252,20 @@ chrome-debug:
 chrome-release:
 	node tool/web-companions.mjs chrome release --config "$(COMPANION_RELEASE_CONFIG)"
 
-run:
+run: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
-run-linux:
+run-linux: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d linux --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
-web:
+web: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d chrome --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
 analyze:
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" analyze
 	"$(DART)" analyze tool
 
-test:
+test: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" test
 
 test-linux-installer:
@@ -268,19 +290,19 @@ check: architecture analyze test
 format:
 	"$(DART)" format apps/flutter/lib apps/flutter/test apps/flutter/tool tool
 
-android:
+android: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && GRADLE_USER_HOME="$(call repo_path,$(ANDROID_GRADLE_HOME))" "$(FLUTTER)" build apk --debug --target "$(ANDROID_TARGET)" --dart-define-from-file="$(call repo_path,$(ANDROID_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=storekit
 
-web-debug:
+web-debug: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build web --debug --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
-web-profile:
+web-profile: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build web --profile --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
-web-release:
+web-release: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build web --release --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
-linux-pub-get:
+linux-pub-get: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) bash "$(REPO_ROOT)/tool/linux/pub_get_with_retry.sh" "$(FLUTTER)"
 
 linux-debug: linux-pub-get
@@ -312,6 +334,7 @@ windows-installer: windows-release
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/installer/build.ps1 -BuildDirectory "$(WINDOWS_RELEASE_DIR)"
 
 macos-debug macos-profile: POMODOIST_BILLING_CHANNEL = storekit
+macos-debug macos-profile: flutter-build-link
 
 # Swift Package Manager dependencies emit hundreds of deprecation warnings that
 # drown out the build result; the filter drops them while keeping real errors.
@@ -331,7 +354,7 @@ macos-profile:
 		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)" 2>&1 \
 		| awk -f "$(REPO_ROOT)/tool/xcode-warnings.awk"
 
-macos-release: testflight-preflight
+macos-release: testflight-preflight flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --release \
 		--target "$(MACOS_RELEASE_TARGET)" \
 		--dart-define-from-file="$(call repo_path,$(MACOS_RELEASE_CONFIG))" \
@@ -366,7 +389,7 @@ macos-reset:
 # Flutter profile mode is unavailable on iOS Simulator, so local runs use debug.
 ios-debug ios-profile: RUN_SIMULATOR = $(IOS_SIMULATOR)
 ipad-debug ipad-profile: RUN_SIMULATOR = $(IPAD_SIMULATOR)
-ios-debug ios-profile ipad-debug ipad-profile:
+ios-debug ios-profile ipad-debug ipad-profile: flutter-build-link
 	xcrun simctl bootstatus "$(RUN_SIMULATOR)" -b
 	open -a Simulator
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d "$(RUN_SIMULATOR)" --debug --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=storekit
@@ -408,7 +431,7 @@ testflight-auth:
 	@test -n "$(ASC_ISSUER_ID)" || (echo "ASC_ISSUER_ID is missing in $(PRIVATE_CONFIG)" >&2; exit 1)
 	@"$(DART)" tool/env_setup.dart value --env "$(PRIVATE_CONFIG)" --key ASC_PRIVATE_KEY_BASE64 >/dev/null
 
-testflight-ios: testflight-preflight testflight-auth
+testflight-ios: testflight-preflight testflight-auth flutter-build-link
 	@set -eu; \
 		key_dir="$$(mktemp -d "$${TMPDIR:-/tmp}/pomodoist-testflight.XXXXXX")"; \
 		trap 'test -n "$$key_dir" && rm -rf -- "$$key_dir"' EXIT HUP INT TERM; \
@@ -433,8 +456,11 @@ testflight-ios: testflight-preflight testflight-auth
 MACOS_ARCHIVE_PATH = $(abspath build/TestFlight/Pomodoist-macOS.xcarchive)
 MACOS_EXPORT_PATH = $(abspath build/TestFlight/macos)
 MACOS_PACKAGE_PATH = $(MACOS_EXPORT_PATH)/Pomodoist.pkg
+# Keep Xcode's archive intermediates under build/ instead of the global
+# ~/Library/Developer/Xcode/DerivedData.
+MACOS_DERIVED_DATA = $(abspath build/TestFlight/derived-data)
 
-testflight-macos: testflight-preflight testflight-auth
+testflight-macos: testflight-preflight testflight-auth flutter-build-link
 	@set -eu; \
 		key_dir="$$(mktemp -d "$${TMPDIR:-/tmp}/pomodoist-testflight.XXXXXX")"; \
 		trap 'test -n "$$key_dir" && rm -rf -- "$$key_dir"' EXIT HUP INT TERM; \
@@ -448,6 +474,7 @@ testflight-macos: testflight-preflight testflight-auth
 		rm -rf "$(MACOS_ARCHIVE_PATH)" "$(MACOS_EXPORT_PATH)"; \
 		xcodebuild -workspace "$(FLUTTER_ROOT)/macos/Runner.xcworkspace" -scheme Runner \
 			-configuration Release -archivePath "$(MACOS_ARCHIVE_PATH)" archive \
+			-derivedDataPath "$(MACOS_DERIVED_DATA)" \
 			-hideShellScriptEnvironment \
 			-allowProvisioningUpdates \
 			-authenticationKeyPath "$$key_path" \
@@ -478,3 +505,5 @@ devices:
 
 clean:
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" clean
+	rm -rf "$(FLUTTER_BUILD)" "$(FLUTTER_DART_TOOL)"
+	@$(LINK_FLUTTER_BUILD)

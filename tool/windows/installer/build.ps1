@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$BuildDirectory = 'apps\flutter\build\windows\x64\runner\Release',
-    [string]$OutputDirectory = 'apps\flutter\build\windows\installer',
+    [string]$BuildDirectory = 'build\flutter\windows\x64\runner\Release',
+    [string]$OutputDirectory = 'build\flutter\windows\installer',
     [string]$CompilerPath,
     [string]$Version
 )

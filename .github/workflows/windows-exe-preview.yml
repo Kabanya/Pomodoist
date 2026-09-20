@@ -71,6 +71,10 @@ jobs:
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version-file: .fvmrc
+      - name: Link Flutter build output into build/
+        run: >-
+          powershell.exe -NoProfile -ExecutionPolicy Bypass
+          -File .\tool\windows\link-build.ps1
       - run: flutter pub get
         working-directory: apps/flutter
       - name: Test installer packaging boundary
@@ -142,9 +146,9 @@ jobs:
             -CompilerPath $compiler
       - name: Verify versions, unsigned boundary, and checksum
         run: |
-          $installer = Resolve-Path apps\flutter\build\windows\installer\Pomodoist-Setup.exe
+          $installer = Resolve-Path build\flutter\windows\installer\Pomodoist-Setup.exe
           $installerInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($installer)
-          $appPath = (Resolve-Path apps\flutter\build\windows\x64\runner\Release\pomodoist.exe).Path
+          $appPath = (Resolve-Path build\flutter\windows\x64\runner\Release\pomodoist.exe).Path
           $appInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($appPath)
           if ($installerInfo.ProductVersion.Trim() -cne $env:POMODOIST_VERSION -or
               $appInfo.ProductVersion.Split('+')[0] -cne $env:POMODOIST_VERSION) {
@@ -168,8 +172,8 @@ jobs:
         with:
           name: pomodoist-windows-exe
           path: |
-            apps/flutter/build/windows/installer/Pomodoist-Setup.exe
-            apps/flutter/build/windows/installer/Pomodoist-Setup.exe.sha256
+            build/flutter/windows/installer/Pomodoist-Setup.exe
+            build/flutter/windows/installer/Pomodoist-Setup.exe.sha256
           if-no-files-found: error
           retention-days: 14
 

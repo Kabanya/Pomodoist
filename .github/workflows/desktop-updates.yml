@@ -52,6 +52,12 @@ jobs:
         if: runner.os == 'Windows'
         shell: powershell
         run: .\tool\test_desktop_update_windows.ps1
+      - name: Link Flutter build output into build/
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: >-
+          powershell.exe -NoProfile -ExecutionPolicy Bypass
+          -File .\tool\windows\link-build.ps1
       - run: flutter pub get --enforce-lockfile
         working-directory: apps/flutter
       - name: Test channels, popup, controller and verified downloads

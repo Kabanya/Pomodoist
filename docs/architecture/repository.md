@@ -66,8 +66,12 @@ commands, enter `apps/flutter` and use the pinned root SDK:
 ```
 
 Generated and private environment files remain outside source architecture.
-Flutter outputs stay under `apps/flutter/build`; companion outputs keep their
-existing root build locations.
+Flutter always writes to `<project>/build` and keeps its compile cache in
+`<project>/.dart_tool`, so `apps/flutter/build` and `apps/flutter/.dart_tool`
+are symlinks (junctions on Windows) into the repository-root `build/`: every
+generated artifact, including the Dart tool cache, lives under `build/` next to
+the companion outputs. The macOS TestFlight archive keeps its Xcode derived
+data in `build/TestFlight`.
 
 ## Automated boundaries
 

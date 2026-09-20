@@ -83,7 +83,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Add task'), findsOneWidget);
     expect(find.byType(QuickAddComposer), findsOneWidget);
     expect(find.byKey(const Key('sidebar-quick-add-input')), findsOneWidget);
 

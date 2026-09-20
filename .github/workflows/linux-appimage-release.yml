@@ -150,14 +150,14 @@ jobs:
             POMODOIST_RELEASE="$GITHUB_SHA"
       - name: Verify AppImage checksum
         run: |
-          cd apps/flutter/build/linux/appimage
+          cd build/flutter/linux/appimage
           sha256sum --check Pomodoist-x86_64.AppImage.sha256
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: pomodoist-linux-appimage-x86_64
           path: |
-            apps/flutter/build/linux/appimage/Pomodoist-x86_64.AppImage
-            apps/flutter/build/linux/appimage/Pomodoist-x86_64.AppImage.sha256
+            build/flutter/linux/appimage/Pomodoist-x86_64.AppImage
+            build/flutter/linux/appimage/Pomodoist-x86_64.AppImage.sha256
           if-no-files-found: error
           retention-days: 14
       - name: Upload AppImage and publish complete desktop release
@@ -197,7 +197,7 @@ jobs:
             gh api --method POST \
               "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$release_id/assets?name=$asset" \
               --header 'Content-Type: application/octet-stream' \
-              --input "apps/flutter/build/linux/appimage/$asset" \
+              --input "build/flutter/linux/appimage/$asset" \
               --silent
           done
           required_assets=(

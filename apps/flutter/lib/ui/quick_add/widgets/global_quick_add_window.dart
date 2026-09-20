@@ -9,7 +9,6 @@ import 'package:multiview_desktop/multiview_desktop.dart';
 
 import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
-import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/quick_add/view_models/global_quick_add_view_model.dart';
 import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:pomodoist/ui/core/widgets/app_zoom.dart';
@@ -21,7 +20,7 @@ import 'package:pomodoist/ui/core/themes/macos_glass.dart';
 import 'package:pomodoist/ui/core/themes/theme_background.dart';
 import 'package:pomodoist/ui/core/widgets/keyboard_dismiss_region.dart';
 
-const globalQuickAddCompactSize = Size(600, 300);
+const globalQuickAddCompactSize = Size(680, 200);
 const globalQuickAddVoiceSize = Size(720, 720);
 
 final globalQuickAddWindowManager = GlobalQuickAddWindowManager();
@@ -54,7 +53,7 @@ class GlobalQuickAddWindowManager extends WindowObserver {
       ),
       options: const WindowOptions(
         size: globalQuickAddCompactSize,
-        minimumSize: Size(420, 260),
+        minimumSize: Size(420, 200),
         maximumSize: Size(900, 800),
         title: 'Pomodoist',
         alwaysOnTop: true,
@@ -156,25 +155,10 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
           child: Scaffold(
             backgroundColor: Colors.transparent,
             body: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Builder(
-                  builder: (context) => Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        context.l10n.addTask,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 18),
-                      QuickAddComposer(
-                        onCompleted: onClose,
-                        onCancel: onClose,
-                        onVoiceModeChanged: onVoiceModeChanged,
-                      ),
-                    ],
-                  ),
-                ),
+              child: QuickAddComposer(
+                onCompleted: onClose,
+                onCancel: onClose,
+                onVoiceModeChanged: onVoiceModeChanged,
               ),
             ),
           ),

@@ -89,8 +89,8 @@ jobs:
         with:
           name: android-validation-NOT-FOR-DISTRIBUTION
           path: |
-            apps/flutter/build/app/outputs/flutter-apk/app-release.apk
-            apps/flutter/build/app/outputs/bundle/release/app-release.aab
+            build/flutter/app/outputs/flutter-apk/app-release.apk
+            build/flutter/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 3
       - name: Remove disposable signing material

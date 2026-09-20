@@ -28,6 +28,8 @@ class QuickAddDetails extends ConsumerWidget {
     this.priority,
     this.enabled = true,
     this.onChanged,
+    this.touchTargets = false,
+    this.desktop = false,
   });
 
   final QuickAddTextController controller;
@@ -38,6 +40,8 @@ class QuickAddDetails extends ConsumerWidget {
   final int? priority;
   final bool enabled;
   final VoidCallback? onChanged;
+  final bool touchTargets;
+  final bool desktop;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -166,13 +170,15 @@ class QuickAddDetails extends ConsumerWidget {
             ? TimeOfDay.fromDateTime(schedule!.start!.toLocal()).format(context)
             : null;
         return Padding(
-          padding: const EdgeInsets.only(top: 8),
+          padding: EdgeInsets.only(top: desktop ? 0 : 8),
           child: Wrap(
-            spacing: 4,
-            runSpacing: 4,
+            spacing: touchTargets || desktop ? 8 : 4,
+            runSpacing: touchTargets || desktop ? 8 : 4,
             children: [
               AppDateTimePicker(
                 builder: (context, picker) => _DetailsMenu(
+                  touchTargets: touchTargets,
+                  desktop: desktop,
                   focusNode: picker.focusNode,
                   label: timeLabel == null
                       ? dateLabel
@@ -207,6 +213,8 @@ class QuickAddDetails extends ConsumerWidget {
                 ),
               ),
               _DetailsMenu(
+                touchTargets: touchTargets,
+                desktop: desktop,
                 label: projectName,
                 icon: LucideIcons.hash,
                 enabled: canEdit,
@@ -235,7 +243,14 @@ class QuickAddDetails extends ConsumerWidget {
                 ],
               ),
               _DetailsMenu(
-                label: context.l10n.priority(parsed.priority ?? priority ?? 4),
+                touchTargets: touchTargets,
+                desktop: desktop,
+                label: touchTargets || desktop
+                    ? 'P${parsed.priority ?? priority ?? 4}'
+                    : context.l10n.priority(parsed.priority ?? priority ?? 4),
+                semanticLabel: context.l10n.priority(
+                  parsed.priority ?? priority ?? 4,
+                ),
                 icon: LucideIcons.flag,
                 enabled: canEdit,
                 items: (close) => [
@@ -256,14 +271,15 @@ class QuickAddDetails extends ConsumerWidget {
       },
     );
   }
-}
 
-Widget _option(String label, VoidCallback? action) => ShadButton.ghost(
-  enabled: action != null,
-  onPressed: action,
-  size: ShadButtonSize.sm,
-  child: Text(label, overflow: TextOverflow.ellipsis),
-);
+  Widget _option(String label, VoidCallback? action) => ShadButton.ghost(
+    enabled: action != null,
+    onPressed: action,
+    size: ShadButtonSize.sm,
+    height: touchTargets ? 48 : null,
+    child: Text(label, overflow: TextOverflow.ellipsis),
+  );
+}
 
 class _DetailsMenu extends StatefulWidget {
   const _DetailsMenu({
@@ -272,11 +288,17 @@ class _DetailsMenu extends StatefulWidget {
     required this.enabled,
     required this.items,
     this.focusNode,
+    this.touchTargets = false,
+    this.desktop = false,
+    this.semanticLabel,
   });
   final String label;
+  final String? semanticLabel;
   final IconData icon;
   final FocusNode? focusNode;
   final bool enabled;
+  final bool touchTargets;
+  final bool desktop;
   final List<Widget> Function(VoidCallback close) items;
 
   @override
@@ -307,11 +329,23 @@ class _DetailsMenuState extends State<_DetailsMenu> {
     child: ShadButton.outline(
       focusNode: widget.focusNode,
       size: ShadButtonSize.sm,
+      height: widget.touchTargets ? 48 : (widget.desktop ? 40 : null),
       enabled: widget.enabled,
       onPressed: widget.enabled ? _popover.toggle : null,
-      leading: Icon(widget.icon, size: 14),
+      leading: Icon(
+        widget.icon,
+        size: widget.touchTargets || widget.desktop ? 18 : 14,
+      ),
+      trailing: widget.desktop
+          ? const Icon(LucideIcons.chevronDown, size: 12)
+          : null,
       child: Flexible(
-        child: Text(widget.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        child: Text(
+          widget.label,
+          semanticsLabel: widget.semanticLabel,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
     ),
   );

@@ -244,11 +244,23 @@ void main() {
       ], workingDirectory: _repoRoot);
 
       expect(result.exitCode, 0, reason: '${entry.key}: ${result.stderr}');
+      final commands = result.stdout
+          .toString()
+          .split(RegExp(r'\r?\n'))
+          .where((line) => line.isNotEmpty)
+          .toList();
+      expect(commands, hasLength(4), reason: entry.key);
       expect(
-        result.stdout
-            .toString()
-            .split(RegExp(r'\r?\n'))
-            .where((line) => line.isNotEmpty),
+        commands.first,
+        anyOf(
+          contains('ln -s ../../build/flutter'),
+          contains('link-build.ps1'),
+        ),
+        reason: '${entry.key}: the flutter build directory must resolve to the '
+            'root build',
+      );
+      expect(
+        commands.sublist(1),
         [
           'xcrun simctl bootstatus "${entry.value}" -b',
           'open -a Simulator',

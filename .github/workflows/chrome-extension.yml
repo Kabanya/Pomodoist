@@ -30,10 +30,10 @@ jobs:
           WEB_APP_URL: https://tasks.example.test
         run: |
           npm run build
-          cd dist
+          cd ../../build/chrome
           zip -r ../pomodoist-chrome-validation.zip .
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: chrome-extension-validation-build
-          path: apps/chrome-extension/pomodoist-chrome-validation.zip
+          path: build/pomodoist-chrome-validation.zip
           if-no-files-found: error

@@ -21,22 +21,30 @@ void main() {
         .where((line) => line.trim().isNotEmpty)
         .toList();
 
-    expect(commands, hasLength(4));
+    expect(commands, hasLength(5));
     expect(
       commands[0],
+      anyOf(
+        contains('ln -s ../../build/flutter'),
+        contains('link-build.ps1'),
+      ),
+      reason: 'the flutter build directory must resolve to the root build',
+    );
+    expect(
+      commands[1],
       'cd "$_repoRoot/apps/flutter" && env -u http_proxy -u https_proxy -u all_proxy '
       '-u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY '
       'bash "$_repoRoot/tool/linux/pub_get_with_retry.sh" "flutter-under-test"',
     );
     expect(
-      commands[1],
+      commands[2],
       'env -u http_proxy -u https_proxy -u all_proxy '
       '-u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY '
       '"dart-under-test" tool/desktop_release_config.dart '
       '--config "/secure config/pomodoist-linux-production.json"',
     );
     expect(
-      commands[2],
+      commands[3],
       contains(
         'flutter-under-test" build linux --release '
         '--target "lib/main.dart" '
@@ -46,8 +54,8 @@ void main() {
         '--dart-define=POMODOIST_BILLING_CHANNEL=stripe',
       ),
     );
-    expect(commands[2], isNot(contains('--no-pub')));
-    expect(commands[3], contains('./tool/linux/build_appimage.sh'));
+    expect(commands[3], isNot(contains('--no-pub')));
+    expect(commands[4], contains('./tool/linux/build_appimage.sh'));
   });
 }
 

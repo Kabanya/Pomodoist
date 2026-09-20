@@ -29,7 +29,7 @@ npm test
 npm run build
 ```
 
-Use a public `anon` JWT or `sb_publishable_...` key only. The builder rejects service-role/secret keys and insecure non-loopback origins. `dist/` can be loaded from `chrome://extensions` in Developer mode or zipped for Chrome Web Store validation.
+Use a public `anon` JWT or `sb_publishable_...` key only. The builder rejects service-role/secret keys and insecure non-loopback origins. `build/chrome` can be loaded from `chrome://extensions` in Developer mode or zipped for Chrome Web Store validation.
 
 The build reuses `apps/flutter/web/icons/Icon-192.png` and the repository `LICENSE`.
 
@@ -49,8 +49,8 @@ local extension ID stays stable on this computer. After rebuilding, click
 it. Debug uses real staging accounts; production accounts are separate.
 
 The release archive is `build/chrome/pomodoist-chrome-release.zip`. Release builds
-do not overwrite debug files or publish to the store. `npm run build` still writes
-to `apps/chrome-extension/dist`.
+do not overwrite debug files or publish to the store. `npm run build` writes to
+`build/chrome`.
 
 Use `COMPANION_OPEN=0` to skip opening Chrome. Override profile paths with
 `COMPANION_DEBUG_CONFIG` and `COMPANION_RELEASE_CONFIG`. Match the profile's public

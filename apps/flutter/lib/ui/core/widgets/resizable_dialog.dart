@@ -5,7 +5,7 @@ import 'package:pomodoist/ui/core/themes/app_theme.dart';
 
 class ResizableDialog extends StatefulWidget {
   const ResizableDialog({
-    required this.title,
+    this.title,
     required this.content,
     required this.actions,
     required this.initialSize,
@@ -17,7 +17,7 @@ class ResizableDialog extends StatefulWidget {
   static const containerKey = Key('resizable-dialog-container');
   static const resizeHandleKey = Key('resizable-dialog-resize-handle');
 
-  final Widget title;
+  final Widget? title;
   final Widget content;
   final List<Widget> actions;
   final Size initialSize;
@@ -66,40 +66,43 @@ class _ResizableDialogState extends State<ResizableDialog> {
           children: [
             if (widget.background != null)
               Positioned.fill(child: widget.background!),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10, right: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-                    child: DefaultTextStyle(
-                      style:
-                          theme.textTheme.headlineSmall ??
-                          const TextStyle(fontSize: 24),
-                      child: widget.title,
-                    ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
-                      child: SingleChildScrollView(child: widget.content),
-                    ),
-                  ),
-                  if (widget.actions.isNotEmpty)
+            if (widget.title == null)
+              Positioned.fill(child: widget.content)
+            else
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10, right: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 24, 20),
-                      child: OverflowBar(
-                        alignment: MainAxisAlignment.end,
-                        overflowAlignment: OverflowBarAlignment.end,
-                        spacing: 8,
-                        overflowSpacing: 8,
-                        children: widget.actions,
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                      child: DefaultTextStyle(
+                        style:
+                            theme.textTheme.headlineSmall ??
+                            const TextStyle(fontSize: 24),
+                        child: widget.title!,
                       ),
                     ),
-                ],
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
+                        child: SingleChildScrollView(child: widget.content),
+                      ),
+                    ),
+                    if (widget.actions.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 24, 20),
+                        child: OverflowBar(
+                          alignment: MainAxisAlignment.end,
+                          overflowAlignment: OverflowBarAlignment.end,
+                          spacing: 8,
+                          overflowSpacing: 8,
+                          children: widget.actions,
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
             Positioned(
               right: 0,
               bottom: 0,

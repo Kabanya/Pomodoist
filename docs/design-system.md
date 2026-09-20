@@ -197,6 +197,9 @@ inside the safe area, with task content scrolling below them.
 
 ### Compact task creation
 
+In the inline Quick Add bar, center the microphone and Add buttons vertically
+within the row, including when task metadata increases its height.
+
 Below the 820 px shell breakpoint, show a 52 px circular Add task button with a
 24 px plus icon, `accentFill` background, `onAccent` foreground and subtle shadow.
 Use the standard floating end position, 16 px from the safe right and bottom
@@ -210,6 +213,32 @@ recording, transcription, draft review and the collapsed panel. Restore it when
 the session finishes or closes. Track session lifetime centrally for every voice
 entry point; do not derive visibility from recording status or panel expansion.
 Wide layouts keep their existing task creation controls.
+
+The Quick Add overlay below 820 px is a full-width bottom sheet with 12 px top
+corners, positioned above software keyboard insets and inside system safe areas.
+Use a compact heading with an explicit Close action, a large multiline field,
+and wrapping date, project and priority controls with 48 px touch targets. Show
+the short `P1`–`P4` priority label while retaining its localized accessible name.
+Only the text field requests autofocus on opening, so typing can start with the
+software keyboard immediately; surrounding focus wrappers must not claim it.
+Keep the microphone and expanded Add button in a pinned 48 px action row; scroll
+the heading, field and metadata when height is limited. Honor the selected theme's
+Quick Add background and accent, keeping the input solid with a visible focus
+indicator. Preserve the draft and input focus when resizing between the sheet
+and desktop dialog, and keep the existing voice-session lifecycle.
+
+Desktop Quick Add uses a compact command panel in both the wide-layout dialog
+and the separate native window. Place a large multiline input between the
+list-plus icon and microphone, above a thin divider. Keep date, project and
+short priority menus together with Add in the bottom row; wrap the action below
+the menus when space is limited. Use 40 px desktop controls and the current
+theme, without a duplicate heading or an Escape hint. Enter submits and Escape
+closes as before; retain a localized accessible name for the panel. Keep the
+input scrollable and size its region to its content, with 12 px vertical padding;
+extra window height must not create a gap between the text and the footer. Keep
+the footer outside the input scroll area, resizing available, and voice-window
+expansion intact. Start the dialog at 680 × 180 px and the native window at
+680 × 200 px. The native title bar supplies window controls.
 
 ### Sidebar
 

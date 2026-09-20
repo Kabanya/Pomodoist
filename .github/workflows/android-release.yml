@@ -104,14 +104,14 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: pomodoist-android-${{ github.sha }}
-          path: apps/flutter/build/android/release/
+          path: build/flutter/android/release/
           if-no-files-found: error
           retention-days: 90
       - name: Save Dart symbols for crash symbolication
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: pomodoist-android-symbols-${{ github.sha }}
-          path: apps/flutter/build/android/symbols/
+          path: build/flutter/android/symbols/
           if-no-files-found: error
           retention-days: 90
       - name: Publish Android artifacts to the GitHub release
@@ -141,8 +141,8 @@ jobs:
               gh release view "$GITHUB_REF_NAME" > /dev/null
           fi
           gh release upload "$GITHUB_REF_NAME" \
-            apps/flutter/build/android/release/Pomodoist-Android.apk \
-            apps/flutter/build/android/release/Pomodoist-Android.apk.sha256 \
+            build/flutter/android/release/Pomodoist-Android.apk \
+            build/flutter/android/release/Pomodoist-Android.apk.sha256 \
             --clobber
           release_id=$(gh api --paginate \
             "repos/$GITHUB_REPOSITORY/releases" \

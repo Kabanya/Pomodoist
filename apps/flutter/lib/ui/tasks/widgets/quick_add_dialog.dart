@@ -2,7 +2,6 @@ import 'package:pomodoist/ui/settings/view_models/theme_settings_view_model.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/themes/theme_background.dart';
 import 'package:pomodoist/ui/core/widgets/app_date_time_picker.dart';
@@ -38,6 +37,7 @@ class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
   bool _disposing = false;
   LocalHistoryEntry? _backEntry;
   final _focus = FocusScopeNode();
+  final _composerKey = GlobalKey();
 
   @override
   void initState() {
@@ -92,6 +92,18 @@ class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 820;
+    final composer = QuickAddComposer(
+      key: _composerKey,
+      compact: compact,
+      initialText: widget.initialText,
+      defaultDate: widget.defaultDate,
+      projectId: widget.projectId,
+      labelId: widget.labelId,
+      onCompleted: widget.onClose,
+      onCancel: widget.onClose,
+      onVoiceSessionChanged: _setVoiceActive,
+    );
     final dialog = ExcludeFocus(
       excluding: _voiceActive,
       child: Offstage(
@@ -105,27 +117,42 @@ class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
             ),
             FocusScope(
               node: _focus,
-              child: ResizableDialog(
-                background: ThemeBackground(
-                  zone: ThemeBackgroundZone.quickAdd,
-                  blurBehind: true,
-                  color: context.appColors.surface,
-                  child: const SizedBox.expand(),
-                ),
-                title: Text(context.l10n.addTask),
-                initialSize: const Size(560, 260),
-                minSize: const Size(320, 220),
-                content: QuickAddComposer(
-                  initialText: widget.initialText,
-                  defaultDate: widget.defaultDate,
-                  projectId: widget.projectId,
-                  labelId: widget.labelId,
-                  onCompleted: widget.onClose,
-                  onCancel: widget.onClose,
-                  onVoiceSessionChanged: _setVoiceActive,
-                ),
-                actions: const [],
-              ),
+              child: compact
+                  ? Padding(
+                      padding: MediaQuery.viewInsetsOf(context),
+                      child: SafeArea(
+                        bottom: false,
+                        minimum: const EdgeInsets.only(top: 16),
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Material(
+                            color: Colors.transparent,
+                            clipBehavior: Clip.antiAlias,
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(12),
+                            ),
+                            child: ThemeBackground(
+                              zone: ThemeBackgroundZone.quickAdd,
+                              blurBehind: true,
+                              color: context.appColors.surface,
+                              child: SafeArea(top: false, child: composer),
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : ResizableDialog(
+                      background: ThemeBackground(
+                        zone: ThemeBackgroundZone.quickAdd,
+                        blurBehind: true,
+                        color: context.appColors.surface,
+                        child: const SizedBox.expand(),
+                      ),
+                      initialSize: const Size(680, 180),
+                      minSize: const Size(420, 180),
+                      content: composer,
+                      actions: const [],
+                    ),
             ),
           ],
         ),

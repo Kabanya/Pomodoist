@@ -39,13 +39,15 @@ function Invoke-DesktopReleaseConfigValidation {
 
 Push-Location (Join-Path $repoRoot 'apps\flutter')
 try {
+    & (Join-Path $PSScriptRoot 'link-build.ps1')
     if ($Clean) {
         & flutter clean
         if ($LASTEXITCODE -ne 0) { throw 'flutter clean failed' }
-        $buildDirectory = Join-Path $repoRoot 'apps\flutter\build'
-        if (Test-Path -LiteralPath $buildDirectory) {
-            throw "flutter clean did not remove $buildDirectory. Close processes using the build directory and retry."
-        }
+        cmd /c rmdir "$repoRoot\apps\flutter\build" 2>$null
+        Remove-Item -LiteralPath (Join-Path $repoRoot 'build\flutter') -Recurse -Force -ErrorAction SilentlyContinue
+        cmd /c rmdir "$repoRoot\apps\flutter\.dart_tool" 2>$null
+        Remove-Item -LiteralPath (Join-Path $repoRoot 'build\dart_tool') -Recurse -Force -ErrorAction SilentlyContinue
+        & (Join-Path $PSScriptRoot 'link-build.ps1')
     }
 
     $resolvedConfig = $null

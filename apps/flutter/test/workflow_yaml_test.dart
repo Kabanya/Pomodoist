@@ -457,7 +457,7 @@ void main() {
     );
     final artifact = bundle['with'] as YamlMap;
     expect(artifact['name'], r'pomodoist-android-${{ github.sha }}');
-    expect(artifact['path'], 'apps/flutter/build/android/release/');
+    expect(artifact['path'], 'build/flutter/android/release/');
     expect(artifact['retention-days'], 90);
   });
 

@@ -18,6 +18,9 @@ void main() {
     File(
       '../../tool/windows/build.ps1',
     ).copySync('${scriptDirectory.path}${Platform.pathSeparator}build.ps1');
+    File(
+      '../../tool/windows/link-build.ps1',
+    ).copySync('${scriptDirectory.path}${Platform.pathSeparator}link-build.ps1');
 
     Directory('${testRoot.path}/apps/flutter').createSync(recursive: true);
     final configFile = File(
@@ -79,7 +82,7 @@ void main() {
     ]);
   });
 
-  test('clean build stops when flutter clean leaves the build directory', () {
+  test('clean build recreates the root build link', () {
     if (!Platform.isWindows) return;
 
     final testRoot = Directory.systemTemp.createTempSync(
@@ -94,6 +97,9 @@ void main() {
     File(
       '../../tool/windows/build.ps1',
     ).copySync('${scriptDirectory.path}${Platform.pathSeparator}build.ps1');
+    File(
+      '../../tool/windows/link-build.ps1',
+    ).copySync('${scriptDirectory.path}${Platform.pathSeparator}link-build.ps1');
 
     Directory(
       '${testRoot.path}/apps/flutter/build',
@@ -136,11 +142,22 @@ void main() {
       '0123456789abcdef0123456789abcdef01234567',
     ], environment: environment);
 
-    expect(result.exitCode, isNot(0));
+    expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+    expect(flutterLog.readAsLinesSync(), [
+      'clean',
+      'build windows --release '
+          '--dart-define-from-file=${configFile.path} '
+          '--dart-define=POMODOIST_RELEASE='
+          '0123456789abcdef0123456789abcdef01234567 '
+          '--dart-define=POMODOIST_BILLING_CHANNEL=stripe',
+    ]);
+    File(
+      '${testRoot.path}/apps/flutter/build/probe.txt',
+    ).writeAsStringSync('ok');
     expect(
-      '${result.stdout}\n${result.stderr}',
-      contains('flutter clean did not remove'),
+      File('${testRoot.path}/build/flutter/probe.txt').existsSync(),
+      isTrue,
+      reason: 'apps/flutter/build must resolve to the root build directory.',
     );
-    expect(flutterLog.readAsLinesSync(), ['clean']);
   });
 }

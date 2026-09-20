@@ -98,7 +98,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(4, 4, 6, 4),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Column(
