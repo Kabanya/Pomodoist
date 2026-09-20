@@ -51,12 +51,12 @@ final settingsViewModelProvider =
 class SettingsViewModel extends Notifier<SettingsViewState> {
   @override
   SettingsViewState build() {
-    ref.watch(accountAuthStateProvider);
-    final account = ref.watch(accountClientProvider);
-    final bootstrap = ref.watch(accountBootstrapProvider);
+    final availability = ref.watch(accountAvailabilityProvider);
+    final session = ref.watch(accountSessionProvider).value;
+    final signedIn = ref.watch(accountSignedInProvider);
     final overview = ref.watch(accountOverviewProvider);
-    final profile = overview.value?.profile;
-    final userId = account?.currentUserId;
+    final profile = ref.watch(accountProfileProvider);
+    final userId = session?.userId;
     return SettingsViewState(
       language: ref.watch(appLanguageProvider),
       voiceModeSupported: ref.watch(
@@ -65,11 +65,11 @@ class SettingsViewModel extends Notifier<SettingsViewState> {
       reengagementEnabled: ref.watch(reengagementNotificationsEnabledProvider),
       timerStyle: ref.watch(focusTimerVisualStyleProvider),
       celebrationEnabled: ref.watch(focusCompletionCelebrationEnabledProvider),
-      accountConfigured: ref.watch(accountConfiguredProvider),
-      accountLoading: bootstrap.isLoading || overview.isLoading,
-      accountAvailable: account != null,
-      signedIn: userId != null,
-      accountError: bootstrap.error,
+      accountConfigured: availability.configured,
+      accountLoading: availability.loading || overview.isLoading,
+      accountAvailable: availability.available,
+      signedIn: signedIn,
+      accountError: availability.error,
       overviewError: overview.error,
       userId: userId,
       displayName: profile?.displayName,
@@ -88,7 +88,7 @@ class SettingsViewModel extends Notifier<SettingsViewState> {
         .getOrThrow();
     if (!enabled) {
       await ref
-          .read(notificationSchedulerProvider)
+          .read(notificationRepositoryProvider)
           .cancelReengagementReminder();
     }
   }

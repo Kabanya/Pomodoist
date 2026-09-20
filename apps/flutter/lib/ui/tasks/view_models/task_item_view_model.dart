@@ -102,7 +102,7 @@ class TaskItemViewModel extends Notifier<TaskItemState> {
   Future<void> clearSchedule() async {
     (await _tasks.updateTask(
       task.id,
-      const UpdateTaskPatch(clearSchedule: true),
+      UpdateTaskPatch(clearSchedule: true),
     )).getOrThrow();
   }
 

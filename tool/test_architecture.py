@@ -93,10 +93,182 @@ class ArchitectureTests(unittest.TestCase):
             root = Path(directory)
             files = {
                 'server/core-manifest.json': '{"helpers":[],"functions":[]}',
-                'apps/flutter/lib/data/repositories/tasks/task_repository.dart': '',
+                'apps/flutter/lib/data/repositories/tasks/task_repository.dart':
+                    'abstract interface class TaskRepository {}',
                 'apps/flutter/lib/domain/use_cases/complete_task.dart':
-                    "import '../../data/repositories/tasks/task_repository.dart';",
+                    "import '../../data/repositories/tasks/task_repository.dart';\n"
+                    "import '../../data/repositories/local/local_transaction.dart';",
+                'apps/flutter/lib/data/repositories/local/local_transaction.dart':
+                    'typedef RunLocalTransaction = Future<T> Function<T>(Future<T> Function() action);',
                 'apps/flutter/lib/domain/models/task.dart': '',
+            }
+            for name, source in files.items():
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(source)
+            (root / 'server/supabase/functions').mkdir(parents=True)
+            self.assertEqual(check(root), [])
+
+    def test_domain_cannot_import_current_ui_directory(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            files = {
+                'server/core-manifest.json': '{"helpers":[],"functions":[]}',
+                'apps/flutter/lib/domain/models/task.dart':
+                    "import '../../ui/tasks/widgets/screen.dart';",
+                'apps/flutter/lib/ui/tasks/widgets/screen.dart': '',
+            }
+            for name, source in files.items():
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(source)
+            (root / 'server/supabase/functions').mkdir(parents=True)
+            failures = '\n'.join(check(root))
+            self.assertIn('domain depends on infrastructure/UI', failures)
+
+    def test_domain_cannot_import_config_or_routing(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            files = {
+                'server/core-manifest.json': '{"helpers":[],"functions":[]}',
+                'apps/flutter/lib/domain/models/task.dart':
+                    "import '../../config/providers.dart';\n"
+                    "export '../../routing/router.dart';",
+                'apps/flutter/lib/config/providers.dart': '',
+                'apps/flutter/lib/routing/router.dart': '',
+            }
+            for name, source in files.items():
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(source)
+            (root / 'server/supabase/functions').mkdir(parents=True)
+            failures = '\n'.join(check(root))
+            self.assertIn('domain depends on infrastructure/UI', failures)
+            self.assertEqual(failures.count('domain depends on infrastructure/UI'), 2)
+
+    def test_view_models_use_repository_contracts_not_implementations(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            files = {
+                'server/core-manifest.json': '{"helpers":[],"functions":[]}',
+                'apps/flutter/lib/data/repositories/tasks/task_repository.dart':
+                    'abstract interface class TaskRepository {}',
+                'apps/flutter/lib/data/repositories/tasks/task_repository_impl.dart':
+                    'class DriftTaskRepository implements TaskRepository {}',
+                'apps/flutter/lib/ui/tasks/view_models/contract_vm.dart':
+                    "import '../../../data/repositories/tasks/task_repository.dart';",
+                'apps/flutter/lib/ui/tasks/view_models/implementation_vm.dart':
+                    "import '../../../data/repositories/tasks/task_repository_impl.dart';",
+            }
+            for name, source in files.items():
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(source)
+            (root / 'server/supabase/functions').mkdir(parents=True)
+            failures = '\n'.join(check(root))
+            self.assertIn(
+                'implementation_vm.dart: view model depends on infrastructure',
+                failures,
+            )
+            self.assertNotIn('contract_vm.dart', failures)
+
+    def test_view_model_rejects_sdk_packages_missing_from_prefix_list(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            files = {
+                'server/core-manifest.json': '{"helpers":[],"functions":[]}',
+                'apps/flutter/lib/ui/settings/view_models/notifications_vm.dart':
+                    "import 'package:flutter_local_notifications/flutter_local_notifications.dart';",
+            }
+            for name, source in files.items():
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(source)
+            (root / 'server/supabase/functions').mkdir(parents=True)
+            failures = '\n'.join(check(root))
+            self.assertIn('view model depends on infrastructure', failures)
+
+    def test_same_area_repository_coupling_is_rejected(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            files = {
+                'server/core-manifest.json': '{"helpers":[],"functions":[]}',
+                'apps/flutter/lib/data/repositories/tasks/task_repository.dart':
+                    'abstract interface class TaskRepository {}',
+                'apps/flutter/lib/data/repositories/tasks/task_repository_impl.dart':
+                    "import 'package:pomodoist/data/repositories/tasks/task_repository.dart';\n"
+                    "import 'package:pomodoist/data/repositories/tasks/task_time.dart';\n"
+                    "import 'package:pomodoist/data/repositories/tasks/project_notes_repository.dart';\n"
+                    'class DriftTaskRepository implements TaskRepository {}',
+                'apps/flutter/lib/data/repositories/tasks/task_time.dart':
+                    'bool isOverdue(DateTime now) => true;',
+                'apps/flutter/lib/data/repositories/tasks/project_notes_repository.dart':
+                    'class ProjectNotesRepository {}',
+            }
+            for name, source in files.items():
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(source)
+            (root / 'server/supabase/functions').mkdir(parents=True)
+            failures = '\n'.join(check(root))
+            self.assertIn('repository depends on another repository', failures)
+            self.assertNotIn('task_time.dart', failures)
+
+    def test_reexport_chains_cannot_hide_dependencies(self):
+        # re-export chains: `export` is a dependency just like `import`.
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            files = {
+                'server/core-manifest.json': '{"helpers":[],"functions":[]}',
+                'apps/flutter/lib/domain/models/barrel.dart':
+                    "export '../../ui/tasks/widgets/screen.dart';\n"
+                    "export '../../data/services/local/database.dart';",
+                'apps/flutter/lib/ui/tasks/widgets/screen.dart': '',
+                'apps/flutter/lib/data/services/local/database.dart': '',
+                'apps/flutter/lib/ui/tasks/view_models/task_vm.dart': '',
+                'apps/flutter/lib/ui/search/view_models/search_vm.dart':
+                    "export '../../tasks/view_models/task_vm.dart';",
+            }
+            for name, source in files.items():
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(source)
+            (root / 'server/supabase/functions').mkdir(parents=True)
+            failures = '\n'.join(check(root))
+            self.assertIn('domain depends on infrastructure/UI', failures)
+            self.assertIn('view model depends on another view model', failures)
+
+    def test_services_cannot_depend_on_use_cases(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            files = {
+                'server/core-manifest.json': '{"helpers":[],"functions":[]}',
+                'apps/flutter/lib/data/services/sync/engine.dart':
+                    "import 'package:pomodoist/domain/use_cases/account/sync_account_use_case.dart';",
+                'apps/flutter/lib/domain/use_cases/account/sync_account_use_case.dart': '',
+            }
+            for name, source in files.items():
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(source)
+            (root / 'server/supabase/functions').mkdir(parents=True)
+            failures = '\n'.join(check(root))
+            self.assertIn('service depends on use case', failures)
+
+    def test_configuration_may_construct_implementations(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            files = {
+                'server/core-manifest.json': '{"helpers":[],"functions":[]}',
+                'apps/flutter/lib/data/repositories/tasks/task_repository.dart':
+                    'abstract interface class TaskRepository {}',
+                'apps/flutter/lib/data/repositories/tasks/task_repository_impl.dart':
+                    'class DriftTaskRepository implements TaskRepository {}',
+                'apps/flutter/lib/data/services/local/task_store.dart': '',
+                'apps/flutter/lib/config/providers.dart':
+                    "import '../data/repositories/tasks/task_repository.dart';\n"
+                    "import '../data/repositories/tasks/task_repository_impl.dart';\n"
+                    "import '../data/services/local/task_store.dart';",
             }
             for name, source in files.items():
                 path = root / name
@@ -187,6 +359,26 @@ class ArchitectureTests(unittest.TestCase):
             (root / 'apps/flutter/lib/domain/models/tasks/model.dart').unlink()
             (root / 'apps/flutter/lib').rename(root / 'moved-lib')
             self.assertIn('Missing source directory: apps/flutter/lib', check(root))
+
+    def test_same_area_contract_calls_and_shared_policy_helper(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            files = {
+                'server/core-manifest.json': '{"helpers":[],"functions":[]}',
+                'apps/flutter/lib/data/repositories/tasks/first_repository.dart': 'abstract interface class FirstRepository {}',
+                'apps/flutter/lib/data/repositories/tasks/second_repository.dart': 'abstract interface class SecondRepository { void run(); }',
+                'apps/flutter/lib/data/repositories/tasks/first_repository_impl.dart': "import 'first_repository.dart';\nimport 'second_repository.dart'; class FirstRepositoryImpl implements FirstRepository { FirstRepositoryImpl(this.other); final SecondRepository other; void run()=>other.run(); }",
+                'apps/flutter/lib/data/repositories/local/policy.dart': 'class SharedPolicy {}',
+                'apps/flutter/lib/data/repositories/tasks/uses_policy.dart': "import '../local/policy.dart'; final policy=SharedPolicy();",
+            }
+            for name, source in files.items():
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(source)
+            (root / 'server/supabase/functions').mkdir(parents=True)
+            failures = check(root)
+            self.assertTrue(any('first_repository_impl.dart' in e for e in failures))
+            self.assertFalse(any('uses_policy.dart' in e for e in failures))
 
 
 if __name__ == '__main__':

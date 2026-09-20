@@ -3,7 +3,7 @@ part of 'account_sync_engine.dart';
 extension AccountSyncOperations on AccountSyncEngine {
   Future<List<AccountSyncOperation>> _snapshotOperations() async {
     final operations = <AccountSyncOperation>[];
-    final taskHistoryCutoff = await _taskHistoryCutoff();
+    final taskHistoryCutoff = _retentionCutoff;
 
     final sharedProjects = (await (_db.select(
       _db.projects,
@@ -315,39 +315,6 @@ extension AccountSyncOperations on AccountSyncEngine {
         run.status == 'completed' ||
         run.status == 'stopped' ||
         run.status == 'interrupted';
-  }
-
-  Future<DateTime?> _taskHistoryCutoff() async {
-    try {
-      if (await (_localPaidEntitlementLoader?.call() ?? Future.value(false))) {
-        return null;
-      }
-      final overview =
-          await (_overviewLoader == null
-                  ? AccountOverviewService(_account).load()
-                  : _overviewLoader())
-              .timeout(_requestTimeout);
-      final policy =
-          await (_db.select(_db.sharedEntities)..where(
-                (row) =>
-                    row.scopeId.equals('_account') &
-                    row.entityType.equals('history') &
-                    row.entityId.equals('personal'),
-              ))
-              .getSingleOrNull();
-      final data = policy == null
-          ? <String, dynamic>{}
-          : jsonDecode(policy.dataJson) as Map<String, dynamic>;
-      return pomodoistTaskHistoryCutoff(
-        overview,
-        historyUnlimited: data['historyUnlimited'] == true,
-        graceEndsAt: DateTime.tryParse(data['graceEndsAt']?.toString() ?? ''),
-      );
-    } catch (_) {
-      // ponytail: server cleanup still enforces free retention; keep local data
-      // syncing if entitlement lookup is temporarily unavailable.
-      return null;
-    }
   }
 
   Future<bool> _taskCommandPastHistoryCutoff(

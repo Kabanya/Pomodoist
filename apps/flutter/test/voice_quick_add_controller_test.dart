@@ -1,16 +1,12 @@
 import 'package:pomodoist/data/services/voice/voice_capture_service.dart';
-import 'package:pomodoist/domain/models/voice/voice_quick_add_state.dart';
-import 'package:pomodoist/data/repositories/planning/remote_task_decomposer.dart';
-import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
-import 'package:pomodoist/data/repositories/planning/task_decomposition_repository.dart';
+import 'package:pomodoist/domain/models/voice/voice_capture_state.dart';
 import 'dart:async';
 
 import 'package:app_voice/app_voice.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/data/repositories/voice/voice_quick_add_repository.dart';
+import 'package:pomodoist/data/repositories/voice/captured_voice_repository.dart';
 import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +20,7 @@ void main() {
       final original = _Voice();
       final replacement = _Voice();
       var replacements = 0;
-      final controller = _controller(
+      final repository = _repository(
         original,
         waitForMode: () => ready.future,
         replace: () {
@@ -32,16 +28,17 @@ void main() {
           return replacement;
         },
       );
-      addTearDown(controller.dispose);
-      final restored = controller.restoreRecording();
-      expect(controller.canStart, isFalse);
+      addTearDown(repository.dispose);
+      final restored = repository.restore();
+      expect(repository.currentState.canStart, isFalse);
       expect(replacements, 0);
       ready.complete();
-      await restored;
+      (await restored).getOrThrow();
       expect(replacements, 1);
       expect(original.cancels, 0);
       expect(replacement.restores, 1);
-      expect(controller.canStart, isTrue);
+      expect(repository.currentState.canStart, isTrue);
+      expect(repository.currentState.restoring, isFalse);
     },
   );
 
@@ -51,124 +48,100 @@ void main() {
       final voice = _Voice();
       final stopped = Completer<void>();
       voice.stopped = stopped.future;
-      final controller = _controller(voice);
-      controller.status = VoiceCaptureStatus.recording;
-      controller.captureActive = true;
-      final first = controller.stop();
-      await controller.stop();
+      final repository = _repository(voice);
+      addTearDown(repository.dispose);
+      (await repository.restore()).getOrThrow();
+      (await repository.start('en')).getOrThrow();
+      voice.events.add(VoiceRecognitionEvent.recording);
+      await Future<void>.delayed(Duration.zero);
+      expect(repository.currentState.isCapturing, isTrue);
+      final first = repository.stop();
+      await repository.stop();
       expect(voice.stops, 1);
-      controller.dispose();
+      repository.dispose();
       expect(voice.aborts, 1);
       expect(voice.cancels, 0);
       stopped.complete();
-      await first;
+      await first.then((result) => result.getOrThrow());
 
       final discarded = _Voice();
-      final closing = _controller(discarded);
-      closing.status = VoiceCaptureStatus.transcribing;
-      expect((await closing.closeVoice()).getOrThrow(), isTrue);
+      final closing = _repository(discarded);
+      addTearDown(closing.dispose);
+      (await closing.restore()).getOrThrow();
+      (await closing.start('en')).getOrThrow();
+      discarded.events.add(VoiceRecognitionEvent.transcribing);
+      await Future<void>.delayed(Duration.zero);
+      expect((await closing.close()).getOrThrow(), isTrue);
+      expect(closing.currentState.status, VoiceCaptureStatus.canceled);
       closing.dispose();
       expect(discarded.cancels, 1);
       expect(discarded.aborts, 0);
     },
   );
 
-  test(
-    'smart preference loading preserves an explicit choice and manual analysis retries',
-    () async {
-      SharedPreferences.setMockInitialValues({'voice.smartMode': false});
-      final prefs = Completer<SharedPreferences?>();
-      final smartValues = <bool>[];
-      final transcripts = <String>[];
-      var drafts = <DecomposedTaskDraft>[];
-      final controller = _controller(
-        _Voice(),
-        preferences: () => prefs.future,
-        decomposer: SupabaseTaskDecomposer(
-          transport: (body) async {
-            final command = body['command']! as Map;
-            smartValues.add(command['smart'] as bool);
-            transcripts.add(command['transcript'] as String);
-            if (smartValues.length == 1) {
-              throw const TaskDecompositionException('Retry');
-            }
-            return {
-              'ok': true,
-              'tasks': [
-                {
-                  'quickAdd': 'Edited parent',
-                  'subtasks': [
-                    {'quickAdd': 'Child'},
-                  ],
-                },
-              ],
-            };
-          },
-        ),
-        onDrafts: (value) => drafts = value,
-      );
-      addTearDown(controller.dispose);
-      final loading = controller.loadSmartMode();
-      controller.setSmartMode(true);
-      prefs.complete(await SharedPreferences.getInstance());
-      await loading;
-      expect(controller.smartMode, isTrue);
-      controller.transcript = 'Original transcript';
-      await controller.decomposeTranscript(controller.transcript);
-      expect(drafts.single.quickAdd, 'Original transcript');
-      expect(controller.error, 'Retry');
-      await controller.decomposeTranscript(controller.transcript);
-      expect(controller.error, isNull);
-      expect(drafts.single.subtasks.single.quickAdd, 'Child');
-      expect(transcripts, ['Original transcript', 'Original transcript']);
-      expect(smartValues, [true, true]);
-    },
-  );
+  test('denied microphone access exposes the settings target', () async {
+    final voice = _Voice()
+      ..access = {'microphone': 'denied', 'speech': 'authorized'};
+    final repository = _repository(voice);
+    addTearDown(repository.dispose);
+    (await repository.refreshAccess(locale: 'en', request: true)).getOrThrow();
+    expect(repository.currentState.voiceErrorCode, 'microphone_denied');
+    expect(
+      repository.currentState.settingsDestination,
+      VoiceAccessSettings.microphone,
+    );
+    expect(repository.currentState.needsPermissionRequest, isFalse);
+    expect(repository.currentState.canUseCloudFallback, isFalse);
+  });
 }
 
-VoiceQuickAddRepository _controller(
+CapturedVoiceRepository _repository(
   _Voice voice, {
   Future<void> Function()? waitForMode,
   VoiceRecognitionController Function()? replace,
-  Future<SharedPreferences?> Function()? preferences,
-  TaskDecomposer? decomposer,
-  void Function(List<DecomposedTaskDraft>)? onDrafts,
-}) {
-  final repository = VoiceQuickAddRepository(
-    initialController: AppVoiceCaptureService(voice),
-    waitForMode: waitForMode ?? () async {},
-    effectiveMode: () => VoiceTranscriptionMode.cloud,
-    replaceController: () => AppVoiceCaptureService((replace ?? () => voice)()),
-    setMode: (_) async {},
-    signedIn: () => true,
-    preferences: preferences ?? () async => null,
-    decomposer:
-        (transcript, {required now, required locale, smartMode = false}) =>
-            (decomposer ?? (throw StateError('Unexpected analysis'))).decompose(
-              transcript,
-              now: now,
-              locale: locale,
-              smartMode: smartMode,
-            ),
-  );
-  if (onDrafts != null) {
-    repository.addListener(() => onDrafts(repository.drafts));
-  }
-  return repository;
-}
+}) => CapturedVoiceRepository(
+  initialController: AppVoiceCaptureService(voice),
+  waitForMode: waitForMode ?? () async {},
+  effectiveMode: () => VoiceTranscriptionMode.cloud,
+  replaceController: () => AppVoiceCaptureService((replace ?? () => voice)()),
+  setMode: (_) async {},
+  signedIn: () => true,
+);
 
 class _Voice implements VoiceRecognitionController {
+  final events = StreamController<VoiceRecognitionEvent>.broadcast();
+  int starts = 0;
+  int retries = 0;
   int cancels = 0;
   int aborts = 0;
   int stops = 0;
   int restores = 0;
   Future<void>? stopped;
+  Map<String, Object?> access = {
+    'microphone': 'authorized',
+    'speech': 'authorized',
+  };
+
   @override
   bool get canRetryTranscription => false;
+  @override
+  Stream<double> get amplitudeDbfs => const Stream.empty();
   @override
   Future<bool> restorePendingRecording() async {
     restores++;
     return false;
+  }
+
+  @override
+  Stream<VoiceRecognitionEvent> start(VoiceRecognitionConfig config) {
+    starts++;
+    return events.stream;
+  }
+
+  @override
+  Stream<VoiceRecognitionEvent> retryTranscription() {
+    retries++;
+    return events.stream;
   }
 
   @override
@@ -186,6 +159,12 @@ class _Voice implements VoiceRecognitionController {
     stops++;
     return stopped ?? Future.value();
   }
+
+  @override
+  Future<Map<String, Object?>> checkAccess({
+    String? locale,
+    bool request = false,
+  }) async => access;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

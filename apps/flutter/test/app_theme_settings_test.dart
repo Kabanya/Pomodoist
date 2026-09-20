@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/settings/view_models/theme_settings_view_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:pomodoist/data/repositories/settings/preferences_repository.dart';
+import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/data/services/local/preferences_service.dart';
 // Replace only disk writes to exercise persistence failures.
 // ignore: depend_on_referenced_packages
@@ -258,11 +258,9 @@ void main() {
       var fail = true;
       final container = ProviderContainer(
         overrides: [
-          appThemePreferencesProvider.overrideWithValue(
-            PreferencesRepository(
-              PreferencesService(
-                () => fail ? pending.future : SharedPreferences.getInstance(),
-              ),
+          preferencesServiceProvider.overrideWithValue(
+            PreferencesService(
+              () => fail ? pending.future : SharedPreferences.getInstance(),
             ),
           ),
         ],

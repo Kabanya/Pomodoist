@@ -38,10 +38,10 @@ abstract class UpdateInstaller {
 }
 
 class SavedUpdatePreferences {
-  const SavedUpdatePreferences({
+  SavedUpdatePreferences({
     this.channel = UpdateChannel.stable,
-    this.seenTags = const {},
-  });
+    Set<String> seenTags = const {},
+  }) : seenTags = Set.unmodifiable(seenTags);
   final UpdateChannel channel;
   final Set<String> seenTags;
 }

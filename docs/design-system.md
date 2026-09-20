@@ -23,7 +23,7 @@ consistent details, rather than larger elements or more effects.
 | Purpose | Source |
 |---|---|
 | Palette, typography, Material and Shadcn themes | [app_theme.dart](../apps/flutter/lib/ui/core/themes/app_theme.dart) |
-| Built-in themes, local copies, selection and live preview | [app_theme_settings.dart](../apps/flutter/lib/ui/core/themes/app_theme_settings.dart) |
+| Built-in themes, local copies, selection and live preview | [theme_settings_view_model.dart](../apps/flutter/lib/ui/settings/view_models/theme_settings_view_model.dart) |
 | Shared durations, curve, and Reduce Motion | [app_motion.dart](../apps/flutter/lib/ui/core/themes/app_motion.dart) |
 | Main application integration | [app.dart](../apps/flutter/lib/ui/core/widgets/pomodoist_app.dart) |
 | Separate Quick Add window integration | [global_quick_add_window.dart](../apps/flutter/lib/ui/quick_add/widgets/global_quick_add_window.dart) |
@@ -87,9 +87,11 @@ The five built-in themes are immutable. Custom is the only editable slot, starts
 from Classic, and keeps its fixed name and identifier. Editing resumes its saved
 colors; there is no base selector, duplication, renaming or deletion. Reset to
 Classic changes both draft palettes; Save commits the reset and Cancel discards
-it. `AppThemeSettingsController` persists the selected identifier and single
-custom pair together in SharedPreferences. The shared desktop provider scope
-keeps Quick Add and the main window aligned.
+it. `LocalThemeSettingsRepository` persists the selected identifier and single
+custom pair together in SharedPreferences as plain JSON; the color conversion
+stays with `AppThemeSettingsController`. That controller is the one explicit
+preview owner: its draft is shared through the desktop provider scope so Quick
+Add and the main window stay aligned, while ordinary screen drafts stay local.
 
 Local settings use format version 2. The active custom pair from version 1 becomes
 Custom; otherwise Custom starts from Classic and the selected built-in theme is

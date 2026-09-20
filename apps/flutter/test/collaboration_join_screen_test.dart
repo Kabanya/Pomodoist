@@ -370,9 +370,6 @@ void main() {
         api: CollaborationApi(
           (body) async => switch (body['action']) {
             'state' => {'invitations': const []},
-            'publicLink' => const {
-              'url': 'https://web.test/shared/public/token',
-            },
             _ => {'scope': _scopeJson()},
           },
         ),
@@ -390,9 +387,9 @@ void main() {
       // A failing synchronization would surface here if the read reached it.
       failSynchronization = true;
 
-      expect((await repository.state()).getOrThrow(), {
-        'invitations': const [],
-      });
+      final state = (await repository.state()).getOrThrow();
+      expect(state.invitations, isEmpty);
+      expect(state.notifications, isEmpty);
       expect(synchronizations, 0);
     });
 
@@ -401,21 +398,21 @@ void main() {
       () async {
         failSynchronization = true;
 
-        expect(
-          (await repository.action('publicLink', {
-            'enabled': true,
-          })).getOrThrow(),
-          {'url': 'https://web.test/shared/public/token'},
-        );
-        expect((await repository.acceptInvitation('token-1')).getOrThrow(), {
-          'scope': _scopeJson(),
-        });
+        final first = (await repository.acceptInvitation(
+          'token-1',
+        )).getOrThrow();
+        expect(first.id, _scopeId);
+        expect(first.rootProjectId, _projectId);
+        final second = (await repository.acceptInvitation(
+          'token-2',
+        )).getOrThrow();
+        expect(second.rootProjectId, _projectId);
         expect(synchronizations, 2);
       },
     );
 
     test('a mutation synchronizes after the server applied it', () async {
-      (await repository.action('publicLink', {'enabled': true})).getOrThrow();
+      (await repository.acceptInvitation('token-1')).getOrThrow();
 
       expect(synchronizations, 1);
     });

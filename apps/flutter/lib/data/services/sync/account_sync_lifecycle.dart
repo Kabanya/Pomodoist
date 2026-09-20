@@ -5,7 +5,6 @@ import 'package:app_account/app_account.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:pomodoist/data/services/local/database/app_database.dart';
-import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 
 class AccountSyncLifecycle with WidgetsBindingObserver {
@@ -24,17 +23,18 @@ class AccountSyncLifecycle with WidgetsBindingObserver {
   }
 
   AccountSyncLifecycle({
-    required AccountClient account,
-    required AccountSyncEngine engine,
+    required Future<Set<String>> Function() syncNow,
+    required Future<String> Function() deviceId,
+    required Stream<AccountSyncHint> Function() syncHints,
     required OutboxService syncQueueRepository,
     Future<void> Function(Set<String>)? onSynced,
     Duration? pollInterval,
     Duration? queueDebounce,
     Duration? hintResubscribeDelay,
     List<Duration>? retryDelays,
-  }) : _syncNowCallback = engine.syncNow,
-       _deviceId = engine.deviceId,
-       _syncHints = (() => account.syncHints(appId: AccountAppId.pomodoist)),
+  }) : _syncNowCallback = syncNow,
+       _deviceId = deviceId,
+       _syncHints = syncHints,
        _syncQueueRepository = syncQueueRepository,
        _onSynced = onSynced,
        _pollInterval = pollInterval ?? defaultPollInterval,
@@ -42,26 +42,6 @@ class AccountSyncLifecycle with WidgetsBindingObserver {
        _hintResubscribeDelay =
            hintResubscribeDelay ?? const Duration(seconds: 5),
        _retryDelays = retryDelays ?? defaultRetryDelays;
-
-  AccountSyncLifecycle.forTesting({
-    required Future<Set<String>> Function() syncNow,
-    required Future<String> Function() deviceId,
-    required Stream<AccountSyncHint> Function() syncHints,
-    required OutboxService syncQueueRepository,
-    Future<void> Function(Set<String>)? onSynced,
-    Duration pollInterval = defaultPollInterval,
-    Duration queueDebounce = const Duration(milliseconds: 800),
-    Duration hintResubscribeDelay = const Duration(seconds: 5),
-    List<Duration> retryDelays = defaultRetryDelays,
-  }) : _syncNowCallback = syncNow,
-       _deviceId = deviceId,
-       _syncHints = syncHints,
-       _syncQueueRepository = syncQueueRepository,
-       _onSynced = onSynced,
-       _pollInterval = pollInterval,
-       _queueDebounce = queueDebounce,
-       _hintResubscribeDelay = hintResubscribeDelay,
-       _retryDelays = retryDelays;
 
   final Future<Set<String>> Function() _syncNowCallback;
   final Future<String> Function() _deviceId;

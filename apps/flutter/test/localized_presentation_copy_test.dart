@@ -11,7 +11,7 @@ import 'package:pomodoist/ui/settings/widgets/csv_task_import_card.dart';
 import 'package:pomodoist/domain/models/tasks/csv_task_import.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
-import 'package:pomodoist/ui/tasks/widgets/task_search_palette.dart';
+import 'package:pomodoist/ui/tasks/view_models/task_search_palette_view_model.dart';
 import 'package:pomodoist/domain/models/updates/update_contracts.dart';
 import 'package:pomodoist/ui/updates/widgets/update_copy.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
@@ -86,12 +86,24 @@ void main() {
         'My inbox',
       );
       expect(_project('user-project', 'Inbox').displayName(l10n), 'Inbox');
-      expect(taskSearchPaletteResults([], [inbox], l10n.navInbox, l10n: l10n), [
-        (id: 'project:$inboxProjectId', title: l10n.navInbox),
-      ]);
-      expect(taskSearchPaletteResults([], [inbox], 'Inbox', l10n: l10n), [
-        (id: 'project:$inboxProjectId', title: l10n.navInbox),
-      ]);
+      expect(
+        taskSearchPaletteResults(
+          [],
+          [inbox],
+          l10n.navInbox,
+          projectTitle: (project) => project.displayName(l10n),
+        ),
+        [(id: 'project:$inboxProjectId', title: l10n.navInbox)],
+      );
+      expect(
+        taskSearchPaletteResults(
+          [],
+          [inbox],
+          'Inbox',
+          projectTitle: (project) => project.displayName(l10n),
+        ),
+        [(id: 'project:$inboxProjectId', title: l10n.navInbox)],
+      );
       expect(inbox.name, 'Inbox');
     },
   );

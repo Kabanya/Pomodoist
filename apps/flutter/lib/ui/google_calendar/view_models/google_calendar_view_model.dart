@@ -34,7 +34,7 @@ class GoogleCalendarViewModel extends Notifier<GoogleCalendarState> {
   }
 
   CalendarFailure classify(Object error) =>
-      _repository.requiresAuthorization(error)
+      error is GoogleCalendarFailure && error.requiresAuthorization
       ? CalendarFailure.authRequired
       : CalendarFailure.unavailable;
   void retry() => ref.invalidate(googleCalendarConnectionProvider);
@@ -46,10 +46,11 @@ class GoogleCalendarViewModel extends Notifier<GoogleCalendarState> {
     _busy = true;
     state = GoogleCalendarState(state.connection, true);
     try {
-      (await action()).getOrThrow();
+      final result = await action();
+      if (result is Failure<void>) {
+        return classify(result.error);
+      }
       return null;
-    } catch (error) {
-      return classify(error);
     } finally {
       _busy = false;
       if (ref.mounted) state = GoogleCalendarState(state.connection, false);

@@ -834,7 +834,7 @@ Future<_Harness> _pumpUpcoming(
         clockProvider.overrideWithValue(FixedClock(today)),
         taskRepositoryProvider.overrideWithValue(taskRepository),
         projectRepositoryProvider.overrideWithValue(projectRepository),
-        quickAddServiceProvider.overrideWithValue(quickAddService),
+        quickAddUseCaseProvider.overrideWithValue(quickAddService),
         focusRepositoryProvider.overrideWithValue(_FakeFocusRepository()),
         focusPresetsProvider.overrideWith(
           (ref) => Stream.value(const <FocusPresetItem>[]),

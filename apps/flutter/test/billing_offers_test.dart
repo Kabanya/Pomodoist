@@ -7,7 +7,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:in_app_purchase_storekit/store_kit_2_wrappers.dart';
-import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/config/billing_store_dependencies.dart';
+import 'package:pomodoist/data/services/billing/billing_offers.dart';
+import 'package:pomodoist/data/services/billing/billing_store.dart';
+import 'package:pomodoist/domain/models/billing/billing_models.dart';
+import 'package:pomodoist/ui/billing/view_models/billing_view_model.dart';
 import 'package:pomodoist/ui/billing/widgets/billing_offer_copy.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations_en.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -168,12 +172,12 @@ void main() {
       isTrue,
     );
     expect(
-      billingReturnOfferBlocksPurchase(const AsyncData(BillingReturnOffers())),
+      billingReturnOfferBlocksPurchase(AsyncData(BillingReturnOffers())),
       isFalse,
     );
     expect(
       billingReturnOfferBlocksPurchase(
-        const AsyncData(BillingReturnOffers(offerIds: billingReturnOfferIds)),
+        AsyncData(BillingReturnOffers(offerIds: billingReturnOfferIds)),
       ),
       isFalse,
     );

@@ -1,10 +1,13 @@
-import 'package:flutter/foundation.dart';
 import 'package:pomodoist/domain/models/settings/task_preferences.dart';
 import 'package:pomodoist/domain/models/tasks/task_time.dart';
 import 'package:pomodoist/utils/result.dart';
 
-abstract interface class TaskPreferencesRepository implements Listenable {
+abstract interface class TaskPreferencesRepository {
+  /// Current persisted snapshot, read together with [watch] to avoid a gap.
   TaskPreferences get state;
+
+  /// Later updates only; the repository owns and closes the source stream.
+  Stream<TaskPreferences> watch();
   Future<Result<void>> load();
   Future<Result<void>> setReengagementEnabled(bool enabled);
   Future<Result<void>> setQuickAddMinutes(int minutes);

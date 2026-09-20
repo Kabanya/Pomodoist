@@ -1,78 +1,52 @@
-# Flutter MVVM architecture
+# Flutter MVVM implementation notes
 
-The Flutter client uses MVVM with Riverpod for dependency composition and UI
-state. Internal APIs, persisted formats and schemas target the current release;
-the application does not carry migration adapters or parallel legacy layers.
+The canonical architecture contract is
+[Flutter application architecture](flutter-app-architecture.md). It defines the
+layers, dependency direction and boundary rules; this document only records
+implementation notes specific to the Riverpod/MVVM client.
 
-## Source layout
+## ViewModel conventions
 
-```text
-apps/flutter/lib/
-├── config/                  # dependency registration and environments
-├── routing/                 # routes and navigation
-├── data/
-│   ├── repositories/        # repository contracts and implementations
-│   └── services/            # database, network, SDK and platform adapters
-├── domain/
-│   ├── models/              # immutable application models
-│   └── use_cases/           # shared or multi-repository operations
-├── ui/
-│   ├── core/                # design system, localization and application shell
-│   └── <feature>/
-│       ├── view_models/     # immutable screen state and typed actions
-│       └── widgets/         # screens and presentation components
-└── utils/                   # Result and framework-independent helpers
-```
+- ViewModels are Riverpod `Notifier` or `AsyncNotifier` classes and acquire
+  their dependencies inside `build`.
+- State is a single immutable class per ViewModel that describes loading,
+  data, validation and recoverable errors.
+- Actions are typed methods; pending/duplicate-submission guards live in the
+  ViewModel state, not in widgets.
+- `autoDispose` is used for screen-scoped state. Shared application state
+  (account, access, focus, persisted preferences) is owned by repositories and
+  outlives any screen.
+- A ViewModel ignores late results after disposal or an account-generation
+  change instead of publishing them.
 
-## Responsibilities
+## Riverpod conventions
 
-- Widgets observe a feature ViewModel and send it user actions. Layout,
-  animation, text controllers and simple navigation stay in the view. Reusable
-  widgets receive data and callbacks.
-- ViewModels use Riverpod `Notifier` or `AsyncNotifier`. They acquire private
-  dependencies during `build`, publish immutable UI state and never depend on
-  another ViewModel.
-- Use cases contain shared business rules or coordinate multiple repositories.
-  Simple actions call one repository directly.
-- Repositories expose domain models, streams for observation and `Result<T>`
-  for one-shot asynchronous work. Repositories do not depend on one another.
-- Services isolate Drift, HTTP, SDK and platform APIs. Drift rows and external
-  SDK types do not appear in public domain contracts.
-
-Riverpod is the composition and UI-state mechanism. `Ref`, `WidgetRef` and
-`BuildContext` remain above the data and domain layers. Lower-layer objects use
-constructor injection. There is no generic ViewModel base class, command
-framework or second dependency-injection package.
+- `config/` owns provider construction and wiring; UI files may hold providers
+  that are scoped to a screen or widget.
+- Re-exporting a provider does not change the layer of the exported symbol;
+  the boundary rules apply to the resolved dependency.
+- Widgets read UI values and typed actions, never storage controllers or
+  source clients.
 
 The main window and Quick Add window share repository data while each retained
 screen instance owns its draft and selection state. Long-running operations
-capture stable dependencies, dispose subscriptions with their owner and ignore
-results from stale account sessions.
+capture stable dependencies before awaiting and dispose subscriptions with
+their owner.
 
-## Storage and synchronization
+## Storage and synchronization notes
 
 Drift and transport details live in services and repository implementations.
 Task, Kanban, Focus and outbox mutations that belong together run in one
 transaction, and a failure rolls the complete operation back. Synchronization
-owns queue draining, push/pull, retry, cursor and remote-application behavior.
-Other repositories use shared local services rather than depending on the
-outbox repository.
+services own queue draining, push/pull, retry, cursor and remote-application
+behavior. Repository implementations use shared local services rather than
+depending on one another.
 
-## Automated enforcement
+## Validation notes
 
 `tool/check_architecture.py` resolves imports, exports, conditional directives
-and part files. It rejects:
-
-- data or composition access from widgets;
-- UI, routing or composition dependencies from data;
-- repositories depending on repositories for another data area;
-- services depending on repositories;
-- Riverpod in lower layers;
-- infrastructure or UI in domain code;
-- ViewModel-to-ViewModel dependencies;
-- infrastructure in ViewModels or public repository contracts;
-- missing local imports and handwritten dependency cycles.
-
-`tool/test_architecture.py` verifies these failure cases. The accepted validation
+and part files for the directory-level rules.
+`apps/flutter/tool/check_architecture_types.dart` adds resolved-Dart checks for
+inferred provider types and concrete implementations. The accepted validation
 scope is static analysis, unit/widget tests and other fully automated checks.
 Manual UI, emulator, device and visual acceptance are outside this work.

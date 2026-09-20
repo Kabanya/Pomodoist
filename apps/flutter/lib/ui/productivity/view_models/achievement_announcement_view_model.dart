@@ -53,18 +53,13 @@ class AchievementAnnouncementViewModel extends Notifier<AchievementItem?> {
   @override
   AchievementItem? build() {
     _repository = ref.watch(achievementAnnouncementRepositoryProvider);
-    AchievementItem? current() =>
-        _repository.state.current?.presentation == presentation
-        ? _repository.state.current
-        : null;
-    void changed() {
-      if (ref.mounted) state = current();
-    }
-
-    _repository.addListener(changed);
-    ref.onDispose(() => _repository.removeListener(changed));
-    return current();
+    return _current(ref.watch(achievementAnnouncementStateProvider));
   }
+
+  AchievementItem? _current(AchievementAnnouncementState announcements) =>
+      announcements.current?.presentation == presentation
+      ? announcements.current
+      : null;
 
   void dismissCurrent() => _repository.dismissCurrent();
 }

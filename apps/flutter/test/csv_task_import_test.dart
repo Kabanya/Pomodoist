@@ -9,7 +9,7 @@ import 'package:pomodoist/data/repositories/kanban/kanban_repository_impl.dart';
 import 'package:pomodoist/data/repositories/labels/label_repository_impl.dart';
 import 'package:pomodoist/data/repositories/projects/project_repository_impl.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
-import 'package:pomodoist/data/services/local/kanban_transition_coordinator.dart';
+import 'package:pomodoist/data/repositories/local/kanban_transition_coordinator.dart';
 import 'package:pomodoist/domain/models/tasks/csv_task_import.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/domain/use_cases/tasks/csv_task_import_use_case.dart';

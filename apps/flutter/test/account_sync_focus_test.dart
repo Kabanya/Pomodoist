@@ -8,7 +8,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import 'package:pomodoist/data/services/local/database/app_database.dart';
-import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'support/account_sync_engine.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:uuid/uuid.dart';
 
@@ -37,12 +37,7 @@ void main() {
       await db.ensureSeedData();
       queue = DriftOutboxService(db);
       account = _RecordingAccountClient();
-      engine = AccountSyncEngine(
-        db: db,
-        account: account,
-        uuid: const Uuid(),
-        localPaidEntitlementLoader: () async => true,
-      );
+      engine = testSyncEngine(db: db, account: account, uuid: const Uuid());
     });
 
     tearDown(() => db.close());
@@ -209,11 +204,10 @@ void main() {
       final secondDb = AppDatabase(NativeDatabase.memory());
       addTearDown(secondDb.close);
       await secondDb.ensureSeedData();
-      final secondEngine = AccountSyncEngine(
+      final secondEngine = testSyncEngine(
         db: secondDb,
         account: account,
         uuid: const Uuid(),
-        localPaidEntitlementLoader: () async => true,
       );
 
       await engine.pushPending();
@@ -282,11 +276,10 @@ void main() {
         payload: {'id': 'timeout-run'},
       );
       account.pendingPush = Completer<void>().future;
-      engine = AccountSyncEngine(
+      engine = testSyncEngine(
         db: db,
         account: account,
         uuid: const Uuid(),
-        localPaidEntitlementLoader: () async => true,
         requestTimeout: const Duration(milliseconds: 10),
       );
 
@@ -302,11 +295,10 @@ void main() {
 
     test('pull timeout preserves cursor and permits retry', () async {
       account.pendingPull = Completer<AccountSyncPullResult>().future;
-      engine = AccountSyncEngine(
+      engine = testSyncEngine(
         db: db,
         account: account,
         uuid: const Uuid(),
-        localPaidEntitlementLoader: () async => true,
         requestTimeout: const Duration(milliseconds: 10),
       );
 

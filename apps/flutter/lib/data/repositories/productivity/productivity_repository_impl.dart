@@ -5,13 +5,15 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 
 import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/local/productivity_local_service.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/domain/models/productivity/productivity_models.dart';
 
 class DriftProductivityRepository implements ProductivityRepository {
-  DriftProductivityRepository(this._db);
+  DriftProductivityRepository(AppDatabase db)
+    : _productivity = ProductivityLocalService(db);
 
-  final AppDatabase _db;
+  final ProductivityLocalService _productivity;
 
   @override
   Stream<ProductivitySummary> watchTodaySummary() {
@@ -19,27 +21,43 @@ class DriftProductivityRepository implements ProductivityRepository {
     StreamSubscription<List<TaskRow>>? taskSubscription;
     StreamSubscription<List<FocusIntervalRow>>? intervalSubscription;
     StreamSubscription<List<TaskCompletionRow>>? completionSubscription;
+    var listening = false;
+    var revision = 0;
 
     Future<void> emit() async {
-      if (!controller.isClosed) {
-        controller.add(await _calculateSummary(DateTime.now()));
+      final current = ++revision;
+      try {
+        final summary = await _calculateSummary(DateTime.now());
+        if (listening && current == revision && !controller.isClosed) {
+          controller.add(summary);
+        }
+      } on Object catch (error, stackTrace) {
+        if (listening && current == revision && !controller.isClosed) {
+          controller.addError(error, stackTrace);
+        }
       }
     }
 
     controller = StreamController<ProductivitySummary>(
       onListen: () {
-        taskSubscription = _db.select(_db.tasks).watch().listen((_) => emit());
-        intervalSubscription = _db
-            .select(_db.focusIntervals)
-            .watch()
-            .listen((_) => emit());
-        completionSubscription = _db
-            .select(_db.taskCompletions)
-            .watch()
-            .listen((_) => emit());
-        emit();
+        listening = true;
+        taskSubscription = _productivity.watchTasks().listen(
+          (_) => unawaited(emit()),
+          onError: controller.addError,
+        );
+        intervalSubscription = _productivity.watchFocusIntervals().listen(
+          (_) => unawaited(emit()),
+          onError: controller.addError,
+        );
+        completionSubscription = _productivity.watchTaskCompletions().listen(
+          (_) => unawaited(emit()),
+          onError: controller.addError,
+        );
+        unawaited(emit());
       },
       onCancel: () async {
+        listening = false;
+        revision++;
         await taskSubscription?.cancel();
         await intervalSubscription?.cancel();
         await completionSubscription?.cancel();
@@ -54,30 +72,24 @@ class DriftProductivityRepository implements ProductivityRepository {
         final summary = await _calculateSummary(localDate);
         final dateKey = _dateKey(localDate.toLocal());
         final now = DateTime.now().toUtc();
-        await _db
-            .into(_db.focusDailyStats)
-            .insertOnConflictUpdate(
-              FocusDailyStatsCompanion.insert(
-                id: '${localUserId}_$dateKey',
-                userId: localUserId,
-                localDate: dateKey,
-                completedTasks: Value(summary.completedTasks),
-                completedFocusIntervals: Value(summary.completedFocusIntervals),
-                totalFocusSeconds: Value(summary.totalFocusSeconds),
-                plannedFocusIntervals: Value(summary.plannedFocusIntervals),
-                calculatedAt: now,
-              ),
-            );
+        await _productivity.insertDailyStats(
+          FocusDailyStatsCompanion.insert(
+            id: '${localUserId}_$dateKey',
+            userId: localUserId,
+            localDate: dateKey,
+            completedTasks: Value(summary.completedTasks),
+            completedFocusIntervals: Value(summary.completedFocusIntervals),
+            totalFocusSeconds: Value(summary.totalFocusSeconds),
+            plannedFocusIntervals: Value(summary.plannedFocusIntervals),
+            calculatedAt: now,
+          ),
+        );
       });
 
   Future<ProductivitySummary> _calculateSummary(DateTime localDate) async {
-    final tasks = await (_db.select(
-      _db.tasks,
-    )..where((task) => task.isDeleted.equals(false))).get();
-    final completions = await _db.select(_db.taskCompletions).get();
-    final intervals = await (_db.select(
-      _db.focusIntervals,
-    )..where((interval) => interval.isDeleted.equals(false))).get();
+    final tasks = await _productivity.activeTasks();
+    final completions = await _productivity.allTaskCompletions();
+    final intervals = await _productivity.activeFocusIntervals();
     return evaluateProductivitySummary(
       reportDate: localDate,
       tasks: tasks,

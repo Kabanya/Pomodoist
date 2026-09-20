@@ -56,6 +56,10 @@ class TaskDetailScreen extends ConsumerStatefulWidget {
 class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
   final _titleKey = GlobalKey<_EditableTaskTitleState>();
   final _descriptionKey = GlobalKey<_EditableTaskDescriptionState>();
+  final _saveIdentity = Object();
+  final _titleEditorIdentity = Object();
+  final _descriptionEditorIdentity = Object();
+  final _subtaskEditorIdentity = Object();
   late final TaskDetailSaveGuard _saveGuard;
   late final Future<bool> Function() _saveCallback;
 
@@ -64,12 +68,12 @@ class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     super.initState();
     _saveGuard = ref.read(taskDetailSaveGuardProvider);
     _saveCallback = saveEdits;
-    _saveGuard.save = _saveCallback;
+    _saveGuard.register(_saveIdentity, _saveCallback);
   }
 
   @override
   void dispose() {
-    if (_saveGuard.save == _saveCallback) _saveGuard.save = null;
+    _saveGuard.unregister(_saveIdentity);
     super.dispose();
   }
 
@@ -193,10 +197,15 @@ class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            _EditableTaskTitle(key: _titleKey, task: item),
+                            _EditableTaskTitle(
+                              key: _titleKey,
+                              identity: _titleEditorIdentity,
+                              task: item,
+                            ),
                             const SizedBox(height: 12),
                             _EditableTaskDescription(
                               key: _descriptionKey,
+                              identity: _descriptionEditorIdentity,
                               task: item,
                             ),
                             const SizedBox(height: 16),
@@ -297,7 +306,10 @@ class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                               ],
                             ),
                             const SizedBox(height: 20),
-                            _SubtasksSection(task: item),
+                            _SubtasksSection(
+                              identity: _subtaskEditorIdentity,
+                              task: item,
+                            ),
                             const SizedBox(height: 16),
                             TaskCollaborationSection(task: item),
                             const SizedBox(height: 16),
@@ -602,8 +614,13 @@ Future<void> _runScheduleQuickAction(
 }
 
 class _EditableTaskTitle extends ConsumerStatefulWidget {
-  const _EditableTaskTitle({required this.task, super.key});
+  const _EditableTaskTitle({
+    required this.identity,
+    required this.task,
+    super.key,
+  });
 
+  final Object identity;
   final TaskItem task;
 
   @override
@@ -611,18 +628,21 @@ class _EditableTaskTitle extends ConsumerStatefulWidget {
 }
 
 class _EditableTaskTitleState extends ConsumerState<_EditableTaskTitle> {
-  final _editorIdentity = Object();
-
   final _controller = QuickAddTextController();
   final _focusNode = FocusNode();
   bool _editing = false;
   bool get _saving =>
-      ref.read(taskEditorViewModelProvider(_editorIdentity)).isLoading;
+      ref.read(taskEditorViewModelProvider(widget.identity)).saving;
   Future<bool>? _pendingSave;
 
   @override
   void initState() {
     super.initState();
+    final state = ref.read(taskEditorViewModelProvider(widget.identity));
+    if (state.dirty || state.failed) {
+      _editing = true;
+      _controller.text = state.draft;
+    }
     _focusNode.addListener(() {
       if (_editing && !_focusNode.hasFocus) {
         unawaited(_finishEditing());
@@ -639,7 +659,11 @@ class _EditableTaskTitleState extends ConsumerState<_EditableTaskTitle> {
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(taskEditorViewModelProvider(_editorIdentity));
+    ref.watch(
+      taskEditorViewModelProvider(
+        widget.identity,
+      ).select((state) => state.saving),
+    );
     final style = Theme.of(context).textTheme.headlineMedium;
     if (_editing) {
       return QuickAddInput(
@@ -652,6 +676,9 @@ class _EditableTaskTitleState extends ConsumerState<_EditableTaskTitle> {
         style: style,
         textInputAction: TextInputAction.done,
         decoration: InputDecoration(hintText: context.l10n.taskTitleHint),
+        onChanged: (value) => ref
+            .read(taskEditorViewModelProvider(widget.identity).notifier)
+            .updateDraft(value),
         onSubmitted: (_) => unawaited(_finishEditing()),
       );
     }
@@ -673,7 +700,13 @@ class _EditableTaskTitleState extends ConsumerState<_EditableTaskTitle> {
   }
 
   void _startEditing() {
-    _controller.text = widget.task.content;
+    final provider = taskEditorViewModelProvider(widget.identity);
+    final state = ref.read(provider);
+    final draft = state.dirty || state.failed
+        ? state.draft
+        : widget.task.content;
+    ref.read(provider.notifier).updateDraft(draft);
+    _controller.text = draft;
     _controller.selection = TextSelection(
       baseOffset: 0,
       extentOffset: _controller.text.length,
@@ -690,16 +723,9 @@ class _EditableTaskTitleState extends ConsumerState<_EditableTaskTitle> {
   Future<bool> _persistTitle() async {
     if (!_editing) return true;
     try {
-      final next = _controller.text.trim();
-      if (next.isEmpty) {
-        if (mounted) {
-          setState(() => _editing = false);
-        }
-        return true;
-      }
       final saved = await ref
-          .read(taskEditorViewModelProvider(_editorIdentity).notifier)
-          .saveTitle(widget.task, next);
+          .read(taskEditorViewModelProvider(widget.identity).notifier)
+          .saveTitle(widget.task, _controller.text);
       if (!saved) {
         if (mounted) _showEditFailure(context);
         return false;
@@ -724,8 +750,13 @@ void _showEditFailure(BuildContext context) {
 }
 
 class _EditableTaskDescription extends ConsumerStatefulWidget {
-  const _EditableTaskDescription({required this.task, super.key});
+  const _EditableTaskDescription({
+    required this.identity,
+    required this.task,
+    super.key,
+  });
 
+  final Object identity;
   final TaskItem task;
 
   @override
@@ -735,20 +766,19 @@ class _EditableTaskDescription extends ConsumerStatefulWidget {
 
 class _EditableTaskDescriptionState
     extends ConsumerState<_EditableTaskDescription> {
-  final _editorIdentity = Object();
-
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
   bool get _saving =>
-      ref.read(taskEditorViewModelProvider(_editorIdentity)).isLoading;
+      ref.read(taskEditorViewModelProvider(widget.identity)).saving;
   Future<bool>? _pendingSave;
-  late String _savedText;
 
   @override
   void initState() {
     super.initState();
-    _savedText = widget.task.description ?? '';
-    _controller.text = _savedText;
+    final state = ref.read(taskEditorViewModelProvider(widget.identity));
+    _controller.text = state.dirty || state.failed
+        ? state.draft
+        : (widget.task.description ?? '');
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus) {
         unawaited(_save());
@@ -759,11 +789,11 @@ class _EditableTaskDescriptionState
   @override
   void didUpdateWidget(covariant _EditableTaskDescription oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_focusNode.hasFocus || _saving || _controller.text != _savedText) {
+    final state = ref.read(taskEditorViewModelProvider(widget.identity));
+    if (_focusNode.hasFocus || state.saving || state.failed || state.dirty) {
       return;
     }
     final nextText = widget.task.description ?? '';
-    _savedText = nextText;
     if (_controller.text != nextText) {
       _controller.text = nextText;
     }
@@ -778,7 +808,11 @@ class _EditableTaskDescriptionState
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(taskEditorViewModelProvider(_editorIdentity));
+    ref.watch(
+      taskEditorViewModelProvider(
+        widget.identity,
+      ).select((state) => state.saving),
+    );
     return ShadInput(
       key: const Key('task-comment-editor'),
       controller: _controller,
@@ -787,6 +821,9 @@ class _EditableTaskDescriptionState
       minLines: 1,
       maxLines: 5,
       textInputAction: TextInputAction.newline,
+      onChanged: (value) => ref
+          .read(taskEditorViewModelProvider(widget.identity).notifier)
+          .updateDraft(value),
       placeholder: Text(context.l10n.taskCommentHint),
       top: Text(context.l10n.taskComment),
       leading: const Icon(LucideIcons.notebookPen),
@@ -800,21 +837,14 @@ class _EditableTaskDescriptionState
   }
 
   Future<bool> _persistDescription() async {
-    final current = _savedText.trim();
-    final draft = _controller.text;
-    final next = draft.trim();
-    if (next == current) {
-      return true;
-    }
     try {
       final saved = await ref
-          .read(taskEditorViewModelProvider(_editorIdentity).notifier)
-          .saveDescription(widget.task, next);
+          .read(taskEditorViewModelProvider(widget.identity).notifier)
+          .saveDescription(widget.task, _controller.text);
       if (!saved) {
         if (mounted) _showEditFailure(context);
         return false;
       }
-      _savedText = draft;
       return true;
     } catch (_) {
       if (mounted) _showEditFailure(context);
@@ -824,8 +854,9 @@ class _EditableTaskDescriptionState
 }
 
 class _SubtasksSection extends ConsumerStatefulWidget {
-  const _SubtasksSection({required this.task});
+  const _SubtasksSection({required this.identity, required this.task});
 
+  final Object identity;
   final TaskItem task;
 
   @override
@@ -833,11 +864,18 @@ class _SubtasksSection extends ConsumerStatefulWidget {
 }
 
 class _SubtasksSectionState extends ConsumerState<_SubtasksSection> {
-  final _editorIdentity = Object();
-
   final _controller = TextEditingController();
   bool get _saving =>
-      ref.read(taskEditorViewModelProvider(_editorIdentity)).isLoading;
+      ref.read(taskEditorViewModelProvider(widget.identity)).saving;
+
+  @override
+  void initState() {
+    super.initState();
+    final state = ref.read(taskEditorViewModelProvider(widget.identity));
+    if (state.dirty || state.failed) {
+      _controller.text = state.draft;
+    }
+  }
 
   @override
   void dispose() {
@@ -847,7 +885,11 @@ class _SubtasksSectionState extends ConsumerState<_SubtasksSection> {
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(taskEditorViewModelProvider(_editorIdentity));
+    ref.watch(
+      taskEditorViewModelProvider(
+        widget.identity,
+      ).select((state) => state.saving),
+    );
     final l10n = context.l10n;
     final subtasks = ref.watch(subtasksViewModelProvider(widget.task.id));
     final tasks = subtasks.tasks;
@@ -861,6 +903,9 @@ class _SubtasksSectionState extends ConsumerState<_SubtasksSection> {
           controller: _controller,
           enabled: !_saving,
           textInputAction: TextInputAction.done,
+          onChanged: (value) => ref
+              .read(taskEditorViewModelProvider(widget.identity).notifier)
+              .updateDraft(value),
           onSubmitted: (_) => _submit(),
           placeholder: Text(l10n.addSubtaskHint),
           leading: const Icon(LucideIcons.cornerDownRight),
@@ -921,7 +966,7 @@ class _SubtasksSectionState extends ConsumerState<_SubtasksSection> {
     }
     try {
       final saved = await ref
-          .read(taskEditorViewModelProvider(_editorIdentity).notifier)
+          .read(taskEditorViewModelProvider(widget.identity).notifier)
           .createSubtask(widget.task, input);
       if (!saved) throw StateError('Could not create subtask');
       _controller.clear();

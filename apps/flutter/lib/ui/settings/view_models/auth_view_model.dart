@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:pomodoist/config/account_providers.dart';
-import 'package:pomodoist/config/auth/email_auth.dart';
 import 'package:pomodoist/config/auth/password_recovery.dart';
 import 'package:pomodoist/config/auth/account_auth_actions.dart';
 import 'package:pomodoist/config/runtime_public_config.dart';
@@ -88,19 +87,18 @@ final class GuestDataStartupViewModel extends AsyncNotifier<void> {
 final class AuthViewModel extends Notifier<AuthUiState> {
   @override
   AuthUiState build() {
-    final bootstrap = ref.watch(accountBootstrapProvider);
-    final account = ref.watch(accountClientProvider);
+    final availability = ref.watch(accountAvailabilityProvider);
+    final signedIn = ref.watch(accountSignedInProvider);
     final overview = ref.watch(accountOverviewProvider);
+    ref.watch(passwordRecoveryStateProvider);
     final recovery = ref.watch(passwordRecoveryProvider);
-    final profile = overview.value?.profile;
+    final profile = ref.watch(accountProfileProvider);
     return AuthUiState(
-      available: account != null,
-      configured: ref.watch(accountConfiguredProvider),
-      signedIn:
-          ref.watch(accountAuthStateProvider).value?.signedIn == true ||
-          account?.currentUserId != null,
-      loading: bootstrap.isLoading,
-      bootstrapError: bootstrap.error,
+      available: availability.available,
+      configured: availability.configured,
+      signedIn: signedIn,
+      loading: availability.loading,
+      bootstrapError: availability.error,
       profile: profile == null
           ? null
           : AccountProfileState(
@@ -168,15 +166,16 @@ final class AuthViewModel extends Notifier<AuthUiState> {
         AccountAuthOperation.confirmationEmail,
     };
     try {
-      return await ref
-          .read(emailAuthProvider)
-          .submit(
+      final result = await ref
+          .read(accountAuthActionsRepositoryProvider)
+          .submitEmail(
             action: action,
             email: email,
             password: password,
             redirectTo: redirectTo,
             captchaToken: captchaToken,
           );
+      return result.getOrThrow();
     } on Object catch (error) {
       throw classify(error, operation: operation);
     }

@@ -1,11 +1,102 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pomodoist/config/app_language.dart';
+import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/data/repositories/billing/billing_repository.dart';
+import 'package:pomodoist/domain/models/billing/billing_access.dart';
+import 'package:pomodoist/domain/models/settings/app_language.dart';
 import 'package:pomodoist/data/services/planning/quick_add_hint.dart';
+import 'package:pomodoist/data/repositories/planning/quick_add_hint_repository_impl.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_hint.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  test(
+    'recreating a hint observer does not reload shared hint state',
+    () async {
+      final store = _MemoryStore()
+        ..state = QuickAddHintState(
+          createdTaskCount: 10,
+          nextRefreshAt: 25,
+          retryPending: false,
+          recentHints: const [
+            QuickAddHint(text: 'Saved task 09:00 #App @coding', locale: 'en'),
+          ],
+        );
+      final container = ProviderContainer(
+        overrides: [
+          quickAddHintHistoryProvider.overrideWithValue(
+            _FakeHistory(taskCount: 0, titles: const []),
+          ),
+          quickAddHintStoreProvider.overrideWithValue(store),
+          quickAddHintGeneratorProvider.overrideWithValue(
+            _FakeGenerator('Unused'),
+          ),
+          billingRepositoryProvider.overrideWithValue(_Billing()),
+          billingAccessProvider.overrideWith((_) => const Stream.empty()),
+          appLanguageProvider.overrideWithValue(AppLanguage.en),
+        ],
+      );
+      addTearDown(container.dispose);
+      final observer = container.listen(quickAddHintStateProvider, (_, _) {});
+      addTearDown(observer.close);
+      await pumpEventQueue();
+      expect(store.reads, 1);
+      expect(container.read(quickAddHintStateProvider).createdTaskCount, 10);
+      expect(
+        container.read(quickAddHintTextProvider),
+        'Saved task 09:00 #App @coding',
+      );
+      container.invalidate(quickAddHintStateProvider);
+      await pumpEventQueue();
+      expect(store.reads, 1);
+    },
+  );
+
   group('quick-add hint refresh thresholds', () {
+    test('late generation cannot publish or persist after disposal', () async {
+      final generator = _PendingGenerator();
+      final store = _MemoryStore();
+      final repository = StoredQuickAddHintRepository(
+        history: _FakeHistory(taskCount: 10, titles: const ['One']),
+        store: store,
+        generator: generator,
+        locale: () => 'en',
+      );
+      final snapshots = <QuickAddHintState>[];
+      final subscription = repository.watch().listen(snapshots.add);
+      addTearDown(subscription.cancel);
+      addTearDown(repository.dispose);
+      final pending = repository.initialize();
+      await generator.started.future;
+      final lastState = store.state;
+      final count = snapshots.length;
+      repository.dispose();
+      generator.result.complete('Late task 09:00 #App @coding');
+      await pending;
+      await repository.recordUserTaskCreated();
+      expect(store.state, same(lastState));
+      expect(snapshots, hasLength(count));
+      expect(repository.state, same(lastState));
+    });
+
+    test('hint snapshots own their saved hint list', () {
+      final hints = [const QuickAddHint(text: 'Saved', locale: 'en')];
+      final state = QuickAddHintState(
+        createdTaskCount: 10,
+        nextRefreshAt: 25,
+        retryPending: false,
+        recentHints: hints,
+      );
+      hints.clear();
+      expect(state.recentHints.single.text, 'Saved');
+      expect(() => state.recentHints.clear(), throwsUnsupportedError);
+    });
+
     test('use 1, 10, 25, 50, then 50-task intervals', () {
       expect(nextQuickAddHintRefreshAfter(0), 1);
       expect(nextQuickAddHintRefreshAfter(1), 10);
@@ -44,7 +135,7 @@ void main() {
         final generator = _FakeGenerator(
           'Prepare the project brief 09:00 #App @coding',
         );
-        final coordinator = QuickAddHintCoordinator(
+        final coordinator = StoredQuickAddHintRepository(
           history: history,
           store: _MemoryStore(),
           generator: generator,
@@ -61,7 +152,7 @@ void main() {
           orderedEquals(history.titles.take(10)),
         );
         expect(
-          coordinator.hintForLocale('ru'),
+          coordinator.state.hintForLocale('ru'),
           'Prepare the project brief 09:00 #App @coding',
         );
         expect(coordinator.state.nextRefreshAt, 10);
@@ -75,7 +166,7 @@ void main() {
         final generator = _FakeGenerator(
           'Review current priorities 09:00 #App @planning',
         );
-        final coordinator = QuickAddHintCoordinator(
+        final coordinator = StoredQuickAddHintRepository(
           history: _FakeHistory(taskCount: 50, titles: const ['One']),
           store: _MemoryStore(),
           generator: generator,
@@ -86,7 +177,7 @@ void main() {
 
         expect(generator.calls, hasLength(1));
         expect(coordinator.state.nextRefreshAt, 100);
-        expect(coordinator.hintForLocale('en'), isNull);
+        expect(coordinator.state.hintForLocale('en'), isNull);
       },
     );
 
@@ -94,7 +185,7 @@ void main() {
       final generator = _FakeGenerator(
         'Review current priorities 09:00 #App @planning',
       );
-      final coordinator = QuickAddHintCoordinator(
+      final coordinator = StoredQuickAddHintRepository(
         history: _FakeHistory(taskCount: 100, titles: const ['One']),
         store: _MemoryStore(),
         generator: generator,
@@ -112,12 +203,12 @@ void main() {
       'aligns a stored free user with the new, less frequent schedule',
       () async {
         final store = _MemoryStore()
-          ..state = const QuickAddHintState(
+          ..state = QuickAddHintState(
             createdTaskCount: 120,
             nextRefreshAt: 150,
             retryPending: false,
           );
-        final coordinator = QuickAddHintCoordinator(
+        final coordinator = StoredQuickAddHintRepository(
           history: _FakeHistory(taskCount: 120, titles: const ['One']),
           store: store,
           generator: _FakeGenerator('Unused'),
@@ -139,12 +230,12 @@ void main() {
           'Plan the next step 09:00 #App @planning',
         );
         final store = _MemoryStore()
-          ..state = const QuickAddHintState(
+          ..state = QuickAddHintState(
             createdTaskCount: 99,
             nextRefreshAt: 100,
             retryPending: false,
           );
-        final coordinator = QuickAddHintCoordinator(
+        final coordinator = StoredQuickAddHintRepository(
           history: _FakeHistory(taskCount: 99, titles: const ['One']),
           store: store,
           generator: generator,
@@ -169,12 +260,12 @@ void main() {
           'Plan the next step 09:00 #App @planning',
         );
         final store = _MemoryStore()
-          ..state = const QuickAddHintState(
+          ..state = QuickAddHintState(
             createdTaskCount: 20,
             nextRefreshAt: 50,
             retryPending: false,
           );
-        final coordinator = QuickAddHintCoordinator(
+        final coordinator = StoredQuickAddHintRepository(
           history: _FakeHistory(taskCount: 20, titles: const ['One']),
           store: store,
           generator: generator,
@@ -195,7 +286,7 @@ void main() {
       'keeps the previous hint and retries a failed threshold on the next launch',
       () async {
         final store = _MemoryStore();
-        final first = QuickAddHintCoordinator(
+        final first = StoredQuickAddHintRepository(
           history: _FakeHistory(taskCount: 10, titles: const ['First']),
           store: store,
           generator: _FailingGenerator(),
@@ -204,9 +295,9 @@ void main() {
 
         await first.initialize();
         expect(first.state.retryPending, isTrue);
-        expect(first.hintForLocale('ru'), isNull);
+        expect(first.state.hintForLocale('ru'), isNull);
 
-        final second = QuickAddHintCoordinator(
+        final second = StoredQuickAddHintRepository(
           history: _FakeHistory(taskCount: 10, titles: const ['First']),
           store: store,
           generator: _FakeGenerator('Plan the next step 09:00 #App @planning'),
@@ -215,7 +306,7 @@ void main() {
 
         await second.initialize();
         expect(
-          second.hintForLocale('ru'),
+          second.state.hintForLocale('ru'),
           'Plan the next step 09:00 #App @planning',
         );
         expect(second.state.nextRefreshAt, 25);
@@ -226,7 +317,7 @@ void main() {
     test('keeps only the five most recent generated hints', () async {
       SharedPreferences.setMockInitialValues({});
       final preferences = await SharedPreferences.getInstance();
-      final coordinator = QuickAddHintCoordinator(
+      final coordinator = StoredQuickAddHintRepository(
         history: _FakeHistory(taskCount: 0, titles: const ['One']),
         store: SharedPreferencesQuickAddHintStore(() async => preferences),
         generator: _SequenceGenerator(
@@ -287,7 +378,7 @@ void main() {
     test(
       'ignores unavailable history during background initialization',
       () async {
-        final coordinator = QuickAddHintCoordinator(
+        final coordinator = StoredQuickAddHintRepository(
           history: _UnavailableHistory(),
           store: _MemoryStore(),
           generator: _FakeGenerator('Unused'),
@@ -338,7 +429,7 @@ void main() {
       () async {
         SharedPreferences.setMockInitialValues({});
         final preferences = await SharedPreferences.getInstance();
-        final coordinator = QuickAddHintCoordinator(
+        final coordinator = StoredQuickAddHintRepository(
           history: _FakeHistory(taskCount: 0, titles: const ['One']),
           store: SharedPreferencesQuickAddHintStore(() async => preferences),
           generator: _FakeGenerator('Plan next step 09:00 #App @coding'),
@@ -405,14 +496,29 @@ class _FakeHistory implements QuickAddHintHistory {
 
 class _MemoryStore implements QuickAddHintStore {
   QuickAddHintState? state;
+  int reads = 0;
 
   @override
-  Future<QuickAddHintState?> read() async => state;
+  Future<QuickAddHintState?> read() async {
+    reads++;
+    return state;
+  }
 
   @override
   Future<void> write(QuickAddHintState value) async {
     state = value;
   }
+}
+
+class _Billing implements BillingRepository {
+  @override
+  BillingAccess get currentAccess => (
+    hasActiveEntitlement: false,
+    hasLocalStoreKitEntitlement: false,
+    loading: false,
+  );
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
 class _UnavailableHistory implements QuickAddHintHistory {
@@ -450,6 +556,19 @@ class _FailingGenerator implements QuickAddHintGenerator {
     required String locale,
   }) {
     throw const QuickAddHintException('DeepSeek is unavailable.');
+  }
+}
+
+class _PendingGenerator implements QuickAddHintGenerator {
+  final started = Completer<void>();
+  final result = Completer<String>();
+  @override
+  Future<String> generate({
+    required List<String> recentTaskTitles,
+    required String locale,
+  }) {
+    started.complete();
+    return result.future;
   }
 }
 

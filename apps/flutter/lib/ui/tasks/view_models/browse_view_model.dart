@@ -11,6 +11,8 @@ import 'package:pomodoist/domain/use_cases/tasks/project_list_data.dart';
 typedef BrowseState = ({
   AsyncValue<ProductivitySummary> summary,
   BrowsePeriod period,
+  ({int completedTasks, int focusIntervals, int focusSeconds, int openTasks})?
+  numbers,
 });
 final browseViewModelProvider = NotifierProvider.autoDispose
     .family<BrowseViewModel, BrowseState, Object>(BrowseViewModel.new);
@@ -20,8 +22,15 @@ class BrowseViewModel extends Notifier<BrowseState> {
   final Object identity;
   BrowsePeriod _period = BrowsePeriod.today;
   @override
-  BrowseState build() =>
-      (summary: ref.watch(productivitySummaryProvider), period: _period);
+  BrowseState build() {
+    final summary = ref.watch(productivitySummaryProvider);
+    return (
+      summary: summary,
+      period: _period,
+      numbers: summary.hasValue ? browseSummary(summary.value!, _period) : null,
+    );
+  }
+
   void setPeriod(BrowsePeriod period) {
     _period = period;
     ref.invalidateSelf();
@@ -85,9 +94,8 @@ final syncQueueViewModelProvider =
 
 class SyncQueueViewModel extends Notifier<AsyncValue<int>> {
   @override
-  AsyncValue<int> build() =>
-      ref.watch(pendingSyncCommandsProvider).whenData((rows) => rows.length);
-  void retry() => ref.invalidate(pendingSyncCommandsProvider);
+  AsyncValue<int> build() => ref.watch(pendingSyncCommandCountProvider);
+  void retry() => ref.invalidate(pendingSyncCommandCountProvider);
 }
 
 final completedTasksViewModelProvider =
@@ -99,8 +107,8 @@ class CompletedTasksViewModel extends Notifier<DateTime?> {
   @override
   DateTime? build() {
     final overview = ref.watch(accountOverviewProvider);
-    final billing = ref.watch(billingViewModelProvider);
-    return overview.hasValue && !billing.loading
+    final billing = ref.watch(billingAccessProvider).value;
+    return overview.hasValue && billing != null && !billing.loading
         ? pomodoistTaskHistoryCutoff(
             overview.value,
             hasLocalPaidEntitlement: billing.hasActiveEntitlement,

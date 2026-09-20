@@ -5,6 +5,7 @@ import 'package:shadcn_ui/shadcn_ui.dart'
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/collaboration/widgets/collaboration_copy.dart';
 import 'package:pomodoist/ui/collaboration/view_models/task_collaboration_view_model.dart';
@@ -134,11 +135,11 @@ class _TaskCollaborationSectionState
   Widget _commentTile(
     BuildContext context,
     SharedScope scope,
-    Map<String, dynamic> comment,
+    CollaborationComment comment,
   ) {
     final l10n = context.l10n;
-    final body = comment['body'] as String? ?? '';
-    final author = comment['createdBy'] as String? ?? '';
+    final body = comment.body;
+    final author = comment.createdBy ?? '';
     final canDelete = _state.canDeleteComment(comment);
     return ListTile(
       dense: true,
@@ -147,10 +148,9 @@ class _TaskCollaborationSectionState
       subtitle: Text(collaborationMemberLabel(l10n, scope, author)),
       trailing: canDelete
           ? IconButton(
-              key: Key('task-comment-delete-${comment['id']}'),
+              key: Key('task-comment-delete-${comment.id}'),
               tooltip: l10n.collaborationCommentDelete,
-              onPressed: () =>
-                  _deleteComment(scope.id, comment['id'] as String),
+              onPressed: () => _deleteComment(scope.id, comment.id),
               icon: const Icon(LucideIcons.trash2, size: 18),
             )
           : null,
@@ -214,23 +214,21 @@ class _TaskCollaborationSectionState
                             for (final member in editors)
                               CheckboxListTile(
                                 key: Key(
-                                  'task-assignee-option-${member['userId']}',
+                                  'task-assignee-option-${member.userId}',
                                 ),
-                                value: selected.contains(member['userId']),
+                                value: selected.contains(member.userId),
                                 title: Text(
                                   collaborationMemberLabel(
                                     l10n,
                                     scope,
-                                    member['userId'] as String? ?? '',
+                                    member.userId,
                                   ),
                                 ),
                                 onChanged: (checked) => setState(() {
-                                  final userId =
-                                      member['userId'] as String? ?? '';
                                   if (checked == true) {
-                                    selected.add(userId);
+                                    selected.add(member.userId);
                                   } else {
-                                    selected.remove(userId);
+                                    selected.remove(member.userId);
                                   }
                                 }),
                               ),

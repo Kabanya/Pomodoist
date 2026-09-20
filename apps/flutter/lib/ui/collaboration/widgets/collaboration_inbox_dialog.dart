@@ -5,6 +5,7 @@ import 'package:shadcn_ui/shadcn_ui.dart'
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
 import 'package:pomodoist/ui/collaboration/widgets/collaboration_copy.dart';
 import 'package:pomodoist/ui/collaboration/view_models/collaboration_inbox_view_model.dart';
 
@@ -78,26 +79,21 @@ class _CollaborationInboxDialogState
                           for (final invitation in _state.invitations)
                             ListTile(
                               key: Key(
-                                'collaboration-invitation-${invitation['id']}',
+                                'collaboration-invitation-${invitation.id}',
                               ),
                               dense: true,
                               contentPadding: EdgeInsets.zero,
                               leading: const Icon(LucideIcons.users, size: 18),
                               title: Text(
-                                collaborationRoleLabel(
-                                  l10n,
-                                  invitation['role'] as String? ?? 'member',
-                                ),
+                                collaborationRoleLabel(l10n, invitation.role),
                               ),
                               trailing: ShadButton(
                                 key: Key(
-                                  'collaboration-inbox-accept-${invitation['id']}',
+                                  'collaboration-inbox-accept-${invitation.id}',
                                 ),
                                 onPressed: _state.busy
                                     ? null
-                                    : () => _accept(
-                                        invitation['token'] as String? ?? '',
-                                      ),
+                                    : () => _accept(invitation.token ?? ''),
                                 child: Text(l10n.collaborationAccept),
                               ),
                             ),
@@ -111,7 +107,7 @@ class _CollaborationInboxDialogState
                               ),
                             ),
                             if (_state.notifications.any(
-                              (item) => item['readAt'] == null,
+                              (notification) => notification.isUnread,
                             ))
                               ShadButton.ghost(
                                 key: const Key(
@@ -141,17 +137,17 @@ class _CollaborationInboxDialogState
 
   Widget _notificationTile(
     AppLocalizations l10n,
-    Map<String, dynamic> notification,
+    CollaborationNotification notification,
   ) {
-    final unread = notification['readAt'] == null;
-    final id = notification['id'] as String? ?? '';
+    final unread = notification.isUnread;
+    final id = notification.id;
     return ListTile(
       key: Key('collaboration-notification-$id'),
       dense: true,
       contentPadding: EdgeInsets.zero,
       leading: Icon(unread ? LucideIcons.bellDot : LucideIcons.bell, size: 18),
       title: Text(
-        _notificationLabel(l10n, notification['kind'] as String? ?? ''),
+        _notificationLabel(l10n, notification.kind),
         style: unread ? const TextStyle(fontWeight: FontWeight.w600) : null,
       ),
       onTap: unread && !_state.busy ? () => _markRead(id) : null,

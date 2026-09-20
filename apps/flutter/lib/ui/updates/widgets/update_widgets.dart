@@ -30,11 +30,7 @@ class _DesktopUpdateHostState extends ConsumerState<DesktopUpdateHost>
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        unawaited(
-          ref
-              .read(updateViewModelProvider(UpdateSurface.host).notifier)
-              .start(),
-        );
+        unawaited(ref.read(updateViewModelProvider.notifier).start());
       }
     });
   }
@@ -42,7 +38,7 @@ class _DesktopUpdateHostState extends ConsumerState<DesktopUpdateHost>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      ref.read(updateViewModelProvider(UpdateSurface.host).notifier).onResume();
+      ref.read(updateViewModelProvider.notifier).onResume();
     }
   }
 
@@ -54,7 +50,7 @@ class _DesktopUpdateHostState extends ConsumerState<DesktopUpdateHost>
 
   @override
   Widget build(BuildContext context) {
-    final controller = ref.watch(updateViewModelProvider(UpdateSurface.host));
+    final controller = ref.watch(updateViewModelProvider);
     if (!controller.enabled) return widget.child;
     return Overlay.wrap(
       child: Stack(
@@ -100,10 +96,8 @@ class DesktopUpdatePopup extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.watch(updateViewModelProvider(UpdateSurface.popup));
-    final actions = ref.read(
-      updateViewModelProvider(UpdateSurface.popup).notifier,
-    );
+    final controller = ref.watch(updateViewModelProvider);
+    final actions = ref.read(updateViewModelProvider.notifier);
     final copy = UpdateCopy.of(context);
     final theme = Theme.of(context);
     final offer = controller.offer;
@@ -281,12 +275,8 @@ class DesktopUpdateSettings extends ConsumerWidget {
   const DesktopUpdateSettings({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.watch(
-      updateViewModelProvider(UpdateSurface.settings),
-    );
-    final actions = ref.read(
-      updateViewModelProvider(UpdateSurface.settings).notifier,
-    );
+    final controller = ref.watch(updateViewModelProvider);
+    final actions = ref.read(updateViewModelProvider.notifier);
     if (!controller.isDesktop) return const SizedBox.shrink();
 
     final copy = UpdateCopy.of(context);

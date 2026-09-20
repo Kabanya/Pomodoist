@@ -1,18 +1,22 @@
-import 'package:pomodoist/data/services/voice/voice_capture_service.dart';
-import 'package:pomodoist/domain/models/voice/voice_quick_add_state.dart';
-import 'package:pomodoist/data/repositories/planning/remote_task_decomposer.dart';
-import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 import 'dart:async';
-import 'package:app_voice/app_voice.dart';
-import 'package:pomodoist/data/repositories/voice/voice_quick_add_repository.dart';
-import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
+
 import 'package:app_account/app_account.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/account_providers.dart';
-import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/config/billing_store_dependencies.dart';
+import 'package:pomodoist/config/voice_dependencies.dart';
+import 'package:pomodoist/config/voice_preferences_dependencies.dart';
+import 'package:pomodoist/data/repositories/planning/remote_task_decomposer.dart';
+import 'package:pomodoist/data/repositories/voice/voice_capture_repository.dart';
+import 'package:pomodoist/data/services/billing/billing_store.dart';
 import 'package:pomodoist/data/services/planning/task_decomposer.dart';
+import 'package:pomodoist/domain/models/billing/billing_models.dart';
+import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
+import 'package:pomodoist/domain/models/voice/voice_capture_state.dart';
+import 'package:pomodoist/ui/voice/view_models/voice_quick_add_view_model.dart';
+import 'package:pomodoist/utils/result.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
 
 void main() {
   test('AI endpoint selector follows the build and rejects invalid values', () {
@@ -38,61 +42,39 @@ void main() {
           missing: true,
           throws404: throws404,
         );
+        final capture = _CompletedVoiceCapture();
         final container = ProviderContainer(
-          overrides: [accountClientProvider.overrideWithValue(account)],
+          overrides: [
+            accountClientProvider.overrideWithValue(account),
+            accountSessionProvider.overrideWith(
+              (ref) => Stream.value((userId: 'account-id', generation: 1)),
+            ),
+            voiceSmartModeProvider.overrideWithValue(false),
+            voiceCaptureRepositoryProvider.overrideWith((ref, session) {
+              return capture;
+            }),
+          ],
         );
         addTearDown(container.dispose);
-        final finished = Completer<void>();
-        List<DecomposedTaskDraft> drafts = [];
-        final controller = VoiceQuickAddRepository(
-          initialController: AppVoiceCaptureService(_UnusedVoice()),
-          waitForMode: () async {},
-          effectiveMode: () => VoiceTranscriptionMode.cloud,
-          replaceController: () => throw StateError('No automatic recording'),
-          setMode: (_) async {},
-          signedIn: () => true,
-          preferences: () async => null,
-          decomposer:
-              (
-                transcript, {
-                required now,
-                required locale,
-                smartMode = false,
-              }) => container
-                  .read(taskDecomposerProvider)
-                  .decompose(
-                    transcript,
-                    now: now,
-                    locale: locale,
-                    smartMode: smartMode,
-                  ),
+        final session = Object();
+        final listener = container.listen(
+          voiceQuickAddViewModelProvider(session),
+          (_, _) {},
+          fireImmediately: true,
         );
-        controller.locale = 'ru-RU';
-        var analysisStarted = false;
-        controller.addListener(() {
-          drafts = controller.drafts;
-          analysisStarted |= controller.analyzing;
-          if (analysisStarted &&
-              !controller.analyzing &&
-              !finished.isCompleted) {
-            finished.complete();
-          }
-        });
-        addTearDown(controller.dispose);
-        controller.handleEvent(
-          const VoiceCaptureEvent(
-            status: VoiceCaptureStatus.completed,
-            finalText: 'Купить молоко',
-          ),
+        addTearDown(listener.close);
+        final model = container.read(
+          voiceQuickAddViewModelProvider(session).notifier,
         );
-        await finished.future;
-        await Future<void>.delayed(Duration.zero);
+        model.setLocale('ru-RU');
+        capture.complete('Купить молоко');
+        await pumpEventQueue();
         expect(account.calls, 1);
-        expect(controller.transcript, 'Купить молоко');
-        expect(controller.error, contains('backend upgrade'));
-        expect(controller.error, contains(taskDecompositionEndpoint()));
-        expect(controller.analyzing, isFalse);
-        expect(drafts.single.quickAdd, 'Купить молоко');
+        expect(model.state.transcript, 'Купить молоко');
+        expect(model.state.error, contains('backend upgrade'));
+        expect(model.state.error, contains(taskDecompositionEndpoint()));
+        expect(model.state.analyzing, isFalse);
+        expect(model.state.drafts.single.quickAdd, 'Купить молоко');
       },
     );
   }
@@ -197,6 +179,50 @@ void main() {
   });
 }
 
+class _CompletedVoiceCapture implements VoiceCaptureRepository {
+  VoiceCaptureState _state = const VoiceCaptureState(restoring: false);
+  final _states = StreamController<VoiceCaptureState>.broadcast();
+
+  @override
+  VoiceCaptureState get currentState => _state;
+
+  @override
+  Stream<VoiceCaptureState> watchState() async* {
+    yield _state;
+    yield* _states.stream;
+  }
+
+  void complete(String transcript) {
+    _state = VoiceCaptureState(
+      status: VoiceCaptureStatus.completed,
+      transcript: transcript,
+      restoring: false,
+    );
+    _states.add(_state);
+  }
+
+  @override
+  Future<Result<void>> start(String locale, {bool retry = false}) async =>
+      const Success(null);
+  @override
+  Future<Result<void>> stop() async => const Success(null);
+  @override
+  Future<Result<bool>> close() async => const Success(true);
+  @override
+  Future<Result<void>> restore() async => const Success(null);
+  @override
+  Future<Result<void>> refreshAccess({
+    required String locale,
+    bool request = false,
+  }) async => const Success(null);
+  @override
+  Future<Result<void>> recoverAccess(String locale) async =>
+      const Success(null);
+  @override
+  Future<Result<void>> useCloudTranscription(String locale) async =>
+      const Success(null);
+}
+
 class _Account implements AccountClient {
   _Account(this.currentUserId, {this.missing = false, this.throws404 = true});
   final bool missing;
@@ -229,11 +255,6 @@ class _Account implements AccountClient {
     );
   }
 
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-class _UnusedVoice implements VoiceRecognitionController {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

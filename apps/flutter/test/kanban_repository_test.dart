@@ -10,7 +10,7 @@ import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/data/repositories/kanban/kanban_repository_impl.dart';
-import 'package:pomodoist/data/services/local/kanban_transition_coordinator.dart';
+import 'package:pomodoist/data/repositories/local/kanban_transition_coordinator.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 
@@ -536,7 +536,7 @@ void main() {
 
       final taskId = await tasks
           .createTask(
-            const CreateTaskInput(
+            CreateTaskInput(
               content: 'From the board',
               projectId: 'project-shared',
               kanbanStatusId: kanbanStatusInProgressId,
@@ -1046,7 +1046,7 @@ void main() {
 
         final taskId = await tasks
             .createTask(
-              const CreateTaskInput(content: 'Task', labelNames: ['Backlog']),
+              CreateTaskInput(content: 'Task', labelNames: ['Backlog']),
             )
             .then((result) => result.getOrThrow());
         final links = await (db.select(

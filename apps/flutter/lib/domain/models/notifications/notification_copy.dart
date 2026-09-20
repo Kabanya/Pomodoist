@@ -10,6 +10,9 @@ final class NotificationCopy {
     required this.returnChannel,
     required this.returnDescription,
     required this.openApp,
+    required this.taskStarting,
+    required this.returnTitle,
+    required this.returnBody,
   });
 
   const NotificationCopy.english()
@@ -22,7 +25,10 @@ final class NotificationCopy {
       taskDescription = 'Task start notifications',
       returnChannel = 'Return reminders',
       returnDescription = 'Gentle reminders to return to Pomodoist',
-      openApp = 'Open Pomodoist';
+      openApp = 'Open Pomodoist',
+      taskStarting = 'Task starting',
+      returnTitle = 'Your tomato misses you',
+      returnBody = 'One focus or one checkmark is enough to save the day.';
 
   final String focusCompleted;
   final String longBreakCompleted;
@@ -34,4 +40,7 @@ final class NotificationCopy {
   final String returnChannel;
   final String returnDescription;
   final String openApp;
+  final String taskStarting;
+  final String returnTitle;
+  final String returnBody;
 }

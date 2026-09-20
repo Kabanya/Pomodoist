@@ -13,6 +13,19 @@ class TimelineProjectRow {
   final bool hasVisibleChildren;
 }
 
+List<ProjectItem> activeTimelineProjectMenuItems(
+  Iterable<ProjectItem> projects,
+) {
+  final active = [
+    for (final project in projects)
+      if (project.id != inboxProjectId &&
+          !project.isArchived &&
+          !project.isDeleted)
+        project,
+  ]..sort((a, b) => a.orderKey.compareTo(b.orderKey));
+  return List.unmodifiable(active);
+}
+
 List<TimelineProjectRow> buildTimelineProjectRows({
   required List<ProjectItem> projects,
   required Iterable<TaskItem> tasks,

@@ -3,11 +3,12 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
 import 'package:pomodoist/domain/models/tasks/task_time.dart';
 import 'package:pomodoist/utils/clock.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/domain/use_cases/tasks/task_scheduling.dart';
-import 'package:pomodoist/ui/tasks/widgets/task_selection_region.dart';
+import 'package:pomodoist/ui/tasks/view_models/task_selection_view_model.dart';
 
 void main() {
   final midnight = DateTime(2026, 9, 10);
@@ -151,19 +152,27 @@ void main() {
     'cancel does not write; partial failure retains only failed selection',
     () async {
       final items = [task('a', timed), task('b', timed), task('c', timed)];
-      final selection = TaskSelectionController(
-        showDue: (_) async {},
-        showProject: (_) async {},
-        showLabels: (_) async {},
-        showPriority: (_) async {},
-        showMore: (_) async {},
-        duplicate: (_) async {},
-        delete: (_) async {},
+      final container = ProviderContainer(
+        overrides: [
+          taskRepositoryProvider.overrideWith(
+            (ref) => _UnexpectedTaskRepository(),
+          ),
+          projectsProvider.overrideWith(
+            (ref) => Stream.value(const <ProjectItem>[]),
+          ),
+          labelsProvider.overrideWith(
+            (ref) => Stream.value(const <LabelItem>[]),
+          ),
+          clockProvider.overrideWithValue(FixedClock(midnight)),
+        ],
       );
-      addTearDown(selection.dispose);
+      addTearDown(container.dispose);
+      final selection = container.read(
+        taskSelectionViewModelProvider(Object()).notifier,
+      );
       selection.updateVisible(items);
       expect(selection.selectedIds, isEmpty);
-      selection.retainOnly(items.map((t) => t.id));
+      selection.retainVisible(items.map((t) => t.id));
       final writes = <String>[];
       Future<void> update(String id, UpdateTaskPatch patch) async {
         writes.add(id);
@@ -178,7 +187,7 @@ void main() {
         TaskDueResult.schedule(TaskSchedule.allDay(midnight)),
         updateTask: update,
       );
-      selection.retainOnly(failed);
+      selection.retainVisible(failed);
       expect(writes, ['a', 'b', 'c']);
       expect(selection.selectedIds, {'b'});
       expect(selection.active, isTrue);
@@ -188,6 +197,11 @@ void main() {
       );
     },
   );
+}
+
+class _UnexpectedTaskRepository implements TaskRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 TaskItem task(

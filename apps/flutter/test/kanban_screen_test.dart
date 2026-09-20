@@ -488,7 +488,7 @@ Future<_KanbanHarness> _pumpKanban(
     ProviderScope(
       overrides: [
         kanbanRepositoryProvider.overrideWithValue(kanban),
-        quickAddServiceProvider.overrideWithValue(quickAdd),
+        quickAddUseCaseProvider.overrideWithValue(quickAdd),
         activeFocusRunProvider.overrideWith(
           (ref) =>
               Stream<FocusRunItem?>.value(activeFocus ? _activeRun() : null),

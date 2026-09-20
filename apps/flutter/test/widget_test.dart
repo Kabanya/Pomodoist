@@ -1,5 +1,5 @@
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
-import 'package:pomodoist/data/repositories/focus/focus_preferences.dart';
+import 'package:pomodoist/data/repositories/focus/focus_preferences_repository.dart';
 import 'package:pomodoist/utils/result.dart';
 import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
 import 'support/test_app.dart';

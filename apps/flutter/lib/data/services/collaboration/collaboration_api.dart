@@ -36,6 +36,70 @@ class CollaborationApi {
   });
   final Future<Map<String, dynamic>> Function(Map<String, dynamic> body) invoke;
 
+  Future<Map<String, dynamic>> state() => call('state');
+
+  Future<Map<String, dynamic>> publicRead(String token) =>
+      call('publicRead', {'token': token});
+
+  Future<Map<String, dynamic>> acceptInvitation(String token) =>
+      call('accept', {'token': token});
+
+  Future<Map<String, dynamic>> share({
+    required String projectId,
+    required int expectedRevision,
+  }) => call('share', {
+    'rootProjectId': projectId,
+    'expectedRevision': expectedRevision,
+  });
+
+  Future<Map<String, dynamic>> unshare(String scopeId) =>
+      call('unshare', {'scopeId': scopeId});
+
+  Future<Map<String, dynamic>> members(String scopeId) =>
+      call('members', {'scopeId': scopeId});
+
+  Future<Map<String, dynamic>> invite({
+    required String scopeId,
+    required String email,
+    required CollaborationRole role,
+  }) => call('invite', {'scopeId': scopeId, 'email': email, 'role': role.name});
+
+  Future<Map<String, dynamic>> revokeInvitation({
+    required String scopeId,
+    required String invitationId,
+  }) => call('invite', {
+    'scopeId': scopeId,
+    'invitationId': invitationId,
+    'revoke': 'true',
+  });
+
+  Future<Map<String, dynamic>> setMemberRole({
+    required String scopeId,
+    required String userId,
+    required CollaborationRole role,
+  }) => call('role', {'scopeId': scopeId, 'userId': userId, 'role': role.name});
+
+  Future<Map<String, dynamic>> removeMember({
+    required String scopeId,
+    required String userId,
+  }) => call('remove', {'scopeId': scopeId, 'userId': userId});
+
+  Future<Map<String, dynamic>> transferOwnership({
+    required String scopeId,
+    required String userId,
+  }) => call('transfer', {'scopeId': scopeId, 'userId': userId});
+
+  Future<Map<String, dynamic>> leaveScope(String scopeId) =>
+      call('leave', {'scopeId': scopeId});
+
+  Future<Map<String, dynamic>> deleteScope(String scopeId) =>
+      call('delete', {'scopeId': scopeId});
+
+  Future<Map<String, dynamic>> markNotificationRead(String notificationId) =>
+      call('readNotification', {'notificationId': notificationId});
+
+  /// Low-level wire call used by the shared synchronization engine for actions
+  /// that do not surface in the UI, such as `pull`, `push` and `preferences`.
   Future<Map<String, dynamic>> call(
     String action, [
     Map<String, dynamic> arguments = const {},

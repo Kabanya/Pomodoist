@@ -4,7 +4,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uuid/uuid.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
-import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'support/account_sync_engine.dart';
 
 void main() {
   late AppDatabase db;
@@ -80,7 +80,7 @@ void main() {
     () async {
       await (db.update(db.tasks)..where((row) => row.id.equals('legacy')))
           .write(const TasksCompanion(createdBy: Value(localUserId)));
-      await AccountSyncEngine(
+      await testSyncEngine(
         db: db,
         uuid: const Uuid(),
         account: _Account(),
@@ -120,7 +120,7 @@ void main() {
           },
         }),
       ];
-      await AccountSyncEngine(
+      await testSyncEngine(
         db: db,
         uuid: const Uuid(),
         account: account,

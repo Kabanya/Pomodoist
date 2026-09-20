@@ -1,4 +1,5 @@
 import 'package:pomodoist/data/services/account/account_management_service.dart';
+import 'package:pomodoist/data/services/auth/account_profile_service.dart';
 import 'package:pomodoist/domain/models/account/account_management.dart';
 import 'package:pomodoist/utils/result.dart';
 import 'account_management_repository.dart';
@@ -8,15 +9,15 @@ class SdkAccountManagementRepository implements AccountManagementRepository {
     required AccountManagementService service,
     required String? userId,
     required Duration timeout,
-    required Future<void> Function(String userId, String name) saveNickname,
+    required AccountProfileService profile,
   }) : _service = service,
        _userId = userId,
        _timeout = timeout,
-       _saveNickname = saveNickname;
+       _profile = profile;
   final AccountManagementService _service;
   final String? _userId;
   final Duration _timeout;
-  final Future<void> Function(String userId, String name) _saveNickname;
+  final AccountProfileService _profile;
   @override
   String? get userId => _userId;
   @override
@@ -76,6 +77,7 @@ class SdkAccountManagementRepository implements AccountManagementRepository {
     _requireCurrent();
     final value = name.trim();
     if (value.isEmpty) throw ArgumentError.value(name, 'nickname');
-    await _saveNickname(_userId!, value).timeout(_timeout);
+    (await _profile.updateNickname(_userId!, value).timeout(_timeout))
+        .getOrThrow();
   });
 }

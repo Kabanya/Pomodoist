@@ -43,9 +43,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
     final viewState = ref.watch(browseViewModelProvider(_identity));
     final summary = viewState.summary;
     final period = viewState.period;
-    final item = summary.hasValue
-        ? browseSummary(summary.value!, period)
-        : null;
+    final item = viewState.numbers;
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
@@ -655,7 +653,9 @@ class OverdueTasksScreen extends ConsumerWidget {
                 child: Text(context.l10n.browseTitle),
               ),
               ShadButton.ghost(
-                onPressed: ids.isEmpty ? null : () => selection.retainOnly(ids),
+                onPressed: ids.isEmpty
+                    ? null
+                    : () => selection.retainVisible(ids),
                 child: Text(context.l10n.taskSelectAll),
               ),
             ],

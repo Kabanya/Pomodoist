@@ -1,10 +1,14 @@
+export 'global_shortcut_labels.dart';
 // ignore_for_file: deprecated_member_use
+
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/keyboard_shortcuts.dart';
 import 'package:pomodoist/config/platform/platform_quick_add.dart';
+import 'package:pomodoist/data/repositories/platform/global_quick_add_repository.dart';
 
 typedef ShortcutBinding = AppShortcutBinding;
 typedef GlobalShortcutBinding = GlobalQuickAddBinding;
@@ -38,7 +42,7 @@ final keyboardShortcutsViewModelProvider =
     >(KeyboardShortcutsViewModel.new);
 
 class KeyboardShortcutsViewModel extends Notifier<KeyboardShortcutsState> {
-  PlatformQuickAddController? _global;
+  GlobalQuickAddRepository? _global;
 
   @override
   KeyboardShortcutsState build() {
@@ -52,23 +56,24 @@ class KeyboardShortcutsViewModel extends Notifier<KeyboardShortcutsState> {
           TargetPlatform.windows,
           TargetPlatform.linux,
         }.contains(platform);
-    final controller = supportsGlobal
-        ? ref.watch(platformQuickAddControllerProvider)
+    final global = supportsGlobal
+        ? ref.watch(globalQuickAddRepositoryProvider)
         : null;
-    if (!identical(_global, controller)) {
-      _global?.removeListener(_refreshGlobalState);
-      _global = controller;
-      controller?.addListener(_refreshGlobalState);
-    }
-    ref.onDispose(() => _global?.removeListener(_refreshGlobalState));
+    _global = global;
+    final subscription = global?.watchState().listen((value) {
+      if (ref.mounted) _applyGlobal(value);
+    });
+    ref.onDispose(() => unawaited(subscription?.cancel()));
     return KeyboardShortcutsState(
       platform: platform,
       bindings: bindings,
       global:
-          controller?.state ??
+          global?.state ??
           GlobalQuickAddState(
             enabled: false,
-            binding: GlobalQuickAddBinding.defaultFor(platform),
+            binding: GlobalQuickAddBinding.defaultFor(
+              isMacOS: platform == TargetPlatform.macOS,
+            ),
           ),
       supportsGlobal: supportsGlobal,
     );
@@ -79,15 +84,19 @@ class KeyboardShortcutsViewModel extends Notifier<KeyboardShortcutsState> {
     _refreshGlobalState();
   }
 
-  void _refreshGlobalState() {
-    final controller = _global;
-    if (!ref.mounted || controller == null) return;
+  void _applyGlobal(GlobalQuickAddState value) {
     state = KeyboardShortcutsState(
       platform: state.platform,
       bindings: state.bindings,
-      global: controller.state,
+      global: value,
       supportsGlobal: state.supportsGlobal,
     );
+  }
+
+  void _refreshGlobalState() {
+    final global = _global;
+    if (!ref.mounted || global == null) return;
+    _applyGlobal(global.state);
   }
 
   bool conflictsWithZoom(ShortcutBinding binding) =>
@@ -108,26 +117,27 @@ class KeyboardShortcutsViewModel extends Notifier<KeyboardShortcutsState> {
       ref.read(keyboardShortcutsProvider.notifier).setBinding(command, binding);
 
   Future<void> setGlobalEnabled(bool enabled) async {
-    await _global!.setGlobalQuickAddEnabled(enabled);
+    await _global!.setEnabled(enabled);
     _refreshGlobalState();
   }
 
   Future<void> setGlobalShortcut(GlobalShortcutBinding binding) async {
-    await _global!.setGlobalShortcut(binding);
+    await _global!.setShortcut(binding);
     _refreshGlobalState();
   }
 
   Future<GlobalShortcutBinding> captureGlobalShortcut() =>
-      _global!.captureGlobalShortcut();
+      _global!.captureShortcut();
 
-  Future<void> cancelGlobalShortcutCapture() =>
-      _global!.cancelGlobalShortcutCapture();
+  Future<void> cancelGlobalShortcutCapture() => _global!.cancelCapture();
 
   Future<void> resetAll() async {
     await ref.read(keyboardShortcutsProvider.notifier).resetAll();
     if (state.supportsGlobal) {
-      await _global!.setGlobalShortcut(
-        GlobalQuickAddBinding.defaultFor(state.platform),
+      await _global!.setShortcut(
+        GlobalQuickAddBinding.defaultFor(
+          isMacOS: state.platform == TargetPlatform.macOS,
+        ),
       );
       _refreshGlobalState();
     }

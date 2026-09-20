@@ -70,7 +70,7 @@ void main() {
   test('observer writes fail before local content or queue changes', () async {
     await expectLater(
       tasks
-          .updateTask(taskId, const UpdateTaskPatch(content: 'Forbidden'))
+          .updateTask(taskId, UpdateTaskPatch(content: 'Forbidden'))
           .then((result) => result.getOrThrow()),
       throwsA(isA<CollaborationException>()),
     );
@@ -83,7 +83,7 @@ void main() {
     'observer display preferences queue privately without changing shared content',
     () async {
       await tasks
-          .updateTask(taskId, const UpdateTaskPatch(isCollapsed: true))
+          .updateTask(taskId, UpdateTaskPatch(isCollapsed: true))
           .then((result) => result.getOrThrow());
       final row = await (db.select(
         db.tasks,
@@ -224,7 +224,7 @@ void main() {
           )
           .then((result) => result.getOrThrow());
       await tasks
-          .updateTask(id, const UpdateTaskPatch(content: 'Later text'))
+          .updateTask(id, UpdateTaskPatch(content: 'Later text'))
           .then((result) => result.getOrThrow());
       final create = await (db.select(
         db.syncCommands,

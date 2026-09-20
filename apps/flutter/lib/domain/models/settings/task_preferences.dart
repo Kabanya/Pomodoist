@@ -46,7 +46,7 @@ class TimelineVisibleHours {
 }
 
 class TaskPreferences {
-  const TaskPreferences({
+  TaskPreferences({
     this.reengagementEnabled = true,
     this.quickAddMinutes = defaultQuickAddTimedBlockMinutes,
     this.timeDisplayMode = TaskTimeDisplayMode.smart,
@@ -57,8 +57,8 @@ class TaskPreferences {
       endMinutes: 1440,
     ),
     this.hourWidth = defaultTimelineHourWidth,
-    this.collapsedProjectIds = const {},
-  });
+    Set<String> collapsedProjectIds = const {},
+  }) : collapsedProjectIds = Set.unmodifiable(collapsedProjectIds);
   final bool reengagementEnabled;
   final int quickAddMinutes;
   final TaskTimeDisplayMode timeDisplayMode;

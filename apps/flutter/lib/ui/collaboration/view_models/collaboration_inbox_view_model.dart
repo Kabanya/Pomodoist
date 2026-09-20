@@ -1,26 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/collaboration_dependencies.dart';
 import 'package:pomodoist/data/repositories/collaboration/collaboration_repository.dart';
-import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
 
 final class CollaborationInboxState {
   CollaborationInboxState({
     this.loading = false,
     this.busy = false,
     this.error,
-    List<Map<String, dynamic>> invitations = const [],
-    List<Map<String, dynamic>> notifications = const [],
-  }) : invitations = List.unmodifiable(
-         invitations.map(Map<String, dynamic>.unmodifiable),
-       ),
-       notifications = List.unmodifiable(
-         notifications.map(Map<String, dynamic>.unmodifiable),
-       );
+    List<CollaborationInvitation> invitations = const [],
+    List<CollaborationNotification> notifications = const [],
+  }) : invitations = List.unmodifiable(invitations),
+       notifications = List.unmodifiable(notifications);
   final bool loading;
   final bool busy;
   final Object? error;
-  final List<Map<String, dynamic>> invitations;
-  final List<Map<String, dynamic>> notifications;
+  final List<CollaborationInvitation> invitations;
+  final List<CollaborationNotification> notifications;
 }
 
 final collaborationInboxViewModelProvider =
@@ -44,13 +40,13 @@ class CollaborationInboxViewModel extends Notifier<CollaborationInboxState> {
   Future<void> _load(int generation) async {
     try {
       final repository = _repository;
-      final result = repository == null
-          ? <String, dynamic>{}
+      final snapshot = repository == null
+          ? null
           : (await repository.state()).getOrThrow();
       if (!ref.mounted || generation != _generation) return;
       state = CollaborationInboxState(
-        invitations: collaborationMaps(result['invitations']),
-        notifications: collaborationMaps(result['notifications']),
+        invitations: snapshot?.invitations ?? const [],
+        notifications: snapshot?.notifications ?? const [],
       );
     } catch (error) {
       if (!ref.mounted || generation != _generation) return;
@@ -68,21 +64,17 @@ class CollaborationInboxViewModel extends Notifier<CollaborationInboxState> {
           (await repository.acceptInvitation(token)).getOrThrow();
         });
   Future<bool> markRead(String id) => _run((repository) async {
-    (await repository.action('readNotification', {
-      'notificationId': id,
-    })).getOrThrow();
+    (await repository.markNotificationRead(id)).getOrThrow();
   });
   Future<bool> markAllRead() {
     final ids = state.notifications
-        .where((item) => item['readAt'] == null)
-        .map((item) => item['id'] as String)
+        .where((notification) => notification.isUnread)
+        .map((notification) => notification.id)
         .take(50)
         .toList();
     return _run((repository) async {
       for (final id in ids) {
-        (await repository.action('readNotification', {
-          'notificationId': id,
-        })).getOrThrow();
+        (await repository.markNotificationRead(id)).getOrThrow();
       }
     });
   }

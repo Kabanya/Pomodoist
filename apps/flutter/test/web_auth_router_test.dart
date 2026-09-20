@@ -16,11 +16,11 @@ import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 void main() {
   setUpAll(loadTestAppResources);
   test('auth refresh keeps the active native route', () async {
-    final authStates = StreamController<AccountAuthState>();
+    final authStates = StreamController<({String? userId, int generation})>();
     final container = ProviderContainer(
       overrides: [
         accountClientProvider.overrideWithValue(null),
-        accountAuthStateProvider.overrideWith((ref) => authStates.stream),
+        accountSessionProvider.overrideWith((ref) => authStates.stream),
       ],
     );
     final subscription = container.listen(routerProvider, (_, _) {});
@@ -30,23 +30,13 @@ void main() {
       await authStates.close();
     });
 
-    authStates.add(
-      const AccountAuthState(
-        signedIn: true,
-        session: AccountSession(userId: 'user', accessToken: 'token-1'),
-      ),
-    );
+    authStates.add((userId: 'user', generation: 1));
     await pumpEventQueue();
 
     final router = container.read(routerProvider);
     router.go('/projects');
 
-    authStates.add(
-      const AccountAuthState(
-        signedIn: true,
-        session: AccountSession(userId: 'user', accessToken: 'token-2'),
-      ),
-    );
+    authStates.add((userId: 'user', generation: 2));
     await pumpEventQueue();
 
     expect(container.read(routerProvider), same(router));

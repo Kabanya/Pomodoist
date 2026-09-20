@@ -47,17 +47,17 @@ int? _priorityFromToken(String token) {
 }
 
 class ParsedQuickAdd {
-  const ParsedQuickAdd({
+  ParsedQuickAdd({
     required this.content,
     this.project,
     this.section,
-    this.labels = const [],
+    List<String> labels = const [],
     this.priority,
     this.dueDate,
     this.schedule,
     this.deadline,
     this.estimatedFocusIntervals,
-  });
+  }) : labels = List.unmodifiable(labels);
 
   final String content;
   final String? project;
@@ -94,7 +94,10 @@ class QuickAddTokenMatch {
 }
 
 class QuickAddAnalysis {
-  const QuickAddAnalysis({required this.parsed, required this.matches});
+  QuickAddAnalysis({
+    required this.parsed,
+    required List<QuickAddTokenMatch> matches,
+  }) : matches = List.unmodifiable(matches);
 
   final ParsedQuickAdd parsed;
   final List<QuickAddTokenMatch> matches;

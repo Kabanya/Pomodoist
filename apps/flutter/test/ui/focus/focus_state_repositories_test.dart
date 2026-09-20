@@ -1,8 +1,10 @@
-import 'package:pomodoist/data/repositories/focus/focus_preferences.dart';
+import 'package:pomodoist/data/repositories/focus/focus_preferences_repository.dart';
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/data/repositories/focus/focus_completion_repository.dart';
+import 'package:pomodoist/data/repositories/focus/focus_completion_repository_impl.dart';
+import 'package:pomodoist/data/repositories/focus/focus_preferences_repository_impl.dart';
+import 'package:pomodoist/data/services/local/preferences_service.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,7 +21,9 @@ void main() {
         lastFocusPresetIdPreferenceKey: 'old-preset',
       });
       final pending = Completer<SharedPreferences?>();
-      final repository = FocusPreferencesRepository(() => pending.future);
+      final repository = StoredFocusPreferencesRepository(
+        PreferencesService(() => pending.future),
+      );
       addTearDown(repository.dispose);
       final loading = repository.load();
       final selection = repository.setPresetId('new-preset');
@@ -36,18 +40,25 @@ void main() {
 
   test('preference load cannot publish after disposal', () async {
     final pending = Completer<SharedPreferences?>();
-    final repository = FocusPreferencesRepository(() => pending.future);
+    final repository = StoredFocusPreferencesRepository(
+      PreferencesService(() => pending.future),
+    );
     var publications = 0;
-    repository.addListener(() => publications++);
+    final subscription = repository
+        .watch()
+        .skip(1)
+        .listen((_) => publications++);
+    addTearDown(subscription.cancel);
     final loading = repository.load();
     repository.dispose();
     pending.complete(null);
     (await loading).getOrThrow();
+    await Future<void>.delayed(Duration.zero);
     expect(publications, 0);
   });
 
   test('completion is shared, single-flight and never replayed', () {
-    final repository = FocusCompletionRepository();
+    final repository = DefaultFocusCompletionRepository();
     addTearDown(repository.dispose);
     FocusRunCompletionEvent event(String id) => FocusRunCompletionEvent(
       runId: id,

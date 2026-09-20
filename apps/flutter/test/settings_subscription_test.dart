@@ -1,18 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/domain/models/billing/billing_models.dart';
 import 'package:pomodoist/ui/settings/widgets/settings_subscription.dart';
 
 void main() {
   test('loading and failed lookups do not claim a Free subscription', () {
-    expect(settingsSubscriptionTier(const BillingState()), isNull);
+    expect(settingsSubscriptionTier(BillingState()), isNull);
     expect(
-      settingsSubscriptionTier(
-        const BillingState(loading: false, error: 'offline'),
-      ),
+      settingsSubscriptionTier(BillingState(loading: false, error: 'offline')),
       isNull,
     );
     expect(
-      settingsSubscriptionTier(const BillingState(loading: false)),
+      settingsSubscriptionTier(BillingState(loading: false)),
       BillingAccessTier.free,
     );
   });

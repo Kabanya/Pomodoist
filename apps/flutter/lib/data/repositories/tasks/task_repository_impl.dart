@@ -12,131 +12,72 @@ import 'package:pomodoist/data/services/local/shared_access.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
-import 'package:pomodoist/data/services/local/kanban_transition_coordinator.dart';
+import 'package:pomodoist/data/repositories/local/kanban_transition_coordinator.dart';
+import 'package:pomodoist/data/services/local/task_local_service.dart';
 import 'package:pomodoist/data/services/local/task_repository_support.dart';
 
 class DriftTaskRepository implements TaskRepository {
   static const _deleteUndoWindow = Duration(seconds: 7);
 
   DriftTaskRepository(
-    this._db,
+    AppDatabase db,
     this._syncQueue, {
     Uuid? uuid,
     KanbanTransitionCoordinator? kanbanTransitions,
-    void Function()? onUserTaskCreated,
-  }) : _uuid = uuid ?? const Uuid(),
+  }) : _db = db,
+       _uuid = uuid ?? const Uuid(),
+       _tasks = TaskLocalService(db),
        _kanbanTransitions =
            kanbanTransitions ??
-           KanbanTransitionCoordinator(_db, _syncQueue, uuid: uuid),
-       _onUserTaskCreated = onUserTaskCreated;
+           KanbanTransitionCoordinator(db, _syncQueue, uuid: uuid);
 
   final AppDatabase _db;
   SharedAccess get _access => SharedAccess(_db);
   final OutboxService _syncQueue;
   final Uuid _uuid;
+  final TaskLocalService _tasks;
   final KanbanTransitionCoordinator _kanbanTransitions;
-  final void Function()? _onUserTaskCreated;
-
   @override
   Stream<List<TaskItem>> watchTasks(TaskQuery query) {
-    final statement = _db.select(_db.tasks)
-      ..where((task) => task.isDeleted.equals(false));
-    statement.where(
-      (task) => query.kind == TaskQueryKind.completed
-          ? task.status.equals('completed')
-          : task.status.equals('completed').not(),
-    );
-    if (query.kind == TaskQueryKind.inbox) {
-      statement.where((task) => task.projectId.equals(inboxProjectId));
-    } else if (query.kind == TaskQueryKind.project) {
-      statement.where(
-        (task) => query.projectId == null
-            ? task.projectId.isNull()
-            : task.projectId.equals(query.projectId!),
-      );
-    }
-    if (query.kind == TaskQueryKind.label) {
-      final links = _db.selectOnly(_db.taskLabels)
-        ..addColumns([_db.taskLabels.taskId])
-        ..join([
-          innerJoin(
-            _db.labels,
-            _db.labels.id.equalsExp(_db.taskLabels.labelId),
-          ),
-        ])
-        ..where(
-          _db.taskLabels.labelId.equals(query.labelId ?? '') &
-              _db.taskLabels.kind.equals(labelKindUser) &
-              _db.labels.kind.equals(labelKindUser) &
-              _db.labels.isDeleted.equals(false),
+    return _tasks.watchTasks(query).asyncMap((rows) async {
+      final actorId = await _access.actorId();
+      final tasks = rows
+          .map(
+            (row) => _mapTask(row.task, scope: sharedScopeFromRow(row.scope)),
+          )
+          .where(
+            (task) =>
+                !{
+                  TaskQueryKind.today,
+                  TaskQueryKind.upcoming,
+                  TaskQueryKind.day,
+                }.contains(query.kind) ||
+                task.scopeId == null ||
+                task.assigneeIds.contains(actorId),
+          )
+          .where((task) => _matchesQuery(task, query))
+          .toList();
+      tasks.sort((a, b) {
+        final dayOrderCompare = (a.dayOrder ?? 999999).compareTo(
+          b.dayOrder ?? 999999,
         );
-      statement.where((task) => task.id.isInQuery(links));
-    }
-    return statement
-        .join([
-          leftOuterJoin(
-            _db.sharedScopes,
-            _db.sharedScopes.id.equalsExp(_db.tasks.scopeId),
-          ),
-        ])
-        .watch()
-        .asyncMap((rows) async {
-          final actorId = await _access.actorId();
-          final tasks = rows
-              .map(
-                (result) => _mapTask(
-                  result.readTable(_db.tasks),
-                  scope: sharedScopeFromRow(
-                    result.readTableOrNull(_db.sharedScopes),
-                  ),
-                ),
-              )
-              .where(
-                (task) =>
-                    !{
-                      TaskQueryKind.today,
-                      TaskQueryKind.upcoming,
-                      TaskQueryKind.day,
-                    }.contains(query.kind) ||
-                    task.scopeId == null ||
-                    task.assigneeIds.contains(actorId),
-              )
-              .where((task) => _matchesQuery(task, query))
-              .toList();
-          tasks.sort((a, b) {
-            final dayOrderCompare = (a.dayOrder ?? 999999).compareTo(
-              b.dayOrder ?? 999999,
-            );
-            if (dayOrderCompare != 0) {
-              return dayOrderCompare;
-            }
-            return a.orderKey.compareTo(b.orderKey);
-          });
-          return tasks;
-        });
+        if (dayOrderCompare != 0) {
+          return dayOrderCompare;
+        }
+        return a.orderKey.compareTo(b.orderKey);
+      });
+      return List<TaskItem>.unmodifiable(tasks);
+    });
   }
 
   @override
   Stream<TaskItem?> watchTask(String id) {
-    final statement = _db.select(_db.tasks)
-      ..where((task) => task.id.equals(id));
-    return statement
-        .join([
-          leftOuterJoin(
-            _db.sharedScopes,
-            _db.sharedScopes.id.equalsExp(_db.tasks.scopeId),
-          ),
-        ])
-        .watchSingleOrNull()
+    return _tasks
+        .watchTask(id)
         .map(
-          (result) => result == null
+          (row) => row == null
               ? null
-              : _mapTask(
-                  result.readTable(_db.tasks),
-                  scope: sharedScopeFromRow(
-                    result.readTableOrNull(_db.sharedScopes),
-                  ),
-                ),
+              : _mapTask(row.task, scope: sharedScopeFromRow(row.scope)),
         );
   }
 
@@ -161,29 +102,27 @@ class DriftTaskRepository implements TaskRepository {
     final durationSeconds =
         input.durationSeconds ?? schedule?.duration?.inSeconds;
     await _db.transaction(() async {
-      await _db
-          .into(_db.tasks)
-          .insert(
-            TasksCompanion.insert(
-              id: id,
-              userId: localUserId,
-              scopeId: Value(scopeId),
-              createdBy: Value(creator),
-              content: input.content,
-              description: Value(input.description),
-              projectId: projectId,
-              sectionId: Value(input.sectionId),
-              parentId: Value(input.parentId),
-              priority: Value(input.priority ?? 4),
-              dueJson: Value(_scheduleJson(schedule)),
-              deadlineJson: Value(_dateJson(input.deadline)),
-              durationSeconds: Value(durationSeconds),
-              estimatedFocusIntervals: Value(input.estimatedFocusIntervals),
-              orderKey: _orderKey(now),
-              createdAt: now,
-              updatedAt: now,
-            ),
-          );
+      await _tasks.insertTask(
+        TasksCompanion.insert(
+          id: id,
+          userId: localUserId,
+          scopeId: Value(scopeId),
+          createdBy: Value(creator),
+          content: input.content,
+          description: Value(input.description),
+          projectId: projectId,
+          sectionId: Value(input.sectionId),
+          parentId: Value(input.parentId),
+          priority: Value(input.priority ?? 4),
+          dueJson: Value(_scheduleJson(schedule)),
+          deadlineJson: Value(_dateJson(input.deadline)),
+          durationSeconds: Value(durationSeconds),
+          estimatedFocusIntervals: Value(input.estimatedFocusIntervals),
+          orderKey: _orderKey(now),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
       await _kanbanTransitions.assignInitialStatusInTransaction(
         taskId: id,
         requestedStatusId: input.kanbanStatusId,
@@ -207,14 +146,7 @@ class DriftTaskRepository implements TaskRepository {
       final contextLabelId = input.labelId;
       LabelRow? contextLabel;
       if (contextLabelId != null) {
-        contextLabel =
-            await (_db.select(_db.labels)..where(
-                  (row) =>
-                      row.id.equals(contextLabelId) &
-                      row.kind.equals(labelKindUser) &
-                      row.isDeleted.equals(false),
-                ))
-                .getSingleOrNull();
+        contextLabel = await _tasks.findUserLabel(contextLabelId);
         if (contextLabel == null) throw StateError('Label no longer exists');
       }
       if (contextLabel != null) await _attachLabel(id, contextLabel.id, now);
@@ -231,7 +163,6 @@ class DriftTaskRepository implements TaskRepository {
         now,
       );
     });
-    _onUserTaskCreated?.call();
     return id;
   });
 
@@ -248,18 +179,18 @@ class DriftTaskRepository implements TaskRepository {
     }
     final duplicateIds = <String>[];
     await _db.transaction(() async {
-      final rows = await (_db.select(
-        _db.tasks,
-      )..where((task) => task.isDeleted.equals(false))).get();
-      final rowById = _rowById(rows);
+      final rows = await _tasks.activeTasks();
+      final rowById = _tasks.rowById(rows);
       final selectedIds = taskIds.where(rowById.containsKey).toSet();
       if (includeSubtasks) {
-        final childrenByParent = _childrenByParent(rows);
+        final childrenByParent = _tasks.childrenByParent(rows);
         for (final id in taskIds) {
           final root = rowById[id];
           if (root != null) {
             selectedIds.addAll(
-              _subtreeRowsFrom(root, childrenByParent).map((row) => row.id),
+              _tasks
+                  .subtreeRowsFrom(root, childrenByParent)
+                  .map((row) => row.id),
             );
           }
         }
@@ -287,32 +218,30 @@ class DriftTaskRepository implements TaskRepository {
         final orderKey = (now.microsecondsSinceEpoch + index)
             .toString()
             .padLeft(20, '0');
-        await _db
-            .into(_db.tasks)
-            .insert(
-              TasksCompanion.insert(
-                id: duplicateId,
-                userId: source.userId,
-                scopeId: Value(source.scopeId),
-                createdBy: Value(await _access.actorId()),
-                assigneeIdsJson: Value(source.assigneeIdsJson),
-                content: source.content,
-                description: Value(source.description),
-                projectId: source.projectId,
-                sectionId: Value(source.sectionId),
-                parentId: Value(parentId),
-                priority: Value(source.priority),
-                dueJson: Value(_scheduleJson(schedule)),
-                deadlineJson: Value(source.deadlineJson),
-                durationSeconds: Value(source.durationSeconds),
-                estimatedFocusIntervals: Value(source.estimatedFocusIntervals),
-                orderKey: orderKey,
-                dayOrder: Value(source.dayOrder),
-                isCollapsed: Value(source.isCollapsed),
-                createdAt: now,
-                updatedAt: now,
-              ),
-            );
+        await _tasks.insertTask(
+          TasksCompanion.insert(
+            id: duplicateId,
+            userId: source.userId,
+            scopeId: Value(source.scopeId),
+            createdBy: Value(await _access.actorId()),
+            assigneeIdsJson: Value(source.assigneeIdsJson),
+            content: source.content,
+            description: Value(source.description),
+            projectId: source.projectId,
+            sectionId: Value(source.sectionId),
+            parentId: Value(parentId),
+            priority: Value(source.priority),
+            dueJson: Value(_scheduleJson(schedule)),
+            deadlineJson: Value(source.deadlineJson),
+            durationSeconds: Value(source.durationSeconds),
+            estimatedFocusIntervals: Value(source.estimatedFocusIntervals),
+            orderKey: orderKey,
+            dayOrder: Value(source.dayOrder),
+            isCollapsed: Value(source.isCollapsed),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
         await _kanbanTransitions.copyRecurringStatusInTransaction(
           sourceTaskId: source.id,
           newTaskId: duplicateId,
@@ -357,77 +286,78 @@ class DriftTaskRepository implements TaskRepository {
   });
 
   @override
-  Future<Result<void>> updateTask(
-    String id,
-    UpdateTaskPatch patch,
-  ) => Result.capture<void>(() async {
-    if (patch.content != null ||
-        patch.updateDescription ||
-        patch.priority != null ||
-        patch.dueDate != null ||
-        patch.schedule != null ||
-        patch.clearSchedule ||
-        patch.estimatedFocusIntervals != null ||
-        patch.labelNames != null) {
-      await _access.task(id);
-    }
-    final now = DateTime.now().toUtc();
-    final schedule =
-        patch.schedule ??
-        (patch.dueDate == null ? null : TaskSchedule.allDay(patch.dueDate!));
-    await _db.transaction(() async {
-      await (_db.update(_db.tasks)..where((task) => task.id.equals(id))).write(
-        TasksCompanion(
-          content: patch.content == null
-              ? const Value.absent()
-              : Value(patch.content!),
-          description: patch.updateDescription
-              ? Value(patch.description)
-              : const Value.absent(),
-          priority: patch.priority == null
-              ? const Value.absent()
-              : Value(patch.priority!),
-          dueJson: patch.clearSchedule
-              ? const Value(null)
-              : schedule == null
-              ? const Value.absent()
-              : Value(_scheduleJson(schedule)),
-          durationSeconds: patch.clearSchedule || schedule != null
-              ? Value(schedule?.duration?.inSeconds)
-              : const Value.absent(),
-          estimatedFocusIntervals: patch.estimatedFocusIntervals == null
-              ? const Value.absent()
-              : Value(patch.estimatedFocusIntervals),
-          isCollapsed: patch.isCollapsed == null
-              ? const Value.absent()
-              : Value(patch.isCollapsed!),
-          updatedAt: Value(now),
-        ),
-      );
-      if (patch.labelNames != null) {
-        await _attachLabels(id, patch.labelNames!, now);
-      }
-      await _syncQueue.enqueue(
-        type: 'task.update',
-        clientId: id,
-        payload: {
-          'id': id,
-          if (patch.content != null) 'content': patch.content,
-          if (patch.updateDescription) 'description': patch.description,
-          if (patch.priority != null) 'priority': patch.priority,
-          if (patch.clearSchedule)
-            'due': null
-          else if (schedule != null)
-            'due': schedule.toJsonString(),
-          if (patch.clearSchedule || schedule != null)
-            'durationSeconds': schedule?.duration?.inSeconds,
-          if (patch.estimatedFocusIntervals != null)
-            'estimatedFocusIntervals': patch.estimatedFocusIntervals,
-          if (patch.isCollapsed != null) 'isCollapsed': patch.isCollapsed,
-        },
-      );
-    });
-  });
+  Future<Result<void>> updateTask(String id, UpdateTaskPatch patch) =>
+      Result.capture<void>(() async {
+        if (patch.content != null ||
+            patch.updateDescription ||
+            patch.priority != null ||
+            patch.dueDate != null ||
+            patch.schedule != null ||
+            patch.clearSchedule ||
+            patch.estimatedFocusIntervals != null ||
+            patch.labelNames != null) {
+          await _access.task(id);
+        }
+        final now = DateTime.now().toUtc();
+        final schedule =
+            patch.schedule ??
+            (patch.dueDate == null
+                ? null
+                : TaskSchedule.allDay(patch.dueDate!));
+        await _db.transaction(() async {
+          await _tasks.updateTask(
+            id,
+            TasksCompanion(
+              content: patch.content == null
+                  ? const Value.absent()
+                  : Value(patch.content!),
+              description: patch.updateDescription
+                  ? Value(patch.description)
+                  : const Value.absent(),
+              priority: patch.priority == null
+                  ? const Value.absent()
+                  : Value(patch.priority!),
+              dueJson: patch.clearSchedule
+                  ? const Value(null)
+                  : schedule == null
+                  ? const Value.absent()
+                  : Value(_scheduleJson(schedule)),
+              durationSeconds: patch.clearSchedule || schedule != null
+                  ? Value(schedule?.duration?.inSeconds)
+                  : const Value.absent(),
+              estimatedFocusIntervals: patch.estimatedFocusIntervals == null
+                  ? const Value.absent()
+                  : Value(patch.estimatedFocusIntervals),
+              isCollapsed: patch.isCollapsed == null
+                  ? const Value.absent()
+                  : Value(patch.isCollapsed!),
+              updatedAt: Value(now),
+            ),
+          );
+          if (patch.labelNames != null) {
+            await _attachLabels(id, patch.labelNames!, now);
+          }
+          await _syncQueue.enqueue(
+            type: 'task.update',
+            clientId: id,
+            payload: {
+              'id': id,
+              if (patch.content != null) 'content': patch.content,
+              if (patch.updateDescription) 'description': patch.description,
+              if (patch.priority != null) 'priority': patch.priority,
+              if (patch.clearSchedule)
+                'due': null
+              else if (schedule != null)
+                'due': schedule.toJsonString(),
+              if (patch.clearSchedule || schedule != null)
+                'durationSeconds': schedule?.duration?.inSeconds,
+              if (patch.estimatedFocusIntervals != null)
+                'estimatedFocusIntervals': patch.estimatedFocusIntervals,
+              if (patch.isCollapsed != null) 'isCollapsed': patch.isCollapsed,
+            },
+          );
+        });
+      });
 
   @override
   Future<Result<void>> materializeDueRecurringTasks({DateTime? now}) =>
@@ -435,11 +365,9 @@ class DriftTaskRepository implements TaskRepository {
         final timestamp = (now ?? DateTime.now()).toUtc();
         final localNow = timestamp.toLocal();
         await _db.transaction(() async {
-          final rows = await (_db.select(
-            _db.tasks,
-          )..where((task) => task.isDeleted.equals(false))).get();
-          final rowById = {for (final row in rows) row.id: row};
-          final childrenByParent = _childrenByParent(rows);
+          final rows = await _tasks.activeTasks();
+          final rowById = _tasks.rowById(rows);
+          final childrenByParent = _tasks.childrenByParent(rows);
 
           for (final row in rows) {
             if (row.scopeId != null &&
@@ -486,10 +414,8 @@ class DriftTaskRepository implements TaskRepository {
     await _access.task(id, destinationProjectId: projectId);
     final now = DateTime.now().toUtc();
     await _db.transaction(() async {
-      final rows = await (_db.select(
-        _db.tasks,
-      )..where((task) => task.isDeleted.equals(false))).get();
-      final rowById = {for (final row in rows) row.id: row};
+      final rows = await _tasks.activeTasks();
+      final rowById = _tasks.rowById(rows);
       final task = rowById[id];
       if (task == null) {
         return;
@@ -511,7 +437,7 @@ class DriftTaskRepository implements TaskRepository {
             ? sectionId
             : sectionId ?? task.sectionId,
       );
-      final subtree = _subtreeRows(id, rows);
+      final subtree = _tasks.subtreeRows(id, rows);
       final updateSection = clearSectionId || sectionId != null;
       final updateParent = clearParentId || parentId != null;
       for (final row in subtree) {
@@ -534,9 +460,8 @@ class DriftTaskRepository implements TaskRepository {
             nextOrderKey == row.orderKey) {
           continue;
         }
-        await (_db.update(
-          _db.tasks,
-        )..where((task) => task.id.equals(row.id))).write(
+        await _tasks.updateTask(
+          row.id,
           TasksCompanion(
             projectId: Value(nextProjectId),
             sectionId: Value(nextSectionId),
@@ -569,10 +494,8 @@ class DriftTaskRepository implements TaskRepository {
     await _access.task(id, destinationProjectId: projectId);
     final now = DateTime.now().toUtc();
     await _db.transaction(() async {
-      final rows = await (_db.select(
-        _db.tasks,
-      )..where((task) => task.isDeleted.equals(false))).get();
-      final rowById = {for (final row in rows) row.id: row};
+      final rows = await _tasks.activeTasks();
+      final rowById = _tasks.rowById(rows);
       final root = rowById[id];
       if (root == null) {
         return;
@@ -583,15 +506,14 @@ class DriftTaskRepository implements TaskRepository {
           projectChanged &&
           root.parentId != null &&
           rootParent?.projectId != projectId;
-      for (final row in _subtreeRows(id, rows)) {
+      for (final row in _tasks.subtreeRows(id, rows)) {
         final isRoot = row.id == id;
         final nextSectionId = projectChanged ? null : row.sectionId;
         final nextParentId = detachRootFromParent && isRoot
             ? null
             : row.parentId;
-        await (_db.update(
-          _db.tasks,
-        )..where((task) => task.id.equals(row.id))).write(
+        await _tasks.updateTask(
+          row.id,
           TasksCompanion(
             projectId: Value(projectId),
             sectionId: Value(nextSectionId),
@@ -676,16 +598,14 @@ class DriftTaskRepository implements TaskRepository {
         );
         final deletedIds = <String>{};
         await _db.transaction(() async {
-          final rows = await (_db.select(
-            _db.tasks,
-          )..where((task) => task.isDeleted.equals(false))).get();
-          final childrenByParent = _childrenByParent(rows);
-          final rowById = _rowById(rows);
+          final rows = await _tasks.activeTasks();
+          final childrenByParent = _tasks.childrenByParent(rows);
+          final rowById = _tasks.rowById(rows);
           final targets = <TaskRow>[];
           for (final id in ids) {
             final row = rowById[id];
             if (row != null) {
-              targets.addAll(_subtreeRowsFrom(row, childrenByParent));
+              targets.addAll(_tasks.subtreeRowsFrom(row, childrenByParent));
             }
           }
           deletedIds.addAll(
@@ -709,21 +629,19 @@ class DriftTaskRepository implements TaskRepository {
     );
     final deletedIds = <String>{};
     await _db.transaction(() async {
-      final rows = await (_db.select(
-        _db.tasks,
-      )..where((task) => task.isDeleted.equals(false))).get();
-      final rowById = _rowById(rows);
+      final rows = await _tasks.activeTasks();
+      final rowById = _tasks.rowById(rows);
       final selected = rowById[id];
       if (selected == null) {
         return;
       }
-      final childrenByParent = _childrenByParent(rows);
+      final childrenByParent = _tasks.childrenByParent(rows);
       final selectedSchedule = TaskSchedule.fromJsonString(selected.dueJson);
       final seriesId = selectedSchedule?.recurrenceSeriesKey;
       if (selectedSchedule == null || seriesId == null) {
         deletedIds.addAll(
           await _deleteRows(
-            _subtreeRowsFrom(selected, childrenByParent),
+            _tasks.subtreeRowsFrom(selected, childrenByParent),
             now,
             availableAt: undoUntil,
           ),
@@ -747,7 +665,7 @@ class DriftTaskRepository implements TaskRepository {
         }
         deletedIds.addAll(
           await _deleteRows(
-            _subtreeRowsFrom(selected, childrenByParent),
+            _tasks.subtreeRowsFrom(selected, childrenByParent),
             now,
             availableAt: undoUntil,
           ),
@@ -773,7 +691,7 @@ class DriftTaskRepository implements TaskRepository {
       for (final row in targets) {
         deletedIds.addAll(
           await _deleteRows(
-            _subtreeRowsFrom(row, childrenByParent),
+            _tasks.subtreeRowsFrom(row, childrenByParent),
             now,
             availableAt: undoUntil,
           ),
@@ -794,22 +712,11 @@ class DriftTaskRepository implements TaskRepository {
           return false;
         }
         return _db.transaction(() async {
-          final deletedRows =
-              await (_db.select(_db.tasks)..where(
-                    (row) =>
-                        row.id.isIn(batch.taskIds) & row.isDeleted.equals(true),
-                  ))
-                  .get();
-          final commands =
-              await (_db.select(_db.syncCommands)..where(
-                    (row) =>
-                        row.type.equals('task.delete') &
-                        row.status.equals('pending') &
-                        row.attempts.equals(0) &
-                        row.clientId.isIn(batch.taskIds) &
-                        row.availableAt.equals(batch.undoUntil),
-                  ))
-                  .get();
+          final deletedRows = await _tasks.deletedTasks(batch.taskIds);
+          final commands = await _tasks.pendingDeleteCommands(
+            batch.taskIds,
+            batch.undoUntil,
+          );
           final commandTaskIds = commands
               .map((command) => command.clientId)
               .whereType<String>()
@@ -818,20 +725,8 @@ class DriftTaskRepository implements TaskRepository {
             return false;
           }
           await _removeRecurringCopiesCreatedForDelete(deletedRows, batch);
-          await (_db.delete(_db.syncCommands)..where(
-                (row) => row.id.isIn(commands.map((command) => command.id)),
-              ))
-              .go();
-          await (_db.update(_db.tasks)..where(
-                (row) =>
-                    row.id.isIn(batch.taskIds) & row.isDeleted.equals(true),
-              ))
-              .write(
-                TasksCompanion(
-                  isDeleted: const Value(false),
-                  updatedAt: Value(DateTime.now().toUtc()),
-                ),
-              );
+          await _tasks.deleteCommands(commands.map((command) => command.id));
+          await _tasks.restoreTasks(batch.taskIds, DateTime.now().toUtc());
           return true;
         });
       });
@@ -856,70 +751,50 @@ class DriftTaskRepository implements TaskRepository {
         _occurrenceKey(nextSchedule),
         row.id,
       );
-      final createdHere =
-          await (_db.select(_db.syncCommands)..where(
-                (command) =>
-                    command.type.equals('task.create') &
-                    command.clientId.equals(nextRootId) &
-                    command.status.equals('pending') &
-                    command.attempts.equals(0) &
-                    command.updatedAt.isBiggerOrEqualValue(windowStart),
-              ))
-              .getSingleOrNull();
+      final createdHere = await _tasks.pendingCreateCommand(
+        nextRootId,
+        windowStart,
+      );
       if (createdHere == null) {
         continue;
       }
-      final activeRows = await (_db.select(
-        _db.tasks,
-      )..where((task) => task.isDeleted.equals(false))).get();
-      final nextRoot = _rowById(activeRows)[nextRootId];
+      final activeRows = await _tasks.activeTasks();
+      final nextRoot = _tasks.rowById(activeRows)[nextRootId];
       if (nextRoot == null) {
         continue;
       }
-      final copyIds = _subtreeRowsFrom(
-        nextRoot,
-        _childrenByParent(activeRows),
-      ).map((task) => task.id).toSet();
-      await (_db.delete(
-        _db.syncCommands,
-      )..where((command) => command.clientId.isIn(copyIds))).go();
-      await (_db.delete(
-        _db.taskLabels,
-      )..where((label) => label.taskId.isIn(copyIds))).go();
-      await (_db.delete(
-        _db.tasks,
-      )..where((task) => task.id.isIn(copyIds))).go();
+      final copyIds = _tasks
+          .subtreeRowsFrom(nextRoot, _tasks.childrenByParent(activeRows))
+          .map((task) => task.id)
+          .toSet();
+      await _tasks.deleteCommandsByClientIds(copyIds);
+      await _tasks.deleteTaskLabels(copyIds);
+      await _tasks.deleteTaskRows(copyIds);
     }
   }
 
   @override
-  Future<Result<void>> updateFocusAggregates(String id) => Result.capture<void>(
-    () async {
-      final intervals =
-          await (_db.select(_db.focusIntervals)..where(
-                (interval) =>
-                    interval.taskId.equals(id) &
-                    interval.type.equals('work') &
-                    interval.status.equals('completed') &
-                    interval.isDeleted.equals(false),
-              ))
-              .get();
-      var totalSeconds = 0;
-      for (final interval in intervals) {
-        final end = interval.completedAt ?? interval.startedAt;
-        totalSeconds +=
-            end.difference(interval.startedAt).inSeconds -
-            interval.pausedTotalSeconds;
-      }
-      await (_db.update(_db.tasks)..where((task) => task.id.equals(id))).write(
-        TasksCompanion(
-          completedFocusIntervals: Value(intervals.length),
-          totalFocusSeconds: Value(totalSeconds < 0 ? 0 : totalSeconds),
-          updatedAt: Value(DateTime.now().toUtc()),
-        ),
-      );
-    },
-  );
+  Future<Result<void>> updateFocusAggregates(String id) =>
+      Result.capture<void>(() async {
+        final intervals = await _tasks.completedWorkIntervals(id);
+        final totalSeconds = intervals.fold<int>(
+          0,
+          (total, interval) =>
+              total +
+              (interval.completedAt ?? interval.startedAt)
+                  .difference(interval.startedAt)
+                  .inSeconds -
+              interval.pausedTotalSeconds,
+        );
+        await _tasks.updateTask(
+          id,
+          TasksCompanion(
+            completedFocusIntervals: Value(intervals.length),
+            totalFocusSeconds: Value(totalSeconds < 0 ? 0 : totalSeconds),
+            updatedAt: Value(DateTime.now().toUtc()),
+          ),
+        );
+      });
 
   @override
   Future<Result<String>> createTaskFromCalendar(
@@ -928,25 +803,23 @@ class DriftTaskRepository implements TaskRepository {
     final id = _uuid.v4();
     final now = input.updatedAt.toUtc();
     await _db.transaction(() async {
-      await _db
-          .into(_db.tasks)
-          .insert(
-            TasksCompanion.insert(
-              id: id,
-              userId: localUserId,
-              content: input.content,
-              description: Value(input.description),
-              projectId: inboxProjectId,
-              priority: const Value(4),
-              dueJson: Value(_scheduleJson(input.schedule)),
-              durationSeconds: Value(input.schedule.duration?.inSeconds),
-              status: const Value('open'),
-              orderKey: _orderKey(now),
-              createdAt: now,
-              updatedAt: now,
-              completedAt: const Value(null),
-            ),
-          );
+      await _tasks.insertTask(
+        TasksCompanion.insert(
+          id: id,
+          userId: localUserId,
+          content: input.content,
+          description: Value(input.description),
+          projectId: inboxProjectId,
+          priority: const Value(4),
+          dueJson: Value(_scheduleJson(input.schedule)),
+          durationSeconds: Value(input.schedule.duration?.inSeconds),
+          status: const Value('open'),
+          orderKey: _orderKey(now),
+          createdAt: now,
+          updatedAt: now,
+          completedAt: const Value(null),
+        ),
+      );
       await _kanbanTransitions.assignInitialStatusInTransaction(
         taskId: id,
         requestedStatusId: null,
@@ -976,9 +849,7 @@ class DriftTaskRepository implements TaskRepository {
   ) => Result.capture<void>(() async {
     final updatedAt = patch.updatedAt.toUtc();
     await _db.transaction(() async {
-      final existing = await (_db.select(
-        _db.tasks,
-      )..where((task) => task.id.equals(id))).getSingleOrNull();
+      final existing = await _tasks.findTask(id);
       final existingSchedule = TaskSchedule.fromJsonString(existing?.dueJson);
       final existingRecurrence = existingSchedule?.recurrence;
       final existingSeriesId = existingSchedule?.recurrenceSeriesKey;
@@ -1005,9 +876,7 @@ class DriftTaskRepository implements TaskRepository {
             : Value(patch.isDeleted!),
         updatedAt: Value(updatedAt),
       );
-      await (_db.update(
-        _db.tasks,
-      )..where((task) => task.id.equals(id))).write(companion);
+      await _tasks.updateTask(id, companion);
       if (existing == null) {
         return;
       }
@@ -1050,48 +919,6 @@ class DriftTaskRepository implements TaskRepository {
     });
   });
 
-  List<TaskRow> _subtreeRows(String rootId, List<TaskRow> rows) {
-    final root = _rowById(rows)[rootId];
-    if (root == null) {
-      return const [];
-    }
-    return _subtreeRowsFrom(root, _childrenByParent(rows));
-  }
-
-  Map<String, TaskRow> _rowById(List<TaskRow> rows) {
-    return {for (final row in rows) row.id: row};
-  }
-
-  Map<String, List<TaskRow>> _childrenByParent(List<TaskRow> rows) {
-    final childrenByParent = <String, List<TaskRow>>{};
-    for (final row in rows) {
-      final parentId = row.parentId;
-      if (parentId == null) {
-        continue;
-      }
-      childrenByParent.putIfAbsent(parentId, () => []).add(row);
-    }
-    return childrenByParent;
-  }
-
-  List<TaskRow> _subtreeRowsFrom(
-    TaskRow root,
-    Map<String, List<TaskRow>> childrenByParent,
-  ) {
-    final result = <TaskRow>[];
-    final stack = <TaskRow>[root];
-    final seen = <String>{};
-    while (stack.isNotEmpty) {
-      final row = stack.removeLast();
-      if (!seen.add(row.id)) {
-        continue;
-      }
-      result.add(row);
-      stack.addAll(childrenByParent[row.id] ?? const []);
-    }
-    return result;
-  }
-
   bool _shouldMaterialize(
     TaskRow row,
     TaskSchedule schedule,
@@ -1112,8 +939,10 @@ class DriftTaskRepository implements TaskRepository {
     if (row.dueJson == nextDue) {
       return;
     }
-    await (_db.update(_db.tasks)..where((task) => task.id.equals(row.id)))
-        .write(TasksCompanion(dueJson: Value(nextDue), updatedAt: Value(now)));
+    await _tasks.updateTask(
+      row.id,
+      TasksCompanion(dueJson: Value(nextDue), updatedAt: Value(now)),
+    );
     await _syncQueue.enqueue(
       type: 'task.update',
       clientId: row.id,
@@ -1141,11 +970,12 @@ class DriftTaskRepository implements TaskRepository {
     );
     final occurrenceKey = _occurrenceKey(nextSchedule);
     final nextRootId = _recurringTaskId(recurrence, occurrenceKey, row.id);
-    if (rowById.containsKey(nextRootId) || await _taskExists(nextRootId)) {
+    if (rowById.containsKey(nextRootId) ||
+        await _tasks.findTask(nextRootId) != null) {
       return;
     }
 
-    final subtree = _subtreeRowsFrom(row, childrenByParent);
+    final subtree = _tasks.subtreeRowsFrom(row, childrenByParent);
     final idBySource = {
       for (final source in subtree)
         source.id: _recurringTaskId(recurrence, occurrenceKey, source.id),
@@ -1160,36 +990,34 @@ class DriftTaskRepository implements TaskRepository {
       final copiedSchedule = isRoot
           ? nextSchedule
           : _shiftSchedule(sourceSchedule, delta)?.withoutRecurrence();
-      await _db
-          .into(_db.tasks)
-          .insert(
-            TasksCompanion.insert(
-              id: idBySource[source.id]!,
-              userId: source.userId,
-              scopeId: Value(source.scopeId),
-              createdBy: Value(source.createdBy),
-              assigneeIdsJson: Value(source.assigneeIdsJson),
-              content: source.content,
-              description: Value(source.description),
-              projectId: source.projectId,
-              sectionId: Value(source.sectionId),
-              parentId: Value(
-                isRoot
-                    ? source.parentId
-                    : idBySource[source.parentId] ?? source.parentId,
-              ),
-              priority: Value(source.priority),
-              dueJson: Value(_scheduleJson(copiedSchedule)),
-              deadlineJson: Value(source.deadlineJson),
-              durationSeconds: Value(source.durationSeconds),
-              estimatedFocusIntervals: Value(source.estimatedFocusIntervals),
-              orderKey: source.orderKey,
-              dayOrder: Value(source.dayOrder),
-              isCollapsed: Value(source.isCollapsed),
-              createdAt: timestamp,
-              updatedAt: timestamp,
-            ),
-          );
+      await _tasks.insertTask(
+        TasksCompanion.insert(
+          id: idBySource[source.id]!,
+          userId: source.userId,
+          scopeId: Value(source.scopeId),
+          createdBy: Value(source.createdBy),
+          assigneeIdsJson: Value(source.assigneeIdsJson),
+          content: source.content,
+          description: Value(source.description),
+          projectId: source.projectId,
+          sectionId: Value(source.sectionId),
+          parentId: Value(
+            isRoot
+                ? source.parentId
+                : idBySource[source.parentId] ?? source.parentId,
+          ),
+          priority: Value(source.priority),
+          dueJson: Value(_scheduleJson(copiedSchedule)),
+          deadlineJson: Value(source.deadlineJson),
+          durationSeconds: Value(source.durationSeconds),
+          estimatedFocusIntervals: Value(source.estimatedFocusIntervals),
+          orderKey: source.orderKey,
+          dayOrder: Value(source.dayOrder),
+          isCollapsed: Value(source.isCollapsed),
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        ),
+      );
       await _kanbanTransitions.copyRecurringStatusInTransaction(
         sourceTaskId: source.id,
         newTaskId: idBySource[source.id]!,
@@ -1222,11 +1050,7 @@ class DriftTaskRepository implements TaskRepository {
   }) async {
     final uniqueRows = {for (final row in rows) row.id: row}.values;
     for (final row in uniqueRows) {
-      await (_db.update(
-        _db.tasks,
-      )..where((task) => task.id.equals(row.id))).write(
-        TasksCompanion(isDeleted: const Value(true), updatedAt: Value(now)),
-      );
+      await _tasks.setTaskDeleted(row.id, now);
       await _syncQueue.enqueue(
         type: 'task.delete',
         clientId: row.id,
@@ -1237,40 +1061,25 @@ class DriftTaskRepository implements TaskRepository {
     return uniqueRows.map((row) => row.id).toSet();
   }
 
-  Future<bool> _taskExists(String id) async {
-    return await (_db.select(
-          _db.tasks,
-        )..where((task) => task.id.equals(id))).getSingleOrNull() !=
-        null;
-  }
-
   Future<void> _copyLabels({
     required Iterable<String> sourceTaskIds,
     required Map<String, String> idBySource,
     required DateTime now,
   }) async {
-    final rows =
-        await (_db.select(_db.taskLabels)..where(
-              (label) =>
-                  label.taskId.isIn(sourceTaskIds) &
-                  label.kind.equals(labelKindUser),
-            ))
-            .get();
+    final rows = await _tasks.userTaskLabels(sourceTaskIds);
     for (final row in rows) {
       final nextTaskId = idBySource[row.taskId];
       if (nextTaskId == null) {
         continue;
       }
-      await _db
-          .into(_db.taskLabels)
-          .insertOnConflictUpdate(
-            TaskLabelsCompanion.insert(
-              taskId: nextTaskId,
-              labelId: row.labelId,
-              kind: const Value(labelKindUser),
-              createdAt: now,
-            ),
-          );
+      await _tasks.upsertTaskLabel(
+        TaskLabelsCompanion.insert(
+          taskId: nextTaskId,
+          labelId: row.labelId,
+          kind: const Value(labelKindUser),
+          createdAt: now,
+        ),
+      );
       await _syncQueue.enqueue(
         type: 'task.label.add',
         clientId: nextTaskId,
@@ -1361,9 +1170,7 @@ class DriftTaskRepository implements TaskRepository {
     List<String> labelNames,
     DateTime now,
   ) async {
-    final task = await (_db.select(
-      _db.tasks,
-    )..where((row) => row.id.equals(taskId))).getSingle();
+    final task = await _tasks.loadTask(taskId);
     final scopeId = task.scopeId;
     final seen = <String>{};
     for (final rawName in labelNames) {
@@ -1371,49 +1178,25 @@ class DriftTaskRepository implements TaskRepository {
       if (name.isEmpty || !seen.add(name.toLowerCase())) {
         continue;
       }
-      var existing =
-          await (_db.select(_db.labels)
-                ..where(
-                  (label) =>
-                      label.name.equals(name) &
-                      label.kind.equals(labelKindUser) &
-                      (scopeId == null
-                          ? label.scopeId.isNull()
-                          : label.scopeId.equals(scopeId)) &
-                      label.isDeleted.equals(false),
-                )
-                ..limit(1))
-              .getSingleOrNull();
-      existing ??=
-          (await (_db.select(_db.labels)..where(
-                    (label) =>
-                        label.kind.equals(labelKindUser) &
-                        (scopeId == null
-                            ? label.scopeId.isNull()
-                            : label.scopeId.equals(scopeId)) &
-                        label.isDeleted.equals(false),
-                  ))
-                  .get())
-              .firstWhereOrNull(
-                (label) =>
-                    label.name.trim().toLowerCase() == name.toLowerCase(),
-              );
+      var existing = await _tasks.findUserLabelByName(name, scopeId);
+      existing ??= (await _tasks.activeUserLabelsInScope(scopeId))
+          .firstWhereOrNull(
+            (label) => label.name.trim().toLowerCase() == name.toLowerCase(),
+          );
       final labelId = existing?.id ?? _uuid.v4();
       if (existing == null) {
-        await _db
-            .into(_db.labels)
-            .insert(
-              LabelsCompanion.insert(
-                id: labelId,
-                scopeId: Value(scopeId),
-                userId: localUserId,
-                name: name,
-                kind: const Value(labelKindUser),
-                orderKey: _orderKey(now),
-                createdAt: now,
-                updatedAt: now,
-              ),
-            );
+        await _tasks.insertLabel(
+          LabelsCompanion.insert(
+            id: labelId,
+            scopeId: Value(scopeId),
+            userId: localUserId,
+            name: name,
+            kind: const Value(labelKindUser),
+            orderKey: _orderKey(now),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
         await _syncQueue.enqueue(
           type: 'label.create',
           clientId: labelId,
@@ -1426,25 +1209,19 @@ class DriftTaskRepository implements TaskRepository {
 
   Future<void> _attachLabel(String taskId, String labelId, DateTime now) async {
     await _access.task(taskId);
-    final task = await (_db.select(
-      _db.tasks,
-    )..where((row) => row.id.equals(taskId))).getSingle();
-    final label = await (_db.select(
-      _db.labels,
-    )..where((row) => row.id.equals(labelId))).getSingle();
+    final task = await _tasks.loadTask(taskId);
+    final label = await _tasks.loadLabel(labelId);
     if (task.scopeId != label.scopeId) {
       throw const CollaborationException('cross_scope_label');
     }
-    await _db
-        .into(_db.taskLabels)
-        .insertOnConflictUpdate(
-          TaskLabelsCompanion.insert(
-            taskId: taskId,
-            labelId: labelId,
-            kind: const Value(labelKindUser),
-            createdAt: now,
-          ),
-        );
+    await _tasks.upsertTaskLabel(
+      TaskLabelsCompanion.insert(
+        taskId: taskId,
+        labelId: labelId,
+        kind: const Value(labelKindUser),
+        createdAt: now,
+      ),
+    );
     await _syncQueue.enqueue(
       type: 'task.label.add',
       clientId: taskId,

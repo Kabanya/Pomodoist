@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pomodoist/domain/models/updates/update_contracts.dart';
 import 'package:pomodoist/config/update_dependencies.dart';
-import 'package:pomodoist/ui/updates/widgets/update_widgets.dart';
+import 'package:pomodoist/domain/models/updates/update_contracts.dart';
 import 'package:pomodoist/domain/models/updates/update_release.dart';
+import 'package:pomodoist/ui/updates/view_models/update_view_model.dart';
+import 'package:pomodoist/ui/updates/widgets/update_widgets.dart';
 
 import 'desktop_update_controller_test.dart' as support;
 
@@ -19,16 +20,21 @@ void main() {
     (tester) async {
       final installer = support.FakeUpdateInstaller();
       final controller = support.testController(installer: installer);
+      final container = ProviderContainer(
+        overrides: [updateRepositoryProvider.overrideWithValue(controller)],
+      );
+      addTearDown(container.dispose);
+      addTearDown(controller.dispose);
+      container.listen(updateViewModelProvider, (_, _) {});
+      final view = container.read(updateViewModelProvider.notifier);
+      await view.check();
       final router = GoRouter(
         routes: [GoRoute(path: '/', builder: (_, _) => const Scaffold())],
       );
       addTearDown(router.dispose);
-      await controller.check();
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            desktopUpdateControllerProvider.overrideWithValue(controller),
-          ],
+        UncontrolledProviderScope(
+          container: container,
           child: MaterialApp.router(
             routerConfig: router,
             builder: (context, child) => testAppBuilder(
@@ -61,10 +67,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(DesktopUpdatePopup), findsNothing);
       expect(installer.installs, 0);
-      await controller.check();
+      await view.check();
       await tester.pumpAndSettle();
       expect(find.byType(DesktopUpdatePopup), findsNothing);
-      await controller.check(manual: true);
+      await view.check(manual: true);
       await tester.pumpAndSettle();
       expect(find.byType(DesktopUpdatePopup), findsOneWidget);
       await tester.tap(find.byKey(const Key('desktop-update-install')));
@@ -78,16 +84,12 @@ void main() {
   testWidgets('unofficial build suppresses popup and update controls', (
     tester,
   ) async {
-    final controller = support.testController(officialUpdatesAllowed: false)
-      ..offer = support.testOffer()
-      ..popupVisible = true;
+    final controller = support.testController(officialUpdatesAllowed: false);
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          desktopUpdateControllerProvider.overrideWithValue(controller),
-        ],
+        overrides: [updateRepositoryProvider.overrideWithValue(controller)],
         child: const MaterialApp(
           builder: testAppBuilder,
           home: Scaffold(
@@ -124,9 +126,7 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          desktopUpdateControllerProvider.overrideWithValue(controller),
-        ],
+        overrides: [updateRepositoryProvider.overrideWithValue(controller)],
         child: const MaterialApp(
           builder: testAppBuilder,
           home: Scaffold(body: DesktopUpdateSettings()),
@@ -148,12 +148,11 @@ void main() {
     (tester) async {
       final installer = support.FakeUpdateInstaller()..gate = Completer<void>();
       final controller = support.testController(installer: installer);
+      addTearDown(controller.dispose);
       await controller.check();
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            desktopUpdateControllerProvider.overrideWithValue(controller),
-          ],
+          overrides: [updateRepositoryProvider.overrideWithValue(controller)],
           child: const MaterialApp(
             builder: testAppBuilder,
             home: Scaffold(body: DesktopUpdatePopup()),
@@ -172,7 +171,7 @@ void main() {
       expect(find.text('Verifying integrity…'), findsOneWidget);
       installer.gate!.complete();
       await tester.pump(const Duration(milliseconds: 300));
-      expect(controller.phase, UpdatePhase.installing);
+      expect(controller.state.phase, UpdatePhase.installing);
       await tester.pumpWidget(const SizedBox.shrink());
       controller.dispose();
     },
@@ -183,11 +182,10 @@ void main() {
   ) async {
     final source = support.FakeUpdateSource();
     final controller = support.testController(source: source);
+    addTearDown(controller.dispose);
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          desktopUpdateControllerProvider.overrideWithValue(controller),
-        ],
+        overrides: [updateRepositoryProvider.overrideWithValue(controller)],
         child: const MaterialApp(
           builder: testAppBuilder,
           home: Scaffold(body: DesktopUpdateSettings()),
@@ -196,7 +194,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('desktop-update-rc')));
     await tester.pumpAndSettle();
-    expect(controller.channel, UpdateChannel.rc);
+    expect(controller.state.channel, UpdateChannel.rc);
     expect(source.lastChannel, UpdateChannel.rc);
     final before = source.calls;
     await tester.tap(find.byKey(const Key('desktop-update-check')));
@@ -213,14 +211,14 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      final controller = support.testController();
+      final installer = support.FakeUpdateInstaller()..gate = Completer<void>();
+      final controller = support.testController(installer: installer);
       await controller.check();
-      controller.phase = UpdatePhase.verifying;
+      final updating = controller.update();
+      installer.report!(UpdatePhase.verifying, null);
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            desktopUpdateControllerProvider.overrideWithValue(controller),
-          ],
+          overrides: [updateRepositoryProvider.overrideWithValue(controller)],
           child: const MaterialApp(
             builder: testAppBuilder,
             home: MediaQuery(
@@ -235,6 +233,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
+      installer.gate!.complete();
+      await updating;
       await tester.pumpWidget(const SizedBox.shrink());
       controller.dispose();
     },

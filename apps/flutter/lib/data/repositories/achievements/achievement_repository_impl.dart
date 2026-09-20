@@ -2,46 +2,61 @@ import 'package:pomodoist/utils/result.dart';
 import 'package:pomodoist/data/repositories/achievements/achievement_repository.dart';
 import 'dart:async';
 
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:pomodoist/data/services/local/achievement_local_service.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/local/preferences_service.dart';
 import 'package:pomodoist/domain/models/productivity/achievement_models.dart';
 
 const achievementBaselinePreferenceKey = 'achievements.baseline.v1';
 const announcedAchievementsPreferenceKey = 'achievements.announcedIds.v1';
 
 class DriftAchievementRepository implements AchievementRepository {
-  DriftAchievementRepository(this._db, this._prefsProvider);
+  DriftAchievementRepository(AppDatabase db, this._preferences)
+    : _db = db,
+      _achievements = AchievementLocalService(db);
 
   final AppDatabase _db;
-  final Future<SharedPreferences?> Function() _prefsProvider;
+  final AchievementLocalService _achievements;
+  final PreferencesService _preferences;
 
   @override
   Stream<List<AchievementItem>> watchAchievements() {
     late final StreamController<List<AchievementItem>> controller;
     StreamSubscription<List<TaskCompletionRow>>? completionSubscription;
     StreamSubscription<List<FocusIntervalRow>>? intervalSubscription;
+    var listening = false;
+    var revision = 0;
 
     Future<void> emit() async {
-      if (!controller.isClosed) {
-        controller.add(await calculateAchievements(_db));
+      final current = ++revision;
+      try {
+        final items = await calculateAchievements(_db);
+        if (listening && current == revision && !controller.isClosed) {
+          controller.add(List<AchievementItem>.unmodifiable(items));
+        }
+      } on Object catch (error, stackTrace) {
+        if (listening && current == revision && !controller.isClosed) {
+          controller.addError(error, stackTrace);
+        }
       }
     }
 
     controller = StreamController<List<AchievementItem>>(
       onListen: () {
-        completionSubscription = _db
-            .select(_db.taskCompletions)
-            .watch()
-            .listen((_) => emit());
-        intervalSubscription =
-            (_db.select(_db.focusIntervals)
-                  ..where((interval) => interval.isDeleted.equals(false)))
-                .watch()
-                .listen((_) => emit());
-        emit();
+        listening = true;
+        completionSubscription = _achievements.watchTaskCompletions().listen(
+          (_) => unawaited(emit()),
+          onError: controller.addError,
+        );
+        intervalSubscription = _achievements.watchActiveFocusIntervals().listen(
+          (_) => unawaited(emit()),
+          onError: controller.addError,
+        );
+        unawaited(emit());
       },
       onCancel: () async {
+        listening = false;
+        revision++;
         await completionSubscription?.cancel();
         await intervalSubscription?.cancel();
       },
@@ -53,25 +68,24 @@ class DriftAchievementRepository implements AchievementRepository {
   Future<Result<List<AchievementItem>>> takePendingAnnouncements(
     List<AchievementItem> items,
   ) => Result.capture<List<AchievementItem>>(() async {
-    final prefs = await _prefsProvider();
-    if (prefs == null) {
-      return const [];
-    }
+    final values = (await _preferences.read(const [
+      announcedAchievementsPreferenceKey,
+      achievementBaselinePreferenceKey,
+    ])).getOrThrow();
+    final announced = values[announcedAchievementsPreferenceKey];
+    final announcedIds = announced is List<String>
+        ? announced.toSet()
+        : <String>{};
 
     final unlockedIds = items
         .where((item) => item.unlocked)
         .map((item) => item.id)
         .toSet();
-    final announcedIds =
-        prefs.getStringList(announcedAchievementsPreferenceKey)?.toSet() ??
-        <String>{};
-
-    if (!(prefs.getBool(achievementBaselinePreferenceKey) ?? false)) {
-      await prefs.setStringList(
-        announcedAchievementsPreferenceKey,
-        unlockedIds.toList()..sort(),
-      );
-      await prefs.setBool(achievementBaselinePreferenceKey, true);
+    if (values[achievementBaselinePreferenceKey] != true) {
+      (await _preferences.write({
+        announcedAchievementsPreferenceKey: unlockedIds.toList()..sort(),
+        achievementBaselinePreferenceKey: true,
+      })).getOrThrow();
       return const [];
     }
 
@@ -83,19 +97,17 @@ class DriftAchievementRepository implements AchievementRepository {
     }
 
     final nextAnnounced = {...announcedIds, ...pending.map((item) => item.id)};
-    await prefs.setStringList(
-      announcedAchievementsPreferenceKey,
-      nextAnnounced.toList()..sort(),
-    );
+    (await _preferences.write({
+      announcedAchievementsPreferenceKey: nextAnnounced.toList()..sort(),
+    })).getOrThrow();
     return pending;
   });
 }
 
 Future<List<AchievementItem>> calculateAchievements(AppDatabase db) async {
-  final completions = await db.select(db.taskCompletions).get();
-  final intervals = await (db.select(
-    db.focusIntervals,
-  )..where((interval) => interval.isDeleted.equals(false))).get();
+  final service = AchievementLocalService(db);
+  final completions = await service.allTaskCompletions();
+  final intervals = await service.activeFocusIntervals();
   return evaluateAchievements(completions: completions, intervals: intervals);
 }
 

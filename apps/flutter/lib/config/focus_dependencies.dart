@@ -2,8 +2,11 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:pomodoist/data/repositories/focus/focus_preferences.dart';
 import 'package:pomodoist/data/repositories/focus/focus_completion_repository.dart';
+import 'package:pomodoist/data/repositories/focus/focus_completion_repository_impl.dart';
+import 'package:pomodoist/data/repositories/focus/focus_preferences_repository.dart';
+import 'package:pomodoist/data/repositories/focus/focus_preferences_repository_impl.dart';
+import 'package:pomodoist/data/services/local/preferences_service.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 
 final sharedPreferencesProvider = FutureProvider<SharedPreferences?>((
@@ -17,8 +20,8 @@ final sharedPreferencesProvider = FutureProvider<SharedPreferences?>((
 });
 final focusPreferencesRepositoryProvider = Provider<FocusPreferencesRepository>(
   (ref) {
-    final repository = FocusPreferencesRepository(
-      () => ref.read(sharedPreferencesProvider.future),
+    final repository = StoredFocusPreferencesRepository(
+      PreferencesService(() => ref.read(sharedPreferencesProvider.future)),
     );
     unawaited(repository.load());
     ref.onDispose(repository.dispose);
@@ -27,8 +30,8 @@ final focusPreferencesRepositoryProvider = Provider<FocusPreferencesRepository>(
 );
 final focusPreferencesStateProvider = Provider<FocusPreferencesState>((ref) {
   final repository = ref.watch(focusPreferencesRepositoryProvider);
-  repository.addListener(ref.invalidateSelf);
-  ref.onDispose(() => repository.removeListener(ref.invalidateSelf));
+  final subscription = repository.watch().listen((_) => ref.invalidateSelf());
+  ref.onDispose(subscription.cancel);
   return repository.state;
 });
 final focusViewModeProvider = Provider(
@@ -46,13 +49,13 @@ final focusCompletionCelebrationEnabledProvider = Provider(
 final focusCompletionRepositoryProvider = Provider<FocusCompletionRepository>((
   ref,
 ) {
-  final repository = FocusCompletionRepository();
+  final repository = DefaultFocusCompletionRepository();
   ref.onDispose(repository.dispose);
   return repository;
 });
 final focusCompletionEventProvider = Provider<FocusRunCompletionEvent?>((ref) {
   final repository = ref.watch(focusCompletionRepositoryProvider);
-  repository.addListener(ref.invalidateSelf);
-  ref.onDispose(() => repository.removeListener(ref.invalidateSelf));
+  final subscription = repository.watch().listen((_) => ref.invalidateSelf());
+  ref.onDispose(subscription.cancel);
   return repository.state;
 });

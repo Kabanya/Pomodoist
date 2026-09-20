@@ -9,27 +9,30 @@ import 'package:uuid/uuid.dart';
 import 'package:pomodoist/data/services/audio/focus_sound_player.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart'
     hide FocusDailyStats;
+import 'package:pomodoist/data/services/local/focus_local_service.dart';
 import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/utils/timer_engine.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
-import 'package:pomodoist/data/services/local/kanban_transition_coordinator.dart';
+import 'package:pomodoist/data/repositories/local/kanban_transition_coordinator.dart';
 
 class DriftFocusRepository implements FocusRepository {
   DriftFocusRepository(
-    this._db,
+    AppDatabase db,
     this._syncQueue,
     this._notifications, {
     FocusSoundPlayer? soundPlayer,
     Uuid? uuid,
     KanbanTransitionCoordinator? kanbanTransitions,
     void Function(FocusRunCompletionEvent event)? onRunCompleted,
-  }) : _soundPlayer = soundPlayer,
+  }) : _db = db,
+       _soundPlayer = soundPlayer,
        _onRunCompleted = onRunCompleted,
        _kanbanTransitions =
            kanbanTransitions ??
-           KanbanTransitionCoordinator(_db, _syncQueue, uuid: uuid),
-       _uuid = uuid ?? const Uuid();
+           KanbanTransitionCoordinator(db, _syncQueue, uuid: uuid),
+       _uuid = uuid ?? const Uuid(),
+       _focus = FocusLocalService(db);
 
   final AppDatabase _db;
   final OutboxService _syncQueue;
@@ -38,114 +41,61 @@ class DriftFocusRepository implements FocusRepository {
   final void Function(FocusRunCompletionEvent event)? _onRunCompleted;
   final KanbanTransitionCoordinator _kanbanTransitions;
   final Uuid _uuid;
+  final FocusLocalService _focus;
   final Set<String> _publishedCompletionRunIds = <String>{};
 
   @override
   Stream<List<FocusPresetItem>> watchPresets() {
-    final statement = _db.select(_db.focusPresets)
-      ..where((preset) => preset.isDeleted.equals(false))
-      ..orderBy([
-        (preset) => OrderingTerm.desc(preset.isDefault),
-        (preset) => OrderingTerm.asc(preset.name),
-      ]);
-    return statement.watch().map((rows) => rows.map(_mapPreset).toList());
+    return _focus.watchActivePresets().map(
+      (rows) => List<FocusPresetItem>.unmodifiable(rows.map(_mapPreset)),
+    );
   }
 
   @override
   Stream<FocusRunItem?> watchActiveRun() {
-    return _activeFocusRunQuery().watchSingleOrNull().map(
-      (row) => row == null ? null : _mapRun(row.readTable(_db.focusRuns)),
+    return _focus.watchActiveRun().map(
+      (row) => row == null ? null : _mapRun(row),
     );
   }
 
   @override
   Stream<FocusIntervalItem?> watchActiveInterval() {
-    return _activeFocusIntervalQuery().watchSingleOrNull().map(
-      (row) =>
-          row == null ? null : _mapInterval(row.readTable(_db.focusIntervals)),
+    return _focus.watchActiveInterval().map(
+      (row) => row == null ? null : _mapInterval(row),
     );
-  }
-
-  JoinedSelectStatement<HasResultSet, dynamic> _activeFocusRunQuery() {
-    final query = _db.select(_db.focusRuns).join([
-      innerJoin(
-        _db.focusIntervals,
-        _db.focusIntervals.runId.equalsExp(_db.focusRuns.id),
-        useColumns: false,
-      ),
-    ]);
-    _configureActiveFocusPairQuery(query);
-    return query;
-  }
-
-  JoinedSelectStatement<HasResultSet, dynamic> _activeFocusIntervalQuery() {
-    final query = _db.select(_db.focusIntervals).join([
-      innerJoin(
-        _db.focusRuns,
-        _db.focusRuns.id.equalsExp(_db.focusIntervals.runId),
-        useColumns: false,
-      ),
-    ]);
-    _configureActiveFocusPairQuery(query);
-    return query;
-  }
-
-  void _configureActiveFocusPairQuery(
-    JoinedSelectStatement<HasResultSet, dynamic> query,
-  ) {
-    query
-      ..where(
-        (_db.focusRuns.status.equals('active') |
-                _db.focusRuns.status.equals('paused')) &
-            _db.focusRuns.isDeleted.equals(false) &
-            (_db.focusIntervals.status.equals('running') |
-                _db.focusIntervals.status.equals('paused') |
-                _db.focusIntervals.status.equals('ready')) &
-            _db.focusIntervals.isDeleted.equals(false),
-      )
-      ..orderBy([
-        OrderingTerm.desc(_db.focusRuns.startedAt),
-        OrderingTerm.desc(_db.focusIntervals.sequenceNumber),
-      ])
-      ..limit(1);
   }
 
   @override
   Stream<List<FocusRunItem>> watchRunsForTask(String taskId) {
-    final statement = _db.select(_db.focusRuns)
-      ..where((run) => run.taskId.equals(taskId) & run.isDeleted.equals(false))
-      ..orderBy([(run) => OrderingTerm.desc(run.startedAt)]);
-    return statement.watch().map((rows) => rows.map(_mapRun).toList());
+    return _focus
+        .watchRunsForTask(taskId)
+        .map((rows) => List<FocusRunItem>.unmodifiable(rows.map(_mapRun)));
   }
 
   @override
   Stream<List<FocusIntervalItem>> watchIntervalsForTask(String taskId) {
-    final statement = _db.select(_db.focusIntervals)
-      ..where(
-        (interval) =>
-            interval.taskId.equals(taskId) & interval.isDeleted.equals(false),
-      )
-      ..orderBy([(interval) => OrderingTerm.desc(interval.startedAt)]);
-    return statement.watch().map((rows) => rows.map(_mapInterval).toList());
+    return _focus
+        .watchIntervalsForTask(taskId)
+        .map(
+          (rows) =>
+              List<FocusIntervalItem>.unmodifiable(rows.map(_mapInterval)),
+        );
   }
 
   @override
   Stream<List<FocusIntervalItem>> watchIntervalsForRun(String runId) {
-    final statement = _db.select(_db.focusIntervals)
-      ..where(
-        (interval) =>
-            interval.runId.equals(runId) & interval.isDeleted.equals(false),
-      )
-      ..orderBy([(interval) => OrderingTerm.asc(interval.sequenceNumber)]);
-    return statement.watch().map((rows) => rows.map(_mapInterval).toList());
+    return _focus
+        .watchIntervalsForRun(runId)
+        .map(
+          (rows) =>
+              List<FocusIntervalItem>.unmodifiable(rows.map(_mapInterval)),
+        );
   }
 
   @override
   Stream<FocusDailyStats> watchDailyStats(DateTime localDate) {
     final day = DateTime(localDate.year, localDate.month, localDate.day);
-    final statement = _db.select(_db.focusIntervals)
-      ..where((interval) => interval.isDeleted.equals(false));
-    return statement.watch().map((rows) {
+    return _focus.watchNonDeletedIntervals().map((rows) {
       final dayRows = rows.where((row) {
         final started = row.startedAt.toLocal();
         return started.year == day.year &&
@@ -182,25 +132,23 @@ class DriftFocusRepository implements FocusRepository {
           longBreakSeconds: input.longBreakSeconds,
           intervalsBeforeLongBreak: input.intervalsBeforeLongBreak,
         );
-        await _db
-            .into(_db.focusPresets)
-            .insert(
-              FocusPresetsCompanion.insert(
-                id: id,
-                userId: localUserId,
-                name: input.name.trim(),
-                workSeconds: input.workSeconds,
-                shortBreakSeconds: input.shortBreakSeconds,
-                longBreakSeconds: input.longBreakSeconds,
-                intervalsBeforeLongBreak: input.intervalsBeforeLongBreak,
-                autoStartBreaks: Value(input.autoStartBreaks),
-                autoStartWork: Value(input.autoStartWork),
-                allowPause: Value(input.allowPause),
-                strictMode: Value(input.strictMode),
-                createdAt: now,
-                updatedAt: now,
-              ),
-            );
+        await _focus.insertPreset(
+          FocusPresetsCompanion.insert(
+            id: id,
+            userId: localUserId,
+            name: input.name.trim(),
+            workSeconds: input.workSeconds,
+            shortBreakSeconds: input.shortBreakSeconds,
+            longBreakSeconds: input.longBreakSeconds,
+            intervalsBeforeLongBreak: input.intervalsBeforeLongBreak,
+            autoStartBreaks: Value(input.autoStartBreaks),
+            autoStartWork: Value(input.autoStartWork),
+            allowPause: Value(input.allowPause),
+            strictMode: Value(input.strictMode),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
         return id;
       });
 
@@ -216,57 +164,37 @@ class DriftFocusRepository implements FocusRepository {
           existingId: id,
         );
         final now = DateTime.now().toUtc();
-        await (_db.update(_db.focusPresets)
-              ..where((row) => row.id.equals(id) & row.isDeleted.equals(false)))
-            .write(
-              FocusPresetsCompanion(
-                name: Value(input.name.trim()),
-                workSeconds: Value(input.workSeconds),
-                shortBreakSeconds: Value(input.shortBreakSeconds),
-                longBreakSeconds: Value(input.longBreakSeconds),
-                intervalsBeforeLongBreak: Value(input.intervalsBeforeLongBreak),
-                autoStartBreaks: Value(input.autoStartBreaks),
-                autoStartWork: Value(input.autoStartWork),
-                allowPause: Value(input.allowPause),
-                strictMode: Value(input.strictMode),
-                updatedAt: Value(now),
-              ),
-            );
-      });
-
-  @override
-  Future<Result<void>> deletePreset(String id) => Result.capture<void>(
-    () async {
-      final preset = await _presetById(id);
-      if (preset == null || preset.isDefault) {
-        return;
-      }
-      final defaultPreset = await _defaultPreset();
-      final now = DateTime.now().toUtc();
-      await _db.transaction(() async {
-        await (_db.update(
-          _db.focusPresets,
-        )..where((row) => row.id.equals(id))).write(
+        await _focus.updatePreset(
+          id,
           FocusPresetsCompanion(
-            isDeleted: const Value(true),
+            name: Value(input.name.trim()),
+            workSeconds: Value(input.workSeconds),
+            shortBreakSeconds: Value(input.shortBreakSeconds),
+            longBreakSeconds: Value(input.longBreakSeconds),
+            intervalsBeforeLongBreak: Value(input.intervalsBeforeLongBreak),
+            autoStartBreaks: Value(input.autoStartBreaks),
+            autoStartWork: Value(input.autoStartWork),
+            allowPause: Value(input.allowPause),
+            strictMode: Value(input.strictMode),
             updatedAt: Value(now),
           ),
         );
-        await (_db.update(_db.focusRuns)..where(
-              (row) =>
-                  row.presetId.equals(id) &
-                  (row.status.equals('active') | row.status.equals('paused')) &
-                  row.isDeleted.equals(false),
-            ))
-            .write(
-              FocusRunsCompanion(
-                presetId: Value(defaultPreset.id),
-                updatedAt: Value(now),
-              ),
-            );
       });
-    },
-  );
+
+  @override
+  Future<Result<void>> deletePreset(String id) =>
+      Result.capture<void>(() async {
+        final preset = await _presetById(id);
+        if (preset == null || preset.isDefault) {
+          return;
+        }
+        final defaultPreset = await _defaultPreset();
+        final now = DateTime.now().toUtc();
+        await _db.transaction(() async {
+          await _focus.markPresetDeleted(id, now);
+          await _focus.reassignActiveRunsPreset(id, defaultPreset.id, now);
+        });
+      });
 
   @override
   Future<Result<void>> setDefaultPreset(String id) =>
@@ -277,22 +205,8 @@ class DriftFocusRepository implements FocusRepository {
         }
         final now = DateTime.now().toUtc();
         await _db.transaction(() async {
-          await _db
-              .update(_db.focusPresets)
-              .write(
-                FocusPresetsCompanion(
-                  isDefault: const Value(false),
-                  updatedAt: Value(now),
-                ),
-              );
-          await (_db.update(
-            _db.focusPresets,
-          )..where((row) => row.id.equals(id))).write(
-            FocusPresetsCompanion(
-              isDefault: const Value(true),
-              updatedAt: Value(now),
-            ),
-          );
+          await _focus.clearDefaultPresets(now);
+          await _focus.markPresetDefault(id, now);
         });
       });
 
@@ -305,11 +219,7 @@ class DriftFocusRepository implements FocusRepository {
           return;
         }
         final now = DateTime.now().toUtc();
-        await (_db.update(
-          _db.focusRuns,
-        )..where((row) => row.id.equals(run.id))).write(
-          FocusRunsCompanion(presetId: Value(preset.id), updatedAt: Value(now)),
-        );
+        await _focus.updateRunPreset(run.id, preset.id, now);
       });
 
   @override
@@ -320,19 +230,13 @@ class DriftFocusRepository implements FocusRepository {
     final timestamp = (now ?? DateTime.now()).toUtc();
     final task = input.taskId == null
         ? null
-        : await (_db.select(_db.tasks)..where(
-                (task) =>
-                    task.id.equals(input.taskId!) &
-                    task.isDeleted.equals(false),
-              ))
-              .getSingleOrNull();
+        : await _focus.findActiveTask(input.taskId!);
     if (input.taskId != null && task == null) {
       throw ArgumentError.value(input.taskId, 'taskId', 'Unknown task');
     }
     if (task?.status == 'completed') {
       throw StateError('Completed tasks must be restored before Focus starts');
     }
-    await _stopExistingActiveRunIfAny(now: now);
     final runId = _uuid.v4();
     final intervalId = _uuid.v4();
     final preset = await _presetByIdOrDefault(input.presetId);
@@ -345,46 +249,51 @@ class DriftFocusRepository implements FocusRepository {
     final projectId = input.projectId ?? task?.projectId;
 
     await _db.transaction(() async {
+      final activeRun = await _activeRunRow();
+      if (activeRun != null) {
+        await _stopRunInTransaction(
+          activeRun,
+          await _activeIntervalRow(),
+          status: 'interrupted',
+          timestamp: timestamp,
+        );
+      }
       if (input.taskId != null) {
         await _kanbanTransitions.prepareTaskForFocusInTransaction(
           input.taskId!,
           timestamp: timestamp,
         );
       }
-      await _db
-          .into(_db.focusRuns)
-          .insert(
-            FocusRunsCompanion.insert(
-              id: runId,
-              userId: localUserId,
-              taskId: Value(input.taskId),
-              projectId: Value(projectId),
-              presetId: preset.id,
-              status: 'active',
-              startedAt: timestamp,
-              targetWorkIntervals: targetWorkIntervals,
-              note: Value(input.note),
-              createdAt: timestamp,
-              updatedAt: timestamp,
-            ),
-          );
-      await _db
-          .into(_db.focusIntervals)
-          .insert(
-            FocusIntervalsCompanion.insert(
-              id: intervalId,
-              runId: runId,
-              taskId: Value(input.taskId),
-              projectId: Value(projectId),
-              type: 'work',
-              status: 'running',
-              plannedSeconds: preset.workSeconds,
-              startedAt: timestamp,
-              sequenceNumber: 1,
-              createdAt: timestamp,
-              updatedAt: timestamp,
-            ),
-          );
+      await _focus.insertRun(
+        FocusRunsCompanion.insert(
+          id: runId,
+          userId: localUserId,
+          taskId: Value(input.taskId),
+          projectId: Value(projectId),
+          presetId: preset.id,
+          status: 'active',
+          startedAt: timestamp,
+          targetWorkIntervals: targetWorkIntervals,
+          note: Value(input.note),
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        ),
+      );
+      await _focus.insertInterval(
+        FocusIntervalsCompanion.insert(
+          id: intervalId,
+          runId: runId,
+          taskId: Value(input.taskId),
+          projectId: Value(projectId),
+          type: 'work',
+          status: 'running',
+          plannedSeconds: preset.workSeconds,
+          startedAt: timestamp,
+          sequenceNumber: 1,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        ),
+      );
       await _insertEvent(runId, intervalId, 'runStarted', timestamp, {
         'taskId': input.taskId,
         'projectId': projectId,
@@ -411,25 +320,7 @@ class DriftFocusRepository implements FocusRepository {
     }
     final now = DateTime.now().toUtc();
     await _db.transaction(() async {
-      await (_db.update(
-        _db.focusIntervals,
-      )..where((row) => row.id.equals(interval.id))).write(
-        FocusIntervalsCompanion(
-          status: const Value('running'),
-          startedAt: Value(now),
-          pausedAt: const Value(null),
-          pausedTotalSeconds: const Value(0),
-          updatedAt: Value(now),
-        ),
-      );
-      await (_db.update(
-        _db.focusRuns,
-      )..where((row) => row.id.equals(interval.runId))).write(
-        FocusRunsCompanion(
-          status: const Value('active'),
-          updatedAt: Value(now),
-        ),
-      );
+      await _focus.startInterval(interval.id, interval.runId, now);
       await _insertEvent(interval.runId, interval.id, 'intervalStarted', now, {
         'type': interval.type,
       });
@@ -456,23 +347,7 @@ class DriftFocusRepository implements FocusRepository {
         }
         final timestamp = (now ?? DateTime.now()).toUtc();
         await _db.transaction(() async {
-          await (_db.update(
-            _db.focusIntervals,
-          )..where((row) => row.id.equals(interval.id))).write(
-            FocusIntervalsCompanion(
-              status: const Value('paused'),
-              pausedAt: Value(timestamp),
-              updatedAt: Value(timestamp),
-            ),
-          );
-          await (_db.update(
-            _db.focusRuns,
-          )..where((row) => row.id.equals(interval.runId))).write(
-            FocusRunsCompanion(
-              status: const Value('paused'),
-              updatedAt: Value(timestamp),
-            ),
-          );
+          await _focus.pauseInterval(interval.id, interval.runId, timestamp);
           await _insertEvent(
             interval.runId,
             interval.id,
@@ -481,7 +356,7 @@ class DriftFocusRepository implements FocusRepository {
             null,
           );
         });
-        await _notifications.cancelFocusNotification();
+        await _cancelFocusNotificationBestEffort();
         _playSound(FocusSoundCue.pause);
       });
 
@@ -499,23 +374,11 @@ class DriftFocusRepository implements FocusRepository {
         final pausedTotal =
             interval.pausedTotalSeconds + (pausedDelta < 0 ? 0 : pausedDelta);
         await _db.transaction(() async {
-          await (_db.update(
-            _db.focusIntervals,
-          )..where((row) => row.id.equals(interval.id))).write(
-            FocusIntervalsCompanion(
-              status: const Value('running'),
-              pausedAt: const Value(null),
-              pausedTotalSeconds: Value(pausedTotal),
-              updatedAt: Value(timestamp),
-            ),
-          );
-          await (_db.update(
-            _db.focusRuns,
-          )..where((row) => row.id.equals(interval.runId))).write(
-            FocusRunsCompanion(
-              status: const Value('active'),
-              updatedAt: Value(timestamp),
-            ),
+          await _focus.resumeInterval(
+            interval.id,
+            interval.runId,
+            pausedTotal,
+            timestamp,
           );
           await _insertEvent(
             interval.runId,
@@ -543,27 +406,7 @@ class DriftFocusRepository implements FocusRepository {
         }
         final timestamp = (now ?? DateTime.now()).toUtc();
         await _db.transaction(() async {
-          await (_db.update(
-            _db.focusIntervals,
-          )..where((row) => row.id.equals(interval.id))).write(
-            FocusIntervalsCompanion(
-              status: const Value('running'),
-              startedAt: Value(timestamp),
-              pausedAt: const Value(null),
-              pausedTotalSeconds: const Value(0),
-              completedAt: const Value(null),
-              stoppedAt: const Value(null),
-              updatedAt: Value(timestamp),
-            ),
-          );
-          await (_db.update(
-            _db.focusRuns,
-          )..where((row) => row.id.equals(interval.runId))).write(
-            FocusRunsCompanion(
-              status: const Value('active'),
-              updatedAt: Value(timestamp),
-            ),
-          );
+          await _focus.restartInterval(interval.id, interval.runId, timestamp);
           await _insertEvent(
             interval.runId,
             interval.id,
@@ -587,9 +430,7 @@ class DriftFocusRepository implements FocusRepository {
         if (interval == null || interval.status == 'ready') {
           return;
         }
-        final run = await (_db.select(
-          _db.focusRuns,
-        )..where((row) => row.id.equals(interval.runId))).getSingleOrNull();
+        final run = await _focus.findRun(interval.runId);
         if (run == null) {
           return;
         }
@@ -612,16 +453,7 @@ class DriftFocusRepository implements FocusRepository {
             completedWorkIntervals >= run.targetWorkIntervals;
 
         await _db.transaction(() async {
-          await (_db.update(
-            _db.focusIntervals,
-          )..where((row) => row.id.equals(interval.id))).write(
-            FocusIntervalsCompanion(
-              status: const Value('completed'),
-              completedAt: Value(timestamp),
-              pausedAt: const Value(null),
-              updatedAt: Value(timestamp),
-            ),
-          );
+          await _focus.completeInterval(interval.id, timestamp);
           await _insertEvent(
             interval.runId,
             interval.id,
@@ -634,16 +466,7 @@ class DriftFocusRepository implements FocusRepository {
           }
 
           if (completesRun) {
-            await (_db.update(
-              _db.focusRuns,
-            )..where((row) => row.id.equals(run.id))).write(
-              FocusRunsCompanion(
-                status: const Value('completed'),
-                endedAt: Value(timestamp),
-                completedWorkIntervals: Value(completedWorkIntervals),
-                updatedAt: Value(timestamp),
-              ),
-            );
+            await _focus.completeRun(run.id, completedWorkIntervals, timestamp);
             await _insertEvent(
               run.id,
               interval.id,
@@ -652,14 +475,10 @@ class DriftFocusRepository implements FocusRepository {
               null,
             );
           } else {
-            await (_db.update(
-              _db.focusRuns,
-            )..where((row) => row.id.equals(run.id))).write(
-              FocusRunsCompanion(
-                status: const Value('active'),
-                completedWorkIntervals: Value(completedWorkIntervals),
-                updatedAt: Value(timestamp),
-              ),
+            await _focus.markRunInProgress(
+              run.id,
+              completedWorkIntervals,
+              timestamp,
             );
             final next = _nextIntervalSpec(
               completed: interval.type,
@@ -686,7 +505,7 @@ class DriftFocusRepository implements FocusRepository {
             );
           }
         });
-        await _notifications.cancelFocusNotification();
+        await _cancelFocusNotificationBestEffort();
         final nextInterval = await _activeIntervalRow();
         if (nextInterval != null && nextInterval.status == 'running') {
           await _scheduleIntervalNotification(
@@ -713,9 +532,7 @@ class DriftFocusRepository implements FocusRepository {
         if (interval == null) {
           return;
         }
-        final run = await (_db.select(
-          _db.focusRuns,
-        )..where((row) => row.id.equals(interval.runId))).getSingleOrNull();
+        final run = await _focus.findRun(interval.runId);
         if (run == null) {
           return;
         }
@@ -728,16 +545,7 @@ class DriftFocusRepository implements FocusRepository {
             interval.type != 'work' &&
             run.completedWorkIntervals >= run.targetWorkIntervals;
         await _db.transaction(() async {
-          await (_db.update(
-            _db.focusIntervals,
-          )..where((row) => row.id.equals(interval.id))).write(
-            FocusIntervalsCompanion(
-              status: const Value('skipped'),
-              pausedAt: const Value(null),
-              stoppedAt: Value(timestamp),
-              updatedAt: Value(timestamp),
-            ),
-          );
+          await _focus.skipInterval(interval.id, timestamp);
           await _insertEvent(
             interval.runId,
             interval.id,
@@ -746,14 +554,7 @@ class DriftFocusRepository implements FocusRepository {
             null,
           );
           if (interval.type == 'work') {
-            await (_db.update(
-              _db.focusRuns,
-            )..where((row) => row.id.equals(run.id))).write(
-              FocusRunsCompanion(
-                status: const Value('active'),
-                updatedAt: Value(timestamp),
-              ),
-            );
+            await _focus.markRunActive(run.id, timestamp);
             await _createNextInterval(
               run: run,
               type: 'shortBreak',
@@ -763,15 +564,7 @@ class DriftFocusRepository implements FocusRepository {
               sequenceNumber: interval.sequenceNumber + 1,
             );
           } else if (completesRun) {
-            await (_db.update(
-              _db.focusRuns,
-            )..where((row) => row.id.equals(run.id))).write(
-              FocusRunsCompanion(
-                status: const Value('completed'),
-                endedAt: Value(timestamp),
-                updatedAt: Value(timestamp),
-              ),
-            );
+            await _focus.finishRun(run.id, timestamp);
             await _insertEvent(
               run.id,
               interval.id,
@@ -780,14 +573,7 @@ class DriftFocusRepository implements FocusRepository {
               null,
             );
           } else {
-            await (_db.update(
-              _db.focusRuns,
-            )..where((row) => row.id.equals(run.id))).write(
-              FocusRunsCompanion(
-                status: const Value('active'),
-                updatedAt: Value(timestamp),
-              ),
-            );
+            await _focus.markRunActive(run.id, timestamp);
             await _createNextInterval(
               run: run,
               type: 'work',
@@ -808,7 +594,7 @@ class DriftFocusRepository implements FocusRepository {
             );
           }
         });
-        await _notifications.cancelFocusNotification();
+        await _cancelFocusNotificationBestEffort();
         final nextInterval = await _activeIntervalRow();
         if (nextInterval != null && nextInterval.status == 'running') {
           await _scheduleIntervalNotification(
@@ -844,25 +630,9 @@ class DriftFocusRepository implements FocusRepository {
         : 'stopped';
     await _db.transaction(() async {
       if (interval != null) {
-        await (_db.update(
-          _db.focusIntervals,
-        )..where((row) => row.id.equals(interval.id))).write(
-          FocusIntervalsCompanion(
-            status: const Value('stopped'),
-            stoppedAt: Value(timestamp),
-            updatedAt: Value(timestamp),
-          ),
-        );
+        await _focus.stopInterval(interval.id, timestamp);
       }
-      await (_db.update(
-        _db.focusRuns,
-      )..where((row) => row.id.equals(run.id))).write(
-        FocusRunsCompanion(
-          status: Value(status),
-          endedAt: Value(timestamp),
-          updatedAt: Value(timestamp),
-        ),
-      );
+      await _focus.stopRun(run.id, status, timestamp);
       await _insertEvent(run.id, interval?.id, 'runStopped', timestamp, {
         'reason': status,
       });
@@ -876,7 +646,7 @@ class DriftFocusRepository implements FocusRepository {
         },
       );
     });
-    await _notifications.cancelFocusNotification();
+    await _cancelFocusNotificationBestEffort();
   });
 
   @override
@@ -897,12 +667,10 @@ class DriftFocusRepository implements FocusRepository {
     if (callback == null || !_publishedCompletionRunIds.add(run.id)) {
       return;
     }
-    final task = run.taskId == null
-        ? null
-        : await (_db.select(
-            _db.tasks,
-          )..where((row) => row.id.equals(run.taskId!))).getSingleOrNull();
     try {
+      final task = run.taskId == null
+          ? null
+          : await _focus.findTask(run.taskId!);
       callback(
         FocusRunCompletionEvent(
           runId: run.id,
@@ -918,52 +686,44 @@ class DriftFocusRepository implements FocusRepository {
     }
   }
 
-  Future<void> _stopExistingActiveRunIfAny({DateTime? now}) async {
-    final active = await _activeRunRow();
-    if (active != null) {
-      await stopActiveRun(
-        reason: StopFocusReason.interrupted,
-        now: now,
-      ).then((result) => result.getOrThrow());
+  Future<void> _stopRunInTransaction(
+    FocusRunRow run,
+    FocusIntervalRow? interval, {
+    required String status,
+    required DateTime timestamp,
+  }) async {
+    if (interval != null) {
+      await _focus.stopInterval(interval.id, timestamp);
     }
+    await _focus.stopRun(run.id, status, timestamp);
+    await _insertEvent(run.id, interval?.id, 'runStopped', timestamp, {
+      'reason': status,
+    });
+    await _syncQueue.enqueue(
+      type: 'focus.run.stop',
+      clientId: run.id,
+      payload: {
+        'id': run.id,
+        'reason': status,
+        'stoppedAt': timestamp.toIso8601String(),
+      },
+    );
   }
 
   Future<FocusRunRow?> _activeRunRow() {
-    return _activeFocusRunQuery().getSingleOrNull().then(
-      (row) => row?.readTable(_db.focusRuns),
-    );
+    return _focus.activeRun();
   }
 
   Future<FocusIntervalRow?> _activeIntervalRow() {
-    return _activeFocusIntervalQuery().getSingleOrNull().then(
-      (row) => row?.readTable(_db.focusIntervals),
-    );
+    return _focus.activeInterval();
   }
 
-  Future<FocusPresetRow> _defaultPreset() async {
-    final preset =
-        await (_db.select(_db.focusPresets)
-              ..where(
-                (row) =>
-                    row.isDefault.equals(true) & row.isDeleted.equals(false),
-              )
-              ..limit(1))
-            .getSingleOrNull();
-    if (preset != null) {
-      return preset;
-    }
-    await _db.ensureSeedData();
-    return (_db.select(_db.focusPresets)
-          ..where((row) => row.id.equals(defaultPresetId))
-          ..limit(1))
-        .getSingle();
+  Future<FocusPresetRow> _defaultPreset() {
+    return _focus.defaultPreset();
   }
 
   Future<FocusPresetRow?> _presetById(String id) {
-    return (_db.select(_db.focusPresets)
-          ..where((row) => row.id.equals(id) & row.isDeleted.equals(false))
-          ..limit(1))
-        .getSingleOrNull();
+    return _focus.findPreset(id);
   }
 
   Future<FocusPresetRow> _presetByIdOrDefault(String? id) async {
@@ -981,9 +741,7 @@ class DriftFocusRepository implements FocusRepository {
   }
 
   Future<FocusPresetRow?> _presetForInterval(FocusIntervalRow interval) async {
-    final run = await (_db.select(
-      _db.focusRuns,
-    )..where((row) => row.id.equals(interval.runId))).getSingleOrNull();
+    final run = await _focus.findRun(interval.runId);
     if (run == null) {
       return null;
     }
@@ -999,23 +757,21 @@ class DriftFocusRepository implements FocusRepository {
     required int sequenceNumber,
   }) async {
     final intervalId = _uuid.v4();
-    await _db
-        .into(_db.focusIntervals)
-        .insert(
-          FocusIntervalsCompanion.insert(
-            id: intervalId,
-            runId: run.id,
-            taskId: Value(run.taskId),
-            projectId: Value(run.projectId),
-            type: type,
-            status: status,
-            plannedSeconds: plannedSeconds,
-            startedAt: startedAt,
-            sequenceNumber: sequenceNumber,
-            createdAt: startedAt,
-            updatedAt: startedAt,
-          ),
-        );
+    await _focus.insertInterval(
+      FocusIntervalsCompanion.insert(
+        id: intervalId,
+        runId: run.id,
+        taskId: Value(run.taskId),
+        projectId: Value(run.projectId),
+        type: type,
+        status: status,
+        plannedSeconds: plannedSeconds,
+        startedAt: startedAt,
+        sequenceNumber: sequenceNumber,
+        createdAt: startedAt,
+        updatedAt: startedAt,
+      ),
+    );
     await _insertEvent(
       run.id,
       intervalId,
@@ -1083,9 +839,7 @@ class DriftFocusRepository implements FocusRepository {
       );
     }
 
-    final presets = await (_db.select(
-      _db.focusPresets,
-    )..where((row) => row.isDeleted.equals(false))).get();
+    final presets = await _focus.nonDeletedPresets();
     final normalized = trimmed.toLowerCase();
     final duplicate = presets.any(
       (preset) =>
@@ -1104,49 +858,30 @@ class DriftFocusRepository implements FocusRepository {
     DateTime occurredAt,
     Map<String, Object?>? payload,
   ) {
-    return _db
-        .into(_db.focusEvents)
-        .insert(
-          FocusEventsCompanion.insert(
-            id: _uuid.v4(),
-            runId: runId,
-            intervalId: Value(intervalId),
-            type: type,
-            occurredAt: occurredAt,
-            payloadJson: Value(payload == null ? null : jsonEncode(payload)),
-            createdAt: occurredAt,
-          ),
-        );
+    return _focus.insertEvent(
+      FocusEventsCompanion.insert(
+        id: _uuid.v4(),
+        runId: runId,
+        intervalId: Value(intervalId),
+        type: type,
+        occurredAt: occurredAt,
+        payloadJson: Value(payload == null ? null : jsonEncode(payload)),
+        createdAt: occurredAt,
+      ),
+    );
   }
 
   Future<void> _recalculateTaskFocusAggregates(String taskId) async {
-    final intervals =
-        await (_db.select(_db.focusIntervals)..where(
-              (interval) =>
-                  interval.taskId.equals(taskId) &
-                  interval.type.equals('work') &
-                  interval.status.equals('completed') &
-                  interval.isDeleted.equals(false),
-            ))
-            .get();
+    final intervals = await _focus.completedWorkIntervalsForTask(taskId);
     var seconds = intervals.fold<int>(
       0,
       (sum, interval) => sum + _actualSeconds(interval),
     );
     var count = intervals.length;
-    final task = await (_db.select(
-      _db.tasks,
-    )..where((row) => row.id.equals(taskId))).getSingleOrNull();
+    final task = await _focus.findTask(taskId);
     if (task?.scopeId != null) {
       final localIds = intervals.map((row) => row.id).toSet();
-      final shared =
-          await (_db.select(_db.sharedEntities)..where(
-                (row) =>
-                    row.scopeId.equals(task!.scopeId!) &
-                    row.entityType.equals('focus_interval') &
-                    row.isDeleted.equals(false),
-              ))
-              .get();
+      final shared = await _focus.sharedFocusIntervals(task!.scopeId!);
       for (final contribution in shared) {
         final data = jsonDecode(contribution.dataJson) as Map<String, dynamic>;
         if (data['taskId'] == taskId &&
@@ -1156,14 +891,11 @@ class DriftFocusRepository implements FocusRepository {
         }
       }
     }
-    await (_db.update(
-      _db.tasks,
-    )..where((task) => task.id.equals(taskId))).write(
-      TasksCompanion(
-        completedFocusIntervals: Value(count),
-        totalFocusSeconds: Value(seconds),
-        updatedAt: Value(DateTime.now().toUtc()),
-      ),
+    await _focus.updateTaskFocusTotals(
+      taskId,
+      count,
+      seconds,
+      DateTime.now().toUtc(),
     );
   }
 
@@ -1178,17 +910,26 @@ class DriftFocusRepository implements FocusRepository {
       plannedSeconds: plannedSeconds,
       pausedTotalSeconds: pausedTotalSeconds,
     );
-    return _notifications.scheduleFocusIntervalEnd(
-      expectedEndAt: endAt,
-      title: 'pomodoist',
-      body: _notifications.focusCompletedBody(type),
-    );
+    return _notifications
+        .scheduleFocusIntervalEnd(
+          expectedEndAt: endAt,
+          title: 'pomodoist',
+          body: _notifications.focusCompletedBody(type),
+        )
+        .catchError((Object _) {
+          // The focus state is already committed; notifications are advisory.
+        });
   }
+
+  Future<void> _cancelFocusNotificationBestEffort() =>
+      _notifications.cancelFocusNotification().catchError((Object _) {
+        // The focus state is already committed; notifications are advisory.
+      });
 
   void _playSound(FocusSoundCue cue) {
     final soundPlayer = _soundPlayer;
     if (soundPlayer != null) {
-      unawaited(soundPlayer.play(cue));
+      unawaited(soundPlayer.play(cue).catchError((Object _) {}));
     }
   }
 

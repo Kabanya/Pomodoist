@@ -1,6 +1,5 @@
 import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
-
-const voiceQuickAddMaxDuration = Duration(minutes: 5);
+import 'package:pomodoist/domain/models/voice/voice_capture_state.dart';
 
 enum VoiceQuickAddError {
   general,
@@ -12,51 +11,9 @@ enum VoiceQuickAddError {
   recognition,
 }
 
-enum VoiceCaptureStatus {
-  idle,
-  requestingPermission,
-  recording,
-  transcribing,
-  completed,
-  canceled,
-  error,
-  unsupportedPlatform,
-}
-
-enum VoiceAccessSettings { microphone, speech, dictation }
-
-class VoiceCaptureConfig {
-  const VoiceCaptureConfig({
-    this.locale,
-    this.maxDuration = const Duration(seconds: 59),
-  });
-  final String? locale;
-  final Duration maxDuration;
-}
-
-class VoiceCaptureError {
-  const VoiceCaptureError({required this.code, required this.message});
-  final String code;
-  final String message;
-}
-
-class VoiceCaptureEvent {
-  const VoiceCaptureEvent({required this.status, this.finalText, this.error});
-  final VoiceCaptureStatus status;
-  final String? finalText;
-  final VoiceCaptureError? error;
-}
-
-class VoiceCaptureException implements Exception {
-  const VoiceCaptureException(this.code, this.message);
-  final String code;
-  final String message;
-  @override
-  String toString() => message;
-}
-
+/// Immutable presentation state for one retained voice quick add overlay.
 class VoiceQuickAddState {
-  const VoiceQuickAddState({
+  VoiceQuickAddState({
     required this.status,
     required this.transcript,
     required this.error,
@@ -80,9 +37,9 @@ class VoiceQuickAddState {
     required this.settingsDestination,
     required this.canRetryTranscription,
     required this.cloudMode,
-    required this.drafts,
+    required List<DecomposedTaskDraft> drafts,
     required this.draftRevision,
-  });
+  }) : drafts = List.unmodifiable(drafts);
   final VoiceCaptureStatus status;
   final String transcript;
   final Object? error;

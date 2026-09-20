@@ -44,9 +44,9 @@ class PublicProjectViewModel extends Notifier<PublicProjectState> {
     try {
       final repository = _repository;
       if (repository == null) throw const CollaborationException('unavailable');
-      final response = (await repository.publicRead(value)).getOrThrow();
+      final project = (await repository.publicRead(value)).getOrThrow();
       if (!ref.mounted || generation != _generation) return;
-      state = PublicProjectState(project: PublicProject.fromResponse(response));
+      state = PublicProjectState(project: project);
     } catch (error) {
       if (!ref.mounted || generation != _generation) return;
       state = PublicProjectState(

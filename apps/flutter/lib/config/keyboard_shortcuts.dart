@@ -6,12 +6,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' show ShortcutActivator;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pomodoist/config/task_preferences_dependencies.dart';
+import 'package:pomodoist/data/repositories/settings/keyboard_shortcuts_repository.dart';
+import 'package:pomodoist/data/repositories/settings/keyboard_shortcuts_repository_impl.dart';
 import 'package:pomodoist/domain/models/settings/app_shortcut.dart';
 
 export 'package:pomodoist/domain/models/settings/app_shortcut.dart';
-
-const keyboardShortcutsPreferenceKey = 'keyboard.shortcuts.v1';
+export 'package:pomodoist/data/repositories/settings/keyboard_shortcuts_repository.dart'
+    show keyboardShortcutsPreferenceKey;
 
 const _legacyAppShortcutCommands = [
   AppShortcutCommand.toggleSidebar,
@@ -307,6 +309,13 @@ final shortcutTargetPlatformProvider = Provider<TargetPlatform>(
   (ref) => defaultTargetPlatform,
 );
 
+final keyboardShortcutsRepositoryProvider =
+    Provider<KeyboardShortcutsRepository>(
+      (ref) => LocalKeyboardShortcutsRepository(
+        ref.watch(preferencesServiceProvider),
+      ),
+    );
+
 final keyboardShortcutsProvider =
     NotifierProvider<
       KeyboardShortcutsController,
@@ -353,8 +362,8 @@ class KeyboardShortcutsController
 
   Future<void> _load() async {
     final defaults = defaultAppShortcutBindings(_platform);
-    final preferences = await SharedPreferences.getInstance();
-    final raw = preferences.getString(keyboardShortcutsPreferenceKey);
+    final raw = (await ref.read(keyboardShortcutsRepositoryProvider).read())
+        .getOrThrow();
     if (raw == null) return;
 
     Object? decoded;
@@ -431,13 +440,14 @@ class KeyboardShortcutsController
   }
 
   Future<void> _persist() async {
-    final preferences = await SharedPreferences.getInstance();
-    await preferences.setString(
-      keyboardShortcutsPreferenceKey,
-      jsonEncode({
-        for (final entry in state.entries)
-          entry.key.storageKey: entry.value.toJson(),
-      }),
-    );
+    (await ref
+            .read(keyboardShortcutsRepositoryProvider)
+            .write(
+              jsonEncode({
+                for (final entry in state.entries)
+                  entry.key.storageKey: entry.value.toJson(),
+              }),
+            ))
+        .getOrThrow();
   }
 }

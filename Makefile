@@ -282,8 +282,10 @@ test-linux-packaging: test-linux-installer test-linux-appimage test-linux-build-
 test-xcode-warnings:
 	sh tool/test_xcode_warnings.sh
 
-architecture:
+architecture: flutter-build-link
 	python3 tool/check_architecture.py
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" pub get
+	cd "$(FLUTTER_ROOT)" && "$(DART)" run tool/check_architecture_types.dart
 
 check: architecture analyze test
 

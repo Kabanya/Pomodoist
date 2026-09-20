@@ -12,7 +12,7 @@ import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/domain/models/account/account_overview.dart';
-import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/config/billing_store_dependencies.dart';
 import 'package:pomodoist/ui/settings/widgets/app_info_card.dart';
 import 'package:pomodoist/ui/settings/widgets/settings_screen.dart';
 import 'package:pomodoist/ui/settings/widgets/settings_navigation.dart';

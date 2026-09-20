@@ -12,6 +12,6 @@ final class AppViewState {
 
 final appViewModelProvider = Provider<AppViewState>((ref) {
   ref.watch(accountLocaleSyncProvider);
-  ref.watch(platformQuickAddControllerProvider);
+  ref.watch(globalQuickAddRepositoryProvider);
   return AppViewState(language: ref.watch(appLanguageProvider));
 });

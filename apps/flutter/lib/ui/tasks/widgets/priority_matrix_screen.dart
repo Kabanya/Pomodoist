@@ -20,19 +20,16 @@ class PriorityMatrixScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final tasks = ref.watch(priorityMatrixViewModelProvider);
+    final matrix = ref.watch(priorityMatrixViewModelProvider);
     return TaskMotionScope(
       builder: (context, motion) {
-        final visibleById = <String, TaskItem>{
-          for (final task in motion.retainedTasks) task.id: task,
-          for (final task in tasks.value ?? const <TaskItem>[])
-            if (!task.isCompleted) task.id: task,
-        };
-        final visibleTasks = visibleById.values.toList();
+        final buckets = ref
+            .read(priorityMatrixViewModelProvider.notifier)
+            .bucketsWithRetained(motion.retainedTasks);
         return SafeArea(
           bottom: false,
           child: TaskSelectionRegion(
-            visibleTasks: visibleTasks,
+            visibleTasks: matrix.tasks.value ?? const <TaskItem>[],
             child: CustomScrollView(
               slivers: [
                 SliverPadding(
@@ -59,11 +56,14 @@ class PriorityMatrixScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                tasks.when(
+                matrix.tasks.when(
                   data: (_) => SliverPadding(
                     padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
                     sliver: SliverToBoxAdapter(
-                      child: _PriorityMatrix(items: visibleTasks),
+                      child: _PriorityMatrix(
+                        buckets: buckets,
+                        tasksById: matrix.tasksById,
+                      ),
                     ),
                   ),
                   loading: () => const SliverFillRemaining(
@@ -83,14 +83,14 @@ class PriorityMatrixScreen extends ConsumerWidget {
 }
 
 class _PriorityMatrix extends ConsumerWidget {
-  const _PriorityMatrix({required this.items});
+  const _PriorityMatrix({required this.buckets, required this.tasksById});
 
-  final List<TaskItem> items;
+  final Map<int, List<TaskItem>> buckets;
+  final Map<String, TaskItem> tasksById;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final buckets = priorityBuckets(items);
-    final byId = {for (final item in items) item.id: item};
+    final byId = tasksById;
 
     return LayoutBuilder(
       builder: (context, constraints) {

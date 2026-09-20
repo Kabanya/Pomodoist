@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:crypto/crypto.dart';
 import 'package:file_selector/file_selector.dart';
 
 import 'package:flutter/material.dart';
@@ -11,18 +10,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/theme_settings_dependencies.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/themes/theme_backgrounds.dart';
-import 'package:pomodoist/ui/core/themes/theme_image_preparation.dart';
 
 export 'package:pomodoist/ui/core/themes/theme_backgrounds.dart';
 export 'package:pomodoist/config/theme_settings_dependencies.dart'
     show
-        appThemePreferencesProvider,
         themeImagePreparerProvider,
-        themeImageRepositoryProvider;
+        themeImageRepositoryProvider,
+        themeSettingsRepositoryProvider;
 export 'package:pomodoist/data/repositories/settings/theme_image_repository.dart';
+export 'package:pomodoist/data/repositories/settings/theme_settings_repository.dart'
+    show appThemeSettingsPreferenceKey, appThemeSettingsLegacyBackupKey;
 
-const appThemeSettingsPreferenceKey = 'app.themeSettings';
-const appThemeSettingsLegacyBackupKey = 'app.themeSettings.v1Backup';
+part '../services/theme_settings_codec.dart';
+
 const defaultCustomTheme = AppThemeDefinition(
   id: 'custom',
   name: 'Custom',
@@ -261,58 +261,6 @@ class AppThemeSettings {
     loadFailed: loadFailed ?? this.loadFailed,
     isPreparingImage: isPreparingImage ?? this.isPreparingImage,
   );
-
-  String encode() => jsonEncode({
-    'version': 2,
-    'selectedId': selectedId,
-    'customTheme': customTheme.toJson(),
-  });
-
-  static AppThemeSettings decode(Object? raw) {
-    const fallback = AppThemeSettings(isLoaded: true);
-    if (raw is! String) return fallback;
-    try {
-      final json = jsonDecode(raw);
-      if (json is! Map || (json['version'] != 1 && json['version'] != 2)) {
-        return fallback;
-      }
-      var custom = defaultCustomTheme;
-      var selected = json['selectedId'];
-      if (json['version'] == 1) {
-        final copies = json['customThemes'];
-        if (copies is List) {
-          for (final record in copies) {
-            if (record is! Map || record['id'] != selected) continue;
-            try {
-              custom = AppThemeDefinition.fromJson(record);
-              selected = 'custom';
-              break;
-            } on FormatException {
-              // A damaged legacy record must not prevent migration.
-              continue;
-            }
-          }
-        }
-      } else {
-        try {
-          custom = AppThemeDefinition.fromJson(json['customTheme']);
-        } on FormatException {
-          // Keep the selected preset usable if Custom is damaged.
-        }
-      }
-      final validSelection =
-          selected is String &&
-          (selected == 'custom' ||
-              builtinAppThemes.any((theme) => theme.id == selected));
-      return AppThemeSettings(
-        isLoaded: true,
-        customTheme: custom,
-        selectedId: validSelection ? selected : 'classic',
-      );
-    } on FormatException {
-      return fallback;
-    }
-  }
 }
 
 final themeImageBytesProvider = FutureProvider.autoDispose
@@ -329,12 +277,11 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
   Future<void>? _loading;
   String? _legacySettings;
   int _imageSelection = 0;
-  bool _needsImageCleanup = false;
   final Map<String, Uint8List> _pendingImages = {};
 
   Future<Uint8List?> readImage(String id) async =>
       _pendingImages[id] ??
-      await ref.read(themeImageRepositoryProvider).read(id);
+      await ref.read(themeSettingsStorageUseCaseProvider).readImage(id);
 
   void cancelImageSelection() {
     _imageSelection++;
@@ -357,16 +304,12 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
     try {
       final file = await pickFile();
       if (!current() || file == null) return;
-      if (await file.length() > themeImageMaxBytes) {
-        throw const ThemeImageTooLargeException();
-      }
+      final prepared = await ref
+          .read(themeImageImportRepositoryProvider)
+          .prepare(file);
       if (!current()) return;
-      final bytes = await file.readAsBytes();
-      if (!current()) return;
-      final prepared = await ref.read(themeImagePreparerProvider)(bytes);
-      if (!current()) return;
-      final id = sha256.convert(prepared).toString();
-      _pendingImages[id] = prepared;
+      final id = prepared.id;
+      _pendingImages[id] = prepared.bytes;
       // A previously missing image may have been cached by a preview.
       ref.invalidate(themeImageBytesProvider(id));
       final draft = state.preview!;
@@ -400,19 +343,11 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
 
   Future<void> _load() async {
     try {
-      final values = (await ref.read(appThemePreferencesProvider).read(const [
-        appThemeSettingsPreferenceKey,
-      ])).getOrThrow();
-      final raw = values[appThemeSettingsPreferenceKey];
-      if (raw is String) {
-        try {
-          final json = jsonDecode(raw);
-          if (json is Map && json['version'] == 1) _legacySettings = raw;
-        } on FormatException {
-          // The decoder below supplies defaults for malformed settings.
-        }
-      }
-      if (ref.mounted) state = AppThemeSettings.decode(raw);
+      final repository = ref.read(themeSettingsRepositoryProvider);
+      final raw = (await repository.read()).getOrThrow();
+      final decoded = ThemeSettingsCodec.decode(raw);
+      _legacySettings = decoded.legacyRaw;
+      if (ref.mounted) state = decoded.settings;
     } catch (_) {
       _loading = null;
       if (ref.mounted) state = state.copyWith(loadFailed: true);
@@ -495,61 +430,34 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
     AppThemeSettings next, {
     bool savingPreview = false,
   }) async {
-    final oldImageIds = state.customTheme.backgrounds.imageIds;
     state = state.copyWith(isSaving: true);
-    final preferences = ref.read(appThemePreferencesProvider);
+    final repository = ref.read(themeSettingsRepositoryProvider);
     try {
-      final store = ref.read(themeImageRepositoryProvider);
-      await store.protect(() async {
-        final latestValues = (await preferences.read(const [
-          appThemeSettingsPreferenceKey,
-          appThemeSettingsLegacyBackupKey,
-        ], reload: true)).getOrThrow();
-        if (!savingPreview) {
-          // Selecting a preset must not overwrite a Custom saved in another tab.
-          final latest = AppThemeSettings.decode(
-            latestValues[appThemeSettingsPreferenceKey],
+      final latestRaw = (await repository.read(reload: true)).getOrThrow();
+      if (!savingPreview) {
+        // Selecting a preset must not overwrite a Custom saved in another tab.
+        next = next.copyWith(
+          customTheme: ThemeSettingsCodec.decode(
+            latestRaw,
+          ).settings.customTheme,
+        );
+      }
+      await ref
+          .read(themeSettingsStorageUseCaseProvider)
+          .save(
+            value: ThemeSettingsCodec.encode(next),
+            retainedImageIds: next.customTheme.backgrounds.imageIds,
+            pendingImages: Map.unmodifiable(_pendingImages),
+            legacyBackup: _legacySettings,
+            verifyRetainedImages: savingPreview,
           );
-          next = next.copyWith(customTheme: latest.customTheme);
-        }
-        final legacy = _legacySettings;
-        if (legacy != null &&
-            !latestValues.containsKey(appThemeSettingsLegacyBackupKey)) {
-          (await preferences.write({
-            appThemeSettingsLegacyBackupKey: legacy,
-          })).getOrThrow();
-        }
-        for (final id in next.customTheme.backgrounds.imageIds) {
-          final bytes = _pendingImages[id];
-          if (bytes != null) {
-            _needsImageCleanup = true;
-            await store.write(id, bytes);
-          } else if (savingPreview && await store.read(id) == null) {
-            throw StateError('A background image is no longer available');
-          }
-        }
-        (await preferences.write({
-          appThemeSettingsPreferenceKey: next.encode(),
-        })).getOrThrow();
-        _legacySettings = null;
-        if (_needsImageCleanup ||
-            oldImageIds.isNotEmpty ||
-            next.customTheme.backgrounds.imageIds.isNotEmpty ||
-            _pendingImages.isNotEmpty) {
-          try {
-            await store.retain(next.customTheme.backgrounds.imageIds);
-            _needsImageCleanup = false;
-          } catch (_) {
-            // Cleanup must never invalidate successfully saved settings.
-          }
-        }
-        _pendingImages.clear();
-        if (ref.mounted) state = next.copyWith(isSaving: false);
-      });
+      _legacySettings = null;
+      _pendingImages.clear();
+      if (ref.mounted) state = next.copyWith(isSaving: false);
     } catch (_) {
       // Legacy preferences update their cache before the disk write succeeds.
       try {
-        (await preferences.read(const [], reload: true)).getOrThrow();
+        (await repository.read(reload: true)).getOrThrow();
       } catch (_) {
         /* Keep the draft available. */
       }

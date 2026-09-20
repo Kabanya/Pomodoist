@@ -5,29 +5,72 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/collaboration_dependencies.dart';
 import 'package:pomodoist/data/repositories/collaboration/collaboration_repository.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
 import 'package:pomodoist/domain/models/collaboration/public_project.dart';
 import 'package:pomodoist/ui/collaboration/view_models/collaboration_join_view_model.dart';
 import 'package:pomodoist/ui/collaboration/view_models/public_project_view_model.dart';
 import 'package:pomodoist/ui/collaboration/view_models/share_project_view_model.dart';
 import 'package:pomodoist/utils/result.dart';
 
+final _scopesProvider = StreamProvider<List<SharedScope>>(
+  (ref) => const Stream.empty(),
+);
+
+SharedScope _scope(String id) => SharedScope.fromJson({
+  'id': id,
+  'rootProjectId': 'project',
+  'ownerId': 'owner-1',
+  'role': 'administrator',
+});
+
+CollaborationInvitation _invitation(
+  String id,
+  String email, {
+  String expiresAt = '2030-01-02T00:00:00Z',
+  String? acceptedAt,
+  String? revokedAt,
+}) => CollaborationInvitation(
+  id: id,
+  role: CollaborationRole.member,
+  email: email,
+  expiresAt: DateTime.parse(expiresAt),
+  acceptedAt: acceptedAt == null ? null : DateTime.parse(acceptedAt),
+  revokedAt: revokedAt == null ? null : DateTime.parse(revokedAt),
+);
+
 class _Repository implements CollaborationRepository {
   var publicCalls = 0;
   var accepts = 0;
-  Completer<Result<Map<String, dynamic>>>? pendingAccept;
-  Result<Map<String, dynamic>> response = const Success({});
+  Completer<Result<SharedScope>>? pendingAccept;
+  Result<PublicProject> publicResponse = Success(PublicProject(const []));
+  Result<CollaborationState> stateResponse = Success(
+    CollaborationState(invitations: const [], notifications: const []),
+  );
+  final membersByScope = <String, Future<Result<CollaborationMembers>>>{};
+  final memberCalls = <String>[];
   @override
-  Future<Result<Map<String, dynamic>>> publicRead(String token) async {
+  Future<Result<PublicProject>> publicRead(String token) async {
     publicCalls++;
-    return response;
+    return publicResponse;
   }
 
   @override
-  Future<Result<Map<String, dynamic>>> state() async => response;
+  Future<Result<CollaborationState>> state() async => stateResponse;
   @override
-  Future<Result<Map<String, dynamic>>> acceptInvitation(String token) async {
+  Future<Result<SharedScope>> acceptInvitation(String token) {
     accepts++;
-    return pendingAccept?.future ?? response;
+    return pendingAccept?.future ?? Future.value(Success(_scope('scope')));
+  }
+
+  @override
+  Future<Result<CollaborationMembers>> members(String scopeId) {
+    memberCalls.add(scopeId);
+    return membersByScope[scopeId] ??
+        Future.value(
+          Success(
+            CollaborationMembers(members: const [], invitations: const []),
+          ),
+        );
   }
 
   @override
@@ -53,7 +96,7 @@ void main() {
       await _settle();
       expect(container.read(invalid).failure, PublicProjectFailure.unavailable);
       expect(repository.publicCalls, 0);
-      repository.response = Failure(
+      repository.publicResponse = Failure(
         const CollaborationException('42501'),
         StackTrace.current,
       );
@@ -70,7 +113,7 @@ void main() {
     'invitation acceptance is single flight and survives unavailable listing',
     () async {
       final repository = _Repository()
-        ..response = Failure(
+        ..stateResponse = Failure(
           StateError('listing unavailable'),
           StackTrace.current,
         )
@@ -91,9 +134,14 @@ void main() {
       await viewModel.accept();
       expect(repository.accepts, 1);
       repository.pendingAccept!.complete(
-        const Success({
-          'scope': {'rootProjectId': 'project'},
-        }),
+        Success(
+          SharedScope.fromJson({
+            'id': 'scope',
+            'rootProjectId': 'project',
+            'ownerId': 'owner',
+            'role': 'member',
+          }),
+        ),
       );
       await accepting;
       expect(container.read(provider).phase, JoinPhase.accepted);
@@ -119,23 +167,124 @@ void main() {
   test(
     'pending invitations exclude expired and completed and deduplicate email',
     () {
-      final current = {
-        'email': 'a@example.test',
-        'expiresAt': '2030-01-02T00:00:00Z',
-      };
+      final current = _invitation('current', 'a@example.test');
       expect(
         pendingInvitations([
-          {'email': 'a@example.test', 'expiresAt': '2030-01-01T12:00:00Z'},
+          _invitation(
+            'stale',
+            'a@example.test',
+            expiresAt: '2030-01-01T12:00:00Z',
+          ),
           current,
-          {
-            'email': 'b@example.test',
-            'expiresAt': '2030-01-02T00:00:00Z',
-            'acceptedAt': 'today',
-          },
-          {'email': 'c@example.test', 'expiresAt': '2030-01-01T00:00:00Z'},
+          _invitation(
+            'accepted',
+            'b@example.test',
+            acceptedAt: '2029-01-01T00:00:00Z',
+          ),
+          _invitation(
+            'expired',
+            'c@example.test',
+            expiresAt: '2030-01-01T00:00:00Z',
+          ),
         ], DateTime.utc(2030)),
         [current],
       );
+    },
+  );
+
+  test('a scope change drops members loaded for the previous scope', () async {
+    final repository = _Repository();
+    final pending = Completer<Result<CollaborationMembers>>();
+    repository.membersByScope['scope-a'] = pending.future;
+    repository.membersByScope['scope-b'] = Future.value(
+      Success(
+        CollaborationMembers(
+          members: const [],
+          invitations: [_invitation('new', 'new@example.test')],
+        ),
+      ),
+    );
+    final scopes = StreamController<List<SharedScope>>.broadcast();
+    addTearDown(scopes.close);
+    final container = ProviderContainer(
+      overrides: [
+        collaborationRepositoryProvider.overrideWithValue(repository),
+        collaborationActorIdProvider.overrideWith((ref) async => 'owner-1'),
+        collaborationConflictsProvider.overrideWith(
+          (ref) => Stream.value(const []),
+        ),
+        _scopesProvider.overrideWith((ref) => scopes.stream),
+        sharedScopeForProjectProvider.overrideWith(
+          (ref, projectId) => ref.watch(_scopesProvider).value?.first,
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final provider = shareProjectViewModelProvider('project');
+    final keepAlive = container.listen(provider, (_, _) {});
+    addTearDown(keepAlive.close);
+
+    scopes.add([_scope('scope-a')]);
+    await _settle();
+    await _settle();
+    expect(repository.memberCalls, ['scope-a']);
+
+    scopes.add([_scope('scope-b')]);
+    await _settle();
+    await _settle();
+    expect(repository.memberCalls, ['scope-a', 'scope-b']);
+    expect(container.read(provider).invitations.map((row) => row.id), ['new']);
+
+    pending.complete(
+      Success(
+        CollaborationMembers(
+          members: const [],
+          invitations: [_invitation('old', 'old@example.test')],
+        ),
+      ),
+    );
+    await _settle();
+    expect(container.read(provider).invitations.map((row) => row.id), ['new']);
+  });
+
+  test(
+    'sign-out during acceptance never publishes the accepted scope',
+    () async {
+      final repository = _Repository()..pendingAccept = Completer();
+      final session = StreamController<bool>.broadcast();
+      addTearDown(session.close);
+      final signedInProvider = StreamProvider<bool>((ref) => session.stream);
+      final container = ProviderContainer(
+        overrides: [
+          signedInProvider.overrideWith((ref) => session.stream),
+          collaborationRepositoryProvider.overrideWith(
+            (ref) =>
+                ref.watch(signedInProvider).value == true ? repository : null,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final provider = collaborationJoinViewModelProvider('c' * 64);
+      final keepAlive = container.listen(provider, (_, _) {});
+      addTearDown(keepAlive.close);
+      session.add(true);
+      await _settle();
+      await _settle();
+      expect(container.read(provider).signedIn, isTrue);
+
+      final accepting = container.read(provider.notifier).accept();
+      await _settle();
+      expect(repository.accepts, 1);
+
+      session.add(false);
+      await _settle();
+      await _settle();
+      expect(container.read(provider).signedIn, isFalse);
+
+      repository.pendingAccept!.complete(Success(_scope('scope')));
+      await accepting;
+      expect(container.read(provider).phase, isNot(JoinPhase.accepted));
+      expect(container.read(provider).projectId, isNull);
     },
   );
 }

@@ -12,6 +12,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/config/billing_store_dependencies.dart';
+import 'package:pomodoist/data/services/billing/billing_store.dart';
+import 'package:pomodoist/domain/models/billing/billing_models.dart';
+import 'package:pomodoist/ui/billing/view_models/billing_view_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

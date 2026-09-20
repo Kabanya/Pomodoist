@@ -68,7 +68,8 @@ class CsvTaskImportIssue {
 }
 
 class CsvTaskImportException implements Exception {
-  const CsvTaskImportException(this.issues);
+  CsvTaskImportException(List<CsvTaskImportIssue> issues)
+    : issues = List.unmodifiable(issues);
 
   final List<CsvTaskImportIssue> issues;
 
@@ -77,10 +78,10 @@ class CsvTaskImportException implements Exception {
 }
 
 class CsvTaskImportDraft {
-  const CsvTaskImportDraft({
+  CsvTaskImportDraft({
     required this.rowNumber,
     required this.content,
-    required this.labelNames,
+    required List<String> labelNames,
     required this.priority,
     required this.recurrenceInterval,
     this.key,
@@ -92,7 +93,7 @@ class CsvTaskImportDraft {
     this.estimatedFocusIntervals,
     this.kanbanStatusName,
     this.parentKey,
-  });
+  }) : labelNames = List.unmodifiable(labelNames);
 
   final int rowNumber;
   final String? key;
@@ -128,7 +129,8 @@ class CsvTaskImportDraft {
 }
 
 class CsvTaskImportDocument {
-  const CsvTaskImportDocument(this.tasks);
+  CsvTaskImportDocument(List<CsvTaskImportDraft> tasks)
+    : tasks = List.unmodifiable(tasks);
 
   static const maximumBytes = 16 * 1024 * 1024;
   static const maximumTasks = 1000;
@@ -137,7 +139,7 @@ class CsvTaskImportDocument {
 
   factory CsvTaskImportDocument.parse(List<int> bytes) {
     if (bytes.length > maximumBytes) {
-      throw const CsvTaskImportException([
+      throw CsvTaskImportException([
         CsvTaskImportIssue(
           row: 0,
           code: 'fileTooLarge',
@@ -149,7 +151,7 @@ class CsvTaskImportDocument {
     try {
       text = utf8.decode(bytes).trim();
     } on FormatException {
-      throw const CsvTaskImportException([
+      throw CsvTaskImportException([
         CsvTaskImportIssue(
           row: 0,
           code: 'invalidUtf8',
@@ -158,7 +160,7 @@ class CsvTaskImportDocument {
       ]);
     }
     if (text.isEmpty) {
-      throw const CsvTaskImportException([
+      throw CsvTaskImportException([
         CsvTaskImportIssue(
           row: 1,
           code: 'missingHeader',
@@ -189,7 +191,7 @@ class CsvTaskImportDocument {
       ]);
     }
     if (rows.isEmpty) {
-      throw const CsvTaskImportException([
+      throw CsvTaskImportException([
         CsvTaskImportIssue(
           row: 1,
           code: 'missingHeader',
@@ -239,7 +241,7 @@ class CsvTaskImportDocument {
       throw CsvTaskImportException(List.unmodifiable(issues));
     }
     if (rows.length - 1 > maximumTasks) {
-      throw const CsvTaskImportException([
+      throw CsvTaskImportException([
         CsvTaskImportIssue(
           row: 0,
           code: 'tooManyTasks',
@@ -460,12 +462,14 @@ class CsvTaskImportDocument {
 }
 
 class CsvTaskImportPreview {
-  const CsvTaskImportPreview({
+  CsvTaskImportPreview({
     required this.document,
-    required this.newProjects,
-    required this.newLabels,
-    required this.newKanbanStatuses,
-  });
+    required List<String> newProjects,
+    required List<String> newLabels,
+    required List<String> newKanbanStatuses,
+  }) : newProjects = List.unmodifiable(newProjects),
+       newLabels = List.unmodifiable(newLabels),
+       newKanbanStatuses = List.unmodifiable(newKanbanStatuses);
 
   final CsvTaskImportDocument document;
   final List<String> newProjects;
@@ -478,7 +482,8 @@ class CsvTaskImportPreview {
 }
 
 class CsvTaskImportResult {
-  const CsvTaskImportResult(this.taskIds);
+  CsvTaskImportResult(List<String> taskIds)
+    : taskIds = List.unmodifiable(taskIds);
 
   final List<String> taskIds;
 }

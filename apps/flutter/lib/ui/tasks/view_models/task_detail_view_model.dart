@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:pomodoist/config/task_preferences_dependencies.dart';
@@ -82,129 +83,166 @@ class TaskDetailViewModel extends Notifier<TaskDetailState> {
   }
 }
 
+typedef TaskEditorState = ({
+  String draft,
+  bool dirty,
+  bool saving,
+  bool failed,
+});
 final taskEditorViewModelProvider = NotifierProvider.autoDispose
-    .family<TaskEditorViewModel, AsyncValue<void>, Object>(
+    .family<TaskEditorViewModel, TaskEditorState, Object>(
       TaskEditorViewModel.new,
     );
 
-class TaskEditorViewModel extends Notifier<AsyncValue<void>> {
+class TaskEditorViewModel extends Notifier<TaskEditorState> {
   TaskEditorViewModel(this.identity);
   final Object identity;
+  int? _accountGeneration;
   @override
-  AsyncValue<void> build() => const AsyncData(null);
-  Future<bool> _run(Future<void> Function() action) async {
-    if (state.isLoading) return false;
-    state = const AsyncLoading();
-    final result = await AsyncValue.guard(action);
-    if (ref.mounted) state = result;
-    return !result.hasError;
+  TaskEditorState build() {
+    ref.listen(accountSessionProvider, (_, next) {
+      _accountGeneration = next.value?.generation;
+    }, fireImmediately: true);
+    return (draft: '', dirty: false, saving: false, failed: false);
   }
 
-  Future<bool> saveTitle(TaskItem task, String next) => _run(() async {
-    final parsed = ref
-        .read(quickAddParserProvider)
-        .parse(
-          next,
-          now: ref.read(clockProvider).now().toLocal(),
-          defaultDate: task.schedule?.displayDate,
-        );
-    final content = (parsed.content.isEmpty ? task.content : parsed.content);
-    var schedule = parsed.dueDate != null || parsed.schedule?.isTimed == true
-        ? parsed.schedule
-        : null;
-    if (parsed.dueDate != null && schedule?.isAllDay == true) {
-      schedule = task.schedule?.moveToDate(parsed.dueDate!) ?? schedule;
+  TaskEditorState _copy({
+    String? draft,
+    bool? dirty,
+    bool? saving,
+    bool? failed,
+  }) => (
+    draft: draft ?? state.draft,
+    dirty: dirty ?? state.dirty,
+    saving: saving ?? state.saving,
+    failed: failed ?? state.failed,
+  );
+
+  void updateDraft(String value) {
+    if (state.draft == value && state.dirty) return;
+    state = _copy(draft: value, dirty: true);
+  }
+
+  Future<bool> saveTitle(TaskItem task, String next) async {
+    if (state.saving) return false;
+    final draft = next.trim();
+    if (draft.isEmpty) {
+      state = _copy(failed: false, dirty: false);
+      return true;
     }
+    if (draft == task.content.trim() && !state.failed) {
+      state = _copy(draft: task.content, dirty: false, failed: false);
+      return true;
+    }
+    state = _copy(draft: next, dirty: true, saving: true, failed: false);
+    final useCase = ref.read(editTaskTitleUseCaseProvider);
+    final now = ref.read(clockProvider).now().toLocal();
     final focusPreset = selectedFocusPresetOrDefault(
       ref.read(focusPresetsProvider).value ?? const [],
       ref.read(lastFocusPresetIdProvider),
     );
-    final estimatedFocusIntervals = estimateFocusIntervalsForTaskDuration(
-      schedule: parsed.schedule,
-      durationSeconds: null,
-      explicitEstimate: parsed.estimatedFocusIntervals,
-      preset: focusPreset,
-    );
-    final patch = UpdateTaskPatch(
-      content: content == task.content ? null : content,
-      priority: parsed.priority,
-      schedule: schedule,
-      dueDate: schedule == null ? parsed.dueDate : null,
-      estimatedFocusIntervals: estimatedFocusIntervals,
-      labelNames: parsed.labels.isEmpty ? null : parsed.labels,
-    );
-    final shouldUpdateTask =
-        patch.content != null ||
-        patch.priority != null ||
-        patch.schedule != null ||
-        patch.dueDate != null ||
-        patch.estimatedFocusIntervals != null ||
-        patch.labelNames != null;
-    final shouldMoveTask = parsed.project != null;
-    if (!shouldUpdateTask && !shouldMoveTask) return;
-    final taskRepository = ref.read(taskRepositoryProvider);
-    if (shouldUpdateTask) {
-      (await taskRepository.updateTask(task.id, patch)).getOrThrow();
-    }
-    final project = parsed.project;
-    if (project != null) {
-      final projectId =
-          (await ref.read(projectRepositoryProvider).createProject(project))
-              .getOrThrow();
-      (await taskRepository.moveTask(
-        task.id,
-        projectId: projectId,
+    final accountGeneration = ref
+        .read(accountSessionProvider)
+        .value
+        ?.generation;
+    var failed = false;
+    try {
+      (await useCase(
+        task,
+        draft,
+        now: now,
+        focusPreset: focusPreset,
       )).getOrThrow();
+    } catch (_) {
+      failed = true;
     }
-  });
-  Future<bool> saveDescription(TaskItem task, String value) => _run(() async {
-    final text = value.trim();
-    (await ref
-            .read(taskRepositoryProvider)
-            .updateTask(
-              task.id,
-              UpdateTaskPatch(
-                description: text.isEmpty ? null : text,
-                updateDescription: true,
-              ),
-            ))
-        .getOrThrow();
-  });
-  Future<bool> createSubtask(TaskItem task, String input) => _run(() async {
-    final parsed = ref
-        .read(quickAddParserProvider)
-        .parse(input, now: ref.read(clockProvider).now().toLocal());
-    if (parsed.content.isEmpty) {
-      return;
+    if (!ref.mounted) return !failed;
+    final accountChanged =
+        accountGeneration != null && accountGeneration != _accountGeneration;
+    state = _copy(
+      saving: false,
+      failed: accountChanged ? false : failed,
+      dirty: accountChanged ? false : failed,
+    );
+    return !failed;
+  }
+
+  Future<bool> saveDescription(TaskItem task, String value) async {
+    if (state.saving) return false;
+    final draft = value.trim();
+    final persisted = (task.description ?? '').trim();
+    if (draft == persisted && !state.failed) {
+      state = _copy(draft: value, dirty: false, failed: false);
+      return true;
     }
-    final focusPreset = selectedFocusPresetOrDefault(
-      ref.read(focusPresetsProvider).value ?? const [],
-      ref.read(lastFocusPresetIdProvider),
+    state = _copy(draft: value, dirty: true, saving: true, failed: false);
+    final taskRepository = ref.read(taskRepositoryProvider);
+    var failed = false;
+    try {
+      (await taskRepository.updateTask(
+        task.id,
+        UpdateTaskPatch(
+          description: draft.isEmpty ? null : draft,
+          updateDescription: true,
+        ),
+      )).getOrThrow();
+    } catch (_) {
+      failed = true;
+    }
+    if (!ref.mounted) return !failed;
+    state = _copy(saving: false, failed: failed, dirty: failed);
+    return !failed;
+  }
+
+  Future<bool> createSubtask(TaskItem task, String input) async {
+    if (state.saving) return false;
+    state = _copy(draft: input, dirty: true, saving: true, failed: false);
+    var failed = false;
+    try {
+      final parsed = ref
+          .read(quickAddParserProvider)
+          .parse(input, now: ref.read(clockProvider).now().toLocal());
+      if (parsed.content.isNotEmpty) {
+        final focusPreset = selectedFocusPresetOrDefault(
+          ref.read(focusPresetsProvider).value ?? const [],
+          ref.read(lastFocusPresetIdProvider),
+        );
+        final estimatedFocusIntervals = estimateFocusIntervalsForTaskDuration(
+          schedule: parsed.schedule,
+          durationSeconds: null,
+          explicitEstimate: parsed.estimatedFocusIntervals,
+          preset: focusPreset,
+        );
+        (await ref
+                .read(taskRepositoryProvider)
+                .createTask(
+                  CreateTaskInput(
+                    content: parsed.content,
+                    projectId: task.projectId,
+                    sectionId: task.sectionId,
+                    parentId: task.id,
+                    priority: parsed.priority,
+                    labelNames: parsed.labels,
+                    schedule: parsed.schedule,
+                    dueDate: parsed.schedule == null ? parsed.dueDate : null,
+                    durationSeconds: parsed.schedule?.duration?.inSeconds,
+                    estimatedFocusIntervals: estimatedFocusIntervals,
+                  ),
+                ))
+            .getOrThrow();
+      }
+    } catch (_) {
+      failed = true;
+    }
+    if (!ref.mounted) return !failed;
+    state = _copy(
+      saving: false,
+      failed: failed,
+      dirty: failed,
+      draft: failed ? input : '',
     );
-    final estimatedFocusIntervals = estimateFocusIntervalsForTaskDuration(
-      schedule: parsed.schedule,
-      durationSeconds: null,
-      explicitEstimate: parsed.estimatedFocusIntervals,
-      preset: focusPreset,
-    );
-    (await ref
-            .read(taskRepositoryProvider)
-            .createTask(
-              CreateTaskInput(
-                content: parsed.content,
-                projectId: task.projectId,
-                sectionId: task.sectionId,
-                parentId: task.id,
-                priority: parsed.priority,
-                labelNames: parsed.labels,
-                schedule: parsed.schedule,
-                dueDate: parsed.schedule == null ? parsed.dueDate : null,
-                durationSeconds: parsed.schedule?.duration?.inSeconds,
-                estimatedFocusIntervals: estimatedFocusIntervals,
-              ),
-            ))
-        .getOrThrow();
-  });
+    return !failed;
+  }
 }
 
 typedef TaskScheduleState = ({
@@ -238,7 +276,7 @@ class TaskScheduleViewModel extends Notifier<TaskScheduleState> {
   Future<void> clear() async {
     (await ref
             .read(taskRepositoryProvider)
-            .updateTask(task.id, const UpdateTaskPatch(clearSchedule: true)))
+            .updateTask(task.id, UpdateTaskPatch(clearSchedule: true)))
         .getOrThrow();
   }
 

@@ -1,17 +1,17 @@
 import 'package:app_account/app_account.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/domain/models/billing/billing_models.dart';
 
 void main() {
   group('billingAccessTier', () {
     test('returns free without an active entitlement', () {
-      expect(billingAccessTier(const BillingState()), BillingAccessTier.free);
+      expect(billingAccessTier(BillingState()), BillingAccessTier.free);
     });
 
     test('returns monthly for the active local StoreKit product', () {
       expect(
         billingAccessTier(
-          const BillingState(
+          BillingState(
             activeProductId: pomodoistMonthlyProductId,
             activeStoreKitProductIds: {pomodoistMonthlyProductId},
           ),
@@ -23,7 +23,7 @@ void main() {
     test('returns annual for the active account product', () {
       expect(
         billingAccessTier(
-          const BillingState(
+          BillingState(
             accountEntitlementActive: true,
             activeAccountEntitlement: BillingEntitlement(
               appId: AccountAppId.pomodoist,
@@ -42,7 +42,7 @@ void main() {
     test('returns lifetime when the account omits its product id', () {
       expect(
         billingAccessTier(
-          const BillingState(
+          BillingState(
             accountEntitlementActive: true,
             activeAccountEntitlement: BillingEntitlement(
               appId: AccountAppId.pomodoist,
@@ -60,7 +60,7 @@ void main() {
     test('returns pro without exposing an unknown active product id', () {
       expect(
         billingAccessTier(
-          const BillingState(
+          BillingState(
             accountEntitlementActive: true,
             activeAccountEntitlement: BillingEntitlement(
               appId: AccountAppId.pomodoist,

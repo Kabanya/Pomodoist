@@ -1,31 +1,36 @@
+import 'package:pomodoist/data/repositories/local/sync_ownership_coordinator.dart';
+import 'package:pomodoist/data/services/local/account_history_policy_store.dart';
 import 'package:pomodoist/data/repositories/planning/remote_task_decomposer.dart';
-import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 import 'package:pomodoist/data/repositories/planning/task_decomposition_repository.dart';
+import 'package:pomodoist/data/repositories/account/account_session_repository.dart';
+import 'package:pomodoist/data/repositories/account/sdk_account_session_repository.dart';
+import 'package:pomodoist/data/repositories/sync/local_sync_repository.dart';
+import 'package:pomodoist/data/repositories/sync/sync_repository.dart';
 import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
-import 'package:pomodoist/data/services/account/account_overview_service.dart';
+import 'package:pomodoist/data/repositories/account/account_overview_repository.dart';
 import 'package:pomodoist/domain/models/account/account_overview.dart';
+import 'package:pomodoist/domain/models/account/account_session.dart';
+import 'package:pomodoist/domain/use_cases/account/sync_account_use_case.dart';
 import 'dart:async';
 
-import 'package:app_account/app_account.dart';
-import 'package:app_voice/app_voice.dart';
+import 'package:app_account/app_account.dart' hide AccountSession;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'
-    show Supabase, UserAttributes, FunctionException;
 
 import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
 import 'package:pomodoist/data/services/sync/account_sync_lifecycle.dart';
 import 'package:pomodoist/data/services/local/device_identity.dart';
 import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/domain/models/billing/billing_models.dart';
+import 'package:pomodoist/config/billing_store_dependencies.dart';
 import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:pomodoist/data/services/google_calendar/google_calendar_sync_controller.dart';
+import 'package:pomodoist/data/services/google_calendar/google_calendar_account_transport.dart';
 import 'package:pomodoist/data/services/google_calendar/google_calendar_sync_lifecycle.dart';
 import 'package:pomodoist/data/services/planning/task_decomposer.dart';
-import 'package:pomodoist/data/services/voice/pomodoist_voice_controller.dart';
-import 'package:pomodoist/data/services/voice/voice_transcription_policy.dart';
-import 'package:pomodoist/config/voice_preferences_dependencies.dart';
+import 'package:pomodoist/data/services/planning/account_task_decomposition_transport.dart';
+import 'package:pomodoist/data/services/account/account_locale_service.dart';
 import 'package:pomodoist/data/services/platform/native_captcha_startup.dart';
 import 'package:pomodoist/data/services/platform/native_link_coordinator.dart';
 import 'package:pomodoist/config/providers.dart';
@@ -95,20 +100,10 @@ final accountClientProvider = Provider<AccountClient?>((ref) {
 
 final googleCalendarSyncControllerProvider =
     Provider<GoogleCalendarSyncController>((ref) {
-      return GoogleCalendarSyncController(
-        invoke: (body) {
-          final account = ref.read(accountClientProvider);
-          if (account?.currentUserId == null) {
-            throw const GoogleCalendarServerException(
-              'Sign in to connect Google Calendar.',
-            );
-          }
-          return account!.invokeFunction(
-            'pomodoist-google-calendar',
-            body: body,
-          );
-        },
+      final transport = GoogleCalendarAccountTransport(
+        () => ref.read(accountClientProvider),
       );
+      return GoogleCalendarSyncController(invoke: transport.call);
     });
 
 final googleCalendarSyncLifecycleProvider =
@@ -186,6 +181,7 @@ final accountConfiguredProvider = createAccountConfiguredProvider(
 
 // Presentation preference only; failures must never block authentication.
 final accountLocaleSyncProvider = Provider<void>((ref) {
+  const service = AccountLocaleService();
   var disposed = false;
   var pending = Future<void>.value();
   ref.onDispose(() => disposed = true);
@@ -196,17 +192,10 @@ final accountLocaleSyncProvider = Provider<void>((ref) {
               ref.read(accountAuthStateProvider).value?.signedIn != true) {
             return;
           }
-          final auth = Supabase.instance.client.auth;
           final locale = resolveAppLocale(
             ref.read(appLanguageProvider),
           ).toLanguageTag();
-          if (auth.currentUser == null ||
-              auth.currentUser?.userMetadata?['pomodoist_locale'] == locale) {
-            return;
-          }
-          await auth.updateUser(
-            UserAttributes(data: {'pomodoist_locale': locale}),
-          );
+          await service.sync(locale);
         })
         .catchError((Object _) {});
   }
@@ -228,255 +217,117 @@ final accountAuthStateProvider = StreamProvider<AccountAuthState>((ref) async* {
   yield* account.accountAuthStateChanges();
 });
 
-final voiceRecognitionControllerProvider = Provider<VoiceRecognitionController>((
+final accountSessionRepositoryProvider = Provider<AccountSessionRepository>((
   ref,
 ) {
-  // Keep a live account reference without rebuilding an active recording on
-  // bootstrap/token changes. Disposal must not access an already-disposed Ref.
-  var account = ref.read(accountClientProvider);
-  var disposed = false;
-  ref.listen<AccountClient?>(accountClientProvider, (_, next) {
-    account = next;
-  });
-  final controller = createPomodoistVoiceController(
-    mode: effectiveVoiceTranscriptionMode(
-      isWeb: kIsWeb,
-      platform: defaultTargetPlatform,
-      preferred: ref.read(voiceTranscriptionModeProvider),
-      signedIn: account?.currentUserId != null,
-    ),
-    ownerId: () => account?.currentUserId,
-    invoke: (body) async {
-      final current = account;
-      if (disposed || current == null || current.currentUserId == null) {
-        throw const VoiceRecognitionException(
-          'speech_unavailable',
-          'Sign in to use voice transcription.',
-        );
+  final repository = SdkAccountSessionRepository(
+    currentUserId: () => ref.read(accountClientProvider)?.currentUserId,
+    authChanges: () {
+      final account = ref.read(accountClientProvider);
+      return account == null
+          ? const Stream<AccountAuthState>.empty()
+          : account.accountAuthStateChanges();
+    },
+    overviewLoader: () async {
+      final account = ref.read(accountClientProvider);
+      if (account == null || account.currentUserId == null) {
+        return null;
       }
-      final response = await current.invokeFunction(
-        'pomodoist-transcribe',
-        body: body,
-      );
-      return response.data;
+      return ref
+          .read(accountOverviewProvider.future)
+          .timeout(ref.read(accountRequestTimeoutProvider));
     },
   );
-  ref.onDispose(() {
-    disposed = true;
-    controller.dispose();
+  ref.listen(accountClientProvider, (previous, next) {
+    if (!identical(previous, next)) repository.reconnect();
   });
-  return controller;
+  ref.listen(accountOverviewProvider, (_, next) {
+    if (next.hasValue) unawaited(repository.refresh());
+  });
+  ref.onDispose(repository.dispose);
+  return repository;
+});
+
+final accountSessionProvider = StreamProvider<AccountSession>((ref) {
+  return ref.watch(accountSessionRepositoryProvider).watchSession();
+});
+
+final _accountProfileSnapshotProvider =
+    StreamProvider<PomodoistAccountProfile?>((ref) {
+      return ref.watch(accountSessionRepositoryProvider).watchProfile();
+    });
+final accountProfileProvider = Provider<PomodoistAccountProfile?>((ref) {
+  ref.watch(accountSessionProvider);
+  final profile = ref.watch(_accountProfileSnapshotProvider).value;
+  final session = ref.watch(accountSessionRepositoryProvider).currentSession;
+  return profile?.id == session.userId ? profile : null;
+});
+
+final accountSignedInProvider = Provider<bool>((ref) {
+  final session = ref.watch(accountSessionProvider).value;
+  if (session != null) {
+    return session.userId != null;
+  }
+  final authState = ref.watch(accountAuthStateProvider).value;
+  final account = ref.watch(accountClientProvider);
+  return (authState?.signedIn ?? false) || account?.currentUserId != null;
+});
+
+typedef AccountAvailability = ({
+  bool configured,
+  bool available,
+  bool loading,
+  Object? error,
+});
+
+final accountAvailabilityProvider = Provider<AccountAvailability>((ref) {
+  final bootstrap = ref.watch(accountBootstrapProvider);
+  final account = ref.watch(accountClientProvider);
+  return (
+    configured: ref.watch(accountConfiguredProvider),
+    available: account != null,
+    loading: bootstrap.isLoading,
+    error: bootstrap.error,
+  );
 });
 
 final taskDecomposerProvider = Provider<TaskDecomposer>((ref) {
   final endpoint = taskDecompositionEndpoint();
-  final account = ref.watch(accountClientProvider);
-  final billingStore = ref.watch(billingStoreProvider);
-  return SupabaseTaskDecomposer(
-    transport: (body) async {
-      if (account == null) {
-        throw const TaskDecompositionException(
-          'Voice analysis is unavailable.',
-        );
-      }
-      // The server accepts account authorization or verified StoreKit proofs.
-      final storeTransactions = account.currentUserId != null
-          ? const <String>[]
-          : await billingStore.pomodoistTransactionJws();
-      try {
-        final response = await account.invokeFunction(
-          endpoint,
-          body: {
-            ...body,
-            'storeTransactions': storeTransactions,
-            if (pomodoistLocalStoreKit) 'localStoreKit': true,
-          },
-        );
-        if (response.status == 404) throw FunctionException(status: 404);
-        return response.data;
-      } on FunctionException catch (error) {
-        if (error.status != 404) rethrow;
-        throw TaskDecompositionException(
-          'Voice analysis requires a backend upgrade: deploy $endpoint and retry analysis.',
-        );
-      }
-    },
+  final transport = AccountTaskDecompositionTransport(
+    account: ref.watch(accountClientProvider),
+    billingStore: ref.watch(billingStoreProvider),
+    localStoreKit: pomodoistLocalStoreKit,
+    endpoint: endpoint,
   );
+  return SupabaseTaskDecomposer(transport: transport.call);
 });
 
 final pomodoistDeviceIdProvider = FutureProvider<String>((ref) {
   return pomodoistDeviceId(ref.watch(appDatabaseProvider));
 });
 
-final accountOverviewProvider = FutureProvider<PomodoistAccountOverview?>((
+final accountOverviewRepositoryProvider = Provider<AccountOverviewRepository?>((
   ref,
-) async {
+) {
   final account = ref.watch(accountClientProvider);
   final authState = ref.watch(accountAuthStateProvider).value;
   final signedIn =
       (authState?.signedIn ?? false) || account?.currentUserId != null;
-  if (account == null || !signedIn) {
-    return null;
-  }
-  final timeout = ref.watch(accountRequestTimeoutProvider);
-  unawaited(
-    (() async {
-      try {
-        final info = await PackageInfo.fromPlatform().timeout(timeout);
-        await account
-            .registerInstall(
-              appId: AccountAppId.pomodoist,
-              deviceId: await ref.read(pomodoistDeviceIdProvider.future),
-              platform: kIsWeb
-                  ? 'web'
-                  : defaultTargetPlatform.name.toLowerCase(),
-              appVersion: info.buildNumber.isEmpty
-                  ? info.version
-                  : '${info.version}+${info.buildNumber}',
-            )
-            .timeout(timeout);
-      } on Object {
-        // Install registration is advisory and must never block the profile.
-      }
-    })(),
-  );
-  return AccountOverviewService(account).load().timeout(timeout);
-}, retry: (_, _) => null);
-
-final _connectedAgentsOwnerProvider = Provider<(AccountClient?, String?)>((
-  ref,
-) {
-  final account = ref.watch(accountClientProvider);
-  final auth = ref.watch(accountAuthStateProvider).value;
-  if (account == null ||
-      !ref.watch(accountConfiguredProvider) ||
-      auth?.signedIn == false) {
-    return (null, null);
-  }
-  return (account, account.currentUserId);
+  return account == null || !signedIn
+      ? null
+      : AccountOverviewRepository(account);
 });
 
-final connectedAgentsProvider =
-    NotifierProvider<
-      ConnectedAgentsController,
-      AsyncValue<List<AccountOAuthGrant>>
-    >(ConnectedAgentsController.new);
-
-class ConnectedAgentsController
-    extends Notifier<AsyncValue<List<AccountOAuthGrant>>> {
-  AccountClient? _account;
-  String? _userId;
-  List<AccountOAuthGrant>? _grants;
-  Future<void>? _inFlight;
-  var _generation = 0;
-  var _loadGeneration = 0;
-
-  // AsyncError retains the error; the last successful list stays visible too.
-  List<AccountOAuthGrant>? get grants => _grants;
-
-  @override
-  AsyncValue<List<AccountOAuthGrant>> build() {
-    // Keep session changes observable even while Settings has no listeners.
-    final owner = ref.container.listen(
-      _connectedAgentsOwnerProvider,
-      (_, _) => ref.invalidateSelf(),
-    );
-    ref.onDispose(() {
-      owner.close();
-      _generation += 1;
-      _grants = null;
-      _inFlight = null;
-    });
-    final (account, userId) = owner.read();
-    _account = account;
-    _userId = userId;
-    _grants = null;
-    _inFlight = null;
-    final generation = ++_generation;
-    if (account == null || userId == null) return const AsyncData([]);
-    unawaited(
-      Future<void>.microtask(() {
-        if (_isCurrent(account, userId, generation)) return refresh();
-      }),
-    );
-    return const AsyncLoading();
-  }
-
-  bool _isCurrent(AccountClient account, String userId, int generation) =>
-      ref.mounted &&
-      generation == _generation &&
-      identical(account, _account) &&
-      userId == _userId &&
-      userId == account.currentUserId &&
-      ref.read(_connectedAgentsOwnerProvider) == (account, userId);
-
-  Future<void> refresh() {
-    final account = _account;
-    final userId = _userId;
-    final generation = _generation;
-    if (account == null ||
-        userId == null ||
-        !_isCurrent(account, userId, generation)) {
-      return Future.value();
-    }
-    if (_inFlight case final pending?) return pending;
-    final loadGeneration = ++_loadGeneration;
-    return _inFlight = _load(account, userId, generation, loadGeneration)
-        .whenComplete(() {
-          if (generation == _generation && loadGeneration == _loadGeneration) {
-            _inFlight = null;
-          }
-        });
-  }
-
-  Future<void> _load(
-    AccountClient account,
-    String userId,
-    int generation,
-    int loadGeneration,
-  ) async {
-    try {
-      final grants = await account.listOAuthGrants().timeout(
-        ref.read(accountRequestTimeoutProvider),
-      );
-      if (!_isCurrent(account, userId, generation) ||
-          loadGeneration != _loadGeneration) {
-        return;
-      }
-      _grants = List.unmodifiable(grants);
-      state = AsyncData(_grants!);
-    } catch (error, stackTrace) {
-      if (_isCurrent(account, userId, generation) &&
-          loadGeneration == _loadGeneration) {
-        state = AsyncError(error, stackTrace);
-      }
-    }
-  }
-
-  Future<void> revoke(String clientId) async {
-    final account = _account;
-    final userId = _userId;
-    final generation = _generation;
-    if (account == null ||
-        userId == null ||
-        !_isCurrent(account, userId, generation)) {
-      return;
-    }
-    await account
-        .revokeOAuthGrant(clientId)
-        .timeout(ref.read(accountRequestTimeoutProvider));
-    if (!_isCurrent(account, userId, generation)) return;
-    // A list requested before revocation must not put the removed agent back.
-    _loadGeneration += 1;
-    _inFlight = null;
-    _grants = List.unmodifiable([
-      for (final grant in _grants ?? <AccountOAuthGrant>[])
-        if (grant.clientId != clientId) grant,
-    ]);
-    state = AsyncData(_grants!);
-    await refresh();
-  }
-}
+final accountOverviewProvider = FutureProvider<PomodoistAccountOverview?>((
+  ref,
+) async {
+  final repository = ref.watch(accountOverviewRepositoryProvider);
+  if (repository == null) return null;
+  return repository.load(
+    deviceId: () => ref.read(pomodoistDeviceIdProvider.future),
+    timeout: ref.watch(accountRequestTimeoutProvider),
+  );
+}, retry: (_, _) => null);
 
 final accountSyncEngineProvider = Provider<AccountSyncEngine?>((ref) {
   final account = ref.watch(accountClientProvider);
@@ -490,23 +341,60 @@ final accountSyncEngineProvider = Provider<AccountSyncEngine?>((ref) {
     account: account,
     uuid: const Uuid(),
     collaboration: CollaborationApi.account(account),
-    kanbanTransitions: ref.watch(kanbanTransitionCoordinatorProvider),
-    localPaidEntitlementLoader: () async {
-      return ref.read(runtimePublicConfigProvider).selfHostedFeaturesUnlocked ||
-          ref.read(billingViewModelProvider).hasLocalStoreKitEntitlement;
+    prepareAccount: SyncOwnershipCoordinator(
+      ref.watch(appDatabaseProvider),
+      const Uuid(),
+      () => account.currentUserId,
+    ).prepareAccount,
+    repairKanban: ref
+        .watch(kanbanTransitionCoordinatorProvider)
+        .repairAfterRemotePullInTransaction,
+  );
+});
+
+final localSyncRepositoryProvider = Provider<SyncRepository>((ref) {
+  return LocalSyncRepository(
+    engine: () {
+      final engine = ref.read(accountSyncEngineProvider);
+      if (engine == null) {
+        throw StateError('Sync is unavailable while signed out');
+      }
+      return engine;
     },
+    currentSession: () =>
+        ref.read(accountSessionRepositoryProvider).currentSession,
+  );
+});
+
+final syncAccountUseCaseProvider = Provider<SyncAccountUseCase>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return SyncAccountUseCase(
+    sessions: ref.watch(accountSessionRepositoryProvider),
+    sync: ref.watch(localSyncRepositoryProvider),
+    access: ref.watch(billingRepositoryProvider),
+    loadOverview: () async {
+      final overview = await ref
+          .read(accountOverviewProvider.future)
+          .timeout(ref.read(accountRequestTimeoutProvider));
+      return overview;
+    },
+    selfHostedFeaturesUnlocked: () =>
+        ref.read(runtimePublicConfigProvider).selfHostedFeaturesUnlocked,
+    loadHistoryPolicy: AccountHistoryPolicyStore(db).load,
   );
 });
 
 final accountSyncLifecycleProvider = Provider<AccountSyncLifecycle?>((ref) {
   final account = ref.watch(accountClientProvider);
   final engine = ref.watch(accountSyncEngineProvider);
+  final useCase = ref.watch(syncAccountUseCaseProvider);
   if (account == null || engine == null) {
     return null;
   }
   final lifecycle = AccountSyncLifecycle(
-    account: account,
-    engine: engine,
+    syncNow: () async => (await useCase.call()).getOrThrow(),
+    deviceId: engine.deviceId,
+    syncHints: () => account.syncHints(appId: AccountAppId.pomodoist),
     syncQueueRepository: ref.watch(syncQueueRepositoryProvider),
     onSynced: (entityTypes) async {
       if (!entityTypes.contains('task')) {
@@ -566,7 +454,7 @@ final guestDataStartupProvider = FutureProvider.autoDispose<void>((ref) async {
   if (disposed || signedInObserved) {
     return;
   }
-  await AccountSyncEngine.prepareGuestLocalData(
+  await SyncOwnershipCoordinator.prepareGuestLocalData(
     db: db,
     uuid: const Uuid(),
     shouldPrepare: () => !disposed && !signedInObserved,

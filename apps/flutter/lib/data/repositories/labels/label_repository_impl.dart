@@ -5,45 +5,35 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/local/label_local_service.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 
 class DriftLabelRepository implements LabelRepository {
-  DriftLabelRepository(this._db, this._syncQueue, {Uuid? uuid})
-    : _uuid = uuid ?? const Uuid();
+  DriftLabelRepository(AppDatabase db, this._syncQueue, {Uuid? uuid})
+    : _db = db,
+      _uuid = uuid ?? const Uuid(),
+      _labels = LabelLocalService(db);
 
   final AppDatabase _db;
   final OutboxService _syncQueue;
   final Uuid _uuid;
+  final LabelLocalService _labels;
 
   @override
   Stream<List<LabelItem>> watchLabels() {
-    final statement = _db.select(_db.labels)
-      ..where(
-        (label) =>
-            label.scopeId.isNull() &
-            label.kind.equals(labelKindUser) &
-            label.isDeleted.equals(false),
-      )
-      ..orderBy([(label) => OrderingTerm.asc(label.orderKey)]);
-    return statement.watch().map((rows) => rows.map(_mapLabel).toList());
+    return _labels.watchActiveUserLabels().map(
+      (rows) => rows.map(_mapLabel).toList(),
+    );
   }
 
   @override
   Future<Result<LabelItem?>> findByName(String name) =>
       Result.capture<LabelItem?>(() async {
         final normalizedName = name.trim().toLowerCase();
-        final row =
-            (await (_db.select(_db.labels)..where(
-                      (label) =>
-                          label.scopeId.isNull() &
-                          label.kind.equals(labelKindUser) &
-                          label.isDeleted.equals(false),
-                    ))
-                    .get())
-                .firstWhereOrNull(
-                  (label) => label.name.trim().toLowerCase() == normalizedName,
-                );
+        final row = (await _labels.activeUserLabels()).firstWhereOrNull(
+          (label) => label.name.trim().toLowerCase() == normalizedName,
+        );
         return row == null ? null : _mapLabel(row);
       });
 
@@ -60,23 +50,18 @@ class DriftLabelRepository implements LabelRepository {
         final now = DateTime.now().toUtc();
         final id = _uuid.v4();
         await _db.transaction(() async {
-          await _db
-              .into(_db.labels)
-              .insert(
-                LabelsCompanion.insert(
-                  id: id,
-                  userId: localUserId,
-                  name: name.trim(),
-                  icon: Value(icon),
-                  kind: const Value(labelKindUser),
-                  orderKey: now.microsecondsSinceEpoch.toString().padLeft(
-                    20,
-                    '0',
-                  ),
-                  createdAt: now,
-                  updatedAt: now,
-                ),
-              );
+          await _labels.insertLabel(
+            LabelsCompanion.insert(
+              id: id,
+              userId: localUserId,
+              name: name.trim(),
+              icon: Value(icon),
+              kind: const Value(labelKindUser),
+              orderKey: now.microsecondsSinceEpoch.toString().padLeft(20, '0'),
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
           await _syncQueue.enqueue(
             type: 'label.create',
             clientId: id,
@@ -97,19 +82,11 @@ class DriftLabelRepository implements LabelRepository {
       Result.capture<void>(() async {
         _validateIcon(icon);
         await _db.transaction(() async {
-          final changed =
-              await (_db.update(_db.labels)..where(
-                    (row) =>
-                        row.id.equals(id) &
-                        row.kind.equals(labelKindUser) &
-                        row.isDeleted.equals(false),
-                  ))
-                  .write(
-                    LabelsCompanion(
-                      icon: Value(icon),
-                      updatedAt: Value(DateTime.now().toUtc()),
-                    ),
-                  );
+          final changed = await _labels.updateIcon(
+            id,
+            icon,
+            DateTime.now().toUtc(),
+          );
           if (changed == 0) throw StateError('Label no longer exists');
           await _syncQueue.enqueue(
             type: 'label.update',
@@ -123,25 +100,11 @@ class DriftLabelRepository implements LabelRepository {
   Future<Result<void>> deleteLabel(String id) => Result.capture<void>(() async {
     final now = DateTime.now().toUtc();
     await _db.transaction(() async {
-      final label =
-          await (_db.select(_db.labels)
-                ..where(
-                  (label) =>
-                      label.id.equals(id) &
-                      label.scopeId.isNull() &
-                      label.kind.equals(labelKindUser) &
-                      label.isDeleted.equals(false),
-                )
-                ..limit(1))
-              .getSingleOrNull();
+      final label = await _labels.findActiveUserLabel(id);
       if (label == null) {
         return;
       }
-      await (_db.update(
-        _db.labels,
-      )..where((label) => label.id.equals(id))).write(
-        LabelsCompanion(isDeleted: const Value(true), updatedAt: Value(now)),
-      );
+      await _labels.markDeleted(id, now);
       await _syncQueue.enqueue(
         type: 'label.delete',
         clientId: id,

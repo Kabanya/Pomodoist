@@ -40,7 +40,7 @@ void main() {
         queue,
       ).createProject('Work').then((result) => result.getOrThrow());
       final first = await tasks
-          .createTask(const CreateTaskInput(content: 'First'))
+          .createTask(CreateTaskInput(content: 'First'))
           .then((result) => result.getOrThrow());
       final second = await tasks
           .createTask(
@@ -143,13 +143,17 @@ void main() {
         taskRepository: tasks,
         projectRepository: DriftProjectRepository(db, queue),
       );
-      final created = await createVoiceQuickAddTasks(service, const [
-        DecomposedTaskDraft(
-          quickAdd: 'Parent #Work @Extra',
-          subtasks: [DecomposedTaskDraft(quickAdd: 'Child @Review')],
-        ),
-        DecomposedTaskDraft(quickAdd: 'Another'),
-      ], labelId: id);
+      final created =
+          await VoiceQuickAddUseCase(
+            quickAdd: service,
+            runLocalTransaction: db.transaction,
+          )([
+            DecomposedTaskDraft(
+              quickAdd: 'Parent #Work @Extra',
+              subtasks: [DecomposedTaskDraft(quickAdd: 'Child @Review')],
+            ),
+            DecomposedTaskDraft(quickAdd: 'Another'),
+          ], labelId: id);
       final tagged = await tasks
           .watchTasks(TaskQuery(kind: TaskQueryKind.label, labelId: id))
           .first;

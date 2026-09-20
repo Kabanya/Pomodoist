@@ -7,71 +7,14 @@ import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadInput;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
-import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_dialog.dart';
-import 'package:pomodoist/domain/models/tasks/task_models.dart';
-import 'package:pomodoist/ui/tasks/view_models/task_search.dart';
 import 'package:pomodoist/ui/tasks/view_models/task_search_palette_view_model.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart'
     show showVoiceQuickAddSheet;
-
-/// Stable identities keep keyboard selection attached to the same local result.
-List<({String id, String title})> taskSearchPaletteResults(
-  Iterable<TaskItem> tasks,
-  Iterable<ProjectItem> projects,
-  String query, {
-  AppLocalizations? l10n,
-}) {
-  final search = query.trim().toLowerCase();
-  return [
-    if (search.isNotEmpty) ...[
-      for (final task in filterTaskSearch(tasks, query: query).take(6))
-        (id: 'task:${task.id}', title: task.content),
-      for (final project
-          in projects
-              .where(
-                (project) =>
-                    !project.isDeleted &&
-                    !project.isArchived &&
-                    (project.name.toLowerCase().contains(search) ||
-                        (l10n != null &&
-                            project
-                                .displayName(l10n)
-                                .toLowerCase()
-                                .contains(search))),
-              )
-              .take(3))
-        (
-          id: 'project:${project.id}',
-          title: l10n == null ? project.name : project.displayName(l10n),
-        ),
-    ],
-  ];
-}
-
-String? taskSearchPaletteSelection(
-  List<String> ids,
-  String? selected,
-  int offset,
-) {
-  if (ids.isEmpty) return null;
-  final index = ids.indexOf(selected ?? '');
-  if (index < 0) {
-    return offset == 0 ? null : (offset < 0 ? ids.last : ids.first);
-  }
-  return ids[(index + offset) % ids.length];
-}
-
-bool taskSearchPaletteCanActivate(
-  List<String> currentIds,
-  String id,
-  String renderedQuery,
-  String currentQuery,
-) => renderedQuery == currentQuery && currentIds.contains(id);
 
 Future<void> showTaskSearchPalette(BuildContext context, WidgetRef ref) async {
   final previousFocus = FocusManager.instance.primaryFocus;
@@ -131,12 +74,12 @@ class _TaskSearchPaletteState extends ConsumerState<_TaskSearchPalette> {
   bool _busy = false;
   String? _error;
 
-  List<({String id, String title})> _results() => taskSearchPaletteResults(
-    ref.read(taskSearchPaletteViewModelProvider).tasks,
-    ref.read(taskSearchPaletteViewModelProvider).projects,
-    _controller.text,
-    l10n: context.l10n,
-  );
+  List<({String id, String title})> _results() => ref
+      .read(taskSearchPaletteViewModelProvider.notifier)
+      .results(
+        _controller.text,
+        projectTitle: (project) => project.displayName(context.l10n),
+      );
 
   List<String> _ids() => [
     for (final result in _results()) result.id,

@@ -5,7 +5,6 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:multiview_desktop/multiview_desktop.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/app_environment.dart';
@@ -22,6 +21,9 @@ import 'package:pomodoist/config/sentry_observability.dart';
 import 'package:pomodoist/data/services/platform/web_bootstrap_loader.dart';
 import 'package:pomodoist/domain/use_cases/account/pomodoist_retention.dart';
 import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/data/repositories/billing/billing_repository.dart';
+import 'package:pomodoist/data/services/billing/account_billing_service.dart';
+import 'package:pomodoist/domain/models/billing/billing_models.dart';
 import 'package:pomodoist/ui/settings/widgets/pomodoist_account_actions.dart';
 
 Future<void> bootstrapPomodoist(AppEnvironment appEnvironment) async {
@@ -182,102 +184,33 @@ bool _accountSignedIn(Ref ref) {
 }
 
 BillingPurchaseLinker? _purchaseLinker(Ref ref) {
-  final account = ref.watch(accountClientProvider);
-  final signedIn = _accountSignedIn(ref);
-  if (account == null || !signedIn) {
-    return null;
-  }
-  final ownerId = account.currentUserId;
-  return (transactions) async {
-    final session = account.currentSession;
-    if (!ref.mounted ||
-        ownerId == null ||
-        account.currentUserId != ownerId ||
-        session == null ||
-        session.userId != ownerId ||
-        session.accessToken == null ||
-        session.accessToken!.isEmpty) {
-      throw StateError('The purchase account changed.');
-    }
-    final response = await account.invokeFunction(
-      'pomodoist-purchase',
-      headers: {'Authorization': 'Bearer ${session.accessToken}'},
-      body: {'transactions': transactions},
-    );
-    final data = response.data;
-    if (data is Map && data['code'] == 'purchase_already_linked') {
-      throw Exception(
-        'This App Store purchase is linked to another '
-        'Pomodoist account.',
-      );
-    }
-    if (response.status < 200 ||
-        response.status >= 300 ||
-        data is! Map ||
-        data['ok'] != true) {
-      throw Exception(
-        'App Store Pro works on this device, but account '
-        'linking failed.',
-      );
-    }
-    if (ref.mounted && account.currentUserId == ownerId) {
-      ref.invalidate(accountOverviewProvider);
-    }
-  };
+  return _accountBillingService(ref)?.linkPurchases;
 }
 
 BillingOfferRequest? _offerRequest(Ref ref) {
-  final account = ref.watch(accountClientProvider);
-  if (account == null) return null;
-  return (body) async {
-    final response = await account.invokeFunction(
-      'pomodoist-subscription-offer',
-      body: body,
-    );
-    if (response.status < 200 || response.status >= 300) {
-      final data = response.data;
-      throw BillingOfferException(
-        data is Map && data['code'] is String
-            ? data['code'] as String
-            : 'verification_failed',
-      );
-    }
-    return response.data;
-  };
+  return _accountBillingService(ref)?.requestOffer;
 }
 
 BillingStripeGateway? _stripeGateway(Ref ref) {
-  final account = ref.watch(accountClientProvider);
-  if (account == null) return null;
+  final service = _accountBillingService(ref);
+  if (service == null) return null;
   return BillingStripeGateway(
-    loadCatalog: () async {
-      final response = await account.invokeFunction(
-        'pomodoist-stripe-billing',
-        body: {'action': 'catalog'},
-      );
-      if (response.status < 200 || response.status >= 300) {
-        throw StripeBillingException(_stripeBillingError(response.data));
-      }
-      return StripeBillingCatalog.fromJson(response.data);
+    loadCatalog: service.loadStripeCatalog,
+    createCheckout: service.createStripeCheckout,
+    openCheckout: service.openCheckout,
+  );
+}
+
+AccountBillingService? _accountBillingService(Ref ref) {
+  final account = ref.watch(accountClientProvider);
+  if (account == null || !_accountSignedIn(ref)) return null;
+  return AccountBillingService(
+    account: account,
+    locale: () =>
+        resolveAppLocale(ref.read(appLanguageProvider)).toLanguageTag(),
+    onLinked: () {
+      if (ref.mounted) ref.invalidate(accountOverviewProvider);
     },
-    createCheckout: (productId, surface) async {
-      final response = await account.invokeFunction(
-        'pomodoist-stripe-billing',
-        body: {
-          'action': 'checkout',
-          'productId': productId,
-          'surface': surface.name,
-          'locale': resolveAppLocale(
-            ref.read(appLanguageProvider),
-          ).toLanguageTag(),
-        },
-      );
-      if (response.status < 200 || response.status >= 300) {
-        throw StripeBillingException(_stripeBillingError(response.data));
-      }
-      return stripeCheckoutUrlFromJson(response.data);
-    },
-    openCheckout: (url) => launchUrl(url, mode: LaunchMode.externalApplication),
   );
 }
 
@@ -325,10 +258,3 @@ bool get _supportsDesktopMultiView =>
       TargetPlatform.windows,
       TargetPlatform.linux,
     }.contains(defaultTargetPlatform);
-
-String _stripeBillingError(Object? value) {
-  if (value is Map && value['code'] is String) {
-    return value['code'] as String;
-  }
-  return 'checkout_failed';
-}

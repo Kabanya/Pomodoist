@@ -395,11 +395,11 @@ class TaskRecurrence {
 enum TaskRecurrenceUnit { day, week, month }
 
 class TaskItem {
-  const TaskItem({
+  TaskItem({
     this.scopeId,
     this.createdBy,
     this.completedBy,
-    this.assigneeIds = const [],
+    List<String> assigneeIds = const [],
     this.canEdit = true,
     required this.id,
     required this.userId,
@@ -423,7 +423,7 @@ class TaskItem {
     this.dayOrder,
     this.isCollapsed = false,
     this.completedAt,
-  });
+  }) : assigneeIds = List.unmodifiable(assigneeIds);
 
   final String? scopeId;
   final String? createdBy;
@@ -731,7 +731,7 @@ class TaskQuery {
 }
 
 class CreateTaskInput {
-  const CreateTaskInput({
+  CreateTaskInput({
     required this.content,
     this.description,
     this.projectId,
@@ -739,14 +739,14 @@ class CreateTaskInput {
     this.sectionId,
     this.parentId,
     this.priority,
-    this.labelNames = const [],
+    List<String> labelNames = const [],
     this.dueDate,
     this.schedule,
     this.deadline,
     this.durationSeconds,
     this.estimatedFocusIntervals,
     this.kanbanStatusId,
-  });
+  }) : labelNames = List.unmodifiable(labelNames);
 
   final String content;
   final String? description;
@@ -765,7 +765,7 @@ class CreateTaskInput {
 }
 
 class UpdateTaskPatch {
-  const UpdateTaskPatch({
+  UpdateTaskPatch({
     this.content,
     this.description,
     this.updateDescription = false,
@@ -775,8 +775,8 @@ class UpdateTaskPatch {
     this.clearSchedule = false,
     this.estimatedFocusIntervals,
     this.isCollapsed,
-    this.labelNames,
-  });
+    List<String>? labelNames,
+  }) : labelNames = labelNames == null ? null : List.unmodifiable(labelNames);
 
   final String? content;
   final String? description;
@@ -837,7 +837,8 @@ class RemoteCalendarTaskPatch {
 }
 
 class DeletedTaskBatch {
-  const DeletedTaskBatch({required this.taskIds, required this.undoUntil});
+  DeletedTaskBatch({required Set<String> taskIds, required this.undoUntil})
+    : taskIds = Set.unmodifiable(taskIds);
 
   final Set<String> taskIds;
   final DateTime undoUntil;

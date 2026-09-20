@@ -1,62 +1,90 @@
-import 'package:pomodoist/data/services/voice/voice_capture_service.dart';
 import 'dart:async';
 
 import 'package:app_voice/app_voice.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/data/repositories/planning/task_decomposition_repository.dart';
-import 'package:pomodoist/data/repositories/voice/voice_quick_add_repository.dart';
-import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
+import 'package:pomodoist/data/repositories/voice/captured_voice_repository.dart';
+import 'package:pomodoist/data/services/voice/voice_capture_service.dart';
+import 'package:pomodoist/domain/models/voice/voice_capture_state.dart';
 import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
 
 void main() {
-  test('voice repository ignores late decomposition after disposal', () async {
-    final pending = Completer<List<DecomposedTaskDraft>>();
+  test('capture repository ignores late events and releases once', () async {
     final voice = _Voice();
-    final repository = VoiceQuickAddRepository(
-      initialController: AppVoiceCaptureService(voice),
-      waitForMode: () async {},
-      effectiveMode: () => VoiceTranscriptionMode.cloud,
-      replaceController: () => AppVoiceCaptureService(voice),
-      setMode: (_) async {},
-      signedIn: () => true,
-      preferences: () async => null,
-      decomposer:
-          (transcript, {required now, required locale, smartMode = false}) =>
-              _Decomposer(pending.future).decompose(
-                transcript,
-                now: now,
-                locale: locale,
-                smartMode: smartMode,
-              ),
+    final repository = _repository(voice);
+    final received = <VoiceCaptureState>[];
+    final done = Completer<void>();
+    final subscription = repository.watchState().listen(
+      received.add,
+      onDone: done.complete,
     );
-    var notifications = 0;
-    repository.addListener(() => notifications++);
-    final analysis = repository.decomposeTranscript('Plan the day');
-    expect(repository.state.analyzing, isTrue);
-    expect(notifications, 1);
+    await Future<void>.delayed(Duration.zero);
+    (await repository.restore()).getOrThrow();
+    (await repository.start('en')).getOrThrow();
+    voice.events.add(VoiceRecognitionEvent.recording);
+    await Future<void>.delayed(Duration.zero);
+    expect(repository.currentState.isCapturing, isTrue);
+    final published = received.length;
+
     repository.dispose();
-    pending.complete(const [DecomposedTaskDraft(quickAdd: 'Plan the day')]);
-    (await analysis).getOrThrow();
-    expect(notifications, 1);
-    expect(repository.state.drafts, isEmpty);
+    repository.dispose();
+    expect(voice.cancels, 1);
+    expect(voice.aborts, 0);
+    voice.events.add(VoiceRecognitionEvent.completed(text: 'Late'));
+    await Future<void>.delayed(Duration.zero);
+    expect(received, hasLength(published));
+    expect(repository.currentState.transcript, isEmpty);
+    await subscription.cancel();
+    await done.future;
+  });
+
+  test('disposal during transcription aborts instead of cancelling', () async {
+    final voice = _Voice();
+    final repository = _repository(voice);
+    (await repository.restore()).getOrThrow();
+    (await repository.start('en')).getOrThrow();
+    voice.events.add(VoiceRecognitionEvent.transcribing);
+    await Future<void>.delayed(Duration.zero);
+    expect(repository.currentState.isTranscribing, isTrue);
+
+    repository.dispose();
+    expect(voice.aborts, 1);
+    expect(voice.cancels, 0);
   });
 }
 
-class _Decomposer implements TaskDecomposer {
-  _Decomposer(this.pending);
-  final Future<List<DecomposedTaskDraft>> pending;
-  @override
-  Future<List<DecomposedTaskDraft>> decompose(
-    String transcript, {
-    required DateTime now,
-    required String locale,
-    bool smartMode = false,
-  }) => pending;
-}
+CapturedVoiceRepository _repository(_Voice voice) => CapturedVoiceRepository(
+  initialController: AppVoiceCaptureService(voice),
+  waitForMode: () async {},
+  effectiveMode: () => VoiceTranscriptionMode.cloud,
+  replaceController: () => AppVoiceCaptureService(voice),
+  setMode: (_) async {},
+  signedIn: () => true,
+);
 
 class _Voice implements VoiceRecognitionController {
+  final events = StreamController<VoiceRecognitionEvent>.broadcast();
+  int cancels = 0;
+  int aborts = 0;
+
   @override
   bool get canRetryTranscription => false;
+  @override
+  Stream<double> get amplitudeDbfs => const Stream.empty();
+  @override
+  Stream<VoiceRecognitionEvent> start(VoiceRecognitionConfig config) =>
+      events.stream;
+  @override
+  Stream<VoiceRecognitionEvent> retryTranscription() => events.stream;
+  @override
+  Future<void> cancel() async {
+    cancels++;
+  }
+
+  @override
+  Future<void> abortTranscription() async {
+    aborts++;
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

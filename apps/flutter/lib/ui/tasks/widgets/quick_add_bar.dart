@@ -1,4 +1,5 @@
 import 'package:pomodoist/ui/voice/view_models/voice_quick_add_view_model.dart';
+import 'package:pomodoist/domain/models/voice/voice_capture_state.dart';
 import 'package:pomodoist/domain/models/voice/voice_quick_add_state.dart';
 import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 import 'package:pomodoist/ui/tasks/view_models/quick_add_view_model.dart';
@@ -67,9 +68,14 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
   final _focusNode = FocusNode();
   Timer? _successTimer;
   final _identity = Object();
-  bool get _busy => ref.read(quickAddViewModelProvider(_identity)).isLoading;
+  bool get _busy =>
+      ref.read(quickAddViewModelProvider(_identity)).result.isLoading;
   bool _showSuccess = false;
   bool _hasFocus = false;
+
+  void _syncDraft() => ref
+      .read(quickAddViewModelProvider(_identity).notifier)
+      .updateDraft(_controller.text);
 
   @override
   void dispose() {
@@ -81,7 +87,9 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(quickAddViewModelProvider(_identity));
+    ref.watch(
+      quickAddViewModelProvider(_identity).select((state) => state.result),
+    );
     final l10n = context.l10n;
     final colors = context.appColors;
     return Focus(
@@ -119,6 +127,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
                         focusedBorder: InputBorder.none,
                         filled: false,
                       ),
+                      onChanged: (_) => _syncDraft(),
                       onSubmitted: (_) => _submit(),
                     ),
                     QuickAddDetails(
@@ -127,6 +136,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
                       projectId: widget.projectId,
                       priority: widget.defaultPriority,
                       enabled: !_busy,
+                      onChanged: _syncDraft,
                     ),
                   ],
                 ),
@@ -203,11 +213,11 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
     if (input.isEmpty || _busy) {
       return;
     }
+    _syncDraft();
     _beginCreation();
     final task = await ref
         .read(quickAddViewModelProvider(_identity).notifier)
         .submit(
-          input,
           priority: widget.defaultPriority,
           defaultDate: widget.defaultDate,
           projectId: widget.projectId,
@@ -218,7 +228,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
     if (task != null) {
       _controller.clear();
       widget.onTaskCreated?.call([task]);
-    } else if (ref.read(quickAddViewModelProvider(_identity)).hasError) {
+    } else if (ref.read(quickAddViewModelProvider(_identity)).result.hasError) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(context.l10n.taskCreateFailed)));

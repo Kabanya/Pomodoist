@@ -1,11 +1,11 @@
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
 
-String collaborationRoleLabel(AppLocalizations l10n, String role) =>
+String collaborationRoleLabel(AppLocalizations l10n, CollaborationRole role) =>
     switch (role) {
-      'administrator' => l10n.collaborationRoleAdministrator,
-      'member' => l10n.collaborationRoleMember,
-      _ => l10n.collaborationRoleObserver,
+      CollaborationRole.administrator => l10n.collaborationRoleAdministrator,
+      CollaborationRole.member => l10n.collaborationRoleMember,
+      CollaborationRole.observer => l10n.collaborationRoleObserver,
     };
 
 String collaborationErrorMessage(AppLocalizations l10n, Object error) {
@@ -28,10 +28,7 @@ String collaborationErrorMessage(AppLocalizations l10n, Object error) {
 
 String? collaborationMemberName(SharedScope scope, String userId) {
   for (final member in scope.members) {
-    if (member['userId'] == userId) {
-      final name = member['displayName'] as String?;
-      if (name != null && name.trim().isNotEmpty) return name.trim();
-    }
+    if (member.userId == userId) return member.displayName;
   }
   return null;
 }

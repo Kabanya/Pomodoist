@@ -43,10 +43,10 @@ class _TimelineHeader extends StatelessWidget {
           ),
         ),
         ShadButton.outline(
-          onPressed: _isSameDay(day, today)
+          onPressed: isSameLocalDay(day, today)
               ? null
               : () => _goToDate(context, today),
-          enabled: !(_isSameDay(day, today)),
+          enabled: !(isSameLocalDay(day, today)),
           child: Text(l10n.today),
         ),
       ],
@@ -71,7 +71,7 @@ class _TimelineHeader extends StatelessWidget {
   }
 
   void _goToDate(BuildContext context, DateTime date) {
-    context.go('/timeline?date=${_formatRouteDate(_dateOnly(date))}');
+    context.go('/timeline?date=${_formatRouteDate(timelineDateOnly(date))}');
   }
 }
 

@@ -9,7 +9,7 @@ class TaskDueResult {
 }
 
 UpdateTaskPatch taskDuePatch(TaskItem task, TaskDueResult result) {
-  if (result.clear) return const UpdateTaskPatch(clearSchedule: true);
+  if (result.clear) return UpdateTaskPatch(clearSchedule: true);
   final requested = result.schedule!;
   final existing = task.schedule;
   var schedule = requested.isAllDay

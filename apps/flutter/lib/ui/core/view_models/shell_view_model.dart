@@ -58,11 +58,7 @@ final class ShellSidebarState {
 final shellSidebarViewModelProvider = Provider<ShellSidebarState>((ref) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
-  final user = ref.watch(currentUserProvider).value;
-  final account = ref.watch(accountClientProvider);
-  final profile = account == null
-      ? null
-      : ref.watch(accountOverviewProvider).value?.profile;
+  final profile = ref.watch(accountProfileProvider);
   final inbox = ref.watch(tasksByQueryProvider(const TaskQuery.inbox()));
   final todayTasks = ref.watch(
     tasksByQueryProvider(TaskQuery(kind: TaskQueryKind.today, now: today)),
@@ -72,7 +68,7 @@ final shellSidebarViewModelProvider = Provider<ShellSidebarState>((ref) {
   );
   final all = ref.watch(tasksByQueryProvider(const TaskQuery.all()));
   return ShellSidebarState(
-    displayName: profile?.displayName ?? profile?.email ?? user?.displayName,
+    displayName: profile?.displayName ?? profile?.email,
     inboxCount: _openTaskCount(inbox),
     todayCount: _openTaskCount(todayTasks),
     upcomingCount: _openTaskCount(upcoming),

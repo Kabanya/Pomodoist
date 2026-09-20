@@ -4,39 +4,55 @@ import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 
+typedef QuickAddState = ({String draft, AsyncValue<String?> result});
 final quickAddViewModelProvider = NotifierProvider.autoDispose
-    .family<QuickAddViewModel, AsyncValue<String?>, Object>(
-      QuickAddViewModel.new,
-    );
+    .family<QuickAddViewModel, QuickAddState, Object>(QuickAddViewModel.new);
 
-class QuickAddViewModel extends Notifier<AsyncValue<String?>> {
+class QuickAddViewModel extends Notifier<QuickAddState> {
   QuickAddViewModel(this.identity);
   final Object identity;
   @override
-  AsyncValue<String?> build() => const AsyncData(null);
-  Future<String?> submit(
-    String input, {
+  QuickAddState build() => (draft: '', result: const AsyncData(null));
+
+  void updateDraft(String value) {
+    if (state.result.isLoading) return;
+    if (state.draft == value && state.result is AsyncData) return;
+    state = (draft: value, result: const AsyncData(null));
+  }
+
+  void clearDraft() {
+    if (state.draft.isEmpty && state.result is AsyncData) return;
+    state = (draft: '', result: const AsyncData(null));
+  }
+
+  Future<String?> submit({
     int? priority,
     DateTime? defaultDate,
     String? projectId,
     String? kanbanStatusId,
     String? labelId,
   }) async {
-    if (state.isLoading || input.trim().isEmpty) return null;
-    state = const AsyncLoading();
-    final service = ref.read(quickAddServiceProvider);
-    final result = await AsyncValue.guard(
-      () async => (await service.createTask(
-        input.trim(),
+    final input = state.draft.trim();
+    if (state.result.isLoading || input.isEmpty) return null;
+    state = (draft: state.draft, result: const AsyncLoading());
+    final service = ref.read(quickAddUseCaseProvider);
+    try {
+      final created = (await service.createTask(
+        input,
         priority: priority,
         defaultDate: defaultDate,
         projectId: projectId,
         kanbanStatusId: kanbanStatusId,
         labelId: labelId,
-      )).getOrThrow(),
-    );
-    if (ref.mounted) state = result;
-    return result.value;
+      )).getOrThrow();
+      if (ref.mounted) state = (draft: '', result: AsyncData(created));
+      return created;
+    } catch (error, stackTrace) {
+      if (ref.mounted) {
+        state = (draft: state.draft, result: AsyncError(error, stackTrace));
+      }
+      return null;
+    }
   }
 }
 

@@ -37,7 +37,7 @@ class _TimelineCompactTaskBlock extends ConsumerWidget {
     final rawTimeLabel = schedule == null
         ? null
         : schedule.isTimed
-        ? '${_formatMinutes(_startMinutes(schedule))}-${_formatMinutes(_endMinutes(schedule))}'
+        ? '${_formatMinutes(timelineStartMinutes(schedule))}-${_formatMinutes(timelineEndMinutes(schedule))}'
         : context.l10n.timelineAllDay;
     final timeLabel = showProjectName && project != null
         ? '${project!.name} · ${rawTimeLabel ?? ''}'

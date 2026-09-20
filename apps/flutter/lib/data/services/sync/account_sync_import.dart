@@ -1,54 +1,6 @@
 part of 'account_sync_engine.dart';
 
 extension AccountSyncImport on AccountSyncEngine {
-  Future<bool> prepareLocalAccountData({Future<void> Function()? onReset}) {
-    return AccountSyncEngine._ownerTransitionQueueFor(
-      _db,
-    ).run(() => _prepareLocalAccountData(onReset: onReset));
-  }
-
-  Future<bool> _prepareLocalAccountData({
-    Future<void> Function()? onReset,
-  }) async {
-    final userId = _account.currentUserId;
-    if (userId == null || userId.isEmpty) {
-      throw StateError('Account sync requires an authenticated user.');
-    }
-    final owner =
-        await (_db.select(_db.syncState)..where(
-              (row) => row.id.equals(AccountSyncEngine._accountOwnerStateId),
-            ))
-            .getSingleOrNull();
-    if (owner?.cursor == userId) {
-      await _db.backfillTaskCreators(accountUserId: userId);
-      return false;
-    }
-    final importState =
-        await (_db.select(_db.syncState)
-              ..where((row) => row.id.equals(AccountSyncEngine._importStateId)))
-            .getSingleOrNull();
-    final syncState = await _syncState();
-    final reset = owner != null || importState != null || syncState != null;
-    if (reset) {
-      await onReset?.call();
-      await _db.resetAccountData();
-    }
-    final now = DateTime.now().toUtc();
-    await _db
-        .into(_db.syncState)
-        .insertOnConflictUpdate(
-          SyncStateCompanion.insert(
-            id: AccountSyncEngine._accountOwnerStateId,
-            deviceId: _uuid.v4(),
-            cursor: Value(userId),
-            createdAt: now,
-            updatedAt: now,
-          ),
-        );
-    await _db.backfillTaskCreators(accountUserId: userId);
-    return reset;
-  }
-
   Future<bool> importLocalSnapshotIfNeeded() async {
     final state =
         await (_db.select(_db.syncState)
@@ -61,6 +13,7 @@ extension AccountSyncImport on AccountSyncEngine {
     final deviceId = await _ensureDeviceId();
     final operations = await _snapshotOperations();
     await _pushInBatches(deviceId, operations);
+    _checkSession();
 
     final now = DateTime.now().toUtc();
     await _db

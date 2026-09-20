@@ -22,11 +22,11 @@ final voiceSettingsViewModelProvider =
 class VoiceSettingsViewModel extends Notifier<VoiceSettingsState> {
   @override
   VoiceSettingsState build() {
-    ref.watch(accountAuthStateProvider);
+    ref.watch(accountSessionProvider);
     return VoiceSettingsState(
       mode: ref.watch(voiceTranscriptionModeProvider),
       supported: ref.watch(voiceTranscriptionModeSelectionSupportedProvider),
-      signedIn: ref.watch(accountClientProvider)?.currentUserId != null,
+      signedIn: ref.watch(accountSignedInProvider),
     );
   }
 

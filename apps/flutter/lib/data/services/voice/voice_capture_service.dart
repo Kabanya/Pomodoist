@@ -1,5 +1,5 @@
 import 'package:app_voice/app_voice.dart';
-import 'package:pomodoist/domain/models/voice/voice_quick_add_state.dart';
+import 'package:pomodoist/domain/models/voice/voice_capture_state.dart';
 
 abstract interface class VoiceCaptureService {
   bool get canRetryTranscription;

@@ -1,37 +1,23 @@
-import 'package:flutter/foundation.dart';
-
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 
-class FocusCompletionRepository extends ChangeNotifier {
-  FocusRunCompletionEvent? _state;
-  FocusRunCompletionEvent? get state => _state;
-  set state(FocusRunCompletionEvent? value) {
-    _state = value;
-    notifyListeners();
-  }
+/// Application-session owner of focus-run completion events.
+///
+/// Deduplicates by run id and serializes completion actions so a completion is
+/// presented and acted on at most once across routes and windows. [state] is
+/// the current snapshot, [watch] delivers later updates, and per-screen
+/// animation phases stay in the screen's ViewModel.
+abstract interface class FocusCompletionRepository {
+  FocusRunCompletionEvent? get state;
 
-  final Set<String> _presentedRunIds = <String>{};
-  String? _actionRunId;
+  Stream<FocusRunCompletionEvent?> watch();
 
-  void present(FocusRunCompletionEvent event) {
-    if (!_presentedRunIds.add(event.runId)) {
-      return;
-    }
-    state = event;
-  }
+  void present(FocusRunCompletionEvent event);
 
-  bool tryBeginAction(String runId) {
-    if (_actionRunId != null || state?.runId != runId) return false;
-    _actionRunId = runId;
-    return true;
-  }
+  bool tryBeginAction(String runId);
 
-  void endAction(String runId) {
-    if (_actionRunId == runId) _actionRunId = null;
-  }
+  void endAction(String runId);
 
-  void dismiss({String? runId}) {
-    if (runId != null && state?.runId != runId) return;
-    state = null;
-  }
+  void dismiss({String? runId});
+
+  void dispose();
 }

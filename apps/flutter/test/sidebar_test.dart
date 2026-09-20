@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/account/account_overview.dart';
 import 'package:pomodoist/domain/models/settings/app_language.dart';
 import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
@@ -16,6 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/app_language.dart';
+import 'package:pomodoist/config/voice_dependencies.dart';
 import 'package:pomodoist/ui/core/widgets/app_startup_gate.dart';
 import 'package:pomodoist/ui/core/view_models/app_theme_mode_view_model.dart';
 import 'package:pomodoist/config/keyboard_shortcuts.dart';
@@ -27,6 +29,7 @@ import 'package:pomodoist/ui/core/widgets/resizable_dialog.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/utils/clock.dart';
 import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/config/billing_store_dependencies.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/ui/focus/widgets/focus_screen.dart';
 import 'package:pomodoist/ui/onboarding/widgets/onboarding_gate.dart';
@@ -1351,15 +1354,10 @@ Future<_SidebarHarness> _pumpApp(
         billingAccountEntitlementProvider.overrideWithValue(hasAccountPro),
         if (voiceController != null)
           voiceRecognitionControllerProvider.overrideWithValue(voiceController),
-        currentUserProvider.overrideWith(
-          (ref) => Stream.value(
-            UserRow(
-              id: localUserId,
-              email: null,
-              displayName: 'Local User',
-              createdAt: createdAt,
-              updatedAt: createdAt,
-            ),
+        accountProfileProvider.overrideWith(
+          (ref) => const PomodoistAccountProfile(
+            id: localUserId,
+            displayName: 'Local User',
           ),
         ),
         tasksByQueryProvider.overrideWith((ref, query) {
@@ -1397,7 +1395,7 @@ Future<_SidebarHarness> _pumpApp(
         labelsProvider.overrideWith((ref) => Stream.value(labels)),
         productivitySummaryProvider.overrideWith(
           (ref) => Stream.value(
-            const ProductivitySummary(
+            ProductivitySummary(
               completedTasks: 0,
               completedFocusIntervals: 0,
               totalFocusSeconds: 0,

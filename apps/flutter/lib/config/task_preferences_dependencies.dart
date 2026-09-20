@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:pomodoist/data/services/local/preferences_service.dart';
 import 'package:pomodoist/data/repositories/settings/preferences_repository.dart';
+import 'package:pomodoist/data/repositories/settings/preferences_repository_impl.dart';
 import 'package:pomodoist/data/repositories/settings/task_preferences_repository.dart';
 import 'package:pomodoist/data/repositories/settings/task_preferences_repository_impl.dart';
 import 'package:pomodoist/domain/models/settings/task_preferences.dart';
@@ -11,7 +12,7 @@ final preferencesServiceProvider = Provider<PreferencesService>(
   (ref) => PreferencesService(() => ref.read(sharedPreferencesProvider.future)),
 );
 final preferencesRepositoryProvider = Provider<PreferencesRepository>(
-  (ref) => PreferencesRepository(ref.watch(preferencesServiceProvider)),
+  (ref) => LocalPreferencesRepository(ref.watch(preferencesServiceProvider)),
 );
 final taskPreferencesRepositoryProvider = Provider<TaskPreferencesRepository>((
   ref,
@@ -25,8 +26,8 @@ final taskPreferencesRepositoryProvider = Provider<TaskPreferencesRepository>((
 });
 final taskPreferencesStateProvider = Provider<TaskPreferences>((ref) {
   final repository = ref.watch(taskPreferencesRepositoryProvider);
-  repository.addListener(ref.invalidateSelf);
-  ref.onDispose(() => repository.removeListener(ref.invalidateSelf));
+  final subscription = repository.watch().listen((_) => ref.invalidateSelf());
+  ref.onDispose(subscription.cancel);
   return repository.state;
 });
 final reengagementNotificationsEnabledProvider = Provider(

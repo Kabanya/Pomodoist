@@ -1,3 +1,4 @@
+import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'dart:convert';
 
 import 'package:app_account/app_account.dart';
@@ -6,12 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import 'package:uuid/uuid.dart';
 
 import 'package:pomodoist/data/services/local/database/app_database.dart';
-import 'package:pomodoist/data/services/account/account_overview_service.dart';
-import 'package:pomodoist/data/services/local/kanban_transition_coordinator.dart';
-import 'package:pomodoist/domain/models/account/account_overview.dart';
-import 'package:pomodoist/domain/use_cases/account/pomodoist_retention.dart';
+import 'package:pomodoist/data/services/local/sync_owner_store.dart';
 import 'package:pomodoist/data/services/sync/account_sync_mapping.dart';
-import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
 part 'shared_account_sync.dart';
@@ -28,115 +25,90 @@ class AccountSyncEngine {
     required AccountClient account,
     required Uuid uuid,
     CollaborationApi? collaboration,
-    Future<PomodoistAccountOverview?> Function()? overviewLoader,
-    Future<bool> Function()? localPaidEntitlementLoader,
-    KanbanTransitionCoordinator? kanbanTransitions,
+    required Future<bool> Function({Future<void> Function()? onReset})
+    prepareAccount,
+    required Future<void> Function({required DateTime timestamp}) repairKanban,
     Duration requestTimeout = const Duration(seconds: 30),
   }) : _db = db,
        _account = account,
        _uuid = uuid,
        _collaboration = collaboration,
-       _overviewLoader = overviewLoader,
-       _localPaidEntitlementLoader = localPaidEntitlementLoader,
        _requestTimeout = requestTimeout,
-       _kanbanTransitions =
-           kanbanTransitions ??
-           KanbanTransitionCoordinator(db, DriftOutboxService(db));
+       _prepareAccount = prepareAccount,
+       _repairKanban = repairKanban;
 
   static const _syncStateId = 'pomodoist';
 
   static const _importStateId = 'pomodoist-import';
 
-  static const _accountOwnerStateId = 'pomodoist-account-owner-v1';
-
   static const _importStateCursor = 'done-v3';
 
-  static const _guestOwnerCursor = 'guest';
-
   static final _seedSnapshotClock = DateTime.utc(2000);
-
-  static final _ownerTransitionQueues = Expando<_OwnerTransitionQueue>(
-    'account-owner-transition',
-  );
 
   final CollaborationApi? _collaboration;
   final AppDatabase _db;
   final AccountClient _account;
   final Uuid _uuid;
-  final Future<PomodoistAccountOverview?> Function()? _overviewLoader;
-  final Future<bool> Function()? _localPaidEntitlementLoader;
   final Duration _requestTimeout;
-  final KanbanTransitionCoordinator _kanbanTransitions;
-
-  Future<Set<String>> syncNow() {
-    return _ownerTransitionQueueFor(_db).run(() async {
-      await _prepareLocalAccountData();
-      final imported = await importLocalSnapshotIfNeeded();
-      if (imported) {
-        await _broadcastSyncHint();
-      }
-      return <String>{
-        ...await syncShared(),
-        ...await pushPending(),
-        ...await pullLatest(),
-      };
-    });
-  }
-
-  static Future<bool> prepareGuestLocalData({
-    required AppDatabase db,
-    required Uuid uuid,
-    bool Function()? shouldPrepare,
-    Future<void> Function()? onReset,
-  }) {
-    return _ownerTransitionQueueFor(db).run(() async {
-      if (shouldPrepare != null && !shouldPrepare()) {
-        return false;
-      }
-      final owner = await (db.select(
-        db.syncState,
-      )..where((row) => row.id.equals(_accountOwnerStateId))).getSingleOrNull();
-      if (owner?.cursor == _guestOwnerCursor) {
-        return false;
-      }
-      final reset = owner != null;
-      if (reset) {
-        await onReset?.call();
-        await db.resetAccountData();
-      }
-      final now = DateTime.now().toUtc();
-      await db
-          .into(db.syncState)
-          .insertOnConflictUpdate(
-            SyncStateCompanion.insert(
-              id: _accountOwnerStateId,
-              deviceId: uuid.v4(),
-              cursor: const Value(_guestOwnerCursor),
-              createdAt: now,
-              updatedAt: now,
-            ),
-          );
-      return reset;
-    });
-  }
-
-  static _OwnerTransitionQueue _ownerTransitionQueueFor(AppDatabase db) {
-    final existing = _ownerTransitionQueues[db];
-    if (existing != null) {
-      return existing;
+  final Future<bool> Function({Future<void> Function()? onReset})
+  _prepareAccount;
+  final Future<void> Function({required DateTime timestamp}) _repairKanban;
+  DateTime? _retentionCutoff;
+  bool Function()? _isSessionCurrent;
+  String? _syncUserId;
+  void _checkSession() {
+    if (_isSessionCurrent?.call() == false ||
+        (_syncUserId != null && _account.currentUserId != _syncUserId)) {
+      throw const _StaleSyncSession();
     }
-    final created = _OwnerTransitionQueue();
-    _ownerTransitionQueues[db] = created;
-    return created;
   }
-}
 
-class _OwnerTransitionQueue {
-  Future<void> _tail = Future<void>.value();
-
-  Future<T> run<T>(Future<T> Function() action) {
-    final result = _tail.then((_) => action());
-    _tail = result.then<void>((_) {}, onError: (Object _, StackTrace _) {});
+  Future<Map<String, dynamic>> _callCollaboration(
+    String action, [
+    Map<String, dynamic> payload = const {},
+  ]) async {
+    _checkSession();
+    final result = await _collaboration!.call(action, payload);
+    _checkSession();
     return result;
   }
+
+  Future<Set<String>> syncNow({
+    DateTime? retentionCutoff,
+    bool Function()? isSessionCurrent,
+  }) {
+    final userId = _account.currentUserId;
+    return SyncOwnerStore.serialized(_db, () async {
+      _syncUserId = userId;
+      _retentionCutoff = retentionCutoff;
+      _isSessionCurrent = isSessionCurrent;
+      try {
+        _checkSession();
+        await _prepareAccount();
+        _checkSession();
+        final imported = await importLocalSnapshotIfNeeded();
+        if (imported) {
+          await _broadcastSyncHint();
+        }
+        return <String>{
+          ...await syncShared(),
+          ...await pushPending(),
+          ...await pullLatest(),
+        };
+      } on _StaleSyncSession {
+        return <String>{};
+      } finally {
+        _syncUserId = null;
+        _retentionCutoff = null;
+        _isSessionCurrent = null;
+      }
+    });
+  }
+
+  Future<bool> prepareLocalAccountData({Future<void> Function()? onReset}) =>
+      SyncOwnerStore.serialized(_db, () => _prepareAccount(onReset: onReset));
+}
+
+class _StaleSyncSession implements Exception {
+  const _StaleSyncSession();
 }

@@ -29,6 +29,9 @@ jobs:
       - run: make test-linux-packaging
       - run: flutter pub get --enforce-lockfile
         working-directory: apps/flutter
+      - name: Check resolved Dart symbol boundaries
+        run: dart run tool/check_architecture_types.dart
+        working-directory: apps/flutter
       - run: python3 -m unittest discover -s tool -p test_release_notes.py
       - run: flutter analyze
         working-directory: apps/flutter

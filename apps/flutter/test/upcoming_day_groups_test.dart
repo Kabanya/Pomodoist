@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
-import 'package:pomodoist/ui/tasks/widgets/upcoming_day_groups.dart';
+import 'package:pomodoist/ui/tasks/view_models/upcoming_day_groups.dart';
 
 void main() {
   group('buildUpcomingDayGroups', () {
@@ -208,6 +208,91 @@ void main() {
       expect(rows, hasLength(3));
       expect(rows.first.depth, 0);
     });
+
+    test('promotes a task with a missing parent to a root', () {
+      final groups = buildUpcomingDayGroups([
+        _task('orphan', parentId: 'missing', schedule: _allDay(2026, 7, 10)),
+        _task('root', schedule: _allDay(2026, 7, 10)),
+      ]);
+
+      expect(
+        groups.single.rows.map((row) => (row.task.id, row.depth)).toList(),
+        [('orphan', 0), ('root', 0)],
+      );
+    });
+
+    test('groups timed tasks by their local display day at timezone edges', () {
+      final groups = buildUpcomingDayGroups([
+        _task('late', schedule: _timed(2026, 7, 10, 23, minute: 45)),
+        _task('next-day', schedule: _timed(2026, 7, 11, 0, minute: 15)),
+      ]);
+
+      expect(groups.map((group) => group.date), [
+        DateTime(2026, 7, 10),
+        DateTime(2026, 7, 11),
+      ]);
+      expect(groups[0].rows.single.task.id, 'late');
+      expect(groups[1].rows.single.task.id, 'next-day');
+    });
+
+    test('keeps completed tasks on their scheduled local day', () {
+      final groups = buildUpcomingDayGroups([
+        _task(
+          'done',
+          status: 'completed',
+          dayOrder: 2,
+          schedule: _allDay(2026, 7, 10),
+        ),
+        _task('open', dayOrder: 1, schedule: _allDay(2026, 7, 10)),
+      ]);
+
+      expect(groups, hasLength(1));
+      expect(groups.single.date, DateTime(2026, 7, 10));
+      expect(groups.single.rows.map((row) => row.task.id), ['done', 'open']);
+    });
+
+    test('groups recurring occurrences by their occurrence day', () {
+      final groups = buildUpcomingDayGroups([
+        _task(
+          'series',
+          schedule: TaskSchedule.allDay(
+            DateTime(2026, 7, 10),
+            recurrenceSeriesId: 'series-1',
+          ),
+        ),
+      ]);
+
+      expect(groups.single.date, DateTime(2026, 7, 10));
+      expect(
+        groups.single.rows.single.task.schedule!.isRecurringOccurrence,
+        isTrue,
+      );
+    });
+
+    test('stable ordering is identical across repeated builds', () {
+      final tasks = [
+        _task('b', schedule: _allDay(2026, 7, 10), orderKey: 'same'),
+        _task('a', schedule: _allDay(2026, 7, 10), orderKey: 'same'),
+        _task('c', schedule: _allDay(2026, 7, 10), dayOrder: 0),
+      ];
+      final first = buildUpcomingDayGroups(tasks);
+      final second = buildUpcomingDayGroups(tasks);
+
+      expect(
+        first.single.rows.map((row) => row.task.id).toList(),
+        second.single.rows.map((row) => row.task.id).toList(),
+      );
+      expect(first.single.rows.map((row) => row.task.id), ['c', 'a', 'b']);
+    });
+
+    test('selected empty day remains available for task creation', () {
+      final day = DateTime(2026, 9, 20);
+      final groups = buildUpcomingDayGroups(const [], selectedDate: day);
+      expect(groups, hasLength(1));
+      expect(groups.single.date, day);
+      expect(groups.single.isSynthetic, isTrue);
+      expect(groups.single.rows, isEmpty);
+    });
   });
 }
 
@@ -242,8 +327,10 @@ TaskItem _task(
 TaskSchedule _allDay(int year, int month, int day) =>
     TaskSchedule.allDay(DateTime(year, month, day));
 
-TaskSchedule _timed(int year, int month, int day, int hour) =>
-    TaskSchedule.timed(
-      start: DateTime(year, month, day, hour),
-      end: DateTime(year, month, day, hour, 30),
-    );
+TaskSchedule _timed(int year, int month, int day, int hour, {int minute = 0}) {
+  final start = DateTime(year, month, day, hour, minute);
+  return TaskSchedule.timed(
+    start: start,
+    end: start.add(const Duration(minutes: 30)),
+  );
+}

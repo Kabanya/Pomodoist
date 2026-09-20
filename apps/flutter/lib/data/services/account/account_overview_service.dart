@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:app_account/app_account.dart';
 
 import 'package:pomodoist/domain/models/account/account_overview.dart';
@@ -7,8 +10,37 @@ final class AccountOverviewService {
 
   final AccountClient _account;
 
-  Future<PomodoistAccountOverview> load() async =>
-      map(await _account.getOverview());
+  Future<PomodoistAccountOverview> load({
+    Future<String> Function()? deviceId,
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    if (deviceId != null) unawaited(_registerInstall(deviceId, timeout));
+    return map(await _account.getOverview().timeout(timeout));
+  }
+
+  Future<void> _registerInstall(
+    Future<String> Function() deviceId,
+    Duration timeout,
+  ) async {
+    final userId = _account.currentUserId;
+    try {
+      final info = await PackageInfo.fromPlatform().timeout(timeout);
+      final id = await deviceId().timeout(timeout);
+      if (userId == null || _account.currentUserId != userId) return;
+      await _account
+          .registerInstall(
+            appId: AccountAppId.pomodoist,
+            deviceId: id,
+            platform: kIsWeb ? 'web' : defaultTargetPlatform.name.toLowerCase(),
+            appVersion: info.buildNumber.isEmpty
+                ? info.version
+                : '${info.version}+${info.buildNumber}',
+          )
+          .timeout(timeout);
+    } on Object {
+      // Install registration is advisory and must never block the profile.
+    }
+  }
 
   static PomodoistAccountOverview map(AccountOverview overview) =>
       PomodoistAccountOverview(

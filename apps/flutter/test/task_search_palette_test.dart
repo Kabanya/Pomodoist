@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
-import 'package:pomodoist/ui/tasks/widgets/task_search_palette.dart';
+import 'package:pomodoist/ui/tasks/view_models/task_search_palette_view_model.dart';
 
 void main() {
   final now = DateTime.utc(2026);

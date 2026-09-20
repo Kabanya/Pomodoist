@@ -9,7 +9,7 @@ import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 import 'package:pomodoist/data/repositories/kanban/kanban_repository_impl.dart';
-import 'package:pomodoist/data/services/local/kanban_transition_coordinator.dart';
+import 'package:pomodoist/data/repositories/local/kanban_transition_coordinator.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 
@@ -44,11 +44,11 @@ void main() {
       'creation assigns Backlog unless an active non-Done status is valid',
       () async {
         final defaultId = await tasks
-            .createTask(const CreateTaskInput(content: 'Default'))
+            .createTask(CreateTaskInput(content: 'Default'))
             .then((result) => result.getOrThrow());
         final explicitId = await tasks
             .createTask(
-              const CreateTaskInput(
+              CreateTaskInput(
                 content: 'Explicit',
                 kanbanStatusId: kanbanStatusTodoId,
               ),
@@ -56,7 +56,7 @@ void main() {
             .then((result) => result.getOrThrow());
         final doneId = await tasks
             .createTask(
-              const CreateTaskInput(
+              CreateTaskInput(
                 content: 'Done is invalid for create',
                 kanbanStatusId: kanbanStatusDoneId,
               ),
@@ -64,7 +64,7 @@ void main() {
             .then((result) => result.getOrThrow());
         final unknownId = await tasks
             .createTask(
-              const CreateTaskInput(
+              CreateTaskInput(
                 content: 'Unknown is invalid for create',
                 kanbanStatusId: 'missing-status',
               ),
@@ -101,7 +101,7 @@ void main() {
       () async {
         final rootId = await tasks
             .createTask(
-              const CreateTaskInput(
+              CreateTaskInput(
                 content: 'Root',
                 kanbanStatusId: kanbanStatusTodoId,
               ),
@@ -177,7 +177,7 @@ void main() {
       () async {
         final rootId = await tasks
             .createTask(
-              const CreateTaskInput(
+              CreateTaskInput(
                 content: 'Root',
                 kanbanStatusId: kanbanStatusInProgressId,
               ),
@@ -327,7 +327,7 @@ void main() {
       () async {
         final taskId = await tasks
             .createTask(
-              const CreateTaskInput(
+              CreateTaskInput(
                 content: 'Calendar linked',
                 kanbanStatusId: kanbanStatusTodoId,
               ),
@@ -420,7 +420,7 @@ void main() {
       () async {
         final taskId = await tasks
             .createTask(
-              const CreateTaskInput(
+              CreateTaskInput(
                 content: 'Malformed snapshot',
                 kanbanStatusId: kanbanStatusTodoId,
               ),
@@ -462,7 +462,7 @@ void main() {
       () async {
         final taskId = await tasks
             .createTask(
-              const CreateTaskInput(
+              CreateTaskInput(
                 content: 'Complete twice',
                 kanbanStatusId: kanbanStatusTodoId,
               ),

@@ -1,5 +1,5 @@
 import 'package:pomodoist/domain/models/account/password_recovery.dart';
-import 'package:pomodoist/data/repositories/account/password_recovery_repository.dart';
+import 'package:pomodoist/data/repositories/account/password_recovery_repository_impl.dart';
 import 'package:pomodoist/data/services/auth/password_recovery_service.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -83,7 +83,7 @@ void main() {
 
   test('a callback that never verifies leaves a usable invalid-link state', () {
     fakeAsync((async) {
-      final controller = PasswordRecoveryRepository();
+      final controller = SdkPasswordRecoveryRepository();
       controller.beginCallback();
       expect(controller.stage, PasswordRecoveryStage.checking);
       expect(controller.canSave, isFalse);
@@ -416,12 +416,12 @@ class _Fixture {
       userEndpoint: Uri.parse('https://account.test/auth/v1/user'),
       httpClient: client,
     );
-    recovery = PasswordRecoveryRepository();
+    recovery = SdkPasswordRecoveryRepository();
     if (attach) recovery.attach(service);
   }
   late final GoTrueClient auth;
   late final PasswordRecoveryService service;
-  late final PasswordRecoveryRepository recovery;
+  late final SdkPasswordRecoveryRepository recovery;
   final updates = <String>[];
   final updateRequests = <http.Request>[];
   final emails = <(Map<String, dynamic>, String?)>[];

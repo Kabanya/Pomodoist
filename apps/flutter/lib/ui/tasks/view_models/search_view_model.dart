@@ -54,8 +54,8 @@ class SearchViewModel extends Notifier<SearchState> {
         ? _projectId
         : null;
     final overview = ref.watch(accountOverviewProvider);
-    final billing = ref.watch(billingViewModelProvider);
-    final cutoff = overview.hasValue && !billing.loading
+    final billing = ref.watch(billingAccessProvider).value;
+    final cutoff = overview.hasValue && billing != null && !billing.loading
         ? pomodoistTaskHistoryCutoff(
             overview.value,
             hasLocalPaidEntitlement: billing.hasActiveEntitlement,

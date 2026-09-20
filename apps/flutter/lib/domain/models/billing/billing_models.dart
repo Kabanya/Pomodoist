@@ -53,13 +53,13 @@ BillingChannel billingChannelForBuild({
 enum BillingCheckoutSurface { native, web }
 
 class StripeBillingCatalog {
-  const StripeBillingCatalog({
+  StripeBillingCatalog({
     required this.enabled,
     required this.introEligible,
-    this.prices = const {},
+    Map<String, String> prices = const {},
     required this.launchOfferEligible,
     required this.launchOfferEndsAt,
-  });
+  }) : prices = Map.unmodifiable(prices);
 
   final bool enabled;
   final bool introEligible;
@@ -276,7 +276,7 @@ class BillingOffer {
 }
 
 class BillingProduct {
-  const BillingProduct({
+  BillingProduct({
     required this.id,
     required this.title,
     required this.description,
@@ -284,8 +284,8 @@ class BillingProduct {
     required this.rawPrice,
     required this.currencyCode,
     required this.currencySymbol,
-    this.offers = const [],
-  });
+    List<BillingOffer> offers = const [],
+  }) : offers = List.unmodifiable(offers);
 
   final String id;
   final String title;
@@ -315,11 +315,11 @@ class BillingOfferException implements Exception {
 }
 
 class BillingReturnOffers {
-  const BillingReturnOffers({
+  BillingReturnOffers({
     this.transaction,
-    this.offerIds = const {},
+    Map<String, String> offerIds = const {},
     this.retryAfter,
-  });
+  }) : offerIds = Map.unmodifiable(offerIds);
 
   final String? transaction;
   final Map<String, String> offerIds;
@@ -409,17 +409,17 @@ String billingOfferSignature(Object? value, String offerId) {
 }
 
 class BillingState {
-  const BillingState({
+  BillingState({
     this.loading = true,
     this.platformSupported = true,
     this.storeAvailable = false,
     this.restoring = false,
-    this.productDetailsById = const {},
-    this.missingProductIds = const {},
+    Map<String, BillingProduct> productDetailsById = const {},
+    Set<String> missingProductIds = const {},
     this.catalogError,
-    this.eligibleIntroductoryProductIds = const {},
-    this.purchasedProductIds = const {},
-    this.activeStoreKitProductIds = const {},
+    Set<String> eligibleIntroductoryProductIds = const {},
+    Set<String> purchasedProductIds = const {},
+    Set<String> activeStoreKitProductIds = const {},
     this.accountEntitlementActive = false,
     this.environmentEntitlementActive = false,
     this.activeAccountEntitlement,
@@ -429,7 +429,13 @@ class BillingState {
     this.pendingProductId,
     this.purchaseSuccessProductId,
     this.error,
-  });
+  }) : productDetailsById = Map.unmodifiable(productDetailsById),
+       missingProductIds = Set.unmodifiable(missingProductIds),
+       eligibleIntroductoryProductIds = Set.unmodifiable(
+         eligibleIntroductoryProductIds,
+       ),
+       purchasedProductIds = Set.unmodifiable(purchasedProductIds),
+       activeStoreKitProductIds = Set.unmodifiable(activeStoreKitProductIds);
 
   final bool loading;
   final bool platformSupported;

@@ -2,9 +2,12 @@ part of 'account_sync_engine.dart';
 
 extension AccountSyncPush on AccountSyncEngine {
   Future<Set<String>> pushPending() async {
+    if (_isSessionCurrent?.call() == false) {
+      return const <String>{};
+    }
     await _deleteFinishedCommands();
     final deviceId = await _ensureDeviceId();
-    final taskHistoryCutoff = await _taskHistoryCutoff();
+    final taskHistoryCutoff = _retentionCutoff;
     final readyAt = DateTime.now().toUtc();
     final deferredTaskIds =
         (await (_db.select(_db.syncCommands)..where(
@@ -55,6 +58,7 @@ extension AccountSyncPush on AccountSyncEngine {
       await _markAttemptStarted(retained);
     }
     await _pushInBatches(deviceId, operations);
+    _checkSession();
 
     final now = DateTime.now().toUtc();
     await _db.batch((batch) {
@@ -230,6 +234,7 @@ extension AccountSyncPush on AccountSyncEngine {
     List<AccountSyncOperation> operations,
   ) async {
     try {
+      _checkSession();
       await _account
           .pushChanges(
             appId: AccountAppId.pomodoist,
@@ -237,6 +242,7 @@ extension AccountSyncPush on AccountSyncEngine {
             operations: operations,
           )
           .timeout(_requestTimeout);
+      _checkSession();
     } on PostgrestException catch (error) {
       if (!{'PT413', '413'}.contains(error.code) || operations.length <= 1) {
         rethrow;

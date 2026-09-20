@@ -17,7 +17,7 @@ import 'package:pomodoist/ui/tasks/widgets/task_list_item.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_motion.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_selection_region.dart';
 import 'package:pomodoist/ui/tasks/widgets/upcoming_calendar.dart';
-import 'package:pomodoist/ui/tasks/widgets/upcoming_day_groups.dart';
+import 'package:pomodoist/ui/tasks/view_models/upcoming_day_groups.dart';
 
 class UpcomingScreen extends ConsumerStatefulWidget {
   const UpcomingScreen({this.selectedDate, super.key});
@@ -46,35 +46,28 @@ class _UpcomingScreenState extends ConsumerState<UpcomingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final viewState = ref.watch(upcomingViewModelProvider);
-    final today = viewState.today;
     final routeDay = widget.selectedDate == null
         ? null
         : _dateOnly(widget.selectedDate!.toLocal());
     final selectedDay = routeDay;
     _syncRouteSelection(selectedDay);
     _schedulePendingScroll();
+    final viewState = ref.watch(upcomingViewModelProvider(selectedDay));
+    final today = viewState.today;
     final projects = viewState.projects;
     final loadError = viewState.error;
     final loading = viewState.loading;
-    final loadedItems = viewState.tasks;
     return TaskMotionScope(
       key: ValueKey(selectedDay),
       builder: (context, motion) {
-        final itemsById = {
-          for (final task in motion.retainedTasks) task.id: task,
-          for (final task in loadedItems) task.id: task,
-        };
-        final allItems = List<TaskItem>.unmodifiable(itemsById.values);
-        final scheduled = scheduledTasks(allItems);
-        final scheduledCounts = scheduledTaskCounts(scheduled);
-        final groups = buildUpcomingDayGroups(
-          scheduled,
-          selectedDate: selectedDay,
-          visibleFromDate: selectedDay ?? today,
+        final groups = ref
+            .read(upcomingViewModelProvider(selectedDay).notifier)
+            .groupsWithRetained(motion.retainedTasks);
+        final allItems = List<TaskItem>.unmodifiable(
+          mergeTasks(viewState.tasks, motion.retainedTasks),
         );
         final visibleTasks = [
-          for (final group in groups)
+          for (final group in viewState.groups)
             for (final row in group.rows) row.task,
         ];
         return SafeArea(
@@ -111,7 +104,7 @@ class _UpcomingScreenState extends ConsumerState<UpcomingScreen> {
                             UpcomingCalendar(
                               today: today,
                               selectedDate: selectedDay,
-                              scheduledCounts: scheduledCounts,
+                              scheduledCounts: viewState.scheduledCounts,
                               loading: loading,
                               onDateSelected: (date) =>
                                   _selectDate(context, selectedDay, date),

@@ -18,8 +18,10 @@ import 'package:pomodoist/ui/tasks/widgets/task_completion_feedback.dart';
 import 'package:pomodoist/domain/use_cases/tasks/task_scheduling.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_motion.dart';
 
-class TaskSelectionController extends ChangeNotifier {
+/// View-side adapter: owns dialogs and widget context, not selection state.
+class TaskSelectionController {
   TaskSelectionController({
+    required TaskSelectionViewModel viewModel,
     required Future<void> Function(BuildContext) showDue,
     required Future<void> Function(BuildContext) showProject,
     required Future<void> Function(BuildContext) showLabels,
@@ -27,7 +29,8 @@ class TaskSelectionController extends ChangeNotifier {
     required Future<void> Function(BuildContext) showMore,
     required Future<void> Function(BuildContext) duplicate,
     required Future<void> Function(BuildContext) delete,
-  }) : _showDue = showDue,
+  }) : _viewModel = viewModel,
+       _showDue = showDue,
        _showProject = showProject,
        _showLabels = showLabels,
        _showPriority = showPriority,
@@ -35,6 +38,7 @@ class TaskSelectionController extends ChangeNotifier {
        _duplicate = duplicate,
        _delete = delete;
 
+  final TaskSelectionViewModel _viewModel;
   final Future<void> Function(BuildContext) _showDue;
   final Future<void> Function(BuildContext) _showProject;
   final Future<void> Function(BuildContext) _showLabels;
@@ -42,75 +46,25 @@ class TaskSelectionController extends ChangeNotifier {
   final Future<void> Function(BuildContext) _showMore;
   final Future<void> Function(BuildContext) _duplicate;
   final Future<void> Function(BuildContext) _delete;
-  Map<String, TaskItem> _visibleTasks = const {};
-  final Set<String> _selectedIds = {};
-  bool _active = false;
 
-  bool get active => _active;
-  Set<String> get selectedIds => Set.unmodifiable(_selectedIds);
-  int get selectedCount => _selectedIds.length;
-  bool get hasSelection => _selectedIds.isNotEmpty;
-  Iterable<TaskItem> get visibleTasks => _visibleTasks.values;
-  bool get allVisibleSelected =>
-      _visibleTasks.isNotEmpty &&
-      _visibleTasks.keys.every(_selectedIds.contains);
-  Iterable<TaskItem> get selectedTasks sync* {
-    for (final id in _selectedIds) {
-      final task = _visibleTasks[id];
-      if (task != null) yield task;
-    }
-  }
+  bool get active => _viewModel.active;
+  bool get pending => _viewModel.pending;
+  Set<String> get selectedIds => _viewModel.selectedIds;
+  int get selectedCount => _viewModel.selectedIds.length;
+  bool get hasSelection => _viewModel.hasSelection;
+  Iterable<TaskItem> get visibleTasks => _viewModel.visibleTasks;
+  bool get allVisibleSelected => _viewModel.allVisibleSelected;
+  Iterable<TaskItem> get selectedTasks => _viewModel.selectedTasks;
 
-  bool isSelected(String id) => _selectedIds.contains(id);
+  bool isSelected(String id) => _viewModel.isSelected(id);
 
-  void updateVisible(Iterable<TaskItem> tasks) {
-    _visibleTasks = {for (final task in tasks) task.id: task};
-    if (!_active || _selectedIds.isEmpty) return;
-    final hadSelection = _selectedIds.isNotEmpty;
-    _selectedIds.removeWhere((id) => !_visibleTasks.containsKey(id));
-    if (hadSelection && _selectedIds.isEmpty) {
-      _active = false;
-    }
-    notifyListeners();
-  }
-
-  void begin(String id) {
-    _active = true;
-    _selectedIds
-      ..clear()
-      ..add(id);
-    notifyListeners();
-  }
-
-  void toggle(String id) {
-    if (!_active) return;
-    if (!_selectedIds.remove(id)) _selectedIds.add(id);
-    notifyListeners();
-  }
-
-  void toggleAll() {
-    if (allVisibleSelected) {
-      _selectedIds.clear();
-    } else {
-      _selectedIds.addAll(_visibleTasks.keys);
-    }
-    notifyListeners();
-  }
-
-  void retainOnly(Iterable<String> ids) {
-    _selectedIds
-      ..clear()
-      ..addAll(ids.where(_visibleTasks.containsKey));
-    _active = _selectedIds.isNotEmpty;
-    notifyListeners();
-  }
-
-  void close() {
-    if (!_active && _selectedIds.isEmpty) return;
-    _active = false;
-    _selectedIds.clear();
-    notifyListeners();
-  }
+  void updateVisible(Iterable<TaskItem> tasks) =>
+      _viewModel.updateVisible(tasks);
+  void begin(String id) => _viewModel.begin(id);
+  void toggle(String id) => _viewModel.toggle(id);
+  void toggleAll() => _viewModel.toggleAll();
+  void retainVisible(Iterable<String> ids) => _viewModel.retainVisible(ids);
+  void close() => _viewModel.clear();
 
   Future<void> showDue(BuildContext context) => _showDue(context);
   Future<void> showProject(BuildContext context) => _showProject(context);
@@ -121,16 +75,26 @@ class TaskSelectionController extends ChangeNotifier {
   Future<void> delete(BuildContext context) => _delete(context);
 }
 
-class TaskSelectionScope extends InheritedNotifier<TaskSelectionController> {
+class TaskSelectionScope extends InheritedWidget {
   const TaskSelectionScope({
-    required TaskSelectionController controller,
+    required this.controller,
+    required this.active,
+    required this.selectedIds,
     required super.child,
     super.key,
-  }) : super(notifier: controller);
+  });
+
+  final TaskSelectionController controller;
+  final bool active;
+  final Set<String> selectedIds;
 
   static TaskSelectionController? maybeOf(BuildContext context) => context
       .dependOnInheritedWidgetOfExactType<TaskSelectionScope>()
-      ?.notifier;
+      ?.controller;
+
+  @override
+  bool updateShouldNotify(TaskSelectionScope oldWidget) =>
+      oldWidget.active != active || oldWidget.selectedIds != selectedIds;
 }
 
 class TaskSelectionRegion extends ConsumerStatefulWidget {
@@ -154,10 +118,12 @@ class TaskSelectionRegion extends ConsumerStatefulWidget {
 
 class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
   final _identity = Object();
+  bool _visibleSyncScheduled = false;
   TaskSelectionViewModel get _viewModel =>
       ref.read(taskSelectionViewModelProvider(_identity).notifier);
 
   late final TaskSelectionController _controller = TaskSelectionController(
+    viewModel: _viewModel,
     showDue: _showDue,
     showProject: _showProject,
     showLabels: _showLabels,
@@ -165,12 +131,23 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
     showMore: _showMore,
     duplicate: _duplicate,
     delete: _delete,
-  )..updateVisible(widget.visibleTasks);
+  );
 
   @override
   void initState() {
     super.initState();
+    _scheduleVisibleSync();
     HardwareKeyboard.instance.addHandler(_handleKeyEvent);
+  }
+
+  void _scheduleVisibleSync() {
+    if (_visibleSyncScheduled) return;
+    _visibleSyncScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _visibleSyncScheduled = false;
+      if (!mounted) return;
+      _viewModel.updateVisible(widget.visibleTasks);
+    });
   }
 
   bool _handleKeyEvent(KeyEvent event) {
@@ -187,50 +164,52 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
   @override
   void didUpdateWidget(covariant TaskSelectionRegion oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.scopeKey != widget.scopeKey) _controller.close();
-    _controller.updateVisible(widget.visibleTasks);
+    if (oldWidget.scopeKey != widget.scopeKey) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _viewModel.clear();
+      });
+    }
+    _scheduleVisibleSync();
   }
 
   @override
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
-    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(taskSelectionViewModelProvider(_identity));
-    return ListenableBuilder(
-      listenable: _controller,
-      builder: (context, _) => PopScope(
-        canPop: !_controller.active,
-        onPopInvokedWithResult: (didPop, result) {
-          if (!didPop) _controller.close();
-        },
-        child: Focus(
-          autofocus: !widget.shrinkWrap,
-          child: CallbackShortcuts(
-            bindings: {
-              if (_controller.active)
-                const SingleActivator(LogicalKeyboardKey.escape):
-                    _controller.close,
-            },
-            child: TaskSelectionScope(
-              controller: _controller,
-              child: Column(
-                mainAxisSize: widget.shrinkWrap
-                    ? MainAxisSize.min
-                    : MainAxisSize.max,
-                children: [
-                  if (_controller.active) _selectionHeader(context),
-                  if (widget.shrinkWrap)
-                    widget.child
-                  else
-                    Expanded(child: widget.child),
-                  if (_controller.active) _selectionBar(context),
-                ],
-              ),
+    final selection = ref.watch(taskSelectionViewModelProvider(_identity));
+    return PopScope(
+      canPop: !_controller.active,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _controller.close();
+      },
+      child: Focus(
+        autofocus: !widget.shrinkWrap,
+        child: CallbackShortcuts(
+          bindings: {
+            if (_controller.active)
+              const SingleActivator(LogicalKeyboardKey.escape):
+                  _controller.close,
+          },
+          child: TaskSelectionScope(
+            controller: _controller,
+            active: selection.active,
+            selectedIds: selection.selectedIds,
+            child: Column(
+              mainAxisSize: widget.shrinkWrap
+                  ? MainAxisSize.min
+                  : MainAxisSize.max,
+              children: [
+                if (_controller.active) _selectionHeader(context),
+                if (widget.shrinkWrap)
+                  widget.child
+                else
+                  Expanded(child: widget.child),
+                if (_controller.active) _selectionBar(context),
+              ],
             ),
           ),
         ),
@@ -304,7 +283,9 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
   ) {
     return Expanded(
       child: TextButton(
-        onPressed: _controller.hasSelection ? () => action(context) : null,
+        onPressed: _controller.hasSelection && !_controller.pending
+            ? () => action(context)
+            : null,
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
         ),
@@ -426,7 +407,7 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
     if (failed.isEmpty) {
       _controller.close();
     } else {
-      _controller.retainOnly(failed);
+      _controller.retainVisible(failed);
       _showFailures(failed.length);
     }
     if (succeeded.isEmpty) return;
@@ -440,7 +421,7 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
       action: SnackBarAction(
         label: l10n.commonUndo,
         onPressed: () => unawaited(() async {
-          final result = await viewModel.setCompleted(
+          final result = await viewModel.undoCompleted(
             succeeded,
             completed: reopen,
           );
@@ -513,7 +494,7 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
     if (failed.isEmpty) {
       _controller.close();
     } else {
-      _controller.retainOnly(failed);
+      _controller.retainVisible(failed);
       _showFailures(failed.length);
     }
     if (batches.isEmpty) {
@@ -551,7 +532,7 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
       _controller.close();
       return;
     }
-    _controller.retainOnly(failed);
+    _controller.retainVisible(failed);
     _showFailures(failed.length);
   }
 

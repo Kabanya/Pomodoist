@@ -45,11 +45,14 @@ Pomodoist/
 
 ## Dependency direction
 
-Flutter dependencies point inward: widgets use ViewModels, ViewModels use use
-cases or repository contracts, repositories use services, and services own
-external APIs. `config` creates concrete dependencies. Domain code does not
-import Flutter, Riverpod, Drift, SDKs, services or UI. See
-[Flutter MVVM architecture](mvvm-implementation.md) for the complete contracts.
+Flutter dependencies point inward: widgets use ViewModels, ViewModels use
+repository contracts or optional use cases, repositories use services, and
+services own external APIs. `config` creates concrete dependencies. Domain
+code does not import Flutter, Riverpod, Drift, SDKs, services or UI. See
+[Flutter application architecture](flutter-app-architecture.md) for the
+canonical contract and
+[Flutter MVVM implementation notes](mvvm-implementation.md) for
+implementation-specific conventions.
 
 Server adapters validate callers, translate requests and render responses.
 Shared server modules never import an endpoint. MCP, OpenClaw, Watch, Telegram

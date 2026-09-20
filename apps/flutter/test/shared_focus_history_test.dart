@@ -13,7 +13,7 @@ import 'package:go_router/go_router.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
-import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'support/account_sync_engine.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/utils/clock.dart';
 import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
@@ -97,7 +97,7 @@ void main() {
             throw StateError('Unexpected action ${request['action']}');
         }
       });
-      final engine = AccountSyncEngine(
+      final engine = testSyncEngine(
         db: db,
         uuid: const Uuid(),
         account: _Account(),

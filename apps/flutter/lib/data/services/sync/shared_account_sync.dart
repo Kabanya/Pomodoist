@@ -3,10 +3,10 @@ part of 'account_sync_engine.dart';
 extension SharedAccountSync on AccountSyncEngine {
   Future<Set<String>> syncShared() async {
     final api = _collaboration;
-    if (api == null) return {};
+    if (api == null || _isSessionCurrent?.call() == false) return {};
     late Map<String, dynamic> state;
     try {
-      state = await api.call('state');
+      state = await _callCollaboration('state');
     } on CollaborationException catch (error) {
       // Older servers keep the existing personal API usable until this endpoint is installed.
       if (error.code == 'function_not_found' &&
@@ -99,7 +99,7 @@ extension SharedAccountSync on AccountSyncEngine {
         }
       } on CollaborationException catch (error) {
         if (error.code == '42501') {
-          final current = await api.call('state');
+          final current = await _callCollaboration('state');
           if (!collaborationMaps(
             current['scopes'],
           ).any((item) => item['id'] == scope.id)) {
@@ -119,13 +119,16 @@ extension SharedAccountSync on AccountSyncEngine {
       final scope = await (_db.select(
         _db.sharedScopes,
       )..where((s) => s.id.equals(scopeId))).getSingle();
-      final response = await _collaboration!.call('pull', {
+      final response = await _callCollaboration('pull', {
         'scopeId': scopeId,
         'sinceRevision': scope.cursor,
         'deviceId': await _ensureDeviceId(),
       });
       final changes = collaborationMaps(response['changes']);
       final next = (response['nextCursor'] as num?)?.toInt() ?? scope.cursor;
+      if (_isSessionCurrent?.call() == false) {
+        return types;
+      }
       await _db.transaction(() async {
         for (final change in changes) {
           await _applySharedChange(scopeId, change);
@@ -163,7 +166,7 @@ extension SharedAccountSync on AccountSyncEngine {
               ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]))
             .get();
     for (final command in commands) {
-      await _collaboration!.call(
+      await _callCollaboration(
         'preferences',
         jsonDecode(command.payloadJson) as Map<String, dynamic>,
       );
@@ -444,7 +447,7 @@ extension SharedAccountSync on AccountSyncEngine {
           ),
         ];
       }
-      final response = await _collaboration!.call('push', {
+      final response = await _callCollaboration('push', {
         'scopeId': scopeId,
         'deviceId': await _ensureDeviceId(),
         'operations': operations.map((op) {

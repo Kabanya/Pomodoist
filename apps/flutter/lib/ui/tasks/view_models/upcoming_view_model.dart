@@ -1,23 +1,33 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'upcoming_day_groups.dart';
 
 typedef UpcomingState = ({
   DateTime today,
+  DateTime? selectedDay,
   AsyncValue<List<ProjectItem>> projects,
   List<TaskItem> tasks,
+  List<UpcomingDayGroup> groups,
+  Map<DateTime, int> scheduledCounts,
   Object? error,
   bool loading,
 });
-final upcomingViewModelProvider =
-    NotifierProvider.autoDispose<UpcomingViewModel, UpcomingState>(
-      UpcomingViewModel.new,
-    );
+final upcomingViewModelProvider = NotifierProvider.autoDispose
+    .family<UpcomingViewModel, UpcomingState, DateTime?>(UpcomingViewModel.new);
 
 class UpcomingViewModel extends Notifier<UpcomingState> {
+  UpcomingViewModel(this.selectedDay);
+
+  final DateTime? selectedDay;
+
   @override
   UpcomingState build() {
-    final now = ref.watch(clockProvider).now().toLocal();
+    final now =
+        (ref.watch(taskTimeTickerProvider).value ??
+                ref.read(clockProvider).now())
+            .toLocal();
+    final today = DateTime(now.year, now.month, now.day);
     final open = ref.watch(tasksByQueryProvider(const TaskQuery.all()));
     final completed = ref.watch(
       tasksByQueryProvider(const TaskQuery.completed()),
@@ -27,12 +37,40 @@ class UpcomingViewModel extends Notifier<UpcomingState> {
         : completed.hasError
         ? completed.error
         : null;
+    final tasks = mergeTasks(
+      open.value ?? const [],
+      completed.value ?? const [],
+    );
+    final scheduled = scheduledTasks(tasks);
     return (
-      today: DateTime(now.year, now.month, now.day),
+      today: today,
+      selectedDay: selectedDay,
       projects: ref.watch(projectsProvider),
-      tasks: mergeTasks(open.value ?? const [], completed.value ?? const []),
+      tasks: tasks,
+      groups: List.unmodifiable(
+        buildUpcomingDayGroups(
+          scheduled,
+          selectedDate: selectedDay,
+          visibleFromDate: selectedDay ?? today,
+        ),
+      ),
+      scheduledCounts: Map.unmodifiable(scheduledTaskCounts(scheduled)),
       error: error,
       loading: error == null && (!open.hasValue || !completed.hasValue),
+    );
+  }
+
+  /// Rendering-only projection for rows that are animating out. Retained tasks
+  /// may appear temporarily, but actions revalidate against the live
+  /// repository by task ID, so a retained copy never makes a stale action.
+  List<UpcomingDayGroup> groupsWithRetained(Iterable<TaskItem> retained) {
+    if (retained.isEmpty) {
+      return state.groups;
+    }
+    return buildUpcomingDayGroups(
+      scheduledTasks(mergeTasks(state.tasks, retained)),
+      selectedDate: state.selectedDay,
+      visibleFromDate: state.selectedDay ?? state.today,
     );
   }
 }

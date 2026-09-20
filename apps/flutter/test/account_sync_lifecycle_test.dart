@@ -174,7 +174,7 @@ AccountSyncLifecycle _lifecycle({
   Set<String> entityTypes = const {},
   Future<void> Function(Set<String>)? onSynced,
 }) {
-  return AccountSyncLifecycle.forTesting(
+  return AccountSyncLifecycle(
     syncNow: () async {
       await syncNow();
       return entityTypes;

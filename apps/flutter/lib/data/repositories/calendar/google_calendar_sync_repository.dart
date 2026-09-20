@@ -1,21 +1,25 @@
-import 'package:pomodoist/data/services/google_calendar/google_calendar_sync_controller.dart';
 import 'package:pomodoist/utils/result.dart';
 
-class GoogleCalendarSyncRepository {
-  GoogleCalendarSyncRepository(this._service);
-  final GoogleCalendarSyncController _service;
+/// Domain failure for calendar connect/sync/disconnect operations. Callers
+/// branch on [requiresAuthorization] instead of inspecting service exception
+/// types or server error codes.
+class GoogleCalendarFailure implements Exception {
+  const GoogleCalendarFailure(this.code, this.message);
 
-  Future<Result<void>> connect() => Result.capture(_service.connect);
-  Future<Result<void>> sync() =>
-      Result.capture(() => _service.syncNow(interactive: true));
-  Future<Result<void>> disconnect() => Result.capture(_service.disconnect);
+  final GoogleCalendarFailureCode code;
+  final String message;
 
-  bool requiresAuthorization(Object error) =>
-      error is GoogleCalendarServerException &&
-      const {
-        'auth_required',
-        'authorization_unavailable',
-        'invalid_grant',
-        'unauthorized',
-      }.contains(error.code);
+  bool get requiresAuthorization =>
+      code == GoogleCalendarFailureCode.authorizationRequired;
+
+  @override
+  String toString() => message;
+}
+
+enum GoogleCalendarFailureCode { authorizationRequired, unavailable }
+
+abstract interface class GoogleCalendarSyncRepository {
+  Future<Result<void>> connect();
+  Future<Result<void>> sync();
+  Future<Result<void>> disconnect();
 }

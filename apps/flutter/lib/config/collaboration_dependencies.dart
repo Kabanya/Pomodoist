@@ -7,6 +7,7 @@ import 'package:pomodoist/data/repositories/collaboration/collaboration_reposito
 import 'package:pomodoist/data/repositories/collaboration/drift_collaboration_repository.dart';
 import 'package:pomodoist/data/services/local/shared_access.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
 
 final collaborationRepositoryProvider = Provider<CollaborationRepository?>((
   ref,
@@ -32,20 +33,28 @@ final sharedScopesProvider = StreamProvider<List<SharedScope>>(
       Stream.value([]),
 );
 
-final collaborationEntitiesProvider =
+final collaborationCommentsProvider =
     StreamProvider.family<
-      List<Map<String, dynamic>>,
-      ({String scopeId, String type, String? taskId})
+      List<CollaborationComment>,
+      ({String scopeId, String? taskId})
     >(
       (ref, query) =>
           ref
               .watch(collaborationRepositoryProvider)
-              ?.watchEntities(
-                query.scopeId,
-                query.type,
-                taskId: query.taskId,
-              ) ??
-          Stream.value([]),
+              ?.watchComments(query.scopeId, taskId: query.taskId) ??
+          Stream.value(const []),
+    );
+
+final collaborationFocusContributionsProvider =
+    StreamProvider.family<
+      List<CollaborationFocusContribution>,
+      ({String scopeId, String? taskId})
+    >(
+      (ref, query) =>
+          ref
+              .watch(collaborationRepositoryProvider)
+              ?.watchFocusContributions(query.scopeId, taskId: query.taskId) ??
+          Stream.value(const []),
     );
 
 final collaborationActorIdProvider = FutureProvider<String>(

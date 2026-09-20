@@ -38,23 +38,10 @@ class _TimelineGridState extends ConsumerState<_TimelineGrid> {
   int? _touchZoomStartHourWidth;
   int? _trackpadZoomStartHourWidth;
   (int, double, double)? _pendingGestureZoom;
-  Timer? _clockTimer;
-
   double get _pixelsPerMinute => widget.hourWidth / 60;
 
   @override
-  void initState() {
-    super.initState();
-    _clockTimer = Timer.periodic(const Duration(minutes: 1), (_) {
-      if (mounted) {
-        setState(() {});
-      }
-    });
-  }
-
-  @override
   void dispose() {
-    _clockTimer?.cancel();
     _gridFocusNode.dispose();
     _horizontalScrollController.dispose();
     super.dispose();
@@ -601,8 +588,8 @@ class _TimelineGridState extends ConsumerState<_TimelineGrid> {
   ) {
     final task = layout.task;
     final schedule = task.schedule!;
-    final startMinutes = _startMinutes(schedule);
-    final realEndMinutes = _endMinutes(schedule);
+    final startMinutes = timelineStartMinutes(schedule);
+    final realEndMinutes = timelineEndMinutes(schedule);
     final previewEnd = _resizingTaskId == task.id
         ? _previewResizeEnd(task, realEndMinutes)
         : realEndMinutes;
@@ -654,11 +641,11 @@ class _TimelineGridState extends ConsumerState<_TimelineGrid> {
   }
 
   int _previewResizeEnd(TaskItem task, int fallbackEndMinutes) {
-    final startMinutes = _startMinutes(task.schedule!);
+    final startMinutes = timelineStartMinutes(task.schedule!);
     final base = _resizeStartEndMinutes ?? fallbackEndMinutes;
     return _snapMinutes(
       base + (_resizeDelta / _pixelsPerMinute).round(),
-    ).clamp(startMinutes + timelineSnapMinutes, _minutesPerDay);
+    ).clamp(startMinutes + timelineSnapMinutes, timelineMinutesPerDay);
   }
 
   Future<void> _moveTaskToMinutes(
@@ -691,7 +678,7 @@ class _TimelineGridState extends ConsumerState<_TimelineGrid> {
     TaskItem task,
     int endMinutes,
   ) async {
-    final startMinutes = _startMinutes(task.schedule!);
+    final startMinutes = timelineStartMinutes(task.schedule!);
     final duration = Duration(minutes: endMinutes - startMinutes);
     await _updateSchedule(
       context,
@@ -708,7 +695,7 @@ class _TimelineGridState extends ConsumerState<_TimelineGrid> {
   ) {
     final now = ref.read(timelineViewModelProvider).now;
     final minute = now.hour * 60 + now.minute;
-    if (!_isSameDay(widget.day, now) ||
+    if (!isSameLocalDay(widget.day, now) ||
         minute < visibleStart ||
         minute >= visibleEnd) {
       return const [];

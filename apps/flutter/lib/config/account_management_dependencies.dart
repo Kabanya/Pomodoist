@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/data/repositories/account/account_management_repository.dart';
@@ -8,6 +7,7 @@ import 'package:pomodoist/data/repositories/account/sdk_account_management_repos
 import 'package:pomodoist/data/services/auth/account_profile_service.dart';
 import 'package:pomodoist/data/services/account/account_management_service.dart';
 import 'package:pomodoist/domain/use_cases/account/delete_account_use_case.dart';
+import 'package:pomodoist/data/services/platform/external_url_service.dart';
 
 final accountManagementRepositoryProvider =
     Provider<AccountManagementRepository?>((ref) {
@@ -22,9 +22,7 @@ final accountManagementRepositoryProvider =
         service: AccountManagementService(account),
         userId: userId,
         timeout: ref.watch(accountRequestTimeoutProvider),
-        saveNickname: (userId, name) async => (await AccountProfileService(
-          Supabase.instance.client,
-        ).updateNickname(userId, name)).getOrThrow(),
+        profile: AccountProfileService(Supabase.instance.client),
       );
     });
 
@@ -41,6 +39,5 @@ final deleteAccountUseCaseProvider =
 
 typedef TelegramReturnLauncher = Future<bool> Function(Uri uri);
 final telegramReturnLauncherProvider = Provider<TelegramReturnLauncher>(
-  (ref) =>
-      (uri) => launchUrl(uri, mode: LaunchMode.externalApplication),
+  (ref) => const ExternalUrlService().open,
 );

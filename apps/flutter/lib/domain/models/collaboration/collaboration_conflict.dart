@@ -17,14 +17,25 @@ final class CollaborationConflict {
   final String? lastError;
   final int baseRevision;
 
-  String get label {
-    final Object? value;
+  Map<String, dynamic>? get _detail {
+    final value = lastError;
+    if (value == null) return null;
+    final Object? decoded;
     try {
-      value = lastError == null ? null : jsonDecode(lastError!);
+      decoded = jsonDecode(value);
     } on FormatException {
-      return '$type · ${clientId ?? ''}';
+      return null;
     }
-    final conflict = value is Map ? value : null;
-    return '${conflict?['entityType'] ?? type} · ${conflict?['entityId'] ?? clientId ?? ''}';
+    return decoded is Map ? Map<String, dynamic>.from(decoded) : null;
   }
+
+  String get entityType => _detail?['entityType']?.toString() ?? type;
+
+  String get entityId => _detail?['entityId']?.toString() ?? clientId ?? '';
+
+  /// The server revision the remote update carried when this command failed.
+  int get serverRevision =>
+      (_detail?['serverRevision'] as num?)?.toInt() ?? baseRevision;
+
+  String get label => '$entityType · $entityId';
 }

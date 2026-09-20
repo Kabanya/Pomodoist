@@ -1,5 +1,7 @@
+import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
 import 'package:pomodoist/utils/result.dart';
 import 'package:pomodoist/data/repositories/projects/project_repository.dart';
+import 'package:pomodoist/data/repositories/planning/quick_add_hint_repository.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/domain/models/tasks/task_focus_estimate.dart';
@@ -13,20 +15,26 @@ class QuickAddUseCase {
     required ProjectRepository projectRepository,
     FocusPresetItem? focusPreset,
     DateTime Function()? now,
-    Future<FocusPresetItem?> Function()? focusPresetProvider,
+    FocusRepository? focusRepository,
+    String? Function()? selectedFocusPresetId,
+    QuickAddHintRepository? hints,
   }) : _now = now ?? DateTime.now,
        _parser = parser,
        _taskRepository = taskRepository,
        _projectRepository = projectRepository,
        _focusPreset = focusPreset,
-       _focusPresetProvider = focusPresetProvider;
+       _focusRepository = focusRepository,
+       _selectedFocusPresetId = selectedFocusPresetId,
+       _hints = hints;
 
   final DateTime Function() _now;
   final QuickAddParser _parser;
   final TaskRepository _taskRepository;
   final ProjectRepository _projectRepository;
   final FocusPresetItem? _focusPreset;
-  final Future<FocusPresetItem?> Function()? _focusPresetProvider;
+  final FocusRepository? _focusRepository;
+  final String? Function()? _selectedFocusPresetId;
+  final QuickAddHintRepository? _hints;
 
   Future<Result<String>> createTask(
     String input, {
@@ -39,6 +47,7 @@ class QuickAddUseCase {
     TaskSchedule? defaultSchedule,
     String? kanbanStatusId,
     String? labelId,
+    bool recordCreation = true,
   }) => Result.capture<String>(() async {
     final task = await createTaskWithContext(
       input,
@@ -51,6 +60,7 @@ class QuickAddUseCase {
       defaultSchedule: defaultSchedule,
       kanbanStatusId: kanbanStatusId,
       labelId: labelId,
+      recordCreation: recordCreation,
     ).then((result) => result.getOrThrow());
     return task.id;
   });
@@ -67,6 +77,7 @@ class QuickAddUseCase {
     TaskSchedule? defaultSchedule,
     String? kanbanStatusId,
     String? labelId,
+    bool recordCreation = true,
   }) => Result.capture<({String id, String? projectId, String? sectionId})>(
     () async {
       final context = await _createTask(
@@ -81,10 +92,18 @@ class QuickAddUseCase {
         kanbanStatusId,
         labelId,
       );
+      final id = await _taskRepository
+          .createTask(context.input)
+          .then((result) => result.getOrThrow());
+      if (recordCreation) {
+        try {
+          await _hints?.recordUserTaskCreated();
+        } catch (_) {
+          // Hint bookkeeping is advisory and cannot fail a committed task.
+        }
+      }
       return (
-        id: await _taskRepository
-            .createTask(context.input)
-            .then((result) => result.getOrThrow()),
+        id: id,
         projectId: context.projectId,
         sectionId: context.sectionId,
       );
@@ -117,7 +136,15 @@ class QuickAddUseCase {
     final taskSectionId = explicitProjectId == null ? sectionId : null;
     final effectiveSchedule =
         parsed.schedule ?? (parsed.dueDate == null ? defaultSchedule : null);
-    final focusPreset = _focusPreset ?? await _focusPresetProvider?.call();
+    final focusRepository = _focusRepository;
+    final focusPreset =
+        _focusPreset ??
+        (focusRepository == null
+            ? null
+            : selectedFocusPresetOrDefault(
+                await focusRepository.watchPresets().first,
+                _selectedFocusPresetId?.call(),
+              ));
     final estimatedFocusIntervals = estimateFocusIntervalsForTaskDuration(
       schedule: effectiveSchedule,
       durationSeconds: null,

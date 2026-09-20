@@ -3,6 +3,60 @@ import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'task_search.dart';
+
+/// Stable identities keep keyboard selection attached to the same local result.
+List<({String id, String title})> taskSearchPaletteResults(
+  Iterable<TaskItem> tasks,
+  Iterable<ProjectItem> projects,
+  String query, {
+  String Function(ProjectItem project)? projectTitle,
+}) {
+  final search = query.trim().toLowerCase();
+  return [
+    if (search.isNotEmpty) ...[
+      for (final task in filterTaskSearch(tasks, query: query).take(6))
+        (id: 'task:${task.id}', title: task.content),
+      for (final project
+          in projects
+              .where(
+                (project) =>
+                    !project.isDeleted &&
+                    !project.isArchived &&
+                    (project.name.toLowerCase().contains(search) ||
+                        (projectTitle != null &&
+                            projectTitle(
+                              project,
+                            ).toLowerCase().contains(search))),
+              )
+              .take(3))
+        (
+          id: 'project:${project.id}',
+          title: projectTitle == null ? project.name : projectTitle(project),
+        ),
+    ],
+  ];
+}
+
+String? taskSearchPaletteSelection(
+  List<String> ids,
+  String? selected,
+  int offset,
+) {
+  if (ids.isEmpty) return null;
+  final index = ids.indexOf(selected ?? '');
+  if (index < 0) {
+    return offset == 0 ? null : (offset < 0 ? ids.last : ids.first);
+  }
+  return ids[(index + offset) % ids.length];
+}
+
+bool taskSearchPaletteCanActivate(
+  List<String> currentIds,
+  String id,
+  String renderedQuery,
+  String currentQuery,
+) => renderedQuery == currentQuery && currentIds.contains(id);
 
 final class TaskSearchPaletteState {
   const TaskSearchPaletteState({
@@ -41,6 +95,16 @@ class TaskSearchPaletteViewModel extends Notifier<TaskSearchPaletteState> {
       hasError: tasks.hasError || projects.hasError || run.hasError,
     );
   }
+
+  List<({String id, String title})> results(
+    String query, {
+    String Function(ProjectItem project)? projectTitle,
+  }) => taskSearchPaletteResults(
+    state.tasks,
+    state.projects,
+    query,
+    projectTitle: projectTitle,
+  );
 
   bool resultExists(String id) {
     if (id.startsWith('task:')) {

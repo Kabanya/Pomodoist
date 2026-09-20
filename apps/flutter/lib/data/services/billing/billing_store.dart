@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_storekit/store_kit_2_wrappers.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:pomodoist/domain/models/billing/billing_models.dart';
+import 'package:pomodoist/domain/models/billing/billing_store_models.dart';
 
 bool get applePurchasesSupported =>
     !kIsWeb &&
@@ -124,9 +126,97 @@ class BillingStore {
   Future<List<BillingTransactionProof>>? _restoreLoad;
   final StreamController<List<PurchaseDetails>>? _localPurchases;
   final _localPurchasedProductIds = <String>{};
+  final _mappedPurchases = <String, PurchaseDetails>{};
 
   Stream<List<PurchaseDetails>> get purchaseStream =>
       _localPurchases?.stream ?? _purchase.purchaseStream;
+
+  /// Maps a native purchase for domain consumers and remembers its details so
+  /// the same completion bookkeeping works for stream and direct results.
+  BillingPurchaseUpdate mapPurchase(PurchaseDetails purchase) {
+    final completionId =
+        purchase.purchaseID ??
+        '${purchase.productID}:${identityHashCode(purchase)}';
+    _mappedPurchases[completionId] = purchase;
+    return BillingPurchaseUpdate(
+      productId: purchase.productID,
+      transactionId: purchase.purchaseID,
+      completionId: completionId,
+      state: switch (purchase.status) {
+        PurchaseStatus.pending => BillingPurchaseState.pending,
+        PurchaseStatus.purchased => BillingPurchaseState.purchased,
+        PurchaseStatus.restored => BillingPurchaseState.restored,
+        PurchaseStatus.error => BillingPurchaseState.error,
+        PurchaseStatus.canceled => BillingPurchaseState.canceled,
+      },
+      pendingCompletion: purchase.pendingCompletePurchase,
+      proof:
+          purchase.status == PurchaseStatus.purchased ||
+              purchase.status == PurchaseStatus.restored
+          ? billingTransactionProofFromPurchase(purchase)
+          : null,
+      error: purchase.error == null
+          ? null
+          : BillingFailure(
+              code: purchase.error!.code,
+              message: purchase.error!.message,
+            ),
+      errorMessage: purchase.error?.message,
+    );
+  }
+
+  Future<void> completeMappedPurchase(String completionId) {
+    final purchase = _mappedPurchases[completionId];
+    if (purchase == null) return Future.value();
+    return completePurchase(
+      purchase,
+    ).whenComplete(() => _mappedPurchases.remove(completionId));
+  }
+
+  bool isMappedPurchaseActive(String completionId, DateTime now) {
+    final purchase = _mappedPurchases[completionId];
+    return purchase != null && pomodoistStoreKitPurchaseIsActive(purchase, now);
+  }
+
+  Future<bool> isMappedPurchaseVerifiedInactive(String completionId) {
+    final purchase = _mappedPurchases[completionId];
+    return purchase == null
+        ? Future.value(false)
+        : isVerifiedInactivePurchase(purchase);
+  }
+
+  bool isCancellation(Object error) =>
+      error is PlatformException &&
+      (error.code == 'userCancelled' ||
+          RegExp(
+            r'\buserCancelled\b|\bSKErrorDomain\b[^\n]*\bCode=2\b',
+          ).hasMatch('${error.details}'));
+
+  void recordError(String stage, Object error) {
+    var code = switch (error) {
+      PlatformException() => error.code,
+      IAPError() => error.code,
+      _ => error.runtimeType.toString(),
+    };
+    code = code.replaceAll(RegExp(r'[^a-zA-Z0-9_.-]'), '');
+    if (code.length > 80) code = code.substring(0, 80);
+    final native = RegExp(
+      r'([A-Za-z][A-Za-z0-9_.]*ErrorDomain)[^\n]*?(?:Code[=:]\s*|error\s+)(-?\d+)',
+    ).allMatches('$error').map((m) => '${m[1]}:${m[2]}').toSet();
+    if (error case PlatformException(details: final Map details)) {
+      final domain = details['domain'];
+      final number = details['code'];
+      if (domain is String &&
+          number is num &&
+          RegExp(r'^[A-Za-z0-9_.]{1,80}$').hasMatch(domain)) {
+        native.add('$domain:$number');
+      }
+    }
+    developer.log(
+      '$stage code=$code native=${native.join(',')}',
+      name: 'pomodoist.storekit',
+    );
+  }
 
   Future<bool> isAvailable() async {
     if (pomodoistLocalStoreKit) {

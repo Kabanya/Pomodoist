@@ -23,6 +23,7 @@ import 'package:pomodoist/ui/core/widgets/app_date_time_picker.dart';
 import 'package:pomodoist/domain/models/tasks/project_colors.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_completion_feedback.dart';
+import 'package:pomodoist/ui/tasks/view_models/timeline_day_data.dart';
 import 'package:pomodoist/ui/tasks/view_models/timeline_project_layout.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_color_picker.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_motion.dart';
@@ -53,8 +54,8 @@ class _TimelineScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final viewState = ref.watch(timelineViewModelProvider);
-    final today = _dateOnly(viewState.now);
-    final day = _dateOnly(selectedDate ?? today);
+    final today = timelineDateOnly(viewState.now);
+    final day = timelineDateOnly(selectedDate ?? today);
     final tasks = viewState.tasks;
     final projects = viewState.projects;
     final visibleHours = viewState.visibleHours;
@@ -92,18 +93,18 @@ class _TimelineScreen extends ConsumerWidget {
             ),
             tasks.when(
               data: (items) {
-                final visibleById = {
-                  for (final item in motion.retainedTasks) item.id: item,
-                  for (final item in items) item.id: item,
-                };
                 return projects.when(
                   data: (projectItems) => SliverPadding(
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
                     sliver: SliverToBoxAdapter(
                       child: _TimelineDay(
                         day: day,
-                        tasks: visibleById.values.toList(),
-                        projects: projectItems,
+                        presentation: ref.watch(
+                          timelineDayPresentationProvider((
+                            day: day,
+                            retained: motion.retainedTasks,
+                          )),
+                        ),
                         visibleHours: visibleHours,
                       ),
                     ),

@@ -123,15 +123,6 @@ List<DecomposedTaskDraft> _decodeTaskDrafts(Object? tasks) {
   return result;
 }
 
-List<DecomposedTaskDraft> fallbackQuickAddTasks(String transcript) {
-  return transcript
-      .split(RegExp(r'[\n.;]+'))
-      .map(_cleanTask)
-      .where((task) => task.isNotEmpty)
-      .map((task) => DecomposedTaskDraft(quickAdd: task))
-      .toList();
-}
-
 DecomposedTaskDraft? _decodeTaskDraft(Object? task) {
   final text = switch (task) {
     String value => value,

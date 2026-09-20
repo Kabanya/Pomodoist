@@ -83,11 +83,9 @@ class BillingPaywall extends ConsumerWidget {
         : null;
     final returnPending = returnOffers?.asData?.value.retryAfter;
     final collapsedActive = state.hasActiveEntitlement && !showPlansWhenActive;
-    final plans = billingPlans.where(
-      (plan) => launchOfferMode
-          ? plan.productId != pomodoistLifetimeProductId
-          : plan.productId != pomodoistLifetimeLaunchProductId,
-    );
+    final plans = ref
+        .read(billingViewModelProvider.notifier)
+        .plansForPaywall(launchOfferMode: launchOfferMode);
     final lifetimeCompareAtPrice = launchOfferMode
         ? state.productDetailsById[pomodoistLifetimeProductId]?.price ??
               billingPlanForProduct(pomodoistLifetimeProductId)?.fallbackPrice

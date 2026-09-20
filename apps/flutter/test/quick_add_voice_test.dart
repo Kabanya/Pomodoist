@@ -20,11 +20,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/voice_dependencies.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/utils/clock.dart';
 import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/config/billing_store_dependencies.dart';
+import 'package:pomodoist/data/services/billing/billing_store.dart';
+import 'package:pomodoist/domain/models/billing/billing_models.dart';
 import 'package:pomodoist/ui/onboarding/widgets/onboarding_gate.dart';
 import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
@@ -451,7 +455,7 @@ void main() {
                   : systemController;
             }),
             taskDecomposerProvider.overrideWithValue(
-              const _FakeTaskDecomposer([
+              _FakeTaskDecomposer([
                 DecomposedTaskDraft(quickAdd: 'Recovered cloud recording'),
               ]),
             ),
@@ -552,7 +556,7 @@ void main() {
             applePurchasesSupportedProvider.overrideWithValue(false),
             voiceRecognitionControllerProvider.overrideWithValue(controller),
             taskDecomposerProvider.overrideWithValue(
-              const _FakeTaskDecomposer([
+              _FakeTaskDecomposer([
                 DecomposedTaskDraft(quickAdd: 'All recorded tasks'),
               ]),
             ),
@@ -1034,7 +1038,7 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(false),
           voiceRecognitionControllerProvider.overrideWithValue(controller),
           taskDecomposerProvider.overrideWithValue(
-            const _FakeTaskDecomposer([
+            _FakeTaskDecomposer([
               DecomposedTaskDraft(quickAdd: 'Купить кофе today 09:00 30m'),
               DecomposedTaskDraft(
                 quickAdd: 'Написать отчет tomorrow 10:00 1h',
@@ -1142,9 +1146,7 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(false),
           voiceRecognitionControllerProvider.overrideWithValue(controller),
           taskDecomposerProvider.overrideWithValue(
-            const _FakeTaskDecomposer([
-              DecomposedTaskDraft(quickAdd: 'Buy milk'),
-            ]),
+            _FakeTaskDecomposer([DecomposedTaskDraft(quickAdd: 'Buy milk')]),
           ),
         ],
         child: const MaterialApp(
@@ -1314,7 +1316,7 @@ void main() {
     expect(decomposer.transcripts, ['buy milk and coffee']);
     expect(recognizer.stopCalls, 1);
     expect(recognizer.cancelCalls, 0);
-    decomposer.complete(const [
+    decomposer.complete([
       DecomposedTaskDraft(quickAdd: 'Buy milk'),
       DecomposedTaskDraft(quickAdd: 'Buy coffee'),
     ]);
@@ -1435,7 +1437,7 @@ void main() {
       findsNothing,
     );
     expect(find.byKey(const Key('voice-mini-processing')), findsOneWidget);
-    decomposer.complete(const [
+    decomposer.complete([
       DecomposedTaskDraft(quickAdd: 'Buy milk', description: 'Oat milk'),
     ]);
     await tester.pumpAndSettle();
@@ -1777,7 +1779,7 @@ void main() {
     await tester.pump();
     expect(find.byKey(const Key('voice-amplitude-bars')), findsNothing);
 
-    decomposer.complete(const [DecomposedTaskDraft(quickAdd: 'Buy milk')]);
+    decomposer.complete([DecomposedTaskDraft(quickAdd: 'Buy milk')]);
     await tester.pumpAndSettle();
   });
 
@@ -1859,9 +1861,7 @@ void main() {
           applePurchasesSupportedProvider.overrideWithValue(false),
           voiceRecognitionControllerProvider.overrideWithValue(controller),
           taskDecomposerProvider.overrideWithValue(
-            const _FakeTaskDecomposer([
-              DecomposedTaskDraft(quickAdd: 'Buy milk'),
-            ]),
+            _FakeTaskDecomposer([DecomposedTaskDraft(quickAdd: 'Buy milk')]),
           ),
         ],
         child: const MaterialApp(
@@ -1951,7 +1951,7 @@ void main() {
             applePurchasesSupportedProvider.overrideWithValue(false),
             voiceRecognitionControllerProvider.overrideWithValue(controller),
             taskDecomposerProvider.overrideWithValue(
-              const _FakeTaskDecomposer([
+              _FakeTaskDecomposer([
                 DecomposedTaskDraft(
                   quickAdd: 'Plan launch',
                   subtasks: [
@@ -2296,7 +2296,7 @@ void main() {
         .value;
     expect(laterProgress, greaterThan(initialProgress!));
 
-    decomposer.complete(const [DecomposedTaskDraft(quickAdd: 'Buy coffee')]);
+    decomposer.complete([DecomposedTaskDraft(quickAdd: 'Buy coffee')]);
     await tester.pumpAndSettle();
   });
 
@@ -2351,7 +2351,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 650));
     expect(find.text('Buy milk, please'), findsOneWidget);
 
-    decomposer.complete(const [DecomposedTaskDraft(quickAdd: 'Buy milk')]);
+    decomposer.complete([DecomposedTaskDraft(quickAdd: 'Buy milk')]);
     await tester.pumpAndSettle();
   });
 
@@ -2382,7 +2382,7 @@ void main() {
             applePurchasesSupportedProvider.overrideWithValue(false),
             voiceRecognitionControllerProvider.overrideWithValue(controller),
             taskDecomposerProvider.overrideWithValue(
-              const _FakeTaskDecomposer([
+              _FakeTaskDecomposer([
                 DecomposedTaskDraft(
                   quickAdd: 'Запустить проект',
                   subtasks: [
@@ -2633,7 +2633,7 @@ Widget _quickAddMotionApp(
       projectsProvider.overrideWith((ref) => Stream.value(const [])),
       labelsProvider.overrideWith((ref) => Stream.value(const [])),
       quickAddHintTextProvider.overrideWithValue(null),
-      quickAddServiceProvider.overrideWithValue(service),
+      quickAddUseCaseProvider.overrideWithValue(service),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -2726,7 +2726,7 @@ class _RecordingSmartTaskDecomposer implements TaskDecomposer {
     bool smartMode = false,
   }) async {
     smartModes.add(smartMode);
-    return const [DecomposedTaskDraft(quickAdd: 'Buy milk')];
+    return [DecomposedTaskDraft(quickAdd: 'Buy milk')];
   }
 }
 
@@ -2744,7 +2744,7 @@ class _FlakyTaskDecomposer implements TaskDecomposer {
     if (calls == 1) {
       throw const TaskDecompositionException('temporary failure');
     }
-    return const [DecomposedTaskDraft(quickAdd: 'Buy milk tomorrow')];
+    return [DecomposedTaskDraft(quickAdd: 'Buy milk tomorrow')];
   }
 }
 

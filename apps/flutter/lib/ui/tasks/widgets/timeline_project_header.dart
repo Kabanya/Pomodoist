@@ -201,16 +201,7 @@ class _TimelineProjectMenuDialogState
 
   @override
   Widget build(BuildContext context) {
-    final active =
-        widget.projects
-            .where(
-              (project) =>
-                  project.id != inboxProjectId &&
-                  !project.isArchived &&
-                  !project.isDeleted,
-            )
-            .toList()
-          ..sort((a, b) => a.orderKey.compareTo(b.orderKey));
+    final active = widget.projects;
     return AlertDialog(
       title: Text(context.l10n.navProjects),
       actions: [

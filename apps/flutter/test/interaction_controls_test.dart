@@ -1,5 +1,6 @@
+import 'package:pomodoist/domain/models/account/account_overview.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
-import 'package:pomodoist/data/repositories/focus/focus_preferences.dart';
+import 'package:pomodoist/data/repositories/focus/focus_preferences_repository.dart';
 import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/domain/models/settings/task_preferences.dart';
 import 'package:pomodoist/domain/models/calendar/calendar_models.dart';
@@ -35,7 +36,7 @@ import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart'
     hide FocusDailyStats;
 import 'package:pomodoist/utils/clock.dart';
-import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/config/billing_store_dependencies.dart';
 import 'package:pomodoist/ui/focus/widgets/focus_screen.dart';
 import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
 import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
@@ -47,6 +48,7 @@ import 'package:pomodoist/domain/models/tasks/project_colors.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/widgets/browse_screen.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_motion.dart';
+import 'package:pomodoist/ui/tasks/view_models/task_selection_view_model.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_selection_region.dart';
 import 'package:pomodoist/data/repositories/calendar/google_calendar_repository.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
@@ -1316,28 +1318,31 @@ void main() {
   });
 
   test('selection closes only when selected visible rows disappear', () async {
-    Future<void> noop(BuildContext _) async {}
-    final controller = TaskSelectionController(
-      showDue: noop,
-      showProject: noop,
-      showLabels: noop,
-      showPriority: noop,
-      showMore: noop,
-      duplicate: noop,
-      delete: noop,
+    final container = ProviderContainer(
+      overrides: [
+        taskRepositoryProvider.overrideWithValue(_FakeTaskRepository(const [])),
+        projectsProvider.overrideWith(
+          (ref) => Stream.value(const <ProjectItem>[]),
+        ),
+        labelsProvider.overrideWith((ref) => Stream.value(const <LabelItem>[])),
+        clockProvider.overrideWithValue(FixedClock(_testToday())),
+      ],
     );
-    addTearDown(controller.dispose);
+    addTearDown(container.dispose);
+    final selection = container.read(
+      taskSelectionViewModelProvider(Object()).notifier,
+    );
     final task = _task('selection-controller', 'Selection controller');
 
-    controller.updateVisible([task]);
-    controller.begin(task.id);
-    controller.toggle(task.id);
-    expect(controller.active, isTrue);
-    expect(controller.selectedCount, 0);
+    selection.updateVisible([task]);
+    selection.begin(task.id);
+    selection.toggle(task.id);
+    expect(selection.active, isTrue);
+    expect(selection.selectedCount, 0);
 
-    controller.toggle(task.id);
-    controller.updateVisible(const <TaskItem>[]);
-    expect(controller.active, isFalse);
+    selection.toggle(task.id);
+    selection.updateVisible(const <TaskItem>[]);
+    expect(selection.active, isFalse);
   });
 
   test('due presets use current Saturday and strictly future Monday', () {
@@ -3803,7 +3808,7 @@ Future<_BrowseHarness> _pumpBrowseScreen(
         productivitySummaryProvider.overrideWith(
           (ref) => productivitySummary?.call() ?? Stream.value(_summary),
         ),
-        pendingSyncCommandsProvider.overrideWith((ref) => Stream.value([])),
+        pendingSyncCommandCountProvider.overrideWith((ref) => Stream.value(0)),
       ],
       child: MaterialApp(
         builder: testAppBuilder,
@@ -3875,7 +3880,7 @@ Future<_AppHarness> _pumpApp(
           focusTickerProvider.overrideWith((ref) => Stream.value(focusNow)),
         projectRepositoryProvider.overrideWithValue(projectRepository),
         labelRepositoryProvider.overrideWithValue(labelRepository),
-        quickAddServiceProvider.overrideWithValue(
+        quickAddUseCaseProvider.overrideWithValue(
           QuickAddUseCase(
             parser: const QuickAddParser(),
             taskRepository: taskRepository,
@@ -3892,20 +3897,15 @@ Future<_AppHarness> _pumpApp(
         achievementRepositoryProvider.overrideWithValue(
           _FakeAchievementRepository(),
         ),
-        pendingSyncCommandsProvider.overrideWith((ref) => Stream.value([])),
+        pendingSyncCommandCountProvider.overrideWith((ref) => Stream.value(0)),
         if (accountSignedIn)
           accountAuthStateProvider.overrideWith(
             (ref) => Stream.value(const AccountAuthState(signedIn: true)),
           ),
-        currentUserProvider.overrideWith(
-          (ref) => Stream.value(
-            UserRow(
-              id: localUserId,
-              email: null,
-              displayName: 'Local User',
-              createdAt: DateTime.utc(2026),
-              updatedAt: DateTime.utc(2026),
-            ),
+        accountProfileProvider.overrideWith(
+          (ref) => const PomodoistAccountProfile(
+            id: localUserId,
+            displayName: 'Local User',
           ),
         ),
         calendarIntegrationRepositoryProvider.overrideWithValue(
@@ -4368,7 +4368,7 @@ FocusIntervalItem _focusInterval(
   );
 }
 
-const _summary = ProductivitySummary(
+final _summary = ProductivitySummary(
   completedTasks: 0,
   completedFocusIntervals: 0,
   totalFocusSeconds: 0,

@@ -15,9 +15,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/domain/models/tasks/task_time.dart';
+import 'package:pomodoist/data/repositories/notifications/local_notification_repository.dart';
 import 'package:pomodoist/data/services/audio/focus_sound_player.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/local/preferences_service.dart';
 import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
+import 'package:pomodoist/ui/core/localization/app_locale.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
+import 'package:pomodoist/ui/core/localization/notification_copy.dart';
 import 'package:pomodoist/domain/models/account/account_overview.dart';
 import 'package:pomodoist/domain/use_cases/account/pomodoist_retention.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
@@ -32,9 +37,8 @@ import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 import 'package:pomodoist/data/repositories/achievements/achievement_repository_impl.dart';
 import 'package:pomodoist/domain/models/productivity/achievement_models.dart';
 import 'package:pomodoist/data/repositories/productivity/productivity_repository_impl.dart';
-import 'package:pomodoist/domain/models/productivity/productivity_models.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
-import 'package:pomodoist/data/services/local/kanban_transition_coordinator.dart';
+import 'package:pomodoist/data/repositories/local/kanban_transition_coordinator.dart';
 import 'package:pomodoist/domain/models/tasks/task_focus_estimate.dart';
 import 'package:pomodoist/domain/models/tasks/project_colors.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
@@ -788,7 +792,7 @@ void main() {
         addTearDown(db.close);
         final repository = DriftAchievementRepository(
           db,
-          SharedPreferences.getInstance,
+          PreferencesService(SharedPreferences.getInstance),
         );
         final now = DateTime(2026, 5, 1, 10);
         final baselineItems = evaluateAchievements(
@@ -1048,25 +1052,22 @@ void main() {
       'coordinator schedules when enabled and cancels when disabled',
       () async {
         final scheduler = _FakeReengagementNotificationScheduler();
+        final notifications = _notifications(scheduler, AppLanguage.en);
 
-        await syncReengagementReminder(
+        await notifications.syncReengagementReminder(
           enabled: true,
-          summary: _productivitySummary(completedTasks: 0),
           now: DateTime(2026, 5, 1, 19),
-          language: AppLanguage.en,
-          scheduler: scheduler,
+          hasProgressToday: false,
         );
 
         expect(scheduler.permissionRequestCount, 1);
         expect(scheduler.scheduledReengagementAt, DateTime(2026, 5, 1, 20, 30));
         expect(scheduler.scheduledReengagementTitle, 'Your tomato misses you');
 
-        await syncReengagementReminder(
+        await notifications.syncReengagementReminder(
           enabled: false,
-          summary: _productivitySummary(completedTasks: 0),
           now: DateTime(2026, 5, 1, 19),
-          language: AppLanguage.en,
-          scheduler: scheduler,
+          hasProgressToday: false,
         );
 
         expect(scheduler.cancelReengagementCount, 1);
@@ -1077,13 +1078,12 @@ void main() {
       'coordinator schedules tomorrow after a completed task today',
       () async {
         final scheduler = _FakeReengagementNotificationScheduler();
+        final notifications = _notifications(scheduler, AppLanguage.ru);
 
-        await syncReengagementReminder(
+        await notifications.syncReengagementReminder(
           enabled: true,
-          summary: _productivitySummary(completedTasks: 1),
           now: DateTime(2026, 5, 1, 19),
-          language: AppLanguage.ru,
-          scheduler: scheduler,
+          hasProgressToday: true,
         );
 
         expect(scheduler.scheduledReengagementAt, DateTime(2026, 5, 2, 20, 30));
@@ -1093,12 +1093,10 @@ void main() {
 
     test('focus alone does not suppress the evening reminder', () async {
       final scheduler = _FakeReengagementNotificationScheduler();
-      await syncReengagementReminder(
+      await _notifications(scheduler, AppLanguage.en).syncReengagementReminder(
         enabled: true,
-        summary: _productivitySummary(completedFocusIntervals: 1),
         now: DateTime(2026, 5, 1, 19),
-        language: AppLanguage.en,
-        scheduler: scheduler,
+        hasProgressToday: false,
       );
       expect(scheduler.scheduledReengagementAt, DateTime(2026, 5, 1, 20, 30));
     });
@@ -1110,7 +1108,10 @@ void main() {
           ..pendingTaskStarts = {'stale-task', 'future-task'};
         final now = DateTime(2026, 5, 1, 9);
 
-        await syncTaskStartNotifications(
+        await _notifications(
+          scheduler,
+          AppLanguage.en,
+        ).syncTaskStartNotifications(
           tasks: [
             _notificationTask(
               id: 'future-task',
@@ -1135,8 +1136,6 @@ void main() {
             ),
           ],
           now: now,
-          language: AppLanguage.en,
-          scheduler: scheduler,
         );
 
         expect(scheduler.permissionRequestCount, 1);
@@ -1568,12 +1567,10 @@ void main() {
             .createLabel('existing')
             .then((result) => result.getOrThrow());
         final taskId = await taskRepository
-            .createTask(
-              const CreateTaskInput(content: 'Task with edited labels'),
-            )
+            .createTask(CreateTaskInput(content: 'Task with edited labels'))
             .then((result) => result.getOrThrow());
 
-        const patch = UpdateTaskPatch(labelNames: ['existing', 'new']);
+        final patch = UpdateTaskPatch(labelNames: ['existing', 'new']);
         await taskRepository
             .updateTask(taskId, patch)
             .then((result) => result.getOrThrow());
@@ -1679,7 +1676,7 @@ void main() {
       'duplicates only explicitly selected tasks without descendants',
       () async {
         final rootId = await taskRepository
-            .createTask(const CreateTaskInput(content: 'Selected root'))
+            .createTask(CreateTaskInput(content: 'Selected root'))
             .then((result) => result.getOrThrow());
         await taskRepository
             .createTask(
@@ -1844,7 +1841,7 @@ void main() {
           .createProject('Target')
           .then((result) => result.getOrThrow());
       final externalParentId = await taskRepository
-          .createTask(const CreateTaskInput(content: 'External parent'))
+          .createTask(CreateTaskInput(content: 'External parent'))
           .then((result) => result.getOrThrow());
       final rootId = await taskRepository
           .createTask(
@@ -2287,7 +2284,7 @@ void main() {
     test('task descriptions create update sync and clear', () async {
       final taskId = await taskRepository
           .createTask(
-            const CreateTaskInput(
+            CreateTaskInput(
               content: 'Task with comment',
               description: 'Initial comment',
             ),
@@ -2300,7 +2297,7 @@ void main() {
       await taskRepository
           .updateTask(
             taskId,
-            const UpdateTaskPatch(
+            UpdateTaskPatch(
               description: 'Updated comment',
               updateDescription: true,
             ),
@@ -2310,7 +2307,7 @@ void main() {
       expect(task!.description, 'Updated comment');
 
       await taskRepository
-          .updateTask(taskId, const UpdateTaskPatch(updateDescription: true))
+          .updateTask(taskId, UpdateTaskPatch(updateDescription: true))
           .then((result) => result.getOrThrow());
       task = await taskRepository.watchTask(taskId).first;
       expect(task!.description, isNull);
@@ -2342,10 +2339,10 @@ void main() {
             .createProject('Work')
             .then((result) => result.getOrThrow());
         final parentId = await taskRepository
-            .createTask(const CreateTaskInput(content: 'Parent task'))
+            .createTask(CreateTaskInput(content: 'Parent task'))
             .then((result) => result.getOrThrow());
         final childId = await taskRepository
-            .createTask(const CreateTaskInput(content: 'Child task'))
+            .createTask(CreateTaskInput(content: 'Child task'))
             .then((result) => result.getOrThrow());
         final grandchildId = await taskRepository
             .createTask(
@@ -2389,7 +2386,7 @@ void main() {
 
     test('updates collapse state and cascades completion lifecycle', () async {
       final parentId = await taskRepository
-          .createTask(const CreateTaskInput(content: 'Parent lifecycle'))
+          .createTask(CreateTaskInput(content: 'Parent lifecycle'))
           .then((result) => result.getOrThrow());
       final childId = await taskRepository
           .createTask(
@@ -2403,7 +2400,7 @@ void main() {
           .then((result) => result.getOrThrow());
 
       await taskRepository
-          .updateTask(parentId, const UpdateTaskPatch(isCollapsed: true))
+          .updateTask(parentId, UpdateTaskPatch(isCollapsed: true))
           .then((result) => result.getOrThrow());
       expect(
         (await taskRepository.watchTask(parentId).first)!.isCollapsed,
@@ -2456,7 +2453,7 @@ void main() {
 
     test('delete returns the exact subtree and Undo restores it', () async {
       final parentId = await taskRepository
-          .createTask(const CreateTaskInput(content: 'Undo parent'))
+          .createTask(CreateTaskInput(content: 'Undo parent'))
           .then((result) => result.getOrThrow());
       final childId = await taskRepository
           .createTask(
@@ -2494,7 +2491,7 @@ void main() {
 
     test('Undo survives repository restart and expires honestly', () async {
       final taskId = await taskRepository
-          .createTask(const CreateTaskInput(content: 'Persistent Undo'))
+          .createTask(CreateTaskInput(content: 'Persistent Undo'))
           .then((result) => result.getOrThrow());
       await db.delete(db.syncCommands).go();
       final batch = await taskRepository
@@ -2861,7 +2858,7 @@ void main() {
     test('focus interval completion updates task focus aggregates', () async {
       final taskId = await taskRepository
           .createTask(
-            const CreateTaskInput(
+            CreateTaskInput(
               content: 'Write sync engine',
               estimatedFocusIntervals: 2,
             ),
@@ -3045,7 +3042,7 @@ void main() {
       'linked Focus start moves the task to configured focus status',
       () async {
         final taskId = await taskRepository
-            .createTask(const CreateTaskInput(content: 'Focus this task'))
+            .createTask(CreateTaskInput(content: 'Focus this task'))
             .then((result) => result.getOrThrow());
         await db
             .update(db.kanbanSettings)
@@ -3085,7 +3082,7 @@ void main() {
           )
           .then((result) => result.getOrThrow());
       final completedTaskId = await taskRepository
-          .createTask(const CreateTaskInput(content: 'Already complete'))
+          .createTask(CreateTaskInput(content: 'Already complete'))
           .then((result) => result.getOrThrow());
       await taskRepository
           .completeTask(completedTaskId)
@@ -3309,7 +3306,7 @@ void main() {
           onRunCompleted: completions.add,
         );
         final taskId = await taskRepository
-            .createTask(const CreateTaskInput(content: 'Ship celebration'))
+            .createTask(CreateTaskInput(content: 'Ship celebration'))
             .then((result) => result.getOrThrow());
         final completedAt = DateTime.utc(2026, 8, 19, 12);
         final runId = await repository
@@ -3479,16 +3476,14 @@ void main() {
             .then((result) => result.getOrThrow());
         final estimatedTaskId = await taskRepository
             .createTask(
-              const CreateTaskInput(
+              CreateTaskInput(
                 content: 'Estimated focus task',
                 estimatedFocusIntervals: 5,
               ),
             )
             .then((result) => result.getOrThrow());
         final unestimatedTaskId = await taskRepository
-            .createTask(
-              const CreateTaskInput(content: 'Unestimated focus task'),
-            )
+            .createTask(CreateTaskInput(content: 'Unestimated focus task'))
             .then((result) => result.getOrThrow());
 
         Future<void> expectTarget(
@@ -4082,21 +4077,6 @@ FocusIntervalRow _achievementInterval(
   );
 }
 
-ProductivitySummary _productivitySummary({
-  int completedTasks = 0,
-  int completedFocusIntervals = 0,
-}) {
-  return ProductivitySummary(
-    completedTasks: completedTasks,
-    completedFocusIntervals: completedFocusIntervals,
-    totalFocusSeconds: 0,
-    plannedFocusIntervals: 0,
-    openTasks: 0,
-    allTimeCompletedTasks: 0,
-    allTimeCompletedFocusIntervals: 0,
-  );
-}
-
 TaskItem _notificationTask({
   required String id,
   required String content,
@@ -4117,6 +4097,16 @@ TaskItem _notificationTask({
     isDeleted: false,
     createdAt: now,
     updatedAt: now,
+  );
+}
+
+LocalNotificationRepository _notifications(
+  NotificationScheduler scheduler,
+  AppLanguage language,
+) {
+  return LocalNotificationRepository(
+    scheduler,
+    () => lookupAppLocalizations(resolveAppLocale(language)).notificationCopy,
   );
 }
 

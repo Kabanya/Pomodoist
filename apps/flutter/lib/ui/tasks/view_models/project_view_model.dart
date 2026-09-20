@@ -29,6 +29,7 @@ class LabelViewModel extends Notifier<AsyncValue<LabelItem?>> {
       );
   void retry() => ref.invalidate(labelsProvider);
   Future<void> updateIcon(String icon) async {
-    await ref.read(labelRepositoryProvider).updateLabelIcon(labelId, icon);
+    (await ref.read(labelRepositoryProvider).updateLabelIcon(labelId, icon))
+        .getOrThrow();
   }
 }

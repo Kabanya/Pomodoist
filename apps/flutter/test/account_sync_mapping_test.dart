@@ -3,7 +3,7 @@ import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
-import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'support/account_sync_engine.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:uuid/uuid.dart';
 
@@ -32,7 +32,7 @@ void main() {
             updatedAt: now,
           ),
         );
-    final engine = AccountSyncEngine(
+    final engine = testSyncEngine(
       db: db,
       account: _PullOnlyAccountClient(
         AccountSyncPullResult(
@@ -67,7 +67,7 @@ void main() {
     final seed = await (db.select(
       db.projects,
     )..where((row) => row.id.equals(inboxProjectId))).getSingle();
-    final engine = AccountSyncEngine(
+    final engine = testSyncEngine(
       db: db,
       uuid: const Uuid(),
       account: _PullOnlyAccountClient(
@@ -120,7 +120,7 @@ void main() {
     final seed = await (db.select(
       db.labels,
     )..where((row) => row.id.equals('kanban-status-todo-v1'))).getSingle();
-    final engine = AccountSyncEngine(
+    final engine = testSyncEngine(
       db: db,
       uuid: const Uuid(),
       account: _PullOnlyAccountClient(
@@ -208,11 +208,7 @@ void main() {
         ],
       ),
     );
-    final engine = AccountSyncEngine(
-      db: db,
-      account: account,
-      uuid: const Uuid(),
-    );
+    final engine = testSyncEngine(db: db, account: account, uuid: const Uuid());
 
     final entityTypes = await engine.pullLatest();
 
@@ -257,11 +253,7 @@ void main() {
         ],
       ),
     );
-    final engine = AccountSyncEngine(
-      db: db,
-      account: account,
-      uuid: const Uuid(),
-    );
+    final engine = testSyncEngine(db: db, account: account, uuid: const Uuid());
 
     await engine.pullLatest();
 
@@ -387,7 +379,7 @@ void main() {
           ],
         ),
       );
-      final engine = AccountSyncEngine(
+      final engine = testSyncEngine(
         db: db,
         account: account,
         uuid: const Uuid(),

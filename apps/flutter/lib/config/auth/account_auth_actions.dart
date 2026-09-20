@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/auth/email_auth.dart';
 import 'package:pomodoist/data/repositories/account/account_auth_actions_repository.dart';
 import 'package:pomodoist/data/services/auth/account_auth_errors.dart';
 import 'package:pomodoist/data/services/platform/native_captcha_broker.dart';
@@ -47,5 +48,21 @@ final accountAuthActionsRepositoryProvider =
             broker.dispose();
           }
         },
+        emailSubmit:
+            ({
+              required action,
+              required email,
+              required password,
+              required redirectTo,
+              captchaToken,
+            }) => ref
+                .read(emailAuthProvider)
+                .submit(
+                  action: action,
+                  email: email,
+                  password: password,
+                  redirectTo: redirectTo,
+                  captchaToken: captchaToken,
+                ),
       );
     });

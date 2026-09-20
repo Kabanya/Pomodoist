@@ -23,7 +23,9 @@ class UpdateTarget {
 /// SemVer precedence deliberately ignores build metadata, including Flutter's
 /// build number. Numeric identifiers use BigInt to avoid overflow/lexical order.
 class UpdateVersion implements Comparable<UpdateVersion> {
-  UpdateVersion._(this.text, this.numbers, this.prerelease);
+  UpdateVersion._(this.text, List<BigInt> numbers, List<String> prerelease)
+    : numbers = List.unmodifiable(numbers),
+      prerelease = List.unmodifiable(prerelease);
   final String text;
   final List<BigInt> numbers;
   final List<String> prerelease;

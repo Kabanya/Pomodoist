@@ -130,9 +130,10 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
         return AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
-            final cardsByStatus = _filteredCards(
-              _controller.visibleCards(board),
-              _query,
+            final cardsByStatus = _controller.visibleCards(
+              board,
+              query: _query,
+              projectTitle: (project) => project.displayName(context.l10n),
             );
             final wide =
                 MediaQuery.sizeOf(context).width >= _kanbanWideBreakpoint;
@@ -217,30 +218,6 @@ class _KanbanScreenState extends ConsumerState<KanbanScreen> {
         );
       },
     );
-  }
-
-  Map<String, List<KanbanCard>> _filteredCards(
-    Map<String, List<KanbanCard>> cards,
-    String query,
-  ) {
-    final normalized = query.trim().toLowerCase();
-    if (normalized.isEmpty) {
-      return cards;
-    }
-    return {
-      for (final entry in cards.entries)
-        entry.key: entry.value
-            .where(
-              (card) =>
-                  card.task.content.toLowerCase().contains(normalized) ||
-                  card.project.name.toLowerCase().contains(normalized) ||
-                  card.project
-                      .displayName(context.l10n)
-                      .toLowerCase()
-                      .contains(normalized),
-            )
-            .toList(growable: false),
-    };
   }
 
   /// The status a new card starts in, or null on a board whose selected scopes
@@ -526,19 +503,15 @@ class _KanbanHeader extends StatelessWidget {
   }
 }
 
-class _ProjectSelectorButton extends StatelessWidget {
+class _ProjectSelectorButton extends ConsumerWidget {
   const _ProjectSelectorButton({required this.board, required this.onPressed});
 
   final KanbanBoardSnapshot board;
   final VoidCallback onPressed;
 
   @override
-  Widget build(BuildContext context) {
-    final selected = board.availableProjects
-        .where(
-          (project) => board.settings.selectedProjectIds.contains(project.id),
-        )
-        .toList(growable: false);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(kanbanSelectedProjectsProvider(board));
     return ShadButton.outline(
       key: const Key('kanban-project-selector'),
       onPressed: onPressed,
@@ -1613,12 +1586,7 @@ class _KanbanAddDialogState extends ConsumerState<_KanbanAddDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final projects = widget.board.availableProjects
-        .where(
-          (project) =>
-              widget.board.settings.selectedProjectIds.contains(project.id),
-        )
-        .toList(growable: false);
+    final projects = ref.watch(kanbanSelectedProjectsProvider(widget.board));
     return AlertDialog(
       title: Text(
         context.l10n.kanbanAddToStatus(

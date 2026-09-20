@@ -2,11 +2,31 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// The mounted detail editor participates in navigation before it is disposed.
+/// The mounted detail editors participate in navigation before they dispose.
 final taskDetailSaveGuardProvider = Provider((ref) => TaskDetailSaveGuard());
 
 class TaskDetailSaveGuard {
-  Future<bool> Function()? save;
+  final Map<Object, Future<bool> Function()> _editors = {};
+
+  bool get hasRegisteredEditors => _editors.isNotEmpty;
+
+  void register(Object identity, Future<bool> Function() save) {
+    _editors[identity] = save;
+  }
+
+  void unregister(Object identity) {
+    _editors.remove(identity);
+  }
+
+  /// Saves every retained editor draft before navigation. A failed draft keeps
+  /// its editor registered and blocks the route change.
+  Future<bool> saveAll() async {
+    var saved = true;
+    for (final save in List<Future<bool> Function()>.of(_editors.values)) {
+      if (!await save()) saved = false;
+    }
+    return saved;
+  }
 }
 
 Uri taskDetailUri(Uri background, String? taskId) {

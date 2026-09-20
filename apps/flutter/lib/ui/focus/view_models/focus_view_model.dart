@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
@@ -114,7 +113,7 @@ class FocusViewModel extends Notifier<FocusState> {
     if (!ref.mounted) return;
     if (_selectedPresetId == id) _selectedPresetId = null;
     if (ref.read(lastFocusPresetIdProvider) == id) {
-      await ref.read(focusPreferencesRepositoryProvider).setPresetId(null);
+      await _rememberPresetBestEffort(null);
     }
     if (ref.mounted) ref.invalidateSelf();
   }
@@ -122,37 +121,46 @@ class FocusViewModel extends Notifier<FocusState> {
   Future<void> setDefaultPreset(String id) async =>
       (await _repository.setDefaultPreset(id)).getOrThrow();
   Future<void> startFocus(FocusPresetItem preset) async {
-    unawaited(
-      ref.read(focusPreferencesRepositoryProvider).setPresetId(preset.id),
-    );
     (await _repository.startRun(
       StartFocusRunInput(presetId: preset.id),
     )).getOrThrow();
+    await _rememberPresetBestEffort(preset.id);
   }
 
-  void selectPreset(String id) {
+  Future<void> selectPreset(String id) async {
+    (await ref.read(focusPreferencesRepositoryProvider).setPresetId(id))
+        .getOrThrow();
+    if (!ref.mounted) return;
     _selectedPresetId = id;
-    unawaited(ref.read(focusPreferencesRepositoryProvider).setPresetId(id));
     state = _withSelection(
       effectivePreset: _findPreset(state.presets, id),
       activePreset: state.activePreset,
     );
   }
 
-  void setViewMode(FocusViewMode mode) =>
-      unawaited(ref.read(focusPreferencesRepositoryProvider).setViewMode(mode));
+  Future<void> setViewMode(FocusViewMode mode) async =>
+      (await ref.read(focusPreferencesRepositoryProvider).setViewMode(mode))
+          .getOrThrow();
   Future<void> changeActiveRunPreset(FocusRunItem run, String presetId) async {
     (await _repository.changeActiveRunPreset(presetId)).getOrThrow();
     if (!ref.mounted) return;
     _activePresetOverrideRunId = run.id;
     _activePresetOverridePresetId = presetId;
-    unawaited(
-      ref.read(focusPreferencesRepositoryProvider).setPresetId(presetId),
-    );
+    await _rememberPresetBestEffort(presetId);
     state = _withSelection(
       effectivePreset: state.effectivePreset,
       activePreset: _findPreset(state.presets, presetId),
     );
+  }
+
+  Future<void> _rememberPresetBestEffort(String? id) async {
+    try {
+      (await ref.read(focusPreferencesRepositoryProvider).setPresetId(id))
+          .getOrThrow();
+    } catch (_) {
+      // The Focus mutation is committed; remembering the next default is
+      // advisory and must not report the completed action as failed.
+    }
   }
 
   Future<void> startReadyInterval() async =>

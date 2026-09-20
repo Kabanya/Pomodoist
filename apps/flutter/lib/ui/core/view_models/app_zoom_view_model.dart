@@ -4,12 +4,13 @@ import 'dart:ui' show DisplayFeature;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:pomodoist/config/app_zoom_dependencies.dart';
 import 'package:pomodoist/config/keyboard_shortcuts.dart';
-import 'package:pomodoist/config/task_preferences_dependencies.dart';
+import 'package:pomodoist/data/repositories/settings/app_zoom_repository.dart'
+    show appZoomMinimum, appZoomMaximum;
 
-const appZoomPreferenceKey = 'app.zoomPercent';
-const appZoomMinimum = 70;
-const appZoomMaximum = 150;
+export 'package:pomodoist/data/repositories/settings/app_zoom_repository.dart'
+    show appZoomPreferenceKey, appZoomMinimum, appZoomMaximum;
 
 final appZoomProvider = NotifierProvider<AppZoomController, int>(
   AppZoomController.new,
@@ -30,10 +31,8 @@ class AppZoomController extends Notifier<int> {
 
   Future<void> _load() async {
     try {
-      final values = (await ref.read(preferencesRepositoryProvider).read(const [
-        appZoomPreferenceKey,
-      ])).getOrThrow();
-      final saved = values[appZoomPreferenceKey];
+      final saved = (await ref.read(appZoomRepositoryProvider).read())
+          .getOrThrow();
       if (ref.mounted && !_locallyChanged && saved is int) {
         state = saved.clamp(appZoomMinimum, appZoomMaximum);
       }
@@ -51,9 +50,7 @@ class AppZoomController extends Notifier<int> {
     }.clamp(appZoomMinimum, appZoomMaximum);
     state = percent;
     try {
-      (await ref.read(preferencesRepositoryProvider).write({
-        appZoomPreferenceKey: percent,
-      })).getOrThrow();
+      (await ref.read(appZoomRepositoryProvider).write(percent)).getOrThrow();
     } catch (error) {
       // Keep zoom usable for this session if local preferences are unavailable.
       debugPrint('Could not save interface zoom: $error');

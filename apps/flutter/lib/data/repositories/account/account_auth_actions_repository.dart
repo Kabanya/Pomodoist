@@ -1,4 +1,5 @@
 import 'package:pomodoist/domain/models/account/account_auth_failure.dart';
+import 'package:pomodoist/domain/models/account/email_auth.dart';
 import 'package:pomodoist/domain/models/account/social_provider.dart';
 import 'package:pomodoist/utils/result.dart';
 
@@ -12,6 +13,13 @@ abstract interface class AccountAuthActionsRepository {
     required String redirectTo,
   });
   Future<Result<String?>> requestNativeCaptcha(String locale);
+  Future<Result<EmailAuthResult?>> submitEmail({
+    required EmailAuthAction action,
+    required String email,
+    required String password,
+    required String redirectTo,
+    String? captchaToken,
+  });
 }
 
 class DefaultAccountAuthActionsRepository
@@ -20,6 +28,7 @@ class DefaultAccountAuthActionsRepository
     required this.classifier,
     required this.socialSignIn,
     required this.nativeCaptcha,
+    required this.emailSubmit,
   });
 
   final AccountAuthFailure Function(
@@ -33,6 +42,14 @@ class DefaultAccountAuthActionsRepository
   )
   socialSignIn;
   final Future<String?> Function(String locale) nativeCaptcha;
+  final Future<EmailAuthResult?> Function({
+    required EmailAuthAction action,
+    required String email,
+    required String password,
+    required String redirectTo,
+    String? captchaToken,
+  })
+  emailSubmit;
 
   @override
   AccountAuthFailure classify(
@@ -49,4 +66,21 @@ class DefaultAccountAuthActionsRepository
   @override
   Future<Result<String?>> requestNativeCaptcha(String locale) =>
       Result.capture(() => nativeCaptcha(locale));
+
+  @override
+  Future<Result<EmailAuthResult?>> submitEmail({
+    required EmailAuthAction action,
+    required String email,
+    required String password,
+    required String redirectTo,
+    String? captchaToken,
+  }) => Result.capture(
+    () => emailSubmit(
+      action: action,
+      email: email,
+      password: password,
+      redirectTo: redirectTo,
+      captchaToken: captchaToken,
+    ),
+  );
 }

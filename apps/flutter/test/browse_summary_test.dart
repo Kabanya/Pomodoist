@@ -40,11 +40,11 @@ void main() {
     ));
     // Switching back neither mutates the source nor adds today's totals twice.
     expect(browseSummary(summary, BrowsePeriod.today).completedTasks, 6);
-    expect(summary.lastSevenDays, same(days));
+    expect(summary.lastSevenDays, days);
   });
 
   test('an empty week does not fall back to all-time totals', () {
-    const summary = ProductivitySummary(
+    final summary = ProductivitySummary(
       completedTasks: 0,
       completedFocusIntervals: 0,
       totalFocusSeconds: 0,

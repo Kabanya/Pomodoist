@@ -6,10 +6,23 @@ import 'package:shadcn_ui/shadcn_ui.dart'
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_conflict.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/utils/result.dart';
 import 'package:pomodoist/ui/collaboration/widgets/collaboration_copy.dart';
 import 'package:pomodoist/ui/collaboration/view_models/share_project_view_model.dart';
+
+enum _MemberAction {
+  transfer,
+  remove,
+  administrator(CollaborationRole.administrator),
+  member(CollaborationRole.member),
+  observer(CollaborationRole.observer);
+
+  const _MemberAction([this.role]);
+
+  final CollaborationRole? role;
+}
 
 Future<void> showShareProjectDialog(BuildContext context, ProjectItem project) {
   return showDialog<void>(
@@ -31,7 +44,7 @@ class _ShareProjectDialog extends ConsumerStatefulWidget {
 class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
   final _email = TextEditingController();
   late ShareProjectState _state;
-  var _inviteRole = 'member';
+  var _inviteRole = CollaborationRole.member;
   ShareProjectViewModel get _viewModel =>
       ref.read(shareProjectViewModelProvider(widget.project.id).notifier);
 
@@ -160,18 +173,13 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
                 dense: true,
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(LucideIcons.mail, size: 18),
-                title: Text(invitation['email'] as String? ?? ''),
-                subtitle: Text(
-                  collaborationRoleLabel(
-                    l10n,
-                    invitation['role'] as String? ?? 'member',
-                  ),
-                ),
+                title: Text(invitation.email ?? ''),
+                subtitle: Text(collaborationRoleLabel(l10n, invitation.role)),
                 trailing: ShadButton.ghost(
-                  key: Key('collaboration-revoke-${invitation['id']}'),
+                  key: Key('collaboration-revoke-${invitation.id}'),
                   onPressed: _state.busy
                       ? null
-                      : () => _revokeInvitation(invitation['id'] as String),
+                      : () => _revokeInvitation(invitation.id),
                   child: Text(l10n.collaborationRevoke),
                 ),
               ),
@@ -220,12 +228,11 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
   Widget _memberRow(
     BuildContext context,
     SharedScope scope,
-    Map<String, dynamic> member,
+    CollaborationMember member,
   ) {
     final l10n = context.l10n;
     final actorId = _state.actorId;
-    final userId = member['userId'] as String? ?? '';
-    final role = member['role'] as String? ?? 'observer';
+    final userId = member.userId;
     final name = collaborationMemberLabel(l10n, scope, userId);
     final isOwner = userId == scope.ownerId;
     final canManageMembers = scope.canManage && !isOwner;
@@ -242,46 +249,53 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
       title: Text(name),
       subtitle: Text(
         isOwner
-            ? '${collaborationRoleLabel(l10n, role)} · ${l10n.collaborationOwner}'
-            : collaborationRoleLabel(l10n, role),
+            ? '${collaborationRoleLabel(l10n, member.role)} · ${l10n.collaborationOwner}'
+            : collaborationRoleLabel(l10n, member.role),
       ),
       trailing: scope.canManage && userId != actorId
-          ? PopupMenuButton<String>(
+          ? PopupMenuButton<_MemberAction>(
               key: Key('collaboration-member-menu-$userId'),
               enabled: !_state.busy,
               onSelected: (value) {
-                if (value == 'transfer') {
-                  _transfer(userId, name);
-                } else if (value == 'remove') {
-                  _remove(userId, name);
-                } else {
-                  _setRole(userId, value);
+                switch (value) {
+                  case _MemberAction.transfer:
+                    _transfer(userId, name);
+                  case _MemberAction.remove:
+                    _remove(userId, name);
+                  case _MemberAction.administrator ||
+                      _MemberAction.member ||
+                      _MemberAction.observer:
+                    _setRole(userId, value.role!);
                 }
               },
               itemBuilder: (context) => [
                 if (canManageMembers) ...[
-                  for (final role in const [
-                    'administrator',
-                    'member',
-                    'observer',
+                  for (final action in const [
+                    _MemberAction.administrator,
+                    _MemberAction.member,
+                    _MemberAction.observer,
                   ])
-                    if (role != member['role'])
+                    if (action.role != member.role)
                       PopupMenuItem(
-                        key: Key('collaboration-role-$userId-$role'),
-                        value: role,
-                        child: Text(collaborationRoleLabel(context.l10n, role)),
+                        key: Key(
+                          'collaboration-role-$userId-${action.role!.name}',
+                        ),
+                        value: action,
+                        child: Text(
+                          collaborationRoleLabel(context.l10n, action.role!),
+                        ),
                       ),
                 ],
                 if (scope.ownerId == actorId && userId != actorId)
                   PopupMenuItem(
                     key: Key('collaboration-transfer-$userId'),
-                    value: 'transfer',
+                    value: _MemberAction.transfer,
                     child: Text(l10n.collaborationTransferOwnership),
                   ),
                 if (canManageMembers)
                   PopupMenuItem(
                     key: Key('collaboration-remove-$userId'),
-                    value: 'remove',
+                    value: _MemberAction.remove,
                     child: Text(l10n.collaborationRemoveMember),
                   ),
               ],
@@ -306,16 +320,16 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
         Row(
           children: [
             Expanded(
-              child: ShadSelect<String>(
+              child: ShadSelect<CollaborationRole>(
                 key: const Key('collaboration-invite-role'),
                 initialValue: _inviteRole,
                 options: [
                   ShadOption(
-                    value: 'member',
+                    value: CollaborationRole.member,
                     child: Text(l10n.collaborationRoleMember),
                   ),
                   ShadOption(
-                    value: 'observer',
+                    value: CollaborationRole.observer,
                     child: Text(l10n.collaborationRoleObserver),
                   ),
                 ],
@@ -323,8 +337,9 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
                     Text(collaborationRoleLabel(l10n, value)),
                 onChanged: _state.busy
                     ? null
-                    : (value) =>
-                          setState(() => _inviteRole = value ?? 'member'),
+                    : (value) => setState(
+                        () => _inviteRole = value ?? CollaborationRole.member,
+                      ),
               ),
             ),
             const SizedBox(width: 8),
@@ -374,8 +389,8 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
     );
   }
 
-  Future<bool> _run(
-    Future<Result<Map<String, dynamic>>> Function() action, {
+  Future<bool> _run<T>(
+    Future<Result<T>> Function() action, {
     bool close = false,
     String? success,
   }) async {
@@ -405,7 +420,7 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
       if (result case Success(:final value)) {
         if (mounted) {
           _snack(
-            value['emailDelivery'] == 'failed'
+            value.emailDelivery == CollaborationEmailDelivery.failed
                 ? context.l10n.collaborationInviteEmailFailed
                 : context.l10n.collaborationInviteSent(email),
           );
@@ -420,7 +435,7 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
     () => _viewModel.revokeInvitation(id),
     success: context.l10n.collaborationInvitationRevoked,
   );
-  Future<bool> _setRole(String userId, String role) => _run(
+  Future<bool> _setRole(String userId, CollaborationRole role) => _run(
     () => _viewModel.setRole(userId, role),
     success: context.l10n.collaborationRoleUpdated,
   );

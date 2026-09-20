@@ -1,19 +1,30 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+
 import 'package:pomodoist/data/repositories/settings/task_preferences_repository.dart';
 import 'package:pomodoist/data/services/local/preferences_service.dart';
 import 'package:pomodoist/domain/models/settings/task_preferences.dart';
 import 'package:pomodoist/domain/models/tasks/task_time.dart';
 import 'package:pomodoist/utils/result.dart';
 
-class LocalTaskPreferencesRepository extends ChangeNotifier
-    implements TaskPreferencesRepository {
+class LocalTaskPreferencesRepository implements TaskPreferencesRepository {
   LocalTaskPreferencesRepository(this._preferences);
   final PreferencesService _preferences;
+  final _states = StreamController<TaskPreferences>.broadcast(sync: true);
   final _edited = <String>{};
   bool _disposed = false;
-  TaskPreferences _state = const TaskPreferences();
+  TaskPreferences _state = TaskPreferences();
+
   @override
   TaskPreferences get state => _state;
+
+  @override
+  Stream<TaskPreferences> watch() => _states.stream;
+
+  void _publish(TaskPreferences value) {
+    if (_disposed) return;
+    _state = value;
+    _states.add(value);
+  }
 
   @override
   Future<Result<void>> load() => Result.capture(() async {
@@ -35,39 +46,40 @@ class LocalTaskPreferencesRepository extends ChangeNotifier
     final end = values[timelineVisibleEndMinutesPreferenceKey];
     final width = values[timelineHourWidthPreferenceKey];
     final collapsed = values[timelineCollapsedProjectIdsPreferenceKey];
-    _state = _state.copyWith(
-      reengagementEnabled:
-          values[reengagementNotificationsEnabledPreferenceKey] is bool
-          ? values[reengagementNotificationsEnabledPreferenceKey] as bool
-          : null,
-      quickAddMinutes:
-          minutes is int &&
-              minutes >= minQuickAddTimedBlockMinutes &&
-              minutes <= maxQuickAddTimedBlockMinutes
-          ? minutes
-          : null,
-      timeDisplayMode: values[taskTimeDisplayModePreferenceKey] is String
-          ? TaskTimeDisplayMode.fromStorageValue(
-              values[taskTimeDisplayModePreferenceKey] as String,
-            )
-          : null,
-      listStyle: TaskListStyle.values
-          .where((v) => v.name == values[taskListStylePreferenceKey])
-          .firstOrNull,
-      rowSpacing: TaskRowSpacing.values
-          .where((v) => v.name == values[taskRowSpacingPreferenceKey])
-          .firstOrNull,
-      visibleHours: start is int && end is int && _validHours(start, end)
-          ? TimelineVisibleHours(startMinutes: start, endMinutes: end)
-          : null,
-      hourWidth: width is int && timelineHourWidthLevels.contains(width)
-          ? width
-          : null,
-      collapsedProjectIds: collapsed is List<String>
-          ? Set.unmodifiable(collapsed)
-          : null,
+    _publish(
+      _state.copyWith(
+        reengagementEnabled:
+            values[reengagementNotificationsEnabledPreferenceKey] is bool
+            ? values[reengagementNotificationsEnabledPreferenceKey] as bool
+            : null,
+        quickAddMinutes:
+            minutes is int &&
+                minutes >= minQuickAddTimedBlockMinutes &&
+                minutes <= maxQuickAddTimedBlockMinutes
+            ? minutes
+            : null,
+        timeDisplayMode: values[taskTimeDisplayModePreferenceKey] is String
+            ? TaskTimeDisplayMode.fromStorageValue(
+                values[taskTimeDisplayModePreferenceKey] as String,
+              )
+            : null,
+        listStyle: TaskListStyle.values
+            .where((v) => v.name == values[taskListStylePreferenceKey])
+            .firstOrNull,
+        rowSpacing: TaskRowSpacing.values
+            .where((v) => v.name == values[taskRowSpacingPreferenceKey])
+            .firstOrNull,
+        visibleHours: start is int && end is int && _validHours(start, end)
+            ? TimelineVisibleHours(startMinutes: start, endMinutes: end)
+            : null,
+        hourWidth: width is int && timelineHourWidthLevels.contains(width)
+            ? width
+            : null,
+        collapsedProjectIds: collapsed is List<String>
+            ? Set.unmodifiable(collapsed)
+            : null,
+      ),
     );
-    notifyListeners();
   });
 
   Future<Result<void>> _save(
@@ -76,8 +88,7 @@ class LocalTaskPreferencesRepository extends ChangeNotifier
   ) {
     if (_disposed) return Future.value(const Result.ok(null));
     _edited.addAll(values.keys);
-    _state = next;
-    notifyListeners();
+    _publish(next);
     return _preferences.write(values);
   }
 
@@ -165,9 +176,8 @@ class LocalTaskPreferencesRepository extends ChangeNotifier
     });
   }
 
-  @override
   void dispose() {
     _disposed = true;
-    super.dispose();
+    _states.close();
   }
 }

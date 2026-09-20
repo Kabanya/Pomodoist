@@ -4,6 +4,7 @@ import 'package:pomodoist/config/collaboration_dependencies.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
 
 class TaskFocusHistoryEntry {
   const TaskFocusHistoryEntry({
@@ -43,17 +44,16 @@ class TaskHistoryViewModel extends Notifier<TaskHistoryState> {
         ? null
         : ref.watch(sharedScopeProvider(scopeId));
     final contributions = scopeId == null
-        ? const <Map<String, dynamic>>[]
+        ? const <CollaborationFocusContribution>[]
         : ref
                   .watch(
-                    collaborationEntitiesProvider((
+                    collaborationFocusContributionsProvider((
                       scopeId: scopeId,
-                      type: 'focus_interval',
                       taskId: task.id,
                     )),
                   )
                   .value ??
-              const <Map<String, dynamic>>[];
+              const <CollaborationFocusContribution>[];
     final local =
         ref.watch(_localTaskIntervalsProvider(task.id)).value ??
         const <FocusIntervalItem>[];
@@ -68,7 +68,7 @@ class TaskHistoryViewModel extends Notifier<TaskHistoryState> {
           seconds: interval.plannedSeconds,
         ),
       for (final contribution in contributions)
-        if (!localIds.contains(contribution['id'])) ?_sharedEntry(contribution),
+        if (!localIds.contains(contribution.id)) ?_sharedEntry(contribution),
     ]..sort((a, b) => b.startedAt.compareTo(a.startedAt));
     return (
       scope: scope,
@@ -77,26 +77,17 @@ class TaskHistoryViewModel extends Notifier<TaskHistoryState> {
   }
 }
 
-TaskFocusHistoryEntry? _sharedEntry(Map<String, dynamic> contribution) {
-  final startedAt = switch (contribution['startedAt']) {
-    final String text => DateTime.tryParse(text)?.toUtc(),
-    final num milliseconds => DateTime.fromMillisecondsSinceEpoch(
-      milliseconds.toInt(),
-      isUtc: true,
-    ),
-    _ => null,
-  };
+TaskFocusHistoryEntry? _sharedEntry(
+  CollaborationFocusContribution contribution,
+) {
+  final startedAt = contribution.startedAt;
   if (startedAt == null) return null;
   return TaskFocusHistoryEntry(
-    key: 'focus-history-shared-${contribution['id']}',
-    type: contribution['type'] as String? ?? 'work',
-    status: contribution['status'] as String? ?? 'completed',
+    key: 'focus-history-shared-${contribution.id}',
+    type: contribution.type,
+    status: contribution.status,
     startedAt: startedAt,
-    authorId:
-        (contribution['createdBy'] ?? contribution['userId'])?.toString() ?? '',
-    seconds:
-        (contribution['durationSeconds'] as num?)?.toInt() ??
-        (contribution['plannedSeconds'] as num?)?.toInt() ??
-        0,
+    authorId: contribution.authorId,
+    seconds: contribution.seconds,
   );
 }

@@ -7,6 +7,9 @@ extension AccountSyncPull on AccountSyncEngine {
     var sinceRevision = int.tryParse(state?.cursor ?? '') ?? 0;
     final entityTypes = <String>{};
     while (true) {
+      if (_isSessionCurrent?.call() == false) {
+        return entityTypes;
+      }
       final result = await _account
           .pullChanges(
             appId: AccountAppId.pomodoist,
@@ -14,8 +17,10 @@ extension AccountSyncPull on AccountSyncEngine {
             sinceRevision: sinceRevision,
           )
           .timeout(_requestTimeout);
+      _checkSession();
       entityTypes.addAll(result.changes.map((change) => change.entityType));
       if (result.nextCursor < sinceRevision) {
+        _checkSession();
         await _saveCursor(result.nextCursor);
         await _resetImportState();
         final imported = await importLocalSnapshotIfNeeded();
@@ -26,6 +31,7 @@ extension AccountSyncPull on AccountSyncEngine {
         return entityTypes;
       }
       await _applyPullResult(result);
+      _checkSession();
       await _saveCursor(result.nextCursor);
       if (!result.hasMore || result.nextCursor <= sinceRevision) {
         await _repairKanbanAfterFinalPull();
@@ -36,12 +42,13 @@ extension AccountSyncPull on AccountSyncEngine {
   }
 
   Future<void> _applyPullResult(AccountSyncPullResult result) async {
-    if (result.changes.isEmpty) {
+    if (result.changes.isEmpty || _isSessionCurrent?.call() == false) {
       return;
     }
 
     await _db.transaction(() async {
       for (final change in result.changes) {
+        _checkSession();
         if (change.entityType == 'task' &&
             (await (_db.select(_db.tasks)
                           ..where((r) => r.id.equals(change.entityId)))
@@ -93,9 +100,7 @@ extension AccountSyncPull on AccountSyncEngine {
   Future<void> _repairKanbanAfterFinalPull() async {
     final timestamp = DateTime.now().toUtc();
     await _db.transaction(() async {
-      await _kanbanTransitions.repairAfterRemotePullInTransaction(
-        timestamp: timestamp,
-      );
+      await _repairKanban(timestamp: timestamp);
     });
   }
 

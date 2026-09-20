@@ -1,18 +1,49 @@
+import 'package:app_voice/app_voice.dart';
+import 'package:pomodoist/data/repositories/voice/captured_voice_repository.dart';
+import 'package:pomodoist/data/repositories/voice/voice_capture_repository.dart';
+import 'package:pomodoist/data/services/voice/pomodoist_voice_controller.dart';
 import 'package:pomodoist/data/services/voice/voice_capture_service.dart';
 import 'package:pomodoist/data/services/voice/voice_transcription_policy.dart';
+import 'package:pomodoist/data/services/voice/account_voice_backend.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/account_providers.dart';
-import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:pomodoist/config/providers.dart';
-import 'package:pomodoist/data/repositories/voice/voice_quick_add_repository.dart';
 import 'package:pomodoist/config/voice_preferences_dependencies.dart';
 import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 import 'package:pomodoist/domain/use_cases/quick_add/voice_quick_add_use_case.dart';
 
-final voiceQuickAddRepositoryProvider = Provider.autoDispose
-    .family<VoiceQuickAddRepository, Object>((ref, session) {
-      final repository = VoiceQuickAddRepository(
+/// The recognizer handle for the current account. Composition keeps a live
+/// account reference without rebuilding an active recording on bootstrap or
+/// token changes; disposal must not access an already-disposed Ref.
+final voiceRecognitionControllerProvider = Provider<VoiceRecognitionController>(
+  (ref) {
+    var account = ref.read(accountClientProvider);
+    ref.listen(accountClientProvider, (_, next) {
+      account = next;
+    });
+    final backend = AccountVoiceBackend(() => account);
+    final controller = createPomodoistVoiceController(
+      mode: effectiveVoiceTranscriptionMode(
+        isWeb: kIsWeb,
+        platform: defaultTargetPlatform,
+        preferred: ref.read(voiceTranscriptionModeProvider),
+        signedIn: account?.currentUserId != null,
+      ),
+      ownerId: () => account?.currentUserId,
+      invoke: backend.call,
+    );
+    ref.onDispose(() {
+      backend.dispose();
+      controller.dispose();
+    });
+    return controller;
+  },
+);
+
+final voiceCaptureRepositoryProvider = Provider.autoDispose
+    .family<VoiceCaptureRepository, Object>((ref, session) {
+      final repository = CapturedVoiceRepository(
         initialController: AppVoiceCaptureService(
           ref.read(voiceRecognitionControllerProvider),
         ),
@@ -37,21 +68,11 @@ final voiceQuickAddRepositoryProvider = Provider.autoDispose
             .setMode(mode)
             .then((result) => result.getOrThrow()),
         signedIn: () => ref.read(accountClientProvider)?.currentUserId != null,
-        preferences: () => ref.read(sharedPreferencesProvider.future),
-        decomposer:
-            (transcript, {required now, required locale, smartMode = false}) =>
-                ref
-                    .read(taskDecomposerProvider)
-                    .decompose(
-                      transcript,
-                      now: now,
-                      locale: locale,
-                      smartMode: smartMode,
-                    ),
       );
       ref.onDispose(repository.dispose);
       return repository;
     });
+
 typedef SaveVoiceDrafts =
     Future<List<String>> Function(
       List<DecomposedTaskDraft> drafts, {
@@ -62,8 +83,11 @@ typedef SaveVoiceDrafts =
       String? labelId,
     });
 final saveVoiceDraftsProvider = Provider<SaveVoiceDrafts>((ref) {
-  final db = ref.watch(appDatabaseProvider);
-  final quickAdd = ref.watch(quickAddServiceProvider);
+  final useCase = VoiceQuickAddUseCase(
+    quickAdd: ref.watch(quickAddUseCaseProvider),
+    runLocalTransaction: ref.watch(localTransactionProvider),
+    hints: ref.watch(quickAddHintRepositoryProvider),
+  );
   return (
     drafts, {
     defaultPriority,
@@ -71,15 +95,12 @@ final saveVoiceDraftsProvider = Provider<SaveVoiceDrafts>((ref) {
     projectId,
     kanbanStatusId,
     labelId,
-  }) => db.transaction(
-    () => createVoiceQuickAddTasks(
-      quickAdd,
-      drafts,
-      defaultPriority: defaultPriority,
-      defaultDate: defaultDate,
-      projectId: projectId,
-      kanbanStatusId: kanbanStatusId,
-      labelId: labelId,
-    ),
+  }) => useCase(
+    drafts,
+    defaultPriority: defaultPriority,
+    defaultDate: defaultDate,
+    projectId: projectId,
+    kanbanStatusId: kanbanStatusId,
+    labelId: labelId,
   );
 });

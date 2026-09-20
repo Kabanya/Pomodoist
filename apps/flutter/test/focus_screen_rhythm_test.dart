@@ -1,4 +1,4 @@
-import 'package:pomodoist/data/repositories/focus/focus_preferences.dart';
+import 'package:pomodoist/data/repositories/focus/focus_preferences_repository.dart';
 import 'package:pomodoist/utils/result.dart';
 import 'package:pomodoist/data/repositories/projects/project_repository.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository.dart';

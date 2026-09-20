@@ -1,3 +1,6 @@
+import 'package:pomodoist/data/repositories/planning/quick_add_hint_repository.dart';
+import 'package:pomodoist/data/repositories/planning/quick_add_hint_repository_impl.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_hint.dart';
 import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/domain/models/calendar/calendar_models.dart';
 import 'package:pomodoist/data/repositories/calendar/drift_calendar_integration_repository.dart';
@@ -22,6 +25,8 @@ import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:pomodoist/ui/core/localization/notification_copy.dart';
 import 'package:pomodoist/data/services/audio/focus_sound_player.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/repositories/notifications/local_notification_repository.dart';
+import 'package:pomodoist/data/repositories/notifications/notification_repository.dart';
 import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/config/clock_provider.dart';
@@ -32,7 +37,11 @@ import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:pomodoist/config/billing_dependencies.dart';
 import 'package:pomodoist/data/repositories/calendar/google_calendar_repository.dart';
+import 'package:pomodoist/data/repositories/local/local_transaction.dart';
 import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
+import 'package:pomodoist/domain/use_cases/tasks/edit_task_title_use_case.dart';
+import 'package:pomodoist/domain/use_cases/focus/complete_expired_focus_interval_use_case.dart';
+import 'package:pomodoist/domain/use_cases/focus/refresh_focus_notification_language_use_case.dart';
 import 'package:pomodoist/data/services/planning/quick_add_hint.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 import 'package:pomodoist/data/repositories/achievements/achievement_repository_impl.dart';
@@ -41,7 +50,7 @@ import 'package:pomodoist/domain/models/productivity/achievement_models.dart';
 import 'package:pomodoist/domain/models/productivity/productivity_models.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
 import 'package:pomodoist/data/repositories/kanban/kanban_repository_impl.dart';
-import 'package:pomodoist/data/services/local/kanban_transition_coordinator.dart';
+import 'package:pomodoist/data/repositories/local/kanban_transition_coordinator.dart';
 import 'package:pomodoist/domain/use_cases/tasks/csv_task_import_use_case.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:uuid/uuid.dart';
@@ -53,6 +62,7 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
 });
 
 final appStartupProvider = FutureProvider<void>((ref) async {
+  ref.watch(focusAutoCompletionCoordinatorProvider);
   final db = ref.watch(appDatabaseProvider);
   await db.ensureSeedData();
   await ref
@@ -61,70 +71,52 @@ final appStartupProvider = FutureProvider<void>((ref) async {
       .then((result) => result.getOrThrow());
   unawaited(
     _initializeNotificationsBestEffort(
-      ref.watch(notificationSchedulerProvider),
+      ref.watch(notificationRepositoryProvider),
     ),
   );
 });
 
 Future<void> _initializeNotificationsBestEffort(
-  NotificationScheduler scheduler,
+  NotificationRepository notifications,
 ) async {
   try {
-    await scheduler.initialize();
+    await notifications.initialize();
   } catch (_) {}
 }
 
-final currentUserProvider = StreamProvider<UserRow?>((ref) {
-  final db = ref.watch(appDatabaseProvider);
-  return (db.select(db.users)..limit(1)).watchSingleOrNull();
-});
-
 final Provider<NotificationScheduler> notificationSchedulerProvider =
     Provider<NotificationScheduler>((ref) {
-      final scheduler = NotificationScheduler(
+      return NotificationScheduler(
         localizations: () => lookupAppLocalizations(
           resolveAppLocale(ref.read(appLanguageProvider)),
         ).notificationCopy,
       );
-      ref.listen(appLanguageProvider, (_, _) {
-        Future<void> refresh() async {
-          await scheduler.refreshLanguage();
-          if (!ref.mounted) return;
-          final interval = await ref
-              .read(focusRepositoryProvider)
-              .watchActiveInterval()
-              .first;
-          if (!ref.mounted ||
-              interval == null ||
-              interval.status != 'running') {
-            return;
-          }
-          final end = calculateExpectedEndAt(
-            startedAt: interval.startedAt,
-            plannedSeconds: interval.plannedSeconds,
-            pausedTotalSeconds: interval.pausedTotalSeconds,
-          );
-          if (!end.isAfter(DateTime.now())) return;
-          await scheduler.scheduleFocusIntervalEnd(
-            expectedEndAt: end,
-            title: 'pomodoist',
-            body: scheduler.focusCompletedBody(interval.type),
-          );
-        }
-
-        unawaited(refresh().catchError((Object _) {}));
-      });
-      return scheduler;
     });
+
+final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
+  final notifications = LocalNotificationRepository(
+    ref.watch(notificationSchedulerProvider),
+    () => lookupAppLocalizations(
+      resolveAppLocale(ref.read(appLanguageProvider)),
+    ).notificationCopy,
+  );
+  ref.listen(appLanguageProvider, (_, _) {
+    unawaited(
+      RefreshFocusNotificationLanguageUseCase(
+        focus: ref.read(focusRepositoryProvider),
+        notifications: notifications,
+        now: ref.read(clockProvider).now,
+      ).call().catchError((Object _) {}),
+    );
+  });
+  return notifications;
+});
 
 final focusSoundPlayerProvider = Provider<FocusSoundPlayer>((ref) {
   final player = AssetFocusSoundPlayer();
   ref.onDispose(() => unawaited(player.dispose()));
   return player;
 });
-
-const _reengagementReminderHour = 20;
-const _reengagementReminderMinute = 30;
 
 final quickAddParserProvider = Provider<QuickAddParser>(
   (ref) => QuickAddParser(
@@ -149,13 +141,29 @@ final quickAddHintStoreProvider = Provider<QuickAddHintStore>((ref) {
   return SharedPreferencesQuickAddHintStore(() => preferences);
 });
 
-final quickAddHintControllerProvider =
-    NotifierProvider<QuickAddHintController, QuickAddHintState>(
-      QuickAddHintController.new,
-    );
+final quickAddHintRepositoryProvider = Provider<QuickAddHintRepository>((ref) {
+  final repository = StoredQuickAddHintRepository(
+    history: ref.watch(quickAddHintHistoryProvider),
+    store: ref.watch(quickAddHintStoreProvider),
+    generator: ref.watch(quickAddHintGeneratorProvider),
+    locale: () => activeQuickAddHintLocale(ref.read(appLanguageProvider)),
+    hasActiveEntitlement: () =>
+        ref.read(billingRepositoryProvider).currentAccess.hasActiveEntitlement,
+  );
+  ref.onDispose(repository.dispose);
+  unawaited(repository.initialize());
+  return repository;
+});
+
+final quickAddHintStateProvider = Provider<QuickAddHintState>((ref) {
+  final repository = ref.watch(quickAddHintRepositoryProvider);
+  final subscription = repository.watch().listen((_) => ref.invalidateSelf());
+  ref.onDispose(subscription.cancel);
+  return repository.state;
+});
 
 final quickAddHintTextProvider = Provider<String?>((ref) {
-  final state = ref.watch(quickAddHintControllerProvider);
+  final state = ref.watch(quickAddHintStateProvider);
   final language = ref.watch(appLanguageProvider);
   final hint = state.hintForLocale(activeQuickAddHintLocale(language));
   if (hint != null) {
@@ -179,44 +187,6 @@ String quickAddHintFallbackFor(AppLanguage language) =>
 
 String quickAddHintEmptyFor(AppLanguage language) =>
     lookupAppLocalizations(resolveAppLocale(language)).addTask;
-
-class QuickAddHintController extends Notifier<QuickAddHintState> {
-  late final QuickAddHintCoordinator _coordinator;
-  var _hasActiveEntitlement = false;
-  late String _locale;
-
-  @override
-  QuickAddHintState build() {
-    _hasActiveEntitlement = ref
-        .read(billingViewModelProvider)
-        .hasActiveEntitlement;
-    ref.listen<BillingState>(billingViewModelProvider, (_, next) {
-      _hasActiveEntitlement = next.hasActiveEntitlement;
-    });
-    _locale = activeQuickAddHintLocale(ref.read(appLanguageProvider));
-    ref.listen<AppLanguage>(appLanguageProvider, (_, next) {
-      _locale = activeQuickAddHintLocale(next);
-    });
-    _coordinator = QuickAddHintCoordinator(
-      history: ref.read(quickAddHintHistoryProvider),
-      store: ref.read(quickAddHintStoreProvider),
-      generator: ref.read(quickAddHintGeneratorProvider),
-      locale: () => _locale,
-      hasActiveEntitlement: () => _hasActiveEntitlement,
-      onStateChanged: (value) {
-        if (ref.mounted) {
-          state = value;
-        }
-      },
-    );
-    unawaited(_coordinator.initialize());
-    return _coordinator.state;
-  }
-
-  Future<void> recordUserTaskCreated() {
-    return _coordinator.recordUserTaskCreated();
-  }
-}
 
 final syncQueueRepositoryProvider = Provider<OutboxService>((ref) {
   return DriftOutboxService(ref.watch(appDatabaseProvider));
@@ -244,18 +214,12 @@ final kanbanTransitionCoordinatorProvider =
     });
 
 final driftTaskRepositoryProvider = Provider<DriftTaskRepository>((ref) {
-  return DriftTaskRepository(
+  final repository = DriftTaskRepository(
     ref.watch(appDatabaseProvider),
     ref.watch(syncQueueRepositoryProvider),
     kanbanTransitions: ref.watch(kanbanTransitionCoordinatorProvider),
-    onUserTaskCreated: () {
-      unawaited(
-        ref
-            .read(quickAddHintControllerProvider.notifier)
-            .recordUserTaskCreated(),
-      );
-    },
   );
+  return repository;
 });
 
 final taskRepositoryProvider = Provider<TaskRepository>((ref) {
@@ -315,7 +279,7 @@ final productivityRepositoryProvider = Provider<ProductivityRepository>((ref) {
 final achievementRepositoryProvider = Provider<AchievementRepository>((ref) {
   return DriftAchievementRepository(
     ref.watch(appDatabaseProvider),
-    () => ref.read(sharedPreferencesProvider.future),
+    ref.watch(preferencesServiceProvider),
   );
 });
 
@@ -323,42 +287,29 @@ final achievementsProvider = StreamProvider<List<AchievementItem>>((ref) {
   return ref.watch(achievementRepositoryProvider).watchAchievements();
 });
 
-final quickAddServiceProvider = Provider<QuickAddUseCase>((ref) {
+final quickAddUseCaseProvider = Provider<QuickAddUseCase>((ref) {
   return QuickAddUseCase(
     now: ref.watch(clockProvider).now,
     parser: ref.watch(quickAddParserProvider),
     taskRepository: ref.watch(taskRepositoryProvider),
     projectRepository: ref.watch(projectRepositoryProvider),
-    focusPresetProvider: () => _selectedFocusPreset(ref),
+    focusRepository: ref.watch(focusRepositoryProvider),
+    selectedFocusPresetId: () => ref.read(lastFocusPresetIdProvider),
+    hints: ref.watch(quickAddHintRepositoryProvider),
   );
 });
 
-Future<FocusPresetItem?> _selectedFocusPreset(Ref ref) async {
-  final selectedId = ref.read(lastFocusPresetIdProvider);
-  final db = ref.read(appDatabaseProvider);
-  final rows = await db.select(db.focusPresets).get();
-  return selectedFocusPresetOrDefault([
-    for (final row in rows)
-      if (!row.isDeleted) _mapFocusPreset(row),
-  ], selectedId);
-}
+final editTaskTitleUseCaseProvider = Provider<EditTaskTitleUseCase>((ref) {
+  return EditTaskTitleUseCase(
+    parser: ref.watch(quickAddParserProvider),
+    taskRepository: ref.watch(taskRepositoryProvider),
+    projectRepository: ref.watch(projectRepositoryProvider),
+  );
+});
 
-FocusPresetItem _mapFocusPreset(FocusPresetRow row) => FocusPresetItem(
-  id: row.id,
-  userId: row.userId,
-  name: row.name,
-  workSeconds: row.workSeconds,
-  shortBreakSeconds: row.shortBreakSeconds,
-  longBreakSeconds: row.longBreakSeconds,
-  intervalsBeforeLongBreak: row.intervalsBeforeLongBreak,
-  autoStartBreaks: row.autoStartBreaks,
-  autoStartWork: row.autoStartWork,
-  allowPause: row.allowPause,
-  strictMode: row.strictMode,
-  isDefault: row.isDefault,
-  createdAt: row.createdAt,
-  updatedAt: row.updatedAt,
-);
+final localTransactionProvider = Provider<RunLocalTransaction>((ref) {
+  return ref.watch(appDatabaseProvider).transaction;
+});
 
 final tasksByQueryProvider = StreamProvider.family<List<TaskItem>, TaskQuery>((
   ref,
@@ -394,12 +345,13 @@ final taskStartNotificationCoordinatorProvider = Provider<void>((ref) {
   if (tasks == null) {
     return;
   }
+  // Rebuild on language change so rescheduled notifications use new copy.
+  ref.watch(appLanguageProvider);
   unawaited(
     _syncTaskStartNotificationsBestEffort(
       tasks: tasks,
       now: ref.watch(clockProvider).now(),
-      language: ref.watch(appLanguageProvider),
-      scheduler: ref.watch(notificationSchedulerProvider),
+      notifications: ref.watch(notificationRepositoryProvider),
     ),
   );
 });
@@ -407,70 +359,11 @@ final taskStartNotificationCoordinatorProvider = Provider<void>((ref) {
 Future<void> _syncTaskStartNotificationsBestEffort({
   required List<TaskItem> tasks,
   required DateTime now,
-  required AppLanguage language,
-  required NotificationScheduler scheduler,
+  required NotificationRepository notifications,
 }) async {
   try {
-    await syncTaskStartNotifications(
-      tasks: tasks,
-      now: now,
-      language: language,
-      scheduler: scheduler,
-    );
+    await notifications.syncTaskStartNotifications(tasks: tasks, now: now);
   } catch (_) {}
-}
-
-Future<void> syncTaskStartNotifications({
-  required List<TaskItem> tasks,
-  required DateTime now,
-  required AppLanguage language,
-  required NotificationScheduler scheduler,
-}) async {
-  final desired = <String, TaskItem>{};
-  for (final task in tasks) {
-    final schedule = task.schedule;
-    if (task.isCompleted ||
-        task.isDeleted ||
-        schedule == null ||
-        !schedule.isTimed ||
-        !schedule.start!.toLocal().isAfter(now.toLocal())) {
-      continue;
-    }
-    desired[task.id] = task;
-  }
-
-  final pending = await scheduler.pendingTaskStartTaskIds();
-  for (final taskId in pending.difference(desired.keys.toSet())) {
-    await scheduler.cancelTaskStart(taskId);
-  }
-  if (desired.isEmpty) {
-    return;
-  }
-
-  await scheduler.requestNotificationPermissions();
-  final copy = _taskStartNotificationCopy(language);
-  for (final task in desired.values) {
-    await scheduler.scheduleTaskStart(
-      taskId: task.id,
-      startAt: task.schedule!.start!,
-      title: copy.title,
-      body: task.content,
-    );
-  }
-}
-
-_TaskStartNotificationCopy _taskStartNotificationCopy(AppLanguage language) {
-  return _TaskStartNotificationCopy(
-    title: lookupAppLocalizations(
-      resolveAppLocale(language),
-    ).notificationTaskStarting,
-  );
-}
-
-class _TaskStartNotificationCopy {
-  const _TaskStartNotificationCopy({required this.title});
-
-  final String title;
 }
 
 final projectsProvider = StreamProvider<List<ProjectItem>>((ref) {
@@ -530,6 +423,26 @@ final focusTickerProvider = StreamProvider<DateTime>((ref) {
 });
 
 final taskTimeTickerProvider = focusTickerProvider;
+
+final completeExpiredFocusIntervalUseCaseProvider =
+    Provider<CompleteExpiredFocusIntervalUseCase>(
+      (ref) => CompleteExpiredFocusIntervalUseCase(
+        ref.watch(focusRepositoryProvider),
+      ),
+    );
+
+final focusAutoCompletionCoordinatorProvider = Provider<void>((ref) {
+  ref.listen(focusTickerProvider, (_, tick) {
+    final now = tick.value;
+    if (now == null) return;
+    unawaited(
+      ref
+          .read(completeExpiredFocusIntervalUseCaseProvider)
+          .call(ref.read(activeFocusIntervalProvider).value, now)
+          .catchError((Object _) {}),
+    );
+  }, fireImmediately: true);
+});
 
 final overdueTasksProvider = Provider.autoDispose<AsyncValue<List<TaskItem>>>((
   ref,
@@ -591,14 +504,6 @@ final activeFocusRemainingProvider = Provider<Duration?>((ref) {
     pausedTotalSeconds: interval.pausedTotalSeconds,
     pausedAt: interval.pausedAt,
   );
-  if (interval.status == 'running' && remaining == Duration.zero) {
-    unawaited(
-      ref
-          .read(focusRepositoryProvider)
-          .completeActiveInterval()
-          .then((result) => result.getOrThrow()),
-    );
-  }
   return remaining;
 });
 
@@ -620,91 +525,25 @@ final reengagementNotificationCoordinatorProvider = Provider<void>((ref) {
   if (summary == null) {
     return;
   }
+  // Rebuild on language change so the reminder is rescheduled with new copy.
+  ref.watch(appLanguageProvider);
 
-  final scheduler = ref.watch(notificationSchedulerProvider);
+  final notifications = ref.watch(notificationRepositoryProvider);
   final clock = ref.watch(clockProvider);
-  final language = ref.watch(appLanguageProvider);
   unawaited(
-    syncReengagementReminder(
+    notifications.syncReengagementReminder(
       enabled: enabled,
-      summary: summary,
       now: clock.now(),
-      language: language,
-      scheduler: scheduler,
+      hasProgressToday: summary.completedTasks > 0,
     ),
   );
 });
 
-Future<void> syncReengagementReminder({
-  required bool enabled,
-  required ProductivitySummary summary,
-  required DateTime now,
-  required AppLanguage language,
-  required NotificationScheduler scheduler,
-}) async {
-  if (!enabled) {
-    await scheduler.cancelReengagementReminder();
-    return;
-  }
-
-  final copy = _reengagementNotificationCopy(language);
-  await scheduler.requestNotificationPermissions();
-  await scheduler.scheduleReengagementReminder(
-    firstAt: nextReengagementReminderAt(
-      now: now,
-      hasProgressToday: summary.completedTasks > 0,
-    ),
-    title: copy.title,
-    body: copy.body,
-  );
-}
-
-DateTime nextReengagementReminderAt({
-  required DateTime now,
-  required bool hasProgressToday,
-}) {
-  final local = now.toLocal();
-  final todayReminder = DateTime(
-    local.year,
-    local.month,
-    local.day,
-    _reengagementReminderHour,
-    _reengagementReminderMinute,
-  );
-  if (hasProgressToday || !local.isBefore(todayReminder)) {
-    return DateTime(
-      local.year,
-      local.month,
-      local.day + 1,
-      _reengagementReminderHour,
-      _reengagementReminderMinute,
-    );
-  }
-  return todayReminder;
-}
-
-_ReengagementNotificationCopy _reengagementNotificationCopy(
-  AppLanguage language,
-) {
-  final l10n = lookupAppLocalizations(resolveAppLocale(language));
-  return _ReengagementNotificationCopy(
-    title: l10n.notificationReturnTitle,
-    body: l10n.notificationReturnBody,
-  );
-}
-
-class _ReengagementNotificationCopy {
-  const _ReengagementNotificationCopy({
-    required this.title,
-    required this.body,
-  });
-
-  final String title;
-  final String body;
-}
-
-final pendingSyncCommandsProvider = StreamProvider<List<SyncCommandRow>>((ref) {
-  return ref.watch(syncQueueRepositoryProvider).watchPending();
+final pendingSyncCommandCountProvider = StreamProvider<int>((ref) {
+  return ref
+      .watch(syncQueueRepositoryProvider)
+      .watchPending()
+      .map((commands) => commands.length);
 });
 
 final calendarIntegrationRepositoryProvider =

@@ -2,27 +2,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/collaboration_dependencies.dart';
 import 'package:pomodoist/data/repositories/collaboration/collaboration_repository.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
 import 'package:pomodoist/utils/result.dart';
 
 final class TaskCollaborationState {
   TaskCollaborationState({
     this.scope,
     this.actorId,
-    List<Map<String, dynamic>> comments = const [],
-  }) : comments = List.unmodifiable(
-         comments.map(Map<String, dynamic>.unmodifiable),
-       );
+    List<CollaborationComment> comments = const [],
+  }) : comments = List.unmodifiable(comments);
   final SharedScope? scope;
   final String? actorId;
-  final List<Map<String, dynamic>> comments;
-  List<Map<String, dynamic>> get editors => [
-    for (final member in scope?.members ?? <Map<String, dynamic>>[])
-      if (member['role'] != 'observer') member,
+  final List<CollaborationComment> comments;
+  List<CollaborationMember> get editors => [
+    for (final member in scope?.members ?? const <CollaborationMember>[])
+      if (member.role.canEdit) member,
   ];
-  bool canDeleteComment(Map<String, dynamic> comment) =>
+  bool canDeleteComment(CollaborationComment comment) =>
       scope != null &&
       scope!.canEdit &&
-      (comment['createdBy'] == actorId || scope!.canManage);
+      (comment.createdBy == actorId || scope!.canManage);
 }
 
 typedef TaskCollaborationQuery = ({String taskId, String? scopeId});
@@ -51,9 +50,8 @@ class TaskCollaborationViewModel extends Notifier<TaskCollaborationState> {
       comments:
           ref
               .watch(
-                collaborationEntitiesProvider((
+                collaborationCommentsProvider((
                   scopeId: scopeId,
-                  type: 'comment',
                   taskId: query.taskId,
                 )),
               )

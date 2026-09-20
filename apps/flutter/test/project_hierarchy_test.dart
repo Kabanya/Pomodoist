@@ -2,7 +2,7 @@ import 'package:pomodoist/data/repositories/projects/project_repository_impl.dar
 import 'dart:io';
 import 'package:app_account/app_account.dart';
 import 'package:uuid/uuid.dart';
-import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'support/account_sync_engine.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_tree_controls.dart';
 import 'package:pomodoist/ui/tasks/view_models/timeline_project_layout.dart';
 import 'package:drift/drift.dart' show Value, driftRuntimeOptions;
@@ -279,11 +279,10 @@ void main() {
           .createProject('Sibling')
           .then((result) => result.getOrThrow());
       final account = _SyncClient();
-      final engine = AccountSyncEngine(
+      final engine = testSyncEngine(
         db: db,
         account: account,
         uuid: const Uuid(),
-        localPaidEntitlementLoader: () async => true,
       );
       await engine.pushPending();
       final directory = await Directory.systemTemp.createTemp(
@@ -293,7 +292,7 @@ void main() {
       final file = File('${directory.path}/test.sqlite');
       var target = AppDatabase(NativeDatabase(file));
       await target.ensureSeedData();
-      await AccountSyncEngine(
+      await testSyncEngine(
         db: target,
         account: account,
         uuid: const Uuid(),
@@ -308,7 +307,7 @@ void main() {
           .moveProject(child, parentId: null, beforeProjectId: root)
           .then((result) => result.getOrThrow());
       await engine.pushPending();
-      await AccountSyncEngine(
+      await testSyncEngine(
         db: target,
         account: account,
         uuid: const Uuid(),

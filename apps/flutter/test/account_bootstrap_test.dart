@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pomodoist/config/account_providers.dart';
-import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/config/billing_store_dependencies.dart';
 import 'package:pomodoist/ui/settings/widgets/settings_screen.dart';
 import 'package:pomodoist/ui/settings/widgets/settings_navigation.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';

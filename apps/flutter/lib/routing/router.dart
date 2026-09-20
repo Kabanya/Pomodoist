@@ -38,11 +38,7 @@ import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/ui/core/widgets/adaptive_shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  bool signedIn() {
-    final authState = ref.read(accountAuthStateProvider).value;
-    final account = ref.read(accountClientProvider);
-    return (authState?.signedIn ?? false) || account?.currentUserId != null;
-  }
+  bool signedIn() => ref.read(accountSignedInProvider);
 
   final nativeLinkCoordinator = ref.read(nativeLinkCoordinatorProvider);
   final router = GoRouter(
@@ -50,8 +46,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     overridePlatformDefaultLocation: true,
     onEnter: (context, current, next, router) async {
       if (current.uri != next.uri) {
-        final save = ref.read(taskDetailSaveGuardProvider).save;
-        if (save != null && !await save()) return const Block.stop();
+        final guard = ref.read(taskDetailSaveGuardProvider);
+        if (guard.hasRegisteredEditors && !await guard.saveAll()) {
+          return const Block.stop();
+        }
       }
       return const Allow();
     },
@@ -299,9 +297,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
-  ref.listen(accountAuthStateProvider, (_, _) => router.refresh());
-  ref.listen(passwordRecoveryProvider, (_, _) => router.refresh());
-  ref.listen(accountClientProvider, (_, _) => router.refresh());
+  ref.listen(accountSessionProvider, (_, _) => router.refresh());
+  ref.listen(passwordRecoveryStateProvider, (_, _) => router.refresh());
   final detachNativeRoutes = nativeLinkCoordinator?.attachRouteSink((location) {
     router.go(location);
     debugPrint('POMODOIST_NATIVE_LINK_HANDLED');
@@ -320,11 +317,9 @@ class _OAuthConsentRoute extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final account = ref.watch(accountClientProvider);
-    final authState = ref.watch(accountAuthStateProvider).value;
-    final userId = account?.currentUserId ?? authState?.session?.userId;
+    final session = ref.watch(accountSessionProvider).value;
     return OAuthConsentScreen(
-      key: ValueKey((uri.toString(), identityHashCode(account), userId)),
+      key: ValueKey((uri.toString(), session?.userId, session?.generation)),
       uri: uri,
     );
   }

@@ -7,7 +7,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/ui/core/platform/legal_urls.dart';
-import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/config/billing_store_dependencies.dart';
+import 'package:pomodoist/domain/models/billing/billing_models.dart';
+import 'package:pomodoist/ui/billing/view_models/billing_view_model.dart';
 import 'package:pomodoist/ui/settings/widgets/app_info_card.dart';
 import 'package:pomodoist/ui/settings/widgets/settings_subscription.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
@@ -203,7 +205,7 @@ void main() {
           appVersionProvider.overrideWith((ref) async => '2.4.1 (37)'),
           billingViewModelProvider.overrideWith(
             () => _StaticBillingViewModel(
-              const BillingState(
+              BillingState(
                 loading: false,
                 activeProductId: pomodoistMonthlyProductId,
                 activeStoreKitProductIds: {pomodoistMonthlyProductId},
@@ -242,7 +244,7 @@ void main() {
           appVersionProvider.overrideWith((ref) async => '2.4.1 (37)'),
           billingViewModelProvider.overrideWith(
             () => _StaticBillingViewModel(
-              const BillingState(
+              BillingState(
                 loading: false,
                 activeProductId: pomodoistAnnualProductId,
                 activeStoreKitProductIds: {pomodoistAnnualProductId},
@@ -281,7 +283,7 @@ void main() {
           appVersionProvider.overrideWith((ref) async => '2.4.1 (37)'),
           billingViewModelProvider.overrideWith(
             () => _StaticBillingViewModel(
-              const BillingState(
+              BillingState(
                 loading: false,
                 activeProductId: pomodoistLifetimeProductId,
                 activeStoreKitProductIds: {pomodoistLifetimeProductId},
@@ -323,7 +325,7 @@ void main() {
           appVersionProvider.overrideWith((ref) async => '2.4.1 (37)'),
           billingViewModelProvider.overrideWith(
             () => _StaticBillingViewModel(
-              const BillingState(
+              BillingState(
                 loading: false,
                 activeProductId: unknownProductId,
                 activeStoreKitProductIds: {unknownProductId},
@@ -360,7 +362,7 @@ void main() {
     tester,
   ) async {
     final billingController = _StaticBillingViewModel(
-      const BillingState(loading: false),
+      BillingState(loading: false),
     );
     await tester.pumpWidget(
       ProviderScope(
@@ -391,7 +393,7 @@ void main() {
     expect(find.text('Plan: Free'), findsOneWidget);
 
     billingController.replaceState(
-      const BillingState(
+      BillingState(
         loading: false,
         activeProductId: pomodoistMonthlyProductId,
         activeStoreKitProductIds: {pomodoistMonthlyProductId},

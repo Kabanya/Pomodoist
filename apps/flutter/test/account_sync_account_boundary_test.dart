@@ -1,4 +1,4 @@
-import 'package:pomodoist/data/repositories/focus/focus_preferences.dart';
+import 'package:pomodoist/data/repositories/focus/focus_preferences_repository.dart';
 import 'dart:async';
 
 import 'package:app_account/app_account.dart';
@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
-import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'support/account_sync_engine.dart';
 import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
 import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,10 +27,13 @@ void main() {
       final db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
       await db.ensureSeedData();
-      await AccountSyncEngine.prepareGuestLocalData(db: db, uuid: const Uuid());
+      await SyncOwnershipCoordinator.prepareGuestLocalData(
+        db: db,
+        uuid: const Uuid(),
+      );
       await _insertFocusPreset(db, id: 'guest-custom-preset');
 
-      final reset = await AccountSyncEngine.prepareGuestLocalData(
+      final reset = await SyncOwnershipCoordinator.prepareGuestLocalData(
         db: db,
         uuid: const Uuid(),
       );
@@ -50,7 +53,7 @@ void main() {
     ).prepareLocalAccountData();
     await _insertFocusPreset(db, id: 'account-custom-preset');
 
-    final reset = await AccountSyncEngine.prepareGuestLocalData(
+    final reset = await SyncOwnershipCoordinator.prepareGuestLocalData(
       db: db,
       uuid: const Uuid(),
     );
@@ -65,7 +68,10 @@ void main() {
       final db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
       await db.ensureSeedData();
-      await AccountSyncEngine.prepareGuestLocalData(db: db, uuid: const Uuid());
+      await SyncOwnershipCoordinator.prepareGuestLocalData(
+        db: db,
+        uuid: const Uuid(),
+      );
       await _insertFocusPreset(db, id: 'guest-custom-preset');
       final account = _RecordingAccountClient(
         userId: 'account-user-id',
@@ -137,7 +143,7 @@ void main() {
     );
     await _engine(db, account).prepareLocalAccountData();
 
-    final guest = AccountSyncEngine.prepareGuestLocalData(
+    final guest = SyncOwnershipCoordinator.prepareGuestLocalData(
       db: db,
       uuid: const Uuid(),
     );
@@ -227,7 +233,10 @@ void main() {
     final db = _BlockingResetDatabase();
     addTearDown(db.close);
     await db.ensureSeedData();
-    await AccountSyncEngine.prepareGuestLocalData(db: db, uuid: const Uuid());
+    await SyncOwnershipCoordinator.prepareGuestLocalData(
+      db: db,
+      uuid: const Uuid(),
+    );
     final account = _RecordingAccountClient(
       userId: 'account-user-id',
       nextCursor: 0,
@@ -235,7 +244,7 @@ void main() {
     final accountStartup = _engine(db, account).prepareLocalAccountData();
     await db.resetStarted.future;
     var signedIn = false;
-    final guest = AccountSyncEngine.prepareGuestLocalData(
+    final guest = SyncOwnershipCoordinator.prepareGuestLocalData(
       db: db,
       uuid: const Uuid(),
       shouldPrepare: () => !signedIn,
@@ -264,7 +273,7 @@ void main() {
 
     final sync = engine.syncNow();
     await account.pullStarted.future;
-    final guest = AccountSyncEngine.prepareGuestLocalData(
+    final guest = SyncOwnershipCoordinator.prepareGuestLocalData(
       db: db,
       uuid: const Uuid(),
     );
@@ -333,7 +342,10 @@ void main() {
       final db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
       await db.ensureSeedData();
-      await AccountSyncEngine.prepareGuestLocalData(db: db, uuid: const Uuid());
+      await SyncOwnershipCoordinator.prepareGuestLocalData(
+        db: db,
+        uuid: const Uuid(),
+      );
       final container = ProviderContainer(
         overrides: [
           appStartupProvider.overrideWith((ref) async {}),
@@ -631,12 +643,7 @@ Future<void> _expectClearedFocusPreferences(ProviderContainer container) async {
 }
 
 AccountSyncEngine _engine(AppDatabase db, _RecordingAccountClient account) {
-  return AccountSyncEngine(
-    db: db,
-    account: account,
-    uuid: const Uuid(),
-    localPaidEntitlementLoader: () async => true,
-  );
+  return testSyncEngine(db: db, account: account, uuid: const Uuid());
 }
 
 class _RecordingAccountClient implements AccountClient {

@@ -2,16 +2,52 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 
-final priorityMatrixViewModelProvider =
-    NotifierProvider.autoDispose<
-      PriorityMatrixViewModel,
-      AsyncValue<List<TaskItem>>
-    >(PriorityMatrixViewModel.new);
+typedef PriorityMatrixState = ({
+  AsyncValue<List<TaskItem>> tasks,
+  Map<int, List<TaskItem>> buckets,
+  Map<String, TaskItem> tasksById,
+});
 
-class PriorityMatrixViewModel extends Notifier<AsyncValue<List<TaskItem>>> {
+final priorityMatrixViewModelProvider =
+    NotifierProvider.autoDispose<PriorityMatrixViewModel, PriorityMatrixState>(
+      PriorityMatrixViewModel.new,
+    );
+
+class PriorityMatrixViewModel extends Notifier<PriorityMatrixState> {
   @override
-  AsyncValue<List<TaskItem>> build() =>
-      ref.watch(tasksByQueryProvider(const TaskQuery.all()));
+  PriorityMatrixState build() {
+    final tasks = ref
+        .watch(tasksByQueryProvider(const TaskQuery.all()))
+        .whenData(
+          (rows) => List<TaskItem>.unmodifiable(
+            rows.where((task) => !task.isCompleted),
+          ),
+        );
+    return (
+      tasks: tasks,
+      buckets: tasks.hasValue
+          ? priorityBuckets(tasks.value!)
+          : const <int, List<TaskItem>>{},
+      tasksById: Map.unmodifiable({
+        for (final task in tasks.value ?? const <TaskItem>[]) task.id: task,
+      }),
+    );
+  }
+
+  /// Rendering-only projection for rows that are animating out. Retained tasks
+  /// keep their previous bucket until the exit animation finishes; actions
+  /// still revalidate against the live repository by task ID.
+  Map<int, List<TaskItem>> bucketsWithRetained(Iterable<TaskItem> retained) {
+    if (retained.isEmpty) {
+      return state.buckets;
+    }
+    final byId = <String, TaskItem>{
+      for (final task in retained) task.id: task,
+      for (final task in state.tasks.value ?? const <TaskItem>[]) task.id: task,
+    };
+    return priorityBuckets(byId.values);
+  }
+
   Future<void> setPriority(String id, int priority) async {
     (await ref
             .read(taskRepositoryProvider)
@@ -20,7 +56,7 @@ class PriorityMatrixViewModel extends Notifier<AsyncValue<List<TaskItem>>> {
   }
 }
 
-Map<int, List<TaskItem>> priorityBuckets(List<TaskItem> tasks) {
+Map<int, List<TaskItem>> priorityBuckets(Iterable<TaskItem> tasks) {
   final result = {
     for (final priority in matrixPriorities) priority: <TaskItem>[],
   };

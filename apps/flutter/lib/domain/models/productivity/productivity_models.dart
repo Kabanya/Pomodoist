@@ -1,5 +1,5 @@
 class ProductivitySummary {
-  const ProductivitySummary({
+  ProductivitySummary({
     required this.completedTasks,
     required this.completedFocusIntervals,
     required this.totalFocusSeconds,
@@ -7,8 +7,8 @@ class ProductivitySummary {
     required this.openTasks,
     required this.allTimeCompletedTasks,
     required this.allTimeCompletedFocusIntervals,
-    this.lastSevenDays = const [],
-  });
+    List<ProductivityDaySummary> lastSevenDays = const [],
+  }) : lastSevenDays = List.unmodifiable(lastSevenDays);
 
   final int completedTasks;
   final int completedFocusIntervals;

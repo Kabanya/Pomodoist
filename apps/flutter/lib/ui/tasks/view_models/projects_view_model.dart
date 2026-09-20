@@ -117,6 +117,32 @@ class ProjectContextViewModel extends Notifier<ProjectContextState> {
   }
 }
 
+final projectMoveTargetsProvider = Provider.autoDispose
+    .family<AsyncValue<List<ProjectListRow>>, String>((ref, projectId) {
+      return ref
+          .watch(projectsProvider)
+          .whenData(
+            (items) => List.unmodifiable(
+              projectRows(
+                items
+                    .where(
+                      (p) =>
+                          p.id != inboxProjectId &&
+                          !p.isArchived &&
+                          !p.isDeleted,
+                    )
+                    .toList(),
+              ).where(
+                (row) => canParentProject(
+                  items,
+                  projectId: projectId,
+                  parentId: row.project.id,
+                ),
+              ),
+            ),
+          );
+    });
+
 final projectTreeViewModelProvider =
     NotifierProvider.autoDispose<
       ProjectTreeViewModel,
@@ -126,6 +152,12 @@ final projectTreeViewModelProvider =
 class ProjectTreeViewModel extends Notifier<AsyncValue<List<ProjectItem>>> {
   @override
   AsyncValue<List<ProjectItem>> build() => ref.watch(projectsProvider);
+  ProjectMoveTarget? dropTarget(
+    String id,
+    String targetId,
+    ProjectDropPosition position,
+  ) => projectDropTarget(state.value ?? const [], id, targetId, position);
+
   Future<void> move(String id, ProjectMoveTarget target) async {
     (await ref
             .read(projectRepositoryProvider)

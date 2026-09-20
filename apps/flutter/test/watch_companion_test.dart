@@ -4,11 +4,13 @@ import 'package:pomodoist/data/repositories/planning/task_decomposition_reposito
 import 'package:pomodoist/data/repositories/projects/project_repository_impl.dart';
 import 'package:app_account/app_account.dart';
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/runtime_public_config.dart';
-import 'package:pomodoist/config/platform/watch_companion.dart';
+import 'package:pomodoist/data/services/platform/watch_companion_service.dart';
+import 'package:pomodoist/domain/use_cases/platform/watch_companion_use_case.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
@@ -25,7 +27,8 @@ void main() {
   late DriftTaskRepository taskRepository;
   late DriftProjectRepository projectRepository;
   late DriftFocusRepository focusRepository;
-  late WatchCompanionController controller;
+  late WatchCompanionService controller;
+  late WatchCompanionUseCase actions;
   String? selectedPresetId;
 
   setUp(() async {
@@ -40,7 +43,7 @@ void main() {
       syncQueue,
       _NoopNotificationScheduler(),
     );
-    controller = WatchCompanionController(
+    actions = WatchCompanionUseCase(
       taskRepository: taskRepository,
       projectRepository: projectRepository,
       focusRepository: focusRepository,
@@ -54,9 +57,30 @@ void main() {
       selectedFocusPresetIdProvider: () => selectedPresetId,
       now: () => DateTime(2026, 5, 1, 12),
     );
+    controller = WatchCompanionService(
+      execute: actions.execute,
+      snapshot: actions.buildSnapshot,
+      snapshotChanges: actions.snapshotChanges,
+    );
   });
 
   tearDown(() => db.close());
+
+  test('watch does not publish an in-flight snapshot after disposal', () async {
+    final calls = <MethodCall>[];
+    const channel = MethodChannel(watchCompanionChannelName);
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call);
+      return null;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+    final pending = controller.pushSnapshot();
+    controller.dispose();
+    await pending;
+    expect(calls, isEmpty);
+  });
 
   test(
     'Watch exposes personal tasks only and rejects shared task commands',
@@ -123,7 +147,13 @@ void main() {
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
       ),
-      config,
+      environment: config.environment.name,
+      release: config.release,
+      webAppUrl: config.webAppUrl.toString(),
+      supabaseUrl: config.supabaseUrl?.toString(),
+      supabaseAnonKey: config.supabaseAnonKey,
+      turnstileSiteKey: config.turnstileSiteKey,
+      sentryDsn: config.sentryDsn?.toString(),
     );
 
     expect(payload['signedIn'], isTrue);
@@ -452,7 +482,7 @@ class _FakeTaskDecomposer implements TaskDecomposer {
     required String locale,
     bool smartMode = false,
   }) async {
-    return const [
+    return [
       DecomposedTaskDraft(
         quickAdd: 'Plan release today 10:00 30m',
         description: 'From watch dictation',

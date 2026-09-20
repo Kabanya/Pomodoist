@@ -7,6 +7,8 @@ import 'package:uuid/uuid.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
+import 'package:pomodoist/domain/models/collaboration/public_project.dart';
 import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
 import 'package:pomodoist/data/services/local/shared_access.dart';
 
@@ -23,30 +25,109 @@ class DriftCollaborationRepository implements CollaborationRepository {
   final Future<void> Function() synchronize;
 
   @override
-  Future<Result<Map<String, dynamic>>> publicRead(String token) =>
-      Result.capture(() => api.call('publicRead', {'token': token}));
+  Future<Result<PublicProject>> publicRead(String token) => Result.capture(
+    () async => PublicProject.fromResponse(await api.publicRead(token)),
+  );
+
   @override
   Future<Result<String>> actorId() =>
       Result.capture(() => SharedAccess(db).actorId());
+
   @override
-  Future<Result<Map<String, dynamic>>> action(
-    String action, [
-    Map<String, dynamic> args = const {},
-  ]) => Result.capture(() => _mutate(action, args));
+  Future<Result<CollaborationState>> state() => Result.capture(
+    () async => CollaborationState.fromJson(await api.state()),
+  );
+
   @override
-  Future<Result<Map<String, dynamic>>> state() => Result.capture(_state);
+  Future<Result<SharedScope>> acceptInvitation(String token) =>
+      Result.capture(() async {
+        final response = await _mutate(() => api.acceptInvitation(token));
+        return _scope(response);
+      });
+
   @override
-  Future<Result<Map<String, dynamic>>> acceptInvitation(String token) =>
-      Result.capture(() => _acceptInvitation(token));
+  Future<Result<void>> unshare(String scopeId) => Result.capture(() async {
+    await _mutate(() => api.unshare(scopeId));
+  });
+
   @override
-  Future<Result<Map<String, dynamic>>> unshare(String scopeId) =>
-      Result.capture(() => _unshare(scopeId));
-  @override
-  Future<Result<Map<String, dynamic>>> share(String projectId) =>
+  Future<Result<SharedScope>> share(String projectId) =>
       Result.capture(() => _share(projectId));
+
+  @override
+  Future<Result<CollaborationMembers>> members(String scopeId) =>
+      Result.capture(
+        () async => CollaborationMembers.fromJson(await api.members(scopeId)),
+      );
+
+  @override
+  Future<Result<CollaborationInviteOutcome>> invite(
+    String scopeId, {
+    required String email,
+    required CollaborationRole role,
+  }) => Result.capture(() async {
+    final response = await _mutate(
+      () => api.invite(scopeId: scopeId, email: email, role: role),
+    );
+    return CollaborationInviteOutcome.fromJson(response);
+  });
+
+  @override
+  Future<Result<void>> revokeInvitation(String scopeId, String invitationId) =>
+      Result.capture(() async {
+        await _mutate(
+          () => api.revokeInvitation(
+            scopeId: scopeId,
+            invitationId: invitationId,
+          ),
+        );
+      });
+
+  @override
+  Future<Result<void>> setMemberRole(
+    String scopeId,
+    String userId,
+    CollaborationRole role,
+  ) => Result.capture(() async {
+    await _mutate(
+      () => api.setMemberRole(scopeId: scopeId, userId: userId, role: role),
+    );
+  });
+
+  @override
+  Future<Result<void>> removeMember(String scopeId, String userId) =>
+      Result.capture(() async {
+        await _mutate(() => api.removeMember(scopeId: scopeId, userId: userId));
+      });
+
+  @override
+  Future<Result<void>> transferOwnership(String scopeId, String userId) =>
+      Result.capture(() async {
+        await _mutate(
+          () => api.transferOwnership(scopeId: scopeId, userId: userId),
+        );
+      });
+
+  @override
+  Future<Result<void>> leaveScope(String scopeId) => Result.capture(() async {
+    await _mutate(() => api.leaveScope(scopeId));
+  });
+
+  @override
+  Future<Result<void>> deleteScope(String scopeId) => Result.capture(() async {
+    await _mutate(() => api.deleteScope(scopeId));
+  });
+
+  @override
+  Future<Result<void>> markNotificationRead(String notificationId) =>
+      Result.capture(() async {
+        await _mutate(() => api.markNotificationRead(notificationId));
+      });
+
   @override
   Future<Result<void>> setAssignees(String taskId, Set<String> ids) =>
       Result.capture(() => _setAssignees(taskId, ids));
+
   @override
   Future<Result<void>> comment(
     String scopeId,
@@ -63,9 +144,11 @@ class DriftCollaborationRepository implements CollaborationRepository {
       mentions: mentions,
     ),
   );
+
   @override
   Future<Result<void>> deleteComment(String scopeId, String id) =>
       Result.capture(() => _deleteComment(scopeId, id));
+
   @override
   Future<Result<void>> resolveConflict(
     CollaborationConflict command, {
@@ -83,7 +166,26 @@ class DriftCollaborationRepository implements CollaborationRepository {
       );
 
   @override
-  Stream<List<Map<String, dynamic>>> watchEntities(
+  Stream<List<CollaborationComment>> watchComments(
+    String scopeId, {
+    String? taskId,
+  }) => _watchEntities(
+    scopeId,
+    'comment',
+    taskId: taskId,
+  ).map((rows) => [for (final row in rows) CollaborationComment.fromJson(row)]);
+
+  @override
+  Stream<List<CollaborationFocusContribution>> watchFocusContributions(
+    String scopeId, {
+    String? taskId,
+  }) => _watchEntities(scopeId, 'focus_interval', taskId: taskId).map(
+    (rows) => [
+      for (final row in rows) CollaborationFocusContribution.fromJson(row),
+    ],
+  );
+
+  Stream<List<Map<String, dynamic>>> _watchEntities(
     String scopeId,
     String type, {
     String? taskId,
@@ -114,26 +216,23 @@ class DriftCollaborationRepository implements CollaborationRepository {
             return result;
           });
 
-  Future<Map<String, dynamic>> _action(
-    String action, [
-    Map<String, dynamic> args = const {},
-  ]) async {
-    final result = await api.call(action, args);
-    await synchronize();
-    return result;
+  SharedScope _scope(Map<String, dynamic> response) {
+    final scope = response['scope'];
+    if (scope is! Map) {
+      throw const CollaborationException(
+        'invalid_response',
+        'The server did not return a shared scope.',
+      );
+    }
+    return SharedScope.fromJson(Map<String, dynamic>.from(scope));
   }
-
-  // Reads the collaboration state without touching the local database, which
-  // may not be open yet while the invitation screen loads.
-  Future<Map<String, dynamic>> _state() => api.call('state');
 
   // The server already applied the change, so a failing local synchronization
   // must not turn it into an error reported to the user.
   Future<Map<String, dynamic>> _mutate(
-    String action,
-    Map<String, dynamic> args,
+    Future<Map<String, dynamic>> Function() request,
   ) async {
-    final result = await api.call(action, args);
+    final result = await request();
     try {
       await synchronize();
     } catch (_) {
@@ -142,13 +241,7 @@ class DriftCollaborationRepository implements CollaborationRepository {
     return result;
   }
 
-  Future<Map<String, dynamic>> _acceptInvitation(String token) =>
-      _mutate('accept', {'token': token});
-
-  Future<Map<String, dynamic>> _unshare(String scopeId) =>
-      _mutate('unshare', {'scopeId': scopeId});
-
-  Future<Map<String, dynamic>> _share(String projectId) async {
+  Future<SharedScope> _share(String projectId) async {
     final subtreeIds = await _shareEntityIds(projectId);
     var outstanding = await _outstandingPersonalCommands();
     while (true) {
@@ -181,14 +274,14 @@ class DriftCollaborationRepository implements CollaborationRepository {
         'Finish synchronizing this project and resolve pending or deferred changes before sharing.',
       );
     }
-    final state = await api.call('state');
-    final revision = state['personalRevision'];
-    return _action('share', {
-      'rootProjectId': projectId,
-      'expectedRevision': revision is num
-          ? revision.toInt()
-          : int.tryParse('$revision') ?? 0,
-    });
+    final state = CollaborationState.fromJson(await api.state());
+    final response = await _mutate(
+      () => api.share(
+        projectId: projectId,
+        expectedRevision: state.personalRevision,
+      ),
+    );
+    return _scope(response);
   }
 
   Future<List<SyncCommandRow>> _outstandingPersonalCommands() =>
@@ -233,8 +326,8 @@ class DriftCollaborationRepository implements CollaborationRepository {
       }
       final scope = await access.scope(task.scopeId);
       final editors = scope!.members
-          .where((m) => m['role'] != 'observer')
-          .map((m) => m['userId'])
+          .where((member) => member.role.canEdit)
+          .map((member) => member.userId)
           .toSet();
       final previous = collaborationIds(task.assigneeIdsJson).toSet();
       final add = ids.difference(previous).toList();
@@ -390,8 +483,6 @@ class DriftCollaborationRepository implements CollaborationRepository {
     CollaborationConflict command, {
     required bool keepLocal,
   }) async {
-    final conflict =
-        jsonDecode(command.lastError ?? '{}') as Map<String, dynamic>;
     if (keepLocal) {
       await SharedAccess(db).requireEdit(command.scopeId);
       await (db.update(
@@ -400,10 +491,7 @@ class DriftCollaborationRepository implements CollaborationRepository {
         SyncCommandsCompanion(
           uuid: Value(const Uuid().v4()),
           status: const Value('pending'),
-          baseRevision: Value(
-            (conflict['serverRevision'] as num?)?.toInt() ??
-                command.baseRevision,
-          ),
+          baseRevision: Value(command.serverRevision),
           lastError: const Value(null),
         ),
       );

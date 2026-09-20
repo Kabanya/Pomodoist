@@ -2,15 +2,9 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
+import 'package:pomodoist/domain/models/settings/theme_image.dart';
 
-const themeImageMaxBytes = 50 * 1024 * 1024;
-
-class ThemeImageTooLargeException implements Exception {
-  const ThemeImageTooLargeException();
-
-  @override
-  String toString() => 'Theme image exceeds the 50 MB limit';
-}
+export 'package:pomodoist/domain/models/settings/theme_image.dart';
 
 Future<Uint8List> prepareThemeImage(Uint8List bytes) async {
   if (bytes.length > themeImageMaxBytes) {

@@ -220,10 +220,30 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     );
   }
 
-  void _selectPreset(String id) =>
-      ref.read(focusViewModelProvider.notifier).selectPreset(id);
-  void _setViewMode(FocusViewMode mode) =>
-      ref.read(focusViewModelProvider.notifier).setViewMode(mode);
+  void _selectPreset(String id) => unawaited(
+    _savePreference(ref.read(focusViewModelProvider.notifier).selectPreset(id)),
+  );
+  void _setViewMode(FocusViewMode mode) => unawaited(
+    _savePreference(
+      ref.read(focusViewModelProvider.notifier).setViewMode(mode),
+    ),
+  );
+
+  Future<void> _savePreference(Future<void> operation) async {
+    try {
+      await operation;
+    } catch (_) {
+      if (!mounted) return;
+      showActionFeedback(
+        context,
+        message: context.l10n.focusActionFailed,
+        icon: LucideIcons.circleAlert,
+        sound: ActionFeedbackSound.none,
+        haptic: AppHapticCue.none,
+      );
+    }
+  }
+
   void _changeActiveRunPreset(FocusRunItem run, String presetId) {
     unawaited(
       ref

@@ -17,7 +17,7 @@ final class CollaborationJoinState {
   final bool valid;
   final bool signedIn;
   final JoinPhase phase;
-  final String? role;
+  final CollaborationRole? role;
   final String? projectId;
   final Object? error;
   bool get canRetry =>
@@ -46,15 +46,12 @@ class CollaborationJoinViewModel extends Notifier<CollaborationJoinState> {
   }
 
   Future<void> _load(int generation) async {
-    String? role;
-    final result = await _repository!.state();
+    CollaborationRole? role;
     try {
-      for (final invitation in collaborationMaps(
-        result.getOrThrow()['invitations'],
-      )) {
-        if (invitation['token'] != token) continue;
-        final value = invitation['role'];
-        if (value is String) role = value;
+      final snapshot = (await _repository!.state()).getOrThrow();
+      for (final invitation in snapshot.invitations) {
+        if (invitation.token != token) continue;
+        role = invitation.role;
         break;
       }
     } catch (_) {
@@ -81,14 +78,13 @@ class CollaborationJoinViewModel extends Notifier<CollaborationJoinState> {
       phase: JoinPhase.working,
     );
     try {
-      final result = (await repository.acceptInvitation(token)).getOrThrow();
+      final scope = (await repository.acceptInvitation(token)).getOrThrow();
       if (!ref.mounted || generation != _generation) return;
-      final scope = result['scope'];
       state = CollaborationJoinState(
         valid: true,
         signedIn: true,
         phase: JoinPhase.accepted,
-        projectId: scope is Map ? scope['rootProjectId']?.toString() : null,
+        projectId: scope.rootProjectId,
       );
     } catch (error) {
       if (!ref.mounted || generation != _generation) return;

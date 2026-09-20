@@ -91,7 +91,7 @@ Future<void> showMoveProjectDialog(
     context: context,
     builder: (context) => Consumer(
       builder: (context, ref, _) {
-        final projects = ref.watch(projectTreeViewModelProvider);
+        final targets = ref.watch(projectMoveTargetsProvider(project.id));
         return ShadDialog(
           title: Text(context.l10n.moveProject),
           child: Material(
@@ -99,21 +99,11 @@ Future<void> showMoveProjectDialog(
             child: SizedBox(
               width: 420,
               height: 360,
-              child: projects.when(
+              child: targets.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, _) =>
                     Text(context.l10n.projectsUnavailable(error)),
-                data: (items) {
-                  final rows = projectRows(
-                    items
-                        .where(
-                          (p) =>
-                              p.id != inboxProjectId &&
-                              !p.isArchived &&
-                              !p.isDeleted,
-                        )
-                        .toList(),
-                  );
+                data: (rows) {
                   return ListView(
                     children: [
                       ListTile(
@@ -125,22 +115,17 @@ Future<void> showMoveProjectDialog(
                         ),
                       ),
                       for (final row in rows)
-                        if (canParentProject(
-                          items,
-                          projectId: project.id,
-                          parentId: row.project.id,
-                        ))
-                          ListTile(
-                            contentPadding: EdgeInsetsDirectional.only(
-                              start: 16 + math.min(row.depth, 4) * 12.0,
-                              end: 16,
-                            ),
-                            title: Text(row.project.displayName(context.l10n)),
-                            onTap: () => Navigator.pop(
-                              context,
-                              ProjectMoveTarget(row.project.id, null),
-                            ),
+                        ListTile(
+                          contentPadding: EdgeInsetsDirectional.only(
+                            start: 16 + math.min(row.depth, 4) * 12.0,
+                            end: 16,
                           ),
+                          title: Text(row.project.displayName(context.l10n)),
+                          onTap: () => Navigator.pop(
+                            context,
+                            ProjectMoveTarget(row.project.id, null),
+                          ),
+                        ),
                     ],
                   );
                 },
@@ -203,12 +188,13 @@ class _ProjectTreeRowState extends ConsumerState<ProjectTreeRow>
 
   ProjectMoveTarget? _target(DragTargetDetails<ProjectDragData> details) =>
       widget.dragEnabled
-      ? projectDropTarget(
-          ref.read(projectTreeViewModelProvider).value ?? [],
-          details.data.id,
-          widget.row.project.id,
-          _position(details.offset),
-        )
+      ? ref
+            .read(projectTreeViewModelProvider.notifier)
+            .dropTarget(
+              details.data.id,
+              widget.row.project.id,
+              _position(details.offset),
+            )
       : null;
 
   void _endDrag() {

@@ -32,7 +32,12 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
   final _controller = QuickAddTextController();
   final _identity = Object();
   final _inputKey = GlobalKey();
-  bool get _busy => ref.read(quickAddViewModelProvider(_identity)).isLoading;
+  bool get _busy =>
+      ref.read(quickAddViewModelProvider(_identity)).result.isLoading;
+
+  void _syncDraft() => ref
+      .read(quickAddViewModelProvider(_identity).notifier)
+      .updateDraft(_controller.text);
 
   @override
   void initState() {
@@ -51,7 +56,9 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(quickAddViewModelProvider(_identity));
+    ref.watch(
+      quickAddViewModelProvider(_identity).select((state) => state.result),
+    );
     final l10n = context.l10n;
     final input = QuickAddInput(
       key: _inputKey,
@@ -77,6 +84,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
         ),
         disabledBorder: InputBorder.none,
       ),
+      onChanged: (_) => _syncDraft(),
       onSubmitted: (_) => _submit(),
     );
     final details = QuickAddDetails(
@@ -86,6 +94,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
       enabled: !_busy,
       touchTargets: widget.compact,
       desktop: !widget.compact,
+      onChanged: _syncDraft,
     );
     final submit = ShadButton(
       key: const Key('sidebar-quick-add-submit'),
@@ -260,10 +269,10 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
   Future<void> _submit() async {
     final input = _controller.text.trim();
     if (input.isEmpty || _busy) return;
+    _syncDraft();
     final task = await ref
         .read(quickAddViewModelProvider(_identity).notifier)
         .submit(
-          input,
           defaultDate: widget.defaultDate,
           projectId: widget.projectId,
           labelId: widget.labelId,
@@ -271,7 +280,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
     if (!mounted) return;
     if (task != null) {
       widget.onCompleted();
-    } else if (ref.read(quickAddViewModelProvider(_identity)).hasError) {
+    } else if (ref.read(quickAddViewModelProvider(_identity)).result.hasError) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(context.l10n.taskCreateFailed)));

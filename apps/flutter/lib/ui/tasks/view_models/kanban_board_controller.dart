@@ -7,12 +7,45 @@ import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 
+Map<String, List<KanbanCard>> filterKanbanCards(
+  Map<String, List<KanbanCard>> cards,
+  String query, {
+  String Function(ProjectItem project)? projectTitle,
+}) {
+  final normalized = query.trim().toLowerCase();
+  if (normalized.isEmpty) {
+    return cards;
+  }
+  return {
+    for (final entry in cards.entries)
+      entry.key: entry.value
+          .where(
+            (card) =>
+                card.task.content.toLowerCase().contains(normalized) ||
+                card.project.name.toLowerCase().contains(normalized) ||
+                (projectTitle != null &&
+                    projectTitle(
+                      card.project,
+                    ).toLowerCase().contains(normalized)),
+          )
+          .toList(growable: false),
+  };
+}
+
 KanbanBoardController createKanbanBoardController(WidgetRef ref) =>
     KanbanBoardController(ref.read(kanbanRepositoryProvider));
 
 final kanbanScreenBoardProvider = StreamProvider.autoDispose(
   (ref) => ref.watch(kanbanRepositoryProvider).watchBoard(),
 );
+
+final kanbanSelectedProjectsProvider = Provider.autoDispose
+    .family<List<ProjectItem>, KanbanBoardSnapshot>((ref, board) {
+      final ids = board.settings.selectedProjectIds.toSet();
+      return List.unmodifiable(
+        board.availableProjects.where((project) => ids.contains(project.id)),
+      );
+    });
 
 final kanbanActiveFocusTaskIdProvider = Provider.autoDispose(
   (ref) => ref.watch(activeFocusRunProvider).value?.taskId,
@@ -93,13 +126,28 @@ class KanbanBoardController extends ChangeNotifier {
   final KanbanRepository _repository;
   final Map<String, KanbanOptimisticOverride> _overrides = {};
   final Map<String, int> _tokens = {};
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  void _notify() {
+    if (!_disposed) notifyListeners();
+  }
 
   Map<String, KanbanOptimisticOverride> get overrides =>
       Map.unmodifiable(_overrides);
 
   int nextDragToken(String taskId) => (_tokens[taskId] ?? 0) + 1;
 
-  Map<String, List<KanbanCard>> visibleCards(KanbanBoardSnapshot snapshot) {
+  Map<String, List<KanbanCard>> visibleCards(
+    KanbanBoardSnapshot snapshot, {
+    String query = '',
+    String Function(ProjectItem project)? projectTitle,
+  }) {
     final result = {
       for (final status in snapshot.statuses)
         status.id: List<KanbanCard>.from(snapshot.cardsForStatus(status.id)),
@@ -125,7 +173,7 @@ class KanbanBoardController extends ChangeNotifier {
       );
       target.insert(insertionIndex, card);
     }
-    return result;
+    return filterKanbanCards(result, query, projectTitle: projectTitle);
   }
 
   Future<void> moveTask(
@@ -140,7 +188,7 @@ class KanbanBoardController extends ChangeNotifier {
       statusId: statusId,
       targetIndex: targetIndex,
     );
-    notifyListeners();
+    _notify();
     try {
       (await _repository.moveTask(
         taskId,
@@ -150,7 +198,7 @@ class KanbanBoardController extends ChangeNotifier {
     } catch (_) {
       if (_overrides[taskId]?.token == token) {
         _overrides.remove(taskId);
-        notifyListeners();
+        _notify();
       }
       rethrow;
     }
@@ -172,7 +220,7 @@ class KanbanBoardController extends ChangeNotifier {
       }
     }
     if (changed) {
-      notifyListeners();
+      _notify();
     }
   }
 }

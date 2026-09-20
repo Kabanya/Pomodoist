@@ -4,7 +4,7 @@ import 'package:app_account/app_account.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
-import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'support/account_sync_engine.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
 import 'package:pomodoist/data/repositories/collaboration/collaboration_repository.dart';
@@ -159,7 +159,7 @@ void main() {
       }
     });
     account = _Account();
-    engine = AccountSyncEngine(
+    engine = testSyncEngine(
       db: db,
       uuid: const Uuid(),
       account: account,
@@ -187,7 +187,7 @@ void main() {
       expect(row.createdBy, 'owner');
       expect(jsonDecode(row.assigneeIdsJson), ['me']);
       await DriftTaskRepository(db, queue)
-          .updateTask('task', const UpdateTaskPatch(content: 'My edit'))
+          .updateTask('task', UpdateTaskPatch(content: 'My edit'))
           .then((result) => result.getOrThrow());
       final command = await db.select(db.syncCommands).getSingle();
       expect(command.scopeId, 'scope');
@@ -203,7 +203,7 @@ void main() {
     'revocation discards shared snapshots and retains only own unsent text',
     () async {
       await DriftTaskRepository(db, queue)
-          .updateTask('task', const UpdateTaskPatch(content: 'Own draft'))
+          .updateTask('task', UpdateTaskPatch(content: 'Own draft'))
           .then((result) => result.getOrThrow());
       active = false;
       await engine.syncShared();
@@ -281,7 +281,7 @@ void main() {
 
   test('conflicting text stays visible until explicit server choice', () async {
     await DriftTaskRepository(db, queue)
-        .updateTask('task', const UpdateTaskPatch(content: 'Local text'))
+        .updateTask('task', UpdateTaskPatch(content: 'Local text'))
         .then((result) => result.getOrThrow());
     task['content'] = 'Remote text';
     revision = taskRevision = 3;
@@ -319,12 +319,12 @@ void main() {
     () async {
       final tasks = DriftTaskRepository(db, queue);
       await tasks
-          .updateTask('task', const UpdateTaskPatch(content: 'Local content'))
+          .updateTask('task', UpdateTaskPatch(content: 'Local content'))
           .then((result) => result.getOrThrow());
       await tasks
           .updateTask(
             'task',
-            const UpdateTaskPatch(
+            UpdateTaskPatch(
               description: 'Local description',
               updateDescription: true,
             ),
@@ -352,10 +352,10 @@ void main() {
     () async {
       final tasks = DriftTaskRepository(db, queue);
       await tasks
-          .updateTask('task', const UpdateTaskPatch(content: 'First'))
+          .updateTask('task', UpdateTaskPatch(content: 'First'))
           .then((result) => result.getOrThrow());
       await tasks
-          .updateTask('task', const UpdateTaskPatch(content: 'Second'))
+          .updateTask('task', UpdateTaskPatch(content: 'Second'))
           .then((result) => result.getOrThrow());
       task['description'] = 'Remote description';
       revision = taskRevision = 3;
@@ -375,7 +375,7 @@ void main() {
     () async {
       final tasks = DriftTaskRepository(db, queue);
       await tasks
-          .updateTask('task', const UpdateTaskPatch(content: 'Local content'))
+          .updateTask('task', UpdateTaskPatch(content: 'Local content'))
           .then((result) => result.getOrThrow());
       await queue.enqueue(
         type: 'task.kanbanStatus.set',
@@ -398,7 +398,7 @@ void main() {
     () async {
       final tasks = DriftTaskRepository(db, queue);
       await tasks
-          .updateTask('task', const UpdateTaskPatch(content: 'Rejected edit'))
+          .updateTask('task', UpdateTaskPatch(content: 'Rejected edit'))
           .then((result) => result.getOrThrow());
       rejected = true;
       await engine.syncShared();
@@ -492,16 +492,14 @@ void main() {
     });
     await engine.syncShared();
     final comments = await collaboration
-        .watchEntities('scope', 'comment', taskId: 'task')
+        .watchComments('scope', taskId: 'task')
         .first;
-    expect(comments.single['body'], 'Remote comment');
-    expect(comments.single['createdBy'], 'owner');
+    expect(comments.single.body, 'Remote comment');
+    expect(comments.single.createdBy, 'owner');
     // The cursor now sits on the comment revision: a later pull must not drop it.
     await engine.syncShared();
     expect(
-      await collaboration
-          .watchEntities('scope', 'comment', taskId: 'task')
-          .first,
+      await collaboration.watchComments('scope', taskId: 'task').first,
       hasLength(1),
     );
   });

@@ -5,7 +5,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uuid/uuid.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
-import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'support/account_sync_engine.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
 import 'package:pomodoist/data/repositories/collaboration/collaboration_repository.dart';
@@ -40,12 +40,7 @@ void main() {
     await db.delete(db.syncCommands).go();
     account = _Account();
     shares.clear();
-    final engine = AccountSyncEngine(
-      db: db,
-      uuid: const Uuid(),
-      account: account,
-      overviewLoader: () async => null,
-    );
+    final engine = testSyncEngine(db: db, uuid: const Uuid(), account: account);
     repository = DriftCollaborationRepository(
       db: db,
       queue: queue,
@@ -55,7 +50,14 @@ void main() {
         }
         expect(args['action'], 'share');
         shares.add({...args, 'serverRevision': account.revision});
-        return {'scopeId': 'scope'};
+        return {
+          'scope': {
+            'id': 'scope',
+            'rootProjectId': args['rootProjectId'],
+            'ownerId': 'me',
+            'role': 'administrator',
+          },
+        };
       }),
       synchronize: () async {
         await engine.pushPending();
@@ -120,7 +122,7 @@ void main() {
     'unrelated deferred personal task does not block a fully synchronized subtree',
     () async {
       final other = await DriftTaskRepository(db, queue)
-          .createTask(const CreateTaskInput(content: 'Other'))
+          .createTask(CreateTaskInput(content: 'Other'))
           .then((result) => result.getOrThrow());
       await db.delete(db.syncCommands).go();
       await queue.enqueue(

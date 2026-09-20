@@ -2,13 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/config/theme_mode_dependencies.dart';
 
 export 'package:pomodoist/config/theme_mode_dependencies.dart'
     show sharedThemeCookieReaderProvider, sharedThemeCookieWriterProvider;
-
-const appThemeModePreferenceKey = 'app.themeMode';
+export 'package:pomodoist/data/repositories/settings/theme_mode_repository.dart'
+    show appThemeModePreferenceKey;
 
 enum AppThemeMode {
   system(ThemeMode.system),
@@ -78,29 +77,22 @@ class AppThemeModeController extends Notifier<AppThemeMode> {
     if (state != mode) {
       state = mode;
     }
-    (await ref.read(preferencesRepositoryProvider).write({
-      appThemeModePreferenceKey: mode.storageValue,
-    })).getOrThrow();
+    (await ref.read(themeModeRepositoryProvider).write(mode.storageValue))
+        .getOrThrow();
   }
 
   Future<void> _loadStoredThemeMode({bool allowSharedOverride = false}) async {
-    final preferences = ref.read(preferencesRepositoryProvider);
-    final values = (await preferences.read(const [
-      appThemeModePreferenceKey,
-    ])).getOrThrow();
+    final repository = ref.read(themeModeRepositoryProvider);
+    final raw = (await repository.read()).getOrThrow();
     final sharedMode = appThemeModeFromCookieHeader(
       ref.read(sharedThemeCookieReaderProvider)(),
     );
-    final storedMode = AppThemeMode.tryFromStorageValue(
-      values[appThemeModePreferenceKey] as String?,
-    );
+    final storedMode = AppThemeMode.tryFromStorageValue(raw);
     if (!ref.mounted || (_hasLocalSelection && !allowSharedOverride)) return;
 
     if (sharedMode != null) {
       if (storedMode != sharedMode) {
-        (await preferences.write({
-          appThemeModePreferenceKey: sharedMode.storageValue,
-        })).getOrThrow();
+        (await repository.write(sharedMode.storageValue)).getOrThrow();
       }
       if (ref.mounted && (!_hasLocalSelection || allowSharedOverride)) {
         state = sharedMode;

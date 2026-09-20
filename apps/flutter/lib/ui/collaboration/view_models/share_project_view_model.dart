@@ -4,6 +4,7 @@ import 'package:pomodoist/config/collaboration_dependencies.dart';
 import 'package:pomodoist/data/repositories/collaboration/collaboration_repository.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_conflict.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
 import 'package:pomodoist/utils/result.dart';
 
 final class ShareProjectState {
@@ -12,24 +13,22 @@ final class ShareProjectState {
     this.actorId,
     this.busy = false,
     this.sharedJustNow = false,
-    List<Map<String, dynamic>> invitations = const [],
+    List<CollaborationInvitation> invitations = const [],
     List<CollaborationConflict> conflicts = const [],
-  }) : invitations = List.unmodifiable(
-         invitations.map(Map<String, dynamic>.unmodifiable),
-       ),
+  }) : invitations = List.unmodifiable(invitations),
        conflicts = List.unmodifiable(conflicts);
   final SharedScope? scope;
   final String? actorId;
   final bool busy;
   final bool sharedJustNow;
-  final List<Map<String, dynamic>> invitations;
+  final List<CollaborationInvitation> invitations;
   final List<CollaborationConflict> conflicts;
   ShareProjectState copyWith({
     SharedScope? scope,
     String? actorId,
     bool? busy,
     bool? sharedJustNow,
-    List<Map<String, dynamic>>? invitations,
+    List<CollaborationInvitation>? invitations,
     List<CollaborationConflict>? conflicts,
   }) => ShareProjectState(
     scope: scope ?? this.scope,
@@ -92,7 +91,7 @@ class ShareProjectViewModel extends Notifier<ShareProjectState> {
     final repository = _repository;
     final scope = state.scope;
     if (repository == null || scope == null || !scope.canManage) return;
-    final result = await repository.action('members', {'scopeId': scope.id});
+    final result = await repository.members(scope.id);
     if (!ref.mounted ||
         generation != _generation ||
         state.scope?.id != scope.id) {
@@ -101,50 +100,53 @@ class ShareProjectViewModel extends Notifier<ShareProjectState> {
     if (result case Success(:final value)) {
       state = state.copyWith(
         invitations: pendingInvitations(
-          collaborationMaps(value['invitations']),
+          value.invitations,
           DateTime.now().toUtc(),
         ),
       );
     }
   }
 
-  Future<Result<Map<String, dynamic>>> share() => _run((repository) async {
-    final result = (await repository.share(projectId)).getOrThrow();
+  Future<Result<void>> share() => _run((repository) async {
+    (await repository.share(projectId)).getOrThrow();
     if (ref.mounted) state = state.copyWith(sharedJustNow: true);
+  });
+  Future<Result<CollaborationInviteOutcome>> invite(
+    String email,
+    CollaborationRole role,
+  ) => _run((repository) async {
+    final result = (await repository.invite(
+      _scopeId,
+      email: email.trim(),
+      role: role,
+    )).getOrThrow();
+    await _loadInvitations(_generation);
     return result;
   });
-  Future<Result<Map<String, dynamic>>> invite(String email, String role) =>
+  Future<Result<void>> revokeInvitation(String id) => _run((repository) async {
+    (await repository.revokeInvitation(_scopeId, id)).getOrThrow();
+    await _loadInvitations(_generation);
+  });
+  Future<Result<void>> setRole(String userId, CollaborationRole role) =>
       _run((repository) async {
-        final result = (await repository.action('invite', {
-          'scopeId': _scopeId,
-          'email': email.trim(),
-          'role': role,
-        })).getOrThrow();
-        await _loadInvitations(_generation);
-        return result;
+        (await repository.setMemberRole(_scopeId, userId, role)).getOrThrow();
       });
-  Future<Result<Map<String, dynamic>>> revokeInvitation(String id) =>
-      _run((repository) async {
-        final result = (await repository.action('invite', {
-          'scopeId': _scopeId,
-          'invitationId': id,
-          'revoke': 'true',
-        })).getOrThrow();
-        await _loadInvitations(_generation);
-        return result;
-      });
-  Future<Result<Map<String, dynamic>>> setRole(String userId, String role) =>
-      _action('role', {'userId': userId, 'role': role});
-  Future<Result<Map<String, dynamic>>> remove(String userId) =>
-      _action('remove', {'userId': userId});
-  Future<Result<Map<String, dynamic>>> transfer(String userId) =>
-      _action('transfer', {'userId': userId});
-  Future<Result<Map<String, dynamic>>> leave() => _action('leave');
-  Future<Result<Map<String, dynamic>>> delete() => _action('delete');
-  Future<Result<Map<String, dynamic>>> unshare() => _run(
-    (repository) async => (await repository.unshare(_scopeId)).getOrThrow(),
-  );
-  Future<Result<Map<String, dynamic>>> resolveConflict(
+  Future<Result<void>> remove(String userId) => _run((repository) async {
+    (await repository.removeMember(_scopeId, userId)).getOrThrow();
+  });
+  Future<Result<void>> transfer(String userId) => _run((repository) async {
+    (await repository.transferOwnership(_scopeId, userId)).getOrThrow();
+  });
+  Future<Result<void>> leave() => _run((repository) async {
+    (await repository.leaveScope(_scopeId)).getOrThrow();
+  });
+  Future<Result<void>> delete() => _run((repository) async {
+    (await repository.deleteScope(_scopeId)).getOrThrow();
+  });
+  Future<Result<void>> unshare() => _run((repository) async {
+    (await repository.unshare(_scopeId)).getOrThrow();
+  });
+  Future<Result<void>> resolveConflict(
     CollaborationConflict command, {
     required bool keepLocal,
   }) => _run((repository) async {
@@ -152,21 +154,11 @@ class ShareProjectViewModel extends Notifier<ShareProjectState> {
       command,
       keepLocal: keepLocal,
     )).getOrThrow();
-    return const {};
   });
   String get _scopeId =>
       state.scope?.id ?? (throw const CollaborationException('unavailable'));
-  Future<Result<Map<String, dynamic>>> _action(
-    String action, [
-    Map<String, dynamic> args = const {},
-  ]) => _run(
-    (repository) async => (await repository.action(action, {
-      'scopeId': _scopeId,
-      ...args,
-    })).getOrThrow(),
-  );
-  Future<Result<Map<String, dynamic>>> _run(
-    Future<Map<String, dynamic>> Function(CollaborationRepository) action,
+  Future<Result<T>> _run<T>(
+    Future<T> Function(CollaborationRepository) action,
   ) async {
     if (state.busy) {
       return Failure(
@@ -176,9 +168,7 @@ class ShareProjectViewModel extends Notifier<ShareProjectState> {
     }
     final repository = _repository;
     if (repository == null) {
-      final signedIn =
-          (ref.read(accountAuthStateProvider).value?.signedIn ?? false) ||
-          ref.read(accountClientProvider)?.currentUserId != null;
+      final signedIn = ref.read(accountSignedInProvider);
       return Failure(
         CollaborationException(signedIn ? 'unavailable' : 'unauthenticated'),
         StackTrace.current,
@@ -195,24 +185,17 @@ class ShareProjectViewModel extends Notifier<ShareProjectState> {
 }
 
 /// Keep one current, unanswered invitation per email, preferring its latest expiry.
-List<Map<String, dynamic>> pendingInvitations(
-  List<Map<String, dynamic>> rows,
+List<CollaborationInvitation> pendingInvitations(
+  List<CollaborationInvitation> invitations,
   DateTime now,
 ) {
-  final byEmail = <String, Map<String, dynamic>>{};
-  DateTime? expiry(Map<String, dynamic> row) => row['expiresAt'] is String
-      ? DateTime.tryParse(row['expiresAt'])?.toUtc()
-      : null;
-  for (final invitation in rows) {
-    if (invitation['revokedAt'] != null || invitation['acceptedAt'] != null) {
-      continue;
-    }
-    final expiresAt = expiry(invitation);
-    if (expiresAt == null || !expiresAt.isAfter(now)) continue;
-    final email = invitation['email'] as String? ?? '';
+  final byEmail = <String, CollaborationInvitation>{};
+  for (final invitation in invitations) {
+    if (!invitation.isPending(now)) continue;
+    final email = invitation.email ?? '';
     final kept = byEmail[email];
-    final keptExpiry = kept == null ? null : expiry(kept);
-    if (keptExpiry == null || !keptExpiry.isAfter(expiresAt)) {
+    final expiresAt = invitation.expiresAt!;
+    if (kept == null || !kept.expiresAt!.isAfter(expiresAt)) {
       byEmail[email] = invitation;
     }
   }

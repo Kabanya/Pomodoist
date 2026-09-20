@@ -3,14 +3,12 @@ part of 'timeline_screen.dart';
 class _TimelineDay extends ConsumerWidget {
   const _TimelineDay({
     required this.day,
-    required this.tasks,
-    required this.projects,
+    required this.presentation,
     required this.visibleHours,
   });
 
   final DateTime day;
-  final List<TaskItem> tasks;
-  final List<ProjectItem> projects;
+  final TimelineDayPresentation presentation;
   final TimelineVisibleHours visibleHours;
 
   @override
@@ -18,80 +16,36 @@ class _TimelineDay extends ConsumerWidget {
     final hourWidth = ref.watch(
       timelineViewModelProvider.select((state) => state.hourWidth),
     );
-    final dayTasks = tasks.where((task) {
-      final schedule = task.schedule;
-      return !task.isCompleted &&
-          schedule != null &&
-          _isSameDay(schedule.displayDate, day);
-    }).toList();
-    final tasksById = {for (final task in dayTasks) task.id: task};
-    final projectsById = {for (final project in projects) project.id: project};
-    final allDayTasks = <TaskItem>[];
-    final visibleTimedTasks = <TaskItem>[];
-    final beforeTasks = <TaskItem>[];
-    final afterTasks = <TaskItem>[];
-
-    for (final task in dayTasks) {
-      final schedule = task.schedule!;
-      if (schedule.isAllDay) {
-        allDayTasks.add(task);
-        continue;
-      }
-      final startMinutes = _startMinutes(schedule);
-      if (startMinutes < visibleHours.startMinutes) {
-        beforeTasks.add(task);
-      } else if (startMinutes >= visibleHours.endMinutes) {
-        afterTasks.add(task);
-      } else {
-        visibleTimedTasks.add(task);
-      }
-    }
-
-    allDayTasks.sort(_compareTimelineTaskOrder);
-    visibleTimedTasks.sort(_compareTimedTaskOrder);
-    beforeTasks.sort(_compareTimedTaskOrder);
-    afterTasks.sort(_compareTimedTaskOrder);
-    final collapsedProjectIds = ref.watch(
-      timelineViewModelProvider.select((state) => state.collapsed),
-    );
-    final temporarilyVisibleProjectIds = ref.watch(
-      timelineViewModelProvider.select((state) => state.temporary),
-    );
-    final projectRows = buildTimelineProjectRows(
-      projects: projects,
-      tasks: dayTasks,
-      collapsedProjectIds: collapsedProjectIds,
-      temporarilyVisibleProjectIds: temporarilyVisibleProjectIds,
-    );
-    final timedTasksByProject = <String, List<TaskItem>>{};
-    for (final task in visibleTimedTasks) {
-      timedTasksByProject.putIfAbsent(task.projectId, () => []).add(task);
-    }
+    final data = presentation.data;
+    final tasksById = presentation.tasksById;
+    final projectsById = presentation.projectsById;
+    final projectRows = presentation.projectRows;
+    final projects = presentation.menuProjects;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _AllDaySection(
           day: day,
-          tasks: allDayTasks,
+          tasks: data.allDay,
           tasksById: tasksById,
           projectsById: projectsById,
         ),
-        if (beforeTasks.isNotEmpty) ...[
+        if (data.beforeHours.isNotEmpty) ...[
           const SizedBox(height: 12),
           _OutOfRangeSection(
             key: const Key('timeline-before-hours-section'),
             title: context.l10n.timelineBeforeHours,
-            tasks: beforeTasks,
+            tasks: data.beforeHours,
             projectsById: projectsById,
           ),
         ],
-        if (afterTasks.isNotEmpty) ...[
+        if (data.afterHours.isNotEmpty) ...[
           const SizedBox(height: 12),
           _OutOfRangeSection(
             key: const Key('timeline-after-hours-section'),
             title: context.l10n.timelineAfterHours,
-            tasks: afterTasks,
+            tasks: data.afterHours,
             projectsById: projectsById,
           ),
         ],
@@ -99,7 +53,7 @@ class _TimelineDay extends ConsumerWidget {
         _TimelineGrid(
           day: day,
           projectRows: projectRows,
-          tasksByProject: timedTasksByProject,
+          tasksByProject: data.timedByProject,
           projects: projects,
           tasksById: tasksById,
           visibleHours: visibleHours,

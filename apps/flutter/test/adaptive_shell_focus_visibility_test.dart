@@ -1,4 +1,5 @@
 import 'package:pomodoist/config/focus_dependencies.dart';
+import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/productivity_dependencies.dart';
 import 'package:pomodoist/domain/models/calendar/calendar_models.dart';
 import 'package:pomodoist/utils/result.dart';
@@ -251,7 +252,7 @@ Future<void> _pumpShell(
       overrides: [
         focusRepositoryProvider.overrideWithValue(_ActiveFocusRepository(now)),
         focusTickerProvider.overrideWith((ref) => Stream.value(now)),
-        currentUserProvider.overrideWith((ref) => Stream.value(null)),
+        accountProfileProvider.overrideWith((ref) => null),
         tasksByQueryProvider.overrideWith(
           (ref, query) => Stream.value(const []),
         ),

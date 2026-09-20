@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
-import 'package:pomodoist/data/services/sync/account_sync_engine.dart';
+import 'support/account_sync_engine.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
 import 'package:pomodoist/data/repositories/collaboration/drift_collaboration_repository.dart';
@@ -1143,7 +1143,7 @@ void main() {
             _ => {'ok': true},
           },
         );
-        await AccountSyncEngine(
+        await testSyncEngine(
           db: db,
           uuid: const Uuid(),
           account: _Account(),
