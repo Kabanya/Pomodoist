@@ -10,7 +10,9 @@ import 'package:pomodoist/config/billing_store_dependencies.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/config/voice_dependencies.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/domain/models/billing/billing_access.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart';
+import '../testing/fakes/fake_focus_repository.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -30,7 +32,15 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
+          focusRepositoryProvider.overrideWithValue(FakeFocusRepository()),
           billingAccountEntitlementProvider.overrideWithValue(true),
+          billingAccessProvider.overrideWithValue(
+            AsyncData<BillingAccess>((
+              hasActiveEntitlement: true,
+              hasLocalStoreKitEntitlement: false,
+              loading: false,
+            )),
+          ),
           applePurchasesSupportedProvider.overrideWithValue(false),
           voiceRecognitionControllerProvider.overrideWithValue(voiceController),
         ],
@@ -75,7 +85,10 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          focusRepositoryProvider.overrideWithValue(FakeFocusRepository()),
+        ],
         child: GlobalQuickAddWindowApp(
           onClose: () => closeCount++,
           onVoiceModeChanged: (_) {},

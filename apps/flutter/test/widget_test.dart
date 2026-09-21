@@ -1148,6 +1148,8 @@ void main() {
         child: Consumer(
           builder: (context, ref, child) {
             remaining = ref.watch(activeFocusRemainingProvider);
+            // Production activates this coordinator from appStartupProvider.
+            ref.watch(focusAutoCompletionCoordinatorProvider);
             return const SizedBox.shrink();
           },
         ),

@@ -343,7 +343,12 @@ clearing a token reveals the existing context defaults. Preview and creation use
 duration and clock. Preserve IME composition, selection and unrelated tokens.
 Quoted metadata names remain literal during date normalization. Ready voice
 subtasks preview the project inherited from their parent's current phrase.
-Details stay below the editable input; the separate window scrolls when needed.
+The desktop input renders the phrase at a regular weight and a muted, translucent
+text color, so a draft reads as writing rather than as a heading; the hint matches
+that weight and recognized tokens keep their accent through color alone.
+`QuickAddComposer` owns this styling, so the dialog and the separate window
+stay consistent. Details stay below the editable input; the separate window
+scrolls when needed.
 Voice draft titles start at one line and grow with their text up to three lines;
 do not reserve blank lines for short tasks. Keep metadata and comments editable.
 

@@ -135,7 +135,7 @@ COMPANION_RELEASE_CONFIG ?= $(TESTFLIGHT_CONFIG)
 .PHONY: android web-debug web-profile web-release
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
 .PHONY: windows-debug windows-profile windows-release windows-installer
-.PHONY: macos-debug macos-profile macos-release macos-reset
+.PHONY: macos macos-debug macos-run macos-profile macos-release macos-reset
 .PHONY: ios-debug ios-profile ipad-debug ipad-profile watch-debug watch-profile testflight-preflight testflight-auth testflight-ios testflight-macos testflight
 .PHONY: deploy-staging deploy-production deploy-all deploy-telegram-staging deploy-telegram-production
 .PHONY: help devices clean
@@ -194,7 +194,9 @@ help:
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-release' "$${reset}" 'Release app'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-installer' "$${reset}" 'EXE installer'; \
 	printf '\n'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos' "$${reset}" 'Debug app (alias of macos-debug)'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug' "$${reset}" 'Debug app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-run' "$${reset}" 'Debug app with hot reload'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile' "$${reset}" 'Profile app'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release' "$${reset}" 'Release app'; \
 	printf '\n'; \
@@ -335,8 +337,11 @@ windows-release:
 windows-installer: windows-release
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/installer/build.ps1 -BuildDirectory "$(WINDOWS_RELEASE_DIR)"
 
-macos-debug macos-profile: POMODOIST_BILLING_CHANNEL = storekit
-macos-debug macos-profile: flutter-build-link
+macos-debug macos-run macos-profile: POMODOIST_BILLING_CHANNEL = storekit
+macos-debug macos-run macos-profile: flutter-build-link
+
+# `make macos` is the usual entry point; it builds the debug app.
+macos: macos-debug
 
 # Swift Package Manager dependencies emit hundreds of deprecation warnings that
 # drown out the build result; the filter drops them while keeping real errors.
@@ -355,6 +360,15 @@ macos-profile:
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
 		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)" 2>&1 \
 		| awk -f "$(REPO_ROOT)/tool/xcode-warnings.awk"
+
+# Interactive debug run with hot reload. Output is left unfiltered so the
+# "Flutter run key commands" stay usable.
+macos-run:
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d macos --debug \
+		--target "$(MACOS_DEBUG_TARGET)" \
+		--dart-define-from-file="$(call repo_path,$(MACOS_DEBUG_CONFIG))" \
+		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
+		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 macos-release: testflight-preflight flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --release \

@@ -67,11 +67,17 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
       enabled: !_busy,
       autofocus: true,
       maxLines: 4,
-      style: Theme.of(context).textTheme.headlineSmall,
+      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+        fontWeight: FontWeight.w400,
+        fontVariations: const [FontVariation('wght', 400)],
+        color: context.appColors.primaryText.withValues(alpha: .45),
+      ),
       textInputAction: TextInputAction.done,
       decoration: InputDecoration(
         hintText: l10n.quickAddHint,
         hintStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w400,
+          fontVariations: const [FontVariation('wght', 400)],
           color: context.appColors.secondaryText,
         ),
         hintMaxLines: 2,

@@ -320,6 +320,19 @@ final class CapturedVoiceRepository implements VoiceCaptureRepository {
 
   void _handleEvent(VoiceCaptureEvent event) {
     if (!_isActive) return;
+    // Recording side effects run before the state is emitted so the snapshot
+    // carries the reset countdown instead of the previous recording's value.
+    if (event.status == VoiceCaptureStatus.recording) {
+      _startRecordingCountdown();
+      _startAmplitudeMeter();
+    } else if (event.status == VoiceCaptureStatus.transcribing ||
+        event.status == VoiceCaptureStatus.completed ||
+        event.status == VoiceCaptureStatus.canceled ||
+        event.status == VoiceCaptureStatus.error ||
+        event.status == VoiceCaptureStatus.unsupportedPlatform) {
+      _stopRecordingCountdown();
+      _stopAmplitudeMeter();
+    }
     _update(() {
       _status = event.status;
       switch (event.status) {
@@ -343,17 +356,6 @@ final class CapturedVoiceRepository implements VoiceCaptureRepository {
           break;
       }
     });
-    if (event.status == VoiceCaptureStatus.recording) {
-      _startRecordingCountdown();
-      _startAmplitudeMeter();
-    } else if (event.status == VoiceCaptureStatus.transcribing ||
-        event.status == VoiceCaptureStatus.completed ||
-        event.status == VoiceCaptureStatus.canceled ||
-        event.status == VoiceCaptureStatus.error ||
-        event.status == VoiceCaptureStatus.unsupportedPlatform) {
-      _stopRecordingCountdown();
-      _stopAmplitudeMeter();
-    }
     if (event.status == VoiceCaptureStatus.error) {
       unawaited(_refreshAccess());
     }

@@ -7,6 +7,7 @@ import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart';
 import 'package:pomodoist/ui/tasks/view_models/quick_add_text_controller.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
 
 void main() {
   setUpAll(loadTestAppResources);
@@ -71,12 +72,13 @@ void main() {
 
     final leaves = span.children!.cast<TextSpan>();
     final highlighted = leaves
-        .where((child) => child.style?.fontWeight == FontWeight.w600)
+        .where((child) => child.style?.color != null)
         .map((child) => child.text)
         .toList();
     expect(highlighted, ['@work', '#family', '7 PM', '8 march', '!!3']);
     expect(leaves.last.text, ' invalid');
-    expect(leaves.last.style?.fontWeight, isNot(FontWeight.w600));
+    expect(leaves.last.style?.color, isNull);
+    expect(leaves.where((child) => child.style?.fontWeight != null), isEmpty);
   });
 
   testWidgets('quick-add highlighting preserves composing decoration', (
@@ -110,7 +112,47 @@ void main() {
     final work = span.children!.cast<TextSpan>().singleWhere(
       (child) => child.text == '@work',
     );
-    expect(work.style?.fontWeight, FontWeight.w600);
+    expect(work.style?.color, isNotNull);
     expect(work.style?.decoration, TextDecoration.underline);
+  });
+
+  testWidgets('quick-add input renders a light translucent draft style', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          projectsProvider.overrideWith(
+            (ref) => Stream.value(const <ProjectItem>[]),
+          ),
+          labelsProvider.overrideWith(
+            (ref) => Stream.value(const <LabelItem>[]),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.dark(),
+          builder: testAppBuilder,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: QuickAddComposer(onCompleted: () {}, onCancel: () {}),
+          ),
+        ),
+      ),
+    );
+
+    await tester.enterText(
+      find.byKey(const Key('sidebar-quick-add-input')),
+      'Plan the review 09:00',
+    );
+    await tester.pump();
+
+    final editable = tester.widget<EditableText>(find.byType(EditableText));
+    expect(editable.style.fontWeight, FontWeight.w400);
+    expect(
+      editable.style.fontVariations,
+      contains(const FontVariation('wght', 400)),
+    );
+    expect(editable.style.color!.a, closeTo(.45, .01));
   });
 }

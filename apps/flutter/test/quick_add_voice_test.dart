@@ -3,6 +3,8 @@ import 'package:pomodoist/data/repositories/planning/task_decomposition_reposito
 import 'package:pomodoist/utils/result.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadSwitch, LucideIcons;
 import 'support/test_app.dart';
+import '../testing/fakes/fake_billing_repository.dart';
+import '../testing/fakes/fake_focus_repository.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -28,6 +30,7 @@ import 'package:pomodoist/utils/clock.dart';
 import 'package:pomodoist/config/billing_dependencies.dart';
 import 'package:pomodoist/config/billing_store_dependencies.dart';
 import 'package:pomodoist/data/services/billing/billing_store.dart';
+import 'package:pomodoist/domain/models/billing/billing_access.dart';
 import 'package:pomodoist/domain/models/billing/billing_models.dart';
 import 'package:pomodoist/ui/onboarding/widgets/onboarding_gate.dart';
 import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
@@ -53,10 +56,21 @@ void main() {
     projectsProvider.overrideWith((ref) => Stream.value(const <ProjectItem>[])),
     labelsProvider.overrideWith((ref) => Stream.value(const <LabelItem>[])),
     quickAddHintTextProvider.overrideWithValue(null),
+    focusRepositoryProvider.overrideWithValue(FakeFocusRepository()),
   ];
+  final proBillingRepository = FakeBillingRepository()
+    ..currentAccessValue = (
+      hasActiveEntitlement: true,
+      hasLocalStoreKitEntitlement: false,
+      loading: false,
+    );
   final proVoiceOverrides = [
     ...emptySuggestionOverrides,
     billingAccountEntitlementProvider.overrideWithValue(true),
+    billingRepositoryProvider.overrideWithValue(proBillingRepository),
+    billingAccessProvider.overrideWithValue(
+      AsyncData<BillingAccess>(proBillingRepository.currentAccess),
+    ),
   ];
 
   testWidgets(
@@ -274,6 +288,9 @@ void main() {
           ? 'Apple cloud errors do not offer system dictation settings'
           : 'Apple speech failure switches to cloud and starts recording',
       (tester) async {
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(db.close);
+        await db.ensureSeedData();
         debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
         addTearDown(() => debugDefaultTargetPlatformOverride = null);
         const channel = MethodChannel(systemSpeechChannelName);
@@ -326,6 +343,7 @@ void main() {
           ProviderScope(
             overrides: [
               ...proVoiceOverrides,
+              appDatabaseProvider.overrideWithValue(db),
               accountClientProvider.overrideWithValue(
                 _VoiceAccountClient(userId: 'user'),
               ),
@@ -415,6 +433,9 @@ void main() {
   testWidgets(
     'Apple cold start restores audio and applies mode changes in the open panel',
     (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      await db.ensureSeedData();
       debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
       addTearDown(() => debugDefaultTargetPlatformOverride = null);
       SharedPreferences.setMockInitialValues({
@@ -443,6 +464,7 @@ void main() {
         ProviderScope(
           overrides: [
             ...proVoiceOverrides,
+            appDatabaseProvider.overrideWithValue(db),
             accountClientProvider.overrideWithValue(
               _VoiceAccountClient(userId: 'user'),
             ),

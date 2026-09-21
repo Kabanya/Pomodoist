@@ -339,6 +339,11 @@ void main() {
     await tester.pump(const Duration(hours: 6));
     expect(source.calls, 2);
     repository.dispose();
+    // The widget binding asserts that no timers are pending before tearDowns
+    // run, so the container must be disposed here to cancel the view model's
+    // periodic timer. ProviderContainer.dispose is idempotent, so the
+    // addTearDown registration above remains a harmless safety net.
+    harness.container.dispose();
   });
 }
 

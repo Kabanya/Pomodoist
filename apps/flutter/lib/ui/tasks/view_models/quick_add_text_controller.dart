@@ -84,6 +84,6 @@ class QuickAddTextController extends TextEditingController {
       QuickAddTokenKind.priority ||
       QuickAddTokenKind.focusEstimate => Theme.of(context).colorScheme.tertiary,
     };
-    return TextStyle(color: color, fontWeight: FontWeight.w600);
+    return TextStyle(color: color);
   }
 }

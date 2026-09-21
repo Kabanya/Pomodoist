@@ -68,9 +68,7 @@ class BillingPaywall extends ConsumerWidget {
     final state = ref.watch(billingViewModelProvider);
     final channel = ref.watch(billingChannelProvider);
     final l10n = context.l10n;
-    final displayedError = channel == BillingChannel.storeKit
-        ? state.error ?? state.catalogError
-        : state.error;
+    final displayedError = state.error ?? state.catalogError;
     final errorMessage = displayedError == null
         ? null
         : channel == BillingChannel.stripe
@@ -225,7 +223,7 @@ class BillingPaywall extends ConsumerWidget {
           else if (channel == BillingChannel.stripe &&
               !state.storeAvailable &&
               !state.loading &&
-              state.error == null)
+              displayedError == null)
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(

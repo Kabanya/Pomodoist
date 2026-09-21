@@ -27,5 +27,9 @@
 	<true/>
 	<key>com.apple.security.network.client</key>
 	<true/>
+	<!-- The Dart VM Service listens on a local socket; without this the sandbox
+	     refuses the bind and `flutter run` loses hot reload and the debugger. -->
+	<key>com.apple.security.network.server</key>
+	<true/>
 </dict>
 </plist>

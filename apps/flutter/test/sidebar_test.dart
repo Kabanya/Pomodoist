@@ -4,6 +4,7 @@ import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show ShadSelect, ShadButton, LucideIcons;
 import 'support/test_app.dart';
+import '../testing/fakes/fake_focus_repository.dart';
 // ignore_for_file: deprecated_member_use
 
 import 'dart:convert';
@@ -1350,6 +1351,7 @@ Future<_SidebarHarness> _pumpApp(
           FixedClock(DateTime.utc(2026, 1, 2, 11)),
         ),
         appDatabaseProvider.overrideWithValue(db),
+        focusRepositoryProvider.overrideWithValue(FakeFocusRepository()),
         applePurchasesSupportedProvider.overrideWithValue(false),
         billingAccountEntitlementProvider.overrideWithValue(hasAccountPro),
         if (voiceController != null)
