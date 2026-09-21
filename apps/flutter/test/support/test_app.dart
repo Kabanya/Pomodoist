@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
@@ -47,6 +48,15 @@ class TestShadLocalizations
 
 Future<void> loadTestAppResources() async {
   TestWidgetsFlutterBinding.ensureInitialized();
+  // Account overview registration reads package info in the background; without
+  // mock values the platform call never resolves and leaves a pending timeout.
+  PackageInfo.setMockInitialValues(
+    appName: 'Pomodoist',
+    packageName: 'test',
+    version: '1.0.0',
+    buildNumber: '1',
+    buildSignature: '',
+  );
   // Load bundled fonts and deferred translations before widget tests enter
   // fake async, matching the assets available to the running application.
   for (final family in ['Geist', 'GeistMono']) {

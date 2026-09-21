@@ -6,6 +6,7 @@ import 'package:pomodoist/config/clock_provider.dart';
 import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/data/repositories/billing/billing_repository.dart';
 import 'package:pomodoist/data/repositories/billing/billing_repository_impl.dart';
+import 'package:pomodoist/data/services/billing/billing_store.dart';
 import 'package:pomodoist/domain/models/billing/billing_access.dart';
 import 'package:pomodoist/domain/models/billing/billing_models.dart';
 
@@ -38,12 +39,13 @@ final billingPurchaseLinkerProvider = Provider<BillingPurchaseLinker?>(
 
 /// The single owner of verified entitlement state for the current account.
 final billingRepositoryProvider = Provider<BillingRepository>((ref) {
+  final storeSupported = ref.watch(applePurchasesSupportedProvider);
   final repository = AppBillingRepository(
-    store: ref.watch(billingStoreProvider),
+    store: storeSupported ? ref.watch(billingStoreProvider) : BillingStore(),
     preferences: ref.watch(preferencesServiceProvider),
     now: () => ref.read(clockProvider).now(),
     channel: ref.watch(billingChannelProvider),
-    storeSupported: ref.watch(applePurchasesSupportedProvider),
+    storeSupported: storeSupported,
     signedIn: ref.read(billingSignedInProvider),
     purchaseLinker: () => ref.read(billingPurchaseLinkerProvider),
     storeTimeout: ref.watch(billingStoreTimeoutProvider),

@@ -8,22 +8,22 @@ fixture="$(mktemp "${TMPDIR:-/tmp}/xcode-warnings.XXXXXX")"
 trap 'rm -f "$fixture"' EXIT
 
 cat >"$fixture" <<'TRANSCRIPT'
-            /Users/dev/project/apps/flutter/macos/Flutter/ephemeral/Packages/.packages/in_app_purchase_storekit-0.4.10+1/Sources/in_app_purchase_storekit_objc/include/in_app_purchase_storekit_objc/FIAObjectTranslator.h:14:40: warning: 'SKProduct' is deprecated: first deprecated in iOS 18.0 - Use Product.
+            /tmp/dev/project/apps/flutter/macos/Flutter/ephemeral/Packages/.packages/in_app_purchase_storekit-0.4.10+1/Sources/in_app_purchase_storekit_objc/include/in_app_purchase_storekit_objc/FIAObjectTranslator.h:14:40: warning: 'SKProduct' is deprecated: first deprecated in iOS 18.0 - Use Product.
                |
             15 | @interface FIAPaymentQueueHandler
                |                 `- warning: 'SKProduct' is deprecated: first deprecated in iOS 18.0 - Use Product.
                :
 
             42 warnings generated.
-            /Users/dev/.pub-cache/hosted/pub.dev/audioplayers_darwin-6.4.0/darwin/audioplayers_darwin/Sources/audioplayers_darwin/WrappedMediaPlayer.swift:205:14: warning: main actor-isolated property 'eventHandler' can not be referenced from a Sendable closure
+            /tmp/dev/.pub-cache/hosted/pub.dev/audioplayers_darwin-6.4.0/darwin/audioplayers_darwin/Sources/audioplayers_darwin/WrappedMediaPlayer.swift:205:14: warning: main actor-isolated property 'eventHandler' can not be referenced from a Sendable closure
             203 |         }
                |              `- warning: main actor-isolated property 'eventHandler' can not be referenced from a Sendable closure
 
-            /Users/dev/project/apps/flutter/macos/Flutter/ephemeral/Packages/.packages/foo/Sources/foo/Bar.swift:9:1: error: cannot find 'Thing' in scope
+            /tmp/dev/project/apps/flutter/macos/Flutter/ephemeral/Packages/.packages/foo/Sources/foo/Bar.swift:9:1: error: cannot find 'Thing' in scope
             9 | let x = Thing()
               |         ^~~~~
 
-            /Users/dev/project/apps/flutter/macos/Runner/MainFlutterWindow.swift:41:9: error: value of type 'Runner' has no member 'bogus'
+            /tmp/dev/project/apps/flutter/macos/Runner/MainFlutterWindow.swift:41:9: error: value of type 'Runner' has no member 'bogus'
 
 ✓ Built build/macos/Build/Products/Debug/Pomodoist.app
 TRANSCRIPT

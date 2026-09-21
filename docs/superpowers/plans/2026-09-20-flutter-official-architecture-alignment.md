@@ -103,7 +103,7 @@ Project choices retained beyond the official baseline: Riverpod Notifier/AsyncNo
 
 ### Application of the installed architecture skill
 
-Reviewed against `dart-flutter:flutter-apply-architecture-best-practices` version 1.0.5, installed at `/Users/kabanya/.codex/plugins/cache/dart-flutter/dart-flutter/1.0.5/skills/flutter-apply-architecture-best-practices/SKILL.md`.
+Reviewed against `dart-flutter:flutter-apply-architecture-best-practices` version 1.0.5 from the Codex plugin cache.
 
 | Skill guidance | Application to Pomodoist |
 |---|---|

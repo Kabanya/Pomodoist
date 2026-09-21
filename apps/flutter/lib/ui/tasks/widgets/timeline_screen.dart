@@ -39,10 +39,8 @@ class TimelineScreen extends StatelessWidget {
   const TimelineScreen({this.selectedDate, super.key});
   final DateTime? selectedDate;
   @override
-  Widget build(BuildContext context) => ProviderScope(
-    overrides: [timelineViewModelProvider.overrideWith(TimelineViewModel.new)],
-    child: _TimelineScreen(selectedDate: selectedDate),
-  );
+  Widget build(BuildContext context) =>
+      _TimelineScreen(selectedDate: selectedDate);
 }
 
 class _TimelineScreen extends ConsumerWidget {

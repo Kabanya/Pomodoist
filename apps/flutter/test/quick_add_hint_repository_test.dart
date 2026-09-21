@@ -1,32 +1,38 @@
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/data/repositories/planning/quick_add_hint_repository.dart';
+import 'package:pomodoist/data/repositories/projects/project_repository_impl.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
+import 'package:pomodoist/data/services/audio/focus_sound_player.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
-import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
 import 'package:pomodoist/utils/result.dart';
 
 void main() {
-  test('only manual task creation publishes a task-created event', () async {
+  test('only manual quick-add creation records a hint event', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
     await db.ensureSeedData();
-    var notifications = 0;
-    final repository = DriftTaskRepository(db, DriftOutboxService(db));
-
-    addTearDown(repository.dispose);
-    final subscription = repository.userTaskCreated.listen(
-      (_) => notifications++,
+    final syncQueue = DriftOutboxService(db);
+    final tasks = DriftTaskRepository(db, syncQueue);
+    final hints = _RecordingHints();
+    final quickAdd = QuickAddUseCase(
+      parser: const QuickAddParser(),
+      taskRepository: tasks,
+      projectRepository: DriftProjectRepository(db, syncQueue),
+      hints: hints,
     );
-    addTearDown(subscription.cancel);
 
-    await repository
-        .createTask(CreateTaskInput(content: 'Manual task'))
-        .then((result) => result.getOrThrow());
-    await repository
+    await quickAdd.createTask('Manual task').then((r) => r.getOrThrow());
+    expect(hints.created, 1);
+
+    await tasks
         .createTaskFromCalendar(
           RemoteCalendarTaskInput(
             content: 'Calendar task',
@@ -35,13 +41,19 @@ void main() {
           ),
         )
         .then((result) => result.getOrThrow());
+    expect(hints.created, 1);
 
-    final failed = await repository.createTask(
-      CreateTaskInput(content: 'Rolled back task', labelId: 'missing-label'),
+    final failed = await quickAdd.createTask(
+      'Rolled back task',
+      labelId: 'missing-label',
     );
     expect(failed, isA<Failure<String>>());
-    await pumpEventQueue();
-    expect(notifications, 1);
+    expect(hints.created, 1);
+
+    await quickAdd
+        .createTask('Voice draft', recordCreation: false)
+        .then((r) => r.getOrThrow());
+    expect(hints.created, 1);
   });
 
   test(
@@ -55,22 +67,32 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           quickAddHintRepositoryProvider.overrideWithValue(hints),
+          lastFocusPresetIdProvider.overrideWithValue(null),
+          focusSoundPlayerProvider.overrideWithValue(_SilentSoundPlayer()),
         ],
       );
       addTearDown(container.dispose);
-      final tasks = container.read(taskRepositoryProvider);
-      (await tasks.createTask(CreateTaskInput(content: 'First'))).getOrThrow();
-      await pumpEventQueue();
+      final quickAdd = container.read(quickAddUseCaseProvider);
+      (await quickAdd.createTask('First')).getOrThrow();
       expect(hints.created, 1);
       hints.fail = true;
-      final id = (await tasks.createTask(
-        CreateTaskInput(content: 'Second'),
-      )).getOrThrow();
-      await pumpEventQueue();
+      final id = (await quickAdd.createTask('Second')).getOrThrow();
       expect(hints.created, 2);
-      expect((await tasks.watchTask(id).first)?.content, 'Second');
+      final task = await container
+          .read(taskRepositoryProvider)
+          .watchTask(id)
+          .first;
+      expect(task?.content, 'Second');
     },
   );
+}
+
+class _SilentSoundPlayer implements FocusSoundPlayer {
+  @override
+  Future<void> play(FocusSoundCue cue) async {}
+
+  @override
+  Future<void> dispose() async {}
 }
 
 class _RecordingHints implements QuickAddHintRepository {

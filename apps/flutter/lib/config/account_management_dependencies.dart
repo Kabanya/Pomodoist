@@ -22,7 +22,7 @@ final accountManagementRepositoryProvider =
         service: AccountManagementService(account),
         userId: userId,
         timeout: ref.watch(accountRequestTimeoutProvider),
-        profile: AccountProfileService(Supabase.instance.client),
+        profile: () => AccountProfileService(Supabase.instance.client),
       );
     });
 

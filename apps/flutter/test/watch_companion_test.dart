@@ -16,6 +16,7 @@ import 'package:pomodoist/data/services/notifications/notification_scheduler.dar
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/data/repositories/focus/focus_repository_impl.dart';
 import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
+import 'package:pomodoist/domain/use_cases/quick_add/voice_quick_add_use_case.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
 
@@ -43,14 +44,19 @@ void main() {
       syncQueue,
       _NoopNotificationScheduler(),
     );
+    final quickAdd = QuickAddUseCase(
+      parser: const QuickAddParser(),
+      taskRepository: taskRepository,
+      projectRepository: projectRepository,
+    );
     actions = WatchCompanionUseCase(
       taskRepository: taskRepository,
       projectRepository: projectRepository,
       focusRepository: focusRepository,
-      quickAddService: QuickAddUseCase(
-        parser: const QuickAddParser(),
-        taskRepository: taskRepository,
-        projectRepository: projectRepository,
+      quickAddService: quickAdd,
+      voiceQuickAdd: VoiceQuickAddUseCase(
+        quickAdd: quickAdd,
+        runLocalTransaction: <T>(Future<T> Function() action) => action(),
       ),
       taskDecomposer: const _FakeTaskDecomposer(),
       localeProvider: () => 'en',

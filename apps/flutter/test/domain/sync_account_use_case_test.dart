@@ -61,11 +61,11 @@ class _FakeAccess extends Fake implements BillingRepository {
   @override
   String? get purchaseSuccessProductId => null;
   @override
-  Object? get confirmationFailure => null;
+  BillingFailure? get confirmationFailure => null;
   @override
   Stream<BillingPurchaseUpdate> get purchaseUpdates => const Stream.empty();
   @override
-  Stream<Object> get purchaseErrors => const Stream.empty();
+  Stream<BillingFailure> get purchaseErrors => const Stream.empty();
   @override
   Future<Result<void>> refresh() async => const Success(null);
   @override

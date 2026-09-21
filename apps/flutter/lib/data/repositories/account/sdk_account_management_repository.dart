@@ -9,7 +9,7 @@ class SdkAccountManagementRepository implements AccountManagementRepository {
     required AccountManagementService service,
     required String? userId,
     required Duration timeout,
-    required AccountProfileService profile,
+    required AccountProfileService? Function() profile,
   }) : _service = service,
        _userId = userId,
        _timeout = timeout,
@@ -17,7 +17,7 @@ class SdkAccountManagementRepository implements AccountManagementRepository {
   final AccountManagementService _service;
   final String? _userId;
   final Duration _timeout;
-  final AccountProfileService _profile;
+  final AccountProfileService? Function() _profile;
   @override
   String? get userId => _userId;
   @override
@@ -77,7 +77,9 @@ class SdkAccountManagementRepository implements AccountManagementRepository {
     _requireCurrent();
     final value = name.trim();
     if (value.isEmpty) throw ArgumentError.value(name, 'nickname');
-    (await _profile.updateNickname(_userId!, value).timeout(_timeout))
+    final profile = _profile();
+    if (profile == null) throw StateError('The profile service is unavailable.');
+    (await profile.updateNickname(_userId!, value).timeout(_timeout))
         .getOrThrow();
   });
 }

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
+import 'package:pomodoist/data/repositories/planning/quick_add_hint_repository.dart';
 import 'package:pomodoist/data/repositories/projects/project_repository.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
@@ -27,6 +28,7 @@ void main() {
           focusRepositoryProvider.overrideWithValue(focus),
           lastFocusPresetIdProvider.overrideWith((_) => selected),
           quickAddParserProvider.overrideWithValue(const QuickAddParser()),
+          quickAddHintRepositoryProvider.overrideWithValue(_NoHints()),
         ],
       );
       addTearDown(container.dispose);
@@ -51,6 +53,14 @@ void main() {
       expect(focus.reads, 2);
     },
   );
+}
+
+class _NoHints implements QuickAddHintRepository {
+  @override
+  Future<void> recordUserTaskCreated() async {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
 class _Tasks implements TaskRepository {

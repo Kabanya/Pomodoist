@@ -2617,6 +2617,7 @@ class _QuickAddMotionService implements QuickAddUseCase {
     TaskSchedule? defaultSchedule,
     String? kanbanStatusId,
     String? labelId,
+    bool recordCreation = true,
   }) => Result.capture<String>(() async => create());
 
   @override

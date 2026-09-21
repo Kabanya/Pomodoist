@@ -350,7 +350,9 @@ void main() {
           appThemeSettingsPreferenceKey,
         )!;
         expect(
-          AppThemeSettings.decode(persisted).customTheme.backgrounds.toJson(),
+          ThemeSettingsCodec.decode(
+            persisted,
+          ).settings.customTheme.backgrounds.toJson(),
           draft.backgrounds.toJson(),
         );
         expect(persisted, isNot(contains(base64Encode(pixels))));

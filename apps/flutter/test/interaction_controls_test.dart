@@ -3898,10 +3898,14 @@ Future<_AppHarness> _pumpApp(
           _FakeAchievementRepository(),
         ),
         pendingSyncCommandCountProvider.overrideWith((ref) => Stream.value(0)),
-        if (accountSignedIn)
+        if (accountSignedIn) ...[
           accountAuthStateProvider.overrideWith(
             (ref) => Stream.value(const AccountAuthState(signedIn: true)),
           ),
+          accountSessionProvider.overrideWith(
+            (ref) => Stream.value((userId: 'user', generation: 1)),
+          ),
+        ],
         accountProfileProvider.overrideWith(
           (ref) => const PomodoistAccountProfile(
             id: localUserId,

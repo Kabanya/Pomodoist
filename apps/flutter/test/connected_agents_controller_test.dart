@@ -1,13 +1,16 @@
 import 'dart:async';
 
-import 'package:app_account/app_account.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/account_management_dependencies.dart';
+import 'package:pomodoist/data/repositories/account/account_management_repository.dart';
+import 'package:pomodoist/domain/models/account/account_management.dart';
+import 'package:pomodoist/ui/settings/view_models/connected_agents_view_model.dart';
+import 'package:pomodoist/utils/result.dart';
 
 void main() {
-  for (final initial in <List<AccountOAuthGrant>?>[
+  for (final initial in <List<ConnectedAgent>?>[
     [_grant],
     [],
     null,
@@ -19,179 +22,190 @@ void main() {
           ? 'empty list'
           : 'agents'} across visits and refreshes',
       () async {
-        final account = _Account();
-        final container = _container(account);
+        final repository = _FakeRepository();
+        final container = _container(repository);
         final subscription = container.listen(
-          connectedAgentsProvider,
+          connectedAgentsViewModelProvider,
           (_, _) {},
         );
-        final controller = container.read(connectedAgentsProvider.notifier);
-        expect(container.read(connectedAgentsProvider).isLoading, isTrue);
+        final controller = container.read(
+          connectedAgentsViewModelProvider.notifier,
+        );
+        expect(
+          container.read(connectedAgentsViewModelProvider).isLoading,
+          isTrue,
+        );
         await _settle();
         final first = controller.refresh();
         if (initial == null) {
-          account.requests.single.completeError(StateError('offline'));
+          repository.requests.single.completeError(StateError('offline'));
         } else {
-          account.requests.single.complete(initial);
+          repository.requests.single.complete(initial);
         }
         await first;
-        final previous = container.read(connectedAgentsProvider);
+        final previous = container.read(connectedAgentsViewModelProvider);
         expect(previous.isLoading, isFalse);
         expect(previous.hasError, initial == null);
-        expect(controller.grants, initial);
+        expect(
+          _clientIds(previous.grants),
+          initial == null ? isNull : _clientIds(initial),
+        );
 
         subscription.close();
         await container.pump();
-        expect(container.read(connectedAgentsProvider), same(previous));
-        expect(account.requests, hasLength(1));
+        expect(
+          container.read(connectedAgentsViewModelProvider),
+          same(previous),
+        );
+        expect(repository.requests, hasLength(1));
 
         final refresh = controller.refresh();
         final duplicate = controller.refresh();
         expect(duplicate, same(refresh));
-        expect(account.requests, hasLength(2));
-        expect(container.read(connectedAgentsProvider), same(previous));
-        expect(controller.grants, initial);
-        account.requests.last.complete([_grantB]);
+        expect(repository.requests, hasLength(2));
+        expect(
+          container.read(connectedAgentsViewModelProvider),
+          same(previous),
+        );
+        expect(
+          _clientIds(container.read(connectedAgentsViewModelProvider).grants),
+          initial == null ? isNull : _clientIds(initial),
+        );
+        repository.requests.last.complete([_grantB]);
         await refresh;
-        expect(container.read(connectedAgentsProvider).hasError, isFalse);
-        expect(controller.grants, [_grantB]);
+        expect(
+          container.read(connectedAgentsViewModelProvider).hasError,
+          isFalse,
+        );
+        expect(
+          _clientIds(container.read(connectedAgentsViewModelProvider).grants),
+          ['client-b'],
+        );
       },
     );
   }
 
   test('background error retains the last list until retry succeeds', () async {
-    final account = _Account();
-    final container = _container(account);
-    final controller = container.read(connectedAgentsProvider.notifier);
+    final repository = _FakeRepository();
+    final container = _container(repository);
+    final controller = container.read(connectedAgentsViewModelProvider.notifier);
     await _settle();
-    account.requests.single.complete([_grant]);
+    repository.requests.single.complete([_grant]);
     await controller.refresh();
 
     final refresh = controller.refresh();
-    account.requests.last.completeError(StateError('offline'));
+    repository.requests.last.completeError(StateError('offline'));
     await refresh;
-    final failed = container.read(connectedAgentsProvider);
+    final failed = container.read(connectedAgentsViewModelProvider);
     expect(failed.hasError, isTrue);
     expect(failed.isLoading, isFalse);
-    expect(controller.grants, [_grant]);
+    expect(_clientIds(failed.grants), ['client-a']);
 
     final retry = controller.refresh();
-    expect(container.read(connectedAgentsProvider), same(failed));
-    account.requests.last.complete([]);
+    expect(container.read(connectedAgentsViewModelProvider), same(failed));
+    repository.requests.last.complete([]);
     await retry;
-    expect(controller.grants, isEmpty);
-    expect(container.read(connectedAgentsProvider).hasError, isFalse);
+    expect(container.read(connectedAgentsViewModelProvider).grants, isEmpty);
+    expect(
+      container.read(connectedAgentsViewModelProvider).hasError,
+      isFalse,
+    );
   });
 
-  for (final listening in [true, false]) {
-    test(
-      'token renewal retains data; account changes discard stale requests (listening: $listening)',
-      () async {
-        final account = _Account();
-        final container = _container(account);
-        final subscription = container.listen(
-          connectedAgentsProvider,
-          (_, _) {},
-        );
-        final controller = container.read(connectedAgentsProvider.notifier);
-        await _settle();
-        account.requests.single.complete([_grant]);
-        await controller.refresh();
-        final previous = container.read(connectedAgentsProvider);
-        if (!listening) {
-          subscription.close();
-          await container.pump();
-        }
-
-        container.updateOverrides(_overrides(account, token: 'renewed'));
-        await container.pump();
-        expect(container.read(connectedAgentsProvider), same(previous));
-        expect(account.requests, hasLength(1));
-
-        final stale = controller.refresh();
-        account.userId = 'user-b';
-        container.updateOverrides(_overrides(account));
-        await container.pump();
-        expect(container.read(connectedAgentsProvider).isLoading, isTrue);
-        await _settle();
-        expect(controller.grants, isNull);
-        expect(account.requests, hasLength(3));
-        account.requests[1].complete([_grant]);
-        await stale;
-        expect(controller.grants, isNull);
-        account.requests.last.complete([_grantB]);
-        await controller.refresh();
-        expect(controller.grants, [_grantB]);
-
-        container.updateOverrides(_overrides(account, signedIn: false));
-        await container.pump();
-        expect(container.read(connectedAgentsProvider).isLoading, isFalse);
-        expect(controller.grants, isNull);
-        container.updateOverrides(_overrides(account));
-        await container.pump();
-        expect(container.read(connectedAgentsProvider).isLoading, isTrue);
-        await _settle();
-        expect(controller.grants, isNull);
-        expect(account.requests, hasLength(4));
-        account.requests.last.complete([]);
-        await controller.refresh();
-      },
+  test('account changes discard stale requests and load the new user', () async {
+    final repository = _FakeRepository();
+    final container = _container(repository);
+    container.listen(connectedAgentsViewModelProvider, (_, _) {});
+    final controller = container.read(connectedAgentsViewModelProvider.notifier);
+    await _settle();
+    repository.requests.single.complete([_grant]);
+    await controller.refresh();
+    expect(
+      _clientIds(container.read(connectedAgentsViewModelProvider).grants),
+      ['client-a'],
     );
-  }
 
-  test(
-    'signing out and back in while settings are closed clears the cached session',
-    () async {
-      final account = _Account();
-      final container = _container(account);
-      final subscription = container.listen(connectedAgentsProvider, (_, _) {});
-      final controller = container.read(connectedAgentsProvider.notifier);
-      await _settle();
-      account.requests.single.complete([_grant]);
-      await controller.refresh();
-      final stale = controller.refresh();
-      subscription.close();
-      await container.pump();
+    final stale = controller.refresh();
+    final replacement = _FakeRepository(userId: 'user-b');
+    container.updateOverrides(_overrides(replacement));
+    await container.pump();
+    expect(
+      container.read(connectedAgentsViewModelProvider).isLoading,
+      isTrue,
+    );
+    expect(container.read(connectedAgentsViewModelProvider).grants, isNull);
+    await _settle();
+    expect(replacement.requests, hasLength(1));
 
-      container.updateOverrides(_overrides(account, signedIn: false));
-      await container.pump();
-      container.updateOverrides(_overrides(account));
-      await container.pump();
-      account.requests.last.complete([_grant]);
-      await stale;
+    repository.requests[1].complete([_grant]);
+    await stale;
+    expect(container.read(connectedAgentsViewModelProvider).grants, isNull);
 
-      expect(controller.grants, isNull);
-      expect(container.read(connectedAgentsProvider).isLoading, isTrue);
-      expect(controller.grants, isNull);
-      await _settle();
-      account.requests.last.complete([]);
-      await controller.refresh();
-    },
-  );
+    replacement.requests.last.complete([_grantB]);
+    await container.read(connectedAgentsViewModelProvider.notifier).refresh();
+    expect(
+      _clientIds(container.read(connectedAgentsViewModelProvider).grants),
+      ['client-b'],
+    );
+
+    container.updateOverrides([
+      accountManagementRepositoryProvider.overrideWithValue(null),
+    ]);
+    await container.pump();
+    expect(
+      container.read(connectedAgentsViewModelProvider).isLoading,
+      isFalse,
+    );
+    expect(container.read(connectedAgentsViewModelProvider).grants, isEmpty);
+    container.updateOverrides(_overrides(replacement));
+    await container.pump();
+    expect(
+      container.read(connectedAgentsViewModelProvider).isLoading,
+      isTrue,
+    );
+    await _settle();
+    expect(container.read(connectedAgentsViewModelProvider).grants, isNull);
+    replacement.requests.last.complete([]);
+    await container.read(connectedAgentsViewModelProvider.notifier).refresh();
+  });
 
   test(
     'replacement client ignores an old revoke even for the same user',
     () async {
-      final account = _Account();
-      final container = _container(account);
-      container.listen(connectedAgentsProvider, (_, _) {});
-      final controller = container.read(connectedAgentsProvider.notifier);
+      final repository = _FakeRepository();
+      final container = _container(repository);
+      container.listen(connectedAgentsViewModelProvider, (_, _) {});
+      final controller = container.read(
+        connectedAgentsViewModelProvider.notifier,
+      );
       await _settle();
-      account.requests.single.complete([_grant]);
+      repository.requests.single.complete([_grant]);
       await controller.refresh();
-      final revoke = controller.revoke(_grant.clientId);
+      final revoke = controller.revoke(_grant.clientId, 'user-a');
 
-      final replacement = _Account();
+      final replacement = _FakeRepository();
       container.updateOverrides(_overrides(replacement));
       await container.pump();
       await _settle();
-      expect(container.read(connectedAgentsProvider).isLoading, isTrue);
-      expect(controller.grants, isNull);
+      expect(
+        container.read(connectedAgentsViewModelProvider).isLoading,
+        isTrue,
+      );
+      expect(container.read(connectedAgentsViewModelProvider).grants, isNull);
       replacement.requests.single.complete([_grant]);
-      await controller.refresh();
-      account.revocation.complete();
+      await container
+          .read(connectedAgentsViewModelProvider.notifier)
+          .refresh();
+      expect(
+        _clientIds(container.read(connectedAgentsViewModelProvider).grants),
+        ['client-a'],
+      );
+      repository.revocation.complete();
       await revoke;
-      expect(controller.grants, [_grant]);
+      expect(
+        _clientIds(container.read(connectedAgentsViewModelProvider).grants),
+        ['client-a'],
+      );
       expect(replacement.requests, hasLength(1));
       expect(replacement.revokedIds, isEmpty);
     },
@@ -200,116 +214,137 @@ void main() {
   test(
     'successful revoke removes immediately and rejects older list responses',
     () async {
-      final account = _Account();
-      final container = _container(account);
-      final controller = container.read(connectedAgentsProvider.notifier);
+      final repository = _FakeRepository();
+      final container = _container(repository);
+      final controller = container.read(
+        connectedAgentsViewModelProvider.notifier,
+      );
       await _settle();
-      account.requests.single.complete([_grant, _grantB]);
+      repository.requests.single.complete([_grant, _grantB]);
       await controller.refresh();
       final staleRefresh = controller.refresh();
-      final revoke = controller.revoke(_grant.clientId);
-      expect(controller.grants, [_grant, _grantB]);
-      expect(account.revokedIds, [_grant.clientId]);
-      account.revocation.complete();
+      final revoke = controller.revoke(_grant.clientId, 'user-a');
+      expect(
+        _clientIds(container.read(connectedAgentsViewModelProvider).grants),
+        ['client-a', 'client-b'],
+      );
+      expect(repository.revokedIds, ['client-a']);
+      repository.revocation.complete();
       await _settle();
-      expect(controller.grants, [_grantB]);
-      expect(container.read(connectedAgentsProvider).isLoading, isFalse);
-      expect(account.requests, hasLength(3));
+      expect(
+        _clientIds(container.read(connectedAgentsViewModelProvider).grants),
+        ['client-b'],
+      );
+      expect(
+        container.read(connectedAgentsViewModelProvider).isLoading,
+        isFalse,
+      );
+      expect(repository.requests, hasLength(3));
 
-      account.requests[1].complete([_grant, _grantB]);
+      repository.requests[1].complete([_grant, _grantB]);
       await staleRefresh;
-      expect(controller.grants, [_grantB]);
-      account.requests.last.completeError(StateError('refresh failed'));
+      expect(
+        _clientIds(container.read(connectedAgentsViewModelProvider).grants),
+        ['client-b'],
+      );
+      repository.requests.last.completeError(StateError('refresh failed'));
       await revoke;
-      expect(controller.grants, [_grantB]);
-      expect(container.read(connectedAgentsProvider).hasError, isTrue);
+      expect(
+        _clientIds(container.read(connectedAgentsViewModelProvider).grants),
+        ['client-b'],
+      );
+      expect(
+        container.read(connectedAgentsViewModelProvider).hasError,
+        isTrue,
+      );
     },
   );
 
   test(
-    'failed revoke keeps the grant and reports failure to the caller',
+    'failed revoke keeps the grant and exposes the failure to the state',
     () async {
-      final account = _Account();
-      final container = _container(account);
-      final controller = container.read(connectedAgentsProvider.notifier);
+      final repository = _FakeRepository();
+      final container = _container(repository);
+      final controller = container.read(
+        connectedAgentsViewModelProvider.notifier,
+      );
       await _settle();
-      account.requests.single.complete([_grant]);
+      repository.requests.single.complete([_grant]);
       await controller.refresh();
-      final revoke = controller.revoke(_grant.clientId);
-      final assertion = expectLater(revoke, throwsStateError);
-      account.revocation.completeError(StateError('offline'));
-      await assertion;
-      expect(controller.grants, [_grant]);
-      expect(account.requests, hasLength(1));
+      final revoke = controller.revoke(_grant.clientId, 'user-a');
+      repository.revocation.completeError(StateError('offline'));
+      await revoke;
+      expect(
+        _clientIds(container.read(connectedAgentsViewModelProvider).grants),
+        ['client-a'],
+      );
+      expect(
+        container.read(connectedAgentsViewModelProvider).revokeError,
+        isNotNull,
+      );
+      expect(repository.requests, hasLength(1));
     },
   );
 }
 
-ProviderContainer _container(_Account account) {
-  final container = ProviderContainer(overrides: _overrides(account));
+ProviderContainer _container(_FakeRepository repository) {
+  final container = ProviderContainer(overrides: _overrides(repository));
   addTearDown(container.dispose);
   return container;
 }
 
-List<Override> _overrides(
-  _Account account, {
-  String token = 'token',
-  bool signedIn = true,
-}) => [
-  accountClientProvider.overrideWithValue(account),
-  accountConfiguredProvider.overrideWithValue(true),
-  accountAuthStateProvider.overrideWithValue(
-    AsyncData(
-      AccountAuthState(
-        signedIn: signedIn,
-        session: signedIn
-            ? AccountSession(userId: account.userId, accessToken: token)
-            : null,
-      ),
-    ),
-  ),
+List<Override> _overrides(_FakeRepository repository) => [
+  accountManagementRepositoryProvider.overrideWithValue(repository),
 ];
+
+List<String>? _clientIds(List<ConnectedAgent>? agents) =>
+    agents?.map((agent) => agent.clientId).toList();
 
 Future<void> _settle() async {
   await Future<void>.delayed(Duration.zero);
   await Future<void>.delayed(Duration.zero);
 }
 
-final _grant = AccountOAuthGrant(
+final _grant = ConnectedAgent(
   clientId: 'client-a',
   clientName: 'Agent A',
-  scopes: const [],
   connectedAt: DateTime.utc(2026, 9, 1),
 );
-final _grantB = AccountOAuthGrant(
+final _grantB = ConnectedAgent(
   clientId: 'client-b',
   clientName: 'Agent B',
-  scopes: const [],
   connectedAt: DateTime.utc(2026, 9, 2),
 );
 
-class _Account implements AccountClient {
-  String userId = 'user-a';
-  final requests = <Completer<List<AccountOAuthGrant>>>[];
+class _FakeRepository implements AccountManagementRepository {
+  _FakeRepository({this.userId = 'user-a'});
+
+  @override
+  final String? userId;
+  final requests = <Completer<List<ConnectedAgent>>>[];
   final revocation = Completer<void>();
   final revokedIds = <String>[];
 
   @override
-  String get currentUserId => userId;
+  String? get email => null;
 
   @override
-  Future<List<AccountOAuthGrant>> listOAuthGrants() {
-    final request = Completer<List<AccountOAuthGrant>>();
+  bool get isCurrent => true;
+
+  @override
+  Future<Result<List<ConnectedAgent>>> connectedAgents() async {
+    final request = Completer<List<ConnectedAgent>>();
     requests.add(request);
-    return request.future;
+    return Success(await request.future);
   }
 
   @override
-  Future<void> revokeOAuthGrant(String clientId) {
+  Future<Result<void>> revokeAgent(String clientId) async {
     revokedIds.add(clientId);
-    return revocation.future;
+    await revocation.future;
+    return const Success(null);
   }
 
   @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }

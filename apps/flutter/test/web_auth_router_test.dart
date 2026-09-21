@@ -50,6 +50,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         accountClientProvider.overrideWithValue(account),
+        accountOverviewProvider.overrideWith((ref) async => null),
         accountAuthStateProvider.overrideWithValue(const AsyncLoading()),
       ],
     );
@@ -80,6 +81,8 @@ void main() {
       _routerUri(router),
       '/oauth/consent?authorization_id=a%2Fb%2Bc%2520d',
     );
+    await tester.pumpWidget(const SizedBox.shrink());
+    container.dispose();
   });
 
   testWidgets('login redirect honors a live session over a stale snapshot', (
@@ -89,6 +92,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         accountClientProvider.overrideWithValue(account),
+        accountOverviewProvider.overrideWith((ref) async => null),
         // The auth stream can report a stale signed-out snapshot while the
         // live session is intact, so the router must still see a signed-in
         // user and leave the login route for the requested destination.
@@ -132,6 +136,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           accountClientProvider.overrideWithValue(account),
+        accountOverviewProvider.overrideWith((ref) async => null),
           accountAuthStateProvider.overrideWithValue(const AsyncLoading()),
         ],
       );
@@ -181,6 +186,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         accountClientProvider.overrideWithValue(account),
+        accountOverviewProvider.overrideWith((ref) async => null),
         accountAuthStateProvider.overrideWith((ref) => authStates.stream),
       ],
     );
@@ -246,6 +252,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         accountClientProvider.overrideWithValue(accountA),
+        accountOverviewProvider.overrideWith((ref) async => null),
         accountAuthStateProvider.overrideWithValue(
           const AsyncData(
             AccountAuthState(
@@ -278,6 +285,7 @@ void main() {
 
     container.updateOverrides([
       accountClientProvider.overrideWithValue(accountB),
+      accountOverviewProvider.overrideWith((ref) async => null),
       accountAuthStateProvider.overrideWithValue(
         const AsyncData(
           AccountAuthState(
@@ -293,6 +301,8 @@ void main() {
     expect(accountB.getCalls, ['pending']);
     expect(find.text('Agent A'), findsNothing);
     expect(find.text('Agent B'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    container.dispose();
   });
 
   test('web startup preserves the requested local route and query', () {
@@ -386,6 +396,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         accountClientProvider.overrideWithValue(account),
+        accountOverviewProvider.overrideWith((ref) async => null),
         accountAuthStateProvider.overrideWithValue(
           const AsyncData(
             AccountAuthState(
@@ -429,6 +440,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         accountClientProvider.overrideWithValue(account),
+        accountOverviewProvider.overrideWith((ref) async => null),
         accountAuthStateProvider.overrideWithValue(
           const AsyncData(AccountAuthState(signedIn: false)),
         ),

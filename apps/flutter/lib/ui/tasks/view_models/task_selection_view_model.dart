@@ -143,7 +143,8 @@ class TaskSelectionViewModel extends Notifier<TaskSelectionState> {
   }) async {
     final succeeded = <String>[];
     final failed = <String>[];
-    for (final id in requireVisible ? _validIds(ids) : ids.toSet()) {
+    for (final id in ids.toSet()) {
+      if (requireVisible && !_visibleTasks.containsKey(id)) continue;
       try {
         await action(id);
         succeeded.add(id);
