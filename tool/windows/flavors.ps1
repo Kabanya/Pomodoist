@@ -79,13 +79,28 @@ function Get-PomodoistFlavorForEntryPoint {
 # only the link, but $ErrorActionPreference = 'Stop' turns every message it
 # writes to stderr into a terminating error, and it reports an invalid directory
 # name whenever the target is missing - the dangling state this repository has
-# to repair after a fresh checkout and after `flutter clean`. The file system
-# API never resolves the target; it reports a missing target per link, which the
-# callers tolerate.
+# to repair after a fresh checkout and after `flutter clean`.
+#
+# The file system API reports that same missing target as an IOException, and a
+# .NET method call is not affected by $ErrorActionPreference, so the exception
+# has to be caught explicitly: it is the expected outcome for a dangling link
+# rather than a failure. Only IOException is tolerated; anything else (a
+# permission problem, a locked directory) still surfaces.
 function Remove-PomodoistReparsePoint {
     param([Parameter(Mandatory)][string]$Path)
 
-    [System.IO.Directory]::Delete($Path, $false)
+    try {
+        [System.IO.Directory]::Delete($Path, $false)
+    } catch [System.IO.IOException] {
+        # A dangling link reports the missing target as IOException, which is
+        # the expected outcome here, but so does a non-empty directory - the
+        # type alone cannot tell them apart. Only the missing-target message is
+        # tolerated; anything else is rethrown so a real failure to remove the
+        # path is not reported as a repair.
+        if ($_.Exception.Message -notmatch 'Could not find a part of the path|The directory name is invalid|The system cannot find the path specified') {
+            throw
+        }
+    }
     Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction SilentlyContinue
 }
 

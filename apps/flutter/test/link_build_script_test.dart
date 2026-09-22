@@ -183,5 +183,34 @@ void main() {
         reason: 'resolving the link would let the removal reach the target',
       );
     });
+
+    test('the removal helper only tolerates a missing target', () {
+      // A dangling link and a non-empty directory both raise IOException, so
+      // catching the type alone would also swallow a genuine failure to remove
+      // the path and report it as a repair. The helper has to narrow the
+      // tolerated case instead of trusting the exception type.
+      final flavorTable = File(
+        '../../tool/windows/flavors.ps1',
+      ).readAsStringSync();
+      final start = flavorTable.indexOf('function Remove-PomodoistReparsePoint');
+      expect(start, isNonNegative, reason: 'the helper must exist');
+      final body = flavorTable.substring(
+        start,
+        flavorTable.indexOf('\n}', start),
+      );
+
+      expect(
+        body,
+        contains('catch [System.IO.IOException]'),
+        reason: 'a dangling link reports the missing target as IOException',
+      );
+      expect(
+        body,
+        contains('throw'),
+        reason:
+            'an IOException that is not a missing target must be rethrown, or '
+            'a real failure is silently reported as a repair',
+      );
+    });
   });
 }
