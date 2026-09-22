@@ -76,6 +76,41 @@ void main() {
     expect(cmake, contains('message(FATAL_ERROR'));
   });
 
+  test('every named flavor is handled before the unknown-flavor guard', () {
+    // The release targets pass --flavor production, so a flavor that is only
+    // reachable through the default identity still reaches the guard as a
+    // non-empty value and aborts the configure step. Each named flavor
+    // therefore needs a branch of its own above the guard, and the guard must
+    // stay the last thing the table does.
+    final guard = cmake.indexOf('elseif(NOT FLUTTER_APP_FLAVOR STREQUAL "")');
+    expect(guard, isNonNegative, reason: 'the guard must stay in the table');
+    final failure = cmake.indexOf('message(FATAL_ERROR', guard);
+    expect(
+      failure,
+      isNonNegative,
+      reason: 'the guard must refuse an unknown flavor',
+    );
+
+    for (final flavor in AppFlavor.values) {
+      final branch = cmake.indexOf(
+        'FLUTTER_APP_FLAVOR STREQUAL "${flavor.name}"',
+      );
+      expect(
+        branch,
+        isNonNegative,
+        reason:
+            '${flavor.name} is passed to --flavor, so it needs a branch '
+            'before the guard rather than falling through to the default '
+            'identity',
+      );
+      expect(
+        branch,
+        lessThan(guard),
+        reason: 'the ${flavor.name} branch must precede the guard',
+      );
+    }
+  });
+
   test('the runner compiles the flavor identity in', () {
     expect(runnerCmake, contains(r'-DAPPLICATION_ID="${APPLICATION_ID}"'));
     expect(runnerCmake, contains(r'APP_DISPLAY_NAME="${APP_DISPLAY_NAME}"'));

@@ -70,9 +70,11 @@ try {
     if ($Clean) {
         & flutter clean
         if ($LASTEXITCODE -ne 0) { throw 'flutter clean failed' }
-        cmd /c rmdir "$repoRoot\apps\flutter\build" 2>$null
+        # flutter clean empties the real directories behind the links without
+        # removing the links, and the caches have to go with the artifacts.
+        Remove-PomodoistReparsePoint (Join-Path $repoRoot 'apps\flutter\build')
         Remove-Item -LiteralPath (Join-Path $repoRoot 'build\flutter') -Recurse -Force -ErrorAction SilentlyContinue
-        cmd /c rmdir "$repoRoot\apps\flutter\.dart_tool" 2>$null
+        Remove-PomodoistReparsePoint (Join-Path $repoRoot 'apps\flutter\.dart_tool')
         Remove-Item -LiteralPath (Join-Path $repoRoot 'build\dart_tool') -Recurse -Force -ErrorAction SilentlyContinue
         & (Join-Path $PSScriptRoot 'link-build.ps1')
     }

@@ -68,6 +68,10 @@ if(FLUTTER_APP_FLAVOR STREQUAL "development")
 elseif(FLUTTER_APP_FLAVOR STREQUAL "staging")
   set(APPLICATION_ID "com.finchforge.pomodoist.stg")
   set(APP_DISPLAY_NAME "Pomodoist Stg")
+elseif(FLUTTER_APP_FLAVOR STREQUAL "production")
+  # Named explicitly rather than left to the defaults, because the repository
+  # tooling passes --flavor production on the release build and a bare flavor
+  # would otherwise have to fall through to the guard below.
 elseif(NOT FLUTTER_APP_FLAVOR STREQUAL "")
   # An unrecognized flavor would silently build a production-identified app, so
   # refuse instead of falling back.

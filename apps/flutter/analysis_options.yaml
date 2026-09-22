@@ -9,6 +9,12 @@
 # packages, and plugins designed to encourage good coding practices.
 analyzer:
   exclude:
+    # build/ and .dart_tool/ are symlinks to the repository-root output
+    # directories (see tool/link-build.sh). Their generated files
+    # (dartpad/web_plugin_registrant.dart,
+    # flutter_build/dart_plugin_registrant.dart) are not resolvable on their
+    # own, so analyzing them produces spurious uri_does_not_exist errors.
+    - .dart_tool/**
     - build/**
     - android/**
     - ios/**

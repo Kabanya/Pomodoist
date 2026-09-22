@@ -112,4 +112,76 @@ void main() {
     runLinker();
     expect(pubspec.readAsStringSync(), 'name: pomodoist\n');
   });
+
+  group('tool/windows/link-build.ps1', () {
+    // The Windows link repair ran `cmd /c rmdir` to drop a stale junction. With
+    // $ErrorActionPreference = 'Stop' every message cmd.exe writes to stderr
+    // becomes a terminating error, and rmdir reports an invalid directory name
+    // whenever the junction's target is missing, which is exactly the state the
+    // script exists to repair. The removal now goes through the file system API
+    // in flavors.ps1 instead, so this checks the fragile form has not come
+    // back; the removal itself is exercised on Windows only, where junctions
+    // can be created.
+    test('never shells out to cmd to remove a link', () {
+      final script = File('../../tool/windows/link-build.ps1').readAsStringSync();
+      final flavorTable = File(
+        '../../tool/windows/flavors.ps1',
+      ).readAsStringSync();
+      final buildScript = File('../../tool/windows/build.ps1').readAsStringSync();
+
+      for (final entry in {
+        'link-build.ps1': script,
+        'flavors.ps1': flavorTable,
+        'build.ps1': buildScript,
+      }.entries) {
+        expect(
+          entry.value,
+          isNot(matches(RegExp(r'cmd(\.exe)?\s+/c\s+rmdir'))),
+          reason:
+              '${entry.key} must not remove a link through cmd.exe: its '
+              r'stderr output becomes a terminating error while '
+              r'$ErrorActionPreference is Stop',
+        );
+      }
+    });
+
+    test('delegates the repair to the shared helper', () {
+      final script = File('../../tool/windows/link-build.ps1').readAsStringSync();
+
+      expect(
+        script,
+        contains("Join-Path \$PSScriptRoot 'flavors.ps1'"),
+        reason: 'the removal helper lives in the shared flavor table',
+      );
+      expect(script, contains('Set-PomodoistReparsePoint'));
+      expect(
+        script,
+        contains('-Junction'),
+        reason: 'the Flutter links are junctions on Windows',
+      );
+    });
+
+    test('the removal helper never follows the link to its target', () {
+      final flavorTable = File(
+        '../../tool/windows/flavors.ps1',
+      ).readAsStringSync();
+      final start = flavorTable.indexOf('function Remove-PomodoistReparsePoint');
+      expect(start, isNonNegative, reason: 'the helper must exist');
+      final body = flavorTable.substring(
+        start,
+        flavorTable.indexOf('\n}', start),
+      );
+
+      expect(
+        body,
+        contains(r'[System.IO.Directory]::Delete'),
+        reason: 'the link has to go through the file system API',
+      );
+      expect(
+        body,
+        isNot(contains('ResolveSymlinks')),
+        reason: 'resolving the link would let the removal reach the target',
+      );
+    });
+  });
 }
