@@ -61,8 +61,16 @@ void main() {
       'linux-release': '--dart-define-from-file="$_repoRoot/linux.env"',
       'windows-debug': '-ConfigFile "staging.env"',
       'windows-release': '-ConfigFile "C:/windows.env"',
-      'macos-debug': '--dart-define-from-file="$_repoRoot/staging.env"',
+      'macos-debug': '--dart-define-from-file="$_repoRoot/local.env"',
       'macos-release': '--dart-define-from-file="$_repoRoot/testflight.env"',
+      'macos-debug-staging':
+          '--dart-define-from-file="$_repoRoot/staging.env"',
+      'macos-debug-production':
+          '--dart-define-from-file="$_repoRoot/testflight.env"',
+      'macos-profile-staging':
+          '--dart-define-from-file="$_repoRoot/staging.env"',
+      'macos-release-production':
+          '--dart-define-from-file="$_repoRoot/testflight.env"',
     };
 
     for (final entry in expectedConfigs.entries) {
@@ -125,6 +133,57 @@ void main() {
         reason: entry.key,
       );
     }
+  });
+
+  test('macos-debug is the development environment', () {
+    const arguments = [
+      '--no-print-directory',
+      '--dry-run',
+      'FLUTTER=flutter-under-test',
+      'DART=dart-under-test',
+      'LOCAL_CONFIG=local.env',
+      'POMODOIST_RELEASE=0123456789abcdef0123456789abcdef01234567',
+    ];
+    final bare = Process.runSync(_makeExecutable(), [
+      ...arguments,
+      'macos-debug',
+    ], workingDirectory: _repoRoot);
+    final explicit = Process.runSync(_makeExecutable(), [
+      ...arguments,
+      'macos-debug-development',
+    ], workingDirectory: _repoRoot);
+
+    expect(bare.exitCode, 0, reason: bare.stderr.toString());
+    expect(explicit.exitCode, 0, reason: explicit.stderr.toString());
+    expect(
+      bare.stdout.toString(),
+      explicit.stdout.toString(),
+      reason: 'macos-debug must stay an alias of macos-debug-development',
+    );
+    expect(bare.stdout.toString(), contains('--flavor "development"'));
+    expect(
+      bare.stdout.toString(),
+      contains('--target "lib/main_development.dart"'),
+    );
+  });
+
+  test('macos-profile keeps its own local configuration', () {
+    final result = Process.runSync(_makeExecutable(), [
+      '--no-print-directory',
+      '--dry-run',
+      'macos-profile',
+      'FLUTTER=flutter-under-test',
+      'DART=dart-under-test',
+      'LOCAL_CONFIG=local.env',
+      'POMODOIST_RELEASE=0123456789abcdef0123456789abcdef01234567',
+    ], workingDirectory: _repoRoot);
+
+    expect(result.exitCode, 0, reason: result.stderr.toString());
+    expect(
+      result.stdout.toString(),
+      contains('--dart-define-from-file="$_repoRoot/local.env"'),
+    );
+    expect(result.stdout.toString(), contains('build macos --profile'));
   });
 
   test(

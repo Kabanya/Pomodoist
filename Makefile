@@ -111,16 +111,17 @@ IOS_IPA_PATH ?= $(FLUTTER_BUILD)/ios/ipa/$(TESTFLIGHT_PRODUCT_NAME).ipa
 WINDOWS_RELEASE_DIR ?= $(FLUTTER_BUILD)/windows/x64/$(WINDOWS_RELEASE_FLAVOR)/runner/Release
 LINUX_BUNDLE_DIR ?= $(FLUTTER_BUILD)/linux/x64/$(LINUX_RELEASE_FLAVOR)/release/bundle
 
-# Desktop builds use <PLATFORM>_<MODE>_CONFIG. Debug targets default to
-# staging; profile and release targets keep their platform configuration.
-# Override any of them to point one build at another environment, including
-# production. Each configuration is paired with its entry point, so an override
-# must move <PLATFORM>_<MODE>_TARGET as well: a mismatch stops the app at
-# startup with "Entrypoint/config mismatch".
-MACOS_DEBUG_CONFIG   ?= $(STAGING_CONFIG)
+# Desktop builds use <PLATFORM>_<MODE>_CONFIG. macOS debug targets reuse
+# MACOS_DEVELOPMENT_CONFIG/_TARGET, so `make macos-debug` and
+# `make macos-debug-development` are the same build. Override any of them to
+# point one build at another environment, including production. Each
+# configuration is paired with its entry point, so an override must move the
+# matching _TARGET as well: a mismatch stops the app at startup with
+# "Entrypoint/config mismatch". macos-run follows the debug pair.
+MACOS_DEBUG_CONFIG   ?= $(MACOS_DEVELOPMENT_CONFIG)
+MACOS_DEBUG_TARGET   ?= $(MACOS_DEVELOPMENT_TARGET)
 MACOS_PROFILE_CONFIG ?= $(LOCAL_CONFIG)
 MACOS_RELEASE_CONFIG ?= $(TESTFLIGHT_CONFIG)
-MACOS_DEBUG_TARGET   ?= $(STAGING_TARGET)
 MACOS_PROFILE_TARGET ?= $(LOCAL_TARGET)
 MACOS_RELEASE_TARGET ?= $(TESTFLIGHT_TARGET)
 LINUX_DEBUG_CONFIG   ?= $(STAGING_CONFIG)
@@ -135,6 +136,20 @@ WINDOWS_RELEASE_CONFIG ?= $(WINDOWS_CONFIG)
 WINDOWS_DEBUG_TARGET   ?= $(STAGING_TARGET)
 WINDOWS_PROFILE_TARGET ?= $(PRODUCTION_TARGET)
 WINDOWS_RELEASE_TARGET ?= $(PRODUCTION_TARGET)
+
+# Per-environment macOS builds behind the macos-<mode>-<environment> targets.
+# development reuses the local dotenv profile, which talks to the production
+# Supabase project with CAPTCHA disabled; staging uses .env.staging; production
+# uses .env.testflight, the profile the release build already ships. Each
+# configuration stays paired with its entry point so flavor_of derives the
+# matching flavor. Override MACOS_<ENVIRONMENT>_CONFIG/_TARGET to move one
+# environment everywhere it is used.
+MACOS_DEVELOPMENT_CONFIG ?= $(LOCAL_CONFIG)
+MACOS_DEVELOPMENT_TARGET ?= $(LOCAL_TARGET)
+MACOS_STAGING_CONFIG     ?= $(STAGING_CONFIG)
+MACOS_STAGING_TARGET     ?= $(STAGING_TARGET)
+MACOS_PRODUCTION_CONFIG  ?= $(TESTFLIGHT_CONFIG)
+MACOS_PRODUCTION_TARGET  ?= $(PRODUCTION_TARGET)
 
 # Each flavor is read back from its entry point, so moving a
 # <PLATFORM>_<MODE>_TARGET moves the flavor with it and the app keeps one
@@ -151,6 +166,9 @@ LINUX_RELEASE_FLAVOR   ?= $(call flavor_of,$(LINUX_RELEASE_TARGET))
 WINDOWS_DEBUG_FLAVOR   ?= $(call flavor_of,$(WINDOWS_DEBUG_TARGET))
 WINDOWS_PROFILE_FLAVOR ?= $(call flavor_of,$(WINDOWS_PROFILE_TARGET))
 WINDOWS_RELEASE_FLAVOR ?= $(call flavor_of,$(WINDOWS_RELEASE_TARGET))
+MACOS_DEVELOPMENT_FLAVOR ?= $(call flavor_of,$(MACOS_DEVELOPMENT_TARGET))
+MACOS_STAGING_FLAVOR     ?= $(call flavor_of,$(MACOS_STAGING_TARGET))
+MACOS_PRODUCTION_FLAVOR  ?= $(call flavor_of,$(MACOS_PRODUCTION_TARGET))
 TESTFLIGHT_PRODUCT_NAME ?= $(if $(filter $(FLAVOR_STAGING),$(TESTFLIGHT_FLAVOR)),Pomodoist Stg,Pomodoist)
 
 # TestFlight credentials stay in the private env and are never Dart defines.
@@ -173,6 +191,9 @@ COMPANION_RELEASE_CONFIG ?= $(TESTFLIGHT_CONFIG)
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
 .PHONY: windows-debug windows-profile windows-release windows-installer
 .PHONY: macos macos-debug macos-run macos-profile macos-release macos-reset
+.PHONY: macos-debug-development macos-debug-staging macos-debug-production
+.PHONY: macos-profile-development macos-profile-staging macos-profile-production
+.PHONY: macos-release-development macos-release-staging macos-release-production
 .PHONY: ios-debug ios-profile ipad-debug ipad-profile watch-debug watch-profile ios-flavor-settings testflight-preflight testflight-auth testflight-ios testflight-macos testflight
 .PHONY: deploy-staging deploy-production deploy-all deploy-telegram-staging deploy-telegram-production
 .PHONY: help devices clean
@@ -233,8 +254,14 @@ help:
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-installer' "$${reset}" 'EXE installer'; \
 	printf '\n'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos' "$${reset}" 'Debug app (alias of macos-debug)'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug' "$${reset}" 'Debug app'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug' "$${reset}" 'Debug app (development)'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug-staging' "$${reset}" 'Debug app (staging)'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug-production' "$${reset}" 'Debug app (production)'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-run' "$${reset}" 'Debug app with hot reload'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile-staging' "$${reset}" 'Profile app (staging)'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile-production' "$${reset}" 'Profile app (production)'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release-staging' "$${reset}" 'Release app (local, staging)'; \
+	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release-production' "$${reset}" 'Release app (local, production)'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile' "$${reset}" 'Profile app'; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release' "$${reset}" 'Release app'; \
 	printf '\n'; \
@@ -393,8 +420,8 @@ windows-release:
 windows-installer: windows-release
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/installer/build.ps1 -Flavor "$(WINDOWS_RELEASE_FLAVOR)" -BuildDirectory "$(WINDOWS_RELEASE_DIR)"
 
-macos-debug macos-run macos-profile: POMODOIST_BILLING_CHANNEL = storekit
-macos-debug macos-run macos-profile: flutter-build-link
+macos-debug macos-run macos-profile macos-debug-development macos-debug-staging macos-debug-production macos-profile-development macos-profile-staging macos-profile-production: POMODOIST_BILLING_CHANNEL = storekit
+macos-debug macos-run macos-profile macos-debug-development macos-debug-staging macos-debug-production macos-profile-development macos-profile-staging macos-profile-production macos-release-development macos-release-staging macos-release-production: flutter-build-link
 
 # `flutter build macos` drives xcodebuild without -allowProvisioningUpdates, so
 # Xcode can neither find nor create a profile for a flavor whose App IDs are not
@@ -404,20 +431,13 @@ macos-debug macos-run macos-profile: flutter-build-link
 # FLUTTER_XCODE_CODE_SIGNING_ALLOWED=NO, which builds without signing at all.
 MACOS_LOCAL_SIGNING_FLAGS ?=
 
-# `make macos` is the usual entry point; it builds the debug app.
+# `make macos` is the usual entry point; it builds the debug app, which is the
+# development environment. The same build is reachable as macos-debug-development.
 macos: macos-debug
 
 # Swift Package Manager dependencies emit hundreds of deprecation warnings that
 # drown out the build result; the filter drops them while keeping real errors.
-macos-debug:
-	set -o pipefail; cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --debug \
-		--flavor "$(MACOS_DEBUG_FLAVOR)" \
-		--target "$(MACOS_DEBUG_TARGET)" \
-		--dart-define-from-file="$(call repo_path,$(MACOS_DEBUG_CONFIG))" \
-		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
-		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)" \
-		$(MACOS_LOCAL_SIGNING_FLAGS) 2>&1 \
-		| awk -f "$(REPO_ROOT)/tool/xcode-warnings.awk"
+macos-debug: macos-debug-development
 
 macos-profile:
 	set -o pipefail; cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --profile \
@@ -447,6 +467,67 @@ macos-release: testflight-preflight flutter-build-link
 		--dart-define-from-file="$(call repo_path,$(MACOS_RELEASE_CONFIG))" \
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
 		--dart-define=POMODOIST_BILLING_CHANNEL=storekit
+
+# Per-environment builds: macos-<mode>-<environment>. macos-debug is the
+# development case, so the two spellings build the same app. The staging and
+# production targets pin the environment through target-specific variables, which
+# also set the flavor, and release-<environment> skips the TestFlight preflight
+# that macos-release runs because it builds locally and never uploads.
+define macos_flavor_target
+	set -o pipefail; cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --$(1) \
+		--flavor "$(MACOS_$(2)_FLAVOR)" \
+		--target "$(MACOS_$(2)_TARGET)" \
+		--dart-define-from-file="$(call repo_path,$(MACOS_$(2)_CONFIG))" \
+		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
+		--dart-define=POMODOIST_BILLING_CHANNEL=storekit \
+		$(MACOS_LOCAL_SIGNING_FLAGS) 2>&1 \
+		| awk -f "$(REPO_ROOT)/tool/xcode-warnings.awk"
+endef
+
+macos-debug-development: MACOS_DEBUG_CONFIG = $(MACOS_DEVELOPMENT_CONFIG)
+macos-debug-development: MACOS_DEBUG_TARGET = $(MACOS_DEVELOPMENT_TARGET)
+macos-debug-development:
+	$(call macos_flavor_target,debug,DEBUG)
+
+macos-debug-staging: MACOS_DEBUG_CONFIG = $(MACOS_STAGING_CONFIG)
+macos-debug-staging: MACOS_DEBUG_TARGET = $(MACOS_STAGING_TARGET)
+macos-debug-staging:
+	$(call macos_flavor_target,debug,DEBUG)
+
+macos-debug-production: MACOS_DEBUG_CONFIG = $(MACOS_PRODUCTION_CONFIG)
+macos-debug-production: MACOS_DEBUG_TARGET = $(MACOS_PRODUCTION_TARGET)
+macos-debug-production:
+	$(call macos_flavor_target,debug,DEBUG)
+
+macos-profile-development: MACOS_PROFILE_CONFIG = $(MACOS_DEVELOPMENT_CONFIG)
+macos-profile-development: MACOS_PROFILE_TARGET = $(MACOS_DEVELOPMENT_TARGET)
+macos-profile-development:
+	$(call macos_flavor_target,profile,PROFILE)
+
+macos-profile-staging: MACOS_PROFILE_CONFIG = $(MACOS_STAGING_CONFIG)
+macos-profile-staging: MACOS_PROFILE_TARGET = $(MACOS_STAGING_TARGET)
+macos-profile-staging:
+	$(call macos_flavor_target,profile,PROFILE)
+
+macos-profile-production: MACOS_PROFILE_CONFIG = $(MACOS_PRODUCTION_CONFIG)
+macos-profile-production: MACOS_PROFILE_TARGET = $(MACOS_PRODUCTION_TARGET)
+macos-profile-production:
+	$(call macos_flavor_target,profile,PROFILE)
+
+macos-release-development: MACOS_RELEASE_CONFIG = $(MACOS_DEVELOPMENT_CONFIG)
+macos-release-development: MACOS_RELEASE_TARGET = $(MACOS_DEVELOPMENT_TARGET)
+macos-release-development:
+	$(call macos_flavor_target,release,RELEASE)
+
+macos-release-staging: MACOS_RELEASE_CONFIG = $(MACOS_STAGING_CONFIG)
+macos-release-staging: MACOS_RELEASE_TARGET = $(MACOS_STAGING_TARGET)
+macos-release-staging:
+	$(call macos_flavor_target,release,RELEASE)
+
+macos-release-production: MACOS_RELEASE_CONFIG = $(MACOS_PRODUCTION_CONFIG)
+macos-release-production: MACOS_RELEASE_TARGET = $(MACOS_PRODUCTION_TARGET)
+macos-release-production:
+	$(call macos_flavor_target,release,RELEASE)
 
 # Destructive local reset; cloud accounts and purchases are unchanged.
 # Keep macOS container metadata; rm does not follow the sandbox's symlinks.
