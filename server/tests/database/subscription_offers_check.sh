@@ -24,7 +24,7 @@ $$;
 grant select, insert, update on public.pomodoist_purchase_claims to service_role;
 grant select on public.user_entitlements to service_role;
 SQL
-sql < "$script_dir/../../supabase/migrations/20260913203151_pomodoist_subscription_offers.sql"
+sql < "$script_dir/../../supabase/legacy/20260913203151_pomodoist_subscription_offers.sql"
 sql < "$script_dir/subscription_offers_check.inc"
 # Hold the first row lock while a second SKU attempts issuance. Exactly one wins.
 sql -At <<'SQL' > "$result_dir/first" &

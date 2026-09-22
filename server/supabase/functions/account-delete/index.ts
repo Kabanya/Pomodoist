@@ -1,3 +1,4 @@
+import { apiVersionError } from "../_shared/api_version.ts";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -84,6 +85,8 @@ export async function handleAccountDelete(
   if (!body.ok) {
     return json({ error: body.error }, 400);
   }
+  const versionError = apiVersionError(body.value);
+  if (versionError) return json(versionError, 400);
   if ((body.value as { confirm?: unknown }).confirm !== true) {
     return json({ error: "Deletion confirmation is required." }, 400);
   }

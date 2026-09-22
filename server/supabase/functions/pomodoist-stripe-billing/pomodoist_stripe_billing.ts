@@ -1,3 +1,4 @@
+import { apiVersionError } from "../_shared/api_version.ts";
 export type StripeCatalogAccount = {
   enabled: boolean;
   profileCreatedAt: string;
@@ -177,6 +178,8 @@ export async function handlePomodoistStripeBilling(
       parsed.status,
     );
   }
+  const versionError = apiVersionError(parsed.value);
+  if (versionError) return json(versionError, 400);
   if (!isRecord(parsed.value) || typeof parsed.value.action !== "string") {
     return json(
       { code: "invalid_request", error: "A valid action is required." },

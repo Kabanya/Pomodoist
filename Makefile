@@ -216,76 +216,76 @@ help:
 	printf '%s%s%s\n' "$${dim}" 'Tasks • Focus • Reports' "$${reset}"; \
 	printf '\n%sUsage:%s make <target> [VARIABLE=value]\n' "$${bold}" "$${reset}"; \
 	printf '\n%s%sSetup & run%s\n' "$${red}" "$${bold}" "$${reset}"; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup' "$${reset}" 'Full setup: env files + Flutter dependencies'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup-env' "$${reset}" 'Create the .env.setup template'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup-flutter' "$${reset}" 'Generate env files and resolve Flutter dependencies'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make setup-linux' "$${reset}" 'Prepare an Arch Linux workstation'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make run' "$${reset}" 'Run Pomodoist on a connected device'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make run-linux' "$${reset}" 'Run the native Linux desktop app'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make web' "$${reset}" 'Run Pomodoist in Chrome'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make telegram-debug' "$${reset}" 'Local Mini App through HTTPS, using the staging bot'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make chrome-debug' "$${reset}" 'Build the staging extension and open Chrome'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make setup' "$${reset}" 'Full setup: env files + Flutter dependencies'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make setup-env' "$${reset}" 'Create the .env.setup template'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make setup-flutter' "$${reset}" 'Generate env files and resolve Flutter dependencies'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make setup-linux' "$${reset}" 'Prepare an Arch Linux workstation'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make run' "$${reset}" 'Run Pomodoist on a connected device'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make run-linux' "$${reset}" 'Run the native Linux desktop app'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make web' "$${reset}" 'Run Pomodoist in Chrome'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make telegram-debug' "$${reset}" 'Local Mini App through HTTPS, using the staging bot'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make chrome-debug' "$${reset}" 'Build the staging extension and open Chrome'; \
 	printf '\n%s%sQuality%s\n' "$${red}" "$${bold}" "$${reset}"; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make analyze' "$${reset}" 'Analyze Dart code'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make test' "$${reset}" 'Run Flutter tests'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make test-linux-packaging' "$${reset}" 'Test Linux installers, AppImage layout and flavor identity'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make check' "$${reset}" 'Run analysis, tests and icon checks'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make format' "$${reset}" 'Format source files'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make app-icons' "$${reset}" 'Regenerate app icons from the master PNGs'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make analyze' "$${reset}" 'Analyze Dart code'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make test' "$${reset}" 'Run Flutter tests'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make test-linux-packaging' "$${reset}" 'Test Linux installers, AppImage layout and flavor identity'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make check' "$${reset}" 'Run analysis, tests and icon checks'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make format' "$${reset}" 'Format source files'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make app-icons' "$${reset}" 'Regenerate app icons from the master PNGs'; \
 	printf '\n%s%sRelease & distribution%s\n' "$${red}" "$${bold}" "$${reset}"; \
-	printf '  %s%-9s %-26s %s%s\n' "$${dim}" 'Platform' 'Command' 'Action' "$${reset}"; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Android' "$${reset}" "$${bold}" 'make android' "$${reset}" 'Debug APK'; \
+	printf '  %s%-9s %-27s %s%s\n' "$${dim}" 'Platform' 'Command' 'Action' "$${reset}"; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Android' "$${reset}" "$${bold}" 'make android' "$${reset}" 'Debug APK'; \
 	printf '\n'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-debug' "$${reset}" 'Debug app'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-profile' "$${reset}" 'Profile app'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-release' "$${reset}" 'Release app'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Telegram' "$${reset}" "$${bold}" 'make telegram-release' "$${reset}" 'Production Mini App files and ZIP'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Chrome' "$${reset}" "$${bold}" 'make chrome-release' "$${reset}" 'Production extension files and ZIP'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-debug' "$${reset}" 'Debug app'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-profile' "$${reset}" 'Profile app'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-release' "$${reset}" 'Release app'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Telegram' "$${reset}" "$${bold}" 'make telegram-release' "$${reset}" 'Production Mini App files and ZIP'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Chrome' "$${reset}" "$${bold}" 'make chrome-release' "$${reset}" 'Production extension files and ZIP'; \
 	printf '\n'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-debug' "$${reset}" 'Debug app'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-profile' "$${reset}" 'Profile app'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-release' "$${reset}" 'Raw developer bundle'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-appimage' "$${reset}" 'Distributable AppImage'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-install' "$${reset}" 'Install for current user'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-debug' "$${reset}" 'Debug app'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-profile' "$${reset}" 'Profile app'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-release' "$${reset}" 'Raw developer bundle'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-appimage' "$${reset}" 'Distributable AppImage'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-install' "$${reset}" 'Install for current user'; \
 	printf '\n'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-debug' "$${reset}" 'Debug app'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-profile' "$${reset}" 'Profile app'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-release' "$${reset}" 'Release app'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-installer' "$${reset}" 'EXE installer'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-debug' "$${reset}" 'Debug app'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-profile' "$${reset}" 'Profile app'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-release' "$${reset}" 'Release app'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-installer' "$${reset}" 'EXE installer'; \
 	printf '\n'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos' "$${reset}" 'Debug app (alias of macos-debug)'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug' "$${reset}" 'Debug app (development)'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug-staging' "$${reset}" 'Debug app (staging)'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug-production' "$${reset}" 'Debug app (production)'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-run' "$${reset}" 'Debug app with hot reload'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile-staging' "$${reset}" 'Profile app (staging)'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile-production' "$${reset}" 'Profile app (production)'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release-staging' "$${reset}" 'Release app (local, staging)'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release-production' "$${reset}" 'Release app (local, production)'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile' "$${reset}" 'Profile app'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release' "$${reset}" 'Release app'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos' "$${reset}" 'Debug app (alias of macos-debug)'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug' "$${reset}" 'Debug app (development)'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug-staging' "$${reset}" 'Debug app (staging)'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug-production' "$${reset}" 'Debug app (production)'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-run' "$${reset}" 'Debug app with hot reload'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile-staging' "$${reset}" 'Profile app (staging)'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile-production' "$${reset}" 'Profile app (production)'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release-staging' "$${reset}" 'Release app (local, staging)'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release-production' "$${reset}" 'Release app (local, production)'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile' "$${reset}" 'Profile app'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release' "$${reset}" 'Release app'; \
 	printf '\n'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iPhone' "$${reset}" "$${bold}" 'make ios-debug' "$${reset}" 'Run Simulator (debug)'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iPhone' "$${reset}" "$${bold}" 'make ios-profile' "$${reset}" 'Run Simulator (debug)'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iPad' "$${reset}" "$${bold}" 'make ipad-debug' "$${reset}" 'Run Simulator (debug)'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iPad' "$${reset}" "$${bold}" 'make ipad-profile' "$${reset}" 'Run Simulator (debug)'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Watch' "$${reset}" "$${bold}" 'make watch-debug' "$${reset}" 'Run Simulator (debug)'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Watch' "$${reset}" "$${bold}" 'make watch-profile' "$${reset}" 'Run Simulator (profile)'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'iPhone' "$${reset}" "$${bold}" 'make ios-debug' "$${reset}" 'Run Simulator (debug)'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'iPhone' "$${reset}" "$${bold}" 'make ios-profile' "$${reset}" 'Run Simulator (debug)'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'iPad' "$${reset}" "$${bold}" 'make ipad-debug' "$${reset}" 'Run Simulator (debug)'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'iPad' "$${reset}" "$${bold}" 'make ipad-profile' "$${reset}" 'Run Simulator (debug)'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Watch' "$${reset}" "$${bold}" 'make watch-debug' "$${reset}" 'Run Simulator (debug)'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Watch' "$${reset}" "$${bold}" 'make watch-profile' "$${reset}" 'Run Simulator (profile)'; \
 	printf '\n'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'iOS' "$${reset}" "$${bold}" 'make testflight-ios' "$${reset}" 'Upload iOS to TestFlight'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make testflight-macos' "$${reset}" 'Upload macOS to TestFlight'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'All' "$${reset}" "$${bold}" 'make testflight' "$${reset}" 'Upload iOS + macOS to TestFlight'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'iOS' "$${reset}" "$${bold}" 'make testflight-ios' "$${reset}" 'Upload iOS to TestFlight'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make testflight-macos' "$${reset}" 'Upload macOS to TestFlight'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'All' "$${reset}" "$${bold}" 'make testflight' "$${reset}" 'Upload iOS + macOS to TestFlight'; \
 	printf '\n'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-staging' "$${reset}" '     Deploy backend + web staging'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-production' "$${reset}" '     Deploy backend + web production'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-telegram-staging' "$${reset}" '   Deploy staging and configure @pomodoist_test_bot'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-telegram-production' "$${reset}" 'Deploy production and configure @pomodoist_bot'; \
-	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-all' "$${reset}" '     Deploy everything, including both Telegram bots'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-staging' "$${reset}" 'Deploy backend + web staging'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-production' "$${reset}" 'Deploy backend + web production'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-telegram-staging' "$${reset}" 'Deploy staging and configure @pomodoist_test_bot'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-telegram-production' "$${reset}" 'Deploy production and configure @pomodoist_bot'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-all' "$${reset}" 'Deploy everything, including both Telegram bots'; \
 	printf '\n%s%sUtilities%s\n' "$${red}" "$${bold}" "$${reset}"; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make help' "$${reset}" 'Show this command reference'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make devices' "$${reset}" 'List available Flutter devices'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make macos-reset' "$${reset}" 'Erase local app data and permissions (quit Pomodoist first)'; \
-	printf '  %s%-26s%s %s\n\n' "$${bold}" 'make clean' "$${reset}" 'Remove Flutter build outputs'
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make help' "$${reset}" 'Show this command reference'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make devices' "$${reset}" 'List available Flutter devices'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make macos-reset' "$${reset}" 'Erase local app data and permissions (quit Pomodoist first)'; \
+	printf '  %s%-27s%s %s\n\n' "$${bold}" 'make clean' "$${reset}" 'Remove Flutter build outputs'
 
 setup: setup-env setup-flutter
 

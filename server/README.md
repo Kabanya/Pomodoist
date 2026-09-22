@@ -101,6 +101,21 @@ Restore stops client-facing services, loads the dump in one transaction, and sta
 
 ## Updates
 
+The active migration directory contains the fresh-install baseline and subsequent
+changes. The immutable pre-baseline chain lives in `supabase/legacy` and is used
+only to upgrade existing independent servers. The migration runner checks every
+installed checksum and the resulting application catalog before replacing the
+legacy ledger with the new baseline record; it does not recreate user tables.
+Unknown versions or schema drift stop adoption rather than being silently repaired.
+Active migration files must not contain transaction boundaries: the runner commits
+each file and its checksum record in one transaction, so a failed ledger write
+rolls back the migration too. Archived files retain their original contents.
+
+Old backups still require the exact old release that created them. Restore using
+that release, upgrade through the normal migration runner, then create a new
+backup. Do not bypass the backup release-fingerprint check.
+
+
 Container versions are pinned in `compose.yaml` and the Dockerfiles. Read the upstream self-hosting changelog before changing them. PostgreSQL major versions require a documented database upgrade; changing the image tag alone cannot upgrade an existing data volume. Make a verified backup before any version update.
 
 This package intentionally omits Studio, Storage, image transformation, connection pooling, and log analytics because Pomodoist core does not need them. Add a service only when a deployed feature requires it.

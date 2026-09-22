@@ -122,11 +122,13 @@ best-effort after commit; normal client pulls recover a missed hint.
 
 ## Server rollout and tests
 
-Apply `server/supabase/migrations/20260907021651_pomodoist_core_openclaw.sql`
-through the existing hosted/self-hosted core migration procedure, **then** deploy
-the updated `pomodoist-mcp` function (including its imported Watch/shared files).
-No new endpoint, secret, or Supabase project is needed. The frozen initial
-migration remains unchanged. Existing non-OpenClaw MCP tools remain available.
+The current self-hosted baseline includes the OpenClaw schema; existing instances
+receive it through the supported upgrade procedure. For hosted releases, verify
+that the historical OpenClaw migration is already applied before deploying the
+updated `pomodoist-mcp` function (including its imported Watch/shared files).
+Do not replay files from `server/supabase/legacy` on an initialized database.
+No new endpoint, secret, or Supabase project is needed. Existing non-OpenClaw MCP
+tools remain available.
 OAuth issuer, resource audience, dynamic client registration, allowed origins and
 the existing Pomodoist consent UI must already be configured for the instance.
 

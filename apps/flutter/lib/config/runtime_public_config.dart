@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'backend_endpoints.dart';
+
 enum RuntimeEnvironment { local, selfhosted, staging, production }
 
-const _productionSupabaseUrl = 'https://ewauihswbwduvklrozke.supabase.co';
 const _productionSupabasePublishableKey =
     'sb_publishable_tH-xsHgay-S5L5NEt6u4Rg_BK9aM3rh';
 
@@ -103,7 +104,7 @@ class RuntimePublicConfig {
       environment: environment,
       release: release,
       webAppUrl: webAppUrl,
-      supabaseUrl: useSupabaseFallback ? _productionSupabaseUrl : supabaseUrl,
+      supabaseUrl: useSupabaseFallback ? productionSupabaseUrl : supabaseUrl,
       supabaseAnonKey: useSupabaseFallback
           ? _productionSupabasePublishableKey
           : supabaseAnonKey,
@@ -284,7 +285,7 @@ void _validateEnvironmentDomains({
       return;
     case RuntimeEnvironment.staging:
       if (!const {'app-test.pomodoist.com'}.contains(webAppUrl.host) ||
-          !const {'supabase-test.pomodoist.com'}.contains(supabaseUrl?.host)) {
+          !isApprovedBackendOrigin(supabaseUrl, stagingSupabaseOrigins)) {
         throw const FormatException(
           'staging config must use the Pomodoist staging domains',
         );
@@ -292,7 +293,7 @@ void _validateEnvironmentDomains({
       return;
     case RuntimeEnvironment.production:
       if (webAppUrl.host != 'app.pomodoist.com' ||
-          supabaseUrl?.host != 'ewauihswbwduvklrozke.supabase.co') {
+          !isApprovedBackendOrigin(supabaseUrl, productionSupabaseOrigins)) {
         throw const FormatException(
           'production config must use production domains',
         );

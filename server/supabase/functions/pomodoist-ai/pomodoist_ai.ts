@@ -1,3 +1,4 @@
+import { apiVersionError } from "../_shared/api_version.ts";
 import {
   corsHeaders,
   handleTaskDecomposition,
@@ -21,6 +22,8 @@ export async function handlePomodoistAi(
   if (body == null) {
     return json({ ok: false, error: "Request body must be valid JSON." }, 400);
   }
+  const versionError = apiVersionError(body);
+  if (versionError) return json(versionError, 400);
   const command = mapValue(body.command) ?? body;
   const type = stringValue(command.type);
   if (type !== "task.decomposeTranscript") {

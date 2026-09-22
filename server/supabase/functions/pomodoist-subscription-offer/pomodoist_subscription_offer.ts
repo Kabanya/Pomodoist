@@ -1,3 +1,4 @@
+import { apiVersionError } from "../_shared/api_version.ts";
 import type { AppleStoreTransaction } from "../_shared/apple_app_transaction.ts";
 import { readLimitedJson } from "../_shared/limited_json.ts";
 import {
@@ -137,6 +138,8 @@ export async function handleSubscriptionOffer(
   }
   const parsed = await readLimitedJson(req, 40_000);
   if (!parsed.ok) return json({ code: "invalid_request" }, parsed.status);
+  const versionError = apiVersionError(parsed.value);
+  if (versionError) return json(versionError, 400);
   const body = parsed.value;
   // Read only the action before the rollout gate; disabled eligibility must not
   // depend on a purchase proof, account, Apple request, or signing credentials.

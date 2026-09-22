@@ -2,7 +2,7 @@ project_id = "pomodoist-selfhost"
 
 [api]
 enabled = true
-schemas = ["public"]
+schemas = ["public", "api_v1"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 

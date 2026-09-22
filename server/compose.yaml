@@ -92,7 +92,7 @@ services:
       retries: 12
     environment:
       PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD:?run make setup first}@db:5432/postgres
-      PGRST_DB_SCHEMAS: public
+      PGRST_DB_SCHEMAS: public,api_v1
       PGRST_DB_EXTRA_SEARCH_PATH: public,extensions
       PGRST_DB_ANON_ROLE: anon
       PGRST_DB_MAX_ROWS: 1000
@@ -151,6 +151,8 @@ services:
     volumes:
       - ./scripts/migrate.sh:/opt/pomodoist/migrate.sh:ro
       - ./supabase/migrations:/opt/pomodoist/migrations:ro
+      - ./supabase/legacy:/opt/pomodoist/legacy:ro
+      - ./database/application-fingerprint.sql:/opt/pomodoist/application-fingerprint.sql:ro
       - ./database/enable-selfhost.sql:/opt/pomodoist/enable-selfhost.sql:ro
     entrypoint: ["/bin/sh", "/opt/pomodoist/migrate.sh"]
 

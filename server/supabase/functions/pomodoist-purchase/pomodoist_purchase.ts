@@ -1,3 +1,4 @@
+import { apiVersionError } from "../_shared/api_version.ts";
 import type { AppleStoreTransaction } from "../_shared/apple_app_transaction.ts";
 import { readLimitedJson } from "../_shared/limited_json.ts";
 import {
@@ -77,6 +78,8 @@ export async function handlePomodoistPurchase(
   if (!parsed.ok) {
     return json({ error: parsed.error }, parsed.status);
   }
+  const versionError = apiVersionError(parsed.value);
+  if (versionError) return json(versionError, 400);
   if (!isRecord(parsed.value) || !Array.isArray(parsed.value.transactions)) {
     return json({ error: "transactions must be an array." }, 400);
   }

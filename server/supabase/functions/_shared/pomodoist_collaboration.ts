@@ -1,3 +1,4 @@
+import { apiVersionError } from "./api_version.ts";
 import { readLimitedJson } from "./limited_json.ts";
 
 export type Json = Record<string, unknown>;
@@ -86,7 +87,10 @@ export async function handleCollaboration(request: Request, deps: CollaborationD
   try {
     const parsed = await readLimitedJson(request, 1_000_000);
     if (!parsed.ok) return reply({ error: parsed.error, code: "invalid_request" }, parsed.status);
+    const versionError = apiVersionError(parsed.value);
+    if (versionError) return reply(versionError, 400);
     const input = validateCollaborationRequest(parsed.value);
+    delete input.apiVersion;
     const action = String(input.action);
     const authorization = request.headers.get("Authorization");
     if (action !== "publicRead" && (!authorization?.startsWith("Bearer ") || !await deps.authenticate(authorization))) throw new CollaborationError("Authentication required", "unauthenticated", 401);

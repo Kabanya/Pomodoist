@@ -43,6 +43,29 @@ void main() {
       expect(config.environment, RuntimeEnvironment.production);
     });
 
+    test('hosted backend URLs must be approved origins', () {
+      for (final url in [
+        'https://user@ewauihswbwduvklrozke.supabase.co',
+        'https://ewauihswbwduvklrozke.supabase.co:8443',
+        'https://ewauihswbwduvklrozke.supabase.co/other',
+        'https://ewauihswbwduvklrozke.supabase.co?route=other',
+        'https://ewauihswbwduvklrozke.supabase.co#other',
+        'https://ewauihswbwduvklrozke.supabase.co.example.test',
+        'https://supabase-test.pomodoist.com',
+      ]) {
+        expect(
+          () => RuntimePublicConfig.fromRuntimeJson({
+            ..._stagingConfig(),
+            'environment': 'production',
+            'webAppUrl': 'https://app.pomodoist.com',
+            'supabaseUrl': url,
+          }),
+          throwsFormatException,
+          reason: url,
+        );
+      }
+    });
+
     test('accepts selfhosted HTTPS without optional integrations', () {
       final config = RuntimePublicConfig.fromRuntimeJson({
         ..._stagingConfig(),

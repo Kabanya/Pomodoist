@@ -29,6 +29,8 @@ jobs:
         run: make -C server core-up
       - name: Test schema, ownership, and synchronization
         run: make -C server test-db test-smoke
+      - name: Verify baseline upgrades and data restoration
+        run: python3 server/tests/database/baseline_check.py pomodoist-selfhost-db
       - name: Verify draft planners against durable receipts
         working-directory: server
         env:

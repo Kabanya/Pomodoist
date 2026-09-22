@@ -178,3 +178,7 @@ apps/flutter/ios/apps/
 
 # Node tooling: apps/chrome-extension is the only npm package in the repo.
 node_modules/
+
+# Public API contract.
+!docs/api/
+!docs/api/*.md

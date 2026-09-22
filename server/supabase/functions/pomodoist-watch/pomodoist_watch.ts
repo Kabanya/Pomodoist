@@ -1,3 +1,4 @@
+import { apiVersionError } from "../_shared/api_version.ts";
 import {
   appId,
   arrayValue,
@@ -57,6 +58,8 @@ export async function handlePomodoistWatch(
     return json({ ok: false, error: "Request body must be valid JSON." }, 400);
   }
 
+  const versionError = apiVersionError(body);
+  if (versionError) return json(versionError, 400);
   const deviceId = stringValue(body.deviceId) ?? "apple-watch";
   const command = mapValue(body.command) ?? body;
   const type = stringValue(command.type) ?? "snapshot.request";

@@ -1,3 +1,4 @@
+import { apiVersionError } from "../_shared/api_version.ts";
 /** Authenticated audio proxy. Provider credentials stay server-side. */
 export type TranscriptionDeps = {
   env: { get(key: string): string | undefined };
@@ -213,6 +214,8 @@ export async function handleVoiceTranscription(req: Request, deps: Transcription
       if (error instanceof VoiceHttpError) throw error;
       throw new VoiceHttpError(400, "invalid_request", "Request body must be valid JSON.");
     }
+    const versionError = apiVersionError(body);
+    if (versionError) return json(versionError, 400);
     const audio = object(body?.input_audio);
     if (!audio || typeof audio.data !== "string" || typeof audio.format !== "string" || !formats.has(audio.format)) invalidAudio();
     const locale = body?.locale;

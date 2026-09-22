@@ -1,3 +1,4 @@
+import { apiVersionError } from "../_shared/api_version.ts";
 import { readLimitedJson } from "../_shared/limited_json.ts";
 
 const calendarScope = "https://www.googleapis.com/auth/calendar.app.created";
@@ -88,6 +89,8 @@ export async function handlePomodoistGoogleCalendar(
   if (user == null) return json({ error: "Authentication required." }, 401);
   const parsed = await readLimitedJson(req, maxBodyBytes);
   if (!parsed.ok) return json({ error: parsed.error }, parsed.status);
+  const versionError = apiVersionError(parsed.value);
+  if (versionError) return json(versionError, 400);
   if (!isRecord(parsed.value)) return json({ error: "Invalid request." }, 400);
 
   switch (parsed.value.action) {

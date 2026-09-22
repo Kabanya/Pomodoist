@@ -1,3 +1,4 @@
+import { apiVersionError } from "../_shared/api_version.ts";
 import { type JsonMap, object, snapshotOptions, type SnapshotOptions, TelegramError, validateCommand } from './commands.ts';
 export { TelegramError } from './commands.ts';
 export type TelegramIdentity = { telegramUserId: string; userId: string; guestUserId?: string; clientId: string; linked: boolean };
@@ -28,6 +29,8 @@ export async function handlePomodoistTelegram(req: Request, deps: PomodoistTeleg
     const failure = error instanceof TelegramError ? error : new TelegramError('invalid_body');
     return response({ ok: false, code: failure.code }, failure.status);
   }
+  const versionError = apiVersionError(body);
+  if (versionError) return response(versionError, 400);
   const now = deps.now?.() ?? new Date();
   try {
     if (body.action === 'complete_link') {

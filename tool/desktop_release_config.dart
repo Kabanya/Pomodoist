@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
+import '../apps/flutter/lib/config/backend_endpoints.dart';
+
 const _productionWebUrl = 'https://app.pomodoist.com';
 const _productionWebHost = 'app.pomodoist.com';
 const _productionCaptchaUrl = 'https://app.pomodoist.com/auth/challenge';
-const _productionSupabaseUrl = 'https://ewauihswbwduvklrozke.supabase.co';
-const _productionSupabaseHost = 'ewauihswbwduvklrozke.supabase.co';
 const _stagingWebHost = 'app-test.pomodoist.com';
-const _stagingSupabaseHost = 'supabase-test.pomodoist.com';
 const _forbiddenSupabaseKeys = {
   'SERVICE_ROLE_KEY',
   'SUPABASE_SECRET_KEY',
@@ -97,7 +96,11 @@ void _validateProductionConfig(Map<String, Object?> config) {
       'SUPABASE_URL and SUPABASE_ANON_KEY must be supplied together.',
     );
   }
-  if (supabaseUrl != null && supabaseUrl != _productionSupabaseUrl) {
+  if (supabaseUrl != null &&
+      !isApprovedBackendOrigin(
+        Uri.tryParse(supabaseUrl),
+        productionSupabaseOrigins,
+      )) {
     throw const FormatException(
       'SUPABASE_URL must use the production project.',
     );
@@ -122,7 +125,7 @@ void _validateStagingConfig(Map<String, Object?> config) {
     _requiredString(config, 'SUPABASE_URL'),
     'SUPABASE_URL',
   );
-  if (supabaseUrl.host != _stagingSupabaseHost) {
+  if (!isApprovedBackendOrigin(supabaseUrl, stagingSupabaseOrigins)) {
     throw const FormatException('SUPABASE_URL must use the staging project.');
   }
   _requiredString(config, 'SUPABASE_ANON_KEY');
@@ -182,8 +185,11 @@ void _validateDevelopmentConfig(Map<String, Object?> config) {
     );
   }
   if (supabaseUrl != null &&
-      _releaseUrl(supabaseUrl, 'SUPABASE_URL').host ==
-          _productionSupabaseHost) {
+      productionSupabaseOrigins.any(
+        (origin) =>
+            Uri.parse(origin).host ==
+            _releaseUrl(supabaseUrl, 'SUPABASE_URL').host,
+      )) {
     throw const FormatException(
       'The development flavor must not use the production Supabase project.',
     );

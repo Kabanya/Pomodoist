@@ -16,6 +16,8 @@
     "stripe-webhook"
   ],
   "helpers": [
+    "api_version.ts",
+    "api_version_test.ts",
     "apple_app_transaction.ts",
     "apple_app_transaction_test.ts",
     "limited_json.ts",
@@ -36,6 +38,6 @@
     "task_decomposition_http.ts"
   ],
   "baselineMigrations": [
-    "20260906123349_pomodoist_initial.sql"
+    "20260922162731_pomodoist_initial.sql"
   ]
 }
