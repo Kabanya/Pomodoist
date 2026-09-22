@@ -27,6 +27,8 @@ jobs:
       - run: python3 -m unittest discover -s tool -p test_architecture.py
       - run: python3 -m unittest discover -s tool -p test_web_build_contract.py
       - run: make test-linux-packaging
+      - name: Link Flutter build output into build/
+        run: make flutter-build-link
       - run: flutter pub get --enforce-lockfile
         working-directory: apps/flutter
       - name: Check resolved Dart symbol boundaries

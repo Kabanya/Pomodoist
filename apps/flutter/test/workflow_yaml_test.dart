@@ -16,9 +16,22 @@ void main() {
       );
       expect(versionIndex, greaterThanOrEqualTo(0));
       final pubGetIndex = steps.indexWhere(
-        (step) => (step['run'] as String? ?? '').contains('flutter pub get'),
+        (step) => _resolvesDependencies(step['run'] as String? ?? ''),
       );
+      expect(pubGetIndex, greaterThanOrEqualTo(0));
       expect(versionIndex, lessThan(pubGetIndex));
+      // The Flutter build and .dart_tool paths are symlinks into the ignored
+      // repository-root build directory, so a fresh checkout has to recreate
+      // them before pub get; make linux-pub-get and the Windows entry scripts
+      // both link first.
+      final linkIndex = steps.indexWhere(
+        (step) => _linksFlutterBuild(step),
+      );
+      expect(
+        linkIndex,
+        inInclusiveRange(0, pubGetIndex),
+        reason: 'link step not before pub get in ${entry.key}: $steps',
+      );
       final script = steps[versionIndex]['run'] as String;
       for (final (tag, newline) in [
         ('v1.0.3', '\n'),
@@ -234,7 +247,7 @@ void main() {
       trustIndex,
       lessThan(
         steps.indexWhere(
-          (step) => (step['run'] as String? ?? '').contains('flutter pub get'),
+          (step) => _resolvesDependencies(step['run'] as String? ?? ''),
         ),
       ),
     );
@@ -478,6 +491,31 @@ void main() {
 YamlMap _job(String path, String name) =>
     (loadYaml(File(path).readAsStringSync())['jobs'] as YamlMap)[name]
         as YamlMap;
+
+/// Matches every step that resolves Dart dependencies, whether it calls
+/// Flutter directly or goes through a Make target that wraps pub get.
+bool _resolvesDependencies(String run) =>
+    run.contains('flutter pub get') ||
+    run.contains('linux-pub-get') ||
+    run.contains('pub_get_with_retry');
+
+/// The Flutter project keeps build/ and .dart_tool as symlinks into the
+/// ignored repository-root build directory, so every entry point has to
+/// recreate them before Flutter runs.
+bool _linksFlutterBuild(YamlMap step) {
+  final run = step['run'] as String? ?? '';
+  if (run.contains('flutter-build-link') ||
+      run.contains('linux-pub-get') ||
+      run.contains('link-build.sh')) {
+    return true;
+  }
+  final uses = step['uses'] as String? ?? '';
+  if (uses.contains('link-build.ps1')) {
+    return true;
+  }
+  // The Windows workflow runs its linking script through `shell: powershell`.
+  return run.contains('link-build.ps1');
+}
 
 ProcessResult _bash(
   String script,

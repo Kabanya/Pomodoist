@@ -115,18 +115,10 @@ jobs:
           git config --global --add safe.directory "$flutter_root"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Resolve Flutter dependencies
-        working-directory: apps/flutter
-        run: |
-          for attempt in 1 2 3; do
-            if flutter pub get; then
-              break
-            fi
-            if [[ "$attempt" -eq 3 ]]; then
-              echo 'flutter pub get failed after three attempts.' >&2
-              exit 1
-            fi
-            sleep 10
-          done
+        # make linux-pub-get links the Flutter build and .dart_tool paths into
+        # the repository-root build directory before resolving, and retries
+        # through the same helper the local Linux targets use.
+        run: make linux-pub-get
       - name: Validate and create production configuration
         if: matrix.flavor == 'production'
         run: |

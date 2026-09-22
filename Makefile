@@ -303,7 +303,7 @@ run-linux: flutter-build-link
 web: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d chrome --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
-analyze:
+analyze: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" analyze
 	"$(DART)" analyze tool
 

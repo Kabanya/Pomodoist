@@ -16,6 +16,10 @@ if [[ ! "$release" =~ ^[0-9a-f]{40}$ ]]; then
   exit 64
 fi
 config=$(python3 -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$config")
+# The Flutter project links build/ and .dart_tool to the repository-root build
+# directory, and those links are not tracked because the target is ignored, so
+# a fresh checkout has to create them before Flutter writes anything.
+bash "$repo_root/tool/link-build.sh"
 cd "$app_root"
 pubspec_version=$(awk '/^version:/ {sub(/\r$/, ""); print $2; exit}' pubspec.yaml)
 version=${ANDROID_BUILD_NAME:-${pubspec_version%+*}}

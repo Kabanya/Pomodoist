@@ -27,6 +27,8 @@ jobs:
           flutter-version-file: .fvmrc
       - name: Test Android packaging and public configuration
         run: python3 -m unittest discover -s tool/android -p 'test_*.py' -v
+      - name: Link Flutter build output into build/
+        run: make flutter-build-link
       - run: flutter pub get --enforce-lockfile
         working-directory: apps/flutter
       - name: Test Android runtime contracts

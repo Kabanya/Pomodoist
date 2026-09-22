@@ -33,6 +33,12 @@ AuthKey_*.p8
 private_keys/
 .appstoreconnect/private_keys/
 .dart_tool/
+# The trailing-slash rules above only match directories, while the Flutter
+# project links its build output and Dart tool state to the repository-root
+# build directory. Those links are created by tool/link-build.sh, so the
+# symlink form needs an explicit rule or it shows up as untracked.
+apps/flutter/.dart_tool
+apps/flutter/build
 .flutter-plugins-dependencies
 pubspec_overrides.yaml
 .pub-cache/

@@ -61,6 +61,8 @@ jobs:
           flutter-version-file: .fvmrc
       - name: Test Android release tooling
         run: python3 -m unittest discover -s tool/android -p 'test_*.py' -v
+      - name: Link Flutter build output into build/
+        run: make flutter-build-link
       - name: Generate public production configuration
         env:
           TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
