@@ -12,6 +12,10 @@ site_url = "http://localhost:58080"
 additional_redirect_urls = [
   "http://localhost:58080/login-callback",
   "http://localhost:58080/auth/challenge",
+  "pomodoist-dev://login-callback",
+  "pomodoist-dev://captcha-callback",
+  "pomodoist-stg://login-callback",
+  "pomodoist-stg://captcha-callback",
   "pomodoist://login-callback",
   "pomodoist://captcha-callback",
 ]

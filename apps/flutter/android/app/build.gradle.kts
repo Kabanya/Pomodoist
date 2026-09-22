@@ -82,11 +82,44 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     defaultConfig {
-        applicationId = "com.finchforge.pomodoist"
         minSdk = maxOf(24, flutter.minSdkVersion)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+    }
+    // The three flavors install side by side: each owns its application id, so
+    // no two builds share app data, notifications or deep links. These values
+    // must match lib/domain/models/app_flavor.dart, which the Dart side uses to
+    // route links and identify the running build. The flavor name is also what
+    // `--flavor` selects, and Flutter passes it on as FLUTTER_APP_FLAVOR.
+    // `appLabel` is consumed by src/main/AndroidManifest.xml and `urlScheme` by
+    // the deep-link filter in each src/<flavor>/AndroidManifest.xml.
+    //
+    // No resValue() here: AGP 9 disables the resValues build feature by default,
+    // and the launcher label is already carried into android:label by the
+    // appLabel placeholder, so a @string/app_name resource would have no reader.
+    flavorDimensions += "app"
+    productFlavors {
+        create("development") {
+            dimension = "app"
+            applicationId = "com.finchforge.pomodoist.dev"
+            versionNameSuffix = "-dev"
+            manifestPlaceholders["appLabel"] = "Pomodoist Dev"
+            manifestPlaceholders["urlScheme"] = "pomodoist-dev"
+        }
+        create("staging") {
+            dimension = "app"
+            applicationId = "com.finchforge.pomodoist.stg"
+            versionNameSuffix = "-stg"
+            manifestPlaceholders["appLabel"] = "Pomodoist Stg"
+            manifestPlaceholders["urlScheme"] = "pomodoist-stg"
+        }
+        create("production") {
+            dimension = "app"
+            applicationId = "com.finchforge.pomodoist"
+            manifestPlaceholders["appLabel"] = "Pomodoist"
+            manifestPlaceholders["urlScheme"] = "pomodoist"
+        }
     }
     signingConfigs {
         create("release") {

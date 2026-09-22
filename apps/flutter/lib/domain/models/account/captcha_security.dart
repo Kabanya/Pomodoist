@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:pomodoist/domain/models/settings/app_language.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -182,9 +183,16 @@ bool isExactCaptchaReturnTarget(String value) {
       _isCaptchaReturnTargetUri(uri);
 }
 
+/// Default CAPTCHA return target for the running flavor.
+///
+/// Each flavor owns a distinct URL scheme, so a callback posted by the
+/// registration page can only ever reach the build that requested it.
+Uri get pomodoistCaptchaCallbackTarget =>
+    Uri.parse('${appFlavor.urlScheme}://captcha-callback');
+
 bool _isCaptchaReturnTargetUri(Uri uri) {
   final customProtocol =
-      uri.scheme == 'pomodoist' &&
+      uri.scheme == appFlavor.urlScheme &&
       uri.host == 'captcha-callback' &&
       uri.path.isEmpty &&
       !uri.hasPort;
@@ -202,10 +210,7 @@ bool _isCaptchaReturnTargetUri(Uri uri) {
 }
 
 bool isExactCaptchaCallbackUri(Uri uri) {
-  return _isCaptchaCallbackForTarget(
-    uri,
-    Uri.parse('pomodoist://captcha-callback'),
-  );
+  return _isCaptchaCallbackForTarget(uri, pomodoistCaptchaCallbackTarget);
 }
 
 bool _isCaptchaCallbackForTarget(Uri uri, Uri target) {
@@ -380,8 +385,7 @@ final class NativeCaptchaSession {
     CaptchaClock? now,
     CaptchaStateFactory? stateFactory,
     this.ttl = const Duration(minutes: 5),
-  }) : callbackTarget =
-           callbackTarget ?? Uri.parse('pomodoist://captcha-callback'),
+  }) : callbackTarget = callbackTarget ?? pomodoistCaptchaCallbackTarget,
        _now = now ?? DateTime.now,
        _stateFactory = stateFactory ?? generateCaptchaState {
     _validateRegistrationUrl(registrationUrl);

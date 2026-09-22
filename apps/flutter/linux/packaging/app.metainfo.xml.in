@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>com.finchforge.pomodoist</id>
-  <name>Pomodoist</name>
+  <id>@APPLICATION_ID@</id>
+  <name>@DISPLAY_NAME@</name>
   <summary>Plan tasks and protect focused work sessions</summary>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>AGPL-3.0-only</project_license>
@@ -14,9 +14,9 @@
       productivity reports in one desktop application.
     </p>
   </description>
-  <launchable type="desktop-id">com.finchforge.pomodoist.desktop</launchable>
+  <launchable type="desktop-id">@APPLICATION_ID@.desktop</launchable>
   <provides>
-    <binary>pomodoist</binary>
+    <binary>@BINARY_NAME@</binary>
   </provides>
   <url type="homepage">https://pomodoist.com</url>
   <url type="bugtracker">https://github.com/Kabanya/Pomodoist/issues</url>

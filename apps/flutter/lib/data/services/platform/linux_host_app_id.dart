@@ -1,6 +1,12 @@
 import 'dart:io';
 
-const pomodoistApplicationId = 'com.finchforge.pomodoist';
+import 'package:pomodoist/domain/models/app_flavor.dart';
+
+/// Application id of the installed Linux desktop entry for this flavor.
+///
+/// The packaging step installs the entry as `<applicationId>.desktop`, so the
+/// host can only associate a window with the build that owns the id.
+String get pomodoistApplicationId => appFlavor.applicationId;
 
 class LinuxHostAppIdResolver {
   LinuxHostAppIdResolver({Map<String, String>? environment})

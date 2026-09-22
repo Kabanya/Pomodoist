@@ -164,11 +164,12 @@ void main() {
       'lib/domain/models/account/captcha_security.dart',
     ).readAsString();
 
-    expect(broker, contains("uri.scheme != 'pomodoist'"));
+    expect(broker, contains('uri.scheme != appFlavor.urlScheme'));
     expect(broker, contains("uri.host != 'captcha-callback'"));
     expect(broker, contains('InternetAddress.loopbackIPv4'));
     expect(broker, contains("host: '127.0.0.1'"));
     expect(config, contains('POMODOIST_REGISTRATION_URL'));
+    expect(config, contains('pomodoistCaptchaCallbackTarget'));
   });
 
   test(

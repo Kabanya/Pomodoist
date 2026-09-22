@@ -3,6 +3,7 @@
 #include <dwmapi.h>
 #include <flutter_windows.h>
 
+#include "flavor_config.h"
 #include "resource.h"
 
 namespace {
@@ -16,7 +17,9 @@ namespace {
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
 #endif
 
-constexpr const wchar_t kWindowClassName[] = L"FLUTTER_RUNNER_WIN32_WINDOW";
+// Flavor-specific so that a second flavor installed alongside this one registers
+// its own window class instead of colliding with it.
+constexpr const wchar_t kWindowClassName[] = POMODOIST_FLAVOR_WINDOW_CLASS_WIDE;
 
 /// Registry key for app theme preference.
 ///

@@ -2,6 +2,7 @@
 //
 #pragma code_page(65001)
 #include "resource.h"
+#include "flavor_config.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -52,7 +53,19 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
+//
+// Each flavor ships its own icon file so that three side-by-side installs are
+// distinguishable in the taskbar, in Explorer and on the Start menu. The paths
+// stay here rather than in flavor_config.h because the resource compiler is
+// happiest with a literal path, and a macro holding backslashes is awkward to
+// get right.
+#if POMODOIST_FLAVOR_IS_DEVELOPMENT
+IDI_APP_ICON            ICON                    "resources\\app_icon_development.ico"
+#elif POMODOIST_FLAVOR_IS_STAGING
+IDI_APP_ICON            ICON                    "resources\\app_icon_staging.ico"
+#else
 IDI_APP_ICON            ICON                    "resources\\app_icon.ico"
+#endif
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -90,12 +103,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "FinchForge LLC" "\0"
-            VALUE "FileDescription", "Pomodoist" "\0"
+            VALUE "FileDescription", POMODOIST_FLAVOR_DISPLAY_NAME "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "pomodoist" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 FinchForge LLC. Licensed under AGPL-3.0-only." "\0"
             VALUE "OriginalFilename", "pomodoist.exe" "\0"
-            VALUE "ProductName", "Pomodoist" "\0"
+            VALUE "ProductName", POMODOIST_FLAVOR_DISPLAY_NAME "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

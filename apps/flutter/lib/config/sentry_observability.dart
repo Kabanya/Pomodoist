@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'package:pomodoist/config/runtime_public_config.dart';
+import 'package:pomodoist/domain/models/app_flavor.dart';
 
 class SentryRuntimePolicy {
   const SentryRuntimePolicy._({
@@ -159,8 +160,11 @@ class SentryStartupMonitor implements StartupMonitor {
 
 bool containsCaptchaChallengeMetadata(Object? value) {
   if (value is String) {
+    final callbackTarget = RegExp.escape(appFlavor.urlScheme);
     return value.contains('/auth/challenge') ||
-        RegExp(r'pomodoist://captcha-callback(?:[?#]|$)').hasMatch(value);
+        RegExp(
+          '$callbackTarget://captcha-callback(?:[?#]|\$)',
+        ).hasMatch(value);
   }
   if (value is Map) {
     return value.entries.any(

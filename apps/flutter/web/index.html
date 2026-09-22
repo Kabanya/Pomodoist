@@ -18,19 +18,121 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Open-source task manager with a built-in Pomodoro focus timer.">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="pomodoist">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" href="icons/production/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>pomodoist</title>
   <link rel="manifest" href="manifest.json">
+  <script src="config.js"></script>
+  <!--
+    One image serves every environment, so the flavor identity is chosen here at
+    runtime instead of at build time: `config.js` names the deployment
+    environment and the matching manifest, icons and display name are applied in
+    <head>, before the first paint.
+
+    The asset names are a contract with the icon pipeline. Every flavor needs:
+
+      development  manifest-development.json  icons/development/Icon-192.png
+                   icons/development/favicon.png
+      staging      manifest-staging.json      icons/staging/Icon-192.png
+                   icons/staging/favicon.png
+      production   manifest.json              icons/production/Icon-192.png
+                   favicon.png
+
+    The manifest is authoritative: its `icons`, `theme_color` and `name` are
+    adopted once it loads, and any missing or unreadable flavor asset falls back
+    to the production identity rather than leaving the page without an icon.
+  -->
+  <script>
+    (() => {
+      const flavors = {
+        development: {
+          manifest: 'manifest-development.json',
+          icon: 'icons/development/Icon-192.png',
+          favicon: 'icons/development/favicon.png',
+          title: 'Pomodoist Dev',
+        },
+        staging: {
+          manifest: 'manifest-staging.json',
+          icon: 'icons/staging/Icon-192.png',
+          favicon: 'icons/staging/favicon.png',
+          title: 'Pomodoist Stg',
+        },
+        production: {
+          manifest: 'manifest.json',
+          icon: 'icons/production/Icon-192.png',
+          favicon: 'favicon.png',
+          title: 'pomodoist',
+        },
+      };
+      const environments = {
+        local: 'development',
+        staging: 'staging',
+        production: 'production',
+        selfhosted: 'production',
+      };
+      const setLink = (rel, href) => {
+        const link = document.head.querySelector(`link[rel="${rel}"]`);
+        if (link) link.href = href;
+      };
+      const setMeta = (name, content) => {
+        let meta = document.head.querySelector(`meta[name="${name}"]`);
+        if (!meta) {
+          meta = document.createElement('meta');
+          meta.name = name;
+          document.head.append(meta);
+        }
+        meta.content = content;
+      };
+      const apply = (name) => {
+        const flavor = flavors[name];
+        document.documentElement.dataset.flavor = name;
+        setLink('manifest', flavor.manifest);
+        setLink('icon', flavor.favicon);
+        setLink('apple-touch-icon', flavor.icon);
+        setMeta('apple-mobile-web-app-title', flavor.title);
+        document.title = flavor.title;
+      };
+      const iconAvailable = (url) => new Promise((resolve) => {
+        const probe = new Image();
+        probe.onload = () => resolve(true);
+        probe.onerror = () => resolve(false);
+        probe.src = url;
+      });
+      const adoptManifest = async (name) => {
+        const flavor = flavors[name];
+        const response = await fetch(flavor.manifest, { cache: 'no-cache' });
+        if (!response.ok) throw new Error(`${flavor.manifest} ${response.status}`);
+        const manifest = await response.json();
+        const icons = Array.isArray(manifest.icons) ? manifest.icons : [];
+        const icon = icons.find((entry) => entry.sizes === '192x192') || icons[0];
+        if (!icon || !icon.src || !(await iconAvailable(icon.src))) {
+          throw new Error(`${flavor.manifest} has no usable icon`);
+        }
+        setLink('icon', icon.src);
+        setLink('apple-touch-icon', icon.src);
+        if (manifest.theme_color) setMeta('theme-color', manifest.theme_color);
+        if (manifest.name) document.title = manifest.name;
+      };
+
+      const config = window.pomodoistRuntimeConfig;
+      const environment =
+        (config && config.environment) || window.pomodoistBuildEnvironment;
+      const flavor = environments[environment] || 'production';
+      apply(flavor);
+      if (flavor !== 'production') {
+        adoptManifest(flavor).catch(() => apply('production'));
+      }
+    })();
+  </script>
   <script>
     (() => {
       const validPreferences = ['light', 'dark', 'system'];
@@ -153,7 +255,6 @@
   </style>
 </head>
 <body>
-  <script src="config.js"></script>
   <div id="pomodoist-web-loader" role="status" aria-live="polite">
     <div class="pomodoist-loading-content">
       <div class="pomodoist-loading-brand">Pomodoist</div>

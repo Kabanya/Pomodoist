@@ -283,8 +283,13 @@ class RunnerTests: XCTestCase {
     )
   }
 
-  func testUsesProductionAppGroupIdentifier() {
-    XCTAssertEqual(pomodoistFocusAppGroupIdentifier, "group.com.pomodoist")
+  func testFocusAppGroupComesFromTheBundle() {
+    // The identifier is read from Info.plist so each flavor resolves its own
+    // App Group. The fallback is empty rather than the production group: a
+    // build that cannot resolve the key must fall back to .standard, not write
+    // its focus snapshot into another flavor's shared container.
+    let plistValue = Bundle.main.object(forInfoDictionaryKey: "PomodoistAppGroup") as? String
+    XCTAssertEqual(pomodoistFocusAppGroupIdentifier, plistValue ?? "")
   }
 
   func testTimerColorPresetsMatchMenuContract() {

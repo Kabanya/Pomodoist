@@ -4,10 +4,11 @@ project(runner LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
+#
+# Keep this as a single literal `set(BINARY_NAME "...")` line: the Flutter tool
+# reads the executable name back with a regular expression to find the built
+# bundle, so a conditional assignment here would break `flutter run`.
 set(BINARY_NAME "pomodoist")
-# The unique GTK application identifier for this application. See:
-# https://wiki.gnome.org/HowDoI/ChooseApplicationID
-set(APPLICATION_ID "com.finchforge.pomodoist")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
@@ -49,6 +50,31 @@ endfunction()
 # Flutter library and tool build rules.
 set(FLUTTER_MANAGED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/flutter")
 add_subdirectory(${FLUTTER_MANAGED_DIR})
+
+# Application identity. `flutter build linux --flavor <name>` makes Flutter write
+# FLUTTER_APP_FLAVOR into flutter/ephemeral/generated_config.cmake, and the
+# add_subdirectory above hands it back through PARENT_SCOPE. The three values
+# mirror lib/domain/models/app_flavor.dart.
+#
+# The GTK application identifier is what keeps the flavors apart at runtime: it
+# is the D-Bus name GApplication registers, so launching the development build
+# activates the development window and never a running production one. See:
+# https://wiki.gnome.org/HowDoI/ChooseApplicationID
+set(APPLICATION_ID "com.finchforge.pomodoist")
+set(APP_DISPLAY_NAME "Pomodoist")
+if(FLUTTER_APP_FLAVOR STREQUAL "development")
+  set(APPLICATION_ID "com.finchforge.pomodoist.dev")
+  set(APP_DISPLAY_NAME "Pomodoist Dev")
+elseif(FLUTTER_APP_FLAVOR STREQUAL "staging")
+  set(APPLICATION_ID "com.finchforge.pomodoist.stg")
+  set(APP_DISPLAY_NAME "Pomodoist Stg")
+elseif(NOT FLUTTER_APP_FLAVOR STREQUAL "")
+  # An unrecognized flavor would silently build a production-identified app, so
+  # refuse instead of falling back.
+  message(FATAL_ERROR
+    "Unknown FLUTTER_APP_FLAVOR '${FLUTTER_APP_FLAVOR}'. "
+    "Expected development, staging or production.")
+endif()
 
 # System-level dependencies.
 find_package(PkgConfig REQUIRED)

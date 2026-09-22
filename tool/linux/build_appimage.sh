@@ -9,6 +9,12 @@ app_root="$project_root/apps/flutter"
 # shellcheck disable=SC1091
 source "$script_dir/appimage-tools.env"
 
+# shellcheck source=tool/linux/flavor.sh
+source "$script_dir/flavor.sh"
+
+flavor="$(pomodoist_flavor_name)"
+artifact_name="$(pomodoist_flavor_artifact_name "$flavor")"
+
 if [[ "$(uname -m)" != x86_64 ]]; then
   echo 'The current AppImage release target is x86_64.' >&2
   exit 69
@@ -21,7 +27,7 @@ for command_name in curl date find install realpath sha256sum; do
   fi
 done
 
-bundle="${POMODOIST_LINUX_BUNDLE:-$app_root/build/linux/x64/release/bundle}"
+bundle="${POMODOIST_LINUX_BUNDLE:-$(pomodoist_flavor_bundle_dir "$flavor" "$app_root")}"
 output_dir="${POMODOIST_APPIMAGE_OUTPUT_DIR:-$app_root/build/linux/appimage}"
 tool_dir="${POMODOIST_APPIMAGE_TOOL_DIR:-$project_root/build/appimage-tools}"
 version="${POMODOIST_VERSION:-}"
@@ -123,6 +129,7 @@ trap cleanup EXIT
 
 POMODOIST_LINUX_BUNDLE="$bundle" \
 POMODOIST_APPDIR="$appdir" \
+POMODOIST_FLAVOR="$flavor" \
 POMODOIST_VERSION="$version" \
 POMODOIST_RELEASE_DATE="$release_date" \
   "$script_dir/prepare_appdir.sh"
@@ -131,8 +138,8 @@ NO_STRIP=1 APPIMAGE_EXTRACT_AND_RUN=1 "$linuxdeploy" \
   --appdir "$appdir" \
   --deploy-deps-only "$appdir/usr"
 
-artifact="$output_dir/Pomodoist-x86_64.AppImage"
-temporary_artifact="$staging_root/Pomodoist-x86_64.AppImage"
+artifact="$output_dir/$artifact_name"
+temporary_artifact="$staging_root/$artifact_name"
 source_date_epoch="${SOURCE_DATE_EPOCH:-}"
 if [[ -z "$source_date_epoch" ]]; then
   if ! source_date_epoch="$(git -C "$project_root" show -s --format=%ct HEAD 2>/dev/null)"; then
@@ -162,5 +169,5 @@ install -m755 "$temporary_artifact" "$artifact"
   sha256sum "$(basename -- "$artifact")" > "$(basename -- "$artifact").sha256"
 )
 
-printf 'Built Pomodoist AppImage: %s\n' "$artifact"
+printf 'Built Pomodoist AppImage (%s flavor): %s\n' "$flavor" "$artifact"
 printf 'Checksum: %s.sha256\n' "$artifact"

@@ -34,6 +34,42 @@ and then fails the build when any of them arrives with a non-empty value
 guard is what makes the rule hold against a builder that injects build
 arguments on its own.
 
+## Per-environment identity at runtime
+
+`config.js` is not the only thing that differs between environments. Two more
+pieces are resolved when the container starts, so the image stays identical:
+
+**Apple App Site Association.** The image ships the production association and
+`tool/deploy/web/generate_aasa.sh` overwrites it before nginx starts (called from
+`tool/deploy/web/entrypoint.sh`). The Apple team id is `4VK836929S`:
+
+| `POMODOIST_ENVIRONMENT` | Associated app id |
+| --- | --- |
+| `production` | `4VK836929S.com.finchforge.pomodoist` |
+| `staging` | `4VK836929S.com.finchforge.pomodoist.stg` |
+| `selfhosted`, `development` | none — an empty association is written |
+
+Self-hosted deployments serve a domain no app declares as an associated domain,
+so they publish no app ids rather than claiming the production ones.
+
+**Flavor assets.** `apps/flutter/web/index.html` reads `config.js` in `<head>`
+and swaps the manifest link, favicon, apple-touch-icon, theme colour and display
+name before the first paint, so one image carries all three icon sets. The names
+below are the contract with the icon pipeline, and each flavor's manifest is
+authoritative for its `icons`, `theme_color` and `name`:
+
+| Flavor | Environment | Manifest | Fallback icon / favicon |
+| --- | --- | --- | --- |
+| development | `local` | `manifest-development.json` | `icons/development/Icon-192.png`, `icons/development/favicon.png` |
+| staging | `staging` | `manifest-staging.json` | `icons/staging/Icon-192.png`, `icons/staging/favicon.png` |
+| production | `production`, `selfhosted` | `manifest.json` | `icons/Icon-192.png`, `favicon.png` |
+
+The production flavor is the identity already written into `index.html`, so it
+needs no fetch and no DOM change: a production deployment renders exactly the
+markup the build emitted. Every other flavor adopts its manifest first and falls
+back to the production identity when an asset is missing or unreadable, instead
+of leaving the page without an icon.
+
 ## Coolify configuration
 
 The webhook-triggered build must use:

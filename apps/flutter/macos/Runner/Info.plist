@@ -17,6 +17,8 @@
 	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>$(POMODOIST_DISPLAY_NAME)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIconFile</key>
@@ -38,7 +40,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>pomodoist</string>
+				<string>$(POMODOIST_URL_SCHEME)</string>
 			</array>
 		</dict>
 	</array>
@@ -60,5 +62,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>PomodoistAppGroup</key>
+	<string>$(POMODOIST_APP_GROUP)</string>
+	<key>PomodoistURLScheme</key>
+	<string>$(POMODOIST_URL_SCHEME)</string>
 </dict>
 </plist>

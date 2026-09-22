@@ -72,4 +72,7 @@ jobs:
           test/desktop_update_provider_test.dart
       - name: Compile native desktop application
         working-directory: apps/flutter
-        run: flutter build ${{ matrix.platform }} --debug --target lib/main_development.dart
+        run: >-
+          flutter build ${{ matrix.platform }} --debug
+          --flavor development
+          --target lib/main_development.dart

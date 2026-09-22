@@ -20,7 +20,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Pomodoist</string>
+	<string>$(POMODOIST_DISPLAY_NAME)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -28,7 +28,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Pomodoist</string>
+	<string>$(POMODOIST_DISPLAY_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -42,7 +42,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>pomodoist</string>
+				<string>$(POMODOIST_URL_SCHEME)</string>
 			</array>
 		</dict>
 	</array>
@@ -58,6 +58,10 @@
 	<string>Pomodoist uses the microphone to turn spoken quick-add commands into task text.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Pomodoist uses speech recognition to transcribe spoken quick-add commands.</string>
+	<key>PomodoistAppGroup</key>
+	<string>$(POMODOIST_APP_GROUP)</string>
+	<key>PomodoistURLScheme</key>
+	<string>$(POMODOIST_URL_SCHEME)</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

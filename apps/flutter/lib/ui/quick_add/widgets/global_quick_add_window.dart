@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multiview_desktop/multiview_desktop.dart';
 
+import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:pomodoist/ui/quick_add/view_models/global_quick_add_view_model.dart';
@@ -51,11 +52,11 @@ class GlobalQuickAddWindowManager extends WindowObserver {
         onClose: () => unawaited(close()),
         onVoiceModeChanged: (active) => unawaited(setVoiceMode(active)),
       ),
-      options: const WindowOptions(
+      options: WindowOptions(
         size: globalQuickAddCompactSize,
-        minimumSize: Size(420, 200),
-        maximumSize: Size(900, 800),
-        title: 'Pomodoist',
+        minimumSize: const Size(420, 200),
+        maximumSize: const Size(900, 800),
+        title: appFlavor.displayName,
         alwaysOnTop: true,
       ),
     );

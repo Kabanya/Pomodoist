@@ -27,7 +27,7 @@ class ArtifactVerificationTests(unittest.TestCase):
         self.root = Path(self.directory.name)
         (self.root / 'tool/android').mkdir(parents=True)
         shutil.copy(ROOT / 'tool/android/verify_artifacts.sh', self.root / 'tool/android')
-        for name in ('flutter-apk/app-release.apk', 'bundle/release/app-release.aab'):
+        for name in ('flutter-apk/app-production-release.apk', 'bundle/productionRelease/app-production-release.aab'):
             path = self.root / 'apps/flutter/build/app/outputs' / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text('fixture, not a real signed artifact')
@@ -45,8 +45,17 @@ class ArtifactVerificationTests(unittest.TestCase):
         path.write_text('#!/usr/bin/env bash\nset -e\n' + body + '\n')
         path.chmod(0o755)
 
-    def verify(self):
-        return subprocess.run(['bash', 'tool/android/verify_artifacts.sh'], cwd=self.root, env=self.env, capture_output=True, text=True)
+    def add_flavor_artifacts(self, flavor):
+        for name in (f'flutter-apk/app-{flavor}-release.apk', f'bundle/{flavor}Release/app-{flavor}-release.aab'):
+            path = self.root / 'apps/flutter/build/app/outputs' / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('fixture, not a real signed artifact')
+
+    def verify(self, flavor=None):
+        arguments = ['bash', 'tool/android/verify_artifacts.sh']
+        if flavor is not None:
+            arguments.append(flavor)
+        return subprocess.run(arguments, cwd=self.root, env=self.env, capture_output=True, text=True)
 
     def test_matching_release_certificate(self):
         self.env['ANDROID_SIGNING_CERT_SHA256'] = ':'.join(SHA[i:i + 2].lower() for i in range(0, 64, 2))
@@ -104,6 +113,33 @@ class ArtifactVerificationTests(unittest.TestCase):
     def test_rejects_broken_apk_signature(self):
         self.command('apksigner', 'exit 1')
         self.assertNotEqual(self.verify().returncode, 0)
+
+    def test_verifies_a_development_flavor_artifact(self):
+        self.add_flavor_artifacts('development')
+        self.command('aapt', "echo \"package: name='com.finchforge.pomodoist.dev' versionCode='94'\"")
+        result = self.verify('development')
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_rejects_artifacts_built_for_a_different_flavor(self):
+        # A development build must never stand in for the production artifact,
+        # even when it was copied to the production output paths.
+        self.command('aapt', "echo \"package: name='com.finchforge.pomodoist.dev' versionCode='94'\"")
+        self.assertNotEqual(self.verify('production').returncode, 0)
+
+    def test_rejects_a_flavor_whose_package_does_not_match(self):
+        # The path is right but the APK carries another flavor's application id.
+        self.add_flavor_artifacts('development')
+        self.assertNotEqual(self.verify('development').returncode, 0)
+
+    def test_rejects_an_unknown_flavor(self):
+        self.assertEqual(self.verify('canary').returncode, 64)
+
+    def test_rejects_extra_arguments(self):
+        self.assertEqual(self.verify('production').returncode, 0)
+        result = subprocess.run(
+            ['bash', 'tool/android/verify_artifacts.sh', 'production', 'extra'],
+            cwd=self.root, env=self.env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 64)
 
 
 if __name__ == '__main__':

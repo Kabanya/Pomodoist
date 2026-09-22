@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 
 import 'package:pomodoist/domain/models/account/account_auth_failure.dart';
 import 'package:pomodoist/domain/models/account/captcha_security.dart';
+import 'package:pomodoist/domain/models/app_flavor.dart';
 
 typedef NativeLinkClock = DateTime Function();
 typedef NativeRouteSink = void Function(String location);
@@ -185,7 +186,7 @@ String? nativeRouteForLink(Uri uri) {
 }
 
 bool _isExactGoogleCalendarConnectedLink(Uri uri) {
-  return uri.scheme == 'pomodoist' &&
+  return uri.scheme == appFlavor.urlScheme &&
       uri.host == 'google-calendar-connected' &&
       uri.path.isEmpty &&
       uri.userInfo.isEmpty &&
@@ -195,7 +196,7 @@ bool _isExactGoogleCalendarConnectedLink(Uri uri) {
 }
 
 bool _isExactPurchaseSuccessLink(Uri uri) {
-  return uri.scheme == 'pomodoist' &&
+  return uri.scheme == appFlavor.urlScheme &&
       uri.host == 'purchase-success' &&
       uri.path.isEmpty &&
       uri.userInfo.isEmpty &&
@@ -205,7 +206,7 @@ bool _isExactPurchaseSuccessLink(Uri uri) {
 }
 
 bool _isExactFocusLink(Uri uri) {
-  return uri.scheme == 'pomodoist' &&
+  return uri.scheme == appFlavor.urlScheme &&
       uri.host == 'focus' &&
       uri.path.isEmpty &&
       uri.userInfo.isEmpty &&
@@ -215,7 +216,7 @@ bool _isExactFocusLink(Uri uri) {
 }
 
 bool _isLoginCallbackLink(Uri uri) {
-  return uri.scheme == 'pomodoist' &&
+  return uri.scheme == appFlavor.urlScheme &&
       uri.host == 'login-callback' &&
       (uri.path.isEmpty || uri.path == '/') &&
       uri.userInfo.isEmpty &&

@@ -265,6 +265,7 @@ void main() {
           'xcrun simctl bootstatus "${entry.value}" -b',
           'open -a Simulator',
           'cd "$_repoRoot/apps/flutter" && "flutter-under-test" run -d "${entry.value}" --debug '
+              '--flavor "development" '
               '--target "lib/main_development.dart" '
               '--dart-define-from-file="$_repoRoot/pubspec.yaml" '
               '--dart-define=POMODOIST_RELEASE='
@@ -340,6 +341,7 @@ void main() {
       commands[0],
       'powershell.exe -NoProfile -ExecutionPolicy Bypass '
       '-File ./tool/windows/build.ps1 -Configuration Release -Clean '
+      '-Flavor "production" '
       '-ConfigFile "C:/secure config/pomodoist-windows-production.json" '
       '-Target "lib/main.dart" '
       '-ReleaseSha "0123456789abcdef0123456789abcdef01234567"',
@@ -348,6 +350,7 @@ void main() {
       commands[1],
       'powershell.exe -NoProfile -ExecutionPolicy Bypass '
       '-File ./tool/windows/installer/build.ps1 '
+      '-Flavor "production" '
       '-BuildDirectory "C:/release output/Pomodoist"',
     );
     expect(commands.join('\n'), isNot(contains('-Configuration Debug')));

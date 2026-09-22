@@ -36,9 +36,15 @@ import 'package:pomodoist/data/services/platform/native_link_coordinator.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/config/runtime_public_config.dart';
 import 'package:pomodoist/config/app_language.dart';
+import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:pomodoist/ui/core/localization/app_locale.dart';
 
-const _pomodoistNativeLoginRedirect = 'pomodoist://login-callback';
+/// Native redirect Supabase sends the user back to after signing in.
+///
+/// Derived from the flavor so a link minted by one build can never be handled
+/// by another installed side by side with it.
+String get _pomodoistNativeLoginRedirect =>
+    '${appFlavor.urlScheme}://login-callback';
 
 String get pomodoistLoginRedirect =>
     pomodoistLoginRedirectFor(isWeb: kIsWeb, baseUri: Uri.base);
@@ -296,7 +302,7 @@ final taskDecomposerProvider = Provider<TaskDecomposer>((ref) {
   final transport = AccountTaskDecompositionTransport(
     account: ref.watch(accountClientProvider),
     billingStore: ref.watch(billingStoreProvider),
-    localStoreKit: pomodoistLocalStoreKit,
+    localStoreKit: pomodoistUsesLocalStoreKit,
     endpoint: endpoint,
   );
   return SupabaseTaskDecomposer(transport: transport.call);

@@ -1,3 +1,13 @@
+; Inno Setup script for the Pomodoist Windows installer.
+;
+; Every flavor-specific value is supplied by build.ps1 through /D, because the
+; same script has to produce the production, staging and development installers.
+; The flavor table lives in build.ps1; the guards below make a missing /D fail
+; loudly at compile time instead of silently producing a production installer.
+;
+; Production supplies exactly the values this file used to hardcode, so its
+; output is unchanged.
+
 #ifndef AppVersion
   #error AppVersion must be provided by build.ps1
 #endif
@@ -13,19 +23,36 @@
 #ifndef SetupIcon
   #error SetupIcon must be provided by build.ps1
 #endif
+#ifndef AppIdentifier
+  #error AppIdentifier must be provided by build.ps1
+#endif
+#ifndef AppDisplayName
+  #error AppDisplayName must be provided by build.ps1
+#endif
+#ifndef AppUrlScheme
+  #error AppUrlScheme must be provided by build.ps1
+#endif
+#ifndef AppToastGuid
+  #error AppToastGuid must be provided by build.ps1
+#endif
+#ifndef SetupBaseFilename
+  #error SetupBaseFilename must be provided by build.ps1
+#endif
 
 [Setup]
-AppId=com.finchforge.pomodoist
-AppName=Pomodoist
+; AppId doubles as the uninstall registry key, so the three flavors get three
+; independent entries and can be uninstalled separately.
+AppId={#AppIdentifier}
+AppName={#AppDisplayName}
 AppVersion={#AppVersion}
-AppVerName=Pomodoist {#AppVersion}
+AppVerName={#AppDisplayName} {#AppVersion}
 AppPublisher=FinchForge LLC
 AppPublisherURL=https://pomodoist.com
 AppSupportURL=https://github.com/Kabanya/Pomodoist/issues
 AppUpdatesURL=https://github.com/Kabanya/Pomodoist/releases
 AppCopyright=Copyright (C) 2026 FinchForge LLC. Licensed under AGPL-3.0-only.
-DefaultDirName={localappdata}\Programs\Pomodoist
-DefaultGroupName=Pomodoist
+DefaultDirName={localappdata}\Programs\{#AppDisplayName}
+DefaultGroupName={#AppDisplayName}
 UsePreviousAppDir=no
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=
@@ -33,9 +60,9 @@ MinVersion=10.0.19041
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir={#OutputDir}
-OutputBaseFilename=Pomodoist-Setup
+OutputBaseFilename={#SetupBaseFilename}
 SetupIconFile={#SetupIcon}
-UninstallDisplayName=Pomodoist
+UninstallDisplayName={#AppDisplayName}
 UninstallDisplayIcon={app}\pomodoist.exe
 Compression=lzma2/max
 SolidCompression=yes
@@ -54,8 +81,8 @@ ChangesAssociations=yes
 SetupLogging=yes
 VersionInfoCompany=FinchForge LLC
 VersionInfoCopyright=Copyright (C) 2026 FinchForge LLC. Licensed under AGPL-3.0-only.
-VersionInfoDescription=Pomodoist installer
-VersionInfoProductName=Pomodoist
+VersionInfoDescription={#AppDisplayName} installer
+VersionInfoProductName={#AppDisplayName}
 VersionInfoProductVersion={#AppNumericVersion}
 VersionInfoVersion={#AppNumericVersion}
 VersionInfoProductTextVersion={#AppVersion}
@@ -71,13 +98,19 @@ Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\Pomodoist"; Filename: "{app}\pomodoist.exe"; WorkingDir: "{app}"; AppUserModelID: "com.finchforge.pomodoist"; AppUserModelToastActivatorCLSID: "8681f633-939c-46f5-84cc-18f295e4382c"
+; The AppUserModelID has to equal the id the runner sets on itself, and the
+; toast activator CLSID has to match the one the app registers, or the toast
+; identity resolves to nothing. Both are flavor-specific so that three installs
+; raise three distinguishable sets of notifications.
+Name: "{autoprograms}\{#AppDisplayName}"; Filename: "{app}\pomodoist.exe"; WorkingDir: "{app}"; AppUserModelID: "{#AppIdentifier}"; AppUserModelToastActivatorCLSID: "{#AppToastGuid}"
 
 [Registry]
-Root: HKA; Subkey: "Software\Classes\pomodoist"; ValueType: string; ValueName: ""; ValueData: "URL:Pomodoist Protocol"; Flags: uninsdeletekey
-Root: HKA; Subkey: "Software\Classes\pomodoist"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""
-Root: HKA; Subkey: "Software\Classes\pomodoist\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\pomodoist.exe,0"
-Root: HKA; Subkey: "Software\Classes\pomodoist\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\pomodoist.exe"" ""%1"""
+; Each flavor claims its own URL scheme, so the three installs can coexist and
+; each one's links resolve to it alone.
+Root: HKA; Subkey: "Software\Classes\{#AppUrlScheme}"; ValueType: string; ValueName: ""; ValueData: "URL:{#AppDisplayName} Protocol"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\{#AppUrlScheme}"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\{#AppUrlScheme}\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\pomodoist.exe,0"
+Root: HKA; Subkey: "Software\Classes\{#AppUrlScheme}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\pomodoist.exe"" ""%1"""
 
 [Run]
 Filename: "{app}\pomodoist.exe"; WorkingDir: "{app}"; Flags: nowait skipifsilent

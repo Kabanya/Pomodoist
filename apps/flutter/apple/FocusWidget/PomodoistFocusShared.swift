@@ -12,7 +12,10 @@ func pomodoistLocalized(_ key: String, locale: String? = nil) -> String {
   return key
 }
 
-let pomodoistFocusAppGroupIdentifier = "group.com.pomodoist"
+let pomodoistFocusAppGroupIdentifier =
+  Bundle.main.object(forInfoDictionaryKey: "PomodoistAppGroup") as? String ?? ""
+let pomodoistFocusURLScheme =
+  Bundle.main.object(forInfoDictionaryKey: "PomodoistURLScheme") as? String ?? "pomodoist"
 let pomodoistFocusSnapshotDefaultsKey = "focus.snapshot.v1"
 let pomodoistFocusSnapshotFileName = "focus-snapshot-v1.json"
 let pomodoistTimerColorDefaultsKey = "focus.statusItem.timerColor"
@@ -136,8 +139,9 @@ struct PomodoistFocusSnapshotStore {
   var fileURL: URL?
 
   init(
-    defaults: UserDefaults? = UserDefaults(suiteName: pomodoistFocusAppGroupIdentifier),
-    fileURL: URL? = FileManager.default
+    defaults: UserDefaults? = pomodoistFocusAppGroupIdentifier.isEmpty
+      ? nil : UserDefaults(suiteName: pomodoistFocusAppGroupIdentifier),
+    fileURL: URL? = pomodoistFocusAppGroupIdentifier.isEmpty ? nil : FileManager.default
       .containerURL(forSecurityApplicationGroupIdentifier: pomodoistFocusAppGroupIdentifier)?
       .appendingPathComponent(pomodoistFocusSnapshotFileName)
   ) {

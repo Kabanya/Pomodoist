@@ -1,3 +1,5 @@
+import 'package:pomodoist/domain/models/app_flavor.dart';
+
 const billingActiveProductIdPreferenceKey = 'billing.activeProductId.v1';
 const billingPurchasedProductIdsPreferenceKey =
     'billing.purchasedProductIds.v1';
@@ -16,6 +18,34 @@ const _pomodoistLocalStoreKitValue = String.fromEnvironment(
 const pomodoistLocalStoreKit =
     bool.fromEnvironment('POMODOIST_LOCAL_STOREKIT') ||
     _pomodoistLocalStoreKitValue == '1';
+
+/// Whether this build must use the bundled local StoreKit configuration
+/// instead of talking to the App Store.
+///
+/// `POMODOIST_LOCAL_STOREKIT=1` is the only thing that selects the local store.
+/// It is the explicit opt-in, used by local runs and by uploads that want a
+/// hermetic store. `POMODOIST_DEV_UNLOCK=1` unlocks the dev-only purchase
+/// surfaces but never redirects StoreKit, so a staging TestFlight upload — which
+/// sets the dev unlock and nothing else — still initialises the remote store
+/// unless `POMODOIST_LOCAL_STOREKIT=1` is passed as well.
+///
+/// [devUnlock] and [flavor] stay in the signature so a call site can state the
+/// define combination a build carries; neither changes the result.
+///
+/// Production sets neither define, so its StoreKit path is unchanged.
+bool pomodoistUsesLocalStoreKitFor({
+  required bool devUnlock,
+  required bool localStoreKit,
+  required AppFlavor flavor,
+}) => localStoreKit;
+
+/// [pomodoistUsesLocalStoreKitFor] evaluated for the running build.
+bool get pomodoistUsesLocalStoreKit => pomodoistUsesLocalStoreKitFor(
+  devUnlock: pomodoistDevUnlock,
+  localStoreKit: pomodoistLocalStoreKit,
+  flavor: appFlavor,
+);
+
 const _billingChannelValue = String.fromEnvironment(
   'POMODOIST_BILLING_CHANNEL',
 );

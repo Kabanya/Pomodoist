@@ -231,8 +231,9 @@
         } catch (_) {
           returnTarget = null;
         }
+        const appSchemes = ["pomodoist:", "pomodoist-stg:", "pomodoist-dev:"];
         const customProtocolTarget = returnTarget !== null &&
-          returnTarget.protocol === "pomodoist:" &&
+          appSchemes.includes(returnTarget.protocol) &&
           returnTarget.hostname === "captcha-callback" &&
           returnTarget.pathname === "" && returnTarget.port === "";
         const loopbackPort = Number(returnTarget?.port || "0");

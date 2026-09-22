@@ -6,19 +6,31 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 project_root="$(cd -- "$script_dir/../.." && pwd -P)"
 app_root="$project_root/apps/flutter"
 
-bundle="${POMODOIST_LINUX_BUNDLE:-$app_root/build/linux/x64/release/bundle}"
-appdir="${POMODOIST_APPDIR:-$app_root/build/linux/appimage/Pomodoist.AppDir}"
+# shellcheck source=tool/linux/flavor.sh
+source "$script_dir/flavor.sh"
+
+flavor="$(pomodoist_flavor_name)"
+application_id="$(pomodoist_flavor_application_id "$flavor")"
+icon_source="$(pomodoist_flavor_icon_path "$flavor" "$app_root")"
+desktop_id="$application_id"
+
+bundle="${POMODOIST_LINUX_BUNDLE:-$(pomodoist_flavor_bundle_dir "$flavor" "$app_root")}"
+appdir="${POMODOIST_APPDIR:-$app_root/build/linux/appimage/$flavor/Pomodoist.AppDir}"
 version="${POMODOIST_VERSION:-}"
 release_date="${POMODOIST_RELEASE_DATE:-}"
 plugin_dir="${POMODOIST_GSTREAMER_PLUGIN_DIR:-}"
 scanner="${POMODOIST_GSTREAMER_SCANNER:-}"
 plugin_search_roots="${POMODOIST_GSTREAMER_PLUGIN_SEARCH_ROOTS:-/usr/lib:/usr/lib64}"
 scanner_search_roots="${POMODOIST_GSTREAMER_SCANNER_SEARCH_ROOTS:-/usr/lib:/usr/libexec}"
-desktop_id='com.finchforge.pomodoist'
 
 if [[ ! -x "$bundle/pomodoist" || ! -d "$bundle/data" || ! -d "$bundle/lib" ]]; then
   echo "Invalid Pomodoist Linux bundle: $bundle" >&2
   echo 'Build it first with: make linux-release' >&2
+  exit 66
+fi
+
+if [[ ! -f "$icon_source" ]]; then
+  echo "Flavor icon is missing: $icon_source" >&2
   exit 66
 fi
 
@@ -125,20 +137,21 @@ cp -a -- "$bundle/." "$appdir/usr/lib/pomodoist/"
 ln -s -- '../lib/pomodoist/pomodoist' "$appdir/usr/bin/pomodoist"
 install -Dm755 "$app_root/linux/packaging/AppRun" "$appdir/AppRun"
 
-sed 's|@EXECUTABLE@|pomodoist|g' \
-  "$app_root/linux/packaging/$desktop_id.desktop.in" \
+pomodoist_flavor_render_template \
+  "$flavor" "$app_root/linux/packaging/app.desktop.in" \
+  'pomodoist' "$version" "$release_date" 'pomodoist' \
   > "$appdir/$desktop_id.desktop"
 install -Dm644 "$appdir/$desktop_id.desktop" \
   "$appdir/usr/share/applications/$desktop_id.desktop"
 
-install -Dm644 "$app_root/web/icons/Icon-512.png" \
-  "$appdir/$desktop_id.png"
-install -Dm644 "$app_root/web/icons/Icon-512.png" \
+install -Dm644 "$icon_source" "$appdir/$desktop_id.png"
+install -Dm644 "$icon_source" \
   "$appdir/usr/share/icons/hicolor/512x512/apps/$desktop_id.png"
 ln -s -- "$desktop_id.png" "$appdir/.DirIcon"
 
-sed -e "s|@VERSION@|$version|g" -e "s|@RELEASE_DATE@|$release_date|g" \
-  "$app_root/linux/packaging/$desktop_id.metainfo.xml.in" \
+pomodoist_flavor_render_template \
+  "$flavor" "$app_root/linux/packaging/app.metainfo.xml.in" \
+  'pomodoist' "$version" "$release_date" 'pomodoist' \
   > "$appdir/usr/share/metainfo/$desktop_id.appdata.xml"
 
 for plugin in "${gstreamer_plugins[@]}"; do
@@ -149,3 +162,5 @@ install -Dm755 "$scanner" \
   "$appdir/usr/lib/gstreamer-1.0/gst-plugin-scanner"
 
 printf 'Prepared Pomodoist AppDir at %s\n' "$appdir"
+printf 'Flavor: %s (%s)\n' "$flavor" "$application_id"
+printf 'Icon: %s\n' "$icon_source"

@@ -3,8 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
+import 'package:pomodoist/data/services/local/flavor_application_support_directory_io.dart';
 import 'package:pomodoist/data/services/voice/voice_recording.dart';
 
 VoiceRecordingStore createVoiceRecordingStore() => FileVoiceRecordingStore();
@@ -12,7 +12,7 @@ VoiceRecordingStore createVoiceRecordingStore() => FileVoiceRecordingStore();
 /// Only this directory is owned by the backend transcription adapter.
 class FileVoiceRecordingStore implements VoiceRecordingStore {
   FileVoiceRecordingStore({Future<Directory> Function()? directory})
-    : _directoryLoader = directory ?? getApplicationSupportDirectory;
+    : _directoryLoader = directory ?? flavorApplicationSupportDirectory;
   final Future<Directory> Function() _directoryLoader;
   Directory? _directory;
   static final _fileName = RegExp(r'^recording_[0-9]+\.wav$');

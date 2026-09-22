@@ -21,6 +21,11 @@ void main() {
     File(
       '../../tool/windows/link-build.ps1',
     ).copySync('${scriptDirectory.path}${Platform.pathSeparator}link-build.ps1');
+    // build.ps1 dot-sources the flavor table from its own directory, so the
+    // copy has to carry it too or the script aborts before it reaches Flutter.
+    File('../../tool/windows/flavors.ps1').copySync(
+      '${scriptDirectory.path}${Platform.pathSeparator}flavors.ps1',
+    );
 
     Directory('${testRoot.path}/apps/flutter').createSync(recursive: true);
     final configFile = File(
@@ -75,6 +80,8 @@ void main() {
     expect(dartLog.readAsLinesSync(), hasLength(2));
     expect(flutterLog.readAsLinesSync(), [
       'build windows --release '
+          '--flavor production '
+          '--target lib/main.dart '
           '--dart-define-from-file=${configFile.path} '
           '--dart-define=POMODOIST_RELEASE='
           '0123456789abcdef0123456789abcdef01234567 '
@@ -100,6 +107,11 @@ void main() {
     File(
       '../../tool/windows/link-build.ps1',
     ).copySync('${scriptDirectory.path}${Platform.pathSeparator}link-build.ps1');
+    // build.ps1 dot-sources the flavor table from its own directory, so the
+    // copy has to carry it too or the script aborts before it reaches Flutter.
+    File('../../tool/windows/flavors.ps1').copySync(
+      '${scriptDirectory.path}${Platform.pathSeparator}flavors.ps1',
+    );
 
     Directory(
       '${testRoot.path}/apps/flutter/build',
@@ -146,6 +158,8 @@ void main() {
     expect(flutterLog.readAsLinesSync(), [
       'clean',
       'build windows --release '
+          '--flavor production '
+          '--target lib/main.dart '
           '--dart-define-from-file=${configFile.path} '
           '--dart-define=POMODOIST_RELEASE='
           '0123456789abcdef0123456789abcdef01234567 '

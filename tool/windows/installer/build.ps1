@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param(
-    [string]$BuildDirectory = 'build\flutter\windows\x64\runner\Release',
+    [ValidateSet('production', 'development', 'staging')]
+    [string]$Flavor = 'production',
+    [string]$BuildDirectory,
     [string]$OutputDirectory = 'build\flutter\windows\installer',
     [string]$CompilerPath,
     [string]$Version
@@ -10,6 +12,10 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
+. (Join-Path $PSScriptRoot '..\flavors.ps1')
+
+$Flavor = $Flavor.Trim().ToLowerInvariant()
+$flavorConfig = Get-PomodoistFlavor -Flavor $Flavor
 
 function Resolve-RepositoryPath {
     param([Parameter(Mandatory)][string]$Path)
@@ -38,6 +44,12 @@ function Find-InnoCompiler {
         if (Test-Path -LiteralPath $candidate -PathType Leaf) { return $candidate }
     }
     throw 'ISCC.exe was not found. Install Inno Setup 6.4 or newer.'
+}
+
+# Each flavor is packaged from the directory Flutter writes when that flavor is
+# built, so the three installers never package each other's bundle.
+if ([string]::IsNullOrWhiteSpace($BuildDirectory)) {
+    $BuildDirectory = $flavorConfig.BuildDirectory
 }
 
 $buildPath = Resolve-RepositoryPath $BuildDirectory
@@ -71,7 +83,8 @@ $numericVersion = ($Version -split '-', 2)[0] + '.0'
 
 $outputPath = Resolve-RepositoryPath $OutputDirectory
 New-Item -ItemType Directory -Force -Path $outputPath | Out-Null
-$installerPath = Join-Path $outputPath 'Pomodoist-Setup.exe'
+$installerName = "$($flavorConfig.SetupBaseName).exe"
+$installerPath = Join-Path $outputPath $installerName
 $checksumPath = "$installerPath.sha256"
 foreach ($generatedPath in @($installerPath, $checksumPath)) {
     if (Test-Path -LiteralPath $generatedPath) {
@@ -86,7 +99,9 @@ if ([string]::IsNullOrWhiteSpace($CompilerPath)) {
 }
 
 $sourcePath = Join-Path $PSScriptRoot 'Pomodoist.iss'
-$iconPath = Join-Path $repoRoot 'apps\flutter\windows\runner\resources\app_icon.ico'
+$iconPath = Join-Path `
+    $repoRoot `
+    "apps\flutter\windows\runner\resources\$($flavorConfig.IconFileName)"
 foreach ($requiredPath in @($sourcePath, $iconPath)) {
     if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
         throw "Installer input was not found: $requiredPath"
@@ -99,6 +114,11 @@ $compilerArguments = @(
     "/DSourceDir=$buildPath",
     "/DOutputDir=$outputPath",
     "/DSetupIcon=$iconPath",
+    "/DAppIdentifier=$($flavorConfig.ApplicationId)",
+    "/DAppDisplayName=$($flavorConfig.DisplayName)",
+    "/DAppUrlScheme=$($flavorConfig.UrlScheme)",
+    "/DAppToastGuid=$($flavorConfig.ToastGuid)",
+    "/DSetupBaseFilename=$($flavorConfig.SetupBaseName)",
     $sourcePath
 )
 & $CompilerPath @compilerArguments
@@ -112,7 +132,7 @@ if (-not (Test-Path -LiteralPath $installerPath -PathType Leaf)) {
 $hash = (Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash
 [System.IO.File]::WriteAllText(
     $checksumPath,
-    "$hash *Pomodoist-Setup.exe`n",
+    "$hash *$installerName`n",
     [System.Text.Encoding]::ASCII
 )
 

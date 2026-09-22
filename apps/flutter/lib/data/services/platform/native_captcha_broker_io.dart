@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:pomodoist/domain/models/account/captcha_security.dart';
+import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:pomodoist/domain/models/settings/app_language.dart';
 
 class NativeCaptchaBroker {
@@ -44,7 +45,7 @@ class NativeCaptchaBroker {
     try {
       final callbackTarget = _useLoopback
           ? await _startLoopbackServer(request)
-          : Uri.parse('pomodoist://captcha-callback');
+          : pomodoistCaptchaCallbackTarget;
       if (!identical(_activeRequest, request)) return;
       final session = NativeCaptchaSession(
         registrationUrl: _config.registrationUrl,
@@ -173,7 +174,10 @@ class NativeCaptchaBroker {
 
   void _handleUri(_NativeCaptchaRequest request, Uri uri) {
     if (!identical(_activeRequest, request)) return;
-    if (uri.scheme != 'pomodoist' || uri.host != 'captcha-callback') return;
+    if (uri.scheme != appFlavor.urlScheme ||
+        uri.host != 'captcha-callback') {
+      return;
+    }
     final session = request.session;
     if (session == null) return;
     try {

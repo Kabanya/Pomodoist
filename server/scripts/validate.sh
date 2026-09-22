@@ -29,6 +29,13 @@ for service in db auth rest realtime migrate gateway functions web; do
   }
 done
 
+for scheme in pomodoist-dev pomodoist-stg pomodoist; do
+  printf '%s\n' "$rendered" | grep -Fq "$scheme://login-callback"
+  printf '%s\n' "$rendered" | grep -Fq "$scheme://captcha-callback"
+done
+printf '%s\n' "$rendered" | grep -Fq \
+  'GOOGLE_CALENDAR_APP_REDIRECT_URI: pomodoist://google-calendar-connected'
+
 if grep -ERn 'app-test\.pomodoist\.com|app\.pomodoist\.com|supabase-test\.pomodoist\.com|supabase\.co' \
   "$compose" "$example" "$server_dir/docker" "$server_dir/scripts" "$server_dir/README.md" 2>/dev/null; then
   echo "Hosted production endpoint found in self-host packaging" >&2

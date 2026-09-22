@@ -84,7 +84,7 @@ bool pomodoistStoreKitPurchaseIsActive(PurchaseDetails purchase, DateTime now) {
   if (plan == null) {
     return false;
   }
-  if (pomodoistLocalStoreKit) {
+  if (pomodoistUsesLocalStoreKit) {
     return true;
   }
   try {
@@ -114,7 +114,7 @@ class BillingStore {
     Future<void> Function()? restoreSynchronizer,
   }) : _transactionLoader = transactionLoader,
        _restoreSynchronizer = restoreSynchronizer,
-       _localPurchases = pomodoistLocalStoreKit
+       _localPurchases = pomodoistUsesLocalStoreKit
            ? StreamController<List<PurchaseDetails>>.broadcast()
            : null;
 
@@ -219,7 +219,7 @@ class BillingStore {
   }
 
   Future<bool> isAvailable() async {
-    if (pomodoistLocalStoreKit) {
+    if (pomodoistUsesLocalStoreKit) {
       return true;
     }
     return _purchase.isAvailable();
@@ -228,7 +228,7 @@ class BillingStore {
   Future<ProductDetailsResponse> queryProductDetails(
     Set<String> productIds,
   ) async {
-    if (pomodoistLocalStoreKit) {
+    if (pomodoistUsesLocalStoreKit) {
       return ProductDetailsResponse(
         productDetails: [
           for (final plan in billingPlans)
@@ -295,7 +295,7 @@ class BillingStore {
   }
 
   Future<bool> isIntroductoryOfferEligible(String productId) async {
-    if (pomodoistLocalStoreKit) {
+    if (pomodoistUsesLocalStoreKit) {
       return billingPlanForProduct(productId)?.kind ==
               BillingPlanKind.subscription &&
           !_localPurchasedProductIds.any(
@@ -310,7 +310,7 @@ class BillingStore {
   }
 
   Future<bool> buy(ProductDetails productDetails, {String? appAccountToken}) {
-    if (pomodoistLocalStoreKit) {
+    if (pomodoistUsesLocalStoreKit) {
       _localPurchasedProductIds.add(productDetails.id);
       _localPurchases?.add([
         _localPurchase(productDetails.id, PurchaseStatus.purchased),
@@ -326,7 +326,7 @@ class BillingStore {
   }
 
   Future<BillingTransactionProof?> latestSubscriptionTransaction() async {
-    if (pomodoistLocalStoreKit || !applePurchasesSupported) return null;
+    if (pomodoistUsesLocalStoreKit || !applePurchasesSupported) return null;
     final value = await _channel
         .invokeMethod<Object?>('latestSubscriptionTransaction')
         .timeout(billingStoreTimeout);
@@ -377,7 +377,7 @@ class BillingStore {
       _restoreLoad ??= _restore().whenComplete(() => _restoreLoad = null);
 
   Future<List<BillingTransactionProof>> _restore() async {
-    if (!pomodoistLocalStoreKit) {
+    if (!pomodoistUsesLocalStoreKit) {
       await (_restoreSynchronizer ?? AppStore().sync)().timeout(
         billingStoreTimeout,
       );
@@ -401,7 +401,7 @@ class BillingStore {
   }
 
   Future<List<BillingTransactionProof>> _readCurrentEntitlements() async {
-    if (pomodoistLocalStoreKit) {
+    if (pomodoistUsesLocalStoreKit) {
       return [
         for (final productId in _localPurchasedProductIds)
           billingTransactionProofFromPurchase(
@@ -440,7 +440,7 @@ class BillingStore {
   }
 
   Future<void> completePurchase(PurchaseDetails purchase) {
-    if (pomodoistLocalStoreKit) {
+    if (pomodoistUsesLocalStoreKit) {
       return Future.value();
     }
     return _purchase.completePurchase(purchase);
@@ -469,7 +469,7 @@ class BillingStore {
   }
 
   Future<List<String>> pomodoistTransactionJws() async {
-    if (pomodoistLocalStoreKit) {
+    if (pomodoistUsesLocalStoreKit) {
       return const [];
     }
     final transactions = await refreshCurrentEntitlements();

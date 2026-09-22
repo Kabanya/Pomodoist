@@ -2,6 +2,14 @@ name: Linux AppImage release
 
 on:
   workflow_dispatch:
+    inputs:
+      flavors:
+        description: Linux flavors to build
+        type: choice
+        default: production
+        options:
+          - production
+          - all
   push:
     tags:
       - 'v*.*.*'
@@ -15,7 +23,7 @@ permissions:
 
 jobs:
   build-test-publish:
-    name: Build, test, and publish x86_64 AppImage
+    name: Build, test, and publish ${{ matrix.flavor }} x86_64 AppImage
     runs-on: ubuntu-24.04
     container:
       image: ubuntu:22.04@sha256:3b06811b2afd352be909dd088a004166d665dc76d38b13eada33522a9d915c6f
@@ -23,6 +31,12 @@ jobs:
     defaults:
       run:
         shell: bash
+    # A tag push publishes the production AppImage; `all` also builds the
+    # development and staging identities for testing.
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: ${{ fromJSON(inputs.flavors == 'all' && '["development","staging","production"]' || '["production"]') }}
     env:
       TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
       SENTRY_DSN: ${{ vars.SENTRY_DSN }}
@@ -114,6 +128,7 @@ jobs:
             sleep 10
           done
       - name: Validate and create production configuration
+        if: matrix.flavor == 'production'
         run: |
           test -n "$TURNSTILE_SITE_KEY" || {
             echo 'TURNSTILE_SITE_KEY is required.' >&2
@@ -141,27 +156,113 @@ jobs:
               GOOGLE_DESKTOP_CLIENT_ID: $google_id,
               GOOGLE_DESKTOP_CLIENT_SECRET: $google_secret
             }' > "$RUNNER_TEMP/linux-production.json"
+      - name: Validate and create development or staging configuration
+        if: matrix.flavor != 'production'
+        env:
+          DEV_WEB_APP_URL: ${{ vars.DEV_WEB_APP_URL }}
+          DEV_SUPABASE_URL: ${{ vars.DEV_SUPABASE_URL }}
+          DEV_SUPABASE_ANON_KEY: ${{ vars.DEV_SUPABASE_ANON_KEY }}
+          DEV_TURNSTILE_SITE_KEY: ${{ vars.DEV_TURNSTILE_SITE_KEY }}
+          DEV_SENTRY_DSN: ${{ vars.DEV_SENTRY_DSN }}
+          STAGING_SUPABASE_ANON_KEY: ${{ vars.STAGING_SUPABASE_ANON_KEY }}
+          STAGING_TURNSTILE_SITE_KEY: ${{ vars.STAGING_TURNSTILE_SITE_KEY }}
+          STAGING_SENTRY_DSN: ${{ vars.STAGING_SENTRY_DSN }}
+        run: |
+          require() {
+            test -n "${!1}" || {
+              echo "$1 is required to build the ${{ matrix.flavor }} flavor." >&2
+              exit 1
+            }
+          }
+          case "${{ matrix.flavor }}" in
+            development)
+              require DEV_WEB_APP_URL
+              environment='local'
+              web_app_url="$DEV_WEB_APP_URL"
+              registration_url=''
+              supabase_url="$DEV_SUPABASE_URL"
+              supabase_anon_key="$DEV_SUPABASE_ANON_KEY"
+              turnstile="$DEV_TURNSTILE_SITE_KEY"
+              sentry="$DEV_SENTRY_DSN"
+              ;;
+            staging)
+              require STAGING_SUPABASE_ANON_KEY
+              require STAGING_TURNSTILE_SITE_KEY
+              environment='staging'
+              web_app_url='https://app-test.pomodoist.com'
+              registration_url='https://app-test.pomodoist.com/auth/challenge'
+              supabase_url='https://supabase-test.pomodoist.com'
+              supabase_anon_key="$STAGING_SUPABASE_ANON_KEY"
+              turnstile="$STAGING_TURNSTILE_SITE_KEY"
+              sentry="$STAGING_SENTRY_DSN"
+              ;;
+            *)
+              echo "Unknown Linux flavor: ${{ matrix.flavor }}" >&2
+              exit 64
+              ;;
+          esac
+          if [[ -n "$supabase_url" && -z "$supabase_anon_key" ]] ||
+            [[ -z "$supabase_url" && -n "$supabase_anon_key" ]]; then
+            echo 'SUPABASE_URL and SUPABASE_ANON_KEY must be supplied together.' >&2
+            exit 1
+          fi
+
+          jq --null-input \
+            --arg environment "$environment" \
+            --arg web_app_url "$web_app_url" \
+            --arg registration_url "$registration_url" \
+            --arg supabase_url "$supabase_url" \
+            --arg supabase_anon_key "$supabase_anon_key" \
+            --arg turnstile "$turnstile" \
+            --arg sentry "$sentry" \
+            '{
+              POMODOIST_ENVIRONMENT: $environment,
+              WEB_APP_URL: $web_app_url,
+              POMODOIST_REGISTRATION_URL: $registration_url,
+              SUPABASE_URL: $supabase_url,
+              SUPABASE_ANON_KEY: $supabase_anon_key,
+              TURNSTILE_SITE_KEY: $turnstile,
+              SENTRY_DSN: $sentry
+            }' > "$RUNNER_TEMP/linux-${{ matrix.flavor }}.json"
       - name: Test Linux packaging contracts
         run: make test-linux-packaging
       - name: Build production AppImage
+        if: matrix.flavor == 'production'
         run: |
           make linux-appimage \
             LINUX_CONFIG="$RUNNER_TEMP/linux-production.json" \
             POMODOIST_RELEASE="$GITHUB_SHA"
+      - name: Build development or staging AppImage
+        if: matrix.flavor != 'production'
+        run: |
+          case "${{ matrix.flavor }}" in
+            development) target='lib/main_development.dart' ;;
+            staging) target='lib/main_staging.dart' ;;
+            *)
+              echo "Unknown Linux flavor: ${{ matrix.flavor }}" >&2
+              exit 64
+              ;;
+          esac
+          make linux-appimage \
+            LINUX_RELEASE_TARGET="$target" \
+            LINUX_CONFIG="$RUNNER_TEMP/linux-${{ matrix.flavor }}.json" \
+            POMODOIST_RELEASE="$GITHUB_SHA"
       - name: Verify AppImage checksum
         run: |
+          source tool/linux/flavor.sh
+          artifact="$(pomodoist_flavor_artifact_name "${{ matrix.flavor }}")"
           cd build/flutter/linux/appimage
-          sha256sum --check Pomodoist-x86_64.AppImage.sha256
+          sha256sum --check "$artifact.sha256"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: pomodoist-linux-appimage-x86_64
+          name: ${{ matrix.flavor == 'production' && 'pomodoist-linux-appimage-x86_64' || format('pomodoist-linux-appimage-{0}-x86_64', matrix.flavor) }}
           path: |
-            build/flutter/linux/appimage/Pomodoist-x86_64.AppImage
-            build/flutter/linux/appimage/Pomodoist-x86_64.AppImage.sha256
+            build/flutter/linux/appimage/Pomodoist*-x86_64.AppImage
+            build/flutter/linux/appimage/Pomodoist*-x86_64.AppImage.sha256
           if-no-files-found: error
           retention-days: 14
       - name: Upload AppImage and publish complete desktop release
-        if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag' && matrix.flavor == 'production'
         env:
           RELEASE_NOTES_API_KEY: ${{ secrets.RELEASE_NOTES_API_KEY }}
         run: |

@@ -132,4 +132,8 @@ version_tmp=/usr/share/nginx/html/.version.json.tmp
 mv "$config_tmp" /usr/share/nginx/html/config.js
 mv "$version_tmp" /usr/share/nginx/html/version.json
 
+/usr/local/bin/pomodoist-generate-aasa \
+  "$POMODOIST_ENVIRONMENT" \
+  /usr/share/nginx/html/.well-known/apple-app-site-association
+
 exec "$@"

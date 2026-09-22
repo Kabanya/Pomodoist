@@ -1,7 +1,9 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [string]$Executable
+    [string]$Executable,
+    [ValidateSet('production', 'development', 'staging')]
+    [string]$Flavor = 'production'
 )
 
 Set-StrictMode -Version Latest
@@ -11,10 +13,21 @@ if (-not (Test-Path -LiteralPath $Executable -PathType Leaf)) {
     throw "Pomodoist executable was not found: $Executable"
 }
 $executablePath = (Resolve-Path -LiteralPath $Executable).Path
+
+# The receiver stands in for the running application's own window, so it has to
+# present the same window class and title the runner searches for. Both are
+# flavor-specific: a link that reaches another flavor's build is exactly the
+# failure this test exists to catch.
+. (Join-Path $PSScriptRoot 'flavors.ps1')
+$flavorConfig = Get-PomodoistFlavor -Flavor $Flavor
+$probeUri = "$($flavorConfig.UrlScheme)://login-callback?code=delivery-probe"
+$focusUri = "$($flavorConfig.UrlScheme)://focus"
 $started = [System.Collections.Generic.List[System.Diagnostics.Process]]::new()
 $receiver = $null
 
-Add-Type -TypeDefinition @'
+# The two identity constants are filled in from the flavor table after the
+# here-string is read, so the C# source stays free of PowerShell interpolation.
+$receiverSource = @'
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -29,8 +42,8 @@ namespace Pomodoist.Windows.Tests
         private const uint WmDestroy = 0x0002;
         private const uint WmCopyData = 0x004A;
         private const ulong AppLinkMessageId = 0x0402;
-        private const string WindowClass = "FLUTTER_RUNNER_WIN32_WINDOW";
-        private const string WindowTitle = "Pomodoist";
+        private const string WindowClass = "__POMODOIST_WINDOW_CLASS__";
+        private const string WindowTitle = "__POMODOIST_WINDOW_TITLE__";
 
         private readonly ManualResetEventSlim ready = new ManualResetEventSlim();
         private readonly ManualResetEventSlim received = new ManualResetEventSlim();
@@ -291,13 +304,19 @@ namespace Pomodoist.Windows.Tests
 }
 '@
 
+Add-Type -TypeDefinition (
+    $receiverSource.
+        Replace('__POMODOIST_WINDOW_CLASS__', $flavorConfig.WindowClass).
+        Replace('__POMODOIST_WINDOW_TITLE__', $flavorConfig.DisplayName)
+)
+
 function Wait-ForMainWindow {
     param([Parameter(Mandatory)][System.Diagnostics.Process]$Process)
 
     $deadline = [DateTime]::UtcNow.AddSeconds(30)
     do {
         if ($Process.HasExited) {
-            throw "Pomodoist exited before creating its main window ($($Process.ExitCode))."
+            throw "$($flavorConfig.DisplayName) exited before creating its main window ($($Process.ExitCode))."
         }
         $Process.Refresh()
         if ($Process.MainWindowHandle -ne [IntPtr]::Zero) {
@@ -305,11 +324,10 @@ function Wait-ForMainWindow {
         }
         Start-Sleep -Milliseconds 250
     } until ([DateTime]::UtcNow -ge $deadline)
-    throw 'Pomodoist did not create its main window within 30 seconds.'
+    throw "$($flavorConfig.DisplayName) did not create its main window within 30 seconds."
 }
 
 try {
-    $probeUri = 'pomodoist://login-callback?code=delivery-probe'
     $receiver = [Pomodoist.Windows.Tests.DeepLinkReceiver]::new()
     $receiver.Start()
     if (-not $receiver.IsDiscoverable()) {
@@ -339,7 +357,7 @@ try {
 
     $callback = Start-Process `
         -FilePath $executablePath `
-        -ArgumentList @('pomodoist://focus') `
+        -ArgumentList @($focusUri) `
         -PassThru
     $started.Add($callback)
     if (-not $callback.WaitForExit(10000)) {
@@ -349,7 +367,7 @@ try {
         throw "The deep-link process exited with code $($callback.ExitCode)."
     }
     if ($primary.HasExited) {
-        throw 'The primary Pomodoist instance exited while receiving a deep link.'
+        throw "The primary $($flavorConfig.DisplayName) instance exited while receiving a deep link."
     }
 
     Write-Output 'Windows deep-link single-instance test passed.'

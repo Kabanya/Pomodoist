@@ -55,6 +55,33 @@ for name in ("SUPABASE_ANON_KEY", "TURNSTILE_SITE_KEY"):
 if "SENTRY_DSN" not in values:
     fail("SENTRY_DSN must be present (it may be empty)")
 
+
+def flag_state(name: str) -> str:
+    """Return whether an optional boolean dart-define is unset, off or on."""
+    raw = values.get(name)
+    if raw is None:
+        return "unset"
+    normalized = raw.strip().lower()
+    if normalized in ("", "0", "false"):
+        return "off"
+    if normalized in ("1", "true"):
+        return "on"
+    fail(f"{name} must be empty, 0, 1, true or false")
+
+
+# Staging TestFlight uses the local store; production stays on the remote App
+# Store server.
+dev_unlock = flag_state("POMODOIST_DEV_UNLOCK")
+local_storekit = flag_state("POMODOIST_LOCAL_STOREKIT")
+if environment == "staging":
+    if dev_unlock == "off":
+        fail("POMODOIST_DEV_UNLOCK must not be disabled for staging")
+else:
+    if dev_unlock == "on":
+        fail("POMODOIST_DEV_UNLOCK must not be enabled for production")
+    if local_storekit == "on":
+        fail("POMODOIST_LOCAL_STOREKIT must not be enabled for production")
+
 for name, value in values.items():
     if name.startswith(("SUPABASE_SERVICE_ROLE", "SUPABASE_SECRET")):
         fail(f"{name} is forbidden in a client build")

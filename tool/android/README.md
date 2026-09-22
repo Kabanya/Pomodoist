@@ -1,11 +1,48 @@
 # Android builds and release verification
 
 Android uses the shared Flutter task, focus, account, voice and integration flows.
-The application ID and Kotlin namespace are `com.finchforge.pomodoist`. The minimum
-Android API is 24 (or Flutter's minimum, when higher); compile/target SDK and NDK
-come from the Flutter SDK pinned in `.fvmrc`. Keep that pin and `apps/flutter/pubspec.lock` in
-source control. Android Gradle Plugin 8.11.1, Kotlin 2.2.20, Java 17 and core
-library desugaring 2.1.4 are configured in `apps/flutter/android/`.
+Three flavors install side by side, each with its own application ID, launcher
+label and deep-link scheme:
+
+| Flavor | Application ID | Launcher label | URL scheme |
+| --- | --- | --- | --- |
+| `development` | `com.finchforge.pomodoist.dev` | Pomodoist Dev | `pomodoist-dev` |
+| `staging` | `com.finchforge.pomodoist.stg` | Pomodoist Stg | `pomodoist-stg` |
+| `production` | `com.finchforge.pomodoist` | Pomodoist | `pomodoist` |
+
+`apps/flutter/lib/domain/models/app_flavor.dart` declares that table. The Gradle
+flavors in `apps/flutter/android/app/build.gradle.kts` and the per-flavor
+manifests under `apps/flutter/android/app/src/<flavor>/` must match it, and
+`tool/android/test_android_release.py` fails when they drift. The Kotlin
+namespace stays `com.finchforge.pomodoist` for all three, so `.MainActivity`
+resolves identically everywhere.
+
+The launcher label reaches `android:label` through the `appLabel` manifest
+placeholder that each flavor sets in `app/build.gradle.kts`, not through a
+`@string/app_name` resource: AGP 9 disables the `resValues` build feature by
+default, so `resValue("string", "app_name", …)` fails the build with
+`Product Flavor development contains custom resource values, but the feature is
+disabled.` Do not reintroduce it.
+
+The launcher **icon** is also per flavor. Each
+`apps/flutter/android/app/src/<flavor>/res/mipmap-*/ic_launcher.png` overrides
+`src/main/res` for that flavor, so the three installs are distinguishable on the
+home screen; the production source set is byte-identical to `src/main`, which is
+the artwork an unflavored build would use.
+
+Because the Android Gradle Plugin now declares product flavors, **every** Flutter
+Android build must pass `--flavor development|staging|production`. Omitting it
+does not fail cleanly: Gradle still satisfies the aggregate `assembleDebug` task,
+so the flavored APKs are produced, and Flutter then aborts with "Gradle build
+failed to produce an .apk file" because it looked for an unflavored `app-debug.apk`.
+Flutter passes the flavor on to Dart as `FLUTTER_APP_FLAVOR`, which `AppFlavor`
+reads to keep the entry point and the platform identity in step.
+
+The minimum Android API is 24 (or Flutter's minimum, when higher); compile/target
+SDK and NDK come from the Flutter SDK pinned in `.fvmrc`. Keep that pin and
+`apps/flutter/pubspec.lock` in source control. Android Gradle Plugin 9.0.1,
+Kotlin 2.3.20, Java 17 and core library desugaring 2.1.4 are configured in
+`apps/flutter/android/`.
 
 This guide is also the release checklist for issue #50. A successful build does
 **not** certify real-device functionality or Google Play approval. Complete the
@@ -25,9 +62,12 @@ make android
 
 `make setup-flutter` generates the ignored `.env.android` profile from the
 `ANDROID__` values in `.env.setup`. `make android` uses that profile, isolates
-Gradle state under `build/android/gradle-home`, and writes the debug APK to
-`build/flutter/app/outputs/flutter-apk/app-debug.apk` on Windows, macOS, and Linux.
-Override `ANDROID_CONFIG` to build against another dotenv or JSON dart-define file.
+Gradle state under `build/android/gradle-home`, derives `--flavor` from the
+profile's entry point, and writes the debug APK to
+`build/flutter/app/outputs/flutter-apk/app-<flavor>-debug.apk` on Windows, macOS,
+and Linux — `app-development-debug.apk` for the default profile. Override
+`ANDROID_CONFIG` to build against another dotenv or JSON dart-define file, or set
+`ANDROID_FLAVOR` to force a flavor.
 
 The entry point follows the profile: `make android` reads `POMODOIST_ENVIRONMENT`
 back from the dart-define file and picks `lib/main_development.dart` for `local`,
@@ -127,22 +167,36 @@ Rebuilding the same source does not automatically allocate a new Play versionCod
 Equivalent Flutter commands, after validating config and setting signing:
 
 ```sh
-flutter build apk --release --dart-define-from-file=.env.android.json \
+flutter build apk --release --flavor production --dart-define-from-file=.env.android.json \
   --dart-define=POMODOIST_RELEASE="$(git rev-parse HEAD)"
-flutter build appbundle --release --dart-define-from-file=.env.android.json \
+flutter build appbundle --release --flavor production --dart-define-from-file=.env.android.json \
   --dart-define=POMODOIST_RELEASE="$(git rev-parse HEAD)"
-bash tool/android/verify_artifacts.sh
+bash tool/android/verify_artifacts.sh production
+```
+
+`verify_artifacts.sh` and `smoke_test.sh` take the flavor as their only argument
+and default to `production`; both reject an unknown flavor rather than guessing.
+The verifier checks the artifact against that flavor's application ID, so a
+mislabelled or cross-flavored artifact fails. Output paths are flavor-scoped:
+
+```text
+build/app/outputs/flutter-apk/app-<flavor>-release.apk
+build/app/outputs/bundle/<flavor>Release/app-<flavor>-release.aab
 ```
 
 ## GitHub Actions
 
 `Android validation` runs on pull requests and `main`, without production secrets.
 It checks packaging/configuration, Android Dart contracts, fails an unsigned
-release deliberately, then builds APK/AAB using a disposable non-debug CI key.
+release deliberately, then builds APK/AAB for **all three flavors** using a
+disposable non-debug CI key and verifies each against its own application ID.
 It installs the release APK on an API 35 x86_64 emulator and checks process launch,
-background/resume, and cold/warm native deep-link delivery. CI-only artifacts are
-explicitly labelled **NOT FOR DISTRIBUTION** and retained for three days. This
-smoke test does not validate authenticated flows, microphone hardware or layouts.
+background/resume, and cold/warm native deep-link delivery for the `development`
+flavor — the only flavor whose runtime configuration CI can satisfy without
+backend credentials; the `staging` and `production` artifacts are compile- and
+identity-checked only. CI-only artifacts are explicitly labelled **NOT FOR
+DISTRIBUTION** and retained for three days. This smoke test does not validate
+authenticated flows, microphone hardware or layouts.
 
 `Android production release` runs manually or on the same `vX.Y.Z` / `vX.Y.Z-rc.N`
 tags as desktop releases. It accepts only commits already in `main`, builds from
@@ -179,6 +233,15 @@ contacts permission or Android calendar-provider permission is added.
 
 Notifications use a monochrome drawable retained by the resource shrinker, the
 existing runtime notification-permission request, and scheduled/boot receivers.
+The notification icon is intentionally shared: `ic_notification` lives in
+`src/main/res`, and `notification_scheduler.dart` names it by constant string, so
+all three flavors would pick up a per-flavor override automatically if the
+artwork ever needed to differ. The launcher label and launcher icon are
+flavor-specific, as described above; the notification channel IDs are not.
+`focus`, `task_start` and `return_reminders` are the same strings in all three
+flavors, and no manifest declares a channel — Android scopes runtime channels to
+the installing package, so the distinct application IDs already keep the three
+installs from sharing a channel or a notification id.
 Task and focus reminders use exact timing only when **Alarms & reminders** access
 is already allowed by the user in Android settings; otherwise they use inexact
 idle-compatible scheduling. A permission revoked between check and scheduling
@@ -194,10 +257,13 @@ data is lost on uninstall unless exported beforehand.
 The `app_links` integration owns native callbacks; Flutter's built-in deep-link
 handler is disabled to avoid double consumption. Registered hosts are
 `login-callback`, `captcha-callback`, `google-calendar-connected`, `focus` and
-`purchase-success`. Existing Dart validation still rejects malformed callbacks.
-Keep `pomodoist://login-callback` and `pomodoist://captcha-callback` in the backend's
-redirect allowlist and deploy the web CAPTCHA/Calendar callback pages. Google
-Calendar uses the existing account/server integration, not the device calendar.
+`purchase-success`; each flavor manifest registers them under that flavor's own
+scheme, so a link opens exactly one installed build. Existing Dart validation
+still rejects malformed callbacks. Keep `pomodoist://login-callback` and
+`pomodoist://captcha-callback` in the production backend's redirect allowlist and
+deploy the web CAPTCHA/Calendar callback pages; add the matching `pomodoist-dev://`
+and `pomodoist-stg://` entries to the development and staging allowlists.
+Google Calendar uses the existing account/server integration, not the device calendar.
 
 ### Account entitlements, not Android StoreKit payments
 

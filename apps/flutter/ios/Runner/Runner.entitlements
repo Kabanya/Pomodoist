@@ -15,7 +15,7 @@
 	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.pomodoist</string>
+		<string>$(POMODOIST_APP_GROUP)</string>
 	</array>
 </dict>
 </plist>

@@ -6,18 +6,31 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 project_root="$(cd -- "$script_dir/../.." && pwd -P)"
 app_root="$project_root/apps/flutter"
 
-bundle="${POMODOIST_LINUX_BUNDLE:-$app_root/build/linux/x64/release/bundle}"
+# shellcheck source=tool/linux/flavor.sh
+source "$script_dir/flavor.sh"
+
+flavor="$(pomodoist_flavor_name)"
+application_id="$(pomodoist_flavor_application_id "$flavor")"
+install_name="$(pomodoist_flavor_install_name "$flavor")"
+icon_source="$(pomodoist_flavor_icon_path "$flavor" "$app_root")"
+
+bundle="${POMODOIST_LINUX_BUNDLE:-$(pomodoist_flavor_bundle_dir "$flavor" "$app_root")}"
 data_home="${XDG_DATA_HOME:-${HOME:?HOME is required}/.local/share}"
 bin_home="${XDG_BIN_HOME:-${HOME:?HOME is required}/.local/bin}"
-install_dir="${POMODOIST_INSTALL_DIR:-$data_home/pomodoist}"
+install_dir="${POMODOIST_INSTALL_DIR:-$data_home/$install_name}"
 desktop_dir="$data_home/applications"
 icon_dir="$data_home/icons/hicolor/512x512/apps"
-desktop_id='com.finchforge.pomodoist'
+desktop_id="$application_id"
 install_marker='.pomodoist-install'
 
 if [[ ! -x "$bundle/pomodoist" || ! -d "$bundle/data" || ! -d "$bundle/lib" ]]; then
   echo "Invalid Pomodoist Linux bundle: $bundle" >&2
   echo 'Build it first with: make linux-release' >&2
+  exit 66
+fi
+
+if [[ ! -f "$icon_source" ]]; then
+  echo "Flavor icon is missing: $icon_source" >&2
   exit 66
 fi
 
@@ -46,7 +59,7 @@ if [[ -e "$install_dir" ]]; then
     exit 73
   fi
   if [[ ! -f "$install_dir/$install_marker" ]] &&
-    ! { [[ "$install_dir" == "$data_home/pomodoist" ]] &&
+    ! { [[ "$install_dir" == "$data_home/$install_name" ]] &&
       [[ -x "$install_dir/pomodoist" ]] && [[ -d "$install_dir/data" ]] &&
       [[ -d "$install_dir/lib" ]]; }; then
     echo "Refusing to replace an unowned directory: $install_dir" >&2
@@ -57,8 +70,8 @@ fi
 install_parent="$(dirname -- "$install_dir")"
 mkdir -p -- "$install_parent" "$bin_home" "$desktop_dir" "$icon_dir"
 
-if [[ -e "$bin_home/pomodoist" && ! -L "$bin_home/pomodoist" ]]; then
-  echo "Refusing to replace non-symlink: $bin_home/pomodoist" >&2
+if [[ -e "$bin_home/$install_name" && ! -L "$bin_home/$install_name" ]]; then
+  echo "Refusing to replace non-symlink: $bin_home/$install_name" >&2
   exit 73
 fi
 
@@ -91,14 +104,14 @@ if [[ -n "$backup_dir" ]]; then
   find "$backup_dir" -depth -delete
 fi
 
-ln -sfn -- "$install_dir/pomodoist" "$bin_home/pomodoist"
+ln -sfn -- "$install_dir/pomodoist" "$bin_home/$install_name"
 
-escaped_exec="$(printf '%s' "$install_dir/pomodoist" | sed 's/[&|\\]/\\&/g')"
-sed "s|@EXECUTABLE@|$escaped_exec|g" \
-  "$app_root/linux/packaging/$desktop_id.desktop.in" \
+pomodoist_flavor_render_template \
+  "$flavor" "$app_root/linux/packaging/app.desktop.in" \
+  "$install_dir/pomodoist" '' '' 'pomodoist' \
   > "$desktop_dir/$desktop_id.desktop"
 chmod 644 "$desktop_dir/$desktop_id.desktop"
-install -Dm644 "$app_root/web/icons/Icon-512.png" \
+install -Dm644 "$icon_source" \
   "$icon_dir/$desktop_id.png"
 
 if command -v update-desktop-database > /dev/null 2>&1; then
@@ -106,4 +119,5 @@ if command -v update-desktop-database > /dev/null 2>&1; then
 fi
 
 printf 'Pomodoist installed to %s\n' "$install_dir"
-printf 'Launcher: %s\n' "$bin_home/pomodoist"
+printf 'Flavor: %s (%s)\n' "$flavor" "$application_id"
+printf 'Launcher: %s\n' "$bin_home/$install_name"

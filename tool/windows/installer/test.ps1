@@ -27,6 +27,14 @@ function Assert-Contains {
     }
 }
 
+function Assert-ContainsEither {
+    param([string]$Actual, [string[]]$Expected, [string]$Message)
+    foreach ($candidate in $Expected) {
+        if ($Actual.Contains($candidate)) { return }
+    }
+    throw "$Message`nExpected to contain one of: $($Expected -join ' | ')`nActual: $Actual"
+}
+
 function Assert-ThrowsContaining {
     param(
         [scriptblock]$Action,
@@ -95,6 +103,57 @@ exit /b 0
     Assert-Contains $arguments "/DSourceDir=$bundle" 'Bundle path was not passed to Inno Setup.'
     Assert-Contains $arguments "/DOutputDir=$output" 'Output path was not passed to Inno Setup.'
     Assert-Contains $arguments 'Pomodoist.iss' 'Installer source was not compiled.'
+    Assert-Contains $arguments '/DAppIdentifier=com.finchforge.pomodoist' 'Production identifier was not passed to Inno Setup.'
+    Assert-Contains $arguments '/DAppDisplayName=Pomodoist' 'Production display name was not passed to Inno Setup.'
+    Assert-Contains $arguments '/DAppUrlScheme=pomodoist' 'Production URL scheme was not passed to Inno Setup.'
+    Assert-Contains $arguments '/DAppToastGuid=8681f633-939c-46f5-84cc-18f295e4382c' 'Production toast GUID was not passed to Inno Setup.'
+    Assert-Contains $arguments '/DSetupBaseFilename=Pomodoist-Setup' 'Production setup name was not passed to Inno Setup.'
+
+    # A non-production flavor has to reach the compiler with its own identity, so
+    # the three installers can be installed side by side without overwriting each
+    # other's shortcut, protocol handler or uninstall entry.
+    $stagingInstaller = Join-Path $output 'Pomodoist-Staging-Setup.exe'
+    $env:FAKE_INNO_OUTPUT = $stagingInstaller
+    & $buildScript `
+        -BuildDirectory $bundle `
+        -OutputDirectory $output `
+        -CompilerPath $fakeCompiler `
+        -Version '1.2.3' `
+        -Flavor staging
+    Assert-True `
+        (Test-Path -LiteralPath $stagingInstaller) `
+        'Staging installer was not produced under its flavor name.'
+    $arguments = Get-Content -Raw -LiteralPath $compilerLog
+    Assert-Contains $arguments '/DAppIdentifier=com.finchforge.pomodoist.stg' 'Staging identifier was not passed to Inno Setup.'
+    Assert-Contains $arguments '/DAppUrlScheme=pomodoist-stg' 'Staging URL scheme was not passed to Inno Setup.'
+    Assert-Contains $arguments '/DAppToastGuid=b3c1d7a2-5e64-4f18-9a0b-2d7c6e1f8a34' 'Staging toast GUID was not passed to Inno Setup.'
+    Assert-Contains $arguments '/DSetupBaseFilename=Pomodoist-Staging-Setup' 'Staging setup name was not passed to Inno Setup.'
+    Assert-ContainsEither `
+        $arguments `
+        @('/DAppDisplayName=Pomodoist Stg', '/DAppDisplayName="Pomodoist Stg"') `
+        'Staging display name was not passed to Inno Setup.'
+    $stagingChecksum = "$stagingInstaller.sha256"
+    Assert-True `
+        (Test-Path -LiteralPath $stagingChecksum) `
+        'Staging checksum was not produced.'
+    Assert-Contains `
+        (Get-Content -Raw -LiteralPath $stagingChecksum) `
+        '*Pomodoist-Staging-Setup.exe' `
+        'Staging checksum does not name the staging installer.'
+    $env:FAKE_INNO_OUTPUT = Join-Path $output 'Pomodoist-Setup.exe'
+
+    # The build script refuses a target that belongs to another flavor, which is
+    # what keeps an entry point and a compile-time flavor from disagreeing. The
+    # check runs before the script touches the build directories or Flutter.
+    $windowsBuildScript = Join-Path $repoRoot 'tool\windows\build.ps1'
+    Assert-ThrowsContaining `
+        -Action { & $windowsBuildScript -Target 'lib/main_staging.dart' -Flavor development } `
+        -Expected 'belongs to the staging flavor' `
+        -Message 'A target from another flavor was accepted.'
+    Assert-ThrowsContaining `
+        -Action { & $windowsBuildScript -Target 'lib/main_unknown.dart' -Flavor development } `
+        -Expected '-Target must be one of' `
+        -Message 'An unknown target was accepted.'
 
     & $buildScript `
         -BuildDirectory $bundle `
@@ -110,6 +169,11 @@ exit /b 0
     $versionResources = Join-Path $versionRepo 'apps\flutter\windows\runner\resources'
     New-Item -ItemType Directory -Force $versionTools, $versionResources | Out-Null
     Copy-Item -LiteralPath $buildScript -Destination $versionTools
+    # The copied script dot-sources the flavor table next to the copy, so the
+    # fixture needs the real table in the position the script expects it.
+    Copy-Item `
+        -LiteralPath (Join-Path $PSScriptRoot '..\flavors.ps1') `
+        -Destination (Join-Path $versionRepo 'tool\windows\flavors.ps1')
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Pomodoist.iss') -Destination $versionTools
     Copy-Item -LiteralPath (Join-Path $repoRoot 'apps\flutter\windows\runner\resources\app_icon.ico') -Destination $versionResources
     Set-Content -LiteralPath (Join-Path $versionRepo 'apps\flutter\pubspec.yaml') -Value 'version: 1.2.3-rc.1+91'

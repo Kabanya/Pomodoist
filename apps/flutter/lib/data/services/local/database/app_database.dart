@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import 'package:pomodoist/data/services/local/database/database_directory.dart';
+import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart'
     show inboxProjectId;
 export 'package:pomodoist/domain/models/tasks/task_models.dart'
@@ -14,6 +15,15 @@ part 'app_database.g.dart';
 
 const localUserId = 'local-user';
 const localWorkspaceId = 'local-workspace';
+
+/// File name of the local database for the running flavor.
+///
+/// macOS and Windows both resolve the application documents directory to the
+/// user's shared `Documents` folder, so side-by-side installs would otherwise
+/// open the same file and corrupt each other's data. The production name stays
+/// `pomodoist` so installs that already exist keep their data.
+String get pomodoistDatabaseFileName =>
+    appFlavor.isProduction ? 'pomodoist' : 'pomodoist-${appFlavor.name}';
 
 const kanbanSettingsPrimaryId = 'kanban-settings-primary-v1';
 const kanbanStatusBacklogId = 'kanban-status-backlog-v1';
@@ -493,7 +503,7 @@ class AppDatabase extends _$AppDatabase {
     : super(
         executor ??
             driftDatabase(
-              name: 'pomodoist',
+              name: pomodoistDatabaseFileName,
               native: const DriftNativeOptions(
                 shareAcrossIsolates: true,
                 databaseDirectory: pomodoistDatabaseDirectory,

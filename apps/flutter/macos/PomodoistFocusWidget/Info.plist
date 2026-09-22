@@ -38,5 +38,9 @@
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.widgetkit-extension</string>
 	</dict>
+	<key>PomodoistAppGroup</key>
+	<string>$(POMODOIST_APP_GROUP)</string>
+	<key>PomodoistURLScheme</key>
+	<string>$(POMODOIST_URL_SCHEME)</string>
 </dict>
 </plist>

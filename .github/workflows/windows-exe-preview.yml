@@ -128,6 +128,7 @@ jobs:
         run: >-
           powershell.exe -NoProfile -ExecutionPolicy Bypass
           -File .\tool\windows\build.ps1
+          -Flavor production
           -Configuration Release
           -ConfigFile "$env:RUNNER_TEMP\windows-production.json"
           -ReleaseSha $env:GITHUB_SHA
@@ -143,12 +144,37 @@ jobs:
           $compiler = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
           powershell.exe -NoProfile -ExecutionPolicy Bypass `
             -File .\tool\windows\installer\build.ps1 `
+            -Flavor production `
             -CompilerPath $compiler
+      - name: Compile a non-production flavor with pinned compiler
+        run: |
+          # The three flavors share one installer source, and a display name with
+          # a space is the part of the parameterization the packaging test cannot
+          # exercise, so one real compile proves it end to end. The result stays
+          # in the runner temp directory and is never uploaded.
+          $compiler = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          $flavorDir = Join-Path $env:RUNNER_TEMP 'flavor-installer'
+          powershell.exe -NoProfile -ExecutionPolicy Bypass `
+            -File .\tool\windows\installer\build.ps1 `
+            -Flavor staging `
+            -BuildDirectory build\flutter\windows\x64\production\runner\Release `
+            -OutputDirectory $flavorDir `
+            -CompilerPath $compiler
+          $stagingInstaller = Join-Path $flavorDir 'Pomodoist-Staging-Setup.exe'
+          if (-not (Test-Path -LiteralPath $stagingInstaller -PathType Leaf)) {
+            throw 'The staging flavor did not produce its own installer name.'
+          }
+          $productName = (
+            [System.Diagnostics.FileVersionInfo]::GetVersionInfo($stagingInstaller)
+          ).ProductName.Trim()
+          if ($productName -cne 'Pomodoist Stg') {
+            throw "Staging installer product name was '$productName'."
+          }
       - name: Verify versions, unsigned boundary, and checksum
         run: |
           $installer = Resolve-Path build\flutter\windows\installer\Pomodoist-Setup.exe
           $installerInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($installer)
-          $appPath = (Resolve-Path build\flutter\windows\x64\runner\Release\pomodoist.exe).Path
+          $appPath = (Resolve-Path build\flutter\windows\x64\production\runner\Release\pomodoist.exe).Path
           $appInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($appPath)
           if ($installerInfo.ProductVersion.Trim() -cne $env:POMODOIST_VERSION -or
               $appInfo.ProductVersion.Split('+')[0] -cne $env:POMODOIST_VERSION) {

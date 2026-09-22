@@ -6,13 +6,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/billing/view_models/billing_view_model.dart';
 import 'package:pomodoist/ui/onboarding/widgets/onboarding_gate.dart';
 import 'package:pomodoist/ui/onboarding/view_models/onboarding_view_model.dart';
 
-const stripePurchaseFallbackUrl = 'pomodoist://purchase-success';
+/// Deep link the Stripe checkout redirects to when it returns to the app.
+String get stripePurchaseFallbackUrl =>
+    '${appFlavor.urlScheme}://purchase-success';
 
 class PurchaseSuccessScreen extends ConsumerStatefulWidget {
   const PurchaseSuccessScreen({required this.returnTo, this.source, super.key});

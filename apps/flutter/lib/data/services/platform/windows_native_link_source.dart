@@ -1,7 +1,17 @@
 import 'dart:async';
 
-import 'package:flutter/services.dart';
+// `package:flutter/services.dart` exports its own `appFlavor` (the raw
+// `FLUTTER_APP_FLAVOR` define). The domain `appFlavor` is the richer one this
+// file needs, so the Flutter constant is hidden.
+import 'package:flutter/services.dart' hide appFlavor;
 
+import 'package:pomodoist/domain/models/app_flavor.dart';
+
+/// Name of the Windows platform channel that forwards deep links.
+///
+/// Deliberately flavor-independent: the native runner registers the same
+/// channel in every build, and the flavor is decided by the URL scheme of the
+/// links it forwards.
 const windowsNativeLinksChannelName = 'pomodoist/native_links';
 
 final class WindowsNativeLinkSource {
@@ -30,7 +40,7 @@ final class WindowsNativeLinkSource {
       return null;
     }
     final uri = Uri.tryParse(call.arguments as String);
-    if (uri == null || uri.scheme != 'pomodoist') return null;
+    if (uri == null || uri.scheme != appFlavor.urlScheme) return null;
     try {
       await _beforeEmit?.call(uri);
     } on Object {
@@ -49,7 +59,7 @@ final class WindowsNativeLinkSource {
 }
 
 bool isWindowsAccountAuthCallback(Uri uri) {
-  if (uri.scheme != 'pomodoist' ||
+  if (uri.scheme != appFlavor.urlScheme ||
       uri.host != 'login-callback' ||
       (uri.path.isNotEmpty && uri.path != '/') ||
       uri.userInfo.isNotEmpty ||

@@ -93,10 +93,16 @@ SENTRY_DSN=
 
     final output = result.stdout.toString();
     expect(output, contains('check_testflight_env.py ".env.staging"'));
+    expect(output, contains('--flavor "staging"'));
+    expect(output, contains('--target "lib/main_staging.dart"'));
     expect(
       output,
       contains('--dart-define-from-file="$_repoRoot/.env.staging"'),
     );
+    expect(output, contains('--dart-define=POMODOIST_DEV_UNLOCK=1'));
+    expect(output, contains('--dart-define=POMODOIST_LOCAL_STOREKIT=1'));
+    expect(output, contains('-scheme "Staging"'));
+    expect(output, contains('-configuration "Release-Staging"'));
   });
 
   test('TestFlight builds one fully configured IPA before upload', () async {
@@ -127,6 +133,7 @@ SENTRY_DSN=
       output,
       contains('--dart-define=POMODOIST_BILLING_CHANNEL=storekit'),
     );
+    expect(output, isNot(contains('POMODOIST_LOCAL_STOREKIT')));
     expect(output, isNot(contains('GOOGLE_CLIENT_ID')));
     expect(output, isNot(contains('key-*.p8')));
     expect(output, isNot(contains('flutter" build ios')));

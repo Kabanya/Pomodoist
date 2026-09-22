@@ -161,12 +161,12 @@ assert json.loads(text) == {
     "applinks": {
         "apps": [],
         "details": [{
-            "appID": "4VK836929S.com.finchforge.pomodoist",
+            "appID": "4VK836929S.com.finchforge.pomodoist.stg",
             "paths": ["/purchase-success"],
         }],
     },
     "webcredentials": {
-        "apps": ["4VK836929S.com.finchforge.pomodoist"],
+        "apps": ["4VK836929S.com.finchforge.pomodoist.stg"],
     },
 }
 PY

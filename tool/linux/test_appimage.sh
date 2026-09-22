@@ -6,6 +6,13 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 test_root="$(mktemp -d)"
 trap 'rm -rf -- "$test_root"' EXIT
 
+# shellcheck source=tool/linux/flavor.sh
+source "$script_dir/flavor.sh"
+
+# The identity table and the rendered identifiers are checked first; they need
+# nothing but bash and sed.
+"$script_dir/test_flavor_identity.sh"
+
 bundle="$test_root/release bundle"
 appdir="$test_root/Pomodoist AppDir"
 plugin_search_root="$test_root/plugin root"
@@ -23,6 +30,12 @@ printf 'printf "gst-plugin-path=%%s\\n" "$GST_PLUGIN_SYSTEM_PATH_1_0"\n' >> "$bu
 chmod 755 "$bundle/pomodoist"
 printf 'asset\n' > "$bundle/data/example.txt"
 printf 'library\n' > "$bundle/lib/example.so"
+
+# A non-production flavor takes its icon from web/icons/<flavor>/Icon-512.png,
+# which the icon build publishes. The packaging tests must not depend on that
+# build having run, so they point POMODOIST_ICON at a stand-in.
+flavor_icon="$test_root/flavor-icon.png"
+printf 'png\n' > "$flavor_icon"
 
 gstreamer_plugins=(
   libgstaudioconvert.so
@@ -71,6 +84,48 @@ grep -Fqx 'Exec="pomodoist" %u' "$desktop_file"
 grep -Fq '<release version="1.0.0" date="2026-08-17"/>' "$metadata_file"
 desktop-file-validate "$desktop_file"
 appstreamcli validate --no-net "$metadata_file"
+
+# A non-production flavor keeps the same AppDir layout and the same binary name,
+# and only its identifying metadata changes, so the three AppImages can be
+# installed side by side.
+for flavor in development staging; do
+  application_id="$(pomodoist_flavor_application_id "$flavor")"
+  display_name="$(pomodoist_flavor_display_name "$flavor")"
+  url_scheme="$(pomodoist_flavor_url_scheme "$flavor")"
+  flavor_appdir="$test_root/$flavor AppDir"
+
+  POMODOIST_FLAVOR="$flavor" \
+  POMODOIST_LINUX_BUNDLE="$bundle" \
+  POMODOIST_APPDIR="$flavor_appdir" \
+  POMODOIST_ICON="$flavor_icon" \
+  POMODOIST_VERSION=1.0.0 \
+  POMODOIST_RELEASE_DATE=2026-08-17 \
+  POMODOIST_GSTREAMER_PLUGIN_DIR="$plugin_dir" \
+  POMODOIST_GSTREAMER_SCANNER="$scanner_dir/gst-plugin-scanner" \
+    "$script_dir/prepare_appdir.sh"
+
+  flavor_desktop="$flavor_appdir/$application_id.desktop"
+  flavor_metadata="$flavor_appdir/usr/share/metainfo/$application_id.appdata.xml"
+  test -x "$flavor_appdir/usr/lib/pomodoist/pomodoist"
+  test -L "$flavor_appdir/usr/bin/pomodoist"
+  test -f "$flavor_desktop"
+  test -f "$flavor_appdir/$application_id.png"
+  test -f "$flavor_appdir/usr/share/applications/$application_id.desktop"
+  test -f "$flavor_appdir/usr/share/icons/hicolor/512x512/apps/$application_id.png"
+  test ! -e "$flavor_appdir/com.finchforge.pomodoist.desktop"
+  test "$(cat "$flavor_appdir/usr/lib/pomodoist/data/example.txt")" = 'asset'
+  grep -Fqx "Name=$display_name" "$flavor_desktop"
+  grep -Fqx "Icon=$application_id" "$flavor_desktop"
+  grep -Fqx "StartupWMClass=$application_id" "$flavor_desktop"
+  grep -Fqx "MimeType=x-scheme-handler/$url_scheme;" "$flavor_desktop"
+  grep -Fqx 'Exec="pomodoist" %u' "$flavor_desktop"
+  grep -Fq "<id>$application_id</id>" "$flavor_metadata"
+  grep -Fq "<name>$display_name</name>" "$flavor_metadata"
+  grep -Fq "<launchable type=\"desktop-id\">$application_id.desktop</launchable>" \
+    "$flavor_metadata"
+  desktop-file-validate "$flavor_desktop"
+  appstreamcli validate --no-net "$flavor_metadata"
+done
 
 POMODOIST_LINUX_BUNDLE="$bundle" \
 POMODOIST_APPDIR="$test_root/RC.AppDir" \
@@ -140,5 +195,41 @@ test -x "$source_archive_output/Pomodoist-x86_64.AppImage"
   cd -- "$source_archive_output"
   sha256sum --check Pomodoist-x86_64.AppImage.sha256
 )
+
+# A flavored build writes the flavor's file name into the same output directory,
+# so the three AppImages sit next to each other and the published production name
+# stays untouched.
+development_output="$test_root/development archive output"
+env -u SOURCE_DATE_EPOCH \
+PATH="$fake_bin:$PATH" \
+POMODOIST_FLAVOR=development \
+POMODOIST_LINUX_BUNDLE="$bundle" \
+POMODOIST_APPIMAGE_OUTPUT_DIR="$development_output" \
+POMODOIST_ICON="$flavor_icon" \
+POMODOIST_VERSION=1.0.0 \
+POMODOIST_RELEASE_DATE=2026-08-17 \
+POMODOIST_GSTREAMER_PLUGIN_DIR="$plugin_dir" \
+POMODOIST_GSTREAMER_SCANNER="$scanner_dir/gst-plugin-scanner" \
+POMODOIST_LINUXDEPLOY="$fake_bin/linuxdeploy" \
+POMODOIST_APPIMAGETOOL="$fake_bin/appimagetool" \
+POMODOIST_APPIMAGE_RUNTIME="$test_root/runtime-x86_64" \
+  "$script_dir/build_appimage.sh"
+test -x "$development_output/Pomodoist-Dev-x86_64.AppImage"
+test ! -e "$development_output/Pomodoist-x86_64.AppImage"
+(
+  cd -- "$development_output"
+  sha256sum --check Pomodoist-Dev-x86_64.AppImage.sha256
+)
+
+# A flavor that disagrees with the bundle it is handed would name the artifact
+# after one flavor and package the other, so it is refused.
+if POMODOIST_FLAVOR=staging \
+  POMODOIST_LINUX_BUNDLE="$test_root/production bundle/linux/x64/production/release/bundle" \
+  POMODOIST_APPIMAGE_OUTPUT_DIR="$test_root/mismatch archive output" \
+  "$script_dir/build_appimage.sh" > /dev/null 2>&1; then
+  echo 'build_appimage.sh unexpectedly accepted a mismatched flavor' >&2
+  exit 1
+fi
+test ! -e "$test_root/mismatch archive output"
 
 echo 'Linux AppImage AppDir contract passed.'

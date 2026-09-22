@@ -53,6 +53,71 @@ endfunction()
 set(FLUTTER_MANAGED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/flutter")
 add_subdirectory(${FLUTTER_MANAGED_DIR})
 
+# === Build flavor ===
+#
+# `flutter build windows --flavor <name>` makes the Flutter tool write
+# `set(FLUTTER_APP_FLAVOR "<name>" PARENT_SCOPE)` into
+# flutter/ephemeral/generated_config.cmake, which the flutter/CMakeLists.txt
+# included just above. That PARENT_SCOPE write lands in this file's scope, so
+# the variable exists only *after* that add_subdirectory call and has to be read
+# here rather than in runner/CMakeLists.txt.
+#
+# A bare `flutter build windows`, a `flutter run`, and every build that predates
+# the flavors carries no flavor at all, and production is what such a build
+# compiles: the base Debug/Profile/Release configurations, the unflavored window
+# class and the build/windows/x64 output directory. The repository tooling
+# instead names the flavor on every build, production included, so its artifacts
+# land in build/windows/x64/production. Both spellings produce the same
+# application, and the installer and the updater address it by name.
+if(NOT DEFINED FLUTTER_APP_FLAVOR OR FLUTTER_APP_FLAVOR STREQUAL "")
+  set(FLUTTER_APP_FLAVOR "production")
+endif()
+string(TOLOWER "${FLUTTER_APP_FLAVOR}" FLUTTER_APP_FLAVOR)
+
+# Per-flavor identity, mirroring lib/domain/models/app_flavor.dart. That file is
+# the single source of truth; every value below has to match it cell for cell.
+set(POMODOIST_FLAVOR_NAME "${FLUTTER_APP_FLAVOR}")
+set(POMODOIST_FLAVOR_IS_DEVELOPMENT 0)
+set(POMODOIST_FLAVOR_IS_STAGING 0)
+set(POMODOIST_FLAVOR_IS_PRODUCTION 0)
+set(POMODOIST_FLAVOR_DISPLAY_NAME "Pomodoist")
+set(POMODOIST_FLAVOR_APPLICATION_ID "com.finchforge.pomodoist")
+set(POMODOIST_FLAVOR_URL_SCHEME "pomodoist")
+set(POMODOIST_FLAVOR_TOAST_GUID "8681f633-939c-46f5-84cc-18f295e4382c")
+# Production keeps Flutter's conventional window class so that tooling which
+# looks for it keeps working. The other flavors get a class of their own, so
+# that single-instance forwarding can never hand one build's command line to
+# another build running next to it.
+set(POMODOIST_FLAVOR_WINDOW_CLASS "FLUTTER_RUNNER_WIN32_WINDOW")
+
+if(POMODOIST_FLAVOR_NAME STREQUAL "development")
+  set(POMODOIST_FLAVOR_IS_DEVELOPMENT 1)
+  set(POMODOIST_FLAVOR_DISPLAY_NAME "Pomodoist Dev")
+  set(POMODOIST_FLAVOR_APPLICATION_ID "com.finchforge.pomodoist.dev")
+  set(POMODOIST_FLAVOR_URL_SCHEME "pomodoist-dev")
+  set(POMODOIST_FLAVOR_TOAST_GUID "c4d2e8b3-6f75-4029-ab1c-3e8d7f209b45")
+  set(POMODOIST_FLAVOR_WINDOW_CLASS "FLUTTER_RUNNER_WIN32_WINDOW_POMODOIST_DEV")
+elseif(POMODOIST_FLAVOR_NAME STREQUAL "staging")
+  set(POMODOIST_FLAVOR_IS_STAGING 1)
+  set(POMODOIST_FLAVOR_DISPLAY_NAME "Pomodoist Stg")
+  set(POMODOIST_FLAVOR_APPLICATION_ID "com.finchforge.pomodoist.stg")
+  set(POMODOIST_FLAVOR_URL_SCHEME "pomodoist-stg")
+  set(POMODOIST_FLAVOR_TOAST_GUID "b3c1d7a2-5e64-4f18-9a0b-2d7c6e1f8a34")
+  set(POMODOIST_FLAVOR_WINDOW_CLASS "FLUTTER_RUNNER_WIN32_WINDOW_POMODOIST_STG")
+elseif(POMODOIST_FLAVOR_NAME STREQUAL "production")
+  set(POMODOIST_FLAVOR_IS_PRODUCTION 1)
+else()
+  message(FATAL_ERROR
+    "Unknown FLUTTER_APP_FLAVOR '${FLUTTER_APP_FLAVOR}'. "
+    "Pass --flavor development, --flavor staging or --flavor production.")
+endif()
+
+# The executable keeps the name `pomodoist.exe` for every flavor. The three
+# builds are separated by their install directory, application id and window
+# class instead, and the installer, the updater and the packaging tests all
+# address the executable by name.
+set(BINARY_NAME "pomodoist")
+
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
 

@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:pomodoist/domain/models/settings/app_language.dart';
 
 enum AccountAuthOperation {
@@ -261,7 +262,7 @@ AccountAuthFailure classifyAccountAuthCode(
 
 String accountAuthRedirect(String loginRedirect, String returnTo) {
   final uri = Uri.parse(loginRedirect);
-  if (uri.scheme == 'pomodoist') {
+  if (uri.scheme == appFlavor.urlScheme) {
     // Supabase matches the redirect allowlist without the fragment, but with
     // the query. Keep navigation metadata out of the registered callback URL.
     final query = {...uri.queryParameters}..remove('returnTo');

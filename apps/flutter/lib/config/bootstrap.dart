@@ -17,12 +17,14 @@ import 'package:pomodoist/config/auth/native_account_startup.dart';
 import 'package:pomodoist/data/services/platform/native_link_coordinator.dart';
 import 'package:pomodoist/config/runtime_public_config.dart';
 import 'package:pomodoist/config/runtime_public_config_loader.dart';
+import 'package:pomodoist/config/runtime_public_config_loader_core.dart';
 import 'package:pomodoist/config/sentry_observability.dart';
 import 'package:pomodoist/data/services/platform/web_bootstrap_loader.dart';
 import 'package:pomodoist/domain/use_cases/account/pomodoist_retention.dart';
 import 'package:pomodoist/config/billing_dependencies.dart';
 import 'package:pomodoist/data/repositories/billing/billing_repository.dart';
 import 'package:pomodoist/data/services/billing/account_billing_service.dart';
+import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:pomodoist/domain/models/billing/billing_models.dart';
 import 'package:pomodoist/ui/settings/widgets/pomodoist_account_actions.dart';
 
@@ -37,11 +39,37 @@ Future<void> bootstrapPomodoist(AppEnvironment appEnvironment) async {
   );
 }
 
+/// Publishes the flavor this process runs as.
+///
+/// Off the web the entry point decides: each `main_*.dart` names exactly one
+/// [AppEnvironment] and [validateEnvironment] has already refused a build whose
+/// compile-time flavor disagrees with it.
+///
+/// On the web every environment is served by the same `lib/main.dart`, so the
+/// entry point always declares production and the deployed `config.js` is
+/// authoritative instead. The loader has already read that configuration and
+/// published the same flavor; deriving it here again keeps bootstrap the single
+/// place that guarantees the value is set before any layer is constructed.
+void publishAppFlavor({
+  required AppEnvironment appEnvironment,
+  required RuntimePublicConfig config,
+  bool isWeb = kIsWeb,
+}) {
+  setAppFlavor(
+    isWeb
+        ? appFlavorForRuntimeEnvironment(config.environment)
+        : appEnvironment.flavor,
+  );
+}
+
 Future<void> _startPomodoist(
   AppEnvironment appEnvironment,
   RuntimePublicConfig runtimeConfig,
 ) async {
   validateEnvironment(appEnvironment: appEnvironment, config: runtimeConfig);
+  // Publish the flavor before anything else is constructed so every layer
+  // built below reads the same identity.
+  publishAppFlavor(appEnvironment: appEnvironment, config: runtimeConfig);
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy();
   final nativeLinkCoordinator = createNativeLinkCoordinator();

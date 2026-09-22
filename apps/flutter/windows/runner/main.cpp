@@ -1,15 +1,23 @@
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
+#include <shobjidl_core.h>
 #include <windows.h>
 
 #include "app_links/app_links_plugin_c_api.h"
+#include "flavor_config.h"
 #include "flutter_window.h"
 #include "utils.h"
 
 namespace {
 
-bool ForwardAppLinkToRunningInstance(const wchar_t *window_title) {
-  HWND window = ::FindWindow(L"FLUTTER_RUNNER_WIN32_WINDOW", window_title);
+// Looks for a *same-flavor* window only. Production, staging and development
+// can be installed and running side by side, so matching on the title alone
+// would hand one build's deep link to whichever build happened to be running.
+// The window class is what actually separates them; the title check keeps the
+// match honest if the class is ever reused.
+bool ForwardAppLinkToRunningInstance() {
+  HWND window = ::FindWindow(POMODOIST_FLAVOR_WINDOW_CLASS_WIDE,
+                             POMODOIST_FLAVOR_DISPLAY_NAME_WIDE);
   if (window == nullptr) {
     return false;
   }
@@ -26,9 +34,15 @@ bool ForwardAppLinkToRunningInstance(const wchar_t *window_title) {
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
-  if (ForwardAppLinkToRunningInstance(L"Pomodoist")) {
+  if (ForwardAppLinkToRunningInstance()) {
     return EXIT_SUCCESS;
   }
+
+  // Give the process its flavor's identity before any UI exists, so the taskbar
+  // button and the notifications it raises are attributed to this flavor rather
+  // than to the executable path.
+  ::SetCurrentProcessExplicitAppUserModelID(
+      POMODOIST_FLAVOR_APPLICATION_ID_WIDE);
 
   // Attach to console when present (e.g., 'flutter run') or create a
   // new console when running with a debugger.
@@ -50,7 +64,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1280, 720);
-  if (!window.Create(L"Pomodoist", origin, size)) {
+  if (!window.Create(POMODOIST_FLAVOR_DISPLAY_NAME_WIDE, origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(false);

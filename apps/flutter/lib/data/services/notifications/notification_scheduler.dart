@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:pomodoist/domain/models/notifications/notification_copy.dart';
 
 import 'package:pomodoist/data/services/notifications/android_alarm_policy.dart';
@@ -51,16 +52,23 @@ class NotificationScheduler {
   static const int reengagementReminderCount = 30;
   static const String taskStartPayloadPrefix = 'task.start:';
 
-  static const InitializationSettings initializationSettings =
+  /// Platform notification initialization for the running flavor.
+  ///
+  /// A getter rather than a constant because the Windows app name, app user
+  /// model id and toast activation GUID all differ per flavor: side-by-side
+  /// installs must never activate each other's notifications.
+  static InitializationSettings get initializationSettings =>
       InitializationSettings(
-        android: AndroidInitializationSettings('ic_notification'),
-        iOS: DarwinInitializationSettings(),
-        macOS: DarwinInitializationSettings(),
-        linux: LinuxInitializationSettings(defaultActionName: 'Open Pomodoist'),
+        android: const AndroidInitializationSettings('ic_notification'),
+        iOS: const DarwinInitializationSettings(),
+        macOS: const DarwinInitializationSettings(),
+        linux: const LinuxInitializationSettings(
+          defaultActionName: 'Open Pomodoist',
+        ),
         windows: WindowsInitializationSettings(
-          appName: 'Pomodoist',
-          appUserModelId: 'com.finchforge.pomodoist',
-          guid: '8681f633-939c-46f5-84cc-18f295e4382c',
+          appName: appFlavor.displayName,
+          appUserModelId: appFlavor.applicationId,
+          guid: appFlavor.windowsToastGuid,
         ),
       );
 

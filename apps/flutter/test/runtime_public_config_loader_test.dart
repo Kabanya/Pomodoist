@@ -3,8 +3,28 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/runtime_public_config.dart';
 import 'package:pomodoist/config/runtime_public_config_loader_core.dart';
+import 'package:pomodoist/domain/models/app_flavor.dart';
 
 void main() {
+  test('maps every runtime environment onto the flavor it serves', () {
+    expect(
+      appFlavorForRuntimeEnvironment(RuntimeEnvironment.local),
+      AppFlavor.development,
+    );
+    expect(
+      appFlavorForRuntimeEnvironment(RuntimeEnvironment.staging),
+      AppFlavor.staging,
+    );
+    expect(
+      appFlavorForRuntimeEnvironment(RuntimeEnvironment.production),
+      AppFlavor.production,
+    );
+    expect(
+      appFlavorForRuntimeEnvironment(RuntimeEnvironment.selfhosted),
+      AppFlavor.production,
+    );
+  });
+
   test('parses a preloaded window config through the public model', () {
     final config = parsePreloadedRuntimePublicConfig({
       'environment': 'staging',

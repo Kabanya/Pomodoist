@@ -106,6 +106,7 @@ COPY --from=symbolicated --chown=nginx:nginx /image-release /usr/share/nginx/ima
 COPY tool/deploy/web/nginx.conf /etc/nginx/nginx.conf
 COPY tool/deploy/web/security-headers.conf.template /etc/nginx/pomodoist-security-headers.conf.template
 COPY tool/deploy/web/entrypoint.sh /usr/local/bin/pomodoist-entrypoint
+COPY tool/deploy/web/generate_aasa.sh /usr/local/bin/pomodoist-generate-aasa
 RUN chown nginx:nginx /usr/share/nginx/html
 
 USER nginx

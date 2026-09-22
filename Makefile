@@ -60,10 +60,14 @@ POMODOIST_APPIMAGE_BUILDER ?= ./tool/linux/build_appimage.sh
 # platform files carry production values.
 LOCAL_CONFIG ?= .env.local
 STAGING_CONFIG ?= .env.staging
-# TestFlight uploads production by default; TESTFLIGHT_ENV=staging uploads a
-# staging client.
+# TestFlight selects the runtime environment while both variants upload to the
+# existing production App Store Connect app.
 TESTFLIGHT_ENV    ?= production
 TESTFLIGHT_CONFIG ?= $(if $(filter staging,$(TESTFLIGHT_ENV)),$(STAGING_CONFIG),.env.testflight)
+# Staging uses the in-process test store because both TestFlight variants share
+# the production App Store identity and catalog.
+TESTFLIGHT_STAGING_DEFINES = --dart-define=POMODOIST_DEV_UNLOCK=1 --dart-define=POMODOIST_LOCAL_STOREKIT=1
+TESTFLIGHT_DEFINES ?= $(if $(filter $(FLAVOR_STAGING),$(TESTFLIGHT_FLAVOR)),$(TESTFLIGHT_STAGING_DEFINES),)
 LINUX_CONFIG   ?= .env.linux
 WINDOWS_CONFIG ?= .env.windows
 ANDROID_CONFIG ?= .env.android
@@ -74,7 +78,19 @@ ANDROID_CONFIG ?= .env.android
 LOCAL_TARGET      ?= lib/main_development.dart
 STAGING_TARGET    ?= lib/main_staging.dart
 PRODUCTION_TARGET ?= lib/main.dart
-# The entry point follows the TestFlight environment choice above.
+
+# Flutter flavor names. `--flavor` is what makes Flutter compile
+# FLUTTER_APP_FLAVOR into the build, and lib/domain/models/app_flavor.dart turns
+# that value into the display name, the bundle identifier, the URL scheme, the
+# app group and the Windows toast GUID. A run or build that omits the option
+# silently ships the production identity, so every target below passes the
+# flavor of its entry point, and an unknown entry point is rejected instead of
+# falling back to production.
+FLAVOR_DEVELOPMENT := development
+FLAVOR_STAGING     := staging
+FLAVOR_PRODUCTION  := production
+# Maps an entry point ($1) to the flavor it must be built with.
+flavor_of = $(if $(filter $1,$(LOCAL_TARGET)),$(FLAVOR_DEVELOPMENT),$(if $(filter $1,$(STAGING_TARGET)),$(FLAVOR_STAGING),$(if $(filter $1,$(PRODUCTION_TARGET)),$(FLAVOR_PRODUCTION),$(error no flavor for entry point '$1'; use $(LOCAL_TARGET), $(STAGING_TARGET) or $(PRODUCTION_TARGET)))))
 TESTFLIGHT_TARGET ?= $(if $(filter staging,$(TESTFLIGHT_ENV)),$(STAGING_TARGET),$(PRODUCTION_TARGET))
 # make android builds the debug APK described in tool/android/README.md. Its
 # entry point is read back from the dart-define file so the pair cannot drift:
@@ -84,12 +100,16 @@ TESTFLIGHT_TARGET ?= $(if $(filter staging,$(TESTFLIGHT_ENV)),$(STAGING_TARGET),
 # to force an entry point.
 ANDROID_ENVIRONMENT ?= $(shell "$(DART)" tool/env_setup.dart value --env "$(call repo_path,$(ANDROID_CONFIG))" --key POMODOIST_ENVIRONMENT 2>/dev/null)
 ANDROID_TARGET ?= $(if $(filter local,$(ANDROID_ENVIRONMENT)),$(LOCAL_TARGET),$(if $(filter staging,$(ANDROID_ENVIRONMENT)),$(STAGING_TARGET),$(PRODUCTION_TARGET)))
+ANDROID_FLAVOR ?= $(call flavor_of,$(ANDROID_TARGET))
 
-# Build output locations
+# Build output locations. Flutter inserts the flavor into the Windows and Linux
+# output directories, so both paths carry the flavor segment. Xcode names the
+# exported .ipa and .pkg after the selected variant's display name.
 ANDROID_GRADLE_HOME ?= $(abspath build/android/gradle-home)
 IOS_EXPORT_OPTIONS ?= $(FLUTTER_ROOT)/ios/ExportOptions.plist
-IOS_IPA_PATH ?= $(FLUTTER_BUILD)/ios/ipa/Pomodoist.ipa
-WINDOWS_RELEASE_DIR ?= $(FLUTTER_BUILD)/windows/x64/runner/Release
+IOS_IPA_PATH ?= $(FLUTTER_BUILD)/ios/ipa/$(TESTFLIGHT_PRODUCT_NAME).ipa
+WINDOWS_RELEASE_DIR ?= $(FLUTTER_BUILD)/windows/x64/$(WINDOWS_RELEASE_FLAVOR)/runner/Release
+LINUX_BUNDLE_DIR ?= $(FLUTTER_BUILD)/linux/x64/$(LINUX_RELEASE_FLAVOR)/release/bundle
 
 # Desktop builds use <PLATFORM>_<MODE>_CONFIG. Debug targets default to
 # staging; profile and release targets keep their platform configuration.
@@ -116,6 +136,23 @@ WINDOWS_DEBUG_TARGET   ?= $(STAGING_TARGET)
 WINDOWS_PROFILE_TARGET ?= $(PRODUCTION_TARGET)
 WINDOWS_RELEASE_TARGET ?= $(PRODUCTION_TARGET)
 
+# Each flavor is read back from its entry point, so moving a
+# <PLATFORM>_<MODE>_TARGET moves the flavor with it and the app keeps one
+# identity. Overriding a flavor on its own builds an identity the entry point
+# does not declare, which the app rejects at startup.
+LOCAL_FLAVOR           ?= $(call flavor_of,$(LOCAL_TARGET))
+TESTFLIGHT_FLAVOR      ?= $(call flavor_of,$(TESTFLIGHT_TARGET))
+MACOS_DEBUG_FLAVOR     ?= $(call flavor_of,$(MACOS_DEBUG_TARGET))
+MACOS_PROFILE_FLAVOR   ?= $(call flavor_of,$(MACOS_PROFILE_TARGET))
+MACOS_RELEASE_FLAVOR   ?= $(call flavor_of,$(MACOS_RELEASE_TARGET))
+LINUX_DEBUG_FLAVOR     ?= $(call flavor_of,$(LINUX_DEBUG_TARGET))
+LINUX_PROFILE_FLAVOR   ?= $(call flavor_of,$(LINUX_PROFILE_TARGET))
+LINUX_RELEASE_FLAVOR   ?= $(call flavor_of,$(LINUX_RELEASE_TARGET))
+WINDOWS_DEBUG_FLAVOR   ?= $(call flavor_of,$(WINDOWS_DEBUG_TARGET))
+WINDOWS_PROFILE_FLAVOR ?= $(call flavor_of,$(WINDOWS_PROFILE_TARGET))
+WINDOWS_RELEASE_FLAVOR ?= $(call flavor_of,$(WINDOWS_RELEASE_TARGET))
+TESTFLIGHT_PRODUCT_NAME ?= $(if $(filter $(FLAVOR_STAGING),$(TESTFLIGHT_FLAVOR)),Pomodoist Stg,Pomodoist)
+
 # TestFlight credentials stay in the private env and are never Dart defines.
 PRIVATE_CONFIG ?= .env.private
 ASC_KEY_ID     ?= $(shell "$(DART)" tool/env_setup.dart value --env "$(PRIVATE_CONFIG)" --key ASC_KEY_ID 2>/dev/null)
@@ -131,12 +168,12 @@ COMPANION_RELEASE_CONFIG ?= $(TESTFLIGHT_CONFIG)
 .PHONY: setup setup-env setup-flutter setup-linux run run-linux web
 .PHONY: setup-telegram telegram-configure
 .PHONY: telegram-debug telegram-release chrome-debug chrome-release
-.PHONY: architecture analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-packaging check format
+.PHONY: architecture analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-flavor-identity test-linux-packaging check format app-icons app-icons-check
 .PHONY: android web-debug web-profile web-release
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
 .PHONY: windows-debug windows-profile windows-release windows-installer
 .PHONY: macos macos-debug macos-run macos-profile macos-release macos-reset
-.PHONY: ios-debug ios-profile ipad-debug ipad-profile watch-debug watch-profile testflight-preflight testflight-auth testflight-ios testflight-macos testflight
+.PHONY: ios-debug ios-profile ipad-debug ipad-profile watch-debug watch-profile ios-flavor-settings testflight-preflight testflight-auth testflight-ios testflight-macos testflight
 .PHONY: deploy-staging deploy-production deploy-all deploy-telegram-staging deploy-telegram-production
 .PHONY: help devices clean
 
@@ -170,9 +207,10 @@ help:
 	printf '\n%s%sQuality%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make analyze' "$${reset}" 'Analyze Dart code'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make test' "$${reset}" 'Run Flutter tests'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make test-linux-packaging' "$${reset}" 'Test Linux installers and AppImage layout'; \
-	printf '  %s%-26s%s %s\n' "$${bold}" 'make check' "$${reset}" 'Run analysis and tests'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make test-linux-packaging' "$${reset}" 'Test Linux installers, AppImage layout and flavor identity'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make check' "$${reset}" 'Run analysis, tests and icon checks'; \
 	printf '  %s%-26s%s %s\n' "$${bold}" 'make format' "$${reset}" 'Format source files'; \
+	printf '  %s%-26s%s %s\n' "$${bold}" 'make app-icons' "$${reset}" 'Regenerate app icons from the master PNGs'; \
 	printf '\n%s%sRelease & distribution%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-9s %-26s %s%s\n' "$${dim}" 'Platform' 'Command' 'Action' "$${reset}"; \
 	printf '  %s%-9s%s %s%-26s%s %s\n' "$${dim}" 'Android' "$${reset}" "$${bold}" 'make android' "$${reset}" 'Debug APK'; \
@@ -255,11 +293,13 @@ chrome-release:
 	node tool/web-companions.mjs chrome release --config "$(COMPANION_RELEASE_CONFIG)"
 
 run: flutter-build-link
-	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run --flavor "$(LOCAL_FLAVOR)" --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 run-linux: flutter-build-link
-	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d linux --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d linux --flavor "$(LOCAL_FLAVOR)" --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
+# Web picks its environment from config.js at runtime and Flutter ignores
+# --flavor on this platform, so the web targets pass only the entry point.
 web: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d chrome --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
 
@@ -279,7 +319,10 @@ test-linux-appimage:
 test-linux-build-network:
 	./tool/linux/test_make_build.sh
 
-test-linux-packaging: test-linux-installer test-linux-appimage test-linux-build-network
+test-linux-flavor-identity:
+	./tool/linux/test_flavor_identity.sh
+
+test-linux-packaging: test-linux-installer test-linux-appimage test-linux-build-network test-linux-flavor-identity
 
 test-xcode-warnings:
 	sh tool/test_xcode_warnings.sh
@@ -289,13 +332,21 @@ architecture: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" pub get
 	cd "$(FLUTTER_ROOT)" && "$(DART)" run tool/check_architecture_types.dart
 
-check: architecture analyze test
+check: architecture analyze test app-icons-check
 
 format:
 	"$(DART)" format apps/flutter/lib apps/flutter/test apps/flutter/tool tool
 
+# Regenerate the platform icons from the master PNGs; --check verifies the
+# committed icons still match the sources without writing them.
+app-icons:
+	cd "$(FLUTTER_ROOT)" && "$(DART)" run tool/generate_app_icons.dart
+
+app-icons-check:
+	cd "$(FLUTTER_ROOT)" && "$(DART)" run tool/generate_app_icons.dart --check
+
 android: flutter-build-link
-	cd "$(FLUTTER_ROOT)" && GRADLE_USER_HOME="$(call repo_path,$(ANDROID_GRADLE_HOME))" "$(FLUTTER)" build apk --debug --target "$(ANDROID_TARGET)" --dart-define-from-file="$(call repo_path,$(ANDROID_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=storekit
+	cd "$(FLUTTER_ROOT)" && GRADLE_USER_HOME="$(call repo_path,$(ANDROID_GRADLE_HOME))" "$(FLUTTER)" build apk --debug --flavor "$(ANDROID_FLAVOR)" --target "$(ANDROID_TARGET)" --dart-define-from-file="$(call repo_path,$(ANDROID_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=storekit
 
 web-debug: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build web --debug --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=stripe
@@ -310,35 +361,48 @@ linux-pub-get: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) bash "$(REPO_ROOT)/tool/linux/pub_get_with_retry.sh" "$(FLUTTER)"
 
 linux-debug: linux-pub-get
-	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) "$(FLUTTER)" build linux --debug --target "$(LINUX_DEBUG_TARGET)" --dart-define-from-file="$(call repo_path,$(LINUX_DEBUG_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) "$(FLUTTER)" build linux --debug --flavor "$(LINUX_DEBUG_FLAVOR)" --target "$(LINUX_DEBUG_TARGET)" --dart-define-from-file="$(call repo_path,$(LINUX_DEBUG_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 linux-profile: linux-pub-get
-	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) "$(FLUTTER)" build linux --profile --target "$(LINUX_PROFILE_TARGET)" --dart-define-from-file="$(call repo_path,$(LINUX_PROFILE_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) "$(FLUTTER)" build linux --profile --flavor "$(LINUX_PROFILE_FLAVOR)" --target "$(LINUX_PROFILE_TARGET)" --dart-define-from-file="$(call repo_path,$(LINUX_PROFILE_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
 
 linux-release: linux-pub-get
 	$(LINUX_BUILD_ENV) "$(DART)" tool/desktop_release_config.dart --config "$(LINUX_RELEASE_CONFIG)"
-	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) "$(FLUTTER)" build linux --release --target "$(LINUX_RELEASE_TARGET)" --dart-define-from-file="$(call repo_path,$(LINUX_RELEASE_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
+	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) "$(FLUTTER)" build linux --release --flavor "$(LINUX_RELEASE_FLAVOR)" --target "$(LINUX_RELEASE_TARGET)" --dart-define-from-file="$(call repo_path,$(LINUX_RELEASE_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
 
+# Point the packaging scripts at the bundle linux-release just built. The path
+# carries the flavor segment, which is how the scripts pick the identity they
+# package.
 linux-appimage: linux-release
-	$(LINUX_BUILD_ENV) $(POMODOIST_APPIMAGE_BUILDER)
+	$(LINUX_BUILD_ENV) POMODOIST_LINUX_BUNDLE="$(LINUX_BUNDLE_DIR)" $(POMODOIST_APPIMAGE_BUILDER)
 
 linux-install: linux-release
-	./tool/linux/install.sh
+	POMODOIST_LINUX_BUNDLE="$(LINUX_BUNDLE_DIR)" ./tool/linux/install.sh
 
+# build.ps1 forwards -Flavor to `flutter build windows`; without it Flutter
+# compiles the production identity into the executable.
 windows-debug:
-	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Debug -ConfigFile "$(WINDOWS_DEBUG_CONFIG)" -Target "$(WINDOWS_DEBUG_TARGET)"
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Debug -Flavor "$(WINDOWS_DEBUG_FLAVOR)" -ConfigFile "$(WINDOWS_DEBUG_CONFIG)" -Target "$(WINDOWS_DEBUG_TARGET)"
 
 windows-profile:
-	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Profile -ConfigFile "$(WINDOWS_PROFILE_CONFIG)" -Target "$(WINDOWS_PROFILE_TARGET)"
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Profile -Flavor "$(WINDOWS_PROFILE_FLAVOR)" -ConfigFile "$(WINDOWS_PROFILE_CONFIG)" -Target "$(WINDOWS_PROFILE_TARGET)"
 
 windows-release:
-	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Release -Clean -ConfigFile "$(WINDOWS_RELEASE_CONFIG)" -Target "$(WINDOWS_RELEASE_TARGET)" -ReleaseSha "$(POMODOIST_RELEASE)"
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/build.ps1 -Configuration Release -Clean -Flavor "$(WINDOWS_RELEASE_FLAVOR)" -ConfigFile "$(WINDOWS_RELEASE_CONFIG)" -Target "$(WINDOWS_RELEASE_TARGET)" -ReleaseSha "$(POMODOIST_RELEASE)"
 
 windows-installer: windows-release
-	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/installer/build.ps1 -BuildDirectory "$(WINDOWS_RELEASE_DIR)"
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/installer/build.ps1 -Flavor "$(WINDOWS_RELEASE_FLAVOR)" -BuildDirectory "$(WINDOWS_RELEASE_DIR)"
 
 macos-debug macos-run macos-profile: POMODOIST_BILLING_CHANNEL = storekit
 macos-debug macos-run macos-profile: flutter-build-link
+
+# `flutter build macos` drives xcodebuild without -allowProvisioningUpdates, so
+# Xcode can neither find nor create a profile for a flavor whose App IDs are not
+# on the account yet. Only the flags below reach xcodebuild (Flutter turns
+# environment variables into build settings); CODE_SIGN_IDENTITY=- alone leaves
+# the profile requirement in place. The supported way to build a local flavor is
+# FLUTTER_XCODE_CODE_SIGNING_ALLOWED=NO, which builds without signing at all.
+MACOS_LOCAL_SIGNING_FLAGS ?=
 
 # `make macos` is the usual entry point; it builds the debug app.
 macos: macos-debug
@@ -347,31 +411,38 @@ macos: macos-debug
 # drown out the build result; the filter drops them while keeping real errors.
 macos-debug:
 	set -o pipefail; cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --debug \
+		--flavor "$(MACOS_DEBUG_FLAVOR)" \
 		--target "$(MACOS_DEBUG_TARGET)" \
 		--dart-define-from-file="$(call repo_path,$(MACOS_DEBUG_CONFIG))" \
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
-		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)" 2>&1 \
+		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)" \
+		$(MACOS_LOCAL_SIGNING_FLAGS) 2>&1 \
 		| awk -f "$(REPO_ROOT)/tool/xcode-warnings.awk"
 
 macos-profile:
 	set -o pipefail; cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --profile \
+		--flavor "$(MACOS_PROFILE_FLAVOR)" \
 		--target "$(MACOS_PROFILE_TARGET)" \
 		--dart-define-from-file="$(call repo_path,$(MACOS_PROFILE_CONFIG))" \
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
-		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)" 2>&1 \
+		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)" \
+		$(MACOS_LOCAL_SIGNING_FLAGS) 2>&1 \
 		| awk -f "$(REPO_ROOT)/tool/xcode-warnings.awk"
 
 # Interactive debug run with hot reload. Output is left unfiltered so the
 # "Flutter run key commands" stay usable.
 macos-run:
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d macos --debug \
+		--flavor "$(MACOS_DEBUG_FLAVOR)" \
 		--target "$(MACOS_DEBUG_TARGET)" \
 		--dart-define-from-file="$(call repo_path,$(MACOS_DEBUG_CONFIG))" \
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
-		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+		--dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)" \
+		$(MACOS_LOCAL_SIGNING_FLAGS)
 
 macos-release: testflight-preflight flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --release \
+		--flavor "$(MACOS_RELEASE_FLAVOR)" \
 		--target "$(MACOS_RELEASE_TARGET)" \
 		--dart-define-from-file="$(call repo_path,$(MACOS_RELEASE_CONFIG))" \
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
@@ -408,8 +479,32 @@ ipad-debug ipad-profile: RUN_SIMULATOR = $(IPAD_SIMULATOR)
 ios-debug ios-profile ipad-debug ipad-profile: flutter-build-link
 	xcrun simctl bootstatus "$(RUN_SIMULATOR)" -b
 	open -a Simulator
-	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d "$(RUN_SIMULATOR)" --debug --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=storekit
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d "$(RUN_SIMULATOR)" --debug --flavor "$(LOCAL_FLAVOR)" --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=storekit
 
+# The flavor identity of the Xcode project, as a scheme name and as target
+# settings. The Xcode project is the only place the iOS flavor identity is
+# declared, and `apps/flutter/test/ios_flavor_configuration_test.dart` reads it
+# directly; this target is how you cross-check that file against what Xcode
+# resolves. Flutter lowercases `--flavor` into the Xcode scheme name, so
+# `Debug-Development` is what `flutter run --flavor development` builds, and a
+# scheme carries exactly one configuration.
+.flavor_scheme = $(shell printf '%s' '$(1)' | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}')
+.flavor_configuration = $(if $(filter production,$(1)),Debug,$(if $(filter staging,$(1)),Debug-Staging,Debug-Development))
+flavor_scheme = $(call .flavor_scheme,$(1))
+flavor_configuration = $(call .flavor_configuration,$(1))
+
+ios-flavor-settings:
+	@xcrun simctl bootstatus "$(IOS_SIMULATOR)" -b >/dev/null 2>&1 || true
+	xcrun simctl bootstatus "$(IOS_SIMULATOR)" -b
+	xcodebuild -project "$(FLUTTER_ROOT)/ios/Runner.xcodeproj" -target Runner -configuration "$(call flavor_configuration,$(STAGING_FLAVOR))" -sdk iphonesimulator -showBuildSettings | grep -E '^ +(PRODUCT_BUNDLE_IDENTIFIER|PRODUCT_NAME|INFOPLIST_FILE|POMODOIST_APP_GROUP|POMODOIST_URL_SCHEME|POMODOIST_DISPLAY_NAME|ASSETCATALOG_COMPILER_APPICON_NAME|CODE_SIGN_ENTITLEMENTS) ='
+	xcrun simctl bootstatus "$(WATCH_SIMULATOR)" -b >/dev/null 2>&1 || true
+	xcodebuild -project "$(FLUTTER_ROOT)/ios/Runner.xcodeproj" -target Runner -configuration "$(call flavor_configuration,$(LOCAL_FLAVOR))" -sdk iphonesimulator -showBuildSettings | grep -E '^ +(PRODUCT_BUNDLE_IDENTIFIER|PRODUCT_NAME|INFOPLIST_FILE|POMODOIST_APP_GROUP|POMODOIST_URL_SCHEME|POMODOIST_DISPLAY_NAME|ASSETCATALOG_COMPILER_APPICON_NAME|CODE_SIGN_ENTITLEMENTS) ='
+	xcodebuild -project "$(FLUTTER_ROOT)/ios/Runner.xcodeproj" -target PomodoistWatch -configuration "$(call flavor_configuration,$(LOCAL_FLAVOR))" -sdk watchsimulator -showBuildSettings | grep -E '^ +(PRODUCT_BUNDLE_IDENTIFIER|PRODUCT_NAME|TARGET_NAME|ASSETCATALOG_COMPILER_APPICON_NAME|CODE_SIGN_ENTITLEMENTS) ='
+	xcodebuild -project "$(FLUTTER_ROOT)/ios/Runner.xcodeproj" -target RunnerTests -configuration "$(call flavor_configuration,$(LOCAL_FLAVOR))" -sdk iphonesimulator -showBuildSettings | grep -E '^ +(PRODUCT_BUNDLE_IDENTIFIER|TEST_HOST|BUNDLE_LOADER) ='
+
+# The watch app is built straight from the Xcode project, which takes no
+# flavor, so it keeps the base Debug/Profile configurations and the production
+# watch bundle identifier.
 watch-debug: WATCH_CONFIGURATION = Debug
 watch-profile: WATCH_CONFIGURATION = Profile
 watch-debug watch-profile:
@@ -454,11 +549,12 @@ testflight-ios: testflight-preflight testflight-auth flutter-build-link
 		key_path="$$key_dir/AuthKey_$(ASC_KEY_ID).p8"; \
 		"$(DART)" tool/env_setup.dart write-asc-key --env "$(PRIVATE_CONFIG)" --output "$$key_path"; \
 		(cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build ipa --release \
+			--flavor "$(TESTFLIGHT_FLAVOR)" \
 			--target "$(TESTFLIGHT_TARGET)" \
 			--export-options-plist="$(call repo_path,$(IOS_EXPORT_OPTIONS))" \
 			--dart-define-from-file="$(call repo_path,$(TESTFLIGHT_CONFIG))" \
 			--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
-			--dart-define=POMODOIST_BILLING_CHANNEL=storekit); \
+			--dart-define=POMODOIST_BILLING_CHANNEL=storekit $(TESTFLIGHT_DEFINES)); \
 		test -f "$(IOS_IPA_PATH)" || (echo "Missing $(IOS_IPA_PATH)" >&2; exit 1); \
 		xcrun altool --validate-app "$(IOS_IPA_PATH)" \
 			--api-key "$(ASC_KEY_ID)" \
@@ -469,12 +565,15 @@ testflight-ios: testflight-preflight testflight-auth flutter-build-link
 			--api-issuer "$(ASC_ISSUER_ID)" \
 			--p8-file-path "$$key_path"
 
-MACOS_ARCHIVE_PATH = $(abspath build/TestFlight/Pomodoist-macOS.xcarchive)
-MACOS_EXPORT_PATH = $(abspath build/TestFlight/macos)
-MACOS_PACKAGE_PATH = $(MACOS_EXPORT_PATH)/Pomodoist.pkg
+MACOS_ARTIFACT_SUFFIX = $(if $(filter $(FLAVOR_PRODUCTION),$(TESTFLIGHT_FLAVOR)),,-$(TESTFLIGHT_FLAVOR))
+MACOS_ARCHIVE_PATH = $(abspath build/TestFlight/Pomodoist-macOS$(MACOS_ARTIFACT_SUFFIX).xcarchive)
+MACOS_EXPORT_PATH = $(abspath build/TestFlight/macos$(MACOS_ARTIFACT_SUFFIX))
+MACOS_PACKAGE_PATH = $(MACOS_EXPORT_PATH)/$(TESTFLIGHT_PRODUCT_NAME).pkg
 # Keep Xcode's archive intermediates under build/ instead of the global
 # ~/Library/Developer/Xcode/DerivedData.
 MACOS_DERIVED_DATA = $(abspath build/TestFlight/derived-data)
+TESTFLIGHT_MACOS_SCHEME ?= $(if $(filter $(FLAVOR_STAGING),$(TESTFLIGHT_FLAVOR)),Staging,Runner)
+TESTFLIGHT_MACOS_CONFIGURATION ?= $(if $(filter $(FLAVOR_STAGING),$(TESTFLIGHT_FLAVOR)),Release-Staging,Release)
 
 testflight-macos: testflight-preflight testflight-auth flutter-build-link
 	@set -eu; \
@@ -483,13 +582,14 @@ testflight-macos: testflight-preflight testflight-auth flutter-build-link
 		key_path="$$key_dir/AuthKey_$(ASC_KEY_ID).p8"; \
 		"$(DART)" tool/env_setup.dart write-asc-key --env "$(PRIVATE_CONFIG)" --output "$$key_path"; \
 		(cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --release \
+			--flavor "$(TESTFLIGHT_FLAVOR)" \
 			--target "$(TESTFLIGHT_TARGET)" \
 			--dart-define-from-file="$(call repo_path,$(TESTFLIGHT_CONFIG))" \
 			--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
-			--dart-define=POMODOIST_BILLING_CHANNEL=storekit); \
+			--dart-define=POMODOIST_BILLING_CHANNEL=storekit $(TESTFLIGHT_DEFINES)); \
 		rm -rf "$(MACOS_ARCHIVE_PATH)" "$(MACOS_EXPORT_PATH)"; \
-		xcodebuild -workspace "$(FLUTTER_ROOT)/macos/Runner.xcworkspace" -scheme Runner \
-			-configuration Release -archivePath "$(MACOS_ARCHIVE_PATH)" archive \
+		xcodebuild -workspace "$(FLUTTER_ROOT)/macos/Runner.xcworkspace" -scheme "$(TESTFLIGHT_MACOS_SCHEME)" \
+			-configuration "$(TESTFLIGHT_MACOS_CONFIGURATION)" -archivePath "$(MACOS_ARCHIVE_PATH)" archive \
 			-derivedDataPath "$(MACOS_DERIVED_DATA)" \
 			-hideShellScriptEnvironment \
 			-allowProvisioningUpdates \

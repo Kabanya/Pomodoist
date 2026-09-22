@@ -1,0 +1,19 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Registered for this flavor only: another installed build must never
+         receive these callbacks. ${urlScheme} is set by this flavor in
+         app/build.gradle.kts, which mirrors AppFlavor.urlScheme. -->
+    <application>
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="${urlScheme}" android:host="login-callback" />
+                <data android:scheme="${urlScheme}" android:host="captcha-callback" />
+                <data android:scheme="${urlScheme}" android:host="google-calendar-connected" />
+                <data android:scheme="${urlScheme}" android:host="focus" />
+                <data android:scheme="${urlScheme}" android:host="purchase-success" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

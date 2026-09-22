@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/runtime_public_config.dart';
 import 'package:pomodoist/config/sentry_observability.dart';
+import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 void main() {
@@ -252,6 +253,35 @@ void main() {
       );
       expect(filterCaptchaChallengeEvent(event, Hint()), isNull);
       expect(filterCaptchaChallengeBreadcrumb(breadcrumb, Hint()), isNull);
+    });
+
+    test('filters native callbacks of the running flavor only', () {
+      addTearDown(
+        () => setAppFlavor(buildTimeAppFlavor ?? AppFlavor.production),
+      );
+
+      for (final flavor in AppFlavor.values) {
+        setAppFlavor(flavor);
+        expect(
+          containsCaptchaChallengeMetadata(
+            '${flavor.urlScheme}://captcha-callback'
+            '?state=${'A' * 43}&token=TOKEN_SECRET',
+          ),
+          isTrue,
+          reason: flavor.name,
+        );
+
+        for (final other in AppFlavor.values) {
+          if (other == flavor) continue;
+          expect(
+            containsCaptchaChallengeMetadata(
+              '${other.urlScheme}://captcha-callback?state=X&token=Y',
+            ),
+            isFalse,
+            reason: '${flavor.name} filtered a ${other.name} callback',
+          );
+        }
+      }
     });
 
     test('preserves unrelated Sentry events and breadcrumbs', () {

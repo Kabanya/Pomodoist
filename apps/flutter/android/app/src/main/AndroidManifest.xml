@@ -8,7 +8,7 @@
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
     <application
-        android:label="Pomodoist"
+        android:label="${appLabel}"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
@@ -32,16 +32,6 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="pomodoist" android:host="login-callback" />
-                <data android:scheme="pomodoist" android:host="captcha-callback" />
-                <data android:scheme="pomodoist" android:host="google-calendar-connected" />
-                <data android:scheme="pomodoist" android:host="focus" />
-                <data android:scheme="pomodoist" android:host="purchase-success" />
             </intent-filter>
         </activity>
         <receiver

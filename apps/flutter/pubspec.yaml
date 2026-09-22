@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.6+107
+version: 1.1.0+108
 
 environment:
   sdk: ^3.11.5
@@ -105,6 +105,10 @@ dev_dependencies:
   # Resolved semantic architecture checker (tool/check_architecture_types.dart).
   # Pinned to the analyzer already in pubspec.lock; do not upgrade in isolation.
   analyzer: 10.0.1
+  # Renders every platform app icon from the three master PNGs
+  # (tool/generate_app_icons.dart). Pure Dart, so the generator runs with plain
+  # `dart run`; it is never invoked by a normal build.
+  image: ^4.8.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

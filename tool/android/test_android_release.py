@@ -1,6 +1,7 @@
 """Executable Android packaging contracts; no Flutter or third-party modules needed."""
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -9,6 +10,23 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
 ANDROID = '{http://schemas.android.com/apk/res/android}'
+FLAVOR_MANIFESTS = {
+    'development': 'apps/flutter/android/app/src/development/AndroidManifest.xml',
+    'staging': 'apps/flutter/android/app/src/staging/AndroidManifest.xml',
+    'production': 'apps/flutter/android/app/src/production/AndroidManifest.xml',
+}
+FLAVOR_GETTERS = ('displayName', 'applicationId', 'urlScheme')
+CALLBACK_HOSTS = {'login-callback', 'captcha-callback', 'google-calendar-connected', 'focus', 'purchase-success'}
+
+
+def dart_flavor_table():
+    """Read the flavor identity table out of the Dart enum that declares it."""
+    text = (ROOT / 'apps/flutter/lib/domain/models/app_flavor.dart').read_text()
+    table = {}
+    for getter in FLAVOR_GETTERS:
+        block = text.split(f'get {getter}')[1].split('};')[0]
+        table[getter] = dict(re.findall(r"AppFlavor\.(\w+) => '([^']+)'", block))
+    return table
 
 
 class AndroidManifestTests(unittest.TestCase):
@@ -23,10 +41,24 @@ class AndroidManifestTests(unittest.TestCase):
         self.assertNotIn('android.permission.MANAGE_EXTERNAL_STORAGE', permissions)
 
     def test_all_native_callback_hosts_are_registered(self):
-        hosts = {item.get(ANDROID + 'host') for item in self.manifest.findall('application/activity/intent-filter/data')}
-        self.assertTrue({'login-callback', 'captcha-callback', 'google-calendar-connected', 'focus', 'purchase-success'} <= hosts)
         metadata = {item.get(ANDROID + 'name'): item.get(ANDROID + 'value') for item in self.manifest.findall('application/activity/meta-data')}
         self.assertEqual(metadata.get('flutter_deeplinking_enabled'), 'false')
+
+    def test_shared_manifest_registers_no_deep_link_scheme(self):
+        # Every scheme lives in a flavor manifest. A scheme in the shared
+        # manifest would register all three flavors for the same links.
+        data = self.manifest.findall('application/activity/intent-filter/data')
+        self.assertEqual([item.get(ANDROID + 'scheme') for item in data], [None] * len(data))
+
+    def test_each_flavor_registers_the_callback_hosts_under_its_own_scheme(self):
+        for flavor, relative in FLAVOR_MANIFESTS.items():
+            with self.subTest(flavor=flavor):
+                manifest = ET.parse(ROOT / relative).getroot()
+                data = manifest.findall('application/activity/intent-filter/data')
+                self.assertEqual({item.get(ANDROID + 'host') for item in data}, CALLBACK_HOSTS)
+                # The scheme is the flavor's manifestPlaceholder, which
+                # test_flavors_match_the_dart_flavor_table pins to AppFlavor.
+                self.assertEqual({item.get(ANDROID + 'scheme') for item in data}, {'${urlScheme}'})
 
     def test_reminders_survive_reboot_and_app_update(self):
         receivers = {item.get(ANDROID + 'name'): item for item in self.manifest.findall('application/receiver')}
@@ -75,6 +107,25 @@ class AndroidGradleTests(unittest.TestCase):
         self.assertIn('Android Debug', text)
         self.assertIn('androiddebugkey', text)
         self.assertIn('validateReleaseSigning', text)
+
+    def test_flavors_match_the_dart_flavor_table(self):
+        text = (ROOT / 'apps/flutter/android/app/build.gradle.kts').read_text()
+        table = dart_flavor_table()
+        self.assertIn('flavorDimensions += "app"', text)
+        for flavor in FLAVOR_MANIFESTS:
+            with self.subTest(flavor=flavor):
+                self.assertIn(f'create("{flavor}")', text)
+                self.assertIn(f'applicationId = "{table["applicationId"][flavor]}"', text)
+                self.assertIn(f'manifestPlaceholders["appLabel"] = "{table["displayName"][flavor]}"', text)
+                self.assertIn(f'manifestPlaceholders["urlScheme"] = "{table["urlScheme"][flavor]}"', text)
+
+    def test_only_the_shipped_flavor_keeps_the_release_version_name(self):
+        # Staging and development must be distinguishable in settings and logs.
+        text = (ROOT / 'apps/flutter/android/app/build.gradle.kts').read_text()
+        self.assertIn('versionNameSuffix = "-dev"', text)
+        self.assertIn('versionNameSuffix = "-stg"', text)
+        production = text.split('create("production")')[1].split('signingConfigs')[0]
+        self.assertNotIn('versionNameSuffix', production)
 
 
 class ReleaseConfigTests(unittest.TestCase):

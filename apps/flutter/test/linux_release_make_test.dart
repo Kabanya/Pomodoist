@@ -47,6 +47,7 @@ void main() {
       commands[3],
       contains(
         'flutter-under-test" build linux --release '
+        '--flavor "production" '
         '--target "lib/main.dart" '
         '--dart-define-from-file="/secure config/'
         'pomodoist-linux-production.json" '

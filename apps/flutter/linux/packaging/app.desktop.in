@@ -1,13 +1,13 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=Pomodoist
+Name=@DISPLAY_NAME@
 Comment=Task manager with Pomodoro focus sessions
 Comment[pt_BR]=Gerenciador de tarefas com sessões de foco Pomodoro
 Comment[ja]=ポモドーロ集中セッション付きタスク管理
 Comment[ko]=포모도로 집중 세션을 갖춘 작업 관리자
 Exec="@EXECUTABLE@" %u
-Icon=com.finchforge.pomodoist
+Icon=@APPLICATION_ID@
 Terminal=false
 Categories=Office;ProjectManagement;
 Keywords=tasks;todo;pomodoro;focus;productivity;
@@ -15,5 +15,5 @@ Keywords[pt_BR]=tarefas;afazeres;pomodoro;foco;produtividade;
 Keywords[ja]=タスク;やること;ポモドーロ;集中;生産性;
 Keywords[ko]=작업;할 일;포모도로;집중;생산성;
 StartupNotify=true
-StartupWMClass=com.finchforge.pomodoist
-MimeType=x-scheme-handler/pomodoist;
+StartupWMClass=@APPLICATION_ID@
+MimeType=x-scheme-handler/@URL_SCHEME@;

@@ -29,16 +29,18 @@ if [[ ! "$build_number" =~ ^[1-9][0-9]{0,9}$ ]] || (( build_number > 2100000000 
   exit 64
 fi
 flutter pub get --enforce-lockfile
-common=(--release --obfuscate "--target=lib/main.dart" "--build-name=$version" "--build-number=$build_number"
+# Only the production flavor is published: it is the one Play and direct
+# downloads install, and the one whose applicationId matches the release notes.
+common=(--release --obfuscate --flavor production "--target=lib/main.dart" "--build-name=$version" "--build-number=$build_number"
   "--dart-define-from-file=$config" "--dart-define=POMODOIST_RELEASE=$release"
   --dart-define=POMODOIST_BILLING_CHANNEL=storekit)
 flutter build apk "${common[@]}" --split-debug-info=build/android/symbols/apk
 flutter build appbundle "${common[@]}" --split-debug-info=build/android/symbols/appbundle
-bash "$repo_root/tool/android/verify_artifacts.sh"
+bash "$repo_root/tool/android/verify_artifacts.sh" production
 output=build/android/release
 mkdir -p "$output"
-cp build/app/outputs/flutter-apk/app-release.apk "$output/Pomodoist-Android.apk"
-cp build/app/outputs/bundle/release/app-release.aab "$output/Pomodoist-Android.aab"
+cp build/app/outputs/flutter-apk/app-production-release.apk "$output/Pomodoist-Android.apk"
+cp build/app/outputs/bundle/productionRelease/app-production-release.aab "$output/Pomodoist-Android.aab"
 (
   cd "$output"
   sha256sum Pomodoist-Android.apk Pomodoist-Android.aab > SHA256SUMS

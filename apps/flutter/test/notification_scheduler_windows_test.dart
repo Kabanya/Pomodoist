@@ -1,10 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
+import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 void main() {
   setUpAll(tz_data.initializeTimeZones);
+
+  tearDown(() => setAppFlavor(buildTimeAppFlavor ?? AppFlavor.production));
 
   test('Reengagement reminders cover 30 local calendar days', () {
     final berlin = tz.getLocation('Europe/Berlin');
@@ -61,13 +64,28 @@ void main() {
     final windows = NotificationScheduler.initializationSettings.windows;
 
     expect(windows, isNotNull);
-    expect(windows!.appName, 'Pomodoist');
-    expect(windows.appUserModelId, 'com.finchforge.pomodoist');
-    expect(windows.guid, '8681f633-939c-46f5-84cc-18f295e4382c');
+    expect(windows!.appName, AppFlavor.production.displayName);
+    expect(windows.appUserModelId, AppFlavor.production.applicationId);
+    expect(windows.guid, AppFlavor.production.windowsToastGuid);
 
     expect(NotificationScheduler.focusDetails.windows, isNotNull);
     expect(NotificationScheduler.reengagementDetails.windows, isNotNull);
     expect(NotificationScheduler.taskStartDetails.windows, isNotNull);
+  });
+
+  test('Windows notifications follow the running flavor identity', () {
+    for (final flavor in AppFlavor.values) {
+      setAppFlavor(flavor);
+      final windows = NotificationScheduler.initializationSettings.windows;
+
+      expect(windows!.appName, flavor.displayName, reason: flavor.name);
+      expect(
+        windows.appUserModelId,
+        flavor.applicationId,
+        reason: flavor.name,
+      );
+      expect(windows.guid, flavor.windowsToastGuid, reason: flavor.name);
+    }
   });
 
   test('Reminder replacement cancels the whole range first', () async {

@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.14)
 project(runner LANGUAGES CXX)
 
+# Materialize the per-flavor identity the top-level CMakeLists.txt resolved from
+# FLUTTER_APP_FLAVOR. The header is generated rather than passed as -D string
+# defines so that the resource compiler does not have to cope with quoting a
+# macro whose value contains spaces.
+configure_file(
+  "flavor_config.h.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/flavor_config.h"
+)
+
 # Define the application target. To change its name, change BINARY_NAME in the
 # top-level CMakeLists.txt, not the value here, or `flutter run` will no longer
 # work.
@@ -12,6 +21,7 @@ add_executable(${BINARY_NAME} WIN32
   "utils.cpp"
   "win32_window.cpp"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
+  "${CMAKE_CURRENT_BINARY_DIR}/flavor_config.h"
   "Runner.rc"
   "runner.exe.manifest"
 )
@@ -35,7 +45,12 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app
   flutter_wrapper_plugin)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
+# shell32.lib provides SetCurrentProcessExplicitAppUserModelID, which gives the
+# process its per-flavor taskbar and toast identity.
+target_link_libraries(${BINARY_NAME} PRIVATE "shell32.lib")
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
+# Lets the runner sources and Runner.rc both find the generated flavor_config.h.
+target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)

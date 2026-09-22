@@ -15,7 +15,7 @@ concurrency:
 jobs:
   release-build-smoke:
     runs-on: ubuntu-24.04
-    timeout-minutes: 50
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
@@ -35,7 +35,7 @@ jobs:
       - name: Prove release signing fails closed
         working-directory: apps/flutter
         run: |
-          if flutter build apk --release --target-platform android-arm64 \
+          if flutter build apk --release --flavor production --target-platform android-arm64 \
               --dart-define=POMODOIST_BILLING_CHANNEL=storekit > "$RUNNER_TEMP/unsigned-build.log" 2>&1; then
             echo 'Release unexpectedly succeeded without signing credentials.' >&2
             exit 1
@@ -63,14 +63,30 @@ jobs:
       - name: Compile release APK and AAB without production account access
         working-directory: apps/flutter
         run: |
-          common=(--release --target lib/main_development.dart
-            --dart-define=POMODOIST_ENVIRONMENT=local
+          # Every flavor is compiled and identity-verified with a disposable key,
+          # so a flavor whose Gradle wiring or manifest is broken fails here
+          # rather than at release time. Only the development flavor is launched
+          # later: the staging and production runtime configurations need backend
+          # credentials this workflow deliberately does not have.
+          build_flavor() {
+            local flavor=$1 target=$2
+            shift 2
+            local common=(--release "--flavor=$flavor" "--target=$target"
+              --dart-define=POMODOIST_BILLING_CHANNEL=storekit
+              "--dart-define=POMODOIST_RELEASE=$GITHUB_SHA" "$@")
+            flutter build apk "${common[@]}"
+            flutter build appbundle "${common[@]}"
+            bash ../../tool/android/verify_artifacts.sh "$flavor"
+          }
+          build_flavor development lib/main_development.dart \
+            --dart-define=POMODOIST_ENVIRONMENT=local \
             --dart-define=WEB_APP_URL=https://app.pomodoist.com
-            --dart-define=POMODOIST_BILLING_CHANNEL=storekit
-            "--dart-define=POMODOIST_RELEASE=$GITHUB_SHA")
-          flutter build apk "${common[@]}"
-          flutter build appbundle "${common[@]}"
-          bash ../../tool/android/verify_artifacts.sh
+          build_flavor staging lib/main_staging.dart \
+            --dart-define=POMODOIST_ENVIRONMENT=staging \
+            --dart-define=WEB_APP_URL=https://app-test.pomodoist.com
+          build_flavor production lib/main.dart \
+            --dart-define=POMODOIST_ENVIRONMENT=production \
+            --dart-define=WEB_APP_URL=https://app.pomodoist.com
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -83,14 +99,32 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
-          script: bash tool/android/smoke_test.sh
-      - name: Save CI-only APK and AAB
+          script: bash tool/android/smoke_test.sh development
+      - name: Save CI-only development APK and AAB
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: android-validation-development-NOT-FOR-DISTRIBUTION
+          path: |
+            build/flutter/app/outputs/flutter-apk/app-development-release.apk
+            build/flutter/app/outputs/bundle/developmentRelease/app-development-release.aab
+          if-no-files-found: error
+          retention-days: 3
+      - name: Save CI-only staging APK and AAB
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: android-validation-staging-NOT-FOR-DISTRIBUTION
+          path: |
+            build/flutter/app/outputs/flutter-apk/app-staging-release.apk
+            build/flutter/app/outputs/bundle/stagingRelease/app-staging-release.aab
+          if-no-files-found: error
+          retention-days: 3
+      - name: Save CI-only production APK and AAB
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: android-validation-NOT-FOR-DISTRIBUTION
           path: |
-            build/flutter/app/outputs/flutter-apk/app-release.apk
-            build/flutter/app/outputs/bundle/release/app-release.aab
+            build/flutter/app/outputs/flutter-apk/app-production-release.apk
+            build/flutter/app/outputs/bundle/productionRelease/app-production-release.aab
           if-no-files-found: error
           retention-days: 3
       - name: Remove disposable signing material

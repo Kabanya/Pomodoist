@@ -71,9 +71,13 @@ Set these values in `.env` before recreating the services:
 SUPABASE_PUBLIC_URL=https://api.example.com
 API_EXTERNAL_URL=https://api.example.com/auth/v1
 SITE_URL=https://tasks.example.com
-ADDITIONAL_REDIRECT_URLS=https://tasks.example.com/login-callback,https://tasks.example.com/auth/challenge,pomodoist://login-callback,pomodoist://captcha-callback
+ADDITIONAL_REDIRECT_URLS=https://tasks.example.com/login-callback,https://tasks.example.com/auth/challenge,pomodoist-dev://login-callback,pomodoist-dev://captcha-callback,pomodoist-stg://login-callback,pomodoist-stg://captcha-callback,pomodoist://login-callback,pomodoist://captcha-callback
+GOOGLE_CALENDAR_APP_REDIRECT_URI=pomodoist://google-calendar-connected
 POMODOIST_MCP_ALLOWED_ORIGINS=https://tasks.example.com
 ```
+
+Set `GOOGLE_CALENDAR_APP_REDIRECT_URI` to the scheme of the client served by
+that deployment (`pomodoist-dev`, `pomodoist-stg`, or `pomodoist`).
 
 Then run `make up`. The proxy must forward `X-Forwarded-*` headers and WebSocket upgrades. Caddy does both automatically. Open ports 80 and 443 to the proxy; do not expose PostgreSQL or container-internal service ports.
 

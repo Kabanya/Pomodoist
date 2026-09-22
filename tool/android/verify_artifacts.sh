@@ -3,6 +3,23 @@
 set -euo pipefail
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 app_root="$repo_root/apps/flutter"
+if [[ $# -gt 1 ]]; then
+  echo 'Usage: bash tool/android/verify_artifacts.sh [development|staging|production]' >&2
+  exit 64
+fi
+# Each flavor ships its own application id, so the expected package name is
+# derived from the flavor rather than hardcoded; verifying the wrong pair would
+# let a mislabelled artifact through.
+flavor=${1:-production}
+case "$flavor" in
+  development) package=com.finchforge.pomodoist.dev ;;
+  staging) package=com.finchforge.pomodoist.stg ;;
+  production) package=com.finchforge.pomodoist ;;
+  *)
+    echo "Unknown Android flavor: $flavor" >&2
+    exit 64
+    ;;
+esac
 cd "$app_root"
 sdk=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}
 if [[ -z "$sdk" || ! -d "$sdk/build-tools" ]]; then
@@ -10,8 +27,8 @@ if [[ -z "$sdk" || ! -d "$sdk/build-tools" ]]; then
   exit 64
 fi
 build_tools=$(find "$sdk/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)
-apk=build/app/outputs/flutter-apk/app-release.apk
-bundle=build/app/outputs/bundle/release/app-release.aab
+apk=build/app/outputs/flutter-apk/app-$flavor-release.apk
+bundle=build/app/outputs/bundle/${flavor}Release/app-$flavor-release.aab
 test -s "$apk" && test -s "$bundle"
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
@@ -21,7 +38,7 @@ if grep -qi 'CN=Android Debug' "$work/apk.txt"; then
   exit 1
 fi
 "$build_tools/aapt" dump badging "$apk" > "$work/badging.txt"
-grep -q "^package: name='com.finchforge.pomodoist' " "$work/badging.txt"
+grep -q "^package: name='$package' " "$work/badging.txt"
 if grep -q '^application-debuggable' "$work/badging.txt"; then
   echo 'The release APK must not be debuggable.' >&2
   exit 1
@@ -70,4 +87,4 @@ if [[ -n "${ANDROID_SIGNING_CERT_SHA256:-}" ]]; then
     exit 1
   fi
 fi
-printf 'Verified APK/AAB identity and signatures. Certificate SHA-256: %s\n' "$apk_sha"
+printf 'Verified %s APK/AAB identity (%s) and signatures. Certificate SHA-256: %s\n' "$flavor" "$package" "$apk_sha"

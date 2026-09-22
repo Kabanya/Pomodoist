@@ -66,15 +66,31 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Binary assets are ignored by default. The icon masters and the per-flavor
+# icon sets listed below are deliberate exceptions and must remain tracked.
 **.png
-!android/app/src/main/res/mipmap-*/ic_launcher.png
-!ios/Runner/Assets.xcassets/AppIcon.appiconset/*.png
-!ios/PomodoistWatch/Assets.xcassets/AppIcon.appiconset/*.png
-!macos/Runner/Assets.xcassets/AppIcon.appiconset/*.png
-!web/favicon.png
-!web/icons/*.png
 pomodoist_app_icon_no_background.png
-!ios/Runner/pomodoist_app_icon_no_background.png
+
+# Tracked icon masters, the source of truth for the icon generator.
+!apps/flutter/assets/branding/app_icons/pomodoist_icon_development.png
+!apps/flutter/assets/branding/app_icons/pomodoist_icon_staging.png
+!apps/flutter/assets/branding/app_icons/pomodoist_icon_production.png
+
+# Tracked Android launcher icons: the shared main source set plus each flavor.
+!apps/flutter/android/app/src/main/res/mipmap-*/ic_launcher.png
+!apps/flutter/android/app/src/*/res/mipmap-*/ic_launcher.png
+
+# Tracked Apple app icons: iOS app, watch app and macOS app, default plus flavors.
+!apps/flutter/ios/Runner/Assets.xcassets/AppIcon*.appiconset/*.png
+!apps/flutter/ios/PomodoistWatch/Assets.xcassets/AppIcon*.appiconset/*.png
+!apps/flutter/macos/Runner/Assets.xcassets/AppIcon*.appiconset/*.png
+!apps/flutter/ios/Runner/pomodoist_app_icon_no_background.png
+
+# Tracked web icons: shared root assets plus each flavor directory.
+!apps/flutter/web/favicon.png
+!apps/flutter/web/icons/*.png
+!apps/flutter/web/icons/*/*.png
 .codex**
 key-**.md
 .gitignore
@@ -123,19 +139,13 @@ ios/build/
 /apps/flutter/android/app/debug
 /apps/flutter/android/app/profile
 /apps/flutter/android/app/release
-!apps/flutter/android/app/src/main/res/mipmap-*/ic_launcher.png
-!apps/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset/*.png
-!apps/flutter/ios/PomodoistWatch/Assets.xcassets/AppIcon.appiconset/*.png
-!apps/flutter/macos/Runner/Assets.xcassets/AppIcon.appiconset/*.png
-!apps/flutter/web/favicon.png
-!apps/flutter/web/icons/*.png
-!apps/flutter/ios/Runner/pomodoist_app_icon_no_background.png
 /apps/flutter/android/key.properties
 /apps/flutter/android/.kotlin/
 /apps/flutter/android/captures/
 /apps/flutter/build/
 /apps/flutter/coverage/
 /apps/flutter/ios/build/
+/apps/flutter/macos/build/
 !docs/architecture/
 docs/architecture/*
 !docs/architecture/repository.md
@@ -155,3 +165,10 @@ docs/superpowers/specs/*
 
 !apps/chrome-extension/.gitignore
 apps/flutter/assets/branding/app_icons/plan.md
+
+# `make watch-debug` runs xcodebuild straight from apps/flutter/ios, so a
+# relative SYMROOT can land a full build tree in a nested apps/flutter/ios/apps.
+apps/flutter/ios/apps/
+
+# Node tooling: apps/chrome-extension is the only npm package in the repo.
+node_modules/

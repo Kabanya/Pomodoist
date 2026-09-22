@@ -81,7 +81,7 @@ struct PomodoistFocusWidgetView: View {
         large
       }
     }
-    .widgetURL(URL(string: "pomodoist://focus"))
+    .widgetURL(URL(string: "\(pomodoistFocusURLScheme)://focus"))
   }
 
   private var focus: PomodoistFocusSnapshot {

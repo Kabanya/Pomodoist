@@ -2,14 +2,39 @@ import 'dart:convert';
 import 'dart:io';
 
 const _productionWebUrl = 'https://app.pomodoist.com';
+const _productionWebHost = 'app.pomodoist.com';
 const _productionCaptchaUrl = 'https://app.pomodoist.com/auth/challenge';
 const _productionSupabaseUrl = 'https://ewauihswbwduvklrozke.supabase.co';
+const _productionSupabaseHost = 'ewauihswbwduvklrozke.supabase.co';
+const _stagingWebHost = 'app-test.pomodoist.com';
+const _stagingSupabaseHost = 'supabase-test.pomodoist.com';
 const _forbiddenSupabaseKeys = {
   'SERVICE_ROLE_KEY',
   'SUPABASE_SECRET_KEY',
   'SUPABASE_SERVICE_ROLE_KEY',
 };
 
+/// Validates the configuration a desktop release is built from.
+///
+/// The environment the configuration declares selects the flavor identity the
+/// build carries, so each environment is validated against the identity that
+/// belongs to it and nothing else:
+///
+/// * `production` — the shipped flavor, `com.finchforge.pomodoist` /
+///   `pomodoist`.
+/// * `selfhosted` — the shipped flavor pointed at an operator's own instance.
+/// * `staging` — the staging flavor, `com.finchforge.pomodoist.stg` /
+///   `pomodoist-stg`, which must talk to the staging domains only.
+/// * `local` — the development flavor, `com.finchforge.pomodoist.dev` /
+///   `pomodoist-dev`. `local` is the name the development entry point declares
+///   and the only environment `RuntimeEnvironment` accepts for it; a
+///   configuration that says `development` is rejected because the app refuses
+///   to start with an environment it does not know. The development flavor is
+///   refused the production backend, so a dev install can never read or write
+///   production data.
+///
+/// Every environment keeps the privileged-key ban, so no artifact can ship a
+/// Supabase secret whatever it is pointed at.
 void validateDesktopReleaseConfig(Map<String, Object?> config) {
   for (final entry in config.entries) {
     final value = entry.value;
@@ -22,17 +47,29 @@ void validateDesktopReleaseConfig(Map<String, Object?> config) {
   }
 
   final environment = _requiredString(config, 'POMODOIST_ENVIRONMENT');
-  if (environment != 'production' && environment != 'selfhosted') {
-    throw const FormatException(
-      'POMODOIST_ENVIRONMENT must select production or selfhosted.',
-    );
+  switch (environment) {
+    case 'production':
+      _validateProductionConfig(config);
+    case 'selfhosted':
+      _validateSelfHostedConfig(config);
+    case 'staging':
+      _validateStagingConfig(config);
+    case 'local':
+      _validateDevelopmentConfig(config);
+    case 'development':
+      throw const FormatException(
+        'The development flavor declares POMODOIST_ENVIRONMENT=local; '
+        'development is not a runtime environment.',
+      );
+    default:
+      throw const FormatException(
+        'POMODOIST_ENVIRONMENT must select production, selfhosted, staging '
+        'or local.',
+      );
   }
+}
 
-  if (environment == 'selfhosted') {
-    _validateSelfHostedConfig(config);
-    return;
-  }
-
+void _validateProductionConfig(Map<String, Object?> config) {
   if (_requiredString(config, 'WEB_APP_URL') != _productionWebUrl) {
     throw const FormatException('WEB_APP_URL must use the production host.');
   }
@@ -67,12 +104,109 @@ void validateDesktopReleaseConfig(Map<String, Object?> config) {
   }
 }
 
-void _validateSelfHostedConfig(Map<String, Object?> config) {
-  final webAppUrl = _selfHostedUrl(
+/// Validates the staging flavor's configuration.
+///
+/// The domains are the ones `RuntimePublicConfig` accepts for a staging build,
+/// so a staging artifact can never be pointed at the production backend and a
+/// staging install never shares data with the production one.
+void _validateStagingConfig(Map<String, Object?> config) {
+  final webAppUrl = _releaseUrl(
     _requiredString(config, 'WEB_APP_URL'),
     'WEB_APP_URL',
   );
-  _selfHostedUrl(_requiredString(config, 'SUPABASE_URL'), 'SUPABASE_URL');
+  if (webAppUrl.host != _stagingWebHost) {
+    throw const FormatException('WEB_APP_URL must use the staging host.');
+  }
+
+  final supabaseUrl = _releaseUrl(
+    _requiredString(config, 'SUPABASE_URL'),
+    'SUPABASE_URL',
+  );
+  if (supabaseUrl.host != _stagingSupabaseHost) {
+    throw const FormatException('SUPABASE_URL must use the staging project.');
+  }
+  _requiredString(config, 'SUPABASE_ANON_KEY');
+
+  final turnstile = _nonEmptyOptionalString(config, 'TURNSTILE_SITE_KEY');
+  if (turnstile == null) {
+    throw const FormatException(
+      'TURNSTILE_SITE_KEY is required to build the staging flavor.',
+    );
+  }
+  final registration = _nonEmptyOptionalString(
+    config,
+    'POMODOIST_REGISTRATION_URL',
+  );
+  if (registration == null) {
+    throw const FormatException(
+      'POMODOIST_REGISTRATION_URL is required when Turnstile is enabled.',
+    );
+  }
+  final registrationUrl = _releaseUrl(
+    registration,
+    'POMODOIST_REGISTRATION_URL',
+  );
+  if (registrationUrl.path != '/auth/challenge' ||
+      registrationUrl.origin != webAppUrl.origin) {
+    throw const FormatException(
+      'POMODOIST_REGISTRATION_URL must use the staging challenge.',
+    );
+  }
+
+  _optionalString(config, 'SENTRY_DSN');
+}
+
+/// Validates the development flavor's configuration.
+///
+/// The development flavor is the only one allowed to run without a backend, so
+/// its Supabase pair may be absent — but when it is present it must not be the
+/// production project, and the web host must not be the production one either.
+/// Otherwise a dev install would read and write the data the production install
+/// owns, which is exactly what the separate identities exist to prevent.
+void _validateDevelopmentConfig(Map<String, Object?> config) {
+  final webAppUrl = _releaseUrl(
+    _requiredString(config, 'WEB_APP_URL'),
+    'WEB_APP_URL',
+  );
+  if (webAppUrl.host == _productionWebHost) {
+    throw const FormatException(
+      'The development flavor must not use the production web host.',
+    );
+  }
+
+  final supabaseUrl = _nonEmptyOptionalString(config, 'SUPABASE_URL');
+  final supabaseKey = _nonEmptyOptionalString(config, 'SUPABASE_ANON_KEY');
+  if ((supabaseUrl == null) != (supabaseKey == null)) {
+    throw const FormatException(
+      'SUPABASE_URL and SUPABASE_ANON_KEY must be supplied together.',
+    );
+  }
+  if (supabaseUrl != null &&
+      _releaseUrl(supabaseUrl, 'SUPABASE_URL').host ==
+          _productionSupabaseHost) {
+    throw const FormatException(
+      'The development flavor must not use the production Supabase project.',
+    );
+  }
+
+  final registration = _nonEmptyOptionalString(
+    config,
+    'POMODOIST_REGISTRATION_URL',
+  );
+  if (registration != null) {
+    _releaseUrl(registration, 'POMODOIST_REGISTRATION_URL');
+  }
+
+  _optionalString(config, 'TURNSTILE_SITE_KEY');
+  _optionalString(config, 'SENTRY_DSN');
+}
+
+void _validateSelfHostedConfig(Map<String, Object?> config) {
+  final webAppUrl = _releaseUrl(
+    _requiredString(config, 'WEB_APP_URL'),
+    'WEB_APP_URL',
+  );
+  _releaseUrl(_requiredString(config, 'SUPABASE_URL'), 'SUPABASE_URL');
   _requiredString(config, 'SUPABASE_ANON_KEY');
 
   final turnstile = _nonEmptyOptionalString(config, 'TURNSTILE_SITE_KEY');
@@ -86,7 +220,7 @@ void _validateSelfHostedConfig(Map<String, Object?> config) {
     );
   }
   if (registration != null) {
-    final registrationUrl = _selfHostedUrl(
+    final registrationUrl = _releaseUrl(
       registration,
       'POMODOIST_REGISTRATION_URL',
     );
@@ -100,7 +234,7 @@ void _validateSelfHostedConfig(Map<String, Object?> config) {
 
   final sentry = _nonEmptyOptionalString(config, 'SENTRY_DSN');
   if (sentry != null) {
-    final uri = _selfHostedUrl(sentry, 'SENTRY_DSN');
+    final uri = _releaseUrl(sentry, 'SENTRY_DSN');
     if (!RegExp(r'^[A-Za-z0-9]+$').hasMatch(uri.userInfo) ||
         uri.pathSegments.isEmpty ||
         !RegExp(r'^[0-9]+$').hasMatch(uri.pathSegments.last)) {
@@ -109,7 +243,7 @@ void _validateSelfHostedConfig(Map<String, Object?> config) {
   }
 }
 
-Uri _selfHostedUrl(String value, String field) {
+Uri _releaseUrl(String value, String field) {
   final uri = Uri.tryParse(value);
   final loopback =
       uri != null && const {'localhost', '127.0.0.1', '::1'}.contains(uri.host);
@@ -165,7 +299,7 @@ Future<void> main(List<String> arguments) async {
       );
     }
     validateDesktopReleaseConfig(decoded);
-    stdout.writeln('Desktop production configuration is valid.');
+    stdout.writeln('Desktop release configuration is valid.');
   } on FormatException catch (error) {
     stderr.writeln(error.message);
     exitCode = 64;

@@ -2,15 +2,15 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
+import 'package:pomodoist/data/services/local/flavor_application_support_directory_io.dart';
 import 'package:pomodoist/data/services/local/theme_image_store_contract.dart';
 
 ThemeImageStore createThemeImageStore() => FileThemeImageStore();
 
 class FileThemeImageStore extends ThemeImageStore {
   FileThemeImageStore({Future<Directory> Function()? directory})
-    : _directoryLoader = directory ?? getApplicationSupportDirectory;
+    : _directoryLoader = directory ?? flavorApplicationSupportDirectory;
 
   final Future<Directory> Function() _directoryLoader;
   Directory? _directory;

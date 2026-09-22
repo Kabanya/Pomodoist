@@ -2,17 +2,44 @@
 param(
     [ValidateSet('Debug', 'Profile', 'Release')]
     [string]$Configuration = 'Debug',
+    [ValidateSet('production', 'development', 'staging')]
+    [string]$Flavor = 'production',
     [string]$ConfigFile,
-    [string]$Target = 'lib/main.dart',
+    [string]$Target,
     [string]$ReleaseSha,
     [switch]$Clean
 )
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+. (Join-Path $PSScriptRoot 'flavors.ps1')
 
 if (-not [string]::IsNullOrWhiteSpace($ConfigFile) -and -not [System.IO.Path]::IsPathRooted($ConfigFile)) {
     $ConfigFile = Join-Path $repoRoot $ConfigFile
+}
+
+$Flavor = $Flavor.Trim().ToLowerInvariant()
+$flavorConfig = Get-PomodoistFlavor -Flavor $Flavor
+
+# The entry point and the flavor have to name the same environment: the app
+# rejects a build whose entry point and compile-time flavor disagree, so the
+# mismatch is reported here where the fix is obvious.
+if ([string]::IsNullOrWhiteSpace($Target)) {
+    $Target = $flavorConfig.EntryPoint
+} else {
+    $targetFlavor = Get-PomodoistFlavorForEntryPoint -EntryPoint $Target
+    if ($null -eq $targetFlavor) {
+        $knownTargets = @(
+            $PomodoistFlavors.Keys | ForEach-Object { $PomodoistFlavors[$_].EntryPoint }
+        ) -join ', '
+        throw "-Target must be one of $knownTargets; got '$Target'."
+    }
+    if ($targetFlavor -cne $Flavor) {
+        throw (
+            "-Target '$Target' belongs to the $targetFlavor flavor, " +
+            "but -Flavor $Flavor was requested. Pass -Flavor $targetFlavor."
+        )
+    }
 }
 
 function Invoke-DesktopReleaseConfigValidation {
@@ -55,7 +82,15 @@ try {
         $resolvedConfig = (Resolve-Path $ConfigFile).Path
     }
 
-    $flutterArgs = @('build', 'windows', "--$($Configuration.ToLowerInvariant())", '--target', $Target)
+    # --flavor is always passed, production included. Flutter inserts the flavor
+    # into the output directory, and the packaging and release scripts resolve
+    # the flavor's directory, so the two only agree while every build names its
+    # flavor.
+    $flutterArgs = @(
+        'build', 'windows', "--$($Configuration.ToLowerInvariant())",
+        '--flavor', $Flavor,
+        '--target', $Target
+    )
     if ($null -ne $resolvedConfig) {
         $flutterArgs += "--dart-define-from-file=$resolvedConfig"
     }
@@ -68,10 +103,16 @@ try {
     $flutterArgs += "--dart-define=POMODOIST_RELEASE=$ReleaseSha"
     if ($Configuration -eq 'Release') {
         if ($null -eq $resolvedConfig) {
-            throw 'Release builds require -ConfigFile with production dart-defines.'
+            throw 'Release builds require -ConfigFile with the dart-defines of their environment.'
         }
-        Invoke-DesktopReleaseConfigValidation -Path $resolvedConfig
-        $flutterArgs += '--dart-define=POMODOIST_BILLING_CHANNEL=stripe'
+        if ($Flavor -ceq 'production') {
+            # The production release is the only one that ships to users, so it
+            # is the only one that has to prove its configuration is the
+            # production one. A development or staging build legitimately names
+            # a different environment, which this validator rejects.
+            Invoke-DesktopReleaseConfigValidation -Path $resolvedConfig
+            $flutterArgs += '--dart-define=POMODOIST_BILLING_CHANNEL=stripe'
+        }
     }
 
     & flutter @flutterArgs

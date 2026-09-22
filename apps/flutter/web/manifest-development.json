@@ -1,0 +1,35 @@
+{
+    "name": "Pomodoist Dev",
+    "short_name": "Pomodoist Dev",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#FFFDFB",
+    "theme_color": "#D83B2E",
+    "description": "Open-source task manager with a built-in Pomodoro focus timer.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/development/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/development/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/development/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/development/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
