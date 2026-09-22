@@ -232,17 +232,20 @@
           returnTarget = null;
         }
         const appSchemes = ["pomodoist:", "pomodoist-stg:", "pomodoist-dev:"];
+        const loopbackHosts = ["127.0.0.1", "[::1]"];
+        const loopbackPort = Number(returnTarget?.port || "0");
         const customProtocolTarget = returnTarget !== null &&
           appSchemes.includes(returnTarget.protocol) &&
           returnTarget.hostname === "captcha-callback" &&
           returnTarget.pathname === "" && returnTarget.port === "";
-        const loopbackPort = Number(returnTarget?.port || "0");
         const desktopLoopbackTarget = returnTarget !== null &&
           returnTarget.protocol === "http:" &&
-          returnTarget.hostname === "127.0.0.1" &&
+          loopbackHosts.includes(returnTarget.hostname) &&
           returnTarget.pathname === "/captcha-callback" &&
           Number.isInteger(loopbackPort) &&
           loopbackPort >= 1024 && loopbackPort <= 65535;
+        // The desktop broker compares the callback against the target it
+        // registered, so extra parameters are rejected like any other mismatch.
         const validReturnTarget = returnTarget !== null &&
           returnTarget.href === returnTo &&
           (customProtocolTarget || desktopLoopbackTarget) &&

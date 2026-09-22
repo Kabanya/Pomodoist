@@ -547,6 +547,11 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String authProviderUnavailableHere(String provider) {
+    return 'この環境では$providerでのログインを利用できません。別のログイン方法をお使いください。';
+  }
+
+  @override
   String get authSignUpDisabled => 'メールでのアカウント作成は一時的に利用できません。別のログイン方法をお試しください。';
 
   @override

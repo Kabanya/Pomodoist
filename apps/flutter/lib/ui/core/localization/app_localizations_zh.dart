@@ -531,6 +531,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String authProviderUnavailableHere(String provider) {
+    return '此处无法使用 $provider 登录。请使用其他登录方式。';
+  }
+
+  @override
   String get authSignUpDisabled => '暂时无法使用邮箱创建账户。请使用其他登录方式。';
 
   @override

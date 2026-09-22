@@ -1,0 +1,16 @@
+# Repository-root analyzer configuration.
+#
+# This file carries no lints of its own: the real Dart and Flutter packages live
+# in subdirectories (apps/flutter, tool, ...) and each one supplies its own
+# analysis_options.yaml. It exists so that analysis started from the repository
+# root does not descend into generated output.
+#
+# tool/link-build.sh links apps/flutter/.dart_tool and apps/flutter/build to the
+# repository-root build/ directory, so Flutter writes its generated plugin
+# registrants there. Those files import platform plugin packages, and because the
+# canonical path sits outside the Flutter package they cannot resolve their
+# package: URIs. Analyzing them reports spurious uri_does_not_exist errors and
+# the undefined_class/undefined_identifier errors that cascade from them.
+analyzer:
+  exclude:
+    - build/**

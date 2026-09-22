@@ -167,6 +167,7 @@
   "authCaptchaOpenFailed": "Pomodoist no pudo abrir la verificación de seguridad en el navegador. Revisa el navegador predeterminado e inténtalo de nuevo.",
   "authProviderFallback": "este proveedor",
   "authProviderUnavailable": "El acceso con {provider} no está disponible ahora. Inténtalo de nuevo o usa otro método.",
+  "authProviderUnavailableHere": "El acceso con {provider} no está disponible aquí. Usa otro método de inicio de sesión.",
   "authSignUpDisabled": "La creación de cuentas por email no está disponible temporalmente. Usa otro método de acceso.",
   "authAccountRestricted": "No se puede iniciar sesión en esta cuenta ahora. Contacta con soporte si crees que es un error.",
   "authLinkExpired": "Este enlace de acceso no es válido o ha caducado. Solicita uno nuevo.",

@@ -44,13 +44,44 @@ test('loader prioritizes valid language query, saved app language, then browser 
 });
 function challenge(query, state = 's'.repeat(32)) {
   const { get } = elements(), scripts = [];
+  const location = { pathname: '/auth/challenge', search: query, hash: `#state=${state}`,
+    replace(value) { this.href = value; } };
+  let turnstileOptions;
   const document = { title: '', documentElement: {}, body: { dataset: {} }, getElementById: get,
     createElement: () => ({}), head: { append: value => scripts.push(value) } };
   vm.runInNewContext(challengeScript, { document, URL, URLSearchParams,
-    location: { pathname: '/auth/challenge', search: query, hash: `#state=${state}` }, navigator: { languages: ['en'] },
-    window: { pomodoistRuntimeConfig: { turnstileSiteKey: 'public-test-key' } }, setTimeout() {}, clearTimeout() {} });
-  return { document, scripts, get };
+    location, navigator: { languages: ['en'] },
+    window: { pomodoistRuntimeConfig: { turnstileSiteKey: 'public-test-key' },
+      turnstile: { render(_widget, options) { turnstileOptions = options; return 1; } } },
+    requestAnimationFrame(callback) { callback(); }, setTimeout() {}, clearTimeout() {} });
+  return { document, scripts, get, location, solve(token) { turnstileOptions.callback(token); } };
 }
+test('native CAPTCHA accepts every app flavor and returns the token to that exact scheme', () => {
+  for (const scheme of ['pomodoist', 'pomodoist-stg', 'pomodoist-dev']) {
+    const target = `${scheme}://captcha-callback`;
+    const state = '-synthetic_state-for-native-captcha-0123456789';
+    const page = challenge(`?returnTo=${encodeURIComponent(target)}&lang=en`, state);
+    assert.equal(page.document.body.dataset.status, 'loading', scheme);
+    assert.equal(page.scripts.length, 1);
+    page.scripts[0].onload();
+    assert.equal(page.document.body.dataset.status, 'ready');
+    page.solve('opaque-token');
+    assert.equal(page.document.body.dataset.status, 'success');
+    assert.equal(page.location.href, `${target}?state=${state}&token=opaque-token`);
+  }
+});
+test('native CAPTCHA rejects lookalike schemes and altered callback targets', () => {
+  for (const target of [
+    'pomodoist-stg-evil://captcha-callback', 'pomodoist-stg://evil.example',
+    'pomodoist-stg://captcha-callback/', 'pomodoist-stg://user@captcha-callback',
+    'pomodoist-stg://captcha-callback:443', 'pomodoist-stg://captcha-callback?extra=1',
+    'pomodoist-stg://captcha-callback#extra',
+  ]) {
+    const page = challenge(`?returnTo=${encodeURIComponent(target)}&lang=en`);
+    assert.equal(page.document.body.dataset.status, 'invalid', target);
+    assert.equal(page.scripts.length, 0);
+  }
+});
 test('CAPTCHA translates validated locale and rejects ambiguous or malicious query values', () => {
   const base = '?returnTo=' + encodeURIComponent('pomodoist://captcha-callback');
   for (const language of ['pt-BR', 'ja', 'ko']) {

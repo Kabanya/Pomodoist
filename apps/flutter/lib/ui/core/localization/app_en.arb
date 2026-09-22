@@ -223,6 +223,14 @@
   "authCaptchaOpenFailed": "Pomodoist could not open the security check in your browser. Check your default browser and try again.",
   "authProviderFallback": "this provider",
   "authProviderUnavailable": "Sign-in with {provider} is unavailable right now. Try again or use another method.",
+  "authProviderUnavailableHere": "Sign-in with {provider} is unavailable here. Use another sign-in method.",
+  "@authProviderUnavailableHere": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
   "@authProviderUnavailable": {
     "placeholders": {
       "provider": {

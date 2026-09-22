@@ -223,6 +223,7 @@
   "authCaptchaOpenFailed": "O Pomodoist não conseguiu abrir a verificação de segurança no navegador. Verifique seu navegador padrão e tente novamente.",
   "authProviderFallback": "este provedor",
   "authProviderUnavailable": "Entrar com {provider} está indisponível. Tente novamente ou use outro método.",
+  "authProviderUnavailableHere": "Entrar com {provider} não está disponível aqui. Use outro método de login.",
   "@authProviderUnavailable": {
     "placeholders": {
       "provider": {

@@ -579,6 +579,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String authProviderUnavailableHere(String provider) {
+    return 'Sign-in with $provider is unavailable here. Use another sign-in method.';
+  }
+
+  @override
   String get authSignUpDisabled =>
       'Account creation with email is temporarily unavailable. Try another sign-in method.';
 

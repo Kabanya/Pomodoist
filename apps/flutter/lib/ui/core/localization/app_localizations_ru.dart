@@ -580,6 +580,11 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String authProviderUnavailableHere(String provider) {
+    return 'Вход через $provider здесь недоступен. Используйте другой способ входа.';
+  }
+
+  @override
   String get authSignUpDisabled =>
       'Регистрация по email временно недоступна. Выберите другой способ входа.';
 

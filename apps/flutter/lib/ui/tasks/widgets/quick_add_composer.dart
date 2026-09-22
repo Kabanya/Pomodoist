@@ -76,9 +76,9 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
       decoration: InputDecoration(
         hintText: l10n.quickAddHint,
         hintStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w400,
-          fontVariations: const [FontVariation('wght', 400)],
-          color: context.appColors.secondaryText,
+          fontWeight: FontWeight.w300,
+          fontVariations: const [FontVariation('wght', 300)],
+          color: context.appColors.secondaryText.withValues(alpha: .65),
         ),
         hintMaxLines: 2,
         filled: true,

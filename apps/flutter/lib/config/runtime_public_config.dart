@@ -40,6 +40,12 @@ class RuntimePublicConfig {
   bool get selfHostedFeaturesUnlocked =>
       environment == RuntimeEnvironment.selfhosted;
 
+  /// Social providers are only configured on the hosted backends, so a
+  /// self-hosted instance rejects them and needs its own explanation.
+  bool get socialProviderSignInDisabled =>
+      environment == RuntimeEnvironment.staging ||
+      environment == RuntimeEnvironment.selfhosted;
+
   factory RuntimePublicConfig.fromRuntimeJson(Map<String, Object?> json) {
     final actualFields = json.keys.toSet();
     if (actualFields.length != fieldNames.length ||

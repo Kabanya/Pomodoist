@@ -167,9 +167,27 @@ AccountAuthFailure classifyAccountAuthCode(
         recovery: AccountAuthRecovery.switchToSignIn,
       );
     case 'email_address_invalid':
+      if (operation == AccountAuthOperation.passwordUpdate) {
+        return accountAuthOperationFallback(operation);
+      }
+      return const AccountAuthFailure(
+        AccountAuthFailureKind.emailInvalid,
+        field: AccountAuthField.email,
+        recovery: AccountAuthRecovery.editEmail,
+      );
     case 'validation_failed':
       if (operation == AccountAuthOperation.passwordUpdate) {
         return accountAuthOperationFallback(operation);
+      }
+      // A misconfigured provider rejects the OAuth request with the same code
+      // as a malformed email, so the operation decides which one it is.
+      if (operation == AccountAuthOperation.apple ||
+          operation == AccountAuthOperation.google) {
+        return const AccountAuthFailure(
+          AccountAuthFailureKind.providerUnavailable,
+          field: AccountAuthField.form,
+          recovery: AccountAuthRecovery.chooseAnotherProvider,
+        );
       }
       return const AccountAuthFailure(
         AccountAuthFailureKind.emailInvalid,

@@ -167,6 +167,7 @@
   "authCaptchaOpenFailed": "Pomodoist 无法在浏览器中打开安全验证。请检查默认浏览器后重试。",
   "authProviderFallback": "此服务商",
   "authProviderUnavailable": "暂时无法使用 {provider} 登录。请重试或使用其他方式。",
+  "authProviderUnavailableHere": "此处无法使用 {provider} 登录。请使用其他登录方式。",
   "authSignUpDisabled": "暂时无法使用邮箱创建账户。请使用其他登录方式。",
   "authAccountRestricted": "此账户目前无法登录。如果你认为这是错误，请联系支持。",
   "authLinkExpired": "此登录链接无效或已过期。请申请新链接。",

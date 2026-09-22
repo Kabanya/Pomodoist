@@ -99,7 +99,8 @@ void main() {
     expect(challenge, contains('"expired-callback"'));
     expect(challenge, contains('retry.addEventListener("click"'));
     expect(challenge, contains('returnTarget.href === returnTo'));
-    expect(challenge, contains('returnTarget.hostname === "127.0.0.1"'));
+    expect(challenge, contains('loopbackHosts.includes(returnTarget.hostname)'));
+    expect(challenge, contains('"127.0.0.1", "[::1]"'));
     expect(challenge, contains('loopbackPort >= 1024'));
     expect(widget, contains("@JS('turnstile.remove')"));
     expect(widget, contains('CaptchaLoadTimeoutGuard'));

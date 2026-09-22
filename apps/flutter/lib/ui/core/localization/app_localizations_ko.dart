@@ -552,6 +552,11 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String authProviderUnavailableHere(String provider) {
+    return '이 환경에서는 $provider 로그인을 이용할 수 없습니다. 다른 로그인 방법을 사용하세요.';
+  }
+
+  @override
   String get authSignUpDisabled =>
       '이메일 계정 생성을 일시적으로 이용할 수 없습니다. 다른 로그인 방법을 시도하세요.';
 

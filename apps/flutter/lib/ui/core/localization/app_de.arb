@@ -167,6 +167,7 @@
   "authCaptchaOpenFailed": "Pomodoist konnte die Sicherheitsprüfung nicht im Browser öffnen. Prüfe deinen Standardbrowser und versuche es erneut.",
   "authProviderFallback": "diesem Anbieter",
   "authProviderUnavailable": "Die Anmeldung mit {provider} ist gerade nicht verfügbar. Versuche es erneut oder wähle eine andere Methode.",
+  "authProviderUnavailableHere": "Die Anmeldung mit {provider} ist hier nicht verfügbar. Nutze eine andere Anmeldemethode.",
   "authSignUpDisabled": "Die Kontoerstellung per E-Mail ist vorübergehend nicht verfügbar. Wähle eine andere Anmeldemethode.",
   "authAccountRestricted": "Dieses Konto kann derzeit nicht angemeldet werden. Kontaktiere den Support, wenn du einen Fehler vermutest.",
   "authLinkExpired": "Dieser Anmeldelink ist ungültig oder abgelaufen. Fordere einen neuen Link an.",

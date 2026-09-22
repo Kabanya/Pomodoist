@@ -34,11 +34,15 @@ private_keys/
 .appstoreconnect/private_keys/
 .dart_tool/
 # The trailing-slash rules above only match directories, while the Flutter
-# project links its build output and Dart tool state to the repository-root
-# build directory. Those links are created by tool/link-build.sh, so the
-# symlink form needs an explicit rule or it shows up as untracked.
+# project links its Dart tool state to the repository-root build directory.
+# Those links are created by tool/link-build.sh, so the symlink form needs an
+# explicit rule or it shows up as untracked.
+#
+# The app's build/ link is deliberately left to /apps/flutter/build/ below.
+# Nested-project detection needs to see it as an ignored directory; the plain
+# path form turns it into a non-directory match, which makes VS Code resolve
+# nesting from the repository root instead of apps/flutter/.
 apps/flutter/.dart_tool
-apps/flutter/build
 .flutter-plugins-dependencies
 pubspec_overrides.yaml
 .pub-cache/
@@ -57,6 +61,18 @@ pubspec_overrides.yaml
 /linux/flutter/ephemeral/
 /macos/Flutter/ephemeral/
 /windows/flutter/ephemeral/
+
+# Flutter writes an <app>/build symlink into the app directory even though the
+# output lives under the repository-root build/ (see tool/link-build.sh). VS
+# Code walks the tree through that link and resolves the repository root as the
+# workspace root for the generated app files, so it analyses the root-level
+# build/dart_tool output against the root options and reports spurious
+# uri_does_not_exist errors for the plugin registrant.
+#
+# The app's analysis_options.yaml excludes build/** to cover the same files
+# when the app itself is opened; nothing under the app directory is affected
+# because the link resolves outside of it.
+/apps/flutter/build
 
 # Generated sidecar files for the checked-in Drift web worker asset.
 /web/drift_worker.js.deps
@@ -148,7 +164,6 @@ ios/build/
 /apps/flutter/android/key.properties
 /apps/flutter/android/.kotlin/
 /apps/flutter/android/captures/
-/apps/flutter/build/
 /apps/flutter/coverage/
 /apps/flutter/ios/build/
 /apps/flutter/macos/build/

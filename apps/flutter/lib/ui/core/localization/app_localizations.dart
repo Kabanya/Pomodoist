@@ -1117,6 +1117,12 @@ abstract class AppLocalizations {
   /// **'Sign-in with {provider} is unavailable right now. Try again or use another method.'**
   String authProviderUnavailable(String provider);
 
+  /// No description provided for @authProviderUnavailableHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in with {provider} is unavailable here. Use another sign-in method.'**
+  String authProviderUnavailableHere(String provider);
+
   /// No description provided for @authSignUpDisabled.
   ///
   /// In en, this message translates to:

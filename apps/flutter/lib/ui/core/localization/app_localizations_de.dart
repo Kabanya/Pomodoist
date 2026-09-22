@@ -585,6 +585,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String authProviderUnavailableHere(String provider) {
+    return 'Die Anmeldung mit $provider ist hier nicht verfügbar. Nutze eine andere Anmeldemethode.';
+  }
+
+  @override
   String get authSignUpDisabled =>
       'Die Kontoerstellung per E-Mail ist vorübergehend nicht verfügbar. Wähle eine andere Anmeldemethode.';
 

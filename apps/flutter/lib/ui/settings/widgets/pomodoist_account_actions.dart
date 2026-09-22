@@ -300,6 +300,9 @@ class _PomodoistSocialSignInButtonState
         failure,
         operation: _operation,
         provider: widget.label,
+        providerSignInDisabled: ref
+            .read(authViewModelProvider.notifier)
+            .socialProviderSignInDisabled,
       );
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         SnackBar(

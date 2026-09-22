@@ -585,6 +585,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String authProviderUnavailableHere(String provider) {
+    return 'La connexion avec $provider n\'est pas disponible ici. Utilisez une autre méthode de connexion.';
+  }
+
+  @override
   String get authSignUpDisabled =>
       'La création de compte par email est temporairement indisponible. Utilisez une autre méthode.';
 

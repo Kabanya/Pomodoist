@@ -221,6 +221,59 @@ void main() {
     });
   }
 
+  test('a rejected OAuth provider is not blamed on the email address', () {
+    for (final operation in [
+      AccountAuthOperation.apple,
+      AccountAuthOperation.google,
+    ]) {
+      final failure = classifyAccountAuthFailure(
+        const AuthApiException(
+          '{"msg":"Unsupported provider: provider is not enabled"}',
+          code: 'validation_failed',
+          statusCode: '400',
+        ),
+        operation: operation,
+      );
+      expect(failure.kind, AccountAuthFailureKind.providerUnavailable);
+      expect(failure.field, AccountAuthField.form);
+      expect(failure.recovery, AccountAuthRecovery.chooseAnotherProvider);
+    }
+    final email = classifyAccountAuthFailure(
+      const AuthApiException('server detail', code: 'validation_failed'),
+      operation: AccountAuthOperation.signUp,
+    );
+    expect(email.kind, AccountAuthFailureKind.emailInvalid);
+    expect(email.field, AccountAuthField.email);
+  });
+
+  test('a disabled provider sign-in reads as unusable, not as a retry', () {
+    const failure = AccountAuthFailure(
+      AccountAuthFailureKind.providerUnavailable,
+      field: AccountAuthField.form,
+      recovery: AccountAuthRecovery.chooseAnotherProvider,
+    );
+    final l10n = AppLocalizationsEn();
+    expect(
+      presentAccountAuthFailure(
+        l10n,
+        failure,
+        operation: AccountAuthOperation.google,
+        provider: 'Google',
+        providerSignInDisabled: true,
+      ).message,
+      l10n.authProviderUnavailableHere('Google'),
+    );
+    expect(
+      presentAccountAuthFailure(
+        l10n,
+        failure,
+        operation: AccountAuthOperation.google,
+        provider: 'Google',
+      ).message,
+      l10n.authProviderUnavailable('Google'),
+    );
+  });
+
   test('never presents raw server details in any supported locale', () {
     const secret = 'SECRET-user@example.com-token';
     final failure = classifyAccountAuthFailure(

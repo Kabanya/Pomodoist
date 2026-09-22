@@ -575,6 +575,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String authProviderUnavailableHere(String provider) {
+    return 'تسجيل الدخول باستخدام $provider غير متاح هنا. استخدم طريقة تسجيل دخول أخرى.';
+  }
+
+  @override
   String get authSignUpDisabled =>
       'إنشاء الحساب بالبريد الإلكتروني غير متاح مؤقتًا. استخدم طريقة تسجيل دخول أخرى.';
 

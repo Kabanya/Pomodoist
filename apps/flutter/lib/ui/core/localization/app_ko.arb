@@ -223,6 +223,7 @@
   "authCaptchaOpenFailed": "Pomodoist가 브라우저에서 보안 확인을 열지 못했습니다. 기본 브라우저를 확인하고 다시 시도하세요.",
   "authProviderFallback": "이 제공업체",
   "authProviderUnavailable": "현재 {provider} 로그인을 이용할 수 없습니다. 다시 시도하거나 다른 방법을 사용하세요.",
+  "authProviderUnavailableHere": "이 환경에서는 {provider} 로그인을 이용할 수 없습니다. 다른 로그인 방법을 사용하세요.",
   "@authProviderUnavailable": {
     "placeholders": {
       "provider": {

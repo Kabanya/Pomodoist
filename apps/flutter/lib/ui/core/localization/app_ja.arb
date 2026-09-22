@@ -223,6 +223,7 @@
   "authCaptchaOpenFailed": "ブラウザでセキュリティ確認を開けませんでした。標準ブラウザを確認して再試行してください。",
   "authProviderFallback": "このプロバイダ",
   "authProviderUnavailable": "現在{provider}でのログインは利用できません。再試行するか別の方法をお使いください。",
+  "authProviderUnavailableHere": "この環境では{provider}でのログインを利用できません。別のログイン方法をお使いください。",
   "@authProviderUnavailable": {
     "placeholders": {
       "provider": {

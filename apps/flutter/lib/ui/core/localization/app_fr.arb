@@ -167,6 +167,7 @@
   "authCaptchaOpenFailed": "Pomodoist n’a pas pu ouvrir la vérification dans le navigateur. Vérifiez le navigateur par défaut et réessayez.",
   "authProviderFallback": "ce fournisseur",
   "authProviderUnavailable": "La connexion avec {provider} est indisponible. Réessayez ou utilisez une autre méthode.",
+  "authProviderUnavailableHere": "La connexion avec {provider} n'est pas disponible ici. Utilisez une autre méthode de connexion.",
   "authSignUpDisabled": "La création de compte par email est temporairement indisponible. Utilisez une autre méthode.",
   "authAccountRestricted": "Ce compte ne peut pas se connecter actuellement. Contactez l’assistance si vous pensez qu’il s’agit d’une erreur.",
   "authLinkExpired": "Ce lien de connexion est invalide ou expiré. Demandez un nouveau lien.",

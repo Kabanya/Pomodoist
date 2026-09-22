@@ -18,6 +18,7 @@ AccountAuthFeedback presentAccountAuthFailure(
   AccountAuthFailure failure, {
   required AccountAuthOperation operation,
   String? provider,
+  bool providerSignInDisabled = false,
 }) {
   final message = switch (failure.kind) {
     AccountAuthFailureKind.emailRequired => l10n.authEmailRequired,
@@ -40,9 +41,14 @@ AccountAuthFeedback presentAccountAuthFailure(
     AccountAuthFailureKind.captchaCancelled => l10n.authCaptchaCancelled,
     AccountAuthFailureKind.captchaUnavailable => l10n.authCaptchaUnavailable,
     AccountAuthFailureKind.captchaOpenFailed => l10n.authCaptchaOpenFailed,
-    AccountAuthFailureKind.providerUnavailable => l10n.authProviderUnavailable(
-      provider ?? l10n.authProviderFallback,
-    ),
+    AccountAuthFailureKind.providerUnavailable =>
+      providerSignInDisabled
+          ? l10n.authProviderUnavailableHere(
+              provider ?? l10n.authProviderFallback,
+            )
+          : l10n.authProviderUnavailable(
+              provider ?? l10n.authProviderFallback,
+            ),
     AccountAuthFailureKind.signUpDisabled => l10n.authSignUpDisabled,
     AccountAuthFailureKind.accountRestricted => l10n.authAccountRestricted,
     AccountAuthFailureKind.linkExpired =>

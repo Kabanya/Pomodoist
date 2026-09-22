@@ -37,6 +37,6 @@
 	<key>WKApplication</key>
 	<true/>
 	<key>WKCompanionAppBundleIdentifier</key>
-	<string>$(POMODOIST_BUNDLE_ID)</string>
+	<string>$(POMODOIST_COMPANION_BUNDLE_ID)</string>
 </dict>
 </plist>

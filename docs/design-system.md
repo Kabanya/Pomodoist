@@ -344,8 +344,9 @@ duration and clock. Preserve IME composition, selection and unrelated tokens.
 Quoted metadata names remain literal during date normalization. Ready voice
 subtasks preview the project inherited from their parent's current phrase.
 The desktop input renders the phrase at a regular weight and a muted, translucent
-text color, so a draft reads as writing rather than as a heading; the hint matches
-that weight and recognized tokens keep their accent through color alone.
+text color, so a draft reads as writing rather than as a heading; recognized
+tokens keep their accent through color alone. On mobile and desktop, the composer
+hint uses light weight (300) and secondary text at 65% opacity to stay unobtrusive.
 `QuickAddComposer` owns this styling, so the dialog and the separate window
 stay consistent. Details stay below the editable input; the separate window
 scrolls when needed.

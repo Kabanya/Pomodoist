@@ -1149,6 +1149,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1182,6 +1183,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1214,6 +1216,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1312,6 +1315,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1587,6 +1591,7 @@
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist.dev;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1784,6 +1789,7 @@
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist.dev;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1973,6 +1979,7 @@
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist.dev;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2172,6 +2179,7 @@
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist.stg;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2369,6 +2377,7 @@
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2558,6 +2567,7 @@
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist.stg;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
