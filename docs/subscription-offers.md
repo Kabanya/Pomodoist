@@ -216,8 +216,8 @@ they do not demonstrate that an operational IAP key has been installed.
 
 ## Stripe — development preparation for 1.1.0
 
-The Flutter version is `1.1.0+109`. The development flavor understands the
-versioned Stripe offer catalog. Production and staging clients do not opt in.
+The Flutter version is `1.1.0+109`. Development and staging clients understand the versioned Stripe offer catalog;
+the deployed staging site is the `develop` branch. Production clients do not opt in.
 Server offers default to disabled and additionally require
 `STRIPE_BILLING_ENVIRONMENT=develop` and an `sk_test_`/`rk_test_` key. Prices,
 coupons, customers, subscriptions, invoices, Checkout sessions and webhook events

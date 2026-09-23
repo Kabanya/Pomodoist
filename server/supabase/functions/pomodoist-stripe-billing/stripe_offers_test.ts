@@ -88,7 +88,9 @@ Deno.test("active, lifetime, retry, paused and uncertain termination cannot rece
 });
 Deno.test("test-only guard and exact Stripe amounts/coupon durations", () => {
   assertStripeTestOffersConfig("sk_" + "test_fake", "develop");
-  assertThrows(() => assertStripeTestOffersConfig("sk_" + "live_fake", "develop"));
+  assertThrows(() =>
+    assertStripeTestOffersConfig("sk_" + "live_fake", "develop")
+  );
   assertThrows(() =>
     assertStripeTestOffersConfig("sk_" + "test_fake", "production")
   );

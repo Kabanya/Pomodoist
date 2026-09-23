@@ -538,7 +538,7 @@ class _BillingPlanTile extends ConsumerWidget {
         : colors.border;
     final awaitingStripeCatalog =
         channel == BillingChannel.stripe &&
-        appFlavor == AppFlavor.development &&
+        appFlavor != AppFlavor.production &&
         product == null;
     final regularPrice = awaitingStripeCatalog
         ? '—'
