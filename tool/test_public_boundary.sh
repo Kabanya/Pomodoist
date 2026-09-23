@@ -132,4 +132,31 @@ if awk '
   fail '.env.example contains a non-loopback URL value'
 fi
 
+# The release job mints a short-lived GitHub App token scoped to the private
+# backend repository, so it is the only public job that handles a credential.
+# Keep its privilege boundary explicit and machine-checked.
+release_job=$(awk '
+  /^  release:$/ { inside = 1 }
+  inside && /^  [a-zA-Z][a-zA-Z0-9_-]*:$/ && !/^  release:$/ { inside = 0 }
+  inside { print }
+' .github/workflows/selfhost.yml)
+[ -n "$release_job" ] || fail 'selfhost.yml must define the release job'
+if printf '%s\n' "$release_job" | grep -qE '^[[:space:]]+(contents|actions|pull-requests|id-token|packages):[[:space:]]*write' &&
+  ! printf '%s\n' "$release_job" | grep -qE '^[[:space:]]+contents:[[:space:]]*write'; then
+  fail 'the release job may only widen contents, never another scope'
+fi
+if printf '%s\n' "$release_job" | grep -qE '^[[:space:]]+(actions|id-token|pull-requests|packages):'; then
+  fail 'the release job must not request scopes beyond contents write'
+fi
+# A printed token or an enabled trace would expose the App credential.
+if printf '%s\n' "$release_job" | grep -nE '(echo|printf).*(\$\{?\{?[[:space:]]*steps\.app-token|secrets\.POMODOIST_CORE_SYNC)' ; then
+  fail 'the release job must never print the App token or key'
+fi
+if printf '%s\n' "$release_job" | grep -qE 'set[[:space:]]+-[a-z]*x'; then
+  fail 'the release job must not enable shell tracing around a credential'
+fi
+if printf '%s\n' "$release_job" | grep -qE 'pull_request'; then
+  fail 'the release job must never run for a pull request'
+fi
+
 printf 'Public boundary checks passed.\n'
