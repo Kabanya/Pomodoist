@@ -59,36 +59,53 @@ def newest(tagged):
     return max(tagged, key=lambda item: version_key(item[1]))[0]
 
 
+def newest_version(tags):
+    """Return the highest version in `tags`, including candidate tags."""
+    versions = [version for tag in tags if (version := parse_version(tag))]
+    return max(versions, key=version_key) if versions else None
+
+
 def next_tag(lane, tags):
     """Return the tag this lane should publish next.
 
-    The version always advances past every existing tag in the lane, so a
-    rerun after a partial failure cannot collide with an existing tag.
+    "Next" means the lowest tag that sorts strictly above every existing tag,
+    so the series advances one step at a time and a rerun after a partial
+    failure cannot collide with an existing tag.
     """
     if lane not in LANES:
         raise ValueError(f"unknown release lane: {lane}")
+    published = stable_tags(tags) if LANES[lane] == "stable" else candidate_tags(tags)
+    latest = newest_version(tags)
+    # Every version is 0.x, so the major component never breaks a tie here.
+    major = latest[0] if latest else 0
     if LANES[lane] == "stable":
-        published = stable_tags(tags)
-        latest = newest(published)
-        if latest is None:
-            return "server-v0.1.0"
-        major, minor, patch, _ = parse_version(latest)
-        return f"server-v{major}.{minor}.{patch + 1}"
-    published = candidate_tags(tags)
-    stable = newest(stable_tags(tags))
-    latest = newest(published)
-    if latest is None:
-        # The first candidate is based on the newest stable release, so a
-        # candidate never sorts below a stable tag it is meant to supersede.
-        if stable is None:
-            return "server-v0.1.0-rc.1"
-        major, minor, patch, _ = parse_version(stable)
-        return f"server-v{major}.{minor}.{patch}-rc.1"
-    major, minor, patch, candidate = parse_version(latest)
-    if stable is not None and parse_version(stable)[:3] > (major, minor, patch):
-        stable_major, stable_minor, stable_patch, _ = parse_version(stable)
-        return f"server-v{stable_major}.{stable_minor}.{stable_patch}-rc.1"
-    return f"server-v{major}.{minor}.{patch}-rc.{candidate + 1}"
+        minor = latest[1] if latest else 1
+        patch = latest[2] + 1 if latest else 0
+        return f"server-v{major}.{minor}.{patch}"
+    candidate = 1
+    if latest is not None and latest[3] is not None:
+        minor, patch = latest[1], latest[2]
+        candidate += latest[3]
+    else:
+        # The newest tag is stable, so the candidate series opens one patch
+        # above it: a candidate never sorts below the stable release it is
+        # meant to supersede, and the matching stable promotion is one step up.
+        minor = latest[1] if latest else 1
+        patch = latest[2] + 1 if latest else 0
+    return f"server-v{major}.{minor}.{patch}-rc.{candidate}"
+
+
+def stable_for(tag):
+    """Return the stable release a candidate tag promotes to.
+
+    `main` publishes the stable form of the same server tree that `develop`
+    already published as a candidate.
+    """
+    version = parse_version(tag)
+    if version is None or version[3] is None:
+        return None
+    major, minor, patch, _ = version
+    return f"server-v{major}.{minor}.{patch}"
 
 
 def head_is_current(sha, branch, run=subprocess.run):
@@ -118,7 +135,20 @@ def select(lane, tags, tagged_trees):
 
     `tagged_trees` maps a `server/` tree ID to the tags that already point at
     it, so a rerun against unchanged content publishes nothing.
+
+    The `main` lane compares against stable tags only: after `develop` publishes
+    `server-v0.1.10-rc.1`, promoting that same tree must still create the stable
+    `server-v0.1.10`. A candidate is never a released version on its own.
     """
+    if lane not in LANES:
+        raise ValueError(f"unknown release lane: {lane}")
+    if LANES[lane] == "stable":
+        candidate = next_tag(lane, tags)
+        existing = tagged_trees.get(candidate, [])
+        if isinstance(existing, str):
+            existing = [existing]
+        eligible = [tag for tag in existing if tag in {name for name, _ in stable_tags(tags)}]
+        return None if eligible else candidate
     candidate = next_tag(lane, tags)
     return None if tagged_trees.get(candidate) else candidate
 

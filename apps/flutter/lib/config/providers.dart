@@ -18,7 +18,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:pomodoist/config/app_language.dart';
-import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/project_collaboration.dart';
 import 'package:pomodoist/domain/models/settings/app_language.dart';
 import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:pomodoist/domain/models/tasks/task_time.dart';
@@ -53,7 +53,6 @@ import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
 import 'package:pomodoist/data/repositories/kanban/kanban_repository_impl.dart';
 import 'package:pomodoist/data/repositories/local/kanban_transition_coordinator.dart';
 import 'package:pomodoist/domain/use_cases/tasks/csv_task_import_use_case.dart';
-import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:uuid/uuid.dart';
 
@@ -196,17 +195,17 @@ final syncQueueRepositoryProvider = Provider<OutboxService>((ref) {
 
 /// Carries the collaboration API so that deleting a shared root can go through
 /// the server scope operation instead of a content command the server rejects.
+///
+/// The account-backed value is injected through `projectCollaborationProvider`;
+/// keeping the account layer out of this file is what stops it from importing
+/// `account_providers.dart` back.
 final projectRepositoryProvider = Provider<ProjectRepository>((ref) {
-  final account = ref.watch(accountClientProvider);
+  final collaboration = ref.watch(projectCollaborationProvider);
   return DriftProjectRepository(
     ref.watch(appDatabaseProvider),
     ref.watch(syncQueueRepositoryProvider),
-    collaboration: account == null
-        ? null
-        : CollaborationApi.account(account),
-    synchronize: () async {
-      await ref.read(accountSyncEngineProvider)?.syncNow();
-    },
+    collaboration: collaboration.api,
+    synchronize: collaboration.synchronize,
   );
 });
 

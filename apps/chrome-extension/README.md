@@ -48,14 +48,34 @@ From the repository root:
 
 ```sh
 make chrome-debug    # .env.staging → build/chrome/debug; opens Chrome
+make chrome-run      # Load the built extension and check the popup renders
 make chrome-release  # .env.testflight → build/chrome/release + ZIP
 ```
 
-The first time, enable Developer mode in `chrome://extensions`, choose **Load
-unpacked**, and select `build/chrome/debug`. Keep using that directory so its
-local extension ID stays stable on this computer. After rebuilding, click
-**Reload**, then reopen the popup. Popup-only changes also appear when reopening
-it. Debug uses real staging accounts; production accounts are separate.
+`make chrome-run` depends on `chrome-debug`, then loads `build/chrome/debug` into
+a dedicated profile via `--load-extension`. It works because it drives a
+Playwright Chromium build: stable Chrome ignores `--load-extension` from version
+137 on. The profile is reused across runs, so the extension ID stays the same
+and a manual sign-in survives restarts. The tool opens the popup, reports what
+rendered, and fails when something is missing.
+
+```sh
+node tool/chrome-extension-run.mjs --preview --view timer --screenshot /tmp/popup.png
+```
+
+`--preview` injects a stub extension message layer, so the popup renders a fixed
+task list without a signed-in account; `--view` switches to a tab before
+inspecting and `--screenshot` saves the popup at its real 392px width.
+`--await <seconds>` holds the browser open (what `make chrome-run` does).
+Signing in is the one step that stays manual: open the printed
+`chrome-extension://<id>/popup.html` URL.
+
+The first time — or if you prefer stable Chrome — enable Developer mode in
+`chrome://extensions`, choose **Load unpacked**, and select `build/chrome/debug`.
+Keep using that directory so its local extension ID stays stable on this
+computer. After rebuilding, click **Reload**, then reopen the popup. Popup-only
+changes also appear when reopening it. Debug uses real staging accounts;
+production accounts are separate.
 
 The release archive is `build/chrome/pomodoist-chrome-release.zip`. Release builds
 do not overwrite debug files or publish to the store. `npm run build` writes to

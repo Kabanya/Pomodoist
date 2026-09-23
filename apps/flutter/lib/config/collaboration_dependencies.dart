@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/project_collaboration.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/data/repositories/collaboration/collaboration_repository.dart';
 import 'package:pomodoist/data/repositories/collaboration/drift_collaboration_repository.dart';
@@ -11,6 +12,22 @@ import 'package:pomodoist/domain/models/collaboration/collaboration_responses.da
 
 export 'package:pomodoist/config/providers.dart'
     show projectRepositoryProvider;
+
+/// Supplies the account-backed collaboration behaviour that
+/// `projectRepositoryProvider` reads. This file may import both the account
+/// layer and `providers.dart`, so the wiring lives here; reading the account
+/// lazily keeps a signed-out or unconfigured client from building an API.
+final projectCollaborationOverride = projectCollaborationProvider.overrideWith(
+  (ref) {
+    final account = ref.watch(accountClientProvider);
+    return ProjectCollaboration(
+      api: account == null ? null : CollaborationApi.account(account),
+      synchronize: () async {
+        await ref.read(accountSyncEngineProvider)?.syncNow();
+      },
+    );
+  },
+);
 
 final collaborationRepositoryProvider = Provider<CollaborationRepository?>((
   ref,

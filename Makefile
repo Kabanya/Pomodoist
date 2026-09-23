@@ -185,7 +185,7 @@ COMPANION_RELEASE_CONFIG ?= $(TESTFLIGHT_CONFIG)
 
 .PHONY: setup setup-env setup-flutter setup-linux run run-linux web
 .PHONY: setup-telegram telegram-configure
-.PHONY: telegram-debug telegram-local telegram-release chrome-debug chrome-release
+.PHONY: telegram-debug telegram-local telegram-release chrome-debug chrome-run chrome-release
 .PHONY: architecture analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-flavor-identity test-linux-packaging check format app-icons app-icons-check
 .PHONY: android web-debug web-profile web-release
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
@@ -226,6 +226,7 @@ help:
 	printf '  %s%-27s%s %s\n' "$${bold}" 'make telegram-debug' "$${reset}" 'Local Mini App through HTTPS, using the staging bot'; \
 	printf '  %s%-27s%s %s\n' "$${bold}" 'make telegram-local' "$${reset}" 'Mini App preview in Chrome, no tunnel or bot changes'; \
 	printf '  %s%-27s%s %s\n' "$${bold}" 'make chrome-debug' "$${reset}" 'Build the staging extension and open Chrome'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make chrome-run' "$${reset}" 'Load the built extension and check the popup renders'; \
 	printf '\n%s%sQuality%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-27s%s %s\n' "$${bold}" 'make analyze' "$${reset}" 'Analyze Dart code'; \
 	printf '  %s%-27s%s %s\n' "$${bold}" 'make test' "$${reset}" 'Run Flutter tests'; \
@@ -241,6 +242,7 @@ help:
 	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-profile' "$${reset}" 'Profile app'; \
 	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-release' "$${reset}" 'Release app'; \
 	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Telegram' "$${reset}" "$${bold}" 'make telegram-release' "$${reset}" 'Production Mini App files and ZIP'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Chrome' "$${reset}" "$${bold}" 'make chrome-run' "$${reset}" 'Debug extension in a stable local profile'; \
 	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Chrome' "$${reset}" "$${bold}" 'make chrome-release' "$${reset}" 'Production extension files and ZIP'; \
 	printf '\n'; \
 	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-debug' "$${reset}" 'Debug app'; \
@@ -320,6 +322,12 @@ telegram-release:
 
 chrome-debug:
 	node tool/web-companions.mjs chrome debug --config "$(COMPANION_DEBUG_CONFIG)" $(if $(filter 0,$(COMPANION_OPEN)),--no-open,)
+
+# Loads the built debug extension into a dedicated profile, so the extension id
+# stays the same across runs and manual sign-in survives. Signing in is the one
+# step that stays interactive; the tool only automates loading and inspection.
+chrome-run: chrome-debug
+	node tool/chrome-extension-run.mjs $(if $(filter 0,$(COMPANION_OPEN)),--no-open,) $(if $(filter 1,$(COMPANION_OPEN)),--keep-profile --await 600,)
 
 chrome-release:
 	node tool/web-companions.mjs chrome release --config "$(COMPANION_RELEASE_CONFIG)"
