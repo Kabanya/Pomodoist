@@ -597,7 +597,14 @@ function scheduleLabel(task) {
 
 function tick() {
   if (!state.focus) return;
-  const seconds = remainingSeconds(state.focus);
+  // A pending start has no server timestamp yet: counting down against the
+  // local guess makes the clock jump back up when the confirmation arrives.
+  const awaitingStart = pendingCommands.some((pending) =>
+    pending.command.type === "focus.start"
+  );
+  const seconds = awaitingStart
+    ? Number(state.focus.interval.plannedSeconds || 0)
+    : remainingSeconds(state.focus);
   elements["focus-clock"].textContent = formatClock(seconds);
   elements["focus-finish"].hidden = seconds > 0;
   if (seconds === 0 && !autoCompleting && !pendingCommands.length) {

@@ -1,11 +1,13 @@
 import { text, localize } from './i18n.js';
 import { config } from './config.js';
-import { dateKey, dueDay, parseDue, schedule, scheduleFields, tabDraft, tasksFor } from './core.js';
+import { dateKey, deleteConfirmation, dueDay, openSubtasks, parseDue, schedule, scheduleFields, tabDraft, tasksFor } from './core.js';
+import { DEFAULT_MINUTES, PRESETS, initial, phaseDuration, reduce, remainingMs } from './timer.js';
 import { Realtime } from './realtime.js';
 localize(document);
 const $ = id => document.getElementById(id);
 let state, view = 'today', editing = null, dirty = new Set(), busy = 0, live = false, syncing = false;
 let owner = null, poll, hintTimer, refreshAgain = false;
+let timer = initial(), timerTick = null;
 const realtime = new Realtime(() => call('realtime'), () => {
   clearTimeout(hintTimer); hintTimer = setTimeout(refresh, 150);
 }, connected => { live = connected; status(); });
@@ -47,7 +49,7 @@ function render(next) {
   $('startup').hidden = true; $('auth').hidden = !!owner; $('app').hidden = !owner;
   $('clear-account').hidden = !!owner || !state.pending;
   if (previousOwner !== owner) {
-    editing = null; $('editor').hidden = true; $('task-panel').hidden = false;
+    editing = null; $('editor').hidden = true; showPanel();
     $('new-title').value = '';
     realtime.stop(); clearInterval(poll);
     if (owner) { realtime.start(); poll = setInterval(refresh, 30000); }
@@ -95,6 +97,10 @@ async function refresh() {
     if (refreshAgain) { refreshAgain = false; queueMicrotask(refresh); }
   }
 }
+function showPanel() {
+  const timerView = view === 'timer';
+  $('task-panel').hidden = timerView; $('editor').hidden = true; $('timer-panel').hidden = !timerView;
+}
 function openEditor(task) {
   editing = task; dirty = new Set();
   const fields = scheduleFields(task.dueJson);
@@ -103,14 +109,21 @@ function openEditor(task) {
   $('edit-priority').value = task.priority ?? 4;
   const due = parseDue(task.dueJson);
   $('recurrence-note').hidden = !due?.recurrence && !due?.recurrenceSeriesId;
-  $('task-panel').hidden = true; $('editor').hidden = false; $('edit-title').focus();
+  $('task-panel').hidden = true; $('timer-panel').hidden = true; $('editor').hidden = false; $('edit-title').focus();
 }
-function closeEditor() { editing = null; $('editor').hidden = true; $('task-panel').hidden = false; }
+function closeEditor() { editing = null; showPanel(); }
 for (const id of ['edit-date', 'edit-time', 'edit-minutes']) $(id).addEventListener('input', () => dirty.add(id));
 $('cancel-edit').addEventListener('click', closeEditor);
 $('clear-date').addEventListener('click', () => {
   $('edit-date').value = ''; $('edit-time').value = ''; dirty.add('edit-date'); dirty.add('edit-time');
 });
+$('delete-task').addEventListener('click', () => run(async () => {
+  const subtasks = openSubtasks(state.records, editing.id);
+  const prompt = deleteConfirmation(editing.content, subtasks);
+  if (!confirm(text(prompt.message, prompt.values))) return;
+  const result = await call('mutate', { owner, action: { kind: 'delete', id: editing.id } });
+  closeEditor(); render(result);
+}));
 $('edit-form').addEventListener('submit', event => {
   event.preventDefault();
   run(async () => {
@@ -144,7 +157,8 @@ for (const tab of document.querySelectorAll('[data-view]')) {
   tab.addEventListener('click', () => {
     view = tab.dataset.view; closeEditor();
     for (const item of document.querySelectorAll('[data-view]')) { item.setAttribute('aria-selected', String(item === tab)); item.tabIndex = item === tab ? 0 : -1; }
-    $('task-panel').setAttribute('aria-labelledby', tab.id); $('task-scroll').scrollTop = 0; render(state);
+    $('task-panel').setAttribute('aria-labelledby', tab.id); $('task-scroll').scrollTop = 0;
+    if (view === 'timer') { showPanel(); startTicking(); } else { stopTicking(); render(state); }
   });
   tab.addEventListener('keydown', event => {
     const tabs = [...document.querySelectorAll('[data-view]')]; let index = tabs.indexOf(tab);
@@ -155,6 +169,44 @@ for (const tab of document.querySelectorAll('[data-view]')) {
   });
 }
 $('refresh').addEventListener('click', refresh);
+function clockText(timer) {
+  const total = Math.ceil(remainingMs(timer) / 1000);
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
+function paintTimer() {
+  $('timer-display').textContent = clockText(timer);
+  $('timer-phase').textContent = timer.phase === 'break' ? text("Break") : text("Focus");
+  $('timer-toggle').firstElementChild.textContent = text(timer.running ? "Pause" : "Start");
+  const total = phaseDuration(timer.phase, timer.minutes);
+  $('timer-progress').value = total ? remainingMs(timer) / total : 0;
+  for (const button of document.querySelectorAll('[data-minutes]')) {
+    button.setAttribute('aria-pressed', String(Number(button.dataset.minutes) === timer.minutes));
+  }
+}
+function saveTimer() {
+  chrome.storage.session.set({ timer: { ...timer, savedAt: Date.now() } }).catch(() => {});
+}
+function beep() {
+  try {
+    const context = new AudioContext(), oscillator = context.createOscillator(), gain = context.createGain();
+    oscillator.frequency.value = 880; gain.gain.value = 0.08;
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.start(); oscillator.stop(context.currentTime + 0.35);
+  } catch { /* Autoplay policies may refuse audio; the live region still announces the phase. */ }
+}
+function actTimer(action) {
+  const { timer: next, effect } = reduce(timer, action);
+  timer = next;
+  if (effect) { $('timer-display').textContent = text(effect === 'focusEnded' ? "Break" : "Focus"); beep(); }
+  paintTimer(); saveTimer();
+}
+function startTicking() { if (!timerTick) timerTick = setInterval(() => actTimer({ type: 'tick' }), 250); }
+function stopTicking() { clearInterval(timerTick); timerTick = null; }
+$('timer-toggle').addEventListener('click', () => actTimer({ type: timer.running ? 'pause' : 'start' }));
+$('timer-reset').addEventListener('click', () => actTimer({ type: 'reset' }));
+for (const button of document.querySelectorAll('[data-minutes]')) {
+  button.addEventListener('click', () => actTimer({ type: 'setMinutes', minutes: Number(button.dataset.minutes) }));
+}
 $('login').addEventListener('submit', event => {
   event.preventDefault();
   const credentials = { email: $('email').value, password: $('password').value }; $('password').value = '';
@@ -176,5 +228,18 @@ window.addEventListener('online', refresh);
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) realtime.stop(); else if (state?.user) { realtime.start(); refresh(); }
 });
-window.addEventListener('pagehide', () => { realtime.stop(); clearInterval(poll); clearTimeout(hintTimer); });
-try { render(await call('snapshot')); refresh(); } catch (e) { $('startup').hidden = true; error(e.message); }
+window.addEventListener('pagehide', () => { realtime.stop(); clearInterval(poll); clearTimeout(hintTimer); stopTicking(); });
+async function restoreTimer() {
+  try {
+    const saved = (await chrome.storage.session.get('timer')).timer;
+    // Mirror the account-status cache guard: a stale or malformed payload is
+    // discarded rather than trusted.
+    if (saved && PRESETS.includes(saved.minutes) && ['focus', 'break'].includes(saved.phase) &&
+        Number.isFinite(saved.remaining) && saved.remaining >= 0 && Date.now() - saved.savedAt < 86400000) {
+      timer = { ...initial(saved.minutes), ...saved, remaining: remainingMs(saved), endsAt: saved.running ? saved.endsAt : null };
+      if (timer.running && !Number.isFinite(timer.endsAt)) timer = { ...timer, running: false };
+    }
+  } catch { /* Session storage may be unavailable; the default timer is still usable. */ }
+  paintTimer();
+}
+try { await restoreTimer(); render(await call('snapshot')); refresh(); } catch (e) { $('startup').hidden = true; error(e.message); }

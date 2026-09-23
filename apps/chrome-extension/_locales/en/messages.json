@@ -334,5 +334,53 @@
   },
   "extension_description": {
     "message": "Quick access to your Pomodoist tasks: Today, Upcoming, scheduling and browser tab capture."
+  },
+  "timer": {
+    "message": "Timer"
+  },
+  "focus": {
+    "message": "Focus"
+  },
+  "break": {
+    "message": "Break"
+  },
+  "start": {
+    "message": "Start"
+  },
+  "pause": {
+    "message": "Pause"
+  },
+  "reset": {
+    "message": "Reset"
+  },
+  "delete": {
+    "message": "Delete"
+  },
+  "delete_content": {
+    "message": "Delete “{content}”?"
+  },
+  "delete_content_and_subtasks": {
+    "message": "Delete “{content}” and its {count} subtasks?"
+  },
+  "minutes_15": {
+    "message": "15 minutes"
+  },
+  "minutes_5": {
+    "message": "5 minutes"
+  },
+  "minutes_25": {
+    "message": "25 minutes"
+  },
+  "minutes_50": {
+    "message": "50 minutes"
+  },
+  "choose_a_timer_length": {
+    "message": "Choose a timer length"
+  },
+  "time_remaining": {
+    "message": "Time remaining"
+  },
+  "timer_runs_only_in_the_popup": {
+    "message": "This timer runs only in the popup and is not saved to Pomodoist Focus."
   }
 }

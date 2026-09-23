@@ -109,7 +109,23 @@ const keys = {
   "Subtask": "subtask",
   "Project": "project",
   "{count} changes saved locally · waiting to sync": "pending_changes",
-  "Account status checked {time}": "account_checked"
+  "Account status checked {time}": "account_checked",
+  "Timer": "timer",
+  "Focus": "focus",
+  "Break": "break",
+  "Start": "start",
+  "Pause": "pause",
+  "Reset": "reset",
+  "Delete": "delete",
+  "Delete \"{content}\"?": "delete_content",
+  "Delete \"{content}\" and its {count} subtasks?": "delete_content_and_subtasks",
+  "15 minutes": "minutes_15",
+  "5 minutes": "minutes_5",
+  "25 minutes": "minutes_25",
+  "50 minutes": "minutes_50",
+  "Choose a timer length": "choose_a_timer_length",
+  "Time remaining": "time_remaining",
+  "This timer runs only in the popup and is not saved to Pomodoist Focus.": "timer_runs_only_in_the_popup"
 };
 export function text(message, values = {}) {
   const key = keys[message];

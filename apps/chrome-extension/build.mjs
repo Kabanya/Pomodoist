@@ -38,7 +38,7 @@ export async function build(env = process.env, destination = path.join(root, '..
   if (destination === path.parse(destination).root || destination === root || root.startsWith(destination + path.sep)) throw new Error('Build output must not contain the extension source.');
   await rm(destination, { recursive: true, force: true });
   await mkdir(path.join(destination, 'src'), { recursive: true });
-  for (const file of ['i18n.js', 'background.js', 'client.js', 'core.js', 'popup.js', 'realtime.js', 'sync.js']) {
+  for (const file of ['i18n.js', 'background.js', 'client.js', 'core.js', 'popup.js', 'realtime.js', 'sync.js', 'timer.js']) {
     await copyFile(path.join(root, 'src', file), path.join(destination, 'src', file));
   }
   for (const file of ['popup.html', 'styles.css']) await copyFile(path.join(root, file), path.join(destination, file));

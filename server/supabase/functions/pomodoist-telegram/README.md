@@ -148,8 +148,9 @@ node --test tool/configure-telegram-bot.test.mjs
 
 The browser regression uses Playwright and Chrome, without contacting Telegram or
 production. It exercises the real Mini App against controlled API responses and
-the shared task operations. With Playwright available to Node (or `NODE_PATH`
-pointing to an existing runtime):
+the shared task operations. Its in-memory backend lives in
+`tool/telegram-fixture.mjs`, which `make telegram-local` reuses. With Playwright
+available to Node (or `NODE_PATH` pointing to an existing runtime):
 
 ```sh
 node tool/test-telegram-mini-app.mjs
@@ -158,3 +159,21 @@ node tool/test-telegram-mini-app.mjs
 Use Node 22 with `--experimental-transform-types` if needed; current Node versions
 strip TypeScript natively. Optional `TELEGRAM_SCREENSHOT_DIR` saves light/dark
 mobile previews. Live Telegram device acceptance and deployment are separate.
+
+## Browser preview without a tunnel
+
+`make telegram-local` serves the current `apps/telegram-mini-app` files from
+`http://127.0.0.1:7359/telegram/` and opens that URL in Chrome. It starts no
+Cloudflare tunnel, reads no bot token and never contacts Telegram or changes bot
+settings, so it works offline and needs no public HTTPS endpoint.
+
+The preview injects a `Telegram.WebApp` stub and answers Mini App API calls from
+`tool/telegram-fixture.mjs`, the same in-memory backend the browser regression
+uses. It therefore runs the real Mini App against real task and Focus semantics:
+lists, pagination, four views, editing, completion, Focus, drafts and themes all
+work. Seeded fixture tasks are not your account data and are lost on restart.
+
+Use it for fast iteration on Mini App behavior and styling: refresh the page
+after editing files, and press Ctrl+C to stop. Because no Telegram client is
+present, haptics, the Back button, real chat messages, account linking and the
+deployed backend still require `make telegram-debug` or a staging deploy.

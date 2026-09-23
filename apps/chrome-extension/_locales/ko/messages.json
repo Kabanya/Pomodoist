@@ -334,5 +334,53 @@
   },
   "extension_description": {
     "message": "Pomodoist 작업에 빠르게 접근하세요. 오늘, 예정, 일정 설정 및 브라우저 탭 저장을 지원합니다."
+  },
+  "timer": {
+    "message": "타이머"
+  },
+  "focus": {
+    "message": "집중"
+  },
+  "break": {
+    "message": "휴식"
+  },
+  "start": {
+    "message": "시작"
+  },
+  "pause": {
+    "message": "일시정지"
+  },
+  "reset": {
+    "message": "초기화"
+  },
+  "delete": {
+    "message": "삭제"
+  },
+  "delete_content": {
+    "message": "“{content}”을(를) 삭제할까요?"
+  },
+  "delete_content_and_subtasks": {
+    "message": "“{content}” 및 하위 작업 {count}개를 삭제할까요?"
+  },
+  "minutes_15": {
+    "message": "15분"
+  },
+  "minutes_5": {
+    "message": "5분"
+  },
+  "minutes_25": {
+    "message": "25분"
+  },
+  "minutes_50": {
+    "message": "50분"
+  },
+  "choose_a_timer_length": {
+    "message": "타이머 길이 선택"
+  },
+  "time_remaining": {
+    "message": "남은 시간"
+  },
+  "timer_runs_only_in_the_popup": {
+    "message": "이 타이머는 팝업에서만 동작하며 Pomodoist 집중에 저장되지 않습니다."
   }
 }

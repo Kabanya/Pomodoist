@@ -185,7 +185,7 @@ COMPANION_RELEASE_CONFIG ?= $(TESTFLIGHT_CONFIG)
 
 .PHONY: setup setup-env setup-flutter setup-linux run run-linux web
 .PHONY: setup-telegram telegram-configure
-.PHONY: telegram-debug telegram-release chrome-debug chrome-release
+.PHONY: telegram-debug telegram-local telegram-release chrome-debug chrome-release
 .PHONY: architecture analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-flavor-identity test-linux-packaging check format app-icons app-icons-check
 .PHONY: android web-debug web-profile web-release
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
@@ -224,6 +224,7 @@ help:
 	printf '  %s%-27s%s %s\n' "$${bold}" 'make run-linux' "$${reset}" 'Run the native Linux desktop app'; \
 	printf '  %s%-27s%s %s\n' "$${bold}" 'make web' "$${reset}" 'Run Pomodoist in Chrome'; \
 	printf '  %s%-27s%s %s\n' "$${bold}" 'make telegram-debug' "$${reset}" 'Local Mini App through HTTPS, using the staging bot'; \
+	printf '  %s%-27s%s %s\n' "$${bold}" 'make telegram-local' "$${reset}" 'Mini App preview in Chrome, no tunnel or bot changes'; \
 	printf '  %s%-27s%s %s\n' "$${bold}" 'make chrome-debug' "$${reset}" 'Build the staging extension and open Chrome'; \
 	printf '\n%s%sQuality%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-27s%s %s\n' "$${bold}" 'make analyze' "$${reset}" 'Analyze Dart code'; \
@@ -309,6 +310,10 @@ telegram-configure: setup-telegram
 
 telegram-debug:
 	node tool/telegram-debug.mjs --config "$(COMPANION_DEBUG_CONFIG)" --bot-config "$(TELEGRAM_DEBUG_CONFIG)" $(if $(filter 0,$(COMPANION_OPEN)),--no-open,)
+
+# Browser preview of the Mini App without a tunnel or bot changes.
+telegram-local:
+	node tool/telegram-debug.mjs --local --config "$(COMPANION_DEBUG_CONFIG)" $(if $(filter 0,$(COMPANION_OPEN)),--no-open,)
 
 telegram-release:
 	node tool/web-companions.mjs telegram release --config "$(COMPANION_RELEASE_CONFIG)"

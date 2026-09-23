@@ -334,5 +334,53 @@
   },
   "extension_description": {
     "message": "Pomodoistのタスクにすばやくアクセス：今日、今後の予定、スケジュール設定、ブラウザータブの保存。"
+  },
+  "timer": {
+    "message": "タイマー"
+  },
+  "focus": {
+    "message": "集中"
+  },
+  "break": {
+    "message": "休憩"
+  },
+  "start": {
+    "message": "開始"
+  },
+  "pause": {
+    "message": "一時停止"
+  },
+  "reset": {
+    "message": "リセット"
+  },
+  "delete": {
+    "message": "削除"
+  },
+  "delete_content": {
+    "message": "「{content}」を削除しますか？"
+  },
+  "delete_content_and_subtasks": {
+    "message": "「{content}」と {count} 件のサブタスクを削除しますか？"
+  },
+  "minutes_15": {
+    "message": "15分"
+  },
+  "minutes_5": {
+    "message": "5分"
+  },
+  "minutes_25": {
+    "message": "25分"
+  },
+  "minutes_50": {
+    "message": "50分"
+  },
+  "choose_a_timer_length": {
+    "message": "タイマーの長さを選択"
+  },
+  "time_remaining": {
+    "message": "残り時間"
+  },
+  "timer_runs_only_in_the_popup": {
+    "message": "このタイマーはポップアップ内でのみ動作し、Pomodoist の集中には保存されません。"
   }
 }

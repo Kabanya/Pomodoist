@@ -7,11 +7,12 @@ import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { root, miniAppFiles, loadEnv, runtimeConfig, configScript, openUrl } from './web-companions.mjs';
 import { telegramApi } from './configure-telegram-bot.mjs';
+import { createTelegramFixture, telegramStubSource } from './telegram-fixture.mjs';
 
 const apiPath = '/functions/v1/pomodoist-telegram', limit = 48 * 1024;
 const source = path.join(root, 'apps', 'telegram-mini-app');
 
-export function createPreviewServer(config, { sourceDir = source, allowedOrigins = new Set(), fetcher = fetch } = {}) {
+export function createPreviewServer(config, { sourceDir = source, allowedOrigins = new Set(), fetcher = fetch, stub, backend } = {}) {
   const server = createServer(async (req, res) => {
     const reply = (status, body, headers = {}) => {
       res.writeHead(status, { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', ...headers });
@@ -20,6 +21,25 @@ export function createPreviewServer(config, { sourceDir = source, allowedOrigins
     const failure = (status, code) => reply(status, JSON.stringify({ ok: false, code }), { 'Content-Type': 'application/json' });
     try {
       const url = new URL(req.url, 'http://localhost');
+      if (url.pathname === apiPath && backend) {
+        if (!allowedOrigins.has(req.headers.origin)) return failure(403, 'origin_forbidden');
+        if (req.method !== 'POST') return failure(405, 'method_not_allowed');
+        if (Number(req.headers['content-length'] ?? 0) > limit) { req.resume(); return failure(413, 'body_too_large'); }
+        const raw = await new Promise((resolve, reject) => {
+          const chunks = []; let size = 0;
+          req.on('data', chunk => {
+            size += chunk.length;
+            if (size > limit) reject(Object.assign(new Error(), { status: 413 }));
+            else chunks.push(chunk);
+          });
+          req.on('end', () => resolve(Buffer.concat(chunks)));
+          req.on('error', reject);
+        });
+        let body;
+        try { body = JSON.parse(raw.toString('utf8')); } catch { return failure(400, 'invalid_body'); }
+        const result = backend.respond(body);
+        return reply(result.ok === true ? 200 : result.status ?? 400, JSON.stringify(result.ok === true ? { ok: true, data: result.data } : { ok: false, code: result.code }), { 'Content-Type': 'application/json' });
+      }
       if (url.pathname === apiPath) {
         if (!allowedOrigins.has(req.headers.origin)) return failure(403, 'origin_forbidden');
         if (req.method !== 'POST') return failure(405, 'method_not_allowed');
@@ -46,9 +66,14 @@ export function createPreviewServer(config, { sourceDir = source, allowedOrigins
       if (url.pathname === '/') return reply(302, '', { Location: config.webAppUrl + '/' });
       if (url.pathname === '/telegram') return reply(302, '', { Location: '/telegram/' });
       if (url.pathname === '/config.js') return reply(200, configScript({ ...config, supabaseUrl: '' }), { 'Content-Type': 'text/javascript' });
+      if (stub && url.pathname === '/telegram-stub.js') return reply(200, stub, { 'Content-Type': 'text/javascript' });
       const file = url.pathname === '/telegram/' ? 'index.html' : url.pathname.slice('/telegram/'.length);
       if (!url.pathname.startsWith('/telegram/') || !miniAppFiles.includes(file)) return failure(404, 'not_found');
       const type = file.endsWith('.js') ? 'text/javascript' : file.endsWith('.css') ? 'text/css' : 'text/html';
+      if (stub && file === 'index.html') {
+        const page = await readFile(path.join(sourceDir, file), 'utf8');
+        return reply(200, page.replace('<script src="/config.js"></script>', '<script src="/config.js"></script><script src="/telegram-stub.js"></script>'), { 'Content-Type': 'text/html; charset=utf-8' });
+      }
       return reply(200, await readFile(path.join(sourceDir, file)), { 'Content-Type': type + '; charset=utf-8' });
     } catch (error) {
       if (!res.headersSent) failure(error.status === 413 ? 413 : 503, error.status === 413 ? 'body_too_large' : 'request_failed');
@@ -107,23 +132,36 @@ export function readTunnelUrl(child, timeoutMs = 30000) {
 
 async function main() {
   const { values } = parseArgs({ options: { config: { type: 'string', default: path.join(root, '.env.staging') },
-    'bot-config': { type: 'string', default: path.join(root, '.env.telegram.staging') }, 'no-open': { type: 'boolean' } } });
-  const env = await loadEnv(values.config), botEnv = await loadEnv(values['bot-config']);
+    'bot-config': { type: 'string', default: path.join(root, '.env.telegram.staging') }, 'no-open': { type: 'boolean' },
+    local: { type: 'boolean' } } });
+  const localOnly = values.local === true;
+  const env = await loadEnv(values.config), botEnv = localOnly ? {} : await loadEnv(values['bot-config']);
   if (env.POMODOIST_ENVIRONMENT !== 'staging') throw new Error('telegram-debug requires a staging profile.');
   const config = runtimeConfig(env);
-  if (config.supabaseUrl !== botEnv.SUPABASE_URL || config.webAppUrl !== botEnv.POMODOIST_WEB_URL) {
+  if (!localOnly && (config.supabaseUrl !== botEnv.SUPABASE_URL || config.webAppUrl !== botEnv.POMODOIST_WEB_URL)) {
     throw new Error('Staging app and bot profiles must use the same backend and web origin.');
   }
-  const call = telegramApi(botEnv.POMODOIST_TELEGRAM_BOT_TOKEN);
+  const call = localOnly ? null : telegramApi(botEnv.POMODOIST_TELEGRAM_BOT_TOKEN);
   const stateFile = path.join(root, 'build/telegram/debug/menu.json');
   const logFile = path.join(root, 'build/telegram/debug/tunnel.log');
-  const origins = new Set(), server = createPreviewServer(config, { allowedOrigins: origins });
+  const origins = new Set(), server = localOnly
+    ? createPreviewServer(config, { allowedOrigins: origins, stub: telegramStubSource, backend: createTelegramFixture() })
+    : createPreviewServer(config, { allowedOrigins: origins });
   let child, ownsServer = false, stopping = false;
   let stop;
   const stopped = new Promise(resolve => { stop = () => { stopping = true; resolve(); }; });
   process.on('SIGINT', stop); process.on('SIGTERM', stop);
   try {
     server.listen(7359, '127.0.0.1'); await once(server, 'listening'); ownsServer = true;
+    if (localOnly) {
+      origins.add(`http://127.0.0.1:7359`);
+      console.log(`Mini App (${env.POMODOIST_ENVIRONMENT}): http://127.0.0.1:7359/telegram/`);
+      console.log('Tunnel and bot settings are unused. Tasks, Focus and edits are served by an in-memory fixture and reset on restart.');
+      console.log('Refresh the Mini App after editing files. Ctrl+C stops the preview.');
+      if (!values['no-open']) await openUrl('http://127.0.0.1:7359/telegram/', true);
+      await stopped;
+      return;
+    }
     await debugBot(call);
     await restoreDebugMenu(call, stateFile);
     if (stopping) return;
@@ -157,7 +195,7 @@ async function main() {
     if (child.exitCode !== null) stop();
     await stopped;
   } finally {
-    try { if (ownsServer) await restoreDebugMenu(call, stateFile); }
+    try { if (ownsServer && !localOnly) await restoreDebugMenu(call, stateFile); }
     catch { console.error('Menu restoration failed. State was retained; run make telegram-debug again to recover.'); process.exitCode = 1; }
     child?.kill(); server.closeAllConnections(); server.close();
     process.off('SIGINT', stop); process.off('SIGTERM', stop);

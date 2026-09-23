@@ -334,5 +334,53 @@
   },
   "extension_description": {
     "message": "Acesso rápido às suas tarefas do Pomodoist: hoje, próximas, agendamento e captura de abas."
+  },
+  "timer": {
+    "message": "Timer"
+  },
+  "focus": {
+    "message": "Foco"
+  },
+  "break": {
+    "message": "Pausa"
+  },
+  "start": {
+    "message": "Iniciar"
+  },
+  "pause": {
+    "message": "Pausar"
+  },
+  "reset": {
+    "message": "Reiniciar"
+  },
+  "delete": {
+    "message": "Excluir"
+  },
+  "delete_content": {
+    "message": "Excluir “{content}”?"
+  },
+  "delete_content_and_subtasks": {
+    "message": "Excluir “{content}” e suas {count} subtarefas?"
+  },
+  "minutes_15": {
+    "message": "15 minutos"
+  },
+  "minutes_5": {
+    "message": "5 minutos"
+  },
+  "minutes_25": {
+    "message": "25 minutos"
+  },
+  "minutes_50": {
+    "message": "50 minutos"
+  },
+  "choose_a_timer_length": {
+    "message": "Escolha a duração do timer"
+  },
+  "time_remaining": {
+    "message": "Tempo restante"
+  },
+  "timer_runs_only_in_the_popup": {
+    "message": "Este timer funciona apenas na janela do pop-up e não é salvo no Foco do Pomodoist."
   }
 }

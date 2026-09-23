@@ -2,8 +2,8 @@
 import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { taskPage, taskOperations, validateCommand, TelegramError } from '../server/supabase/functions/pomodoist-telegram/commands.ts';
-import { telegramEntityId } from '../apps/telegram-mini-app/core.js';
+import { validateCommand, TelegramError } from '../server/supabase/functions/pomodoist-telegram/commands.ts';
+import { createTelegramFixture, telegramStubSource } from './telegram-fixture.mjs';
 const { chromium } = createRequire(import.meta.url)('playwright');
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 const context = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ru-RU', timezoneId: 'Europe/Moscow' });
@@ -11,40 +11,17 @@ const page = await context.newPage();
 const errors = [];
 page.on('pageerror', error => errors.push(error.message));
 page.setDefaultTimeout(8000);
-const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Moscow' }).format(new Date());
-const future = '2099-12-31';
 const id = n => `11111111-1111-4111-8111-${String(n).padStart(12, '0')}`;
-const model = { tasks: new Map(), projects: new Map([['release', { name: 'Pomodoist' }]]), focusRuns: new Map(), focusIntervals: new Map(), entities: [] };
-const guestModel = { tasks: new Map(), projects: new Map(), focusRuns: new Map(), focusIntervals: new Map(), entities: [] };
-let revision = 0, focus = null, linked = false, guestMode = false, unavailable = false, unlinkUnavailable = false, holdCommand, releaseCommand, dropReply;
+const future = '2099-12-31';
+const fixture = createTelegramFixture();
+const model = fixture.model;
+const put = fixture.put;
+const focus = () => fixture.focus;
+const isLinked = () => fixture.linked;
+let unavailable = false, unlinkUnavailable = false, holdCommand, releaseCommand, dropReply;
 let snapshotRequests = 0, unlinkRequests = 0;
 const commands = [], receipts = new Set();
-function put(task) {
-  model.tasks.set(task.id, task);
-  model.entities = model.entities.filter(e => e.entityId !== task.id);
-  model.entities.push({ entityType: 'task', entityId: task.id, serverRevision: ++revision, data: task });
-}
-for (const [n, content] of ['Продумать Telegram Mini App', 'Проверить сценарий фокуса', 'Подготовить заметки к релизу', 'Разобрать входящие', 'Записать идеи', 'Обновить документацию', 'Проверить мобильную версию', 'Ответить на вопросы'].entries()) {
-  put({ id: id(n + 1), content, status: 'open', projectId: 'inbox', priority: n === 0 ? 1 : 4, orderKey: String(n), dueJson: n === 0 ? JSON.stringify({ type: 'allDay', date: day }) : null });
-}
-put({ id: id(20), content: 'Задача проекта', status: 'open', projectId: 'release', priority: 2, dueJson: JSON.stringify({ type: 'allDay', date: future }) });
-function snapshot(body) {
-  const source = guestMode ? guestModel : model;
-  return { account: { linked }, inbox: [...source.tasks.values()].filter(t => !t.isDeleted && t.projectId === 'inbox' && t.status !== 'completed'), focus: guestMode ? null : focus, generatedAt: new Date().toISOString(), ...taskPage(source, new Date(), body) };
-}
-await context.addInitScript(() => {
-  const handlers = {};
-  const control = () => ({ onClick(fn) { this.click = fn; }, show() {}, hide() {} });
-  window.testTelegram = { handlers, links: [], haptics: [], colors: [], confirms: [], confirmResult: true };
-  window.Telegram = { WebApp: { initData: 'signed-fixture', initDataUnsafe: { user: { id: 42, language_code: 'ru' } }, colorScheme: 'light',
-    ready() {}, expand() {}, onEvent(name, fn) { handlers[name] = fn; }, isVersionAtLeast() { return true; },
-    setHeaderColor(value) { window.testTelegram.colors.push(value); }, setBackgroundColor() {}, setBottomBarColor() {},
-    BackButton: control(), SettingsButton: control(), MainButton: control(), SecondaryButton: control(),
-    HapticFeedback: { impactOccurred(value) { window.testTelegram.haptics.push(value); }, notificationOccurred(value) { window.testTelegram.haptics.push(value); } },
-    showConfirm(message, callback) { window.testTelegram.confirms.push(message); callback(window.testTelegram.confirmResult); },
-    openLink(url) { window.testTelegram.links.push(url); },
-  } };
-});
+await context.addInitScript(telegramStubSource);
 await page.route('**/*', async route => {
   const url = new URL(route.request().url());
   if (url.hostname === 'telegram.org') return route.fulfill({ body: '', contentType: 'text/javascript' });
@@ -56,38 +33,23 @@ await page.route('**/*', async route => {
   if (!url.pathname.endsWith('/pomodoist-telegram')) return route.fulfill({ status: 404, body: '' });
   const body = route.request().postDataJSON();
   if (unavailable) return route.fulfill({ status: 503, json: { ok: false, code: 'request_failed' } });
-  let data;
   try {
-    if (body.action === 'begin_link') data = { url: 'https://mini.example/telegram-account-link?token=fixture' };
-    else if (body.action === 'unlink_account') {
+    if (body.action === 'unlink_account') {
       unlinkRequests++;
       if (unlinkUnavailable) return route.fulfill({ status: 503, json: { ok: false, code: 'request_failed' } });
-      linked = false; guestMode = true; data = snapshot(body);
     }
-    else if (body.action === 'command') {
-      const command = body.command;
-      commands.push(command);
-      validateCommand(command);
-      if (!receipts.has(command.id)) {
-        const operations = taskOperations(model, command, new Date());
-        if (command.type === 'task.create') put({ id: telegramEntityId(command.id), content: command.content, status: 'open', projectId: 'inbox', priority: 4, dueJson: null });
-        else if (operations) for (const op of operations.filter(op => op.entityType === 'task')) put({ ...model.tasks.get(op.entityId), ...op.payload });
-        else if (command.type === 'focus.start') {
-          focus = { run: { id: telegramEntityId(command.id), taskId: command.taskId ?? null, status: 'active' }, interval: { id: telegramEntityId(command.id, 2n), runId: telegramEntityId(command.id), status: 'running', plannedSeconds: 1500, startedAt: new Date().toISOString(), pausedAt: null, pausedTotalSeconds: 0 } };
-        } else if (command.type === 'focus.pause') {
-          focus.run.status = 'paused'; focus.interval.status = 'paused'; focus.interval.pausedAt = new Date().toISOString();
-        } else if (command.type === 'focus.resume') {
-          focus.run.status = 'active'; focus.interval.status = 'running'; focus.interval.pausedAt = null;
-        } else if (command.type === 'focus.stop' || command.type === 'focus.complete') focus = null;
-        model.focusRuns.clear(); model.focusIntervals.clear();
-        if (focus) { model.focusRuns.set(focus.run.id, focus.run); model.focusIntervals.set(focus.interval.id, focus.interval); }
-        receipts.add(command.id);
-      }
-      data = snapshot({ ...body, taskId: command.taskId });
-      if (dropReply === command.type) { dropReply = null; return route.abort('failed'); }
-      if (holdCommand === command.type) { holdCommand = null; await new Promise(resolve => { releaseCommand = resolve; }); }
-    } else { snapshotRequests++; data = snapshot(body); }
-    await route.fulfill({ json: { ok: true, data } });
+    if (body.action === 'command') {
+      commands.push(body.command);
+      validateCommand(body.command);
+      receipts.add(body.command.id);
+    } else if (body.action !== 'unlink_account') snapshotRequests++;
+    const result = fixture.respond(body);
+    if (result.ok !== true) return route.fulfill({ status: result.status, json: { ok: false, code: result.code } });
+    if (body.action === 'command') {
+      if (dropReply === body.command.type) { dropReply = null; return route.abort('failed'); }
+      if (holdCommand === body.command.type) { holdCommand = null; await new Promise(resolve => { releaseCommand = resolve; }); }
+    }
+    await route.fulfill({ json: { ok: true, data: result.data } });
   } catch (error) {
     if (!(error instanceof TelegramError)) throw error;
     await route.fulfill({ status: error.status, json: { ok: false, code: error.code } });
@@ -164,34 +126,34 @@ try {
   await task(2).click(); await page.locator('#edit-title:enabled').waitFor();
   await page.locator('#start-focus').click(); await waitView('Фокус'); await synced();
   await page.locator('#focus-toggle').click(); await synced();
-  assert.equal(focus.interval.status, 'paused');
+  assert.equal(focus().interval.status, 'paused');
   assert.ok(await page.evaluate(() => window.testTelegram.haptics.length > 0));
   await page.reload(); await page.locator('#app:not([hidden])').waitFor();
   assert.equal(await page.locator('#focus-toggle').textContent(), 'Продолжить');
   await page.locator('#focus-toggle').click(); await synced();
-  assert.equal(focus.interval.status, 'running');
+  assert.equal(focus().interval.status, 'running');
   await page.locator('#focus-stop').click(); await synced();
-  assert.equal(focus, null);
+  assert.equal(focus(), null);
   await nav('focus'); await page.locator('#focus-empty:not([hidden])').waitFor();
   const taskCount = model.tasks.size;
   dropReply = 'focus.start';
   await page.locator('#focus-start').click();
   await page.locator('#toast:not([hidden])').waitFor();
-  assert.equal(focus.run.taskId, null);
-  const standaloneRunId = focus.run.id;
+  assert.equal(focus().run.taskId, null);
+  const standaloneRunId = focus().run.id;
   await page.reload(); await page.locator('#app:not([hidden])').waitFor(); await synced();
-  assert.equal(focus.run.id, standaloneRunId);
-  assert.equal(focus.run.taskId, null);
+  assert.equal(focus().run.id, standaloneRunId);
+  assert.equal(focus().run.taskId, null);
   assert.equal(model.tasks.size, taskCount);
   assert.equal(await page.locator('#focus-task').textContent(), 'Фокус');
   await page.locator('#focus-toggle').click(); await synced();
-  assert.equal(focus.interval.status, 'paused');
+  assert.equal(focus().interval.status, 'paused');
   await page.reload(); await page.locator('#app:not([hidden])').waitFor();
   assert.equal(await page.locator('#focus-toggle').textContent(), 'Продолжить');
   await page.locator('#focus-toggle').click(); await synced();
-  assert.equal(focus.interval.status, 'running');
+  assert.equal(focus().interval.status, 'running');
   await page.locator('#focus-stop').click(); await synced();
-  assert.equal(focus, null);
+  assert.equal(focus(), null);
   await task(3).click(); await page.locator('#edit-title:enabled').waitFor();
   await page.locator('#delete-task').click();
   assert.equal(model.tasks.get(id(3)).isDeleted, undefined);
@@ -218,7 +180,7 @@ try {
   await page.locator('#account-button').click(); await page.locator('#link-account').click();
   await page.waitForFunction(() => window.testTelegram.links.length > 0);
   assert.match(await page.evaluate(() => window.testTelegram.links.at(-1)), /telegram-account-link/);
-  linked = true;
+  fixture.linked = true;
   await page.locator('#close-settings').click(); await page.locator('#refresh-button').click();
   await page.waitForFunction(() => document.querySelector('#link-account').hidden);
   assert.equal(await page.locator('#sign-out').getAttribute('hidden'), null);
@@ -247,14 +209,14 @@ try {
   });
   await page.locator('#account-button').click();
   await page.locator('#sign-out').click();
-  assert.equal(linked, true);
+  assert.equal(isLinked(), true);
   assert.equal(unlinkRequests, 0);
   assert.equal(await page.evaluate(() => localStorage.getItem('pomodoist.telegram.draft.v1')), 'Сохранить черновик');
   await page.evaluate(() => { window.testTelegram.confirmResult = true; });
   unlinkUnavailable = true;
   await page.locator('#sign-out').click();
   await page.locator('#account-error:not([hidden])').waitFor();
-  assert.equal(linked, true);
+  assert.equal(isLinked(), true);
   assert.equal(await page.evaluate(() => localStorage.getItem('pomodoist.telegram.task-draft.v1.fixture')), 'detail');
   await page.locator('#close-settings').click();
   unavailable = true;
@@ -267,7 +229,7 @@ try {
   unlinkUnavailable = false;
   await page.locator('#sign-out').click();
   await page.locator('#settings-dialog').waitFor({ state: 'hidden' });
-  assert.equal(linked, false);
+  assert.equal(isLinked(), false);
   assert.equal(await page.locator('.task').count(), 0);
   assert.equal(await page.locator('#inbox-title').textContent(), 'Входящие');
   assert.equal(await page.evaluate(() => localStorage.getItem('pomodoist.telegram.draft.v1')), null);

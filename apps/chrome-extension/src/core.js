@@ -146,6 +146,12 @@ export function taskOperations(records, action, now = Date.now(), uuid = () => c
     if (!Object.keys(patch).length) return [];
     return [op('task', task.id, { id: task.id, ...patch, updatedAt: now }, 'task.update')];
   }
+  if (action.kind === 'delete') {
+    // The shared helper always emits an upsert, so the tombstone is built here.
+    // Only the task row is deleted: subtasks stay behind, as in the edit path.
+    return [{ opId: uuid(), entityType: 'task', entityId: task.id, operation: 'delete',
+      payload: { schemaVersion: 1, commandType: 'task.delete', id: task.id }, clientUpdatedAt: iso }];
+  }
   if (!['complete', 'uncomplete'].includes(action.kind)) throw new Error('Unknown task action.');
   const tasks = recordsOf(records, 'task');
   const stack = [task], seen = new Set(), operations = [];
@@ -176,6 +182,14 @@ export function optimisticRecords(records, operations) {
     else next[key] = { ...next[key], ...op.payload, id: op.entityId };
   }
   return next;
+}
+export function openSubtasks(records, id) {
+  return recordsOf(records, 'task').filter(task => task.parentId === id && task.status !== 'completed').length;
+}
+export function deleteConfirmation(content, subtasks) {
+  const name = String(content ?? '').slice(0, 200);
+  return subtasks > 0 ? { message: 'Delete "{content}" and its {count} subtasks?', values: { content: name, count: subtasks } }
+    : { message: 'Delete "{content}"?', values: { content: name } };
 }
 export function tabDraft(tab) {
   let url;
