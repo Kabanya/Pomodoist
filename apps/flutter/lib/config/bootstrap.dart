@@ -235,6 +235,7 @@ AccountBillingService? _accountBillingService(Ref ref) {
   final account = ref.watch(accountClientProvider);
   if (account == null || !_accountSignedIn(ref)) return null;
   return AccountBillingService(
+    stripeTestOffers: appFlavor == AppFlavor.development,
     account: account,
     locale: () =>
         resolveAppLocale(ref.read(appLanguageProvider)).toLanguageTag(),

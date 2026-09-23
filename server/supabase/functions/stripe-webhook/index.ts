@@ -1,3 +1,4 @@
+import { assertStripeTestOffersConfig } from "../pomodoist-stripe-billing/stripe_offers.ts";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -18,8 +19,17 @@ Deno.serve((req) => {
   });
   const admin = createClient(url, serviceRoleKey);
 
+  const testModeOnly =
+    Deno.env.get("STRIPE_TEST_SUBSCRIPTION_OFFERS_ENABLED") === "true";
   return handleStripeWebhook(req, {
+    testModeOnly,
     verifyEvent: async (rawBody, signature) => {
+      if (testModeOnly) {
+        assertStripeTestOffersConfig(
+          stripeSecretKey,
+          Deno.env.get("STRIPE_BILLING_ENVIRONMENT") ?? "",
+        );
+      }
       if (webhookSecret.length === 0) {
         throw new Error("Stripe webhook is not configured.");
       }

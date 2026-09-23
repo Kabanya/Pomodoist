@@ -68,7 +68,7 @@ void main() {
             calls++;
             return gate.future;
           },
-          createCheckout: (_, _) async =>
+          createCheckout: (_, _, _) async =>
               Uri.https('checkout.stripe.com', '/test'),
           openCheckout: (_) async => true,
         ),
@@ -92,6 +92,38 @@ void main() {
     },
   );
 
+  test(
+    'Stripe purchase preserves selected return offer and never retries at full price',
+    () async {
+      final selections = <String?>[];
+      var opens = 0;
+      final repository = _stripeRepository(
+        BillingStripeGateway(
+          loadCatalog: () async => StripeBillingCatalog(
+            enabled: true,
+            introEligible: false,
+            subscriptionOffer: 'return',
+            launchOfferEligible: false,
+            launchOfferEndsAt: null,
+          ),
+          createCheckout: (_, _, offer) async {
+            selections.add(offer);
+            throw const StripeBillingException('offer_not_eligible');
+          },
+          openCheckout: (_) async {
+            opens++;
+            return true;
+          },
+        ),
+      );
+      await repository.loadCatalog();
+      final result = await repository.purchase(pomodoistMonthlyProductId);
+      expect(result, isA<Failure<bool>>());
+      expect(selections, ['return']);
+      expect(opens, 0);
+    },
+  );
+
   test('concurrent purchase commands open only one checkout', () async {
     final gate = Completer<Uri>();
     var creates = 0;
@@ -104,7 +136,7 @@ void main() {
           launchOfferEligible: false,
           launchOfferEndsAt: null,
         ),
-        createCheckout: (_, _) {
+        createCheckout: (_, _, _) {
           creates++;
           return gate.future;
         },
@@ -136,7 +168,7 @@ void main() {
       final repository = _stripeRepository(
         BillingStripeGateway(
           loadCatalog: () => gates[calls++].future,
-          createCheckout: (_, _) async =>
+          createCheckout: (_, _, _) async =>
               Uri.https('checkout.stripe.com', '/test'),
           openCheckout: (_) async => true,
         ),

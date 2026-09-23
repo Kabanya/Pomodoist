@@ -58,6 +58,7 @@ class BillingCatalog {
     Set<String> missingProductIds = const {},
     Set<String> eligibleIntroductoryProductIds = const {},
     this.error,
+    this.stripeSubscriptionOffer,
     this.stripeLaunchOfferEligible = false,
     this.stripeLaunchOfferEndsAt,
   }) : _products = Map.unmodifiable(products),
@@ -72,6 +73,7 @@ class BillingCatalog {
   Set<String> get missingProductIds => _missing;
   Set<String> get eligibleIntroductoryProductIds => Set.unmodifiable(_eligible);
   final String? error;
+  final String? stripeSubscriptionOffer;
   final bool stripeLaunchOfferEligible;
   final DateTime? stripeLaunchOfferEndsAt;
 }

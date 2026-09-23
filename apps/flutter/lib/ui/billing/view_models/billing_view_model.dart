@@ -109,6 +109,7 @@ class BillingViewModel extends Notifier<BillingState> {
           access.catalog.eligibleIntroductoryProductIds,
       missingProductIds: access.catalog.missingProductIds,
       catalogError: access.catalog.error,
+      stripeSubscriptionOffer: access.catalog.stripeSubscriptionOffer,
       stripeLaunchOfferEligible: access.catalog.stripeLaunchOfferEligible,
       stripeLaunchOfferEndsAt: access.catalog.stripeLaunchOfferEndsAt,
       pendingProductId: access.pendingProductId,

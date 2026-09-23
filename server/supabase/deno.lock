@@ -13,6 +13,7 @@
     "npm:jose@6.2.5": "6.2.5",
     "npm:openai@^4.52.5": "4.104.0_zod@4.1.13",
     "npm:reflect-metadata@0.2.2": "0.2.2",
+    "npm:stripe@22.4.0": "22.4.0",
     "npm:zod@4.1.13": "4.1.13"
   },
   "jsr": {
@@ -838,6 +839,9 @@
     },
     "statuses@2.0.2": {
       "integrity": "sha512-DvEy55V3DB7uknRo+4iOGT5fP1slR8wQohVdknigZPMpMstaKJQWhwiYBACJE3Ul2pTnATihhBYnRhZQHGBiRw=="
+    },
+    "stripe@22.4.0": {
+      "integrity": "sha512-LVJ+tcSYeqOSnXr3i+Kz2tZ7y0crLLdP2uwD/4wccrmEVyn0g/Heo0pF7as7rxS/sOjJzrb1lxgZY0Y0Dx1pSA=="
     },
     "toidentifier@1.0.1": {
       "integrity": "sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA=="
