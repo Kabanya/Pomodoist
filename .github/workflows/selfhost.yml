@@ -3,7 +3,7 @@ name: Self-hosted server
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, develop]
     tags:
       - 'server-v*.*.*'
 
@@ -50,3 +50,114 @@ jobs:
             docker compose --project-directory server --env-file server/.env \
               -f server/compose.yaml down --volumes --remove-orphans
           fi
+
+  release:
+    needs: server
+    # Tags created with the repository GITHUB_TOKEN do not start ordinary
+    # tag-triggered workflows, so this job depends on the already-green server
+    # suite rather than on a tag event. Never runs for pull requests.
+    if: >-
+      github.event_name == 'push'
+      && github.repository == 'Kabanya/Pomodoist'
+      && contains(fromJSON('["develop", "main"]'), github.ref_name)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    concurrency:
+      group: server-release-${{ github.ref_name }}
+      cancel-in-progress: false
+    outputs:
+      tag: ${{ steps.select.outputs.tag }}
+      published: ${{ steps.select.outputs.published }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select the next release tag for this branch
+        id: select
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LANE: ${{ github.ref_name }}
+          TESTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # A push that landed after this run started must not publish a tag
+          # for a branch head that has already moved on.
+          head="$(gh api "repos/${{ github.repository }}/commits/${LANE}" --jq .sha)"
+          if [ "$head" != "$TESTED_SHA" ]; then
+            echo "The branch moved to $head after this run tested $TESTED_SHA."
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          tag="$(python3 server/scripts/next_release_tag.py --lane "$LANE" --dry-run | jq -er .tag)"
+          tree="$(git rev-parse "${TESTED_SHA}:server")"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "tree=$tree" >> "$GITHUB_OUTPUT"
+          # An existing tag already carrying this exact tree means the content
+          # is published; a web-only push must not open a new server version.
+          for existing in $(git tag --list 'server-v*'); do
+            if [ "$(git rev-parse "${existing}^{commit}:server")" = "$tree" ]; then
+              echo "$existing already carries server tree $tree."
+              echo "published=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+          echo "published=true" >> "$GITHUB_OUTPUT"
+      - name: Create the immutable release tag
+        if: steps.select.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.select.outputs.tag }}
+          TESTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # The tag must not already exist at another commit, and this job
+          # never force-pushes a tag.
+          existing="$(git ls-remote --tags origin "refs/tags/${TAG}" | awk '{print $1}')"
+          if [ -n "$existing" ]; then
+            echo "Tag ${TAG} already exists." >&2
+            exit 1
+          fi
+          gh api "repos/${{ github.repository }}/git/refs" \
+            --method POST \
+            --field ref="refs/tags/${TAG}" \
+            --field sha="${TESTED_SHA}" >/dev/null
+          {
+            echo "### Public server release"
+            echo
+            echo "| field | value |"
+            echo "| --- | --- |"
+            echo "| branch | \`${GITHUB_REF_NAME}\` |"
+            echo "| tag | \`${TAG}\` |"
+            echo "| tested SHA | \`${TESTED_SHA}\` |"
+            echo "| server tree | \`${{ steps.select.outputs.tree }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Mint a token scoped to the private backend repository
+        id: app-token
+        if: steps.select.outputs.published == 'true'
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          app-id: ${{ secrets.POMODOIST_CORE_SYNC_APP_ID }}
+          private-key: ${{ secrets.POMODOIST_CORE_SYNC_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: account-sync-platform
+      - name: Notify the private backend repository
+        if: steps.select.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ steps.select.outputs.tag }}
+          TESTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # If dispatch fails after the tag exists, fail visibly: the private
+          # repository's hourly reconciliation will repair the missed event.
+          jq -n \
+            --arg branch "$GITHUB_REF_NAME" \
+            --arg tag "$TAG" \
+            --arg sha "$TESTED_SHA" \
+            '{event_type: "pomodoist-core-published",
+              client_payload: {branch: $branch, tag: $tag, sha: $sha}}' \
+            | gh api "repos/${{ github.repository_owner }}/account-sync-platform/dispatches" \
+                --method POST --input -
