@@ -39,32 +39,67 @@ class NextTagTest(unittest.TestCase):
         self.assertEqual(next_release_tag.next_tag("main", []), "server-v0.1.0")
 
     def test_main_ignores_candidate_tags(self):
+        # A candidate never drags the stable series backwards: 0.2.0-rc.7
+        # outranks 0.1.9, so the next stable release is 0.2.1.
         tags = PUBLISHED + ["server-v0.2.0-rc.7"]
-        self.assertEqual(next_release_tag.next_tag("main", tags), "server-v0.1.10")
+        self.assertEqual(next_release_tag.next_tag("main", tags), "server-v0.2.1")
 
-    def test_develop_starts_first_candidate_from_newest_stable(self):
-        self.assertEqual(next_release_tag.next_tag("develop", PUBLISHED), "server-v0.1.9-rc.1")
+    def test_main_advances_past_a_candidate_of_the_same_series(self):
+        # The candidate sorts above its stable base, so the stable release that
+        # promotes it must sort above the candidate too.
+        tags = PUBLISHED + ["server-v0.1.10-rc.1"]
+        self.assertEqual(next_release_tag.next_tag("main", tags), "server-v0.1.11")
+
+    def test_develop_starts_the_series_above_the_newest_stable(self):
+        # A candidate must sort above the stable tag it supersedes, because the
+        # private selector refuses any release older than its current lock.
+        self.assertEqual(next_release_tag.next_tag("develop", PUBLISHED), "server-v0.1.10-rc.1")
+        self.assertGreater(
+            next_release_tag.version_key(
+                next_release_tag.parse_version("server-v0.1.10-rc.1")),
+            next_release_tag.version_key(next_release_tag.parse_version("server-v0.1.9")))
 
     def test_develop_advances_existing_candidate(self):
+        # A candidate whose series is still below the newest tag keeps its own
+        # series; only the counter advances.
         tags = PUBLISHED + ["server-v0.1.9-rc.1", "server-v0.1.9-rc.2"]
         self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.9-rc.3")
+        tags = PUBLISHED + ["server-v0.1.10-rc.1", "server-v0.1.10-rc.2"]
+        self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.10-rc.3")
 
-    def test_develop_restarts_candidate_after_a_stable_promotion(self):
+    def test_develop_opens_a_new_series_when_the_candidate_falls_behind(self):
+        # The newest candidate is below the newest stable, so the next
+        # candidate opens a series above that stable instead of continuing a
+        # series that would sort below it.
         tags = PUBLISHED + ["server-v0.1.9-rc.1", "server-v0.1.10"]
-        self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.10-rc.1")
+        self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.11-rc.1")
+
+    def test_develop_continues_a_candidate_series_that_ties_its_stable(self):
+        # 0.1.10-rc.2 sorts above both 0.1.10-rc.1 and the stable 0.1.10, so
+        # the series continues rather than restarting at 0.1.11-rc.1.
+        tags = PUBLISHED + ["server-v0.1.10-rc.4", "server-v0.1.10"]
+        self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.10-rc.5")
+        tags = PUBLISHED + ["server-v0.1.10-rc.1", "server-v0.1.10"]
+        self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.10-rc.2")
+
+    def test_develop_opens_the_next_series_after_a_stable_promotion(self):
+        tags = PUBLISHED + ["server-v0.1.9-rc.1", "server-v0.1.10"]
+        self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.11-rc.1")
 
     def test_develop_ignores_unrelated_tags(self):
         tags = PUBLISHED + ["v9.9.9", "server-v0.1.9-rc", "release-2026"]
-        self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.9-rc.1")
+        self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.10-rc.1")
 
-    def test_candidate_never_sorts_below_its_stable_base(self):
-        tags = PUBLISHED + ["server-v0.1.10-rc.1", "server-v0.1.11"]
-        selected = next_release_tag.next_tag("develop", tags)
-        self.assertEqual(selected, "server-v0.1.11-rc.1")
-        self.assertGreater(next_release_tag.version_key(
-                               next_release_tag.parse_version("server-v0.1.11-rc.1")),
-                           next_release_tag.version_key(
-                               next_release_tag.parse_version("server-v0.1.11")))
+    def test_next_tag_sorts_above_every_existing_tag(self):
+        for lane in ("develop", "main"):
+            for tags in (PUBLISHED, PUBLISHED + ["server-v0.1.10-rc.1"],
+                         PUBLISHED + ["server-v0.1.10"]):
+                selected = next_release_tag.next_tag(lane, tags)
+                for existing in tags:
+                    self.assertGreater(
+                        next_release_tag.version_key(next_release_tag.parse_version(selected)),
+                        next_release_tag.version_key(next_release_tag.parse_version(existing)),
+                        f"{lane}: {selected} must outrank {existing}")
 
     def test_rerun_of_the_same_sha_does_not_change_the_tag(self):
         first = next_release_tag.next_tag("develop", PUBLISHED)
@@ -77,21 +112,51 @@ class NextTagTest(unittest.TestCase):
                 next_release_tag.next_tag(lane, PUBLISHED)
 
 
+class StableForTest(unittest.TestCase):
+    def test_promotes_a_candidate_to_its_stable_form(self):
+        self.assertEqual(next_release_tag.stable_for("server-v0.1.10-rc.3"), "server-v0.1.10")
+
+    def test_stable_tags_have_no_promotion(self):
+        self.assertIsNone(next_release_tag.stable_for("server-v0.1.10"))
+        self.assertIsNone(next_release_tag.stable_for("not-a-release"))
+
+
 class SelectTest(unittest.TestCase):
     def test_publishes_when_the_tested_tree_has_no_tag(self):
         selected = next_release_tag.select("main", PUBLISHED, {})
         self.assertEqual(selected, "server-v0.1.10")
 
     def test_skips_when_the_tested_tree_already_carries_the_next_tag(self):
-        selected = next_release_tag.select("main", PUBLISHED,
-                                           {"server-v0.1.10": "aaa"})
+        tags = PUBLISHED + ["server-v0.1.10"]
+        selected = next_release_tag.select("main", tags,
+                                           {"server-v0.1.11": ["server-v0.1.10"]})
         self.assertIsNone(selected)
 
     def test_publishes_when_the_tree_is_not_yet_tagged(self):
         # A tag exists for a different tree, so this content still needs one.
         selected = next_release_tag.select("main", PUBLISHED,
-                                           {"server-v0.1.9": "aaa"})
+                                           {"server-v0.1.9": ["server-v0.1.9"]})
         self.assertEqual(selected, "server-v0.1.10")
+
+    def test_a_candidate_never_suppresses_the_stable_promotion(self):
+        # Promoting the tree `develop` already tagged as a candidate must still
+        # create the stable release, otherwise `main` would never publish it.
+        tags = PUBLISHED + ["server-v0.1.10-rc.1"]
+        selected = next_release_tag.select("main", tags,
+                                           {"server-v0.1.11": ["server-v0.1.10-rc.1"]})
+        self.assertEqual(selected, "server-v0.1.11")
+
+    def test_develop_still_deduplicates_against_its_own_candidates(self):
+        # Unchanged content on `develop` stays a no-op: the tag that already
+        # carries this tree is the one this lane would publish next.
+        tags = PUBLISHED + ["server-v0.1.10-rc.1"]
+        selected = next_release_tag.select("develop", tags,
+                                           {"server-v0.1.10-rc.2": ["server-v0.1.10-rc.2"]})
+        self.assertIsNone(selected)
+
+    def test_rejects_unknown_lane(self):
+        with self.assertRaises(ValueError):
+            next_release_tag.select("staging", PUBLISHED, {})
 
 
 class RepositoryStateTest(unittest.TestCase):
