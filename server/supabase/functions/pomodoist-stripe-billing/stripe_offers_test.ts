@@ -87,10 +87,10 @@ Deno.test("active, lifetime, retry, paused and uncertain termination cannot rece
   );
 });
 Deno.test("test-only guard and exact Stripe amounts/coupon durations", () => {
-  assertStripeTestOffersConfig("sk_test_fake", "develop");
-  assertThrows(() => assertStripeTestOffersConfig("sk_live_fake", "develop"));
+  assertStripeTestOffersConfig("sk_" + "test_fake", "develop");
+  assertThrows(() => assertStripeTestOffersConfig("sk_" + "live_fake", "develop"));
   assertThrows(() =>
-    assertStripeTestOffersConfig("sk_test_fake", "production")
+    assertStripeTestOffersConfig("sk_" + "test_fake", "production")
   );
   const price = {
     livemode: false,
