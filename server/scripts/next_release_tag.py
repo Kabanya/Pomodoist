@@ -145,7 +145,8 @@ def select(lane, tags, tagged_trees, tree):
     if LANES[lane] == "stable":
         return None if any(parse_version(tag) and parse_version(tag)[3] is None
                            for tag in existing) else next_tag(lane, tags)
-    return None if existing else next_tag(lane, tags)
+    return None if any(parse_version(tag) and parse_version(tag)[3] is not None
+                       for tag in existing) else next_tag(lane, tags)
 
 
 def main():

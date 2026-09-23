@@ -159,6 +159,12 @@ class SelectTest(unittest.TestCase):
         self.assertIsNone(next_release_tag.select(
             "main", tags, {"tree": ["server-v0.1.10"]}, "tree"))
 
+    def test_stable_tag_on_another_lane_does_not_block_develop(self):
+        tags = PUBLISHED + ["server-v0.1.10"]
+        self.assertEqual(next_release_tag.select(
+            "develop", tags, {"tree": ["server-v0.1.10"]}, "tree"),
+            "server-v0.1.11-rc.1")
+
     def test_develop_still_deduplicates_against_its_own_candidates(self):
         # Unchanged content on `develop` stays a no-op: the tag that already
         # carries this tree is the one this lane would publish next.
