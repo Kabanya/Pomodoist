@@ -9,6 +9,7 @@ import 'package:multiview_desktop/multiview_desktop.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/app_environment.dart';
 import 'package:pomodoist/config/app_language.dart';
+import 'package:pomodoist/config/collaboration_dependencies.dart';
 import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/widgets/pomodoist_app.dart';
@@ -133,6 +134,7 @@ List<Override> _pomodoistOverrides({
       nativeAccountStartup.initializeAccount,
     ),
     nativeLinkCoordinatorProvider.overrideWithValue(nativeLinkCoordinator),
+    projectCollaborationOverride,
     ..._billingEntitlementOverrides(runtimeConfig: runtimeConfig),
     ..._billingPurchaseOverrides(),
   ];
