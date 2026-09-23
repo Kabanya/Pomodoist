@@ -17,7 +17,7 @@ grant usage on schema private to service_role;
 create table auth.users(id uuid primary key);
 insert into auth.users values ('00000000-0000-4000-8000-000000000001');
 SQL
-sql < "$script_dir/../../supabase/migrations/20260923231745_pomodoist_stripe_test_offers.sql"
+sql < "$script_dir/../../supabase/migrations/20260923234807_pomodoist_core_stripe_test_offers.sql"
 sql <<'SQL'
 do $$ begin
   if has_function_privilege('anon','public.reserve_pomodoist_stripe_checkout(uuid,jsonb)','execute')

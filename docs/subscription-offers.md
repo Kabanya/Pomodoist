@@ -272,7 +272,7 @@ Do not copy the overlay to staging or production.
 
 ### Development setup and acceptance
 
-1. Apply migration `20260923231745_pomodoist_stripe_test_offers.sql` to the
+1. Apply migration `20260923234807_pomodoist_core_stripe_test_offers.sql` to the
    **development** database through the normal migration runner. Never edit the
    consolidated initial schema. The private reservation table and service-only
    RPCs serialize all Checkout products for an account.
