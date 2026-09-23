@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BREAK_MINUTES, DEFAULT_MINUTES, PRESETS, initial, phaseDuration, reduce, remainingMs } from '../src/timer.js';
+import { BREAK_MINUTES, DEFAULT_MINUTES, PRESETS, initial, phaseDuration, reduce, remainingMs, restore } from '../src/timer.js';
 
 const at = 1_800_000_000_000;
 
@@ -75,4 +75,44 @@ test('choosing a preset clears a stale deadline and stops the previous interval'
 test('an unknown action is ignored', () => {
   const timer = initial();
   assert.deepEqual(reduce(timer, { type: 'teleport' }, at), { timer, effect: '' });
+});
+test('a cached running timer resumes against the wall clock after the popup reopens', () => {
+  const saved = { phase: 'focus', minutes: 15, endsAt: at + 15 * 60000, remaining: 15 * 60000, running: true, completed: 2, savedAt: at };
+  const timer = restore(saved, at + 5 * 60000);
+  assert.equal(timer.running, true);
+  assert.equal(timer.phase, 'focus');
+  assert.equal(timer.minutes, 15);
+  assert.equal(timer.completed, 2);
+  assert.equal(remainingMs(timer, at + 5 * 60000), 10 * 60000);
+});
+test('a cache whose deadline passed while closed comes back finished, not resumable', () => {
+  const saved = { phase: 'focus', minutes: 15, endsAt: at + 15 * 60000, remaining: 15 * 60000, running: true, completed: 1, savedAt: at };
+  const timer = restore(saved, at + 60 * 60000);
+  assert.equal(timer.running, false);
+  assert.equal(timer.remaining, 15 * 60000);
+  assert.equal(timer.completed, 1);
+  assert.ok(Number.isFinite(remainingMs(timer, at + 60 * 60000)));
+});
+test('a paused timer keeps its exact remaining time across a reopen', () => {
+  const timer = restore({ phase: 'break', minutes: 25, running: false, remaining: 42000, endsAt: null, savedAt: at }, at + 60000);
+  assert.deepEqual({ phase: timer.phase, minutes: timer.minutes, running: timer.running, remaining: timer.remaining },
+    { phase: 'break', minutes: 25, running: false, remaining: 42000 });
+});
+test('a corrupt or expired cache is rejected instead of freezing the countdown', () => {
+  const good = { phase: 'focus', minutes: 25, running: true, remaining: 60000, endsAt: at + 60000, savedAt: at };
+  const cases = {
+    missing: undefined, nulled: null, string: 'nonsense',
+    badPreset: { ...good, minutes: 7 },
+    badPhase: { ...good, phase: 'nap' },
+    nanRemaining: { ...good, remaining: NaN },
+    negativeRemaining: { ...good, remaining: -1 },
+    nanEndsAt: { ...good, endsAt: NaN },
+    stringEndsAt: { ...good, endsAt: 'nope' },
+    nanSavedAt: { ...good, savedAt: NaN },
+    expired: { ...good, savedAt: at - 86400001 },
+    pausedWithoutRemaining: { ...good, running: false, remaining: undefined },
+  };
+  for (const [name, payload] of Object.entries(cases)) assert.equal(restore(payload, at), null, name);
+  // A paused timer is allowed to carry no deadline at all.
+  assert.ok(restore({ ...good, running: false, endsAt: null }, at));
 });

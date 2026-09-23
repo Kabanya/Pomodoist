@@ -6,14 +6,23 @@ Manifest V3 companion for Pomodoist. It uses the same Supabase Auth account, acc
 
 - Email/password and Google/Apple PKCE sign-in with token refresh.
 - Today (including overdue), Upcoming, Inbox and completed views.
-- Create, edit, schedule, complete and restore tasks.
+- Create, edit, schedule, complete, restore and delete tasks.
 - One-click task creation from the current tab's title and URL.
+- A standalone interval timer tab with 15/5/25/50-minute presets, automatic
+  focus-to-break transition and start/pause/reset controls.
 - Durable local outbox, cursor-based pull, idempotent retries and remote tombstones.
 - Private Realtime hints while the popup is open, with a bounded refresh fallback.
 - Server-owned account and subscription/entitlement status.
 - Compact light/dark UI and keyboard-accessible task tabs.
 
-Recurring schedule metadata is preserved; recurrence rule management remains in the full app. Project moves, deletion, Focus, voice and billing also remain in the full app.
+Recurring schedule metadata is preserved; recurrence rule management remains in the full app. Deleting a task removes only that task — its subtasks are left behind, and the confirmation reports how many there are before you commit. Project moves, Focus, voice and billing also remain in the full app.
+
+The timer tab is local to the popup. It is deliberately not connected to tasks
+or to the synced Pomodoist Focus entities, so its intervals are never uploaded
+and never appear in the full app. It keeps counting against the wall clock, so
+reopening the popup shows the correct remaining time, but it stops when the
+popup is closed and there is no toolbar badge. The chosen duration and current
+phase are cached per browser session, not per account.
 
 ## Build
 

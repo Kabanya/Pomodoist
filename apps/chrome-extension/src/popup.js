@@ -1,13 +1,16 @@
 import { text, localize } from './i18n.js';
 import { config } from './config.js';
 import { dateKey, deleteConfirmation, dueDay, openSubtasks, parseDue, schedule, scheduleFields, tabDraft, tasksFor } from './core.js';
-import { DEFAULT_MINUTES, PRESETS, initial, phaseDuration, reduce, remainingMs } from './timer.js';
+import { initial, phaseDuration, reduce, remainingMs, restore } from './timer.js';
 import { Realtime } from './realtime.js';
 localize(document);
 const $ = id => document.getElementById(id);
 let state, view = 'today', editing = null, dirty = new Set(), busy = 0, live = false, syncing = false;
 let owner = null, poll, hintTimer, refreshAgain = false;
 let timer = initial(), timerTick = null;
+// Every timer read goes through one clock accessor, so the countdown, the
+// deadline and the cache timestamp can never disagree about "now".
+const now = () => Date.now();
 const realtime = new Realtime(() => call('realtime'), () => {
   clearTimeout(hintTimer); hintTimer = setTimeout(refresh, 150);
 }, connected => { live = connected; status(); });
@@ -170,7 +173,7 @@ for (const tab of document.querySelectorAll('[data-view]')) {
 }
 $('refresh').addEventListener('click', refresh);
 function clockText(timer) {
-  const total = Math.ceil(remainingMs(timer) / 1000);
+  const total = Math.ceil(remainingMs(timer, now()) / 1000);
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
 function paintTimer() {
@@ -178,13 +181,13 @@ function paintTimer() {
   $('timer-phase').textContent = timer.phase === 'break' ? text("Break") : text("Focus");
   $('timer-toggle').firstElementChild.textContent = text(timer.running ? "Pause" : "Start");
   const total = phaseDuration(timer.phase, timer.minutes);
-  $('timer-progress').value = total ? remainingMs(timer) / total : 0;
+  $('timer-progress').value = total ? remainingMs(timer, now()) / total : 0;
   for (const button of document.querySelectorAll('[data-minutes]')) {
     button.setAttribute('aria-pressed', String(Number(button.dataset.minutes) === timer.minutes));
   }
 }
 function saveTimer() {
-  chrome.storage.session.set({ timer: { ...timer, savedAt: Date.now() } }).catch(() => {});
+  chrome.storage.session.set({ timer: { ...timer, savedAt: now() } }).catch(() => {});
 }
 function beep() {
   try {
@@ -195,10 +198,16 @@ function beep() {
   } catch { /* Autoplay policies may refuse audio; the live region still announces the phase. */ }
 }
 function actTimer(action) {
-  const { timer: next, effect } = reduce(timer, action);
+  const { timer: next, effect } = reduce(timer, action, now());
   timer = next;
-  if (effect) { $('timer-display').textContent = text(effect === 'focusEnded' ? "Break" : "Focus"); beep(); }
-  paintTimer(); saveTimer();
+  paintTimer();
+  if (effect) {
+    // Painted after the phase line so the announcement replaces the label
+    // instead of being overwritten by it. This is the polite live region.
+    $('timer-phase').textContent = text(effect === 'focusEnded' ? "Focus session complete. Take a break." : "Break over. Ready to focus?");
+    beep();
+  }
+  saveTimer();
 }
 function startTicking() { if (!timerTick) timerTick = setInterval(() => actTimer({ type: 'tick' }), 250); }
 function stopTicking() { clearInterval(timerTick); timerTick = null; }
@@ -230,16 +239,13 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('pagehide', () => { realtime.stop(); clearInterval(poll); clearTimeout(hintTimer); stopTicking(); });
 async function restoreTimer() {
-  try {
-    const saved = (await chrome.storage.session.get('timer')).timer;
-    // Mirror the account-status cache guard: a stale or malformed payload is
-    // discarded rather than trusted.
-    if (saved && PRESETS.includes(saved.minutes) && ['focus', 'break'].includes(saved.phase) &&
-        Number.isFinite(saved.remaining) && saved.remaining >= 0 && Date.now() - saved.savedAt < 86400000) {
-      timer = { ...initial(saved.minutes), ...saved, remaining: remainingMs(saved), endsAt: saved.running ? saved.endsAt : null };
-      if (timer.running && !Number.isFinite(timer.endsAt)) timer = { ...timer, running: false };
-    }
-  } catch { /* Session storage may be unavailable; the default timer is still usable. */ }
-  paintTimer();
+  let saved;
+  try { saved = (await chrome.storage.session.get('timer')).timer; }
+  catch { return; /* Session storage may be unavailable; the default timer still works. */ }
+  const restored = restore(saved);
+  if (restored) timer = restored;
 }
-try { await restoreTimer(); render(await call('snapshot')); refresh(); } catch (e) { $('startup').hidden = true; error(e.message); }
+paintTimer();
+try { await restoreTimer(); } catch { /* A restore failure must not block the task list. */ }
+paintTimer();
+try { render(await call('snapshot')); refresh(); } catch (e) { $('startup').hidden = true; error(e.message); }

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { tasksFor, schedule, scheduleFields, taskOperations, tabDraft, callbackValue, recordsOf } from '../src/core.js';
+import { tasksFor, schedule, scheduleFields, taskOperations, tabDraft, callbackValue, recordsOf, optimisticRecords, openSubtasks, deleteConfirmation } from '../src/core.js';
 
 const now = new Date(2026, 8, 7, 12).getTime();
 const task = (id, dueJson = null, extra = {}) => ({ id, userId: 'local-user', content: id,
@@ -108,6 +108,37 @@ test('recordsOf excludes tombstones', () => {
 });
 test('removing a repeating schedule requires the full app instead of silently dropping the rule', () => {
   assert.throws(() => schedule('', '', 30, JSON.stringify({ type: 'allDay', date: '2026-09-07', recurrence: { unit: 'day' } })), /repeating/i);
+});
+test('deleting a task emits one tombstone operation and no completion side effects', () => {
+  const r = records([task('a', day('2026-09-07')), task('child', null, { parentId: 'a' })]);
+  const ops = taskOperations(r, { kind: 'delete', id: 'a' }, now, uuid);
+  assert.equal(ops.length, 1);
+  assert.deepEqual(ops[0], { opId: ops[0].opId, entityType: 'task', entityId: 'a', operation: 'delete',
+    payload: { schemaVersion: 1, commandType: 'task.delete', id: 'a' }, clientUpdatedAt: new Date(now).toISOString() });
+  assert.ok(ops[0].opId);
+  assert.ok(!ops.some(o => ['task_kanban_status', 'task_completion'].includes(o.entityType)));
+});
+test('deleting an unavailable task is refused rather than resurrected', () => {
+  assert.throws(() => taskOperations({}, { kind: 'delete', id: 'missing' }, now, uuid));
+  assert.throws(() => taskOperations(records([task('a', null, { isDeleted: true })]), { kind: 'delete', id: 'a' }, now, uuid));
+});
+test('a deleted task disappears optimistically and never returns to a list', () => {
+  const r = records([task('a', day('2026-09-07')), task('keep', day('2026-09-07'))]);
+  const next = optimisticRecords(r, taskOperations(r, { kind: 'delete', id: 'a' }, now, uuid));
+  assert.equal(next['task:a'], undefined);
+  assert.deepEqual(tasksFor(next, 'today', now).map(t => t.id), ['keep']);
+  assert.deepEqual(recordsOf(next, 'task').map(t => t.id), ['keep']);
+});
+test('the delete confirmation counts open subtasks and truncates a long title', () => {
+  const r = records([task('root'), task('open', null, { parentId: 'root' }),
+    task('finished', null, { parentId: 'root', status: 'completed' }),
+    task('gone', null, { parentId: 'root', isDeleted: true }), task('unrelated')]);
+  assert.equal(openSubtasks(r, 'root'), 1);
+  assert.equal(openSubtasks(r, 'unrelated'), 0);
+  const withChildren = deleteConfirmation('Root', 1);
+  assert.deepEqual(withChildren, { message: 'Delete "{content}" and its {count} subtasks?', values: { content: 'Root', count: 1 } });
+  assert.deepEqual(deleteConfirmation('Solo', 0), { message: 'Delete "{content}"?', values: { content: 'Solo' } });
+  assert.equal(deleteConfirmation('x'.repeat(500), 0).values.content.length, 200);
 });
 test('an oversized page URL is rejected, not truncated into another link', () => {
   assert.throws(() => tabDraft({ title: 'Page', url: 'https://example.test/?q=' + 'a'.repeat(8200) }), /long/i);

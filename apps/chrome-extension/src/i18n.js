@@ -125,6 +125,8 @@ const keys = {
   "50 minutes": "minutes_50",
   "Choose a timer length": "choose_a_timer_length",
   "Time remaining": "time_remaining",
+  "Focus session complete. Take a break.": "focus_session_complete_take_a_break",
+  "Break over. Ready to focus?": "break_over_ready_to_focus",
   "This timer runs only in the popup and is not saved to Pomodoist Focus.": "timer_runs_only_in_the_popup"
 };
 export function text(message, values = {}) {

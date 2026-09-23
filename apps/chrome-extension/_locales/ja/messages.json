@@ -382,5 +382,11 @@
   },
   "timer_runs_only_in_the_popup": {
     "message": "このタイマーはポップアップ内でのみ動作し、Pomodoist の集中には保存されません。"
+  },
+  "focus_session_complete_take_a_break": {
+    "message": "集中セッションが終了しました。休憩しましょう。"
+  },
+  "break_over_ready_to_focus": {
+    "message": "休憩が終了しました。集中を始めますか？"
   }
 }

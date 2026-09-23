@@ -382,5 +382,11 @@
   },
   "timer_runs_only_in_the_popup": {
     "message": "Este timer funciona apenas na janela do pop-up e não é salvo no Foco do Pomodoist."
+  },
+  "focus_session_complete_take_a_break": {
+    "message": "Sessão de foco concluída. Faça uma pausa."
+  },
+  "break_over_ready_to_focus": {
+    "message": "Pausa encerrada. Pronto para focar?"
   }
 }

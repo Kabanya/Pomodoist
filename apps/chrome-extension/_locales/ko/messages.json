@@ -382,5 +382,11 @@
   },
   "timer_runs_only_in_the_popup": {
     "message": "이 타이머는 팝업에서만 동작하며 Pomodoist 집중에 저장되지 않습니다."
+  },
+  "focus_session_complete_take_a_break": {
+    "message": "집중 세션이 끝났습니다. 휴식을 취하세요."
+  },
+  "break_over_ready_to_focus": {
+    "message": "휴식이 끝났습니다. 다시 집중할까요?"
   }
 }
