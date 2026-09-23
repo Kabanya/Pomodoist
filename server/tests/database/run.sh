@@ -15,5 +15,5 @@ docker run --rm --name "pomodoist-selfhost-schema-tests-$$" \
   --network "container:$container" --env PGPASSWORD \
   --volume "$script_dir:/tests:ro" \
   --volume "$script_dir/../../database:/database:ro" \
-  public.ecr.aws/supabase/pg_prove:3.36 \
+  supabase/pg_prove:3.36 \
   pg_prove -h 127.0.0.1 -p 5432 -U postgres -d postgres --ext .sql -r /tests
