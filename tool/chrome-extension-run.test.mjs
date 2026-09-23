@@ -1,9 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { auditProbe, browserCandidates, devToolsSocket, extensionIdFromPreferences, findBrowser, noBrowserMessage } from './chrome-extension-run.mjs';
 
+const emptyBrowserCache = path.join(tmpdir(), 'pomodoist-chrome-test-empty-cache');
+
 test('a testing build is preferred and a stable Chrome is never offered as a candidate', async () => {
-  const candidates = await browserCandidates({ CHROME_BIN: '/custom/chrome' }, '/home/nobody');
+  const candidates = await browserCandidates({ CHROME_BIN: '/custom/chrome' }, emptyBrowserCache);
   assert.equal(candidates[0], '/custom/chrome');
   assert.ok(candidates.some(candidate => /Chrome for Testing|Chromium/.test(candidate)));
   // Pointing at the stable app would silently load nothing, so it is excluded.
@@ -11,7 +15,7 @@ test('a testing build is preferred and a stable Chrome is never offered as a can
 });
 
 test('an unreadable Playwright cache is skipped instead of failing the lookup', async () => {
-  const candidates = await browserCandidates({}, '/home/nobody');
+  const candidates = await browserCandidates({}, emptyBrowserCache);
   assert.ok(Array.isArray(candidates) && candidates.length > 0);
   assert.ok(!candidates.includes(''));
 });

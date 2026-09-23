@@ -91,34 +91,10 @@ jobs:
             echo "published=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          tag="$(python3 server/scripts/next_release_tag.py --lane "$LANE" --dry-run | jq -er .tag)"
-          tree="$(git rev-parse "${TESTED_SHA}:server")"
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "tree=$tree" >> "$GITHUB_OUTPUT"
-          # The next tag is the lowest one strictly above every existing tag, so
-          # it cannot already exist. Publishing again is therefore a no-op
-          # whenever this branch head was already tagged or an older run is
-          # racing this one.
-          if git rev-parse --verify --quiet "refs/tags/${tag}^{commit}" >/dev/null; then
-            echo "Tag ${tag} already exists."
-            echo "published=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          # A tag carrying this exact tree means the content is published. On
-          # `main` only stable tags count: after `develop` published
-          # server-v0.1.10-rc.1, merging that same tree must still release the
-          # stable server-v0.1.10. A candidate is never a released version.
-          pattern='server-v*'
-          [ "$LANE" = "main" ] && pattern='server-v*.*.*'
-          for existing in $(git tag --list "$pattern"); do
-            case "$existing" in *-rc.*) continue ;; esac
-            if [ "$(git rev-parse "${existing}^{commit}:server")" = "$tree" ]; then
-              echo "$existing already carries server tree $tree."
-              echo "published=false" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-          done
-          echo "published=true" >> "$GITHUB_OUTPUT"
+          selection="$(python3 server/scripts/next_release_tag.py --lane "$LANE" --sha "$TESTED_SHA")"
+          echo "tag=$(jq -r '.tag // ""' <<< "$selection")" >> "$GITHUB_OUTPUT"
+          echo "tree=$(jq -er .tree <<< "$selection")" >> "$GITHUB_OUTPUT"
+          echo "published=$(jq -r .published <<< "$selection")" >> "$GITHUB_OUTPUT"
       - name: Notify the private backend repository
         # Minting a token and notifying run before the tag exists: a missing App
         # configuration then fails the job with nothing published, instead of

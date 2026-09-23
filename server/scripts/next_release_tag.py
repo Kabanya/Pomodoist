@@ -49,7 +49,8 @@ def version_key(version):
     version, so it gets the higher sentinel in that slot.
     """
     major, minor, patch, candidate = version
-    return (major, minor, patch, 0 if candidate is None else candidate)
+    return (major, minor, patch, 1 if candidate is None else 0,
+            0 if candidate is None else candidate)
 
 
 def newest(tagged):
@@ -74,13 +75,12 @@ def next_tag(lane, tags):
     """
     if lane not in LANES:
         raise ValueError(f"unknown release lane: {lane}")
-    published = stable_tags(tags) if LANES[lane] == "stable" else candidate_tags(tags)
     latest = newest_version(tags)
     # Every version is 0.x, so the major component never breaks a tie here.
     major = latest[0] if latest else 0
     if LANES[lane] == "stable":
         minor = latest[1] if latest else 1
-        patch = latest[2] + 1 if latest else 0
+        patch = latest[2] if latest and latest[3] is not None else latest[2] + 1 if latest else 0
         return f"server-v{major}.{minor}.{patch}"
     candidate = 1
     if latest is not None and latest[3] is not None:
@@ -130,11 +130,10 @@ def tag_target(tag, run=subprocess.run):
     return result.stdout.strip() if result.returncode == 0 else None
 
 
-def select(lane, tags, tagged_trees):
+def select(lane, tags, tagged_trees, tree):
     """Return the tag to publish, or None when the tested tree already has one.
 
-    `tagged_trees` maps a `server/` tree ID to the tags that already point at
-    it, so a rerun against unchanged content publishes nothing.
+    `tagged_trees` maps a `server/` tree ID to tags already pointing at it.
 
     The `main` lane compares against stable tags only: after `develop` publishes
     `server-v0.1.10-rc.1`, promoting that same tree must still create the stable
@@ -142,15 +141,11 @@ def select(lane, tags, tagged_trees):
     """
     if lane not in LANES:
         raise ValueError(f"unknown release lane: {lane}")
+    existing = tagged_trees.get(tree, [])
     if LANES[lane] == "stable":
-        candidate = next_tag(lane, tags)
-        existing = tagged_trees.get(candidate, [])
-        if isinstance(existing, str):
-            existing = [existing]
-        eligible = [tag for tag in existing if tag in {name for name, _ in stable_tags(tags)}]
-        return None if eligible else candidate
-    candidate = next_tag(lane, tags)
-    return None if tagged_trees.get(candidate) else candidate
+        return None if any(parse_version(tag) and parse_version(tag)[3] is None
+                           for tag in existing) else next_tag(lane, tags)
+    return None if existing else next_tag(lane, tags)
 
 
 def main():
@@ -171,9 +166,15 @@ def main():
     if args.sha and args.branch and not head_is_current(args.sha, args.branch):
         print("branch head moved past the tested commit; not tagging", file=sys.stderr)
         return 0
-    tag = next_tag(args.lane, tags)
-    print(json.dumps({"lane": args.lane, "tag": tag,
-                      "tree": server_tree(args.sha) if args.sha else None}))
+    tree = server_tree(args.sha) if args.sha else None
+    tagged_trees = {}
+    if tree:
+        for existing in tags:
+            if parse_version(existing) and tag_target(existing):
+                tagged_trees.setdefault(server_tree(f"{existing}^{{commit}}"), []).append(existing)
+    tag = select(args.lane, tags, tagged_trees, tree)
+    print(json.dumps({"lane": args.lane, "tag": tag, "tree": tree,
+                      "published": tag is not None}))
     return 0
 
 

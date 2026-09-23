@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Unit tests for the public server release tag selector."""
 import importlib.util
+import json
+import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -39,16 +42,14 @@ class NextTagTest(unittest.TestCase):
         self.assertEqual(next_release_tag.next_tag("main", []), "server-v0.1.0")
 
     def test_main_ignores_candidate_tags(self):
-        # A candidate never drags the stable series backwards: 0.2.0-rc.7
-        # outranks 0.1.9, so the next stable release is 0.2.1.
+        # A candidate opens the next stable version, not the one after it.
         tags = PUBLISHED + ["server-v0.2.0-rc.7"]
-        self.assertEqual(next_release_tag.next_tag("main", tags), "server-v0.2.1")
+        self.assertEqual(next_release_tag.next_tag("main", tags), "server-v0.2.0")
 
     def test_main_advances_past_a_candidate_of_the_same_series(self):
-        # The candidate sorts above its stable base, so the stable release that
-        # promotes it must sort above the candidate too.
+        # The stable release completes the tested candidate series.
         tags = PUBLISHED + ["server-v0.1.10-rc.1"]
-        self.assertEqual(next_release_tag.next_tag("main", tags), "server-v0.1.11")
+        self.assertEqual(next_release_tag.next_tag("main", tags), "server-v0.1.10")
 
     def test_develop_starts_the_series_above_the_newest_stable(self):
         # A candidate must sort above the stable tag it supersedes, because the
@@ -60,10 +61,9 @@ class NextTagTest(unittest.TestCase):
             next_release_tag.version_key(next_release_tag.parse_version("server-v0.1.9")))
 
     def test_develop_advances_existing_candidate(self):
-        # A candidate whose series is still below the newest tag keeps its own
-        # series; only the counter advances.
+        # An older candidate cannot outrank the newest stable release.
         tags = PUBLISHED + ["server-v0.1.9-rc.1", "server-v0.1.9-rc.2"]
-        self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.9-rc.3")
+        self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.10-rc.1")
         tags = PUBLISHED + ["server-v0.1.10-rc.1", "server-v0.1.10-rc.2"]
         self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.10-rc.3")
 
@@ -75,12 +75,9 @@ class NextTagTest(unittest.TestCase):
         self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.11-rc.1")
 
     def test_develop_continues_a_candidate_series_that_ties_its_stable(self):
-        # 0.1.10-rc.2 sorts above both 0.1.10-rc.1 and the stable 0.1.10, so
-        # the series continues rather than restarting at 0.1.11-rc.1.
+        # A stable tag closes its candidate series.
         tags = PUBLISHED + ["server-v0.1.10-rc.4", "server-v0.1.10"]
-        self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.10-rc.5")
-        tags = PUBLISHED + ["server-v0.1.10-rc.1", "server-v0.1.10"]
-        self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.10-rc.2")
+        self.assertEqual(next_release_tag.next_tag("develop", tags), "server-v0.1.11-rc.1")
 
     def test_develop_opens_the_next_series_after_a_stable_promotion(self):
         tags = PUBLISHED + ["server-v0.1.9-rc.1", "server-v0.1.10"]
@@ -100,6 +97,12 @@ class NextTagTest(unittest.TestCase):
                         next_release_tag.version_key(next_release_tag.parse_version(selected)),
                         next_release_tag.version_key(next_release_tag.parse_version(existing)),
                         f"{lane}: {selected} must outrank {existing}")
+
+    def test_stable_ranks_above_its_candidates(self):
+        stable = next_release_tag.parse_version("server-v0.1.10")
+        candidate = next_release_tag.parse_version("server-v0.1.10-rc.9")
+        self.assertGreater(next_release_tag.version_key(stable),
+                           next_release_tag.version_key(candidate))
 
     def test_rerun_of_the_same_sha_does_not_change_the_tag(self):
         first = next_release_tag.next_tag("develop", PUBLISHED)
@@ -123,19 +126,19 @@ class StableForTest(unittest.TestCase):
 
 class SelectTest(unittest.TestCase):
     def test_publishes_when_the_tested_tree_has_no_tag(self):
-        selected = next_release_tag.select("main", PUBLISHED, {})
+        selected = next_release_tag.select("main", PUBLISHED, {}, "tree")
         self.assertEqual(selected, "server-v0.1.10")
 
     def test_skips_when_the_tested_tree_already_carries_the_next_tag(self):
         tags = PUBLISHED + ["server-v0.1.10"]
         selected = next_release_tag.select("main", tags,
-                                           {"server-v0.1.11": ["server-v0.1.10"]})
+                                           {"tree": ["server-v0.1.10"]}, "tree")
         self.assertIsNone(selected)
 
     def test_publishes_when_the_tree_is_not_yet_tagged(self):
         # A tag exists for a different tree, so this content still needs one.
         selected = next_release_tag.select("main", PUBLISHED,
-                                           {"server-v0.1.9": ["server-v0.1.9"]})
+                                           {"other": ["server-v0.1.9"]}, "tree")
         self.assertEqual(selected, "server-v0.1.10")
 
     def test_a_candidate_never_suppresses_the_stable_promotion(self):
@@ -143,20 +146,30 @@ class SelectTest(unittest.TestCase):
         # create the stable release, otherwise `main` would never publish it.
         tags = PUBLISHED + ["server-v0.1.10-rc.1"]
         selected = next_release_tag.select("main", tags,
-                                           {"server-v0.1.11": ["server-v0.1.10-rc.1"]})
-        self.assertEqual(selected, "server-v0.1.11")
+                                           {"tree": ["server-v0.1.10-rc.1"]}, "tree")
+        self.assertEqual(selected, "server-v0.1.10")
+
+    def test_existing_candidate_tree_does_not_publish_another_rc(self):
+        tags = PUBLISHED + ["server-v0.1.10-rc.1"]
+        self.assertIsNone(next_release_tag.select(
+            "develop", tags, {"tree": ["server-v0.1.10-rc.1"]}, "tree"))
+
+    def test_existing_stable_tree_does_not_publish_another_stable(self):
+        tags = PUBLISHED + ["server-v0.1.10"]
+        self.assertIsNone(next_release_tag.select(
+            "main", tags, {"tree": ["server-v0.1.10"]}, "tree"))
 
     def test_develop_still_deduplicates_against_its_own_candidates(self):
         # Unchanged content on `develop` stays a no-op: the tag that already
         # carries this tree is the one this lane would publish next.
         tags = PUBLISHED + ["server-v0.1.10-rc.1"]
         selected = next_release_tag.select("develop", tags,
-                                           {"server-v0.1.10-rc.2": ["server-v0.1.10-rc.2"]})
+                                           {"tree": ["server-v0.1.10-rc.1"]}, "tree")
         self.assertIsNone(selected)
 
     def test_rejects_unknown_lane(self):
         with self.assertRaises(ValueError):
-            next_release_tag.select("staging", PUBLISHED, {})
+            next_release_tag.select("staging", PUBLISHED, {}, "tree")
 
 
 class RepositoryStateTest(unittest.TestCase):
@@ -171,6 +184,39 @@ class RepositoryStateTest(unittest.TestCase):
 
     def test_next_stable_after_the_real_history(self):
         self.assertEqual(next_release_tag.next_tag("main", PUBLISHED), "server-v0.1.10")
+
+
+class CliDecisionTest(unittest.TestCase):
+    def test_existing_rc_is_idempotent_and_promotable(self):
+        with tempfile.TemporaryDirectory() as directory:
+            def git(*args):
+                return subprocess.run(["git", *args], cwd=directory, check=True,
+                                      capture_output=True, text=True).stdout.strip()
+
+            git("init", "-q")
+            git("config", "user.email", "test@example.test")
+            git("config", "user.name", "Test")
+            server = Path(directory) / "server"
+            server.mkdir()
+            (server / "README.md").write_text("stable\n")
+            git("add", "server")
+            git("commit", "-qm", "stable")
+            git("tag", "server-v0.1.9")
+            (server / "README.md").write_text("candidate\n")
+            git("add", "server")
+            git("commit", "-qm", "candidate")
+            sha = git("rev-parse", "HEAD")
+            git("tag", "server-v0.1.10-rc.1")
+
+            def decision(lane):
+                result = subprocess.run(
+                    ["python3", str(MODULE), "--lane", lane, "--sha", sha],
+                    cwd=directory, check=True, capture_output=True, text=True)
+                return json.loads(result.stdout)
+
+            self.assertEqual(decision("develop")["published"], False)
+            self.assertEqual(decision("main")["tag"], "server-v0.1.10")
+            self.assertEqual(decision("main")["published"], True)
 
 
 if __name__ == "__main__":
