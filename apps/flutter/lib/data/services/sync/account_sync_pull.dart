@@ -47,6 +47,26 @@ extension AccountSyncPull on AccountSyncEngine {
     }
 
     await _db.transaction(() async {
+      // `unshare` restores the whole subtree as personal rows and drops the
+      // scope. Every restored row must be known before the first one is applied,
+      // because removing the shared copy takes its children with it. Resolve
+      // them in one pass so the removal can spare exactly what comes back.
+      //
+      // Each row is matched to the scope it still carries locally, never to the
+      // scope of a row it points at: the project and its tasks come back in the
+      // same batch, so a task would otherwise be judged by a project that has
+      // already lost its scope and get swept away with it.
+      final handedBack = <String, Map<String, String>>{};
+      for (final change in result.changes) {
+        if (change.deleted || change.data['scopeId'] != null) continue;
+        final scopeId = await _localScopeIdOf(change);
+        if (scopeId != null) {
+          handedBack.putIfAbsent(scopeId, () => <String, String>{})[
+              change.entityId] =
+              change.entityType;
+        }
+      }
+
       for (final change in result.changes) {
         _checkSession();
         if (change.entityType == 'task' &&
@@ -57,13 +77,27 @@ extension AccountSyncPull on AccountSyncEngine {
                 null) {
           continue;
         }
-        if (change.entityType == 'project' &&
-            (await (_db.select(_db.projects)
-                          ..where((r) => r.id.equals(change.entityId)))
-                        .getSingleOrNull())
-                    ?.scopeId !=
-                null) {
-          continue;
+        if (change.entityType == 'project') {
+          final local = await _localScopeIdOf(change);
+          final kept = handedBack[local];
+          if (local != null) {
+            // Still scoped here but unscoped on the server: the scope was
+            // unshared and this change is the personal row that replaces it.
+            // Drop the shared copy first, or the shared-entity guard below
+            // skips the very row that has to land.
+            if (change.data['scopeId'] != null) continue;
+            await _removeSharedScope(
+              local,
+              keepEntityType: change.entityType,
+              keepEntityIds: kept?.keys.toSet() ?? const {},
+              keepProjectIds: kept?.keys.toSet() ?? const {},
+            );
+            // Every kept row keeps its shared marker through the removal, so
+            // all of them must lose it before the guard below lets them land.
+            for (final entry in kept?.entries ?? const Iterable.empty()) {
+              await _clearSharedEntity(entry.value, entry.key);
+            }
+          }
         }
         if (!change.entityType.startsWith('focus_')) {
           final scoped =
@@ -95,6 +129,53 @@ extension AccountSyncPull on AccountSyncEngine {
         }
       }
     });
+  }
+
+  /// The scope a locally stored project still carries, which is what marks it as
+  /// a shared copy the server may have just handed back as personal.
+  Future<String?> _localScopeIdOf(AccountSyncEntity change) async {
+    switch (change.entityType) {
+      case 'project':
+        return (await (_db.select(
+          _db.projects,
+        )..where((row) => row.id.equals(change.entityId))).getSingleOrNull())
+            ?.scopeId;
+      case 'task':
+        final own = await (_db.select(
+          _db.tasks,
+        )..where((row) => row.id.equals(change.entityId))).getSingleOrNull();
+        if (own?.scopeId != null) return own!.scopeId;
+        // The row may already be gone when the scope's own batch arrives first,
+        // so fall back to the project the task belongs to.
+        final projectId = change.data['projectId'] as String?;
+        if (projectId == null) return null;
+        return (await (_db.select(
+          _db.projects,
+        )..where((row) => row.id.equals(projectId))).getSingleOrNull())
+            ?.scopeId;
+      case 'section':
+        // A section carries no scope of its own; it belongs to a project that
+        // does, so resolve through that project.
+        final section = await (_db.select(
+          _db.sections,
+        )..where((row) => row.id.equals(change.entityId))).getSingleOrNull();
+        final projectId = section?.projectId;
+        if (projectId == null) return null;
+        return (await (_db.select(
+          _db.projects,
+        )..where((row) => row.id.equals(projectId))).getSingleOrNull())
+            ?.scopeId;
+      default:
+        return null;
+    }
+  }
+
+  Future<void> _clearSharedEntity(String entityType, String entityId) async {
+    await (_db.delete(_db.sharedEntities)..where(
+          (row) =>
+              row.entityType.equals(entityType) & row.entityId.equals(entityId),
+        ))
+        .go();
   }
 
   Future<void> _repairKanbanAfterFinalPull() async {

@@ -1,4 +1,5 @@
 import 'package:pomodoist/data/repositories/projects/project_repository_impl.dart';
+import 'dart:convert';
 import 'package:app_account/app_account.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -47,6 +48,12 @@ void main() {
       api: CollaborationApi((args) async {
         if (args['action'] == 'state') {
           return {'personalRevision': account.revision};
+        }
+        if (args['action'] == 'unshare') {
+          account.unsharedRoot = root;
+          account.unsharedChild = child;
+          account.unsharedTask = task;
+          return {'ok': true, 'rootProjectId': root};
         }
         expect(args['action'], 'share');
         shares.add({...args, 'serverRevision': account.revision});
@@ -136,11 +143,105 @@ void main() {
       expect(await db.select(db.syncCommands).get(), hasLength(1));
     },
   );
+
+  test(
+    'unsharing hands the project back as personal instead of dropping it',
+    () async {
+      (await repository.share(root)).getOrThrow();
+      await _localSharedState(db, root);
+
+      (await repository.unshare('scope')).getOrThrow();
+
+      final restored = await (db.select(
+        db.projects,
+      )..where((p) => p.id.equals(root))).getSingle();
+      expect(restored.scopeId, null);
+      expect(restored.isDeleted, isFalse);
+      expect(await db.select(db.sharedScopes).get(), isEmpty);
+    },
+  );
+
+  test(
+    'unsharing restores the whole subtree, not just the root project',
+    () async {
+      (await repository.share(root)).getOrThrow();
+      await _localSharedState(db, root);
+
+      (await repository.unshare('scope')).getOrThrow();
+
+      final projects = await (db.select(
+        db.projects,
+      )..where((p) => p.id.isIn([root, child]))).get();
+      expect(
+        {for (final row in projects) row.id: row.scopeId},
+        {root: null, child: null},
+      );
+      // The child and its task come back in the same pull as the root, and the
+      // subtree pass must keep both rather than take them with the scope.
+      expect(
+        (await (db.select(
+          db.tasks,
+        )..where((t) => t.id.equals(task))).getSingle()).scopeId,
+        null,
+      );
+    },
+  );
+
+  test('owner deletes a shared root through the server scope delete', () async {
+    (await repository.share(root)).getOrThrow();
+    await _localSharedState(db, root);
+    final actions = <String>[];
+    final projects = DriftProjectRepository(
+      db,
+      queue,
+      collaboration: CollaborationApi((args) async {
+        actions.add(args['action'] as String);
+        return {'ok': true};
+      }),
+    );
+
+    (await projects.deleteProject(root)).getOrThrow();
+
+    expect(actions, ['delete']);
+    expect(
+      (await (db.select(
+        db.projects,
+      )..where((p) => p.id.equals(root))).getSingle()).isDeleted,
+      isTrue,
+    );
+  });
+}
+
+/// Leaves the database as a completed shared sync would: the project carries
+/// the scope and the scope row is cached locally.
+Future<void> _localSharedState(AppDatabase db, String root) async {
+  await db
+      .update(db.projects)
+      .write(const ProjectsCompanion(scopeId: Value('scope')));
+  await db
+      .into(db.sharedScopes)
+      .insertOnConflictUpdate(
+        SharedScopesCompanion.insert(
+          id: 'scope',
+          dataJson: jsonEncode({
+            'id': 'scope',
+            'rootProjectId': root,
+            'ownerId': 'me',
+            'role': 'administrator',
+          }),
+        ),
+      );
 }
 
 class _Account implements AccountClient {
   var revision = 0;
   String? serverName;
+
+  /// Set when the server unshares a root: the subtree comes back as personal
+  /// rows, so the next pull must carry all of it.
+  String? unsharedRoot;
+  String? unsharedChild;
+  String? unsharedTask;
   @override
   String? get currentUserId => 'me';
   @override
@@ -164,11 +265,51 @@ class _Account implements AccountClient {
     required String deviceId,
     required int sinceRevision,
     int limit = 500,
-  }) async => AccountSyncPullResult(
-    nextCursor: revision,
-    hasMore: false,
-    changes: const [],
-  );
+  }) async {
+    final root = unsharedRoot;
+    final child = unsharedChild;
+    final task = unsharedTask;
+    if (root == null || child == null || task == null) {
+      return AccountSyncPullResult(
+        nextCursor: revision,
+        hasMore: false,
+        changes: const [],
+      );
+    }
+    // `unshare` hands the subtree back as personal rows: none of them carries a
+    // scopeId, while the local copies still do. That is exactly the state the
+    // pull has to reconcile. A child is listed before its parent, so a pass that
+    // resolves rows one at a time cannot know what else is coming back.
+    return AccountSyncPullResult(
+      nextCursor: revision,
+      hasMore: false,
+      changes: [
+        for (final id in [child, task, root])
+          AccountSyncEntity(
+            entityType: id == task ? 'task' : 'project',
+            entityId: id,
+            serverRevision: revision,
+            updatedAt: DateTime.now().toUtc(),
+            data: {
+              'id': id,
+              'userId': 'me',
+              if (id == task) 'projectId': child,
+              if (id != task) 'name': id == root ? 'Root' : 'Child',
+              if (id != task) 'viewStyle': 'list',
+              if (id != task) 'isFavorite': false,
+              if (id != task) 'isArchived': false,
+              if (id != task && id == child) 'parentId': root,
+              if (id == task) 'content': 'Task',
+              if (id == task) 'isCompleted': false,
+              'isDeleted': false,
+              'orderKey': 'a',
+              'createdAt': DateTime.utc(2026).toIso8601String(),
+              'updatedAt': DateTime.now().toUtc().toIso8601String(),
+            },
+          ),
+      ],
+    );
+  }
   @override
   Future<void> broadcastSyncHint({
     required String appId,

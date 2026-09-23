@@ -73,6 +73,33 @@ Deno.test("only invitations send mail; cleanup failures preserve successful muta
   const response = await handleCollaboration(f.request({ action: "delete", scopeId: "s" }), f.deps);
   equal(response.status, 200); equal(f.calls, ["auth", "rpc:delete"]);
 });
+Deno.test("successful owner unshare responds while storage cleanup is still pending", async () => {
+  const f = fixture({ ok: true, restored: 1, rootProjectId: "project" });
+  const cleanup = Promise.withResolvers<void>();
+  const started = Promise.withResolvers<void>();
+  const background: Promise<unknown>[] = [];
+  f.deps.cleanup = () => { started.resolve(); return cleanup.promise; };
+  f.deps.waitUntil = task => { background.push(task); };
+  const response = handleCollaboration(f.request({ action: "unshare", scopeId: "scope" }), f.deps);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await started.promise;
+    const result = await Promise.race([
+      response,
+      new Promise<null>(resolve => { timer = setTimeout(() => resolve(null), 100); }),
+    ]);
+    if (!result) throw new Error("Committed unshare is blocked on storage cleanup");
+    equal(result.status, 200);
+    equal(await result.json(), { ok: true, restored: 1, rootProjectId: "project" });
+    equal(background.length, 1);
+    cleanup.reject(new Error("Storage timed out after the mutation committed"));
+    await Promise.all(background);
+  } finally {
+    clearTimeout(timer);
+    cleanup.resolve();
+    await response;
+  }
+});
 Deno.test("oversized requests never authenticate", async () => {
   const f = fixture(); const response = await handleCollaboration(f.request({ action: "state", extra: "x".repeat(1_000_001) }), f.deps);
   equal(response.status, 413); equal(f.calls, []);

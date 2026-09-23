@@ -1,13 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/providers.dart';
-import 'package:pomodoist/domain/models/collaboration/collaboration_conflict.dart';
-import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
 import 'package:pomodoist/data/repositories/collaboration/collaboration_repository.dart';
 import 'package:pomodoist/data/repositories/collaboration/drift_collaboration_repository.dart';
+import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
 import 'package:pomodoist/data/services/local/shared_access.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_conflict.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
+
+export 'package:pomodoist/config/providers.dart'
+    show projectRepositoryProvider;
 
 final collaborationRepositoryProvider = Provider<CollaborationRepository?>((
   ref,

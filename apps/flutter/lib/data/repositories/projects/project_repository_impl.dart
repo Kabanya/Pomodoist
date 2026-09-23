@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
 import 'package:pomodoist/data/services/local/project_local_service.dart';
 import 'package:pomodoist/data/services/local/shared_access.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
@@ -15,16 +16,28 @@ import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/data/services/local/task_repository_support.dart';
 
 class DriftProjectRepository implements ProjectRepository {
-  DriftProjectRepository(AppDatabase db, this._syncQueue, {Uuid? uuid})
-    : _db = db,
-      _uuid = uuid ?? const Uuid(),
-      _projects = ProjectLocalService(db);
+  DriftProjectRepository(
+    AppDatabase db,
+    this._syncQueue, {
+    Uuid? uuid,
+    CollaborationApi? collaboration,
+    Future<void> Function()? synchronize,
+  }) : _db = db,
+       _uuid = uuid ?? const Uuid(),
+       _projects = ProjectLocalService(db),
+       _collaboration = collaboration,
+       _synchronize = synchronize;
 
   final AppDatabase _db;
   SharedAccess get _access => SharedAccess(_db);
   final OutboxService _syncQueue;
   final Uuid _uuid;
   final ProjectLocalService _projects;
+
+  /// Used to delete a shared root, which the server accepts only as a scope
+  /// operation.
+  final CollaborationApi? _collaboration;
+  final Future<void> Function()? _synchronize;
 
   @override
   Stream<List<ProjectItem>> watchProjects() {
@@ -315,86 +328,126 @@ class DriftProjectRepository implements ProjectRepository {
   @override
   Future<Result<void>> deleteProject(String id) => Result.capture<void>(
     () async {
-      await _access.project(id, deleting: true);
       if (id == inboxProjectId) {
         return;
       }
-      final now = DateTime.now().toUtc();
-      await _db.transaction(() async {
-        final project = await _projects.findActiveProject(id);
-        if (project == null) {
-          return;
-        }
+      // Read the scope up front: authorising the delete and deleting the shared
+      // root both need it, and the scope row is gone once the server unshares.
+      final scopeId = await _access.projectScope(id);
+      final scope = await _access.scope(scopeId);
+      final isSharedRoot = scope?.rootProjectId == id;
+      if (!isSharedRoot) {
+        await _access.project(id, deleting: true);
+      }
+      await _deleteSharedRoot(id, scopeId, isSharedRoot);
+      await _deleteLocalProject(id);
+    },
+  );
 
-        final items = await _activeProjects();
-        final parents = projectParents(items);
-        final parentId = parents[id];
-        final children = items
-            .where((p) => p.id != inboxProjectId && parents[p.id] == id)
-            .toList();
-        final siblings = <ProjectItem>[
-          for (final item in items.where(
-            (p) => p.id != inboxProjectId && parents[p.id] == parentId,
-          ))
-            if (item.id == id) ...children else item,
-        ];
+  /// A shared root lives on the server, so the scope must be deleted there
+  /// before the local row. Deleting it here keeps the project menu working the
+  /// same way the share dialog does.
+  Future<void> _deleteSharedRoot(
+    String id,
+    String? scopeId,
+    bool isSharedRoot,
+  ) async {
+    if (scopeId == null || !isSharedRoot) return;
+    final api = _collaboration;
+    if (api == null) {
+      throw const CollaborationException('unauthenticated');
+    }
+    await api.deleteScope(scopeId);
+    try {
+      await _synchronize?.call();
+    } catch (_) {
+      // The server already applied the delete; the local pull is best effort
+      // and the next sync reconciles whatever is left.
+    }
+  }
+
+  Future<void> _deleteLocalProject(String id) async {
+    final now = DateTime.now().toUtc();
+    await _db.transaction(() async {
+      final project = await _projects.findActiveProject(id);
+      if (project == null) {
+        return;
+      }
+
+      final items = await _activeProjects();
+      final scopeId = await _access.projectScope(id);
+      final parents = projectParents(items);
+      final parentId = parents[id];
+      final children = items
+          .where((p) => p.id != inboxProjectId && parents[p.id] == id)
+          .toList();
+      final siblings = <ProjectItem>[
+        for (final item in items.where(
+          (p) => p.id != inboxProjectId && parents[p.id] == parentId,
+        ))
+          if (item.id == id) ...children else item,
+      ];
+      if (scopeId == null) {
         await _writeProjectOrder(siblings, parentId, now);
+      }
 
-        final tasks = await _projects.activeTasksForProject(id);
-        for (final task in tasks) {
-          final targetProjectId = project.scopeId == null
-              ? inboxProjectId
-              : parentId!;
-          await _projects.moveTaskToProject(task.id, targetProjectId, now);
-          await _syncQueue.enqueue(
-            type: 'task.move',
-            clientId: task.id,
-            payload: {
-              'id': task.id,
-              'projectId': targetProjectId,
-              'sectionId': null,
-              'parentId': task.parentId,
-              'orderKey': task.orderKey,
-            },
-          );
-        }
+      final tasks = await _projects.activeTasksForProject(id);
+      for (final task in tasks) {
+        final targetProjectId = project.scopeId == null
+            ? inboxProjectId
+            : parentId!;
+        await _projects.moveTaskToProject(task.id, targetProjectId, now);
+        await _syncQueue.enqueue(
+          type: 'task.move',
+          clientId: task.id,
+          payload: {
+            'id': task.id,
+            'projectId': targetProjectId,
+            'sectionId': null,
+            'parentId': task.parentId,
+            'orderKey': task.orderKey,
+          },
+        );
+      }
 
-        final settingsBefore = await _projects.loadKanbanSettings();
-        await _projects.setProjectDeleted(id, now);
+      final settingsBefore = await _projects.loadKanbanSettings();
+      await _projects.setProjectDeleted(id, now);
+      if (scopeId == null) {
         await _projects.repairKanbanSettings(now: now);
-        final settingsAfter = await _projects.loadKanbanSettings();
-        await _syncQueue.enqueueBatch([
+      }
+      final settingsAfter = await _projects.loadKanbanSettings();
+      await _syncQueue.enqueueBatch([
+        if (scopeId == null)
           SyncQueueCommand(
             type: 'project.delete',
             clientId: id,
             payload: {'id': id},
           ),
-          if (settingsBefore.selectedProjectIdsJson !=
-              settingsAfter.selectedProjectIdsJson)
-            SyncQueueCommand(
-              type: 'kanban.settings.projects.set',
-              clientId: kanbanSettingsPrimaryId,
-              payload: {
-                'id': kanbanSettingsPrimaryId,
-                'selectedProjectIdsJson': settingsAfter.selectedProjectIdsJson,
-                'changedAt': now.toIso8601String(),
-              },
-            ),
-          if (settingsBefore.focusStatusLabelId !=
-              settingsAfter.focusStatusLabelId)
-            SyncQueueCommand(
-              type: 'kanban.settings.focus.set',
-              clientId: kanbanSettingsPrimaryId,
-              payload: {
-                'id': kanbanSettingsPrimaryId,
-                'focusStatusLabelId': settingsAfter.focusStatusLabelId,
-                'changedAt': now.toIso8601String(),
-              },
-            ),
-        ], occurredAt: now);
-      });
-    },
-  );
+        if (settingsBefore.selectedProjectIdsJson !=
+            settingsAfter.selectedProjectIdsJson)
+          SyncQueueCommand(
+            type: 'kanban.settings.projects.set',
+            clientId: kanbanSettingsPrimaryId,
+            payload: {
+              'id': kanbanSettingsPrimaryId,
+              'selectedProjectIdsJson': settingsAfter.selectedProjectIdsJson,
+              'changedAt': now.toIso8601String(),
+            },
+          ),
+        if (settingsBefore.focusStatusLabelId !=
+            settingsAfter.focusStatusLabelId)
+          SyncQueueCommand(
+            type: 'kanban.settings.focus.set',
+            clientId: kanbanSettingsPrimaryId,
+            payload: {
+              'id': kanbanSettingsPrimaryId,
+              'focusStatusLabelId': settingsAfter.focusStatusLabelId,
+              'changedAt': now.toIso8601String(),
+            },
+          ),
+      ], occurredAt: now);
+    });
+  }
 
   ProjectItem _mapProject(
     ProjectRow row, {

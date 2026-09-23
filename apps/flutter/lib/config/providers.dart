@@ -18,6 +18,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:pomodoist/config/app_language.dart';
+import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/domain/models/settings/app_language.dart';
 import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:pomodoist/domain/models/tasks/task_time.dart';
@@ -52,6 +53,7 @@ import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
 import 'package:pomodoist/data/repositories/kanban/kanban_repository_impl.dart';
 import 'package:pomodoist/data/repositories/local/kanban_transition_coordinator.dart';
 import 'package:pomodoist/domain/use_cases/tasks/csv_task_import_use_case.dart';
+import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:uuid/uuid.dart';
 
@@ -192,6 +194,22 @@ final syncQueueRepositoryProvider = Provider<OutboxService>((ref) {
   return DriftOutboxService(ref.watch(appDatabaseProvider));
 });
 
+/// Carries the collaboration API so that deleting a shared root can go through
+/// the server scope operation instead of a content command the server rejects.
+final projectRepositoryProvider = Provider<ProjectRepository>((ref) {
+  final account = ref.watch(accountClientProvider);
+  return DriftProjectRepository(
+    ref.watch(appDatabaseProvider),
+    ref.watch(syncQueueRepositoryProvider),
+    collaboration: account == null
+        ? null
+        : CollaborationApi.account(account),
+    synchronize: () async {
+      await ref.read(accountSyncEngineProvider)?.syncNow();
+    },
+  );
+});
+
 final csvTaskImporterProvider = Provider<CsvTaskImportUseCase>((ref) {
   final db = ref.watch(appDatabaseProvider);
   return CsvTaskImportUseCase(
@@ -236,13 +254,6 @@ final kanbanRepositoryProvider = Provider<KanbanRepository>((ref) {
 
 final kanbanBoardProvider = StreamProvider<KanbanBoardSnapshot>((ref) {
   return ref.watch(kanbanRepositoryProvider).watchBoard();
-});
-
-final projectRepositoryProvider = Provider<ProjectRepository>((ref) {
-  return DriftProjectRepository(
-    ref.watch(appDatabaseProvider),
-    ref.watch(syncQueueRepositoryProvider),
-  );
 });
 
 final labelRepositoryProvider = Provider<LabelRepository>((ref) {

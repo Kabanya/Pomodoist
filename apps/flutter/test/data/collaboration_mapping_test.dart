@@ -10,9 +10,31 @@ import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_conflict.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
+import 'package:pomodoist/ui/collaboration/widgets/collaboration_copy.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations_en.dart';
 import 'package:pomodoist/utils/result.dart';
 
 void main() {
+  test(
+    'unshare reports the server permission denial instead of a generic error',
+    () async {
+      final api = CollaborationApi((request) async {
+        expect(request, {'action': 'unshare', 'scopeId': 'scope'});
+        return {
+          'code': '42501',
+          'error': 'Only the owner may make the project private',
+        };
+      });
+      final result = await Result.capture(() => api.unshare('scope'));
+      expect(result, isA<Failure<Map<String, dynamic>>>());
+      final error = (result as Failure<Map<String, dynamic>>).error;
+      expect(
+        collaborationErrorMessage(AppLocalizationsEn(), error),
+        AppLocalizationsEn().collaborationForbidden,
+      );
+    },
+  );
+
   group('domain transport models', () {
     test('a malformed scope role is rejected, a missing one is observer', () {
       expect(

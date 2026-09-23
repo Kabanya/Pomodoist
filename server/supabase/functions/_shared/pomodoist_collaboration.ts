@@ -8,6 +8,7 @@ export type CollaborationDependencies = {
   upload: (path: string) => Promise<{ signedUrl: string; token: string }>;
   download: (path: string, name: string) => Promise<string>;
   cleanup: () => Promise<void>;
+  waitUntil?: (task: Promise<unknown>) => void;
   inviteEmail: (email: string, url: string) => Promise<void>;
   webUrl: string;
 };
@@ -116,8 +117,12 @@ export async function handleCollaboration(request: Request, deps: CollaborationD
     if (action === "publicRead") {
       return reply(publicCollaborationProjection(result));
     }
-    // Cleanup is best effort after authorization; durable SQL records retry the work.
-    if (["deleteAttachment", "delete", "unshare", "state", "finishUpload"].includes(action)) { try { await deps.cleanup(); } catch { /* Retained in the SQL deletion queue. */ } }
+    // Storage cleanup must not delay an already committed mutation past the client's timeout.
+    if (["deleteAttachment", "delete", "unshare", "state", "finishUpload"].includes(action)) {
+      const cleanup = deps.cleanup().catch(() => { /* Retained in the SQL deletion queue. */ });
+      if (deps.waitUntil) deps.waitUntil(cleanup);
+      else await cleanup;
+    }
     const { objectPath: _path, ...safe } = result;
     return reply(safe);
   } catch (error) {

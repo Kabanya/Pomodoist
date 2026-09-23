@@ -13,6 +13,7 @@ String collaborationErrorMessage(AppLocalizations l10n, Object error) {
   return switch (code) {
     'personal_sync_pending' => l10n.collaborationSyncPending,
     'forbidden' ||
+    '42501' ||
     'invalid_assignee' ||
     'invalid_section' ||
     'cross_scope_move' ||

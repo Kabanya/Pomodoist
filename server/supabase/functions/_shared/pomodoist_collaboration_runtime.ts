@@ -2,6 +2,8 @@ import { createClient } from "npm:@supabase/supabase-js@2.115.0";
 import { CollaborationError, type CollaborationDependencies } from "./pomodoist_collaboration.ts";
 import { sendInvitationEmail } from "./pomodoist_collaboration_mail.ts";
 
+declare const EdgeRuntime: { waitUntil(task: Promise<unknown>): void };
+
 export function collaborationRuntime(settings: {
   url: string; publicUrl?: string; key: string; webUrl: string; env: { get(name: string): string | undefined };
   fetcher?: typeof fetch;
@@ -18,6 +20,7 @@ const admin = createClient(url, key, options);
 const client = (authorization: string | null) => authorization ? createClient(url, key, { ...options, global: { ...options.global, headers: { Authorization: authorization } } }) : admin;
 return {
   webUrl: settings.webUrl,
+  waitUntil: typeof EdgeRuntime === "undefined" ? undefined : task => EdgeRuntime.waitUntil(task),
   authenticate: settings.authenticate ?? (async authorization => {
     const { data, error } = await client(authorization).auth.getUser();
     return error || data.user?.is_anonymous ? null : data.user?.id ?? null;
