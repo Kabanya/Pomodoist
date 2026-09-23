@@ -1,9 +1,9 @@
 # Branch-Based Backend Deployment — Corrected Implementation Plan
 
-**Status:** Corrected after verification against both live repositories and hosted state
-on 2026-09-23. This revision supersedes the prior corrected draft: three of its findings
-(C2, C3, C4) were themselves partly wrong, and the error changed which task is the real
-blocker. Read "Verified corrections" before implementing anything.
+**Status (2026-09-23 audit):** Implementation is partly present, but automation is
+**not ready for cutover**. Tasks 0-7 below describe the intended implementation, not
+completed checkboxes. Read "Current blockers and completion order" first; the older
+"Verified corrections" section records how the design was derived.
 
 **Goal (unchanged):** A relevant push to `develop` automatically reaches staging; a
 relevant push to `main` automatically reaches production. Public Pomodoist server
@@ -16,6 +16,127 @@ branch-appropriate tag and sends `repository_dispatch` to the private repo with 
 short-lived GitHub App token. The private workflow verifies public refs, reconciles the
 branch lock, and explicitly dispatches that branch's deployment workflow. An hourly
 scheduled run repairs a lost event. Staging and production are independent lanes.
+
+---
+
+## Current blockers and completion order
+
+P means the public `Kabanya/Pomodoist` checkout;
+B means the private `Kabanya/account-sync-platform` checkout. The user requires
+Nottica to remain separate from Pomodoist. This is a status-aware continuation of
+the task list below, not a second architecture.
+
+### Why the original `Make private` attempt failed
+
+Staging returned `400 invalid_request` from the old Edge request validator, before
+authentication or SQL. Production returned `404` because its collaboration Edge
+Function was not deployed. The pinned `server-v0.1.9` release already contains the
+initial collaboration schema and function, but its SQL dispatcher has no `unshare`.
+P's new fresh-install baseline includes `unshare`, but B excludes that baseline when
+upgrading an existing hosted database. The hosted upgrade needs the ordered five-file
+chain ending in `20260917000000_pomodoist_core_collaboration_unshare.sql`. B's old
+cache symlinks could lose historical migrations when the public lock changed; the
+local B branch materializes 13 v0.1.9 forward files plus three later dispatcher
+revisions as immutable regular SQL files. These facts explain the defect; they do not
+prove a production upgrade has occurred.
+
+### What was verified at this audit
+
+| Area | Verified state | Remaining boundary |
+| --- | --- | --- |
+| P release code | Commits `435227c`, `9a029e3`, `856957d` are on `origin/develop`; 19 selector tests and 319 Deno tests passed locally. | The latest `selfhost.yml` run for `f42890f` failed while pulling `public.ecr.aws/supabase/pg_prove:3.36` (`toomanyrequests`); its release job was skipped. No RC tag exists. |
+| B code | The local `fix/core-migration-continuity` branch ends at `73180ef`; 13 pinned forward files and three legacy revisions match their source bytes. Selector, assembler, policy, and Deno tests passed locally. | This branch does not exist on `origin`; neither remote `develop` nor default `main` contains its new workflow. No CI run has tested this branch. |
+| Migration evidence | `B/docs/pomodoist-collaboration-adoption.md` lists the expected five pending migrations. | Its hosted-style local test started with a ledger already at `20260914104510`, so it exercised only the final three. Production's reported boundary is `20260913222604`. No live production `db push --dry-run` artifact exists. |
+| GitHub settings | B has `production`, `production-validation`, and `staging` environments; each currently has no protection rules. | P lacks `POMODOIST_CORE_SYNC_APP_ID` and `_KEY`. B has no `SUPABASE_DB_PASSWORD` in repository or relevant environment secrets; `production-validation` has no environment secrets. |
+| External targets | B workflows name production ref `ewauihswbwduvklrozke` and a Coolify staging resource. | The production ref has not been independently confirmed as Pomodoist-only; the staging resource's source branch and source-commit setting are unverified. |
+
+The author's reports of 586 P DB tests and 215 B DB tests are recorded in B docs, but
+this audit did not rerun those suites. Do not present them as fresh CI evidence.
+
+### Newly found release-contract defects (fix before the first tag)
+
+1. **RC ordering blocks staging.** P's current
+   `next_release_tag.py --lane develop --dry-run` returns `server-v0.1.9-rc.1`.
+   B already locks stable `server-v0.1.9`;
+   its selector correctly ranks that stable tag above every `0.1.9-rc.N`, so it will
+   return `no change`. P must start the next development series at
+   `server-v0.1.10-rc.1`, and B must test the exact stable-to-RC transition.
+2. **Stable promotion can be suppressed.** P `selfhost.yml` currently skips a release
+   when *any* tag has the same `server/` tree. After `develop` publishes
+   `server-v0.1.10-rc.1`, merging the same tree into `main` would skip the required
+   stable `server-v0.1.10`. Deduplicate against stable tags for `main`; an RC must
+   never count as a stable release. Pin this with a test of the actual release job
+   decision, not only the unused `select()` helper.
+3. **Lost deployment dispatch is not repaired.** B's selector returns `no change`
+   after a bot lock commit. In `supabase-core-sync.yml`, both the assemble step and
+   the run-lookup/dispatch step are conditioned on a new tag. An hourly run therefore
+   skips recovery precisely when a lock was committed but its deployment dispatch
+   was lost. The no-change path must verify the locked public tree and the current
+   B branch head, look up runs for that SHA, then dispatch only when none exists;
+   a failed run must remain failed, not be retried hourly.
+
+### Exact remaining actions, in safe order
+
+1. [ ] **Repair the three release-contract defects.** In P, change
+   `server/scripts/next_release_tag.py`, its tests, and `.github/workflows/selfhost.yml`.
+   Assert `next_tag("develop", ["server-v0.1.9"]) == "server-v0.1.10-rc.1"`;
+   assert promotion of the same tree still creates stable `server-v0.1.10`. In B,
+   extend `scripts/select-pomodoist-core-release_test.py` for stable `0.1.9` to RC
+   `0.1.10-rc.1`, and make `.github/workflows/supabase-core-sync.yml` repair a lost
+   dispatch when selection is `no change`. Test absent, active, successful, and failed
+   deployment-run responses. Mint or validate the GitHub App token **before** creating
+   a public tag so missing App configuration cannot leave a tag with no notification.
+   Keep these changes on review branches; do not merge or publish a tag yet.
+2. [ ] **Prove the full local hosted upgrade.** In an isolated disposable local
+   Supabase database, apply B migrations only through `20260913222604`; verify that
+   exact ledger boundary. Add the five later migrations, run
+   `supabase migration up --local`, and record all five applied names in order. Run B's DB tests and P's
+   owner/participant `unshare` SQL assertions. Correct the misleading sentence in
+   `B/docs/pomodoist-collaboration-adoption.md` claiming the three-file test used
+   the same boundary as production. Never use a live database for this rehearsal.
+3. [ ] **Make the code reviewable remotely.** Push B's local
+   `fix/core-migration-continuity` branch as a draft PR without merging it. Review
+   the full `origin/main..HEAD` scope, including email/template changes inherited
+   from `develop`; explicitly retain or separate unrelated changes. Require B CI
+   on the exact final SHA. P's release fixes also need a reviewable branch/PR.
+4. [ ] **Get current CI green.** Rerun P `selfhost.yml` at the final source SHA. If
+   `public.ecr.aws` rate limits it again, fix the image source or caching and rerun;
+   a local test pass does not replace this gate. Run P tag/boundary/Deno/DB checks
+   and B selector/assembler/policy/Deno/DB/Compose checks on final SHAs. Save CI URLs
+   and counts. A red run blocks tag publication, even when the failure is external.
+5. [ ] **Configure one-time external settings without deploying.** Install one GitHub
+   App only on B with the minimum required repository permissions; place its ID/key
+   into P Actions secrets. Put `SUPABASE_DB_PASSWORD` into B `production` and
+   `production-validation` secrets, and scope the needed Supabase access token to
+   those environments. Verify the project's identity belongs to Pomodoist alone;
+   do not change Nottica. Verify B Actions can grant the sync job `contents: write`
+   and `actions: write`, and verify Coolify staging follows `develop` with source
+   commit reporting. Never put secret values in Git, logs, or this plan.
+6. [ ] **Capture the production read-only migration artifact.** From the reviewed B
+   candidate and the verified Pomodoist production ref, run `supabase link` and
+   `supabase db push --dry-run --linked` with credentials supplied securely. The
+   output must list exactly the five migrations in the adoption document, in order.
+   Review the SQL of each file and stop if the list, target, or SQL differs. The
+   dry-run is a gate, not authorization to apply migrations.
+7. [ ] **Execute the one-time staging-first cutover only after gates 1-6 pass.** The
+   first cross-repository transition cannot be atomic. Publish the tested RC, pin
+   it once in the reviewed B `develop` cutover commit, and let the `develop` push
+   deploy staging. Require a green staging run, its B SHA, and exact Coolify UUID.
+   Promote the same P server tree to `main` as stable `server-v0.1.10` (if tag history
+   has not changed); update the B
+   main PR to that stable lock and repeat the trusted production dry-run. Only then
+   merge B `main` with its production push trigger. Its first deployment must apply
+   the reviewed five-file chain. Install the default-branch sync listener as part of
+   this controlled transition; earlier public dispatches may be missed until then,
+   so the one-time pins are intentional. Afterward verify a fresh release updates
+   the matching B branch automatically and that no-change reconciliation does not
+   redeploy a successful SHA.
+
+**Stop conditions:** any production project ambiguity, mismatched migration list,
+missing secret, failed CI, stale branch head, unverified Coolify commit, or failed
+deployment stops cutover. Do not merge B's full production workflow into `main`
+before the production dry-run and staging proof: the merge itself can trigger a
+production deployment.
 
 ---
 
@@ -360,14 +481,18 @@ Two consequences the earlier drafts missed:
 - [ ] Release job depends on the `server` test job; same-repo `push` on `develop`/`main`
       only. Compare remote branch head with `github.sha`; exit without tagging if stale.
 - [ ] Compute the `server/` Git tree ID; if the newest branch-appropriate tag already
-      points at that tree, exit with no tag.
+      points at that tree, exit with no tag. An RC with that tree must **not** suppress
+      the stable tag when promoting to `main`; test the workflow's actual decision.
 - [ ] Deterministic next-tag function over `server-vX.Y.Z` / `server-vX.Y.Z-rc.N`.
       `main` → stable, `develop` → rc. Seed with `server-v0.1.9`, **synthetic** RCs (C7),
-      a stable promotion, unrelated/malformed tags, and a same-SHA rerun.
+      a stable promotion, unrelated/malformed tags, and a same-SHA rerun. The first RC
+      after stable `server-v0.1.9` must be `server-v0.1.10-rc.1`, which sorts above the
+      current B lock; the matching stable promotion is `server-v0.1.10`.
 - [ ] Serialize publishing (`concurrency`, `cancel-in-progress: false`). Tag the tested
       SHA, verify it does not exist elsewhere, push one tag, write tag/SHA/tree to the
       summary. On a lost race refetch and recompute; never force-push.
-- [ ] Mint a short-lived GitHub App installation token scoped to B and send
+- [ ] Mint or validate the short-lived GitHub App installation token scoped to B
+      before creating a tag, then send
       `repository_dispatch` type `pomodoist-core-published` with branch, tag, public SHA.
       Never on PRs. Fail visibly if dispatch fails after tagging.
 - [ ] Comment that `GITHUB_TOKEN` tags do not start ordinary tag-triggered workflows, so
@@ -400,7 +525,9 @@ Two consequences the earlier drafts missed:
       deployment workflow with the full B SHA as `release_sha`. This requires the target
       workflow to declare `workflow_dispatch` **on B `main`** — see C2.
 - [ ] Later no-change pass: if no successful or running deployment exists for that B SHA,
-      dispatch once. If the run failed, surface it and wait for a code change.
+      dispatch once. This path must run when the selector literally returns `no change`,
+      after rechecking the locked public tree and current B branch head. If the run
+      failed, surface it and wait for a code change; test all four run outcomes.
 
 ### Task 4 (revised — see C1, C2): Complete the `develop` staging lane
 
@@ -504,26 +631,34 @@ Two consequences the earlier drafts missed:
 
 ### Task 8: Cutover
 
-**Precondition:** Tasks 0-7 reviewed and locally checked.
+**Precondition:** The seven completion gates at the top of this plan have evidence,
+including a green P CI run, reviewed B PRs, the five-file production dry-run,
+Pomodoist-only target confirmation, secrets, and the three release-contract fixes.
+Do not merge the full B production workflow to `main` while its `push main` trigger
+could apply an unreviewed migration.
 
-- [ ] Merge the P release workflow into P `develop`. Observe the green `selfhost.yml`
-      run, the new RC tag and target SHA. A web-only P push must produce no server tag.
-      Per C7 this is the **first** RC tag ever created.
-- [ ] Merge B sync/staging workflow into B `develop` **and** default `main` (C2: the
-      `workflow_dispatch` declaration must exist on `main`). Point the staging Coolify
-      branch at `develop` before the first new webhook. Confirm the public release event
-      updates only the B `develop` lock and dispatches staging for the new B SHA.
-- [ ] Read the staging run and Coolify UUID. Require exact B SHA, migration before
-      function publication, health, OAuth/calendar checks. The collaboration smoke is
-      meaningful only after the function exists.
-- [ ] Merge P `develop` → P `main`; observe green CI and an immutable stable tag. Release
-      the public server first, then the private adapter/lock — the repos cannot deploy
-      atomically.
-- [ ] Merge B branch changes to `main`. Expect exactly one effective production
-      deployment for the latest B SHA, green validation, green dry-run.
-- [ ] **Do not let the first unattended `main` run apply the pending chain unreviewed.**
-      Use the Task 1 artifact, confirm historical migration continuity, and accept the
-      pending SQL explicitly in the run record.
+- [ ] Publish the tested P RC from `develop`. The expected first tag is
+      `server-v0.1.10-rc.1` if no other tags were published. Record its SHA/tree. The
+      B default-branch listener may not yet exist; do not assume this dispatch was
+      delivered. The one-time reviewed B `develop` lock update is the bootstrap path.
+- [ ] Merge the reviewed B `develop` cutover commit with that RC lock and staging
+      workflow. Confirm Coolify tracks `develop`. The `push develop` event deploys
+      staging; require green CI, exact B SHA, Coolify UUID/commit, migrations before
+      functions, health, OAuth/calendar checks, and the anonymous `unshare` → `401`
+      smoke. Stop if any check fails.
+- [ ] Merge P `develop` into P `main` only after staging passes. Observe green P CI
+      and an immutable stable tag for the same server tree; expected tag is
+      `server-v0.1.10` if tag history has not changed. An RC tag with that tree must
+      not suppress this stable release.
+- [ ] Update the reviewed B `main` PR to pin that stable tag. Repeat the trusted
+      production `supabase db push --dry-run` against the verified project and require
+      the same five pending migrations. Only then merge B `main`: its push trigger is
+      the first production deployment. The full sync listener now exists on the
+      default branch for future public dispatches and hourly repair.
+- [ ] Verify exactly which deployment run applied the SQL and functions; require
+      production validation, dry-run, ledger, collaboration endpoint, signing key,
+      MCP routes, and health to pass. A failed or duplicate run is an incident to
+      investigate, not evidence of deployment success.
 - [ ] Verify the production ledger and collaboration endpoint read-only. Do not infer
       owner success from a `401` alone — the SQL tests prove the owner path.
 - [ ] Record the four source SHAs, selected tags, B lock SHAs, CI run IDs, Coolify UUID,
