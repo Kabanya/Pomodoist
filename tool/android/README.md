@@ -186,17 +186,19 @@ build/app/outputs/bundle/<flavor>Release/app-<flavor>-release.aab
 
 ## GitHub Actions
 
-`Android validation` runs on pull requests and `main`, without production secrets.
+`Android validation` runs on pull requests, `main`, and every new tag, without production secrets.
 It checks packaging/configuration, Android Dart contracts, fails an unsigned
 release deliberately, then builds APK/AAB for **all three flavors** using a
 disposable non-debug CI key and verifies each against its own application ID.
-It installs the release APK on an API 35 x86_64 emulator and checks process launch,
+On tags, it installs the release APK on an API 35 x86_64 emulator and checks process launch,
 background/resume, and cold/warm native deep-link delivery for the `development`
 flavor — the only flavor whose runtime configuration CI can satisfy without
 backend credentials; the `staging` and `production` artifacts are compile- and
 identity-checked only. CI-only artifacts are explicitly labelled **NOT FOR
 DISTRIBUTION** and retained for three days. This smoke test does not validate
 authenticated flows, microphone hardware or layouts.
+Server and Windows preview tags created with `GITHUB_TOKEN` call the same validation
+workflow directly, because their tag events do not start another workflow.
 
 `Android production release` runs manually or on the same `vX.Y.Z` / `vX.Y.Z-rc.N`
 tags as desktop releases. It accepts only commits already in `main`, builds from

@@ -156,3 +156,10 @@ jobs:
             echo "| tested SHA | \`${TESTED_SHA}\` |"
             echo "| server tree | \`${{ steps.select.outputs.tree }}\` |"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  android-tag-smoke:
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    uses: ./.github/workflows/android.yml
+    with:
+      release_tag: ${{ needs.release.outputs.tag }}

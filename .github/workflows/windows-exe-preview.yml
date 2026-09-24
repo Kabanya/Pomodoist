@@ -210,6 +210,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      preview_tag: ${{ steps.preview.outputs.tag }}
     env:
       GH_REPO: ${{ github.repository }}
     steps:
@@ -278,6 +280,7 @@ jobs:
             --raw-field make_latest="$latest" \
             --silent
       - name: Publish manual GitHub pre-release
+        id: preview
         if: github.ref_type != 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -299,3 +302,11 @@ jobs:
             --notes "$notes" \
             release/Pomodoist-Setup.exe \
             release/Pomodoist-Setup.exe.sha256
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  android-preview-smoke:
+    needs: publish
+    if: ${{ always() && needs.publish.outputs.preview_tag != '' }}
+    uses: ./.github/workflows/android.yml
+    with:
+      release_tag: ${{ needs.publish.outputs.preview_tag }}
