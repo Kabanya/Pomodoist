@@ -546,7 +546,35 @@ confirmed entitlement data visible during refreshes. Put sign-out and account
 deletion in a separate bottom group. Keep platform and authentication gates,
 import previews, integration warnings, revoke confirmations and shortcut conflict
 handling. Persistence errors show existing feedback without resetting session
-values. Standalone login, registration and onboarding layouts are unchanged.
+values. Standalone login and registration retain their own layouts.
+
+### First-run onboarding
+
+Use the compact slide-card direction from variant 02 in
+`variants/onboarding/index.html`: a brand row, a decorative illustration above
+the current setting, and a pinned footer with Back, four progress indicators,
+and Continue / Later / Finish. The flow remains Language, Timer, Pro, Account.
+Center a dialog up to 540 px wide on larger windows; below 600 px, use the full
+safe area. Scroll the slide body independently so purchasing and account content
+remain reachable in short windows. Stack progress above the actions on narrow
+layouts or with enlarged text.
+
+Show all supported languages as selectable tiles, with System using a full row.
+Show Bar and Circle as timer preview cards; the illustration follows the selected
+language and timer style. Reflow choices into one column when space or text scale
+requires it. Use existing localized strings, palette roles and bundled fonts.
+Decorative previews are excluded from semantics and text scaling; setting labels
+retain text scaling, selection semantics and keyboard focus. Keep touch targets
+at least 48 px and prevent focus from reaching the underlying app.
+
+Back, progress indicators and swipes over the illustration navigate between
+slides without clearing saved settings. Mirror swipe direction in RTL; a swipe
+on the account slide never finishes the wizard. Use the shared 180 ms fade,
+finishing immediately with Reduce Motion. Keep real billing and account actions,
+including purchase restoration and signed-in/error states. Account buttons use
+the shared panel's compact vertical presentation. Closing or finishing still
+persists completion; prevent overlapping preference writes and show localized,
+retryable feedback when a write fails.
 
 ### Authentication
 

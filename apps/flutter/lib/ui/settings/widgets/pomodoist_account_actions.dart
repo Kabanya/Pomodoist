@@ -50,7 +50,10 @@ class PomodoistSignInActions extends ConsumerWidget {
 }
 
 class PomodoistAccountAccessPanel extends ConsumerWidget {
-  const PomodoistAccountAccessPanel({super.key});
+  const PomodoistAccountAccessPanel({this.compact = false, super.key});
+
+  /// Onboarding supplies its own heading and uses full-width sign-in actions.
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -96,6 +99,7 @@ class PomodoistAccountAccessPanel extends ConsumerWidget {
     }
     return PomodoistAccountOverviewPanel(
       profile: auth.profile,
+      compact: compact,
       actions: pomodoistAccountSignInActions(
         context: context,
         canSignIn: auth.canSignIn,
@@ -113,17 +117,31 @@ class PomodoistAccountOverviewPanel extends StatelessWidget {
     required this.profile,
     required this.actions,
     this.onRefresh,
+    this.compact = false,
     super.key,
   });
 
   final AccountProfileState? profile;
   final List<Widget> actions;
   final VoidCallback? onRefresh;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final profile = this.profile;
     if (profile == null) {
+      if (compact) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final action in actions)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: action,
+              ),
+          ],
+        );
+      }
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(16),

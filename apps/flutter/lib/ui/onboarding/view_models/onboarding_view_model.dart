@@ -72,6 +72,19 @@ class OnboardingViewModel extends Notifier<OnboardingState> {
 
   DateTime now() => ref.read(clockProvider).now();
 
+  void selectStep(OnboardingStep step) {
+    state = state.copyWith(step: step);
+  }
+
+  void swipe(double velocity, {required bool rightToLeft}) {
+    final direction = rightToLeft ? -velocity : velocity;
+    if (direction < -150 && state.step != OnboardingStep.account) {
+      next();
+    } else if (direction > 150) {
+      back();
+    }
+  }
+
   void next() {
     if (state.step == OnboardingStep.account) {
       unawaited(complete());

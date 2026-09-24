@@ -89,6 +89,8 @@ export async function handlePomodoistAppStoreNotification(
   if (
     state == null ||
     transaction.purchaseDate == null ||
+    transaction.signedDate == null ||
+    !Number.isFinite(Date.parse(transaction.signedDate)) ||
     transaction.originalTransactionId.length > 128 ||
     transaction.transactionId.length > 128
   ) {
@@ -105,7 +107,7 @@ export async function handlePomodoistAppStoreNotification(
     p_expires_at: transaction.expiresDate ?? null,
     p_revoked_at: transaction.revocationDate ?? null,
     p_app_account_token: transaction.appAccountToken ?? null,
-    p_signed_at: notification.signedDate,
+    p_signed_at: transaction.signedDate,
     p_raw_claims: transaction.claims,
     p_user_id: null,
   });

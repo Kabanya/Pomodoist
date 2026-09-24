@@ -2242,9 +2242,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('onboarding-language-select')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Русский').last);
+    final russian = find.byKey(const ValueKey('onboarding-language-ru'));
+    await tester.ensureVisible(russian);
+    await tester.tap(russian);
     await tester.pumpAndSettle();
 
     final prefs = await SharedPreferences.getInstance();

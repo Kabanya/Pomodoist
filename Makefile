@@ -547,24 +547,28 @@ macos-release-production:
 macos-reset:
 	@test "$$(uname -s)" = Darwin || { echo 'macos-reset requires macOS.' >&2; exit 1; }
 	@test -n "$${HOME:-}" && test "$$HOME" != / && test -d "$$HOME" || { echo 'A valid HOME directory is required.' >&2; exit 1; }
-	@if pgrep -ix pomodoist >/dev/null; then echo 'Quit Pomodoist with Cmd+Q, then run make macos-reset again.' >&2; exit 1; fi
-	@echo 'Deleting local Pomodoist data, including unsynced tasks, settings and saved sessions.'
-	@for domain in com.finchforge.pomodoist com.finchforge.pomodoist.focuswidget group.com.pomodoist \
-		"$$HOME/Library/Containers/com.finchforge.pomodoist/Data/Library/Preferences/com.finchforge.pomodoist" \
-		"$$HOME/Library/Containers/com.finchforge.pomodoist.focuswidget/Data/Library/Preferences/com.finchforge.pomodoist.focuswidget" \
-		"$$HOME/Library/Group Containers/group.com.pomodoist/Library/Preferences/group.com.pomodoist"; do \
-		defaults delete "$$domain" 2>/dev/null || true; \
+	@if pgrep -ix 'Pomodoist|Pomodoist Dev|Pomodoist Stg|PomodoistFocus.*' >/dev/null; then echo 'Quit all Pomodoist variants and focus widgets, then run make macos-reset again.' >&2; exit 1; fi
+	@echo 'Deleting local Pomodoist development, staging and production data, including unsynced tasks, settings and saved sessions.'
+	@for suffix in .dev .stg ''; do \
+		app="com.finchforge.pomodoist$$suffix"; widget="$$app.focuswidget"; group="group.com.pomodoist$$suffix"; \
+		for domain in "$$app" "$$widget" "$$group" \
+			"$$HOME/Library/Containers/$$app/Data/Library/Preferences/$$app" \
+			"$$HOME/Library/Containers/$$widget/Data/Library/Preferences/$$widget" \
+			"$$HOME/Library/Group Containers/$$group/Library/Preferences/$$group"; do \
+			defaults delete "$$domain" 2>/dev/null || true; \
+		done; \
+		for bundle in "$$app" "$$widget"; do \
+			rm -rf "$$HOME/Library/Containers/$$bundle/Data" \
+				"$$HOME/Library/Application Support/$$bundle" \
+				"$$HOME/Library/Caches/$$bundle" \
+				"$$HOME/Library/Saved Application State/$$bundle.savedState"; \
+			rm -f "$$HOME/Library/Preferences/$$bundle.plist"; \
+			tccutil reset All "$$bundle"; \
+		done; \
+		rm -rf "$$HOME/Library/Group Containers/$$group/Library" \
+			"$$HOME/Library/Group Containers/$$group/focus-snapshot-v1.json"; \
 	done
-	rm -rf "$$HOME/Library/Containers/com.finchforge.pomodoist/Data" \
-		"$$HOME/Library/Containers/com.finchforge.pomodoist.focuswidget/Data" \
-		"$$HOME/Library/Group Containers/group.com.pomodoist/Library" \
-		"$$HOME/Library/Group Containers/group.com.pomodoist/focus-snapshot-v1.json" \
-		"$$HOME/Library/Application Support/com.finchforge.pomodoist" \
-		"$$HOME/Library/Caches/com.finchforge.pomodoist" \
-		"$$HOME/Library/Saved Application State/com.finchforge.pomodoist.savedState"
-	rm -f "$$HOME/Library/Preferences/com.finchforge.pomodoist.plist" \
-		"$$HOME/Documents/pomodoist.sqlite" "$$HOME/Documents/pomodoist.sqlite-wal" "$$HOME/Documents/pomodoist.sqlite-shm"
-	tccutil reset All com.finchforge.pomodoist
+	rm -f "$$HOME/Documents/pomodoist.sqlite" "$$HOME/Documents/pomodoist.sqlite-wal" "$$HOME/Documents/pomodoist.sqlite-shm"
 	@echo 'Local reset complete. Start Pomodoist in guest mode for a clean slate.'
 
 # Flutter profile mode is unavailable on iOS Simulator, so local runs use debug.

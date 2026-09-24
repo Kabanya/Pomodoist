@@ -106,6 +106,53 @@ Deno.test("acknowledges replay and control notifications", async (t) => {
   });
 });
 
+Deno.test("late notification cannot replace a newer signed transaction", async () => {
+  const stored: PomodoistPurchaseRpcParams[] = [];
+  const deliver = async (
+    notificationDate: string,
+    proof: AppleStoreTransaction,
+  ) => {
+    const response = await handlePomodoistAppStoreNotification(
+      request("outer"),
+      {
+        ...deps({
+          notification: notification({ signedDate: notificationDate }),
+          transaction: proof,
+        }),
+        recordPurchase: (params) => {
+          if (
+            stored.length === 0 || params.p_signed_at >= stored[0].p_signed_at
+          ) {
+            stored[0] = params;
+          }
+          return Promise.resolve({ data: { applied: true }, error: null });
+        },
+      },
+    );
+    assertEquals(response.status, 200);
+  };
+
+  await deliver(
+    "2026-07-27T12:00:00.000Z",
+    transaction({
+      transactionId: "renewal-2",
+      signedDate: "2026-07-27T11:00:00.000Z",
+      expiresDate: "2026-08-27T00:00:00.000Z",
+    }),
+  );
+  await deliver(
+    "2026-07-27T13:00:00.000Z",
+    transaction({
+      transactionId: "renewal-1",
+      signedDate: "2026-07-27T10:00:00.000Z",
+      expiresDate: "2026-07-26T00:00:00.000Z",
+    }),
+  );
+
+  assertEquals(stored[0].p_latest_transaction_id, "renewal-2");
+  assertEquals(stored[0].p_expires_at, "2026-08-27T00:00:00.000Z");
+});
+
 Deno.test("rejects untrusted payloads without a database write", async (t) => {
   const cases: Array<{
     name: string;
@@ -147,6 +194,12 @@ Deno.test("rejects untrusted payloads without a database write", async (t) => {
       options: {
         transaction: transaction({ productId: "other.product" }),
       },
+      status: 200,
+    },
+    {
+      name: "missing transaction timestamp",
+      request: request("outer"),
+      options: { transaction: transaction({ signedDate: undefined }) },
       status: 200,
     },
   ];
