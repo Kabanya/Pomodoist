@@ -1,3 +1,4 @@
+import { type StripeOfferKind, stripeReturnCampaign } from "./stripe_offers.ts";
 import { apiVersionError } from "../_shared/api_version.ts";
 export type StripeCatalogAccount = {
   enabled: boolean;
@@ -12,6 +13,8 @@ export type StripeBillingCatalog = {
   enabled: boolean;
   introEligible: boolean;
   prices: Record<string, string>;
+  offersEnabled?: boolean;
+  subscriptionOffer?: StripeOfferKind;
   launchOffer: {
     eligible: boolean;
     endsAt: string | null;
@@ -27,6 +30,7 @@ export type StripeBillingAccountContext = {
 };
 
 export type StripeCheckoutSessionInput = {
+  selectedOffer?: StripeOfferKind;
   locale?: string;
   customerId: string;
   userId: string;
@@ -41,6 +45,10 @@ export type StripeCheckoutSessionInput = {
 
 export type PomodoistStripeBillingDeps = {
   enabled: boolean;
+  offersEnabled?: boolean;
+  loadOffer?: (
+    context: StripeBillingAccountContext,
+  ) => Promise<StripeOfferKind>;
   authenticate: (
     authorization: string,
   ) => Promise<{ userId: string; email: string | null } | null>;
@@ -72,9 +80,14 @@ export function stripeCheckoutParams(
   const metadata = {
     supabase_user_id: input.userId,
     product_id: input.productId,
+    ...(input.selectedOffer === "return"
+      ? { return_campaign: stripeReturnCampaign }
+      : {}),
   };
   return {
-    ...(input.locale == null ? {} : { locale: stripeCheckoutLocale(input.locale) }),
+    ...(input.locale == null
+      ? {}
+      : { locale: stripeCheckoutLocale(input.locale) }),
     customer: input.customerId,
     client_reference_id: input.userId,
     line_items: [{ price: input.priceId, quantity: 1 }],
@@ -84,7 +97,12 @@ export function stripeCheckoutParams(
     ...(input.surface === "native" ? { origin_context: "mobile_app" } : {}),
     metadata,
     ...(input.mode === "subscription"
-      ? { subscription_data: { metadata } }
+      ? {
+        subscription_data: {
+          metadata,
+          ...(input.selectedOffer === "trial" ? { trial_period_days: 7 } : {}),
+        },
+      }
       : { payment_intent_data: { metadata } }),
     ...(input.couponId == null
       ? {}
@@ -95,10 +113,15 @@ export function stripeCheckoutParams(
 }
 
 export function stripeCheckoutLocale(value: unknown): string {
-  if (typeof value !== "string" || !/^[a-z]{2,3}(?:[-_][a-z0-9]{2,8})*$/i.test(value)) return "auto";
+  if (
+    typeof value !== "string" ||
+    !/^[a-z]{2,3}(?:[-_][a-z0-9]{2,8})*$/i.test(value)
+  ) return "auto";
   const base = value.toLowerCase().split(/[-_]/)[0];
   if (base === "pt") return "pt-BR";
-  return ["en", "ru", "de", "es", "fr", "zh", "ja", "ko"].includes(base) ? base : "auto";
+  return ["en", "ru", "de", "es", "fr", "zh", "ja", "ko"].includes(base)
+    ? base
+    : "auto";
 }
 
 const launchCycleMs = 7 * 24 * 60 * 60 * 1000;
@@ -186,119 +209,178 @@ export async function handlePomodoistStripeBilling(
       400,
     );
   }
-  if (parsed.value.action === "catalog") {
-    const context = await deps.loadAccount(account.userId);
-    return json(
-      stripeCatalogForAccount({
+  if (deps.offersEnabled && parsed.value.offerVersion !== 1) {
+    return json({
+      code: "billing_update_required",
+      error: "Update the client to use test offers.",
+    }, 409);
+  }
+  if (
+    !deps.offersEnabled && parsed.value.action === "checkout" &&
+    parsed.value.selectedOffer != null
+  ) {
+    return json({
+      code: "offer_not_eligible",
+      error: "The offer configuration changed. Refresh the catalog.",
+    }, 409);
+  }
+  try {
+    if (parsed.value.action === "catalog") {
+      const context = await deps.loadAccount(account.userId);
+      const catalog = stripeCatalogForAccount({
         enabled: deps.enabled,
         profileCreatedAt: context.profileCreatedAt,
         firstSubscriptionPaidAt: context.firstSubscriptionPaidAt,
         hasActiveEntitlement: context.hasActiveEntitlement,
         hasLifetimePurchase: context.hasLifetimePurchase,
         now: deps.now?.() ?? new Date(),
-      }),
-    );
-  }
-  if (parsed.value.action !== "checkout") {
-    return json(
-      { code: "invalid_request", error: "Unknown billing action." },
-      400,
-    );
-  }
-  if (!deps.enabled) {
-    return json(
-      { code: "billing_disabled", error: "Stripe checkout is disabled." },
-      503,
-    );
-  }
-  const productId = parsed.value.productId;
-  const surface = parsed.value.surface;
-  if (
-    typeof productId !== "string" ||
-    (!subscriptionProductIds.has(productId) &&
-      !lifetimeProductIds.has(productId)) ||
-    typeof deps.priceIds[productId] !== "string"
-  ) {
-    return json(
-      { code: "invalid_product", error: "Unknown Pomodoist product." },
-      400,
-    );
-  }
-  if (surface !== "web" && surface !== "native") {
-    return json(
-      { code: "invalid_request", error: "Unknown checkout surface." },
-      400,
-    );
-  }
-  const context = await deps.loadAccount(account.userId);
-  if (context.hasActiveEntitlement) {
-    return json(
-      { code: "already_entitled", error: "Pomodoist Pro is already active." },
-      409,
-    );
-  }
-  const catalog = stripeCatalogForAccount({
-    enabled: deps.enabled,
-    profileCreatedAt: context.profileCreatedAt,
-    firstSubscriptionPaidAt: context.firstSubscriptionPaidAt,
-    hasActiveEntitlement: context.hasActiveEntitlement,
-    hasLifetimePurchase: context.hasLifetimePurchase,
-    now: deps.now?.() ?? new Date(),
-  });
-  if (
-    productId === "pomodoist.pro.lifetime.launch" &&
-    !catalog.launchOffer.eligible
-  ) {
-    return json(
-      { code: "offer_expired", error: "The launch offer is not active." },
-      409,
-    );
-  }
-
-  try {
-    let customerId = context.stripeCustomerId;
-    if (customerId == null) {
-      const createdCustomerId = await deps.createCustomer(account);
-      customerId = await deps.linkCustomer(account.userId, createdCustomerId);
+      });
+      if (deps.offersEnabled) {
+        if (!deps.enabled || !deps.loadOffer) {
+          throw new Error("Test offers are not configured.");
+        }
+        catalog.offersEnabled = true;
+        catalog.subscriptionOffer = await deps.loadOffer(context);
+        catalog.introEligible = false;
+        catalog.prices["pomodoist.pro.monthly"] = "$4.99";
+        catalog.prices["pomodoist.pro.annual"] = "$29.99";
+      }
+      return json(catalog);
     }
-    const subscription = subscriptionProductIds.has(productId);
-    const session = await deps.createCheckoutSession({
-      ...(parsed.value.locale == null ? {} : { locale: stripeCheckoutLocale(parsed.value.locale) }),
-      customerId,
-      userId: account.userId,
-      productId,
-      priceId: deps.priceIds[productId],
-      couponId: subscription && catalog.introEligible
-        ? deps.couponIds[productId] ?? null
-        : null,
-      mode: subscription ? "subscription" : "payment",
-      surface,
-      successUrl: deps.successUrl,
-      cancelUrl: deps.cancelUrl,
-    });
-    if (session.url == null || !isAllowedCheckoutUrl(session.url)) {
-      throw new Error("Stripe returned an invalid Checkout URL.");
-    }
-    return json({ url: session.url });
-  } catch (error) {
-    if (
-      isRecord(error) &&
-      (String(error.param ?? "").startsWith("managed_payments") ||
-        String(error.code ?? "").startsWith("managed_payments") ||
-        String(error.message ?? "").toLowerCase().includes("managed payments"))
-    ) {
+    if (parsed.value.action !== "checkout") {
       return json(
-        {
-          code: "managed_payments_unavailable",
-          error: "Stripe Managed Payments is unavailable.",
-        },
+        { code: "invalid_request", error: "Unknown billing action." },
+        400,
+      );
+    }
+    if (!deps.enabled) {
+      return json(
+        { code: "billing_disabled", error: "Stripe checkout is disabled." },
         503,
       );
     }
-    return json(
-      { code: "checkout_failed", error: "Could not start Stripe checkout." },
-      502,
-    );
+    const productId = parsed.value.productId;
+    const surface = parsed.value.surface;
+    if (
+      typeof productId !== "string" ||
+      (!subscriptionProductIds.has(productId) &&
+        !lifetimeProductIds.has(productId)) ||
+      typeof deps.priceIds[productId] !== "string"
+    ) {
+      return json(
+        { code: "invalid_product", error: "Unknown Pomodoist product." },
+        400,
+      );
+    }
+    if (surface !== "web" && surface !== "native") {
+      return json(
+        { code: "invalid_request", error: "Unknown checkout surface." },
+        400,
+      );
+    }
+    const context = await deps.loadAccount(account.userId);
+    if (context.hasActiveEntitlement) {
+      return json(
+        { code: "already_entitled", error: "Pomodoist Pro is already active." },
+        409,
+      );
+    }
+    const catalog = stripeCatalogForAccount({
+      enabled: deps.enabled,
+      profileCreatedAt: context.profileCreatedAt,
+      firstSubscriptionPaidAt: context.firstSubscriptionPaidAt,
+      hasActiveEntitlement: context.hasActiveEntitlement,
+      hasLifetimePurchase: context.hasLifetimePurchase,
+      now: deps.now?.() ?? new Date(),
+    });
+    if (
+      productId === "pomodoist.pro.lifetime.launch" &&
+      !catalog.launchOffer.eligible
+    ) {
+      return json(
+        { code: "offer_expired", error: "The launch offer is not active." },
+        409,
+      );
+    }
+
+    try {
+      let customerId = context.stripeCustomerId;
+      if (customerId == null) {
+        const createdCustomerId = await deps.createCustomer(account);
+        customerId = await deps.linkCustomer(account.userId, createdCustomerId);
+      }
+      const subscription = subscriptionProductIds.has(productId);
+      let selectedOffer: StripeOfferKind | undefined;
+      if (deps.offersEnabled) {
+        if (!deps.loadOffer) throw new Error("Test offers are not configured.");
+        selectedOffer = await deps.loadOffer({
+          ...context,
+          stripeCustomerId: customerId,
+        });
+        if (
+          selectedOffer === "blocked" ||
+          (subscription && selectedOffer !== parsed.value.selectedOffer)
+        ) {
+          return json({
+            code: "offer_not_eligible",
+            error: "Refresh the offer before checkout.",
+          }, 409);
+        }
+        if (!subscription) selectedOffer = "standard";
+      }
+      const session = await deps.createCheckoutSession({
+        ...(parsed.value.locale == null
+          ? {}
+          : { locale: stripeCheckoutLocale(parsed.value.locale) }),
+        customerId,
+        userId: account.userId,
+        productId,
+        priceId: deps.priceIds[productId],
+        ...(selectedOffer == null ? {} : { selectedOffer }),
+        couponId: subscription && (deps.offersEnabled
+            ? selectedOffer === "return"
+            : catalog.introEligible)
+          ? deps.couponIds[productId] ?? null
+          : null,
+        mode: subscription ? "subscription" : "payment",
+        surface,
+        successUrl: deps.successUrl,
+        cancelUrl: deps.cancelUrl,
+      });
+      if (session.url == null || !isAllowedCheckoutUrl(session.url)) {
+        throw new Error("Stripe returned an invalid Checkout URL.");
+      }
+      return json({ url: session.url });
+    } catch (error) {
+      if (error instanceof Error && error.message === "offer_pending") {
+        return json({ code: "offer_pending" }, 409);
+      }
+      if (
+        isRecord(error) &&
+        (String(error.param ?? "").startsWith("managed_payments") ||
+          String(error.code ?? "").startsWith("managed_payments") ||
+          String(error.message ?? "").toLowerCase().includes(
+            "managed payments",
+          ))
+      ) {
+        return json(
+          {
+            code: "managed_payments_unavailable",
+            error: "Stripe Managed Payments is unavailable.",
+          },
+          503,
+        );
+      }
+      return json(
+        { code: "checkout_failed", error: "Could not start Stripe checkout." },
+        502,
+      );
+    }
+  } catch {
+    return json({
+      code: "checkout_failed",
+      error: "Could not verify Stripe billing.",
+    }, 502);
   }
 }
 

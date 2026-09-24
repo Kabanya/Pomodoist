@@ -134,6 +134,7 @@ Deno.test("Stripe webhook refreshes subscription state from Stripe on invoice pa
     data: {
       object: {
         id: "in_test",
+        total: 1499,
         parent: {
           subscription_details: { subscription: "sub_test" },
         },
@@ -362,3 +363,71 @@ function webhookDeps(
     ...overrides,
   };
 }
+
+Deno.test("test offer environment rejects live or unmarked webhook events", async () => {
+  for (const livemode of [true, undefined]) {
+    let records = 0;
+    const event = {
+      id: "evt_live",
+      type: "checkout.session.completed",
+      created: 1,
+      livemode,
+      data: { object: {} },
+    };
+    const response = await handleStripeWebhook(
+      signedRequest(event),
+      webhookDeps({
+        testModeOnly: true,
+        verifyEvent: async () => event,
+        recordEvent: async () => {
+          records++;
+          return { applied: true };
+        },
+      }),
+    );
+    assertEquals(response.status, 401);
+    assertEquals(records, 0);
+  }
+});
+
+Deno.test("zero-value trial invoice grants only verified trial access, not first paid subscription", async () => {
+  const event = {
+    id: "evt_trial",
+    type: "invoice.paid",
+    created: 1785585600,
+    livemode: false,
+    data: { object: { subscription: "sub_trial", total: 0 } },
+  };
+  const records: Array<Record<string, unknown>> = [];
+  const response = await handleStripeWebhook(
+    signedRequest(event),
+    webhookDeps({
+      testModeOnly: true,
+      verifyEvent: async () => event,
+      retrieveSubscription: async () => ({
+        id: "sub_trial",
+        customer: "cus_trial",
+        livemode: false,
+        status: "trialing",
+        metadata: {
+          supabase_user_id: "11111111-1111-4111-8111-111111111111",
+          product_id: "pomodoist.pro.monthly",
+        },
+        items: {
+          data: [{
+            current_period_start: 1785582000,
+            current_period_end: 1786186800,
+          }],
+        },
+      }),
+      recordEvent: async (record) => {
+        records.push(record);
+        return { applied: true };
+      },
+    }),
+  );
+  assertEquals(response.status, 200);
+  assertEquals(records[0].firstSubscriptionPaid, false);
+  assertEquals(records[0].status, "active");
+  assertEquals(records[0].validUntil, "2026-08-08T11:00:00.000Z");
+});

@@ -8,6 +8,7 @@ import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/platform/legal_urls.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
+import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:pomodoist/domain/models/billing/billing_models.dart';
 import 'package:pomodoist/ui/billing/view_models/billing_view_model.dart';
 import 'package:pomodoist/ui/billing/widgets/billing_offer_copy.dart';
@@ -17,7 +18,8 @@ String stripeBillingErrorMessage(AppLocalizations l10n, String code) {
     'authentication_required' => l10n.billingStripeAuthenticationRequired,
     'billing_disabled' => l10n.billingStripeDisabled,
     'already_entitled' => l10n.billingStripeAlreadyEntitled,
-    'offer_expired' => l10n.billingStripeOfferExpired,
+    'offer_expired' || 'offer_not_eligible' => l10n.billingStripeOfferExpired,
+    'offer_pending' => l10n.billingReturnFailed,
     'managed_payments_unavailable' =>
       l10n.billingStripeManagedPaymentsUnavailable,
     _ => l10n.billingStripeCheckoutFailed,
@@ -526,7 +528,7 @@ class _BillingPlanTile extends ConsumerWidget {
     final product = state.productDetailsById[plan.productId];
     final channel = ref.watch(billingChannelProvider);
     final signedIn = ref.watch(billingSignedInProvider);
-    final productRequired = channel == BillingChannel.storeKit;
+    final productRequired = channel == BillingChannel.storeKit || signedIn;
     final active = state.activeProductId == plan.productId;
     final pending = state.pendingProductId == plan.productId;
     final highlighted = plan.highlighted;
@@ -534,7 +536,13 @@ class _BillingPlanTile extends ConsumerWidget {
     final border = highlighted
         ? colors.accent.withValues(alpha: 0.45)
         : colors.border;
-    final regularPrice = _regularPrice(l10n, plan, product, channel);
+    final awaitingStripeCatalog =
+        channel == BillingChannel.stripe &&
+        appFlavor != AppFlavor.production &&
+        product == null;
+    final regularPrice = awaitingStripeCatalog
+        ? '—'
+        : _regularPrice(l10n, plan, product, channel);
     final offer = channel == BillingChannel.storeKit
         ? billingOfferForProduct(
             product,
@@ -543,14 +551,22 @@ class _BillingPlanTile extends ConsumerWidget {
             ),
             returnOfferId: returnOfferId,
           )
-        : null;
+        : stripeSubscriptionOffer(
+            state.stripeSubscriptionOffer,
+            plan.productId,
+          );
     final trial = offer?.paymentMode == BillingOfferPaymentMode.freeTrial;
     final returning = offer?.type == BillingOfferType.promotional;
     final offerBlocked =
-        offerCheckBlocked || (returnOfferId != null && !returning);
+        offerCheckBlocked ||
+        (returnOfferId != null && !returning) ||
+        (channel == BillingChannel.stripe &&
+            state.stripeSubscriptionOffer == 'blocked');
     final introductoryPrice =
-        forceIntroductoryPrice ||
-            state.eligibleIntroductoryProductIds.contains(plan.productId)
+        !awaitingStripeCatalog &&
+            ((state.stripeSubscriptionOffer == null &&
+                    forceIntroductoryPrice) ||
+                state.eligibleIntroductoryProductIds.contains(plan.productId))
         ? channel == BillingChannel.storeKit && offer == null
               ? null
               : channel == BillingChannel.storeKit
@@ -564,7 +580,9 @@ class _BillingPlanTile extends ConsumerWidget {
         ? null
         : compareAtPrice ??
               (introductoryPrice == null && !returning ? null : regularPrice);
-    final subtitle = trial
+    final subtitle = awaitingStripeCatalog && !signedIn
+        ? l10n.billingStripeAuthenticationRequired
+        : trial
         ? l10n.billingTrialRenewal(regularPrice)
         : returning
         ? l10n.billingReturnSubtitle(
@@ -708,7 +726,10 @@ class _BillingPlanTile extends ConsumerWidget {
                           .read(billingViewModelProvider.notifier)
                           .purchase(
                             plan.productId,
-                            returnOfferId: returning ? offer!.id : null,
+                            returnOfferId:
+                                returning && channel == BillingChannel.storeKit
+                                ? offer!.id
+                                : null,
                           );
                     },
               child: pending

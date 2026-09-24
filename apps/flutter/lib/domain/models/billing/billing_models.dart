@@ -86,6 +86,7 @@ class StripeBillingCatalog {
   StripeBillingCatalog({
     required this.enabled,
     required this.introEligible,
+    this.subscriptionOffer,
     Map<String, String> prices = const {},
     required this.launchOfferEligible,
     required this.launchOfferEndsAt,
@@ -93,6 +94,7 @@ class StripeBillingCatalog {
 
   final bool enabled;
   final bool introEligible;
+  final String? subscriptionOffer;
   final Map<String, String> prices;
   final bool launchOfferEligible;
   final DateTime? launchOfferEndsAt;
@@ -126,7 +128,22 @@ class StripeBillingCatalog {
         (launchEligible && endsAt == null)) {
       throw const FormatException('Invalid Stripe catalog.');
     }
+    final subscriptionOffer = json['subscriptionOffer'];
+    if (json['offersEnabled'] == true &&
+        (![
+              'trial',
+              'return',
+              'standard',
+              'blocked',
+            ].contains(subscriptionOffer) ||
+            introEligible)) {
+      throw const FormatException('Invalid Stripe subscription offer.');
+    }
+    if (json['offersEnabled'] != true && subscriptionOffer != null) {
+      throw const FormatException('Unexpected Stripe subscription offer.');
+    }
     return StripeBillingCatalog(
+      subscriptionOffer: subscriptionOffer as String?,
       enabled: enabled,
       introEligible: introEligible,
       prices: {
@@ -453,6 +470,7 @@ class BillingState {
     this.accountEntitlementActive = false,
     this.environmentEntitlementActive = false,
     this.activeAccountEntitlement,
+    this.stripeSubscriptionOffer,
     this.stripeLaunchOfferEligible = false,
     this.stripeLaunchOfferEndsAt,
     this.activeProductId,
@@ -480,6 +498,7 @@ class BillingState {
   final bool accountEntitlementActive;
   final bool environmentEntitlementActive;
   final BillingEntitlement? activeAccountEntitlement;
+  final String? stripeSubscriptionOffer;
   final bool stripeLaunchOfferEligible;
   final DateTime? stripeLaunchOfferEndsAt;
   final String? activeProductId;
@@ -517,6 +536,7 @@ class BillingState {
     bool? accountEntitlementActive,
     bool? environmentEntitlementActive,
     Object? activeAccountEntitlement = _unset,
+    Object? stripeSubscriptionOffer = _unset,
     bool? stripeLaunchOfferEligible,
     Object? stripeLaunchOfferEndsAt = _unset,
     Object? activeProductId = _unset,
@@ -546,6 +566,9 @@ class BillingState {
       activeAccountEntitlement: identical(activeAccountEntitlement, _unset)
           ? this.activeAccountEntitlement
           : activeAccountEntitlement as BillingEntitlement?,
+      stripeSubscriptionOffer: identical(stripeSubscriptionOffer, _unset)
+          ? this.stripeSubscriptionOffer
+          : stripeSubscriptionOffer as String?,
       stripeLaunchOfferEligible:
           stripeLaunchOfferEligible ?? this.stripeLaunchOfferEligible,
       stripeLaunchOfferEndsAt: identical(stripeLaunchOfferEndsAt, _unset)
@@ -614,7 +637,11 @@ class BillingStripeGateway {
   });
 
   final Future<StripeBillingCatalog> Function() loadCatalog;
-  final Future<Uri> Function(String productId, BillingCheckoutSurface surface)
+  final Future<Uri> Function(
+    String productId,
+    BillingCheckoutSurface surface,
+    String? selectedOffer,
+  )
   createCheckout;
   final Future<bool> Function(Uri url) openCheckout;
 }
@@ -643,3 +670,37 @@ BillingChannel get defaultBillingChannel =>
     billingChannelForBuild(value: _billingChannelBuildGuard.value);
 
 const _releaseMode = bool.fromEnvironment('dart.vm.product');
+
+/// Terms are accepted only from the versioned, server-validated USD test catalog.
+BillingOffer? stripeSubscriptionOffer(String? kind, String productId) {
+  if (productId != pomodoistMonthlyProductId &&
+      productId != pomodoistAnnualProductId) {
+    return null;
+  }
+  if (kind == 'trial') {
+    return const BillingOffer(
+      id: null,
+      type: BillingOfferType.introductory,
+      paymentMode: BillingOfferPaymentMode.freeTrial,
+      price: 0,
+      periodUnit: BillingOfferPeriodUnit.day,
+      periodValue: 7,
+      periodCount: 1,
+    );
+  }
+  if (kind != 'return') return null;
+  final monthly = productId == pomodoistMonthlyProductId;
+  return BillingOffer(
+    id: 'stripe_return_2026_v1',
+    type: BillingOfferType.promotional,
+    paymentMode: monthly
+        ? BillingOfferPaymentMode.payAsYouGo
+        : BillingOfferPaymentMode.payUpFront,
+    price: monthly ? 1.99 : 14.99,
+    periodUnit: monthly
+        ? BillingOfferPeriodUnit.month
+        : BillingOfferPeriodUnit.year,
+    periodValue: 1,
+    periodCount: monthly ? 3 : 1,
+  );
+}

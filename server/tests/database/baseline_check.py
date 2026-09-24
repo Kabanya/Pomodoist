@@ -126,8 +126,11 @@ try:
     sql('drop trigger reject_api_record on pomodoist_meta.schema_migrations; drop function pomodoist_meta.reject_api_record();')
     migrate()
     assert sql(preserved_query).stdout == before, 'Upgrade changed user data'
-    assert fingerprint() == (SERVER / 'supabase/legacy/schema.md5').read_text().strip()
-    assert sql('select count(*) from pomodoist_meta.schema_migrations;').stdout.strip() == '2'
+    # Forward migrations may intentionally change the application schema.
+    # Compare the fresh install below with this upgraded schema, not the frozen legacy baseline.
+    upgraded_fingerprint = fingerprint()
+    migration_count = len(list((SERVER / 'supabase/migrations').glob('*.sql')))
+    assert sql('select count(*) from pomodoist_meta.schema_migrations;').stdout.strip() == str(migration_count)
     migrate()  # Rerun must not replay the baseline.
     sql("update pomodoist_meta.schema_migrations set checksum='bad' where version like '%initial';")
     assert migrate(check=False).returncode != 0, 'Changed applied migration was accepted'
@@ -135,7 +138,7 @@ try:
     print('Legacy upgrade, retry and checksum rejection passed.', flush=True)
     sql("drop schema api_v1,private,public,pomodoist_meta cascade; create schema public authorization pg_database_owner; grant usage on schema public to public; delete from auth.users; do $$ begin if to_regclass('storage.buckets') is not null then delete from storage.buckets; end if; end $$;", user='supabase_admin')
     migrate()
-    assert fingerprint() == (SERVER / 'supabase/legacy/schema.md5').read_text().strip(), 'Fresh baseline differs from legacy'
+    assert fingerprint() == upgraded_fingerprint, 'Fresh install differs from upgraded schema'
     assert sql("select count(*) from storage.buckets where id='pomodoist-shared' and not public and file_size_limit=20000000;").stdout.strip() == '1', 'Fresh baseline omitted the private Storage bucket'
     # Exercise the data-only restore strategy used by backup.sh/restore.sh.
     sql("""insert into auth.users(id,email,aud,role,created_at,updated_at)

@@ -174,7 +174,7 @@ void main() {
           launchOfferEligible: true,
           launchOfferEndsAt: DateTime.utc(2026, 8, 3, 18),
         ),
-        createCheckout: (productId, surface) async {
+        createCheckout: (productId, surface, _) async {
           requestedProductId = productId;
           requestedSurface = surface;
           return Uri.parse('https://checkout.stripe.com/c/pay/test');
@@ -244,7 +244,7 @@ void main() {
           billingStripeGatewayProvider.overrideWithValue(
             BillingStripeGateway(
               loadCatalog: () => throw UnimplementedError(),
-              createCheckout: (_, _) async {
+              createCheckout: (_, _, _) async {
                 checkouts += 1;
                 return Uri.parse('https://checkout.stripe.com/c/pay/test');
               },
@@ -313,7 +313,7 @@ void main() {
           billingStripeGatewayProvider.overrideWithValue(
             BillingStripeGateway(
               loadCatalog: () => throw Exception('Stripe catalog failed.'),
-              createCheckout: (_, _) => throw UnimplementedError(),
+              createCheckout: (_, _, _) => throw UnimplementedError(),
               openCheckout: (_) async => false,
             ),
           ),
@@ -358,7 +358,7 @@ void main() {
               loadCatalog: () => throw const StripeBillingException(
                 'managed_payments_unavailable',
               ),
-              createCheckout: (_, _) => throw UnimplementedError(),
+              createCheckout: (_, _, _) => throw UnimplementedError(),
               openCheckout: (_) async => false,
             ),
           ),
@@ -402,7 +402,7 @@ void main() {
                 launchOfferEligible: false,
                 launchOfferEndsAt: null,
               ),
-              createCheckout: (_, _) => throw UnimplementedError(),
+              createCheckout: (_, _, _) => throw UnimplementedError(),
               openCheckout: (_) async => false,
             ),
           ),
@@ -443,10 +443,11 @@ void main() {
               loadCatalog: () async => StripeBillingCatalog(
                 enabled: true,
                 introEligible: false,
+                prices: const {pomodoistAnnualProductId: r'$39'},
                 launchOfferEligible: false,
                 launchOfferEndsAt: null,
               ),
-              createCheckout: (_, _) async {
+              createCheckout: (_, _, _) async {
                 checkouts += 1;
                 return Uri.parse('https://checkout.stripe.com/c/pay/test');
               },
@@ -2168,7 +2169,7 @@ void main() {
                 launchOfferEligible: false,
                 launchOfferEndsAt: null,
               ),
-              createCheckout: (_, _) => throw UnimplementedError(),
+              createCheckout: (_, _, _) => throw UnimplementedError(),
               openCheckout: (_) async => true,
             ),
           ),
@@ -2338,7 +2339,7 @@ void main() {
                 launchOfferEligible: false,
                 launchOfferEndsAt: null,
               ),
-              createCheckout: (_, _) => throw UnimplementedError(),
+              createCheckout: (_, _, _) => throw UnimplementedError(),
               openCheckout: (url) async {
                 openedUrl = url;
                 return true;

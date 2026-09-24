@@ -1,4 +1,4 @@
-# Apple subscription trial and return campaign
+# Subscription trials and return campaigns
 
 ## Terms
 
@@ -214,12 +214,135 @@ Manual UI, signed Sandbox transactions and a production launch remain separate
 acceptance steps. Unit tests use generated test keys and injected Apple responses;
 they do not demonstrate that an operational IAP key has been installed.
 
-## Stripe
+## Stripe — development preparation for 1.1.0
 
-Stripe pricing, introductions, checkout, account requirements and existing
-fallback prices are unchanged. Stripe trial/return support is future work and
-must use its own server eligibility and billing configuration. Apple offer
-identifiers and signing rules are not reused for Stripe.
+The Flutter version is `1.1.0+109`. Development and staging clients understand the versioned Stripe offer catalog;
+the deployed staging site is the `develop` branch. Production clients do not opt in.
+Server offers default to disabled and additionally require
+`STRIPE_BILLING_ENVIRONMENT=develop` and an `sk_test_`/`rk_test_` key. Prices,
+coupons, customers, subscriptions, invoices, Checkout sessions and webhook events
+must be in test mode. Existing billing is preserved when the offer flag is off.
+No production configuration, existing subscription price, or Apple setting was
+changed by this preparation.
+
+The USD terms match the table above. Stripe uses its own authenticated Pomodoist
+account/customer history, not Apple's anonymous purchase identity or signatures.
+The trial is once across monthly and annual subscriptions for this customer;
+a canceled zero-value trial still counts. A return purchase has no trial.
+Eligibility starts seven complete days after Stripe `ended_at`, not
+`canceled_at` (which can mark a scheduled cancellation before access ends).
+Active Pro/lifetime and any nonterminal Stripe status, including dunning,
+unpaid, incomplete and paused, block checkout. All history pages are read.
+A paid return invoice consumes campaign `return_2026_v1` across both plans;
+refunds do not reset it. Credits covering an otherwise nonzero invoice also
+count as payment. Stripe's retained subscription/invoice history is the
+redemption record; the application does not trust a client clock or flag.
+
+Checkout receives the selected offer and revalidates it. Changed eligibility,
+API/configuration failures and concurrent attempts return an error instead of
+falling back to full price. The server applies coupons directly; there are no
+user-entered codes. Payment still uses the existing hosted Stripe Checkout and
+requires a Pomodoist account. Apple continues to use native StoreKit without a
+mandatory account. Stripe's USD catalog does not reproduce Apple's storefront
+price equalization; Checkout determines applicable taxes and any supported
+currency conversion. Verify the final presented currency/total during acceptance.
+
+The shared Pro paywall reuses existing localized trial and return-offer copy.
+There are no new notifications or campaigns. Before sign-in/catalog verification,
+the development paywall does not advertise the legacy introductory price.
+
+### Prepared test catalog
+
+Verified against Stripe on 2026-09-24; every object has `livemode=false`.
+Existing test product `prod_V0Os8ESsMYYxOx` is reused. Old prices/coupons remain
+untouched, so this does not change existing subscribers.
+
+| Server variable | Test object | Terms |
+| --- | --- | --- |
+| `STRIPE_PRICE_MONTHLY` | `price_1UIzUjK42TpBP1F46UQARy9h` | USD 4.99/month |
+| `STRIPE_PRICE_ANNUAL` | `price_1UIzUlK42TpBP1F4Caf8B7O3` | USD 29.99/year |
+| `STRIPE_COUPON_MONTHLY_RETURN` | `pomodoist_develop_return_2026_month` | USD 3 off, repeating 3 months |
+| `STRIPE_COUPON_ANNUAL_RETURN` | `pomodoist_develop_return_2026_year` | USD 15 off, once |
+
+Identifiers and flags are also saved in the ignored local file
+`server/.env.stripe-offers.develop` (mode 0600, no credentials). It is an explicit
+configuration overlay, not automatically loaded. It keeps
+`STRIPE_CHECKOUT_ENABLED=false` until the development backend is configured.
+Do not copy the overlay to staging or production.
+
+### Development setup and acceptance
+
+1. Apply migration `20260923234807_pomodoist_core_stripe_test_offers.sql` to the
+   **development** database through the normal migration runner. Never edit the
+   consolidated initial schema. The private reservation table and service-only
+   RPCs serialize all Checkout products for an account.
+2. Configure the development functions with the test key, development webhook
+   secret, all existing lifetime price IDs, the four values above,
+   `STRIPE_BILLING_ENVIRONMENT=develop`,
+   `STRIPE_TEST_SUBSCRIPTION_OFFERS_ENABLED=true` and
+   `STRIPE_CHECKOUT_ENABLED=true`. Keep the existing Managed Payments setup.
+   In Compose, `SITE_URL` supplies Checkout return URLs; it must point to the
+   development client. No remote deployment was performed by this preparation.
+3. Route test Stripe events to the development `stripe-webhook` function.
+   Subscribe to subscription created/updated/deleted, Checkout completed/async
+   payment succeeded, invoice paid/payment failed and charge refunded events.
+   Verify the signature with that endpoint's secret, not a live endpoint secret.
+4. Run the development client with `POMODOIST_BILLING_CHANNEL=stripe` and
+   `POMODOIST_DEV_UNLOCK=false`. Catalog and Checkout carry `offerVersion: 1`;
+   older clients are rejected while test offers are enabled. Sign in to view
+   verified offers. Eligibility does not grant Pro; verified webhooks do.
+5. Manually accept the complete test flow: both trial plans, trial cancellation
+   and expiry, regular renewal, return after seven elapsed days, all three
+   monthly discount invoices / one annual discount invoice, regular renewal
+   afterward, restoration after sign-in, dunning/lifetime exclusions, cancellation,
+   account switch, concurrent devices and verification failures. A Stripe test
+   clock does not override the application's wall clock; test the boundary with
+   unit fixtures or genuinely elapsed history.
+
+**Cancellation/concurrency:** one account-wide SQL reservation stores immutable
+Checkout parameters and anchors a 40-minute session expiry. Identical retries
+reuse the open session/Stripe idempotency key. Closing the browser does not
+consume the offer. Selecting another product waits for the old session to
+expire; retry then releases it after Stripe verification. A completed payment
+that is still processing remains blocked. Completed sessions are released only
+when fresh history permits another purchase. Legacy open/processing sessions
+also block the transition. These checks fail closed if Stripe is unavailable.
+
+### Verification performed
+
+Current checks passed: 32 Flutter unit tests, 29 Deno tests, full Flutter
+analysis, Deno entry-point checks, architecture boundaries and localization
+contracts. No app was launched for manual acceptance.
+
+- Stripe's real test API accepted all four Managed Payments Checkout requests:
+  monthly/annual trial totals were USD 0; monthly return total USD 1.99 and annual
+  return total USD 14.99. Each test session was explicitly expired without a
+  payment. This proves parameter/catalog compatibility, not renewals or webhook
+  delivery.
+- Unit coverage checks the seven-day boundary, canceled trials, shared campaign
+  reuse, exact prices/coupon duration, live-key isolation, selected-offer mismatch,
+  API errors, immutable retry parameters, concurrent plans, cancellation and
+  processing payments. Webhook tests include trial access and live-event rejection.
+- An isolated disposable PostgreSQL database verifies migration execution,
+  client-role denial, concurrent cross-product reservations and stale-release
+  protection. No running application database was changed.
+
+Reproduce from the repository root:
+
+```sh
+deno test --config server/supabase/deno.json server/supabase/functions/pomodoist-stripe-billing/ server/supabase/functions/stripe-webhook/
+bash server/tests/database/stripe_offers_check.sh pomodoist-selfhost-db
+cd apps/flutter
+../../.fvm/flutter_sdk/bin/flutter test --no-pub test/stripe_subscription_offers_test.dart test/data/billing_access_repository_test.dart test/billing_offers_test.dart
+../../.fvm/flutter_sdk/bin/flutter analyze --no-pub
+```
+
+Public release, live Stripe configuration and Apple offer activation remain
+separate release decisions. Do not enable test configuration in a published build.
+
+Stripe references: [Checkout trials](https://docs.stripe.com/payments/checkout/free-trials),
+[coupon durations](https://docs.stripe.com/billing/subscriptions/coupons#coupon-duration),
+[Checkout expiry](https://docs.stripe.com/api/checkout/sessions/create#create_checkout_session-expires_at).
 
 ## Apple references
 

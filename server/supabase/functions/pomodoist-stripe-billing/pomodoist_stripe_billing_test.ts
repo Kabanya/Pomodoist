@@ -4,12 +4,21 @@ import {
   handlePomodoistStripeBilling,
   type PomodoistStripeBillingDeps,
   stripeCatalogForAccount,
-  stripeCheckoutParams,
   stripeCheckoutLocale,
+  stripeCheckoutParams,
 } from "./pomodoist_stripe_billing.ts";
 
 Deno.test("Checkout locale preserves Brazilian Portuguese and validates all new languages", () => {
-  for (const [input, expected] of [["pt", "pt-BR"], ["pt_BR", "pt-BR"], ["ja-JP", "ja"], ["ko-KR", "ko"], ["unknown", "auto"], ["ja<script>", "auto"]]) {
+  for (
+    const [input, expected] of [
+      ["pt", "pt-BR"],
+      ["pt_BR", "pt-BR"],
+      ["ja-JP", "ja"],
+      ["ko-KR", "ko"],
+      ["unknown", "auto"],
+      ["ja<script>", "auto"],
+    ]
+  ) {
     assertEquals(stripeCheckoutLocale(input), expected);
   }
 });
@@ -273,3 +282,131 @@ function billingDeps(
     ...overrides,
   };
 }
+
+Deno.test("versioned test catalog replaces introductory discounts with trial and new prices", async () => {
+  const deps = billingDeps({
+    offersEnabled: true,
+    loadOffer: async () => "trial",
+  });
+  const request = (body: unknown) =>
+    new Request("https://functions.test/billing", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer test",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+  assertEquals(
+    (await handlePomodoistStripeBilling(request({ action: "catalog" }), deps))
+      .status,
+    409,
+  );
+  const response = await handlePomodoistStripeBilling(
+    request({ action: "catalog", offerVersion: 1 }),
+    deps,
+  );
+  const catalog = await response.json();
+  assertEquals(catalog.subscriptionOffer, "trial");
+  assertEquals(catalog.introEligible, false);
+  assertEquals(catalog.prices["pomodoist.pro.monthly"], "$4.99");
+  assertEquals(catalog.prices["pomodoist.pro.annual"], "$29.99");
+});
+
+Deno.test("stale offer, verification error and blocked history never fall back to full-price checkout", async () => {
+  for (
+    const loadOffer of [
+      async () => "standard" as const,
+      async () => "blocked" as const,
+      () => Promise.reject(new Error("Stripe unavailable")),
+    ]
+  ) {
+    let calls = 0;
+    const deps = billingDeps({
+      offersEnabled: true,
+      loadOffer,
+      createCheckoutSession: async () => {
+        calls++;
+        return { url: "https://checkout.stripe.com/test" };
+      },
+    });
+    const response = await handlePomodoistStripeBilling(
+      new Request("https://functions.test/billing", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer test",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "checkout",
+          offerVersion: 1,
+          productId: "pomodoist.pro.annual",
+          surface: "web",
+          selectedOffer: "return",
+        }),
+      }),
+      deps,
+    );
+    assertEquals(response.status >= 400, true);
+    assertEquals(calls, 0);
+  }
+});
+
+Deno.test("trial and return coupons are mutually exclusive native Checkout parameters", () => {
+  const input = {
+    customerId: "cus_test",
+    userId: "user",
+    productId: "pomodoist.pro.monthly",
+    priceId: "price_test",
+    couponId: null,
+    mode: "subscription" as const,
+    surface: "web" as const,
+    successUrl: "http://localhost/success",
+    cancelUrl: "http://localhost/cancel",
+  };
+  const trial = stripeCheckoutParams({ ...input, selectedOffer: "trial" });
+  assertEquals(
+    (trial.subscription_data as Record<string, unknown>).trial_period_days,
+    7,
+  );
+  assertEquals(trial.discounts, undefined);
+  const returning = stripeCheckoutParams({
+    ...input,
+    selectedOffer: "return",
+    couponId: "coupon_return",
+  });
+  assertEquals(
+    (returning.subscription_data as Record<string, unknown>).trial_period_days,
+    undefined,
+  );
+  assertEquals(returning.discounts, [{ coupon: "coupon_return" }]);
+});
+
+Deno.test("disabling test offers after catalog selection cannot route a discounted purchase to legacy checkout", async () => {
+  let calls = 0;
+  const response = await handlePomodoistStripeBilling(
+    new Request("https://functions.test/billing", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer test",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "checkout",
+        offerVersion: 1,
+        productId: "pomodoist.pro.annual",
+        surface: "web",
+        selectedOffer: "return",
+      }),
+    }),
+    billingDeps({
+      offersEnabled: false,
+      createCheckoutSession: async () => {
+        calls++;
+        return { url: "https://checkout.stripe.com/test" };
+      },
+    }),
+  );
+  assertEquals(response.status, 409);
+  assertEquals(calls, 0);
+});

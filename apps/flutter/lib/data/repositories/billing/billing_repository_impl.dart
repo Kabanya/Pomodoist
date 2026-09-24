@@ -881,6 +881,7 @@ final class AppBillingRepository implements BillingRepository {
             eligibleIntroductoryProductIds: value.introEligible
                 ? {pomodoistMonthlyProductId, pomodoistAnnualProductId}
                 : {},
+            stripeSubscriptionOffer: value.subscriptionOffer,
             stripeLaunchOfferEligible: value.launchOfferEligible,
             stripeLaunchOfferEndsAt: value.launchOfferEndsAt,
           ),
@@ -1042,7 +1043,11 @@ final class AppBillingRepository implements BillingRepository {
           throw StateError('Stripe billing is not configured.');
         }
         final url = await _withTimeout(
-          gateway.createCheckout(productId, _surface),
+          gateway.createCheckout(
+            productId,
+            _surface,
+            _catalog.stripeSubscriptionOffer,
+          ),
         );
         if (_disposed || generation != _accountGeneration) {
           cancelPurchase();

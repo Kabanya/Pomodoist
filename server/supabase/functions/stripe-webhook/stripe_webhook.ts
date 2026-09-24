@@ -1,5 +1,6 @@
 export type StripeWebhookEvent = {
   id: string;
+  livemode?: boolean;
   type: string;
   created: number;
   data: { object: Record<string, unknown> };
@@ -24,6 +25,7 @@ export type StripeEventRecord = {
 };
 
 export type StripeWebhookDeps = {
+  testModeOnly?: boolean;
   verifyEvent: (
     rawBody: string,
     signature: string,
@@ -70,6 +72,9 @@ export async function handleStripeWebhook(
   let event: StripeWebhookEvent;
   try {
     event = await deps.verifyEvent(rawBody, signature);
+    if (deps.testModeOnly && event.livemode !== false) {
+      throw new Error("Test mode event required.");
+    }
   } catch {
     return json(
       { code: "invalid_signature", error: "Invalid Stripe signature." },
@@ -119,6 +124,9 @@ async function stripeRecordForEvent(
   let subscription: StripeSubscriptionSnapshot;
   try {
     subscription = await deps.retrieveSubscription(subscriptionId);
+    if (deps.testModeOnly && subscription.livemode !== false) {
+      throw new Error("Test mode subscription required.");
+    }
   } catch {
     throw new Error("Could not refresh Stripe subscription.");
   }
@@ -307,7 +315,8 @@ function subscriptionRecordForEvent(
     status,
     validFrom: periodStart.toISOString(),
     validUntil: periodEnd.toISOString(),
-    firstSubscriptionPaid: event.type === "invoice.paid",
+    firstSubscriptionPaid: event.type === "invoice.paid" &&
+      numberValue(event.data.object.total) > 0,
     payload: { stripeStatus },
   };
 }
