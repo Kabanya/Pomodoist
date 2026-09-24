@@ -1,0 +1,15 @@
+// Build configuration for the macOS direct-download distribution.
+//
+// Flutter's assemble script derives FLUTTER_BUILD_MODE from the name of the
+// build configuration, so a configuration Flutter has never heard of stops the
+// build with "add an appropriate value for FLUTTER_BUILD_MODE". A Direct-*
+// configuration is a release build, so this declares the same release mode as
+// Runner/Configs/Release.xcconfig.
+//
+// Only the app target and the widget reference this file; the project-level,
+// test and aggregate configurations keep the Release.xcconfig they were copied
+// from.
+#include "../../Flutter/Flutter-Release.xcconfig"
+#include "Warnings.xcconfig"
+
+FLUTTER_BUILD_MODE = release

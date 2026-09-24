@@ -615,6 +615,107 @@ class AppLocalizationsKo extends AppLocalizations {
   String get navPriorityMatrix => '우선순위 매트릭스';
 
   @override
+  String get navCalendar => '캘린더';
+
+  @override
+  String get calendarSubtitle => '하루를 계획하고 삶을 위한 여유를 남겨 두세요.';
+
+  @override
+  String get calendarDay => '일';
+
+  @override
+  String get calendarWeek => '주';
+
+  @override
+  String get calendarMonth => '월';
+
+  @override
+  String get calendarRoutine => '일과';
+
+  @override
+  String get calendarOverview => '하루 개요';
+
+  @override
+  String get calendarOpenMonth => '월 보기 열기';
+
+  @override
+  String get calendarUnscheduled => '일정 없음';
+
+  @override
+  String get calendarAllProjects => '모든 프로젝트';
+
+  @override
+  String get calendarRoutineDefault => '평소의 하루';
+
+  @override
+  String get calendarRoutineDescription =>
+      '작업은 시작 시간별로 그룹화됩니다. 하루에 맞게 시간대를 조정하세요.';
+
+  @override
+  String get calendarEditRoutine => '시간대 설정';
+
+  @override
+  String get calendarRoutineTitle => '일과 설정';
+
+  @override
+  String get calendarRoutineName => '일과 이름';
+
+  @override
+  String get calendarPeriodName => '시간대 이름';
+
+  @override
+  String get calendarAddPeriod => '시간대 추가';
+
+  @override
+  String get calendarRemovePeriod => '시간대 삭제';
+
+  @override
+  String get calendarPeriodStart => '시작';
+
+  @override
+  String get calendarPeriodEnd => '종료';
+
+  @override
+  String get calendarRoutineInvalid =>
+      '일과와 시간대에 이름을 지정하세요. 종료 시간은 시작 시간보다 늦어야 하며 시간대가 겹치면 안 됩니다.';
+
+  @override
+  String get calendarOutsideRoutine => '일과 시간대 외';
+
+  @override
+  String get calendarFreeTime => '자유 시간';
+
+  @override
+  String get calendarMorning => '아침';
+
+  @override
+  String get calendarAfternoon => '오후';
+
+  @override
+  String get calendarEvening => '저녁';
+
+  @override
+  String get calendarNewPeriod => '새 시간대';
+
+  @override
+  String get calendarResize => '작업 시간 변경';
+
+  @override
+  String get calendarPreviousPeriod => '이전 시간대';
+
+  @override
+  String get calendarNextPeriod => '다음 시간대';
+
+  @override
+  String get calendarSaveFailed => '캘린더 설정을 저장하지 못했습니다';
+
+  @override
+  String get calendarNoActiveFocus => '진행 중인 집중 세션 없음';
+
+  @override
+  String get calendarCurrentTask => '현재 작업';
+
+  @override
   String get navTimeline => '타임라인';
 
   @override

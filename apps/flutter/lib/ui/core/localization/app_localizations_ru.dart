@@ -648,6 +648,107 @@ class AppLocalizationsRu extends AppLocalizations {
   String get navPriorityMatrix => 'Матрица приоритетов';
 
   @override
+  String get navCalendar => 'Календарь';
+
+  @override
+  String get calendarSubtitle => 'Планы на день. Пространство для жизни.';
+
+  @override
+  String get calendarDay => 'День';
+
+  @override
+  String get calendarWeek => 'Неделя';
+
+  @override
+  String get calendarMonth => 'Месяц';
+
+  @override
+  String get calendarRoutine => 'Распорядок';
+
+  @override
+  String get calendarOverview => 'Обзор дня';
+
+  @override
+  String get calendarOpenMonth => 'Месяц целиком';
+
+  @override
+  String get calendarUnscheduled => 'Без расписания';
+
+  @override
+  String get calendarAllProjects => 'Все проекты';
+
+  @override
+  String get calendarRoutineDefault => 'Мой обычный день';
+
+  @override
+  String get calendarRoutineDescription =>
+      'Задачи распределяются по времени начала. Настройте периоды под свой день.';
+
+  @override
+  String get calendarEditRoutine => 'Настроить периоды';
+
+  @override
+  String get calendarRoutineTitle => 'Ваш распорядок дня';
+
+  @override
+  String get calendarRoutineName => 'Название распорядка';
+
+  @override
+  String get calendarPeriodName => 'Название периода';
+
+  @override
+  String get calendarAddPeriod => 'Добавить период';
+
+  @override
+  String get calendarRemovePeriod => 'Удалить период';
+
+  @override
+  String get calendarPeriodStart => 'С';
+
+  @override
+  String get calendarPeriodEnd => 'До';
+
+  @override
+  String get calendarRoutineInvalid =>
+      'Назовите распорядок и периоды. Конец должен быть позже начала, периоды не должны пересекаться.';
+
+  @override
+  String get calendarOutsideRoutine => 'Вне периодов распорядка';
+
+  @override
+  String get calendarFreeTime => 'Свободное время';
+
+  @override
+  String get calendarMorning => 'Утро';
+
+  @override
+  String get calendarAfternoon => 'День';
+
+  @override
+  String get calendarEvening => 'Вечер';
+
+  @override
+  String get calendarNewPeriod => 'Новый период';
+
+  @override
+  String get calendarResize => 'Изменить длительность';
+
+  @override
+  String get calendarPreviousPeriod => 'Предыдущий период';
+
+  @override
+  String get calendarNextPeriod => 'Следующий период';
+
+  @override
+  String get calendarSaveFailed => 'Не удалось сохранить настройки календаря';
+
+  @override
+  String get calendarNoActiveFocus => 'Нет активной фокус-сессии';
+
+  @override
+  String get calendarCurrentTask => 'Текущая задача';
+
+  @override
   String get navTimeline => 'Таймлайн';
 
   @override

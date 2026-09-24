@@ -1,0 +1,244 @@
+name: macOS DMG
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*'
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  validate-ref:
+    name: Require main branch or release tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Reject unsupported ref
+        run: |
+          number='(0|[1-9][0-9]*)'
+          if [[ "$GITHUB_REF" != refs/heads/main && ! "$GITHUB_REF" =~ ^refs/tags/v$number\.$number\.$number(-rc\.$number)?$ ]]; then
+            echo 'macOS builds require main, vX.Y.Z, or vX.Y.Z-rc.N.' >&2
+            exit 64
+          fi
+
+  build-test:
+    name: Build and verify DMG
+    needs: validate-ref
+    # An arm64 runner builds the universal binary in one pass; the artifact is
+    # checked for both architectures below.
+    runs-on: macos-14
+    environment: macos-production
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Prepare application version
+        id: version
+        run: |
+          pubspec_version=$(awk '/^version:/ {sub(/\r$/, ""); print $2; exit}' apps/flutter/pubspec.yaml)
+          if [[ ! "$pubspec_version" =~ ^.+\+([0-9]+)$ ]]; then
+            echo 'apps/flutter/pubspec.yaml must contain a numeric build number after +.' >&2
+            exit 64
+          fi
+          build_number="${BASH_REMATCH[1]}"
+          release_version="${pubspec_version%+*}"
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            number='(0|[1-9][0-9]*)'
+            if [[ ! "$GITHUB_REF_NAME" =~ ^v$number\.$number\.$number(-rc\.$number)?$ ]]; then
+              echo 'Release tags must use vX.Y.Z or vX.Y.Z-rc.N.' >&2
+              exit 64
+            fi
+            release_version="${GITHUB_REF_NAME#v}"
+            awk -v version="$release_version+$build_number" '
+              /^version:/ {$0 = "version: " version}
+              {sub(/\r$/, ""); print}
+            ' apps/flutter/pubspec.yaml > apps/flutter/pubspec.yaml.tmp
+            mv apps/flutter/pubspec.yaml.tmp apps/flutter/pubspec.yaml
+          fi
+          echo "POMODOIST_VERSION=$release_version" >> "$GITHUB_ENV"
+          echo "version=$release_version" >> "$GITHUB_OUTPUT"
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version-file: .fvmrc
+      - run: flutter pub get
+        working-directory: apps/flutter
+      - name: Check the direct-download contract
+        run: tool/macos/test_build_contract.sh
+      - name: Validate and write production configuration
+        env:
+          WEB_APP_URL: ${{ vars.WEB_APP_URL }}
+          TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+          SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+          GOOGLE_DESKTOP_CLIENT_ID: ${{ vars.GOOGLE_DESKTOP_CLIENT_ID }}
+          GOOGLE_DESKTOP_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+          for name in WEB_APP_URL TURNSTILE_SITE_KEY GOOGLE_DESKTOP_CLIENT_ID; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "$name is required in the macos-production environment." >&2
+              exit 1
+            fi
+          done
+          # The direct download ships the same production profile as the other
+          # desktop builds, with Stripe billing rather than StoreKit.
+          cat > "$RUNNER_TEMP/macos-production.env" <<EOF
+          POMODOIST_ENVIRONMENT=production
+          WEB_APP_URL=${WEB_APP_URL}
+          POMODOIST_REGISTRATION_URL=https://app.pomodoist.com/auth/challenge
+          TURNSTILE_SITE_KEY=${TURNSTILE_SITE_KEY}
+          SENTRY_DSN=${SENTRY_DSN}
+          GOOGLE_DESKTOP_CLIENT_ID=${GOOGLE_DESKTOP_CLIENT_ID}
+          GOOGLE_DESKTOP_CLIENT_SECRET=${GOOGLE_DESKTOP_CLIENT_SECRET}
+          POMODOIST_BILLING_CHANNEL=stripe
+          EOF
+      - name: Build DMG
+        env:
+          # Supplied by the macos-production environment once a Developer ID
+          # certificate exists. While unset, the script ships an unsigned
+          # artifact and says so in the release notes.
+          POMODOIST_MACOS_SIGNING_IDENTITY: ${{ secrets.POMODOIST_MACOS_SIGNING_IDENTITY }}
+          POMODOIST_MACOS_NOTARY_PROFILE: ${{ secrets.POMODOIST_MACOS_NOTARY_PROFILE }}
+          POMODOIST_MACOS_CONFIG: ${{ runner.temp }}/macos-production.env
+        run: tool/macos/build.sh --flavor production --output release
+      - name: Remove production configuration
+        if: always()
+        run: rm -f "$RUNNER_TEMP/macos-production.env"
+      - name: Verify architectures, checksum and release boundary
+        run: |
+          set -euo pipefail
+          dmg=release/Pomodoist-macOS.dmg
+          test -f "$dmg"
+          test -f "$dmg.sha256"
+          shasum -a 256 -c "$dmg.sha256"
+
+          # A universal binary has to carry both slices, or one class of Mac
+          # would have to fall back to emulation it cannot use.
+          mount_point=$(mktemp -d)
+          hdiutil attach "$dmg" -nobrowse -readonly -mountpoint "$mount_point" > /dev/null
+          trap 'hdiutil detach "$mount_point" > /dev/null 2>&1 || true' EXIT
+          # The app is named after the flavor's display name and so is its
+          # executable, so both are discovered rather than assumed.
+          app=$(find "$mount_point" -maxdepth 1 -name '*.app' -print -quit)
+          if [[ -z "$app" ]]; then
+            echo 'The DMG contains no application bundle.' >&2
+            exit 1
+          fi
+          test -L "$mount_point/Applications"
+          executable=$(find "$app/Contents/MacOS" -maxdepth 1 -type f -print -quit)
+          archs=$(lipo -archs "$executable")
+          for want in arm64 x86_64; do
+            if [[ "$archs" != *"$want"* ]]; then
+              echo "The DMG is missing the $want slice (found: $archs)." >&2
+              exit 1
+            fi
+          done
+
+          # The bundle must be the non-sandboxed direct-download build, or a
+          # downloaded copy would not launch.
+          if codesign -d --entitlements - "$app" 2>/dev/null | grep -q 'app-sandbox'; then
+            echo 'The shipped app is sandboxed.' >&2
+            exit 1
+          fi
+          bundle_id=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Contents/Info.plist")
+          if [[ "$bundle_id" != 'com.finchforge.pomodoist' ]]; then
+            echo "Unexpected bundle identifier: $bundle_id" >&2
+            exit 1
+          fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: pomodoist-macos-dmg
+          path: |
+            release/Pomodoist-macOS.dmg
+            release/Pomodoist-macOS.dmg.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish macOS DMG
+    environment: macos-production
+    needs: build-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: github.ref_type == 'tag'
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: pomodoist-macos-dmg
+          path: release
+      - name: Upload DMG and publish complete desktop release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_NOTES_API_KEY: ${{ secrets.RELEASE_NOTES_API_KEY }}
+        run: |
+          release_notes='Official Pomodoist desktop release. macOS is distributed as a universal .dmg (Apple silicon and Intel).'
+          prerelease=false
+          latest=true
+          if [[ "$GITHUB_REF_NAME" == *-rc.* ]]; then
+            prerelease=true
+            latest=false
+          fi
+          if ! gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            if generated_notes=$(python3 tool/release_notes.py); then
+              release_notes="$generated_notes"
+            fi
+            gh release create "$GITHUB_REF_NAME" \
+              --draft \
+              --prerelease="$prerelease" \
+              --target "$GITHUB_SHA" \
+              --title "Pomodoist $GITHUB_REF_NAME" \
+              --notes "$release_notes" || \
+              gh release view "$GITHUB_REF_NAME" > /dev/null
+          fi
+          gh release upload "$GITHUB_REF_NAME" \
+            release/Pomodoist-macOS.dmg \
+            release/Pomodoist-macOS.dmg.sha256 \
+            --clobber
+          release_id=$(gh api --paginate \
+            "repos/$GITHUB_REPOSITORY/releases" \
+            --jq ".[] | select(.tag_name == \"$GITHUB_REF_NAME\") | .id")
+          required_assets=(
+            Pomodoist-x86_64.AppImage
+            Pomodoist-x86_64.AppImage.sha256
+            Pomodoist-Setup.exe
+            Pomodoist-Setup.exe.sha256
+            Pomodoist-macOS.dmg
+            Pomodoist-macOS.dmg.sha256
+            Pomodoist-Android.apk
+            Pomodoist-Android.apk.sha256
+          )
+          asset_names=$(gh api \
+            "repos/$GITHUB_REPOSITORY/releases/$release_id/assets" \
+            --jq '.[].name')
+          for required_asset in "${required_assets[@]}"; do
+            if ! grep -Fqx -- "$required_asset" <<< "$asset_names"; then
+              echo 'Release remains draft until all release assets are present.'
+              exit 0
+            fi
+          done
+          gh api --method PATCH \
+            "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+            --raw-field tag_name="$GITHUB_REF_NAME" \
+            --field draft=false \
+            --field prerelease="$prerelease" \
+            --raw-field make_latest="$latest" \
+            --silent
+      - name: Report an unpublished manual build
+        if: github.ref_type != 'tag'
+        run: |
+          echo 'Manual builds produce an artifact only; releases are published from tags.' >&2

@@ -31,10 +31,7 @@ class OnboardingIllustration extends StatelessWidget {
                 child: switch (step) {
                   OnboardingStep.language => const _LanguageArtwork(),
                   OnboardingStep.timer => Center(
-                    child: OnboardingTimerPreview(
-                      style: timerStyle,
-                      large: true,
-                    ),
+                    child: _TimerPreview(style: timerStyle),
                   ),
                   OnboardingStep.paywall => const _ProArtwork(),
                   OnboardingStep.account => const _DevicesArtwork(),
@@ -48,15 +45,10 @@ class OnboardingIllustration extends StatelessWidget {
   }
 }
 
-class OnboardingTimerPreview extends StatelessWidget {
-  const OnboardingTimerPreview({
-    required this.style,
-    this.large = false,
-    super.key,
-  });
+class _TimerPreview extends StatelessWidget {
+  const _TimerPreview({required this.style});
 
   final FocusTimerVisualStyle style;
-  final bool large;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +58,7 @@ class OnboardingTimerPreview extends StatelessWidget {
       textScaler: TextScaler.noScaling,
       textDirection: TextDirection.ltr,
       style: AppTheme.monoTextStyle.copyWith(
-        fontSize: large ? 32 : 24,
+        fontSize: 32,
         fontWeight: FontWeight.w400,
         color: colors.primaryText,
         letterSpacing: -1,
@@ -74,17 +66,17 @@ class OnboardingTimerPreview extends StatelessWidget {
     );
     return ExcludeSemantics(
       child: SizedBox(
-        width: large ? 200 : 120,
-        height: large ? 136 : 104,
+        width: 200,
+        height: 136,
         child: style == FocusTimerVisualStyle.circle
             ? Stack(
                 alignment: Alignment.center,
                 children: [
                   SizedBox.square(
-                    dimension: large ? 128 : 96,
+                    dimension: 128,
                     child: CircularProgressIndicator(
                       value: 0.75,
-                      strokeWidth: large ? 5 : 3,
+                      strokeWidth: 5,
                       color: colors.accent,
                       backgroundColor: colors.border,
                       strokeCap: StrokeCap.round,
@@ -100,7 +92,7 @@ class OnboardingTimerPreview extends StatelessWidget {
                   const SizedBox(height: 16),
                   LinearProgressIndicator(
                     value: 0.75,
-                    minHeight: large ? 5 : 3,
+                    minHeight: 5,
                     borderRadius: BorderRadius.circular(4),
                     color: colors.accent,
                     backgroundColor: colors.border,

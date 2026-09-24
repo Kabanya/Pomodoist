@@ -654,6 +654,108 @@ class AppLocalizationsDe extends AppLocalizations {
   String get navPriorityMatrix => 'Prioritätsmatrix';
 
   @override
+  String get navCalendar => 'Kalender';
+
+  @override
+  String get calendarSubtitle => 'Plane deinen Tag. Lass Raum für das Leben.';
+
+  @override
+  String get calendarDay => 'Tag';
+
+  @override
+  String get calendarWeek => 'Woche';
+
+  @override
+  String get calendarMonth => 'Monat';
+
+  @override
+  String get calendarRoutine => 'Tagesablauf';
+
+  @override
+  String get calendarOverview => 'Tagesübersicht';
+
+  @override
+  String get calendarOpenMonth => 'Monat öffnen';
+
+  @override
+  String get calendarUnscheduled => 'Ohne Zeitplan';
+
+  @override
+  String get calendarAllProjects => 'Alle Projekte';
+
+  @override
+  String get calendarRoutineDefault => 'Mein üblicher Tag';
+
+  @override
+  String get calendarRoutineDescription =>
+      'Aufgaben werden nach Startzeit gruppiert. Passe die Zeitabschnitte an deinen Tag an.';
+
+  @override
+  String get calendarEditRoutine => 'Zeitabschnitte anpassen';
+
+  @override
+  String get calendarRoutineTitle => 'Dein Tagesablauf';
+
+  @override
+  String get calendarRoutineName => 'Name des Tagesablaufs';
+
+  @override
+  String get calendarPeriodName => 'Name des Zeitabschnitts';
+
+  @override
+  String get calendarAddPeriod => 'Zeitabschnitt hinzufügen';
+
+  @override
+  String get calendarRemovePeriod => 'Zeitabschnitt entfernen';
+
+  @override
+  String get calendarPeriodStart => 'Von';
+
+  @override
+  String get calendarPeriodEnd => 'Bis';
+
+  @override
+  String get calendarRoutineInvalid =>
+      'Benenne den Tagesablauf und seine Zeitabschnitte. Die Endzeit muss nach der Startzeit liegen und Zeitabschnitte dürfen sich nicht überschneiden.';
+
+  @override
+  String get calendarOutsideRoutine => 'Außerhalb des Tagesablaufs';
+
+  @override
+  String get calendarFreeTime => 'Freie Zeit';
+
+  @override
+  String get calendarMorning => 'Morgen';
+
+  @override
+  String get calendarAfternoon => 'Nachmittag';
+
+  @override
+  String get calendarEvening => 'Abend';
+
+  @override
+  String get calendarNewPeriod => 'Neuer Zeitabschnitt';
+
+  @override
+  String get calendarResize => 'Aufgabendauer ändern';
+
+  @override
+  String get calendarPreviousPeriod => 'Vorheriger Zeitabschnitt';
+
+  @override
+  String get calendarNextPeriod => 'Nächster Zeitabschnitt';
+
+  @override
+  String get calendarSaveFailed =>
+      'Kalendereinstellungen konnten nicht gespeichert werden';
+
+  @override
+  String get calendarNoActiveFocus => 'Keine aktive Fokus Sitzung';
+
+  @override
+  String get calendarCurrentTask => 'Aktuelle Aufgabe';
+
+  @override
   String get navTimeline => 'Zeitleiste';
 
   @override

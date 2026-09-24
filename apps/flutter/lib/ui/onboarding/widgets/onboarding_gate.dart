@@ -130,31 +130,7 @@ class _OnboardingOverlayState extends ConsumerState<_OnboardingOverlay> {
                                 ),
                                 child: Row(
                                   children: [
-                                    Container(
-                                      width: 28,
-                                      height: 28,
-                                      decoration: BoxDecoration(
-                                        color: colors.accentFill,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Icon(
-                                        LucideIcons.check,
-                                        color: colors.onAccent,
-                                        size: 20,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        'pomodoist',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                    ),
+                                    const Spacer(),
                                     Text(
                                       '${state.step.index + 1} / 4',
                                       style: AppTheme.monoTextStyle.copyWith(
@@ -556,34 +532,24 @@ class _TimerStep extends ConsumerWidget {
                   child: OutlinedButton(
                     style: _choiceStyle(context, style == selected),
                     onPressed: enabled ? () => onSelected(style) : null,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Row(
                       children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: OnboardingTimerPreview(style: style),
+                        Expanded(
+                          child: Text(
+                            style == FocusTimerVisualStyle.bar
+                                ? context.l10n.settingsTimerVisualBar
+                                : context.l10n.settingsTimerVisualCircle,
+                          ),
                         ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                style == FocusTimerVisualStyle.bar
-                                    ? context.l10n.settingsTimerVisualBar
-                                    : context.l10n.settingsTimerVisualCircle,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              style == selected
-                                  ? LucideIcons.circleCheck
-                                  : LucideIcons.circle,
-                              size: 16,
-                              color: style == selected
-                                  ? context.appColors.accent
-                                  : context.appColors.secondaryText,
-                            ),
-                          ],
+                        const SizedBox(width: 4),
+                        Icon(
+                          style == selected
+                              ? LucideIcons.circleCheck
+                              : LucideIcons.circle,
+                          size: 16,
+                          color: style == selected
+                              ? context.appColors.accent
+                              : context.appColors.secondaryText,
                         ),
                       ],
                     ),

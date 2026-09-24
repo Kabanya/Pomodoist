@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Entitlements for the direct-download build distributed as a .dmg from
+	     GitHub Releases.
+
+	     The App Store build in Release.entitlements sets
+	     com.apple.security.app-sandbox and com.apple.security.application-groups,
+	     both of which require a Mac App Store provisioning profile. A directly
+	     downloaded app has no such profile, so the sandbox is off and the app
+	     group is absent here.
+
+	     com.apple.security.cs.allow-jit and com.apple.security.device.audio-input
+	     are kept because the Dart VM needs JIT and the app records voice notes.
+	     applinks/webcredentials and applesignin are dropped: they are tied to the
+	     App Store build's provisioning. -->
+	<key>com.apple.security.cs.allow-jit</key>
+	<true/>
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
+</dict>
+</plist>

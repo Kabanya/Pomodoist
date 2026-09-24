@@ -30,6 +30,7 @@ void main() {
         '⌘5',
         '⌘6',
         '⌘7',
+        '⇧⌘2',
         '⌘8',
         '⌘9',
         '⇧⌘0',
@@ -52,6 +53,36 @@ void main() {
     expect(
       bindings.values.last.labelFor(TargetPlatform.windows),
       'Ctrl+Shift+1',
+    );
+  });
+
+  test('adding Calendar keeps a saved custom shortcut', () async {
+    final saved = defaultAppShortcutBindings(TargetPlatform.macOS);
+    saved[AppShortcutCommand.search] = saved[AppShortcutCommand.calendar]!;
+    SharedPreferences.setMockInitialValues({
+      keyboardShortcutsPreferenceKey: jsonEncode({
+        for (final entry in saved.entries)
+          if (entry.key != AppShortcutCommand.calendar)
+            entry.key.storageKey: entry.value.toJson(),
+      }),
+    });
+    final container = ProviderContainer(
+      overrides: [
+        shortcutTargetPlatformProvider.overrideWithValue(TargetPlatform.macOS),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(keyboardShortcutsLoadedProvider.future);
+    final loaded = container.read(keyboardShortcutsProvider);
+    expect(loaded[AppShortcutCommand.search], saved[AppShortcutCommand.search]);
+    expect(
+      loaded[AppShortcutCommand.calendar]!.labelFor(TargetPlatform.macOS),
+      '⇧⌘3',
+    );
+    expect(
+      loaded.values.map((binding) => binding.signature).toSet(),
+      hasLength(loaded.length),
     );
   });
 
@@ -430,6 +461,7 @@ void main() {
           '⌘5',
           '⌘6',
           '⌘7',
+          '⇧⌘2',
           '⌘8',
           '⌘9',
           '⇧⌘0',

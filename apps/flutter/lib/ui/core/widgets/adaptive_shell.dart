@@ -368,6 +368,8 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
         _goFromShortcut('/inbox');
       case AppShortcutCommand.priorityMatrix:
         _goFromShortcut('/priority-matrix');
+      case AppShortcutCommand.calendar:
+        _goFromShortcut('/calendar');
       case AppShortcutCommand.timeline:
         _goFromShortcut('/timeline');
       case AppShortcutCommand.kanban:
@@ -1030,6 +1032,7 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
                         destinationTile(path),
                       groupLabel(l10n.sidebarViews),
                       for (final path in [
+                        '/calendar',
                         '/timeline',
                         '/kanban',
                         '/priority-matrix',
@@ -1587,6 +1590,12 @@ List<_Destination> _desktopDestinations(BuildContext context) {
       '/priority-matrix',
       LucideIcons.grid2x2,
       LucideIcons.grid2x2,
+    ),
+    _Destination(
+      l10n.navCalendar,
+      '/calendar',
+      LucideIcons.calendarRange,
+      LucideIcons.calendarRange,
     ),
     _Destination(
       l10n.navTimeline,

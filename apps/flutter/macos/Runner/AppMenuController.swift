@@ -59,7 +59,7 @@ final class AppMenuController: NSObject {
     for group in [
       ["browse", "search"],
       ["today", "upcoming", "focus", "inbox"],
-      ["priorityMatrix", "timeline", "kanban", "reports"],
+      ["priorityMatrix", "calendar", "timeline", "kanban", "reports"],
     ] {
       let items = group.compactMap { name in
         commands[name].map { menuItem(for: $0, name: name) }

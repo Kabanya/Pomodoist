@@ -8,6 +8,7 @@ enum AppShortcutCommand {
   focus,
   inbox,
   priorityMatrix,
+  calendar,
   timeline,
   kanban,
   reports,

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Entitlements for the focus widget inside the direct-download build.
+
+	     The App Store widget (PomodoistFocusWidget.entitlements) declares
+	     com.apple.security.application-groups, which only a Mac App Store
+	     provisioning profile can grant. A directly downloaded build has no
+	     profile, so the entitlement is absent here and the extension builds
+	     ad-hoc.
+
+	     Without the app group the widget cannot read the shared data the app
+	     writes, so it does not function in this distribution and the app does
+	     not offer it. It is still built because the Runner target links it
+	     unconditionally, and pbxproj cannot make a dependency
+	     configuration-dependent.
+
+	     com.apple.security.app-sandbox stays off to match the host app: an
+	     extension inherits its container from the host, and a sandboxed
+	     extension inside an unsandboxed app cannot share the app's data. -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+</dict>
+</plist>

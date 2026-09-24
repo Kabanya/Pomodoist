@@ -609,6 +609,107 @@ class AppLocalizationsJa extends AppLocalizations {
   String get navPriorityMatrix => '優先度マトリクス';
 
   @override
+  String get navCalendar => 'カレンダー';
+
+  @override
+  String get calendarSubtitle => '一日を計画して、暮らしの余白も残しましょう。';
+
+  @override
+  String get calendarDay => '日';
+
+  @override
+  String get calendarWeek => '週';
+
+  @override
+  String get calendarMonth => '月';
+
+  @override
+  String get calendarRoutine => 'ルーティン';
+
+  @override
+  String get calendarOverview => '一日の概要';
+
+  @override
+  String get calendarOpenMonth => '月を開く';
+
+  @override
+  String get calendarUnscheduled => '予定なし';
+
+  @override
+  String get calendarAllProjects => 'すべてのプロジェクト';
+
+  @override
+  String get calendarRoutineDefault => 'いつもの一日';
+
+  @override
+  String get calendarRoutineDescription =>
+      'タスクを開始時刻ごとにまとめます。時間帯を自分の一日に合わせて調整してください。';
+
+  @override
+  String get calendarEditRoutine => '時間帯を設定';
+
+  @override
+  String get calendarRoutineTitle => '毎日のルーティン';
+
+  @override
+  String get calendarRoutineName => 'ルーティン名';
+
+  @override
+  String get calendarPeriodName => '時間帯の名前';
+
+  @override
+  String get calendarAddPeriod => '時間帯を追加';
+
+  @override
+  String get calendarRemovePeriod => '時間帯を削除';
+
+  @override
+  String get calendarPeriodStart => '開始';
+
+  @override
+  String get calendarPeriodEnd => '終了';
+
+  @override
+  String get calendarRoutineInvalid =>
+      'ルーティンと時間帯に名前を付けてください。終了時刻は開始時刻より後にし、時間帯が重ならないようにしてください。';
+
+  @override
+  String get calendarOutsideRoutine => 'ルーティンの時間帯外';
+
+  @override
+  String get calendarFreeTime => '空き時間';
+
+  @override
+  String get calendarMorning => '朝';
+
+  @override
+  String get calendarAfternoon => '午後';
+
+  @override
+  String get calendarEvening => '夜';
+
+  @override
+  String get calendarNewPeriod => '新しい時間帯';
+
+  @override
+  String get calendarResize => 'タスクの所要時間を変更';
+
+  @override
+  String get calendarPreviousPeriod => '前の時間帯';
+
+  @override
+  String get calendarNextPeriod => '次の時間帯';
+
+  @override
+  String get calendarSaveFailed => 'カレンダー設定を保存できませんでした';
+
+  @override
+  String get calendarNoActiveFocus => '進行中の集中セッションはありません';
+
+  @override
+  String get calendarCurrentTask => '現在のタスク';
+
+  @override
   String get navTimeline => 'タイムライン';
 
   @override

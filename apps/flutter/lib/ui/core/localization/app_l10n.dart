@@ -21,6 +21,7 @@ String appShortcutLabel(AppLocalizations l10n, AppShortcutCommand command) =>
       AppShortcutCommand.focus => l10n.navFocus,
       AppShortcutCommand.inbox => l10n.navInbox,
       AppShortcutCommand.priorityMatrix => l10n.navPriorityMatrix,
+      AppShortcutCommand.calendar => l10n.navCalendar,
       AppShortcutCommand.timeline => l10n.navTimeline,
       AppShortcutCommand.kanban => l10n.navKanban,
       AppShortcutCommand.reports => l10n.navReports,

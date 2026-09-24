@@ -646,6 +646,107 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navPriorityMatrix => 'Priority Matrix';
 
   @override
+  String get navCalendar => 'Calendar';
+
+  @override
+  String get calendarSubtitle => 'Plan your day. Leave room for life.';
+
+  @override
+  String get calendarDay => 'Day';
+
+  @override
+  String get calendarWeek => 'Week';
+
+  @override
+  String get calendarMonth => 'Month';
+
+  @override
+  String get calendarRoutine => 'Routine';
+
+  @override
+  String get calendarOverview => 'Day overview';
+
+  @override
+  String get calendarOpenMonth => 'Open month';
+
+  @override
+  String get calendarUnscheduled => 'Unscheduled';
+
+  @override
+  String get calendarAllProjects => 'All projects';
+
+  @override
+  String get calendarRoutineDefault => 'My usual day';
+
+  @override
+  String get calendarRoutineDescription =>
+      'Tasks are grouped by start time. Customize periods to suit your day.';
+
+  @override
+  String get calendarEditRoutine => 'Configure periods';
+
+  @override
+  String get calendarRoutineTitle => 'Your daily routine';
+
+  @override
+  String get calendarRoutineName => 'Routine name';
+
+  @override
+  String get calendarPeriodName => 'Period name';
+
+  @override
+  String get calendarAddPeriod => 'Add period';
+
+  @override
+  String get calendarRemovePeriod => 'Remove period';
+
+  @override
+  String get calendarPeriodStart => 'From';
+
+  @override
+  String get calendarPeriodEnd => 'Until';
+
+  @override
+  String get calendarRoutineInvalid =>
+      'Name the routine and its periods. End times must follow start times, and periods cannot overlap.';
+
+  @override
+  String get calendarOutsideRoutine => 'Outside routine periods';
+
+  @override
+  String get calendarFreeTime => 'Free time';
+
+  @override
+  String get calendarMorning => 'Morning';
+
+  @override
+  String get calendarAfternoon => 'Afternoon';
+
+  @override
+  String get calendarEvening => 'Evening';
+
+  @override
+  String get calendarNewPeriod => 'New period';
+
+  @override
+  String get calendarResize => 'Resize task';
+
+  @override
+  String get calendarPreviousPeriod => 'Previous period';
+
+  @override
+  String get calendarNextPeriod => 'Next period';
+
+  @override
+  String get calendarSaveFailed => 'Could not save calendar settings';
+
+  @override
+  String get calendarNoActiveFocus => 'No active focus session';
+
+  @override
+  String get calendarCurrentTask => 'Current task';
+
+  @override
   String get navTimeline => 'Timeline';
 
   @override

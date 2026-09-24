@@ -197,6 +197,31 @@ drafts. Close and Escape restore focus; nested menus handle Escape first.
 Keep the close/back and overflow actions pinned at the top of task details,
 inside the safe area, with task content scrolling below them.
 
+### Calendar planning view
+
+Calendar is a separate planning destination before Timeline in Views. Its Day,
+Week, Month and Routine modes share the same task schedules, project filter and
+selected date. Use a vertical time grid, subtle project-color fills, compact
+cards and the existing task-detail panel. Month cells retain every scheduled
+task; changing only the date retains timed duration and recurrence. All-day and
+unscheduled drop areas are explicit conversions. Desktop cards drag immediately;
+touch cards drag after a long press. Read-only tasks remain visible without edit
+or drag affordances. Overlapping timed tasks receive separate lanes; intervals
+spanning midnight appear on each intersecting day.
+
+Day overview opens from one labeled button in every mode. With at least 1060 px
+of content width it uses a 300 px side column; narrower layouts use a dismissible
+modal with keyboard focus containment and safe-area clearance. The panel contains
+a locale-aware mini calendar and the existing live Focus session and linked task.
+It must never start a separate timer or silently replace an active session.
+
+Routine is an alternative calendar layout grouped by task start time, with
+localized default Morning, Afternoon and Evening periods. Users may name, add,
+remove and adjust periods; invalid or overlapping ranges cannot be saved. Tasks
+outside the configured periods remain visible. The routine and selected mode are
+local preferences; failed saves retain the editor draft. Reuse shared colors,
+fonts, localized time/date formatting and existing Focus/task actions.
+
 ### Compact task creation
 
 In the inline Quick Add bar, center the microphone and Add buttons vertically
@@ -551,8 +576,9 @@ values. Standalone login and registration retain their own layouts.
 ### First-run onboarding
 
 Use the compact slide-card direction from variant 02 in
-`variants/onboarding/index.html`: a brand row, a decorative illustration above
-the current setting, and a pinned footer with Back, four progress indicators,
+`variants/onboarding/index.html`: a minimal header with the step counter and
+Close, a decorative illustration above the current setting, and a pinned footer
+with Back, four progress indicators,
 and Continue / Later / Finish. The flow remains Language, Timer, Pro, Account.
 Center a dialog up to 540 px wide on larger windows; below 600 px, use the full
 safe area. Scroll the slide body independently so purchasing and account content
@@ -560,9 +586,11 @@ remain reachable in short windows. Stack progress above the actions on narrow
 layouts or with enlarged text.
 
 Show all supported languages as selectable tiles, with System using a full row.
-Show Bar and Circle as timer preview cards; the illustration follows the selected
-language and timer style. Reflow choices into one column when space or text scale
-requires it. Use existing localized strings, palette roles and bundled fonts.
+Show Bar and Circle as compact text choices with a selection indicator. Keep the
+timer preview only in the illustration above; it follows the selected style.
+The language illustration follows the selected language. Reflow choices into one
+column when space or text scale requires it. Use existing localized strings,
+palette roles and bundled fonts.
 Decorative previews are excluded from semantics and text scaling; setting labels
 retain text scaling, selection semantics and keyboard focus. Keep touch targets
 at least 48 px and prevent focus from reaching the underlying app.

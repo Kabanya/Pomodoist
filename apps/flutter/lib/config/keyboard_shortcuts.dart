@@ -210,6 +210,11 @@ Map<AppShortcutCommand, AppShortcutBinding> defaultAppShortcutBindings(
     AppShortcutCommand.focus: binding(PhysicalKeyboardKey.digit5, '5'),
     AppShortcutCommand.inbox: binding(PhysicalKeyboardKey.digit6, '6'),
     AppShortcutCommand.priorityMatrix: binding(PhysicalKeyboardKey.digit7, '7'),
+    AppShortcutCommand.calendar: binding(
+      PhysicalKeyboardKey.digit2,
+      '2',
+      shift: true,
+    ),
     AppShortcutCommand.timeline: binding(PhysicalKeyboardKey.digit8, '8'),
     AppShortcutCommand.kanban: binding(PhysicalKeyboardKey.digit9, '9'),
     AppShortcutCommand.reports: binding(
@@ -291,6 +296,7 @@ AppShortcutBinding _platformBinding(
   PhysicalKeyboardKey key,
   String label, {
   bool shift = false,
+  bool alt = false,
 }) {
   final apple = _isApplePlatform(platform);
   return AppShortcutBinding(
@@ -298,6 +304,7 @@ AppShortcutBinding _platformBinding(
     keyLabel: label,
     meta: apple,
     control: !apple,
+    alt: alt,
     shift: shift,
   );
 }
@@ -387,6 +394,26 @@ class KeyboardShortcutsController
       loaded[command] =
           AppShortcutBinding.tryFromJson(decodedMap[command.storageKey]) ??
           defaults[command]!;
+    }
+    if (!decodedMap.containsKey(AppShortcutCommand.calendar.storageKey)) {
+      final used = loaded.entries
+          .where((entry) => entry.key != AppShortcutCommand.calendar)
+          .map((entry) => entry.value.signature)
+          .toSet();
+      loaded[AppShortcutCommand.calendar] = [
+        for (final alt in [false, true])
+          for (final (key, label) in [
+            (PhysicalKeyboardKey.digit2, '2'),
+            (PhysicalKeyboardKey.digit3, '3'),
+            (PhysicalKeyboardKey.digit4, '4'),
+            (PhysicalKeyboardKey.digit5, '5'),
+            (PhysicalKeyboardKey.digit6, '6'),
+            (PhysicalKeyboardKey.digit7, '7'),
+            (PhysicalKeyboardKey.digit8, '8'),
+            (PhysicalKeyboardKey.digit9, '9'),
+          ])
+            _platformBinding(_platform, key, label, shift: true, alt: alt),
+      ].firstWhere((binding) => !used.contains(binding.signature));
     }
     if (loaded.values.map((value) => value.signature).toSet().length !=
         AppShortcutCommand.values.length) {

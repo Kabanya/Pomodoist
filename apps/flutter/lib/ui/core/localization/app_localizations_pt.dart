@@ -650,6 +650,108 @@ class AppLocalizationsPt extends AppLocalizations {
   String get navPriorityMatrix => 'Matriz de prioridades';
 
   @override
+  String get navCalendar => 'Calendário';
+
+  @override
+  String get calendarSubtitle => 'Planeie o seu dia. Deixe espaço para a vida.';
+
+  @override
+  String get calendarDay => 'Dia';
+
+  @override
+  String get calendarWeek => 'Semana';
+
+  @override
+  String get calendarMonth => 'Mês';
+
+  @override
+  String get calendarRoutine => 'Rotina';
+
+  @override
+  String get calendarOverview => 'Visão geral do dia';
+
+  @override
+  String get calendarOpenMonth => 'Abrir mês';
+
+  @override
+  String get calendarUnscheduled => 'Sem horário';
+
+  @override
+  String get calendarAllProjects => 'Todos os projetos';
+
+  @override
+  String get calendarRoutineDefault => 'O meu dia habitual';
+
+  @override
+  String get calendarRoutineDescription =>
+      'As tarefas são agrupadas pela hora de início. Ajuste os períodos ao seu dia.';
+
+  @override
+  String get calendarEditRoutine => 'Configurar períodos';
+
+  @override
+  String get calendarRoutineTitle => 'A sua rotina diária';
+
+  @override
+  String get calendarRoutineName => 'Nome da rotina';
+
+  @override
+  String get calendarPeriodName => 'Nome do período';
+
+  @override
+  String get calendarAddPeriod => 'Adicionar período';
+
+  @override
+  String get calendarRemovePeriod => 'Remover período';
+
+  @override
+  String get calendarPeriodStart => 'Das';
+
+  @override
+  String get calendarPeriodEnd => 'Até';
+
+  @override
+  String get calendarRoutineInvalid =>
+      'Dê nome à rotina e aos seus períodos. O fim deve ser posterior ao início e os períodos não se podem sobrepor.';
+
+  @override
+  String get calendarOutsideRoutine => 'Fora dos períodos da rotina';
+
+  @override
+  String get calendarFreeTime => 'Tempo livre';
+
+  @override
+  String get calendarMorning => 'Manhã';
+
+  @override
+  String get calendarAfternoon => 'Tarde';
+
+  @override
+  String get calendarEvening => 'Noite';
+
+  @override
+  String get calendarNewPeriod => 'Novo período';
+
+  @override
+  String get calendarResize => 'Alterar duração da tarefa';
+
+  @override
+  String get calendarPreviousPeriod => 'Período anterior';
+
+  @override
+  String get calendarNextPeriod => 'Período seguinte';
+
+  @override
+  String get calendarSaveFailed =>
+      'Não foi possível guardar as definições do calendário';
+
+  @override
+  String get calendarNoActiveFocus => 'Nenhuma sessão de foco ativa';
+
+  @override
+  String get calendarCurrentTask => 'Tarefa atual';
+
+  @override
   String get navTimeline => 'Linha do tempo';
 
   @override
@@ -3457,4 +3559,106 @@ class AppLocalizationsPt extends AppLocalizations {
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
 class AppLocalizationsPtBr extends AppLocalizationsPt {
   AppLocalizationsPtBr() : super('pt_BR');
+
+  @override
+  String get navCalendar => 'Calendário';
+
+  @override
+  String get calendarSubtitle => 'Planeje seu dia. Deixe espaço para a vida.';
+
+  @override
+  String get calendarDay => 'Dia';
+
+  @override
+  String get calendarWeek => 'Semana';
+
+  @override
+  String get calendarMonth => 'Mês';
+
+  @override
+  String get calendarRoutine => 'Rotina';
+
+  @override
+  String get calendarOverview => 'Visão geral do dia';
+
+  @override
+  String get calendarOpenMonth => 'Abrir mês';
+
+  @override
+  String get calendarUnscheduled => 'Sem horário';
+
+  @override
+  String get calendarAllProjects => 'Todos os projetos';
+
+  @override
+  String get calendarRoutineDefault => 'Meu dia habitual';
+
+  @override
+  String get calendarRoutineDescription =>
+      'As tarefas são agrupadas pelo horário de início. Ajuste os períodos ao seu dia.';
+
+  @override
+  String get calendarEditRoutine => 'Configurar períodos';
+
+  @override
+  String get calendarRoutineTitle => 'Sua rotina diária';
+
+  @override
+  String get calendarRoutineName => 'Nome da rotina';
+
+  @override
+  String get calendarPeriodName => 'Nome do período';
+
+  @override
+  String get calendarAddPeriod => 'Adicionar período';
+
+  @override
+  String get calendarRemovePeriod => 'Remover período';
+
+  @override
+  String get calendarPeriodStart => 'Das';
+
+  @override
+  String get calendarPeriodEnd => 'Até';
+
+  @override
+  String get calendarRoutineInvalid =>
+      'Dê nome à rotina e aos períodos. O fim deve ser posterior ao início e os períodos não podem se sobrepor.';
+
+  @override
+  String get calendarOutsideRoutine => 'Fora dos períodos da rotina';
+
+  @override
+  String get calendarFreeTime => 'Tempo livre';
+
+  @override
+  String get calendarMorning => 'Manhã';
+
+  @override
+  String get calendarAfternoon => 'Tarde';
+
+  @override
+  String get calendarEvening => 'Noite';
+
+  @override
+  String get calendarNewPeriod => 'Novo período';
+
+  @override
+  String get calendarResize => 'Alterar duração da tarefa';
+
+  @override
+  String get calendarPreviousPeriod => 'Período anterior';
+
+  @override
+  String get calendarNextPeriod => 'Próximo período';
+
+  @override
+  String get calendarSaveFailed =>
+      'Não foi possível salvar as configurações do calendário';
+
+  @override
+  String get calendarNoActiveFocus => 'Nenhuma sessão de foco ativa';
+
+  @override
+  String get calendarCurrentTask => 'Tarefa atual';
 }

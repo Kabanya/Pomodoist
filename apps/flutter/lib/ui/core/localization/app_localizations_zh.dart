@@ -591,6 +591,105 @@ class AppLocalizationsZh extends AppLocalizations {
   String get navPriorityMatrix => '优先级矩阵';
 
   @override
+  String get navCalendar => '日历';
+
+  @override
+  String get calendarSubtitle => '规划一天，也为生活留出空间。';
+
+  @override
+  String get calendarDay => '日';
+
+  @override
+  String get calendarWeek => '周';
+
+  @override
+  String get calendarMonth => '月';
+
+  @override
+  String get calendarRoutine => '日程';
+
+  @override
+  String get calendarOverview => '当日概览';
+
+  @override
+  String get calendarOpenMonth => '打开月视图';
+
+  @override
+  String get calendarUnscheduled => '未安排时间';
+
+  @override
+  String get calendarAllProjects => '所有项目';
+
+  @override
+  String get calendarRoutineDefault => '我平常的一天';
+
+  @override
+  String get calendarRoutineDescription => '任务按开始时间分组。请根据自己的日程调整时间段。';
+
+  @override
+  String get calendarEditRoutine => '设置时间段';
+
+  @override
+  String get calendarRoutineTitle => '你的每日安排';
+
+  @override
+  String get calendarRoutineName => '日程名称';
+
+  @override
+  String get calendarPeriodName => '时间段名称';
+
+  @override
+  String get calendarAddPeriod => '添加时间段';
+
+  @override
+  String get calendarRemovePeriod => '删除时间段';
+
+  @override
+  String get calendarPeriodStart => '从';
+
+  @override
+  String get calendarPeriodEnd => '至';
+
+  @override
+  String get calendarRoutineInvalid => '请为日程和时间段命名。结束时间必须晚于开始时间，时间段不能重叠。';
+
+  @override
+  String get calendarOutsideRoutine => '日程时间段之外';
+
+  @override
+  String get calendarFreeTime => '空闲时间';
+
+  @override
+  String get calendarMorning => '早晨';
+
+  @override
+  String get calendarAfternoon => '下午';
+
+  @override
+  String get calendarEvening => '晚上';
+
+  @override
+  String get calendarNewPeriod => '新时间段';
+
+  @override
+  String get calendarResize => '调整任务时长';
+
+  @override
+  String get calendarPreviousPeriod => '上一时间段';
+
+  @override
+  String get calendarNextPeriod => '下一时间段';
+
+  @override
+  String get calendarSaveFailed => '无法保存日历设置';
+
+  @override
+  String get calendarNoActiveFocus => '没有进行中的专注会话';
+
+  @override
+  String get calendarCurrentTask => '当前任务';
+
+  @override
   String get navTimeline => '时间线';
 
   @override

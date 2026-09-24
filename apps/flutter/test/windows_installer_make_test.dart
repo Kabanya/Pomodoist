@@ -186,6 +186,37 @@ void main() {
     expect(result.stdout.toString(), contains('build macos --profile'));
   });
 
+  test('macos-provision-staging is separate from normal profile builds', () {
+    final arguments = [
+      '--no-print-directory',
+      '--dry-run',
+      'FLUTTER=flutter-under-test',
+      'STAGING_CONFIG=pubspec.yaml',
+      'POMODOIST_RELEASE=0123456789abcdef0123456789abcdef01234567',
+    ];
+    final provision = Process.runSync(_makeExecutable(), [
+      ...arguments,
+      'macos-provision-staging',
+    ], workingDirectory: _repoRoot);
+    final profile = Process.runSync(_makeExecutable(), [
+      ...arguments,
+      'macos-profile-staging',
+    ], workingDirectory: _repoRoot);
+
+    expect(provision.exitCode, 0, reason: provision.stderr.toString());
+    expect(profile.exitCode, 0, reason: profile.stderr.toString());
+    final provisionCommands = provision.stdout.toString();
+    final profileCommands = profile.stdout.toString();
+    expect(provisionCommands, contains('--config-only'));
+    expect(provisionCommands, contains('xcodebuild -workspace'));
+    expect(provisionCommands, contains('-scheme "Staging"'));
+    expect(provisionCommands, contains('-configuration "Profile-Staging"'));
+    expect(provisionCommands, contains('-allowProvisioningUpdates'));
+    expect(profileCommands, contains('build macos --profile'));
+    expect(profileCommands, isNot(contains('--config-only')));
+    expect(profileCommands, isNot(contains('-allowProvisioningUpdates')));
+  });
+
   test(
     'Android build isolates Gradle state and uses the guarded billing channel',
     () {

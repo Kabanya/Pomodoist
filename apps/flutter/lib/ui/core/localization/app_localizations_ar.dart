@@ -641,6 +641,107 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navPriorityMatrix => 'مصفوفة الأولويات';
 
   @override
+  String get navCalendar => 'التقويم';
+
+  @override
+  String get calendarSubtitle => 'خطط ليومك واترك مساحة للحياة.';
+
+  @override
+  String get calendarDay => 'يوم';
+
+  @override
+  String get calendarWeek => 'أسبوع';
+
+  @override
+  String get calendarMonth => 'شهر';
+
+  @override
+  String get calendarRoutine => 'الروتين';
+
+  @override
+  String get calendarOverview => 'نظرة عامة على اليوم';
+
+  @override
+  String get calendarOpenMonth => 'فتح الشهر';
+
+  @override
+  String get calendarUnscheduled => 'غير مجدولة';
+
+  @override
+  String get calendarAllProjects => 'جميع المشاريع';
+
+  @override
+  String get calendarRoutineDefault => 'يومي المعتاد';
+
+  @override
+  String get calendarRoutineDescription =>
+      'تُجمَّع المهام حسب وقت البدء. خصص الفترات بما يناسب يومك.';
+
+  @override
+  String get calendarEditRoutine => 'ضبط الفترات';
+
+  @override
+  String get calendarRoutineTitle => 'روتينك اليومي';
+
+  @override
+  String get calendarRoutineName => 'اسم الروتين';
+
+  @override
+  String get calendarPeriodName => 'اسم الفترة';
+
+  @override
+  String get calendarAddPeriod => 'إضافة فترة';
+
+  @override
+  String get calendarRemovePeriod => 'إزالة الفترة';
+
+  @override
+  String get calendarPeriodStart => 'من';
+
+  @override
+  String get calendarPeriodEnd => 'حتى';
+
+  @override
+  String get calendarRoutineInvalid =>
+      'سمِّ الروتين وفتراته. يجب أن يكون وقت الانتهاء بعد وقت البدء، وألا تتداخل الفترات.';
+
+  @override
+  String get calendarOutsideRoutine => 'خارج فترات الروتين';
+
+  @override
+  String get calendarFreeTime => 'وقت فراغ';
+
+  @override
+  String get calendarMorning => 'الصباح';
+
+  @override
+  String get calendarAfternoon => 'بعد الظهر';
+
+  @override
+  String get calendarEvening => 'المساء';
+
+  @override
+  String get calendarNewPeriod => 'فترة جديدة';
+
+  @override
+  String get calendarResize => 'تغيير مدة المهمة';
+
+  @override
+  String get calendarPreviousPeriod => 'الفترة السابقة';
+
+  @override
+  String get calendarNextPeriod => 'الفترة التالية';
+
+  @override
+  String get calendarSaveFailed => 'تعذر حفظ إعدادات التقويم';
+
+  @override
+  String get calendarNoActiveFocus => 'لا توجد جلسة تركيز نشطة';
+
+  @override
+  String get calendarCurrentTask => 'المهمة الحالية';
+
+  @override
   String get navTimeline => 'المخطط الزمني';
 
   @override

@@ -193,7 +193,9 @@ COMPANION_RELEASE_CONFIG ?= $(TESTFLIGHT_CONFIG)
 .PHONY: macos macos-debug macos-run macos-profile macos-release macos-reset
 .PHONY: macos-debug-development macos-debug-staging macos-debug-production
 .PHONY: macos-profile-development macos-profile-staging macos-profile-production
+.PHONY: macos-provision-staging
 .PHONY: macos-release-development macos-release-staging macos-release-production
+.PHONY: macos-dmg-production macos-dmg-staging macos-dmg-development
 .PHONY: ios-debug ios-profile ipad-debug ipad-profile watch-debug watch-profile ios-flavor-settings testflight-preflight testflight-auth testflight-ios testflight-macos testflight
 .PHONY: deploy-staging deploy-production deploy-all deploy-telegram-staging deploy-telegram-production
 .PHONY: help devices clean
@@ -261,6 +263,7 @@ help:
 	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug-staging' "$${reset}" 'Debug app (staging)'; \
 	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug-production' "$${reset}" 'Debug app (production)'; \
 	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-run' "$${reset}" 'Debug app with hot reload'; \
+	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-provision-staging' "$${reset}" 'Get staging signing profiles'; \
 	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile-staging' "$${reset}" 'Profile app (staging)'; \
 	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile-production' "$${reset}" 'Profile app (production)'; \
 	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release-staging' "$${reset}" 'Release app (local, staging)'; \
@@ -433,6 +436,19 @@ windows-release:
 windows-installer: windows-release
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tool/windows/installer/build.ps1 -Flavor "$(WINDOWS_RELEASE_FLAVOR)" -BuildDirectory "$(WINDOWS_RELEASE_DIR)"
 
+# Direct-download macOS distribution: a universal .app in a .dmg with a SHA-256
+# sidecar, billed through Stripe and not sandboxed. These are the counterpart of
+# windows-installer and are unrelated to the macos-* targets below, which build
+# App Store flavors with StoreKit billing.
+macos-dmg-production:
+	./tool/macos/build.sh --flavor production
+
+macos-dmg-staging:
+	./tool/macos/build.sh --flavor staging
+
+macos-dmg-development:
+	./tool/macos/build.sh --flavor development
+
 macos-debug macos-run macos-profile macos-debug-development macos-debug-staging macos-debug-production macos-profile-development macos-profile-staging macos-profile-production: POMODOIST_BILLING_CHANNEL = storekit
 macos-debug macos-run macos-profile macos-debug-development macos-debug-staging macos-debug-production macos-profile-development macos-profile-staging macos-profile-production macos-release-development macos-release-staging macos-release-production: flutter-build-link
 
@@ -493,7 +509,7 @@ define macos_flavor_target
 		--dart-define-from-file="$(call repo_path,$(MACOS_$(2)_CONFIG))" \
 		--dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" \
 		--dart-define=POMODOIST_BILLING_CHANNEL=storekit \
-		$(MACOS_LOCAL_SIGNING_FLAGS) 2>&1 \
+		$(3) $(MACOS_LOCAL_SIGNING_FLAGS) 2>&1 \
 		| awk -f "$(REPO_ROOT)/tool/xcode-warnings.awk"
 endef
 
@@ -521,6 +537,22 @@ macos-profile-staging: MACOS_PROFILE_CONFIG = $(MACOS_STAGING_CONFIG)
 macos-profile-staging: MACOS_PROFILE_TARGET = $(MACOS_STAGING_TARGET)
 macos-profile-staging:
 	$(call macos_flavor_target,profile,PROFILE)
+
+# One signed build lets Xcode create/cache missing app and widget profiles.
+macos-provision-staging: MACOS_PROFILE_CONFIG = $(MACOS_STAGING_CONFIG)
+macos-provision-staging: MACOS_PROFILE_TARGET = $(MACOS_STAGING_TARGET)
+macos-provision-staging: flutter-build-link
+macos-provision-staging:
+	$(call macos_flavor_target,profile,PROFILE,--config-only)
+	xcodebuild -workspace "$(FLUTTER_ROOT)/macos/Runner.xcworkspace" \
+		-scheme "Staging" -configuration "Profile-Staging" \
+		-derivedDataPath "$(FLUTTER_ROOT)/build/macos" \
+		-destination 'platform=macOS' \
+		-quiet -hideShellScriptEnvironment \
+		-allowProvisioningUpdates -allowProvisioningDeviceRegistration \
+		OBJROOT="$(FLUTTER_ROOT)/build/macos/Build/Intermediates.noindex" \
+		SYMROOT="$(FLUTTER_ROOT)/build/macos/Build/Products" \
+		COMPILER_INDEX_STORE_ENABLE=NO build
 
 macos-profile-production: MACOS_PROFILE_CONFIG = $(MACOS_PRODUCTION_CONFIG)
 macos-profile-production: MACOS_PROFILE_TARGET = $(MACOS_PRODUCTION_TARGET)

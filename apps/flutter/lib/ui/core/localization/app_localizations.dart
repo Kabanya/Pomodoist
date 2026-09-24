@@ -1231,6 +1231,204 @@ abstract class AppLocalizations {
   /// **'Priority Matrix'**
   String get navPriorityMatrix;
 
+  /// No description provided for @navCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get navCalendar;
+
+  /// No description provided for @calendarSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan your day. Leave room for life.'**
+  String get calendarSubtitle;
+
+  /// No description provided for @calendarDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get calendarDay;
+
+  /// No description provided for @calendarWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get calendarWeek;
+
+  /// No description provided for @calendarMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get calendarMonth;
+
+  /// No description provided for @calendarRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine'**
+  String get calendarRoutine;
+
+  /// No description provided for @calendarOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Day overview'**
+  String get calendarOverview;
+
+  /// No description provided for @calendarOpenMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Open month'**
+  String get calendarOpenMonth;
+
+  /// No description provided for @calendarUnscheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Unscheduled'**
+  String get calendarUnscheduled;
+
+  /// No description provided for @calendarAllProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'All projects'**
+  String get calendarAllProjects;
+
+  /// No description provided for @calendarRoutineDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'My usual day'**
+  String get calendarRoutineDefault;
+
+  /// No description provided for @calendarRoutineDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks are grouped by start time. Customize periods to suit your day.'**
+  String get calendarRoutineDescription;
+
+  /// No description provided for @calendarEditRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure periods'**
+  String get calendarEditRoutine;
+
+  /// No description provided for @calendarRoutineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your daily routine'**
+  String get calendarRoutineTitle;
+
+  /// No description provided for @calendarRoutineName.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine name'**
+  String get calendarRoutineName;
+
+  /// No description provided for @calendarPeriodName.
+  ///
+  /// In en, this message translates to:
+  /// **'Period name'**
+  String get calendarPeriodName;
+
+  /// No description provided for @calendarAddPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Add period'**
+  String get calendarAddPeriod;
+
+  /// No description provided for @calendarRemovePeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove period'**
+  String get calendarRemovePeriod;
+
+  /// No description provided for @calendarPeriodStart.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get calendarPeriodStart;
+
+  /// No description provided for @calendarPeriodEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Until'**
+  String get calendarPeriodEnd;
+
+  /// No description provided for @calendarRoutineInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Name the routine and its periods. End times must follow start times, and periods cannot overlap.'**
+  String get calendarRoutineInvalid;
+
+  /// No description provided for @calendarOutsideRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'Outside routine periods'**
+  String get calendarOutsideRoutine;
+
+  /// No description provided for @calendarFreeTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Free time'**
+  String get calendarFreeTime;
+
+  /// No description provided for @calendarMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning'**
+  String get calendarMorning;
+
+  /// No description provided for @calendarAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Afternoon'**
+  String get calendarAfternoon;
+
+  /// No description provided for @calendarEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Evening'**
+  String get calendarEvening;
+
+  /// No description provided for @calendarNewPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'New period'**
+  String get calendarNewPeriod;
+
+  /// No description provided for @calendarResize.
+  ///
+  /// In en, this message translates to:
+  /// **'Resize task'**
+  String get calendarResize;
+
+  /// No description provided for @calendarPreviousPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous period'**
+  String get calendarPreviousPeriod;
+
+  /// No description provided for @calendarNextPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Next period'**
+  String get calendarNextPeriod;
+
+  /// No description provided for @calendarSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save calendar settings'**
+  String get calendarSaveFailed;
+
+  /// No description provided for @calendarNoActiveFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'No active focus session'**
+  String get calendarNoActiveFocus;
+
+  /// No description provided for @calendarCurrentTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Current task'**
+  String get calendarCurrentTask;
+
   /// No description provided for @navTimeline.
   ///
   /// In en, this message translates to:

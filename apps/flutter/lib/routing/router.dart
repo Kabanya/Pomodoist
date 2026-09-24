@@ -20,6 +20,7 @@ import 'package:pomodoist/ui/settings/widgets/telegram_account_link_screen.dart'
 import 'package:pomodoist/ui/settings/widgets/captcha_challenge_screen.dart';
 import 'package:pomodoist/ui/settings/widgets/oauth_consent_screen.dart';
 import 'package:pomodoist/ui/tasks/widgets/browse_screen.dart';
+import 'package:pomodoist/ui/tasks/widgets/calendar_screen.dart';
 import 'package:pomodoist/ui/tasks/widgets/inbox_screen.dart';
 import 'package:pomodoist/ui/tasks/widgets/kanban_screen.dart';
 import 'package:pomodoist/ui/tasks/widgets/priority_matrix_screen.dart';
@@ -201,6 +202,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/priority-matrix',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: PriorityMatrixScreen()),
+          ),
+          GoRoute(
+            path: '/calendar',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: CalendarScreen(
+                selectedDate: _parseRouteDate(
+                  state.uri.queryParameters['date'],
+                ),
+              ),
+            ),
           ),
           GoRoute(
             path: '/timeline',
