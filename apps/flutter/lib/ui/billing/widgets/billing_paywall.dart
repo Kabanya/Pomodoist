@@ -537,9 +537,7 @@ class _BillingPlanTile extends ConsumerWidget {
         ? colors.accent.withValues(alpha: 0.45)
         : colors.border;
     final awaitingStripeCatalog =
-        channel == BillingChannel.stripe &&
-        appFlavor != AppFlavor.production &&
-        product == null;
+        channel == BillingChannel.stripe && product == null;
     final regularPrice = awaitingStripeCatalog
         ? '—'
         : _regularPrice(l10n, plan, product, channel);
@@ -571,7 +569,9 @@ class _BillingPlanTile extends ConsumerWidget {
               ? null
               : channel == BillingChannel.storeKit
               ? _introductoryPrice(context, l10n, plan, product)
-              : plan.introductoryFallbackPrice
+              : appFlavor == AppFlavor.production
+              ? plan.introductoryFallbackPrice
+              : null
         : null;
     final displayedPrice = offer != null && product != null
         ? billingOfferPrice(l10n, product, offer)

@@ -76,11 +76,11 @@ void main() {
     );
     expect(
       billingPlanForProduct(pomodoistMonthlyProductId)?.fallbackPrice,
-      r'$5.99/month',
+      r'$4.99/month',
     );
     expect(
       billingPlanForProduct(pomodoistAnnualProductId)?.fallbackPrice,
-      r'$39/year',
+      r'$29.99/year',
     );
     expect(
       billingPlanForProduct(pomodoistLifetimeProductId)?.kind,
@@ -121,8 +121,8 @@ void main() {
       'enabled': true,
       'introEligible': false,
       'prices': {
-        pomodoistMonthlyProductId: r'$5.99',
-        pomodoistAnnualProductId: r'$39',
+        pomodoistMonthlyProductId: r'$4.99',
+        pomodoistAnnualProductId: r'$29.99',
         pomodoistLifetimeProductId: r'$99.99',
         pomodoistLifetimeLaunchProductId: r'$89.99',
       },
@@ -1244,9 +1244,7 @@ void main() {
     );
   });
 
-  testWidgets(r'24-hour offer shows subscription promo prices everywhere', (
-    tester,
-  ) async {
+  testWidgets('Stripe prices wait for catalog', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -1275,23 +1273,23 @@ void main() {
       const ValueKey('billing-plan-pomodoist.pro.annual'),
     );
     expect(
-      find.descendant(of: annual, matching: find.text(r'$19/year')),
+      find.descendant(of: annual, matching: find.text('—')),
       findsOneWidget,
     );
     expect(
-      find.descendant(of: annual, matching: find.text(r'$39/year')),
-      findsOneWidget,
+      find.descendant(of: annual, matching: find.text(r'$19/year')),
+      findsNothing,
     );
     final monthly = find.byKey(
       const ValueKey('billing-plan-pomodoist.pro.monthly'),
     );
     expect(
-      find.descendant(of: monthly, matching: find.text(r'$2.99/month')),
+      find.descendant(of: monthly, matching: find.text('—')),
       findsOneWidget,
     );
     expect(
-      find.descendant(of: monthly, matching: find.text(r'$5.99/month')),
-      findsOneWidget,
+      find.descendant(of: monthly, matching: find.text(r'$2.99/month')),
+      findsNothing,
     );
   });
 
@@ -2051,7 +2049,7 @@ void main() {
       TextDecoration.lineThrough,
     );
     expect(
-      find.descendant(of: annualPlan, matching: find.text(r'$39/year')),
+      find.descendant(of: annualPlan, matching: find.text(r'$29.99/year')),
       findsOneWidget,
     );
     expect(
@@ -2059,7 +2057,10 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.descendant(of: annualPlan, matching: find.text(r'Then $39/year.')),
+      find.descendant(
+        of: annualPlan,
+        matching: find.text(r'Then $29.99/year.'),
+      ),
       findsOneWidget,
     );
     expect(find.textContaining('trial'), findsNothing);

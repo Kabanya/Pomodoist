@@ -100,11 +100,11 @@ void main() {
     );
     expect(
       billingPlanForProduct(pomodoistMonthlyProductId)!.fallbackPrice,
-      r'$5.99/month',
+      r'$4.99/month',
     );
     expect(
       billingPlanForProduct(pomodoistAnnualProductId)!.fallbackPrice,
-      r'$39/year',
+      r'$29.99/year',
     );
   });
 

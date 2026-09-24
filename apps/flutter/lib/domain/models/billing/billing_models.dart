@@ -208,14 +208,14 @@ const billingPlans = [
   BillingPlan(
     productId: pomodoistAnnualProductId,
     kind: BillingPlanKind.subscription,
-    fallbackPrice: r'$39/year',
+    fallbackPrice: r'$29.99/year',
     introductoryFallbackPrice: r'$19/year',
     highlighted: true,
   ),
   BillingPlan(
     productId: pomodoistMonthlyProductId,
     kind: BillingPlanKind.subscription,
-    fallbackPrice: r'$5.99/month',
+    fallbackPrice: r'$4.99/month',
     introductoryFallbackPrice: r'$2.99/month',
     highlighted: false,
   ),

@@ -249,7 +249,11 @@ currency conversion. Verify the final presented currency/total during acceptance
 
 The shared Pro paywall reuses existing localized trial and return-offer copy.
 There are no new notifications or campaigns. Before sign-in/catalog verification,
-the development paywall does not advertise the legacy introductory price.
+the paywall does not advertise an unverified Stripe price. Shared fallback
+subscription prices are USD 4.99/month and USD 29.99/year. The older paid
+introduction and USD 5.99/39 catalog remain only in the disabled-offer legacy
+path for existing production configuration; development never displays that
+paid introduction.
 
 ### Prepared test catalog
 
@@ -265,10 +269,9 @@ untouched, so this does not change existing subscribers.
 | `STRIPE_COUPON_ANNUAL_RETURN` | `pomodoist_develop_return_2026_year` | USD 15 off, once |
 
 Identifiers and flags are also saved in the ignored local file
-`server/.env.stripe-offers.develop` (mode 0600, no credentials). It is an explicit
-configuration overlay, not automatically loaded. It keeps
-`STRIPE_CHECKOUT_ENABLED=false` until the development backend is configured.
-Do not copy the overlay to staging or production.
+`server/.env.stripe-offers.develop` (mode 0600; it may contain credentials).
+The file is not loaded automatically. Apply test values only to the development
+backend, and never commit or copy the file into production.
 
 ### Development setup and acceptance
 
