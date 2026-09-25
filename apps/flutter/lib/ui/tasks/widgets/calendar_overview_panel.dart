@@ -115,8 +115,9 @@ class _CalendarOverviewPanelState extends ConsumerState<CalendarOverviewPanel> {
               gridMainAxisSpacing: 4,
               headerPadding: const EdgeInsets.only(bottom: 8),
               onChanged: (date) {
-                if (date != null)
+                if (date != null) {
                   widget.onDateSelected(DateUtils.dateOnly(date));
+                }
               },
             ),
           ),

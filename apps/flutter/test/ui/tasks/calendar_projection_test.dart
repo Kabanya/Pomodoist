@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pomodoist/domain/models/tasks/calendar_models.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/view_models/calendar_view_model.dart';
 

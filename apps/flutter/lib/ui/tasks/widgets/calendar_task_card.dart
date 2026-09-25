@@ -152,8 +152,9 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
             },
           );
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         _calendarError(context, context.l10n.taskActionFailedCount(1));
+      }
     } finally {
       if (mounted) setState(() => _focusing = false);
     }
@@ -290,8 +291,9 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
           task.isDeleted ||
           task.isCompleted ||
           (selection?.pending ?? false) ||
-          actions.pending.contains(task.id))
+          actions.pending.contains(task.id)) {
         return;
+      }
       if (selecting) {
         selection?.toggle(task.id);
       } else {
@@ -390,8 +392,9 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                                   context,
                                 ).scale(textStyle.fontSize ?? 12) *
                                 (textStyle.height ?? 1.4);
-                            if (constraints.maxHeight < lineHeight)
+                            if (constraints.maxHeight < lineHeight) {
                               return const SizedBox.shrink();
+                            }
                             final menu =
                                 constraints.maxWidth >= 90 &&
                                 constraints.maxHeight >= 32;

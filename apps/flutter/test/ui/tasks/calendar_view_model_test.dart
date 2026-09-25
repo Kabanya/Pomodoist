@@ -6,7 +6,6 @@ import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/data/repositories/settings/preferences_repository.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
-import 'package:pomodoist/domain/models/tasks/calendar_models.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/view_models/calendar_view_model.dart';
 import 'package:pomodoist/utils/clock.dart';
@@ -71,7 +70,7 @@ class FakePreferences implements PreferencesRepository {
       return Result.error(StateError('read failure'), StackTrace.current);
     }
     return pendingRead?.future ??
-        Result.ok({if (stored != null) calendarSettingsKey: stored!});
+        Result.ok({calendarSettingsKey: ?stored});
   }
 
   @override
@@ -79,8 +78,9 @@ class FakePreferences implements PreferencesRepository {
     final value = values[calendarSettingsKey] as String;
     writes.add(value);
     if (writes.length == 1) await firstWriteGate?.future;
-    if (failWrite)
+    if (failWrite) {
       return Result.error(StateError('disk failure'), StackTrace.current);
+    }
     stored = value;
     return const Result.ok(null);
   }

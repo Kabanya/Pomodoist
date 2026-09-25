@@ -87,7 +87,7 @@ class TaskSelectionViewModel extends Notifier<TaskSelectionState> {
 
   void begin([String? id]) {
     state = _copy(
-      selectedIds: Set<String>.unmodifiable({if (id != null) id}),
+      selectedIds: Set<String>.unmodifiable({?id}),
       active: true,
     );
   }

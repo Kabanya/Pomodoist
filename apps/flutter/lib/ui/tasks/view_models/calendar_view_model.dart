@@ -47,8 +47,9 @@ final calendarTaskFocusActionsProvider = Provider.autoDispose
           !presets.hasValue ||
           run.hasError ||
           interval.hasError ||
-          presets.hasError)
+          presets.hasError) {
         return const [];
+      }
       return calendarFocusActions(
         task,
         run: run.value,
@@ -265,8 +266,9 @@ class CalendarViewModel extends Notifier<CalendarState> {
             run: run,
             interval: interval,
             preset: presets.where((p) => p.id == run?.presetId).firstOrNull,
-          ).contains(action))
+          ).contains(action)) {
         return;
+      }
       final result = await switch (action) {
         CalendarFocusAction.pause => focus.pauseActiveInterval(),
         CalendarFocusAction.resume => focus.resumeActiveInterval(),
@@ -344,8 +346,9 @@ class CalendarViewModel extends Notifier<CalendarState> {
   Future<void> resizeTask(String taskId, DateTime end) async {
     final task = await _current(taskId);
     final schedule = task.schedule;
-    if (schedule == null || !schedule.isTimed)
+    if (schedule == null || !schedule.isTimed) {
       throw StateError('Task has no timed schedule');
+    }
     final next = TaskSchedule.timed(
       start: schedule.start!,
       end: end,
@@ -474,8 +477,9 @@ CalendarPresentation buildCalendarPresentation(
         final due = schedule.date!;
         if (due.year == date.year &&
             due.month == date.month &&
-            due.day == date.day)
+            due.day == date.day) {
           allDay.add(task);
+        }
         continue;
       }
       final taskStart = schedule.start!.toLocal();

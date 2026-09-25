@@ -241,7 +241,7 @@ class _CalendarRoutineEditorState extends State<_CalendarRoutineEditor> {
         onChanged: _saving
             ? null
             : (value) {
-                if (value != null)
+                if (value != null) {
                   setState(() {
                     if (start) {
                       draft.start = value;
@@ -249,6 +249,7 @@ class _CalendarRoutineEditorState extends State<_CalendarRoutineEditor> {
                       draft.end = value;
                     }
                   });
+                }
               },
       );
 }

@@ -14,7 +14,6 @@ import 'package:shadcn_ui/shadcn_ui.dart'
         ShadContextMenuController,
         ShadContextMenuItem;
 
-import 'package:pomodoist/domain/models/tasks/calendar_models.dart';
 import 'package:pomodoist/domain/models/tasks/project_colors.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
@@ -71,8 +70,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     try {
       await action();
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         _calendarError(context, context.l10n.taskActionFailedCount(1));
+      }
     } finally {
       if (mounted) setState(() => _pending.remove(id));
     }
@@ -354,8 +354,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                                       firstDate: DateTime(1900),
                                                       lastDate: DateTime(2200),
                                                     );
-                                                if (picked != null && mounted)
+                                                if (picked != null && mounted) {
                                                   _goToDate(picked);
+                                                }
                                               },
                                               child: ConstrainedBox(
                                                 constraints: BoxConstraints(
@@ -631,8 +632,9 @@ String _calendarPeriodLabel(
 ) {
   final locale = Localizations.localeOf(context).toString();
   if (mode == CalendarMode.day) return intl.DateFormat.MMMd(locale).format(day);
-  if (mode == CalendarMode.month)
+  if (mode == CalendarMode.month) {
     return MaterialLocalizations.of(context).formatMonthYear(day);
+  }
   return '${intl.DateFormat.MMMd(locale).format(days.first.date)} – ${intl.DateFormat.MMMMd(locale).format(days.last.date)}';
 }
 
