@@ -2,9 +2,6 @@ name: macOS DMG
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - 'v*.*.*'
 
 concurrency:
   group: desktop-release-${{ github.workflow }}-${{ github.ref }}
