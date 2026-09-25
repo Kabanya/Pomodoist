@@ -141,82 +141,125 @@ Deno.test("fresh eligibility errors and legacy open sessions never create checko
 
 Deno.test("full Stripe history distinguishes free trials, paid credits and consumed return campaign", async () => {
   const { loadStripeOffer } = await import("./stripe_offer_checkout.ts");
-  const subscriptions = [
-    {
-      id: "sub_trial",
-      status: "canceled",
-      trial_start: 1,
-      ended_at: 100,
-      livemode: false,
-      metadata: {},
-    },
-    {
-      id: "sub_return",
-      status: "canceled",
-      trial_start: null,
-      ended_at: 200,
-      livemode: false,
-      metadata: { return_campaign: "return_2026_v1" },
-    },
-  ];
-  const seen: string[] = [];
-  let fundedReturn = false;
-  const stripe = {
-    prices: {
-      retrieve: async (id: string) => ({
-        livemode: false,
-        active: true,
-        currency: "usd",
-        unit_amount: id === "monthly" ? 499 : 2999,
-        recurring: {
-          interval: id === "monthly" ? "month" : "year",
-          interval_count: 1,
-          usage_type: "licensed",
+  for (const livemode of [false, true]) {
+    const subscriptions = [
+      {
+        id: "sub_trial",
+        status: "canceled",
+        trial_start: 1,
+        ended_at: 100,
+        livemode,
+        metadata: {},
+      },
+      {
+        id: "sub_return",
+        status: "canceled",
+        trial_start: null,
+        ended_at: 200,
+        livemode,
+        metadata: { return_campaign: "return_2026_v1" },
+      },
+    ];
+    const seen: string[] = [];
+    let fundedReturn = false;
+    const stripe = {
+      prices: {
+        retrieve: async (id: string) => ({
+          livemode,
+          active: true,
+          currency: "usd",
+          unit_amount: id === "monthly" ? 499 : 2999,
+          recurring: {
+            interval: id === "monthly" ? "month" : "year",
+            interval_count: 1,
+            usage_type: "licensed",
+          },
+          product: "prod_test",
+        }),
+      },
+      coupons: {
+        retrieve: async (id: string) => ({
+          livemode,
+          valid: true,
+          currency: "usd",
+          amount_off: id === "monthly" ? 300 : 1500,
+          percent_off: null,
+          duration: id === "monthly" ? "repeating" : "once",
+          duration_in_months: id === "monthly" ? 3 : null,
+        }),
+      },
+      customers: { retrieve: async () => ({ id: "cus_test", livemode }) },
+      subscriptions: {
+        list: async function* () {
+          for (const subscription of subscriptions) yield subscription;
         },
-        product: "prod_test",
-      }),
-    },
-    coupons: {
-      retrieve: async (id: string) => ({
-        livemode: false,
-        valid: true,
-        currency: "usd",
-        amount_off: id === "monthly" ? 300 : 1500,
-        percent_off: null,
-        duration: id === "monthly" ? "repeating" : "once",
-        duration_in_months: id === "monthly" ? 3 : null,
-      }),
-    },
-    customers: { retrieve: async () => ({ id: "cus_test", livemode: false }) },
-    subscriptions: {
-      list: async function* () {
-        for (const subscription of subscriptions) yield subscription;
       },
-    },
-    invoices: {
-      list: async function* ({ subscription }: { subscription: string }) {
-        seen.push(subscription);
-        yield {
-          livemode: false,
-          total: fundedReturn && subscription === "sub_return" ? 199 : 0,
-          amount_paid: 0,
-        };
+      invoices: {
+        list: async function* ({ subscription }: { subscription: string }) {
+          seen.push(subscription);
+          yield {
+            livemode,
+            total: fundedReturn && subscription === "sub_return" ? 199 : 0,
+            amount_paid: 0,
+          };
+        },
       },
-    },
-  } as unknown as Stripe;
-  const context = {
-    stripeCustomerId: "cus_test",
-    profileCreatedAt: "2026-01-01",
-    hasActiveEntitlement: false,
-    hasLifetimePurchase: false,
-    firstSubscriptionPaidAt: null,
-  };
-  const ids = {
-    "pomodoist.pro.monthly": "monthly",
-    "pomodoist.pro.annual": "annual",
-  };
-  assertEquals(await loadStripeOffer(stripe, context, ids, ids), "return");
-  assertEquals(seen, ["sub_trial", "sub_return"]);
-  fundedReturn = true;
-  assertEquals(await loadStripeOffer(stripe, context, ids, ids), "standard");
+    } as unknown as Stripe;
+    const context = {
+      stripeCustomerId: "cus_test",
+      profileCreatedAt: "2026-01-01",
+      hasActiveEntitlement: false,
+      hasLifetimePurchase: false,
+      firstSubscriptionPaidAt: null,
+    };
+    const ids = {
+      "pomodoist.pro.monthly": "monthly",
+      "pomodoist.pro.annual": "annual",
+    };
+    assertEquals(
+      await loadStripeOffer(stripe, context, ids, ids, livemode),
+      "return",
+    );
+    assertEquals(seen, ["sub_trial", "sub_return"]);
+    fundedReturn = true;
+    assertEquals(
+      await loadStripeOffer(stripe, context, ids, ids, livemode),
+      "standard",
+    );
+  }
+});
+
+Deno.test("live Checkout rejects test sessions before reuse or creation", async () => {
+  for (const livemode of [false, true]) {
+    for (const existing of [false, true]) {
+      const session = {
+        url,
+        livemode,
+        status: "open",
+        metadata: { offer_reservation: reservation.id },
+      };
+      const stripe = {
+        checkout: {
+          sessions: {
+            list: async function* () {
+              if (existing) yield session;
+            },
+            create: async () => session,
+          },
+        },
+      } as unknown as Stripe;
+      const checkout = () =>
+        createReservedStripeCheckout(
+          stripe,
+          input,
+          async () => reservation,
+          async () => {},
+          async () => true,
+          100,
+          true,
+        );
+      if (livemode) assertEquals(await checkout(), { url });
+      else await assertRejects(checkout, Error, "mode mismatch");
+    }
+  }
 });

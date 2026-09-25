@@ -16,19 +16,18 @@ void main() {
     'launchOffer': {'eligible': false, 'endsAt': null},
   };
   test(
-    'only development transport opts in and sends the selected offer',
+    'all release clients negotiate offers and preserve legacy catalogs',
     () async {
-      for (final develop in [false, true]) {
+      for (final offers in [false, true]) {
         final account = _BillingAccount();
         final service = AccountBillingService(
           account: account,
-          stripeTestOffers: develop,
           locale: () => 'ru',
           onLinked: () {},
         );
         account.response = AccountFunctionResponse(
           status: 200,
-          data: develop
+          data: offers
               ? catalog('return')
               : {
                   ...catalog('return'),
@@ -36,8 +35,9 @@ void main() {
                   'subscriptionOffer': null,
                 },
         );
-        await service.loadStripeCatalog();
-        expect(account.requests.last['offerVersion'], develop ? 1 : null);
+        final result = await service.loadStripeCatalog();
+        expect(result.subscriptionOffer, offers ? 'return' : null);
+        expect(account.requests.last['offerVersion'], 1);
         account.response = const AccountFunctionResponse(
           status: 200,
           data: {'url': 'https://checkout.stripe.com/test'},
@@ -45,42 +45,14 @@ void main() {
         await service.createStripeCheckout(
           pomodoistMonthlyProductId,
           BillingCheckoutSurface.web,
-          develop ? 'return' : null,
+          offers ? 'return' : null,
         );
         expect(
           account.requests.last['selectedOffer'],
-          develop ? 'return' : null,
+          offers ? 'return' : null,
         );
-        expect(account.requests.last['offerVersion'], develop ? 1 : null);
+        expect(account.requests.last['offerVersion'], 1);
       }
-    },
-  );
-  test(
-    'production transport rejects a test offer instead of silently omitting it',
-    () async {
-      final account = _BillingAccount();
-      final service = AccountBillingService(
-        account: account,
-        locale: () => 'en',
-        onLinked: () {},
-      );
-      account.response = AccountFunctionResponse(
-        status: 200,
-        data: catalog('trial'),
-      );
-      await expectLater(
-        service.loadStripeCatalog(),
-        throwsA(isA<StripeBillingException>()),
-      );
-      await expectLater(
-        service.createStripeCheckout(
-          pomodoistAnnualProductId,
-          BillingCheckoutSurface.web,
-          'return',
-        ),
-        throwsA(isA<StripeBillingException>()),
-      );
-      expect(account.requests.length, 1);
     },
   );
   test(
@@ -89,7 +61,6 @@ void main() {
       final account = _BillingAccount();
       final service = AccountBillingService(
         account: account,
-        stripeTestOffers: true,
         locale: () => 'en',
         onLinked: () {},
       );

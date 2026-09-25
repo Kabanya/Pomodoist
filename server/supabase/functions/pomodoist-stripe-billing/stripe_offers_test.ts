@@ -1,7 +1,7 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import {
   assertStripeOfferObjects,
-  assertStripeTestOffersConfig,
+  assertStripeOffersConfig,
   type StripeOfferHistory,
   stripeOfferKind,
   stripeReturnCampaign,
@@ -86,13 +86,11 @@ Deno.test("active, lifetime, retry, paused and uncertain termination cannot rece
     "blocked",
   );
 });
-Deno.test("test-only guard and exact Stripe amounts/coupon durations", () => {
-  assertStripeTestOffersConfig("sk_" + "test_fake", "develop");
+Deno.test("environment guard and exact Stripe amounts/coupon durations", () => {
+  assertStripeOffersConfig("sk_" + "test_fake", "develop");
+  assertThrows(() => assertStripeOffersConfig("sk_" + "live_fake", "develop"));
   assertThrows(() =>
-    assertStripeTestOffersConfig("sk_" + "live_fake", "develop")
-  );
-  assertThrows(() =>
-    assertStripeTestOffersConfig("sk_" + "test_fake", "production")
+    assertStripeOffersConfig("sk_" + "test_fake", "production")
   );
   const price = {
     livemode: false,
@@ -112,6 +110,16 @@ Deno.test("test-only guard and exact Stripe amounts/coupon durations", () => {
     duration_in_months: 3,
   };
   assertStripeOfferObjects(price, coupon, true);
+  assertStripeOfferObjects(
+    { ...price, livemode: true },
+    { ...coupon, livemode: true },
+    true,
+    true,
+  );
+  assertThrows(() => assertStripeOfferObjects(price, coupon, true, true));
+  assertThrows(() =>
+    assertStripeOfferObjects({ ...price, livemode: true }, coupon, true, true)
+  );
   for (
     const wrong of [{ amount_off: 299 }, { duration_in_months: 2 }, {
       livemode: true,
@@ -120,5 +128,28 @@ Deno.test("test-only guard and exact Stripe amounts/coupon durations", () => {
     assertThrows(() =>
       assertStripeOfferObjects(price, { ...coupon, ...wrong }, true)
     );
+  }
+});
+
+Deno.test("production offers accept only live keys in the production environment", () => {
+  assertEquals(
+    assertStripeOffersConfig("rk_" + "live_fake", "production"),
+    true,
+  );
+  assertEquals(
+    assertStripeOffersConfig("sk_" + "test_fake", "develop", true),
+    false,
+  );
+  assertThrows(() =>
+    assertStripeOffersConfig("sk_" + "live_fake", "production", true)
+  );
+  for (
+    const [key, environment] of [
+      ["rk_" + "test_fake", "production"],
+      ["rk_" + "live_fake", "develop"],
+      ["rk_" + "live_fake", ""],
+    ]
+  ) {
+    assertThrows(() => assertStripeOffersConfig(key, environment));
   }
 });

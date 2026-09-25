@@ -25,7 +25,7 @@ export type StripeEventRecord = {
 };
 
 export type StripeWebhookDeps = {
-  testModeOnly?: boolean;
+  expectedLivemode?: boolean;
   verifyEvent: (
     rawBody: string,
     signature: string,
@@ -72,8 +72,10 @@ export async function handleStripeWebhook(
   let event: StripeWebhookEvent;
   try {
     event = await deps.verifyEvent(rawBody, signature);
-    if (deps.testModeOnly && event.livemode !== false) {
-      throw new Error("Test mode event required.");
+    if (
+      deps.expectedLivemode != null && event.livemode !== deps.expectedLivemode
+    ) {
+      throw new Error("Stripe event mode mismatch.");
     }
   } catch {
     return json(
@@ -124,8 +126,11 @@ async function stripeRecordForEvent(
   let subscription: StripeSubscriptionSnapshot;
   try {
     subscription = await deps.retrieveSubscription(subscriptionId);
-    if (deps.testModeOnly && subscription.livemode !== false) {
-      throw new Error("Test mode subscription required.");
+    if (
+      deps.expectedLivemode != null &&
+      subscription.livemode !== deps.expectedLivemode
+    ) {
+      throw new Error("Stripe subscription mode mismatch.");
     }
   } catch {
     throw new Error("Could not refresh Stripe subscription.");

@@ -8,7 +8,6 @@ import 'package:pomodoist/domain/models/billing/billing_models.dart';
 final class AccountBillingService {
   AccountBillingService({
     required AccountClient account,
-    this.stripeTestOffers = false,
     required String Function() locale,
     required void Function() onLinked,
   }) : _account = account,
@@ -16,7 +15,6 @@ final class AccountBillingService {
        _locale = locale,
        _onLinked = onLinked;
 
-  final bool stripeTestOffers;
   final AccountClient _account;
   final String? _ownerId;
   final String Function() _locale;
@@ -74,15 +72,12 @@ final class AccountBillingService {
     _checkStripeOwner();
     final response = await _account.invokeFunction(
       'pomodoist-stripe-billing',
-      body: {'action': 'catalog', if (stripeTestOffers) 'offerVersion': 1},
+      body: {'action': 'catalog', 'offerVersion': 1},
     );
     if (response.status < 200 || response.status >= 300) {
       throw StripeBillingException(_stripeError(response.data));
     }
     final catalog = StripeBillingCatalog.fromJson(response.data);
-    if (!stripeTestOffers && catalog.subscriptionOffer != null) {
-      throw const StripeBillingException('billing_disabled');
-    }
     return catalog;
   }
 
@@ -92,16 +87,12 @@ final class AccountBillingService {
     String? selectedOffer,
   ) async {
     _checkStripeOwner();
-    if (!stripeTestOffers && selectedOffer != null) {
-      throw const StripeBillingException('billing_disabled');
-    }
     final response = await _account.invokeFunction(
       'pomodoist-stripe-billing',
       body: {
         'action': 'checkout',
-        if (stripeTestOffers) 'offerVersion': 1,
-        if (stripeTestOffers && selectedOffer != null)
-          'selectedOffer': selectedOffer,
+        'offerVersion': 1,
+        'selectedOffer': ?selectedOffer,
         'productId': productId,
         'surface': surface.name,
         'locale': _locale(),

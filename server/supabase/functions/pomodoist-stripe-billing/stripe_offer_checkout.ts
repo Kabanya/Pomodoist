@@ -15,19 +15,25 @@ export async function loadStripeOffer(
   context: StripeBillingAccountContext,
   priceIds: Record<string, string>,
   couponIds: Record<string, string>,
+  livemode = false,
 ) {
   for (const product of ["pomodoist.pro.monthly", "pomodoist.pro.annual"]) {
     const [price, coupon] = await Promise.all([
       stripe.prices.retrieve(priceIds[product]),
       stripe.coupons.retrieve(couponIds[product]),
     ]);
-    assertStripeOfferObjects(price, coupon, product.endsWith("monthly"));
+    assertStripeOfferObjects(
+      price,
+      coupon,
+      product.endsWith("monthly"),
+      livemode,
+    );
   }
   const history: StripeOfferHistory[] = [];
   if (context.stripeCustomerId != null) {
     const customer = await stripe.customers.retrieve(context.stripeCustomerId);
-    if (customer.deleted || customer.livemode !== false) {
-      throw new Error("Invalid test customer.");
+    if (customer.deleted || customer.livemode !== livemode) {
+      throw new Error("Stripe customer mode mismatch.");
     }
     // Iterate every page. Canceled subscriptions remain in Stripe's history;
     // zero-amount trial invoices must not be mistaken for a paid return offer.
@@ -38,8 +44,8 @@ export async function loadStripeOffer(
         limit: 100,
       })
     ) {
-      if (subscription.livemode !== false) {
-        throw new Error("Live subscription in test history.");
+      if (subscription.livemode !== livemode) {
+        throw new Error("Stripe subscription mode mismatch.");
       }
       let paid = false;
       for await (
@@ -50,8 +56,8 @@ export async function loadStripeOffer(
           limit: 100,
         })
       ) {
-        if (invoice.livemode !== false) {
-          throw new Error("Live invoice in test history.");
+        if (invoice.livemode !== livemode) {
+          throw new Error("Stripe invoice mode mismatch.");
         }
         if (invoice.total > 0) paid = true;
       }
@@ -80,6 +86,7 @@ export async function createReservedStripeCheckout(
   release: (id: string) => Promise<void>,
   verify: () => Promise<boolean>,
   now = Math.floor(Date.now() / 1000),
+  livemode = false,
 ): Promise<{ url: string | null }> {
   const reservation = await reserve();
   let existing: Stripe.Checkout.Session | null = null;
@@ -90,8 +97,8 @@ export async function createReservedStripeCheckout(
       limit: 100,
     })
   ) {
-    if (session.livemode !== false) {
-      throw new Error("Live Checkout in test history.");
+    if (session.livemode !== livemode) {
+      throw new Error("Stripe Checkout mode mismatch.");
     }
     if (session.metadata?.offer_reservation === reservation.id) {
       existing = session;
@@ -135,8 +142,8 @@ export async function createReservedStripeCheckout(
   const session = await stripe.checkout.sessions.create(params, {
     idempotencyKey: `pomodoist-test-offer:${reservation.id}`,
   });
-  if (session.livemode !== false) {
-    throw new Error("Live Checkout in test mode.");
+  if (session.livemode !== livemode) {
+    throw new Error("Stripe Checkout mode mismatch.");
   }
   return { url: session.url };
 }

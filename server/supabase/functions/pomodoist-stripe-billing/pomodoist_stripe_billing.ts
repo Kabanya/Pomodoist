@@ -212,7 +212,7 @@ export async function handlePomodoistStripeBilling(
   if (deps.offersEnabled && parsed.value.offerVersion !== 1) {
     return json({
       code: "billing_update_required",
-      error: "Update the client to use test offers.",
+      error: "Update the client to use subscription offers.",
     }, 409);
   }
   if (
@@ -237,7 +237,7 @@ export async function handlePomodoistStripeBilling(
       });
       if (deps.offersEnabled) {
         if (!deps.enabled || !deps.loadOffer) {
-          throw new Error("Test offers are not configured.");
+          throw new Error("Subscription offers are not configured.");
         }
         catalog.offersEnabled = true;
         catalog.subscriptionOffer = await deps.loadOffer(context);
@@ -312,7 +312,7 @@ export async function handlePomodoistStripeBilling(
       const subscription = subscriptionProductIds.has(productId);
       let selectedOffer: StripeOfferKind | undefined;
       if (deps.offersEnabled) {
-        if (!deps.loadOffer) throw new Error("Test offers are not configured.");
+        if (!deps.loadOffer) throw new Error("Subscription offers are not configured.");
         selectedOffer = await deps.loadOffer({
           ...context,
           stripeCustomerId: customerId,

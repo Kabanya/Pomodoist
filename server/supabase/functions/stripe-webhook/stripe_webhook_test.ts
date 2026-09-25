@@ -364,29 +364,31 @@ function webhookDeps(
   };
 }
 
-Deno.test("test offer environment rejects live or unmarked webhook events", async () => {
-  for (const livemode of [true, undefined]) {
-    let records = 0;
-    const event = {
-      id: "evt_live",
-      type: "checkout.session.completed",
-      created: 1,
-      livemode,
-      data: { object: {} },
-    };
-    const response = await handleStripeWebhook(
-      signedRequest(event),
-      webhookDeps({
-        testModeOnly: true,
-        verifyEvent: async () => event,
-        recordEvent: async () => {
-          records++;
-          return { applied: true };
-        },
-      }),
-    );
-    assertEquals(response.status, 401);
-    assertEquals(records, 0);
+Deno.test("offer environments reject mismatched or unmarked webhook events", async () => {
+  for (const expectedLivemode of [false, true]) {
+    for (const livemode of [!expectedLivemode, undefined]) {
+      let records = 0;
+      const event = {
+        id: "evt_live",
+        type: "checkout.session.completed",
+        created: 1,
+        livemode,
+        data: { object: {} },
+      };
+      const response = await handleStripeWebhook(
+        signedRequest(event),
+        webhookDeps({
+          expectedLivemode,
+          verifyEvent: async () => event,
+          recordEvent: async () => {
+            records++;
+            return { applied: true };
+          },
+        }),
+      );
+      assertEquals(response.status, 401);
+      assertEquals(records, 0);
+    }
   }
 });
 
@@ -402,7 +404,7 @@ Deno.test("zero-value trial invoice grants only verified trial access, not first
   const response = await handleStripeWebhook(
     signedRequest(event),
     webhookDeps({
-      testModeOnly: true,
+      expectedLivemode: false,
       verifyEvent: async () => event,
       retrieveSubscription: async () => ({
         id: "sub_trial",

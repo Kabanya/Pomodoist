@@ -1,4 +1,4 @@
-import { assertStripeTestOffersConfig } from "../pomodoist-stripe-billing/stripe_offers.ts";
+import { assertStripeOffersConfig } from "../pomodoist-stripe-billing/stripe_offers.ts";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -19,15 +19,20 @@ Deno.serve((req) => {
   });
   const admin = createClient(url, serviceRoleKey);
 
-  const testModeOnly =
+  const testOffersEnabled =
     Deno.env.get("STRIPE_TEST_SUBSCRIPTION_OFFERS_ENABLED") === "true";
+  const offersEnabled = testOffersEnabled ||
+    Deno.env.get("STRIPE_SUBSCRIPTION_OFFERS_ENABLED") === "true";
   return handleStripeWebhook(req, {
-    testModeOnly,
+    expectedLivemode: offersEnabled
+      ? /^(sk|rk)_live_/.test(stripeSecretKey)
+      : undefined,
     verifyEvent: async (rawBody, signature) => {
-      if (testModeOnly) {
-        assertStripeTestOffersConfig(
+      if (offersEnabled) {
+        assertStripeOffersConfig(
           stripeSecretKey,
           Deno.env.get("STRIPE_BILLING_ENVIRONMENT") ?? "",
+          testOffersEnabled,
         );
       }
       if (webhookSecret.length === 0) {

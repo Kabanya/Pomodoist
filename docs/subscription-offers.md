@@ -214,16 +214,30 @@ Manual UI, signed Sandbox transactions and a production launch remain separate
 acceptance steps. Unit tests use generated test keys and injected Apple responses;
 they do not demonstrate that an operational IAP key has been installed.
 
-## Stripe — development preparation for 1.1.0
+## Stripe — 1.1.0 rollout
 
-The Flutter version is `1.1.0+109`. Development and staging clients understand the versioned Stripe offer catalog;
-the deployed staging site is the `develop` branch. Production clients do not opt in.
-Server offers default to disabled and additionally require
-`STRIPE_BILLING_ENVIRONMENT=develop` and an `sk_test_`/`rk_test_` key. Prices,
-coupons, customers, subscriptions, invoices, Checkout sessions and webhook events
-must be in test mode. Existing billing is preserved when the offer flag is off.
-No production configuration, existing subscription price, or Apple setting was
-changed by this preparation.
+All 1.1.0 client flavors understand the versioned Stripe offer catalog. The
+server controls activation with `STRIPE_SUBSCRIPTION_OFFERS_ENABLED=true`;
+its default remains false. Use `STRIPE_BILLING_ENVIRONMENT=production` with a
+live key, or `develop` with a test key. Prices, coupons, customers, subscription
+and invoice history, Checkout sessions and webhook events must match that mode.
+The previous `STRIPE_TEST_SUBSCRIPTION_OFFERS_ENABLED` flag remains supported
+for existing development deployments and still rejects live keys.
+
+Deploy the reservation migration and compatible functions before activation,
+and publish the compatible web client before enabling the production catalog.
+Reuse the existing production product with new USD 4.99/month and 29.99/year
+prices and production return coupons (USD 3 off for three months; USD 15 off
+once for annual). Never copy test object IDs or a test webhook secret to live.
+Existing Stripe subscriptions keep their current prices; this rollout does not
+rewrite customer subscriptions or create prorations. Existing open Checkout
+sessions block a second checkout until they finish or expire.
+
+A 1.1.0 client also accepts the disabled-offer legacy catalog. Older clients
+without `offerVersion=1` receive `billing_update_required` after offer activation;
+the server never silently substitutes regular pricing for a requested offer.
+Activation status must be checked against the deployed environment separately
+from tests and code publication.
 
 The USD terms match the table above. Stripe uses its own authenticated Pomodoist
 account/customer history, not Apple's anonymous purchase identity or signatures.

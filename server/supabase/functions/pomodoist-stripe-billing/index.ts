@@ -1,4 +1,4 @@
-import { assertStripeTestOffersConfig } from "./stripe_offers.ts";
+import { assertStripeOffersConfig } from "./stripe_offers.ts";
 import {
   createReservedStripeCheckout,
   loadStripeOffer,
@@ -28,8 +28,10 @@ Deno.serve((req) => {
     "pomodoist.pro.lifetime.launch":
       Deno.env.get("STRIPE_PRICE_LIFETIME_LAUNCH") ?? "",
   };
-  const offersEnabled =
+  const testOffersEnabled =
     Deno.env.get("STRIPE_TEST_SUBSCRIPTION_OFFERS_ENABLED") === "true";
+  const offersEnabled = testOffersEnabled ||
+    Deno.env.get("STRIPE_SUBSCRIPTION_OFFERS_ENABLED") === "true";
   const couponIds = {
     "pomodoist.pro.monthly": Deno.env.get(
       offersEnabled
@@ -52,10 +54,11 @@ Deno.serve((req) => {
     apiVersion: "2026-07-29.dahlia",
   });
 
-  const validateTestMode = () =>
-    assertStripeTestOffersConfig(
+  const validateMode = () =>
+    assertStripeOffersConfig(
       stripeSecretKey,
       Deno.env.get("STRIPE_BILLING_ENVIRONMENT") ?? "",
+      testOffersEnabled,
     );
   const loadAccount = async (
     userId: string,
@@ -73,8 +76,13 @@ Deno.serve((req) => {
     enabled,
     offersEnabled,
     loadOffer: async (context) => {
-      validateTestMode();
-      return await loadStripeOffer(stripe, context, priceIds, couponIds);
+      return await loadStripeOffer(
+        stripe,
+        context,
+        priceIds,
+        couponIds,
+        validateMode(),
+      );
     },
     authenticate: async (authorization) => {
       const auth = createClient(url, anonKey, {
@@ -90,7 +98,7 @@ Deno.serve((req) => {
     },
     loadAccount,
     createCustomer: async ({ userId, email }) => {
-      if (offersEnabled) validateTestMode();
+      if (offersEnabled) validateMode();
       const customer = await stripe.customers.create(
         {
           ...(email == null ? {} : { email }),
@@ -112,32 +120,41 @@ Deno.serve((req) => {
     },
     createCheckoutSession: async (input) => {
       if (offersEnabled) {
-        validateTestMode();
-        return await createReservedStripeCheckout(stripe, input, async () => {
-          const { data, error } = await admin.rpc(
-            "reserve_pomodoist_stripe_checkout",
-            { p_user_id: input.userId, p_input: input },
-          );
-          if (error || !isRecord(data)) {
-            throw new Error("Could not reserve Checkout.");
-          }
-          return data as StripeCheckoutReservation;
-        }, async (id) => {
-          const { error } = await admin.rpc(
-            "release_pomodoist_stripe_checkout",
-            { p_user_id: input.userId, p_reservation_id: id },
-          );
-          if (error) throw new Error("Could not release Checkout.");
-        }, async () => {
-          const kind = await loadStripeOffer(
-            stripe,
-            await loadAccount(input.userId),
-            priceIds,
-            couponIds,
-          );
-          return kind !== "blocked" &&
-            (input.mode !== "subscription" || kind === input.selectedOffer);
-        });
+        const livemode = validateMode();
+        return await createReservedStripeCheckout(
+          stripe,
+          input,
+          async () => {
+            const { data, error } = await admin.rpc(
+              "reserve_pomodoist_stripe_checkout",
+              { p_user_id: input.userId, p_input: input },
+            );
+            if (error || !isRecord(data)) {
+              throw new Error("Could not reserve Checkout.");
+            }
+            return data as StripeCheckoutReservation;
+          },
+          async (id) => {
+            const { error } = await admin.rpc(
+              "release_pomodoist_stripe_checkout",
+              { p_user_id: input.userId, p_reservation_id: id },
+            );
+            if (error) throw new Error("Could not release Checkout.");
+          },
+          async () => {
+            const kind = await loadStripeOffer(
+              stripe,
+              await loadAccount(input.userId),
+              priceIds,
+              couponIds,
+              livemode,
+            );
+            return kind !== "blocked" &&
+              (input.mode !== "subscription" || kind === input.selectedOffer);
+          },
+          undefined,
+          livemode,
+        );
       }
       const session = await stripe.checkout.sessions.create(
         stripeCheckoutParams(input) as Stripe.Checkout.SessionCreateParams,

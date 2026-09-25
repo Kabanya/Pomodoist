@@ -40,12 +40,16 @@ export function stripeOfferKind(
     : "standard";
 }
 
-export function assertStripeTestOffersConfig(key: string, environment: string) {
-  if (!/^(sk|rk)_test_/.test(key) || environment !== "develop") {
-    throw new Error(
-      "Subscription offers require Stripe test mode and develop.",
-    );
+export function assertStripeOffersConfig(
+  key: string,
+  environment: string,
+  testOnly = false,
+): boolean {
+  if (/^(sk|rk)_test_/.test(key) && environment === "develop") return false;
+  if (!testOnly && /^(sk|rk)_live_/.test(key) && environment === "production") {
+    return true;
   }
+  throw new Error("Stripe key mode does not match the offer environment.");
 }
 
 export function assertStripeOfferObjects(
@@ -70,9 +74,11 @@ export function assertStripeOfferObjects(
     applies_to?: { products?: string[] };
   },
   monthly: boolean,
+  livemode = false,
 ) {
   if (
-    price.livemode !== false || coupon.livemode !== false || !price.active ||
+    price.livemode !== livemode || coupon.livemode !== livemode ||
+    !price.active ||
     !coupon.valid ||
     price.currency !== "usd" || price.unit_amount !== (monthly ? 499 : 2999) ||
     price.recurring?.interval !== (monthly ? "month" : "year") ||
