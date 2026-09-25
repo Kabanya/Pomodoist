@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -9,6 +10,41 @@ import 'package:pomodoist/domain/models/app_flavor.dart';
 /// expands from `$(POMODOIST_APP_GROUP)` per flavor. Losing that key on one
 /// target would silently send that flavor's snapshot to the production group.
 void main() {
+  test('base macOS configurations resolve the production App Group', () async {
+    if (!Platform.isMacOS) return;
+
+    for (final configuration in [
+      'Debug',
+      'Profile',
+      'Release',
+      'Debug-RunnerStoreKitLocal',
+    ]) {
+      final result = await Process.run('xcodebuild', [
+        '-project',
+        'macos/Runner.xcodeproj',
+        '-alltargets',
+        '-configuration',
+        configuration,
+        '-showBuildSettings',
+        '-json',
+      ]);
+      expect(result.exitCode, 0, reason: result.stderr.toString());
+      final targets = jsonDecode(result.stdout.toString()) as List<dynamic>;
+      for (final target in ['Runner', 'PomodoistFocusWidgetExtension']) {
+        final entries = targets.where((entry) => entry['target'] == target);
+        expect(entries, isNotEmpty, reason: '$configuration/$target');
+        for (final entry in entries) {
+          expect(
+            entry['buildSettings']['POMODOIST_APP_GROUP'],
+            'group.com.pomodoist',
+            reason:
+                '$configuration/$target must sign with a nonempty App Group',
+          );
+        }
+      }
+    }
+  });
+
   test('every focus target publishes its own PomodoistAppGroup', () {
     for (final path in [
       'macos/Runner/Info.plist',
