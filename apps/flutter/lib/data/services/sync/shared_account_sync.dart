@@ -366,7 +366,29 @@ extension SharedAccountSync on AccountSyncEngine {
       }
     }
     if (type == 'task_completion' && normalized['snapshotJson'] is Map) {
-      normalized['snapshotJson'] = jsonEncode(normalized['snapshotJson']);
+      final snapshot = Map<String, dynamic>.from(
+        normalized['snapshotJson'] as Map,
+      );
+      // Older servers returned only task fields and dropped workflow history.
+      if (!snapshot.containsKey('version') && !snapshot.containsKey('kanban')) {
+        final local = await (_db.select(
+          _db.taskCompletions,
+        )..where((row) => row.id.equals(id))).getSingleOrNull();
+        try {
+          final previous = jsonDecode(local?.snapshotJson ?? 'null');
+          if (previous is Map && previous['version'] == 1) {
+            final kanban = previous['kanban'];
+            if (kanban is Map &&
+                kanban['previousStatusLabelId'] is String &&
+                (kanban['previousStatusLabelId'] as String).trim().isNotEmpty) {
+              snapshot.addAll({'version': 1, 'kanban': kanban});
+            }
+          }
+        } on FormatException {
+          // A malformed local snapshot must not block canonical history sync.
+        }
+      }
+      normalized['snapshotJson'] = jsonEncode(snapshot);
     }
     if (type == 'project') {
       final local = await (_db.select(
@@ -467,6 +489,10 @@ extension SharedAccountSync on AccountSyncEngine {
             ..remove('viewStyle')
             // The shared scope accepts entity fields only; schemaVersion is envelope metadata.
             ..remove('schemaVersion');
+          if (op.entityType != 'task_label' &&
+              op.entityType != 'task_kanban_status') {
+            data.remove('changedAt');
+          }
           if (data['assigneeIdsJson'] is String) {
             data['assigneeIds'] = jsonDecode(
               data.remove('assigneeIdsJson') as String,
@@ -521,15 +547,17 @@ extension SharedAccountSync on AccountSyncEngine {
               syncEntityTypeForCommand(next.type) != entityType ||
               !acceptedFields.containsAll(_sharedCommandPatch(next).keys) ||
               !command.type.endsWith('.create') &&
-                  !command.type.endsWith('.update') ||
-              !next.type.endsWith('.update')) {
+                  !command.type.endsWith('.update') &&
+                  !syncUsesCapturedPatch(command.type) ||
+              !next.type.endsWith('.update') &&
+                  !syncUsesCapturedPatch(next.type)) {
             continue;
           }
           final accepted = applied
               .where((item) => item['opId'] == command.uuid)
               .firstOrNull;
           final revision = (accepted?['serverRevision'] as num?)?.toInt();
-          if (revision == null) continue;
+          if (revision == null || revision <= next.baseRevision) continue;
           await (_db.update(_db.syncCommands)
                 ..where((row) => row.id.equals(next.id)))
               .write(SyncCommandsCompanion(baseRevision: Value(revision)));
@@ -580,6 +608,7 @@ extension SharedAccountSync on AccountSyncEngine {
         'userId',
         'createdAt',
         'updatedAt',
+        'changedAt',
         'commandType',
       }.contains(key),
     );
@@ -667,16 +696,14 @@ extension SharedAccountSync on AccountSyncEngine {
       )..where((row) => row.taskId.isIn(ids))).go();
       // A kept project is also where the server reassigned the tasks it handed
       // back, so only the projects that are actually going away lose sections.
-      await (_db.delete(_db.sections)..where(
-            (row) => row.projectId.isIn(projectIds),
-          ))
-          .go();
+      await (_db.delete(
+        _db.sections,
+      )..where((row) => row.projectId.isIn(projectIds))).go();
       await (_db.delete(
         _db.tasks,
       )..where((row) => row.scopeId.equals(scopeId))).go();
       await (_db.delete(_db.projects)..where(
-            (row) =>
-                row.scopeId.equals(scopeId) & row.id.isNotIn(projectIds),
+            (row) => row.scopeId.equals(scopeId) & row.id.isNotIn(projectIds),
           ))
           .go();
       // Keep only the user's unsent text; do not retain cached shared snapshots.
@@ -705,10 +732,9 @@ extension SharedAccountSync on AccountSyncEngine {
           );
         }
       }
-      await (_db.delete(_db.labels)..where(
-            (row) => row.scopeId.equals(scopeId),
-          ))
-          .go();
+      await (_db.delete(
+        _db.labels,
+      )..where((row) => row.scopeId.equals(scopeId))).go();
       // The handed-back rows keep their shared entity marker; dropping it here
       // would let the shared-entity guard in the pull accept a later change for
       // the same id, so the same guard clears it when the row is applied.

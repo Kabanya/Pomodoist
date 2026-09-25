@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:uuid/uuid.dart';
 import 'package:app_account/app_account.dart';
 import 'package:drift/native.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'support/account_sync_engine.dart';
@@ -11,6 +12,8 @@ import 'package:pomodoist/data/repositories/collaboration/collaboration_reposito
 import 'package:pomodoist/data/repositories/collaboration/drift_collaboration_repository.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_conflict.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
+import 'package:pomodoist/data/repositories/kanban/kanban_repository_impl.dart';
+import 'package:pomodoist/data/repositories/local/kanban_transition_coordinator.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 
 void main() {
@@ -31,6 +34,8 @@ void main() {
   var taskRevision = 2;
   var rejected = false;
   final fieldRevisions = <String, int>{};
+  final kanbanFieldRevisions = <String, int>{};
+  final kanban = <String, dynamic>{};
   final extraChanges = <Map<String, dynamic>>[];
   final pushes = <Map<String, dynamic>>[];
   Map<String, dynamic> task = {};
@@ -44,6 +49,8 @@ void main() {
     taskRevision = 2;
     rejected = false;
     fieldRevisions.clear();
+    kanbanFieldRevisions.clear();
+    kanban.clear();
     extraChanges.clear();
     pushes.clear();
     task = {
@@ -105,11 +112,17 @@ void main() {
               ],
             };
           }
-          final fields = (ops.first['payload'] as Map).keys
+          final isKanban = ops.first['entityType'] == 'task_kanban_status';
+          final revisions = isKanban ? kanbanFieldRevisions : fieldRevisions;
+          final current = isKanban ? kanban : task;
+          final patch = ops.first['payload'] as Map;
+          final fields = patch.keys
               .where(
                 (key) =>
-                    (fieldRevisions[key] ?? 0) >
-                    (ops.first['baseRevision'] as int),
+                    key != 'changedAt' &&
+                    (revisions[key] ?? 0) >
+                        (ops.first['baseRevision'] as int) &&
+                    current[key] != patch[key],
               )
               .toList();
           if (conflict || fields.isNotEmpty) {
@@ -119,24 +132,35 @@ void main() {
                   'opId': ops.first['opId'],
                   'serverRevision': revision,
                   'fields': conflict ? ['content'] : fields,
-                  'current': task,
+                  'current': current,
                 },
               ],
               'applied': [],
               'rejected': [],
             };
           }
+          final applied = <Map<String, dynamic>>[];
           for (final op in ops) {
             revision++;
+            applied.add({'opId': op['opId'], 'serverRevision': revision});
             if (op['entityType'] == 'task') {
               task = {...task, ...(op['payload'] as Map<String, dynamic>)};
               taskRevision = revision;
-              for (final key in ['content', 'description']) {
+              for (final key in ['content', 'description', 'orderKey']) {
                 if ((op['payload'] as Map).containsKey(key)) {
                   fieldRevisions[key] = revision;
                 }
               }
             } else {
+              if (op['entityType'] == 'task_kanban_status') {
+                final patch = op['payload'] as Map<String, dynamic>;
+                for (final key in ['labelId', 'changedAt']) {
+                  if (patch.containsKey(key) && kanban[key] != patch[key]) {
+                    kanbanFieldRevisions[key] = revision;
+                  }
+                }
+                kanban.addAll(patch);
+              }
               extraChanges.add({
                 'entityType': op['entityType'],
                 'entityId': op['entityId'],
@@ -146,14 +170,7 @@ void main() {
               });
             }
           }
-          return {
-            'applied': [
-              for (final op in ops)
-                {'opId': op['opId'], 'serverRevision': revision},
-            ],
-            'conflicts': [],
-            'rejected': [],
-          };
+          return {'applied': applied, 'conflicts': [], 'rejected': []};
         default:
           throw StateError('Unexpected action ${request['action']}');
       }
@@ -176,6 +193,241 @@ void main() {
     await engine.syncShared();
   });
   tearDown(() => db.close());
+
+  Future<void> addReviewStatus() async {
+    final now = DateTime.utc(2026, 9, 14);
+    await db
+        .into(db.labels)
+        .insert(
+          LabelsCompanion.insert(
+            id: 'scope:review',
+            scopeId: const Value('scope'),
+            userId: localUserId,
+            name: 'Review',
+            kind: const Value(labelKindKanbanStatus),
+            orderKey: 'b',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+  }
+
+  test(
+    'consecutive Kanban status changes do not conflict with themselves',
+    () async {
+      for (final label in ['scope:todo', 'scope:progress']) {
+        await queue.enqueue(
+          type: 'task.kanbanStatus.set',
+          clientId: 'task',
+          payload: {
+            'taskId': 'task',
+            'labelId': label,
+            'changedAt': DateTime.now().toUtc().toIso8601String(),
+          },
+        );
+      }
+      await engine.syncShared();
+      final remaining = await db.select(db.syncCommands).get();
+      expect(
+        remaining.map(
+          (row) => '${row.type}: ${row.status}, base=${row.baseRevision}',
+        ),
+        isEmpty,
+      );
+      expect(kanban['labelId'], 'scope:progress');
+      expect(kanban['changedAt'], isNotNull);
+    },
+  );
+
+  test('consecutive Kanban reorders do not conflict with themselves', () async {
+    for (final order in ['00000000000000001000', '00000000000000002000']) {
+      await queue.enqueue(
+        type: 'task.reorder',
+        clientId: 'task',
+        payload: {
+          'id': 'task',
+          'orderKey': order,
+          'changedAt': DateTime.utc(2026, 9, 14).toIso8601String(),
+        },
+      );
+    }
+    await engine.syncShared();
+    final remaining = await db.select(db.syncCommands).get();
+    expect(
+      remaining.map(
+        (row) => '${row.type}: ${row.status}, base=${row.baseRevision}',
+      ),
+      isEmpty,
+    );
+    expect(task['orderKey'], '00000000000000002000');
+    expect(task.containsKey('changedAt'), isFalse);
+  });
+
+  test(
+    'a reorder acknowledgement cannot waive a remote content conflict',
+    () async {
+      await queue.enqueue(
+        type: 'task.reorder',
+        clientId: 'task',
+        payload: {'id': 'task', 'orderKey': 'b'},
+      );
+      await queue.enqueue(
+        type: 'task.update',
+        clientId: 'task',
+        payload: {'id': 'task', 'content': 'Local content'},
+      );
+      task['content'] = 'Remote content';
+      revision = taskRevision = 3;
+      fieldRevisions['content'] = 3;
+      await engine.syncShared();
+      final draft = await db.select(db.syncCommands).getSingle();
+      expect(draft.type, 'task.update');
+      expect(draft.status, 'conflict');
+      expect(draft.baseRevision, 2);
+      expect(task['content'], 'Remote content');
+    },
+  );
+
+  test('a remote status change remains a conflict', () async {
+    await queue.enqueue(
+      type: 'task.kanbanStatus.set',
+      clientId: 'task',
+      payload: {'taskId': 'task', 'labelId': 'scope:review'},
+    );
+    kanban.addAll({'taskId': 'task', 'labelId': 'scope:remote'});
+    revision = 3;
+    kanbanFieldRevisions['labelId'] = 3;
+    await engine.syncShared();
+    expect((await db.select(db.syncCommands).getSingle()).status, 'conflict');
+    expect(kanban['labelId'], 'scope:remote');
+  });
+
+  test('shared column rename sends only supported label fields', () async {
+    await addReviewStatus();
+    (await DriftKanbanRepository(
+      db,
+      syncQueue: queue,
+    ).renameStatus('scope:review', 'QA')).getOrThrow();
+    await engine.syncShared();
+    final operation = (pushes.single['operations'] as List).single as Map;
+    expect(operation['entityType'], 'label');
+    final payload = operation['payload'] as Map;
+    expect(payload['name'], 'QA');
+    // Unlike task_kanban_status, the server's label schema has no changedAt.
+    expect(payload.containsKey('changedAt'), isFalse);
+  });
+
+  test('shared column reorder strips legacy local clock metadata', () async {
+    await addReviewStatus();
+    await queue.enqueue(
+      type: 'kanban.status.reorder',
+      clientId: 'scope:review',
+      payload: {
+        'id': 'scope:review',
+        'orderKey': 'c',
+        'changedAt': '2026-09-14T00:00:00Z',
+      },
+    );
+    await engine.syncShared();
+    final operation = (pushes.single['operations'] as List).single as Map;
+    expect(operation['entityType'], 'label');
+    expect((operation['payload'] as Map)['orderKey'], 'c');
+    expect((operation['payload'] as Map).containsKey('changedAt'), isFalse);
+  });
+
+  final workflowSnapshot = jsonEncode({
+    'version': 1,
+    'kanban': {'previousStatusLabelId': 'scope:review'},
+  });
+  for (final scenario in [
+    (
+      name: 'legacy server preserves local workflow',
+      local: workflowSnapshot,
+      remote: <String, dynamic>{},
+      expected: 'scope:review',
+    ),
+    (
+      name: 'canonical server workflow wins',
+      local: workflowSnapshot,
+      remote: <String, dynamic>{
+        'version': 1,
+        'kanban': {'previousStatusLabelId': null},
+      },
+      expected: 'scope:kanban-status-backlog-v1',
+    ),
+    (
+      name: 'canonical workflow arrives on a new device',
+      local: null,
+      remote: <String, dynamic>{
+        'version': 1,
+        'kanban': {'previousStatusLabelId': 'scope:review'},
+      },
+      expected: 'scope:review',
+    ),
+    (
+      name: 'malformed local snapshot does not block pull',
+      local: '{invalid',
+      remote: <String, dynamic>{},
+      expected: 'scope:kanban-status-backlog-v1',
+    ),
+    (
+      name: 'unknown local snapshot version is ignored',
+      local: '{"version":2,"kanban":{"previousStatusLabelId":"scope:review"}}',
+      remote: <String, dynamic>{},
+      expected: 'scope:kanban-status-backlog-v1',
+    ),
+  ]) {
+    test('completion pull: ${scenario.name}', () async {
+      await addReviewStatus();
+      final now = DateTime.utc(2026, 9, 14);
+      if (scenario.local != null) {
+        await db
+            .into(db.taskCompletions)
+            .insert(
+              TaskCompletionsCompanion.insert(
+                id: 'completion',
+                taskId: 'task',
+                userId: 'me',
+                completedAt: now,
+                createdAt: now,
+                snapshotJson: Value(scenario.local),
+              ),
+            );
+      }
+      revision = 3;
+      extraChanges.add({
+        'entityType': 'task_completion',
+        'entityId': 'completion',
+        'serverRevision': 3,
+        'updatedAt': now.toIso8601String(),
+        'data': {
+          'id': 'completion',
+          'taskId': 'task',
+          'userId': 'me',
+          'completedAt': now.toIso8601String(),
+          'createdAt': now.toIso8601String(),
+          'snapshotJson': {
+            ...task,
+            'status': 'completed',
+            'completedBy': 'me',
+            ...scenario.remote,
+          },
+        },
+      });
+      await engine.syncShared();
+      final transitions = KanbanTransitionCoordinator(db, queue);
+      expect(
+        await transitions.latestValidSnapshotStatusInTransaction('task'),
+        scenario.expected,
+      );
+      final completion = await db.select(db.taskCompletions).getSingle();
+      final snapshot = jsonDecode(completion.snapshotJson!) as Map;
+      expect(snapshot['content'], task['content']);
+      if (scenario.remote.containsKey('kanban')) {
+        expect(snapshot['kanban'], scenario.remote['kanban']);
+      }
+    });
+  }
 
   test(
     'shared pull keeps scope, creator and assignees and replay uses shared revision',
