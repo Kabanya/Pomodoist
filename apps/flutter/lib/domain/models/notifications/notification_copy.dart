@@ -11,8 +11,7 @@ final class NotificationCopy {
     required this.returnDescription,
     required this.openApp,
     required this.taskStarting,
-    required this.returnTitle,
-    required this.returnBody,
+    required this.returnMessages,
   });
 
   const NotificationCopy.english()
@@ -27,8 +26,28 @@ final class NotificationCopy {
       returnDescription = 'Gentle reminders to return to Pomodoist',
       openApp = 'Open Pomodoist',
       taskStarting = 'Task starting',
-      returnTitle = 'Your tomato misses you',
-      returnBody = 'One focus or one checkmark is enough to save the day.';
+      returnMessages = const [
+        (
+          title: 'Pomo misses you',
+          body: 'If you have the energy, finish one small task.',
+        ),
+        (
+          title: 'Pomo checking in',
+          body: 'Choose the easiest item on your list — one is enough.',
+        ),
+        (
+          title: 'Pomo is here',
+          body: 'You can start with a task you can finish today.',
+        ),
+        (
+          title: 'An evening with Pomo',
+          body: 'One finished task is already a good step.',
+        ),
+        (
+          title: 'A reminder from Pomo',
+          body: 'Check your list and pick one manageable thing for tonight.',
+        ),
+      ];
 
   final String focusCompleted;
   final String longBreakCompleted;
@@ -41,6 +60,12 @@ final class NotificationCopy {
   final String returnDescription;
   final String openApp;
   final String taskStarting;
-  final String returnTitle;
-  final String returnBody;
+  final List<({String title, String body})> returnMessages;
+
+  ({String title, String body}) returnMessageFor(DateTime date) {
+    final day = DateTime.utc(date.year, date.month, date.day);
+    final index =
+        day.difference(DateTime.utc(2026)).inDays % returnMessages.length;
+    return returnMessages[index];
+  }
 }

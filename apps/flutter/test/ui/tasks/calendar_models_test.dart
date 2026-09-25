@@ -2,6 +2,23 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/domain/models/tasks/calendar_models.dart';
 
 void main() {
+  test('mobile mode defaults independently and survives routine edits', () {
+    final legacy = CalendarSettings.fromJsonString('{"mode":"week"}');
+    expect(legacy.mobileMode, CalendarMobileMode.day);
+    final saved = legacy
+        .copyWith(mobileMode: CalendarMobileMode.routine)
+        .copyWith(mode: CalendarMode.month, routineName: 'Mine');
+    final restored = CalendarSettings.fromJsonString(saved.toJsonString());
+    expect(restored.mobileMode, CalendarMobileMode.routine);
+    expect(restored.mode, CalendarMode.month);
+    expect(
+      CalendarSettings.fromJsonString(
+        '{"mode":"month","mobileMode":"week"}',
+      ).mobileMode,
+      CalendarMobileMode.day,
+    );
+  });
+
   test('routine periods reject overlap and out-of-day bounds', () {
     expect(
       () => CalendarPeriod(name: 'bad', startMinutes: 100, endMinutes: 100),

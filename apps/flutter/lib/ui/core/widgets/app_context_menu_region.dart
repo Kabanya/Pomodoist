@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show ShadContextMenu, ShadContextMenuController, ShadGlobalAnchor;
 
@@ -48,7 +49,7 @@ class _AppContextMenuRegionState extends State<AppContextMenuRegion> {
   Widget build(BuildContext context) => ShadContextMenu(
     controller: _controller,
     anchor: _position == null ? null : ShadGlobalAnchor(_position!),
-    items: widget.items,
+    items: scrollableActionMenuItems(context, widget.items),
     child: GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTapDown: (_) => _controller.hide(),

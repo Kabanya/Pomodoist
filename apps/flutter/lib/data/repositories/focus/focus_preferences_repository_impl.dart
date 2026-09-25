@@ -29,6 +29,7 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
     final values = (await _preferences.read(const [
       focusViewModePreferenceKey,
       focusTimerVisualStylePreferenceKey,
+      focusSessionDisplayPreferenceKey,
       lastFocusPresetIdPreferenceKey,
       focusCompletionCelebrationEnabledPreferenceKey,
     ])).getOrThrow();
@@ -44,6 +45,11 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
             ? state.timerStyle
             : FocusTimerVisualStyle.fromStorageValue(
                 values[focusTimerVisualStylePreferenceKey] as String?,
+              ),
+        sessionDisplay: _changed.contains(focusSessionDisplayPreferenceKey)
+            ? state.sessionDisplay
+            : FocusSessionDisplay.fromStorageValue(
+                values[focusSessionDisplayPreferenceKey] as String?,
               ),
         lastPresetId: _changed.contains(lastFocusPresetIdPreferenceKey)
             ? state.lastPresetId
@@ -68,6 +74,7 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
             FocusPreferencesState(
               viewMode: value,
               timerStyle: state.timerStyle,
+              sessionDisplay: state.sessionDisplay,
               lastPresetId: state.lastPresetId,
               celebrationEnabled: state.celebrationEnabled,
             ),
@@ -89,12 +96,35 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
             FocusPreferencesState(
               viewMode: state.viewMode,
               timerStyle: value,
+              sessionDisplay: state.sessionDisplay,
               lastPresetId: state.lastPresetId,
               celebrationEnabled: state.celebrationEnabled,
             ),
           );
         } catch (_) {
           _changed.remove(focusTimerVisualStylePreferenceKey);
+          rethrow;
+        }
+      });
+  @override
+  Future<Result<void>> setSessionDisplay(FocusSessionDisplay value) =>
+      Result.capture(() async {
+        _changed.add(focusSessionDisplayPreferenceKey);
+        try {
+          (await _preferences.write({
+            focusSessionDisplayPreferenceKey: value.storageValue,
+          })).getOrThrow();
+          _publish(
+            FocusPreferencesState(
+              viewMode: state.viewMode,
+              timerStyle: state.timerStyle,
+              sessionDisplay: value,
+              lastPresetId: state.lastPresetId,
+              celebrationEnabled: state.celebrationEnabled,
+            ),
+          );
+        } catch (_) {
+          _changed.remove(focusSessionDisplayPreferenceKey);
           rethrow;
         }
       });
@@ -109,6 +139,7 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
         FocusPreferencesState(
           viewMode: state.viewMode,
           timerStyle: state.timerStyle,
+          sessionDisplay: state.sessionDisplay,
           lastPresetId: value,
           celebrationEnabled: state.celebrationEnabled,
         ),
@@ -130,6 +161,7 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
             FocusPreferencesState(
               viewMode: state.viewMode,
               timerStyle: state.timerStyle,
+              sessionDisplay: state.sessionDisplay,
               lastPresetId: state.lastPresetId,
               celebrationEnabled: value,
             ),
@@ -146,6 +178,7 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
     (await _preferences.write({
       focusViewModePreferenceKey: null,
       focusTimerVisualStylePreferenceKey: null,
+      focusSessionDisplayPreferenceKey: null,
       lastFocusPresetIdPreferenceKey: null,
       focusCompletionCelebrationEnabledPreferenceKey: null,
     })).getOrThrow();

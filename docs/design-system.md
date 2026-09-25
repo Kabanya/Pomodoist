@@ -196,6 +196,8 @@ Navigation waits for pending title and description edits and retains failed
 drafts. Close and Escape restore focus; nested menus handle Escape first.
 Keep the close/back and overflow actions pinned at the top of task details,
 inside the safe area, with task content scrolling below them.
+When compact details replace the shell header, preserve the inherited top
+MediaQuery padding so their SafeArea still clears the system status bar.
 
 ### Calendar planning view
 
@@ -247,6 +249,87 @@ outside the configured periods remain visible. The routine and selected mode are
 local preferences; failed saves retain the editor draft. Reuse shared colors,
 fonts, localized time/date formatting and existing Focus/task actions.
 
+Below 820 px of available calendar width, use three equal text segments: Day,
+Month and Rhythm. Keep the active segment visibly selected and exposed to
+accessibility; retain the selected date, project filter and visible selection
+when switching modes. Save the mobile mode separately from the desktop mode,
+defaulting legacy preferences to Day without changing the saved desktop view.
+
+Mobile Day uses a single chronological column with time labels, full-width
+cards and tappable free windows. Concurrent tasks stack rather than shrinking
+into narrow lanes. Month shows date cells with task indicators and a full-width
+agenda for the selected day; its month grid collapses to a week strip. Rhythm
+shows only the selected day's configurable, collapsible periods, plus all-day
+and outside-period tasks. Scroll the mode switch, date controls and content
+in one scroll view; the mode switch is not pinned. Keep the contextual footer
+reachable independently of the scroll position.
+
+On these compact layouts, card taps open an action sheet and long presses enter
+selection. Date and time edits share a sheet with explicit Save/Cancel; duration
+edits change the end date/time and preserve recurrence. Keep the existing shared
+bulk toolbar and Focus mini-player. Hide the shell's floating plus on Calendar;
+use a labeled Schedule action bound to the selected date, hidden during
+selection. Overflow exposes overview, unscheduled tasks and project filters;
+overview opens as a bottom sheet with the existing live Focus information.
+The unscheduled sheet owns its own selection region and bulk toolbar, so Select
+all targets the visible list rather than hidden tasks from the current day.
+All controls retain touch targets and text scaling in both themes.
+
+### Mobile bottom panels
+
+Below the 820 px shell breakpoint, contextual calendar actions, bulk task
+selection, the floating Focus mini-player and bottom navigation share
+`BottomPanelSurface`. Use 12 px side margins, a 12 px corner radius, `surface`
+fill, a full `border` outline and the navigation's soft shadow (10% black,
+18 px blur, 0/8 px offset). Leave 8 px below each contextual panel; navigation
+keeps 12 px bottom spacing and uses the adaptive geometry described below.
+Clip interaction ink to the rounded surface and retain existing touch targets.
+
+Keep panels in normal layout, ordered as screen actions, active Focus, then
+navigation. Bulk selection replaces the calendar action row. Hosts own safe
+areas outside the surface; the shell removes bottom padding from screen content
+and owns one bottom SafeArea around the mini-player and navigation together,
+including when navigation is hidden.
+Do not add a second safe-area inset or a full-width background behind panels.
+Honor both themes, shared state transitions and Reduce Motion.
+
+Desktop retains its existing flat surfaces. Modal selection panels opt out with
+`TaskSelectionRegion.floatingToolbar: false`, including Calendar's Unscheduled
+sheet; their existing toolbar, safe area and elevation remain unchanged.
+
+### Bottom navigation preferences
+
+Appearance settings offer two styles and an ordered selection of zero to five
+main destinations. Start with Today, Upcoming, Focus, Inbox and Projects in
+that order. All main destinations may be pinned, including Settings; individual
+projects and labels are not pin targets. Match selection by destination identity
+and route boundaries, including project detail routes. Removing the current
+destination never navigates away or selects another button.
+
+Soft accent is the default: only the active destination shows its label, beside
+its icon, on `accentTint` with `accent` foreground. Center the compact surface
+for one to three destinations; four or five fill the available width. With
+labels always fills the width between the standard side margins, with equal
+button widths. One or two destinations place labels beside icons; three to five
+place labels below icons. Horizontal buttons start at 48 px high; vertical
+buttons start at 64 px. Increase height for text scaling. Retain at least 44 px
+touch targets, use ellipsis rather than shrinking text, and expose full labels
+through semantics and tooltips. Preserve logical order in RTL.
+
+Zero destinations removes the entire navigation surface and its spacing. The
+shell still owns the system inset; the upper menu, task creation, Focus player
+and contextual panels remain independently available. Reuse the actual panel
+clearance tracker. Settings previews must not register as shell clearances.
+
+The editor previews a local draft using the real component. Save publishes only
+after a successful local preference write; failures keep the draft for retry.
+Cancel discards edits, Remove all retains the style, and Use defaults restores
+both style and destinations. Store one local record, without account sync.
+Preserve an explicitly empty list, ignore unknown or duplicate stored IDs and
+cap restored selections at five. Preview uses the current theme; changing the
+navigation style does not change the application theme. Use shared 180 ms state
+and 240 ms size transitions and honor Reduce Motion.
+
 ### Compact task creation
 
 In the inline Quick Add bar, center the microphone and Add buttons vertically
@@ -254,9 +337,20 @@ within the row, including when task metadata increases its height.
 
 Below the 820 px shell breakpoint, show a 52 px circular Add task button with a
 24 px plus icon, `accentFill` background, `onAccent` foreground and subtle shadow.
-Use the standard floating end position, 16 px from the safe right and bottom
-edges, above bottom navigation, the mini Focus player and the software keyboard.
-Keep it available on all shell routes, including Focus, Settings and task details.
+Start at the bottom right, 16 px from safe edges. Allow dragging and snap to the
+nearest of four safe corners on release, as with the collapsed voice panel. Keep
+the chosen corner while navigating within the shell; no saved setting is needed.
+Follow the pointer immediately during a drag. On release or a bottom-panel
+change, slide into place over 240 ms with `AppMotion.curve`, keeping size and
+rotation unchanged. A new drag or interrupted transition starts from the visible
+position. Reduce Motion makes all repositioning immediate.
+Clamp movement below the header and above bottom navigation, the mini Focus
+player, contextual action panels and the software keyboard. Floating bottom
+surfaces register their actual top edge with the existing bottom-clearance
+tracker, shared by voice controls and the Add button; do not sum panel heights
+or system insets twice. Modal selection panels do not register.
+Keep it available on shell routes, including Focus, Settings and task details;
+Calendar uses its labeled Schedule action instead.
 It opens the existing Quick Add dialog; modal surfaces retain their normal input
 barriers. Give the button the localized Add task label and a visible focus state.
 
@@ -523,6 +617,43 @@ before replacing a different session, revalidate after confirmation, and preserv
 it on cancellation. Share the in-flight guard across rows, report failures, and
 open Focus after a successful action. Completion remains on the checkbox.
 
+### Minimal Focus timer
+
+Use one centered column in Minimal view: a quiet preset selector while idle,
+large light-weight GeistMono digits with the selected progress style, and a
+56 px circular Play / Pause action. The active phase stays visible above the
+digits; the primary action retains its localized accessible label, tooltip,
+keyboard activation and preset pause restrictions. Use theme tokens for both
+light and dark palettes. Fit long timer values within the available width.
+
+Place the direct Full view action in the Focus header, outside the centered
+column. Hide it when the host fixes the view mode. Honor the stored Circle / Bar
+preference in both Minimal and Full views: visual style and detail level are
+independent. Minimal uses a circular progress ring for Circle and an 80 px by
+2 px progress track for Bar, both while idle and during an active interval.
+Both views scale the circle with the available width and window height, from
+280 px up to 520 px on large windows. Digits scale proportionally; the dial and
+long countdown values shrink to fit narrower layouts.
+
+### Full Focus layout
+
+Use the control-dock composition: header actions and the session rhythm at the
+top, linked task above the horizontally centered timer, and a separated control
+dock at the bottom of the available viewport. Keep the task and timer grouped
+with the header: use a 64 px gap below the rhythm on desktop and 32 px on compact
+layouts. Extra viewport height belongs below the timer, before the dock. Let the entire stage scroll when its content
+exceeds that height; embedded stages size to their contents. Center the primary
+action independently of the session summary and Complete interval action. On
+narrow layouts, wrap controls below the summary and keep every action reachable.
+
+The overflow menu offers **Compact** and **Icons** session displays. Compact
+uses duration-weighted segments; Icons preserves the numbered work sessions,
+break icons, interval history and active-step recentering. Persist the choice
+locally, independently of Minimal / Full and Circle / Bar, defaulting to Compact.
+Changing this presentation never starts, stops or resets a running interval.
+Keep preset selection in the header and retain existing strict-mode constraints,
+localized feedback, accessible timer summaries and Reduce Motion behavior.
+
 ### Focus completion actions
 
 When the current task is open and a next scheduled task is available, completing
@@ -616,10 +747,15 @@ Use the compact slide-card direction from variant 02 in
 Close, a decorative illustration above the current setting, and a pinned footer
 with Back, four progress indicators,
 and Continue / Later / Finish. The flow remains Language, Timer, Pro, Account.
-Center a dialog up to 540 px wide on larger windows; below 600 px, use the full
-safe area. Scroll the slide body independently so purchasing and account content
-remain reachable in short windows. Stack progress above the actions on narrow
-layouts or with enlarged text.
+Center a dialog up to 540 px wide on larger windows. When the viewport's
+shortest side is below 600 px, use a fullscreen surface in both orientations.
+Paint the opaque surface behind the safe-area insets too; dimming, shadows and
+dialog borders belong only to the larger-window presentation. The mobile slide
+body fills the remaining height and scrolls independently, keeping the footer
+at the bottom even on short slides. Use 20 px horizontal content padding and
+120 px artwork on mobile, reducing artwork to 88 px below 500 px of safe-area
+height. Keep labels and touch targets at their normal accessible sizes. Stack
+progress above the actions on narrow layouts or with enlarged text.
 
 Show all supported languages as selectable tiles, with System using a full row.
 Show Bar and Circle as compact text choices with a selection indicator. Keep the
@@ -779,8 +915,19 @@ and comments. Center it within the Browse content width.
 
 - Interactive elements must have distinguishable hover, pressed, selected,
   disabled, loading, error, and keyboard focus states where applicable.
+- Overflow actions use `AppActionMenu` with `ShadContextMenuItem`; pointer menus
+  reuse `AppContextMenuRegion`. Do not introduce Material `PopupMenuButton` or
+  `showMenu` for app actions. Keep checked, disabled and destructive states,
+  localized labels and at least 44 px menu rows. Long menus scroll within the
+  available viewport, including with the keyboard open. Overflow buttons choose
+  the side with more free space when opened, in overlay coordinates so interface
+  zoom is respected. Bound scrolling to that side, leaving room for the menu
+  border, padding, anchor gap and safe-area/keyboard insets.
 - Menubar popovers use the shared automatic anchor so actions remain inside
-  the viewport near window edges.
+  the viewport near window edges. `ShadAnchorAuto` uses different follower
+  alignment semantics from `CompositedTransformFollower`: bottom followers place
+  the menu below, top followers place it above; use the opposite horizontal
+  follower alignment to align matching trigger and menu edges.
 - Open field and action menus through explicit activation (click, tap, or
   keyboard), never pointer hover. Keep `ShadMenubarTheme.selectOnHover` disabled.
 - Keep keyboard focus visible. Task row actions must be available through

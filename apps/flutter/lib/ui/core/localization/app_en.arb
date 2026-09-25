@@ -262,6 +262,9 @@
   "calendarWeek": "Week",
   "calendarMonth": "Month",
   "calendarRoutine": "Routine",
+  "calendarRhythm": "Rhythm",
+  "calendarCollapseMonth": "Collapse month",
+  "calendarExpandMonth": "Show month",
   "calendarOverview": "Day overview",
   "calendarOpenMonth": "Open month",
   "calendarUnscheduled": "Unscheduled",
@@ -1546,8 +1549,16 @@
   "accountChangeNickname": "Change nickname",
   "accountNicknameSaveError": "Could not save your nickname. Please try again.",
   "notificationTaskStarting": "Task starting",
-  "notificationReturnTitle": "Your tomato misses you",
-  "notificationReturnBody": "One focus or one checkmark is enough to save the day.",
+  "notificationReturnTitle": "Pomo misses you",
+  "notificationReturnBody": "If you have the energy, finish one small task.",
+  "notificationReturnTitle2": "Pomo checking in",
+  "notificationReturnBody2": "Choose the easiest item on your list — one is enough.",
+  "notificationReturnTitle3": "Pomo is here",
+  "notificationReturnBody3": "You can start with a task you can finish today.",
+  "notificationReturnTitle4": "An evening with Pomo",
+  "notificationReturnBody4": "One finished task is already a good step.",
+  "notificationReturnTitle5": "A reminder from Pomo",
+  "notificationReturnBody5": "Check your list and pick one manageable thing for tonight.",
   "notificationFocusChannel": "Focus",
   "notificationFocusDescription": "Focus interval completion notifications",
   "notificationReturnChannel": "Return reminders",
@@ -1801,5 +1812,44 @@
   "collaborationPublicTasks": "Tasks",
   "projectInfoTitle": "About project",
   "projectInfoPersonal": "Personal project",
-  "projectInfoYou": "You"
+  "projectInfoYou": "You",
+  "focusSessionDisplay": "Session display",
+  "focusSessionCompact": "Compact",
+  "focusSessionIcons": "Icons",
+  "focusNextInterval": "Next: {phase} · {duration}",
+  "@focusNextInterval": {
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsBottomNavigation": "Bottom navigation",
+  "settingsBottomNavigationDescription": "Choose up to five sections, their order, and the navigation style. Saved on this device.",
+  "settingsBottomNavigationSoft": "Soft accent",
+  "settingsBottomNavigationLabels": "With labels",
+  "settingsBottomNavigationPreview": "Preview",
+  "settingsBottomNavigationEmpty": "The bottom panel is hidden. All sections and these settings remain available from the top menu.",
+  "settingsBottomNavigationCount": "{count} of {max} sections",
+  "settingsBottomNavigationEarlier": "Move earlier",
+  "settingsBottomNavigationLater": "Move later",
+  "settingsBottomNavigationAdd": "Add a section",
+  "settingsBottomNavigationClear": "Remove all",
+  "settingsBottomNavigationDefaults": "Use defaults",
+  "settingsBottomNavigationLoadError": "Could not load navigation settings. Please try again.",
+  "settingsBottomNavigationEdit": "Customize",
+  "settingsBottomNavigationRemove": "Remove",
+  "@settingsBottomNavigationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  }
 }

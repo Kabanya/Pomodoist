@@ -1,4 +1,5 @@
 import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
+import 'package:pomodoist/domain/models/notifications/notification_copy.dart';
 
 /// Double for [NotificationScheduler] that records what the app scheduled.
 ///
@@ -70,11 +71,10 @@ class FakeReengagementNotificationScheduler extends NotificationScheduler {
   @override
   Future<void> scheduleReengagementReminder({
     required DateTime firstAt,
-    required String title,
-    required String body,
+    required NotificationCopy copy,
   }) async {
     scheduledReengagementAt = firstAt;
-    scheduledReengagementTitle = title;
+    scheduledReengagementTitle = copy.returnMessageFor(firstAt).title;
   }
 
   @override

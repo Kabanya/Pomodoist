@@ -627,6 +627,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get calendarRoutine => 'ルーティン';
 
   @override
+  String get calendarRhythm => 'リズム';
+
+  @override
+  String get calendarCollapseMonth => '月を折りたたむ';
+
+  @override
+  String get calendarExpandMonth => '月を表示';
+
+  @override
   String get calendarOverview => '一日の概要';
 
   @override
@@ -2890,10 +2899,34 @@ class AppLocalizationsJa extends AppLocalizations {
   String get notificationTaskStarting => 'タスクの開始';
 
   @override
-  String get notificationReturnTitle => 'トマトがあなたを待っています';
+  String get notificationReturnTitle => 'Pomoが待っています';
 
   @override
-  String get notificationReturnBody => '集中を1回、またはタスクを1つ完了すれば、今日は実りある1日になります。';
+  String get notificationReturnBody => '余裕があれば、小さなタスクを一つ終わらせましょう。';
+
+  @override
+  String get notificationReturnTitle2 => 'Pomoからひとこと';
+
+  @override
+  String get notificationReturnBody2 => 'リストでいちばん簡単なことを選んでみましょう。一つで十分です。';
+
+  @override
+  String get notificationReturnTitle3 => 'Pomoがそばにいます';
+
+  @override
+  String get notificationReturnBody3 => '今日中に終えられそうなタスクから始められます。';
+
+  @override
+  String get notificationReturnTitle4 => 'Pomoと過ごす夜';
+
+  @override
+  String get notificationReturnBody4 => 'タスクを一つ終えるだけでも、いい一歩です。';
+
+  @override
+  String get notificationReturnTitle5 => 'Pomoからのお知らせ';
+
+  @override
+  String get notificationReturnBody5 => 'リストを見て、今夜できそうなことを一つ選びましょう。';
 
   @override
   String get notificationFocusChannel => '集中';
@@ -3410,4 +3443,68 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get projectInfoYou => 'あなた';
+
+  @override
+  String get focusSessionDisplay => 'セッションの表示';
+
+  @override
+  String get focusSessionCompact => 'コンパクト';
+
+  @override
+  String get focusSessionIcons => 'アイコン';
+
+  @override
+  String focusNextInterval(String phase, String duration) {
+    return '次：$phase · $duration';
+  }
+
+  @override
+  String get settingsBottomNavigation => '下部ナビゲーション';
+
+  @override
+  String get settingsBottomNavigationDescription =>
+      '最大5つのセクションと表示順、ナビゲーションのスタイルを選択します。このデバイスに保存されます。';
+
+  @override
+  String get settingsBottomNavigationSoft => 'ソフトアクセント';
+
+  @override
+  String get settingsBottomNavigationLabels => 'ラベル付き';
+
+  @override
+  String get settingsBottomNavigationPreview => 'プレビュー';
+
+  @override
+  String get settingsBottomNavigationEmpty =>
+      '下部バーは非表示です。すべてのセクションとこの設定には上部メニューからアクセスできます。';
+
+  @override
+  String settingsBottomNavigationCount(int count, int max) {
+    return '$max個中$count個のセクション';
+  }
+
+  @override
+  String get settingsBottomNavigationEarlier => '前へ移動';
+
+  @override
+  String get settingsBottomNavigationLater => '後ろへ移動';
+
+  @override
+  String get settingsBottomNavigationAdd => 'セクションを追加';
+
+  @override
+  String get settingsBottomNavigationClear => 'すべて外す';
+
+  @override
+  String get settingsBottomNavigationDefaults => '初期設定に戻す';
+
+  @override
+  String get settingsBottomNavigationLoadError =>
+      'ナビゲーション設定を読み込めませんでした。もう一度お試しください。';
+
+  @override
+  String get settingsBottomNavigationEdit => 'カスタマイズ';
+
+  @override
+  String get settingsBottomNavigationRemove => '外す';
 }

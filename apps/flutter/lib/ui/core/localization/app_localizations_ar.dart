@@ -659,6 +659,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get calendarRoutine => 'الروتين';
 
   @override
+  String get calendarRhythm => 'الإيقاع';
+
+  @override
+  String get calendarCollapseMonth => 'طي الشهر';
+
+  @override
+  String get calendarExpandMonth => 'عرض الشهر';
+
+  @override
   String get calendarOverview => 'نظرة عامة على اليوم';
 
   @override
@@ -2922,11 +2931,37 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationTaskStarting => 'بدء المهمة';
 
   @override
-  String get notificationReturnTitle => 'الطماطم تشتاق إليك';
+  String get notificationReturnTitle => 'Pomo يشتاق إليك';
 
   @override
   String get notificationReturnBody =>
-      'جلسة تركيز واحدة أو علامة إنجاز واحدة تكفي ليكون يومك مثمرًا.';
+      'إذا كانت لديك طاقة، أنجز مهمة صغيرة واحدة.';
+
+  @override
+  String get notificationReturnTitle2 => 'Pomo يتواصل معك';
+
+  @override
+  String get notificationReturnBody2 => 'اختر أسهل مهمة في قائمتك؛ واحدة تكفي.';
+
+  @override
+  String get notificationReturnTitle3 => 'Pomo بجانبك';
+
+  @override
+  String get notificationReturnBody3 =>
+      'يمكنك البدء بمهمة تستطيع إنهاءها اليوم.';
+
+  @override
+  String get notificationReturnTitle4 => 'أمسية مع Pomo';
+
+  @override
+  String get notificationReturnBody4 => 'إنجاز مهمة واحدة خطوة جيدة بالفعل.';
+
+  @override
+  String get notificationReturnTitle5 => 'تذكير من Pomo';
+
+  @override
+  String get notificationReturnBody5 =>
+      'ألق نظرة على قائمتك واختر مهمة مناسبة لهذا المساء.';
 
   @override
   String get notificationFocusChannel => 'التركيز';
@@ -3458,4 +3493,68 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get projectInfoYou => 'أنت';
+
+  @override
+  String get focusSessionDisplay => 'عرض الجلسات';
+
+  @override
+  String get focusSessionCompact => 'مضغوط';
+
+  @override
+  String get focusSessionIcons => 'أيقونات';
+
+  @override
+  String focusNextInterval(String phase, String duration) {
+    return 'التالي: $phase · $duration';
+  }
+
+  @override
+  String get settingsBottomNavigation => 'التنقل السفلي';
+
+  @override
+  String get settingsBottomNavigationDescription =>
+      'اختر حتى خمسة أقسام وترتيبها ونمط التنقل. تُحفظ على هذا الجهاز.';
+
+  @override
+  String get settingsBottomNavigationSoft => 'تمييز ناعم';
+
+  @override
+  String get settingsBottomNavigationLabels => 'مع تسميات';
+
+  @override
+  String get settingsBottomNavigationPreview => 'معاينة';
+
+  @override
+  String get settingsBottomNavigationEmpty =>
+      'الشريط السفلي مخفي. تظل جميع الأقسام وهذه الإعدادات متاحة من القائمة العلوية.';
+
+  @override
+  String settingsBottomNavigationCount(int count, int max) {
+    return '$count من $max أقسام';
+  }
+
+  @override
+  String get settingsBottomNavigationEarlier => 'نقل للأمام';
+
+  @override
+  String get settingsBottomNavigationLater => 'نقل للخلف';
+
+  @override
+  String get settingsBottomNavigationAdd => 'إضافة قسم';
+
+  @override
+  String get settingsBottomNavigationClear => 'إزالة الكل';
+
+  @override
+  String get settingsBottomNavigationDefaults => 'الإعدادات الافتراضية';
+
+  @override
+  String get settingsBottomNavigationLoadError =>
+      'تعذر تحميل إعدادات التنقل. حاول مجددًا.';
+
+  @override
+  String get settingsBottomNavigationEdit => 'تخصيص';
+
+  @override
+  String get settingsBottomNavigationRemove => 'إزالة';
 }

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/sentry_observability.dart';
 import 'package:pomodoist/domain/models/billing/billing_models.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/domain/models/notifications/notification_copy.dart';
 import 'package:pomodoist/domain/models/updates/update_release.dart';
 import 'package:pomodoist/utils/result.dart';
 
@@ -386,11 +387,10 @@ void main() {
         await reengagement.requestNotificationPermissions();
         await reengagement.scheduleReengagementReminder(
           firstAt: DateTime.utc(2026),
-          title: 'Come back',
-          body: 'Try again',
+          copy: const NotificationCopy.english(),
         );
         expect(reengagement.permissionRequestCount, 1);
-        expect(reengagement.scheduledReengagementTitle, 'Come back');
+        expect(reengagement.scheduledReengagementTitle, contains('Pomo'));
         await reengagement.scheduleTaskStart(
           taskId: 'task-2',
           startAt: DateTime.utc(2026),

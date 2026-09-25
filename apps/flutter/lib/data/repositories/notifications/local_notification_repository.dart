@@ -14,6 +14,25 @@ class LocalNotificationRepository implements NotificationRepository {
 
   final NotificationScheduler _scheduler;
   final NotificationCopy Function() _copy;
+  Future<void> _reengagementUpdate = Future<void>.value();
+  int _reengagementRevision = 0;
+
+  Future<void> _queueReengagementUpdate(Future<void> Function() update) {
+    final previous = _reengagementUpdate;
+    final revision = ++_reengagementRevision;
+    final current = () async {
+      try {
+        await previous;
+      } catch (_) {
+        // A failed update must not prevent the next cancellation or refresh.
+      }
+      if (revision == _reengagementRevision) {
+        await update();
+      }
+    }();
+    _reengagementUpdate = current;
+    return current;
+  }
 
   @override
   Future<void> initialize() => _scheduler.initialize();
@@ -83,7 +102,7 @@ class LocalNotificationRepository implements NotificationRepository {
     required bool enabled,
     required DateTime now,
     required bool hasProgressToday,
-  }) async {
+  }) => _queueReengagementUpdate(() async {
     if (!enabled) {
       await _scheduler.cancelReengagementReminder();
       return;
@@ -96,14 +115,13 @@ class LocalNotificationRepository implements NotificationRepository {
         now: now,
         hasProgressToday: hasProgressToday,
       ),
-      title: copy.returnTitle,
-      body: copy.returnBody,
+      copy: copy,
     );
-  }
+  });
 
   @override
   Future<void> cancelReengagementReminder() =>
-      _scheduler.cancelReengagementReminder();
+      _queueReengagementUpdate(_scheduler.cancelReengagementReminder);
 }
 
 DateTime nextReengagementReminderAt({

@@ -50,6 +50,11 @@ IPAD_SIMULATOR  ?= iPad Pro 13-inch (M5)
 WATCH_SIMULATOR ?= Apple Watch Series 11 (46mm)
 WATCH_BUILD_DIR ?= build/watch-simulator
 WATCH_BUILD_PATH = $(call repo_path,$(WATCH_BUILD_DIR))
+# Xcode 27 uses Device Hub; older Xcode versions ship Simulator.
+OPEN_SIMULATOR = developer_dir="$$(xcode-select -p)" && \
+	if [ -d "$$developer_dir/../Applications/DeviceHub.app" ]; then \
+		open -a "$$developer_dir/../Applications/DeviceHub.app"; \
+	else open -a "$$developer_dir/Applications/Simulator.app"; fi
 
 # Linux packaging. Release downloads use direct HTTPS, which prevents stale
 # localhost proxy variables from breaking reproducible local builds.
@@ -607,7 +612,7 @@ ios-debug ios-profile: RUN_SIMULATOR = $(IOS_SIMULATOR)
 ipad-debug ipad-profile: RUN_SIMULATOR = $(IPAD_SIMULATOR)
 ios-debug ios-profile ipad-debug ipad-profile: flutter-build-link
 	xcrun simctl bootstatus "$(RUN_SIMULATOR)" -b
-	open -a Simulator
+	$(OPEN_SIMULATOR)
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d "$(RUN_SIMULATOR)" --debug --flavor "$(LOCAL_FLAVOR)" --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=storekit
 
 # The flavor identity of the Xcode project, as a scheme name and as target
@@ -638,7 +643,7 @@ watch-debug: WATCH_CONFIGURATION = Debug
 watch-profile: WATCH_CONFIGURATION = Profile
 watch-debug watch-profile:
 	xcrun simctl bootstatus "$(WATCH_SIMULATOR)" -b
-	open -a Simulator
+	$(OPEN_SIMULATOR)
 	xcodebuild -quiet -project "$(FLUTTER_ROOT)/ios/Runner.xcodeproj" -target PomodoistWatch -configuration "$(WATCH_CONFIGURATION)" -sdk watchsimulator SYMROOT="$(WATCH_BUILD_PATH)" OBJROOT="$(WATCH_BUILD_PATH)/obj" build
 	xcrun simctl install "$(WATCH_SIMULATOR)" "$(WATCH_BUILD_PATH)/$(WATCH_CONFIGURATION)-watchsimulator/PomodoistWatch.app"
 	xcrun simctl launch "$(WATCH_SIMULATOR)" com.finchforge.pomodoist.watchkitapp

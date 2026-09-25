@@ -10,18 +10,20 @@ class OnboardingIllustration extends StatelessWidget {
   const OnboardingIllustration({
     required this.step,
     required this.timerStyle,
+    this.height = 148,
     super.key,
   });
 
   final OnboardingStep step;
   final FocusTimerVisualStyle timerStyle;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
     return ExcludeSemantics(
       child: MediaQuery.withNoTextScaling(
         child: SizedBox(
-          height: 148,
+          height: height,
           child: Center(
             child: FittedBox(
               fit: BoxFit.scaleDown,

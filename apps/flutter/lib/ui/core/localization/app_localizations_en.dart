@@ -664,6 +664,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarRoutine => 'Routine';
 
   @override
+  String get calendarRhythm => 'Rhythm';
+
+  @override
+  String get calendarCollapseMonth => 'Collapse month';
+
+  @override
+  String get calendarExpandMonth => 'Show month';
+
+  @override
   String get calendarOverview => 'Day overview';
 
   @override
@@ -2965,11 +2974,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationTaskStarting => 'Task starting';
 
   @override
-  String get notificationReturnTitle => 'Your tomato misses you';
+  String get notificationReturnTitle => 'Pomo misses you';
 
   @override
   String get notificationReturnBody =>
-      'One focus or one checkmark is enough to save the day.';
+      'If you have the energy, finish one small task.';
+
+  @override
+  String get notificationReturnTitle2 => 'Pomo checking in';
+
+  @override
+  String get notificationReturnBody2 =>
+      'Choose the easiest item on your list — one is enough.';
+
+  @override
+  String get notificationReturnTitle3 => 'Pomo is here';
+
+  @override
+  String get notificationReturnBody3 =>
+      'You can start with a task you can finish today.';
+
+  @override
+  String get notificationReturnTitle4 => 'An evening with Pomo';
+
+  @override
+  String get notificationReturnBody4 =>
+      'One finished task is already a good step.';
+
+  @override
+  String get notificationReturnTitle5 => 'A reminder from Pomo';
+
+  @override
+  String get notificationReturnBody5 =>
+      'Check your list and pick one manageable thing for tonight.';
 
   @override
   String get notificationFocusChannel => 'Focus';
@@ -3526,4 +3563,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get projectInfoYou => 'You';
+
+  @override
+  String get focusSessionDisplay => 'Session display';
+
+  @override
+  String get focusSessionCompact => 'Compact';
+
+  @override
+  String get focusSessionIcons => 'Icons';
+
+  @override
+  String focusNextInterval(String phase, String duration) {
+    return 'Next: $phase · $duration';
+  }
+
+  @override
+  String get settingsBottomNavigation => 'Bottom navigation';
+
+  @override
+  String get settingsBottomNavigationDescription =>
+      'Choose up to five sections, their order, and the navigation style. Saved on this device.';
+
+  @override
+  String get settingsBottomNavigationSoft => 'Soft accent';
+
+  @override
+  String get settingsBottomNavigationLabels => 'With labels';
+
+  @override
+  String get settingsBottomNavigationPreview => 'Preview';
+
+  @override
+  String get settingsBottomNavigationEmpty =>
+      'The bottom panel is hidden. All sections and these settings remain available from the top menu.';
+
+  @override
+  String settingsBottomNavigationCount(int count, int max) {
+    return '$count of $max sections';
+  }
+
+  @override
+  String get settingsBottomNavigationEarlier => 'Move earlier';
+
+  @override
+  String get settingsBottomNavigationLater => 'Move later';
+
+  @override
+  String get settingsBottomNavigationAdd => 'Add a section';
+
+  @override
+  String get settingsBottomNavigationClear => 'Remove all';
+
+  @override
+  String get settingsBottomNavigationDefaults => 'Use defaults';
+
+  @override
+  String get settingsBottomNavigationLoadError =>
+      'Could not load navigation settings. Please try again.';
+
+  @override
+  String get settingsBottomNavigationEdit => 'Customize';
+
+  @override
+  String get settingsBottomNavigationRemove => 'Remove';
 }

@@ -17,6 +17,8 @@ import 'package:pomodoist/ui/onboarding/view_models/onboarding_view_model.dart';
 export 'package:pomodoist/ui/onboarding/view_models/onboarding_view_model.dart';
 import 'package:pomodoist/ui/settings/widgets/pomodoist_account_actions.dart';
 
+bool onboardingUsesFullScreen(Size size) => size.shortestSide < 600;
+
 class OnboardingGate extends ConsumerWidget {
   const OnboardingGate({required this.child, super.key});
 
@@ -86,203 +88,236 @@ class _OnboardingOverlayState extends ConsumerState<_OnboardingOverlay> {
     });
     return Positioned.fill(
       child: BlockSemantics(
-        child: Material(
-          color: colors.primaryText.withValues(alpha: 0.35),
-          child: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final fullScreen = constraints.maxWidth < 600;
-                return Padding(
-                  padding: EdgeInsets.all(fullScreen ? 0 : 24),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: fullScreen ? constraints.maxWidth : 540,
-                        maxHeight: fullScreen ? constraints.maxHeight : 760,
-                      ),
-                      child: Material(
-                        color: colors.surface,
-                        elevation: fullScreen ? 0 : 12,
-                        shadowColor: colors.primaryText.withValues(alpha: 0.12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            fullScreen ? 0 : 12,
+        child: LayoutBuilder(
+          builder: (context, viewport) {
+            final fullScreen = onboardingUsesFullScreen(viewport.biggest);
+            return Material(
+              color: fullScreen
+                  ? colors.surface
+                  : colors.primaryText.withValues(alpha: 0.35),
+              child: SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Padding(
+                      padding: EdgeInsets.all(fullScreen ? 0 : 24),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: fullScreen ? constraints.maxWidth : 540,
+                            maxHeight: fullScreen ? constraints.maxHeight : 760,
                           ),
-                          side: fullScreen
-                              ? BorderSide.none
-                              : BorderSide(color: colors.border),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: FocusScope(
-                          autofocus: true,
-                          child: Column(
-                            mainAxisSize: fullScreen
-                                ? MainAxisSize.max
-                                : MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                  24,
-                                  12,
-                                  12,
-                                  0,
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Spacer(),
-                                    Text(
-                                      '${state.step.index + 1} / 4',
-                                      style: AppTheme.monoTextStyle.copyWith(
-                                        fontSize: 11,
-                                        color: colors.secondaryText,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    IconButton(
-                                      key: const Key('onboarding-close-button'),
-                                      tooltip: l10n.commonClose,
-                                      onPressed: _saving
-                                          ? null
-                                          : () => unawaited(
-                                              _save(controller.complete),
-                                            ),
-                                      icon: const Icon(LucideIcons.x, size: 20),
-                                    ),
-                                  ],
-                                ),
+                          child: Material(
+                            color: colors.surface,
+                            elevation: fullScreen ? 0 : 12,
+                            shadowColor: colors.primaryText.withValues(
+                              alpha: 0.12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                fullScreen ? 0 : 12,
                               ),
-                              Flexible(
-                                child: SingleChildScrollView(
-                                  controller: _scroll,
-                                  padding: const EdgeInsets.fromLTRB(
-                                    24,
-                                    8,
-                                    24,
-                                    24,
-                                  ),
-                                  child: AnimatedSwitcher(
-                                    duration: AppMotion.duration(
-                                      context,
-                                      AppMotion.state,
-                                    ),
-                                    switchInCurve: AppMotion.curve,
-                                    switchOutCurve: AppMotion.curve,
-                                    layoutBuilder: (current, previous) => Stack(
-                                      alignment: Alignment.topCenter,
+                              side: fullScreen
+                                  ? BorderSide.none
+                                  : BorderSide(color: colors.border),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: FocusScope(
+                              autofocus: true,
+                              child: Column(
+                                mainAxisSize: fullScreen
+                                    ? MainAxisSize.max
+                                    : MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Padding(
+                                    padding:
+                                        const EdgeInsetsDirectional.fromSTEB(
+                                          24,
+                                          12,
+                                          12,
+                                          0,
+                                        ),
+                                    child: Row(
                                       children: [
-                                        for (final child in previous)
-                                          ExcludeFocus(
-                                            child: ExcludeSemantics(
-                                              child: IgnorePointer(
-                                                child: child,
+                                        const Spacer(),
+                                        Text(
+                                          '${state.step.index + 1} / 4',
+                                          style: AppTheme.monoTextStyle
+                                              .copyWith(
+                                                fontSize: 11,
+                                                color: colors.secondaryText,
                                               ),
-                                            ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        IconButton(
+                                          key: const Key(
+                                            'onboarding-close-button',
                                           ),
-                                        ?current,
-                                      ],
-                                    ),
-                                    child: Column(
-                                      key: ValueKey(
-                                        'onboarding-step-${state.step.name}',
-                                      ),
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        GestureDetector(
-                                          onHorizontalDragEnd: (details) {
-                                            if (_saving) return;
-                                            controller.swipe(
-                                              details.primaryVelocity ?? 0,
-                                              rightToLeft:
-                                                  Directionality.of(context) ==
-                                                  TextDirection.rtl,
-                                            );
-                                          },
-                                          child: OnboardingIllustration(
-                                            step: state.step,
-                                            timerStyle: state.timerStyle,
+                                          tooltip: l10n.commonClose,
+                                          onPressed: _saving
+                                              ? null
+                                              : () => unawaited(
+                                                  _save(controller.complete),
+                                                ),
+                                          icon: const Icon(
+                                            LucideIcons.x,
+                                            size: 20,
                                           ),
                                         ),
-                                        const SizedBox(height: 16),
-                                        if (state.step !=
-                                            OnboardingStep.paywall) ...[
-                                          _StepHeader(step: state.step),
-                                          const SizedBox(height: 24),
-                                        ],
-                                        switch (state.step) {
-                                          OnboardingStep.language =>
-                                            _LanguageStep(
-                                              enabled: !_saving,
-                                              onSelected: (value) => unawaited(
-                                                _save(
-                                                  () => controller.setLanguage(
-                                                    value,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          OnboardingStep.timer => _TimerStep(
-                                            enabled: !_saving,
-                                            onSelected: (value) => unawaited(
-                                              _save(
-                                                () => controller.setTimerStyle(
-                                                  value,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          OnboardingStep.paywall =>
-                                            const LaunchOfferPaywall(
-                                              compact: true,
-                                            ),
-                                          OnboardingStep.account =>
-                                            const PomodoistAccountAccessPanel(
-                                              compact: true,
-                                            ),
-                                        },
                                       ],
                                     ),
                                   ),
-                                ),
-                              ),
-                              if (_saveFailed)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                    vertical: 8,
-                                  ),
-                                  child: Semantics(
-                                    liveRegion: true,
-                                    child: Text(
-                                      l10n.settingsSaveError,
-                                      style: TextStyle(color: colors.error),
+                                  Flexible(
+                                    fit: fullScreen
+                                        ? FlexFit.tight
+                                        : FlexFit.loose,
+                                    child: SingleChildScrollView(
+                                      controller: _scroll,
+                                      padding: EdgeInsets.fromLTRB(
+                                        fullScreen ? 20 : 24,
+                                        8,
+                                        fullScreen ? 20 : 24,
+                                        24,
+                                      ),
+                                      child: AnimatedSwitcher(
+                                        duration: AppMotion.duration(
+                                          context,
+                                          AppMotion.state,
+                                        ),
+                                        switchInCurve: AppMotion.curve,
+                                        switchOutCurve: AppMotion.curve,
+                                        layoutBuilder: (current, previous) =>
+                                            Stack(
+                                              alignment: Alignment.topCenter,
+                                              children: [
+                                                for (final child in previous)
+                                                  ExcludeFocus(
+                                                    child: ExcludeSemantics(
+                                                      child: IgnorePointer(
+                                                        child: child,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ?current,
+                                              ],
+                                            ),
+                                        child: Column(
+                                          key: ValueKey(
+                                            'onboarding-step-${state.step.name}',
+                                          ),
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            GestureDetector(
+                                              onHorizontalDragEnd: (details) {
+                                                if (_saving) return;
+                                                controller.swipe(
+                                                  details.primaryVelocity ?? 0,
+                                                  rightToLeft:
+                                                      Directionality.of(
+                                                        context,
+                                                      ) ==
+                                                      TextDirection.rtl,
+                                                );
+                                              },
+                                              child: OnboardingIllustration(
+                                                height: fullScreen
+                                                    ? (constraints.maxHeight <
+                                                              500
+                                                          ? 88
+                                                          : 120)
+                                                    : 148,
+                                                step: state.step,
+                                                timerStyle: state.timerStyle,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            if (state.step !=
+                                                OnboardingStep.paywall) ...[
+                                              _StepHeader(step: state.step),
+                                              const SizedBox(height: 24),
+                                            ],
+                                            switch (state.step) {
+                                              OnboardingStep.language =>
+                                                _LanguageStep(
+                                                  enabled: !_saving,
+                                                  onSelected: (value) =>
+                                                      unawaited(
+                                                        _save(
+                                                          () => controller
+                                                              .setLanguage(
+                                                                value,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                ),
+                                              OnboardingStep.timer =>
+                                                _TimerStep(
+                                                  enabled: !_saving,
+                                                  onSelected: (value) =>
+                                                      unawaited(
+                                                        _save(
+                                                          () => controller
+                                                              .setTimerStyle(
+                                                                value,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                ),
+                                              OnboardingStep.paywall =>
+                                                const LaunchOfferPaywall(
+                                                  compact: true,
+                                                ),
+                                              OnboardingStep.account =>
+                                                const PomodoistAccountAccessPanel(
+                                                  compact: true,
+                                                ),
+                                            },
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ),
-                              _OnboardingFooter(
-                                step: state.step,
-                                enabled: !_saving,
-                                onBack: controller.back,
-                                onSelect: controller.selectStep,
-                                onNext: () {
-                                  if (state.step == OnboardingStep.account) {
-                                    unawaited(_save(controller.complete));
-                                  } else {
-                                    controller.next();
-                                  }
-                                },
+                                  if (_saveFailed)
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                        vertical: 8,
+                                      ),
+                                      child: Semantics(
+                                        liveRegion: true,
+                                        child: Text(
+                                          l10n.settingsSaveError,
+                                          style: TextStyle(color: colors.error),
+                                        ),
+                                      ),
+                                    ),
+                                  _OnboardingFooter(
+                                    step: state.step,
+                                    enabled: !_saving,
+                                    onBack: controller.back,
+                                    onSelect: controller.selectStep,
+                                    onNext: () {
+                                      if (state.step ==
+                                          OnboardingStep.account) {
+                                        unawaited(_save(controller.complete));
+                                      } else {
+                                        controller.next();
+                                      }
+                                    },
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+                    );
+                  },
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

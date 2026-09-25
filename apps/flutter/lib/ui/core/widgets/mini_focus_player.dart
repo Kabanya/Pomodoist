@@ -1,8 +1,9 @@
+import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:pomodoist/ui/core/themes/app_motion.dart';
-import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
+import 'package:pomodoist/ui/core/widgets/bottom_panel_surface.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadContextMenuItem;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -291,24 +292,13 @@ class _MinimalMiniFocusPlayer extends StatelessWidget {
                   ready || paused ? LucideIcons.play : LucideIcons.pause,
                 ),
               ),
-              PopupMenuButton<_MiniFocusAction>(
-                popUpAnimationStyle: AnimationStyle(
-                  duration: AppMotion.duration(context, AppMotion.popup),
-                  reverseDuration: AppMotion.duration(context, AppMotion.popup),
-                  curve: AppMotion.curve,
-                ),
+              AppActionMenu(
                 key: const Key('minimal-mini-focus-more-menu'),
                 tooltip: l10n.moreFocusActions,
-                icon: const Icon(LucideIcons.ellipsis),
-                onSelected: (action) {
-                  switch (action) {
-                    case _MiniFocusAction.stop:
-                      unawaited(_stopFocus(context, onStop));
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: _MiniFocusAction.stop,
+                items: [
+                  ShadContextMenuItem(
+                    height: 44,
+                    onPressed: () => unawaited(_stopFocus(context, onStop)),
                     child: Text(l10n.commonStop),
                   ),
                 ],
@@ -328,50 +318,15 @@ class _MiniFocusPlayerFrame extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    final radius = floating ? BorderRadius.circular(12) : BorderRadius.zero;
-    final box = AnimatedContainer(
-      duration: AppMotion.duration(context, AppMotion.state),
-      curve: AppMotion.curve,
-      key: const Key('mini-focus-player-surface'),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: floating
-            ? Border.all(color: colors.border)
-            : Border(top: BorderSide(color: colors.border)),
-        borderRadius: floating ? radius : null,
-        boxShadow: floating
-            ? [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.10),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ]
-            : null,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: radius,
-        clipBehavior: floating ? Clip.antiAlias : Clip.none,
-        child: child,
-      ),
-    );
-
-    return SafeArea(
-      top: false,
-      child: floating
-          ? Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-              child: box,
-            )
-          : box,
-    );
-  }
+  Widget build(BuildContext context) => SafeArea(
+    top: false,
+    child: BottomPanelSurface(
+      floating: floating,
+      surfaceKey: const Key('mini-focus-player-surface'),
+      child: child,
+    ),
+  );
 }
-
-enum _MiniFocusAction { stop }
 
 Future<void> _startReadyInterval(
   BuildContext context,

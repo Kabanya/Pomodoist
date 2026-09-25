@@ -672,6 +672,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get calendarRoutine => 'Tagesablauf';
 
   @override
+  String get calendarRhythm => 'Rhythmus';
+
+  @override
+  String get calendarCollapseMonth => 'Monat einklappen';
+
+  @override
+  String get calendarExpandMonth => 'Monat anzeigen';
+
+  @override
   String get calendarOverview => 'Tagesübersicht';
 
   @override
@@ -2968,11 +2977,39 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notificationTaskStarting => 'Aufgabe beginnt';
 
   @override
-  String get notificationReturnTitle => 'Deine Tomate vermisst dich';
+  String get notificationReturnTitle => 'Pomo vermisst dich';
 
   @override
   String get notificationReturnBody =>
-      'Eine Fokuseinheit oder ein Häkchen reicht, damit sich der Tag lohnt.';
+      'Wenn du noch Energie hast, erledige eine kleine Aufgabe.';
+
+  @override
+  String get notificationReturnTitle2 => 'Pomo meldet sich';
+
+  @override
+  String get notificationReturnBody2 =>
+      'Wähle den einfachsten Punkt auf deiner Liste – einer reicht.';
+
+  @override
+  String get notificationReturnTitle3 => 'Pomo ist da';
+
+  @override
+  String get notificationReturnBody3 =>
+      'Du kannst mit einer Aufgabe beginnen, die du heute noch abschließen kannst.';
+
+  @override
+  String get notificationReturnTitle4 => 'Ein Abend mit Pomo';
+
+  @override
+  String get notificationReturnBody4 =>
+      'Eine erledigte Aufgabe ist schon ein guter Schritt.';
+
+  @override
+  String get notificationReturnTitle5 => 'Pomo erinnert dich';
+
+  @override
+  String get notificationReturnBody5 =>
+      'Schau auf deine Liste und wähle etwas Machbares für heute Abend.';
 
   @override
   String get notificationFocusChannel => 'Fokus';
@@ -3539,4 +3576,68 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get projectInfoYou => 'Du';
+
+  @override
+  String get focusSessionDisplay => 'Sitzungsanzeige';
+
+  @override
+  String get focusSessionCompact => 'Kompakt';
+
+  @override
+  String get focusSessionIcons => 'Symbole';
+
+  @override
+  String focusNextInterval(String phase, String duration) {
+    return 'Als Nächstes: $phase · $duration';
+  }
+
+  @override
+  String get settingsBottomNavigation => 'Untere Navigation';
+
+  @override
+  String get settingsBottomNavigationDescription =>
+      'Wähle bis zu fünf Bereiche, ihre Reihenfolge und den Navigationsstil. Wird auf diesem Gerät gespeichert.';
+
+  @override
+  String get settingsBottomNavigationSoft => 'Sanfter Akzent';
+
+  @override
+  String get settingsBottomNavigationLabels => 'Mit Beschriftungen';
+
+  @override
+  String get settingsBottomNavigationPreview => 'Vorschau';
+
+  @override
+  String get settingsBottomNavigationEmpty =>
+      'Die untere Leiste ist ausgeblendet. Alle Bereiche und diese Einstellungen bleiben über das obere Menü erreichbar.';
+
+  @override
+  String settingsBottomNavigationCount(int count, int max) {
+    return '$count von $max Bereichen';
+  }
+
+  @override
+  String get settingsBottomNavigationEarlier => 'Nach vorne verschieben';
+
+  @override
+  String get settingsBottomNavigationLater => 'Nach hinten verschieben';
+
+  @override
+  String get settingsBottomNavigationAdd => 'Bereich hinzufügen';
+
+  @override
+  String get settingsBottomNavigationClear => 'Alle entfernen';
+
+  @override
+  String get settingsBottomNavigationDefaults => 'Standard wiederherstellen';
+
+  @override
+  String get settingsBottomNavigationLoadError =>
+      'Die Navigationseinstellungen konnten nicht geladen werden. Bitte versuche es erneut.';
+
+  @override
+  String get settingsBottomNavigationEdit => 'Anpassen';
+
+  @override
+  String get settingsBottomNavigationRemove => 'Entfernen';
 }

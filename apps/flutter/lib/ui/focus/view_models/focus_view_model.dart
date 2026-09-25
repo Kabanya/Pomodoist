@@ -15,6 +15,7 @@ class FocusState {
     required this.remaining,
     required this.viewMode,
     required this.timerVisualStyle,
+    required this.sessionDisplay,
     required this.effectivePreset,
     required this.activePreset,
     required this.loading,
@@ -27,6 +28,7 @@ class FocusState {
   final Duration? remaining;
   final FocusViewMode viewMode;
   final FocusTimerVisualStyle timerVisualStyle;
+  final FocusSessionDisplay sessionDisplay;
   final FocusPresetItem? effectivePreset;
   final FocusPresetItem? activePreset;
   final bool loading;
@@ -97,6 +99,7 @@ class FocusViewModel extends Notifier<FocusState> {
       remaining: remaining,
       viewMode: viewMode,
       timerVisualStyle: timerVisualStyle,
+      sessionDisplay: ref.watch(focusPreferencesStateProvider).sessionDisplay,
       effectivePreset: effectivePreset,
       activePreset: activePreset,
       loading: loading,
@@ -141,6 +144,12 @@ class FocusViewModel extends Notifier<FocusState> {
   Future<void> setViewMode(FocusViewMode mode) async =>
       (await ref.read(focusPreferencesRepositoryProvider).setViewMode(mode))
           .getOrThrow();
+  Future<void> setSessionDisplay(FocusSessionDisplay value) async =>
+      (await ref
+              .read(focusPreferencesRepositoryProvider)
+              .setSessionDisplay(value))
+          .getOrThrow();
+
   Future<void> changeActiveRunPreset(FocusRunItem run, String presetId) async {
     (await _repository.changeActiveRunPreset(presetId)).getOrThrow();
     if (!ref.mounted) return;
@@ -217,6 +226,7 @@ class FocusViewModel extends Notifier<FocusState> {
     remaining: state.remaining,
     viewMode: state.viewMode,
     timerVisualStyle: state.timerVisualStyle,
+    sessionDisplay: state.sessionDisplay,
     effectivePreset: effectivePreset,
     activePreset: activePreset,
     loading: state.loading,

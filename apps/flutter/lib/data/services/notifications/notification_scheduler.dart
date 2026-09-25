@@ -210,8 +210,7 @@ class NotificationScheduler {
 
   Future<void> scheduleReengagementReminder({
     required DateTime firstAt,
-    required String title,
-    required String body,
+    required NotificationCopy copy,
   }) async {
     await initialize();
     if (kIsWeb || defaultTargetPlatform == TargetPlatform.linux) {
@@ -223,15 +222,18 @@ class NotificationScheduler {
     await replaceReengagementReminders(
       firstAt: scheduled,
       cancel: (id) => _plugin.cancel(id: id),
-      schedule: (reminder) => _plugin.zonedSchedule(
-        id: reminder.id,
-        title: title,
-        body: body,
-        scheduledDate: reminder.scheduledDate,
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        notificationDetails: localizedDetails(reengagementDetails),
-        payload: 'reengagement.daily',
-      ),
+      schedule: (reminder) {
+        final message = copy.returnMessageFor(reminder.scheduledDate);
+        return _plugin.zonedSchedule(
+          id: reminder.id,
+          title: message.title,
+          body: message.body,
+          scheduledDate: reminder.scheduledDate,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          notificationDetails: localizedDetails(reengagementDetails),
+          payload: 'reengagement.daily',
+        );
+      },
     );
   }
 

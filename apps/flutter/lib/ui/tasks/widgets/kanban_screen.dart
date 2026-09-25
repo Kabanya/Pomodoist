@@ -5,15 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show
         LucideIcons,
-        ShadBorder,
         ShadButton,
         ShadCheckbox,
         ShadContextMenuItem,
         ShadDialog,
         ShadIconButton,
         ShadInput,
-        ShadMenubar,
-        ShadMenubarItem,
         ShadOption,
         ShadSelect;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,6 +23,7 @@ import 'package:pomodoist/ui/core/localization/formatters.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/themes/theme_background.dart';
 import 'package:pomodoist/ui/core/widgets/action_feedback.dart';
+import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
 import 'package:pomodoist/domain/models/tasks/project_colors.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_color_picker.dart';
@@ -1254,66 +1252,52 @@ class _CardMenu extends StatelessWidget {
       (candidate) => !candidate.isDone && !candidate.isBacklog,
       orElse: () => statuses.firstWhere((candidate) => candidate.isBacklog),
     );
-    return Tooltip(
-      message: context.l10n.kanbanTaskActions,
-      child: ShadMenubar(
-        key: Key('kanban-card-menu-${card.task.id}'),
-        selectOnHover: false,
-        padding: EdgeInsets.zero,
-        border: ShadBorder.none,
-        backgroundColor: Colors.transparent,
-        items: [
-          ShadMenubarItem(
-            constraints: const BoxConstraints(minWidth: 220),
-            items: [
-              ShadContextMenuItem(
-                leading: const Icon(LucideIcons.externalLink),
-                onPressed: () => onOpen(card.task.id),
-                child: Text(context.l10n.commonOpen),
-              ),
-              for (final candidate in statuses)
-                if (candidate.id != status.id)
-                  ShadContextMenuItem(
-                    leading: const Icon(LucideIcons.arrowRight),
-                    onPressed: () =>
-                        unawaited(onMove(card.task.id, candidate.id)),
-                    child: Text(
-                      context.l10n.kanbanMoveTo(
-                        _statusDisplayName(context, candidate),
-                      ),
-                    ),
-                  ),
-              ShadContextMenuItem(
-                leading: Icon(
-                  card.task.isCompleted
-                      ? LucideIcons.rotateCcw
-                      : LucideIcons.circleCheck,
-                ),
-                onPressed: () => unawaited(
-                  onMove(
-                    card.task.id,
-                    card.task.isCompleted ? restoreTarget.id : done.id,
-                  ),
-                ),
-                child: Text(
-                  card.task.isCompleted
-                      ? context.l10n.markOpen
-                      : context.l10n.markComplete,
+    return AppActionMenu(
+      key: Key('kanban-card-menu-${card.task.id}'),
+      tooltip: context.l10n.kanbanTaskActions,
+      constraints: const BoxConstraints(minWidth: 220),
+      items: [
+        ShadContextMenuItem(
+          leading: const Icon(LucideIcons.externalLink),
+          onPressed: () => onOpen(card.task.id),
+          child: Text(context.l10n.commonOpen),
+        ),
+        for (final candidate in statuses)
+          if (candidate.id != status.id)
+            ShadContextMenuItem(
+              leading: const Icon(LucideIcons.arrowRight),
+              onPressed: () => unawaited(onMove(card.task.id, candidate.id)),
+              child: Text(
+                context.l10n.kanbanMoveTo(
+                  _statusDisplayName(context, candidate),
                 ),
               ),
-              ShadContextMenuItem(
-                enabled: !card.task.isCompleted,
-                leading: const Icon(LucideIcons.timer),
-                onPressed: () => onStartFocus(card),
-                child: Text(context.l10n.startFocus),
-              ),
-            ],
-            height: 36,
-            buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
-            child: const Icon(LucideIcons.ellipsis),
+            ),
+        ShadContextMenuItem(
+          leading: Icon(
+            card.task.isCompleted
+                ? LucideIcons.rotateCcw
+                : LucideIcons.circleCheck,
           ),
-        ],
-      ),
+          onPressed: () => unawaited(
+            onMove(
+              card.task.id,
+              card.task.isCompleted ? restoreTarget.id : done.id,
+            ),
+          ),
+          child: Text(
+            card.task.isCompleted
+                ? context.l10n.markOpen
+                : context.l10n.markComplete,
+          ),
+        ),
+        ShadContextMenuItem(
+          enabled: !card.task.isCompleted,
+          leading: const Icon(LucideIcons.timer),
+          onPressed: () => onStartFocus(card),
+          child: Text(context.l10n.startFocus),
+        ),
+      ],
     );
   }
 }

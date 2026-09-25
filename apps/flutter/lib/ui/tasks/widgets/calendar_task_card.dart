@@ -87,12 +87,15 @@ class _CalendarTaskCard extends ConsumerStatefulWidget {
     required this.actions,
     this.compact = false,
     this.fill = false,
+    this.mobile = false,
+    super.key,
   });
   final TaskItem task;
   final ProjectItem? project;
   final _CalendarActions actions;
   final bool compact;
   final bool fill;
+  final bool mobile;
 
   @override
   ConsumerState<_CalendarTaskCard> createState() => _CalendarTaskCardState();
@@ -158,6 +161,180 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
     } finally {
       if (mounted) setState(() => _focusing = false);
     }
+  }
+
+  Future<void> _mobileActions() async {
+    final l10n = context.l10n;
+    final selection = TaskSelectionScope.maybeOf(context);
+    final enabled =
+        task.canEdit &&
+        !_focusing &&
+        !task.isDeleted &&
+        !task.isCompleted &&
+        !actions.pending.contains(task.id) &&
+        !(selection?.pending ?? false);
+    final choices =
+        <({String label, IconData icon, Future<void> Function() run})>[];
+    void add(String label, IconData icon, Future<void> Function() run) =>
+        choices.add((label: label, icon: icon, run: run));
+    if (selection?.active ?? false) {
+      if (selection!.hasSelection && !selection.pending) {
+        add(
+          l10n.taskDue,
+          LucideIcons.calendar,
+          () => selection.showDue(context),
+        );
+        add(
+          l10n.taskClearDue,
+          LucideIcons.calendarX,
+          () => selection.clearSchedule(context),
+        );
+        add(
+          l10n.taskMore,
+          LucideIcons.ellipsis,
+          () => selection.showMore(context),
+        );
+      }
+    } else {
+      add(
+        l10n.commonOpen,
+        LucideIcons.externalLink,
+        () async => openTaskDetails(context, task.id),
+      );
+      if (!_focusing && !actions.pending.contains(task.id)) {
+        for (final action in ref.read(calendarTaskFocusActionsProvider(task))) {
+          add(
+            switch (action) {
+              CalendarFocusAction.start => l10n.startFocus,
+              CalendarFocusAction.pause => l10n.pause,
+              CalendarFocusAction.resume => l10n.resume,
+              CalendarFocusAction.startInterval => l10n.startInterval,
+              CalendarFocusAction.stop => l10n.commonStop,
+            },
+            action == CalendarFocusAction.pause
+                ? LucideIcons.pause
+                : action == CalendarFocusAction.stop
+                ? LucideIcons.square
+                : LucideIcons.play,
+            () => _focus(action),
+          );
+        }
+      }
+      if (enabled) {
+        add(l10n.taskSchedule, LucideIcons.calendar, () async {
+          final schedule = task.schedule;
+          final start = schedule?.start?.toLocal();
+          final result = await _pickCalendarMobileTime(
+            context,
+            initialDate: schedule?.displayDate ?? DateTime.now(),
+            initialMinutes: start == null
+                ? null
+                : start.hour * 60 + start.minute,
+          );
+          if (result != null && mounted) {
+            await actions.onMove(
+              task.id,
+              result.day,
+              minutes: result.minutes,
+              allDay: result.minutes == null,
+            );
+          }
+        });
+        if (task.schedule?.isTimed == true) {
+          add(l10n.calendarResize, LucideIcons.clock, () async {
+            final end = task.schedule!.end!.toLocal();
+            final result = await _pickCalendarMobileTime(
+              context,
+              initialDate: end,
+              initialMinutes: end.hour * 60 + end.minute,
+              allowAllDay: false,
+            );
+            if (result != null && mounted) {
+              await actions.onResize(
+                task.id,
+                DateTime(
+                  result.day.year,
+                  result.day.month,
+                  result.day.day,
+                  result.minutes! ~/ 60,
+                  result.minutes! % 60,
+                ),
+              );
+            }
+          });
+        }
+        if (selection != null) {
+          add(l10n.taskSelect, LucideIcons.listChecks, () async {
+            selection.begin(task.id);
+          });
+        }
+        if (task.schedule != null) {
+          add(
+            l10n.taskClearDue,
+            LucideIcons.calendarX,
+            () => actions.onUnschedule(task.id),
+          );
+        }
+        add(
+          l10n.markComplete,
+          LucideIcons.check,
+          () => actions.onComplete(task.id),
+        );
+        if (selection != null) {
+          add(l10n.commonDelete, LucideIcons.trash2, () async {
+            selection.begin(task.id);
+            await selection.delete(context);
+          });
+        }
+      }
+    }
+    final action = await showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      sheetAnimationStyle: AnimationStyle(
+        duration: AppMotion.duration(context, AppMotion.panel),
+        reverseDuration: AppMotion.duration(context, AppMotion.panel),
+      ),
+      builder: (sheetContext) => SafeArea(
+        top: false,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * .8,
+          ),
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            children: [
+              Text(task.content, style: Theme.of(context).textTheme.titleLarge),
+              if (task.schedule != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(formatTaskSchedule(context, task.schedule)),
+                ),
+              if (task.description?.trim().isNotEmpty ?? false)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    task.description!,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              const SizedBox(height: 12),
+              for (var i = 0; i < choices.length; i++)
+                ListTile(
+                  leading: Icon(choices[i].icon, size: 20),
+                  title: Text(choices[i].label),
+                  onTap: () => Navigator.pop(sheetContext, i),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (action != null && mounted) await choices[action].run();
   }
 
   List<Widget> _menuItems(
@@ -338,6 +515,7 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                     ),
               borderRadius: BorderRadius.circular(8),
               child: InkWell(
+                onLongPress: widget.mobile ? selectTask : null,
                 onTap: () {
                   final keyboard = HardwareKeyboard.instance;
                   if (selection != null &&
@@ -345,6 +523,8 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                           keyboard.isControlPressed ||
                           keyboard.isMetaPressed)) {
                     selectTask();
+                  } else if (widget.mobile) {
+                    unawaited(_mobileActions());
                   } else {
                     openTaskDetails(context, task.id);
                   }
@@ -354,7 +534,13 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                   clipBehavior: Clip.antiAlias,
                   constraints: fill
                       ? const BoxConstraints.expand()
-                      : BoxConstraints(minHeight: compact ? 40 : 58),
+                      : BoxConstraints(
+                          minHeight: widget.mobile
+                              ? 76
+                              : compact
+                              ? 40
+                              : 58,
+                        ),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
@@ -478,8 +664,8 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                                 ),
                                 if (menu)
                                   SizedBox(
-                                    width: 28,
-                                    height: 32,
+                                    width: widget.mobile ? 44 : 28,
+                                    height: widget.mobile ? 44 : 32,
                                     child: IconButton(
                                       padding: EdgeInsets.zero,
                                       tooltip: context.l10n.taskMore,
@@ -487,7 +673,9 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                                         LucideIcons.ellipsis,
                                         size: 15,
                                       ),
-                                      onPressed: _menuController.show,
+                                      onPressed: widget.mobile
+                                          ? () => unawaited(_mobileActions())
+                                          : _menuController.show,
                                     ),
                                   ),
                               ],
@@ -508,7 +696,7 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
       selected: selecting ? selected : null,
       child: card,
     );
-    if (!enabled || selecting) return accessibleCard;
+    if (!enabled || selecting || widget.mobile) return accessibleCard;
     final feedback = Material(
       color: Colors.transparent,
       child: Container(

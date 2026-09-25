@@ -1,10 +1,11 @@
+import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
 import 'package:pomodoist/ui/focus/view_models/focus_view_model.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadContextMenuItem;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
@@ -23,6 +24,7 @@ import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
 
 part 'focus_active_controls.dart';
 part 'focus_timer_stage.dart';
+part 'focus_full_layout.dart';
 
 final class FocusStageActions {
   const FocusStageActions({
@@ -49,6 +51,9 @@ class FocusIdleStage extends StatelessWidget {
     required this.timerVisualStyle,
     required this.compact,
     required this.viewMode,
+    this.sessionDisplay = FocusSessionDisplay.compact,
+    this.onSessionDisplayChanged,
+    this.minHeight = 0,
     this.showViewModeMenu = true,
     required this.onPresetSelected,
     required this.onViewModeChanged,
@@ -63,6 +68,9 @@ class FocusIdleStage extends StatelessWidget {
   final FocusTimerVisualStyle timerVisualStyle;
   final bool compact;
   final FocusViewMode viewMode;
+  final FocusSessionDisplay sessionDisplay;
+  final ValueChanged<FocusSessionDisplay>? onSessionDisplayChanged;
+  final double minHeight;
   final bool showViewModeMenu;
   final ValueChanged<String> onPresetSelected;
   final ValueChanged<FocusViewMode> onViewModeChanged;
@@ -73,215 +81,120 @@ class FocusIdleStage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final colors = context.appColors;
     final preset = selectedPreset;
     final full = viewMode == FocusViewMode.full;
-    final inlineCircle =
-        !full && timerVisualStyle == FocusTimerVisualStyle.circle;
-    final cadence = preset == null
-        ? 0
-        : preset.intervalsBeforeLongBreak.clamp(1, 12);
+    final cadence = preset?.intervalsBeforeLongBreak.clamp(1, 12) ?? 0;
     final rhythm = preset == null
         ? null
         : buildFocusRhythm(preset: preset, targetWorkIntervals: cadence);
-    final primary = FilledButton(
-      key: const Key('focus-primary-action'),
-      style: FilledButton.styleFrom(minimumSize: const Size(176, 48)),
+    final primary = _FocusPrimaryButton(
+      minimal: !full,
+      label: l10n.startFocus,
+      icon: LucideIcons.play,
       onPressed: onStart,
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: 8,
-        children: [
-          const Icon(LucideIcons.play, size: 18),
-          Text(l10n.startFocus),
-        ],
-      ),
+    );
+    final presetMenu = _MinimalPresetMenu(
+      presets: presets,
+      selectedPreset: preset,
+      onSelected: onPresetSelected,
+      onCustomize: onCustomize,
+      onCreate: onCreate,
+    );
+    final sessionLabel = preset == null
+        ? l10n.noPreset
+        : l10n.focusSessionProgress(1, cadence);
+    final nextLabel = _nextIntervalLabel(
+      context,
+      rhythm?.steps.skip(1).firstOrNull,
     );
 
-    return Column(
+    return ConstrainedBox(
       key: const Key('focus-state-idle'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _FocusModeDetails(
-          visible: full && rhythm != null,
-          child: rhythm == null
-              ? const SizedBox.shrink()
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+      constraints: BoxConstraints(minHeight: full ? minHeight : 0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (full)
+                Column(
                   children: [
-                    Text(
-                      l10n.focusSessionProgress(1, cadence),
-                      style: AppTheme.monoTextStyle.copyWith(
-                        fontSize: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.fontSize,
-                        color: colors.secondaryText,
+                    _FocusFullHeader(
+                      preset: presetMenu,
+                      onMinimize: showViewModeMenu
+                          ? () => onViewModeChanged(FocusViewMode.minimal)
+                          : null,
+                      menu: _FocusViewModeMenu(
+                        viewMode: viewMode,
+                        onChanged: onViewModeChanged,
+                        showViewModeMenu: showViewModeMenu,
+                        sessionDisplay: sessionDisplay,
+                        onSessionDisplayChanged: onSessionDisplayChanged,
                       ),
                     ),
-                    SizedBox(height: compact ? 12 : 16),
-                    FocusRhythmRail(
-                      rhythm: rhythm,
-                      semanticsLabel: l10n.focusRhythmPreviewSummary(
-                        rhythm.steps.length,
+                    if (rhythm != null) ...[
+                      const SizedBox(height: 24),
+                      _FocusSessionOverview(
+                        rhythm: rhythm,
+                        label: sessionLabel,
+                        presetName: preset!.displayName(l10n),
+                        semanticsLabel: l10n.focusRhythmPreviewSummary(
+                          rhythm.steps.length,
+                        ),
+                        compact: compact,
+                        display: sessionDisplay,
                       ),
-                      compact: compact,
-                      activeProgress: 0,
+                    ],
+                  ],
+                ),
+              Padding(
+                padding: EdgeInsets.only(
+                  top: full ? (compact ? 32 : 64) : 8,
+                  bottom: 32,
+                ),
+                child: Column(
+                  key: const Key('focus-primary-stage'),
+                  children: [
+                    if (full)
+                      Text(
+                        l10n.noActiveSession,
+                        key: const Key('focus-idle-full-copy'),
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      )
+                    else
+                      presetMenu,
+                    const SizedBox(height: 28),
+                    _FocusMinimalTimer(
+                      style: timerVisualStyle,
+                      remainingLabel: preset == null
+                          ? '--:--'
+                          : formatDurationCompact(
+                              Duration(seconds: preset.workSeconds),
+                            ),
+                      progress: 0,
+                      color: context.appColors.accent,
                     ),
                   ],
                 ),
-        ),
-        SizedBox(height: full ? (compact ? 28 : 42) : 8),
-        Column(
-          key: const Key('focus-primary-stage'),
-          children: [
-            if (!inlineCircle) ...[
-              Icon(
-                LucideIcons.timer,
-                size: compact ? 30 : 34,
-                color: colors.mutedText,
-              ),
-              const SizedBox(height: 10),
-            ],
-            AnimatedSwitcher(
-              duration: AppMotion.duration(context, AppMotion.state),
-              switchInCurve: AppMotion.curve,
-              switchOutCurve: AppMotion.curve,
-              child: full
-                  ? Column(
-                      key: const Key('focus-idle-full-copy'),
-                      children: [
-                        Text(
-                          l10n.noActiveSession,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          preset?.displayName(l10n) ?? l10n.noPreset,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    )
-                  : _MinimalPresetMenu(
-                      key: const Key('focus-idle-minimal-copy'),
-                      presets: presets,
-                      selectedPreset: preset,
-                      onSelected: onPresetSelected,
-                      onCustomize: onCustomize,
-                      onCreate: onCreate,
-                    ),
-            ),
-            if (inlineCircle) ...[
-              const SizedBox(height: 14),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final circleSize = compact
-                      ? math.min(
-                          300.0,
-                          math.max(200.0, constraints.maxWidth - 24),
-                        )
-                      : 320.0;
-                  return Center(
-                    child: SizedBox.square(
-                      key: const Key('focus-idle-circular-timer'),
-                      dimension: circleSize,
-                      child: CustomPaint(
-                        painter: _FocusTimerPainter(
-                          progress: 0,
-                          trackColor: colors.surfaceHover,
-                          fillColor: colors.mutedText,
-                        ),
-                        child: Center(
-                          child: Text(
-                            preset == null
-                                ? '--:--'
-                                : formatDurationCompact(
-                                    Duration(seconds: preset.workSeconds),
-                                  ),
-                            style: AppTheme.monoTextStyle.copyWith(
-                              color: colors.primaryText,
-                              fontWeight: FontWeight.w700,
-                              fontSize: compact ? 54 : 62,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ] else if (preset != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                l10n.minutesWork((preset.workSeconds / 60).round()),
-                textAlign: TextAlign.center,
-                style: AppTheme.monoTextStyle.copyWith(
-                  fontSize: Theme.of(
-                    context,
-                  ).textTheme.headlineMedium?.fontSize,
-                  color: colors.primaryText,
-                  fontWeight: FontWeight.w700,
-                ),
               ),
             ],
-          ],
-        ),
-        SizedBox(height: compact ? 28 : 34),
-        _FocusModeDetails(
-          visible: full,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 22),
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final candidate in presets)
-                  ChoiceChip(
-                    key: ValueKey('preset-choice-${candidate.id}'),
-                    selected: candidate.id == preset?.id,
-                    onSelected: (_) => onPresetSelected(candidate.id),
-                    label: Text(candidate.displayName(l10n)),
-                    avatar: Icon(
-                      candidate.id == preset?.id
-                          ? LucideIcons.circleDot
-                          : LucideIcons.circle,
-                      size: 16,
-                    ),
-                  ),
-              ],
-            ),
           ),
-        ),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            primary,
-            if (full)
-              ShadButton.outline(
-                enabled: onCustomize != null,
-                onPressed: onCustomize,
-                leading: const Icon(LucideIcons.slidersHorizontal, size: 18),
-                child: Text(l10n.customize),
-              ),
-            if (full)
-              ShadButton.ghost(
-                onPressed: onCreate,
-                leading: const Icon(LucideIcons.plus, size: 18),
-                child: Text(l10n.newPreset),
-              ),
-            if (showViewModeMenu)
-              _FocusViewModeMenu(
-                viewMode: viewMode,
-                onChanged: onViewModeChanged,
-              ),
-          ],
-        ),
-      ],
+          if (full)
+            _FocusControlDock(
+              summary: nextLabel == null
+                  ? sessionLabel
+                  : '$sessionLabel\n$nextLabel',
+              primary: primary,
+            )
+          else
+            Center(child: primary),
+        ],
+      ),
     );
   }
 }
@@ -293,7 +206,6 @@ class _MinimalPresetMenu extends StatelessWidget {
     required this.onSelected,
     required this.onCustomize,
     required this.onCreate,
-    super.key,
   });
 
   final List<FocusPresetItem> presets;
@@ -358,7 +270,7 @@ class _MinimalPresetMenu extends StatelessWidget {
               padding: const WidgetStatePropertyAll(
                 EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               ),
-              foregroundColor: WidgetStatePropertyAll(colors.primaryText),
+              foregroundColor: WidgetStatePropertyAll(colors.secondaryText),
               backgroundColor: WidgetStateProperty.resolveWith((states) {
                 if (states.contains(WidgetState.hovered) ||
                     states.contains(WidgetState.focused) ||
@@ -379,7 +291,10 @@ class _MinimalPresetMenu extends StatelessWidget {
                   child: Text(
                     title,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: colors.secondaryText,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -398,10 +313,19 @@ class _MinimalPresetMenu extends StatelessWidget {
 }
 
 class _FocusViewModeMenu extends StatelessWidget {
-  const _FocusViewModeMenu({required this.viewMode, required this.onChanged});
+  const _FocusViewModeMenu({
+    required this.viewMode,
+    required this.onChanged,
+    required this.sessionDisplay,
+    required this.onSessionDisplayChanged,
+    required this.showViewModeMenu,
+  });
 
   final FocusViewMode viewMode;
   final ValueChanged<FocusViewMode> onChanged;
+  final FocusSessionDisplay sessionDisplay;
+  final ValueChanged<FocusSessionDisplay>? onSessionDisplayChanged;
+  final bool showViewModeMenu;
 
   @override
   Widget build(BuildContext context) {
@@ -415,20 +339,25 @@ class _FocusViewModeMenu extends StatelessWidget {
         label: context.l10n.moreFocusActions,
         container: true,
         button: true,
-        child: PopupMenuButton<FocusViewMode>(
+        child: AppActionMenu(
           tooltip: context.l10n.moreFocusActions,
-          icon: const Icon(LucideIcons.ellipsis),
-          onSelected: onChanged,
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              key: const Key('focus-switch-view-mode'),
-              value: target,
-              child: Text(
-                target == FocusViewMode.full
-                    ? context.l10n.focusSwitchToFullView
-                    : context.l10n.focusSwitchToMinimalView,
-              ),
+          items: [
+            ..._sessionDisplayMenuItems(
+              context,
+              sessionDisplay,
+              onSessionDisplayChanged,
             ),
+            if (showViewModeMenu)
+              ShadContextMenuItem(
+                height: 44,
+                key: const Key('focus-switch-view-mode'),
+                onPressed: () => onChanged(target),
+                child: Text(
+                  target == FocusViewMode.full
+                      ? context.l10n.focusSwitchToFullView
+                      : context.l10n.focusSwitchToMinimalView,
+                ),
+              ),
           ],
         ),
       ),
@@ -448,6 +377,9 @@ class FocusActiveStage extends StatelessWidget {
     required this.compact,
     required this.viewMode,
     this.showViewModeMenu = true,
+    this.sessionDisplay = FocusSessionDisplay.compact,
+    this.onSessionDisplayChanged,
+    this.minHeight = 0,
     required this.actions,
     required this.onViewModeChanged,
     required this.onPresetChanged,
@@ -466,6 +398,9 @@ class FocusActiveStage extends StatelessWidget {
   final bool compact;
   final FocusViewMode viewMode;
   final bool showViewModeMenu;
+  final FocusSessionDisplay sessionDisplay;
+  final ValueChanged<FocusSessionDisplay>? onSessionDisplayChanged;
+  final double minHeight;
   final FocusStageActions actions;
   final ValueChanged<FocusViewMode> onViewModeChanged;
   final ValueChanged<String> onPresetChanged;
@@ -482,17 +417,17 @@ class FocusActiveStage extends StatelessWidget {
       interval: interval,
       selectedPreset: preset,
       actions: actions,
+      minimal: !full,
     );
     final menu = _buildFocusMoreActionsMenu(
       context,
-      interval: interval,
-      remaining: remaining,
       presets: presets,
       selectedPreset: preset,
-      compact: compact,
       minimal: !full,
       viewMode: viewMode,
       showViewModeMenu: showViewModeMenu,
+      sessionDisplay: sessionDisplay,
+      onSessionDisplayChanged: onSessionDisplayChanged,
       actions: actions,
       onViewModeChanged: onViewModeChanged,
       onPresetChanged: onPresetChanged,
@@ -521,78 +456,111 @@ class FocusActiveStage extends StatelessWidget {
       ),
     );
 
-    return Column(
+    final sessionLabel = l10n.focusSessionProgress(
+      sessionNumber,
+      run.targetWorkIntervals,
+    );
+    final nextStep = rhythm?.steps
+        .where((step) => step.sequence > interval.sequenceNumber)
+        .firstOrNull;
+    final nextLabel = _nextIntervalLabel(context, nextStep);
+    return ConstrainedBox(
       key: const Key('focus-state-active'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _FocusModeDetails(
-          visible: full && rhythm != null,
-          child: rhythm == null
-              ? const SizedBox.shrink()
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+      constraints: BoxConstraints(minHeight: full ? minHeight : 0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _FocusModeDetails(
+                visible: full,
+                child: Column(
                   children: [
-                    Text(
-                      l10n.focusSessionProgress(
-                        sessionNumber,
-                        run.targetWorkIntervals,
+                    _FocusFullHeader(
+                      preset: _MinimalPresetMenu(
+                        presets: presets,
+                        selectedPreset: preset,
+                        onSelected: onPresetChanged,
+                        onCustomize: preset == null
+                            ? null
+                            : () => onCustomizePreset(preset),
+                        onCreate: onCreatePreset,
                       ),
-                      style: AppTheme.monoTextStyle.copyWith(
-                        fontSize: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.fontSize,
-                        color: context.appColors.secondaryText,
-                      ),
+                      menu: menu,
+                      onMinimize: showViewModeMenu
+                          ? () => onViewModeChanged(FocusViewMode.minimal)
+                          : null,
                     ),
-                    SizedBox(height: compact ? 12 : 16),
-                    FocusRhythmRail(
-                      rhythm: rhythm,
-                      activeSequence: interval.sequenceNumber,
-                      activeProgress: _progress(interval, remaining),
-                      recenterToken:
-                          '${run.id}:${interval.id}:${interval.status}:'
-                          '${interval.sequenceNumber}',
-                      semanticsLabel: l10n.focusRhythmSummary(
-                        activeStepNumber,
-                        rhythm.steps.length,
-                        phaseLabel,
-                        _activeStatusLabel(context, interval.status),
+                    if (rhythm != null) ...[
+                      const SizedBox(height: 24),
+                      _FocusSessionOverview(
+                        rhythm: rhythm,
+                        label: sessionLabel,
+                        presetName: preset!.displayName(l10n),
+                        compact: compact,
+                        display: sessionDisplay,
+                        activeSequence: interval.sequenceNumber,
+                        activeProgress: _progress(interval, remaining),
+                        recenterToken:
+                            '${run.id}:${interval.id}:${interval.status}:${interval.sequenceNumber}',
+                        semanticsLabel: l10n.focusRhythmSummary(
+                          activeStepNumber,
+                          rhythm.steps.length,
+                          phaseLabel,
+                          _activeStatusLabel(context, interval.status),
+                        ),
                       ),
-                      compact: compact,
-                    ),
-                    SizedBox(height: compact ? 32 : 44),
+                    ],
                   ],
                 ),
-        ),
-        _FocusTimerStage(
-          key: const Key('focus-primary-stage'),
-          interval: interval,
-          remaining: remaining,
-          style: timerVisualStyle,
-          compact: compact,
-        ),
-        _FocusModeDetails(
-          visible: full,
-          child: run.taskId == null
-              ? SizedBox(height: compact ? 28 : 36)
-              : _FocusLinkedTaskContext(
-                  taskId: run.taskId!,
-                  projectId: run.projectId,
-                  compact: compact,
+              ),
+              Padding(
+                padding: EdgeInsets.only(
+                  top: full ? (compact ? 32 : 64) : 0,
+                  bottom: 32,
                 ),
-        ),
-        if (!full) const SizedBox(height: 32),
-        _FocusActiveActions(
-          interval: interval,
-          remaining: remaining,
-          selectedPreset: preset,
-          compact: compact,
-          minimal: !full,
-          actions: actions,
-          primary: primary,
-          menu: menu,
-        ),
-      ],
+                child: Column(
+                  children: [
+                    _FocusModeDetails(
+                      visible: full && run.taskId != null,
+                      child: run.taskId == null
+                          ? const SizedBox.shrink()
+                          : _FocusLinkedTaskContext(
+                              taskId: run.taskId!,
+                              projectId: run.projectId,
+                              compact: compact,
+                            ),
+                    ),
+                    _FocusTimerStage(
+                      key: const Key('focus-primary-stage'),
+                      interval: interval,
+                      remaining: remaining,
+                      style: timerVisualStyle,
+                      compact: compact,
+                      minimal: !full,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          _FocusActiveActions(
+            interval: interval,
+            remaining: remaining,
+            selectedPreset: preset,
+            minimal: !full,
+            actions: actions,
+            primary: primary,
+            summary: nextLabel == null
+                ? sessionLabel
+                : '$sessionLabel\n$nextLabel',
+          ),
+        ],
+      ),
     );
   }
 }

@@ -19,6 +19,7 @@ void main() {
         focusViewModePreferenceKey: 'full',
         focusTimerVisualStylePreferenceKey: 'bar',
         lastFocusPresetIdPreferenceKey: 'old-preset',
+        focusSessionDisplayPreferenceKey: 'compact',
       });
       final pending = Completer<SharedPreferences?>();
       final repository = StoredFocusPreferencesRepository(
@@ -28,13 +29,52 @@ void main() {
       final loading = repository.load();
       final selection = repository.setPresetId('new-preset');
       final mode = repository.setViewMode(FocusViewMode.minimal);
+      final display = repository.setSessionDisplay(FocusSessionDisplay.icons);
       pending.complete(await SharedPreferences.getInstance());
       (await loading).getOrThrow();
       (await selection).getOrThrow();
       (await mode).getOrThrow();
+      (await display).getOrThrow();
       expect(repository.state.lastPresetId, 'new-preset');
       expect(repository.state.viewMode, FocusViewMode.minimal);
       expect(repository.state.timerStyle, FocusTimerVisualStyle.bar);
+      expect(repository.state.sessionDisplay, FocusSessionDisplay.icons);
+    },
+  );
+
+  test(
+    'session display persists independently and clears with focus preferences',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        focusSessionDisplayPreferenceKey: 'unknown',
+      });
+      final preferences = await SharedPreferences.getInstance();
+      final service = PreferencesService(() async => preferences);
+      final repository = StoredFocusPreferencesRepository(service);
+      addTearDown(repository.dispose);
+      (await repository.load()).getOrThrow();
+      expect(repository.state.sessionDisplay, FocusSessionDisplay.compact);
+      (await repository.setSessionDisplay(
+        FocusSessionDisplay.icons,
+      )).getOrThrow();
+      (await repository.setViewMode(FocusViewMode.full)).getOrThrow();
+      (await repository.setTimerStyle(FocusTimerVisualStyle.bar)).getOrThrow();
+      (await repository.setPresetId('custom')).getOrThrow();
+      (await repository.setCelebrationEnabled(false)).getOrThrow();
+      final restored = StoredFocusPreferencesRepository(service);
+      addTearDown(restored.dispose);
+      (await restored.load()).getOrThrow();
+      expect(restored.state.sessionDisplay, FocusSessionDisplay.icons);
+      expect(restored.state.viewMode, FocusViewMode.full);
+      expect(restored.state.timerStyle, FocusTimerVisualStyle.bar);
+      expect(restored.state.lastPresetId, 'custom');
+      expect(restored.state.celebrationEnabled, isFalse);
+      (await restored.clear()).getOrThrow();
+      expect(restored.state.sessionDisplay, FocusSessionDisplay.compact);
+      expect(
+        preferences.containsKey(focusSessionDisplayPreferenceKey),
+        isFalse,
+      );
     },
   );
 

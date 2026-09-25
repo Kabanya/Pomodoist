@@ -671,6 +671,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get calendarRoutine => 'Rutina';
 
   @override
+  String get calendarRhythm => 'Ritmo';
+
+  @override
+  String get calendarCollapseMonth => 'Contraer mes';
+
+  @override
+  String get calendarExpandMonth => 'Mostrar mes';
+
+  @override
   String get calendarOverview => 'Resumen del día';
 
   @override
@@ -2962,11 +2971,39 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notificationTaskStarting => 'La tarea comienza';
 
   @override
-  String get notificationReturnTitle => 'Tu tomate te echa de menos';
+  String get notificationReturnTitle => 'Pomo te echa de menos';
 
   @override
   String get notificationReturnBody =>
-      'Una sesión de concentración o una tarea completada basta para aprovechar el día.';
+      'Si tienes ganas, termina una tarea pequeña.';
+
+  @override
+  String get notificationReturnTitle2 => 'Pomo está por aquí';
+
+  @override
+  String get notificationReturnBody2 =>
+      'Elige la tarea más sencilla de tu lista; con una basta.';
+
+  @override
+  String get notificationReturnTitle3 => 'Pomo está contigo';
+
+  @override
+  String get notificationReturnBody3 =>
+      'Puedes empezar por una tarea que puedas terminar hoy.';
+
+  @override
+  String get notificationReturnTitle4 => 'Una noche con Pomo';
+
+  @override
+  String get notificationReturnBody4 =>
+      'Terminar una tarea ya es un buen paso.';
+
+  @override
+  String get notificationReturnTitle5 => 'Un recordatorio de Pomo';
+
+  @override
+  String get notificationReturnBody5 =>
+      'Mira tu lista y elige algo que puedas hacer esta noche.';
 
   @override
   String get notificationFocusChannel => 'Concentración';
@@ -3535,4 +3572,68 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get projectInfoYou => 'Tú';
+
+  @override
+  String get focusSessionDisplay => 'Vista de sesiones';
+
+  @override
+  String get focusSessionCompact => 'Compacta';
+
+  @override
+  String get focusSessionIcons => 'Iconos';
+
+  @override
+  String focusNextInterval(String phase, String duration) {
+    return 'Siguiente: $phase · $duration';
+  }
+
+  @override
+  String get settingsBottomNavigation => 'Navegación inferior';
+
+  @override
+  String get settingsBottomNavigationDescription =>
+      'Elige hasta cinco secciones, su orden y el estilo de navegación. Se guarda en este dispositivo.';
+
+  @override
+  String get settingsBottomNavigationSoft => 'Acento suave';
+
+  @override
+  String get settingsBottomNavigationLabels => 'Con etiquetas';
+
+  @override
+  String get settingsBottomNavigationPreview => 'Vista previa';
+
+  @override
+  String get settingsBottomNavigationEmpty =>
+      'La barra inferior está oculta. Todas las secciones y estos ajustes siguen disponibles en el menú superior.';
+
+  @override
+  String settingsBottomNavigationCount(int count, int max) {
+    return '$count de $max secciones';
+  }
+
+  @override
+  String get settingsBottomNavigationEarlier => 'Mover antes';
+
+  @override
+  String get settingsBottomNavigationLater => 'Mover después';
+
+  @override
+  String get settingsBottomNavigationAdd => 'Añadir sección';
+
+  @override
+  String get settingsBottomNavigationClear => 'Quitar todas';
+
+  @override
+  String get settingsBottomNavigationDefaults => 'Valores predeterminados';
+
+  @override
+  String get settingsBottomNavigationLoadError =>
+      'No se pudieron cargar los ajustes de navegación. Inténtalo de nuevo.';
+
+  @override
+  String get settingsBottomNavigationEdit => 'Personalizar';
+
+  @override
+  String get settingsBottomNavigationRemove => 'Quitar';
 }

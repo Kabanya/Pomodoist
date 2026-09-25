@@ -633,6 +633,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get calendarRoutine => '일과';
 
   @override
+  String get calendarRhythm => '리듬';
+
+  @override
+  String get calendarCollapseMonth => '월 접기';
+
+  @override
+  String get calendarExpandMonth => '월 표시';
+
+  @override
   String get calendarOverview => '하루 개요';
 
   @override
@@ -2899,10 +2908,34 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notificationTaskStarting => '작업 시작';
 
   @override
-  String get notificationReturnTitle => '토마토가 당신을 기다려요';
+  String get notificationReturnTitle => 'Pomo가 기다려요';
 
   @override
-  String get notificationReturnBody => '집중 한 번이나 작업 하나 완료면 오늘도 알찬 하루가 됩니다.';
+  String get notificationReturnBody => '여유가 있다면 작은 작업 하나를 마무리해 보세요.';
+
+  @override
+  String get notificationReturnTitle2 => 'Pomo가 안부를 전해요';
+
+  @override
+  String get notificationReturnBody2 => '목록에서 가장 쉬운 일을 골라 보세요. 하나면 충분해요.';
+
+  @override
+  String get notificationReturnTitle3 => 'Pomo가 함께해요';
+
+  @override
+  String get notificationReturnBody3 => '오늘 끝낼 수 있는 작업부터 시작해도 좋아요.';
+
+  @override
+  String get notificationReturnTitle4 => 'Pomo와 함께하는 저녁';
+
+  @override
+  String get notificationReturnBody4 => '작업 하나를 마치는 것도 좋은 한 걸음이에요.';
+
+  @override
+  String get notificationReturnTitle5 => 'Pomo의 알림';
+
+  @override
+  String get notificationReturnBody5 => '목록을 보고 오늘 저녁에 할 수 있는 일을 하나 골라 보세요.';
 
   @override
   String get notificationFocusChannel => '집중';
@@ -3419,4 +3452,68 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get projectInfoYou => '나';
+
+  @override
+  String get focusSessionDisplay => '세션 표시';
+
+  @override
+  String get focusSessionCompact => '간결하게';
+
+  @override
+  String get focusSessionIcons => '아이콘';
+
+  @override
+  String focusNextInterval(String phase, String duration) {
+    return '다음: $phase · $duration';
+  }
+
+  @override
+  String get settingsBottomNavigation => '하단 탐색';
+
+  @override
+  String get settingsBottomNavigationDescription =>
+      '최대 5개의 섹션과 순서, 탐색 스타일을 선택하세요. 이 기기에 저장됩니다.';
+
+  @override
+  String get settingsBottomNavigationSoft => '부드러운 강조';
+
+  @override
+  String get settingsBottomNavigationLabels => '이름 표시';
+
+  @override
+  String get settingsBottomNavigationPreview => '미리보기';
+
+  @override
+  String get settingsBottomNavigationEmpty =>
+      '하단 바가 숨겨져 있습니다. 상단 메뉴에서 모든 섹션과 이 설정에 접근할 수 있습니다.';
+
+  @override
+  String settingsBottomNavigationCount(int count, int max) {
+    return '섹션 $count/$max개';
+  }
+
+  @override
+  String get settingsBottomNavigationEarlier => '앞으로 이동';
+
+  @override
+  String get settingsBottomNavigationLater => '뒤로 이동';
+
+  @override
+  String get settingsBottomNavigationAdd => '섹션 추가';
+
+  @override
+  String get settingsBottomNavigationClear => '모두 제거';
+
+  @override
+  String get settingsBottomNavigationDefaults => '기본값으로';
+
+  @override
+  String get settingsBottomNavigationLoadError =>
+      '탐색 설정을 불러오지 못했습니다. 다시 시도하세요.';
+
+  @override
+  String get settingsBottomNavigationEdit => '맞춤 설정';
+
+  @override
+  String get settingsBottomNavigationRemove => '제거';
 }

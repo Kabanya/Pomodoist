@@ -25,7 +25,7 @@ class _BottomClearance extends ValueNotifier<double> {
   }
 }
 
-/// Keeps the floating voice controls above the actual bottom navigation/player.
+/// Keeps floating voice and Add controls above the actual bottom panels.
 class VoicePanelBottomClearance extends StatefulWidget {
   const VoicePanelBottomClearance({required this.child, super.key});
 

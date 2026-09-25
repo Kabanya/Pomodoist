@@ -59,8 +59,32 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const _FocusHeader(),
-                SizedBox(height: desktop ? 24 : 20),
+                if (viewMode == FocusViewMode.minimal ||
+                    loading ||
+                    loadError != null ||
+                    (run == null) != (interval == null) ||
+                    (run != null &&
+                        (interval?.runId != run.id || remaining == null)))
+                  Row(
+                    children: [
+                      const Expanded(child: FocusHeader()),
+                      if (viewMode == FocusViewMode.minimal &&
+                          widget.fixedViewMode == null)
+                        IconButton(
+                          key: const Key('focus-switch-view-mode'),
+                          tooltip: context.l10n.focusSwitchToFullView,
+                          constraints: const BoxConstraints.tightFor(
+                            width: 48,
+                            height: 48,
+                          ),
+                          color: context.appColors.secondaryText,
+                          onPressed: () => _setViewMode(FocusViewMode.full),
+                          icon: const Icon(LucideIcons.maximize, size: 18),
+                        ),
+                    ],
+                  ),
+                if (viewMode == FocusViewMode.minimal)
+                  SizedBox(height: desktop ? 24 : 20),
                 loadError != null
                     ? _FocusLoadError(error: loadError)
                     : loading
@@ -72,6 +96,13 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                         timerVisualStyle: timerVisualStyle,
                         compact: !desktop,
                         viewMode: viewMode,
+                        sessionDisplay: state.sessionDisplay,
+                        onSessionDisplayChanged: _setSessionDisplay,
+                        minHeight:
+                            widget.embedded || !constraints.hasBoundedHeight
+                            ? 0
+                            : (constraints.maxHeight - (desktop ? 60 : 50))
+                                  .clamp(0, double.infinity),
                         showViewModeMenu: widget.fixedViewMode == null,
                         onViewModeChanged: _setViewMode,
                         onPresetSelected: _selectPreset,
@@ -98,6 +129,13 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                         timerVisualStyle: timerVisualStyle,
                         compact: !desktop,
                         viewMode: viewMode,
+                        sessionDisplay: state.sessionDisplay,
+                        onSessionDisplayChanged: _setSessionDisplay,
+                        minHeight:
+                            widget.embedded || !constraints.hasBoundedHeight
+                            ? 0
+                            : (constraints.maxHeight - (desktop ? 60 : 50))
+                                  .clamp(0, double.infinity),
                         showViewModeMenu: widget.fixedViewMode == null,
                         actions: actions,
                         onViewModeChanged: _setViewMode,
@@ -229,6 +267,12 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     ),
   );
 
+  void _setSessionDisplay(FocusSessionDisplay display) => unawaited(
+    _savePreference(
+      ref.read(focusViewModelProvider.notifier).setSessionDisplay(display),
+    ),
+  );
+
   Future<void> _savePreference(Future<void> operation) async {
     try {
       await operation;
@@ -307,22 +351,6 @@ class _FocusTransition extends StatelessWidget {
             Text(context.l10n.preparingFocus),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _FocusHeader extends StatelessWidget {
-  const _FocusHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      key: const Key('focus-heading'),
-      header: true,
-      child: Text(
-        context.l10n.focusTitle,
-        style: Theme.of(context).textTheme.headlineMedium,
       ),
     );
   }

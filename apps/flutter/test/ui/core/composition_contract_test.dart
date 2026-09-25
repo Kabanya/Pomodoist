@@ -9,6 +9,7 @@ import 'package:pomodoist/data/repositories/notifications/notification_repositor
 import 'package:pomodoist/data/repositories/updates/update_repository.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
+import 'package:pomodoist/domain/models/notifications/notification_copy.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/routing/router.dart';
@@ -45,8 +46,7 @@ class _NoopNotificationScheduler extends NotificationScheduler {
   @override
   Future<void> scheduleReengagementReminder({
     required DateTime firstAt,
-    required String title,
-    required String body,
+    required NotificationCopy copy,
   }) async {}
 
   @override

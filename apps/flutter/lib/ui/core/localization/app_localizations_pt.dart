@@ -668,6 +668,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get calendarRoutine => 'Rotina';
 
   @override
+  String get calendarRhythm => 'Ritmo';
+
+  @override
+  String get calendarCollapseMonth => 'Recolher mês';
+
+  @override
+  String get calendarExpandMonth => 'Mostrar mês';
+
+  @override
   String get calendarOverview => 'Visão geral do dia';
 
   @override
@@ -2978,11 +2987,39 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notificationTaskStarting => 'Hora da tarefa';
 
   @override
-  String get notificationReturnTitle => 'Seu tomate está com saudade';
+  String get notificationReturnTitle => 'Pomo sente sua falta';
 
   @override
   String get notificationReturnBody =>
-      'Um foco ou uma tarefa concluída já faz o dia valer a pena.';
+      'Se tiver energia, conclua uma tarefa pequena.';
+
+  @override
+  String get notificationReturnTitle2 => 'Pomo passando por aqui';
+
+  @override
+  String get notificationReturnBody2 =>
+      'Escolha o item mais simples da lista; um já basta.';
+
+  @override
+  String get notificationReturnTitle3 => 'Pomo está por perto';
+
+  @override
+  String get notificationReturnBody3 =>
+      'Você pode começar por uma tarefa que consiga concluir hoje.';
+
+  @override
+  String get notificationReturnTitle4 => 'Uma noite com Pomo';
+
+  @override
+  String get notificationReturnBody4 =>
+      'Concluir uma tarefa já é um bom passo.';
+
+  @override
+  String get notificationReturnTitle5 => 'Um lembrete do Pomo';
+
+  @override
+  String get notificationReturnBody5 =>
+      'Olhe sua lista e escolha algo possível para esta noite.';
 
   @override
   String get notificationFocusChannel => 'Foco';
@@ -3547,6 +3584,70 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get projectInfoYou => 'Tu';
+
+  @override
+  String get focusSessionDisplay => 'Visualização das sessões';
+
+  @override
+  String get focusSessionCompact => 'Compacta';
+
+  @override
+  String get focusSessionIcons => 'Ícones';
+
+  @override
+  String focusNextInterval(String phase, String duration) {
+    return 'A seguir: $phase · $duration';
+  }
+
+  @override
+  String get settingsBottomNavigation => 'Navegação inferior';
+
+  @override
+  String get settingsBottomNavigationDescription =>
+      'Escolha até cinco secções, a sua ordem e o estilo de navegação. Guardado neste dispositivo.';
+
+  @override
+  String get settingsBottomNavigationSoft => 'Destaque suave';
+
+  @override
+  String get settingsBottomNavigationLabels => 'Com legendas';
+
+  @override
+  String get settingsBottomNavigationPreview => 'Pré-visualização';
+
+  @override
+  String get settingsBottomNavigationEmpty =>
+      'A barra inferior está oculta. Todas as secções e estas definições continuam disponíveis no menu superior.';
+
+  @override
+  String settingsBottomNavigationCount(int count, int max) {
+    return '$count de $max secções';
+  }
+
+  @override
+  String get settingsBottomNavigationEarlier => 'Mover para antes';
+
+  @override
+  String get settingsBottomNavigationLater => 'Mover para depois';
+
+  @override
+  String get settingsBottomNavigationAdd => 'Adicionar secção';
+
+  @override
+  String get settingsBottomNavigationClear => 'Remover todas';
+
+  @override
+  String get settingsBottomNavigationDefaults => 'Valores predefinidos';
+
+  @override
+  String get settingsBottomNavigationLoadError =>
+      'Não foi possível carregar as definições de navegação. Tente novamente.';
+
+  @override
+  String get settingsBottomNavigationEdit => 'Personalizar';
+
+  @override
+  String get settingsBottomNavigationRemove => 'Remover';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -3570,6 +3671,15 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get calendarRoutine => 'Rotina';
+
+  @override
+  String get calendarRhythm => 'Ritmo';
+
+  @override
+  String get calendarCollapseMonth => 'Recolher mês';
+
+  @override
+  String get calendarExpandMonth => 'Mostrar mês';
 
   @override
   String get calendarOverview => 'Visão geral do dia';
@@ -3663,4 +3773,68 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get projectInfoYou => 'Você';
+
+  @override
+  String get focusSessionDisplay => 'Visualização das sessões';
+
+  @override
+  String get focusSessionCompact => 'Compacta';
+
+  @override
+  String get focusSessionIcons => 'Ícones';
+
+  @override
+  String focusNextInterval(String phase, String duration) {
+    return 'A seguir: $phase · $duration';
+  }
+
+  @override
+  String get settingsBottomNavigation => 'Navegação inferior';
+
+  @override
+  String get settingsBottomNavigationDescription =>
+      'Escolha até cinco seções, a ordem e o estilo de navegação. Salvo neste dispositivo.';
+
+  @override
+  String get settingsBottomNavigationSoft => 'Destaque suave';
+
+  @override
+  String get settingsBottomNavigationLabels => 'Com legendas';
+
+  @override
+  String get settingsBottomNavigationPreview => 'Prévia';
+
+  @override
+  String get settingsBottomNavigationEmpty =>
+      'A barra inferior está oculta. Todas as seções e estas configurações continuam disponíveis no menu superior.';
+
+  @override
+  String settingsBottomNavigationCount(int count, int max) {
+    return '$count de $max seções';
+  }
+
+  @override
+  String get settingsBottomNavigationEarlier => 'Mover para antes';
+
+  @override
+  String get settingsBottomNavigationLater => 'Mover para depois';
+
+  @override
+  String get settingsBottomNavigationAdd => 'Adicionar seção';
+
+  @override
+  String get settingsBottomNavigationClear => 'Remover todas';
+
+  @override
+  String get settingsBottomNavigationDefaults => 'Padrão';
+
+  @override
+  String get settingsBottomNavigationLoadError =>
+      'Não foi possível carregar as configurações de navegação. Tente novamente.';
+
+  @override
+  String get settingsBottomNavigationEdit => 'Personalizar';
+
+  @override
+  String get settingsBottomNavigationRemove => 'Remover';
 }

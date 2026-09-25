@@ -129,6 +129,12 @@ missing, verification fails closed. The ordinary Apple
 purchase flow remains available. Configure existing App Store notifications
 for both purchase lifecycle and durable redemption updates.
 
+Production status as of **2026-09-25**: the Apple In-App Purchase key secrets are
+stored in Supabase, but `APPLE_RETURN_OFFERS_ENABLED` and
+`APPLE_RETURN_OFFER_SIGNATURE_MAX_AGE_SECONDS` are unset. Apple return offers
+remain disabled; ordinary StoreKit purchases are unaffected. This does not
+describe the separate Stripe return-offer rollout.
+
 ## Read-only App Store Connect check
 
 Verified by authenticated GET requests on **2026-09-13 UTC**:

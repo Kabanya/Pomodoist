@@ -1,10 +1,15 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:pomodoist/ui/core/widgets/compact_task_button_location.dart';
+
 import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:pomodoist/ui/core/widgets/app_bottom_navigation.dart';
+import 'package:pomodoist/domain/models/settings/bottom_navigation_preferences.dart';
+import 'package:pomodoist/ui/settings/view_models/bottom_navigation_view_model.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -67,7 +72,11 @@ class AdaptiveShell extends ConsumerStatefulWidget {
 
 class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _addTaskButtonKey = GlobalKey();
   final _backgroundLink = LayerLink();
+  Alignment _addTaskCorner = Alignment.bottomRight;
+  Offset? _addTaskDrag;
+
   bool _wideSidebarVisible = true;
   bool _wideSidebarMounted = true;
   bool _wideSidebarDragging = false;
@@ -78,6 +87,15 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   bool _searchPaletteOpen = false;
   int? _rawHandledPhysicalKeyId;
   late final ShellAppMenu? _appMenuController;
+
+  Offset? _visibleAddTaskPosition() {
+    final button = _addTaskButtonKey.currentContext?.findRenderObject();
+    final scaffold = _scaffoldKey.currentContext?.findRenderObject();
+    if (button is! RenderBox || scaffold is! RenderBox || !button.hasSize) {
+      return null;
+    }
+    return button.localToGlobal(Offset.zero, ancestor: scaffold);
+  }
 
   @override
   void initState() {
@@ -151,8 +169,9 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     final wide = MediaQuery.sizeOf(context).width >= _wideLayoutBreakpoint;
     final compactTaskDetailsOpen = !wide && widget.taskId != null;
     final focusLocation = _isFocusLocation(widget.location);
-    final mobileDestinations = _mobileDestinations(context);
-    final selected = _selectedMobileIndex(widget.location, mobileDestinations);
+    final navigation =
+        ref.watch(bottomNavigationProvider).value ??
+        BottomNavigationPreferences();
     final hasTodayFocusStrip =
         widget.location == '/today' &&
         ref.watch(shellTodayFocusStripVisibleProvider);
@@ -182,7 +201,8 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
             children: [
               MediaQuery.removePadding(
                 context: context,
-                removeTop: true,
+                // Fullscreen details own their SafeArea when the header is hidden.
+                removeTop: !compactTaskDetailsOpen,
                 removeBottom: !wide,
                 child: TaskDetailsHost(
                   taskId: widget.taskId,
@@ -248,68 +268,115 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
         ),
       );
     } else {
-      scaffold = LayoutBuilder(
-        builder: (context, constraints) => CompositedTransformTarget(
-          link: _backgroundLink,
-          child: ThemeBackground(
-            zone: ThemeBackgroundZone.main,
-            child: Scaffold(
-              key: _scaffoldKey,
-              backgroundColor: Colors.transparent,
-              drawer: Drawer(
-                width: _wideSidebarDefaultWidth,
-                backgroundColor: glass ? Colors.transparent : colors.surface,
-                shape: const RoundedRectangleBorder(),
-                child: ThemeBackground(
-                  zone: ThemeBackgroundZone.sidebar,
-                  blurBehind: true,
-                  wholeAppViewport: (
-                    link: _backgroundLink,
-                    size: constraints.biggest,
-                  ),
-                  child: _TodoistSidebar(
-                    location: widget.location,
+      scaffold = ValueListenableBuilder<double>(
+        valueListenable: voicePanelBottomClearanceOf(context),
+        builder: (context, clearance, _) {
+          final location = CompactTaskButtonLocation(
+            corner: _addTaskCorner,
+            dragPosition: _addTaskDrag,
+            bottomClearance: compactTaskDetailsOpen ? 0 : clearance,
+          );
+          void finishDrag([DragEndDetails? details]) {
+            setState(() {
+              _addTaskCorner = location.nearestCorner(
+                details?.velocity.pixelsPerSecond ?? Offset.zero,
+              );
+              _addTaskDrag = null;
+            });
+          }
+
+          return LayoutBuilder(
+            builder: (context, constraints) => CompositedTransformTarget(
+              link: _backgroundLink,
+              child: ThemeBackground(
+                zone: ThemeBackgroundZone.main,
+                child: Scaffold(
+                  key: _scaffoldKey,
+                  backgroundColor: Colors.transparent,
+                  drawer: Drawer(
                     width: _wideSidebarDefaultWidth,
-                    onDestinationSelected: _goFromDrawer,
-                  ),
-                ),
-              ),
-              body: content,
-              floatingActionButton: ValueListenableBuilder<bool>(
-                valueListenable: voiceQuickAddActiveOf(context),
-                builder: (context, voiceActive, _) => voiceActive
-                    ? const SizedBox.shrink()
-                    : SizedBox.square(
-                        dimension: 52,
-                        child: FloatingActionButton(
-                          key: const Key('compact-add-task'),
-                          heroTag: null,
-                          tooltip: context.l10n.addTask,
-                          backgroundColor: colors.accentFill,
-                          foregroundColor: colors.onAccent,
-                          focusColor: colors.onAccent.withValues(alpha: 0.24),
-                          elevation: 3,
-                          shape: const CircleBorder(),
-                          onPressed: () => showQuickAddDialog(context),
-                          child: const Icon(LucideIcons.plus, size: 24),
-                        ),
+                    backgroundColor: glass
+                        ? Colors.transparent
+                        : colors.surface,
+                    shape: const RoundedRectangleBorder(),
+                    child: ThemeBackground(
+                      zone: ThemeBackgroundZone.sidebar,
+                      blurBehind: true,
+                      wholeAppViewport: (
+                        link: _backgroundLink,
+                        size: constraints.biggest,
                       ),
-              ),
-              floatingActionButtonLocation:
-                  FloatingActionButtonLocation.endFloat,
-              bottomNavigationBar: compactTaskDetailsOpen
-                  ? null
-                  : VoicePanelBottomClearance(
-                      child: _ShellBottomChrome(
-                        selectedIndex: selected,
-                        showMiniFocusPlayer: showMiniFocusPlayer,
-                        onDestinationSelected: (index) =>
-                            context.go(mobileDestinations[index].path),
+                      child: _TodoistSidebar(
+                        location: widget.location,
+                        width: _wideSidebarDefaultWidth,
+                        onDestinationSelected: _goFromDrawer,
                       ),
                     ),
+                  ),
+                  body: content,
+                  floatingActionButton: ValueListenableBuilder<bool>(
+                    valueListenable: voiceQuickAddActiveOf(context),
+                    builder: (context, voiceActive, _) =>
+                        voiceActive || widget.location == '/calendar'
+                        ? const SizedBox.shrink()
+                        : SizedBox.square(
+                            key: _addTaskButtonKey,
+                            dimension: 52,
+                            child: GestureDetector(
+                              excludeFromSemantics: true,
+                              onPanStart: (_) => setState(
+                                () => _addTaskDrag =
+                                    _visibleAddTaskPosition() ??
+                                    location.position,
+                              ),
+                              onPanUpdate: (details) => setState(
+                                () => _addTaskDrag = location.clamp(
+                                  (_addTaskDrag ?? location.position) +
+                                      details.delta,
+                                ),
+                              ),
+                              onPanEnd: finishDrag,
+                              onPanCancel: finishDrag,
+                              child: FloatingActionButton(
+                                key: const Key('compact-add-task'),
+                                heroTag: null,
+                                tooltip: context.l10n.addTask,
+                                backgroundColor: colors.accentFill,
+                                foregroundColor: colors.onAccent,
+                                focusColor: colors.onAccent.withValues(
+                                  alpha: 0.24,
+                                ),
+                                elevation: 3,
+                                shape: const CircleBorder(),
+                                onPressed: () => showQuickAddDialog(context),
+                                child: const Icon(LucideIcons.plus, size: 24),
+                              ),
+                            ),
+                          ),
+                  ),
+                  floatingActionButtonLocation: location,
+                  floatingActionButtonAnimator: CompactTaskButtonAnimator(
+                    from: _visibleAddTaskPosition(),
+                    immediate:
+                        _addTaskDrag != null ||
+                        MediaQuery.disableAnimationsOf(context),
+                  ),
+                  bottomNavigationBar: compactTaskDetailsOpen
+                      ? null
+                      : VoicePanelBottomClearance(
+                          child: _ShellBottomChrome(
+                            preferences: navigation,
+                            selected: navigation.selectedFor(widget.location),
+                            showMiniFocusPlayer: showMiniFocusPlayer,
+                            onDestinationSelected: (destination) =>
+                                context.go(destination.path),
+                          ),
+                        ),
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       );
     }
 
@@ -653,16 +720,6 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     final viewportWidth = MediaQuery.sizeOf(context).width;
     return math.max(0, math.min(_wideSidebarMaxWidth, viewportWidth));
   }
-
-  int? _selectedMobileIndex(String path, List<_Destination> destinations) {
-    if (path.startsWith('/project')) {
-      return 4;
-    }
-    final index = destinations.indexWhere(
-      (destination) => path.startsWith(destination.path),
-    );
-    return index < 0 ? null : index;
-  }
 }
 
 class _ShellTopBar extends StatelessWidget {
@@ -751,160 +808,37 @@ class _ShellMenuButton extends StatelessWidget {
 
 class _ShellBottomChrome extends StatelessWidget {
   const _ShellBottomChrome({
-    required this.selectedIndex,
+    required this.preferences,
+    required this.selected,
     required this.showMiniFocusPlayer,
     required this.onDestinationSelected,
   });
 
-  final int? selectedIndex;
+  final BottomNavigationPreferences preferences;
+  final BottomNavigationDestination? selected;
   final bool showMiniFocusPlayer;
-  final ValueChanged<int> onDestinationSelected;
+  final ValueChanged<BottomNavigationDestination> onDestinationSelected;
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
+  Widget build(BuildContext context) => SafeArea(
+    top: false,
+    child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (showMiniFocusPlayer)
-          MediaQuery.removePadding(
-            context: context,
-            removeBottom: true,
-            child: const MiniFocusPlayer(floating: true),
-          ),
-        _FloatingBottomNavigationBar(
-          selectedIndex: selectedIndex,
-          onDestinationSelected: onDestinationSelected,
+        if (showMiniFocusPlayer) const MiniFocusPlayer(floating: true),
+        AppBottomNavigation(
+          key: const Key('mobile-bottom-navigation'),
+          preferences: preferences,
+          selected: selected,
+          onSelected: onDestinationSelected,
         ),
       ],
-    );
-  }
+    ),
+  );
 }
 
 bool _isFocusLocation(String path) =>
     path == '/focus' || path.startsWith('/focus/');
-
-class _FloatingBottomNavigationBar extends StatelessWidget {
-  const _FloatingBottomNavigationBar({
-    required this.selectedIndex,
-    required this.onDestinationSelected,
-  });
-
-  final int? selectedIndex;
-  final ValueChanged<int> onDestinationSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colors = context.appColors;
-    final destinations = _mobileDestinations(context);
-    return SafeArea(
-      key: const Key('mobile-bottom-navigation'),
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: colors.surface,
-            border: Border.all(color: colors.border),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.10),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-              child: SizedBox(
-                height: 64,
-                child: Row(
-                  children: [
-                    for (var index = 0; index < 5; index++)
-                      Expanded(
-                        child: _FloatingDestinationButton(
-                          destination: destinations[index],
-                          selected: index == selectedIndex,
-                          textTheme: textTheme,
-                          onTap: () => onDestinationSelected(index),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FloatingDestinationButton extends StatelessWidget {
-  const _FloatingDestinationButton({
-    required this.destination,
-    required this.selected,
-    required this.textTheme,
-    required this.onTap,
-  });
-
-  final _Destination destination;
-  final bool selected;
-  final TextTheme textTheme;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    final foreground = selected ? colors.accent : colors.secondaryText;
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: destination.label,
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  selected ? destination.selectedIcon : destination.icon,
-                  color: foreground,
-                  size: selected ? 23 : 22,
-                ),
-                const SizedBox(height: 4),
-                SizedBox(
-                  width: double.infinity,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      destination.label,
-                      maxLines: 1,
-                      style: textTheme.labelSmall?.copyWith(
-                        color: foreground,
-                        fontWeight: selected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _TodoistSidebar extends ConsumerStatefulWidget {
   const _TodoistSidebar({
@@ -1528,32 +1462,6 @@ class _SidebarProjectTile extends StatelessWidget {
       ),
     );
   }
-}
-
-List<_Destination> _mobileDestinations(BuildContext context) {
-  final l10n = context.l10n;
-  return [
-    _Destination(
-      l10n.navToday,
-      '/today',
-      LucideIcons.calendarCheck,
-      LucideIcons.calendarCheck,
-    ),
-    _Destination(
-      l10n.navUpcoming,
-      '/upcoming',
-      LucideIcons.calendarDays,
-      LucideIcons.calendarDays,
-    ),
-    _Destination(l10n.navFocus, '/focus', LucideIcons.timer, LucideIcons.timer),
-    _Destination(l10n.navInbox, '/inbox', LucideIcons.inbox, LucideIcons.inbox),
-    _Destination(
-      l10n.navProjects,
-      '/projects',
-      LucideIcons.folder,
-      LucideIcons.folder,
-    ),
-  ];
 }
 
 List<_Destination> _desktopDestinations(BuildContext context) {

@@ -20,6 +20,7 @@ import 'package:pomodoist/data/services/audio/focus_sound_player.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/data/services/local/preferences_service.dart';
 import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
+import 'package:pomodoist/domain/models/notifications/notification_copy.dart';
 import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:pomodoist/ui/core/localization/notification_copy.dart';
@@ -985,6 +986,40 @@ void main() {
   });
 
   group('reengagement notifications', () {
+    test('five Pomo messages rotate by local calendar day', () {
+      final russian = lookupAppLocalizations(
+        resolveAppLocale(AppLanguage.ru),
+      ).notificationCopy;
+      final titles = [
+        for (var day = 1; day <= 6; day++)
+          russian.returnMessageFor(DateTime(2026, 1, day, 20, 30)).title,
+      ];
+
+      expect(titles, [
+        'Помо скучает',
+        'Помо на связи',
+        'Помо рядом',
+        'Вечер с Помо',
+        'Помо напоминает',
+        'Помо скучает',
+      ]);
+      expect(
+        russian.returnMessageFor(DateTime(2026, 1, 1)).body,
+        'Если есть силы, заверши одну небольшую задачу',
+      );
+      final english = lookupAppLocalizations(
+        resolveAppLocale(AppLanguage.en),
+      ).notificationCopy;
+      expect(
+        english.returnMessageFor(DateTime(2026, 1, 1)).title,
+        'Pomo misses you',
+      );
+      expect(
+        english.returnMessageFor(DateTime(2026, 1, 1)).body,
+        isNot(contains('focus')),
+      );
+    });
+
     test('preference defaults to enabled', () async {
       SharedPreferences.setMockInitialValues({});
       final container = ProviderContainer(
@@ -1062,7 +1097,7 @@ void main() {
 
         expect(scheduler.permissionRequestCount, 1);
         expect(scheduler.scheduledReengagementAt, DateTime(2026, 5, 1, 20, 30));
-        expect(scheduler.scheduledReengagementTitle, 'Your tomato misses you');
+        expect(scheduler.scheduledReengagementTitle, contains('Pomo'));
 
         await notifications.syncReengagementReminder(
           enabled: false,
@@ -1087,7 +1122,7 @@ void main() {
         );
 
         expect(scheduler.scheduledReengagementAt, DateTime(2026, 5, 2, 20, 30));
-        expect(scheduler.scheduledReengagementTitle, 'Помидор скучает');
+        expect(scheduler.scheduledReengagementTitle, contains('Помо'));
       },
     );
 
@@ -1099,6 +1134,46 @@ void main() {
         hasProgressToday: false,
       );
       expect(scheduler.scheduledReengagementAt, DateTime(2026, 5, 1, 20, 30));
+    });
+
+    test('completed task wins over an in-flight reminder update', () async {
+      final scheduler = _FakeReengagementNotificationScheduler()
+        ..firstScheduleGate = Completer<void>();
+      final notifications = _notifications(scheduler, AppLanguage.en);
+      final beforeCompletion = notifications.syncReengagementReminder(
+        enabled: true,
+        now: DateTime(2026, 5, 1, 19),
+        hasProgressToday: false,
+      );
+      await Future<void>.delayed(Duration.zero);
+      final afterCompletion = notifications.syncReengagementReminder(
+        enabled: true,
+        now: DateTime(2026, 5, 1, 19),
+        hasProgressToday: true,
+      );
+      await Future<void>.delayed(Duration.zero);
+      scheduler.firstScheduleGate!.complete();
+      await Future.wait([beforeCompletion, afterCompletion]);
+
+      expect(scheduler.scheduledReengagementAt, DateTime(2026, 5, 2, 20, 30));
+    });
+
+    test('turning reminders off wins over an in-flight update', () async {
+      final scheduler = _FakeReengagementNotificationScheduler()
+        ..firstScheduleGate = Completer<void>();
+      final notifications = _notifications(scheduler, AppLanguage.en);
+      final schedule = notifications.syncReengagementReminder(
+        enabled: true,
+        now: DateTime(2026, 5, 1, 19),
+        hasProgressToday: false,
+      );
+      await Future<void>.delayed(Duration.zero);
+      final cancel = notifications.cancelReengagementReminder();
+      await Future<void>.delayed(Duration.zero);
+      scheduler.firstScheduleGate!.complete();
+      await Future.wait([schedule, cancel]);
+
+      expect(scheduler.scheduledReengagementAt, isNull);
     });
 
     test(
@@ -4113,6 +4188,8 @@ LocalNotificationRepository _notifications(
 class _FakeReengagementNotificationScheduler extends NotificationScheduler {
   int cancelReengagementCount = 0;
   int permissionRequestCount = 0;
+  int reengagementScheduleCount = 0;
+  Completer<void>? firstScheduleGate;
   DateTime? scheduledReengagementAt;
   String? scheduledReengagementTitle;
   final scheduledTaskStarts = <String, DateTime>{};
@@ -4127,16 +4204,19 @@ class _FakeReengagementNotificationScheduler extends NotificationScheduler {
   @override
   Future<void> scheduleReengagementReminder({
     required DateTime firstAt,
-    required String title,
-    required String body,
+    required NotificationCopy copy,
   }) async {
+    if (++reengagementScheduleCount == 1) {
+      await firstScheduleGate?.future;
+    }
     scheduledReengagementAt = firstAt;
-    scheduledReengagementTitle = title;
+    scheduledReengagementTitle = copy.returnMessageFor(firstAt).title;
   }
 
   @override
   Future<void> cancelReengagementReminder() async {
     cancelReengagementCount++;
+    scheduledReengagementAt = null;
   }
 
   @override

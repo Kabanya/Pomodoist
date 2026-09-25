@@ -1,11 +1,16 @@
 part of 'focus_stage.dart';
 
+/// Grow with the available area while keeping a readable, bounded dial.
+double focusTimerDiameter(Size viewport) =>
+    math.min(viewport.width, (viewport.shortestSide * 0.5).clamp(280.0, 520.0));
+
 class _FocusTimerStage extends StatelessWidget {
   const _FocusTimerStage({
     required this.interval,
     required this.remaining,
     required this.style,
     required this.compact,
+    required this.minimal,
     super.key,
   });
 
@@ -13,6 +18,7 @@ class _FocusTimerStage extends StatelessWidget {
   final Duration remaining;
   final FocusTimerVisualStyle style;
   final bool compact;
+  final bool minimal;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +61,47 @@ class _FocusTimerStage extends StatelessWidget {
             child: ExcludeSemantics(
               child: LayoutBuilder(
                 builder: (context, constraints) {
+                  final circleSize = focusTimerDiameter(
+                    Size(
+                      constraints.maxWidth,
+                      MediaQuery.sizeOf(context).height,
+                    ),
+                  );
+                  final fontSize = circleSize * 2 / 9;
+                  if (minimal) {
+                    return Column(
+                      children: [
+                        const SizedBox(height: 8),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 48),
+                          child: Center(
+                            child: Wrap(
+                              alignment: WrapAlignment.center,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 6,
+                              children: [
+                                Icon(phaseIcon, size: 16, color: color),
+                                Text(
+                                  phaseLabel,
+                                  key: const Key('focus-phase-label'),
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(color: color),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+                        _FocusMinimalTimer(
+                          style: style,
+                          remainingLabel: remainingLabel,
+                          progress: progress,
+                          color: color,
+                        ),
+                      ],
+                    );
+                  }
                   if (style == FocusTimerVisualStyle.bar) {
                     return Column(
                       children: [
@@ -65,14 +112,15 @@ class _FocusTimerStage extends StatelessWidget {
                           color: color,
                         ),
                         const SizedBox(height: 10),
-                        Text(
-                          remainingLabel,
-                          style: AppTheme.monoTextStyle.copyWith(
-                            fontSize: Theme.of(
-                              context,
-                            ).textTheme.displayLarge?.fontSize,
-                            color: colors.primaryText,
-                            fontWeight: FontWeight.w700,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            remainingLabel,
+                            style: AppTheme.monoTextStyle.copyWith(
+                              fontSize: fontSize,
+                              color: colors.primaryText,
+                              fontWeight: FontWeight.w400,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -103,12 +151,6 @@ class _FocusTimerStage extends StatelessWidget {
                     );
                   }
 
-                  final circleSize = compact
-                      ? math.min(
-                          300.0,
-                          math.max(200.0, constraints.maxWidth - 24),
-                        )
-                      : 320.0;
                   return Center(
                     child: SizedBox.square(
                       key: const Key('focus-circular-timer'),
@@ -139,8 +181,8 @@ class _FocusTimerStage extends StatelessWidget {
                                     remainingLabel,
                                     style: AppTheme.monoTextStyle.copyWith(
                                       color: colors.primaryText,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: compact ? 62 : 70,
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: fontSize,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -169,6 +211,82 @@ class _FocusTimerStage extends StatelessWidget {
       },
     );
   }
+}
+
+class _FocusMinimalTimer extends StatelessWidget {
+  const _FocusMinimalTimer({
+    required this.style,
+    required this.remainingLabel,
+    required this.progress,
+    required this.color,
+  });
+
+  final FocusTimerVisualStyle style;
+  final String remainingLabel;
+  final double progress;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final diameter = focusTimerDiameter(
+        Size(constraints.maxWidth, MediaQuery.sizeOf(context).height),
+      );
+      final time = FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          remainingLabel,
+          textDirection: TextDirection.ltr,
+          style: AppTheme.monoTextStyle.copyWith(
+            fontSize: diameter * 2 / 9,
+            fontWeight: FontWeight.w400,
+            letterSpacing: -3,
+            color: context.appColors.primaryText,
+          ),
+        ),
+      );
+      if (style == FocusTimerVisualStyle.bar) {
+        return Column(
+          key: const Key('focus-minimal-timer'),
+          children: [
+            time,
+            const SizedBox(height: 24),
+            SizedBox(
+              width: 80,
+              child: LinearProgressIndicator(
+                key: const Key('focus-linear-timer'),
+                value: progress,
+                minHeight: 2,
+                borderRadius: BorderRadius.circular(2),
+                color: color,
+                backgroundColor: context.appColors.surfaceHover,
+                stopIndicatorColor: Colors.transparent,
+                trackGap: 0,
+              ),
+            ),
+          ],
+        );
+      }
+      return ConstrainedBox(
+        key: const Key('focus-minimal-timer'),
+        constraints: BoxConstraints(maxWidth: diameter),
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: CustomPaint(
+            key: const Key('focus-circular-timer'),
+            painter: _FocusTimerPainter(
+              progress: progress,
+              trackColor: context.appColors.surfaceHover,
+              fillColor: color,
+            ),
+            child: Center(
+              child: Padding(padding: const EdgeInsets.all(28), child: time),
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
 
 class _PhaseLabel extends StatelessWidget {

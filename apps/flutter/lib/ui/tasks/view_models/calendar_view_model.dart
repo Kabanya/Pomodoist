@@ -195,6 +195,30 @@ class CalendarViewModel extends Notifier<CalendarState> {
   Future<void> setMode(CalendarMode mode) =>
       _save((settings) => settings.copyWith(mode: mode));
 
+  Future<void> setMobileMode(CalendarMobileMode mode) =>
+      _save((settings) => settings.copyWith(mobileMode: mode));
+
+  CalendarPresentation mobilePresentation(
+    DateTime day, {
+    required int firstWeekday,
+  }) {
+    final month = _settings.mobileMode == CalendarMobileMode.month;
+    final result = presentation(
+      day,
+      month ? CalendarMode.month : CalendarMode.day,
+      firstWeekday: firstWeekday,
+    );
+    if (!month) return result;
+    final last = result.days.lastIndexWhere(
+      (entry) => entry.date.year == day.year && entry.date.month == day.month,
+    );
+    return CalendarPresentation(
+      days: result.days.take((last ~/ 7 + 1) * 7).toList(),
+      unscheduled: result.unscheduled,
+      projectsById: result.projectsById,
+    );
+  }
+
   void setProject(String? projectId) {
     _projectId = projectId;
     _publish();

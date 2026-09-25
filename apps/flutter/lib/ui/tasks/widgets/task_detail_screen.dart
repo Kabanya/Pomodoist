@@ -26,6 +26,7 @@ import 'package:pomodoist/ui/tasks/view_models/task_detail_view_model.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/widgets/action_feedback.dart';
+import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
 import 'package:pomodoist/ui/core/widgets/app_date_time_picker.dart';
 import 'package:pomodoist/ui/collaboration/widgets/collaboration_copy.dart';
 import 'package:pomodoist/ui/tasks/view_models/task_history_view_model.dart';
@@ -113,42 +114,28 @@ class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
         ),
         const Spacer(),
         if (item != null)
-          Tooltip(
-            message: l10n.taskMore,
-            child: ShadMenubar(
-              padding: EdgeInsets.zero,
-              border: ShadBorder.none,
-              backgroundColor: Colors.transparent,
-              items: [
-                ShadMenubarItem(
-                  height: 40,
-                  items: [
-                    ShadContextMenuItem(
-                      onPressed: () async {
-                        if (!await saveEdits() || !context.mounted) return;
-                        await deleteTaskWithRecurringPrompt(
-                          context,
-                          ref,
-                          item,
-                          onDeleted: () => Future<void>.delayed(
-                            AppMotion.duration(context, AppMotion.task),
-                            () {
-                              if (context.mounted) _goBack(context);
-                            },
-                          ),
-                        );
+          AppActionMenu(
+            tooltip: l10n.taskMore,
+            items: [
+              ShadContextMenuItem(
+                onPressed: () async {
+                  if (!await saveEdits() || !context.mounted) return;
+                  await deleteTaskWithRecurringPrompt(
+                    context,
+                    ref,
+                    item,
+                    onDeleted: () => Future<void>.delayed(
+                      AppMotion.duration(context, AppMotion.task),
+                      () {
+                        if (context.mounted) _goBack(context);
                       },
-                      leading: const Icon(LucideIcons.trash2),
-                      child: Text(l10n.commonDelete),
                     ),
-                  ],
-                  child: Semantics(
-                    label: l10n.taskMore,
-                    child: const Icon(LucideIcons.ellipsis),
-                  ),
-                ),
-              ],
-            ),
+                  );
+                },
+                leading: const Icon(LucideIcons.trash2),
+                child: Text(l10n.commonDelete),
+              ),
+            ],
           ),
       ],
     );

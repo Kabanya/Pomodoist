@@ -4,6 +4,8 @@ import 'task_models.dart';
 
 enum CalendarMode { day, week, month, routine }
 
+enum CalendarMobileMode { day, month, routine }
+
 final class CalendarPeriod {
   CalendarPeriod({
     required this.name,
@@ -29,6 +31,7 @@ final class CalendarPeriod {
 final class CalendarSettings {
   CalendarSettings({
     this.mode = CalendarMode.week,
+    this.mobileMode = CalendarMobileMode.day,
     this.routineName = '',
     List<CalendarPeriod>? periods,
   }) : periods = List.unmodifiable(periods ?? defaultPeriods) {
@@ -59,21 +62,25 @@ final class CalendarSettings {
   }
 
   final CalendarMode mode;
+  final CalendarMobileMode mobileMode;
   final String routineName;
   final List<CalendarPeriod> periods;
 
   CalendarSettings copyWith({
     CalendarMode? mode,
+    CalendarMobileMode? mobileMode,
     String? routineName,
     List<CalendarPeriod>? periods,
   }) => CalendarSettings(
     mode: mode ?? this.mode,
+    mobileMode: mobileMode ?? this.mobileMode,
     routineName: routineName ?? this.routineName,
     periods: periods ?? this.periods,
   );
 
   String toJsonString() => jsonEncode({
     'mode': mode.name,
+    'mobileMode': mobileMode.name,
     'routineName': routineName,
     'periods': [for (final period in periods) period.toJson()],
   });
@@ -107,6 +114,11 @@ final class CalendarSettings {
       }
       return CalendarSettings(
         mode: mode ?? CalendarMode.week,
+        mobileMode:
+            CalendarMobileMode.values
+                .where((value) => value.name == decoded['mobileMode'])
+                .firstOrNull ??
+            CalendarMobileMode.day,
         routineName: decoded['routineName'] is String
             ? decoded['routineName'] as String
             : '',

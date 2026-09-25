@@ -666,6 +666,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get calendarRoutine => 'Распорядок';
 
   @override
+  String get calendarRhythm => 'Ритм';
+
+  @override
+  String get calendarCollapseMonth => 'Свернуть месяц';
+
+  @override
+  String get calendarExpandMonth => 'Показать месяц';
+
+  @override
   String get calendarOverview => 'Обзор дня';
 
   @override
@@ -2974,11 +2983,39 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notificationTaskStarting => 'Время задачи';
 
   @override
-  String get notificationReturnTitle => 'Помидор скучает';
+  String get notificationReturnTitle => 'Помо скучает';
 
   @override
   String get notificationReturnBody =>
-      'Один фокус или одна галочка — и день уже не зря.';
+      'Если есть силы, заверши одну небольшую задачу';
+
+  @override
+  String get notificationReturnTitle2 => 'Помо на связи';
+
+  @override
+  String get notificationReturnBody2 =>
+      'Выбери самое простое дело из списка — одного достаточно';
+
+  @override
+  String get notificationReturnTitle3 => 'Помо рядом';
+
+  @override
+  String get notificationReturnBody3 =>
+      'Можно начать с задачи, которую реально закончить сегодня';
+
+  @override
+  String get notificationReturnTitle4 => 'Вечер с Помо';
+
+  @override
+  String get notificationReturnBody4 =>
+      'Одна завершённая задача — уже хороший шаг';
+
+  @override
+  String get notificationReturnTitle5 => 'Помо напоминает';
+
+  @override
+  String get notificationReturnBody5 =>
+      'Загляни в список и выбери посильное дело на вечер';
 
   @override
   String get notificationFocusChannel => 'Фокус';
@@ -3521,4 +3558,68 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get projectInfoYou => 'Вы';
+
+  @override
+  String get focusSessionDisplay => 'Вид сессий';
+
+  @override
+  String get focusSessionCompact => 'Компактный';
+
+  @override
+  String get focusSessionIcons => 'Иконки';
+
+  @override
+  String focusNextInterval(String phase, String duration) {
+    return 'Далее: $phase · $duration';
+  }
+
+  @override
+  String get settingsBottomNavigation => 'Нижняя навигация';
+
+  @override
+  String get settingsBottomNavigationDescription =>
+      'Выберите до пяти разделов, их порядок и стиль панели. Сохраняется на этом устройстве.';
+
+  @override
+  String get settingsBottomNavigationSoft => 'Мягкий акцент';
+
+  @override
+  String get settingsBottomNavigationLabels => 'С подписями';
+
+  @override
+  String get settingsBottomNavigationPreview => 'Предпросмотр';
+
+  @override
+  String get settingsBottomNavigationEmpty =>
+      'Нижняя панель скрыта. Все разделы и эти настройки остаются доступны через верхнее меню.';
+
+  @override
+  String settingsBottomNavigationCount(int count, int max) {
+    return 'Разделов: $count из $max';
+  }
+
+  @override
+  String get settingsBottomNavigationEarlier => 'Переместить раньше';
+
+  @override
+  String get settingsBottomNavigationLater => 'Переместить позже';
+
+  @override
+  String get settingsBottomNavigationAdd => 'Добавить раздел';
+
+  @override
+  String get settingsBottomNavigationClear => 'Убрать все';
+
+  @override
+  String get settingsBottomNavigationDefaults => 'По умолчанию';
+
+  @override
+  String get settingsBottomNavigationLoadError =>
+      'Не удалось загрузить настройки навигации. Попробуйте ещё раз.';
+
+  @override
+  String get settingsBottomNavigationEdit => 'Настроить';
+
+  @override
+  String get settingsBottomNavigationRemove => 'Убрать';
 }

@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:math' as math;
+
+import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -15,12 +18,14 @@ class FocusRhythmRail extends StatefulWidget {
     required this.semanticsLabel,
     required this.compact,
     required this.activeProgress,
+    this.display = FocusSessionDisplay.icons,
     this.activeSequence,
     this.recenterToken,
     super.key,
   });
 
   final FocusRhythm rhythm;
+  final FocusSessionDisplay display;
   final String semanticsLabel;
   final bool compact;
   final int? activeSequence;
@@ -47,11 +52,14 @@ class _FocusRhythmRailState extends State<FocusRhythmRail> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final stepExtent = widget.compact ? 50.0 : 82.0;
-        final contentWidth = widget.rhythm.steps.length * stepExtent;
+        final segments = widget.display == FocusSessionDisplay.compact;
+        final contentWidth = segments
+            ? math.max(constraints.maxWidth, widget.rhythm.steps.length * 24.0)
+            : widget.rhythm.steps.length * stepExtent;
         final scrolls = contentWidth > constraints.maxWidth;
         _scheduleActiveCenter(
           '${widget.activeSequence}:${constraints.maxWidth}:'
-          '${widget.rhythm.steps.length}:${widget.compact}:'
+          '${widget.rhythm.steps.length}:${widget.compact}:${widget.display}:'
           '${Directionality.of(context)}:${widget.recenterToken}',
           scrolls: scrolls,
           reduceMotion: MediaQuery.disableAnimationsOf(context),
@@ -63,26 +71,48 @@ class _FocusRhythmRailState extends State<FocusRhythmRail> {
             children: [
               for (var index = 0; index < widget.rhythm.steps.length; index++)
                 Expanded(
-                  child: _RhythmStepSlot(
-                    step: widget.rhythm.steps[index],
-                    compact: widget.compact,
-                    active:
-                        widget.rhythm.steps[index].sequence ==
-                        widget.activeSequence,
-                    activeProgress: widget.activeProgress.clamp(0.0, 1.0),
-                    activeStepKey:
-                        widget.rhythm.steps[index].sequence ==
-                            widget.activeSequence
-                        ? _activeStepKey
-                        : null,
-                    leadingConnectorSource: index > 0
-                        ? widget.rhythm.steps[index - 1]
-                        : null,
-                    activeSequence: widget.activeSequence,
-                    showLeadingConnector: index > 0,
-                    showTrailingConnector:
-                        index < widget.rhythm.steps.length - 1,
-                  ),
+                  flex: segments
+                      ? widget.rhythm.steps[index].plannedSeconds.clamp(
+                          60,
+                          3600,
+                        )
+                      : 1,
+                  child: segments
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 3),
+                          child: _RhythmSegment(
+                            key:
+                                widget.rhythm.steps[index].sequence ==
+                                    widget.activeSequence
+                                ? _activeStepKey
+                                : null,
+                            step: widget.rhythm.steps[index],
+                            active:
+                                widget.rhythm.steps[index].sequence ==
+                                widget.activeSequence,
+                            progress: widget.activeProgress.clamp(0.0, 1.0),
+                          ),
+                        )
+                      : _RhythmStepSlot(
+                          step: widget.rhythm.steps[index],
+                          compact: widget.compact,
+                          active:
+                              widget.rhythm.steps[index].sequence ==
+                              widget.activeSequence,
+                          activeProgress: widget.activeProgress.clamp(0.0, 1.0),
+                          activeStepKey:
+                              widget.rhythm.steps[index].sequence ==
+                                  widget.activeSequence
+                              ? _activeStepKey
+                              : null,
+                          leadingConnectorSource: index > 0
+                              ? widget.rhythm.steps[index - 1]
+                              : null,
+                          activeSequence: widget.activeSequence,
+                          showLeadingConnector: index > 0,
+                          showTrailingConnector:
+                              index < widget.rhythm.steps.length - 1,
+                        ),
                 ),
             ],
           ),
@@ -115,9 +145,11 @@ class _FocusRhythmRailState extends State<FocusRhythmRail> {
     required bool scrolls,
     required bool reduceMotion,
   }) {
-    if (!scrolls ||
-        widget.activeSequence == null ||
-        _lastCenterSignature == signature) {
+    if (!scrolls) {
+      _lastCenterSignature = null;
+      return;
+    }
+    if (widget.activeSequence == null || _lastCenterSignature == signature) {
       return;
     }
     final animate = _lastCenterSignature != null && !reduceMotion;
@@ -154,6 +186,44 @@ class _FocusRhythmRailState extends State<FocusRhythmRail> {
         }
       }
     });
+  }
+}
+
+class _RhythmSegment extends StatelessWidget {
+  const _RhythmSegment({
+    required this.step,
+    required this.active,
+    required this.progress,
+    super.key,
+  });
+
+  final FocusRhythmStep step;
+  final bool active;
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final color = _activeColor(colors, step);
+    return Padding(
+      key: ValueKey('focus-rhythm-segment-${step.sequence}'),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: LinearProgressIndicator(
+        minHeight: 6,
+        value: active
+            ? progress
+            : _isFinished(step)
+            ? 1
+            : 0,
+        color: active ? color : colors.secondaryText.withValues(alpha: 0.5),
+        backgroundColor: active
+            ? color.withValues(alpha: 0.15)
+            : colors.surfaceHover,
+        borderRadius: BorderRadius.circular(4),
+        stopIndicatorColor: Colors.transparent,
+        trackGap: 0,
+      ),
+    );
   }
 }
 

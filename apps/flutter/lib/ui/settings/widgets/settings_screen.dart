@@ -22,6 +22,7 @@ import 'package:pomodoist/ui/settings/widgets/account_nickname_dialog.dart';
 import 'package:pomodoist/ui/settings/widgets/app_info_card.dart';
 import 'package:pomodoist/ui/settings/widgets/csv_task_import_card.dart';
 import 'package:pomodoist/ui/settings/widgets/theme_settings_card.dart';
+import 'package:pomodoist/ui/settings/widgets/bottom_navigation_settings.dart';
 import 'package:pomodoist/ui/settings/widgets/voice_transcription_settings_card.dart';
 import 'package:pomodoist/ui/settings/widgets/pomodoist_account_actions.dart';
 import 'package:pomodoist/ui/settings/widgets/auth_surfaces.dart';
@@ -332,6 +333,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ThemeSettingsCard(),
+            SizedBox(height: 24),
+            BottomNavigationSettings(),
             SizedBox(height: 24),
             TaskListStyleSettings(),
           ],

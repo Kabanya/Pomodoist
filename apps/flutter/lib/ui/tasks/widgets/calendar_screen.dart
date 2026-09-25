@@ -1,8 +1,10 @@
+import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:pomodoist/ui/core/widgets/bottom_panel_surface.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -35,6 +37,7 @@ part 'calendar_time_grid.dart';
 part 'calendar_boards.dart';
 part 'calendar_task_card.dart';
 part 'calendar_routine_editor.dart';
+part 'calendar_mobile.dart';
 
 /// Converts a pointer position on the 24-hour grid into a quarter-hour slot.
 int calendarDropMinutes(double localY, double hourHeight) {
@@ -83,6 +86,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     setState(() => _savingMode = true);
     try {
       await ref.read(calendarViewModelProvider.notifier).setMode(mode);
+    } catch (_) {
+      if (mounted) _calendarError(context, context.l10n.calendarSaveFailed);
+    } finally {
+      if (mounted) setState(() => _savingMode = false);
+    }
+  }
+
+  Future<void> _setMobileMode(CalendarMobileMode mode) async {
+    if (_savingMode) return;
+    setState(() => _savingMode = true);
+    try {
+      await ref.read(calendarViewModelProvider.notifier).setMobileMode(mode);
     } catch (_) {
       if (mounted) _calendarError(context, context.l10n.calendarSaveFailed);
     } finally {
@@ -153,8 +168,41 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     if (mounted) _overviewFocus.requestFocus();
   }
 
+  Future<void> _mobileOverview(DateTime day) => showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    sheetAnimationStyle: AnimationStyle(
+      duration: AppMotion.duration(context, AppMotion.panel),
+      reverseDuration: AppMotion.duration(context, AppMotion.panel),
+    ),
+    builder: (sheetContext) => SizedBox(
+      height: MediaQuery.sizeOf(sheetContext).height * .8,
+      child: CalendarOverviewPanel(
+        selectedDate: day,
+        onDateSelected: (date) {
+          Navigator.pop(sheetContext);
+          _goToDate(date);
+        },
+        onOpenMonth: () {
+          Navigator.pop(sheetContext);
+          unawaited(_setMobileMode(CalendarMobileMode.month));
+        },
+        onClose: () => Navigator.pop(sheetContext),
+        onOpenTask: (id) {
+          Navigator.pop(sheetContext);
+          openTaskDetails(context, id);
+        },
+      ),
+    ),
+  );
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => LayoutBuilder(builder: _buildCalendar);
+
+  Widget _buildCalendar(BuildContext context, BoxConstraints viewport) {
+    final mobile = viewport.maxWidth < 820;
     final state = ref.watch(calendarViewModelProvider);
     final vm = ref.read(calendarViewModelProvider.notifier);
     final selected = widget.selectedDate ?? state.now;
@@ -164,7 +212,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final firstWeekday = material.firstDayOfWeekIndex == 0
         ? 7
         : material.firstDayOfWeekIndex;
-    final presentation = vm.presentation(day, mode, firstWeekday: firstWeekday);
+    final presentation = mobile
+        ? vm.mobilePresentation(day, firstWeekday: firstWeekday)
+        : vm.presentation(day, mode, firstWeekday: firstWeekday);
     final actions = _CalendarActions(
       pending: _pending,
       onMove: (id, target, {minutes, allDay = false}) => _run(
@@ -180,7 +230,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           undo: () => vm.reopenTask(id),
         );
       }),
-      onSelectDay: (date) => unawaited(_selectDay(date)),
+      onSelectDay: (date) =>
+          mobile ? _goToDate(date) : unawaited(_selectDay(date)),
       onAdd: (date, [minutes]) => unawaited(
         showQuickAddDialog(
           context,
@@ -195,10 +246,31 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return SafeArea(
       bottom: false,
       child: TaskSelectionRegion(
-        visibleTasks: presentation.selectableTasks,
+        visibleTasks: mobile
+            ? CalendarPresentation(
+                days: presentation.days
+                    .where((d) => _sameCalendarDay(d.date, day))
+                    .toList(),
+                unscheduled: const [],
+                projectsById: presentation.projectsById,
+              ).selectableTasks
+            : presentation.selectableTasks,
         scopeKey: (day, state.projectId),
         child: LayoutBuilder(
           builder: (context, constraints) {
+            if (mobile) {
+              return _CalendarMobile(
+                state: state,
+                presentation: presentation,
+                day: day,
+                firstWeekday: firstWeekday,
+                actions: actions,
+                savingMode: _savingMode,
+                onMode: _setMobileMode,
+                onDate: _goToDate,
+                onOverview: () => unawaited(_mobileOverview(day)),
+              );
+            }
             final wide = constraints.maxWidth >= 1060;
             final content = Padding(
               padding: EdgeInsets.fromLTRB(
@@ -402,19 +474,21 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                       ),
                                     ],
                                   ),
-                                  PopupMenuButton<String>(
+                                  AppActionMenu(
                                     tooltip: l10n.calendarAllProjects,
-                                    onSelected: (id) =>
-                                        vm.setProject(id.isEmpty ? null : id),
-                                    itemBuilder: (context) => [
-                                      PopupMenuItem(
-                                        value: '',
+                                    width: null,
+                                    items: [
+                                      ShadContextMenuItem(
+                                        height: 44,
+                                        onPressed: () => vm.setProject(null),
                                         child: Text(l10n.calendarAllProjects),
                                       ),
                                       for (final project
                                           in presentation.projectsById.values)
-                                        PopupMenuItem(
-                                          value: project.id,
+                                        ShadContextMenuItem(
+                                          height: 44,
+                                          onPressed: () =>
+                                              vm.setProject(project.id),
                                           child: Text(
                                             project.displayName(context.l10n),
                                           ),

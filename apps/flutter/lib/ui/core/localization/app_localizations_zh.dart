@@ -609,6 +609,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get calendarRoutine => '日程';
 
   @override
+  String get calendarRhythm => '节奏';
+
+  @override
+  String get calendarCollapseMonth => '收起月份';
+
+  @override
+  String get calendarExpandMonth => '显示月份';
+
+  @override
   String get calendarOverview => '当日概览';
 
   @override
@@ -2816,10 +2825,34 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notificationTaskStarting => '任务开始';
 
   @override
-  String get notificationReturnTitle => '你的番茄想你了';
+  String get notificationReturnTitle => 'Pomo 想你了';
 
   @override
-  String get notificationReturnBody => '完成一次专注或勾选一个任务，今天就没有白过。';
+  String get notificationReturnBody => '如果还有精力，完成一件小任务吧。';
+
+  @override
+  String get notificationReturnTitle2 => 'Pomo 来问候你';
+
+  @override
+  String get notificationReturnBody2 => '从清单里选最简单的一项，完成一件就够了。';
+
+  @override
+  String get notificationReturnTitle3 => 'Pomo 陪着你';
+
+  @override
+  String get notificationReturnBody3 => '可以先做一件今天能够完成的任务。';
+
+  @override
+  String get notificationReturnTitle4 => '和 Pomo 一起度过夜晚';
+
+  @override
+  String get notificationReturnBody4 => '完成一件任务，也是很好的进展。';
+
+  @override
+  String get notificationReturnTitle5 => 'Pomo 提醒你';
+
+  @override
+  String get notificationReturnBody5 => '看看清单，选一件今晚做得到的事。';
 
   @override
   String get notificationFocusChannel => '专注';
@@ -3331,4 +3364,66 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get projectInfoYou => '你';
+
+  @override
+  String get focusSessionDisplay => '专注轮次显示';
+
+  @override
+  String get focusSessionCompact => '紧凑';
+
+  @override
+  String get focusSessionIcons => '图标';
+
+  @override
+  String focusNextInterval(String phase, String duration) {
+    return '下一项：$phase · $duration';
+  }
+
+  @override
+  String get settingsBottomNavigation => '底部导航';
+
+  @override
+  String get settingsBottomNavigationDescription =>
+      '选择最多五个板块、排列顺序和导航样式。保存在此设备上。';
+
+  @override
+  String get settingsBottomNavigationSoft => '柔和强调';
+
+  @override
+  String get settingsBottomNavigationLabels => '显示标签';
+
+  @override
+  String get settingsBottomNavigationPreview => '预览';
+
+  @override
+  String get settingsBottomNavigationEmpty => '底部导航栏已隐藏。仍可通过顶部菜单访问所有板块和此设置。';
+
+  @override
+  String settingsBottomNavigationCount(int count, int max) {
+    return '已选 $count 个板块，最多 $max 个';
+  }
+
+  @override
+  String get settingsBottomNavigationEarlier => '向前移动';
+
+  @override
+  String get settingsBottomNavigationLater => '向后移动';
+
+  @override
+  String get settingsBottomNavigationAdd => '添加板块';
+
+  @override
+  String get settingsBottomNavigationClear => '全部移除';
+
+  @override
+  String get settingsBottomNavigationDefaults => '恢复默认';
+
+  @override
+  String get settingsBottomNavigationLoadError => '无法加载导航设置。请重试。';
+
+  @override
+  String get settingsBottomNavigationEdit => '自定义';
+
+  @override
+  String get settingsBottomNavigationRemove => '移除';
 }

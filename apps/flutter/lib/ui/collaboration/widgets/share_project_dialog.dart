@@ -1,7 +1,15 @@
+import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
-    show LucideIcons, ShadButton, ShadDialog, ShadInput, ShadOption, ShadSelect;
+    show
+        ShadContextMenuItem,
+        LucideIcons,
+        ShadButton,
+        ShadDialog,
+        ShadInput,
+        ShadOption,
+        ShadSelect;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
@@ -225,6 +233,19 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
     final name = collaborationMemberLabel(l10n, scope, userId);
     final isOwner = userId == scope.ownerId;
     final canManageMembers = scope.canManage && !isOwner;
+    void selectAction(_MemberAction value) {
+      switch (value) {
+        case _MemberAction.transfer:
+          _transfer(userId, name);
+        case _MemberAction.remove:
+          _remove(userId, name);
+        case _MemberAction.administrator ||
+            _MemberAction.member ||
+            _MemberAction.observer:
+          _setRole(userId, value.role!);
+      }
+    }
+
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
@@ -242,22 +263,11 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
             : collaborationRoleLabel(l10n, member.role),
       ),
       trailing: scope.canManage && userId != actorId
-          ? PopupMenuButton<_MemberAction>(
+          ? AppActionMenu(
+              tooltip: l10n.taskMore,
               key: Key('collaboration-member-menu-$userId'),
               enabled: !_state.busy,
-              onSelected: (value) {
-                switch (value) {
-                  case _MemberAction.transfer:
-                    _transfer(userId, name);
-                  case _MemberAction.remove:
-                    _remove(userId, name);
-                  case _MemberAction.administrator ||
-                      _MemberAction.member ||
-                      _MemberAction.observer:
-                    _setRole(userId, value.role!);
-                }
-              },
-              itemBuilder: (context) => [
+              items: [
                 if (canManageMembers) ...[
                   for (final action in const [
                     _MemberAction.administrator,
@@ -265,26 +275,29 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
                     _MemberAction.observer,
                   ])
                     if (action.role != member.role)
-                      PopupMenuItem(
+                      ShadContextMenuItem(
+                        height: 44,
                         key: Key(
                           'collaboration-role-$userId-${action.role!.name}',
                         ),
-                        value: action,
+                        onPressed: () => selectAction(action),
                         child: Text(
                           collaborationRoleLabel(context.l10n, action.role!),
                         ),
                       ),
                 ],
                 if (scope.ownerId == actorId && userId != actorId)
-                  PopupMenuItem(
+                  ShadContextMenuItem(
+                    height: 44,
                     key: Key('collaboration-transfer-$userId'),
-                    value: _MemberAction.transfer,
+                    onPressed: () => selectAction(_MemberAction.transfer),
                     child: Text(l10n.collaborationTransferOwnership),
                   ),
                 if (canManageMembers)
-                  PopupMenuItem(
+                  ShadContextMenuItem(
+                    height: 44,
                     key: Key('collaboration-remove-$userId'),
-                    value: _MemberAction.remove,
+                    onPressed: () => selectAction(_MemberAction.remove),
                     child: Text(l10n.collaborationRemoveMember),
                   ),
               ],

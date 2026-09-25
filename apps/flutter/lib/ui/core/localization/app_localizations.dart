@@ -1267,6 +1267,24 @@ abstract class AppLocalizations {
   /// **'Routine'**
   String get calendarRoutine;
 
+  /// No description provided for @calendarRhythm.
+  ///
+  /// In en, this message translates to:
+  /// **'Rhythm'**
+  String get calendarRhythm;
+
+  /// No description provided for @calendarCollapseMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse month'**
+  String get calendarCollapseMonth;
+
+  /// No description provided for @calendarExpandMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Show month'**
+  String get calendarExpandMonth;
+
   /// No description provided for @calendarOverview.
   ///
   /// In en, this message translates to:
@@ -5198,14 +5216,62 @@ abstract class AppLocalizations {
   /// No description provided for @notificationReturnTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your tomato misses you'**
+  /// **'Pomo misses you'**
   String get notificationReturnTitle;
 
   /// No description provided for @notificationReturnBody.
   ///
   /// In en, this message translates to:
-  /// **'One focus or one checkmark is enough to save the day.'**
+  /// **'If you have the energy, finish one small task.'**
   String get notificationReturnBody;
+
+  /// No description provided for @notificationReturnTitle2.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomo checking in'**
+  String get notificationReturnTitle2;
+
+  /// No description provided for @notificationReturnBody2.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the easiest item on your list — one is enough.'**
+  String get notificationReturnBody2;
+
+  /// No description provided for @notificationReturnTitle3.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomo is here'**
+  String get notificationReturnTitle3;
+
+  /// No description provided for @notificationReturnBody3.
+  ///
+  /// In en, this message translates to:
+  /// **'You can start with a task you can finish today.'**
+  String get notificationReturnBody3;
+
+  /// No description provided for @notificationReturnTitle4.
+  ///
+  /// In en, this message translates to:
+  /// **'An evening with Pomo'**
+  String get notificationReturnTitle4;
+
+  /// No description provided for @notificationReturnBody4.
+  ///
+  /// In en, this message translates to:
+  /// **'One finished task is already a good step.'**
+  String get notificationReturnBody4;
+
+  /// No description provided for @notificationReturnTitle5.
+  ///
+  /// In en, this message translates to:
+  /// **'A reminder from Pomo'**
+  String get notificationReturnTitle5;
+
+  /// No description provided for @notificationReturnBody5.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your list and pick one manageable thing for tonight.'**
+  String get notificationReturnBody5;
 
   /// No description provided for @notificationFocusChannel.
   ///
@@ -6004,6 +6070,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You'**
   String get projectInfoYou;
+
+  /// No description provided for @focusSessionDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Session display'**
+  String get focusSessionDisplay;
+
+  /// No description provided for @focusSessionCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact'**
+  String get focusSessionCompact;
+
+  /// No description provided for @focusSessionIcons.
+  ///
+  /// In en, this message translates to:
+  /// **'Icons'**
+  String get focusSessionIcons;
+
+  /// No description provided for @focusNextInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {phase} · {duration}'**
+  String focusNextInterval(String phase, String duration);
+
+  /// No description provided for @settingsBottomNavigation.
+  ///
+  /// In en, this message translates to:
+  /// **'Bottom navigation'**
+  String get settingsBottomNavigation;
+
+  /// No description provided for @settingsBottomNavigationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose up to five sections, their order, and the navigation style. Saved on this device.'**
+  String get settingsBottomNavigationDescription;
+
+  /// No description provided for @settingsBottomNavigationSoft.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft accent'**
+  String get settingsBottomNavigationSoft;
+
+  /// No description provided for @settingsBottomNavigationLabels.
+  ///
+  /// In en, this message translates to:
+  /// **'With labels'**
+  String get settingsBottomNavigationLabels;
+
+  /// No description provided for @settingsBottomNavigationPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get settingsBottomNavigationPreview;
+
+  /// No description provided for @settingsBottomNavigationEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The bottom panel is hidden. All sections and these settings remain available from the top menu.'**
+  String get settingsBottomNavigationEmpty;
+
+  /// No description provided for @settingsBottomNavigationCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {max} sections'**
+  String settingsBottomNavigationCount(int count, int max);
+
+  /// No description provided for @settingsBottomNavigationEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Move earlier'**
+  String get settingsBottomNavigationEarlier;
+
+  /// No description provided for @settingsBottomNavigationLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Move later'**
+  String get settingsBottomNavigationLater;
+
+  /// No description provided for @settingsBottomNavigationAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a section'**
+  String get settingsBottomNavigationAdd;
+
+  /// No description provided for @settingsBottomNavigationClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all'**
+  String get settingsBottomNavigationClear;
+
+  /// No description provided for @settingsBottomNavigationDefaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Use defaults'**
+  String get settingsBottomNavigationDefaults;
+
+  /// No description provided for @settingsBottomNavigationLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load navigation settings. Please try again.'**
+  String get settingsBottomNavigationLoadError;
+
+  /// No description provided for @settingsBottomNavigationEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize'**
+  String get settingsBottomNavigationEdit;
+
+  /// No description provided for @settingsBottomNavigationRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get settingsBottomNavigationRemove;
 }
 
 class _AppLocalizationsDelegate

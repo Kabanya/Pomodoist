@@ -115,6 +115,8 @@ pomodoist_app_icon_no_background.png
 !apps/flutter/web/icons/*/*.png
 .codex**
 key-**.md
+key-**.key
+**.p8
 .gitignore
 supabase/.temp/
 server/supabase/.temp/

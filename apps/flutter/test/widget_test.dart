@@ -316,6 +316,7 @@ void main() {
   testWidgets('FocusScreen renders the idle preset picker', (tester) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     await tester.pumpWidget(
       ProviderScope(
@@ -333,7 +334,9 @@ void main() {
     expect(find.text('No active session'), findsOneWidget);
     expect(find.text('Classic'), findsAtLeastNWidgets(1));
     expect(find.text('Classic default'), findsNothing);
-    expect(find.text('25m work'), findsOneWidget);
+    expect(find.text('25:00'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('minimal-preset-menu')));
+    await tester.pumpAndSettle();
     expect(find.text('Customize'), findsOneWidget);
     expect(find.text('New preset'), findsOneWidget);
     expect(find.text('Start focus'), findsOneWidget);
@@ -344,6 +347,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     await tester.pumpWidget(
       ProviderScope(
@@ -357,16 +361,21 @@ void main() {
       await tester.pump();
     }
 
-    await tester.tap(find.byKey(ValueKey('preset-choice-$deepWorkPresetId')));
+    await tester.tap(find.byKey(const Key('minimal-preset-menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(ValueKey('minimal-preset-choice-$deepWorkPresetId')),
+    );
     await tester.pump();
 
-    expect(find.text('50m work'), findsOneWidget);
-    expect(find.text('25m work'), findsNothing);
+    expect(find.text('50:00'), findsOneWidget);
+    expect(find.text('25:00'), findsNothing);
   });
 
   testWidgets('FocusScreen persists the last selected preset', (tester) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     await tester.pumpWidget(
       ProviderScope(
@@ -380,7 +389,11 @@ void main() {
       await tester.pump();
     }
 
-    await tester.tap(find.byKey(ValueKey('preset-choice-$deepWorkPresetId')));
+    await tester.tap(find.byKey(const Key('minimal-preset-menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(ValueKey('minimal-preset-choice-$deepWorkPresetId')),
+    );
     await tester.pumpAndSettle();
     final prefs = await SharedPreferences.getInstance();
 
@@ -929,6 +942,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     final now = DateTime.utc(2026, 4, 27, 10);
     await _pumpMiniFocusPlayer(
@@ -950,6 +964,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     final now = DateTime.utc(2026, 4, 27, 10);
     await _pumpMiniFocusPlayer(
@@ -978,6 +993,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     final now = DateTime.utc(2026, 4, 27, 10);
     await _pumpMiniFocusPlayer(
@@ -1168,6 +1184,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     final now = DateTime.utc(2026, 4, 27, 10);
     await _pumpActiveFocusScreen(tester, now);
@@ -1179,6 +1196,7 @@ void main() {
   testWidgets('FocusScreen enlarges circular timer on macOS', (tester) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     final now = DateTime.utc(2026, 4, 27, 10);
     await _pumpActiveFocusScreen(
@@ -1199,6 +1217,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     final now = DateTime.utc(2026, 4, 27, 10);
     await _pumpActiveFocusScreen(
@@ -1219,6 +1238,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     final now = DateTime.utc(2026, 4, 27, 10);
     await _pumpActiveFocusScreen(
@@ -1239,6 +1259,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     final now = DateTime.utc(2026, 4, 27, 10);
     await _pumpActiveFocusScreen(
@@ -1259,6 +1280,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
       focusTimerVisualStylePreferenceKey:
           FocusTimerVisualStyle.bar.storageValue,
     });
@@ -1272,6 +1294,7 @@ void main() {
   testWidgets('Focus preset form validates required fields', (tester) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     await tester.pumpWidget(
       ProviderScope(
@@ -1284,6 +1307,9 @@ void main() {
     for (var pump = 0; pump < 8; pump++) {
       await tester.pump();
     }
+
+    await tester.tap(find.byKey(const Key('minimal-preset-menu')));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('New preset'));
     await tester.pumpAndSettle();
@@ -1301,6 +1327,7 @@ void main() {
   testWidgets('Customize preset dialog opens wider by default', (tester) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     await tester.pumpWidget(
       ProviderScope(
@@ -1313,6 +1340,9 @@ void main() {
     for (var pump = 0; pump < 8; pump++) {
       await tester.pump();
     }
+
+    await tester.tap(find.byKey(const Key('minimal-preset-menu')));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Customize'));
     await tester.pumpAndSettle();
@@ -1327,6 +1357,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     await tester.pumpWidget(
       ProviderScope(
@@ -1339,6 +1370,9 @@ void main() {
     for (var pump = 0; pump < 8; pump++) {
       await tester.pump();
     }
+
+    await tester.tap(find.byKey(const Key('minimal-preset-menu')));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('New preset'));
     await tester.pumpAndSettle();
@@ -1371,6 +1405,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     final fake = _FakeFocusRepository(
       activeRun: FocusRunItem(
@@ -1433,6 +1468,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      focusSessionDisplayPreferenceKey: FocusSessionDisplay.icons.storageValue,
     });
     final now = DateTime.utc(2026, 4, 27, 10);
     final fake = _FakeFocusRepository(

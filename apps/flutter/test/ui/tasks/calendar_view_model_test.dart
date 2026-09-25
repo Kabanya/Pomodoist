@@ -69,8 +69,7 @@ class FakePreferences implements PreferencesRepository {
       failNextRead = false;
       return Result.error(StateError('read failure'), StackTrace.current);
     }
-    return pendingRead?.future ??
-        Result.ok({calendarSettingsKey: ?stored});
+    return pendingRead?.future ?? Result.ok({calendarSettingsKey: ?stored});
   }
 
   @override
@@ -107,6 +106,72 @@ ProviderContainer container(
 );
 
 void main() {
+  test(
+    'mobile mode persists independently and failed writes keep the last mode',
+    () async {
+      final preferences = FakePreferences();
+      final c = container(FakeTasks(), preferences);
+      addTearDown(c.dispose);
+      final sub = c.listen(calendarViewModelProvider, (_, _) {});
+      addTearDown(sub.close);
+      final vm = c.read(calendarViewModelProvider.notifier);
+      await vm.setMode(CalendarMode.week);
+      await vm.setMobileMode(CalendarMobileMode.routine);
+      final saved = CalendarSettings.fromJsonString(preferences.stored);
+      expect(saved.mode, CalendarMode.week);
+      expect(saved.mobileMode, CalendarMobileMode.routine);
+      expect(
+        vm
+            .mobilePresentation(DateTime(2026, 9, 25), firstWeekday: 1)
+            .days
+            .single
+            .date,
+        DateTime(2026, 9, 25),
+      );
+      preferences.failWrite = true;
+      await expectLater(
+        vm.setMobileMode(CalendarMobileMode.month),
+        throwsStateError,
+      );
+      expect(
+        c.read(calendarViewModelProvider).settings.mobileMode,
+        CalendarMobileMode.routine,
+      );
+    },
+  );
+
+  test(
+    'mobile month keeps the selected day and includes adjacent dates',
+    () async {
+      final c = container(FakeTasks(), FakePreferences());
+      addTearDown(c.dispose);
+      final sub = c.listen(calendarViewModelProvider, (_, _) {});
+      addTearDown(sub.close);
+      final vm = c.read(calendarViewModelProvider.notifier);
+      await vm.setMobileMode(CalendarMobileMode.month);
+      final day = DateTime(2026, 9, 25);
+      final month = vm.mobilePresentation(day, firstWeekday: 1);
+      expect(month.days.length, 35);
+      expect(
+        vm
+            .mobilePresentation(DateTime(2021, 2, 15), firstWeekday: 1)
+            .days
+            .length,
+        28,
+      );
+      expect(
+        vm
+            .mobilePresentation(DateTime(2026, 8, 15), firstWeekday: 1)
+            .days
+            .length,
+        42,
+      );
+      expect(month.days.any((d) => d.date == day), isTrue);
+      await vm.setMobileMode(CalendarMobileMode.day);
+      expect(vm.mobilePresentation(day, firstWeekday: 1).days.single.date, day);
+    },
+  );
+
   test(
     'timed drag and resize retain recurrence and duration across midnight',
     () async {

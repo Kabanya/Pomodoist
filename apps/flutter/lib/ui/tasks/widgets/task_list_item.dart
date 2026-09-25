@@ -1,3 +1,5 @@
+import 'package:pomodoist/ui/core/widgets/app_context_menu_region.dart';
+import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
 import 'package:pomodoist/ui/tasks/view_models/task_subtask_progress.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
 import 'dart:async';
@@ -6,7 +8,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
-import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadContextMenuItem;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -206,33 +208,11 @@ class TaskListItem extends ConsumerWidget {
       );
     }
 
-    Widget overflowAction() {
-      return Builder(
-        builder: (buttonContext) => IconButton(
-          key: ValueKey('agenda-overflow-action-${task.id}'),
-          tooltip: l10n.moreFocusActions,
-          visualDensity: VisualDensity.compact,
-          onPressed: () {
-            final renderObject = buttonContext.findRenderObject();
-            if (renderObject is! RenderBox) {
-              return;
-            }
-            final position = renderObject.localToGlobal(
-              Offset(renderObject.size.width, renderObject.size.height),
-            );
-            unawaited(
-              _showQuickActions(
-                buttonContext,
-                ref,
-                position,
-                includeFocus: isModern,
-              ),
-            );
-          },
-          icon: const Icon(LucideIcons.ellipsis),
-        ),
-      );
-    }
+    Widget overflowAction() => AppActionMenu(
+      key: ValueKey('agenda-overflow-action-${task.id}'),
+      tooltip: l10n.moreFocusActions,
+      items: _quickActionItems(context, ref, includeFocus: isModern),
+    );
 
     Future<void> toggleCompletion() async {
       if (task.isCompleted) {
@@ -340,13 +320,6 @@ class TaskListItem extends ConsumerWidget {
                   openTaskDetails(context, task.id);
                 }
               },
-              onSecondaryTapDown: (details) {
-                if (!(selection?.active ?? false)) {
-                  unawaited(
-                    _showQuickActions(context, ref, details.globalPosition),
-                  );
-                }
-              },
               onLongPress:
                   _usesTouchTaskInteraction && (selection?.active ?? false)
                   ? () => selection!.toggle(task.id)
@@ -434,8 +407,15 @@ class TaskListItem extends ConsumerWidget {
             ),
           ),
         );
+        final contextualContent = selection?.active ?? false
+            ? content
+            : AppContextMenuRegion(
+                enableLongPress: false,
+                items: _quickActionItems(context, ref),
+                child: content,
+              );
         if (!enableSubtaskDrop) {
-          return content;
+          return contextualContent;
         }
         return AnimatedPadding(
           duration: MediaQuery.disableAnimationsOf(context)
@@ -443,7 +423,7 @@ class TaskListItem extends ConsumerWidget {
               : AppMotion.state,
           curve: Curves.easeOutCubic,
           padding: EdgeInsets.symmetric(vertical: accepting ? 4 : 0),
-          child: content,
+          child: contextualContent,
         );
       }
 
@@ -539,159 +519,169 @@ class TaskListItem extends ConsumerWidget {
         (subtaskProgress?.total ?? 0) > 0;
   }
 
-  Future<void> _showQuickActions(
+  List<Widget> _quickActionItems(
     BuildContext context,
-    WidgetRef ref,
-    Offset position, {
+    WidgetRef ref, {
     bool includeFocus = false,
-  }) async {
+  }) {
     final l10n = context.l10n;
     final colors = context.appColors;
     final selection = TaskSelectionScope.maybeOf(context);
-    final action = await showMenu<_TaskQuickAction>(
-      context: context,
-      popUpAnimationStyle: AnimationStyle(
-        duration: AppMotion.duration(context, AppMotion.popup),
-        reverseDuration: AppMotion.duration(context, AppMotion.popup),
-        curve: AppMotion.curve,
-      ),
-      position: _menuPosition(context, position),
-      items: [
-        if (includeFocus && selection != null)
-          PopupMenuItem(
-            value: _TaskQuickAction.startFocus,
-            enabled: !task.isCompleted && !selection.active,
-            child: _TaskMenuRow(icon: LucideIcons.play, label: l10n.startFocus),
+    return [
+      if (includeFocus && selection != null)
+        ShadContextMenuItem(
+          height: 44,
+          onPressed: () => unawaited(
+            _runQuickAction(context, ref, _TaskQuickAction.startFocus),
           ),
-        PopupMenuItem(
-          value: _TaskQuickAction.schedule,
+          enabled: !task.isCompleted && !selection.active,
+          child: _TaskMenuRow(icon: LucideIcons.play, label: l10n.startFocus),
+        ),
+      ShadContextMenuItem(
+        height: 44,
+        onPressed: () =>
+            unawaited(_runQuickAction(context, ref, _TaskQuickAction.schedule)),
+        child: _TaskMenuRow(
+          icon: LucideIcons.calendar,
+          label: l10n.taskSchedule,
+        ),
+      ),
+      if (selection != null) ...[
+        ShadContextMenuItem(
+          height: 44,
+          onPressed: () =>
+              unawaited(_runQuickAction(context, ref, _TaskQuickAction.select)),
           child: _TaskMenuRow(
-            icon: LucideIcons.calendar,
-            label: l10n.taskSchedule,
+            icon: LucideIcons.listChecks,
+            label: l10n.taskSelect,
           ),
         ),
-        if (selection != null) ...[
-          PopupMenuItem(
-            value: _TaskQuickAction.select,
+        ShadContextMenuItem(
+          height: 44,
+          onPressed: () =>
+              unawaited(_runQuickAction(context, ref, _TaskQuickAction.move)),
+          child: _TaskMenuRow(
+            icon: LucideIcons.folderInput,
+            label: l10n.taskMove,
+          ),
+        ),
+        ShadContextMenuItem(
+          height: 44,
+          onPressed: () => unawaited(
+            _runQuickAction(context, ref, _TaskQuickAction.choosePriority),
+          ),
+          child: _TaskMenuRow(icon: LucideIcons.flag, label: l10n.taskPriority),
+        ),
+        ShadContextMenuItem(
+          height: 44,
+          onPressed: () => unawaited(
+            _runQuickAction(context, ref, _TaskQuickAction.duplicate),
+          ),
+          child: _TaskMenuRow(
+            icon: LucideIcons.copy,
+            label: l10n.taskDuplicate,
+          ),
+        ),
+        ShadContextMenuItem(
+          height: 44,
+          onPressed: () => unawaited(
+            _runQuickAction(context, ref, _TaskQuickAction.deleteSelection),
+          ),
+          child: _TaskMenuRow(
+            icon: LucideIcons.trash2,
+            label: l10n.commonDelete,
+            color: colors.accent,
+          ),
+        ),
+      ] else ...[
+        ShadContextMenuItem(
+          height: 44,
+          onPressed: () => unawaited(
+            _runQuickAction(context, ref, _TaskQuickAction.startFocus),
+          ),
+          enabled: !task.isCompleted,
+          child: _TaskMenuRow(icon: LucideIcons.play, label: l10n.startFocus),
+        ),
+        ShadContextMenuItem(
+          height: 44,
+          onPressed: () => unawaited(
+            _runQuickAction(context, ref, _TaskQuickAction.toggleComplete),
+          ),
+          child: _TaskMenuRow(
+            icon: task.isCompleted ? LucideIcons.undo2 : LucideIcons.check,
+            label: task.isCompleted ? l10n.markOpen : l10n.markComplete,
+          ),
+        ),
+        if (task.parentId != null)
+          ShadContextMenuItem(
+            height: 44,
+            onPressed: () => unawaited(
+              _runQuickAction(context, ref, _TaskQuickAction.makeParent),
+            ),
             child: _TaskMenuRow(
-              icon: LucideIcons.listChecks,
-              label: l10n.taskSelect,
+              icon: LucideIcons.indentDecrease,
+              label: l10n.makeParentTask,
             ),
           ),
-          PopupMenuItem(
-            value: _TaskQuickAction.move,
+        Divider(height: 8, color: context.appColors.border),
+        ShadContextMenuItem(
+          height: 44,
+          onPressed: () =>
+              unawaited(_runQuickAction(context, ref, _TaskQuickAction.today)),
+          child: _TaskMenuRow(
+            icon: LucideIcons.calendarCheck,
+            label: l10n.today,
+          ),
+        ),
+        ShadContextMenuItem(
+          height: 44,
+          onPressed: () => unawaited(
+            _runQuickAction(context, ref, _TaskQuickAction.tomorrow),
+          ),
+          child: _TaskMenuRow(icon: LucideIcons.calendar, label: l10n.tomorrow),
+        ),
+        if (task.schedule != null)
+          ShadContextMenuItem(
+            height: 44,
+            onPressed: () => unawaited(
+              _runQuickAction(context, ref, _TaskQuickAction.clearDate),
+            ),
             child: _TaskMenuRow(
-              icon: LucideIcons.folderInput,
-              label: l10n.taskMove,
+              icon: LucideIcons.calendarX,
+              label: l10n.clearDate,
             ),
           ),
-          PopupMenuItem(
-            value: _TaskQuickAction.choosePriority,
+        Divider(height: 8, color: context.appColors.border),
+        for (final priority in [1, 2, 3, 4])
+          ShadContextMenuItem(
+            height: 44,
+            onPressed: () => unawaited(
+              _runQuickAction(context, ref, _priorityAction(priority)),
+            ),
             child: _TaskMenuRow(
               icon: LucideIcons.flag,
-              label: l10n.taskPriority,
-            ),
-          ),
-          PopupMenuItem(
-            value: _TaskQuickAction.duplicate,
-            child: _TaskMenuRow(
-              icon: LucideIcons.copy,
-              label: l10n.taskDuplicate,
-            ),
-          ),
-          PopupMenuItem(
-            value: _TaskQuickAction.deleteSelection,
-            child: _TaskMenuRow(
-              icon: LucideIcons.trash2,
-              label: l10n.commonDelete,
-              color: colors.accent,
-            ),
-          ),
-        ] else ...[
-          PopupMenuItem(
-            value: _TaskQuickAction.startFocus,
-            enabled: !task.isCompleted,
-            child: _TaskMenuRow(icon: LucideIcons.play, label: l10n.startFocus),
-          ),
-          PopupMenuItem(
-            value: _TaskQuickAction.toggleComplete,
-            child: _TaskMenuRow(
-              icon: task.isCompleted ? LucideIcons.undo2 : LucideIcons.check,
-              label: task.isCompleted ? l10n.markOpen : l10n.markComplete,
-            ),
-          ),
-          if (task.parentId != null)
-            PopupMenuItem(
-              value: _TaskQuickAction.makeParent,
-              child: _TaskMenuRow(
-                icon: LucideIcons.indentDecrease,
-                label: l10n.makeParentTask,
+              label: l10n.priority(priority),
+              selected: task.priority == priority,
+              color: _priorityColor(
+                priority,
+                Theme.of(context).colorScheme,
+                colors,
               ),
             ),
-          const PopupMenuDivider(),
-          PopupMenuItem(
-            value: _TaskQuickAction.today,
-            child: _TaskMenuRow(
-              icon: LucideIcons.calendarCheck,
-              label: l10n.today,
-            ),
           ),
-          PopupMenuItem(
-            value: _TaskQuickAction.tomorrow,
-            child: _TaskMenuRow(
-              icon: LucideIcons.calendar,
-              label: l10n.tomorrow,
-            ),
+        Divider(height: 8, color: context.appColors.border),
+        ShadContextMenuItem(
+          height: 44,
+          onPressed: () =>
+              unawaited(_runQuickAction(context, ref, _TaskQuickAction.delete)),
+          child: _TaskMenuRow(
+            icon: LucideIcons.trash2,
+            label: l10n.commonDelete,
+            color: colors.accent,
           ),
-          if (task.schedule != null)
-            PopupMenuItem(
-              value: _TaskQuickAction.clearDate,
-              child: _TaskMenuRow(
-                icon: LucideIcons.calendarX,
-                label: l10n.clearDate,
-              ),
-            ),
-          const PopupMenuDivider(),
-          for (final priority in [1, 2, 3, 4])
-            PopupMenuItem(
-              value: _priorityAction(priority),
-              child: _TaskMenuRow(
-                icon: LucideIcons.flag,
-                label: l10n.priority(priority),
-                selected: task.priority == priority,
-                color: _priorityColor(
-                  priority,
-                  Theme.of(context).colorScheme,
-                  colors,
-                ),
-              ),
-            ),
-          const PopupMenuDivider(),
-          PopupMenuItem(
-            value: _TaskQuickAction.delete,
-            child: _TaskMenuRow(
-              icon: LucideIcons.trash2,
-              label: l10n.commonDelete,
-              color: colors.accent,
-            ),
-          ),
-        ],
+        ),
       ],
-    );
-    if (action == null || !context.mounted) {
-      return;
-    }
-    await _runQuickAction(context, ref, action);
-  }
-
-  RelativeRect _menuPosition(BuildContext context, Offset globalPosition) {
-    final overlay =
-        Overlay.of(context).context.findRenderObject()! as RenderBox;
-    final position = overlay.globalToLocal(globalPosition);
-    return RelativeRect.fromRect(
-      Rect.fromLTWH(position.dx, position.dy, 0, 0),
-      Offset.zero & overlay.size,
-    );
+    ];
   }
 
   Future<void> _runQuickAction(

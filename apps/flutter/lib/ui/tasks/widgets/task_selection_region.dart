@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:pomodoist/ui/core/widgets/bottom_panel_surface.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'package:flutter/services.dart';
@@ -111,12 +112,16 @@ class TaskSelectionRegion extends ConsumerStatefulWidget {
     required this.child,
     this.scopeKey,
     this.shrinkWrap = false,
+    this.floatingToolbar = true,
     super.key,
   });
 
   final Iterable<TaskItem> visibleTasks;
   final Object? scopeKey;
   final bool shrinkWrap;
+
+  /// Disable for selection hosted inside modal panels.
+  final bool floatingToolbar;
   final Widget child;
 
   @override
@@ -268,21 +273,26 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
 
   Widget _selectionBar(BuildContext context) {
     final l10n = context.l10n;
+    final actions = Row(
+      children: [
+        _barAction(LucideIcons.calendar, l10n.taskDue, _showDue),
+        _barAction(LucideIcons.folder, l10n.taskProject, _showProject),
+        _barAction(LucideIcons.tag, l10n.taskLabels, _showLabels),
+        _barAction(LucideIcons.flag, l10n.taskPriority, _showPriority),
+        _barAction(LucideIcons.ellipsis, l10n.taskMore, _showMore),
+      ],
+    );
+    if (widget.floatingToolbar && MediaQuery.sizeOf(context).width < 820) {
+      return SafeArea(
+        key: const Key('task-selection-bottom-bar'),
+        top: false,
+        child: BottomPanelSurface(child: actions),
+      );
+    }
     return Material(
       key: const Key('task-selection-bottom-bar'),
       elevation: 8,
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            _barAction(LucideIcons.calendar, l10n.taskDue, _showDue),
-            _barAction(LucideIcons.folder, l10n.taskProject, _showProject),
-            _barAction(LucideIcons.tag, l10n.taskLabels, _showLabels),
-            _barAction(LucideIcons.flag, l10n.taskPriority, _showPriority),
-            _barAction(LucideIcons.ellipsis, l10n.taskMore, _showMore),
-          ],
-        ),
-      ),
+      child: SafeArea(top: false, child: actions),
     );
   }
 
