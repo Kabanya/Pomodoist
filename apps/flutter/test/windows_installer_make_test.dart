@@ -57,14 +57,25 @@ void main() {
       'run-linux': '--dart-define-from-file="$_repoRoot/local.env"',
       'web': '--dart-define-from-file="$_repoRoot/local.env"',
       'web-release': '--dart-define-from-file="$_repoRoot/local.env"',
-      'linux-debug': '--dart-define-from-file="$_repoRoot/staging.env"',
+      'linux-debug': '--dart-define-from-file="$_repoRoot/linux-dev.env"',
       'linux-release': '--dart-define-from-file="$_repoRoot/linux.env"',
+      'linux-debug-staging':
+          '--dart-define-from-file="$_repoRoot/linux-stg.env"',
+      'linux-profile-staging':
+          '--dart-define-from-file="$_repoRoot/linux-stg.env"',
+      'linux-release-staging':
+          '--dart-define-from-file="$_repoRoot/linux-stg.env"',
+      'linux-debug-production':
+          '--dart-define-from-file="$_repoRoot/linux.env"',
+      'linux-profile-production':
+          '--dart-define-from-file="$_repoRoot/linux.env"',
+      'linux-release-production':
+          '--dart-define-from-file="$_repoRoot/linux.env"',
       'windows-debug': '-ConfigFile "staging.env"',
       'windows-release': '-ConfigFile "C:/windows.env"',
       'macos-debug': '--dart-define-from-file="$_repoRoot/local.env"',
       'macos-release': '--dart-define-from-file="$_repoRoot/testflight.env"',
-      'macos-debug-staging':
-          '--dart-define-from-file="$_repoRoot/staging.env"',
+      'macos-debug-staging': '--dart-define-from-file="$_repoRoot/staging.env"',
       'macos-debug-production':
           '--dart-define-from-file="$_repoRoot/testflight.env"',
       'macos-profile-staging':
@@ -83,6 +94,8 @@ void main() {
         'LOCAL_CONFIG=local.env',
         'ANDROID_CONFIG=android.env',
         'LINUX_CONFIG=linux.env',
+        'LINUX_DEVELOPMENT_PROFILE=linux-dev.env',
+        'LINUX_STAGING_PROFILE=linux-stg.env',
         'WINDOWS_CONFIG=C:/windows.env',
         'STAGING_CONFIG=staging.env',
         'TESTFLIGHT_CONFIG=testflight.env',
@@ -346,7 +359,8 @@ void main() {
           contains('ln -s ../../build/flutter'),
           contains('link-build.ps1'),
         ),
-        reason: '${entry.key}: the flutter build directory must resolve to the '
+        reason:
+            '${entry.key}: the flutter build directory must resolve to the '
             'root build',
       );
       expect(commands.sublist(1), <Object>[

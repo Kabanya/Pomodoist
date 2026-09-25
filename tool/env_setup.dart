@@ -9,11 +9,27 @@ const _profiles = <String, String>{
   'TESTFLIGHT__': '.env.testflight',
   'WINDOWS__': '.env.windows',
   'LINUX__': '.env.linux',
+  'LINUX_DEVELOPMENT__': '.env.linux-development',
+  'LINUX_STAGING__': '.env.linux-staging',
   'PRIVATE__': '.env.private',
   'DEPLOY__': '.env.deploy',
   'TELEGRAM_STAGING__': '.env.telegram.staging',
   'TELEGRAM_PRODUCTION__': '.env.telegram.production',
 };
+
+/// The profile whose prefix owns [name], longest prefix first.
+///
+/// `LINUX_DEVELOPMENT__FOO` starts with both `LINUX__` and
+/// `LINUX_DEVELOPMENT__`, so the longest match has to win or a per-environment
+/// key would be written into the generic `.env.linux` profile as well.
+String? _profileFor(String name) {
+  final prefixes = _profiles.keys.toList()
+    ..sort((first, second) => second.length.compareTo(first.length));
+  for (final prefix in prefixes) {
+    if (name.startsWith(prefix)) return prefix;
+  }
+  return null;
+}
 
 final _namePattern = RegExp(r'^[A-Z][A-Z0-9_]*$');
 
@@ -134,9 +150,8 @@ Future<void> _sync(Directory root) async {
   for (final profile in _profiles.entries) {
     final selected = <String, String>{};
     for (final entry in masterValues.entries) {
-      if (entry.key.startsWith(profile.key)) {
-        selected[entry.key.substring(profile.key.length)] = entry.value;
-      }
+      if (_profileFor(entry.key) != profile.key) continue;
+      selected[entry.key.substring(profile.key.length)] = entry.value;
     }
     if (selected.isEmpty) continue;
 
@@ -221,8 +236,7 @@ Future<Map<String, String>> _parse(
     if (!_namePattern.hasMatch(name)) {
       throw _EnvError('invalid key at line ${index + 1} in ${file.path}');
     }
-    if (requireProfilePrefix &&
-        !_profiles.keys.any((prefix) => name.startsWith(prefix))) {
+    if (requireProfilePrefix && _profileFor(name) == null) {
       throw _EnvError('key $name has no environment prefix');
     }
     if (values.containsKey(name)) throw _EnvError('duplicate key $name');

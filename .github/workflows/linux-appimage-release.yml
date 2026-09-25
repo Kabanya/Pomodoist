@@ -218,26 +218,15 @@ jobs:
             }' > "$RUNNER_TEMP/linux-${{ matrix.flavor }}.json"
       - name: Test Linux packaging contracts
         run: make test-linux-packaging
-      - name: Build production AppImage
-        if: matrix.flavor == 'production'
+      - name: Build the matrix flavor's AppImage
+        # linux-appimage-<environment> pins the identity triple the workflow
+        # just wrote — the flavor, its entry point and its configuration — so
+        # the workflow no longer has to restate the entry point it expects.
         run: |
-          make linux-appimage \
-            LINUX_CONFIG="$RUNNER_TEMP/linux-production.json" \
-            POMODOIST_RELEASE="$GITHUB_SHA"
-      - name: Build development or staging AppImage
-        if: matrix.flavor != 'production'
-        run: |
-          case "${{ matrix.flavor }}" in
-            development) target='lib/main_development.dart' ;;
-            staging) target='lib/main_staging.dart' ;;
-            *)
-              echo "Unknown Linux flavor: ${{ matrix.flavor }}" >&2
-              exit 64
-              ;;
-          esac
-          make linux-appimage \
-            LINUX_RELEASE_TARGET="$target" \
-            LINUX_CONFIG="$RUNNER_TEMP/linux-${{ matrix.flavor }}.json" \
+          make "linux-appimage-${{ matrix.flavor }}" \
+            LINUX_DEVELOPMENT_CONFIG="$RUNNER_TEMP/linux-development.json" \
+            LINUX_STAGING_CONFIG="$RUNNER_TEMP/linux-staging.json" \
+            LINUX_PRODUCTION_CONFIG="$RUNNER_TEMP/linux-production.json" \
             POMODOIST_RELEASE="$GITHUB_SHA"
       - name: Verify AppImage checksum
         run: |

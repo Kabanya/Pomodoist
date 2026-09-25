@@ -75,6 +75,12 @@ TESTFLIGHT_DEFINES ?= $(if $(filter $(FLAVOR_STAGING),$(TESTFLIGHT_FLAVOR)),$(TE
 LINUX_CONFIG   ?= .env.linux
 WINDOWS_CONFIG ?= .env.windows
 ANDROID_CONFIG ?= .env.android
+# Per-environment Linux dotenv profiles. The Linux identities have their own
+# files rather than borrowing the shared LOCAL and STAGING ones, because a
+# desktop profile carries the Linux OAuth client and the billing channel that
+# belong to that environment. Generate them with `make setup-flutter`.
+LINUX_DEVELOPMENT_PROFILE ?= .env.linux-development
+LINUX_STAGING_PROFILE     ?= .env.linux-staging
 
 # Flutter entry points. Each entry point declares the environment it serves and
 # refuses to start when the dart-define file names another one, so every run and
@@ -113,7 +119,6 @@ ANDROID_GRADLE_HOME ?= $(abspath build/android/gradle-home)
 IOS_EXPORT_OPTIONS ?= $(FLUTTER_ROOT)/ios/ExportOptions.plist
 IOS_IPA_PATH ?= $(FLUTTER_BUILD)/ios/ipa/$(TESTFLIGHT_PRODUCT_NAME).ipa
 WINDOWS_RELEASE_DIR ?= $(FLUTTER_BUILD)/windows/x64/$(WINDOWS_RELEASE_FLAVOR)/runner/Release
-LINUX_BUNDLE_DIR ?= $(FLUTTER_BUILD)/linux/x64/$(LINUX_RELEASE_FLAVOR)/release/bundle
 
 # Desktop builds use <PLATFORM>_<MODE>_CONFIG. macOS debug targets reuse
 # MACOS_DEVELOPMENT_CONFIG/_TARGET, so `make macos-debug` and
@@ -128,12 +133,22 @@ MACOS_PROFILE_CONFIG ?= $(LOCAL_CONFIG)
 MACOS_RELEASE_CONFIG ?= $(TESTFLIGHT_CONFIG)
 MACOS_PROFILE_TARGET ?= $(LOCAL_TARGET)
 MACOS_RELEASE_TARGET ?= $(TESTFLIGHT_TARGET)
-LINUX_DEBUG_CONFIG   ?= $(STAGING_CONFIG)
+# Linux defaults to the development environment, which is the dotenv profile a
+# workstation runs against locally. The profile and release targets build what
+# is shipped, so they read the production profile; override the pair to point
+# one build at another environment.
+LINUX_DEBUG_CONFIG   ?= $(LINUX_DEVELOPMENT_PROFILE)
 LINUX_PROFILE_CONFIG ?= $(LINUX_CONFIG)
 LINUX_RELEASE_CONFIG ?= $(LINUX_CONFIG)
-LINUX_DEBUG_TARGET   ?= $(STAGING_TARGET)
+LINUX_DEBUG_TARGET   ?= $(LOCAL_TARGET)
 LINUX_PROFILE_TARGET ?= $(PRODUCTION_TARGET)
 LINUX_RELEASE_TARGET ?= $(PRODUCTION_TARGET)
+# The billing channel of a generic build is the one its environment ships, so
+# linux-debug matches linux-debug-development and linux-release matches
+# linux-release-production.
+LINUX_DEBUG_BILLING_CHANNEL   ?= $(LINUX_DEVELOPMENT_BILLING_CHANNEL)
+LINUX_PROFILE_BILLING_CHANNEL ?= $(LINUX_PRODUCTION_BILLING_CHANNEL)
+LINUX_RELEASE_BILLING_CHANNEL ?= $(LINUX_PRODUCTION_BILLING_CHANNEL)
 WINDOWS_DEBUG_CONFIG ?= $(STAGING_CONFIG)
 WINDOWS_PROFILE_CONFIG ?= $(WINDOWS_CONFIG)
 WINDOWS_RELEASE_CONFIG ?= $(WINDOWS_CONFIG)
@@ -155,6 +170,31 @@ MACOS_STAGING_TARGET     ?= $(STAGING_TARGET)
 MACOS_PRODUCTION_CONFIG  ?= $(TESTFLIGHT_CONFIG)
 MACOS_PRODUCTION_TARGET  ?= $(PRODUCTION_TARGET)
 
+# Per-environment Linux builds behind the linux-<mode>-<environment> targets.
+# The naming mirrors the macos-<mode>-<environment> targets, but the supported
+# modes differ: the macOS table is driven by Xcode configurations, while the
+# Linux table is the build, the AppImage packaging and the user installer
+# repeated per environment. Every environment reads its own dotenv profile —
+# development .env.linux-development, staging .env.linux-staging, production
+# .env.linux, the profile the shipped AppImage is built from — so no two Linux
+# builds share a configuration. Each configuration stays paired with its entry
+# point so flavor_of derives the matching flavor. Override
+# LINUX_<ENVIRONMENT>_CONFIG/_TARGET to move one environment everywhere it is
+# used.
+LINUX_DEVELOPMENT_CONFIG ?= $(LINUX_DEVELOPMENT_PROFILE)
+LINUX_DEVELOPMENT_TARGET ?= $(LOCAL_TARGET)
+LINUX_STAGING_CONFIG     ?= $(LINUX_STAGING_PROFILE)
+LINUX_STAGING_TARGET     ?= $(STAGING_TARGET)
+LINUX_PRODUCTION_CONFIG  ?= $(LINUX_CONFIG)
+LINUX_PRODUCTION_TARGET  ?= $(PRODUCTION_TARGET)
+# Billing channel per environment, used when a target has no dotenv file of its
+# own to declare one (a run against an arbitrary override, or a config path the
+# repository does not own). Each profile above already carries the matching
+# POMODOIST_BILLING_CHANNEL.
+LINUX_DEVELOPMENT_BILLING_CHANNEL ?= storekit
+LINUX_STAGING_BILLING_CHANNEL     ?= stripe
+LINUX_PRODUCTION_BILLING_CHANNEL  ?= stripe
+
 # Each flavor is read back from its entry point, so moving a
 # <PLATFORM>_<MODE>_TARGET moves the flavor with it and the app keeps one
 # identity. Overriding a flavor on its own builds an identity the entry point
@@ -173,6 +213,14 @@ WINDOWS_RELEASE_FLAVOR ?= $(call flavor_of,$(WINDOWS_RELEASE_TARGET))
 MACOS_DEVELOPMENT_FLAVOR ?= $(call flavor_of,$(MACOS_DEVELOPMENT_TARGET))
 MACOS_STAGING_FLAVOR     ?= $(call flavor_of,$(MACOS_STAGING_TARGET))
 MACOS_PRODUCTION_FLAVOR  ?= $(call flavor_of,$(MACOS_PRODUCTION_TARGET))
+LINUX_DEVELOPMENT_FLAVOR ?= $(call flavor_of,$(LINUX_DEVELOPMENT_TARGET))
+LINUX_STAGING_FLAVOR     ?= $(call flavor_of,$(LINUX_STAGING_TARGET))
+LINUX_PRODUCTION_FLAVOR  ?= $(call flavor_of,$(LINUX_PRODUCTION_TARGET))
+# The bundle a packaging target consumes is derived from the release flavor it
+# packaged, so linux-appimage-staging picks the staging segment instead of
+# reusing a production path. Override LINUX_BUNDLE_DIR to point at a bundle
+# Flutter wrote somewhere else.
+LINUX_BUNDLE_DIR ?= $(FLUTTER_BUILD)/linux/x64/$(LINUX_RELEASE_FLAVOR)/release/bundle
 TESTFLIGHT_PRODUCT_NAME ?= $(if $(filter $(FLAVOR_STAGING),$(TESTFLIGHT_FLAVOR)),Pomodoist Stg,Pomodoist)
 
 # TestFlight credentials stay in the private env and are never Dart defines.
@@ -193,6 +241,10 @@ COMPANION_RELEASE_CONFIG ?= $(TESTFLIGHT_CONFIG)
 .PHONY: architecture analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-flavor-identity test-linux-packaging check format app-icons app-icons-check
 .PHONY: android web-debug web-profile web-release
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
+.PHONY: linux-run
+.PHONY: linux-debug-development linux-debug-staging linux-debug-production
+.PHONY: linux-profile-development linux-profile-staging linux-profile-production
+.PHONY: linux-release-development linux-release-staging linux-release-production
 .PHONY: windows-debug windows-profile windows-release windows-installer
 .PHONY: macos macos-debug macos-run macos-profile macos-release macos-reset
 .PHONY: macos-debug-development macos-debug-staging macos-debug-production
@@ -251,11 +303,20 @@ help:
 	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Chrome' "$${reset}" "$${bold}" 'make chrome-run' "$${reset}" 'Debug extension in a stable local profile'; \
 	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Chrome' "$${reset}" "$${bold}" 'make chrome-release' "$${reset}" 'Production extension files and ZIP'; \
 	printf '\n'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-debug' "$${reset}" 'Debug app'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-profile' "$${reset}" 'Profile app'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-release' "$${reset}" 'Raw developer bundle'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-appimage' "$${reset}" 'Distributable AppImage'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-install' "$${reset}" 'Install for current user'; \
+	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-debug' "$${reset}" 'Debug app (development)'; \
+	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-profile' "$${reset}" 'Profile app'; \
+	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-release' "$${reset}" 'Raw developer bundle'; \
+	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-appimage' "$${reset}" 'Distributable AppImage'; \
+	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-install' "$${reset}" 'Install for current user'; \
+	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-run' "$${reset}" 'Debug app with hot reload'; \
+	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-debug-staging' "$${reset}" 'Debug app (staging)'; \
+	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-debug-production' "$${reset}" 'Debug app (production)'; \
+	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-profile-development' "$${reset}" 'Profile app (development)'; \
+	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-profile-staging' "$${reset}" 'Profile app (staging)'; \
+	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-profile-production' "$${reset}" 'Profile app (production)'; \
+	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-release-development' "$${reset}" 'Release app (local, development)'; \
+	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-release-staging' "$${reset}" 'Release app (local, staging)'; \
+	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-release-production' "$${reset}" 'Release app (local, production)'; \
 	printf '\n'; \
 	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-debug' "$${reset}" 'Debug app'; \
 	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-profile' "$${reset}" 'Profile app'; \
@@ -407,24 +468,155 @@ web-release: flutter-build-link
 linux-pub-get: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) bash "$(REPO_ROOT)/tool/linux/pub_get_with_retry.sh" "$(FLUTTER)"
 
-linux-debug: linux-pub-get
-	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) "$(FLUTTER)" build linux --debug --flavor "$(LINUX_DEBUG_FLAVOR)" --target "$(LINUX_DEBUG_TARGET)" --dart-define-from-file="$(call repo_path,$(LINUX_DEBUG_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+# Linux build modes behind linux-<mode> and linux-<mode>-<environment>. Each
+# target is defined once through linux_flavor_target, which reads the
+# <PLATFORM>_<MODE>_CONFIG/_TARGET pair the target pins, so a per-environment
+# target and its generic counterpart cannot drift apart. --target always
+# accompanies --dart-define-from-file: the entry point refuses to start when the
+# configuration it was handed names another environment.
+#
+# Unlike the macos_flavor_target macro these recipes contain no shell operators,
+# so they expand to one command line per target and `make --dry-run` lists them
+# cleanly, which is what the make contract tests read.
+define linux_flavor_target
+cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) "$(FLUTTER)" build linux --$(1) --flavor "$(LINUX_$(2)_FLAVOR)" --target "$(LINUX_$(2)_TARGET)" --dart-define-from-file="$(call repo_path,$(LINUX_$(2)_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=$(LINUX_$(2)_BILLING_CHANNEL)
+endef
 
-linux-profile: linux-pub-get
-	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) "$(FLUTTER)" build linux --profile --flavor "$(LINUX_PROFILE_FLAVOR)" --target "$(LINUX_PROFILE_TARGET)" --dart-define-from-file="$(call repo_path,$(LINUX_PROFILE_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(POMODOIST_BILLING_CHANNEL)"
+# Only the release targets validate their configuration first: it is the
+# artifact that ships, and only a release is allowed to be built from a
+# production profile.
+define linux_release_target
+$(LINUX_BUILD_ENV) "$(DART)" tool/desktop_release_config.dart --config "$(LINUX_RELEASE_CONFIG)"
+$(call linux_flavor_target,release,RELEASE)
+endef
 
-linux-release: linux-pub-get
-	$(LINUX_BUILD_ENV) "$(DART)" tool/desktop_release_config.dart --config "$(LINUX_RELEASE_CONFIG)"
-	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) "$(FLUTTER)" build linux --release --flavor "$(LINUX_RELEASE_FLAVOR)" --target "$(LINUX_RELEASE_TARGET)" --dart-define-from-file="$(call repo_path,$(LINUX_RELEASE_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=$(POMODOIST_BILLING_CHANNEL)
+define linux_appimage_target
+$(LINUX_BUILD_ENV) POMODOIST_LINUX_BUNDLE="$(LINUX_BUNDLE_DIR)" $(POMODOIST_APPIMAGE_BUILDER)
+endef
+
+define linux_install_target
+POMODOIST_LINUX_BUNDLE="$(LINUX_BUNDLE_DIR)" ./tool/linux/install.sh
+endef
+
+linux-debug linux-profile linux-release: linux-pub-get
+
+linux-debug:
+	$(call linux_flavor_target,debug,DEBUG)
+
+linux-profile:
+	$(call linux_flavor_target,profile,PROFILE)
+
+linux-release:
+	$(linux_release_target)
 
 # Point the packaging scripts at the bundle linux-release just built. The path
 # carries the flavor segment, which is how the scripts pick the identity they
 # package.
 linux-appimage: linux-release
-	$(LINUX_BUILD_ENV) POMODOIST_LINUX_BUNDLE="$(LINUX_BUNDLE_DIR)" $(POMODOIST_APPIMAGE_BUILDER)
+	$(linux_appimage_target)
 
 linux-install: linux-release
-	POMODOIST_LINUX_BUNDLE="$(LINUX_BUNDLE_DIR)" ./tool/linux/install.sh
+	$(linux_install_target)
+
+# Interactive debug run with hot reload. Output is left unfiltered so the
+# "Flutter run key commands" stay usable. It follows the debug pair, which is
+# the development environment, and therefore shares `make linux-debug`.
+linux-run: flutter-build-link
+	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) "$(FLUTTER)" run -d linux --debug --flavor "$(LINUX_DEBUG_FLAVOR)" --target "$(LINUX_DEBUG_TARGET)" --dart-define-from-file="$(call repo_path,$(LINUX_DEBUG_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(LINUX_DEBUG_BILLING_CHANNEL)"
+
+# Per-environment builds: linux-<mode>-<environment>. A generic target and the
+# environment it defaults to are the same build, so linux-debug and
+# linux-debug-development produce identical commands; the environment targets
+# pin the pair through target-specific variables, which also set the flavor
+# through <PLATFORM>_<ENVIRONMENT>_FLAVOR. Every target resolves packages first,
+# exactly as its generic counterpart does.
+linux-debug-development linux-debug-staging linux-debug-production \
+linux-profile-development linux-profile-staging linux-profile-production \
+linux-release-development linux-release-staging linux-release-production: linux-pub-get
+
+linux-debug-development: LINUX_DEBUG_CONFIG = $(LINUX_DEVELOPMENT_CONFIG)
+linux-debug-development: LINUX_DEBUG_TARGET = $(LINUX_DEVELOPMENT_TARGET)
+linux-debug-development: LINUX_DEBUG_FLAVOR = $(LINUX_DEVELOPMENT_FLAVOR)
+linux-debug-development:
+	$(call linux_flavor_target,debug,DEBUG)
+
+linux-debug-staging: LINUX_DEBUG_CONFIG = $(LINUX_STAGING_CONFIG)
+linux-debug-staging: LINUX_DEBUG_TARGET = $(LINUX_STAGING_TARGET)
+linux-debug-staging: LINUX_DEBUG_FLAVOR = $(LINUX_STAGING_FLAVOR)
+linux-debug-staging:
+	$(call linux_flavor_target,debug,DEBUG)
+
+linux-debug-production: LINUX_DEBUG_CONFIG = $(LINUX_PRODUCTION_CONFIG)
+linux-debug-production: LINUX_DEBUG_TARGET = $(LINUX_PRODUCTION_TARGET)
+linux-debug-production: LINUX_DEBUG_FLAVOR = $(LINUX_PRODUCTION_FLAVOR)
+linux-debug-production:
+	$(call linux_flavor_target,debug,DEBUG)
+
+linux-profile-development: LINUX_PROFILE_CONFIG = $(LINUX_DEVELOPMENT_CONFIG)
+linux-profile-development: LINUX_PROFILE_TARGET = $(LINUX_DEVELOPMENT_TARGET)
+linux-profile-development: LINUX_PROFILE_FLAVOR = $(LINUX_DEVELOPMENT_FLAVOR)
+linux-profile-development:
+	$(call linux_flavor_target,profile,PROFILE)
+
+linux-profile-staging: LINUX_PROFILE_CONFIG = $(LINUX_STAGING_CONFIG)
+linux-profile-staging: LINUX_PROFILE_TARGET = $(LINUX_STAGING_TARGET)
+linux-profile-staging: LINUX_PROFILE_FLAVOR = $(LINUX_STAGING_FLAVOR)
+linux-profile-staging:
+	$(call linux_flavor_target,profile,PROFILE)
+
+linux-profile-production: LINUX_PROFILE_CONFIG = $(LINUX_PRODUCTION_CONFIG)
+linux-profile-production: LINUX_PROFILE_TARGET = $(LINUX_PRODUCTION_TARGET)
+linux-profile-production: LINUX_PROFILE_FLAVOR = $(LINUX_PRODUCTION_FLAVOR)
+linux-profile-production:
+	$(call linux_flavor_target,profile,PROFILE)
+
+linux-release-development: LINUX_RELEASE_CONFIG = $(LINUX_DEVELOPMENT_CONFIG)
+linux-release-development: LINUX_RELEASE_TARGET = $(LINUX_DEVELOPMENT_TARGET)
+linux-release-development: LINUX_RELEASE_FLAVOR = $(LINUX_DEVELOPMENT_FLAVOR)
+linux-release-development:
+	$(linux_release_target)
+
+linux-release-staging: LINUX_RELEASE_CONFIG = $(LINUX_STAGING_CONFIG)
+linux-release-staging: LINUX_RELEASE_TARGET = $(LINUX_STAGING_TARGET)
+linux-release-staging: LINUX_RELEASE_FLAVOR = $(LINUX_STAGING_FLAVOR)
+linux-release-staging:
+	$(linux_release_target)
+
+linux-release-production: LINUX_RELEASE_CONFIG = $(LINUX_PRODUCTION_CONFIG)
+linux-release-production: LINUX_RELEASE_TARGET = $(LINUX_PRODUCTION_TARGET)
+linux-release-production: LINUX_RELEASE_FLAVOR = $(LINUX_PRODUCTION_FLAVOR)
+linux-release-production:
+	$(linux_release_target)
+
+# Package and install one environment's release. These stand to linux-appimage
+# and linux-install the way linux-release-<environment> stands to linux-release,
+# and they extend it so the bundle being packaged is always the one the
+# environment build just produced. Each pins LINUX_RELEASE_FLAVOR so
+# LINUX_BUNDLE_DIR resolves to that environment's bundle instead of inheriting
+# the production default, which would package one flavor under another's name.
+linux-appimage-development: LINUX_RELEASE_FLAVOR = $(LINUX_DEVELOPMENT_FLAVOR)
+linux-appimage-development: linux-release-development
+	$(linux_appimage_target)
+
+linux-appimage-staging: LINUX_RELEASE_FLAVOR = $(LINUX_STAGING_FLAVOR)
+linux-appimage-staging: linux-release-staging
+	$(linux_appimage_target)
+
+linux-appimage-production: LINUX_RELEASE_FLAVOR = $(LINUX_PRODUCTION_FLAVOR)
+linux-appimage-production: linux-release-production
+	$(linux_appimage_target)
+
+linux-install-development: LINUX_RELEASE_FLAVOR = $(LINUX_DEVELOPMENT_FLAVOR)
+linux-install-development: linux-release-development
+	$(linux_install_target)
+
+linux-install-staging: LINUX_RELEASE_FLAVOR = $(LINUX_STAGING_FLAVOR)
+linux-install-staging: linux-release-staging
+	$(linux_install_target)
+
+linux-install-production: LINUX_RELEASE_FLAVOR = $(LINUX_PRODUCTION_FLAVOR)
+linux-install-production: linux-release-production
+	$(linux_install_target)
 
 # build.ps1 forwards -Flavor to `flutter build windows`; without it Flutter
 # compiles the production identity into the executable.

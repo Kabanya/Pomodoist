@@ -219,6 +219,88 @@ LOCAL__ADDED=default
     });
   });
 
+  test('Linux per-environment profiles sync beside the generic one', () async {
+    final root = await Directory.systemTemp.createTemp('pomodoist-env-');
+    addTearDown(() => root.delete(recursive: true));
+    await File('${root.path}/.env.example').writeAsString('''
+LINUX__POMODOIST_ENVIRONMENT=production
+LINUX_DEVELOPMENT__POMODOIST_ENVIRONMENT=local
+LINUX_STAGING__POMODOIST_ENVIRONMENT=staging
+''');
+    await File('${root.path}/.env.setup').writeAsString('''
+LINUX__POMODOIST_ENVIRONMENT=production
+LINUX_DEVELOPMENT__POMODOIST_ENVIRONMENT=local
+LINUX_STAGING__POMODOIST_ENVIRONMENT=staging
+''');
+
+    final result = await _run('sync', ['--root', root.path]);
+
+    expect(result.exitCode, 0, reason: result.stderr.toString());
+    expect(_values('${root.path}/.env.linux'), {
+      'POMODOIST_ENVIRONMENT': 'production',
+    });
+    expect(_values('${root.path}/.env.linux-development'), {
+      'POMODOIST_ENVIRONMENT': 'local',
+    });
+    expect(_values('${root.path}/.env.linux-staging'), {
+      'POMODOIST_ENVIRONMENT': 'staging',
+    });
+  });
+
+  test(
+    'a per-environment key never reaches the generic Linux profile',
+    () async {
+      // LINUX_DEVELOPMENT__FOO starts with both LINUX__ and
+      // LINUX_DEVELOPMENT__, so a prefix match that is not longest-first would
+      // write POMODOIST_ENVIRONMENT=local into the production .env.linux.
+      final root = await Directory.systemTemp.createTemp('pomodoist-env-');
+      addTearDown(() => root.delete(recursive: true));
+      await File('${root.path}/.env.example').writeAsString('''
+LINUX__POMODOIST_ENVIRONMENT=production
+LINUX_DEVELOPMENT__POMODOIST_ENVIRONMENT=local
+LINUX_DEVELOPMENT__WEB_APP_URL=
+''');
+      await File('${root.path}/.env.setup').writeAsString('''
+LINUX__POMODOIST_ENVIRONMENT=production
+LINUX_DEVELOPMENT__POMODOIST_ENVIRONMENT=local
+LINUX_DEVELOPMENT__WEB_APP_URL=https://dev.pomodoist.com
+''');
+
+      final result = await _run('sync', ['--root', root.path]);
+
+      expect(result.exitCode, 0, reason: result.stderr.toString());
+      expect(_values('${root.path}/.env.linux'), {
+        'POMODOIST_ENVIRONMENT': 'production',
+      });
+      expect(_values('${root.path}/.env.linux-development'), {
+        'POMODOIST_ENVIRONMENT': 'local',
+        'WEB_APP_URL': 'https://dev.pomodoist.com',
+      });
+    },
+  );
+
+  test(
+    'every checked-in Linux profile validates for its environment',
+    () async {
+      // The release targets run the desktop validator against these profiles
+      // before Flutter starts, so a profile the validator refuses makes
+      // `make linux-release-<environment>` fail on a fresh checkout.
+      final profiles = <String, String>{
+        'LINUX__POMODOIST_ENVIRONMENT': 'production',
+        'LINUX_DEVELOPMENT__POMODOIST_ENVIRONMENT': 'local',
+        'LINUX_STAGING__POMODOIST_ENVIRONMENT': 'staging',
+      };
+      final template = _values('../../.env.example');
+      for (final entry in profiles.entries) {
+        expect(
+          template[entry.key],
+          entry.value,
+          reason: '${entry.key} must declare ${entry.value}',
+        );
+      }
+    },
+  );
+
   test('sync creates a mode-600 deploy profile with literal values', () async {
     if (Platform.isWindows) return;
     final root = await Directory.systemTemp.createTemp('pomodoist-env-');

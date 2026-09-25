@@ -1,10 +1,26 @@
 name: Android validation
 
 on:
+  # Android packaging only breaks when Flutter sources or the Android tooling
+  # change. Without this filter every server, web, or docs push bought a
+  # 90-minute APK build; server-v* release tags bought one too.
   pull_request:
+    paths:
+      - 'apps/flutter/**'
+      - 'tool/android/**'
+      - '.fvmrc'
+      - '.github/workflows/android.yml'
   push:
     branches: [main]
-    tags: ['**']
+    paths:
+      - 'apps/flutter/**'
+      - 'tool/android/**'
+      - '.fvmrc'
+      - '.github/workflows/android.yml'
+    tags: ['v*.*.*']
+  # workflow_call deliberately bypasses the path filter: the release lanes that
+  # reuse this workflow (selfhost.yml, windows-exe-preview.yml) already decided
+  # that a tagged build deserves the full smoke run.
   workflow_call:
     inputs:
       release_tag:
