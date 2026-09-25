@@ -304,8 +304,6 @@ jobs:
             Pomodoist-x86_64.AppImage.sha256
             Pomodoist-Setup.exe
             Pomodoist-Setup.exe.sha256
-            Pomodoist-macOS.dmg
-            Pomodoist-macOS.dmg.sha256
             Pomodoist-Android.apk
             Pomodoist-Android.apk.sha256
           )

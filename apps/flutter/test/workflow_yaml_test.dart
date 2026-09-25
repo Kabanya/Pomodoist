@@ -98,7 +98,7 @@ void main() {
     });
   }
 
-  test('tag publication waits for every platform and preserves RC status', () {
+  test('tag publication waits for automated platforms and preserves RC status', () {
     final publishers = [
       (
         path: '../../.github/workflows/linux-appimage-release.yml',
@@ -115,13 +115,6 @@ void main() {
         job: 'publish',
         step: 'Upload EXE and publish complete desktop release',
         assets: ['Pomodoist-Setup.exe', 'Pomodoist-Setup.exe.sha256'],
-        legacyGh: 'false',
-      ),
-      (
-        path: '../../.github/workflows/macos-dmg-release.yml',
-        job: 'publish',
-        step: 'Upload DMG and publish complete desktop release',
-        assets: ['Pomodoist-macOS.dmg', 'Pomodoist-macOS.dmg.sha256'],
         legacyGh: 'false',
       ),
       (
@@ -149,9 +142,9 @@ void main() {
 
     for (final tag in ['v1.0.3', 'v1.0.3-rc.1']) {
       for (final order in [
-        [0, 1, 2, 3],
-        [1, 2, 3, 0],
-        [3, 2, 1, 0],
+        [0, 1, 2],
+        [1, 2, 0],
+        [2, 1, 0],
       ]) {
         final temp = Directory.systemTemp.createTempSync('release-publish-');
         try {
@@ -170,8 +163,8 @@ void main() {
             });
           }
 
-          // Three platforms are never enough, and a repeated platform stays idempotent.
-          for (final position in [0, 1, 2, 0]) {
+          // Missing an automated platform keeps the release in draft.
+          for (final position in [0, 1, 0]) {
             final publisher = publishers[order[position]];
             final result = publish(position);
             expect(result.exitCode, 0, reason: '${result.stderr}');
@@ -194,7 +187,7 @@ void main() {
             );
           }
 
-          final last = publish(3);
+          final last = publish(2);
           expect(last.exitCode, 0, reason: '${last.stderr}');
           final log = File('${temp.path}/gh.log').readAsLinesSync();
           final publication = log.singleWhere(
@@ -350,14 +343,15 @@ void main() {
     }
   });
 
-  test('one tag release waits for Linux, Windows, macOS and Android assets', () {
+  test('one tag release waits for Linux, Windows and Android assets', () {
     for (final path in [
       '../../.github/workflows/linux-appimage-release.yml',
       '../../.github/workflows/windows-exe-preview.yml',
-      '../../.github/workflows/macos-dmg-release.yml',
+      '../../.github/workflows/android-release.yml',
     ]) {
       final workflow = File(path).readAsStringSync();
-      expect(workflow, contains("- 'v*.*.*'"), reason: path);
+      final triggers = (loadYaml(workflow) as YamlMap)['on'] as YamlMap;
+      expect((triggers['push'] as YamlMap)['tags'], contains('v*.*.*'));
       expect(
         workflow,
         anyOf(contains('--draft'), contains('--field draft=true')),
@@ -372,8 +366,6 @@ void main() {
       );
       expect(workflow, contains('Pomodoist-Setup.exe'), reason: path);
       expect(workflow, contains('Pomodoist-Setup.exe.sha256'), reason: path);
-      expect(workflow, contains('Pomodoist-macOS.dmg'), reason: path);
-      expect(workflow, contains('Pomodoist-macOS.dmg.sha256'), reason: path);
       expect(workflow, contains('Pomodoist-Android.apk'), reason: path);
       expect(workflow, contains('Pomodoist-Android.apk.sha256'), reason: path);
       expect(
@@ -515,7 +507,7 @@ void main() {
     expect(script, contains('gh release upload'));
     expect(script, contains('--clobber'));
     expect(script, contains('required_assets=('));
-    expect(script, contains('Pomodoist-macOS.dmg'));
+    expect(script, isNot(contains('Pomodoist-macOS.dmg')));
 
     final bundle = (job['steps'] as YamlList).cast<YamlMap>().singleWhere(
       (step) => step['name'] == 'Save signed release artifacts',
