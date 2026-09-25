@@ -2034,7 +2034,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.descendant(of: launchPlan, matching: find.text(r'$89.99')),
+      find.descendant(of: launchPlan, matching: find.text('—')),
       findsOneWidget,
     );
     final annualComparePrice = find.descendant(
@@ -2043,23 +2043,19 @@ void main() {
         const ValueKey('billing-compare-pomodoist.pro.annual'),
       ),
     );
-    expect(annualComparePrice, findsOneWidget);
+    expect(annualComparePrice, findsNothing);
     expect(
-      tester.widget<Text>(annualComparePrice).style?.decoration,
-      TextDecoration.lineThrough,
-    );
-    expect(
-      find.descendant(of: annualPlan, matching: find.text(r'$29.99/year')),
+      find.descendant(of: annualPlan, matching: find.text('—')),
       findsOneWidget,
     );
     expect(
       find.descendant(of: annualPlan, matching: find.text(r'$19/year')),
-      findsOneWidget,
+      findsNothing,
     );
     expect(
       find.descendant(
         of: annualPlan,
-        matching: find.text(r'Then $29.99/year.'),
+        matching: find.text('Sign in to Pomodoist and try again.'),
       ),
       findsOneWidget,
     );
@@ -2118,7 +2114,7 @@ void main() {
     );
     expect(
       find.byKey(const ValueKey('billing-compare-pomodoist.pro.annual')),
-      findsOneWidget,
+      findsNothing,
     );
     expect(
       find.byKey(const ValueKey('billing-compare-pomodoist.pro.lifetime')),

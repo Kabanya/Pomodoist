@@ -891,14 +891,15 @@ void main() {
     await _pumpFrames(tester);
     expect(find.text('Browse'), findsAtLeastNWidgets(1));
 
-    await tester.tap(
-      find.byKey(ValueKey('sidebar-project-${harness.workProjectId}')),
+    final projectLink = find.byKey(
+      ValueKey('sidebar-project-${harness.workProjectId}'),
     );
+    await tester.ensureVisible(projectLink);
     await _pumpFrames(tester);
-    expect(
-      find.text('List view - board and calendar are roadmap items.'),
-      findsOneWidget,
-    );
+    await tester.tap(projectLink);
+    await _pumpFrames(tester);
+    expect(find.text('Project task'), findsOneWidget);
+    expect(find.text('Inbox task'), findsNothing);
     expect(find.text('Work'), findsAtLeastNWidgets(2));
     await _disposeApp(tester);
   });
