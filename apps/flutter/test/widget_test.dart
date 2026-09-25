@@ -366,7 +366,7 @@ void main() {
     await tester.tap(
       find.byKey(ValueKey('minimal-preset-choice-$deepWorkPresetId')),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.text('50:00'), findsOneWidget);
     expect(find.text('25:00'), findsNothing);
@@ -425,7 +425,7 @@ void main() {
     expect(find.text('Classic'), findsOneWidget);
     expect(find.byIcon(LucideIcons.chevronDown), findsOneWidget);
     expect(find.text('25:00'), findsOneWidget);
-    expect(find.text('Start focus'), findsOneWidget);
+    expect(find.byTooltip('Start focus'), findsOneWidget);
     expect(find.text('Customize'), findsNothing);
 
     await tester.tap(find.byKey(const Key('minimal-preset-menu')));

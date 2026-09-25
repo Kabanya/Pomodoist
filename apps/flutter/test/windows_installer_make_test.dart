@@ -349,21 +349,17 @@ void main() {
         reason: '${entry.key}: the flutter build directory must resolve to the '
             'root build',
       );
-      expect(
-        commands.sublist(1),
-        [
-          'xcrun simctl bootstatus "${entry.value}" -b',
-          'open -a Simulator',
-          'cd "$_repoRoot/apps/flutter" && "flutter-under-test" run -d "${entry.value}" --debug '
-              '--flavor "development" '
-              '--target "lib/main_development.dart" '
-              '--dart-define-from-file="$_repoRoot/pubspec.yaml" '
-              '--dart-define=POMODOIST_RELEASE='
-              '"0123456789abcdef0123456789abcdef01234567" '
-              '--dart-define=POMODOIST_BILLING_CHANNEL=storekit',
-        ],
-        reason: entry.key,
-      );
+      expect(commands.sublist(1), <Object>[
+        'xcrun simctl bootstatus "${entry.value}" -b',
+        _openSimulatorRecipe,
+        'cd "$_repoRoot/apps/flutter" && "flutter-under-test" run -d "${entry.value}" --debug '
+            '--flavor "development" '
+            '--target "lib/main_development.dart" '
+            '--dart-define-from-file="$_repoRoot/pubspec.yaml" '
+            '--dart-define=POMODOIST_RELEASE='
+            '"0123456789abcdef0123456789abcdef01234567" '
+            '--dart-define=POMODOIST_BILLING_CHANNEL=storekit',
+      ], reason: entry.key);
     }
   });
 
@@ -392,7 +388,7 @@ void main() {
             .where((line) => line.isNotEmpty),
         [
           'xcrun simctl bootstatus "Watch Test" -b',
-          'open -a Simulator',
+          _openSimulatorRecipe,
           'xcodebuild -quiet -project "$_repoRoot/apps/flutter/ios/Runner.xcodeproj" '
               '-target PomodoistWatch -configuration "${entry.value}" '
               '-sdk watchsimulator SYMROOT="$watchBuildDir" '
@@ -482,6 +478,15 @@ String _makeExecutable() {
 
   throw StateError('GNU Make is required for this test.');
 }
+
+/// The `OPEN_SIMULATOR` recipe the Makefile emits for ios, ipad and watch
+/// targets: Xcode 27 ships Device Hub while older Xcode ships Simulator, so the
+/// line picks whichever bundle exists under the active developer directory.
+const _openSimulatorRecipe =
+    'developer_dir="\$(xcode-select -p)" && '
+    'if [ -d "\$developer_dir/../Applications/DeviceHub.app" ]; then '
+    'open -a "\$developer_dir/../Applications/DeviceHub.app"; '
+    'else open -a "\$developer_dir/Applications/Simulator.app"; fi';
 
 /// Resolves `make --dry-run android` for [config] and returns its `--target`
 /// argument, so the test exercises the real dotenv reader in the Makefile.

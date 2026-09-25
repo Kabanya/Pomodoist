@@ -4,6 +4,8 @@ abstract final class AppMotion {
   static const hover = Duration(milliseconds: 120);
   static const popup = Duration(milliseconds: 180);
   static const panel = Duration(milliseconds: 240);
+  static const navigation = Duration(milliseconds: 320);
+  static const navigationCurve = Cubic(0.22, 1, 0.36, 1);
   static const task = Duration(milliseconds: 240);
   static const highlight = Duration(milliseconds: 500);
   static const state = Duration(milliseconds: 180);

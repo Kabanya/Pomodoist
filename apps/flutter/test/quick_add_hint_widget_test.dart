@@ -153,6 +153,6 @@ void main() {
       editable.style.fontVariations,
       contains(const FontVariation('wght', 400)),
     );
-    expect(editable.style.color!.a, closeTo(.45, .01));
+    expect(editable.style.color!.a, 1.0);
   });
 }

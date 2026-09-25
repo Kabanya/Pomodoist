@@ -12,6 +12,44 @@ import 'package:pomodoist/utils/result.dart';
 
 void main() {
   test(
+    'motion keeps the panel equal to its buttons and reveals both labels',
+    () {
+      final from = BottomNavigationFrame(widths: [120, 44], labels: [1, 0]);
+      final to = BottomNavigationFrame(widths: [44, 100], labels: [0, 1]);
+      final tween = BottomNavigationTween(begin: from, end: to);
+      final middle = tween.lerp(.5);
+      expect(middle.widths, [82, 72]);
+      expect(middle.labels, [.5, .5]);
+      expect(middle.contentWidth, 154);
+      expect(tween.lerp(0), from);
+      expect(tween.lerp(1), to);
+      // Rebuilding with the same target must not restart a running transition.
+      expect(to, BottomNavigationFrame(widths: [44, 100], labels: [0, 1]));
+      final reversed = BottomNavigationTween(begin: middle, end: from);
+      expect(reversed.lerp(0), middle);
+      expect(reversed.lerp(.5).widths, [101, 58]);
+    },
+  );
+
+  test('navigation motion preserves touch widths and full panel size', () {
+    for (var count = 1; count <= 5; count++) {
+      final from = BottomNavigationFrame(
+        widths: [100, ...List.filled(count - 1, 44.0)],
+        labels: [1, ...List.filled(count - 1, 0.0)],
+      );
+      final to = BottomNavigationFrame(
+        widths: [...List.filled(count - 1, 44.0), 100],
+        labels: [...List.filled(count - 1, 0.0), 1],
+      );
+      for (final t in [0.0, .1, .5, .9, 1.0]) {
+        final frame = BottomNavigationTween(begin: from, end: to).lerp(t);
+        expect(frame.widths.every((width) => width >= 44), isTrue);
+        expect(frame.contentWidth, closeTo(from.contentWidth, .000001));
+      }
+    }
+  });
+
+  test(
     'defaults, empty selection, invalid and duplicate stored destinations',
     () {
       final defaults = BottomNavigationPreferences();

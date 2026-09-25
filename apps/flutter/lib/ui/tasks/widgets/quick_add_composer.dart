@@ -70,7 +70,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
         fontWeight: FontWeight.w400,
         fontVariations: const [FontVariation('wght', 400)],
-        color: context.appColors.primaryText.withValues(alpha: .45),
+        color: context.appColors.primaryText,
       ),
       textInputAction: TextInputAction.done,
       decoration: InputDecoration(

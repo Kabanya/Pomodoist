@@ -89,12 +89,23 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   late final ShellAppMenu? _appMenuController;
 
   Offset? _visibleAddTaskPosition() {
-    final button = _addTaskButtonKey.currentContext?.findRenderObject();
-    final scaffold = _scaffoldKey.currentContext?.findRenderObject();
+    // A GlobalKey keeps pointing at a deactivated element until the frame is
+    // finalized, so only dereference active elements: crossing the wide/compact
+    // breakpoint reparents both the Scaffold and the Add-task button, and
+    // findRenderObject() asserts on an element from the previous layout.
+    final button = _activeRenderObjectOf(_addTaskButtonKey);
+    final scaffold = _activeRenderObjectOf(_scaffoldKey);
     if (button is! RenderBox || scaffold is! RenderBox || !button.hasSize) {
       return null;
     }
     return button.localToGlobal(Offset.zero, ancestor: scaffold);
+  }
+
+  RenderObject? _activeRenderObjectOf(GlobalKey key) {
+    final element = key.currentContext as Element?;
+    return element != null && element.debugIsActive
+        ? element.findRenderObject()
+        : null;
   }
 
   @override
@@ -167,7 +178,11 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
       );
     }
     final wide = MediaQuery.sizeOf(context).width >= _wideLayoutBreakpoint;
-    final compactTaskDetailsOpen = !wide && widget.taskId != null;
+    // Details reached through the `/task/:id` route fill the viewport just like
+    // the query-parameter selection, so both hide the shell chrome below 820 px.
+    final compactTaskDetailsOpen =
+        !wide &&
+        (widget.taskId != null || widget.location.startsWith('/task/'));
     final focusLocation = _isFocusLocation(widget.location);
     final navigation =
         ref.watch(bottomNavigationProvider).value ??

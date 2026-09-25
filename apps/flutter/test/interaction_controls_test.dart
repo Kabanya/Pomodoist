@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/settings/bottom_navigation_preferences.dart';
 import 'package:pomodoist/domain/models/account/account_overview.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/data/repositories/focus/focus_preferences_repository.dart';
@@ -3200,6 +3201,9 @@ void main() {
       onboardingCompletedPreferenceKey: true,
       launchOfferStartedAtPreferenceKey: '2026-01-01T10:00:00.000Z',
       focusViewModePreferenceKey: FocusViewMode.full.storageValue,
+      bottomNavigationPreferenceKey: BottomNavigationPreferences(
+        style: BottomNavigationStyle.labels,
+      ).encode(),
     });
     await _pumpApp(tester);
 
@@ -3409,22 +3413,27 @@ void main() {
 
     await _pumpFocusScreen(tester, focusRepository, now);
 
+    // Minimal mode is icon-only: it keeps the primary action and a route to
+    // the Full view, and exposes none of the full dock's secondary actions.
     expect(find.widgetWithText(ShadButton, 'Complete interval'), findsNothing);
     expect(find.widgetWithText(ShadButton, 'Skip'), findsNothing);
     expect(find.widgetWithText(ShadButton, 'Stop'), findsNothing);
     expect(find.byKey(const Key('minimal-active-more-menu')), findsNothing);
-    final menu = find.byKey(const Key('focus-details-menu'));
-    expect(menu, findsOneWidget);
-    await tester.tap(
-      find.descendant(of: menu, matching: find.byIcon(LucideIcons.ellipsis)),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Switch to Full'), findsOneWidget);
+    expect(find.byKey(const Key('focus-details-menu')), findsNothing);
     expect(find.text('Skip'), findsNothing);
-    await tester.tapAt(Offset.zero);
-    await tester.pumpAndSettle();
+    expect(find.text('Complete interval'), findsNothing);
+    expect(find.text('Stop'), findsNothing);
 
-    await tester.tap(find.text('Pause'));
+    // The mode toggle lives in the minimal header row, not in a dock menu.
+    // Its affordance is a keyed semantic label, not rendered text.
+    final switchMode = find.byKey(const Key('focus-switch-view-mode'));
+    expect(switchMode, findsOneWidget);
+    expect(
+      tester.getSemantics(switchMode).label,
+      'Switch to Full',
+    );
+
+    await tester.tap(find.bySemanticsLabel('Pause'));
     await tester.pump();
 
     expect(focusRepository.pauseCount, 1);
@@ -3448,7 +3457,11 @@ void main() {
 
     await _pumpFocusScreen(tester, focusRepository, now);
 
-    await tester.tap(find.text('Resume'));
+    // Minimal mode renders the primary action as an icon whose accessible
+    // name is the semantic label, so drive it by that label.
+    final resume = find.bySemanticsLabel('Resume');
+    expect(resume, findsOneWidget);
+    await tester.tap(resume);
     await tester.pump();
 
     expect(focusRepository.resumeCount, 1);
@@ -3468,7 +3481,9 @@ void main() {
 
     await _pumpFocusScreen(tester, focusRepository, now);
 
-    await tester.tap(find.text('Start interval'));
+    final start = find.bySemanticsLabel('Start interval');
+    expect(start, findsOneWidget);
+    await tester.tap(start);
     await tester.pump();
 
     expect(focusRepository.startReadyCount, 1);
@@ -3483,7 +3498,11 @@ void main() {
 
     await _pumpFocusScreen(tester, focusRepository, now);
 
-    await tester.tap(find.text('Resume'));
+    // No view-mode preference means the default minimal shell, where the
+    // primary action carries its label as a semantic label only.
+    final resume = find.bySemanticsLabel('Resume');
+    expect(resume, findsOneWidget);
+    await tester.tap(resume);
     await tester.pump();
 
     expect(focusRepository.resumeCount, 1);
@@ -3935,6 +3954,16 @@ Future<void> _pumpFocusScreen(
   _FakeFocusRepository focusRepository,
   DateTime now,
 ) async {
+  // A phone viewport keeps `FocusScreen` on its compact shell breakpoint, and
+  // the messenger has to own the Scaffold so action feedback can reach it.
+  tester.view
+    ..physicalSize = const Size(390, 844)
+    ..devicePixelRatio = 1;
+  addTearDown(() {
+    tester.view
+      ..resetPhysicalSize()
+      ..resetDevicePixelRatio();
+  });
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -3945,7 +3974,9 @@ Future<void> _pumpFocusScreen(
       child: MaterialApp(
         builder: testAppBuilder,
         theme: AppTheme.light(),
-        home: const Scaffold(body: FocusScreen()),
+        home: const ScaffoldMessenger(
+          child: Scaffold(body: FocusScreen()),
+        ),
       ),
     ),
   );
@@ -3993,6 +4024,14 @@ void _setTimelineVisibleHourPrefs({
 
 Future<void> _tapFullFocusMenuItem(WidgetTester tester, String label) async {
   final menu = find.byKey(const Key('focus-details-menu'));
+  // Action feedback from an earlier step renders as a toast that covers the
+  // dock, so it has to be dismissed or it swallows the trigger tap.
+  ScaffoldMessenger.of(
+    tester.element(find.byType(FocusScreen)),
+  ).hideCurrentSnackBar();
+  await tester.pumpAndSettle();
+  // The dock sits inside the page scroll view, so the trigger has to be
+  // brought into the viewport before its hit test can succeed.
   await tester.ensureVisible(menu);
   await tester.pump();
   await tester.tap(

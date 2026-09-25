@@ -1,8 +1,9 @@
 part of 'focus_stage.dart';
 
-/// Grow with the available area while keeping a readable, bounded dial.
-double focusTimerDiameter(Size viewport) =>
-    math.min(viewport.width, (viewport.shortestSide * 0.5).clamp(280.0, 520.0));
+/// Grow with the available content width while keeping a readable, bounded dial.
+double focusTimerDiameter(double maxWidth, {required bool compact}) => compact
+    ? math.min(300.0, math.max(200.0, maxWidth - 24))
+    : 320.0;
 
 class _FocusTimerStage extends StatelessWidget {
   const _FocusTimerStage({
@@ -11,6 +12,7 @@ class _FocusTimerStage extends StatelessWidget {
     required this.style,
     required this.compact,
     required this.minimal,
+    required this.diameter,
     super.key,
   });
 
@@ -19,6 +21,7 @@ class _FocusTimerStage extends StatelessWidget {
   final FocusTimerVisualStyle style;
   final bool compact;
   final bool minimal;
+  final double diameter;
 
   @override
   Widget build(BuildContext context) {
@@ -61,12 +64,7 @@ class _FocusTimerStage extends StatelessWidget {
             child: ExcludeSemantics(
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final circleSize = focusTimerDiameter(
-                    Size(
-                      constraints.maxWidth,
-                      MediaQuery.sizeOf(context).height,
-                    ),
-                  );
+                  final circleSize = diameter;
                   final fontSize = circleSize * 2 / 9;
                   if (minimal) {
                     return Column(
@@ -98,6 +96,8 @@ class _FocusTimerStage extends StatelessWidget {
                           remainingLabel: remainingLabel,
                           progress: progress,
                           color: color,
+                          compact: compact,
+                          maxWidth: circleSize,
                         ),
                       ],
                     );
@@ -219,74 +219,74 @@ class _FocusMinimalTimer extends StatelessWidget {
     required this.remainingLabel,
     required this.progress,
     required this.color,
+    required this.maxWidth,
+    this.compact = false,
   });
 
   final FocusTimerVisualStyle style;
   final String remainingLabel;
   final double progress;
   final Color color;
+  final double maxWidth;
+  final bool compact;
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final diameter = focusTimerDiameter(
-        Size(constraints.maxWidth, MediaQuery.sizeOf(context).height),
-      );
-      final time = FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Text(
-          remainingLabel,
-          textDirection: TextDirection.ltr,
-          style: AppTheme.monoTextStyle.copyWith(
-            fontSize: diameter * 2 / 9,
-            fontWeight: FontWeight.w400,
-            letterSpacing: -3,
-            color: context.appColors.primaryText,
-          ),
+  Widget build(BuildContext context) {
+    final diameter = focusTimerDiameter(maxWidth, compact: compact);
+    final time = FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        remainingLabel,
+        textDirection: TextDirection.ltr,
+        style: AppTheme.monoTextStyle.copyWith(
+          fontSize: diameter * 2 / 9,
+          fontWeight: FontWeight.w400,
+          letterSpacing: -3,
+          color: context.appColors.primaryText,
         ),
-      );
-      if (style == FocusTimerVisualStyle.bar) {
-        return Column(
-          key: const Key('focus-minimal-timer'),
-          children: [
-            time,
-            const SizedBox(height: 24),
-            SizedBox(
-              width: 80,
-              child: LinearProgressIndicator(
-                key: const Key('focus-linear-timer'),
-                value: progress,
-                minHeight: 2,
-                borderRadius: BorderRadius.circular(2),
-                color: color,
-                backgroundColor: context.appColors.surfaceHover,
-                stopIndicatorColor: Colors.transparent,
-                trackGap: 0,
-              ),
-            ),
-          ],
-        );
-      }
-      return ConstrainedBox(
+      ),
+    );
+    if (style == FocusTimerVisualStyle.bar) {
+      return Column(
         key: const Key('focus-minimal-timer'),
-        constraints: BoxConstraints(maxWidth: diameter),
-        child: AspectRatio(
-          aspectRatio: 1,
-          child: CustomPaint(
-            key: const Key('focus-circular-timer'),
-            painter: _FocusTimerPainter(
-              progress: progress,
-              trackColor: context.appColors.surfaceHover,
-              fillColor: color,
-            ),
-            child: Center(
-              child: Padding(padding: const EdgeInsets.all(28), child: time),
+        children: [
+          time,
+          const SizedBox(height: 24),
+          SizedBox(
+            width: 80,
+            child: LinearProgressIndicator(
+              key: const Key('focus-linear-timer'),
+              value: progress,
+              minHeight: 2,
+              borderRadius: BorderRadius.circular(2),
+              color: color,
+              backgroundColor: context.appColors.surfaceHover,
+              stopIndicatorColor: Colors.transparent,
+              trackGap: 0,
             ),
           ),
-        ),
+        ],
       );
-    },
-  );
+    }
+    return ConstrainedBox(
+      key: const Key('focus-minimal-timer'),
+      constraints: BoxConstraints(maxWidth: diameter),
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: CustomPaint(
+          key: const Key('focus-circular-timer'),
+          painter: _FocusTimerPainter(
+            progress: progress,
+            trackColor: context.appColors.surfaceHover,
+            fillColor: color,
+          ),
+          child: Center(
+            child: Padding(padding: const EdgeInsets.all(28), child: time),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _PhaseLabel extends StatelessWidget {

@@ -327,8 +327,15 @@ Cancel discards edits, Remove all retains the style, and Use defaults restores
 both style and destinations. Store one local record, without account sync.
 Preserve an explicitly empty list, ignore unknown or duplicate stored IDs and
 cap restored selections at five. Preview uses the current theme; changing the
-navigation style does not change the application theme. Use shared 180 ms state
-and 240 ms size transitions and honor Reduce Motion.
+navigation style does not change the application theme. Switching destinations
+uses a coordinated 320 ms smooth reveal with `AppMotion.navigationCurve`
+(`cubic-bezier(0.22, 1, 0.36, 1)`). Animate every button width, the surface width
+and the outgoing/incoming label reveals together; the surface always equals
+the current sum of button widths plus its insets. Keep outgoing labels mounted
+until they have faded and collapsed. Rapid selections retarget the visible
+frame, without restarting from the previous destination's final geometry.
+Retain the shared 180 ms color transition. Configuration changes and enabling
+Reduce Motion show the final layout immediately.
 
 ### Compact task creation
 
@@ -498,10 +505,10 @@ clearing a token reveals the existing context defaults. Preview and creation use
 duration and clock. Preserve IME composition, selection and unrelated tokens.
 Quoted metadata names remain literal during date normalization. Ready voice
 subtasks preview the project inherited from their parent's current phrase.
-The desktop input renders the phrase at a regular weight and a muted, translucent
-text color, so a draft reads as writing rather than as a heading; recognized
-tokens keep their accent through color alone. On mobile and desktop, the composer
-hint uses light weight (300) and secondary text at 65% opacity to stay unobtrusive.
+The composer renders entered text at a regular weight in opaque primary text;
+recognized tokens keep their accent through color alone. On mobile and desktop,
+the composer hint uses light weight (300) and secondary text at 65% opacity to
+stay unobtrusive.
 `QuickAddComposer` owns this styling, so the dialog and the separate window
 stay consistent. Details stay below the editable input; the separate window
 scrolls when needed.

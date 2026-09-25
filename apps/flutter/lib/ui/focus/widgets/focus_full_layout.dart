@@ -19,11 +19,11 @@ class FocusHeader extends StatelessWidget {
 class _FocusFullHeader extends StatelessWidget {
   const _FocusFullHeader({
     required this.preset,
-    required this.menu,
     required this.onMinimize,
+    this.menu,
   });
   final Widget preset;
-  final Widget menu;
+  final Widget? menu;
   final VoidCallback? onMinimize;
 
   @override
@@ -46,7 +46,7 @@ class _FocusFullHeader extends StatelessWidget {
             color: context.appColors.secondaryText,
             constraints: const BoxConstraints.tightFor(width: 48, height: 48),
           ),
-        menu,
+        ?menu,
       ],
     ),
   );
@@ -117,10 +117,12 @@ class _FocusControlDock extends StatelessWidget {
     required this.summary,
     required this.primary,
     this.secondary,
+    this.menu,
   });
   final String summary;
   final Widget primary;
   final Widget? secondary;
+  final Widget? menu;
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +149,7 @@ class _FocusControlDock extends StatelessWidget {
                   alignment: WrapAlignment.center,
                   spacing: 12,
                   runSpacing: 12,
-                  children: [primary, ?secondary],
+                  children: [primary, ?secondary, ?menu],
                 ),
               ],
             );
@@ -162,9 +164,15 @@ class _FocusControlDock extends StatelessWidget {
               ),
               primary,
               Expanded(
-                child: Align(
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: secondary ?? const SizedBox.shrink(),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ?secondary,
+                    if (menu != null) ...[
+                      const SizedBox(width: 8),
+                      menu!,
+                    ],
+                  ],
                 ),
               ),
             ],

@@ -68,53 +68,77 @@ class AppBottomNavigation extends StatelessWidget {
         final inactiveWidth = active == null
             ? contentWidth / destinations.length
             : 44.0;
-        final panel = SizedBox(
-          width: contentWidth + 36,
-          child: BottomPanelSurface(
-            bottomSpacing: preview ? 0 : 12,
-            trackClearance: !preview,
-            child: Padding(
-              padding: const EdgeInsets.all(5),
-              child: SizedBox(
-                height: height,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (final destination in destinations)
-                      SizedBox(
-                        width: !soft
-                            ? contentWidth / destinations.length
-                            : destination == active
-                            ? contentWidth -
-                                  inactiveWidth * (destinations.length - 1)
-                            : inactiveWidth,
-                        child: _DestinationButton(
-                          destination: destination,
-                          selected: destination == active,
-                          showLabel: !soft || destination == active,
-                          labelsBelow: layout.labelsBelow,
-                          textStyle: textStyle,
-                          onTap: () => onSelected(destination),
-                        ),
-                      ),
-                  ],
+        final target = BottomNavigationFrame(
+          widths: [
+            for (final destination in destinations)
+              !soft
+                  ? contentWidth / destinations.length
+                  : destination == active
+                  ? contentWidth - inactiveWidth * (destinations.length - 1)
+                  : inactiveWidth,
+          ],
+          labels: [
+            for (final destination in destinations)
+              !soft || destination == active ? 1.0 : 0.0,
+          ],
+        );
+        final reduceMotion = MediaQuery.disableAnimationsOf(context);
+        return TweenAnimationBuilder<BottomNavigationFrame>(
+          // Configuration changes start in their final layout; only route
+          // changes retarget the current frame. Reduce Motion snaps immediately.
+          key: ValueKey((
+            preferences.style,
+            destinations.map((d) => d.name).join(','),
+            reduceMotion,
+          )),
+          tween: BottomNavigationTween(end: target),
+          duration: AppMotion.duration(context, AppMotion.navigation),
+          curve: AppMotion.navigationCurve,
+          builder: (context, frame, _) {
+            final panel = SizedBox(
+              width: frame.contentWidth + 36,
+              child: BottomPanelSurface(
+                bottomSpacing: preview ? 0 : 12,
+                trackClearance: !preview,
+                child: Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: SizedBox(
+                    height: height,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (
+                          var index = 0;
+                          index < destinations.length;
+                          index++
+                        )
+                          SizedBox(
+                            width: frame.widths[index],
+                            child: _DestinationButton(
+                              destination: destinations[index],
+                              selected: destinations[index] == active,
+                              labelProgress: frame.labels[index],
+                              labelsBelow: layout.labelsBelow,
+                              textStyle: textStyle,
+                              onTap: () => onSelected(destinations[index]),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-        );
-        return Align(
-          heightFactor: 1,
-          child: contentWidth + 36 > constraints.maxWidth
-              ? SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: panel,
-                )
-              : AnimatedSize(
-                  duration: AppMotion.duration(context, AppMotion.panel),
-                  curve: AppMotion.curve,
-                  child: panel,
-                ),
+            );
+            return Align(
+              heightFactor: 1,
+              child: frame.contentWidth + 36 > constraints.maxWidth + .001
+                  ? SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: panel,
+                    )
+                  : panel,
+            );
+          },
         );
       },
     );
@@ -125,7 +149,7 @@ class _DestinationButton extends StatelessWidget {
   const _DestinationButton({
     required this.destination,
     required this.selected,
-    required this.showLabel,
+    required this.labelProgress,
     required this.labelsBelow,
     required this.textStyle,
     required this.onTap,
@@ -133,7 +157,7 @@ class _DestinationButton extends StatelessWidget {
 
   final BottomNavigationDestination destination;
   final bool selected;
-  final bool showLabel;
+  final double labelProgress;
   final bool labelsBelow;
   final TextStyle textStyle;
   final VoidCallback onTap;
@@ -181,14 +205,41 @@ class _DestinationButton extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [icon, const SizedBox(height: 4), text],
                         )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      // The icon stays centred in its own slot; the label grows
+                      // from the leading edge as a cropped overlay while the
+                      // inactive slots are collapsed to a sliver.
+                      : Stack(
+                          alignment: Alignment.center,
                           children: [
                             icon,
-                            if (showLabel) ...[
-                              const SizedBox(width: 6),
-                              Flexible(child: text),
-                            ],
+                            Positioned.fill(
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    child: ClipRect(
+                                      child: Align(
+                                        alignment:
+                                            AlignmentDirectional.centerStart,
+                                        widthFactor: labelProgress,
+                                        child: Opacity(
+                                          opacity: labelProgress.clamp(
+                                            0.0,
+                                            1.0,
+                                          ),
+                                          child: Padding(
+                                            padding:
+                                                const EdgeInsetsDirectional.only(
+                                                  start: 6,
+                                                ),
+                                            child: text,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                 ),

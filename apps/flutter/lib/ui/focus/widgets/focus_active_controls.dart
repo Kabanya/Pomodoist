@@ -90,6 +90,7 @@ class _FocusActiveActions extends StatelessWidget {
     required this.minimal,
     required this.actions,
     required this.primary,
+    required this.menu,
     required this.summary,
   });
   final FocusIntervalItem interval;
@@ -98,6 +99,7 @@ class _FocusActiveActions extends StatelessWidget {
   final bool minimal;
   final FocusStageActions actions;
   final Widget primary;
+  final Widget menu;
   final String summary;
 
   @override
@@ -109,6 +111,7 @@ class _FocusActiveActions extends StatelessWidget {
     return _FocusControlDock(
       summary: summary,
       primary: primary,
+      menu: menu,
       secondary: OutlinedButton.icon(
         style: OutlinedButton.styleFrom(minimumSize: const Size(200, 48)),
         onPressed: blocked
@@ -224,6 +227,8 @@ Widget _buildFocusPrimaryAction(
 
 Widget _buildFocusMoreActionsMenu(
   BuildContext context, {
+  required FocusIntervalItem interval,
+  required Duration remaining,
   required List<FocusPresetItem> presets,
   required FocusPresetItem? selectedPreset,
   required bool minimal,
@@ -231,45 +236,18 @@ Widget _buildFocusMoreActionsMenu(
   required bool showViewModeMenu,
   required FocusSessionDisplay sessionDisplay,
   required ValueChanged<FocusSessionDisplay>? onSessionDisplayChanged,
-  required FocusStageActions actions,
+  required FocusStageActions? actions,
   required ValueChanged<FocusViewMode> onViewModeChanged,
   required ValueChanged<String> onPresetChanged,
   required ValueChanged<FocusPresetItem> onCustomizePreset,
   required VoidCallback onCreatePreset,
 }) {
   final l10n = context.l10n;
+  final ready = interval.status == 'ready';
   final strict = selectedPreset?.strictMode ?? false;
-
-  void selectAction(_FocusMoreAction action) {
-    switch (action.kind) {
-      case _FocusMoreActionKind.skip:
-        unawaited(_performFocusAction(context, actions.skipActiveInterval));
-      case _FocusMoreActionKind.stop:
-        unawaited(
-          _performFocusAction(
-            context,
-            () => actions.stopActiveRun(reason: StopFocusReason.stopped),
-            message: l10n.focusStopped,
-            icon: LucideIcons.circleStop,
-            haptic: AppHapticCue.light,
-          ),
-        );
-      case _FocusMoreActionKind.customize:
-        final preset = selectedPreset;
-        if (preset != null) onCustomizePreset(preset);
-      case _FocusMoreActionKind.createPreset:
-        onCreatePreset();
-      case _FocusMoreActionKind.changePreset:
-        final presetId = action.presetId;
-        if (presetId != null) onPresetChanged(presetId);
-      case _FocusMoreActionKind.toggleViewMode:
-        onViewModeChanged(
-          viewMode == FocusViewMode.full
-              ? FocusViewMode.minimal
-              : FocusViewMode.full,
-        );
-    }
-  }
+  final blocksEarlyCompletion = strict && remaining > Duration.zero;
+  final paused = interval.status == 'paused';
+  final allowPause = selectedPreset?.allowPause ?? true;
 
   return SizedBox.square(
     dimension: 48,
@@ -287,20 +265,56 @@ Widget _buildFocusMoreActionsMenu(
             sessionDisplay,
             onSessionDisplayChanged,
           ),
+          if (!minimal && actions != null)
+            ShadContextMenuItem(
+              height: 44,
+              onPressed: !ready && !blocksEarlyCompletion
+                  ? () => _handleFocusMoreAction(
+                      context,
+                      const _FocusMoreAction(_FocusMoreActionKind.complete),
+                      selectedPreset: selectedPreset,
+                      actions: actions,
+                      viewMode: viewMode,
+                      onViewModeChanged: onViewModeChanged,
+                      onPresetChanged: onPresetChanged,
+                      onCustomizePreset: onCustomizePreset,
+                      onCreatePreset: onCreatePreset,
+                    )
+                  : null,
+              child: Text(l10n.completeInterval),
+            ),
           if (!minimal)
             ShadContextMenuItem(
               height: 44,
-              onPressed: () => selectAction(
-                const _FocusMoreAction(_FocusMoreActionKind.skip),
-              ),
               enabled: !strict,
+              onPressed: strict
+                  ? null
+                  : () => _handleFocusMoreAction(
+                      context,
+                      const _FocusMoreAction(_FocusMoreActionKind.skip),
+                      selectedPreset: selectedPreset,
+                      actions: actions,
+                      viewMode: viewMode,
+                      onViewModeChanged: onViewModeChanged,
+                      onPresetChanged: onPresetChanged,
+                      onCustomizePreset: onCustomizePreset,
+                      onCreatePreset: onCreatePreset,
+                    ),
               child: Text(l10n.skip),
             ),
           if (!minimal)
             ShadContextMenuItem(
               height: 44,
-              onPressed: () => selectAction(
+              onPressed: () => _handleFocusMoreAction(
+                context,
                 const _FocusMoreAction(_FocusMoreActionKind.stop),
+                selectedPreset: selectedPreset,
+                actions: actions,
+                viewMode: viewMode,
+                onViewModeChanged: onViewModeChanged,
+                onPresetChanged: onPresetChanged,
+                onCustomizePreset: onCustomizePreset,
+                onCreatePreset: onCreatePreset,
               ),
               child: Text(l10n.commonStop),
             ),
@@ -309,27 +323,79 @@ Widget _buildFocusMoreActionsMenu(
           if (!minimal && selectedPreset != null)
             ShadContextMenuItem(
               height: 44,
-              onPressed: () => selectAction(
+              onPressed: () => _handleFocusMoreAction(
+                context,
                 const _FocusMoreAction(_FocusMoreActionKind.customize),
+                selectedPreset: selectedPreset,
+                actions: actions,
+                viewMode: viewMode,
+                onViewModeChanged: onViewModeChanged,
+                onPresetChanged: onPresetChanged,
+                onCustomizePreset: onCustomizePreset,
+                onCreatePreset: onCreatePreset,
               ),
               child: Text(l10n.customizePreset),
             ),
           if (!minimal)
             ShadContextMenuItem(
               height: 44,
-              onPressed: () => selectAction(
+              onPressed: () => _handleFocusMoreAction(
+                context,
                 const _FocusMoreAction(_FocusMoreActionKind.createPreset),
+                selectedPreset: selectedPreset,
+                actions: actions,
+                viewMode: viewMode,
+                onViewModeChanged: onViewModeChanged,
+                onPresetChanged: onPresetChanged,
+                onCustomizePreset: onCustomizePreset,
+                onCreatePreset: onCreatePreset,
               ),
               child: Text(l10n.newPreset),
             ),
           for (final preset in minimal ? const <FocusPresetItem>[] : presets)
             ShadContextMenuItem(
               height: 44,
-              onPressed: () => selectAction(
-                _FocusMoreAction(_FocusMoreActionKind.changePreset, preset.id),
-              ),
-              enabled: preset.id != selectedPreset?.id,
+              onPressed: preset.id == selectedPreset?.id
+                  ? null
+                  : () => _handleFocusMoreAction(
+                      context,
+                      _FocusMoreAction(
+                        _FocusMoreActionKind.changePreset,
+                        presetId: preset.id,
+                      ),
+                      selectedPreset: selectedPreset,
+                      actions: actions,
+                      viewMode: viewMode,
+                      onViewModeChanged: onViewModeChanged,
+                      onPresetChanged: onPresetChanged,
+                      onCustomizePreset: onCustomizePreset,
+                      onCreatePreset: onCreatePreset,
+                    ),
               child: Text(l10n.usePreset(preset.displayName(l10n))),
+            ),
+          if (minimal && actions != null && !ready)
+            ShadContextMenuItem(
+              height: 44,
+              key: const Key('focus-toggle-pause-action'),
+              enabled: paused || allowPause,
+              onPressed: paused || allowPause
+                  ? () => _handleFocusMoreAction(
+                      context,
+                      _FocusMoreAction(
+                        _FocusMoreActionKind.togglePause,
+                        label: paused ? l10n.resume : l10n.pause,
+                        icon: paused ? LucideIcons.play : LucideIcons.pause,
+                      ),
+                      selectedPreset: selectedPreset,
+                      actions: actions,
+                      viewMode: viewMode,
+                      onViewModeChanged: onViewModeChanged,
+                      onPresetChanged: onPresetChanged,
+                      onCustomizePreset: onCustomizePreset,
+                      onCreatePreset: onCreatePreset,
+                    )
+                  : null,
+              child: Text(paused ? l10n.resume : l10n.pause),
             ),
           if (showViewModeMenu && !minimal)
             Divider(height: 8, color: context.appColors.border),
@@ -337,8 +403,16 @@ Widget _buildFocusMoreActionsMenu(
             ShadContextMenuItem(
               height: 44,
               key: const Key('focus-switch-view-mode'),
-              onPressed: () => selectAction(
+              onPressed: () => _handleFocusMoreAction(
+                context,
                 const _FocusMoreAction(_FocusMoreActionKind.toggleViewMode),
+                selectedPreset: selectedPreset,
+                actions: actions,
+                viewMode: viewMode,
+                onViewModeChanged: onViewModeChanged,
+                onPresetChanged: onPresetChanged,
+                onCustomizePreset: onCustomizePreset,
+                onCreatePreset: onCreatePreset,
               ),
               child: Text(
                 viewMode == FocusViewMode.full
@@ -350,6 +424,76 @@ Widget _buildFocusMoreActionsMenu(
       ),
     ),
   );
+}
+
+void _handleFocusMoreAction(
+  BuildContext context,
+  _FocusMoreAction action, {
+  required FocusPresetItem? selectedPreset,
+  required FocusStageActions? actions,
+  required FocusViewMode viewMode,
+  required ValueChanged<FocusViewMode> onViewModeChanged,
+  required ValueChanged<String> onPresetChanged,
+  required ValueChanged<FocusPresetItem> onCustomizePreset,
+  required VoidCallback onCreatePreset,
+}) {
+  final l10n = context.l10n;
+  switch (action.kind) {
+    case _FocusMoreActionKind.complete:
+      if (actions != null) {
+        unawaited(
+          _performFocusAction(
+            context,
+            actions.completeActiveInterval,
+            message: l10n.intervalCompleted,
+            icon: LucideIcons.circleCheck,
+          ),
+        );
+      }
+    case _FocusMoreActionKind.skip:
+      if (actions != null) {
+        unawaited(_performFocusAction(context, actions.skipActiveInterval));
+      }
+    case _FocusMoreActionKind.stop:
+      if (actions != null) {
+        unawaited(
+          _performFocusAction(
+            context,
+            () => actions.stopActiveRun(reason: StopFocusReason.stopped),
+            message: l10n.focusStopped,
+            icon: LucideIcons.circleStop,
+            haptic: AppHapticCue.light,
+          ),
+        );
+      }
+    case _FocusMoreActionKind.customize:
+      final preset = selectedPreset;
+      if (preset != null) onCustomizePreset(preset);
+    case _FocusMoreActionKind.createPreset:
+      onCreatePreset();
+    case _FocusMoreActionKind.changePreset:
+      final presetId = action.presetId;
+      if (presetId != null) onPresetChanged(presetId);
+    case _FocusMoreActionKind.toggleViewMode:
+      onViewModeChanged(
+        viewMode == FocusViewMode.full
+            ? FocusViewMode.minimal
+            : FocusViewMode.full,
+      );
+    case _FocusMoreActionKind.togglePause:
+      if (actions != null) {
+        unawaited(
+          _performFocusAction(
+            context,
+            action.label == l10n.resume
+                ? actions.resumeActiveInterval
+                : actions.pauseActiveInterval,
+            message: action.label,
+            icon: action.icon ?? LucideIcons.circlePause,
+          ),
+        );
+      }
+  }
 }
 
 Future<void> _performFocusAction(
@@ -379,19 +523,23 @@ Future<void> _performFocusAction(
 }
 
 enum _FocusMoreActionKind {
+  complete,
   skip,
   stop,
   customize,
   createPreset,
   changePreset,
   toggleViewMode,
+  togglePause,
 }
 
 class _FocusMoreAction {
-  const _FocusMoreAction(this.kind, [this.presetId]);
+  const _FocusMoreAction(this.kind, {this.presetId, this.label, this.icon});
 
   final _FocusMoreActionKind kind;
   final String? presetId;
+  final String? label;
+  final IconData? icon;
 }
 
 Widget _withPauseAvailabilitySemantics(

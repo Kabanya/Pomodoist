@@ -70,16 +70,22 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                       const Expanded(child: FocusHeader()),
                       if (viewMode == FocusViewMode.minimal &&
                           widget.fixedViewMode == null)
-                        IconButton(
+                        Semantics(
                           key: const Key('focus-switch-view-mode'),
-                          tooltip: context.l10n.focusSwitchToFullView,
-                          constraints: const BoxConstraints.tightFor(
-                            width: 48,
-                            height: 48,
+                          button: true,
+                          container: true,
+                          label: context.l10n.focusSwitchToFullView,
+                          excludeSemantics: true,
+                          child: IconButton(
+                            tooltip: context.l10n.focusSwitchToFullView,
+                            constraints: const BoxConstraints.tightFor(
+                              width: 48,
+                              height: 48,
+                            ),
+                            color: context.appColors.secondaryText,
+                            onPressed: () => _setViewMode(FocusViewMode.full),
+                            icon: const Icon(LucideIcons.maximize, size: 18),
                           ),
-                          color: context.appColors.secondaryText,
-                          onPressed: () => _setViewMode(FocusViewMode.full),
-                          icon: const Icon(LucideIcons.maximize, size: 18),
                         ),
                     ],
                   ),
@@ -97,7 +103,11 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                         compact: !desktop,
                         viewMode: viewMode,
                         sessionDisplay: state.sessionDisplay,
-                        onSessionDisplayChanged: _setSessionDisplay,
+                        // A fixed view mode belongs to a surface that owns its
+                        // own controls, so it offers no session-display menu.
+                        onSessionDisplayChanged: widget.fixedViewMode == null
+                            ? _setSessionDisplay
+                            : null,
                         minHeight:
                             widget.embedded || !constraints.hasBoundedHeight
                             ? 0
@@ -128,6 +138,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                         selectedPreset: activePreset,
                         timerVisualStyle: timerVisualStyle,
                         compact: !desktop,
+                        width: constraints.maxWidth,
                         viewMode: viewMode,
                         sessionDisplay: state.sessionDisplay,
                         onSessionDisplayChanged: _setSessionDisplay,

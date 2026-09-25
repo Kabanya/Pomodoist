@@ -4,7 +4,7 @@ import 'package:pomodoist/data/repositories/projects/project_repository.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
 import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
 import 'support/test_app.dart';
-import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadContextMenuItem;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -528,12 +528,12 @@ void main() {
     expect(find.text('Skip'), findsOneWidget);
     final skipItem = find.byWidgetPredicate(
       (widget) =>
-          widget is PopupMenuItem &&
+          widget is ShadContextMenuItem &&
           widget.child is Text &&
-          (widget.child! as Text).data == 'Skip',
+          (widget.child as Text).data == 'Skip',
     );
     expect(skipItem, findsOneWidget);
-    expect(tester.widget<PopupMenuItem<dynamic>>(skipItem).enabled, isFalse);
+    expect(tester.widget<ShadContextMenuItem>(skipItem).enabled, isFalse);
   });
 
   testWidgets('full paused session can resume with a no-pause preset', (
@@ -1062,6 +1062,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.byKey(const Key('focus-primary-action')));
+    await tester.pump();
     final initialBounds = tester.getRect(
       find.byKey(const Key('focus-primary-action')),
     );
@@ -1090,7 +1092,8 @@ void main() {
   ) async {
     final now = DateTime.utc(2026, 7, 10, 9);
     final repository = _FocusRepository(failPause: true);
-    await tester.pumpWidget(
+    await _pumpActiveStageHarness(
+      tester,
       _focusActiveStageHarness(
         now: now,
         interval: _interval(now, status: 'running'),
@@ -1261,7 +1264,8 @@ void main() {
     final now = DateTime.utc(2026, 7, 10, 9);
     final viewMode = ValueNotifier(FocusViewMode.full);
     addTearDown(viewMode.dispose);
-    await tester.pumpWidget(
+    await _pumpActiveStageHarness(
+      tester,
       _focusActiveStageHarness(
         now: now,
         interval: _interval(now, status: 'running'),
@@ -2489,6 +2493,22 @@ Widget _focusActiveStageHarness({
       ),
     ),
   );
+}
+
+Future<void> _pumpActiveStageHarness(
+  WidgetTester tester,
+  Widget harness, {
+  Size size = const Size(1200, 900),
+}) async {
+  tester.view
+    ..physicalSize = size
+    ..devicePixelRatio = 1;
+  addTearDown(() {
+    tester.view
+      ..resetPhysicalSize()
+      ..resetDevicePixelRatio();
+  });
+  await tester.pumpWidget(harness);
 }
 
 FocusStageActions _focusActions(FocusRepository repository) =>

@@ -131,7 +131,9 @@ class FocusIdleStage extends StatelessWidget {
                       menu: _FocusViewModeMenu(
                         viewMode: viewMode,
                         onChanged: onViewModeChanged,
-                        showViewModeMenu: showViewModeMenu,
+                        // A fixed view mode belongs to a surface that owns its
+                        // own way out, so it exposes no view-mode menu.
+                        showViewModeMenu: false,
                         sessionDisplay: sessionDisplay,
                         onSessionDisplayChanged: onSessionDisplayChanged,
                       ),
@@ -165,19 +167,21 @@ class FocusIdleStage extends StatelessWidget {
                         key: const Key('focus-idle-full-copy'),
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.titleMedium,
-                      )
-                    else
-                      presetMenu,
+                      ),
+                    if (!full) presetMenu,
                     const SizedBox(height: 28),
-                    _FocusMinimalTimer(
-                      style: timerVisualStyle,
-                      remainingLabel: preset == null
-                          ? '--:--'
-                          : formatDurationCompact(
-                              Duration(seconds: preset.workSeconds),
-                            ),
-                      progress: 0,
-                      color: context.appColors.accent,
+                    LayoutBuilder(
+                      builder: (context, constraints) => _FocusMinimalTimer(
+                        style: timerVisualStyle,
+                        remainingLabel: preset == null
+                            ? '--:--'
+                            : formatDurationCompact(
+                                Duration(seconds: preset.workSeconds),
+                              ),
+                        progress: 0,
+                        color: context.appColors.accent,
+                        maxWidth: constraints.maxWidth,
+                      ),
                     ),
                   ],
                 ),
@@ -332,33 +336,34 @@ class _FocusViewModeMenu extends StatelessWidget {
     final target = viewMode == FocusViewMode.full
         ? FocusViewMode.minimal
         : FocusViewMode.full;
+    final items = [
+      ..._sessionDisplayMenuItems(
+        context,
+        sessionDisplay,
+        onSessionDisplayChanged,
+      ),
+      if (showViewModeMenu)
+        ShadContextMenuItem(
+          height: 44,
+          key: const Key('focus-switch-view-mode'),
+          onPressed: () => onChanged(target),
+          child: Text(
+            target == FocusViewMode.full
+                ? context.l10n.focusSwitchToFullView
+                : context.l10n.focusSwitchToMinimalView,
+          ),
+        ),
+    ];
+    if (items.isEmpty) return const SizedBox.shrink();
     return SizedBox.square(
       dimension: 48,
       child: Semantics(
-        key: const Key('focus-details-menu'),
         label: context.l10n.moreFocusActions,
         container: true,
         button: true,
         child: AppActionMenu(
           tooltip: context.l10n.moreFocusActions,
-          items: [
-            ..._sessionDisplayMenuItems(
-              context,
-              sessionDisplay,
-              onSessionDisplayChanged,
-            ),
-            if (showViewModeMenu)
-              ShadContextMenuItem(
-                height: 44,
-                key: const Key('focus-switch-view-mode'),
-                onPressed: () => onChanged(target),
-                child: Text(
-                  target == FocusViewMode.full
-                      ? context.l10n.focusSwitchToFullView
-                      : context.l10n.focusSwitchToMinimalView,
-                ),
-              ),
-          ],
+          items: items,
         ),
       ),
     );
@@ -375,6 +380,7 @@ class FocusActiveStage extends StatelessWidget {
     required this.selectedPreset,
     required this.timerVisualStyle,
     required this.compact,
+    this.width = 320,
     required this.viewMode,
     this.showViewModeMenu = true,
     this.sessionDisplay = FocusSessionDisplay.compact,
@@ -396,6 +402,7 @@ class FocusActiveStage extends StatelessWidget {
   final FocusPresetItem? selectedPreset;
   final FocusTimerVisualStyle timerVisualStyle;
   final bool compact;
+  final double width;
   final FocusViewMode viewMode;
   final bool showViewModeMenu;
   final FocusSessionDisplay sessionDisplay;
@@ -421,6 +428,8 @@ class FocusActiveStage extends StatelessWidget {
     );
     final menu = _buildFocusMoreActionsMenu(
       context,
+      interval: interval,
+      remaining: remaining,
       presets: presets,
       selectedPreset: preset,
       minimal: !full,
@@ -490,7 +499,6 @@ class FocusActiveStage extends StatelessWidget {
                             : () => onCustomizePreset(preset),
                         onCreate: onCreatePreset,
                       ),
-                      menu: menu,
                       onMinimize: showViewModeMenu
                           ? () => onViewModeChanged(FocusViewMode.minimal)
                           : null,
@@ -542,6 +550,10 @@ class FocusActiveStage extends StatelessWidget {
                       style: timerVisualStyle,
                       compact: compact,
                       minimal: !full,
+                      diameter: focusTimerDiameter(
+                        width,
+                        compact: compact,
+                      ),
                     ),
                   ],
                 ),
@@ -555,6 +567,7 @@ class FocusActiveStage extends StatelessWidget {
             minimal: !full,
             actions: actions,
             primary: primary,
+            menu: menu,
             summary: nextLabel == null
                 ? sessionLabel
                 : '$sessionLabel\n$nextLabel',
