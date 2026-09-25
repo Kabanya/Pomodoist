@@ -5585,12 +5585,6 @@ abstract class AppLocalizations {
   /// **'Copy link'**
   String get collaborationCopyLink;
 
-  /// No description provided for @collaborationConflicts.
-  ///
-  /// In en, this message translates to:
-  /// **'Sync conflicts'**
-  String get collaborationConflicts;
-
   /// No description provided for @collaborationLeaveProject.
   ///
   /// In en, this message translates to:
@@ -5638,24 +5632,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invite'**
   String get collaborationInvite;
-
-  /// No description provided for @collaborationConflictHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Another member also changed this item'**
-  String get collaborationConflictHint;
-
-  /// No description provided for @collaborationConflictKeepLocal.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep mine'**
-  String get collaborationConflictKeepLocal;
-
-  /// No description provided for @collaborationConflictUseServer.
-  ///
-  /// In en, this message translates to:
-  /// **'Use server'**
-  String get collaborationConflictUseServer;
 
   /// No description provided for @collaborationProjectShared.
   ///
@@ -5758,12 +5734,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Link copied'**
   String get collaborationLinkCopied;
-
-  /// No description provided for @collaborationConflictResolved.
-  ///
-  /// In en, this message translates to:
-  /// **'Conflict resolved'**
-  String get collaborationConflictResolved;
 
   /// No description provided for @collaborationRoleAdministrator.
   ///
@@ -6016,6 +5986,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tasks'**
   String get collaborationPublicTasks;
+
+  /// No description provided for @projectInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About project'**
+  String get projectInfoTitle;
+
+  /// No description provided for @projectInfoPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal project'**
+  String get projectInfoPersonal;
+
+  /// No description provided for @projectInfoYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get projectInfoYou;
 }
 
 class _AppLocalizationsDelegate

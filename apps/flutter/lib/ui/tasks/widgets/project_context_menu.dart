@@ -18,6 +18,7 @@ import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
 import 'package:pomodoist/ui/tasks/widgets/create_project_dialog.dart';
 import 'package:pomodoist/ui/collaboration/widgets/share_project_dialog.dart';
+import 'package:pomodoist/ui/collaboration/widgets/project_info_dialog.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_color_picker.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_icon.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_tree_controls.dart';
@@ -65,6 +66,12 @@ class _ProjectContextMenuState extends ConsumerState<ProjectContextMenu> {
       child: AppContextMenuRegion(
         controller: _controller,
         items: [
+          if (project.id != inboxProjectId)
+            ShadContextMenuItem(
+              leading: const Icon(LucideIcons.info, size: 16),
+              onPressed: () => showProjectInfoDialog(context, project.id),
+              child: Text(l10n.projectInfoTitle),
+            ),
           if (!project.isArchived && project.id != inboxProjectId) ...[
             ShadContextMenuItem(
               leading: const Icon(LucideIcons.folderPlus, size: 16),

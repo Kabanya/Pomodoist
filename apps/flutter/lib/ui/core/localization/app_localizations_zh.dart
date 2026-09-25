@@ -3116,9 +3116,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get collaborationCopyLink => '复制链接';
 
   @override
-  String get collaborationConflicts => '同步冲突';
-
-  @override
   String get collaborationLeaveProject => '退出项目';
 
   @override
@@ -3141,15 +3138,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get collaborationInvite => '邀请';
-
-  @override
-  String get collaborationConflictHint => '另一位成员也修改了此项';
-
-  @override
-  String get collaborationConflictKeepLocal => '保留我的版本';
-
-  @override
-  String get collaborationConflictUseServer => '使用服务器版本';
 
   @override
   String get collaborationProjectShared => '项目已共享';
@@ -3208,9 +3196,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get collaborationLinkCopied => '链接已复制';
-
-  @override
-  String get collaborationConflictResolved => '冲突已解决';
 
   @override
   String get collaborationRoleAdministrator => '管理员';
@@ -3337,4 +3322,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get collaborationPublicTasks => '任务';
+
+  @override
+  String get projectInfoTitle => '关于项目';
+
+  @override
+  String get projectInfoPersonal => '个人项目';
+
+  @override
+  String get projectInfoYou => '你';
 }

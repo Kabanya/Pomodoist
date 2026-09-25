@@ -60,12 +60,11 @@ POMODOIST_APPIMAGE_BUILDER ?= ./tool/linux/build_appimage.sh
 # platform files carry production values.
 LOCAL_CONFIG ?= .env.local
 STAGING_CONFIG ?= .env.staging
-# TestFlight selects the runtime environment while both variants upload to the
-# existing production App Store Connect app.
+# TestFlight selects the environment and its own App Store Connect app.
+# Staging requires the .stg App IDs, App Group and provisioning profiles.
 TESTFLIGHT_ENV    ?= production
 TESTFLIGHT_CONFIG ?= $(if $(filter staging,$(TESTFLIGHT_ENV)),$(STAGING_CONFIG),.env.testflight)
-# Staging uses the in-process test store because both TestFlight variants share
-# the production App Store identity and catalog.
+# Staging keeps the in-process test store independent of its App Store catalog.
 TESTFLIGHT_STAGING_DEFINES = --dart-define=POMODOIST_DEV_UNLOCK=1 --dart-define=POMODOIST_LOCAL_STOREKIT=1
 TESTFLIGHT_DEFINES ?= $(if $(filter $(FLAVOR_STAGING),$(TESTFLIGHT_FLAVOR)),$(TESTFLIGHT_STAGING_DEFINES),)
 LINUX_CONFIG   ?= .env.linux

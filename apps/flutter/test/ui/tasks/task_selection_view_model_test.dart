@@ -6,10 +6,48 @@ import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/view_models/task_selection_view_model.dart';
+import 'package:pomodoist/domain/use_cases/tasks/task_scheduling.dart';
 import 'package:pomodoist/utils/clock.dart';
 import 'package:pomodoist/utils/result.dart';
 
 void main() {
+  test(
+    'selection can start empty and clear schedules once without deleting tasks',
+    () async {
+      final repository = _FakeTaskRepository()..failUpdates.add('b');
+      final container = _container(repository: repository);
+      addTearDown(container.dispose);
+      final selection = container.read(
+        taskSelectionViewModelProvider(Object()).notifier,
+      );
+      final a = _task(
+        'a',
+        schedule: TaskSchedule.allDay(DateTime(2026, 9, 25)),
+      );
+      final b = _task(
+        'b',
+        schedule: TaskSchedule.allDay(DateTime(2026, 9, 26)),
+      );
+      selection.updateVisible([a, a, b]);
+      selection.begin();
+      expect(selection.active, isTrue);
+      expect(selection.selectedIds, isEmpty);
+      selection.toggleAll();
+      expect(selection.selectedIds, {'a', 'b'});
+      final failed = await selection.schedule(
+        selection.selectedTasks,
+        const TaskDueResult.clear(),
+      );
+      expect(repository.clearedScheduleIds, ['a']);
+      expect(repository.deletedIds, isEmpty);
+      expect(failed, ['b']);
+      selection.retainVisible(failed);
+      expect(selection.selectedIds, {'b'});
+      selection.updateVisible([a]);
+      expect(selection.active, isFalse);
+    },
+  );
+
   test(
     'screen identities keep selection independent and share persisted values',
     () async {
@@ -207,12 +245,21 @@ void main() {
 
       final deleted = await selection.delete([
         ordinary,
+        ordinary,
+        recurring,
         recurring,
       ], includeFollowing: true);
       expect(deleted.failed, isEmpty);
       expect(deleted.batches, hasLength(2));
       expect(repository.deletedIds, ['ordinary']);
       expect(repository.recurringDeletedIds, ['recurring']);
+      expect(repository.recurringFollowing, [true]);
+      // Undo must work after deleted cards have disappeared from the calendar.
+      selection.updateVisible([]);
+      final restored = await selection.restore(deleted.batches);
+      expect(restored.ids, {'ordinary', 'recurring'});
+      expect(restored.failures, 0);
+      expect(repository.restoredIds, ['ordinary', 'recurring']);
 
       repository.failDeletes.add('ordinary-2');
       final failed = _task('ordinary-2');
@@ -275,6 +322,7 @@ ProjectItem _project(String id) => ProjectItem(
 
 class _FakeTaskRepository implements TaskRepository {
   final List<String> priorityIds = [];
+  final List<String> clearedScheduleIds = [];
   final List<String> labelIds = [];
   final List<String> movedIds = [];
   final List<bool> clearedSections = [];
@@ -282,6 +330,8 @@ class _FakeTaskRepository implements TaskRepository {
   final List<String> uncompletedIds = [];
   final List<String> deletedIds = [];
   final List<String> recurringDeletedIds = [];
+  final List<bool> recurringFollowing = [];
+  final List<String> restoredIds = [];
   final Set<String> failUpdates = {};
   final Set<String> failCompletes = {};
   final Set<String> failDeletes = {};
@@ -295,6 +345,7 @@ class _FakeTaskRepository implements TaskRepository {
         if (failUpdates.contains(id)) {
           throw StateError('update $id failed');
         }
+        if (patch.clearSchedule) clearedScheduleIds.add(id);
         if (patch.priority != null) priorityIds.add(id);
         if (patch.labelNames != null) labelIds.add(id);
       });
@@ -357,12 +408,16 @@ class _FakeTaskRepository implements TaskRepository {
     required bool includeFollowing,
   }) => Result.capture(() async {
     recurringDeletedIds.add(id);
+    recurringFollowing.add(includeFollowing);
     return DeletedTaskBatch(taskIds: {id}, undoUntil: DateTime.utc(2026));
   });
 
   @override
   Future<Result<bool>> restoreDeletedTasks(DeletedTaskBatch batch) =>
-      Result.capture(() async => true);
+      Result.capture(() async {
+        restoredIds.addAll(batch.taskIds);
+        return true;
+      });
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

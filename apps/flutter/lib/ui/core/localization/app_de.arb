@@ -1041,7 +1041,6 @@
   "collaborationPublicLink": "Öffentlicher Link",
   "collaborationPublicLinkHint": "Jeder mit dem Link kann dieses Projekt ansehen",
   "collaborationCopyLink": "Link kopieren",
-  "collaborationConflicts": "Synchronisierungskonflikte",
   "collaborationLeaveProject": "Projekt verlassen",
   "collaborationDeleteSharedProject": "Für alle löschen",
   "collaborationMakePrivate": "Privat machen",
@@ -1050,9 +1049,6 @@
   "collaborationRemoveMember": "Mitglied entfernen",
   "collaborationEmail": "E-Mail",
   "collaborationInvite": "Einladen",
-  "collaborationConflictHint": "Ein anderes Mitglied hat dieses Element ebenfalls geändert",
-  "collaborationConflictKeepLocal": "Meine Version behalten",
-  "collaborationConflictUseServer": "Serverversion",
   "collaborationProjectShared": "Projekt geteilt",
   "collaborationInviteEmailFailed": "Einladung gespeichert, aber die E-Mail konnte nicht gesendet werden",
   "collaborationInviteSent": "Einladung an {email} gesendet",
@@ -1070,7 +1066,6 @@
   "collaborationMakePrivateDescription": "Das Projekt und seine Inhalte kehren in Ihr persönliches Konto zurück. Andere Teilnehmer verlieren sofort den Zugriff.",
   "collaborationProjectMadePrivate": "Projekt ist wieder privat",
   "collaborationLinkCopied": "Link kopiert",
-  "collaborationConflictResolved": "Konflikt gelöst",
   "collaborationRoleAdministrator": "Administrator",
   "collaborationRoleMember": "Mitglied",
   "collaborationRoleObserver": "Beobachter",
@@ -1112,5 +1107,8 @@
   "collaborationPublicUnavailable": "Dieser geteilte Link ist nicht mehr verfügbar",
   "collaborationPublicEmpty": "Es wurde noch nichts geteilt",
   "collaborationPublicOpen": "Pomodoist öffnen",
-  "collaborationPublicTasks": "Aufgaben"
+  "collaborationPublicTasks": "Aufgaben",
+  "projectInfoTitle": "Über das Projekt",
+  "projectInfoPersonal": "Persönliches Projekt",
+  "projectInfoYou": "Du"
 }

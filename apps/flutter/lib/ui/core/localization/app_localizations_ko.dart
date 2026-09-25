@@ -3202,9 +3202,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get collaborationCopyLink => '링크 복사';
 
   @override
-  String get collaborationConflicts => '동기화 충돌';
-
-  @override
   String get collaborationLeaveProject => '프로젝트 나가기';
 
   @override
@@ -3227,15 +3224,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get collaborationInvite => '초대';
-
-  @override
-  String get collaborationConflictHint => '다른 멤버도 이 항목을 변경했습니다';
-
-  @override
-  String get collaborationConflictKeepLocal => '내 변경 유지';
-
-  @override
-  String get collaborationConflictUseServer => '서버 버전 사용';
 
   @override
   String get collaborationProjectShared => '프로젝트를 공유했습니다';
@@ -3295,9 +3283,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get collaborationLinkCopied => '링크를 복사했습니다';
-
-  @override
-  String get collaborationConflictResolved => '충돌을 해결했습니다';
 
   @override
   String get collaborationRoleAdministrator => '관리자';
@@ -3425,4 +3410,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get collaborationPublicTasks => '작업';
+
+  @override
+  String get projectInfoTitle => '프로젝트 정보';
+
+  @override
+  String get projectInfoPersonal => '개인 프로젝트';
+
+  @override
+  String get projectInfoYou => '나';
 }

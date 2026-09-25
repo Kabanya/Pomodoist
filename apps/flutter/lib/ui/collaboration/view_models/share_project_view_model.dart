@@ -3,7 +3,6 @@ import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/collaboration_dependencies.dart';
 import 'package:pomodoist/data/repositories/collaboration/collaboration_repository.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
-import 'package:pomodoist/domain/models/collaboration/collaboration_conflict.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
 import 'package:pomodoist/utils/result.dart';
 
@@ -14,29 +13,24 @@ final class ShareProjectState {
     this.busy = false,
     this.sharedJustNow = false,
     List<CollaborationInvitation> invitations = const [],
-    List<CollaborationConflict> conflicts = const [],
-  }) : invitations = List.unmodifiable(invitations),
-       conflicts = List.unmodifiable(conflicts);
+  }) : invitations = List.unmodifiable(invitations);
   final SharedScope? scope;
   final String? actorId;
   final bool busy;
   final bool sharedJustNow;
   final List<CollaborationInvitation> invitations;
-  final List<CollaborationConflict> conflicts;
   ShareProjectState copyWith({
     SharedScope? scope,
     String? actorId,
     bool? busy,
     bool? sharedJustNow,
     List<CollaborationInvitation>? invitations,
-    List<CollaborationConflict>? conflicts,
   }) => ShareProjectState(
     scope: scope ?? this.scope,
     actorId: actorId ?? this.actorId,
     busy: busy ?? this.busy,
     sharedJustNow: sharedJustNow ?? this.sharedJustNow,
     invitations: invitations ?? this.invitations,
-    conflicts: conflicts ?? this.conflicts,
   );
 }
 
@@ -62,30 +56,19 @@ class ShareProjectViewModel extends Notifier<ShareProjectState> {
         busy: state.busy,
         sharedJustNow: state.sharedJustNow,
         invitations: state.invitations,
-        conflicts: _conflicts(next?.id),
       );
       if (previous?.id != next?.id) _loadInvitations(generation);
     });
     ref.listen(collaborationActorIdProvider, (_, next) {
       state = state.copyWith(actorId: next.value);
     });
-    ref.listen(collaborationConflictsProvider, (_, next) {
-      state = state.copyWith(conflicts: _conflicts(state.scope?.id));
-    });
     final scope = ref.read(sharedScopeForProjectProvider(projectId));
     Future.microtask(() => _loadInvitations(generation));
     return ShareProjectState(
       scope: scope,
       actorId: ref.read(collaborationActorIdProvider).value,
-      conflicts: _conflicts(scope?.id),
     );
   }
-
-  List<CollaborationConflict> _conflicts(String? scopeId) =>
-      (ref.read(collaborationConflictsProvider).value ??
-              const <CollaborationConflict>[])
-          .where((row) => row.scopeId == scopeId)
-          .toList();
 
   Future<void> _loadInvitations(int generation) async {
     final repository = _repository;
@@ -145,15 +128,6 @@ class ShareProjectViewModel extends Notifier<ShareProjectState> {
   });
   Future<Result<void>> unshare() => _run((repository) async {
     (await repository.unshare(_scopeId)).getOrThrow();
-  });
-  Future<Result<void>> resolveConflict(
-    CollaborationConflict command, {
-    required bool keepLocal,
-  }) => _run((repository) async {
-    (await repository.resolveConflict(
-      command,
-      keepLocal: keepLocal,
-    )).getOrThrow();
   });
   String get _scopeId =>
       state.scope?.id ?? (throw const CollaborationException('unavailable'));

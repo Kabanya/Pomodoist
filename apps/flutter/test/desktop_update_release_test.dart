@@ -125,6 +125,32 @@ void main() {
       'v2.0.0',
     );
   });
+  for (final (target, name) in [
+    (linuxTarget, 'Pomodoist-x86_64.AppImage'),
+    (
+      const UpdateTarget(UpdateOS.windows, UpdateArch.x64),
+      'Pomodoist-Setup.exe',
+    ),
+  ]) {
+    test('${target.os.name} RC installation still requires the RC channel', () {
+      final releases = [
+        releaseFixture('v1.1.0-rc.5', name: name, prerelease: true),
+      ];
+      expect(
+        select(releases, current: '1.1.0-rc.4', target: target),
+        isNull,
+      );
+      expect(
+        select(
+          releases,
+          current: '1.1.0-rc.4',
+          target: target,
+          channel: UpdateChannel.rc,
+        )?.tag,
+        'v1.1.0-rc.5',
+      );
+    });
+  }
   test('never downgrades RC or reinstalls metadata-only changes', () {
     expect(select([releaseFixture('v1.9.0')], current: '2.0.0-rc.1'), isNull);
     expect(select([releaseFixture('v2.0.0+96')], current: '2.0.0+94'), isNull);

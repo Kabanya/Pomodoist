@@ -7,7 +7,7 @@ on:
       - 'v*.*.*'
 
 concurrency:
-  group: desktop-release-${{ github.ref }}
+  group: desktop-release-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:

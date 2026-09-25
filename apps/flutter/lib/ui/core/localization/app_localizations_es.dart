@@ -3303,9 +3303,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get collaborationCopyLink => 'Copiar enlace';
 
   @override
-  String get collaborationConflicts => 'Conflictos de sincronización';
-
-  @override
   String get collaborationLeaveProject => 'Salir del proyecto';
 
   @override
@@ -3328,16 +3325,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get collaborationInvite => 'Invitar';
-
-  @override
-  String get collaborationConflictHint =>
-      'Otro miembro también modificó este elemento';
-
-  @override
-  String get collaborationConflictKeepLocal => 'Mantener la mía';
-
-  @override
-  String get collaborationConflictUseServer => 'Versión del servidor';
 
   @override
   String get collaborationProjectShared => 'Proyecto compartido';
@@ -3401,9 +3388,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get collaborationLinkCopied => 'Enlace copiado';
-
-  @override
-  String get collaborationConflictResolved => 'Conflicto resuelto';
 
   @override
   String get collaborationRoleAdministrator => 'Administrador';
@@ -3542,4 +3526,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get collaborationPublicTasks => 'Tareas';
+
+  @override
+  String get projectInfoTitle => 'Acerca del proyecto';
+
+  @override
+  String get projectInfoPersonal => 'Proyecto personal';
+
+  @override
+  String get projectInfoYou => 'Tú';
 }

@@ -123,16 +123,12 @@ class _CalendarMonthBoard extends StatelessWidget {
                                       ),
                                       Expanded(
                                         child: day.tasks.isEmpty
-                                            ? InkWell(
-                                                onTap: () =>
+                                            ? _CalendarAddTarget(
+                                                date: day.date,
+                                                alignment:
+                                                    Alignment.bottomCenter,
+                                                onAdd: () =>
                                                     actions.onAdd(day.date),
-                                                child: Center(
-                                                  child: Icon(
-                                                    LucideIcons.plus,
-                                                    size: 14,
-                                                    color: colors.mutedText,
-                                                  ),
-                                                ),
                                               )
                                             : ListView.separated(
                                                 itemCount: day.tasks.length,

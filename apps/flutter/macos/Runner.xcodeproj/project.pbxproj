@@ -1837,7 +1837,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
-				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				SDKROOT = macosx;
@@ -1889,7 +1889,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
-				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				SDKROOT = macosx;
@@ -1914,12 +1914,12 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				POMODOIST_APP_GROUP = group.com.pomodoist;
-				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist";
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
+				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist.stg";
 				POMODOIST_BUILD_ENTITLEMENTS = "Runner/Release.entitlements";
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg;
 				PRODUCT_NAME = "Pomodoist Stg";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -1941,11 +1941,11 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist";
+				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist.stg";
 				POMODOIST_BUILD_ENTITLEMENTS = "Runner/Direct.entitlements";
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg;
 				PRODUCT_NAME = "Pomodoist Stg";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -1959,7 +1959,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Stg";
@@ -1973,7 +1973,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Stg";
@@ -2000,9 +2000,9 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				OTHER_LDFLAGS = "";
-				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg Focus Widget";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.focuswidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.focuswidget;
 				PRODUCT_NAME = PomodoistFocusWidgetExtension;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -2032,7 +2032,7 @@
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				OTHER_LDFLAGS = "";
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg Focus Widget";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.focuswidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.focuswidget;
 				PRODUCT_NAME = PomodoistFocusWidgetExtension;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;

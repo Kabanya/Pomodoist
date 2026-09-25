@@ -1652,7 +1652,6 @@
   "collaborationPublicLink": "공개 링크",
   "collaborationPublicLinkHint": "링크가 있는 누구나 이 프로젝트를 볼 수 있습니다",
   "collaborationCopyLink": "링크 복사",
-  "collaborationConflicts": "동기화 충돌",
   "collaborationLeaveProject": "프로젝트 나가기",
   "collaborationDeleteSharedProject": "모두에게서 삭제",
   "collaborationMakePrivate": "비공개로 전환",
@@ -1661,9 +1660,6 @@
   "collaborationRemoveMember": "멤버 제거",
   "collaborationEmail": "이메일",
   "collaborationInvite": "초대",
-  "collaborationConflictHint": "다른 멤버도 이 항목을 변경했습니다",
-  "collaborationConflictKeepLocal": "내 변경 유지",
-  "collaborationConflictUseServer": "서버 버전 사용",
   "collaborationProjectShared": "프로젝트를 공유했습니다",
   "collaborationInviteEmailFailed": "초대는 저장되었지만 이메일을 보내지 못했습니다",
   "collaborationInviteSent": "{email} 님에게 초대를 보냈습니다",
@@ -1681,7 +1677,6 @@
   "collaborationMakePrivateDescription": "프로젝트와 콘텐츠가 개인 계정으로 돌아갑니다. 다른 참여자는 즉시 접근할 수 없게 됩니다.",
   "collaborationProjectMadePrivate": "프로젝트가 다시 비공개가 되었습니다",
   "collaborationLinkCopied": "링크를 복사했습니다",
-  "collaborationConflictResolved": "충돌을 해결했습니다",
   "collaborationRoleAdministrator": "관리자",
   "collaborationRoleMember": "멤버",
   "collaborationRoleObserver": "관찰자",
@@ -1723,5 +1718,8 @@
   "collaborationPublicUnavailable": "이 공유 링크는 더 이상 사용할 수 없습니다",
   "collaborationPublicEmpty": "아직 공유된 내용이 없습니다",
   "collaborationPublicOpen": "Pomodoist 열기",
-  "collaborationPublicTasks": "작업"
+  "collaborationPublicTasks": "작업",
+  "projectInfoTitle": "프로젝트 정보",
+  "projectInfoPersonal": "개인 프로젝트",
+  "projectInfoYou": "나"
 }

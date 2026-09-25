@@ -73,7 +73,7 @@ class _CalendarTimeGridState extends State<_CalendarTimeGrid> {
                     ],
                   ),
                   SizedBox(
-                    height: anyAllDay ? 104 : 42,
+                    height: anyAllDay ? 104 : 44,
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -97,16 +97,10 @@ class _CalendarTimeGridState extends State<_CalendarTimeGrid> {
                                 allDay: true,
                               ),
                               child: day.allDay.isEmpty
-                                  ? InkWell(
-                                      onTap: () =>
+                                  ? _CalendarAddTarget(
+                                      date: day.date,
+                                      onAdd: () =>
                                           widget.actions.onAdd(day.date),
-                                      child: Center(
-                                        child: Icon(
-                                          LucideIcons.plus,
-                                          size: 14,
-                                          color: colors.mutedText,
-                                        ),
-                                      ),
                                     )
                                   : ListView.separated(
                                       padding: const EdgeInsets.all(4),
@@ -440,6 +434,7 @@ class _CalendarResizableEventState extends State<_CalendarResizableEvent> {
     final event = widget.event;
     final canResize =
         event.task.canEdit &&
+        !(TaskSelectionScope.maybeOf(context)?.active ?? false) &&
         !event.continuesAfter &&
         !widget.actions.pending.contains(event.task.id);
     return Stack(

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pomodoist/domain/models/app_flavor.dart';
 
 /// The Focus widget and the focus status item share their snapshot through an
 /// App Group. The group is never written into a plist or a Swift literal: each
@@ -128,30 +129,52 @@ void main() {
     }
   });
 
-  test('macOS staging TestFlight uses the production App Store identity', () {
+  test('macOS build modes preserve each flavor identity', () {
     final project = File(
       'macos/Runner.xcodeproj/project.pbxproj',
     ).readAsStringSync();
-    final identity = _identityByConfiguration(project)['Release-Staging']!;
-
-    expect(
-      identity['Runner']?['PRODUCT_BUNDLE_IDENTIFIER'],
-      'com.finchforge.pomodoist',
-    );
-    expect(identity['Runner']?['POMODOIST_APP_GROUP'], 'group.com.pomodoist');
-    expect(identity['Runner']?['POMODOIST_DISPLAY_NAME'], 'Pomodoist Stg');
-    expect(
-      identity['Runner']?['ASSETCATALOG_COMPILER_APPICON_NAME'],
-      'AppIcon-Staging',
-    );
-    expect(
-      identity['PomodoistFocusWidgetExtension']?['PRODUCT_BUNDLE_IDENTIFIER'],
-      'com.finchforge.pomodoist.focuswidget',
-    );
-    expect(
-      identity['PomodoistFocusWidgetExtension']?['POMODOIST_APP_GROUP'],
-      'group.com.pomodoist',
-    );
+    final configurations = _identityByConfiguration(project);
+    for (final flavor in AppFlavor.values) {
+      final name = '${flavor.name[0].toUpperCase()}${flavor.name.substring(1)}';
+      for (final mode in ['Debug', 'Profile', 'Release', 'Release-Direct']) {
+        final configuration = '$mode-$name';
+        final identity = configurations[configuration]!;
+        final expected = {
+          'Runner': flavor.applicationId,
+          'RunnerTests': flavor.runnerTestsBundleId,
+          'PomodoistFocusWidgetExtension': flavor.focusWidgetBundleId,
+        };
+        for (final entry in expected.entries) {
+          expect(
+            identity[entry.key]?['PRODUCT_BUNDLE_IDENTIFIER'],
+            entry.value,
+            reason: '$configuration/${entry.key}',
+          );
+        }
+        expect(
+          identity['Runner']?['POMODOIST_BUILD_BUNDLE_ID'],
+          flavor.applicationId,
+          reason: '$configuration signing must use the flavor identity',
+        );
+        if (mode != 'Release-Direct') {
+          for (final target in ['Runner', 'PomodoistFocusWidgetExtension']) {
+            expect(
+              identity[target]?['POMODOIST_APP_GROUP'],
+              flavor.appGroup,
+              reason: '$configuration/$target',
+            );
+          }
+        }
+        expect(
+          identity['Runner']?['POMODOIST_DISPLAY_NAME'],
+          flavor.displayName,
+        );
+        expect(
+          identity['Runner']?['ASSETCATALOG_COMPILER_APPICON_NAME'],
+          flavor.isProduction ? 'AppIcon' : 'AppIcon-$name',
+        );
+      }
+    }
   });
 }
 

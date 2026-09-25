@@ -85,8 +85,11 @@ class TaskSelectionViewModel extends Notifier<TaskSelectionState> {
     );
   }
 
-  void begin(String id) {
-    state = _copy(selectedIds: Set<String>.unmodifiable({id}), active: true);
+  void begin([String? id]) {
+    state = _copy(
+      selectedIds: Set<String>.unmodifiable({if (id != null) id}),
+      active: true,
+    );
   }
 
   void toggle(String id) {

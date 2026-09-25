@@ -3237,9 +3237,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get collaborationCopyLink => 'نسخ الرابط';
 
   @override
-  String get collaborationConflicts => 'تعارضات المزامنة';
-
-  @override
   String get collaborationLeaveProject => 'مغادرة المشروع';
 
   @override
@@ -3262,15 +3259,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get collaborationInvite => 'دعوة';
-
-  @override
-  String get collaborationConflictHint => 'قام عضو آخر بتعديل هذا العنصر أيضًا';
-
-  @override
-  String get collaborationConflictKeepLocal => 'الإبقاء على نسختي';
-
-  @override
-  String get collaborationConflictUseServer => 'استخدام نسخة الخادم';
 
   @override
   String get collaborationProjectShared => 'تمت مشاركة المشروع';
@@ -3331,9 +3319,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get collaborationLinkCopied => 'تم نسخ الرابط';
-
-  @override
-  String get collaborationConflictResolved => 'تم حل التعارض';
 
   @override
   String get collaborationRoleAdministrator => 'مسؤول';
@@ -3464,4 +3449,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get collaborationPublicTasks => 'المهام';
+
+  @override
+  String get projectInfoTitle => 'حول المشروع';
+
+  @override
+  String get projectInfoPersonal => 'مشروع شخصي';
+
+  @override
+  String get projectInfoYou => 'أنت';
 }

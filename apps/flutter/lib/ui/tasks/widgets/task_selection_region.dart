@@ -23,6 +23,7 @@ class TaskSelectionController {
   TaskSelectionController({
     required TaskSelectionViewModel viewModel,
     required Future<void> Function(BuildContext) showDue,
+    required Future<void> Function(BuildContext) clearSchedule,
     required Future<void> Function(BuildContext) showProject,
     required Future<void> Function(BuildContext) showLabels,
     required Future<void> Function(BuildContext) showPriority,
@@ -31,6 +32,7 @@ class TaskSelectionController {
     required Future<void> Function(BuildContext) delete,
   }) : _viewModel = viewModel,
        _showDue = showDue,
+       _clearSchedule = clearSchedule,
        _showProject = showProject,
        _showLabels = showLabels,
        _showPriority = showPriority,
@@ -40,6 +42,7 @@ class TaskSelectionController {
 
   final TaskSelectionViewModel _viewModel;
   final Future<void> Function(BuildContext) _showDue;
+  final Future<void> Function(BuildContext) _clearSchedule;
   final Future<void> Function(BuildContext) _showProject;
   final Future<void> Function(BuildContext) _showLabels;
   final Future<void> Function(BuildContext) _showPriority;
@@ -60,13 +63,14 @@ class TaskSelectionController {
 
   void updateVisible(Iterable<TaskItem> tasks) =>
       _viewModel.updateVisible(tasks);
-  void begin(String id) => _viewModel.begin(id);
+  void begin([String? id]) => _viewModel.begin(id);
   void toggle(String id) => _viewModel.toggle(id);
   void toggleAll() => _viewModel.toggleAll();
   void retainVisible(Iterable<String> ids) => _viewModel.retainVisible(ids);
   void close() => _viewModel.clear();
 
   Future<void> showDue(BuildContext context) => _showDue(context);
+  Future<void> clearSchedule(BuildContext context) => _clearSchedule(context);
   Future<void> showProject(BuildContext context) => _showProject(context);
   Future<void> showLabels(BuildContext context) => _showLabels(context);
   Future<void> showPriority(BuildContext context) => _showPriority(context);
@@ -79,6 +83,7 @@ class TaskSelectionScope extends InheritedWidget {
   const TaskSelectionScope({
     required this.controller,
     required this.active,
+    required this.pending,
     required this.selectedIds,
     required super.child,
     super.key,
@@ -86,6 +91,7 @@ class TaskSelectionScope extends InheritedWidget {
 
   final TaskSelectionController controller;
   final bool active;
+  final bool pending;
   final Set<String> selectedIds;
 
   static TaskSelectionController? maybeOf(BuildContext context) => context
@@ -94,7 +100,9 @@ class TaskSelectionScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(TaskSelectionScope oldWidget) =>
-      oldWidget.active != active || oldWidget.selectedIds != selectedIds;
+      oldWidget.active != active ||
+      oldWidget.selectedIds != selectedIds ||
+      oldWidget.pending != pending;
 }
 
 class TaskSelectionRegion extends ConsumerStatefulWidget {
@@ -125,6 +133,7 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
   late final TaskSelectionController _controller = TaskSelectionController(
     viewModel: _viewModel,
     showDue: _showDue,
+    clearSchedule: _clearSchedule,
     showProject: _showProject,
     showLabels: _showLabels,
     showPriority: _showPriority,
@@ -197,6 +206,7 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
           child: TaskSelectionScope(
             controller: _controller,
             active: selection.active,
+            pending: selection.pending,
             selectedIds: selection.selectedIds,
             child: Column(
               mainAxisSize: widget.shrinkWrap
@@ -299,6 +309,15 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
         ),
       ),
     );
+  }
+
+  Future<void> _clearSchedule(BuildContext context) async {
+    if (!_controller.hasSelection || _controller.pending) return;
+    final failed = await _viewModel.schedule(
+      _controller.selectedTasks,
+      const TaskDueResult.clear(),
+    );
+    if (mounted) _finishNonDestructive(failed);
   }
 
   Future<void> _showDue(BuildContext context) async {

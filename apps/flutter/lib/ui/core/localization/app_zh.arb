@@ -1041,7 +1041,6 @@
   "collaborationPublicLink": "公开链接",
   "collaborationPublicLinkHint": "任何拥有链接的人都可以查看此项目",
   "collaborationCopyLink": "复制链接",
-  "collaborationConflicts": "同步冲突",
   "collaborationLeaveProject": "退出项目",
   "collaborationDeleteSharedProject": "为所有人删除",
   "collaborationMakePrivate": "设为私有",
@@ -1050,9 +1049,6 @@
   "collaborationRemoveMember": "移除成员",
   "collaborationEmail": "电子邮件",
   "collaborationInvite": "邀请",
-  "collaborationConflictHint": "另一位成员也修改了此项",
-  "collaborationConflictKeepLocal": "保留我的版本",
-  "collaborationConflictUseServer": "使用服务器版本",
   "collaborationProjectShared": "项目已共享",
   "collaborationInviteEmailFailed": "邀请已保存，但邮件发送失败",
   "collaborationInviteSent": "邀请已发送至 {email}",
@@ -1070,7 +1066,6 @@
   "collaborationMakePrivateDescription": "项目及其内容将回到你的个人账户，其他参与者会立即失去访问权限。",
   "collaborationProjectMadePrivate": "项目已恢复为私有",
   "collaborationLinkCopied": "链接已复制",
-  "collaborationConflictResolved": "冲突已解决",
   "collaborationRoleAdministrator": "管理员",
   "collaborationRoleMember": "成员",
   "collaborationRoleObserver": "观察者",
@@ -1112,5 +1107,8 @@
   "collaborationPublicUnavailable": "此共享链接已不可用",
   "collaborationPublicEmpty": "尚未共享任何内容",
   "collaborationPublicOpen": "打开 Pomodoist",
-  "collaborationPublicTasks": "任务"
+  "collaborationPublicTasks": "任务",
+  "projectInfoTitle": "关于项目",
+  "projectInfoPersonal": "个人项目",
+  "projectInfoYou": "你"
 }

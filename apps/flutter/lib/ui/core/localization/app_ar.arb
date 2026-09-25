@@ -1041,7 +1041,6 @@
   "collaborationPublicLink": "رابط عام",
   "collaborationPublicLinkHint": "يمكن لأي شخص لديه الرابط عرض هذا المشروع",
   "collaborationCopyLink": "نسخ الرابط",
-  "collaborationConflicts": "تعارضات المزامنة",
   "collaborationLeaveProject": "مغادرة المشروع",
   "collaborationDeleteSharedProject": "حذف للجميع",
   "collaborationMakePrivate": "جعله خاصًا",
@@ -1050,9 +1049,6 @@
   "collaborationRemoveMember": "إزالة العضو",
   "collaborationEmail": "البريد الإلكتروني",
   "collaborationInvite": "دعوة",
-  "collaborationConflictHint": "قام عضو آخر بتعديل هذا العنصر أيضًا",
-  "collaborationConflictKeepLocal": "الإبقاء على نسختي",
-  "collaborationConflictUseServer": "استخدام نسخة الخادم",
   "collaborationProjectShared": "تمت مشاركة المشروع",
   "collaborationInviteEmailFailed": "تم حفظ الدعوة لكن تعذّر إرسال البريد",
   "collaborationInviteSent": "تم إرسال الدعوة إلى {email}",
@@ -1070,7 +1066,6 @@
   "collaborationMakePrivateDescription": "يعود المشروع ومحتواه إلى حسابك الشخصي، ويفقد المشاركون الآخرون الوصول فورًا.",
   "collaborationProjectMadePrivate": "أصبح المشروع خاصًا مجددًا",
   "collaborationLinkCopied": "تم نسخ الرابط",
-  "collaborationConflictResolved": "تم حل التعارض",
   "collaborationRoleAdministrator": "مسؤول",
   "collaborationRoleMember": "عضو",
   "collaborationRoleObserver": "مراقب",
@@ -1112,5 +1107,8 @@
   "collaborationPublicUnavailable": "هذا الرابط المشترك لم يعد متاحاً",
   "collaborationPublicEmpty": "لم تتم مشاركة أي شيء بعد",
   "collaborationPublicOpen": "افتح Pomodoist",
-  "collaborationPublicTasks": "المهام"
+  "collaborationPublicTasks": "المهام",
+  "projectInfoTitle": "حول المشروع",
+  "projectInfoPersonal": "مشروع شخصي",
+  "projectInfoYou": "أنت"
 }

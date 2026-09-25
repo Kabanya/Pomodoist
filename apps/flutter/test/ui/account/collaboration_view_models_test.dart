@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/collaboration_dependencies.dart';
 import 'package:pomodoist/data/repositories/collaboration/collaboration_repository.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
+import 'package:pomodoist/domain/models/collaboration/collaboration_conflict.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
 import 'package:pomodoist/domain/models/collaboration/public_project.dart';
 import 'package:pomodoist/ui/collaboration/view_models/collaboration_join_view_model.dart';
@@ -41,6 +42,7 @@ CollaborationInvitation _invitation(
 class _Repository implements CollaborationRepository {
   var publicCalls = 0;
   var accepts = 0;
+  var conflictReads = 0;
   Completer<Result<SharedScope>>? pendingAccept;
   Result<PublicProject> publicResponse = Success(PublicProject(const []));
   Result<CollaborationState> stateResponse = Success(
@@ -48,6 +50,12 @@ class _Repository implements CollaborationRepository {
   );
   final membersByScope = <String, Future<Result<CollaborationMembers>>>{};
   final memberCalls = <String>[];
+  @override
+  Stream<List<CollaborationConflict>> watchConflicts() {
+    conflictReads++;
+    return Stream.value(const []);
+  }
+
   @override
   Future<Result<PublicProject>> publicRead(String token) async {
     publicCalls++;
@@ -80,6 +88,25 @@ class _Repository implements CollaborationRepository {
 Future<void> _settle() => Future<void>.delayed(Duration.zero);
 
 void main() {
+  test('sharing reads members without subscribing to sync conflicts', () async {
+    final repository = _Repository();
+    final container = ProviderContainer(
+      overrides: [
+        collaborationRepositoryProvider.overrideWithValue(repository),
+        collaborationActorIdProvider.overrideWith((_) async => 'owner-1'),
+        sharedScopeForProjectProvider.overrideWith((_, _) => _scope('scope')),
+      ],
+    );
+    addTearDown(container.dispose);
+    final provider = shareProjectViewModelProvider('project');
+    container.listen(provider, (_, _) {});
+    await _settle();
+    await _settle();
+    expect(container.read(provider).scope!.ownerId, 'owner-1');
+    expect(repository.memberCalls, ['scope']);
+    expect(repository.conflictReads, 0);
+  });
+
   test(
     'invalid public tokens never request data; revoked tokens do not retry',
     () async {
@@ -210,9 +237,6 @@ void main() {
       overrides: [
         collaborationRepositoryProvider.overrideWithValue(repository),
         collaborationActorIdProvider.overrideWith((ref) async => 'owner-1'),
-        collaborationConflictsProvider.overrideWith(
-          (ref) => Stream.value(const []),
-        ),
         _scopesProvider.overrideWith((ref) => scopes.stream),
         sharedScopeForProjectProvider.overrideWith(
           (ref, projectId) => ref.watch(_scopesProvider).value?.first,

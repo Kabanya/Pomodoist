@@ -32,5 +32,8 @@
   "calendarNextPeriod": "Próximo período",
   "calendarSaveFailed": "Não foi possível salvar as configurações do calendário",
   "calendarNoActiveFocus": "Nenhuma sessão de foco ativa",
-  "calendarCurrentTask": "Tarefa atual"
+  "calendarCurrentTask": "Tarefa atual",
+  "projectInfoTitle": "Sobre o projeto",
+  "projectInfoPersonal": "Projeto pessoal",
+  "projectInfoYou": "Você"
 }

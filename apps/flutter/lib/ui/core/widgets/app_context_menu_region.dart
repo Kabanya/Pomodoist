@@ -11,12 +11,14 @@ class AppContextMenuRegion extends StatefulWidget {
     required this.items,
     required this.child,
     this.controller,
+    this.enableLongPress = true,
     super.key,
   });
 
   final List<Widget> items;
   final Widget child;
   final ShadContextMenuController? controller;
+  final bool enableLongPress;
 
   @override
   State<AppContextMenuRegion> createState() => _AppContextMenuRegionState();
@@ -68,7 +70,9 @@ class _AppContextMenuRegionState extends State<AppContextMenuRegion> {
           BrowserContextMenu.enableContextMenu();
         }
       },
-      onLongPressStart: (details) => _show(details.globalPosition),
+      onLongPressStart: widget.enableLongPress
+          ? (details) => _show(details.globalPosition)
+          : null,
       child: widget.child,
     ),
   );

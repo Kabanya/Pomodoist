@@ -118,6 +118,13 @@ void main() {
         legacyGh: 'false',
       ),
       (
+        path: '../../.github/workflows/macos-dmg-release.yml',
+        job: 'publish',
+        step: 'Upload DMG and publish complete desktop release',
+        assets: ['Pomodoist-macOS.dmg', 'Pomodoist-macOS.dmg.sha256'],
+        legacyGh: 'false',
+      ),
+      (
         path: '../../.github/workflows/android-release.yml',
         job: 'signed-apk-and-bundle',
         step: 'Publish Android artifacts to the GitHub release',
@@ -142,9 +149,9 @@ void main() {
 
     for (final tag in ['v1.0.3', 'v1.0.3-rc.1']) {
       for (final order in [
-        [0, 1, 2],
-        [1, 2, 0],
-        [2, 0, 1],
+        [0, 1, 2, 3],
+        [1, 2, 3, 0],
+        [3, 2, 1, 0],
       ]) {
         final temp = Directory.systemTemp.createTempSync('release-publish-');
         try {
@@ -163,8 +170,8 @@ void main() {
             });
           }
 
-          // Two platforms are never enough, and a repeated platform stays idempotent.
-          for (final position in [0, 1, 0]) {
+          // Three platforms are never enough, and a repeated platform stays idempotent.
+          for (final position in [0, 1, 2, 0]) {
             final publisher = publishers[order[position]];
             final result = publish(position);
             expect(result.exitCode, 0, reason: '${result.stderr}');
@@ -187,7 +194,7 @@ void main() {
             );
           }
 
-          final last = publish(2);
+          final last = publish(3);
           expect(last.exitCode, 0, reason: '${last.stderr}');
           final log = File('${temp.path}/gh.log').readAsLinesSync();
           final publication = log.singleWhere(
@@ -218,6 +225,34 @@ void main() {
           temp.deleteSync(recursive: true);
         }
       }
+    }
+  });
+
+  test('Linux reuses a draft created during a concurrent publish', () {
+    final steps = _job(
+      '../../.github/workflows/linux-appimage-release.yml',
+      'build-test-publish',
+    )['steps'] as YamlList;
+    final script = (steps.cast<YamlMap>().singleWhere(
+      (step) =>
+          step['name'] == 'Upload AppImage and publish complete desktop release',
+    ))['run'] as String;
+    final temp = Directory.systemTemp.createTempSync('release-race-');
+    try {
+      final result = _bash('$_fakeGh\n$script', temp, {
+        'GITHUB_REF_NAME': 'v1.0.3-rc.1',
+        'GITHUB_REPOSITORY': 'example/pomodoist',
+        'GH_REPO': 'example/pomodoist',
+        'GITHUB_SHA': '0123456789abcdef0123456789abcdef01234567',
+        'CREATE_RACE': 'true',
+      });
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect(File('${temp.path}/assets').readAsLinesSync(), [
+        'Pomodoist-x86_64.AppImage',
+        'Pomodoist-x86_64.AppImage.sha256',
+      ]);
+    } finally {
+      temp.deleteSync(recursive: true);
     }
   });
 
@@ -286,6 +321,7 @@ void main() {
   for (final path in [
     '../../.github/workflows/android-release.yml',
     '../../.github/workflows/linux-appimage-release.yml',
+    '../../.github/workflows/macos-dmg-release.yml',
     '../../.github/workflows/validate.yml',
     '../../.github/workflows/windows-exe-preview.yml',
   ]) {
@@ -297,18 +333,31 @@ void main() {
     });
   }
 
-  test('one tag release waits for Linux, Windows and Android assets', () {
+  test('desktop builders have independent queues for the same tag', () {
+    final workflows = [
+      '../../.github/workflows/linux-appimage-release.yml',
+      '../../.github/workflows/windows-exe-preview.yml',
+      '../../.github/workflows/macos-dmg-release.yml',
+    ];
+    for (final path in workflows) {
+      final workflow = loadYaml(File(path).readAsStringSync()) as YamlMap;
+      final group = (workflow['concurrency'] as YamlMap)['group'] as String;
+      expect(
+        group,
+        r'desktop-release-${{ github.workflow }}-${{ github.ref }}',
+        reason: path,
+      );
+    }
+  });
+
+  test('one tag release waits for Linux, Windows, macOS and Android assets', () {
     for (final path in [
       '../../.github/workflows/linux-appimage-release.yml',
       '../../.github/workflows/windows-exe-preview.yml',
+      '../../.github/workflows/macos-dmg-release.yml',
     ]) {
       final workflow = File(path).readAsStringSync();
       expect(workflow, contains("- 'v*.*.*'"), reason: path);
-      expect(
-        workflow,
-        contains(r'group: desktop-release-${{ github.ref }}'),
-        reason: path,
-      );
       expect(
         workflow,
         anyOf(contains('--draft'), contains('--field draft=true')),
@@ -323,6 +372,8 @@ void main() {
       );
       expect(workflow, contains('Pomodoist-Setup.exe'), reason: path);
       expect(workflow, contains('Pomodoist-Setup.exe.sha256'), reason: path);
+      expect(workflow, contains('Pomodoist-macOS.dmg'), reason: path);
+      expect(workflow, contains('Pomodoist-macOS.dmg.sha256'), reason: path);
       expect(workflow, contains('Pomodoist-Android.apk'), reason: path);
       expect(workflow, contains('Pomodoist-Android.apk.sha256'), reason: path);
       expect(
@@ -464,6 +515,7 @@ void main() {
     expect(script, contains('gh release upload'));
     expect(script, contains('--clobber'));
     expect(script, contains('required_assets=('));
+    expect(script, contains('Pomodoist-macOS.dmg'));
 
     final bundle = (job['steps'] as YamlList).cast<YamlMap>().singleWhere(
       (step) => step['name'] == 'Save signed release artifacts',
@@ -554,6 +606,7 @@ gh() {
     'api --method')
       if [[ "$3" == POST && "$4" == */releases ]]; then
         touch release-exists
+        [[ "${CREATE_RACE:-false}" != true ]] || return 22
         echo 123
       elif [[ "$3" == POST && "$4" == https://uploads.github.com/* ]]; then
         echo "${4##*name=}" >> assets

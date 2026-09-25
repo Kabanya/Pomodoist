@@ -53,7 +53,7 @@ void main() {
           final settings = project.buildSettings(name, 'Runner')!;
           expect(
             settings['PRODUCT_BUNDLE_IDENTIFIER'],
-            _nativeFlavor(name, flavor).applicationId,
+            flavor.applicationId,
             reason: '$name/Runner',
           );
           // The built `.app` is named after `PRODUCT_NAME` — which is what the
@@ -73,22 +73,21 @@ void main() {
       for (final entry in flavored.entries) {
         final flavor = _flavor(entry.key);
         for (final name in entry.value) {
-          final nativeFlavor = _nativeFlavor(name, flavor);
-          // The project-level configuration and the app target both carry the
-          // identity, because the watch and widget targets inherit the group
-          // from the configuration they are built with.
-          for (final target in ['Project', 'Runner']) {
+          // Check target overrides as well as the inherited project group.
+          for (final target in ['Project', 'Runner', 'Watch', 'Widget']) {
             final settings = project.buildSettings(name, target)!;
             expect(
               settings['POMODOIST_APP_GROUP'],
-              nativeFlavor.appGroup,
+              flavor.appGroup,
               reason: '$name/$target',
             );
-            expect(
-              settings['POMODOIST_URL_SCHEME'],
-              contains(flavor.urlScheme),
-              reason: '$name/$target',
-            );
+            if (target != 'Watch') {
+              expect(
+                settings['POMODOIST_URL_SCHEME'],
+                contains(flavor.urlScheme),
+                reason: '$name/$target',
+              );
+            }
             expect(
               settings['POMODOIST_DISPLAY_NAME'],
               contains(flavor.displayName),
@@ -103,14 +102,21 @@ void main() {
       for (final entry in flavored.entries) {
         final flavor = _flavor(entry.key);
         for (final name in entry.value) {
-          final nativeFlavor = _nativeFlavor(name, flavor);
           final expected = {
-            'Runner': nativeFlavor.applicationId,
-            'RunnerTests': nativeFlavor.runnerTestsBundleId,
-            'Watch': nativeFlavor.watchBundleId,
-            'WatchTests': nativeFlavor.watchTestsBundleId,
-            'Widget': nativeFlavor.focusWidgetBundleId,
+            'Runner': flavor.applicationId,
+            'RunnerTests': flavor.runnerTestsBundleId,
+            'Watch': flavor.watchBundleId,
+            'WatchTests': flavor.watchTestsBundleId,
+            'Widget': flavor.focusWidgetBundleId,
           };
+          expect(
+            project.buildSettings(
+              name,
+              'Watch',
+            )!['POMODOIST_COMPANION_BUNDLE_ID'],
+            flavor.applicationId,
+            reason: '$name/Watch must pair with its flavor app',
+          );
           for (final target in _targets) {
             expect(
               project.buildSettings(name, target)!['PRODUCT_BUNDLE_IDENTIFIER'],
@@ -180,15 +186,11 @@ void main() {
       }
     });
 
-    test('only staging TestFlight reuses the production App Store identity', () {
-      // Debug/Profile flavors install side by side. Release-Staging is the one
-      // exception: it is uploaded as another build of the existing production
-      // App Store Connect app, while retaining staging runtime configuration,
-      // display name and icon.
+    test('every build mode keeps each flavor independently installable', () {
       for (final entry in flavored.entries) {
         final flavor = _flavor(entry.key);
         for (final name in entry.value) {
-          final applicationId = _nativeFlavor(name, flavor).applicationId;
+          final applicationId = flavor.applicationId;
           for (final target in _targets) {
             final bundleId = project.buildSettings(
               name,
@@ -296,9 +298,6 @@ const List<String> _targets = [
 
 AppFlavor _flavor(String name) =>
     AppFlavor.values.firstWhere((flavor) => flavor.name == name.toLowerCase());
-
-AppFlavor _nativeFlavor(String configuration, AppFlavor runtimeFlavor) =>
-    configuration == 'Release-Staging' ? AppFlavor.production : runtimeFlavor;
 
 /// The build settings of `ios/Runner.xcodeproj`, read straight out of the
 /// project file.

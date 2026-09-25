@@ -166,6 +166,16 @@ final class CalendarPresentation {
   final List<CalendarDay> days;
   final List<TaskItem> unscheduled;
   final Map<String, ProjectItem> projectsById;
+
+  /// One editable task per ID, even when its event spans several visible days.
+  Iterable<TaskItem> get selectableTasks =>
+      {
+        for (final day in days)
+          for (final task in day.tasks) task.id: task,
+        for (final task in unscheduled) task.id: task,
+      }.values.where(
+        (task) => task.canEdit && !task.isDeleted && !task.isCompleted,
+      );
 }
 
 final class CalendarRoutineDay {

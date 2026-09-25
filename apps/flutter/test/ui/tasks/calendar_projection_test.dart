@@ -3,23 +3,57 @@ import 'package:pomodoist/domain/models/tasks/calendar_models.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/view_models/calendar_view_model.dart';
 
-TaskItem item(String id, TaskSchedule? schedule) => TaskItem(
-  id: id,
-  userId: 'u',
-  content: id,
-  projectId: 'p',
-  priority: 1,
-  status: 'pending',
-  completedFocusIntervals: 0,
-  totalFocusSeconds: 0,
-  orderKey: id,
-  isDeleted: false,
-  createdAt: DateTime(2026),
-  updatedAt: DateTime(2026),
-  dueJson: schedule?.toJsonString(),
-);
+TaskItem item(String id, TaskSchedule? schedule, {bool canEdit = true}) =>
+    TaskItem(
+      id: id,
+      canEdit: canEdit,
+      userId: 'u',
+      content: id,
+      projectId: 'p',
+      priority: 1,
+      status: 'pending',
+      completedFocusIntervals: 0,
+      totalFocusSeconds: 0,
+      orderKey: id,
+      isDeleted: false,
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+      dueJson: schedule?.toJsonString(),
+    );
 
 void main() {
+  test(
+    'calendar selection includes visible editable tasks once across all modes',
+    () {
+      final cross = item(
+        'cross',
+        TaskSchedule.timed(
+          start: DateTime(2026, 9, 25, 23),
+          end: DateTime(2026, 9, 27),
+        ),
+      );
+      final allDay = item('day', TaskSchedule.allDay(DateTime(2026, 9, 25)));
+      final unscheduled = item('unscheduled', null);
+      final readOnly = item('read-only', null, canEdit: false);
+      final elsewhere = item('elsewhere', TaskSchedule.allDay(DateTime(2027)));
+      for (final mode in CalendarMode.values) {
+        final view = buildCalendarPresentation(
+          [cross, allDay, unscheduled, readOnly, elsewhere],
+          const [],
+          DateTime(2026, 9, 25),
+          mode,
+          firstWeekday: DateTime.monday,
+        );
+        expect(view.selectableTasks.map((task) => task.id).toSet(), {
+          'cross',
+          'day',
+          'unscheduled',
+        });
+        expect(view.selectableTasks.length, 3);
+      }
+    },
+  );
+
   test('sub-minute events retain a visible positive segment', () {
     final view = buildCalendarPresentation(
       [

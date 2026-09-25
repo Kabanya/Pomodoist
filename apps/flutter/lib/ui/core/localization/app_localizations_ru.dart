@@ -3292,9 +3292,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get collaborationCopyLink => 'Копировать ссылку';
 
   @override
-  String get collaborationConflicts => 'Конфликты синхронизации';
-
-  @override
   String get collaborationLeaveProject => 'Покинуть проект';
 
   @override
@@ -3317,16 +3314,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get collaborationInvite => 'Пригласить';
-
-  @override
-  String get collaborationConflictHint =>
-      'Другой участник тоже изменил этот элемент';
-
-  @override
-  String get collaborationConflictKeepLocal => 'Оставить моё';
-
-  @override
-  String get collaborationConflictUseServer => 'Версия сервера';
 
   @override
   String get collaborationProjectShared =>
@@ -3389,9 +3376,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get collaborationLinkCopied => 'Ссылка скопирована';
-
-  @override
-  String get collaborationConflictResolved => 'Конфликт разрешён';
 
   @override
   String get collaborationRoleAdministrator => 'Администратор';
@@ -3528,4 +3512,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get collaborationPublicTasks => 'Задачи';
+
+  @override
+  String get projectInfoTitle => 'О проекте';
+
+  @override
+  String get projectInfoPersonal => 'Личный проект';
+
+  @override
+  String get projectInfoYou => 'Вы';
 }

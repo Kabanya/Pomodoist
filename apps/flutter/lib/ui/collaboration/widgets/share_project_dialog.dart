@@ -4,7 +4,6 @@ import 'package:shadcn_ui/shadcn_ui.dart'
     show LucideIcons, ShadButton, ShadDialog, ShadInput, ShadOption, ShadSelect;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
-import 'package:pomodoist/domain/models/collaboration/collaboration_conflict.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
@@ -123,7 +122,6 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
   Widget _manageScope(BuildContext context, SharedScope scope) {
     final l10n = context.l10n;
     final actorId = _state.actorId;
-    final conflicts = _state.conflicts;
     final members = scope.members;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -184,15 +182,6 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
                 ),
               ),
           ],
-        ],
-        if (conflicts.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Text(
-            l10n.collaborationConflicts,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          for (final conflict in conflicts)
-            _conflictRow(context, scope, conflict),
         ],
         const SizedBox(height: 12),
         Row(
@@ -355,40 +344,6 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
     );
   }
 
-  Widget _conflictRow(
-    BuildContext context,
-    SharedScope scope,
-    CollaborationConflict command,
-  ) {
-    final l10n = context.l10n;
-    return ListTile(
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-      leading: const Icon(LucideIcons.triangleAlert, size: 18),
-      title: Text(command.label),
-      subtitle: Text(l10n.collaborationConflictHint),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ShadButton.ghost(
-            key: Key('collaboration-conflict-mine-${command.id}'),
-            onPressed: _state.busy
-                ? null
-                : () => _resolveConflict(command, keepLocal: true),
-            child: Text(l10n.collaborationConflictKeepLocal),
-          ),
-          ShadButton.ghost(
-            key: Key('collaboration-conflict-server-${command.id}'),
-            onPressed: _state.busy
-                ? null
-                : () => _resolveConflict(command, keepLocal: false),
-            child: Text(l10n.collaborationConflictUseServer),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<bool> _run<T>(
     Future<Result<T>> Function() action, {
     bool close = false,
@@ -523,14 +478,6 @@ class _ShareProjectDialogState extends ConsumerState<_ShareProjectDialog> {
       success: context.l10n.collaborationProjectMadePrivate,
     );
   }
-
-  Future<bool> _resolveConflict(
-    CollaborationConflict command, {
-    required bool keepLocal,
-  }) => _run(
-    () => _viewModel.resolveConflict(command, keepLocal: keepLocal),
-    success: context.l10n.collaborationConflictResolved,
-  );
 
   Future<bool?> _confirm(
     String title,

@@ -1711,7 +1711,6 @@
   "collaborationPublicLink": "Public link",
   "collaborationPublicLinkHint": "Anyone with the link can view this project",
   "collaborationCopyLink": "Copy link",
-  "collaborationConflicts": "Sync conflicts",
   "collaborationLeaveProject": "Leave project",
   "collaborationDeleteSharedProject": "Delete for everyone",
   "collaborationMakePrivate": "Make private",
@@ -1720,9 +1719,6 @@
   "collaborationRemoveMember": "Remove member",
   "collaborationEmail": "Email",
   "collaborationInvite": "Invite",
-  "collaborationConflictHint": "Another member also changed this item",
-  "collaborationConflictKeepLocal": "Keep mine",
-  "collaborationConflictUseServer": "Use server",
   "collaborationProjectShared": "Project shared",
   "collaborationInviteEmailFailed": "Invitation saved, but the email could not be sent",
   "collaborationInviteSent": "Invitation sent to {email}",
@@ -1761,7 +1757,6 @@
   "collaborationMakePrivateDescription": "The project and its content return to your personal account. Other participants lose access immediately.",
   "collaborationProjectMadePrivate": "Project is private again",
   "collaborationLinkCopied": "Link copied",
-  "collaborationConflictResolved": "Conflict resolved",
   "collaborationRoleAdministrator": "Administrator",
   "collaborationRoleMember": "Member",
   "collaborationRoleObserver": "Observer",
@@ -1803,5 +1798,8 @@
   "collaborationPublicUnavailable": "This shared link is no longer available",
   "collaborationPublicEmpty": "Nothing has been shared yet",
   "collaborationPublicOpen": "Open Pomodoist",
-  "collaborationPublicTasks": "Tasks"
+  "collaborationPublicTasks": "Tasks",
+  "projectInfoTitle": "About project",
+  "projectInfoPersonal": "Personal project",
+  "projectInfoYou": "You"
 }

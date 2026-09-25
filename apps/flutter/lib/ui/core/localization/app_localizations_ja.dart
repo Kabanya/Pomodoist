@@ -3193,9 +3193,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get collaborationCopyLink => 'リンクをコピー';
 
   @override
-  String get collaborationConflicts => '同期の競合';
-
-  @override
   String get collaborationLeaveProject => 'プロジェクトから退出';
 
   @override
@@ -3218,15 +3215,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get collaborationInvite => '招待';
-
-  @override
-  String get collaborationConflictHint => '別のメンバーもこの項目を変更しました';
-
-  @override
-  String get collaborationConflictKeepLocal => '自分の変更を残す';
-
-  @override
-  String get collaborationConflictUseServer => 'サーバー版を使う';
 
   @override
   String get collaborationProjectShared => 'プロジェクトを共有しました';
@@ -3286,9 +3274,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get collaborationLinkCopied => 'リンクをコピーしました';
-
-  @override
-  String get collaborationConflictResolved => '競合を解決しました';
 
   @override
   String get collaborationRoleAdministrator => '管理者';
@@ -3416,4 +3401,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get collaborationPublicTasks => 'タスク';
+
+  @override
+  String get projectInfoTitle => 'プロジェクト情報';
+
+  @override
+  String get projectInfoPersonal => '個人プロジェクト';
+
+  @override
+  String get projectInfoYou => 'あなた';
 }

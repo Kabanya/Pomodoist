@@ -2299,7 +2299,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
-				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				SDKROOT = iphoneos;
@@ -2328,10 +2328,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg;
 				PRODUCT_NAME = "Pomodoist Stg";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -2348,7 +2348,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Stg";
@@ -2375,10 +2375,10 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
-				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.watchkitapp;
+				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist.stg;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -2400,7 +2400,7 @@
 				DEVELOPMENT_TEAM = 4VK836929S;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.watchkitapp.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.watchkitapp.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SUPPORTED_PLATFORMS = "watchos watchsimulator";
@@ -2431,10 +2431,10 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.focuswidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.focuswidget;
 				PRODUCT_NAME = PomodoistFocusWidgetExtension;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;

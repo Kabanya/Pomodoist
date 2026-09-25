@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/config/focus_dependencies.dart';
+import 'package:pomodoist/config/task_focus_dependencies.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/data/repositories/settings/preferences_repository.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
@@ -11,6 +14,50 @@ import 'package:pomodoist/domain/models/tasks/task_models.dart';
 export 'package:pomodoist/domain/models/tasks/calendar_models.dart';
 
 const calendarSettingsKey = 'calendar.settings.v1';
+
+enum CalendarFocusAction { start, pause, resume, startInterval, stop }
+
+List<CalendarFocusAction> calendarFocusActions(
+  TaskItem task, {
+  FocusRunItem? run,
+  FocusIntervalItem? interval,
+  FocusPresetItem? preset,
+}) {
+  if (task.isDeleted || task.isCompleted) return const [];
+  if (run?.taskId != task.id) return const [CalendarFocusAction.start];
+  return [
+    if (interval?.runId == run?.id)
+      if (interval!.status == 'ready')
+        CalendarFocusAction.startInterval
+      else if (interval.status == 'paused')
+        CalendarFocusAction.resume
+      else if (interval.status == 'running' && (preset?.allowPause ?? true))
+        CalendarFocusAction.pause,
+    CalendarFocusAction.stop,
+  ];
+}
+
+final calendarTaskFocusActionsProvider = Provider.autoDispose
+    .family<List<CalendarFocusAction>, TaskItem>((ref, task) {
+      final run = ref.watch(activeFocusRunProvider);
+      final interval = ref.watch(activeFocusIntervalProvider);
+      final presets = ref.watch(focusPresetsProvider);
+      if (!run.hasValue ||
+          !interval.hasValue ||
+          !presets.hasValue ||
+          run.hasError ||
+          interval.hasError ||
+          presets.hasError)
+        return const [];
+      return calendarFocusActions(
+        task,
+        run: run.value,
+        interval: interval.value,
+        preset: presets.value!
+            .where((p) => p.id == run.value?.presetId)
+            .firstOrNull,
+      );
+    });
 
 final class CalendarState {
   const CalendarState({
@@ -46,6 +93,7 @@ class CalendarViewModel extends Notifier<CalendarState> {
   Future<void>? _loadFuture;
   Future<void> _saveQueue = Future.value();
   String? _projectId;
+  bool _focusBusy = false;
 
   @override
   CalendarState build() {
@@ -185,6 +233,54 @@ class CalendarViewModel extends Notifier<CalendarState> {
 
   List<CalendarRoutineDay> routineDays(CalendarPresentation presentation) =>
       groupCalendarRoutineDays(presentation, _settings);
+
+  Future<void> focusTask(
+    String taskId,
+    CalendarFocusAction action, {
+    required Future<bool> Function() confirmSwitch,
+  }) async {
+    if (_focusBusy) return;
+    _focusBusy = true;
+    try {
+      final focus = ref.read(focusRepositoryProvider);
+      final launcher = ref.read(taskFocusLauncherProvider);
+      final presetId = ref.read(lastFocusPresetIdProvider);
+      final task = await _tasks.watchTask(taskId).first;
+      if (task == null || task.isDeleted || task.isCompleted) return;
+      final presets = await focus.watchPresets().first;
+      if (!ref.mounted) return;
+      if (action == CalendarFocusAction.start) {
+        await launcher.open(
+          task,
+          preset: selectedFocusPresetOrDefault(presets, presetId),
+          confirmSwitch: confirmSwitch,
+        );
+        return;
+      }
+      final run = await focus.watchActiveRun().first;
+      final interval = await focus.watchActiveInterval().first;
+      if (!ref.mounted ||
+          !calendarFocusActions(
+            task,
+            run: run,
+            interval: interval,
+            preset: presets.where((p) => p.id == run?.presetId).firstOrNull,
+          ).contains(action))
+        return;
+      final result = await switch (action) {
+        CalendarFocusAction.pause => focus.pauseActiveInterval(),
+        CalendarFocusAction.resume => focus.resumeActiveInterval(),
+        CalendarFocusAction.startInterval => focus.startReadyInterval(),
+        CalendarFocusAction.stop => focus.stopActiveRun(
+          reason: StopFocusReason.stopped,
+        ),
+        CalendarFocusAction.start => throw StateError('Start handled above'),
+      };
+      result.getOrThrow();
+    } finally {
+      _focusBusy = false;
+    }
+  }
 
   Future<TaskItem> _current(String id, {bool allowCompleted = false}) async {
     final task = await _tasks.watchTask(id).first;

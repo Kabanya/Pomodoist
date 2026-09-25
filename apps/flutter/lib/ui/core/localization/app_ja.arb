@@ -1652,7 +1652,6 @@
   "collaborationPublicLink": "公開リンク",
   "collaborationPublicLinkHint": "リンクを知っている人は誰でもこのプロジェクトを閲覧できます",
   "collaborationCopyLink": "リンクをコピー",
-  "collaborationConflicts": "同期の競合",
   "collaborationLeaveProject": "プロジェクトから退出",
   "collaborationDeleteSharedProject": "全員から削除",
   "collaborationMakePrivate": "非公開にする",
@@ -1661,9 +1660,6 @@
   "collaborationRemoveMember": "メンバーを削除",
   "collaborationEmail": "メールアドレス",
   "collaborationInvite": "招待",
-  "collaborationConflictHint": "別のメンバーもこの項目を変更しました",
-  "collaborationConflictKeepLocal": "自分の変更を残す",
-  "collaborationConflictUseServer": "サーバー版を使う",
   "collaborationProjectShared": "プロジェクトを共有しました",
   "collaborationInviteEmailFailed": "招待は保存されましたが、メールを送信できませんでした",
   "collaborationInviteSent": "{email} に招待を送信しました",
@@ -1681,7 +1677,6 @@
   "collaborationMakePrivateDescription": "プロジェクトとその内容は個人アカウントに戻ります。他の参加者はすぐにアクセスできなくなります。",
   "collaborationProjectMadePrivate": "プロジェクトを再び非公開にしました",
   "collaborationLinkCopied": "リンクをコピーしました",
-  "collaborationConflictResolved": "競合を解決しました",
   "collaborationRoleAdministrator": "管理者",
   "collaborationRoleMember": "メンバー",
   "collaborationRoleObserver": "オブザーバー",
@@ -1723,5 +1718,8 @@
   "collaborationPublicUnavailable": "この共有リンクは利用できなくなりました",
   "collaborationPublicEmpty": "まだ何も共有されていません",
   "collaborationPublicOpen": "Pomodoist を開く",
-  "collaborationPublicTasks": "タスク"
+  "collaborationPublicTasks": "タスク",
+  "projectInfoTitle": "プロジェクト情報",
+  "projectInfoPersonal": "個人プロジェクト",
+  "projectInfoYou": "あなた"
 }

@@ -3316,9 +3316,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get collaborationCopyLink => 'Copiar link';
 
   @override
-  String get collaborationConflicts => 'Conflitos de sincronização';
-
-  @override
   String get collaborationLeaveProject => 'Sair do projeto';
 
   @override
@@ -3341,16 +3338,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get collaborationInvite => 'Convidar';
-
-  @override
-  String get collaborationConflictHint =>
-      'Outro membro também alterou este item';
-
-  @override
-  String get collaborationConflictKeepLocal => 'Manter a minha';
-
-  @override
-  String get collaborationConflictUseServer => 'Versão do servidor';
 
   @override
   String get collaborationProjectShared => 'Projeto compartilhado';
@@ -3414,9 +3401,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get collaborationLinkCopied => 'Link copiado';
-
-  @override
-  String get collaborationConflictResolved => 'Conflito resolvido';
 
   @override
   String get collaborationRoleAdministrator => 'Administrador';
@@ -3554,6 +3538,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get collaborationPublicTasks => 'Tarefas';
+
+  @override
+  String get projectInfoTitle => 'Sobre o projeto';
+
+  @override
+  String get projectInfoPersonal => 'Projeto pessoal';
+
+  @override
+  String get projectInfoYou => 'Tu';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -3661,4 +3654,13 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get calendarCurrentTask => 'Tarefa atual';
+
+  @override
+  String get projectInfoTitle => 'Sobre o projeto';
+
+  @override
+  String get projectInfoPersonal => 'Projeto pessoal';
+
+  @override
+  String get projectInfoYou => 'Você';
 }

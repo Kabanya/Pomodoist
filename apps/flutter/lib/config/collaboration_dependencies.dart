@@ -6,28 +6,26 @@ import 'package:pomodoist/data/repositories/collaboration/collaboration_reposito
 import 'package:pomodoist/data/repositories/collaboration/drift_collaboration_repository.dart';
 import 'package:pomodoist/data/services/collaboration/collaboration_api.dart';
 import 'package:pomodoist/data/services/local/shared_access.dart';
-import 'package:pomodoist/domain/models/collaboration/collaboration_conflict.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_responses.dart';
 
-export 'package:pomodoist/config/providers.dart'
-    show projectRepositoryProvider;
+export 'package:pomodoist/config/providers.dart' show projectRepositoryProvider;
 
 /// Supplies the account-backed collaboration behaviour that
 /// `projectRepositoryProvider` reads. This file may import both the account
 /// layer and `providers.dart`, so the wiring lives here; reading the account
 /// lazily keeps a signed-out or unconfigured client from building an API.
-final projectCollaborationOverride = projectCollaborationProvider.overrideWith(
-  (ref) {
-    final account = ref.watch(accountClientProvider);
-    return ProjectCollaboration(
-      api: account == null ? null : CollaborationApi.account(account),
-      synchronize: () async {
-        await ref.read(accountSyncEngineProvider)?.syncNow();
-      },
-    );
-  },
-);
+final projectCollaborationOverride = projectCollaborationProvider.overrideWith((
+  ref,
+) {
+  final account = ref.watch(accountClientProvider);
+  return ProjectCollaboration(
+    api: account == null ? null : CollaborationApi.account(account),
+    synchronize: () async {
+      await ref.read(accountSyncEngineProvider)?.syncNow();
+    },
+  );
+});
 
 final collaborationRepositoryProvider = Provider<CollaborationRepository?>((
   ref,
@@ -103,15 +101,6 @@ final sharedScopeProvider = Provider.family<SharedScope?, String>((
   return null;
 });
 
-final scopeConflictsProvider =
-    StreamProvider.family<List<CollaborationConflict>, String>((ref, scopeId) {
-      final repository = ref.watch(collaborationRepositoryProvider);
-      if (repository == null) return Stream.value(const []);
-      return repository.watchConflicts().map(
-        (rows) => rows.where((row) => row.scopeId == scopeId).toList(),
-      );
-    });
-
 // Anonymous project links use the configured client without requiring a session.
 final publicCollaborationRepositoryProvider =
     Provider<CollaborationRepository?>((ref) {
@@ -124,10 +113,3 @@ final publicCollaborationRepositoryProvider =
         synchronize: () async {},
       );
     });
-
-final collaborationConflictsProvider =
-    StreamProvider<List<CollaborationConflict>>(
-      (ref) =>
-          ref.watch(collaborationRepositoryProvider)?.watchConflicts() ??
-          Stream.value(const []),
-    );

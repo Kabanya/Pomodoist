@@ -1652,7 +1652,6 @@
   "collaborationPublicLink": "Link público",
   "collaborationPublicLinkHint": "Qualquer pessoa com o link pode visualizar este projeto",
   "collaborationCopyLink": "Copiar link",
-  "collaborationConflicts": "Conflitos de sincronização",
   "collaborationLeaveProject": "Sair do projeto",
   "collaborationDeleteSharedProject": "Excluir para todos",
   "collaborationMakePrivate": "Tornar privado",
@@ -1661,9 +1660,6 @@
   "collaborationRemoveMember": "Remover membro",
   "collaborationEmail": "E-mail",
   "collaborationInvite": "Convidar",
-  "collaborationConflictHint": "Outro membro também alterou este item",
-  "collaborationConflictKeepLocal": "Manter a minha",
-  "collaborationConflictUseServer": "Versão do servidor",
   "collaborationProjectShared": "Projeto compartilhado",
   "collaborationInviteEmailFailed": "Convite salvo, mas o e-mail não pôde ser enviado",
   "collaborationInviteSent": "Convite enviado para {email}",
@@ -1681,7 +1677,6 @@
   "collaborationMakePrivateDescription": "O projeto e o conteúdo voltam para a sua conta pessoal. Os outros participantes perdem o acesso imediatamente.",
   "collaborationProjectMadePrivate": "O projeto voltou a ser privado",
   "collaborationLinkCopied": "Link copiado",
-  "collaborationConflictResolved": "Conflito resolvido",
   "collaborationRoleAdministrator": "Administrador",
   "collaborationRoleMember": "Membro",
   "collaborationRoleObserver": "Observador",
@@ -1723,5 +1718,8 @@
   "collaborationPublicUnavailable": "Este link compartilhado não está mais disponível",
   "collaborationPublicEmpty": "Nada foi compartilhado ainda",
   "collaborationPublicOpen": "Abrir o Pomodoist",
-  "collaborationPublicTasks": "Tarefas"
+  "collaborationPublicTasks": "Tarefas",
+  "projectInfoTitle": "Sobre o projeto",
+  "projectInfoPersonal": "Projeto pessoal",
+  "projectInfoYou": "Tu"
 }

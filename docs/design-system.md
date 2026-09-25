@@ -209,11 +209,36 @@ touch cards drag after a long press. Read-only tasks remain visible without edit
 or drag affordances. Overlapping timed tasks receive separate lanes; intervals
 spanning midnight appear on each intersecting day.
 
+Empty Month cells and all-day slots use the full empty area as the create target,
+without a permanent plus icon. Reveal the localized Schedule label in a subtle
+surface-tint badge on hover or keyboard focus, with the standard 120 ms fade.
+Keep the label visible on mobile platforms and the action labeled for assistive
+technology even when the badge is hidden. Honor Reduce Motion and use at least
+44 px of height for the all-day creation row.
+
 Day overview opens from one labeled button in every mode. With at least 1060 px
 of content width it uses a 300 px side column; narrower layouts use a dismissible
 modal with keyboard focus containment and safe-area clearance. The panel contains
 a locale-aware mini calendar and the existing live Focus session and linked task.
 It must never start a separate timer or silently replace an active session.
+
+Calendar task cards share one context menu for the overflow button, secondary
+click and keyboard menu shortcut. Keep touch long-press available for dragging.
+Offer Start Focus for an idle task; the task linked to the active run offers
+Pause or Resume and Stop (or Start interval while ready). Respect preset pause
+restrictions and confirm switching away from another task's run. Read current
+Focus state before acting; keep the calendar open and let its overview update.
+
+Use the existing TaskSelectionRegion for every calendar mode and the unscheduled
+tray. Enter selection from the header, the task context menu, or Ctrl/Cmd-click;
+subsequent card taps toggle membership. Count multi-day tasks once by ID and
+exclude read-only tasks. Show selected cards with an accent border, checkmark
+and selection semantics. Disable card dragging and duration resizing while
+selection is active. Date/project changes reset selection; mode changes retain
+only tasks still visible. Reuse the shared bulk actions, recurring deletion
+confirmation and deletion Undo. Clear due removes scheduling while preserving
+the task; Delete removes the task itself. Context-menu bulk actions always
+operate on the selected set, including when opened from an unselected card.
 
 Routine is an alternative calendar layout grouped by task start time, with
 localized default Morning, Afternoon and Evening periods. Users may name, add,
@@ -284,7 +309,18 @@ renaming, icon and color selection, favorites, and confirmed deletion. Sidebar
 rows show no menu button; the Projects screen keeps its ellipsis button for
 keyboard and touch access. Project icons are synchronized project data;
 existing projects retain the hash icon until changed. The shared-project badge
-follows the project name in both rows, before the task count.
+follows the project name in both rows, before the task count. It always uses the
+users icon. Keep sync conflicts internal: do not show conflict badges, tooltips,
+messages or resolution controls in the interface. Preserve sync conflict storage
+and processing independently of presentation.
+
+The shared project context menu also offers **About project** for every project
+except Inbox, including archived projects. Its read-only dialog shows the current
+owner, the viewer's role and members with role, owner and viewer labels. Resolve
+shared subprojects by their scope ID. Personal projects show the viewer as their
+only member and owner; loading, missing or failed shared data must never fall
+back to personal ownership. Reuse the standard dialog's responsive width,
+scrolling body and pinned close action.
 
 Projects support arbitrary nesting with globally unique names. The shared menu
 offers Create subproject, Move project, and Move up/down among siblings. Keep
