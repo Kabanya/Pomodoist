@@ -186,7 +186,7 @@ build/app/outputs/bundle/<flavor>Release/app-<flavor>-release.aab
 
 ## GitHub Actions
 
-`Android validation` runs on pull requests, `main`, and every new tag, without production secrets.
+`Android validation` runs on pull requests that touch Flutter or Android files and on every new tag, without production secrets.
 It checks packaging/configuration, Android Dart contracts, fails an unsigned
 release deliberately, then builds APK/AAB for **all three flavors** using a
 disposable non-debug CI key and verifies each against its own application ID.

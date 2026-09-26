@@ -416,15 +416,23 @@ void main() {
     final build = jobs['build-test-publish'] as YamlMap;
     final steps = build['steps'] as YamlList;
     final buildStep = steps.cast<YamlMap>().singleWhere(
-      (step) => step['name'] == 'Build production AppImage',
+      (step) => step['name'] == "Build the matrix flavor's AppImage",
     );
     final command = buildStep['run'] as String;
 
-    expect(command, contains('make linux-appimage'));
-    expect(
-      command,
-      contains('LINUX_CONFIG="\$RUNNER_TEMP/linux-production.json"'),
-    );
+    // The workflow calls linux-appimage-<environment>, which pins the flavor,
+    // entry point and config as one identity, and passes every profile so a
+    // matrix flavor always builds from the config the workflow validated.
+    expect(command, contains(r'make "linux-appimage-${{ matrix.flavor }}"'));
+    for (final environment in ['development', 'staging', 'production']) {
+      expect(
+        command,
+        contains(
+          'LINUX_${environment.toUpperCase()}_CONFIG='
+          '"\$RUNNER_TEMP/linux-$environment.json"',
+        ),
+      );
+    }
     expect(command, contains('POMODOIST_RELEASE="\$GITHUB_SHA"'));
   });
 
