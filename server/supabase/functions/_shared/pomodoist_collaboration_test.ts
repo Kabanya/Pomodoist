@@ -64,9 +64,46 @@ Deno.test("public reads bypass user auth and remain non-indexable", async () => 
 });
 Deno.test("invitation SMTP failure preserves its reviewable token and reports failed delivery", async () => {
   const f = fixture({ id: "i", token: "token", email: "user@example.com" });
-  f.deps.inviteEmail = async () => { throw new Error("smtp failed"); };
-  const response = await handleCollaboration(f.request({ action: "invite", scopeId: "s", email: "user@example.com" }), f.deps);
-  equal(response.status, 200); equal((await response.json()).emailDelivery, "failed");
+  f.deps.inviteEmail = async () => { throw new Error("private SMTP error with user@example.com and token"); };
+  const logged: unknown[][] = []; const original = console.error;
+  console.error = (...args: unknown[]) => { logged.push(args); };
+  try {
+    const response = await handleCollaboration(f.request({ action: "invite", scopeId: "s", email: "user@example.com" }), f.deps);
+    equal(response.status, 200); equal((await response.json()).emailDelivery, "failed");
+    equal(logged, [["Invitation email failed", { stage: "unknown", reason: "unexpected" }]]);
+  } finally { console.error = original; }
+});
+Deno.test("invitation diagnostics identify SMTP failures without exposing mail or credentials", async () => {
+  const env = { get: (name: string) => ({ SMTP_HOST: "smtp.example.com", SMTP_PORT: "465", SMTP_ADMIN_EMAIL: "sender@example.com", SMTP_USER: "sender", SMTP_PASS: "private-password" } as Record<string, string>)[name] };
+  const greeting = ["220 ready\r\n", "250 ready\r\n", "235 authenticated\r\n", "250 sender\r\n"];
+  const cases = [
+    { replies: [], env: { get: () => undefined }, want: { stage: "configuration", reason: "invalid_configuration" } },
+    { replies: [], connectError: true, want: { stage: "connect", reason: "transport" } },
+    { replies: [...greeting], want: { stage: "RCPT", reason: "disconnected" } },
+    { replies: [...greeting, "550 5.7.1 Blocked user@example.com private-token\r\n"], want: { stage: "RCPT", reason: "rejected", expected: 250, actual: 550, enhanced: "5.7.1" } },
+    { replies: [...greeting, "private-password user@example.com\r\n"], want: { stage: "RCPT", reason: "invalid_response", expected: 250 } },
+    { replies: [...greeting, "250 recipient\r\n", "354 data\r\n", "550 5.7.26 private-token\r\n"], want: { stage: "message", reason: "rejected", expected: 250, actual: 550, enhanced: "5.7.26" } },
+  ];
+  for (const c of cases) {
+    let closed = false;
+    const socket: SmtpConnection = {
+      read: async buffer => { const line = c.replies.shift(); if (!line) return null; const bytes = new TextEncoder().encode(line); buffer.set(bytes); return bytes.length; },
+      write: async bytes => bytes.length, close: () => { closed = true; },
+    };
+    const f = fixture({ id: "i", token: "private-token", email: "user@example.com" });
+    f.deps.inviteEmail = (email, url) => sendInvitationEmail(c.env ?? env, email, url, {
+      connect: async () => { if (c.connectError) throw new Error("private transport details"); return socket; }, startTls: async () => socket,
+    });
+    const logged: unknown[][] = []; const original = console.error;
+    console.error = (...args: unknown[]) => { logged.push(args); };
+    try {
+      const response = await handleCollaboration(f.request({ action: "invite", scopeId: "s", email: "user@example.com" }), f.deps);
+      equal(response.status, 200);
+      equal(await response.json(), { id: "i", token: "private-token", email: "user@example.com", url: "https://app.example.com/shared/join/private-token", emailDelivery: "failed" });
+      equal(logged, [["Invitation email failed", c.want]]);
+      if (!c.env && !c.connectError) equal(closed, true);
+    } finally { console.error = original; }
+  }
 });
 Deno.test("only invitations send mail; cleanup failures preserve successful mutations", async () => {
   const f = fixture({ ok: true }); f.deps.cleanup = async () => { throw new Error("offline storage"); };

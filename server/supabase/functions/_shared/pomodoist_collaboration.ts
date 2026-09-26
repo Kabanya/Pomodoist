@@ -1,5 +1,6 @@
 import { apiVersionError } from "./api_version.ts";
 import { readLimitedJson } from "./limited_json.ts";
+import { SmtpDeliveryError } from "./pomodoist_collaboration_mail.ts";
 
 export type Json = Record<string, unknown>;
 export type CollaborationDependencies = {
@@ -102,7 +103,10 @@ export async function handleCollaboration(request: Request, deps: CollaborationD
       let emailDelivery = "not_requested";
       if (result.email) {
         try { await deps.inviteEmail(String(result.email), url); emailDelivery = "sent"; }
-        catch { emailDelivery = "failed"; }
+        catch (error) {
+          console.error("Invitation email failed", error instanceof SmtpDeliveryError ? error.diagnostic : { stage: "unknown", reason: "unexpected" });
+          emailDelivery = "failed";
+        }
       }
       return reply({ ...result, url, emailDelivery });
     }
