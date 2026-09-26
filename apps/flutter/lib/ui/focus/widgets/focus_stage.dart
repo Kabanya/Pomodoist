@@ -139,7 +139,7 @@ class FocusIdleStage extends StatelessWidget {
                       ),
                     ),
                     if (rhythm != null) ...[
-                      const SizedBox(height: 24),
+                      SizedBox(height: compact ? 12 : 24),
                       _FocusSessionOverview(
                         rhythm: rhythm,
                         label: sessionLabel,
@@ -155,8 +155,8 @@ class FocusIdleStage extends StatelessWidget {
                 ),
               Padding(
                 padding: EdgeInsets.only(
-                  top: full ? (compact ? 32 : 64) : 8,
-                  bottom: 32,
+                  top: full ? (compact ? 16 : 64) : 8,
+                  bottom: full && compact ? 16 : 32,
                 ),
                 child: Column(
                   key: const Key('focus-primary-stage'),
@@ -169,7 +169,7 @@ class FocusIdleStage extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     if (!full) presetMenu,
-                    const SizedBox(height: 28),
+                    SizedBox(height: full && compact ? 16 : 28),
                     LayoutBuilder(
                       builder: (context, constraints) => _FocusMinimalTimer(
                         style: timerVisualStyle,
@@ -504,7 +504,7 @@ class FocusActiveStage extends StatelessWidget {
                           : null,
                     ),
                     if (rhythm != null) ...[
-                      const SizedBox(height: 24),
+                      SizedBox(height: compact ? 12 : 24),
                       _FocusSessionOverview(
                         rhythm: rhythm,
                         label: sessionLabel,
@@ -528,8 +528,8 @@ class FocusActiveStage extends StatelessWidget {
               ),
               Padding(
                 padding: EdgeInsets.only(
-                  top: full ? (compact ? 32 : 64) : 0,
-                  bottom: 32,
+                  top: full ? (compact ? 16 : 64) : 0,
+                  bottom: full && compact ? 16 : 32,
                 ),
                 child: Column(
                   children: [
@@ -550,10 +550,7 @@ class FocusActiveStage extends StatelessWidget {
                       style: timerVisualStyle,
                       compact: compact,
                       minimal: !full,
-                      diameter: focusTimerDiameter(
-                        width,
-                        compact: compact,
-                      ),
+                      diameter: focusTimerDiameter(width, compact: compact),
                     ),
                   ],
                 ),

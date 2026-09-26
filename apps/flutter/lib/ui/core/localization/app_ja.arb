@@ -1251,6 +1251,8 @@
     }
   },
   "googleAuthRequired": "Googleカレンダーの認証が必要です。再度ログインし、「今すぐ同期」を実行してください。",
+  "googleCalendarRateLimited": "Googleカレンダーのリクエスト上限に達しました。数分待ってから再度同期してください。",
+  "googleCalendarSyncFailed": "Googleカレンダーの同期に失敗しました。後でもう一度お試しください。",
   "googleSignInNotConfigured": "Googleログインが未設定です。このiOSターゲットにGOOGLE_CLIENT_IDとGOOGLE_REVERSED_CLIENT_IDを設定してください。",
   "googleCallbackNotConfigured": "Googleログインのコールバックが未設定です。ios/Flutter/GoogleOAuth.xcconfigにGOOGLE_REVERSED_CLIENT_IDを設定してください。",
   "googleWebButtonFirst": "ウェブでは先にGoogleログインボタンを押し、その後「接続」を押してください。",

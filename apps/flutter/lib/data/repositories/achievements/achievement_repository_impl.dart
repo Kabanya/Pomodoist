@@ -18,6 +18,7 @@ class DriftAchievementRepository implements AchievementRepository {
   final AppDatabase _db;
   final AchievementLocalService _achievements;
   final PreferencesService _preferences;
+  Future<void> _announcementWrite = Future.value();
 
   @override
   Stream<List<AchievementItem>> watchAchievements() {
@@ -67,38 +68,70 @@ class DriftAchievementRepository implements AchievementRepository {
   @override
   Future<Result<List<AchievementItem>>> takePendingAnnouncements(
     List<AchievementItem> items,
+  ) {
+    final result = _announcementWrite.then(
+      (_) => _takePendingAnnouncements(items),
+    );
+    _announcementWrite = result.then((_) {});
+    return result;
+  }
+
+  Future<Result<List<AchievementItem>>> _takePendingAnnouncements(
+    List<AchievementItem> items,
   ) => Result.capture<List<AchievementItem>>(() async {
     final values = (await _preferences.read(const [
       announcedAchievementsPreferenceKey,
       achievementBaselinePreferenceKey,
     ])).getOrThrow();
     final announced = values[announcedAchievementsPreferenceKey];
-    final announcedIds = announced is List<String>
-        ? announced.toSet()
+    final announcedIds = announced is List
+        ? announced.whereType<String>().toSet()
         : <String>{};
 
-    final unlockedIds = items
-        .where((item) => item.unlocked)
-        .map((item) => item.id)
-        .toSet();
+    String? announcementKey(AchievementItem item) =>
+        item.group == AchievementGroup.combo
+        ? (item.announcementDay == null
+              ? null
+              : '${item.id}@${item.announcementDay}')
+        : item.id;
+
+    final eligible = items.where(
+      (item) => item.unlocked && announcementKey(item) != null,
+    );
     if (values[achievementBaselinePreferenceKey] != true) {
       (await _preferences.write({
-        announcedAchievementsPreferenceKey: unlockedIds.toList()..sort(),
+        announcedAchievementsPreferenceKey:
+            eligible.map(announcementKey).cast<String>().toList()..sort(),
         achievementBaselinePreferenceKey: true,
       })).getOrThrow();
       return const [];
     }
 
-    final pending = items
-        .where((item) => item.unlocked && !announcedIds.contains(item.id))
+    // Preserve old lifetime combo acknowledgements for the migration day.
+    var migrated = false;
+    for (final item in items.where(
+      (item) => item.group == AchievementGroup.combo,
+    )) {
+      if (announcedIds.remove(item.id)) {
+        migrated = true;
+        final key = announcementKey(item);
+        if (key != null) announcedIds.add(key);
+      }
+    }
+    final pending = eligible
+        .where((item) => !announcedIds.contains(announcementKey(item)))
         .toList();
-    if (pending.isEmpty) {
+    if (pending.isEmpty && !migrated) {
       return const [];
     }
 
-    final nextAnnounced = {...announcedIds, ...pending.map((item) => item.id)};
+    for (final item in pending) {
+      // Keep only the latest announcement day for each daily combo.
+      announcedIds.removeWhere((key) => key.startsWith('${item.id}@'));
+      announcedIds.add(announcementKey(item)!);
+    }
     (await _preferences.write({
-      announcedAchievementsPreferenceKey: nextAnnounced.toList()..sort(),
+      announcedAchievementsPreferenceKey: announcedIds.toList()..sort(),
     })).getOrThrow();
     return pending;
   });
@@ -115,6 +148,7 @@ List<AchievementItem> evaluateAchievements({
   required List<TaskCompletionRow> completions,
   required List<FocusIntervalRow> intervals,
   DateTime Function(DateTime value)? localize,
+  DateTime? now,
 }) {
   final toLocal = localize ?? (DateTime value) => value.toLocal();
   final completedWork = intervals
@@ -129,18 +163,57 @@ List<AchievementItem> evaluateAchievements({
       .where((interval) => !interval.isDeleted && interval.status == 'stopped')
       .toList();
 
+  final today = _localDayKey(now ?? DateTime.now(), toLocal);
+  final dailyCompletions = completions
+      .where((item) => _localDayKey(item.completedAt, toLocal) == today)
+      .toList();
+  final dailyWork = completedWork
+      .where((item) => _localDayKey(item.startedAt, toLocal) == today)
+      .toList();
+  final dailyStopped = stoppedIntervals
+      .where((item) => _localDayKey(item.startedAt, toLocal) == today)
+      .toList();
+  final dailyIds = _evaluateCombos(
+    dailyCompletions,
+    dailyWork,
+    dailyStopped,
+    toLocal,
+  ).where((item) => item.unlocked).map((item) => item.id).toSet();
+
   return [
     for (final definition in _focusMilestones)
       definition.toItem(progress: completedWork.length),
     for (final definition in _taskMilestones)
       definition.toItem(progress: completions.length),
-    _comboDayNotWasted(completions, completedWork, toLocal),
-    _comboFocusPlusCheck(completions, completedWork, toLocal),
-    _comboNoFuss(completedWork, stoppedIntervals, toLocal),
-    _comboCleanEntry(completions, completedWork),
-    _comboTomatoClosedQuestion(completions, completedWork, toLocal),
+    for (final item in _evaluateCombos(
+      completions,
+      completedWork,
+      stoppedIntervals,
+      toLocal,
+    ))
+      AchievementItem(
+        id: item.id,
+        group: item.group,
+        presentation: item.presentation,
+        progress: item.progress,
+        target: item.target,
+        announcementDay: dailyIds.contains(item.id) ? today : null,
+      ),
   ];
 }
+
+List<AchievementItem> _evaluateCombos(
+  List<TaskCompletionRow> completions,
+  List<FocusIntervalRow> completedWork,
+  List<FocusIntervalRow> stoppedIntervals,
+  DateTime Function(DateTime value) toLocal,
+) => [
+  _comboDayNotWasted(completions, completedWork, toLocal),
+  _comboFocusPlusCheck(completions, completedWork, toLocal),
+  _comboNoFuss(completedWork, stoppedIntervals, toLocal),
+  _comboCleanEntry(completions, completedWork),
+  _comboTomatoClosedQuestion(completions, completedWork, toLocal),
+];
 
 AchievementItem _comboDayNotWasted(
   List<TaskCompletionRow> completions,

@@ -2326,6 +2326,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Google Calendar authorization is required. Sign in again and run Sync now.';
 
   @override
+  String get googleCalendarRateLimited =>
+      'Google Calendar request limit reached. Wait a few minutes before syncing again.';
+
+  @override
+  String get googleCalendarSyncFailed =>
+      'Google Calendar sync failed. Try again later.';
+
+  @override
   String get googleSignInNotConfigured =>
       'Google Sign-In is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_REVERSED_CLIENT_ID for this iOS target.';
 

@@ -1258,6 +1258,8 @@
     }
   },
   "googleAuthRequired": "Google Calendar authorization is required. Sign in again and run Sync now.",
+  "googleCalendarRateLimited": "Google Calendar request limit reached. Wait a few minutes before syncing again.",
+  "googleCalendarSyncFailed": "Google Calendar sync failed. Try again later.",
   "googleSignInNotConfigured": "Google Sign-In is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_REVERSED_CLIENT_ID for this iOS target.",
   "googleCallbackNotConfigured": "Google Sign-In callback is not configured. Set GOOGLE_REVERSED_CLIENT_ID in ios/Flutter/GoogleOAuth.xcconfig.",
   "googleWebButtonFirst": "On web, click the Google sign-in button first, then Connect.",

@@ -117,6 +117,6 @@ void main() {
     await tester.pump();
 
     expect(find.textContaining('DioException'), findsNothing);
-    expect(find.textContaining('temporarily unavailable'), findsOneWidget);
+    expect(find.textContaining('Google Calendar sync failed'), findsOneWidget);
   });
 }

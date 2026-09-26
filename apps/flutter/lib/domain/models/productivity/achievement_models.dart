@@ -9,6 +9,7 @@ class AchievementItem {
     required this.presentation,
     required this.progress,
     required this.target,
+    this.announcementDay,
   });
 
   final String id;
@@ -16,6 +17,9 @@ class AchievementItem {
   final AchievementPresentation presentation;
   final int progress;
   final int target;
+
+  /// Local day on which a daily combo was earned; null when not earned today.
+  final String? announcementDay;
 
   bool get unlocked => progress >= target;
 

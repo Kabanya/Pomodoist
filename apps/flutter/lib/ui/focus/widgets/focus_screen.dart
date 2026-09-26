@@ -53,6 +53,13 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     final content = LayoutBuilder(
       builder: (context, constraints) {
         final desktop = constraints.maxWidth >= 720;
+        final compactFull = !desktop && viewMode == FocusViewMode.full;
+        final padding = EdgeInsets.fromLTRB(
+          desktop ? 32 : 16,
+          desktop ? 28 : (compactFull ? 0 : 18),
+          desktop ? 32 : 16,
+          compactFull ? 16 : 32,
+        );
         final stage = Align(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 920),
@@ -111,8 +118,10 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                         minHeight:
                             widget.embedded || !constraints.hasBoundedHeight
                             ? 0
-                            : (constraints.maxHeight - (desktop ? 60 : 50))
-                                  .clamp(0, double.infinity),
+                            : (constraints.maxHeight - padding.vertical).clamp(
+                                0,
+                                double.infinity,
+                              ),
                         showViewModeMenu: widget.fixedViewMode == null,
                         onViewModeChanged: _setViewMode,
                         onPresetSelected: _selectPreset,
@@ -145,8 +154,10 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                         minHeight:
                             widget.embedded || !constraints.hasBoundedHeight
                             ? 0
-                            : (constraints.maxHeight - (desktop ? 60 : 50))
-                                  .clamp(0, double.infinity),
+                            : (constraints.maxHeight - padding.vertical).clamp(
+                                0,
+                                double.infinity,
+                              ),
                         showViewModeMenu: widget.fixedViewMode == null,
                         actions: actions,
                         onViewModeChanged: _setViewMode,
@@ -167,27 +178,14 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         if (widget.embedded) {
           return KeyedSubtree(
             key: Key(desktop ? 'focus-layout-desktop' : 'focus-layout-compact'),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                desktop ? 32 : 16,
-                desktop ? 28 : 18,
-                desktop ? 32 : 16,
-                32,
-              ),
-              child: stage,
-            ),
+            child: Padding(padding: padding, child: stage),
           );
         }
         return KeyedSubtree(
           key: Key(desktop ? 'focus-layout-desktop' : 'focus-layout-compact'),
           child: ListView(
             key: const Key('focus-stage-scroll'),
-            padding: EdgeInsets.fromLTRB(
-              desktop ? 32 : 16,
-              desktop ? 28 : 18,
-              desktop ? 32 : 16,
-              32,
-            ),
+            padding: padding,
             children: [stage],
           ),
         );

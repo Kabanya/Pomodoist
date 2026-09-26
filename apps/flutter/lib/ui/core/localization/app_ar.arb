@@ -747,6 +747,8 @@
   "failedToLoadIntegration": "تعذر تحميل التكامل: {error}",
   "googleCalendarFailed": "فشل Google Calendar: {message}",
   "googleAuthRequired": "يلزم تفويض Google Calendar. سجل الدخول مرة أخرى ثم شغل مزامنة الآن.",
+  "googleCalendarRateLimited": "تم بلوغ حد طلبات Google Calendar. انتظر بضع دقائق قبل المزامنة مرة أخرى.",
+  "googleCalendarSyncFailed": "تعذرت مزامنة Google Calendar. حاول مرة أخرى لاحقًا.",
   "googleSignInNotConfigured": "Google Sign-In غير مهيأ. عيّن GOOGLE_CLIENT_ID و GOOGLE_REVERSED_CLIENT_ID لهذا هدف iOS.",
   "googleCallbackNotConfigured": "رد Google Sign-In غير مهيأ. عيّن GOOGLE_REVERSED_CLIENT_ID في ios/Flutter/GoogleOAuth.xcconfig.",
   "googleWebButtonFirst": "على الويب، اضغط زر تسجيل الدخول إلى Google أولا، ثم اتصال.",

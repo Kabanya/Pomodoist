@@ -786,6 +786,171 @@ void main() {
     });
 
     test(
+      'restored platform lists suppress previously announced milestones',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          achievementBaselinePreferenceKey: true,
+          announcedAchievementsPreferenceKey: <Object?>['task_1'],
+        });
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(db.close);
+        final repository = DriftAchievementRepository(
+          db,
+          PreferencesService(SharedPreferences.getInstance),
+        );
+        final items = evaluateAchievements(
+          completions: [_achievementCompletion('task', DateTime(2026, 5, 1))],
+          intervals: const [],
+        );
+        expect(
+          (await repository.takePendingAnnouncements(items)).getOrThrow(),
+          isEmpty,
+        );
+      },
+    );
+
+    test('concurrent updates claim each announcement only once', () async {
+      SharedPreferences.setMockInitialValues({
+        achievementBaselinePreferenceKey: true,
+      });
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      final repository = DriftAchievementRepository(
+        db,
+        PreferencesService(SharedPreferences.getInstance),
+      );
+      final items = evaluateAchievements(
+        completions: [_achievementCompletion('task', DateTime(2026, 5, 1))],
+        intervals: const [],
+      );
+      final results = await Future.wait([
+        repository.takePendingAnnouncements(items),
+        repository.takePendingAnnouncements(items),
+      ]);
+      expect(
+        results.expand((result) => result.getOrThrow()).map((item) => item.id),
+        ['task_1'],
+      );
+    });
+
+    test(
+      'old combos stay unlocked without being announced on a new day',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          achievementBaselinePreferenceKey: true,
+          announcedAchievementsPreferenceKey: ['task_1', 'focus_1'],
+        });
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(db.close);
+        final repository = DriftAchievementRepository(
+          db,
+          PreferencesService(SharedPreferences.getInstance),
+        );
+        final yesterday = DateTime.now().subtract(const Duration(days: 1));
+        final items = evaluateAchievements(
+          completions: [_achievementCompletion('task', yesterday)],
+          intervals: [_achievementInterval('work', yesterday)],
+        );
+        expect(
+          _achievementById(items, 'combo_day_not_wasted').unlocked,
+          isTrue,
+        );
+        expect(
+          (await repository.takePendingAnnouncements(items)).getOrThrow(),
+          isEmpty,
+        );
+      },
+    );
+
+    test(
+      'daily combos survive restart and can be earned again the next local day',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          achievementBaselinePreferenceKey: true,
+        });
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(db.close);
+        DriftAchievementRepository repository() => DriftAchievementRepository(
+          db,
+          PreferencesService(SharedPreferences.getInstance),
+        );
+        final completions = <TaskCompletionRow>[];
+        final intervals = <FocusIntervalRow>[];
+        DateTime localize(DateTime value) =>
+            value.toUtc().add(const Duration(hours: 3));
+        for (var day = 1; day <= 2; day++) {
+          // 21:30 UTC belongs to the following local day.
+          final now = DateTime.utc(2026, 5, day, 21, 30);
+          completions.add(_achievementCompletion('task-$day', now));
+          intervals.add(_achievementInterval('work-$day', now));
+          final items = evaluateAchievements(
+            completions: completions,
+            intervals: intervals,
+            localize: localize,
+            now: now,
+          );
+          final pending = (await repository().takePendingAnnouncements(
+            items,
+          )).getOrThrow();
+          expect(pending.map((item) => item.id), [
+            if (day == 1) ...['focus_1', 'task_1'],
+            'combo_day_not_wasted',
+          ]);
+          expect(
+            pending.last.announcementDay,
+            day == 1 ? '2026-05-02' : '2026-05-03',
+          );
+          final prefs = await SharedPreferences.getInstance();
+          SharedPreferences.setMockInitialValues({
+            for (final key in prefs.getKeys())
+              key: prefs.get(key) is List
+                  ? List<Object?>.from(prefs.get(key) as List)
+                  : prefs.get(key)!,
+          });
+          expect(
+            (await repository().takePendingAnnouncements(items)).getOrThrow(),
+            isEmpty,
+          );
+        }
+      },
+    );
+
+    test(
+      'legacy combo acknowledgements suppress migration-day repeats',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          achievementBaselinePreferenceKey: true,
+          announcedAchievementsPreferenceKey: <Object?>[
+            'task_1',
+            'focus_1',
+            'combo_day_not_wasted',
+          ],
+        });
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(db.close);
+        final repository = DriftAchievementRepository(
+          db,
+          PreferencesService(SharedPreferences.getInstance),
+        );
+        for (var day = 1; day <= 2; day++) {
+          final now = DateTime(2026, 5, day, 10);
+          final items = evaluateAchievements(
+            completions: [_achievementCompletion('task-$day', now)],
+            intervals: [_achievementInterval('work-$day', now)],
+            now: now,
+          );
+          final pending = (await repository.takePendingAnnouncements(
+            items,
+          )).getOrThrow();
+          expect(
+            pending.map((item) => item.id),
+            day == 1 ? <String>[] : ['combo_day_not_wasted'],
+          );
+        }
+      },
+    );
+
+    test(
       'prefs baseline suppresses old unlocks and future unlocks once',
       () async {
         SharedPreferences.setMockInitialValues({});

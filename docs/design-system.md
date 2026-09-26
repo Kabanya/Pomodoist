@@ -307,7 +307,9 @@ and route boundaries, including project detail routes. Removing the current
 destination never navigates away or selects another button.
 
 Soft accent is the default: only the active destination shows its label, beside
-its icon, on `accentTint` with `accent` foreground. Center the compact surface
+its icon, on `accentTint` with `accent` foreground. Center the icon and label as
+one row with a 6 px gap; reveal the label within that row during transitions.
+Center the compact surface
 for one to three destinations; four or five fill the available width. With
 labels always fills the width between the standard side margins, with equal
 button widths. One or two destinations place labels beside icons; three to five
@@ -647,8 +649,12 @@ long countdown values shrink to fit narrower layouts.
 Use the control-dock composition: header actions and the session rhythm at the
 top, linked task above the horizontally centered timer, and a separated control
 dock at the bottom of the available viewport. Keep the task and timer grouped
-with the header: use a 64 px gap below the rhythm on desktop and 32 px on compact
-layouts. Extra viewport height belongs below the timer, before the dock. Let the entire stage scroll when its content
+with the header: use a 64 px gap below the rhythm on desktop and 16 px on compact
+layouts. Compact Full view has no extra top page padding, keeps 16 px below the
+stage and timer, and uses 12 px between the header and rhythm. Linked tasks have
+no extra top padding and 12 px below them. Subtract the actual page padding from
+the available stage height, preserving system safe areas and control sizes.
+Extra viewport height belongs below the timer, before the dock. Let the entire stage scroll when its content
 exceeds that height; embedded stages size to their contents. Center the primary
 action independently of the session summary and Complete interval action. On
 narrow layouts, wrap controls below the summary and keep every action reachable.

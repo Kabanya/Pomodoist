@@ -747,6 +747,8 @@
   "failedToLoadIntegration": "No se pudo cargar la integración: {error}",
   "googleCalendarFailed": "Google Calendar falló: {message}",
   "googleAuthRequired": "Se requiere autorización de Google Calendar. Inicia sesión de nuevo y ejecuta Sincronizar ahora.",
+  "googleCalendarRateLimited": "Se ha alcanzado el límite de solicitudes de Google Calendar. Espera unos minutos antes de volver a sincronizar.",
+  "googleCalendarSyncFailed": "No se pudo sincronizar Google Calendar. Inténtalo más tarde.",
   "googleSignInNotConfigured": "Google Sign-In no está configurado. Define GOOGLE_CLIENT_ID y GOOGLE_REVERSED_CLIENT_ID para este target iOS.",
   "googleCallbackNotConfigured": "El callback de Google Sign-In no está configurado. Define GOOGLE_REVERSED_CLIENT_ID en ios/Flutter/GoogleOAuth.xcconfig.",
   "googleWebButtonFirst": "En web, haz clic primero en el botón de inicio de sesión de Google y luego en Conectar.",

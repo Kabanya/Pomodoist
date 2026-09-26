@@ -2347,6 +2347,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Google Kalender-Autorisierung ist erforderlich. Melde dich erneut an und starte Jetzt synchronisieren.';
 
   @override
+  String get googleCalendarRateLimited =>
+      'Das Anfragelimit von Google Kalender wurde erreicht. Warte einige Minuten, bevor du erneut synchronisierst.';
+
+  @override
+  String get googleCalendarSyncFailed =>
+      'Die Synchronisierung mit Google Kalender ist fehlgeschlagen. Versuche es später erneut.';
+
+  @override
   String get googleSignInNotConfigured =>
       'Google Sign-In ist nicht konfiguriert. Setze GOOGLE_CLIENT_ID und GOOGLE_REVERSED_CLIENT_ID für dieses iOS-Target.';
 

@@ -2266,6 +2266,13 @@ class AppLocalizationsJa extends AppLocalizations {
       'Googleカレンダーの認証が必要です。再度ログインし、「今すぐ同期」を実行してください。';
 
   @override
+  String get googleCalendarRateLimited =>
+      'Googleカレンダーのリクエスト上限に達しました。数分待ってから再度同期してください。';
+
+  @override
+  String get googleCalendarSyncFailed => 'Googleカレンダーの同期に失敗しました。後でもう一度お試しください。';
+
+  @override
   String get googleSignInNotConfigured =>
       'Googleログインが未設定です。このiOSターゲットにGOOGLE_CLIENT_IDとGOOGLE_REVERSED_CLIENT_IDを設定してください。';
 

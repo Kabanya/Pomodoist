@@ -4109,6 +4109,18 @@ abstract class AppLocalizations {
   /// **'Google Calendar authorization is required. Sign in again and run Sync now.'**
   String get googleAuthRequired;
 
+  /// No description provided for @googleCalendarRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Calendar request limit reached. Wait a few minutes before syncing again.'**
+  String get googleCalendarRateLimited;
+
+  /// No description provided for @googleCalendarSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Calendar sync failed. Try again later.'**
+  String get googleCalendarSyncFailed;
+
   /// No description provided for @googleSignInNotConfigured.
   ///
   /// In en, this message translates to:

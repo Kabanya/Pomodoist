@@ -2317,6 +2317,14 @@ class AppLocalizationsAr extends AppLocalizations {
       'يلزم تفويض Google Calendar. سجل الدخول مرة أخرى ثم شغل مزامنة الآن.';
 
   @override
+  String get googleCalendarRateLimited =>
+      'تم بلوغ حد طلبات Google Calendar. انتظر بضع دقائق قبل المزامنة مرة أخرى.';
+
+  @override
+  String get googleCalendarSyncFailed =>
+      'تعذرت مزامنة Google Calendar. حاول مرة أخرى لاحقًا.';
+
+  @override
   String get googleSignInNotConfigured =>
       'Google Sign-In غير مهيأ. عيّن GOOGLE_CLIENT_ID و GOOGLE_REVERSED_CLIENT_ID لهذا هدف iOS.';
 

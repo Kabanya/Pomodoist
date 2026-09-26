@@ -1251,6 +1251,8 @@
     }
   },
   "googleAuthRequired": "É necessária autorização do Google Agenda. Entre novamente e execute Sincronizar agora.",
+  "googleCalendarRateLimited": "O limite de solicitações do Google Agenda foi atingido. Aguarde alguns minutos antes de sincronizar novamente.",
+  "googleCalendarSyncFailed": "A sincronização do Google Agenda falhou. Tente novamente mais tarde.",
   "googleSignInNotConfigured": "O login do Google não está configurado. Defina GOOGLE_CLIENT_ID e GOOGLE_REVERSED_CLIENT_ID para este destino iOS.",
   "googleCallbackNotConfigured": "O callback de login do Google não está configurado. Defina GOOGLE_REVERSED_CLIENT_ID em ios/Flutter/GoogleOAuth.xcconfig.",
   "googleWebButtonFirst": "Na web, clique primeiro no botão de login do Google e depois em Conectar.",

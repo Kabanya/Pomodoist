@@ -205,39 +205,25 @@ class _DestinationButton extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [icon, const SizedBox(height: 4), text],
                         )
-                      // The icon stays centred in its own slot; the label grows
-                      // from the leading edge as a cropped overlay while the
-                      // inactive slots are collapsed to a sliver.
-                      : Stack(
-                          alignment: Alignment.center,
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             icon,
-                            Positioned.fill(
-                              child: Row(
-                                children: [
-                                  Flexible(
-                                    child: ClipRect(
-                                      child: Align(
-                                        alignment:
-                                            AlignmentDirectional.centerStart,
-                                        widthFactor: labelProgress,
-                                        child: Opacity(
-                                          opacity: labelProgress.clamp(
-                                            0.0,
-                                            1.0,
-                                          ),
-                                          child: Padding(
-                                            padding:
-                                                const EdgeInsetsDirectional.only(
-                                                  start: 6,
-                                                ),
-                                            child: text,
-                                          ),
-                                        ),
+                            Flexible(
+                              child: ClipRect(
+                                child: Align(
+                                  alignment: AlignmentDirectional.centerStart,
+                                  widthFactor: labelProgress,
+                                  child: Opacity(
+                                    opacity: labelProgress.clamp(0.0, 1.0),
+                                    child: Padding(
+                                      padding: const EdgeInsetsDirectional.only(
+                                        start: 6,
                                       ),
+                                      child: text,
                                     ),
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                           ],

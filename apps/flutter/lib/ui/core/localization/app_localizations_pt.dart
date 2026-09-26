@@ -2337,6 +2337,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'É necessária autorização do Google Agenda. Entre novamente e execute Sincronizar agora.';
 
   @override
+  String get googleCalendarRateLimited =>
+      'O limite de solicitações do Google Agenda foi atingido. Aguarde alguns minutos antes de sincronizar novamente.';
+
+  @override
+  String get googleCalendarSyncFailed =>
+      'A sincronização do Google Agenda falhou. Tente novamente mais tarde.';
+
+  @override
   String get googleSignInNotConfigured =>
       'O login do Google não está configurado. Defina GOOGLE_CLIENT_ID e GOOGLE_REVERSED_CLIENT_ID para este destino iOS.';
 

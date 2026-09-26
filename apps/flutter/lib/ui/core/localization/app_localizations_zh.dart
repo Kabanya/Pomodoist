@@ -2226,6 +2226,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get googleAuthRequired => '需要 Google Calendar 授权。请重新登录并运行立即同步。';
 
   @override
+  String get googleCalendarRateLimited =>
+      '已达到 Google Calendar 请求频率上限。请等待几分钟后再同步。';
+
+  @override
+  String get googleCalendarSyncFailed => 'Google Calendar 同步失败。请稍后重试。';
+
+  @override
   String get googleSignInNotConfigured =>
       'Google Sign-In 未配置。请为此 iOS target 设置 GOOGLE_CLIENT_ID 和 GOOGLE_REVERSED_CLIENT_ID。';
 

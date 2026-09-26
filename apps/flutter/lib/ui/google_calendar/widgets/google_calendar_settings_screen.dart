@@ -167,9 +167,11 @@ class _GoogleCalendarSettingsScreenState
 }
 
 String _googleCalendarErrorMessage(BuildContext context, Object error) =>
-    error == CalendarFailure.authRequired
-    ? context.l10n.googleAuthRequired
-    : context.l10n.authServiceUnavailable;
+    switch (CalendarFailure.fromError(error)) {
+      CalendarFailure.authRequired => context.l10n.googleAuthRequired,
+      CalendarFailure.rateLimited => context.l10n.googleCalendarRateLimited,
+      CalendarFailure.unavailable => context.l10n.googleCalendarSyncFailed,
+    };
 
 class _StatusRows extends StatelessWidget {
   const _StatusRows({
@@ -233,7 +235,7 @@ class _StatusRows extends StatelessWidget {
           const SizedBox(height: 12),
           _MessageBand(
             icon: LucideIcons.circleAlert,
-            text: context.l10n.authServiceUnavailable,
+            text: _googleCalendarErrorMessage(context, lastError!),
             color: colors.error,
           ),
         ],

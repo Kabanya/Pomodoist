@@ -25,8 +25,8 @@ class _FocusLinkedTaskContext extends ConsumerWidget {
     return Padding(
       key: const Key('focus-task-context'),
       padding: EdgeInsets.only(
-        top: compact ? 18 : 22,
-        bottom: compact ? 26 : 32,
+        top: compact ? 0 : 22,
+        bottom: compact ? 12 : 32,
       ),
       child: Column(
         children: [

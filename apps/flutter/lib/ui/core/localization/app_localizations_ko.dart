@@ -2274,6 +2274,14 @@ class AppLocalizationsKo extends AppLocalizations {
       'Google Calendar 승인이 필요합니다. 다시 로그인하고 지금 동기화를 실행하세요.';
 
   @override
+  String get googleCalendarRateLimited =>
+      'Google Calendar 요청 한도에 도달했습니다. 몇 분 후에 다시 동기화하세요.';
+
+  @override
+  String get googleCalendarSyncFailed =>
+      'Google Calendar 동기화에 실패했습니다. 나중에 다시 시도하세요.';
+
+  @override
   String get googleSignInNotConfigured =>
       'Google 로그인이 구성되지 않았습니다. 이 iOS 대상에 GOOGLE_CLIENT_ID와 GOOGLE_REVERSED_CLIENT_ID를 설정하세요.';
 

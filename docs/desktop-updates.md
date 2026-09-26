@@ -78,6 +78,14 @@ application closure and system reboot, then restarts Pomodoist. It restores the
 old directory if installation or launch fails. Neither helper writes to the
 application database, preferences, account tokens or application-data directories.
 
+Windows launches PowerShell with Dart's normal process mode (`CREATE_NO_WINDOW`),
+not `DETACHED_PROCESS`, which can prevent Windows PowerShell from starting the
+script. The helper continues after the application's required native exit; the
+application does not wait for the helper to finish. Its output is drained into
+`helper-stdout.log` and `helper-stderr.log` while the application is running, so
+startup errors before the script's own error handler are retained. Linux keeps
+its detached shell helper.
+
 The new Flutter window acknowledges startup through a restricted marker. The
 helper restores and relaunches the prior build if no marker arrives. This is a
 window/engine health check, not a guarantee that every future database migration

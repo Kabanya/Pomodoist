@@ -2348,6 +2348,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Нужна авторизация Google Calendar. Войдите снова и запустите синхронизацию.';
 
   @override
+  String get googleCalendarRateLimited =>
+      'Достигнут лимит запросов Google Calendar. Подождите несколько минут перед повторной синхронизацией.';
+
+  @override
+  String get googleCalendarSyncFailed =>
+      'Не удалось синхронизировать Google Calendar. Попробуйте позже.';
+
+  @override
   String get googleSignInNotConfigured =>
       'Google Sign-In не настроен. Задайте GOOGLE_CLIENT_ID и GOOGLE_REVERSED_CLIENT_ID для этой iOS цели.';
 

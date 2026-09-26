@@ -2347,6 +2347,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'autorisation Google Calendar est requise. Connectez-vous à nouveau puis lancez la synchronisation.';
 
   @override
+  String get googleCalendarRateLimited =>
+      'La limite de requêtes de Google Calendar est atteinte. Attendez quelques minutes avant de relancer la synchronisation.';
+
+  @override
+  String get googleCalendarSyncFailed =>
+      'La synchronisation de Google Calendar a échoué. Réessayez plus tard.';
+
+  @override
   String get googleSignInNotConfigured =>
       'Google Sign-In n\'est pas configuré. Définissez GOOGLE_CLIENT_ID et GOOGLE_REVERSED_CLIENT_ID pour cette cible iOS.';
 

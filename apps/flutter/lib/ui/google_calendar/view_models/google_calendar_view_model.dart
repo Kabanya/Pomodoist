@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/calendar_dependencies.dart';
 import 'package:pomodoist/utils/result.dart';
@@ -5,7 +7,35 @@ import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/data/repositories/calendar/google_calendar_sync_repository.dart';
 import 'package:pomodoist/domain/models/calendar/calendar_models.dart';
 
-enum CalendarFailure { authRequired, unavailable }
+enum CalendarFailure {
+  authRequired,
+  rateLimited,
+  unavailable;
+
+  static CalendarFailure fromError(Object error) {
+    if (error is CalendarFailure) return error;
+    if (error is GoogleCalendarFailure && error.requiresAuthorization) {
+      return authRequired;
+    }
+    final message = error is GoogleCalendarFailure ? error.message : error;
+    if (message is String) {
+      try {
+        if (jsonDecode(message) case {'error': {'errors': List errors}}) {
+          for (final detail in errors) {
+            if (detail case {
+              'reason': 'rateLimitExceeded' || 'userRateLimitExceeded',
+            }) {
+              return rateLimited;
+            }
+          }
+        }
+      } on FormatException {
+        // Older saved errors may contain plain text instead of Google JSON.
+      }
+    }
+    return unavailable;
+  }
+}
 
 class GoogleCalendarState {
   const GoogleCalendarState(this.connection, this.busy);
@@ -33,10 +63,7 @@ class GoogleCalendarViewModel extends Notifier<GoogleCalendarState> {
     );
   }
 
-  CalendarFailure classify(Object error) =>
-      error is GoogleCalendarFailure && error.requiresAuthorization
-      ? CalendarFailure.authRequired
-      : CalendarFailure.unavailable;
+  CalendarFailure classify(Object error) => CalendarFailure.fromError(error);
   void retry() => ref.invalidate(googleCalendarConnectionProvider);
   Future<CalendarFailure?> connect() => _run(_repository.connect);
   Future<CalendarFailure?> sync() => _run(_repository.sync);

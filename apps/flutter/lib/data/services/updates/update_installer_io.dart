@@ -14,6 +14,53 @@ import 'package:pomodoist/domain/models/updates/update_release.dart';
 
 UpdateInstaller createUpdateInstaller() => NativeUpdateInstaller();
 
+Future<void> startUpdateHelper(
+  String command,
+  List<String> arguments, {
+  required UpdateOS os,
+  required Directory stage,
+  required Map<String, String> environment,
+  Future<Process> Function(
+        String,
+        List<String>, {
+        String? workingDirectory,
+        Map<String, String>? environment,
+        bool includeParentEnvironment,
+        bool runInShell,
+        ProcessStartMode mode,
+      })
+      startProcess =
+      Process.start,
+}) async {
+  final windows = os == UpdateOS.windows;
+  final process = await startProcess(
+    command,
+    arguments,
+    // On Windows normal mode uses CREATE_NO_WINDOW. DETACHED_PROCESS can stop
+    // Windows PowerShell before it even runs the script. The native required
+    // exit still lets this child continue; never await the helper's exit here.
+    mode: windows ? ProcessStartMode.normal : ProcessStartMode.detached,
+    workingDirectory: stage.path,
+    environment: environment,
+    includeParentEnvironment: false,
+  );
+  if (windows) {
+    unawaited(process.stdin.close().catchError((Object _) {}));
+    for (final (stream, name) in [
+      (process.stdout, 'helper-stdout.log'),
+      (process.stderr, 'helper-stderr.log'),
+    ]) {
+      // Capture startup failures outside the script's try/catch as well.
+      // Log I/O errors must not abort a running installer or escape unhandled.
+      unawaited(
+        stream
+            .pipe(File(p.join(stage.path, name)).openWrite())
+            .catchError((Object _) {}),
+      );
+    }
+  }
+}
+
 class NativeUpdateInstaller implements UpdateInstaller {
   bool _disposed = false;
   bool _exitRequested = false;
@@ -195,13 +242,12 @@ class NativeUpdateInstaller implements UpdateInstaller {
               hash,
             ]
           : [script.path, '$pid', executable, payload.path, hash];
-      await Process.start(
+      await startUpdateHelper(
         command,
         arguments,
-        mode: ProcessStartMode.detached,
-        workingDirectory: stage.path,
+        os: platform.os,
+        stage: stage,
         environment: _helperEnvironment(),
-        includeParentEnvironment: false,
       );
       helperStarted = true;
       _helperStage = stage;
