@@ -1,4 +1,5 @@
 {
+  "settingsShortcutsFocusAlternate": "Foco (segundo atalho)",
   "@@locale": "pt_BR",
   "navCalendar": "Calendário",
   "calendarSubtitle": "Planeje seu dia. Deixe espaço para a vida.",
@@ -222,5 +223,20 @@
   "accountAvatarTravel": "Viagens e lugares",
   "accountAvatarObjects": "Objetos",
   "accountAvatarSymbols": "Símbolos",
-  "accountAvatarFlags": "Bandeiras"
+  "accountAvatarFlags": "Bandeiras",
+  "reportsPlanEstimates": "Estimativas das tarefas abertas com prazo até hoje",
+  "reportsDayInProgress": "O dia ainda está em andamento",
+  "reportsTimeByProject": "Onde você investiu seu tempo",
+  "reportsNoProject": "Sem projeto",
+  "reportsNoTask": "Sem tarefa vinculada",
+  "reportsUnavailableName": "{name} (indisponível)",
+  "reportsUnknownProject": "Projeto indisponível",
+  "reportsUnknownTask": "Tarefa indisponível",
+  "reportsNoProjectFocus": "Nenhuma sessão de foco concluída neste período",
+  "reportsProjectShare": "{percent}% do tempo de foco",
+  "habitIcon": "Ícone do hábito",
+  "habitIconEmoji": "Emojis",
+  "habitIconIcons": "Ícones",
+  "habitIconReset": "Redefinir ícone",
+  "habitIconOption": "{icon, select, bookOpen{Leitura} dumbbell{Exercício} footprints{Caminhada} glassWater{Água} moon{Sono} sun{Sol} heart{Saúde} brain{Aprendizado} apple{Nutrição} coffee{Café} music{Música} pencil{Escrita} code{Programação} leaf{Natureza} target{Objetivo} bike{Ciclismo} other{Ícone do hábito}}"
 }

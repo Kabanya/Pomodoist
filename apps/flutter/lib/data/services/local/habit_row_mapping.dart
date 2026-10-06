@@ -7,6 +7,7 @@ Habit habitFromRow(HabitRow row) => Habit(
   id: row.id,
   userId: row.userId,
   title: row.title,
+  icon: row.icon,
   projectId: row.projectId,
   reminderMinutes: row.reminderMinutes,
   scheduleHistory: (jsonDecode(row.scheduleHistoryJson) as List).map(
@@ -20,6 +21,7 @@ HabitsCompanion habitToRow(Habit habit) => HabitsCompanion.insert(
   id: habit.id,
   userId: habit.userId,
   title: habit.title,
+  icon: Value(habit.icon),
   projectId: Value(habit.projectId),
   reminderMinutes: Value(habit.reminderMinutes),
   scheduleHistoryJson: jsonEncode(

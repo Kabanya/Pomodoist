@@ -8,6 +8,7 @@ enum AppShortcutCommand {
   today,
   upcoming,
   focus,
+  focusAlternate,
   inbox,
   priorityMatrix,
   calendar,

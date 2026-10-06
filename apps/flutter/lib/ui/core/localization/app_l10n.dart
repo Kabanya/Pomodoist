@@ -23,6 +23,7 @@ String appShortcutLabel(AppLocalizations l10n, AppShortcutCommand command) =>
       AppShortcutCommand.today => l10n.navToday,
       AppShortcutCommand.upcoming => l10n.navUpcoming,
       AppShortcutCommand.focus => l10n.navFocus,
+      AppShortcutCommand.focusAlternate => l10n.settingsShortcutsFocusAlternate,
       AppShortcutCommand.inbox => l10n.navInbox,
       AppShortcutCommand.priorityMatrix => l10n.navPriorityMatrix,
       AppShortcutCommand.calendar => l10n.navCalendar,

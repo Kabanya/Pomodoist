@@ -958,6 +958,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'Detalles de la tarea (segundo atajo)';
 
   @override
+  String get settingsShortcutsFocusAlternate => 'Concentración (segundo atajo)';
+
+  @override
   String get settingsShortcutsGlobalQuickAdd =>
       'Añadir rápidamente de forma global';
 
@@ -1860,7 +1863,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String reportsIntervalCountSemantics(int completed) {
-    return '$completed intervalos de concentración completados; sin objetivo';
+    return '$completed intervalos de concentración completados; sin estimaciones de tareas';
   }
 
   @override
@@ -4205,4 +4208,76 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get accountAvatarFlags => 'Banderas';
+
+  @override
+  String get reportsPlanEstimates =>
+      'Estimaciones de tareas abiertas para hoy o antes';
+
+  @override
+  String get reportsDayInProgress => 'El día aún está en curso';
+
+  @override
+  String get reportsTimeByProject => 'En qué empleaste tu tiempo';
+
+  @override
+  String get reportsNoProject => 'Sin proyecto';
+
+  @override
+  String get reportsNoTask => 'Sin tarea vinculada';
+
+  @override
+  String reportsUnavailableName(String name) {
+    return '$name (no disponible)';
+  }
+
+  @override
+  String get reportsUnknownProject => 'Proyecto no disponible';
+
+  @override
+  String get reportsUnknownTask => 'Tarea no disponible';
+
+  @override
+  String get reportsNoProjectFocus =>
+      'No hay sesiones de concentración completadas en este período';
+
+  @override
+  String reportsProjectShare(String percent) {
+    return '$percent% del tiempo de concentración';
+  }
+
+  @override
+  String get habitIcon => 'Icono del hábito';
+
+  @override
+  String get habitIconEmoji => 'Emojis';
+
+  @override
+  String get habitIconIcons => 'Iconos';
+
+  @override
+  String get habitIconReset => 'Restablecer icono';
+
+  @override
+  String habitIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'bookOpen': 'Lectura',
+      'dumbbell': 'Ejercicio',
+      'footprints': 'Caminar',
+      'glassWater': 'Agua',
+      'moon': 'Sueño',
+      'sun': 'Sol',
+      'heart': 'Salud',
+      'brain': 'Aprendizaje',
+      'apple': 'Nutrición',
+      'coffee': 'Café',
+      'music': 'Música',
+      'pencil': 'Escritura',
+      'code': 'Programación',
+      'leaf': 'Naturaleza',
+      'target': 'Objetivo',
+      'bike': 'Ciclismo',
+      'other': 'Icono del hábito',
+    });
+    return '$_temp0';
+  }
 }

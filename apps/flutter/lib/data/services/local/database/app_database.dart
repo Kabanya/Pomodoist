@@ -476,6 +476,7 @@ class Habits extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
   TextColumn get title => text()();
+  TextColumn get icon => text().nullable()();
   TextColumn get projectId => text().nullable()();
   IntColumn get reminderMinutes => integer().nullable()();
   TextColumn get scheduleHistoryJson => text()();
@@ -548,7 +549,7 @@ class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -566,6 +567,12 @@ class AppDatabase extends _$AppDatabase {
         await _runResumableMigrationStep(
           () => m.createIndex(habitCheckInsByDay),
           alreadyAppliedMessage: 'already exists',
+        );
+      }
+      if (from < 11) {
+        await _runResumableMigrationStep(
+          () => m.addColumn(habits, habits.icon),
+          alreadyAppliedMessage: 'duplicate column name: icon',
         );
       }
       if (from < 10) {

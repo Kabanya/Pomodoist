@@ -367,6 +367,7 @@ class HabitsViewModel extends Notifier<HabitsViewState> {
     DateTime? endDate,
     required List<int> weekdays,
     required String target,
+    String? icon,
     String? projectId,
     int? reminderMinutes,
     HabitDayPeriod dayPeriod = HabitDayPeriod.automatic,
@@ -378,6 +379,7 @@ class HabitsViewModel extends Notifier<HabitsViewState> {
       endDate: endDate,
       weekdays: weekdays,
       targetPerDay: int.tryParse(target) ?? 0,
+      icon: icon,
       projectId: projectId,
       reminderMinutes: reminderMinutes,
       dayPeriod: dayPeriod,
@@ -411,6 +413,9 @@ class HabitsViewModel extends Notifier<HabitsViewState> {
     );
   }
 
+  Future<bool> updateIcon(String id, String? icon) => _run(
+    () => _repository.updateIcon(id, icon, now: ref.read(clockProvider).now()),
+  );
   Future<bool> deleteHabit(String id) => _run(
     () => _repository.deleteHabit(id, now: ref.read(clockProvider).now()),
   );

@@ -1,7 +1,54 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/domain/models/habits/habit_models.dart';
+import 'package:pomodoist/domain/models/habits/habit_icons.dart';
 
 void main() {
+  test(
+    'sign editing accepts catalog and whole emoji and rejects arbitrary text',
+    () {
+      for (final value in ['bookOpen', '👍🏽', '🇷🇺', '👨‍👩‍👧‍👦', '❤️']) {
+        expect(normalizeHabitIcon(' $value '), value);
+      }
+      expect(normalizeHabitIcon(null), isNull);
+      for (final value in ['', ' ', 'futureIcon', 'hello', '😀😀', '😀' * 33]) {
+        expect(() => normalizeHabitIcon(value), throwsArgumentError);
+      }
+    },
+  );
+  test(
+    'habit JSON preserves icons, complete emoji and unknown future signs',
+    () {
+      final base = Habit(
+        id: 'h',
+        userId: 'local-user',
+        title: 'Read',
+        scheduleHistory: [
+          HabitSchedule(
+            effectiveFrom: DateTime(2026, 10, 6),
+            startDate: DateTime(2026, 10, 6),
+            weekdays: [1, 2, 3, 4, 5, 6, 7],
+            targetPerDay: 1,
+          ),
+        ],
+        createdAt: DateTime.utc(2026, 10, 6),
+        updatedAt: DateTime.utc(2026, 10, 6),
+      ).toJson();
+      for (final icon in [
+        'bookOpen',
+        '👍🏽',
+        '🇷🇺',
+        '👨‍👩‍👧‍👦',
+        'futureIcon',
+      ]) {
+        expect(Habit.fromJson({...base, 'icon': icon}).toJson()['icon'], icon);
+      }
+      expect(
+        Habit.fromJson({...base}..remove('icon')).toJson()['icon'],
+        isNull,
+      );
+      expect(Habit.fromJson({...base, 'icon': null}).toJson()['icon'], isNull);
+    },
+  );
   test('calendar duration includes its first and last day across a year', () {
     expect(habitEndAfterDays(DateTime(2026, 12, 29), 7), DateTime(2027, 1, 4));
     expect(habitEndAfterDays(DateTime(2028, 2, 28), 7), DateTime(2028, 3, 5));

@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:pomodoist/routing/habit_detail_navigation.dart';
 import 'package:pomodoist/ui/habits/view_models/habits_view_model.dart';
 import 'package:pomodoist/ui/habits/widgets/habit_editor.dart';
+import 'package:pomodoist/ui/habits/widgets/habit_icon.dart';
 
 class HabitsScreen extends ConsumerStatefulWidget {
   const HabitsScreen({super.key});
@@ -133,25 +134,35 @@ class _HabitsScreenState extends ConsumerState<HabitsScreen> {
                       ],
                     ),
                     if (!view.finished)
-                      ShadTabs<HabitViewMode>(
-                        value: view.viewMode,
-                        scrollable: true,
-                        gap: 0,
-                        onChanged: vm.setViewMode,
-                        tabs: [
-                          ShadTab(
-                            value: HabitViewMode.list,
-                            height: 44,
-                            enabled:
-                                !view.viewSaving && !view.viewSettingsLoading,
-                            child: Text(l.habitsListView),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          ChoiceChip(
+                            label: Text(l.habitsListView),
+                            selected: view.viewMode == HabitViewMode.list,
+                            side: BorderSide(
+                              color: view.viewMode == HabitViewMode.list
+                                  ? colors.accent
+                                  : colors.border,
+                            ),
+                            onSelected:
+                                view.viewSaving || view.viewSettingsLoading
+                                ? null
+                                : (_) => vm.setViewMode(HabitViewMode.list),
                           ),
-                          ShadTab(
-                            value: HabitViewMode.rhythm,
-                            height: 44,
-                            enabled:
-                                !view.viewSaving && !view.viewSettingsLoading,
-                            child: Text(l.habitsRhythmView),
+                          ChoiceChip(
+                            label: Text(l.habitsRhythmView),
+                            selected: view.viewMode == HabitViewMode.rhythm,
+                            side: BorderSide(
+                              color: view.viewMode == HabitViewMode.rhythm
+                                  ? colors.accent
+                                  : colors.border,
+                            ),
+                            onSelected:
+                                view.viewSaving || view.viewSettingsLoading
+                                ? null
+                                : (_) => vm.setViewMode(HabitViewMode.rhythm),
                           ),
                         ],
                       ),
@@ -511,16 +522,17 @@ class _HabitsScreenState extends ConsumerState<HabitsScreen> {
       ),
       child: Row(
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: colors.surfaceTint,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(LucideIcons.repeat2, size: 18, color: colors.mutedText),
+          HabitIconButton(
+            icon: row.habit.icon,
+            onPressed: view.saving
+                ? null
+                : () => showHabitIconPicker(
+                    context,
+                    icon: row.habit.icon,
+                    onSave: (icon) => vm.updateIcon(row.habit.id, icon),
+                  ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

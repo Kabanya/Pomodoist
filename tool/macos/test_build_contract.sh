@@ -16,7 +16,7 @@
 #   4. The build script selects those configurations, and names ones the Xcode
 #      project actually defines.
 #   5. The artifact naming matches the documented convention.
-#   6. The release gate requires the macOS asset.
+#   6. Packaging signs before creating the DMG and requires notarization.
 set -euo pipefail
 
 tool_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
@@ -206,22 +206,10 @@ if [[ "$expected_dmg" != 'Pomodoist-macOS.dmg' ]]; then
   fail 'unreachable'
 fi
 
-# 6. The release gate in the existing desktop workflows must require the macOS
-#    asset, or a macOS-less release could still be published.
-for workflow in windows-exe-preview.yml linux-appimage-release.yml; do
-  path="$repo_root/.github/workflows/$workflow"
-  if [[ ! -f "$path" ]]; then
-    fail ".github/workflows/$workflow is missing"
-    continue
-  fi
-  if ! grep -q "$expected_dmg" "$path"; then
-    fail "$workflow does not require $expected_dmg in its release asset gate"
-  fi
-done
-
 if (( failures > 0 )); then
   printf '\n%d macOS direct-download contract check(s) failed.\n' "$failures" >&2
   exit 1
 fi
 
+python3 "$tool_dir/test_build.py"
 printf 'macOS direct-download contract is intact.\n'

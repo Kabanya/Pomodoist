@@ -13,6 +13,180 @@ void main() {
     SharedPreferences.setMockInitialValues(const {});
   });
 
+  test('both Focus shortcuts match on Apple and non-Apple platforms', () {
+    for (final platform in [TargetPlatform.macOS, TargetPlatform.windows]) {
+      final bindings = defaultAppShortcutBindings(platform);
+      final keyboard = _KeyboardState(
+        meta: platform == TargetPlatform.macOS,
+        control: platform == TargetPlatform.windows,
+      );
+      for (final (physical, logical, command) in [
+        (PhysicalKeyboardKey.digit5, LogicalKeyboardKey.digit5, 'focus'),
+        (PhysicalKeyboardKey.keyF, LogicalKeyboardKey.keyF, 'focusAlternate'),
+      ]) {
+        final event = KeyDownEvent(
+          physicalKey: physical,
+          logicalKey: logical,
+          timeStamp: Duration.zero,
+        );
+        expect(
+          bindings.entries
+              .where((entry) => entry.value.matches(event, keyboard))
+              .map((entry) => entry.key.name),
+          [command],
+        );
+      }
+    }
+  });
+
+  test('saved shortcuts gain and persist the second Focus shortcut', () async {
+    final saved = defaultAppShortcutBindings(TargetPlatform.macOS);
+    SharedPreferences.setMockInitialValues({
+      keyboardShortcutsPreferenceKey: jsonEncode({
+        for (final entry in saved.entries)
+          if (entry.key.name != 'focusAlternate')
+            entry.key.storageKey: entry.value.toJson(),
+      }),
+    });
+    final container = ProviderContainer(
+      overrides: [
+        shortcutTargetPlatformProvider.overrideWithValue(TargetPlatform.macOS),
+      ],
+    );
+    addTearDown(container.dispose);
+    await container.read(keyboardShortcutsLoadedProvider.future);
+    final loaded = container.read(keyboardShortcutsProvider);
+    expect(
+      loaded.entries
+          .where((entry) => entry.key.name == 'focusAlternate')
+          .map((entry) => entry.value.labelFor(TargetPlatform.macOS)),
+      ['⌘F'],
+    );
+    final stored =
+        jsonDecode(
+              (await SharedPreferences.getInstance()).getString(
+                keyboardShortcutsPreferenceKey,
+              )!,
+            )
+            as Map;
+    expect(stored.containsKey('focusAlternate'), isTrue);
+  });
+
+  test('adding Focus shortcut preserves occupied F and Shift+F', () async {
+    final saved = defaultAppShortcutBindings(TargetPlatform.macOS);
+    saved[AppShortcutCommand.search] = AppShortcutBinding(
+      physicalKeyId: PhysicalKeyboardKey.keyF.usbHidUsage,
+      keyLabel: 'F',
+      meta: true,
+    );
+    saved[AppShortcutCommand.quickAdd] = AppShortcutBinding(
+      physicalKeyId: PhysicalKeyboardKey.keyF.usbHidUsage,
+      keyLabel: 'F',
+      meta: true,
+      shift: true,
+    );
+    SharedPreferences.setMockInitialValues({
+      keyboardShortcutsPreferenceKey: jsonEncode({
+        for (final entry in saved.entries)
+          if (entry.key.name != 'focusAlternate')
+            entry.key.storageKey: entry.value.toJson(),
+      }),
+    });
+    final container = ProviderContainer(
+      overrides: [
+        shortcutTargetPlatformProvider.overrideWithValue(TargetPlatform.macOS),
+      ],
+    );
+    addTearDown(container.dispose);
+    await container.read(keyboardShortcutsLoadedProvider.future);
+    final loaded = container.read(keyboardShortcutsProvider);
+    expect(loaded[AppShortcutCommand.search], saved[AppShortcutCommand.search]);
+    expect(
+      loaded[AppShortcutCommand.quickAdd],
+      saved[AppShortcutCommand.quickAdd],
+    );
+    expect(
+      loaded.entries
+          .where((entry) => entry.key.name == 'focusAlternate')
+          .map((entry) => entry.value.labelFor(TargetPlatform.macOS)),
+      ['⇧⌘G'],
+    );
+  });
+
+  test('legacy custom F is preserved when adding the Focus shortcut', () async {
+    SharedPreferences.setMockInitialValues({
+      keyboardShortcutsPreferenceKey: jsonEncode({
+        AppShortcutCommand.search.storageKey: _storedMacBinding(
+          PhysicalKeyboardKey.keyF,
+          'F',
+        ),
+      }),
+    });
+    final container = ProviderContainer(
+      overrides: [
+        shortcutTargetPlatformProvider.overrideWithValue(TargetPlatform.macOS),
+      ],
+    );
+    addTearDown(container.dispose);
+    await container.read(keyboardShortcutsLoadedProvider.future);
+    final loaded = container.read(keyboardShortcutsProvider);
+    expect(
+      loaded[AppShortcutCommand.search]!.labelFor(TargetPlatform.macOS),
+      '⌘F',
+    );
+    expect(
+      loaded[AppShortcutCommand.focusAlternate]!.labelFor(TargetPlatform.macOS),
+      '⇧⌘F',
+    );
+  });
+
+  test('second Focus shortcut can be remapped, restored and reset', () async {
+    final overrides = [
+      shortcutTargetPlatformProvider.overrideWithValue(TargetPlatform.macOS),
+    ];
+    final first = ProviderContainer(overrides: overrides);
+    await first.read(keyboardShortcutsLoadedProvider.future);
+    final controller = first.read(keyboardShortcutsProvider.notifier);
+    expect(
+      await controller.setBinding(
+        AppShortcutCommand.focusAlternate,
+        first.read(keyboardShortcutsProvider)[AppShortcutCommand.focus]!,
+      ),
+      AppShortcutCommand.focus,
+    );
+    await controller.setBinding(
+      AppShortcutCommand.focusAlternate,
+      AppShortcutBinding(
+        physicalKeyId: PhysicalKeyboardKey.keyJ.usbHidUsage,
+        keyLabel: 'J',
+        meta: true,
+      ),
+    );
+    first.dispose();
+    final second = ProviderContainer(overrides: overrides);
+    addTearDown(second.dispose);
+    await second.read(keyboardShortcutsLoadedProvider.future);
+    expect(
+      second
+          .read(keyboardShortcutsProvider)[AppShortcutCommand.focusAlternate]!
+          .labelFor(TargetPlatform.macOS),
+      '⌘J',
+    );
+    await second.read(keyboardShortcutsProvider.notifier).resetAll();
+    expect(
+      second
+          .read(keyboardShortcutsProvider)[AppShortcutCommand.focusAlternate]!
+          .labelFor(TargetPlatform.macOS),
+      '⌘F',
+    );
+    expect(
+      second
+          .read(keyboardShortcutsProvider)[AppShortcutCommand.focus]!
+          .labelFor(TargetPlatform.macOS),
+      '⌘5',
+    );
+  });
+
   test('Apple defaults follow the desktop sidebar order', () {
     final bindings = defaultAppShortcutBindings(TargetPlatform.macOS);
 
@@ -30,6 +204,7 @@ void main() {
         '⌘3',
         '⌘4',
         '⌘5',
+        '⌘F',
         '⌘6',
         '⌘7',
         '⇧⌘2',
@@ -571,6 +746,7 @@ void main() {
           '⌘3',
           '⌘4',
           '⌘5',
+          '⌘F',
           '⌘6',
           '⌘7',
           '⇧⌘2',

@@ -1777,6 +1777,12 @@ abstract class AppLocalizations {
   /// **'Toggle task details (second shortcut)'**
   String get settingsShortcutsToggleTaskDetailsAlternate;
 
+  /// No description provided for @settingsShortcutsFocusAlternate.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus (second shortcut)'**
+  String get settingsShortcutsFocusAlternate;
+
   /// No description provided for @settingsShortcutsGlobalQuickAdd.
   ///
   /// In en, this message translates to:
@@ -3316,7 +3322,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportsIntervalCountSemantics.
   ///
   /// In en, this message translates to:
-  /// **'{completed} focus intervals completed; no goal set'**
+  /// **'{completed} focus intervals completed; no task estimates'**
   String reportsIntervalCountSemantics(int completed);
 
   /// No description provided for @reportsWeeklyChartSemantics.
@@ -7240,6 +7246,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Flags'**
   String get accountAvatarFlags;
+
+  /// No description provided for @reportsPlanEstimates.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimates for open tasks due today or earlier'**
+  String get reportsPlanEstimates;
+
+  /// No description provided for @reportsDayInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Today is still in progress'**
+  String get reportsDayInProgress;
+
+  /// No description provided for @reportsTimeByProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Where your time went'**
+  String get reportsTimeByProject;
+
+  /// No description provided for @reportsNoProject.
+  ///
+  /// In en, this message translates to:
+  /// **'No project'**
+  String get reportsNoProject;
+
+  /// No description provided for @reportsNoTask.
+  ///
+  /// In en, this message translates to:
+  /// **'No linked task'**
+  String get reportsNoTask;
+
+  /// No description provided for @reportsUnavailableName.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (unavailable)'**
+  String reportsUnavailableName(String name);
+
+  /// No description provided for @reportsUnknownProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable project'**
+  String get reportsUnknownProject;
+
+  /// No description provided for @reportsUnknownTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable task'**
+  String get reportsUnknownTask;
+
+  /// No description provided for @reportsNoProjectFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed focus sessions in this period'**
+  String get reportsNoProjectFocus;
+
+  /// No description provided for @reportsProjectShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% of focus time'**
+  String reportsProjectShare(String percent);
+
+  /// No description provided for @habitIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit icon'**
+  String get habitIcon;
+
+  /// No description provided for @habitIconEmoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Emoji'**
+  String get habitIconEmoji;
+
+  /// No description provided for @habitIconIcons.
+  ///
+  /// In en, this message translates to:
+  /// **'Icons'**
+  String get habitIconIcons;
+
+  /// No description provided for @habitIconReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset icon'**
+  String get habitIconReset;
+
+  /// Accessible habit icon name
+  ///
+  /// In en, this message translates to:
+  /// **'{icon, select, bookOpen{Reading} dumbbell{Exercise} footprints{Walking} glassWater{Water} moon{Sleep} sun{Sun} heart{Health} brain{Learning} apple{Nutrition} coffee{Coffee} music{Music} pencil{Writing} code{Coding} leaf{Nature} target{Goal} bike{Cycling} other{Habit icon}}'**
+  String habitIconOption(String icon);
 }
 
 class _AppLocalizationsDelegate

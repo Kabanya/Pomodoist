@@ -197,6 +197,7 @@ brag*/
 
 !apps/chrome-extension/.gitignore
 apps/flutter/assets/branding/app_icons/plan.md
+release-assets/
 
 # `make watch-debug` runs xcodebuild straight from apps/flutter/ios, so a
 # relative SYMROOT can land a full build tree in a nested apps/flutter/ios/apps.
@@ -213,3 +214,14 @@ node_modules/
 !apps/flutter/lib/domain/models/habits/
 !apps/flutter/lib/data/repositories/habits/
 !apps/flutter/lib/ui/habits/
+
+# Selected App Store marketing direction and its reference image.
+!docs/app-store-screenshots.md
+!docs/assets/
+docs/assets/*
+!docs/assets/app-store-grid-reference.png
+
+# Local rigged mascot models and Blender source files.
+/apps/flutter/assets/branding/mascot/*.glb
+/apps/flutter/assets/branding/mascot/*.blend*
+docs/assets/app-store-grid-reference.png

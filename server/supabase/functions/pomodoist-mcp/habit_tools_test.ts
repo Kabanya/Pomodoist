@@ -430,3 +430,47 @@ Deno.test("habit undo compares timestamps as instants across UTC offsets", async
     "later",
   );
 });
+
+Deno.test("habit signs survive create, edit, reset and read", async () => {
+  const f = fixture();
+  await f.run("create_habit", { title: "Read", time_zone: "UTC", icon: "📚" });
+  assertEquals(f.habits.at(-1)!.icon, "📚");
+  await f.run("update_habit", {
+    habit_id: id,
+    time_zone: "UTC",
+    icon: "bookOpen",
+  });
+  const read = await f.run("get_habit", f.args);
+  assertEquals(read.data.icon, "bookOpen");
+  await f.run("update_habit", {
+    habit_id: id,
+    time_zone: "UTC",
+    title: "Water again",
+  });
+  assertEquals(f.habits[0].icon, "bookOpen");
+  await f.run("update_habit", { habit_id: id, time_zone: "UTC", icon: null });
+  assertEquals(f.habits[0].icon, null);
+  for (const icon of ["", " ", 1, false, {}, "😀".repeat(33)]) {
+    assert(
+      !f.tools.get("create_habit")!.schema.safeParse({
+        title: "Read",
+        time_zone: "UTC",
+        icon,
+      }).success,
+    );
+    assert(
+      !f.tools.get("update_habit")!.schema.safeParse({
+        habit_id: id,
+        time_zone: "UTC",
+        icon,
+      }).success,
+    );
+  }
+  assert(
+    f.tools.get("create_habit")!.schema.safeParse({
+      title: "Read",
+      time_zone: "UTC",
+      icon: "😀".repeat(32),
+    }).success,
+  );
+});

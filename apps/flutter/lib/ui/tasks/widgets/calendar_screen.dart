@@ -26,6 +26,7 @@ import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/widgets/app_date_time_picker.dart';
 import 'package:pomodoist/ui/core/widgets/app_context_menu_region.dart';
+import 'package:pomodoist/ui/core/widgets/task_details_host.dart';
 import 'package:pomodoist/ui/tasks/view_models/calendar_view_model.dart';
 import 'package:pomodoist/ui/tasks/widgets/calendar_overview_panel.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_color_picker.dart';
@@ -203,7 +204,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Widget build(BuildContext context) => LayoutBuilder(builder: _buildCalendar);
 
   Widget _buildCalendar(BuildContext context, BoxConstraints viewport) {
-    final mobile = viewport.maxWidth < 820;
+    final layoutWidth =
+        DetailsPanelViewport.maybeOf(
+          context,
+        )?.backgroundLayoutWidth(viewport.maxWidth) ??
+        viewport.maxWidth;
+    final mobile = layoutWidth < 820;
     final state = ref.watch(calendarViewModelProvider);
     final vm = ref.read(calendarViewModelProvider.notifier);
     final selected = widget.selectedDate ?? state.now;
@@ -272,7 +278,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 onOverview: () => unawaited(_mobileOverview(day)),
               );
             }
-            final wide = constraints.maxWidth >= 1060;
+            final wide = layoutWidth >= 1060;
             final content = Padding(
               padding: EdgeInsets.fromLTRB(
                 constraints.maxWidth < 600 ? 12 : 24,

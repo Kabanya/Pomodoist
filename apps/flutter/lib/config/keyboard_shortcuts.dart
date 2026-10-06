@@ -219,6 +219,7 @@ Map<AppShortcutCommand, AppShortcutBinding> defaultAppShortcutBindings(
     AppShortcutCommand.today: binding(PhysicalKeyboardKey.digit3, '3'),
     AppShortcutCommand.upcoming: binding(PhysicalKeyboardKey.digit4, '4'),
     AppShortcutCommand.focus: binding(PhysicalKeyboardKey.digit5, '5'),
+    AppShortcutCommand.focusAlternate: binding(PhysicalKeyboardKey.keyF, 'F'),
     AppShortcutCommand.inbox: binding(PhysicalKeyboardKey.digit6, '6'),
     AppShortcutCommand.priorityMatrix: binding(PhysicalKeyboardKey.digit7, '7'),
     AppShortcutCommand.calendar: binding(
@@ -429,9 +430,10 @@ class KeyboardShortcutsController
     for (final command in [
       AppShortcutCommand.toggleTaskDetails,
       AppShortcutCommand.toggleTaskDetailsAlternate,
+      AppShortcutCommand.focusAlternate,
     ]) {
       if (!decodedMap.containsKey(command.storageKey)) {
-        _preserveTaskDetailsShortcut(loaded, _platform, command);
+        _preserveNewShortcut(loaded, _platform, command);
       }
     }
     if (loaded.values.map((value) => value.signature).toSet().length !=
@@ -455,7 +457,13 @@ class KeyboardShortcutsController
       used.add(replacement.signature);
     }
     if (ref.mounted) state = Map.unmodifiable(loaded);
-    if (ref.mounted && displaced.isNotEmpty) await _persist();
+    if (ref.mounted &&
+        (displaced.isNotEmpty ||
+            !decodedMap.containsKey(
+              AppShortcutCommand.focusAlternate.storageKey,
+            ))) {
+      await _persist();
+    }
   }
 
   Future<void> _loadLegacy(
@@ -484,14 +492,10 @@ class KeyboardShortcutsController
         for (final detailsCommand in [
           AppShortcutCommand.toggleTaskDetails,
           AppShortcutCommand.toggleTaskDetailsAlternate,
+          AppShortcutCommand.focusAlternate,
         ]) {
           if (loaded[detailsCommand]?.signature == candidate.signature) {
-            _preserveTaskDetailsShortcut(
-              loaded,
-              _platform,
-              detailsCommand,
-              candidate,
-            );
+            _preserveNewShortcut(loaded, _platform, detailsCommand, candidate);
             loaded[command] = candidate;
             break;
           }
@@ -516,7 +520,7 @@ class KeyboardShortcutsController
   }
 }
 
-void _preserveTaskDetailsShortcut(
+void _preserveNewShortcut(
   Map<AppShortcutCommand, AppShortcutBinding> bindings,
   TargetPlatform platform,
   AppShortcutCommand command, [
@@ -529,7 +533,10 @@ void _preserveTaskDetailsShortcut(
   };
   if (!used.contains(bindings[command]!.signature)) return;
   final firstLetter = PhysicalKeyboardKey.keyA.usbHidUsage;
-  for (final letter in 'BCDEFGHIJKLMNOPQRSTUVWXYZ'.codeUnits) {
+  final letters = command == AppShortcutCommand.focusAlternate
+      ? 'FGHIJKLMNOPQRSTUVWXYZ'
+      : 'BCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for (final letter in letters.codeUnits) {
     final candidate = _platformBinding(
       platform,
       PhysicalKeyboardKey.findKeyByCode(firstLetter + letter - 65)!,

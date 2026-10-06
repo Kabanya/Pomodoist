@@ -10,6 +10,11 @@ abstract interface class HabitRepository {
     HabitDraft draft, {
     required DateTime now,
   });
+  Future<Result<void>> updateIcon(
+    String id,
+    String? icon, {
+    required DateTime now,
+  });
   Future<Result<void>> deleteHabit(String id, {required DateTime now});
   Future<Result<void>> addCheckIn(
     String id,

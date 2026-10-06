@@ -13985,6 +13985,15 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, HabitRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _projectIdMeta = const VerificationMeta(
     'projectId',
   );
@@ -14060,6 +14069,7 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, HabitRow> {
     id,
     userId,
     title,
+    icon,
     projectId,
     reminderMinutes,
     scheduleHistoryJson,
@@ -14099,6 +14109,12 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, HabitRow> {
       );
     } else if (isInserting) {
       context.missing(_titleMeta);
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
     }
     if (data.containsKey('project_id')) {
       context.handle(
@@ -14169,6 +14185,10 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, HabitRow> {
         DriftSqlType.string,
         data['${effectivePrefix}title'],
       )!,
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      ),
       projectId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}project_id'],
@@ -14206,6 +14226,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
   final String id;
   final String userId;
   final String title;
+  final String? icon;
   final String? projectId;
   final int? reminderMinutes;
   final String scheduleHistoryJson;
@@ -14216,6 +14237,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
     required this.id,
     required this.userId,
     required this.title,
+    this.icon,
     this.projectId,
     this.reminderMinutes,
     required this.scheduleHistoryJson,
@@ -14229,6 +14251,9 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
     map['id'] = Variable<String>(id);
     map['user_id'] = Variable<String>(userId);
     map['title'] = Variable<String>(title);
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<String>(icon);
+    }
     if (!nullToAbsent || projectId != null) {
       map['project_id'] = Variable<String>(projectId);
     }
@@ -14247,6 +14272,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
       id: Value(id),
       userId: Value(userId),
       title: Value(title),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
       projectId: projectId == null && nullToAbsent
           ? const Value.absent()
           : Value(projectId),
@@ -14269,6 +14295,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
       id: serializer.fromJson<String>(json['id']),
       userId: serializer.fromJson<String>(json['userId']),
       title: serializer.fromJson<String>(json['title']),
+      icon: serializer.fromJson<String?>(json['icon']),
       projectId: serializer.fromJson<String?>(json['projectId']),
       reminderMinutes: serializer.fromJson<int?>(json['reminderMinutes']),
       scheduleHistoryJson: serializer.fromJson<String>(
@@ -14286,6 +14313,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
       'id': serializer.toJson<String>(id),
       'userId': serializer.toJson<String>(userId),
       'title': serializer.toJson<String>(title),
+      'icon': serializer.toJson<String?>(icon),
       'projectId': serializer.toJson<String?>(projectId),
       'reminderMinutes': serializer.toJson<int?>(reminderMinutes),
       'scheduleHistoryJson': serializer.toJson<String>(scheduleHistoryJson),
@@ -14299,6 +14327,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
     String? id,
     String? userId,
     String? title,
+    Value<String?> icon = const Value.absent(),
     Value<String?> projectId = const Value.absent(),
     Value<int?> reminderMinutes = const Value.absent(),
     String? scheduleHistoryJson,
@@ -14309,6 +14338,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
     id: id ?? this.id,
     userId: userId ?? this.userId,
     title: title ?? this.title,
+    icon: icon.present ? icon.value : this.icon,
     projectId: projectId.present ? projectId.value : this.projectId,
     reminderMinutes: reminderMinutes.present
         ? reminderMinutes.value
@@ -14323,6 +14353,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
       id: data.id.present ? data.id.value : this.id,
       userId: data.userId.present ? data.userId.value : this.userId,
       title: data.title.present ? data.title.value : this.title,
+      icon: data.icon.present ? data.icon.value : this.icon,
       projectId: data.projectId.present ? data.projectId.value : this.projectId,
       reminderMinutes: data.reminderMinutes.present
           ? data.reminderMinutes.value
@@ -14342,6 +14373,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('title: $title, ')
+          ..write('icon: $icon, ')
           ..write('projectId: $projectId, ')
           ..write('reminderMinutes: $reminderMinutes, ')
           ..write('scheduleHistoryJson: $scheduleHistoryJson, ')
@@ -14357,6 +14389,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
     id,
     userId,
     title,
+    icon,
     projectId,
     reminderMinutes,
     scheduleHistoryJson,
@@ -14371,6 +14404,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
           other.id == this.id &&
           other.userId == this.userId &&
           other.title == this.title &&
+          other.icon == this.icon &&
           other.projectId == this.projectId &&
           other.reminderMinutes == this.reminderMinutes &&
           other.scheduleHistoryJson == this.scheduleHistoryJson &&
@@ -14383,6 +14417,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
   final Value<String> id;
   final Value<String> userId;
   final Value<String> title;
+  final Value<String?> icon;
   final Value<String?> projectId;
   final Value<int?> reminderMinutes;
   final Value<String> scheduleHistoryJson;
@@ -14394,6 +14429,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
     this.title = const Value.absent(),
+    this.icon = const Value.absent(),
     this.projectId = const Value.absent(),
     this.reminderMinutes = const Value.absent(),
     this.scheduleHistoryJson = const Value.absent(),
@@ -14406,6 +14442,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
     required String id,
     required String userId,
     required String title,
+    this.icon = const Value.absent(),
     this.projectId = const Value.absent(),
     this.reminderMinutes = const Value.absent(),
     required String scheduleHistoryJson,
@@ -14423,6 +14460,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
     Expression<String>? id,
     Expression<String>? userId,
     Expression<String>? title,
+    Expression<String>? icon,
     Expression<String>? projectId,
     Expression<int>? reminderMinutes,
     Expression<String>? scheduleHistoryJson,
@@ -14435,6 +14473,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
       if (id != null) 'id': id,
       if (userId != null) 'user_id': userId,
       if (title != null) 'title': title,
+      if (icon != null) 'icon': icon,
       if (projectId != null) 'project_id': projectId,
       if (reminderMinutes != null) 'reminder_minutes': reminderMinutes,
       if (scheduleHistoryJson != null)
@@ -14450,6 +14489,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
     Value<String>? id,
     Value<String>? userId,
     Value<String>? title,
+    Value<String?>? icon,
     Value<String?>? projectId,
     Value<int?>? reminderMinutes,
     Value<String>? scheduleHistoryJson,
@@ -14462,6 +14502,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
       id: id ?? this.id,
       userId: userId ?? this.userId,
       title: title ?? this.title,
+      icon: icon ?? this.icon,
       projectId: projectId ?? this.projectId,
       reminderMinutes: reminderMinutes ?? this.reminderMinutes,
       scheduleHistoryJson: scheduleHistoryJson ?? this.scheduleHistoryJson,
@@ -14483,6 +14524,9 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
     }
     if (title.present) {
       map['title'] = Variable<String>(title.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
     }
     if (projectId.present) {
       map['project_id'] = Variable<String>(projectId.value);
@@ -14516,6 +14560,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('title: $title, ')
+          ..write('icon: $icon, ')
           ..write('projectId: $projectId, ')
           ..write('reminderMinutes: $reminderMinutes, ')
           ..write('scheduleHistoryJson: $scheduleHistoryJson, ')
@@ -21954,6 +21999,7 @@ typedef $$HabitsTableCreateCompanionBuilder =
       required String id,
       required String userId,
       required String title,
+      Value<String?> icon,
       Value<String?> projectId,
       Value<int?> reminderMinutes,
       required String scheduleHistoryJson,
@@ -21967,6 +22013,7 @@ typedef $$HabitsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> userId,
       Value<String> title,
+      Value<String?> icon,
       Value<String?> projectId,
       Value<int?> reminderMinutes,
       Value<String> scheduleHistoryJson,
@@ -21997,6 +22044,11 @@ class $$HabitsTableFilterComposer
 
   ColumnFilters<String> get title => $composableBuilder(
     column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get icon => $composableBuilder(
+    column: $table.icon,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -22055,6 +22107,11 @@ class $$HabitsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get projectId => $composableBuilder(
     column: $table.projectId,
     builder: (column) => ColumnOrderings(column),
@@ -22103,6 +22160,9 @@ class $$HabitsTableAnnotationComposer
 
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
 
   GeneratedColumn<String> get projectId =>
       $composableBuilder(column: $table.projectId, builder: (column) => column);
@@ -22158,6 +22218,7 @@ class $$HabitsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> userId = const Value.absent(),
                 Value<String> title = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
                 Value<String?> projectId = const Value.absent(),
                 Value<int?> reminderMinutes = const Value.absent(),
                 Value<String> scheduleHistoryJson = const Value.absent(),
@@ -22169,6 +22230,7 @@ class $$HabitsTableTableManager
                 id: id,
                 userId: userId,
                 title: title,
+                icon: icon,
                 projectId: projectId,
                 reminderMinutes: reminderMinutes,
                 scheduleHistoryJson: scheduleHistoryJson,
@@ -22182,6 +22244,7 @@ class $$HabitsTableTableManager
                 required String id,
                 required String userId,
                 required String title,
+                Value<String?> icon = const Value.absent(),
                 Value<String?> projectId = const Value.absent(),
                 Value<int?> reminderMinutes = const Value.absent(),
                 required String scheduleHistoryJson,
@@ -22193,6 +22256,7 @@ class $$HabitsTableTableManager
                 id: id,
                 userId: userId,
                 title: title,
+                icon: icon,
                 projectId: projectId,
                 reminderMinutes: reminderMinutes,
                 scheduleHistoryJson: scheduleHistoryJson,

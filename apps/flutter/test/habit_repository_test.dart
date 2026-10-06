@@ -26,6 +26,122 @@ void main() {
   Future<String> create() async =>
       (await repo.createHabit(draft(), now: today)).getOrThrow();
   test(
+    'icon-only writes preserve goals, reminders and check-ins and roll back on outbox failure',
+    () async {
+      final id = (await repo.createHabit(
+        HabitDraft(
+          title: 'Read',
+          startDate: today,
+          targetPerDay: 2,
+          reminderMinutes: 480,
+          icon: '📚',
+        ),
+        now: today,
+      )).getOrThrow();
+      (await repo.addCheckIn(id, today, now: today)).getOrThrow();
+      final before = (await repo.watchHabits().first).single.toJson();
+      final stamp = today.add(const Duration(minutes: 1));
+      (await repo.updateIcon(id, 'bookOpen', now: stamp)).getOrThrow();
+      final after = (await repo.watchHabits().first).single.toJson();
+      expect(after, {
+        ...before,
+        'icon': 'bookOpen',
+        'updatedAt': stamp.toUtc().toIso8601String(),
+      });
+      expect(await repo.watchCheckIns().first, hasLength(1));
+      final commands = await db.select(db.syncCommands).get();
+      expect(jsonDecode(commands.last.payloadJson), {
+        'icon': 'bookOpen',
+        'updatedAt': stamp.toUtc().toIso8601String(),
+      });
+      final failing = DriftHabitRepository(db, _FailingOutbox(db));
+      expect(
+        (await failing.updateIcon(id, '👍🏽', now: stamp)).getOrThrow,
+        throwsStateError,
+      );
+      expect((await repo.watchHabits().first).single.icon, 'bookOpen');
+      expect(await db.select(db.syncCommands).get(), hasLength(3));
+      expect(
+        (await repo.updateIcon(id, 'invalid', now: stamp)).getOrThrow,
+        throwsArgumentError,
+      );
+      expect((await repo.watchHabits().first).single.icon, 'bookOpen');
+      (await repo.updateHabit(
+        id,
+        HabitDraft(
+          title: 'Read again',
+          startDate: today,
+          targetPerDay: 2,
+          reminderMinutes: 480,
+          icon: 'bookOpen',
+        ),
+        now: stamp,
+      )).getOrThrow();
+      expect((await repo.watchHabits().first).single.icon, 'bookOpen');
+      (await repo.updateIcon(id, null, now: stamp)).getOrThrow();
+      expect((await repo.watchHabits().first).single.icon, isNull);
+      (await repo.deleteHabit(id, now: stamp)).getOrThrow();
+      expect(
+        (await repo.updateIcon(id, 'heart', now: stamp)).getOrThrow,
+        throwsStateError,
+      );
+    },
+  );
+  test('editing a habit preserves an unchanged future sign', () async {
+    final id = await create();
+    await db.customStatement('UPDATE habits SET icon = ? WHERE id = ?', [
+      'futureIcon',
+      id,
+    ]);
+    (await repo.updateHabit(
+      id,
+      HabitDraft(
+        title: 'Read again',
+        startDate: DateTime(2026, 9, 28),
+        targetPerDay: 2,
+        icon: 'futureIcon',
+      ),
+      now: today,
+    )).getOrThrow();
+    expect((await repo.watchHabits().first).single.icon, 'futureIcon');
+    final updates = await (db.select(
+      db.syncCommands,
+    )..where((c) => c.type.equals('habit.update'))).get();
+    expect(jsonDecode(updates.single.payloadJson)['icon'], 'futureIcon');
+  });
+  test(
+    'schema 10 migration preserves data and signs survive a restart',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'habit-icon-migration-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final file = File('${directory.path}/habits.sqlite');
+      var disk = AppDatabase(NativeDatabase(file));
+      try {
+        var saved = DriftHabitRepository(disk, DriftOutboxService(disk));
+        final id = (await saved.createHabit(draft(), now: today)).getOrThrow();
+        (await saved.addCheckIn(id, today, now: today)).getOrThrow();
+        await disk.customStatement('ALTER TABLE habits DROP COLUMN icon');
+        await disk.customStatement('PRAGMA user_version = 10');
+        await disk.close();
+        disk = AppDatabase(NativeDatabase(file));
+        saved = DriftHabitRepository(disk, DriftOutboxService(disk));
+        expect((await saved.watchHabits().first).single.icon, isNull);
+        expect(await saved.watchCheckIns().first, hasLength(1));
+        expect(await disk.select(disk.syncCommands).get(), hasLength(2));
+        (await saved.updateIcon(id, '👨‍👩‍👧‍👦', now: today)).getOrThrow();
+        await disk.close();
+        disk = AppDatabase(NativeDatabase(file));
+        saved = DriftHabitRepository(disk, DriftOutboxService(disk));
+        expect((await saved.watchHabits().first).single.icon, '👨‍👩‍👧‍👦');
+        expect(await saved.watchCheckIns().first, hasLength(1));
+      } finally {
+        await disk.close();
+      }
+    },
+  );
+  test(
     'period changes persist in existing JSON and preserve older schedules',
     () async {
       final id = await create();
@@ -56,7 +172,7 @@ void main() {
         commands.singleWhere((c) => c.type == 'habit.update').payloadJson,
       );
       expect(payload['scheduleHistory'].last['dayPeriod'], 'morning');
-      expect(db.schemaVersion, 10);
+      expect(db.schemaVersion, 11);
     },
   );
   test(
@@ -262,7 +378,7 @@ void main() {
         expect(
           (await disk.customSelect('PRAGMA user_version').getSingle())
               .read<int>('user_version'),
-          10,
+          11,
         );
         expect(
           await disk

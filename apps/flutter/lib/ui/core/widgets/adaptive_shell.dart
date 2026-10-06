@@ -20,6 +20,8 @@ import 'package:go_router/go_router.dart';
 import 'package:pomodoist/domain/models/productivity/achievement_models.dart';
 import 'package:pomodoist/ui/productivity/widgets/achievement_announcements.dart';
 import 'package:pomodoist/ui/focus/widgets/focus_completion_celebration.dart';
+import 'package:pomodoist/ui/focus/view_models/focus_view_model.dart';
+import 'package:pomodoist/ui/core/widgets/action_feedback.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/collaboration/widgets/shared_project_badge.dart';
 import 'package:pomodoist/domain/use_cases/tasks/project_list_data.dart';
@@ -498,8 +500,8 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
         _goFromShortcut('/today');
       case AppShortcutCommand.upcoming:
         _goFromShortcut('/upcoming');
-      case AppShortcutCommand.focus:
-        _goFromShortcut('/focus');
+      case AppShortcutCommand.focus || AppShortcutCommand.focusAlternate:
+        unawaited(_openOrToggleFocus());
       case AppShortcutCommand.inbox:
         _goFromShortcut('/inbox');
       case AppShortcutCommand.priorityMatrix:
@@ -514,6 +516,25 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
         _goFromShortcut('/reports');
       case AppShortcutCommand.settings:
         _goFromShortcut('/settings');
+    }
+  }
+
+  Future<void> _openOrToggleFocus() async {
+    if (!_isFocusLocation(widget.location)) {
+      _goFromShortcut('/focus');
+      return;
+    }
+    try {
+      await ref.read(focusViewModelProvider.notifier).toggleViewMode();
+    } catch (_) {
+      if (!mounted) return;
+      showActionFeedback(
+        context,
+        message: context.l10n.focusActionFailed,
+        icon: LucideIcons.circleAlert,
+        sound: ActionFeedbackSound.none,
+        haptic: AppHapticCue.none,
+      );
     }
   }
 

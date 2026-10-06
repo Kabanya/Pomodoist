@@ -948,6 +948,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Toggle task details (second shortcut)';
 
   @override
+  String get settingsShortcutsFocusAlternate => 'Focus (second shortcut)';
+
+  @override
   String get settingsShortcutsGlobalQuickAdd => 'Global quick add';
 
   @override
@@ -1844,7 +1847,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String reportsIntervalCountSemantics(int completed) {
-    return '$completed focus intervals completed; no goal set';
+    return '$completed focus intervals completed; no task estimates';
   }
 
   @override
@@ -4192,4 +4195,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountAvatarFlags => 'Flags';
+
+  @override
+  String get reportsPlanEstimates =>
+      'Estimates for open tasks due today or earlier';
+
+  @override
+  String get reportsDayInProgress => 'Today is still in progress';
+
+  @override
+  String get reportsTimeByProject => 'Where your time went';
+
+  @override
+  String get reportsNoProject => 'No project';
+
+  @override
+  String get reportsNoTask => 'No linked task';
+
+  @override
+  String reportsUnavailableName(String name) {
+    return '$name (unavailable)';
+  }
+
+  @override
+  String get reportsUnknownProject => 'Unavailable project';
+
+  @override
+  String get reportsUnknownTask => 'Unavailable task';
+
+  @override
+  String get reportsNoProjectFocus =>
+      'No completed focus sessions in this period';
+
+  @override
+  String reportsProjectShare(String percent) {
+    return '$percent% of focus time';
+  }
+
+  @override
+  String get habitIcon => 'Habit icon';
+
+  @override
+  String get habitIconEmoji => 'Emoji';
+
+  @override
+  String get habitIconIcons => 'Icons';
+
+  @override
+  String get habitIconReset => 'Reset icon';
+
+  @override
+  String habitIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'bookOpen': 'Reading',
+      'dumbbell': 'Exercise',
+      'footprints': 'Walking',
+      'glassWater': 'Water',
+      'moon': 'Sleep',
+      'sun': 'Sun',
+      'heart': 'Health',
+      'brain': 'Learning',
+      'apple': 'Nutrition',
+      'coffee': 'Coffee',
+      'music': 'Music',
+      'pencil': 'Writing',
+      'code': 'Coding',
+      'leaf': 'Nature',
+      'target': 'Goal',
+      'bike': 'Cycling',
+      'other': 'Habit icon',
+    });
+    return '$_temp0';
+  }
 }

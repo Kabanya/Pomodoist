@@ -16,6 +16,61 @@ import 'package:pomodoist/utils/result.dart';
 
 void main() {
   test(
+    'sign edits retain the selected day and surface failure without losing the sign',
+    () async {
+      final now = DateTime(2026, 10, 6, 12);
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          clockProvider.overrideWithValue(FixedClock(now)),
+          preferencesRepositoryProvider.overrideWithValue(_Preferences()),
+          projectsProvider.overrideWith((_) => Stream.value([])),
+          habitReminderStatusProvider.overrideWith(_Status.new),
+        ],
+      );
+      addTearDown(container.dispose);
+      final sub = container.listen(habitsViewModelProvider, (_, _) {});
+      addTearDown(sub.close);
+      final vm = container.read(habitsViewModelProvider.notifier);
+      expect(
+        await vm.save(
+          title: 'Read',
+          startDate: now,
+          weekdays: [1, 2, 3, 4, 5, 6, 7],
+          target: '1',
+          icon: '📚',
+        ),
+        isTrue,
+      );
+      final habits = await container.read(habitsProvider.future);
+      final id = habits.single.id;
+      vm.selectDay(DateTime(2026, 10, 5));
+      expect(await vm.updateIcon(id, 'bookOpen'), isTrue);
+      expect(
+        container.read(habitsViewModelProvider).selectedDay,
+        DateTime(2026, 10, 5),
+      );
+      expect(await vm.updateIcon(id, 'bad icon'), isFalse);
+      expect(container.read(habitsViewModelProvider).actionError, isTrue);
+      expect(
+        (await container.read(habitRepositoryProvider).watchHabits().first)
+            .single
+            .icon,
+        'bookOpen',
+      );
+      expect(await vm.updateIcon(id, null), isTrue);
+      expect(container.read(habitsViewModelProvider).actionError, isFalse);
+      expect(
+        (await container.read(habitRepositoryProvider).watchHabits().first)
+            .single
+            .icon,
+        isNull,
+      );
+    },
+  );
+  test(
     'independent morning and night goals regroup and undo without duplicate summary',
     () async {
       final now = DateTime(2026, 10, 3, 12);

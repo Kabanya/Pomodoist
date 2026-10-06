@@ -954,6 +954,9 @@ class AppLocalizationsPt extends AppLocalizations {
       'Detalhes da tarefa (segundo atalho)';
 
   @override
+  String get settingsShortcutsFocusAlternate => 'Foco (segundo atalho)';
+
+  @override
   String get settingsShortcutsGlobalQuickAdd => 'Adição rápida global';
 
   @override
@@ -1853,7 +1856,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String reportsIntervalCountSemantics(int completed) {
-    return '$completed intervalos de foco concluídos; sem meta definida';
+    return '$completed intervalos de foco concluídos; sem estimativas de tarefas';
   }
 
   @override
@@ -4218,6 +4221,78 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get accountAvatarFlags => 'Bandeiras';
+
+  @override
+  String get reportsPlanEstimates =>
+      'Estimativas das tarefas abertas com prazo até hoje';
+
+  @override
+  String get reportsDayInProgress => 'O dia ainda está em andamento';
+
+  @override
+  String get reportsTimeByProject => 'Onde você investiu seu tempo';
+
+  @override
+  String get reportsNoProject => 'Sem projeto';
+
+  @override
+  String get reportsNoTask => 'Sem tarefa vinculada';
+
+  @override
+  String reportsUnavailableName(String name) {
+    return '$name (indisponível)';
+  }
+
+  @override
+  String get reportsUnknownProject => 'Projeto indisponível';
+
+  @override
+  String get reportsUnknownTask => 'Tarefa indisponível';
+
+  @override
+  String get reportsNoProjectFocus =>
+      'Nenhuma sessão de foco concluída neste período';
+
+  @override
+  String reportsProjectShare(String percent) {
+    return '$percent% do tempo de foco';
+  }
+
+  @override
+  String get habitIcon => 'Ícone do hábito';
+
+  @override
+  String get habitIconEmoji => 'Emojis';
+
+  @override
+  String get habitIconIcons => 'Ícones';
+
+  @override
+  String get habitIconReset => 'Repor ícone';
+
+  @override
+  String habitIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'bookOpen': 'Leitura',
+      'dumbbell': 'Exercício',
+      'footprints': 'Caminhada',
+      'glassWater': 'Água',
+      'moon': 'Sono',
+      'sun': 'Sol',
+      'heart': 'Saúde',
+      'brain': 'Aprendizagem',
+      'apple': 'Nutrição',
+      'coffee': 'Café',
+      'music': 'Música',
+      'pencil': 'Escrita',
+      'code': 'Programação',
+      'leaf': 'Natureza',
+      'target': 'Objetivo',
+      'bike': 'Ciclismo',
+      'other': 'Ícone do hábito',
+    });
+    return '$_temp0';
+  }
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -4334,6 +4409,9 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get calendarCurrentTask => 'Tarefa atual';
+
+  @override
+  String get settingsShortcutsFocusAlternate => 'Foco (segundo atalho)';
 
   @override
   String get taskChangeProject => 'Alterar projeto';
@@ -4844,4 +4922,76 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get accountAvatarFlags => 'Bandeiras';
+
+  @override
+  String get reportsPlanEstimates =>
+      'Estimativas das tarefas abertas com prazo até hoje';
+
+  @override
+  String get reportsDayInProgress => 'O dia ainda está em andamento';
+
+  @override
+  String get reportsTimeByProject => 'Onde você investiu seu tempo';
+
+  @override
+  String get reportsNoProject => 'Sem projeto';
+
+  @override
+  String get reportsNoTask => 'Sem tarefa vinculada';
+
+  @override
+  String reportsUnavailableName(String name) {
+    return '$name (indisponível)';
+  }
+
+  @override
+  String get reportsUnknownProject => 'Projeto indisponível';
+
+  @override
+  String get reportsUnknownTask => 'Tarefa indisponível';
+
+  @override
+  String get reportsNoProjectFocus =>
+      'Nenhuma sessão de foco concluída neste período';
+
+  @override
+  String reportsProjectShare(String percent) {
+    return '$percent% do tempo de foco';
+  }
+
+  @override
+  String get habitIcon => 'Ícone do hábito';
+
+  @override
+  String get habitIconEmoji => 'Emojis';
+
+  @override
+  String get habitIconIcons => 'Ícones';
+
+  @override
+  String get habitIconReset => 'Redefinir ícone';
+
+  @override
+  String habitIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'bookOpen': 'Leitura',
+      'dumbbell': 'Exercício',
+      'footprints': 'Caminhada',
+      'glassWater': 'Água',
+      'moon': 'Sono',
+      'sun': 'Sol',
+      'heart': 'Saúde',
+      'brain': 'Aprendizado',
+      'apple': 'Nutrição',
+      'coffee': 'Café',
+      'music': 'Música',
+      'pencil': 'Escrita',
+      'code': 'Programação',
+      'leaf': 'Natureza',
+      'target': 'Objetivo',
+      'bike': 'Ciclismo',
+      'other': 'Ícone do hábito',
+    });
+    return '$_temp0';
+  }
 }

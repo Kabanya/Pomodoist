@@ -1,4 +1,5 @@
 {
+  "settingsShortcutsFocusAlternate": "专注（第二个快捷键）",
   "settingsSectionGeneral": "通用",
   "settingsSectionAppearance": "外观",
   "settingsSectionTasksFocus": "任务与专注",
@@ -609,7 +610,7 @@
   "failedToLoadAchievements": "无法加载成就：{error}",
   "backToReports": "返回报告",
   "reportsIntervalProgressSemantics": "已完成 {completed}/{target} 个专注时段",
-  "reportsIntervalCountSemantics": "已完成 {completed} 个专注时段；未设目标",
+  "reportsIntervalCountSemantics": "已完成 {completed} 个专注时段；无任务预计时段数",
   "reportsWeeklyChartSemantics": "过去 7 天的专注时间：{summary}",
   "failedToLoadReports": "无法加载报告：{error}",
   "taskNotFound": "未找到任务",
@@ -1344,5 +1345,20 @@
   "accountAvatarTravel": "旅行和地点",
   "accountAvatarObjects": "物品",
   "accountAvatarSymbols": "符号",
-  "accountAvatarFlags": "旗帜"
+  "accountAvatarFlags": "旗帜",
+  "reportsPlanEstimates": "今天或更早到期的未完成任务的预计时段数",
+  "reportsDayInProgress": "今天尚未结束",
+  "reportsTimeByProject": "时间花在哪里",
+  "reportsNoProject": "无项目",
+  "reportsNoTask": "无关联任务",
+  "reportsUnavailableName": "{name}（不可用）",
+  "reportsUnknownProject": "不可用的项目",
+  "reportsUnknownTask": "不可用的任务",
+  "reportsNoProjectFocus": "此期间没有已完成的专注会话",
+  "reportsProjectShare": "占专注时间的 {percent}%",
+  "habitIcon": "习惯图标",
+  "habitIconEmoji": "表情符号",
+  "habitIconIcons": "图标",
+  "habitIconReset": "重置图标",
+  "habitIconOption": "{icon, select, bookOpen{阅读} dumbbell{运动} footprints{步行} glassWater{喝水} moon{睡眠} sun{阳光} heart{健康} brain{学习} apple{营养} coffee{咖啡} music{音乐} pencil{写作} code{编程} leaf{自然} target{目标} bike{骑行} other{习惯图标}}"
 }

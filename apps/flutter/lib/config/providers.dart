@@ -284,7 +284,10 @@ final focusPresetsProvider = StreamProvider<List<FocusPresetItem>>((ref) {
 });
 
 final productivityRepositoryProvider = Provider<ProductivityRepository>((ref) {
-  return DriftProductivityRepository(ref.watch(appDatabaseProvider));
+  return DriftProductivityRepository(
+    ref.watch(appDatabaseProvider),
+    clock: ref.watch(clockProvider),
+  );
 });
 
 final achievementRepositoryProvider = Provider<AchievementRepository>((ref) {

@@ -5,6 +5,7 @@ import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/data/services/local/habit_row_mapping.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/domain/models/habits/habit_models.dart';
+import 'package:pomodoist/domain/models/habits/habit_icons.dart';
 import 'package:pomodoist/utils/result.dart';
 
 class DriftHabitRepository implements HabitRepository {
@@ -68,6 +69,7 @@ class DriftHabitRepository implements HabitRepository {
         id: _uuid.v4(),
         userId: localUserId,
         title: draft.title,
+        icon: normalizeHabitIcon(draft.icon),
         projectId: draft.projectId,
         reminderMinutes: draft.reminderMinutes,
         scheduleHistory: [draft.schedule(draft.startDate)],
@@ -114,6 +116,9 @@ class DriftHabitRepository implements HabitRepository {
           id: id,
           userId: old.userId,
           title: draft.title,
+          icon: draft.icon == old.icon
+              ? old.icon
+              : normalizeHabitIcon(draft.icon),
           projectId: draft.projectId,
           reminderMinutes: draft.reminderMinutes,
           scheduleHistory: history,
@@ -122,6 +127,29 @@ class DriftHabitRepository implements HabitRepository {
         ),
         'habit.update',
       );
+    }),
+  );
+  @override
+  Future<Result<void>> updateIcon(
+    String id,
+    String? icon, {
+    required DateTime now,
+  }) => Result.capture(
+    () => _db.transaction(() async {
+      final old = await _find(id);
+      final normalized = normalizeHabitIcon(icon);
+      if (old.icon == normalized) return;
+      final stamp = now.toUtc();
+      await (_db.update(_db.habits)..where((h) => h.id.equals(id))).write(
+        HabitsCompanion(icon: Value(normalized), updatedAt: Value(stamp)),
+      );
+      await _outbox.enqueueBatch([
+        SyncQueueCommand(
+          type: 'habit.update',
+          clientId: id,
+          payload: {'icon': normalized, 'updatedAt': stamp.toIso8601String()},
+        ),
+      ], occurredAt: stamp);
     }),
   );
   @override
@@ -134,6 +162,7 @@ class DriftHabitRepository implements HabitRepository {
               id: id,
               userId: old.userId,
               title: old.title,
+              icon: old.icon,
               projectId: old.projectId,
               reminderMinutes: old.reminderMinutes,
               scheduleHistory: old.scheduleHistory,
