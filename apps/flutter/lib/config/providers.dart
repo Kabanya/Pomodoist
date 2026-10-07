@@ -30,6 +30,7 @@ import 'package:pomodoist/data/repositories/notifications/local_notification_rep
 import 'package:pomodoist/data/repositories/notifications/notification_repository.dart';
 import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/data/services/local/sync_owner_store.dart';
 import 'package:pomodoist/config/clock_provider.dart';
 export 'package:pomodoist/config/clock_provider.dart' show clockProvider;
 import 'package:pomodoist/utils/timer_engine.dart';
@@ -199,10 +200,15 @@ final localSyncOwnerProvider = StreamProvider<String?>((ref) {
 });
 
 final syncQueueRepositoryProvider = Provider<OutboxService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
   final owner = ref.watch(localSyncOwnerProvider);
   return DriftOutboxService(
-    ref.watch(appDatabaseProvider),
-    expectedOwner: Future.value(owner.value),
+    db,
+    // Capture the persisted owner before starting a mutation, even while the
+    // stream is loading. Waiting for that stream inside a transaction can stall.
+    expectedOwner: owner.hasValue
+        ? Future.value(owner.requireValue)
+        : SyncOwnerStore(db, const Uuid()).owner().then((row) => row?.cursor),
   );
 });
 
