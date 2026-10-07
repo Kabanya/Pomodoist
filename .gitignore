@@ -225,3 +225,6 @@ docs/assets/*
 /apps/flutter/assets/branding/mascot/*.glb
 /apps/flutter/assets/branding/mascot/*.blend*
 docs/assets/app-store-grid-reference.png
+
+# Local agent scratch files
+**/.superpowers/

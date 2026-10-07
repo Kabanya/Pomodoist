@@ -187,7 +187,10 @@ void main() {
       ),
     );
 
-    final total = find.text('12h 33m');
+    final total = find.descendant(
+      of: find.byKey(const Key('reports-weekly-totals')),
+      matching: find.text('12h 33m'),
+    );
     expect(total, findsOneWidget);
     final paragraph = tester.renderObject<RenderParagraph>(total);
     expect(paragraph.didExceedMaxLines, isFalse);

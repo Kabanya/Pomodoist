@@ -907,6 +907,7 @@ void main() {
       const Key('settings-focus-completion-celebration-switch'),
     );
     await tester.ensureVisible(celebration);
+    await tester.pumpAndSettle();
     expect(celebration, findsOneWidget);
     await tester.tap(celebration);
     await tester.pump();
@@ -1060,9 +1061,7 @@ void main() {
     expect(fake.stopReasons, [StopFocusReason.stopped]);
   });
 
-  testWidgets('MiniFocusPlayer starts ready interval', (
-    tester,
-  ) async {
+  testWidgets('MiniFocusPlayer starts ready interval', (tester) async {
     final now = DateTime.utc(2026, 4, 27, 10);
     final fake = _FakeFocusRepository(
       activeRun: _focusRun(now),
