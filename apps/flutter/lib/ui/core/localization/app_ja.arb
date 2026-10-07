@@ -416,6 +416,7 @@
   "settingsShortcutsToggleSidebar": "サイドバーを切り替え",
   "settingsShortcutsToggleTaskDetails": "タスクの詳細を表示・非表示",
   "settingsShortcutsToggleTaskDetailsAlternate": "タスクの詳細（2つ目のショートカット）",
+  "settingsShortcutsFocusAlternate": "フォーカス（2つ目のショートカット）",
   "settingsShortcutsGlobalQuickAdd": "グローバルクイック追加",
   "settingsShortcutsGlobalQuickAddSubtitle": "Pomodoistがアクティブでないときも使えます。",
   "settingsShortcutsRecordTitle": "ショートカットを押してください",
@@ -891,7 +892,7 @@
       }
     }
   },
-  "reportsIntervalCountSemantics": "集中インターバル{completed}回完了、目標未設定",
+  "reportsIntervalCountSemantics": "集中インターバル{completed}回完了、タスクの見積もりなし",
   "@reportsIntervalCountSemantics": {
     "placeholders": {
       "completed": {
@@ -1955,5 +1956,27 @@
   "accountAvatarTravel": "旅行と場所",
   "accountAvatarObjects": "物",
   "accountAvatarSymbols": "記号",
-  "accountAvatarFlags": "旗"
+  "accountAvatarFlags": "旗",
+  "reportsPlanEstimates": "今日以前が期限の未完了タスクの見積もり",
+  "reportsDayInProgress": "今日はまだ進行中です",
+  "reportsTimeByProject": "時間の使い道",
+  "reportsNoProject": "プロジェクトなし",
+  "reportsNoTask": "関連タスクなし",
+  "reportsUnavailableName": "{name}（利用不可）",
+  "reportsUnknownProject": "利用できないプロジェクト",
+  "reportsUnknownTask": "利用できないタスク",
+  "reportsNoProjectFocus": "この期間に完了した集中セッションはありません",
+  "reportsProjectShare": "集中時間の{percent}%",
+  "habitIcon": "習慣のアイコン",
+  "habitIconEmoji": "絵文字",
+  "habitIconIcons": "アイコン",
+  "habitIconReset": "アイコンをリセット",
+  "habitIconOption": "{icon, select, bookOpen{読書} dumbbell{運動} footprints{ウォーキング} glassWater{水分補給} moon{睡眠} sun{太陽} heart{健康} brain{学習} apple{栄養} coffee{コーヒー} music{音楽} pencil{執筆} code{プログラミング} leaf{自然} target{目標} bike{サイクリング} other{習慣のアイコン}}",
+  "settingsSynchronization": "同期",
+  "settingsRestartSync": "同期を再開",
+  "settingsSyncRunning": "データを確認して同期しています…",
+  "settingsSyncComplete": "同期が完了しました。",
+  "settingsSyncPending": "送信または復元を待っている変更があります。",
+  "settingsSyncFailed": "同期が完了していません。自動的に再試行します。",
+  "syncUnresolvedChanges": "拒否: {rejected}。復元待ち: {repair}。"
 }

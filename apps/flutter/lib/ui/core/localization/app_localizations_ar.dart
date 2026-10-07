@@ -939,6 +939,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'تفاصيل المهمة (الاختصار الثاني)';
 
   @override
+  String get settingsShortcutsFocusAlternate => 'التركيز (الاختصار الثاني)';
+
+  @override
   String get settingsShortcutsGlobalQuickAdd => 'إضافة سريعة عامة';
 
   @override
@@ -1834,7 +1837,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String reportsIntervalCountSemantics(int completed) {
-    return 'اكتملت $completed فترات تركيز؛ لا يوجد هدف';
+    return 'اكتملت $completed فترات تركيز؛ لا توجد تقديرات للمهام';
   }
 
   @override
@@ -4113,4 +4116,100 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get accountAvatarFlags => 'الأعلام';
+
+  @override
+  String get reportsPlanEstimates =>
+      'تقديرات المهام المفتوحة المستحقة اليوم أو قبله';
+
+  @override
+  String get reportsDayInProgress => 'اليوم لم ينتهِ بعد';
+
+  @override
+  String get reportsTimeByProject => 'كيف قضيت وقتك';
+
+  @override
+  String get reportsNoProject => 'بدون مشروع';
+
+  @override
+  String get reportsNoTask => 'بدون مهمة مرتبطة';
+
+  @override
+  String reportsUnavailableName(String name) {
+    return '$name (غير متاح)';
+  }
+
+  @override
+  String get reportsUnknownProject => 'مشروع غير متاح';
+
+  @override
+  String get reportsUnknownTask => 'مهمة غير متاحة';
+
+  @override
+  String get reportsNoProjectFocus =>
+      'لا توجد جلسات تركيز مكتملة في هذه الفترة';
+
+  @override
+  String reportsProjectShare(String percent) {
+    return '$percent٪ من وقت التركيز';
+  }
+
+  @override
+  String get habitIcon => 'رمز العادة';
+
+  @override
+  String get habitIconEmoji => 'رموز تعبيرية';
+
+  @override
+  String get habitIconIcons => 'أيقونات';
+
+  @override
+  String get habitIconReset => 'إعادة تعيين الرمز';
+
+  @override
+  String habitIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'bookOpen': 'القراءة',
+      'dumbbell': 'التمرين',
+      'footprints': 'المشي',
+      'glassWater': 'الماء',
+      'moon': 'النوم',
+      'sun': 'الشمس',
+      'heart': 'الصحة',
+      'brain': 'التعلم',
+      'apple': 'التغذية',
+      'coffee': 'القهوة',
+      'music': 'الموسيقى',
+      'pencil': 'الكتابة',
+      'code': 'البرمجة',
+      'leaf': 'الطبيعة',
+      'target': 'الهدف',
+      'bike': 'ركوب الدراجة',
+      'other': 'رمز العادة',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsSynchronization => 'المزامنة';
+
+  @override
+  String get settingsRestartSync => 'إعادة تشغيل المزامنة';
+
+  @override
+  String get settingsSyncRunning => 'جارٍ فحص البيانات ومزامنتها…';
+
+  @override
+  String get settingsSyncComplete => 'اكتملت المزامنة.';
+
+  @override
+  String get settingsSyncPending => 'بعض التغييرات تنتظر الإرسال أو الاستعادة.';
+
+  @override
+  String get settingsSyncFailed =>
+      'لم تكتمل المزامنة. سنعيد المحاولة تلقائيًا.';
+
+  @override
+  String syncUnresolvedChanges(int rejected, int repair) {
+    return 'مرفوضة: $rejected. بانتظار الاستعادة: $repair.';
+  }
 }

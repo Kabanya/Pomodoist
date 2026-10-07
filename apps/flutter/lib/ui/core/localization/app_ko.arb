@@ -416,6 +416,7 @@
   "settingsShortcutsToggleSidebar": "사이드바 전환",
   "settingsShortcutsToggleTaskDetails": "작업 세부 정보 표시 또는 숨기기",
   "settingsShortcutsToggleTaskDetailsAlternate": "작업 세부 정보 (두 번째 단축키)",
+  "settingsShortcutsFocusAlternate": "집중 (두 번째 단축키)",
   "settingsShortcutsGlobalQuickAdd": "전역 빠른 추가",
   "settingsShortcutsGlobalQuickAddSubtitle": "Pomodoist가 활성 상태가 아니어도 작동합니다.",
   "settingsShortcutsRecordTitle": "단축키를 누르세요",
@@ -891,7 +892,7 @@
       }
     }
   },
-  "reportsIntervalCountSemantics": "집중 구간 {completed}회 완료, 목표 미설정",
+  "reportsIntervalCountSemantics": "집중 구간 {completed}회 완료, 작업 예상 횟수 미설정",
   "@reportsIntervalCountSemantics": {
     "placeholders": {
       "completed": {
@@ -1955,5 +1956,27 @@
   "accountAvatarTravel": "여행과 장소",
   "accountAvatarObjects": "사물",
   "accountAvatarSymbols": "기호",
-  "accountAvatarFlags": "깃발"
+  "accountAvatarFlags": "깃발",
+  "reportsPlanEstimates": "오늘 또는 이전에 마감인 미완료 작업의 예상 횟수",
+  "reportsDayInProgress": "오늘은 아직 진행 중입니다",
+  "reportsTimeByProject": "시간을 어디에 썼나요",
+  "reportsNoProject": "프로젝트 없음",
+  "reportsNoTask": "연결된 작업 없음",
+  "reportsUnavailableName": "{name} (사용 불가)",
+  "reportsUnknownProject": "사용할 수 없는 프로젝트",
+  "reportsUnknownTask": "사용할 수 없는 작업",
+  "reportsNoProjectFocus": "이 기간에 완료된 집중 세션이 없습니다",
+  "reportsProjectShare": "집중 시간의 {percent}%",
+  "habitIcon": "습관 아이콘",
+  "habitIconEmoji": "이모지",
+  "habitIconIcons": "아이콘",
+  "habitIconReset": "아이콘 초기화",
+  "habitIconOption": "{icon, select, bookOpen{독서} dumbbell{운동} footprints{걷기} glassWater{물} moon{수면} sun{태양} heart{건강} brain{학습} apple{영양} coffee{커피} music{음악} pencil{글쓰기} code{코딩} leaf{자연} target{목표} bike{자전거} other{습관 아이콘}}",
+  "settingsSynchronization": "동기화",
+  "settingsRestartSync": "동기화 다시 시작",
+  "settingsSyncRunning": "데이터를 확인하고 동기화하는 중…",
+  "settingsSyncComplete": "동기화가 완료되었습니다.",
+  "settingsSyncPending": "전송 또는 복구를 기다리는 변경 사항이 있습니다.",
+  "settingsSyncFailed": "동기화가 완료되지 않았습니다. 자동으로 다시 시도합니다.",
+  "syncUnresolvedChanges": "거부됨: {rejected}. 복구 대기 중: {repair}."
 }

@@ -156,6 +156,7 @@ class Habit {
     required this.id,
     required this.userId,
     required this.title,
+    this.icon,
     this.projectId,
     this.reminderMinutes,
     required Iterable<HabitSchedule> scheduleHistory,
@@ -180,7 +181,7 @@ class Habit {
     }
   }
   final String id, userId, title;
-  final String? projectId;
+  final String? icon, projectId;
   final int? reminderMinutes;
   final List<HabitSchedule> scheduleHistory;
   final DateTime createdAt, updatedAt;
@@ -204,6 +205,7 @@ class Habit {
     'id': id,
     'userId': userId,
     'title': title,
+    'icon': icon,
     'projectId': projectId,
     'reminderMinutes': reminderMinutes,
     'scheduleHistory': scheduleHistory.map((s) => s.toJson()).toList(),
@@ -215,6 +217,7 @@ class Habit {
     id: json['id'] as String,
     userId: json['userId'] as String,
     title: json['title'] as String,
+    icon: json['icon'] as String?,
     projectId: json['projectId'] as String?,
     reminderMinutes: json['reminderMinutes'] as int?,
     scheduleHistory: (json['scheduleHistory'] as List).map(
@@ -235,6 +238,7 @@ class HabitDraft {
     int targetPerDay = 1,
     Map<HabitDayPeriod, int> periodTargets = const {},
     this.dayPeriod = HabitDayPeriod.automatic,
+    this.icon,
     this.projectId,
     this.reminderMinutes,
   }) : periodTargets = Map.unmodifiable(periodTargets),
@@ -260,7 +264,7 @@ class HabitDraft {
   final int targetPerDay;
   final HabitDayPeriod dayPeriod;
   final Map<HabitDayPeriod, int> periodTargets;
-  final String? projectId;
+  final String? icon, projectId;
   final int? reminderMinutes;
   HabitSchedule schedule(DateTime effectiveFrom) => HabitSchedule(
     effectiveFrom: effectiveFrom,

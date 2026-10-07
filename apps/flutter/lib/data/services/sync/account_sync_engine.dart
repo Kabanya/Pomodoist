@@ -1,5 +1,7 @@
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'dart:convert';
+import 'account_sync_failure.dart';
+export 'account_sync_failure.dart';
 
 import 'package:app_account/app_account.dart';
 import 'package:drift/drift.dart';
@@ -23,6 +25,7 @@ part 'account_sync_operations.dart';
 part 'account_sync_pull.dart';
 part 'account_sync_upserts.dart';
 part 'account_sync_state.dart';
+part 'account_sync_recovery.dart';
 
 class AccountSyncEngine {
   AccountSyncEngine({
@@ -61,6 +64,8 @@ class AccountSyncEngine {
   DateTime? _retentionCutoff;
   bool Function()? _isSessionCurrent;
   String? _syncUserId;
+  int _pushRequestsLeft = 64;
+  final _committedTypes = <String>{};
   void _checkSession() {
     if (_isSessionCurrent?.call() == false ||
         (_syncUserId != null && _account.currentUserId != _syncUserId)) {
@@ -93,15 +98,37 @@ class AccountSyncEngine {
           _checkSession();
           await _prepareAccount();
           _checkSession();
-          final imported = await importLocalSnapshotIfNeeded();
+          _committedTypes.clear();
+          final imported = await importLocalSnapshotIfNeeded(push: false);
           if (imported) {
             await _broadcastSyncHint();
           }
-          return <String>{
-            ...await syncShared(),
-            ...await pushPending(),
-            ...await pullLatest(),
-          };
+          await _capturePendingOperations();
+          Object? failure;
+          for (final stage in [
+            syncShared,
+            pushPending,
+            pullLatest,
+            recoverUnreadable,
+          ]) {
+            try {
+              _committedTypes.addAll(await stage());
+            } on _StaleSyncSession {
+              rethrow;
+            } catch (error) {
+              _checkSession();
+              if (error is PostgrestException && error.code == 'PT401') rethrow;
+              failure ??= error;
+            }
+            _checkSession();
+          }
+          if (failure != null) {
+            throw AccountSyncPartialFailure(
+              Set.unmodifiable(_committedTypes),
+              failure,
+            );
+          }
+          return Set<String>.of(_committedTypes);
         } on _StaleSyncSession {
           return <String>{};
         } finally {

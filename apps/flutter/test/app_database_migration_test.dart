@@ -13,7 +13,7 @@ void main() {
   const inProgressId = 'kanban-status-in-progress-v1';
   const doneId = 'kanban-status-done-v1';
 
-  group('schema v10', () {
+  group('schema v12', () {
     late AppDatabase db;
     migrations.InitializedSchema? initializedV3;
 
@@ -41,15 +41,15 @@ void main() {
         (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
           'user_version',
         ),
-        10,
+        12,
       );
     });
 
     test('fresh database creates compact Kanban schema and index', () async {
       db = AppDatabase(NativeDatabase.memory());
 
-      expect(db.schemaVersion, 10);
-      if (db.schemaVersion != 10) {
+      expect(db.schemaVersion, 12);
+      if (db.schemaVersion != 12) {
         return;
       }
       await db
@@ -61,6 +61,7 @@ void main() {
       await db.customSelect('SELECT kind FROM task_labels LIMIT 0').get();
       await db.customSelect('SELECT icon FROM projects LIMIT 0').get();
       await db.customSelect('SELECT icon FROM labels LIMIT 0').get();
+      await db.customSelect('SELECT icon FROM habits LIMIT 0').get();
       await db.customSelect('SELECT * FROM kanban_settings LIMIT 0').get();
 
       final index = await db
@@ -148,8 +149,8 @@ void main() {
         final version = await db
             .customSelect('PRAGMA user_version')
             .getSingle();
-        expect(version.read<int>('user_version'), 10);
-        if (version.read<int>('user_version') != 10) {
+        expect(version.read<int>('user_version'), 12);
+        if (version.read<int>('user_version') != 12) {
           return;
         }
         final userLabels = await db
@@ -235,7 +236,7 @@ void main() {
 
       final version = await db.customSelect('PRAGMA user_version').getSingle();
 
-      expect(version.read<int>('user_version'), 10);
+      expect(version.read<int>('user_version'), 12);
       expect(
         await _columnNames(db, 'labels'),
         containsAll(['kind', 'system_key', 'icon']),
@@ -250,7 +251,7 @@ void main() {
       final retriedVersion = await db
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(retriedVersion.read<int>('user_version'), 10);
+      expect(retriedVersion.read<int>('user_version'), 12);
     });
   });
 

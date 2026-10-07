@@ -187,7 +187,10 @@ void main() {
       ),
     );
 
-    final total = find.text('12h 33m');
+    final total = find.descendant(
+      of: find.byKey(const Key('reports-weekly-totals')),
+      matching: find.text('12h 33m'),
+    );
     expect(total, findsOneWidget);
     final paragraph = tester.renderObject<RenderParagraph>(total);
     expect(paragraph.didExceedMaxLines, isFalse);
@@ -251,7 +254,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('weekly chart repaints labels when an LTR locale changes', (
+  testWidgets('weekly bars update labels when an LTR locale changes', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -295,17 +298,23 @@ void main() {
       ),
     );
     await tester.pump();
-    final chartFinder = find.descendant(
-      of: find.byKey(const Key('reports-weekly-chart')),
-      matching: find.byType(CustomPaint),
+    final chartFinder = find.byKey(const Key('reports-weekly-chart'));
+    expect(
+      find.descendant(of: chartFinder, matching: find.text('Mon')),
+      findsOneWidget,
     );
-    final oldPainter = tester.widget<CustomPaint>(chartFinder).painter!;
 
     locale.value = const Locale('ru');
     await tester.pump();
-    final newPainter = tester.widget<CustomPaint>(chartFinder).painter!;
 
-    expect(newPainter.shouldRepaint(oldPainter), isTrue);
+    expect(
+      find.descendant(of: chartFinder, matching: find.text('Пн')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: chartFinder, matching: find.text('Mon')),
+      findsNothing,
+    );
   });
 }
 
@@ -398,7 +407,7 @@ const _achievements = [
 ];
 
 List<ProductivityDaySummary> _weeklyDays({bool empty = false}) {
-  final start = DateTime(2026, 7, 6);
+  final start = DateTime(2026, 7, 5);
   return [
     for (var index = 0; index < 7; index++)
       ProductivityDaySummary(

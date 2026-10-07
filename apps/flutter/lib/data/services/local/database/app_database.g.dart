@@ -11743,6 +11743,344 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
   }
 }
 
+class $AccountRecoverySnapshotsTable extends AccountRecoverySnapshots
+    with TableInfo<$AccountRecoverySnapshotsTable, AccountRecoverySnapshotRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AccountRecoverySnapshotsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _ownerIdMeta = const VerificationMeta(
+    'ownerId',
+  );
+  @override
+  late final GeneratedColumn<String> ownerId = GeneratedColumn<String>(
+    'owner_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _schemaVersionMeta = const VerificationMeta(
+    'schemaVersion',
+  );
+  @override
+  late final GeneratedColumn<int> schemaVersion = GeneratedColumn<int>(
+    'schema_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
+    'payloadJson',
+  );
+  @override
+  late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
+    'payload_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    ownerId,
+    schemaVersion,
+    payloadJson,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'account_recovery_snapshots';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AccountRecoverySnapshotRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('owner_id')) {
+      context.handle(
+        _ownerIdMeta,
+        ownerId.isAcceptableOrUnknown(data['owner_id']!, _ownerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ownerIdMeta);
+    }
+    if (data.containsKey('schema_version')) {
+      context.handle(
+        _schemaVersionMeta,
+        schemaVersion.isAcceptableOrUnknown(
+          data['schema_version']!,
+          _schemaVersionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schemaVersionMeta);
+    }
+    if (data.containsKey('payload_json')) {
+      context.handle(
+        _payloadJsonMeta,
+        payloadJson.isAcceptableOrUnknown(
+          data['payload_json']!,
+          _payloadJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadJsonMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {ownerId};
+  @override
+  AccountRecoverySnapshotRow map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AccountRecoverySnapshotRow(
+      ownerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_id'],
+      )!,
+      schemaVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}schema_version'],
+      )!,
+      payloadJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_json'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $AccountRecoverySnapshotsTable createAlias(String alias) {
+    return $AccountRecoverySnapshotsTable(attachedDatabase, alias);
+  }
+}
+
+class AccountRecoverySnapshotRow extends DataClass
+    implements Insertable<AccountRecoverySnapshotRow> {
+  final String ownerId;
+  final int schemaVersion;
+  final String payloadJson;
+  final DateTime createdAt;
+  const AccountRecoverySnapshotRow({
+    required this.ownerId,
+    required this.schemaVersion,
+    required this.payloadJson,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['owner_id'] = Variable<String>(ownerId);
+    map['schema_version'] = Variable<int>(schemaVersion);
+    map['payload_json'] = Variable<String>(payloadJson);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  AccountRecoverySnapshotsCompanion toCompanion(bool nullToAbsent) {
+    return AccountRecoverySnapshotsCompanion(
+      ownerId: Value(ownerId),
+      schemaVersion: Value(schemaVersion),
+      payloadJson: Value(payloadJson),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory AccountRecoverySnapshotRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AccountRecoverySnapshotRow(
+      ownerId: serializer.fromJson<String>(json['ownerId']),
+      schemaVersion: serializer.fromJson<int>(json['schemaVersion']),
+      payloadJson: serializer.fromJson<String>(json['payloadJson']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'ownerId': serializer.toJson<String>(ownerId),
+      'schemaVersion': serializer.toJson<int>(schemaVersion),
+      'payloadJson': serializer.toJson<String>(payloadJson),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  AccountRecoverySnapshotRow copyWith({
+    String? ownerId,
+    int? schemaVersion,
+    String? payloadJson,
+    DateTime? createdAt,
+  }) => AccountRecoverySnapshotRow(
+    ownerId: ownerId ?? this.ownerId,
+    schemaVersion: schemaVersion ?? this.schemaVersion,
+    payloadJson: payloadJson ?? this.payloadJson,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  AccountRecoverySnapshotRow copyWithCompanion(
+    AccountRecoverySnapshotsCompanion data,
+  ) {
+    return AccountRecoverySnapshotRow(
+      ownerId: data.ownerId.present ? data.ownerId.value : this.ownerId,
+      schemaVersion: data.schemaVersion.present
+          ? data.schemaVersion.value
+          : this.schemaVersion,
+      payloadJson: data.payloadJson.present
+          ? data.payloadJson.value
+          : this.payloadJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountRecoverySnapshotRow(')
+          ..write('ownerId: $ownerId, ')
+          ..write('schemaVersion: $schemaVersion, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(ownerId, schemaVersion, payloadJson, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AccountRecoverySnapshotRow &&
+          other.ownerId == this.ownerId &&
+          other.schemaVersion == this.schemaVersion &&
+          other.payloadJson == this.payloadJson &&
+          other.createdAt == this.createdAt);
+}
+
+class AccountRecoverySnapshotsCompanion
+    extends UpdateCompanion<AccountRecoverySnapshotRow> {
+  final Value<String> ownerId;
+  final Value<int> schemaVersion;
+  final Value<String> payloadJson;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const AccountRecoverySnapshotsCompanion({
+    this.ownerId = const Value.absent(),
+    this.schemaVersion = const Value.absent(),
+    this.payloadJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AccountRecoverySnapshotsCompanion.insert({
+    required String ownerId,
+    required int schemaVersion,
+    required String payloadJson,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : ownerId = Value(ownerId),
+       schemaVersion = Value(schemaVersion),
+       payloadJson = Value(payloadJson),
+       createdAt = Value(createdAt);
+  static Insertable<AccountRecoverySnapshotRow> custom({
+    Expression<String>? ownerId,
+    Expression<int>? schemaVersion,
+    Expression<String>? payloadJson,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (ownerId != null) 'owner_id': ownerId,
+      if (schemaVersion != null) 'schema_version': schemaVersion,
+      if (payloadJson != null) 'payload_json': payloadJson,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AccountRecoverySnapshotsCompanion copyWith({
+    Value<String>? ownerId,
+    Value<int>? schemaVersion,
+    Value<String>? payloadJson,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return AccountRecoverySnapshotsCompanion(
+      ownerId: ownerId ?? this.ownerId,
+      schemaVersion: schemaVersion ?? this.schemaVersion,
+      payloadJson: payloadJson ?? this.payloadJson,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (ownerId.present) {
+      map['owner_id'] = Variable<String>(ownerId.value);
+    }
+    if (schemaVersion.present) {
+      map['schema_version'] = Variable<int>(schemaVersion.value);
+    }
+    if (payloadJson.present) {
+      map['payload_json'] = Variable<String>(payloadJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountRecoverySnapshotsCompanion(')
+          ..write('ownerId: $ownerId, ')
+          ..write('schemaVersion: $schemaVersion, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SyncStateTable extends SyncState
     with TableInfo<$SyncStateTable, SyncStateRow> {
   @override
@@ -13985,6 +14323,15 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, HabitRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _projectIdMeta = const VerificationMeta(
     'projectId',
   );
@@ -14060,6 +14407,7 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, HabitRow> {
     id,
     userId,
     title,
+    icon,
     projectId,
     reminderMinutes,
     scheduleHistoryJson,
@@ -14099,6 +14447,12 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, HabitRow> {
       );
     } else if (isInserting) {
       context.missing(_titleMeta);
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
     }
     if (data.containsKey('project_id')) {
       context.handle(
@@ -14169,6 +14523,10 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, HabitRow> {
         DriftSqlType.string,
         data['${effectivePrefix}title'],
       )!,
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      ),
       projectId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}project_id'],
@@ -14206,6 +14564,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
   final String id;
   final String userId;
   final String title;
+  final String? icon;
   final String? projectId;
   final int? reminderMinutes;
   final String scheduleHistoryJson;
@@ -14216,6 +14575,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
     required this.id,
     required this.userId,
     required this.title,
+    this.icon,
     this.projectId,
     this.reminderMinutes,
     required this.scheduleHistoryJson,
@@ -14229,6 +14589,9 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
     map['id'] = Variable<String>(id);
     map['user_id'] = Variable<String>(userId);
     map['title'] = Variable<String>(title);
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<String>(icon);
+    }
     if (!nullToAbsent || projectId != null) {
       map['project_id'] = Variable<String>(projectId);
     }
@@ -14247,6 +14610,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
       id: Value(id),
       userId: Value(userId),
       title: Value(title),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
       projectId: projectId == null && nullToAbsent
           ? const Value.absent()
           : Value(projectId),
@@ -14269,6 +14633,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
       id: serializer.fromJson<String>(json['id']),
       userId: serializer.fromJson<String>(json['userId']),
       title: serializer.fromJson<String>(json['title']),
+      icon: serializer.fromJson<String?>(json['icon']),
       projectId: serializer.fromJson<String?>(json['projectId']),
       reminderMinutes: serializer.fromJson<int?>(json['reminderMinutes']),
       scheduleHistoryJson: serializer.fromJson<String>(
@@ -14286,6 +14651,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
       'id': serializer.toJson<String>(id),
       'userId': serializer.toJson<String>(userId),
       'title': serializer.toJson<String>(title),
+      'icon': serializer.toJson<String?>(icon),
       'projectId': serializer.toJson<String?>(projectId),
       'reminderMinutes': serializer.toJson<int?>(reminderMinutes),
       'scheduleHistoryJson': serializer.toJson<String>(scheduleHistoryJson),
@@ -14299,6 +14665,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
     String? id,
     String? userId,
     String? title,
+    Value<String?> icon = const Value.absent(),
     Value<String?> projectId = const Value.absent(),
     Value<int?> reminderMinutes = const Value.absent(),
     String? scheduleHistoryJson,
@@ -14309,6 +14676,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
     id: id ?? this.id,
     userId: userId ?? this.userId,
     title: title ?? this.title,
+    icon: icon.present ? icon.value : this.icon,
     projectId: projectId.present ? projectId.value : this.projectId,
     reminderMinutes: reminderMinutes.present
         ? reminderMinutes.value
@@ -14323,6 +14691,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
       id: data.id.present ? data.id.value : this.id,
       userId: data.userId.present ? data.userId.value : this.userId,
       title: data.title.present ? data.title.value : this.title,
+      icon: data.icon.present ? data.icon.value : this.icon,
       projectId: data.projectId.present ? data.projectId.value : this.projectId,
       reminderMinutes: data.reminderMinutes.present
           ? data.reminderMinutes.value
@@ -14342,6 +14711,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('title: $title, ')
+          ..write('icon: $icon, ')
           ..write('projectId: $projectId, ')
           ..write('reminderMinutes: $reminderMinutes, ')
           ..write('scheduleHistoryJson: $scheduleHistoryJson, ')
@@ -14357,6 +14727,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
     id,
     userId,
     title,
+    icon,
     projectId,
     reminderMinutes,
     scheduleHistoryJson,
@@ -14371,6 +14742,7 @@ class HabitRow extends DataClass implements Insertable<HabitRow> {
           other.id == this.id &&
           other.userId == this.userId &&
           other.title == this.title &&
+          other.icon == this.icon &&
           other.projectId == this.projectId &&
           other.reminderMinutes == this.reminderMinutes &&
           other.scheduleHistoryJson == this.scheduleHistoryJson &&
@@ -14383,6 +14755,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
   final Value<String> id;
   final Value<String> userId;
   final Value<String> title;
+  final Value<String?> icon;
   final Value<String?> projectId;
   final Value<int?> reminderMinutes;
   final Value<String> scheduleHistoryJson;
@@ -14394,6 +14767,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
     this.title = const Value.absent(),
+    this.icon = const Value.absent(),
     this.projectId = const Value.absent(),
     this.reminderMinutes = const Value.absent(),
     this.scheduleHistoryJson = const Value.absent(),
@@ -14406,6 +14780,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
     required String id,
     required String userId,
     required String title,
+    this.icon = const Value.absent(),
     this.projectId = const Value.absent(),
     this.reminderMinutes = const Value.absent(),
     required String scheduleHistoryJson,
@@ -14423,6 +14798,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
     Expression<String>? id,
     Expression<String>? userId,
     Expression<String>? title,
+    Expression<String>? icon,
     Expression<String>? projectId,
     Expression<int>? reminderMinutes,
     Expression<String>? scheduleHistoryJson,
@@ -14435,6 +14811,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
       if (id != null) 'id': id,
       if (userId != null) 'user_id': userId,
       if (title != null) 'title': title,
+      if (icon != null) 'icon': icon,
       if (projectId != null) 'project_id': projectId,
       if (reminderMinutes != null) 'reminder_minutes': reminderMinutes,
       if (scheduleHistoryJson != null)
@@ -14450,6 +14827,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
     Value<String>? id,
     Value<String>? userId,
     Value<String>? title,
+    Value<String?>? icon,
     Value<String?>? projectId,
     Value<int?>? reminderMinutes,
     Value<String>? scheduleHistoryJson,
@@ -14462,6 +14840,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
       id: id ?? this.id,
       userId: userId ?? this.userId,
       title: title ?? this.title,
+      icon: icon ?? this.icon,
       projectId: projectId ?? this.projectId,
       reminderMinutes: reminderMinutes ?? this.reminderMinutes,
       scheduleHistoryJson: scheduleHistoryJson ?? this.scheduleHistoryJson,
@@ -14483,6 +14862,9 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
     }
     if (title.present) {
       map['title'] = Variable<String>(title.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
     }
     if (projectId.present) {
       map['project_id'] = Variable<String>(projectId.value);
@@ -14516,6 +14898,7 @@ class HabitsCompanion extends UpdateCompanion<HabitRow> {
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('title: $title, ')
+          ..write('icon: $icon, ')
           ..write('projectId: $projectId, ')
           ..write('reminderMinutes: $reminderMinutes, ')
           ..write('scheduleHistoryJson: $scheduleHistoryJson, ')
@@ -15064,6 +15447,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $SyncCommandsTable syncCommands = $SyncCommandsTable(this);
+  late final $AccountRecoverySnapshotsTable accountRecoverySnapshots =
+      $AccountRecoverySnapshotsTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
   late final $GoogleCalendarConnectionsTable googleCalendarConnections =
       $GoogleCalendarConnectionsTable(this);
@@ -15120,6 +15505,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     focusEvents,
     focusDailyStats,
     syncCommands,
+    accountRecoverySnapshots,
     syncState,
     googleCalendarConnections,
     googleCalendarEventLinks,
@@ -20836,6 +21222,210 @@ typedef $$SyncCommandsTableProcessedTableManager =
       SyncCommandRow,
       PrefetchHooks Function()
     >;
+typedef $$AccountRecoverySnapshotsTableCreateCompanionBuilder =
+    AccountRecoverySnapshotsCompanion Function({
+      required String ownerId,
+      required int schemaVersion,
+      required String payloadJson,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$AccountRecoverySnapshotsTableUpdateCompanionBuilder =
+    AccountRecoverySnapshotsCompanion Function({
+      Value<String> ownerId,
+      Value<int> schemaVersion,
+      Value<String> payloadJson,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$AccountRecoverySnapshotsTableFilterComposer
+    extends Composer<_$AppDatabase, $AccountRecoverySnapshotsTable> {
+  $$AccountRecoverySnapshotsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get ownerId => $composableBuilder(
+    column: $table.ownerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get schemaVersion => $composableBuilder(
+    column: $table.schemaVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AccountRecoverySnapshotsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AccountRecoverySnapshotsTable> {
+  $$AccountRecoverySnapshotsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get ownerId => $composableBuilder(
+    column: $table.ownerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get schemaVersion => $composableBuilder(
+    column: $table.schemaVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AccountRecoverySnapshotsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AccountRecoverySnapshotsTable> {
+  $$AccountRecoverySnapshotsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get ownerId =>
+      $composableBuilder(column: $table.ownerId, builder: (column) => column);
+
+  GeneratedColumn<int> get schemaVersion => $composableBuilder(
+    column: $table.schemaVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$AccountRecoverySnapshotsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AccountRecoverySnapshotsTable,
+          AccountRecoverySnapshotRow,
+          $$AccountRecoverySnapshotsTableFilterComposer,
+          $$AccountRecoverySnapshotsTableOrderingComposer,
+          $$AccountRecoverySnapshotsTableAnnotationComposer,
+          $$AccountRecoverySnapshotsTableCreateCompanionBuilder,
+          $$AccountRecoverySnapshotsTableUpdateCompanionBuilder,
+          (
+            AccountRecoverySnapshotRow,
+            BaseReferences<
+              _$AppDatabase,
+              $AccountRecoverySnapshotsTable,
+              AccountRecoverySnapshotRow
+            >,
+          ),
+          AccountRecoverySnapshotRow,
+          PrefetchHooks Function()
+        > {
+  $$AccountRecoverySnapshotsTableTableManager(
+    _$AppDatabase db,
+    $AccountRecoverySnapshotsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AccountRecoverySnapshotsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$AccountRecoverySnapshotsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$AccountRecoverySnapshotsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> ownerId = const Value.absent(),
+                Value<int> schemaVersion = const Value.absent(),
+                Value<String> payloadJson = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AccountRecoverySnapshotsCompanion(
+                ownerId: ownerId,
+                schemaVersion: schemaVersion,
+                payloadJson: payloadJson,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String ownerId,
+                required int schemaVersion,
+                required String payloadJson,
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => AccountRecoverySnapshotsCompanion.insert(
+                ownerId: ownerId,
+                schemaVersion: schemaVersion,
+                payloadJson: payloadJson,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AccountRecoverySnapshotsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AccountRecoverySnapshotsTable,
+      AccountRecoverySnapshotRow,
+      $$AccountRecoverySnapshotsTableFilterComposer,
+      $$AccountRecoverySnapshotsTableOrderingComposer,
+      $$AccountRecoverySnapshotsTableAnnotationComposer,
+      $$AccountRecoverySnapshotsTableCreateCompanionBuilder,
+      $$AccountRecoverySnapshotsTableUpdateCompanionBuilder,
+      (
+        AccountRecoverySnapshotRow,
+        BaseReferences<
+          _$AppDatabase,
+          $AccountRecoverySnapshotsTable,
+          AccountRecoverySnapshotRow
+        >,
+      ),
+      AccountRecoverySnapshotRow,
+      PrefetchHooks Function()
+    >;
 typedef $$SyncStateTableCreateCompanionBuilder =
     SyncStateCompanion Function({
       required String id,
@@ -21954,6 +22544,7 @@ typedef $$HabitsTableCreateCompanionBuilder =
       required String id,
       required String userId,
       required String title,
+      Value<String?> icon,
       Value<String?> projectId,
       Value<int?> reminderMinutes,
       required String scheduleHistoryJson,
@@ -21967,6 +22558,7 @@ typedef $$HabitsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> userId,
       Value<String> title,
+      Value<String?> icon,
       Value<String?> projectId,
       Value<int?> reminderMinutes,
       Value<String> scheduleHistoryJson,
@@ -21997,6 +22589,11 @@ class $$HabitsTableFilterComposer
 
   ColumnFilters<String> get title => $composableBuilder(
     column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get icon => $composableBuilder(
+    column: $table.icon,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -22055,6 +22652,11 @@ class $$HabitsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get projectId => $composableBuilder(
     column: $table.projectId,
     builder: (column) => ColumnOrderings(column),
@@ -22103,6 +22705,9 @@ class $$HabitsTableAnnotationComposer
 
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
 
   GeneratedColumn<String> get projectId =>
       $composableBuilder(column: $table.projectId, builder: (column) => column);
@@ -22158,6 +22763,7 @@ class $$HabitsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> userId = const Value.absent(),
                 Value<String> title = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
                 Value<String?> projectId = const Value.absent(),
                 Value<int?> reminderMinutes = const Value.absent(),
                 Value<String> scheduleHistoryJson = const Value.absent(),
@@ -22169,6 +22775,7 @@ class $$HabitsTableTableManager
                 id: id,
                 userId: userId,
                 title: title,
+                icon: icon,
                 projectId: projectId,
                 reminderMinutes: reminderMinutes,
                 scheduleHistoryJson: scheduleHistoryJson,
@@ -22182,6 +22789,7 @@ class $$HabitsTableTableManager
                 required String id,
                 required String userId,
                 required String title,
+                Value<String?> icon = const Value.absent(),
                 Value<String?> projectId = const Value.absent(),
                 Value<int?> reminderMinutes = const Value.absent(),
                 required String scheduleHistoryJson,
@@ -22193,6 +22801,7 @@ class $$HabitsTableTableManager
                 id: id,
                 userId: userId,
                 title: title,
+                icon: icon,
                 projectId: projectId,
                 reminderMinutes: reminderMinutes,
                 scheduleHistoryJson: scheduleHistoryJson,
@@ -22522,6 +23131,11 @@ class $AppDatabaseManager {
       $$FocusDailyStatsTableTableManager(_db, _db.focusDailyStats);
   $$SyncCommandsTableTableManager get syncCommands =>
       $$SyncCommandsTableTableManager(_db, _db.syncCommands);
+  $$AccountRecoverySnapshotsTableTableManager get accountRecoverySnapshots =>
+      $$AccountRecoverySnapshotsTableTableManager(
+        _db,
+        _db.accountRecoverySnapshots,
+      );
   $$SyncStateTableTableManager get syncState =>
       $$SyncStateTableTableManager(_db, _db.syncState);
   $$GoogleCalendarConnectionsTableTableManager get googleCalendarConnections =>

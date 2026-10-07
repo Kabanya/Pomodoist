@@ -36,6 +36,10 @@ const periods = [
 type Period = typeof periods[number];
 const period = z.enum(periods);
 const selection = z.enum(["automatic", ...periods]);
+const habitIcon = z.string().refine(
+  (v) => v.trim().length > 0 && [...v].length <= 32,
+  "Expected a nonblank habit icon of at most 32 Unicode code points.",
+).nullable();
 const goal = z.number().int().min(1).max(99);
 const quotas = z.object({
   morning: goal.optional(),
@@ -74,6 +78,7 @@ type Schedule = z.output<typeof scheduleSchema>;
 type Habit = {
   id: string;
   title: string;
+  icon?: string | null;
   projectId: string | null;
   reminderMinutes: number | null;
   scheduleHistory: Schedule[];
@@ -90,6 +95,7 @@ type Mark = {
 const publicHabit = z.object({
   id: z.uuid(),
   title: z.string(),
+  icon: habitIcon,
   projectId: entityId.nullable(),
   reminderMinutes: z.number().int().min(0).max(1439).nullable(),
   scheduleHistory: z.array(scheduleSchema).min(1),
@@ -108,6 +114,7 @@ const publicHabit = z.object({
 }).strict();
 const readArgs = { time_zone: timeZone, date: date.optional() };
 const fields = {
+  icon: habitIcon.optional(),
   title: name.optional(),
   start_date: date.optional(),
   end_date: date.nullable().optional(),
@@ -244,6 +251,7 @@ function view(s: Snapshot, h: Habit, day: string, current: string) {
   return {
     id: h.id,
     title: h.title,
+    icon: h.icon ?? null,
     projectId: h.projectId ?? null,
     reminderMinutes: h.reminderMinutes ?? null,
     scheduleHistory: h.scheduleHistory,
@@ -331,6 +339,7 @@ function edited(s: Snapshot, h: Habit, args: z.output<typeof changed>) {
     userId: localUserId,
     isDeleted: false,
     title: args.title ?? h.title,
+    icon: args.icon !== undefined ? args.icon : h.icon ?? null,
     projectId: args.project_id !== undefined
       ? args.project_id
       : h.projectId ?? null,
@@ -433,6 +442,7 @@ export function habitMutations(
       id,
       userId: localUserId,
       title: args.title,
+      icon: args.icon ?? null,
       projectId: args.project_id ?? null,
       reminderMinutes: args.reminder_minutes ?? null,
       scheduleHistory: [buildSchedule(args, current)],

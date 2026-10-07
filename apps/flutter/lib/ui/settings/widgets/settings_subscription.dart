@@ -62,14 +62,12 @@ class SettingsSubscription extends ConsumerWidget {
         SettingsRow(
           title: l10n.billingTitle,
           subtitle: '${l10n.settingsPlanLabel}: $plan',
-          control: Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: ShadButton.outline(
-              height: 48,
-              onPressed: () => _open(context),
-              trailing: const Icon(LucideIcons.chevronRight, size: 16),
-              child: Text(l10n.settingsSubscriptionActions),
-            ),
+          control: ShadButton.outline(
+            width: double.infinity,
+            height: 48,
+            onPressed: () => _open(context),
+            trailing: const Icon(LucideIcons.chevronRight, size: 16),
+            child: Text(l10n.settingsSubscriptionActions),
           ),
         ),
         if (state.loading) const LinearProgressIndicator(minHeight: 2),

@@ -50,8 +50,8 @@ void main() {
   test('platform quick add bridge creates a task', () async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = _container(db);
-    addTearDown(container.dispose);
     addTearDown(db.close);
+    addTearDown(container.dispose);
 
     final controller = container.read(globalQuickAddServiceProvider);
     final result = await controller.handleMethodCall(
@@ -69,8 +69,8 @@ void main() {
   test('platform quick add bridge rejects empty input', () async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = _container(db);
-    addTearDown(container.dispose);
     addTearDown(db.close);
+    addTearDown(container.dispose);
 
     final controller = container.read(globalQuickAddServiceProvider);
 
@@ -99,8 +99,8 @@ void main() {
         quickAddHintTextProvider.overrideWithValue('Plan the next review'),
       ],
     );
-    addTearDown(container.dispose);
     addTearDown(db.close);
+    addTearDown(container.dispose);
 
     final controller = container.read(globalQuickAddServiceProvider);
     final result = await controller.handleMethodCall(
@@ -267,8 +267,8 @@ void main() {
     );
     final db = AppDatabase(NativeDatabase.memory());
     final container = _container(db);
-    addTearDown(container.dispose);
     addTearDown(db.close);
+    addTearDown(container.dispose);
     final controller = container.read(globalQuickAddRepositoryProvider);
     await controller.ready;
     const binding = GlobalQuickAddBinding(
@@ -311,8 +311,8 @@ void main() {
     );
     final db = AppDatabase(NativeDatabase.memory());
     final container = _container(db);
-    addTearDown(container.dispose);
     addTearDown(db.close);
+    addTearDown(container.dispose);
     final controller = container.read(globalQuickAddRepositoryProvider);
     await controller.ready;
     await controller.setEnabled(false);
@@ -360,8 +360,8 @@ void main() {
     );
     final db = AppDatabase(NativeDatabase.memory());
     final container = _container(db);
-    addTearDown(container.dispose);
     addTearDown(db.close);
+    addTearDown(container.dispose);
     final controller = container.read(globalQuickAddRepositoryProvider);
     await controller.ready;
 

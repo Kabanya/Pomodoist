@@ -14,7 +14,11 @@ validate:
 up:
 	@test -f .env || (echo 'Run make setup first.' >&2; exit 1)
 	@sh scripts/refresh-release.sh
-	$(COMPOSE) up -d --build --wait
+	$(COMPOSE) up -d --no-deps --wait db
+	@baseline=$$(mktemp); trap 'rm -f "$$baseline"' EXIT HUP INT TERM; \
+	  python3 scripts/sync_health.py capture pomodoist-selfhost-db "$$baseline" && \
+	  $(COMPOSE) up -d --build --wait && \
+	  python3 scripts/sync_health.py check pomodoist-selfhost-db "$$baseline"
 	sh scripts/status.sh
 
 core-up:

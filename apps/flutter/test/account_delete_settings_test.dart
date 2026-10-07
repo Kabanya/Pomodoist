@@ -438,6 +438,7 @@ Future<void> _pumpSettings(
     ProviderScope(
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
+        localSyncOwnerProvider.overrideWith((ref) => Stream.value(null)),
         accountClientProvider.overrideWithValue(account),
         accountConfiguredProvider.overrideWithValue(true),
         accountAuthStateProvider.overrideWithValue(

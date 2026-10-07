@@ -2,6 +2,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
 
 void main() {
+  test(
+    'Calendar details retain the selected day when switching and closing',
+    () {
+      final background = Uri.parse('/calendar?date=2026-10-06');
+      final opened = taskDetailUri(background, 'first');
+      final switched = taskDetailUri(opened, 'second');
+      expect(opened.queryParameters['date'], '2026-10-06');
+      expect(switched.queryParameters['date'], '2026-10-06');
+      expect(switched.queryParameters['task'], 'second');
+      expect(taskDetailUri(switched, null), background);
+    },
+  );
+
   test('opening and closing details preserves the background query', () {
     final background = Uri.parse('/upcoming?date=2026-09-09&q=release#week');
     final opened = taskDetailUri(background, 'task / one');

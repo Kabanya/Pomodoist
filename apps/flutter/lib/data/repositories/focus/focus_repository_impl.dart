@@ -122,64 +122,68 @@ class DriftFocusRepository implements FocusRepository {
 
   @override
   Future<Result<String>> createPreset(CreateFocusPresetInput input) =>
-      Result.capture<String>(() async {
-        final now = DateTime.now().toUtc();
-        final id = _uuid.v4();
-        await _validatePresetInput(
-          name: input.name,
-          workSeconds: input.workSeconds,
-          shortBreakSeconds: input.shortBreakSeconds,
-          longBreakSeconds: input.longBreakSeconds,
-          intervalsBeforeLongBreak: input.intervalsBeforeLongBreak,
-        );
-        await _focus.insertPreset(
-          FocusPresetsCompanion.insert(
-            id: id,
-            userId: localUserId,
-            name: input.name.trim(),
+      Result.capture<String>(
+        () => ownerBoundTransaction(_db, _syncQueue, () async {
+          final now = DateTime.now().toUtc();
+          final id = _uuid.v4();
+          await _validatePresetInput(
+            name: input.name,
             workSeconds: input.workSeconds,
             shortBreakSeconds: input.shortBreakSeconds,
             longBreakSeconds: input.longBreakSeconds,
             intervalsBeforeLongBreak: input.intervalsBeforeLongBreak,
-            autoStartBreaks: Value(input.autoStartBreaks),
-            autoStartWork: Value(input.autoStartWork),
-            allowPause: Value(input.allowPause),
-            strictMode: Value(input.strictMode),
-            createdAt: now,
-            updatedAt: now,
-          ),
-        );
-        return id;
-      });
+          );
+          await _focus.insertPreset(
+            FocusPresetsCompanion.insert(
+              id: id,
+              userId: localUserId,
+              name: input.name.trim(),
+              workSeconds: input.workSeconds,
+              shortBreakSeconds: input.shortBreakSeconds,
+              longBreakSeconds: input.longBreakSeconds,
+              intervalsBeforeLongBreak: input.intervalsBeforeLongBreak,
+              autoStartBreaks: Value(input.autoStartBreaks),
+              autoStartWork: Value(input.autoStartWork),
+              allowPause: Value(input.allowPause),
+              strictMode: Value(input.strictMode),
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+          return id;
+        }),
+      );
 
   @override
   Future<Result<void>> updatePreset(String id, UpdateFocusPresetInput input) =>
-      Result.capture<void>(() async {
-        await _validatePresetInput(
-          name: input.name,
-          workSeconds: input.workSeconds,
-          shortBreakSeconds: input.shortBreakSeconds,
-          longBreakSeconds: input.longBreakSeconds,
-          intervalsBeforeLongBreak: input.intervalsBeforeLongBreak,
-          existingId: id,
-        );
-        final now = DateTime.now().toUtc();
-        await _focus.updatePreset(
-          id,
-          FocusPresetsCompanion(
-            name: Value(input.name.trim()),
-            workSeconds: Value(input.workSeconds),
-            shortBreakSeconds: Value(input.shortBreakSeconds),
-            longBreakSeconds: Value(input.longBreakSeconds),
-            intervalsBeforeLongBreak: Value(input.intervalsBeforeLongBreak),
-            autoStartBreaks: Value(input.autoStartBreaks),
-            autoStartWork: Value(input.autoStartWork),
-            allowPause: Value(input.allowPause),
-            strictMode: Value(input.strictMode),
-            updatedAt: Value(now),
-          ),
-        );
-      });
+      Result.capture<void>(
+        () => ownerBoundTransaction(_db, _syncQueue, () async {
+          await _validatePresetInput(
+            name: input.name,
+            workSeconds: input.workSeconds,
+            shortBreakSeconds: input.shortBreakSeconds,
+            longBreakSeconds: input.longBreakSeconds,
+            intervalsBeforeLongBreak: input.intervalsBeforeLongBreak,
+            existingId: id,
+          );
+          final now = DateTime.now().toUtc();
+          await _focus.updatePreset(
+            id,
+            FocusPresetsCompanion(
+              name: Value(input.name.trim()),
+              workSeconds: Value(input.workSeconds),
+              shortBreakSeconds: Value(input.shortBreakSeconds),
+              longBreakSeconds: Value(input.longBreakSeconds),
+              intervalsBeforeLongBreak: Value(input.intervalsBeforeLongBreak),
+              autoStartBreaks: Value(input.autoStartBreaks),
+              autoStartWork: Value(input.autoStartWork),
+              allowPause: Value(input.allowPause),
+              strictMode: Value(input.strictMode),
+              updatedAt: Value(now),
+            ),
+          );
+        }),
+      );
 
   @override
   Future<Result<void>> deletePreset(String id) =>
@@ -190,7 +194,7 @@ class DriftFocusRepository implements FocusRepository {
         }
         final defaultPreset = await _defaultPreset();
         final now = DateTime.now().toUtc();
-        await _db.transaction(() async {
+        await ownerBoundTransaction(_db, _syncQueue, () async {
           await _focus.markPresetDeleted(id, now);
           await _focus.reassignActiveRunsPreset(id, defaultPreset.id, now);
         });
@@ -204,7 +208,7 @@ class DriftFocusRepository implements FocusRepository {
           return;
         }
         final now = DateTime.now().toUtc();
-        await _db.transaction(() async {
+        await ownerBoundTransaction(_db, _syncQueue, () async {
           await _focus.clearDefaultPresets(now);
           await _focus.markPresetDefault(id, now);
         });
@@ -212,15 +216,17 @@ class DriftFocusRepository implements FocusRepository {
 
   @override
   Future<Result<void>> changeActiveRunPreset(String presetId) =>
-      Result.capture<void>(() async {
-        final preset = await _presetById(presetId);
-        final run = await _activeRunRow();
-        if (preset == null || run == null) {
-          return;
-        }
-        final now = DateTime.now().toUtc();
-        await _focus.updateRunPreset(run.id, preset.id, now);
-      });
+      Result.capture<void>(
+        () => ownerBoundTransaction(_db, _syncQueue, () async {
+          final preset = await _presetById(presetId);
+          final run = await _activeRunRow();
+          if (preset == null || run == null) {
+            return;
+          }
+          final now = DateTime.now().toUtc();
+          await _focus.updateRunPreset(run.id, preset.id, now);
+        }),
+      );
 
   @override
   Future<Result<String>> startRun(
@@ -248,7 +254,7 @@ class DriftFocusRepository implements FocusRepository {
         (input.taskId == null ? cadence : task?.estimatedFocusIntervals ?? 1);
     final projectId = input.projectId ?? task?.projectId;
 
-    await _db.transaction(() async {
+    await ownerBoundTransaction(_db, _syncQueue, () async {
       final activeRun = await _activeRunRow();
       if (activeRun != null) {
         await _stopRunInTransaction(
@@ -319,7 +325,7 @@ class DriftFocusRepository implements FocusRepository {
       return;
     }
     final now = DateTime.now().toUtc();
-    await _db.transaction(() async {
+    await ownerBoundTransaction(_db, _syncQueue, () async {
       await _focus.startInterval(interval.id, interval.runId, now);
       await _insertEvent(interval.runId, interval.id, 'intervalStarted', now, {
         'type': interval.type,
@@ -346,7 +352,7 @@ class DriftFocusRepository implements FocusRepository {
           return;
         }
         final timestamp = (now ?? DateTime.now()).toUtc();
-        await _db.transaction(() async {
+        await ownerBoundTransaction(_db, _syncQueue, () async {
           await _focus.pauseInterval(interval.id, interval.runId, timestamp);
           await _insertEvent(
             interval.runId,
@@ -373,7 +379,7 @@ class DriftFocusRepository implements FocusRepository {
         final pausedDelta = timestamp.difference(interval.pausedAt!).inSeconds;
         final pausedTotal =
             interval.pausedTotalSeconds + (pausedDelta < 0 ? 0 : pausedDelta);
-        await _db.transaction(() async {
+        await ownerBoundTransaction(_db, _syncQueue, () async {
           await _focus.resumeInterval(
             interval.id,
             interval.runId,
@@ -405,7 +411,7 @@ class DriftFocusRepository implements FocusRepository {
           return;
         }
         final timestamp = (now ?? DateTime.now()).toUtc();
-        await _db.transaction(() async {
+        await ownerBoundTransaction(_db, _syncQueue, () async {
           await _focus.restartInterval(interval.id, interval.runId, timestamp);
           await _insertEvent(
             interval.runId,
@@ -452,7 +458,7 @@ class DriftFocusRepository implements FocusRepository {
             interval.type != 'work' &&
             completedWorkIntervals >= run.targetWorkIntervals;
 
-        await _db.transaction(() async {
+        await ownerBoundTransaction(_db, _syncQueue, () async {
           await _focus.completeInterval(interval.id, timestamp);
           await _insertEvent(
             interval.runId,
@@ -544,7 +550,7 @@ class DriftFocusRepository implements FocusRepository {
         final completesRun =
             interval.type != 'work' &&
             run.completedWorkIntervals >= run.targetWorkIntervals;
-        await _db.transaction(() async {
+        await ownerBoundTransaction(_db, _syncQueue, () async {
           await _focus.skipInterval(interval.id, timestamp);
           await _insertEvent(
             interval.runId,
@@ -628,7 +634,7 @@ class DriftFocusRepository implements FocusRepository {
     final status = reason == StopFocusReason.interrupted
         ? 'interrupted'
         : 'stopped';
-    await _db.transaction(() async {
+    await ownerBoundTransaction(_db, _syncQueue, () async {
       if (interval != null) {
         await _focus.stopInterval(interval.id, timestamp);
       }
@@ -651,12 +657,14 @@ class DriftFocusRepository implements FocusRepository {
 
   @override
   Future<Result<void>> logDistraction({required String runId, String? note}) =>
-      Result.capture<void>(() async {
-        final now = DateTime.now().toUtc();
-        await _insertEvent(runId, null, 'distractionLogged', now, {
-          'note': note,
-        });
-      });
+      Result.capture<void>(
+        () => ownerBoundTransaction(_db, _syncQueue, () async {
+          final now = DateTime.now().toUtc();
+          await _insertEvent(runId, null, 'distractionLogged', now, {
+            'note': note,
+          });
+        }),
+      );
 
   Future<void> _publishRunCompletion({
     required FocusRunRow run,

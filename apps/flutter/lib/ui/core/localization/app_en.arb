@@ -424,6 +424,7 @@
   "settingsShortcutsToggleSidebar": "Toggle sidebar",
   "settingsShortcutsToggleTaskDetails": "Toggle task details",
   "settingsShortcutsToggleTaskDetailsAlternate": "Toggle task details (second shortcut)",
+  "settingsShortcutsFocusAlternate": "Focus (second shortcut)",
   "settingsShortcutsGlobalQuickAdd": "Global quick add",
   "settingsShortcutsGlobalQuickAddSubtitle": "Works even when Pomodoist is not active.",
   "settingsShortcutsRecordTitle": "Press a shortcut",
@@ -899,7 +900,7 @@
       }
     }
   },
-  "reportsIntervalCountSemantics": "{completed} focus intervals completed; no goal set",
+  "reportsIntervalCountSemantics": "{completed} focus intervals completed; no task estimates",
   "@reportsIntervalCountSemantics": {
     "placeholders": {
       "completed": {
@@ -2096,5 +2097,59 @@
   "accountAvatarTravel": "Travel and places",
   "accountAvatarObjects": "Objects",
   "accountAvatarSymbols": "Symbols",
-  "accountAvatarFlags": "Flags"
+  "accountAvatarFlags": "Flags",
+  "reportsPlanEstimates": "Estimates for open tasks due today or earlier",
+  "reportsDayInProgress": "Today is still in progress",
+  "reportsTimeByProject": "Where your time went",
+  "reportsNoProject": "No project",
+  "reportsNoTask": "No linked task",
+  "reportsUnavailableName": "{name} (unavailable)",
+  "reportsUnknownProject": "Unavailable project",
+  "reportsUnknownTask": "Unavailable task",
+  "reportsNoProjectFocus": "No completed focus sessions in this period",
+  "reportsProjectShare": "{percent}% of focus time",
+  "@reportsUnavailableName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@reportsProjectShare": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "habitIcon": "Habit icon",
+  "habitIconEmoji": "Emoji",
+  "habitIconIcons": "Icons",
+  "habitIconReset": "Reset icon",
+  "habitIconOption": "{icon, select, bookOpen{Reading} dumbbell{Exercise} footprints{Walking} glassWater{Water} moon{Sleep} sun{Sun} heart{Health} brain{Learning} apple{Nutrition} coffee{Coffee} music{Music} pencil{Writing} code{Coding} leaf{Nature} target{Goal} bike{Cycling} other{Habit icon}}",
+  "@habitIconOption": {
+    "description": "Accessible habit icon name",
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsSynchronization": "Synchronization",
+  "settingsRestartSync": "Restart synchronization",
+  "settingsSyncRunning": "Checking and syncing your data…",
+  "settingsSyncComplete": "Synchronization completed.",
+  "settingsSyncPending": "Some changes are still pending or need recovery.",
+  "settingsSyncFailed": "Synchronization is incomplete. We will retry automatically.",
+  "syncUnresolvedChanges": "Rejected: {rejected}. Awaiting recovery: {repair}.",
+  "@syncUnresolvedChanges": {
+    "placeholders": {
+      "rejected": {
+        "type": "int"
+      },
+      "repair": {
+        "type": "int"
+      }
+    }
+  }
 }

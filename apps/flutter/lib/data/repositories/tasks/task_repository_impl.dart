@@ -128,7 +128,7 @@ class DriftTaskRepository implements TaskRepository {
         (input.dueDate == null ? null : TaskSchedule.allDay(input.dueDate!));
     final durationSeconds =
         input.durationSeconds ?? schedule?.duration?.inSeconds;
-    await _db.transaction(() async {
+    await ownerBoundTransaction(_db, _syncQueue, () async {
       await _tasks.insertTask(
         TasksCompanion.insert(
           id: id,
@@ -205,7 +205,7 @@ class DriftTaskRepository implements TaskRepository {
       await _access.task(id);
     }
     final duplicateIds = <String>[];
-    await _db.transaction(() async {
+    await ownerBoundTransaction(_db, _syncQueue, () async {
       final rows = await _tasks.activeTasks();
       final rowById = _tasks.rowById(rows);
       final selectedIds = taskIds.where(rowById.containsKey).toSet();
@@ -331,7 +331,7 @@ class DriftTaskRepository implements TaskRepository {
             (patch.dueDate == null
                 ? null
                 : TaskSchedule.allDay(patch.dueDate!));
-        await _db.transaction(() async {
+        await ownerBoundTransaction(_db, _syncQueue, () async {
           await _tasks.updateTask(
             id,
             TasksCompanion(
@@ -394,7 +394,7 @@ class DriftTaskRepository implements TaskRepository {
     await _access.task(id);
     final requested = names.map((name) => name.trim().toLowerCase()).toSet();
     if (requested.isEmpty) return;
-    await _db.transaction(() async {
+    await ownerBoundTransaction(_db, _syncQueue, () async {
       final task = await _tasks.loadTask(id);
       final scopedLabels = await _tasks.activeUserLabelsInScope(task.scopeId);
       final matchingIds = {
@@ -419,7 +419,7 @@ class DriftTaskRepository implements TaskRepository {
       Result.capture<void>(() async {
         final timestamp = (now ?? DateTime.now()).toUtc();
         final localNow = timestamp.toLocal();
-        await _db.transaction(() async {
+        await ownerBoundTransaction(_db, _syncQueue, () async {
           final rows = await _tasks.activeTasks();
           final rowById = _tasks.rowById(rows);
           final childrenByParent = _tasks.childrenByParent(rows);
@@ -468,7 +468,7 @@ class DriftTaskRepository implements TaskRepository {
   }) => Result.capture<void>(() async {
     await _access.task(id, destinationProjectId: projectId);
     final now = DateTime.now().toUtc();
-    await _db.transaction(() async {
+    await ownerBoundTransaction(_db, _syncQueue, () async {
       final rows = await _tasks.activeTasks();
       final rowById = _tasks.rowById(rows);
       final task = rowById[id];
@@ -547,7 +547,7 @@ class DriftTaskRepository implements TaskRepository {
     required String? parentId,
     required String? beforeTaskId,
   }) => Result.capture(
-    () => _db.transaction(() async {
+    () => ownerBoundTransaction(_db, _syncQueue, () async {
       await _access.task(id, destinationProjectId: projectId);
       final destination = await (_db.select(
         _db.projects,
@@ -632,7 +632,7 @@ class DriftTaskRepository implements TaskRepository {
   }) => Result.capture<void>(() async {
     await _access.task(id, destinationProjectId: projectId);
     final now = DateTime.now().toUtc();
-    await _db.transaction(() async {
+    await ownerBoundTransaction(_db, _syncQueue, () async {
       final rows = await _tasks.activeTasks();
       final rowById = _tasks.rowById(rows);
       final root = rowById[id];
@@ -697,7 +697,7 @@ class DriftTaskRepository implements TaskRepository {
       Result.capture<void>(() async {
         await _access.task(id);
         final now = DateTime.now().toUtc();
-        await _db.transaction(() async {
+        await ownerBoundTransaction(_db, _syncQueue, () async {
           await _kanbanTransitions.completeSubtreeInTransaction(
             id,
             timestamp: now,
@@ -710,7 +710,7 @@ class DriftTaskRepository implements TaskRepository {
       Result.capture<void>(() async {
         await _access.task(id);
         final now = DateTime.now().toUtc();
-        await _db.transaction(() async {
+        await ownerBoundTransaction(_db, _syncQueue, () async {
           await _kanbanTransitions.restoreSubtreeInTransaction(
             id,
             timestamp: now,
@@ -736,7 +736,7 @@ class DriftTaskRepository implements TaskRepository {
           isUtc: true,
         );
         final deletedIds = <String>{};
-        await _db.transaction(() async {
+        await ownerBoundTransaction(_db, _syncQueue, () async {
           final rows = await _tasks.activeTasks();
           final childrenByParent = _tasks.childrenByParent(rows);
           final rowById = _tasks.rowById(rows);
@@ -767,7 +767,7 @@ class DriftTaskRepository implements TaskRepository {
       isUtc: true,
     );
     final deletedIds = <String>{};
-    await _db.transaction(() async {
+    await ownerBoundTransaction(_db, _syncQueue, () async {
       final rows = await _tasks.activeTasks();
       final rowById = _tasks.rowById(rows);
       final selected = rowById[id];
@@ -850,7 +850,7 @@ class DriftTaskRepository implements TaskRepository {
             DateTime.now().toUtc().isAfter(batch.undoUntil)) {
           return false;
         }
-        return _db.transaction(() async {
+        return ownerBoundTransaction(_db, _syncQueue, () async {
           final deletedRows = await _tasks.deletedTasks(batch.taskIds);
           final commands = await _tasks.pendingDeleteCommands(
             batch.taskIds,
@@ -913,27 +913,28 @@ class DriftTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Result<void>> updateFocusAggregates(String id) =>
-      Result.capture<void>(() async {
-        final intervals = await _tasks.completedWorkIntervals(id);
-        final totalSeconds = intervals.fold<int>(
-          0,
-          (total, interval) =>
-              total +
-              (interval.completedAt ?? interval.startedAt)
-                  .difference(interval.startedAt)
-                  .inSeconds -
-              interval.pausedTotalSeconds,
-        );
-        await _tasks.updateTask(
-          id,
-          TasksCompanion(
-            completedFocusIntervals: Value(intervals.length),
-            totalFocusSeconds: Value(totalSeconds < 0 ? 0 : totalSeconds),
-            updatedAt: Value(DateTime.now().toUtc()),
-          ),
-        );
-      });
+  Future<Result<void>> updateFocusAggregates(String id) => Result.capture<void>(
+    () => ownerBoundTransaction(_db, _syncQueue, () async {
+      final intervals = await _tasks.completedWorkIntervals(id);
+      final totalSeconds = intervals.fold<int>(
+        0,
+        (total, interval) =>
+            total +
+            (interval.completedAt ?? interval.startedAt)
+                .difference(interval.startedAt)
+                .inSeconds -
+            interval.pausedTotalSeconds,
+      );
+      await _tasks.updateTask(
+        id,
+        TasksCompanion(
+          completedFocusIntervals: Value(intervals.length),
+          totalFocusSeconds: Value(totalSeconds < 0 ? 0 : totalSeconds),
+          updatedAt: Value(DateTime.now().toUtc()),
+        ),
+      );
+    }),
+  );
 
   @override
   Future<Result<String>> createTaskFromCalendar(
@@ -941,7 +942,7 @@ class DriftTaskRepository implements TaskRepository {
   ) => Result.capture<String>(() async {
     final id = _uuid.v4();
     final now = input.updatedAt.toUtc();
-    await _db.transaction(() async {
+    await ownerBoundTransaction(_db, _syncQueue, () async {
       await _tasks.insertTask(
         TasksCompanion.insert(
           id: id,
@@ -987,7 +988,7 @@ class DriftTaskRepository implements TaskRepository {
     RemoteCalendarTaskPatch patch,
   ) => Result.capture<void>(() async {
     final updatedAt = patch.updatedAt.toUtc();
-    await _db.transaction(() async {
+    await ownerBoundTransaction(_db, _syncQueue, () async {
       final existing = await _tasks.findTask(id);
       final existingSchedule = TaskSchedule.fromJsonString(existing?.dueJson);
       final existingRecurrence = existingSchedule?.recurrence;

@@ -58,7 +58,7 @@ final class AppMenuController: NSObject {
     goMenu.removeAllItems()
     for group in [
       ["browse", "search"],
-      ["today", "upcoming", "focus", "inbox"],
+      ["today", "upcoming", "focus", "focusAlternate", "inbox"],
       ["priorityMatrix", "calendar", "timeline", "kanban", "reports"],
     ] {
       let items = group.compactMap { name in
@@ -170,6 +170,10 @@ final class AppMenuController: NSObject {
 
   @objc private func selectMenuItem(_ sender: NSMenuItem) {
     guard let name = sender.representedObject as? String else {
+      return
+    }
+    if (name == "focus" || name == "focusAlternate"),
+       let event = NSApp.currentEvent, event.type == .keyDown, event.isARepeat {
       return
     }
     DispatchQueue.main.async { [channel] in

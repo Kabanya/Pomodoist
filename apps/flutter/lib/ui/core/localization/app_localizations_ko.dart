@@ -913,6 +913,9 @@ class AppLocalizationsKo extends AppLocalizations {
       '작업 세부 정보 (두 번째 단축키)';
 
   @override
+  String get settingsShortcutsFocusAlternate => '집중 (두 번째 단축키)';
+
+  @override
   String get settingsShortcutsGlobalQuickAdd => '전역 빠른 추가';
 
   @override
@@ -1796,7 +1799,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String reportsIntervalCountSemantics(int completed) {
-    return '집중 구간 $completed회 완료, 목표 미설정';
+    return '집중 구간 $completed회 완료, 작업 예상 횟수 미설정';
   }
 
   @override
@@ -4061,4 +4064,97 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get accountAvatarFlags => '깃발';
+
+  @override
+  String get reportsPlanEstimates => '오늘 또는 이전에 마감인 미완료 작업의 예상 횟수';
+
+  @override
+  String get reportsDayInProgress => '오늘은 아직 진행 중입니다';
+
+  @override
+  String get reportsTimeByProject => '시간을 어디에 썼나요';
+
+  @override
+  String get reportsNoProject => '프로젝트 없음';
+
+  @override
+  String get reportsNoTask => '연결된 작업 없음';
+
+  @override
+  String reportsUnavailableName(String name) {
+    return '$name (사용 불가)';
+  }
+
+  @override
+  String get reportsUnknownProject => '사용할 수 없는 프로젝트';
+
+  @override
+  String get reportsUnknownTask => '사용할 수 없는 작업';
+
+  @override
+  String get reportsNoProjectFocus => '이 기간에 완료된 집중 세션이 없습니다';
+
+  @override
+  String reportsProjectShare(String percent) {
+    return '집중 시간의 $percent%';
+  }
+
+  @override
+  String get habitIcon => '습관 아이콘';
+
+  @override
+  String get habitIconEmoji => '이모지';
+
+  @override
+  String get habitIconIcons => '아이콘';
+
+  @override
+  String get habitIconReset => '아이콘 초기화';
+
+  @override
+  String habitIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'bookOpen': '독서',
+      'dumbbell': '운동',
+      'footprints': '걷기',
+      'glassWater': '물',
+      'moon': '수면',
+      'sun': '태양',
+      'heart': '건강',
+      'brain': '학습',
+      'apple': '영양',
+      'coffee': '커피',
+      'music': '음악',
+      'pencil': '글쓰기',
+      'code': '코딩',
+      'leaf': '자연',
+      'target': '목표',
+      'bike': '자전거',
+      'other': '습관 아이콘',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsSynchronization => '동기화';
+
+  @override
+  String get settingsRestartSync => '동기화 다시 시작';
+
+  @override
+  String get settingsSyncRunning => '데이터를 확인하고 동기화하는 중…';
+
+  @override
+  String get settingsSyncComplete => '동기화가 완료되었습니다.';
+
+  @override
+  String get settingsSyncPending => '전송 또는 복구를 기다리는 변경 사항이 있습니다.';
+
+  @override
+  String get settingsSyncFailed => '동기화가 완료되지 않았습니다. 자동으로 다시 시도합니다.';
+
+  @override
+  String syncUnresolvedChanges(int rejected, int repair) {
+    return '거부됨: $rejected. 복구 대기 중: $repair.';
+  }
 }

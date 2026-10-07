@@ -15,9 +15,12 @@ create function pg_temp.check_data(p_id text,p_habit text) returns jsonb languag
  'createdAt','2026-09-30T12:00:00Z','updatedAt','2026-09-30T12:00:00Z','isDeleted',false);
 $$;
 create function pg_temp.habit_op(p_op text,p_type text,p_id text,p_data jsonb,p_action text default 'upsert') returns jsonb language sql as $$
- select jsonb_build_object('opId',p_op,'entityType',p_type,'entityId',p_id,'operation',p_action,'payload',p_data,'clientUpdatedAt','2026-09-30T12:00:00Z');
+ select jsonb_build_object('opId',p_op,'entityType',p_type,'entityId',p_id,'operation',p_action,
+   'payload',jsonb_build_object('schemaVersion',1,'commandType',p_type || case p_action when 'delete' then '.delete' else '.create' end) || p_data,
+   'clientUpdatedAt','2026-09-30T12:00:00Z');
 $$;
-select lives_ok($$select public.push_changes('pomodoist','habits',jsonb_build_array(pg_temp.habit_op('create','habit','ab900000-0000-4000-8000-000000000010',pg_temp.habit_data('ab900000-0000-4000-8000-000000000010'))))$$,'valid habit uses existing push');
+select lives_ok($$select public.push_changes('pomodoist','habits',jsonb_build_array(pg_temp.habit_op('mixed-task','task','metadata-task','{"content":"Synced with habit"}'),pg_temp.habit_op('create','habit','ab900000-0000-4000-8000-000000000010',pg_temp.habit_data('ab900000-0000-4000-8000-000000000010'))))$$,'task and SDK habit metadata sync in one batch');
+select is((select count(*) from public.sync_entities where user_id=auth.uid() and entity_type='task' and entity_id='metadata-task'),1::bigint,'habit metadata does not block task delivery');
 select lives_ok($$select public.push_changes('pomodoist','habits',jsonb_build_array(pg_temp.habit_op('check1','habit_check_in','ab900000-0000-4000-8000-000000000011',pg_temp.check_data('ab900000-0000-4000-8000-000000000011','ab900000-0000-4000-8000-000000000010'))))$$,'first independent check-in');
 select lives_ok($$select public.push_changes('pomodoist','other-device',jsonb_build_array(pg_temp.habit_op('check2','habit_check_in','ab900000-0000-4000-8000-000000000012',pg_temp.check_data('ab900000-0000-4000-8000-000000000012','ab900000-0000-4000-8000-000000000010'))))$$,'second independent check-in');
 select public.push_changes('pomodoist','habits',jsonb_build_array(pg_temp.habit_op('check1','habit_check_in','ab900000-0000-4000-8000-000000000011',pg_temp.check_data('ab900000-0000-4000-8000-000000000011','ab900000-0000-4000-8000-000000000010'))));

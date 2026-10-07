@@ -190,8 +190,20 @@ String quickAddHintFallbackFor(AppLanguage language) =>
 String quickAddHintEmptyFor(AppLanguage language) =>
     lookupAppLocalizations(resolveAppLocale(language)).addTask;
 
+final localSyncOwnerProvider = StreamProvider<String?>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return (db.select(db.syncState)
+        ..where((r) => r.id.equals('pomodoist-account-owner-v1')))
+      .watchSingleOrNull()
+      .map((r) => r?.cursor);
+});
+
 final syncQueueRepositoryProvider = Provider<OutboxService>((ref) {
-  return DriftOutboxService(ref.watch(appDatabaseProvider));
+  final owner = ref.watch(localSyncOwnerProvider);
+  return DriftOutboxService(
+    ref.watch(appDatabaseProvider),
+    expectedOwner: Future.value(owner.value),
+  );
 });
 
 /// Carries the collaboration API so that deleting a shared root can go through
@@ -284,7 +296,10 @@ final focusPresetsProvider = StreamProvider<List<FocusPresetItem>>((ref) {
 });
 
 final productivityRepositoryProvider = Provider<ProductivityRepository>((ref) {
-  return DriftProductivityRepository(ref.watch(appDatabaseProvider));
+  return DriftProductivityRepository(
+    ref.watch(appDatabaseProvider),
+    clock: ref.watch(clockProvider),
+  );
 });
 
 final achievementRepositoryProvider = Provider<AchievementRepository>((ref) {
@@ -560,6 +575,10 @@ final pendingSyncCommandCountProvider = StreamProvider<int>((ref) {
       .watchPending()
       .map((commands) => commands.length);
 });
+
+final syncQueueStatusProvider = StreamProvider(
+  (ref) => watchSyncQueueStatus(ref.watch(appDatabaseProvider)),
+);
 
 final calendarIntegrationRepositoryProvider =
     Provider<CalendarIntegrationRepository>((ref) {

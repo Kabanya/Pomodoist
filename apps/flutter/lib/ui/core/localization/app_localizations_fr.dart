@@ -959,6 +959,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Détails de la tâche (deuxième raccourci)';
 
   @override
+  String get settingsShortcutsFocusAlternate =>
+      'Concentration (deuxième raccourci)';
+
+  @override
   String get settingsShortcutsGlobalQuickAdd => 'Ajout rapide global';
 
   @override
@@ -1864,7 +1868,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String reportsIntervalCountSemantics(int completed) {
-    return '$completed intervalles de concentration terminés ; aucun objectif';
+    return '$completed intervalles de concentration terminés ; aucune estimation des tâches';
   }
 
   @override
@@ -4212,4 +4216,102 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get accountAvatarFlags => 'Drapeaux';
+
+  @override
+  String get reportsPlanEstimates =>
+      'Estimations des tâches ouvertes prévues pour aujourd’hui ou avant';
+
+  @override
+  String get reportsDayInProgress => 'La journée est encore en cours';
+
+  @override
+  String get reportsTimeByProject => 'Où est passé votre temps';
+
+  @override
+  String get reportsNoProject => 'Sans projet';
+
+  @override
+  String get reportsNoTask => 'Sans tâche liée';
+
+  @override
+  String reportsUnavailableName(String name) {
+    return '$name (indisponible)';
+  }
+
+  @override
+  String get reportsUnknownProject => 'Projet indisponible';
+
+  @override
+  String get reportsUnknownTask => 'Tâche indisponible';
+
+  @override
+  String get reportsNoProjectFocus =>
+      'Aucune session de concentration terminée sur cette période';
+
+  @override
+  String reportsProjectShare(String percent) {
+    return '$percent% du temps de concentration';
+  }
+
+  @override
+  String get habitIcon => 'Icône de l’habitude';
+
+  @override
+  String get habitIconEmoji => 'Émojis';
+
+  @override
+  String get habitIconIcons => 'Icônes';
+
+  @override
+  String get habitIconReset => 'Réinitialiser l’icône';
+
+  @override
+  String habitIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'bookOpen': 'Lecture',
+      'dumbbell': 'Exercice',
+      'footprints': 'Marche',
+      'glassWater': 'Eau',
+      'moon': 'Sommeil',
+      'sun': 'Soleil',
+      'heart': 'Santé',
+      'brain': 'Apprentissage',
+      'apple': 'Nutrition',
+      'coffee': 'Café',
+      'music': 'Musique',
+      'pencil': 'Écriture',
+      'code': 'Programmation',
+      'leaf': 'Nature',
+      'target': 'Objectif',
+      'bike': 'Vélo',
+      'other': 'Icône de l’habitude',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsSynchronization => 'Synchronisation';
+
+  @override
+  String get settingsRestartSync => 'Relancer la synchronisation';
+
+  @override
+  String get settingsSyncRunning =>
+      'Vérification et synchronisation des données…';
+
+  @override
+  String get settingsSyncComplete => 'Synchronisation terminée.';
+
+  @override
+  String get settingsSyncPending =>
+      'Certaines modifications attendent un envoi ou une récupération.';
+
+  @override
+  String get settingsSyncFailed =>
+      'Synchronisation incomplète. Une nouvelle tentative sera automatique.';
+
+  @override
+  String syncUnresolvedChanges(int rejected, int repair) {
+    return 'Rejetés : $rejected. En attente de récupération : $repair.';
+  }
 }

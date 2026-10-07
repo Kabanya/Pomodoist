@@ -9,6 +9,8 @@ class ProductivityLocalService {
     return _db.select(_db.tasks).watch();
   }
 
+  Stream<List<ProjectRow>> watchProjects() => _db.select(_db.projects).watch();
+
   Stream<List<FocusIntervalRow>> watchFocusIntervals() {
     return _db.select(_db.focusIntervals).watch();
   }

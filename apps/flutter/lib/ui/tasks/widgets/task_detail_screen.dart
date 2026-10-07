@@ -27,6 +27,7 @@ import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/localization/formatters.dart';
 import 'package:pomodoist/ui/tasks/view_models/task_detail_view_model.dart';
+import 'package:pomodoist/ui/tasks/view_models/task_item_view_model.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/widgets/action_feedback.dart';
@@ -40,6 +41,7 @@ import 'package:pomodoist/ui/tasks/widgets/task_completion_feedback.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart';
 import 'package:pomodoist/ui/tasks/view_models/quick_add_text_controller.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_list_item.dart';
+import 'package:pomodoist/ui/tasks/widgets/task_selection_region.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_motion.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
 
@@ -775,6 +777,21 @@ class _TaskProperties extends ConsumerWidget {
                 child: Text(scheduleLabel, style: TextStyle(color: color)),
               ),
               [
+                ShadContextMenuItem(
+                  onPressed: () async {
+                    try {
+                      final result = await showTaskDuePanel(context, ref);
+                      if (result == null || !context.mounted) return;
+                      await ref
+                          .read(taskItemViewModelProvider(task).notifier)
+                          .schedule(result);
+                    } catch (_) {
+                      if (context.mounted) _showEditFailure(context);
+                    }
+                  },
+                  child: Text(l10n.scheduleTitle),
+                ),
+                const Divider(height: 8),
                 ShadContextMenuItem(
                   onPressed: () => unawaited(
                     _runScheduleQuickAction(

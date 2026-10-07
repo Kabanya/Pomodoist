@@ -10,23 +10,19 @@
 #     built with is missing or contradictory in a release build.
 #   * The app is not sandboxed, so it launches without a Mac App Store
 #     provisioning profile.
-#   * Signing is ad-hoc unless Developer ID credentials are supplied, in which
-#     case it signs, notarizes and staples instead. See SIGNING below.
+#   * Developer ID signing, notarization and stapling are mandatory.
 #
 # Usage:
 #   tool/macos/build.sh [--flavor production|staging|development] [--output DIR]
 #
 # SIGNING
 #
-# With no credentials the .dmg is shipped unsigned and Gatekeeper warns about an
-# unidentified developer, matching how the Windows installer already ships. Set
-# all three of the following to have the script sign with hardened runtime,
-# notarize and staple instead:
+# Set both credentials before building. No unsigned distribution is produced:
 #
 #   POMODOIST_MACOS_SIGNING_IDENTITY  "Developer ID Application: ... (TEAMID)"
 #   POMODOIST_MACOS_NOTARY_PROFILE    a `notarytool store-credentials` profile
 #
-# Nothing else changes: the same command produces either artifact.
+# The identity must already be installed with its private key in the Keychain.
 set -euo pipefail
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
@@ -61,6 +57,18 @@ while [[ $# -gt 0 ]]; do
 done
 
 pomodoist_macos_require_flavor "$flavor"
+
+signing_identity="${POMODOIST_MACOS_SIGNING_IDENTITY:-}"
+notary_profile="${POMODOIST_MACOS_NOTARY_PROFILE:-}"
+if [[ "$signing_identity" != 'Developer ID Application: '* || -z "$notary_profile" ]]; then
+  printf 'Developer ID Application signing identity and notary profile are required.\n' >&2
+  exit 64
+fi
+if ! security find-identity -v -p codesigning | grep -Fq -- "\"$signing_identity\""; then
+  printf 'The Developer ID Application identity and private key are missing from the Keychain.\n' >&2
+  exit 66
+fi
+xcrun notarytool history --keychain-profile "$notary_profile" > /dev/null
 
 display_name=$(pomodoist_macos_flavor_field "$flavor" display_name)
 entry_point=$(pomodoist_macos_flavor_field "$flavor" entry_point)
@@ -98,6 +106,7 @@ fi
 
 output_dir="${output_dir:-$repo_root/build/release}"
 mkdir -p "$output_dir"
+output_dir=$(cd -- "$output_dir" && pwd -P)
 
 dmg_name="Pomodoist-macOS.dmg"
 if [[ "$flavor" != "production" ]]; then
@@ -148,6 +157,13 @@ flutter_bin="${POMODOIST_FLUTTER:-flutter}"
 # directory, not to the project, and silently signs with the project default
 # when the path does not resolve.
 export FLUTTER_XCODE_CODE_SIGN_ENTITLEMENTS="$flutter_root/macos/Runner/Direct.entitlements"
+# Compile without App Store provisioning; the staged copy gets Developer ID.
+export FLUTTER_XCODE_CODE_SIGN_IDENTITY='-'
+export FLUTTER_XCODE_CODE_SIGN_STYLE=Manual
+export FLUTTER_XCODE_DEVELOPMENT_TEAM=''
+export FLUTTER_XCODE_PROVISIONING_PROFILE_SPECIFIER=''
+export FLUTTER_XCODE_ARCHS='arm64 x86_64'
+export FLUTTER_XCODE_ONLY_ACTIVE_ARCH=NO
 
 "$flutter_bin" build macos \
   --release \
@@ -200,42 +216,64 @@ trap cleanup EXIT
 cp -R "$app_path" "$staging_dir/"
 ln -s /Applications "$staging_dir/Applications"
 
+staged_app="$staging_dir/$display_name.app"
+# The App Store widget needs its shared container and is omitted from the DMG.
+rm -rf "$staged_app/Contents/PlugIns/PomodoistFocusWidgetExtension.appex"
+rm -f "$staged_app/Contents/embedded.provisionprofile"
+
+printf '==> Signing with %s\n' "$signing_identity"
+# Sign nested code inside out, preserving the main app's Direct entitlements.
+while IFS= read -r -d '' binary; do
+  if file -b "$binary" | grep -q 'Mach-O'; then
+    archs=$(lipo -archs "$binary")
+    if [[ "$archs" != *arm64* || "$archs" != *x86_64* ]]; then
+      printf 'Missing universal architectures in %s: %s\n' "$binary" "$archs" >&2
+      exit 1
+    fi
+    codesign --force --timestamp --options runtime --sign "$signing_identity" "$binary"
+  fi
+done < <(find "$staged_app" -type f -print0)
+while IFS= read -r -d '' framework; do
+  codesign --force --timestamp --options runtime --sign "$signing_identity" "$framework"
+done < <(find "$staged_app" -depth -type d -name '*.framework' -print0)
+codesign --force --timestamp --options runtime \
+  --entitlements "$flutter_root/macos/Runner/Direct.entitlements" \
+  --sign "$signing_identity" "$staged_app"
+codesign --verify --deep --strict "$staged_app"
+
 printf '==> Assembling %s\n' "$dmg_name"
 dmg_path="$output_dir/$dmg_name"
-rm -f "$dmg_path"
+rm -f "$dmg_path" "$dmg_path.sha256"
 hdiutil create \
   -volname "$display_name" \
   -srcfolder "$staging_dir" \
   -ov -format UDZO \
   "$dmg_path" > /dev/null
 
-# Signing, notarization and stapling happen only when credentials are supplied,
-# so the same command produces either an unsigned artifact or a notarized one.
-signing_identity="${POMODOIST_MACOS_SIGNING_IDENTITY:-}"
-notary_profile="${POMODOIST_MACOS_NOTARY_PROFILE:-}"
-
-if [[ -n "$signing_identity" ]]; then
-  printf '==> Signing with %s\n' "$signing_identity"
-  codesign --force --deep --timestamp --options runtime \
-    --sign "$signing_identity" "$app_path"
-else
-  printf '==> No signing credentials; shipping an unsigned app\n'
-  printf '    Gatekeeper will warn about an unidentified developer.\n'
+codesign --force --timestamp --sign "$signing_identity" "$dmg_path"
+printf '==> Notarizing\n'
+xcrun notarytool submit "$dmg_path" \
+  --keychain-profile "$notary_profile" \
+  --no-wait --no-progress --output-format plist > "$output_dir/notarization-submission.plist"
+submission_id=$(/usr/libexec/PlistBuddy -c 'Print :id' "$output_dir/notarization-submission.plist")
+printf 'Notarization submission: %s\n' "$submission_id"
+# Keep the submission ID if Apple's client fails while waiting; never re-upload
+# an existing submission just to recover its result.
+xcrun notarytool wait "$submission_id" \
+  --keychain-profile "$notary_profile" \
+  --no-progress --output-format plist > "$output_dir/notarization.plist"
+notary_status=$(/usr/libexec/PlistBuddy -c 'Print :status' "$output_dir/notarization.plist")
+if [[ "$notary_status" != Accepted ]]; then
+  printf 'Notarization status: %s\n' "$notary_status" >&2
+  xcrun notarytool log "$submission_id" --keychain-profile "$notary_profile" \
+    "$output_dir/notarization-log.json"
+  exit 1
 fi
+printf '==> Stapling\n'
+xcrun stapler staple "$dmg_path"
+xcrun stapler validate "$dmg_path"
 
-if [[ -n "$signing_identity" && -n "$notary_profile" ]]; then
-  printf '==> Notarizing\n'
-  xcrun notarytool submit "$dmg_path" \
-    --keychain-profile "$notary_profile" \
-    --wait
-  printf '==> Stapling\n'
-  xcrun stapler staple "$dmg_path"
-  xcrun stapler validate "$dmg_path"
-fi
-
-# The sidecar is written for both a signed and an unsigned artifact, so the
-# release gate always finds one. Both the write and the verification happen in
-# the output directory, because the sidecar records a bare file name.
+# Write the release checksum only after notarization and stapling succeed.
 (
   cd "$output_dir"
   shasum -a 256 "$dmg_name" | awk '{print $1 "  " $2}' > "$dmg_name.sha256"

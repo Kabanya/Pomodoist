@@ -2,6 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/data/services/local/account_recovery_store.dart';
+import 'package:pomodoist/data/services/local/sync_owner_store.dart';
+import 'package:uuid/uuid.dart';
 import 'package:pomodoist/data/repositories/account/account_management_repository.dart';
 import 'package:pomodoist/data/repositories/account/sdk_account_management_repository.dart';
 import 'package:pomodoist/data/services/auth/account_profile_service.dart';
@@ -31,9 +34,23 @@ final deleteAccountUseCaseProvider =
       final repository = ref.watch(accountManagementRepositoryProvider);
       if (repository == null) return null;
       final database = ref.read(appDatabaseProvider);
+      final deletedOwner = repository.userId;
       return DeleteAccountUseCase(
         repository: repository,
-        resetLocalData: database.resetAccountData,
+        resetLocalData: () => SyncOwnerStore.serialized(
+          database,
+          () => database.transaction(() async {
+            if (deletedOwner == null) return;
+            await AccountRecoveryStore(database).discardOwner(deletedOwner);
+            final store = SyncOwnerStore(database, const Uuid());
+            final owner = (await store.owner())?.cursor;
+            if (owner == deletedOwner ||
+                owner == null && repository.isCurrent) {
+              await database.resetAccountData();
+              await store.writeOwner('guest');
+            }
+          }),
+        ),
       );
     });
 

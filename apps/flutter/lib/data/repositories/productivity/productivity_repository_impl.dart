@@ -8,12 +8,17 @@ import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/data/services/local/productivity_local_service.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/domain/models/productivity/productivity_models.dart';
+import 'package:pomodoist/utils/clock.dart';
 
 class DriftProductivityRepository implements ProductivityRepository {
-  DriftProductivityRepository(AppDatabase db)
-    : _productivity = ProductivityLocalService(db);
+  DriftProductivityRepository(
+    AppDatabase db, {
+    Clock clock = const SystemClock(),
+  }) : _productivity = ProductivityLocalService(db),
+       _clock = clock;
 
   final ProductivityLocalService _productivity;
+  final Clock _clock;
 
   @override
   Stream<ProductivitySummary> watchTodaySummary() {
@@ -21,22 +26,27 @@ class DriftProductivityRepository implements ProductivityRepository {
     StreamSubscription<List<TaskRow>>? taskSubscription;
     StreamSubscription<List<FocusIntervalRow>>? intervalSubscription;
     StreamSubscription<List<TaskCompletionRow>>? completionSubscription;
+    StreamSubscription<List<ProjectRow>>? projectSubscription;
     List<TaskRow>? tasks;
     List<FocusIntervalRow>? intervals;
     List<TaskCompletionRow>? completions;
+    List<ProjectRow>? projects;
 
     void emit() {
       if (tasks == null ||
           intervals == null ||
           completions == null ||
+          projects == null ||
           controller.isClosed) {
         return;
       }
       try {
         controller.add(
           evaluateProductivitySummary(
-            reportDate: DateTime.now(),
+            reportDate: _clock.now().toLocal(),
+            now: _clock.now().toUtc(),
             tasks: tasks!,
+            projects: projects!,
             intervals: intervals!,
             completions: completions!,
           ),
@@ -50,6 +60,10 @@ class DriftProductivityRepository implements ProductivityRepository {
       onListen: () {
         taskSubscription = _productivity.watchTasks().listen((value) {
           tasks = value;
+          emit();
+        }, onError: controller.addError);
+        projectSubscription = _productivity.watchProjects().listen((value) {
+          projects = value;
           emit();
         }, onError: controller.addError);
         intervalSubscription = _productivity.watchFocusIntervals().listen((
@@ -69,6 +83,7 @@ class DriftProductivityRepository implements ProductivityRepository {
         await taskSubscription?.cancel();
         await intervalSubscription?.cancel();
         await completionSubscription?.cancel();
+        await projectSubscription?.cancel();
       },
     );
     return controller.stream;
@@ -112,6 +127,7 @@ ProductivitySummary evaluateProductivitySummary({
   required List<TaskRow> tasks,
   required List<TaskCompletionRow> completions,
   required List<FocusIntervalRow> intervals,
+  List<ProjectRow> projects = const [],
   DateTime Function(DateTime value)? localize,
   DateTime? now,
 }) {
@@ -122,12 +138,13 @@ ProductivitySummary evaluateProductivitySummary({
       .where((interval) => !interval.isDeleted)
       .toList();
   final days = lastSevenProductivityDays(day);
+  final timestamp = now ?? DateTime.now().toUtc();
   final daily = _dailySummaries(
     days,
     completions,
     activeIntervals,
     toLocal,
-    now ?? DateTime.now().toUtc(),
+    timestamp,
   );
   final openTasks = activeTasks
       .where((task) => task.status != 'completed')
@@ -154,7 +171,102 @@ ProductivitySummary evaluateProductivitySummary({
     allTimeCompletedTasks: completions.length,
     allTimeCompletedFocusIntervals: completedWork,
     lastSevenDays: [for (final date in days) daily[_dateKey(date)]!],
+    todayProjects: _projectSummaries(
+      day,
+      day,
+      tasks,
+      projects,
+      activeIntervals,
+      toLocal,
+      timestamp,
+    ),
+    lastSevenDaysProjects: _projectSummaries(
+      days.first,
+      day,
+      tasks,
+      projects,
+      activeIntervals,
+      toLocal,
+      timestamp,
+    ),
   );
+}
+
+List<ProjectFocusSummary> _projectSummaries(
+  DateTime start,
+  DateTime end,
+  List<TaskRow> tasks,
+  List<ProjectRow> projects,
+  List<FocusIntervalRow> intervals,
+  DateTime Function(DateTime) localize,
+  DateTime now,
+) {
+  final tasksById = {for (final task in tasks) task.id: task};
+  final projectsById = {for (final project in projects) project.id: project};
+  final grouped = <String?, Map<String?, ({int seconds, int intervals})>>{};
+  for (final interval in intervals) {
+    if (interval.type != 'work' || interval.status != 'completed') continue;
+    final day = _dayOnly(localize(interval.startedAt));
+    if (day.isBefore(start) || day.isAfter(end)) continue;
+    final project = grouped.putIfAbsent(interval.projectId, () => {});
+    final previous = project[interval.taskId] ?? (seconds: 0, intervals: 0);
+    project[interval.taskId] = (
+      seconds: previous.seconds + _actualSeconds(interval, now),
+      intervals: previous.intervals + 1,
+    );
+  }
+  final result = <ProjectFocusSummary>[];
+  for (final entry in grouped.entries) {
+    final row = projectsById[entry.key];
+    final taskSummaries =
+        [
+          for (final task in entry.value.entries)
+            TaskFocusSummary(
+              taskId: task.key,
+              name: tasksById[task.key]?.content,
+              canOpen:
+                  tasksById[task.key] != null &&
+                  !tasksById[task.key]!.isDeleted,
+              totalFocusSeconds: task.value.seconds,
+              completedFocusIntervals: task.value.intervals,
+            ),
+        ]..sort((a, b) {
+          final time = b.totalFocusSeconds.compareTo(a.totalFocusSeconds);
+          return time != 0 ? time : (a.taskId ?? '').compareTo(b.taskId ?? '');
+        });
+    result.add(
+      ProjectFocusSummary(
+        projectId: entry.key,
+        project: row == null
+            ? null
+            : ProjectItem(
+                id: row.id,
+                userId: row.userId,
+                name: row.name,
+                color: row.color,
+                scopeId: row.scopeId,
+                orderKey: row.orderKey,
+                isDeleted: row.isDeleted,
+                isArchived: row.isArchived,
+                createdAt: row.createdAt,
+                updatedAt: row.updatedAt,
+              ),
+        totalFocusSeconds: entry.value.values.fold(
+          0,
+          (sum, task) => sum + task.seconds,
+        ),
+        completedFocusIntervals: entry.value.values.fold(
+          0,
+          (sum, task) => sum + task.intervals,
+        ),
+        tasks: taskSummaries,
+      ),
+    );
+  }
+  return result..sort((a, b) {
+    final time = b.totalFocusSeconds.compareTo(a.totalFocusSeconds);
+    return time != 0 ? time : (a.projectId ?? '').compareTo(b.projectId ?? '');
+  });
 }
 
 Map<String, ProductivityDaySummary> _dailySummaries(

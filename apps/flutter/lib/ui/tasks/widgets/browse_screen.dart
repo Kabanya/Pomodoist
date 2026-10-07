@@ -317,8 +317,7 @@ class _BrowseSecondary extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final labels = ref.watch(browseLabelsViewModelProvider);
-    final labelTaskCounts =
-        ref.watch(labelTaskCountsViewModelProvider);
+    final labelTaskCounts = ref.watch(labelTaskCountsViewModelProvider);
     final items = labels.value ?? const <LabelItem>[];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -400,10 +399,15 @@ class _QueueIndicatorState extends ConsumerState<_QueueIndicator> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final pending = ref.watch(syncQueueViewModelProvider);
+    final healthState = ref.watch(syncQueueStatusViewModelProvider);
+    final health = healthState.value;
+    final unavailable = pending.hasError || healthState.hasError;
+    final loading = pending.isLoading || healthState.isLoading;
+    final unresolved = (health?.rejected ?? 0) + (health?.repair ?? 0);
     final count = pending.hasValue ? pending.value! : null;
-    final description = pending.hasError
+    final description = unavailable
         ? l10n.browseQueueUnavailable
-        : pending.isLoading
+        : loading
         ? l10n.browseQueueLoading
         : l10n.pendingLocalCommands(count!);
     final media = MediaQuery.of(context);
@@ -428,8 +432,16 @@ class _QueueIndicatorState extends ConsumerState<_QueueIndicator> {
               ),
               const SizedBox(height: 12),
               if (count != null) Text(l10n.pendingLocalCommands(count)),
+              if (unresolved > 0)
+                Text(
+                  l10n.syncUnresolvedChanges(
+                    health?.rejected ?? 0,
+                    health?.repair ?? 0,
+                  ),
+                  style: TextStyle(color: context.appColors.error),
+                ),
               _LoadStatus(
-                value: pending,
+                value: healthState.hasError ? healthState : pending,
                 errorText: (_) => l10n.browseQueueUnavailable,
                 onRetry: () =>
                     ref.read(syncQueueViewModelProvider.notifier).retry(),
@@ -448,13 +460,21 @@ class _QueueIndicatorState extends ConsumerState<_QueueIndicator> {
         child: ShadButton.ghost(
           onPressed: _popover.toggle,
           leading: Icon(
-            pending.hasError ? LucideIcons.cloudAlert : LucideIcons.cloudUpload,
+            unavailable || unresolved > 0
+                ? LucideIcons.cloudAlert
+                : LucideIcons.cloudUpload,
             size: 16,
-            color: pending.hasError
+            color: unavailable || unresolved > 0
                 ? context.appColors.error
                 : context.appColors.secondaryText,
           ),
-          child: Text(pending.isLoading ? '…' : count?.toString() ?? '—'),
+          child: Text(
+            loading
+                ? '…'
+                : count == null
+                ? '—'
+                : '${count + unresolved}',
+          ),
         ),
       ),
     );

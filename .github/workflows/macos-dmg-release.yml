@@ -99,9 +99,9 @@ jobs:
           EOF
       - name: Build DMG
         env:
-          # Supplied by the macos-production environment once a Developer ID
-          # certificate exists. While unset, the script ships an unsigned
-          # artifact and says so in the release notes.
+          # The signing identity and its private key must be installed on the
+          # runner, and the notary profile must exist in its Keychain. Missing
+          # credentials stop the build; unsigned artifacts are never published.
           POMODOIST_MACOS_SIGNING_IDENTITY: ${{ secrets.POMODOIST_MACOS_SIGNING_IDENTITY }}
           POMODOIST_MACOS_NOTARY_PROFILE: ${{ secrets.POMODOIST_MACOS_NOTARY_PROFILE }}
           POMODOIST_MACOS_CONFIG: ${{ runner.temp }}/macos-production.env

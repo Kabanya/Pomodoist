@@ -483,26 +483,28 @@ class DriftCollaborationRepository implements CollaborationRepository {
     CollaborationConflict command, {
     required bool keepLocal,
   }) async {
-    if (keepLocal) {
-      await SharedAccess(db).requireEdit(command.scopeId);
-      await (db.update(
-        db.syncCommands,
-      )..where((row) => row.id.equals(command.id))).write(
-        SyncCommandsCompanion(
-          uuid: Value(const Uuid().v4()),
-          status: const Value('pending'),
-          baseRevision: Value(command.serverRevision),
-          lastError: const Value(null),
-        ),
-      );
-    } else {
-      await (db.delete(
-        db.syncCommands,
-      )..where((row) => row.id.equals(command.id))).go();
-    }
-    await (db.update(db.sharedScopes)
-          ..where((row) => row.id.equals(command.scopeId)))
-        .write(const SharedScopesCompanion(cursor: Value(0)));
+    await ownerBoundTransaction(db, queue, () async {
+      if (keepLocal) {
+        await SharedAccess(db).requireEdit(command.scopeId);
+        await (db.update(
+          db.syncCommands,
+        )..where((row) => row.id.equals(command.id))).write(
+          SyncCommandsCompanion(
+            uuid: Value(const Uuid().v4()),
+            status: const Value('pending'),
+            baseRevision: Value(command.serverRevision),
+            lastError: const Value(null),
+          ),
+        );
+      } else {
+        await (db.delete(
+          db.syncCommands,
+        )..where((row) => row.id.equals(command.id))).go();
+      }
+      await (db.update(db.sharedScopes)
+            ..where((row) => row.id.equals(command.scopeId)))
+          .write(const SharedScopesCompanion(cursor: Value(0)));
+    });
     await synchronize();
   }
 }

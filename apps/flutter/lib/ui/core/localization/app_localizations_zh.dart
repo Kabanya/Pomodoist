@@ -884,6 +884,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsShortcutsToggleTaskDetailsAlternate => '任务详情（第二个快捷键）';
 
   @override
+  String get settingsShortcutsFocusAlternate => '专注（第二个快捷键）';
+
+  @override
   String get settingsShortcutsGlobalQuickAdd => '全局快速添加';
 
   @override
@@ -1748,7 +1751,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String reportsIntervalCountSemantics(int completed) {
-    return '已完成 $completed 个专注时段；未设目标';
+    return '已完成 $completed 个专注时段；无任务预计时段数';
   }
 
   @override
@@ -3965,4 +3968,97 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get accountAvatarFlags => '旗帜';
+
+  @override
+  String get reportsPlanEstimates => '今天或更早到期的未完成任务的预计时段数';
+
+  @override
+  String get reportsDayInProgress => '今天尚未结束';
+
+  @override
+  String get reportsTimeByProject => '时间花在哪里';
+
+  @override
+  String get reportsNoProject => '无项目';
+
+  @override
+  String get reportsNoTask => '无关联任务';
+
+  @override
+  String reportsUnavailableName(String name) {
+    return '$name（不可用）';
+  }
+
+  @override
+  String get reportsUnknownProject => '不可用的项目';
+
+  @override
+  String get reportsUnknownTask => '不可用的任务';
+
+  @override
+  String get reportsNoProjectFocus => '此期间没有已完成的专注会话';
+
+  @override
+  String reportsProjectShare(String percent) {
+    return '占专注时间的 $percent%';
+  }
+
+  @override
+  String get habitIcon => '习惯图标';
+
+  @override
+  String get habitIconEmoji => '表情符号';
+
+  @override
+  String get habitIconIcons => '图标';
+
+  @override
+  String get habitIconReset => '重置图标';
+
+  @override
+  String habitIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'bookOpen': '阅读',
+      'dumbbell': '运动',
+      'footprints': '步行',
+      'glassWater': '喝水',
+      'moon': '睡眠',
+      'sun': '阳光',
+      'heart': '健康',
+      'brain': '学习',
+      'apple': '营养',
+      'coffee': '咖啡',
+      'music': '音乐',
+      'pencil': '写作',
+      'code': '编程',
+      'leaf': '自然',
+      'target': '目标',
+      'bike': '骑行',
+      'other': '习惯图标',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsSynchronization => '同步';
+
+  @override
+  String get settingsRestartSync => '重新启动同步';
+
+  @override
+  String get settingsSyncRunning => '正在检查并同步数据…';
+
+  @override
+  String get settingsSyncComplete => '同步已完成。';
+
+  @override
+  String get settingsSyncPending => '部分更改仍在等待上传或恢复。';
+
+  @override
+  String get settingsSyncFailed => '同步尚未完成，将自动重试。';
+
+  @override
+  String syncUnresolvedChanges(int rejected, int repair) {
+    return '已拒绝：$rejected。等待恢复：$repair。';
+  }
 }

@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'account_sync_failure.dart';
 
 class AccountSyncLifecycle with WidgetsBindingObserver {
   static const defaultPollInterval = Duration(minutes: 1);
@@ -28,6 +29,7 @@ class AccountSyncLifecycle with WidgetsBindingObserver {
     required Stream<AccountSyncHint> Function() syncHints,
     required OutboxService syncQueueRepository,
     Future<void> Function(Set<String>)? onSynced,
+    Future<void> Function()? onRestart,
     Duration? pollInterval,
     Duration? queueDebounce,
     Duration? hintResubscribeDelay,
@@ -37,6 +39,7 @@ class AccountSyncLifecycle with WidgetsBindingObserver {
        _syncHints = syncHints,
        _syncQueueRepository = syncQueueRepository,
        _onSynced = onSynced,
+       _onRestart = onRestart,
        _pollInterval = pollInterval ?? defaultPollInterval,
        _queueDebounce = queueDebounce ?? const Duration(milliseconds: 800),
        _hintResubscribeDelay =
@@ -48,6 +51,7 @@ class AccountSyncLifecycle with WidgetsBindingObserver {
   final Stream<AccountSyncHint> Function() _syncHints;
   final OutboxService _syncQueueRepository;
   final Future<void> Function(Set<String>)? _onSynced;
+  final Future<void> Function()? _onRestart;
   final Duration _pollInterval;
   final Duration _queueDebounce;
   final Duration _hintResubscribeDelay;
@@ -63,6 +67,32 @@ class AccountSyncLifecycle with WidgetsBindingObserver {
   bool _syncAgain = false;
   bool _disposed = false;
   int _retryAttempt = 0;
+  Completer<void>? _activeSync;
+  Future<Set<String>>? _restartFuture;
+
+  /// Explicitly accelerates the existing scheduler, without replacing its
+  /// engine, deleting data or running a second cycle concurrently.
+  Future<Set<String>> restart() {
+    if (_disposed) return Future.error(StateError('Synchronization stopped'));
+    return _restartFuture ??= (() async {
+      await _activeSync?.future;
+      if (_disposed) throw StateError('Synchronization stopped');
+      _retryTimer?.cancel();
+      _retryTimer = null;
+      _debounce?.cancel();
+      _debounce = null;
+      _syncAgain = false;
+      _retryAttempt = 0;
+      _hintResubscribeTimer?.cancel();
+      await _hintSubscription?.cancel();
+      _hintSubscription = null;
+      if (_disposed) throw StateError('Synchronization stopped');
+      _startHintSubscription();
+      await _onRestart?.call();
+      if (_disposed) throw StateError('Synchronization stopped');
+      return _syncNow(explicit: true);
+    })().whenComplete(() => _restartFuture = null);
+  }
 
   void start() {
     if (_disposed) {
@@ -170,37 +200,48 @@ class AccountSyncLifecycle with WidgetsBindingObserver {
     await _syncNow();
   }
 
-  Future<void> _syncNow() async {
-    if (_disposed) {
-      return;
+  Future<Set<String>> _syncNow({bool explicit = false}) async {
+    if (_disposed ||
+        !explicit &&
+            (_retryTimer?.isActive == true || _restartFuture != null)) {
+      return {};
     }
     if (_syncing) {
       _syncAgain = true;
-      return;
+      return {};
     }
     _syncing = true;
+    final finished = _activeSync = Completer<void>();
     Set<String>? entityTypes;
+    Object? failure;
     try {
       entityTypes = await _syncNowCallback();
       _retryAttempt = 0;
       _retryTimer?.cancel();
       _retryTimer = null;
-    } catch (_) {
-      _scheduleRetry();
-    } finally {
-      _syncing = false;
-    }
-    if (_syncAgain) {
+    } catch (error) {
+      failure = error;
+      if (error is AccountSyncPartialFailure) entityTypes = error.entityTypes;
+      _debounce?.cancel();
       _syncAgain = false;
-      _scheduleSync(Duration.zero);
+      _scheduleRetry();
     }
-    if (entityTypes != null) {
+    if (!_disposed && entityTypes != null) {
       try {
         await _onSynced?.call(entityTypes);
       } catch (_) {
         // Account sync succeeded; integrations retry through their own flows.
       }
     }
+    _syncing = false;
+    _activeSync = null;
+    finished.complete();
+    if (_syncAgain && _restartFuture == null) {
+      _syncAgain = false;
+      _scheduleSync(Duration.zero);
+    }
+    if (explicit && failure != null) throw failure;
+    return entityTypes ?? {};
   }
 
   void _scheduleRetry() {

@@ -21,6 +21,82 @@ void main() {
   });
   tearDown(() => db.close());
   test(
+    'habit sign survives push, other-device pull, legacy updates and explicit reset',
+    () async {
+      final id = (await repo.createHabit(
+        HabitDraft(title: 'Read', startDate: now, icon: '📚'),
+        now: now,
+      )).getOrThrow();
+      final sender = testSyncEngine(
+        db: db,
+        account: account,
+        uuid: const Uuid(),
+      );
+      await sender.pushPending();
+      final payload = account.pushed
+          .singleWhere((o) => o.entityType == 'habit')
+          .payload;
+      expect(payload['icon'], '📚');
+      final remoteDb = AppDatabase(NativeDatabase.memory());
+      addTearDown(remoteDb.close);
+      final remote = _Account()
+        ..changes = [
+          AccountSyncEntity(
+            entityType: 'habit',
+            entityId: id,
+            serverRevision: 1,
+            data: payload,
+          ),
+        ];
+      final receiver = testSyncEngine(
+        db: remoteDb,
+        account: remote,
+        uuid: const Uuid(),
+      );
+      final received = DriftHabitRepository(
+        remoteDb,
+        DriftOutboxService(remoteDb),
+      );
+      await receiver.pullLatest();
+      expect((await received.watchHabits().first).single.icon, '📚');
+      final legacy = {...payload}..remove('icon');
+      legacy['title'] = 'Read again';
+      remote.changes = [
+        AccountSyncEntity(
+          entityType: 'habit',
+          entityId: id,
+          serverRevision: 2,
+          data: legacy,
+        ),
+      ];
+      await receiver.pullLatest();
+      expect((await received.watchHabits().first).single.icon, '📚');
+      expect((await received.watchHabits().first).single.title, 'Read again');
+      (await repo.updateIcon(
+        id,
+        null,
+        now: now.add(const Duration(minutes: 1)),
+      )).getOrThrow();
+      await sender.pushPending();
+      final reset = account.pushed
+          .lastWhere((o) => o.entityType == 'habit')
+          .payload;
+      expect(reset.containsKey('icon'), isTrue);
+      expect(reset['icon'], isNull);
+      remote.changes = [
+        AccountSyncEntity(
+          entityType: 'habit',
+          entityId: id,
+          serverRevision: 3,
+          data: reset,
+        ),
+      ];
+      await receiver.pullLatest();
+      expect((await received.watchHabits().first).single.icon, isNull);
+      expect((await received.watchHabits().first).single.title, 'Read again');
+    },
+  );
+  test(
     'period quotas and night check-ins survive push, pull and snapshot',
     () async {
       final id = (await repo.createHabit(
@@ -117,6 +193,8 @@ void main() {
       ),
     ];
     final engine = testSyncEngine(db: db, account: account, uuid: const Uuid());
+    // The remote edit follows acknowledgement of the local creation.
+    await engine.pushPending();
     await engine.pullLatest();
     expect(
       (await repo.watchHabits().first).single.scheduleHistory.last.dayPeriod,
@@ -167,8 +245,10 @@ void main() {
       account.pushed.clear();
       await engine.importLocalSnapshotIfNeeded();
       expect(
-        account.pushed.singleWhere((o) => o.entityType == 'habit').operation,
-        'delete',
+        account.pushed
+            .where((o) => o.entityType == 'habit')
+            .map((o) => o.operation),
+        allOf(isNotEmpty, everyElement('delete')),
       );
     },
   );

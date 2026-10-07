@@ -53,6 +53,14 @@ void main() {
         'alt': false,
         'shift': false,
       });
+      expect(commands[AppShortcutCommand.focusAlternate.name], {
+        'label': 'Label focusAlternate',
+        'keyLabel': 'F',
+        'meta': true,
+        'control': false,
+        'alt': false,
+        'shift': false,
+      });
     },
   );
 

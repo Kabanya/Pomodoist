@@ -71,7 +71,9 @@ class SdkAccountManagementRepository implements AccountManagementRepository {
     await _service.deleteRemoteAccount().timeout(_timeout);
   });
   @override
-  Future<Result<void>> signOut() => Result.capture(_service.signOut);
+  Future<Result<void>> signOut() => Result.capture(() async {
+    if (isCurrent) await _service.signOut();
+  });
   @override
   Future<Result<void>> updateNickname(String name) => Result.capture(() async {
     _requireCurrent();

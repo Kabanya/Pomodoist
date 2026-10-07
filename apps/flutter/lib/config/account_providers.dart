@@ -399,6 +399,14 @@ final syncAccountUseCaseProvider = Provider<SyncAccountUseCase>((ref) {
   );
 });
 
+final accountSyncRestartProvider = Provider<Future<void> Function()>((ref) {
+  return () async {
+    final lifecycle = ref.read(accountSyncLifecycleProvider);
+    if (lifecycle == null) throw StateError('Synchronization is unavailable');
+    await lifecycle.restart();
+  };
+});
+
 final accountSyncLifecycleProvider = Provider<AccountSyncLifecycle?>((ref) {
   final account = ref.watch(accountClientProvider);
   final engine = ref.watch(accountSyncEngineProvider);
@@ -406,7 +414,18 @@ final accountSyncLifecycleProvider = Provider<AccountSyncLifecycle?>((ref) {
   if (account == null || engine == null) {
     return null;
   }
+  final owner = account.currentUserId;
   final lifecycle = AccountSyncLifecycle(
+    onRestart: () async {
+      if (!ref.mounted || account.currentUserId != owner) {
+        throw StateError('Account changed');
+      }
+      await engine.prepareLocalAccountData();
+      if (!ref.mounted || account.currentUserId != owner) {
+        throw StateError('Account changed');
+      }
+      await engine.requestRecoveryScan();
+    },
     syncNow: () async => (await useCase.call()).getOrThrow(),
     deviceId: engine.deviceId,
     syncHints: () => account.syncHints(appId: AccountAppId.pomodoist),

@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +13,8 @@ import 'package:pomodoist/domain/models/productivity/achievement_models.dart';
 import 'package:pomodoist/ui/productivity/widgets/achievement_localizations.dart';
 import 'package:pomodoist/domain/models/productivity/productivity_models.dart';
 import 'package:pomodoist/ui/productivity/widgets/achievement_widgets.dart';
+import 'package:pomodoist/domain/models/tasks/project_colors.dart';
+import 'package:pomodoist/routing/task_detail_navigation.dart';
 
 const _wideReportsBreakpoint = 760.0;
 const _reportsMaxWidth = 1160.0;
@@ -64,6 +65,18 @@ class ReportsScreen extends ConsumerWidget {
                         _WeeklyStory(
                           key: const Key('reports-weekly-story'),
                           days: item.lastSevenDays,
+                          today: today,
+                        ),
+                        const SizedBox(height: 30),
+                        const Divider(),
+                        const SizedBox(height: 24),
+                        _ProjectFocusSection(
+                          key: const Key('reports-project-focus'),
+                          summary: item,
+                          state: state,
+                          viewModel: ref.read(
+                            reportsViewModelProvider.notifier,
+                          ),
                         ),
                         const SizedBox(height: 30),
                         const Divider(),
@@ -96,14 +109,32 @@ class _TodayStory extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final wide = constraints.maxWidth >= _wideReportsBreakpoint;
+        final wide =
+            constraints.maxWidth >= _wideReportsBreakpoint &&
+            MediaQuery.textScalerOf(context).scale(1) <= 1.3;
         final introduction = _TodayIntroduction(summary: summary, wide: wide);
-        final progress = _IntervalProgress(
-          completed: summary.completedFocusIntervals,
-          target: summary.plannedFocusIntervals,
-          size: wide ? 154 : 126,
+        final progress = SizedBox(
+          width: wide ? 200 : constraints.maxWidth,
+          child: Column(
+            children: [
+              _IntervalProgress(
+                completed: summary.completedFocusIntervals,
+                target: summary.plannedFocusIntervals,
+                size: MediaQuery.textScalerOf(context)
+                    .scale(wide ? 154 : 126)
+                    .clamp(0, wide ? 200 : constraints.maxWidth)
+                    .toDouble(),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                context.l10n.reportsPlanEstimates,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
         );
-        final metrics = _TodayMetrics(summary: summary, wide: wide);
+        final metrics = _TodayMetrics(summary: summary);
 
         if (!wide) {
           return Column(
@@ -111,14 +142,9 @@ class _TodayStory extends StatelessWidget {
             children: [
               introduction,
               const SizedBox(height: 24),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  progress,
-                  const SizedBox(width: 24),
-                  Expanded(child: metrics),
-                ],
-              ),
+              metrics,
+              const SizedBox(height: 24),
+              progress,
             ],
           );
         }
@@ -130,11 +156,11 @@ class _TodayStory extends StatelessWidget {
             Container(
               width: 1,
               height: 132,
-              margin: const EdgeInsets.symmetric(horizontal: 38),
+              margin: const EdgeInsets.symmetric(horizontal: 24),
               color: context.appColors.border,
             ),
             progress,
-            const SizedBox(width: 48),
+            const SizedBox(width: 24),
             Expanded(flex: 3, child: metrics),
           ],
         );
@@ -172,16 +198,20 @@ class _TodayIntroduction extends StatelessWidget {
         const SizedBox(height: 14),
         Text(
           formatFocusTime(context, summary.totalFocusSeconds),
-          style: textTheme.displayMedium?.copyWith(
-            color: colors.primaryText,
-            fontSize: wide ? 56 : 40,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -1.2,
-            height: 1,
-          ),
+          style: textTheme.displayMedium
+              ?.merge(AppTheme.monoTextStyle)
+              .copyWith(
+                color: colors.primaryText,
+                fontSize: wide ? 56 : 40,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -1.2,
+                height: 1,
+              ),
         ),
         const SizedBox(height: 2),
         Text(context.l10n.focusTime, style: textTheme.bodyMedium),
+        const SizedBox(height: 12),
+        Text(context.l10n.reportsDayInProgress, style: textTheme.bodySmall),
       ],
     );
   }
@@ -225,7 +255,12 @@ class _IntervalProgress extends StatelessWidget {
                 key: const Key('reports-interval-progress-value'),
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(value, style: Theme.of(context).textTheme.headlineSmall),
+                  Text(
+                    value,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.headlineSmall?.merge(AppTheme.monoTextStyle),
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     context.l10n.focusIntervals,
@@ -283,14 +318,14 @@ class _ProgressRingPainter extends CustomPainter {
 }
 
 class _TodayMetrics extends StatelessWidget {
-  const _TodayMetrics({required this.summary, required this.wide});
+  const _TodayMetrics({required this.summary});
 
   final ProductivitySummary summary;
-  final bool wide;
 
   @override
-  Widget build(BuildContext context) {
-    final children = [
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
       _StoryMetric(
         icon: LucideIcons.circleCheck,
         iconKey: const Key('reports-completed-tasks-icon'),
@@ -298,32 +333,13 @@ class _TodayMetrics extends StatelessWidget {
         value: '${summary.completedTasks}',
         label: context.l10n.completedTasks,
       ),
-      _StoryMetric(
-        icon: LucideIcons.circle,
-        iconColor: context.appColors.accent,
-        value: '${summary.openTasks}',
-        label: context.l10n.openTasks,
+      const SizedBox(height: 16),
+      Text(
+        '${context.l10n.openTasks}: ${summary.openTasks}',
+        style: Theme.of(context).textTheme.bodySmall,
       ),
-    ];
-    if (!wide) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [children[0], const SizedBox(height: 20), children[1]],
-      );
-    }
-    return Row(
-      children: [
-        Expanded(child: children[0]),
-        Container(
-          width: 1,
-          height: 64,
-          margin: const EdgeInsets.symmetric(horizontal: 22),
-          color: context.appColors.border,
-        ),
-        Expanded(child: children[1]),
-      ],
-    );
-  }
+    ],
+  );
 }
 
 class _StoryMetric extends StatelessWidget {
@@ -352,14 +368,14 @@ class _StoryMetric extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(value, style: Theme.of(context).textTheme.headlineSmall),
-              const SizedBox(height: 2),
               Text(
-                label,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall,
+                value,
+                style: Theme.of(
+                  context,
+                ).textTheme.headlineSmall?.merge(AppTheme.monoTextStyle),
               ),
+              const SizedBox(height: 2),
+              Text(label, style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
         ),
@@ -369,9 +385,10 @@ class _StoryMetric extends StatelessWidget {
 }
 
 class _WeeklyStory extends StatelessWidget {
-  const _WeeklyStory({required this.days, super.key});
+  const _WeeklyStory({required this.days, required this.today, super.key});
 
   final List<ProductivityDaySummary> days;
+  final DateTime today;
 
   @override
   Widget build(BuildContext context) {
@@ -399,7 +416,7 @@ class _WeeklyStory extends StatelessWidget {
     ];
     final semanticsSummary = [
       for (var index = 0; index < days.length; index++)
-        '${weekdayLabels[index]} ${pointLabels[index]}',
+        '${weekdayLabels[index]} ${pointLabels[index]}${days[index].localDate == today ? ', ${context.l10n.navToday}' : ''}',
     ].join(', ');
 
     return LayoutBuilder(
@@ -418,10 +435,11 @@ class _WeeklyStory extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(context.l10n.reportsThisWeek, style: textTheme.titleLarge),
+            const SizedBox(height: 6),
+            Text(context.l10n.reportsDayInProgress, style: textTheme.bodySmall),
             const SizedBox(height: 22),
             SizedBox(
               key: const Key('reports-weekly-chart'),
-              height: wide ? 260 : 210,
               width: double.infinity,
               child: hasStats && days.isNotEmpty
                   ? Semantics(
@@ -430,20 +448,11 @@ class _WeeklyStory extends StatelessWidget {
                       ),
                       readOnly: true,
                       child: ExcludeSemantics(
-                        child: CustomPaint(
-                          painter: _WeeklyFocusChartPainter(
-                            days: days,
-                            pointLabels: pointLabels,
-                            weekdayLabels: weekdayLabels,
-                            lineColor: colors.accent,
-                            gridColor: colors.border,
-                            fillColor: colors.accentTint.withValues(alpha: 0.7),
-                            primaryTextColor: colors.primaryText,
-                            mutedTextColor: colors.mutedText,
-                            textDirection: Directionality.of(context),
-                            labelStyle:
-                                textTheme.labelSmall ?? const TextStyle(),
-                          ),
+                        child: _WeeklyFocusBars(
+                          days: days,
+                          today: today,
+                          pointLabels: pointLabels,
+                          weekdayLabels: weekdayLabels,
                         ),
                       ),
                     )
@@ -470,161 +479,382 @@ class _WeeklyStory extends StatelessWidget {
   }
 }
 
-class _WeeklyFocusChartPainter extends CustomPainter {
-  const _WeeklyFocusChartPainter({
+class _WeeklyFocusBars extends StatelessWidget {
+  const _WeeklyFocusBars({
     required this.days,
+    required this.today,
     required this.pointLabels,
     required this.weekdayLabels,
-    required this.lineColor,
-    required this.gridColor,
-    required this.fillColor,
-    required this.primaryTextColor,
-    required this.mutedTextColor,
-    required this.textDirection,
-    required this.labelStyle,
   });
 
   final List<ProductivityDaySummary> days;
+  final DateTime today;
   final List<String> pointLabels;
   final List<String> weekdayLabels;
-  final Color lineColor;
-  final Color gridColor;
-  final Color fillColor;
-  final Color primaryTextColor;
-  final Color mutedTextColor;
-  final TextDirection textDirection;
-  final TextStyle labelStyle;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    if (days.isEmpty) return;
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
     final maxSeconds = days.fold<int>(
       1,
-      (maxValue, day) => math.max(maxValue, day.totalFocusSeconds),
+      (value, day) => math.max(value, day.totalFocusSeconds),
     );
-    const horizontalPadding = 26.0;
-    const topPadding = 34.0;
-    const bottomPadding = 30.0;
-    final chartHeight = size.height - topPadding - bottomPadding;
-    final chartWidth = size.width - horizontalPadding * 2;
-    final gridPaint = Paint()
-      ..color = gridColor
-      ..strokeWidth = 1;
-    for (var index = 0; index < 3; index++) {
-      final y = topPadding + chartHeight * index / 2;
-      canvas.drawLine(
-        Offset(horizontalPadding, y),
-        Offset(size.width - horizontalPadding, y),
-        gridPaint,
-      );
-    }
-
-    final points = <Offset>[
-      for (var index = 0; index < days.length; index++)
-        Offset(
-          days.length == 1
-              ? size.width / 2
-              : horizontalPadding + chartWidth * index / (days.length - 1),
-          topPadding +
-              chartHeight * (1 - days[index].totalFocusSeconds / maxSeconds),
-        ),
-    ];
-    final linePath = _smoothPath(points);
-    final areaPath = Path.from(linePath)
-      ..lineTo(points.last.dx, topPadding + chartHeight)
-      ..lineTo(points.first.dx, topPadding + chartHeight)
-      ..close();
-    canvas.drawPath(areaPath, Paint()..color = fillColor);
-    canvas.drawPath(
-      linePath,
-      Paint()
-        ..color = lineColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round,
-    );
-
-    final pointPaint = Paint()..color = lineColor;
-    for (var index = 0; index < points.length; index++) {
-      final point = points[index];
-      canvas.drawCircle(point, 4.5, pointPaint);
-      _paintLabel(
-        canvas,
-        pointLabels[index],
-        Offset(point.dx, math.max(0, point.dy - 18)),
-        canvasSize: size,
-        color: primaryTextColor,
-        alignAbove: true,
-      );
-      _paintLabel(
-        canvas,
-        weekdayLabels[index],
-        Offset(point.dx, size.height - 2),
-        canvasSize: size,
-        color: mutedTextColor,
-        alignAbove: true,
-      );
-    }
-  }
-
-  Path _smoothPath(List<Offset> points) {
-    final path = Path()..moveTo(points.first.dx, points.first.dy);
-    for (var index = 1; index < points.length; index++) {
-      final previous = points[index - 1];
-      final current = points[index];
-      final midpointX = (previous.dx + current.dx) / 2;
-      path.cubicTo(
-        midpointX,
-        previous.dy,
-        midpointX,
-        current.dy,
-        current.dx,
-        current.dy,
-      );
-    }
-    return path;
-  }
-
-  void _paintLabel(
-    Canvas canvas,
-    String value,
-    Offset anchor, {
-    required Size canvasSize,
-    required Color color,
-    required bool alignAbove,
-  }) {
-    final painter = TextPainter(
-      text: TextSpan(
-        text: value,
-        style: labelStyle.copyWith(
-          color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
+    final textStyle = Theme.of(context).textTheme.labelSmall;
+    final textScaler = MediaQuery.textScalerOf(context);
+    // Labels keep their text scale; narrow charts scroll rather than shrink.
+    final labelWidths = [...pointLabels, ...weekdayLabels].map((label) {
+      final painter = TextPainter(
+        text: TextSpan(text: label, style: textStyle),
+        textDirection: Directionality.of(context),
+        textScaler: textScaler,
+      )..layout();
+      final width = painter.width;
+      painter.dispose();
+      return width;
+    });
+    final dayWidth = math.max(64.0, labelWidths.fold<double>(0, math.max) + 16);
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SizedBox(
+          width: math.max(constraints.maxWidth, days.length * dayWidth),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              for (var index = 0; index < days.length; index++)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          pointLabels[index],
+                          style: textStyle,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          height: 140,
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Container(
+                              width: 44,
+                              height: days[index].totalFocusSeconds == 0
+                                  ? 2
+                                  : math.max(
+                                      2,
+                                      140 *
+                                          days[index].totalFocusSeconds /
+                                          maxSeconds,
+                                    ),
+                              decoration: BoxDecoration(
+                                color: days[index].localDate == today
+                                    ? colors.accent
+                                    : colors.accentTint,
+                                borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(4),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          weekdayLabels[index],
+                          style: textStyle,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 4),
+                        SizedBox(
+                          height: 8,
+                          child: days[index].localDate == today
+                              ? Icon(
+                                  LucideIcons.circle,
+                                  size: 6,
+                                  color: colors.accent,
+                                )
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
-      textDirection: textDirection,
-      maxLines: 1,
-    )..layout(maxWidth: 58);
-    final x = (anchor.dx - painter.width / 2)
-        .clamp(0.0, math.max(0.0, canvasSize.width - painter.width))
-        .toDouble();
-    final y = alignAbove ? anchor.dy - painter.height : anchor.dy;
-    painter.paint(canvas, Offset(x, y));
+    );
+  }
+}
+
+class _ProjectFocusSection extends StatelessWidget {
+  const _ProjectFocusSection({
+    required this.summary,
+    required this.state,
+    required this.viewModel,
+    super.key,
+  });
+
+  final ProductivitySummary summary;
+  final ReportsState state;
+  final ReportsViewModel viewModel;
+
+  Color _color(BuildContext context, ProjectFocusSummary project) =>
+      project.project == null
+      ? context.appColors.mutedText
+      : parseThemeColor(effectiveProjectColor(project.project!))!;
+
+  String _title(BuildContext context, ProjectFocusSummary project) {
+    final l10n = context.l10n;
+    if (project.projectId == null) return l10n.reportsNoProject;
+    if (project.name == null) return l10n.reportsUnknownProject;
+    return project.isUnavailable
+        ? l10n.reportsUnavailableName(project.name!)
+        : project.name!;
+  }
+
+  String _taskTitle(BuildContext context, TaskFocusSummary task) {
+    final l10n = context.l10n;
+    if (task.taskId == null) return l10n.reportsNoTask;
+    if (task.name == null) return l10n.reportsUnknownTask;
+    return task.canOpen ? task.name! : l10n.reportsUnavailableName(task.name!);
   }
 
   @override
-  bool shouldRepaint(_WeeklyFocusChartPainter oldDelegate) =>
-      !listEquals(days, oldDelegate.days) ||
-      !listEquals(pointLabels, oldDelegate.pointLabels) ||
-      !listEquals(weekdayLabels, oldDelegate.weekdayLabels) ||
-      lineColor != oldDelegate.lineColor ||
-      gridColor != oldDelegate.gridColor ||
-      fillColor != oldDelegate.fillColor ||
-      primaryTextColor != oldDelegate.primaryTextColor ||
-      mutedTextColor != oldDelegate.mutedTextColor ||
-      textDirection != oldDelegate.textDirection ||
-      labelStyle != oldDelegate.labelStyle;
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final textTheme = Theme.of(context).textTheme;
+    final projects = state.projectPeriod == ReportsProjectPeriod.today
+        ? summary.todayProjects
+        : summary.lastSevenDaysProjects;
+    final total = projects.fold<int>(
+      0,
+      (sum, project) => sum + project.totalFocusSeconds,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l10n.reportsTimeByProject, style: textTheme.titleLarge),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final period in ReportsProjectPeriod.values)
+              Semantics(
+                selected: state.projectPeriod == period,
+                child: ShadButton.ghost(
+                  key: ValueKey('reports-project-period-${period.name}'),
+                  height: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  backgroundColor: state.projectPeriod == period
+                      ? context.appColors.surfaceTint
+                      : null,
+                  onPressed: () => viewModel.setProjectPeriod(period),
+                  child: Text(
+                    period == ReportsProjectPeriod.today
+                        ? l10n.navToday
+                        : l10n.lastSevenDaysLabel,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Text(
+          formatFocusTime(context, total),
+          style: AppTheme.monoTextStyle.copyWith(
+            fontSize: 36,
+            fontWeight: FontWeight.w600,
+            color: context.appColors.primaryText,
+          ),
+        ),
+        if (total > 0) ...[
+          const SizedBox(height: 20),
+          ExcludeSemantics(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: SizedBox(
+                height: 12,
+                child: Row(
+                  children: [
+                    for (final project in projects)
+                      if (project.totalFocusSeconds > 0)
+                        Expanded(
+                          flex: project.totalFocusSeconds,
+                          child: ColoredBox(
+                            color: _color(context, project),
+                            child: const SizedBox.expand(),
+                          ),
+                        ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 16),
+        if (projects.isEmpty)
+          Text(l10n.reportsNoProjectFocus, style: textTheme.bodySmall),
+        for (final project in projects) _projectRow(context, project, total),
+      ],
+    );
+  }
+
+  Widget _projectRow(
+    BuildContext context,
+    ProjectFocusSummary project,
+    int total,
+  ) {
+    final expanded = state.expandedProjectIds.contains(project.projectId);
+    final duration = formatFocusTime(context, project.totalFocusSeconds);
+    final share = total == 0
+        ? null
+        : context.l10n.reportsProjectShare(
+            MaterialLocalizations.of(
+              context,
+            ).formatDecimal((100 * project.totalFocusSeconds / total).round()),
+          );
+    final textTheme = Theme.of(context).textTheme;
+    return Column(
+      key: ValueKey(project.projectId),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          expanded: expanded,
+          child: ShadButton.ghost(
+            width: double.infinity,
+            expands: true,
+            height: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            onPressed: () => viewModel.toggleProject(project.projectId),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final title = Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: _color(context, project),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _title(context, project),
+                        textAlign: TextAlign.start,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      expanded
+                          ? LucideIcons.chevronDown
+                          : LucideIcons.chevronRight,
+                      size: 16,
+                    ),
+                  ],
+                );
+                final value = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      duration,
+                      style: AppTheme.monoTextStyle.copyWith(
+                        color: context.appColors.primaryText,
+                      ),
+                    ),
+                    if (share != null) Text(share, style: textTheme.bodySmall),
+                  ],
+                );
+                if (constraints.maxWidth < 480 ||
+                    MediaQuery.textScalerOf(context).scale(1) > 1.3) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      title,
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(start: 20),
+                        child: value,
+                      ),
+                    ],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: title),
+                    const SizedBox(width: 24),
+                    value,
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+        if (expanded)
+          for (final task in project.tasks)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 20),
+              child: task.canOpen
+                  ? ShadButton.ghost(
+                      width: double.infinity,
+                      expands: true,
+                      height: 0,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 12,
+                      ),
+                      onPressed: () => openTaskDetails(context, task.taskId!),
+                      child: _taskRow(context, task),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 12,
+                      ),
+                      child: _taskRow(context, task),
+                    ),
+            ),
+        const Divider(height: 1),
+      ],
+    );
+  }
+
+  Widget _taskRow(BuildContext context, TaskFocusSummary task) => LayoutBuilder(
+    builder: (context, constraints) {
+      final title = Text(
+        _taskTitle(context, task),
+        textAlign: TextAlign.start,
+        style: task.canOpen ? null : Theme.of(context).textTheme.bodySmall,
+      );
+      final time = Text(
+        formatFocusTime(context, task.totalFocusSeconds),
+        style: AppTheme.monoTextStyle.copyWith(
+          color: context.appColors.secondaryText,
+        ),
+      );
+      if (constraints.maxWidth < 480 ||
+          MediaQuery.textScalerOf(context).scale(1) > 1.3) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [title, const SizedBox(height: 4), time],
+        );
+      }
+      return Row(
+        children: [
+          Expanded(child: title),
+          const SizedBox(width: 16),
+          time,
+        ],
+      );
+    },
+  );
 }
 
 class _WeeklyTotals extends StatelessWidget {
@@ -643,36 +873,47 @@ class _WeeklyTotals extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _WeeklyTotal(
-            icon: LucideIcons.clock,
-            iconColor: context.appColors.accent,
-            value: focusTime,
-            label: context.l10n.focusTime,
-            compact: compact,
-          ),
-        ),
-        Expanded(
-          child: _WeeklyTotal(
-            icon: LucideIcons.timer,
-            iconColor: context.appColors.accent,
-            value: focusIntervals,
-            label: context.l10n.focusIntervals,
-            compact: compact,
-          ),
-        ),
-        Expanded(
-          child: _WeeklyTotal(
-            icon: LucideIcons.circleCheck,
-            iconColor: context.appColors.info,
-            value: completedTasks,
-            label: context.l10n.completedTasks,
-            compact: compact,
-          ),
-        ),
-      ],
+    final metrics = [
+      _WeeklyTotal(
+        icon: LucideIcons.clock,
+        iconColor: context.appColors.accent,
+        value: focusTime,
+        label: context.l10n.focusTime,
+        compact: compact,
+      ),
+      _WeeklyTotal(
+        icon: LucideIcons.timer,
+        iconColor: context.appColors.accent,
+        value: focusIntervals,
+        label: context.l10n.focusIntervals,
+        compact: compact,
+      ),
+      _WeeklyTotal(
+        icon: LucideIcons.circleCheck,
+        iconColor: context.appColors.info,
+        value: completedTasks,
+        label: context.l10n.completedTasks,
+        compact: compact,
+      ),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 520 ||
+            MediaQuery.textScalerOf(context).scale(1) > 1.3) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var index = 0; index < metrics.length; index++) ...[
+                if (index > 0) const SizedBox(height: 16),
+                metrics[index],
+              ],
+            ],
+          );
+        }
+        return Row(
+          children: [for (final metric in metrics) Expanded(child: metric)],
+        );
+      },
     );
   }
 }
@@ -705,26 +946,16 @@ class _WeeklyTotal extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    value,
-                    style: compact
-                        ? Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          )
-                        : Theme.of(context).textTheme.titleLarge,
-                  ),
+                Text(
+                  value,
+                  style:
+                      (compact
+                              ? Theme.of(context).textTheme.titleMedium
+                              : Theme.of(context).textTheme.titleLarge)
+                          ?.merge(AppTheme.monoTextStyle),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                Text(label, style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
           ),

@@ -438,6 +438,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     final l10n = context.l10n;
     final state = ref.watch(settingsViewModelProvider);
     final viewModel = ref.read(settingsViewModelProvider.notifier);
+    final syncPhase = state.signedIn && state.userId != null
+        ? ref.watch(syncRestartViewModelProvider)
+        : SyncRestartPhase.idle;
     final returnTo = settingsLocation(SettingsSection.account).toString();
     void retryBootstrap() => unawaited(viewModel.retryAccount());
     return Column(
@@ -486,50 +489,65 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ],
           if (state.signedIn && state.userId != null)
             SettingsRow(
+              title: l10n.settingsSynchronization,
+              subtitle: switch (syncPhase) {
+                SyncRestartPhase.idle => null,
+                SyncRestartPhase.running => l10n.settingsSyncRunning,
+                SyncRestartPhase.complete => l10n.settingsSyncComplete,
+                SyncRestartPhase.pending => l10n.settingsSyncPending,
+                SyncRestartPhase.failed => l10n.settingsSyncFailed,
+              },
+              control: ShadButton.outline(
+                key: const Key('account-restart-sync'),
+                width: double.infinity,
+                height: 48,
+                enabled:
+                    state.syncPrepared && syncPhase != SyncRestartPhase.running,
+                onPressed: () => unawaited(
+                  ref.read(syncRestartViewModelProvider.notifier).restart(),
+                ),
+                leading: const Icon(LucideIcons.refreshCw, size: 18),
+                child: Text(l10n.settingsRestartSync),
+              ),
+            ),
+          if (state.signedIn && state.userId != null)
+            SettingsRow(
               title: l10n.accountAvatar,
-              control: Wrap(
-                spacing: 12,
-                runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  CircleAvatar(
-                    child: state.avatarEmoji == null
-                        ? const Icon(Icons.person_outline)
-                        : Text(
-                            state.avatarEmoji!,
-                            style: const TextStyle(fontSize: 24),
-                          ),
-                  ),
-                  ShadButton.outline(
-                    key: const Key('account-change-avatar'),
-                    height: 48,
-                    enabled: !state.accountLoading,
-                    onPressed: () {
-                      final userId = state.userId!;
-                      showDialog<void>(
-                        context: context,
-                        barrierDismissible: false,
-                        animationStyle: AnimationStyle(
-                          duration: AppMotion.duration(
-                            context,
-                            AppMotion.popup,
-                          ),
-                          reverseDuration: AppMotion.duration(
-                            context,
-                            AppMotion.popup,
-                          ),
-                          curve: AppMotion.curve,
+              control: ShadButton.outline(
+                key: const Key('account-change-avatar'),
+                width: double.infinity,
+                height: 48,
+                leading: CircleAvatar(
+                  radius: 16,
+                  child: state.avatarEmoji == null
+                      ? const Icon(Icons.person_outline, size: 18)
+                      : Text(
+                          state.avatarEmoji!,
+                          style: const TextStyle(fontSize: 20),
                         ),
-                        builder: (_) => AccountAvatarDialog(
-                          emoji: state.avatarEmoji,
-                          onSave: (emoji) =>
-                              viewModel.saveAvatarEmoji(userId, emoji),
-                        ),
-                      );
-                    },
-                    child: Text(l10n.accountChangeAvatar),
-                  ),
-                ],
+                ),
+                enabled: !state.accountLoading,
+                onPressed: () {
+                  final userId = state.userId!;
+                  showDialog<void>(
+                    context: context,
+                    barrierDismissible: false,
+                    animationStyle: AnimationStyle(
+                      duration: AppMotion.duration(context, AppMotion.popup),
+                      reverseDuration: AppMotion.duration(
+                        context,
+                        AppMotion.popup,
+                      ),
+                      curve: AppMotion.curve,
+                    ),
+                    builder: (_) => AccountAvatarDialog(
+                      emoji: state.avatarEmoji,
+                      onSave: (emoji) =>
+                          viewModel.saveAvatarEmoji(userId, emoji),
+                    ),
+                  );
+                },
+                child: Text(l10n.accountChangeAvatar),
               ),
             ),
           if (state.signedIn &&
@@ -539,6 +557,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               subtitle: state.displayName,
               control: ShadButton.outline(
                 key: const Key('account-change-nickname'),
+                width: double.infinity,
+                height: 48,
                 onPressed: () {
                   showDialog<void>(
                     context: context,

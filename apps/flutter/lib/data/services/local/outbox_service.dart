@@ -6,6 +6,30 @@ import 'package:uuid/uuid.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/data/services/local/shared_access.dart';
 import 'package:pomodoist/data/services/sync/account_sync_mapping.dart';
+import 'package:pomodoist/domain/models/account/sync_status.dart';
+
+Stream<SyncQueueStatus> watchSyncQueueStatus(AppDatabase db) => db
+    .customSelect(
+      '''
+  SELECT
+    (SELECT count(*) FROM sync_commands WHERE status = 'pending') AS pending,
+    (SELECT count(*) FROM sync_commands WHERE status IN ('rejected','conflict','revoked')) AS rejected,
+    (SELECT count(*) FROM shared_entities WHERE scope_id = '_account'
+      AND entity_type LIKE 'sync_repair:%' AND is_deleted = 0) AS repair,
+    EXISTS(SELECT 1 FROM sync_state WHERE id = 'pomodoist-repair-v1'
+      AND cursor NOT LIKE 'done:%') AS recovering
+''',
+      readsFrom: {db.syncCommands, db.sharedEntities, db.syncState},
+    )
+    .watchSingle()
+    .map(
+      (r) => (
+        pending: r.read<int>('pending'),
+        rejected: r.read<int>('rejected'),
+        repair: r.read<int>('repair'),
+        recovering: r.read<int>('recovering') != 0,
+      ),
+    );
 
 class SyncQueueCommand {
   const SyncQueueCommand({
@@ -38,10 +62,24 @@ abstract interface class OutboxService {
 }
 
 class DriftOutboxService implements OutboxService {
-  DriftOutboxService(this._db, {Uuid? uuid}) : _uuid = uuid ?? const Uuid();
+  DriftOutboxService(this._db, {Uuid? uuid, this.expectedOwner})
+    : _uuid = uuid ?? const Uuid();
 
   final AppDatabase _db;
   final Uuid _uuid;
+  final Future<String?>? expectedOwner;
+
+  Future<void> checkOwner() async {
+    if (expectedOwner == null) return;
+    final owner = await expectedOwner;
+    final current =
+        await (_db.select(_db.syncState)
+              ..where((r) => r.id.equals('pomodoist-account-owner-v1')))
+            .getSingleOrNull();
+    if (current?.cursor != owner) {
+      throw StateError('Account changed during local mutation.');
+    }
+  }
 
   @override
   Future<void> enqueue({
@@ -85,6 +123,7 @@ class DriftOutboxService implements OutboxService {
         .reversed
         .toList();
     await _db.transaction(() async {
+      await checkOwner();
       for (final clientId in latestConnectionClients) {
         await (_db.delete(_db.syncCommands)..where(
               (row) =>
@@ -261,3 +300,13 @@ class DriftOutboxService implements OutboxService {
     return query.watch();
   }
 }
+
+/// Covers local-only writes and Undo as well as writes that enqueue sync work.
+Future<T> ownerBoundTransaction<T>(
+  AppDatabase db,
+  OutboxService queue,
+  Future<T> Function() action,
+) => db.transaction(() async {
+  if (queue is DriftOutboxService) await queue.checkOwner();
+  return action();
+});

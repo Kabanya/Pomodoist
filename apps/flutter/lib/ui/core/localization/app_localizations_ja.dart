@@ -908,6 +908,9 @@ class AppLocalizationsJa extends AppLocalizations {
       'タスクの詳細（2つ目のショートカット）';
 
   @override
+  String get settingsShortcutsFocusAlternate => 'フォーカス（2つ目のショートカット）';
+
+  @override
   String get settingsShortcutsGlobalQuickAdd => 'グローバルクイック追加';
 
   @override
@@ -1790,7 +1793,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String reportsIntervalCountSemantics(int completed) {
-    return '集中インターバル$completed回完了、目標未設定';
+    return '集中インターバル$completed回完了、タスクの見積もりなし';
   }
 
   @override
@@ -4052,4 +4055,97 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get accountAvatarFlags => '旗';
+
+  @override
+  String get reportsPlanEstimates => '今日以前が期限の未完了タスクの見積もり';
+
+  @override
+  String get reportsDayInProgress => '今日はまだ進行中です';
+
+  @override
+  String get reportsTimeByProject => '時間の使い道';
+
+  @override
+  String get reportsNoProject => 'プロジェクトなし';
+
+  @override
+  String get reportsNoTask => '関連タスクなし';
+
+  @override
+  String reportsUnavailableName(String name) {
+    return '$name（利用不可）';
+  }
+
+  @override
+  String get reportsUnknownProject => '利用できないプロジェクト';
+
+  @override
+  String get reportsUnknownTask => '利用できないタスク';
+
+  @override
+  String get reportsNoProjectFocus => 'この期間に完了した集中セッションはありません';
+
+  @override
+  String reportsProjectShare(String percent) {
+    return '集中時間の$percent%';
+  }
+
+  @override
+  String get habitIcon => '習慣のアイコン';
+
+  @override
+  String get habitIconEmoji => '絵文字';
+
+  @override
+  String get habitIconIcons => 'アイコン';
+
+  @override
+  String get habitIconReset => 'アイコンをリセット';
+
+  @override
+  String habitIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'bookOpen': '読書',
+      'dumbbell': '運動',
+      'footprints': 'ウォーキング',
+      'glassWater': '水分補給',
+      'moon': '睡眠',
+      'sun': '太陽',
+      'heart': '健康',
+      'brain': '学習',
+      'apple': '栄養',
+      'coffee': 'コーヒー',
+      'music': '音楽',
+      'pencil': '執筆',
+      'code': 'プログラミング',
+      'leaf': '自然',
+      'target': '目標',
+      'bike': 'サイクリング',
+      'other': '習慣のアイコン',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsSynchronization => '同期';
+
+  @override
+  String get settingsRestartSync => '同期を再開';
+
+  @override
+  String get settingsSyncRunning => 'データを確認して同期しています…';
+
+  @override
+  String get settingsSyncComplete => '同期が完了しました。';
+
+  @override
+  String get settingsSyncPending => '送信または復元を待っている変更があります。';
+
+  @override
+  String get settingsSyncFailed => '同期が完了していません。自動的に再試行します。';
+
+  @override
+  String syncUnresolvedChanges(int rejected, int repair) {
+    return '拒否: $rejected。復元待ち: $repair。';
+  }
 }

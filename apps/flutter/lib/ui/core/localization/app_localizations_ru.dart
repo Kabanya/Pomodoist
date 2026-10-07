@@ -952,6 +952,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Карточка задачи (второе сочетание)';
 
   @override
+  String get settingsShortcutsFocusAlternate => 'Focus — второе сочетание';
+
+  @override
   String get settingsShortcutsGlobalQuickAdd => 'Глобальное быстрое добавление';
 
   @override
@@ -1860,7 +1863,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String reportsIntervalCountSemantics(int completed) {
-    return 'Завершено интервалов фокуса: $completed; цель не задана';
+    return 'Завершено интервалов фокуса: $completed; оценки задач не заданы';
   }
 
   @override
@@ -4198,4 +4201,100 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get accountAvatarFlags => 'Флаги';
+
+  @override
+  String get reportsPlanEstimates => 'Оценки открытых задач на сегодня и ранее';
+
+  @override
+  String get reportsDayInProgress => 'День ещё продолжается';
+
+  @override
+  String get reportsTimeByProject => 'Куда ушло время';
+
+  @override
+  String get reportsNoProject => 'Без проекта';
+
+  @override
+  String get reportsNoTask => 'Без связанной задачи';
+
+  @override
+  String reportsUnavailableName(String name) {
+    return '$name (недоступно)';
+  }
+
+  @override
+  String get reportsUnknownProject => 'Недоступный проект';
+
+  @override
+  String get reportsUnknownTask => 'Недоступная задача';
+
+  @override
+  String get reportsNoProjectFocus =>
+      'За этот период нет завершённых сессий фокуса';
+
+  @override
+  String reportsProjectShare(String percent) {
+    return '$percent% времени фокуса';
+  }
+
+  @override
+  String get habitIcon => 'Значок привычки';
+
+  @override
+  String get habitIconEmoji => 'Эмодзи';
+
+  @override
+  String get habitIconIcons => 'Иконки';
+
+  @override
+  String get habitIconReset => 'Сбросить значок';
+
+  @override
+  String habitIconOption(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'bookOpen': 'Чтение',
+      'dumbbell': 'Тренировка',
+      'footprints': 'Ходьба',
+      'glassWater': 'Вода',
+      'moon': 'Сон',
+      'sun': 'Солнце',
+      'heart': 'Здоровье',
+      'brain': 'Учёба',
+      'apple': 'Питание',
+      'coffee': 'Кофе',
+      'music': 'Музыка',
+      'pencil': 'Письмо',
+      'code': 'Программирование',
+      'leaf': 'Природа',
+      'target': 'Цель',
+      'bike': 'Велосипед',
+      'other': 'Значок привычки',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsSynchronization => 'Синхронизация';
+
+  @override
+  String get settingsRestartSync => 'Перезапустить синхронизацию';
+
+  @override
+  String get settingsSyncRunning => 'Проверяем и синхронизируем данные…';
+
+  @override
+  String get settingsSyncComplete => 'Синхронизация завершена.';
+
+  @override
+  String get settingsSyncPending =>
+      'Часть изменений ещё ожидает отправки или восстановления.';
+
+  @override
+  String get settingsSyncFailed =>
+      'Синхронизация не завершена. Повторим автоматически.';
+
+  @override
+  String syncUnresolvedChanges(int rejected, int repair) {
+    return 'Отклонено: $rejected. Ожидают восстановления: $repair.';
+  }
 }

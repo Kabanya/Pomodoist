@@ -30,6 +30,8 @@ jobs:
         run: deno test --config server/supabase/deno.json --allow-env --allow-net --allow-read server/supabase/functions server/tests/contracts_test.ts
       - name: Check project file source contracts
         run: python3 -m unittest server/tests/test_project_files_contract.py
+      - name: Test read-only synchronization health gate
+        run: python3 -m unittest server/tests/test_sync_health.py
       - name: Generate an independent instance
         run: make -C server setup
       - name: Start fresh database and API

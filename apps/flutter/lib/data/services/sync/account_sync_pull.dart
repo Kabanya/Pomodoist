@@ -4,6 +4,8 @@ extension AccountSyncPull on AccountSyncEngine {
   Future<Set<String>> pullLatest({
     Set<String> revokedScopeIds = const {},
   }) async {
+    await _capturePendingOperations();
+    await _applyDeferredIncoming();
     var scopesToRemove = revokedScopeIds;
     final deviceId = await _ensureDeviceId();
     final state = await _syncState();
@@ -26,7 +28,7 @@ extension AccountSyncPull on AccountSyncEngine {
         _checkSession();
         await _saveCursor(result.nextCursor);
         await _resetImportState();
-        final imported = await importLocalSnapshotIfNeeded();
+        final imported = await importLocalSnapshotIfNeeded(push: false);
         if (imported) {
           await _broadcastSyncHint();
         }
@@ -36,7 +38,6 @@ extension AccountSyncPull on AccountSyncEngine {
       await _applyPullResult(result, revokedScopeIds: scopesToRemove);
       scopesToRemove = const {};
       _checkSession();
-      await _saveCursor(result.nextCursor);
       if (!result.hasMore || result.nextCursor <= sinceRevision) {
         await _repairKanbanAfterFinalPull();
         return entityTypes;
@@ -105,12 +106,15 @@ extension AccountSyncPull on AccountSyncEngine {
             continue;
           }
         }
+        if (await _deferIncoming(change)) continue;
         if (change.deleted) {
           await _applyDelete(change);
         } else {
           await _applyUpsert(change);
         }
       }
+      _checkSession();
+      await _saveCursor(result.nextCursor);
     });
   }
 
@@ -170,13 +174,19 @@ extension AccountSyncPull on AccountSyncEngine {
         await _upsertWorkspace(entity.entityId, data);
         return;
       case 'project':
-        await _upsertProject(entity.entityId, data);
+        await _applyRequiredEntity(
+          entity,
+          () => _upsertProject(entity.entityId, data),
+        );
         return;
       case 'section':
         await _upsertSection(entity.entityId, data);
         return;
       case 'task':
-        await _upsertTask(entity.entityId, data);
+        await _applyRequiredEntity(
+          entity,
+          () => _upsertTask(entity.entityId, data),
+        );
         return;
       case 'task_completion':
         await _upsertTaskCompletion(entity.entityId, data);
@@ -227,6 +237,7 @@ extension AccountSyncPull on AccountSyncEngine {
   }
 
   Future<void> _applyDelete(AccountSyncEntity entity) async {
+    await _resolveUnreadableEntity(entity);
     final now = entity.deletedAt ?? DateTime.now().toUtc();
     switch (entity.entityType) {
       case 'habit':

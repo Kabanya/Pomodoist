@@ -28,6 +28,29 @@ class TaskDetailsHost extends StatelessWidget {
   );
 }
 
+/// Original background width before a contextual panel reserves its space.
+class DetailsPanelViewport extends InheritedWidget {
+  const DetailsPanelViewport({
+    required this.width,
+    required super.child,
+    super.key,
+  });
+
+  final double width;
+
+  bool get sideBySide => width >= 960;
+
+  double backgroundLayoutWidth(double contentWidth) =>
+      sideBySide ? width : contentWidth;
+
+  static DetailsPanelViewport? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<DetailsPanelViewport>();
+
+  @override
+  bool updateShouldNotify(DetailsPanelViewport oldWidget) =>
+      width != oldWidget.width;
+}
+
 /// Full-height contextual panels share layout, motion and focus restoration.
 class DetailsPanelHost extends StatefulWidget {
   const DetailsPanelHost({
@@ -66,7 +89,11 @@ class _DetailsPanelHostState extends State<DetailsPanelHost> {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final open = widget.panel != null;
-      final sideBySide = constraints.maxWidth >= 960;
+      final viewport = DetailsPanelViewport(
+        width: constraints.maxWidth,
+        child: widget.child,
+      );
+      final sideBySide = viewport.sideBySide;
       final panelWidth = sideBySide ? 440.0 : constraints.maxWidth;
       final duration = AppMotion.duration(context, AppMotion.panel);
       return BackButtonListener(
@@ -100,7 +127,7 @@ class _DetailsPanelHostState extends State<DetailsPanelHost> {
                   excluding: open && !sideBySide,
                   child: ExcludeSemantics(
                     excluding: open && !sideBySide,
-                    child: widget.child,
+                    child: viewport,
                   ),
                 ),
               ),

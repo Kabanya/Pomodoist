@@ -71,6 +71,10 @@ including during theme transitions.
   offset so scrollable containers cannot clip its sides; focusing does not change
   field spacing or size.
 - Align spacing to a **4 px** grid while preserving the current density.
+- Settings rows vertically center labels and controls in horizontal layouts;
+  narrow layouts stack them. Account avatar, nickname and subscription actions
+  fill the same trailing column and use a 48 px height. The avatar preview sits
+  inside its action button.
 - Keep main screens flat. Use shadows to separate floating surfaces.
   Decorative gradients, glow, and spring transitions are not the backdrop
   for everyday actions.
@@ -282,6 +286,16 @@ of content width it uses a 300 px side column; narrower layouts use a dismissibl
 modal with keyboard focus containment and safe-area clearance. The panel contains
 a locale-aware mini calendar and the existing live Focus session and linked task.
 It must never start a separate timer or silently replace an active session.
+
+When task details occupy the shared 440 px side panel, calculate Calendar's
+820 px mobile and 1060 px overview breakpoints from the host width before the
+details panel reserves space. Keep an open Day overview between the calendar
+grid and task details; shrink the grid and reuse its horizontal scrolling.
+Opening or closing details must preserve the selected date, desktop mode,
+scroll position and overview visibility. Do not reopen an overview the user
+closed. Command-Option-B and Command-Shift-B retain their task-details actions.
+Below the 960 px side-panel breakpoint, keep the existing full-width details
+and responsive calendar behavior.
 
 Calendar task cards share one context menu for the overflow button, secondary
 click and keyboard menu shortcut. Keep touch long-press available for dragging.
@@ -964,6 +978,15 @@ its pause and stop controls keep their own actions.
 
 ### Minimal Focus timer
 
+The Focus keyboard shortcuts are Cmd/Ctrl+5 and Cmd/Ctrl+F by default; both
+remain configurable. From another destination, open Focus in its stored view
+mode. When Focus is already open, toggle Minimal / Full and persist the choice
+without changing the session or countdown. Ignore key repeats and overlapping
+mode writes, and surface preference-save failures through the existing Focus
+error feedback. Preserve user bindings when adding the second shortcut; if F is
+occupied, choose the first available Shift+F through Shift+Z combination with
+the platform's Command or Control modifier.
+
 Use one centered column in Minimal view: a quiet preset selector while idle,
 large light-weight GeistMono digits with the selected progress style, and a
 56 px circular Play / Pause action. The active phase stays visible above the
@@ -1429,6 +1452,29 @@ acts.
 - Cleanup of temporary visual state must not block the workflow when an effect
   has zero duration.
 
+## Reports
+
+Reports keeps a flat reading order: today's focus time and completed tasks,
+seven-day focus bars and totals, project distribution, then the closest locked
+achievement. Open tasks are secondary context. The interval ring compares
+completed intervals with estimates on open tasks due today or earlier; these
+estimates are not a separately configured daily goal. Identify today as an
+unfinished day rather than comparing it with completed days.
+
+Project distribution has a local Today / Last 7 days selector, initially Last
+7 days. Changing it resets expanded project groups without changing the daily
+overview or weekly chart. Live updates retain expansion by project ID. Use the
+existing project colors, duration formatting, task-details navigation and
+keyboard-accessible buttons. Preserve text scaling: totals stack when needed,
+project rows wrap, and narrow weekly charts scroll instead of shrinking labels.
+Provide a spoken chart summary including today's marker.
+
+Count the same non-deleted completed work intervals and actual duration without
+pauses as the existing daily summary. Attribute time to the project recorded on
+the interval, even after a task moves. Keep unlinked, missing and deleted records
+in explicit groups; unavailable tasks do not open. Zero-time distributions have
+no percentage or proportion bar. Both themes use the shared palette and type.
+
 ## Validation
 
 For styling work, the agent formats changed Dart files, runs static analysis,
@@ -1471,6 +1517,33 @@ the strip scrolls horizontally when text scaling needs more room. Preserve the
 selected date, editor draft and action state when switching List / Day rhythm.
 The selected view is a device-local preference; failed writes retain the previous
 view and expose retry feedback. Finished remains an ordinary historical list.
+
+List / Day rhythm use separate choice chips matching Active / Finished in size,
+fill, typography, 8 px corner radius and selected checkmark. Each has a 1 px
+outline: accent for the selected view and the palette border color otherwise.
+Keep 8 px gaps and allow wrapping on narrow screens. Disable the view chips while
+their preference is loading or saving, and hide them in Finished.
+
+Habit signs use one optional synced `icon` value: a stable Lucide catalog name
+or one complete Unicode emoji. Null uses the existing repeat icon. Keep a neutral
+32 px square with 8 px corners, an 18 px icon or 20 px emoji, and a 44 px button
+target. Render unknown signs with the default icon without discarding stored data.
+List, Day rhythm and Finished use the same sign and keyboard-accessible picker.
+
+The habit editor places the sign button beside the name input; selections remain
+in the draft until Save. Selecting a sign from a row saves only the sign and its
+update timestamp immediately. The picker offers the complete installed emoji
+catalog with localized categories, search and skin tones, plus 16 habit icons.
+Reset selects the default sign; Cancel discards an uncommitted choice. Keep failed
+choices available for retry and block dismissal and duplicate actions during a
+write. Use a dialog up to 560 px, fullscreen below 600 px, with pinned heading and
+actions around scrollable content. Picker cells have 48 px targets. Reuse palette,
+localization and Reduce Motion conventions from the account emoji editor.
+
+Drift schema 11 adds one nullable habit icon column. The server validator must
+accept the optional icon before releasing updated clients. Older payloads that
+omit the icon retain the server value; explicit null clears it. Habit icon writes
+must not revise schedules or check-ins.
 
 Active List rows are divided into Remaining and Done, with counts. Partial goals
 stay in Remaining; completing or undoing a check-in moves the row between groups.

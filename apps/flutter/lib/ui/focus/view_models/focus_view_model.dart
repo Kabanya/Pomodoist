@@ -42,6 +42,7 @@ final focusViewModelProvider =
 
 class FocusViewModel extends Notifier<FocusState> {
   late FocusRepository _repository;
+  bool _changingViewMode = false;
   String? _selectedPresetId;
   String? _activePresetOverrideRunId;
   String? _activePresetOverridePresetId;
@@ -144,6 +145,21 @@ class FocusViewModel extends Notifier<FocusState> {
   Future<void> setViewMode(FocusViewMode mode) async =>
       (await ref.read(focusPreferencesRepositoryProvider).setViewMode(mode))
           .getOrThrow();
+  Future<void> toggleViewMode() async {
+    if (_changingViewMode) return;
+    _changingViewMode = true;
+    try {
+      final mode = ref.read(focusPreferencesRepositoryProvider).state.viewMode;
+      await setViewMode(
+        mode == FocusViewMode.minimal
+            ? FocusViewMode.full
+            : FocusViewMode.minimal,
+      );
+    } finally {
+      _changingViewMode = false;
+    }
+  }
+
   Future<void> setSessionDisplay(FocusSessionDisplay value) async =>
       (await ref
               .read(focusPreferencesRepositoryProvider)

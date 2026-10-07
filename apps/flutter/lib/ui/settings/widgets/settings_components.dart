@@ -67,7 +67,9 @@ class SettingsRow extends StatelessWidget {
                 child: Flex(
                   direction: stacked ? Axis.vertical : Axis.horizontal,
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: stacked
+                      ? CrossAxisAlignment.start
+                      : CrossAxisAlignment.center,
                   children: [
                     SizedBox(
                       width: stacked

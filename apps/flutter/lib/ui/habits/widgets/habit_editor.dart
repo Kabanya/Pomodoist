@@ -9,6 +9,7 @@ import 'package:pomodoist/domain/models/notifications/habit_reminder_status.dart
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/widgets/app_date_time_picker.dart';
+import 'package:pomodoist/ui/habits/widgets/habit_icon.dart';
 import 'package:pomodoist/ui/habits/view_models/habits_view_model.dart';
 
 String habitDayPeriodLabel(BuildContext context, HabitDayPeriod period) {
@@ -126,7 +127,7 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
     for (final p in _selectedPeriods)
       p: int.tryParse(_periodControllers[p]!.text) ?? 0,
   };
-  String? _project;
+  String? _icon, _project;
   int _duration = 0;
   bool _error = false;
   @override
@@ -134,6 +135,7 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
     super.initState();
     final habit = widget.habit;
     final schedule = habit?.scheduleHistory.last;
+    _icon = habit?.icon;
     _title = TextEditingController(text: habit?.title ?? '');
     _target = TextEditingController(text: '${schedule?.targetPerDay ?? 1}');
     _target.addListener(_targetChanged);
@@ -214,6 +216,7 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
         .save(
           id: widget.habit?.id,
           title: _title.text,
+          icon: _icon,
           startDate: _start,
           endDate: _end,
           weekdays: _daily
@@ -296,11 +299,32 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
                   children: [
                     _field(
                       l.habitName,
-                      ShadInput(
-                        controller: _title,
-                        maxLength: 200,
-                        enabled: !view.saving,
-                        placeholder: Text(l.habitName),
+                      Row(
+                        children: [
+                          HabitIconButton(
+                            icon: _icon,
+                            onPressed: view.saving
+                                ? null
+                                : () => showHabitIconPicker(
+                                    context,
+                                    icon: _icon,
+                                    onSave: (icon) async {
+                                      if (!mounted) return false;
+                                      setState(() => _icon = icon);
+                                      return true;
+                                    },
+                                  ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ShadInput(
+                              controller: _title,
+                              maxLength: 200,
+                              enabled: !view.saving,
+                              placeholder: Text(l.habitName),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     _field(

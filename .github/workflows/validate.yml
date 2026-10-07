@@ -38,6 +38,23 @@ jobs:
       - run: flutter analyze
         working-directory: apps/flutter
       - run: dart analyze tool
+      - name: Exercise account recovery and restart fault scenarios
+        working-directory: apps/flutter
+        run: >-
+          flutter test --no-pub --reporter json
+          test/account_recovery_store_test.dart
+          test/account_sync_reliability_test.dart
+          test/account_sync_lifecycle_test.dart
+          test/settings_sync_restart_test.dart
+          test/domain/sync_account_use_case_test.dart
+          > sync-reliability.json
+      - name: Preserve machine-readable synchronization report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: sync-reliability
+          path: apps/flutter/sync-reliability.json
+          if-no-files-found: ignore
       - run: flutter test
         working-directory: apps/flutter
       - name: Test browser voice recording storage
