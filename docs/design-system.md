@@ -71,6 +71,10 @@ including during theme transitions.
   offset so scrollable containers cannot clip its sides; focusing does not change
   field spacing or size.
 - Align spacing to a **4 px** grid while preserving the current density.
+- Settings rows vertically center labels and controls in horizontal layouts;
+  narrow layouts stack them. Account avatar, nickname and subscription actions
+  fill the same trailing column and use a 48 px height. The avatar preview sits
+  inside its action button.
 - Keep main screens flat. Use shadows to separate floating surfaces.
   Decorative gradients, glow, and spring transitions are not the backdrop
   for everyday actions.

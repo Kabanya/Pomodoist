@@ -1971,5 +1971,12 @@
   "habitIconEmoji": "絵文字",
   "habitIconIcons": "アイコン",
   "habitIconReset": "アイコンをリセット",
-  "habitIconOption": "{icon, select, bookOpen{読書} dumbbell{運動} footprints{ウォーキング} glassWater{水分補給} moon{睡眠} sun{太陽} heart{健康} brain{学習} apple{栄養} coffee{コーヒー} music{音楽} pencil{執筆} code{プログラミング} leaf{自然} target{目標} bike{サイクリング} other{習慣のアイコン}}"
+  "habitIconOption": "{icon, select, bookOpen{読書} dumbbell{運動} footprints{ウォーキング} glassWater{水分補給} moon{睡眠} sun{太陽} heart{健康} brain{学習} apple{栄養} coffee{コーヒー} music{音楽} pencil{執筆} code{プログラミング} leaf{自然} target{目標} bike{サイクリング} other{習慣のアイコン}}",
+  "settingsSynchronization": "同期",
+  "settingsRestartSync": "同期を再開",
+  "settingsSyncRunning": "データを確認して同期しています…",
+  "settingsSyncComplete": "同期が完了しました。",
+  "settingsSyncPending": "送信または復元を待っている変更があります。",
+  "settingsSyncFailed": "同期が完了していません。自動的に再試行します。",
+  "syncUnresolvedChanges": "拒否: {rejected}。復元待ち: {repair}。"
 }

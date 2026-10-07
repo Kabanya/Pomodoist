@@ -193,6 +193,8 @@ void main() {
       ),
     ];
     final engine = testSyncEngine(db: db, account: account, uuid: const Uuid());
+    // The remote edit follows acknowledgement of the local creation.
+    await engine.pushPending();
     await engine.pullLatest();
     expect(
       (await repo.watchHabits().first).single.scheduleHistory.last.dayPeriod,
@@ -243,8 +245,10 @@ void main() {
       account.pushed.clear();
       await engine.importLocalSnapshotIfNeeded();
       expect(
-        account.pushed.singleWhere((o) => o.entityType == 'habit').operation,
-        'delete',
+        account.pushed
+            .where((o) => o.entityType == 'habit')
+            .map((o) => o.operation),
+        allOf(isNotEmpty, everyElement('delete')),
       );
     },
   );

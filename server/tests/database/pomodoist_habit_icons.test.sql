@@ -36,7 +36,7 @@ begin
     end loop;
   end loop;
   op := jsonb_build_object('opId','sign-create','entityType','habit','entityId',habit_id,'operation','upsert',
-    'payload',payload || '{"icon":"📚"}'::jsonb,'clientUpdatedAt','2026-10-06T12:00:00Z');
+    'payload',payload || '{"icon":"📚","schemaVersion":1,"commandType":"habit.create"}'::jsonb,'clientUpdatedAt','2026-10-06T12:00:00Z');
   perform private.push_changes_for_user(account_id,'pomodoist','habit-icons',jsonb_build_array(op));
   -- Full legacy writes omit icon and must not erase its field clock or value.
   perform private.push_changes_for_user(account_id,'pomodoist','habit-icons',jsonb_build_array(op || jsonb_build_object(

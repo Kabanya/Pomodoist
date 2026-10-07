@@ -178,7 +178,9 @@ void main() {
 
         await engine.importLocalSnapshotIfNeeded();
 
-        final operations = account.pushed;
+        final operations = account.pushed
+            .where((op) => op.opId.startsWith('import:'))
+            .toList();
         expect(
           operations
               .where(
@@ -562,7 +564,7 @@ void main() {
       final updated = await (db.select(
         db.tasks,
       )..where((row) => row.id.equals(taskId))).getSingle();
-      expect(updated.content, 'Updated remotely');
+      expect(updated.content, 'Delete locally');
       expect(updated.isDeleted, isTrue);
       expect(
         await tasks
@@ -781,7 +783,8 @@ void main() {
 
       await engine.pullLatest();
 
-      expect(await queue.watchPending().first, isEmpty);
+      expect((await queue.watchPending().first).single.type, 'task.delete');
+      expect((await queue.watchPending().first).single.availableAt, null);
       expect(
         await tasks
             .restoreDeletedTasks(batch)

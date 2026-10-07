@@ -4134,4 +4134,27 @@ class AppLocalizationsKo extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get settingsSynchronization => '동기화';
+
+  @override
+  String get settingsRestartSync => '동기화 다시 시작';
+
+  @override
+  String get settingsSyncRunning => '데이터를 확인하고 동기화하는 중…';
+
+  @override
+  String get settingsSyncComplete => '동기화가 완료되었습니다.';
+
+  @override
+  String get settingsSyncPending => '전송 또는 복구를 기다리는 변경 사항이 있습니다.';
+
+  @override
+  String get settingsSyncFailed => '동기화가 완료되지 않았습니다. 자동으로 다시 시도합니다.';
+
+  @override
+  String syncUnresolvedChanges(int rejected, int repair) {
+    return '거부됨: $rejected. 복구 대기 중: $repair.';
+  }
 }

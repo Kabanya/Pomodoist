@@ -1360,5 +1360,12 @@
   "habitIconEmoji": "表情符号",
   "habitIconIcons": "图标",
   "habitIconReset": "重置图标",
-  "habitIconOption": "{icon, select, bookOpen{阅读} dumbbell{运动} footprints{步行} glassWater{喝水} moon{睡眠} sun{阳光} heart{健康} brain{学习} apple{营养} coffee{咖啡} music{音乐} pencil{写作} code{编程} leaf{自然} target{目标} bike{骑行} other{习惯图标}}"
+  "habitIconOption": "{icon, select, bookOpen{阅读} dumbbell{运动} footprints{步行} glassWater{喝水} moon{睡眠} sun{阳光} heart{健康} brain{学习} apple{营养} coffee{咖啡} music{音乐} pencil{写作} code{编程} leaf{自然} target{目标} bike{骑行} other{习惯图标}}",
+  "settingsSynchronization": "同步",
+  "settingsRestartSync": "重新启动同步",
+  "settingsSyncRunning": "正在检查并同步数据…",
+  "settingsSyncComplete": "同步已完成。",
+  "settingsSyncPending": "部分更改仍在等待上传或恢复。",
+  "settingsSyncFailed": "同步尚未完成，将自动重试。",
+  "syncUnresolvedChanges": "已拒绝：{rejected}。等待恢复：{repair}。"
 }

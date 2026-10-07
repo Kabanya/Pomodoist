@@ -8,6 +8,56 @@ import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/config/voice_preferences_dependencies.dart';
 import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
 import 'package:pomodoist/domain/models/settings/app_language.dart';
+import 'package:pomodoist/domain/models/account/sync_status.dart';
+export 'package:pomodoist/domain/models/account/sync_status.dart';
+
+final syncRestartViewModelProvider =
+    NotifierProvider.autoDispose<SyncRestartViewModel, SyncRestartPhase>(
+      SyncRestartViewModel.new,
+    );
+
+class SyncRestartViewModel extends Notifier<SyncRestartPhase> {
+  int _generation = 0;
+  Future<void>? _running;
+  @override
+  SyncRestartPhase build() {
+    ref.watch(localSyncOwnerProvider);
+    _generation++;
+    _running = null;
+    return SyncRestartPhase.idle;
+  }
+
+  Future<void> restart() {
+    final generation = _generation;
+    return _running ??= _restart().whenComplete(() {
+      if (generation == _generation) _running = null;
+    });
+  }
+
+  Future<void> _restart() async {
+    final generation = _generation;
+    state = SyncRestartPhase.running;
+    try {
+      await ref.read(accountSyncRestartProvider)();
+      if (!ref.mounted || generation != _generation) return;
+      final subscription = ref.listen(syncQueueStatusProvider, (_, _) {});
+      ref.invalidate(syncQueueStatusProvider);
+      final status = await ref
+          .read(syncQueueStatusProvider.future)
+          .whenComplete(subscription.close);
+      if (!ref.mounted || generation != _generation) return;
+      state =
+          status.pending + status.rejected + status.repair > 0 ||
+              status.recovering
+          ? SyncRestartPhase.pending
+          : SyncRestartPhase.complete;
+    } catch (_) {
+      if (ref.mounted && generation == _generation) {
+        state = SyncRestartPhase.failed;
+      }
+    }
+  }
+}
 
 final class SettingsViewState {
   const SettingsViewState({
@@ -26,6 +76,7 @@ final class SettingsViewState {
     this.displayName,
     this.avatarEmoji,
     this.email,
+    this.syncPrepared = false,
   });
 
   final AppLanguage language;
@@ -43,6 +94,7 @@ final class SettingsViewState {
   final String? displayName;
   final String? avatarEmoji;
   final String? email;
+  final bool syncPrepared;
 }
 
 final settingsViewModelProvider =
@@ -77,6 +129,8 @@ class SettingsViewModel extends Notifier<SettingsViewState> {
       displayName: profile?.displayName,
       avatarEmoji: profile?.avatarEmoji,
       email: profile?.email,
+      syncPrepared:
+          userId != null && ref.watch(localSyncOwnerProvider).value == userId,
     );
   }
 

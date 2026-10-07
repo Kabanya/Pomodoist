@@ -110,6 +110,19 @@ void main() {
       expect(requests.single.url.queryParameters['id'], 'eq.user-a');
       expect(jsonDecode(requests.single.body), {'avatar_emoji': '👍🏽'});
     });
+    test('late deletion cleanup cannot sign out a different account', () async {
+      await signIn();
+      final repository = SdkAccountManagementRepository(
+        service: AccountManagementService(
+          AccountClient.fromSupabaseClient(client),
+        ),
+        userId: 'deleted-account',
+        timeout: const Duration(seconds: 1),
+        profile: () => null,
+      );
+      (await repository.signOut()).getOrThrow();
+      expect(client.auth.currentUser?.id, 'user-a');
+    });
     test('sends SQL null on reset', () async {
       await signIn();
       (await AccountProfileService(

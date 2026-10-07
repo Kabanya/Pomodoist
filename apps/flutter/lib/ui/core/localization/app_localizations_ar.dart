@@ -4188,4 +4188,28 @@ class AppLocalizationsAr extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get settingsSynchronization => 'المزامنة';
+
+  @override
+  String get settingsRestartSync => 'إعادة تشغيل المزامنة';
+
+  @override
+  String get settingsSyncRunning => 'جارٍ فحص البيانات ومزامنتها…';
+
+  @override
+  String get settingsSyncComplete => 'اكتملت المزامنة.';
+
+  @override
+  String get settingsSyncPending => 'بعض التغييرات تنتظر الإرسال أو الاستعادة.';
+
+  @override
+  String get settingsSyncFailed =>
+      'لم تكتمل المزامنة. سنعيد المحاولة تلقائيًا.';
+
+  @override
+  String syncUnresolvedChanges(int rejected, int repair) {
+    return 'مرفوضة: $rejected. بانتظار الاستعادة: $repair.';
+  }
 }

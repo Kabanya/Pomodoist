@@ -6,6 +6,7 @@ extension AccountSyncPush on AccountSyncEngine {
       return const <String>{};
     }
     await _deleteFinishedCommands();
+    await _capturePendingOperations();
     final deviceId = await _ensureDeviceId();
     final taskHistoryCutoff = _retentionCutoff;
     final readyAt = DateTime.now().toUtc();
@@ -33,55 +34,157 @@ extension AccountSyncPush on AccountSyncEngine {
                         ? const Constant(true)
                         : row.clientId.isNotIn(deferredTaskIds)),
               )
-              ..orderBy([(row) => OrderingTerm.asc(row.createdAt)])
-              ..limit(100))
+              ..orderBy([
+                (row) => OrderingTerm.asc(row.createdAt),
+                (row) => OrderingTerm.asc(row.id),
+              ]))
             .get();
-    if (pending.isEmpty) {
-      return const <String>{};
-    }
-
-    var retained = pending;
-    try {
-      retained = await _compactPendingTaskCommands(pending);
-    } catch (_) {
-      // Compaction is optional; the original commands remain authoritative.
-      retained = pending;
-    }
-
-    final operations = <AccountSyncOperation>[];
-    for (final command in retained) {
-      operations.addAll(
-        await _operationsFromCommand(command, taskHistoryCutoff),
+    _pushRequestsLeft = 64;
+    final blocked =
+        (await (_db.select(_db.syncCommands)..where(
+                  (r) =>
+                      r.scopeId.isNull() &
+                      (r.status.equals('rejected') |
+                          r.status.equals('conflict')),
+                ))
+                .get())
+            .map((r) => r.clientId)
+            .whereType<String>()
+            .toSet();
+    final types = <String>{};
+    final group = <SyncCommandRow>[];
+    var size = 0;
+    // ponytail: linear queue scan; use persisted keyset pages if local queues
+    // grow beyond memory. Network work is limited to 64 requests per cycle.
+    for (final command in pending) {
+      final operations = await _operationsFromCommand(
+        command,
+        taskHistoryCutoff,
       );
-    }
-    if (operations.isNotEmpty) {
-      await _markAttemptStarted(retained);
-    }
-    await _pushInBatches(deviceId, operations);
-    _checkSession();
-
-    final now = DateTime.now().toUtc();
-    await _db.batch((batch) {
-      for (final command in retained) {
-        batch.update(
-          _db.syncCommands,
-          SyncCommandsCompanion(
-            status: const Value('synced'),
-            updatedAt: Value(now),
-          ),
-          where: (row) => row.id.equals(command.id),
-        );
+      final references = <String>{
+        if (command.clientId != null) command.clientId!,
+        for (final op in operations) ...[
+          op.entityId,
+          for (final key in [
+            'projectId',
+            'taskId',
+            'parentId',
+            'sectionId',
+            'habitId',
+            'runId',
+          ])
+            if (op.payload[key] is String) op.payload[key] as String,
+        ],
+      };
+      if (references.any(blocked.contains)) {
+        if (command.clientId != null) blocked.add(command.clientId!);
+        continue;
       }
-    });
-    final entityTypes = operations
-        .map((operation) => operation.entityType)
-        .toSet();
-    await _deleteFinishedCommands();
-    if (operations.isNotEmpty) {
-      await _broadcastSyncHint();
+      if (group.isNotEmpty && size + operations.length > 100) {
+        types.addAll(await _pushCommandGroup(deviceId, group, blocked));
+        group.clear();
+        size = 0;
+      }
+      group.add(command);
+      size += operations.length;
     }
-    return entityTypes;
+    if (group.isNotEmpty) {
+      types.addAll(await _pushCommandGroup(deviceId, group, blocked));
+    }
+    await _deleteFinishedCommands();
+    if (types.isNotEmpty) await _broadcastSyncHint();
+    return types;
   }
+
+  Future<Set<String>> _pushCommandGroup(
+    String deviceId,
+    List<SyncCommandRow> commands,
+    Set<String> blocked,
+  ) async {
+    final retained = <SyncCommandRow>[];
+    final operations = <AccountSyncOperation>[];
+    for (final command in commands) {
+      final ops = await _operationsFromCommand(command, _retentionCutoff);
+      if (ops.any(
+            (op) =>
+                blocked.contains(op.entityId) ||
+                [
+                  'projectId',
+                  'taskId',
+                  'parentId',
+                  'sectionId',
+                  'habitId',
+                  'runId',
+                ].any((key) => blocked.contains(op.payload[key])),
+          ) ||
+          blocked.contains(command.clientId)) {
+        continue;
+      }
+      retained.add(command);
+      operations.addAll(ops);
+    }
+    if (retained.isEmpty) return {};
+    await _markAttemptStarted(retained);
+    try {
+      await _pushInBatches(deviceId, operations);
+    } on PostgrestException catch (error) {
+      if (!_permanentPayloadError(error)) rethrow;
+      if (retained.length > 1) {
+        final mid = retained.length ~/ 2;
+        return {
+          ...await _pushCommandGroup(
+            deviceId,
+            retained.sublist(0, mid),
+            blocked,
+          ),
+          ...await _pushCommandGroup(deviceId, retained.sublist(mid), blocked),
+        };
+      }
+      _checkSession();
+      final command = retained.single;
+      await (_db.update(
+        _db.syncCommands,
+      )..where((r) => r.id.equals(command.id))).write(
+        SyncCommandsCompanion(
+          status: const Value('rejected'),
+          lastError: Value('validation:${error.message}'),
+        ),
+      );
+      if (command.clientId != null) blocked.add(command.clientId!);
+      return {};
+    }
+    _checkSession();
+    await (_db.update(
+      _db.syncCommands,
+    )..where((r) => r.id.isIn(retained.map((r) => r.id)))).write(
+      SyncCommandsCompanion(
+        status: const Value('synced'),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+    final types = operations.map((op) => op.entityType).toSet();
+    _committedTypes.addAll(types);
+    return types;
+  }
+
+  bool _permanentPayloadError(PostgrestException error) =>
+      error.code == '22023' &&
+      const {
+        'Invalid habit identity',
+        'Invalid habit field',
+        'Invalid habit timestamp',
+        'Invalid habit icon',
+        'Invalid habit title',
+        'Invalid habit reminder',
+        'Invalid habit schedule',
+        'Invalid habit day period',
+        'Invalid habit period targets',
+        'Invalid habit weekdays',
+        'Invalid check-in day period',
+        'Invalid check-in habit',
+        'Incomplete task entity',
+        'Incomplete project entity',
+      }.contains(error.message);
 
   Future<void> _deleteFinishedCommands() async {
     await (_db.delete(_db.syncCommands)..where(
@@ -235,6 +338,9 @@ extension AccountSyncPush on AccountSyncEngine {
   ) async {
     try {
       _checkSession();
+      if (_pushRequestsLeft-- <= 0) {
+        throw StateError('Sync request budget reached');
+      }
       await _account
           .pushChanges(
             appId: AccountAppId.pomodoist,

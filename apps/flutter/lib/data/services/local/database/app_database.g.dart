@@ -11743,6 +11743,344 @@ class SyncCommandsCompanion extends UpdateCompanion<SyncCommandRow> {
   }
 }
 
+class $AccountRecoverySnapshotsTable extends AccountRecoverySnapshots
+    with TableInfo<$AccountRecoverySnapshotsTable, AccountRecoverySnapshotRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AccountRecoverySnapshotsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _ownerIdMeta = const VerificationMeta(
+    'ownerId',
+  );
+  @override
+  late final GeneratedColumn<String> ownerId = GeneratedColumn<String>(
+    'owner_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _schemaVersionMeta = const VerificationMeta(
+    'schemaVersion',
+  );
+  @override
+  late final GeneratedColumn<int> schemaVersion = GeneratedColumn<int>(
+    'schema_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
+    'payloadJson',
+  );
+  @override
+  late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
+    'payload_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    ownerId,
+    schemaVersion,
+    payloadJson,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'account_recovery_snapshots';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AccountRecoverySnapshotRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('owner_id')) {
+      context.handle(
+        _ownerIdMeta,
+        ownerId.isAcceptableOrUnknown(data['owner_id']!, _ownerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ownerIdMeta);
+    }
+    if (data.containsKey('schema_version')) {
+      context.handle(
+        _schemaVersionMeta,
+        schemaVersion.isAcceptableOrUnknown(
+          data['schema_version']!,
+          _schemaVersionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schemaVersionMeta);
+    }
+    if (data.containsKey('payload_json')) {
+      context.handle(
+        _payloadJsonMeta,
+        payloadJson.isAcceptableOrUnknown(
+          data['payload_json']!,
+          _payloadJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadJsonMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {ownerId};
+  @override
+  AccountRecoverySnapshotRow map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AccountRecoverySnapshotRow(
+      ownerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_id'],
+      )!,
+      schemaVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}schema_version'],
+      )!,
+      payloadJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_json'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $AccountRecoverySnapshotsTable createAlias(String alias) {
+    return $AccountRecoverySnapshotsTable(attachedDatabase, alias);
+  }
+}
+
+class AccountRecoverySnapshotRow extends DataClass
+    implements Insertable<AccountRecoverySnapshotRow> {
+  final String ownerId;
+  final int schemaVersion;
+  final String payloadJson;
+  final DateTime createdAt;
+  const AccountRecoverySnapshotRow({
+    required this.ownerId,
+    required this.schemaVersion,
+    required this.payloadJson,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['owner_id'] = Variable<String>(ownerId);
+    map['schema_version'] = Variable<int>(schemaVersion);
+    map['payload_json'] = Variable<String>(payloadJson);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  AccountRecoverySnapshotsCompanion toCompanion(bool nullToAbsent) {
+    return AccountRecoverySnapshotsCompanion(
+      ownerId: Value(ownerId),
+      schemaVersion: Value(schemaVersion),
+      payloadJson: Value(payloadJson),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory AccountRecoverySnapshotRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AccountRecoverySnapshotRow(
+      ownerId: serializer.fromJson<String>(json['ownerId']),
+      schemaVersion: serializer.fromJson<int>(json['schemaVersion']),
+      payloadJson: serializer.fromJson<String>(json['payloadJson']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'ownerId': serializer.toJson<String>(ownerId),
+      'schemaVersion': serializer.toJson<int>(schemaVersion),
+      'payloadJson': serializer.toJson<String>(payloadJson),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  AccountRecoverySnapshotRow copyWith({
+    String? ownerId,
+    int? schemaVersion,
+    String? payloadJson,
+    DateTime? createdAt,
+  }) => AccountRecoverySnapshotRow(
+    ownerId: ownerId ?? this.ownerId,
+    schemaVersion: schemaVersion ?? this.schemaVersion,
+    payloadJson: payloadJson ?? this.payloadJson,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  AccountRecoverySnapshotRow copyWithCompanion(
+    AccountRecoverySnapshotsCompanion data,
+  ) {
+    return AccountRecoverySnapshotRow(
+      ownerId: data.ownerId.present ? data.ownerId.value : this.ownerId,
+      schemaVersion: data.schemaVersion.present
+          ? data.schemaVersion.value
+          : this.schemaVersion,
+      payloadJson: data.payloadJson.present
+          ? data.payloadJson.value
+          : this.payloadJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountRecoverySnapshotRow(')
+          ..write('ownerId: $ownerId, ')
+          ..write('schemaVersion: $schemaVersion, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(ownerId, schemaVersion, payloadJson, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AccountRecoverySnapshotRow &&
+          other.ownerId == this.ownerId &&
+          other.schemaVersion == this.schemaVersion &&
+          other.payloadJson == this.payloadJson &&
+          other.createdAt == this.createdAt);
+}
+
+class AccountRecoverySnapshotsCompanion
+    extends UpdateCompanion<AccountRecoverySnapshotRow> {
+  final Value<String> ownerId;
+  final Value<int> schemaVersion;
+  final Value<String> payloadJson;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const AccountRecoverySnapshotsCompanion({
+    this.ownerId = const Value.absent(),
+    this.schemaVersion = const Value.absent(),
+    this.payloadJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AccountRecoverySnapshotsCompanion.insert({
+    required String ownerId,
+    required int schemaVersion,
+    required String payloadJson,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : ownerId = Value(ownerId),
+       schemaVersion = Value(schemaVersion),
+       payloadJson = Value(payloadJson),
+       createdAt = Value(createdAt);
+  static Insertable<AccountRecoverySnapshotRow> custom({
+    Expression<String>? ownerId,
+    Expression<int>? schemaVersion,
+    Expression<String>? payloadJson,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (ownerId != null) 'owner_id': ownerId,
+      if (schemaVersion != null) 'schema_version': schemaVersion,
+      if (payloadJson != null) 'payload_json': payloadJson,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AccountRecoverySnapshotsCompanion copyWith({
+    Value<String>? ownerId,
+    Value<int>? schemaVersion,
+    Value<String>? payloadJson,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return AccountRecoverySnapshotsCompanion(
+      ownerId: ownerId ?? this.ownerId,
+      schemaVersion: schemaVersion ?? this.schemaVersion,
+      payloadJson: payloadJson ?? this.payloadJson,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (ownerId.present) {
+      map['owner_id'] = Variable<String>(ownerId.value);
+    }
+    if (schemaVersion.present) {
+      map['schema_version'] = Variable<int>(schemaVersion.value);
+    }
+    if (payloadJson.present) {
+      map['payload_json'] = Variable<String>(payloadJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountRecoverySnapshotsCompanion(')
+          ..write('ownerId: $ownerId, ')
+          ..write('schemaVersion: $schemaVersion, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SyncStateTable extends SyncState
     with TableInfo<$SyncStateTable, SyncStateRow> {
   @override
@@ -15109,6 +15447,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $SyncCommandsTable syncCommands = $SyncCommandsTable(this);
+  late final $AccountRecoverySnapshotsTable accountRecoverySnapshots =
+      $AccountRecoverySnapshotsTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
   late final $GoogleCalendarConnectionsTable googleCalendarConnections =
       $GoogleCalendarConnectionsTable(this);
@@ -15165,6 +15505,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     focusEvents,
     focusDailyStats,
     syncCommands,
+    accountRecoverySnapshots,
     syncState,
     googleCalendarConnections,
     googleCalendarEventLinks,
@@ -20881,6 +21222,210 @@ typedef $$SyncCommandsTableProcessedTableManager =
       SyncCommandRow,
       PrefetchHooks Function()
     >;
+typedef $$AccountRecoverySnapshotsTableCreateCompanionBuilder =
+    AccountRecoverySnapshotsCompanion Function({
+      required String ownerId,
+      required int schemaVersion,
+      required String payloadJson,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$AccountRecoverySnapshotsTableUpdateCompanionBuilder =
+    AccountRecoverySnapshotsCompanion Function({
+      Value<String> ownerId,
+      Value<int> schemaVersion,
+      Value<String> payloadJson,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$AccountRecoverySnapshotsTableFilterComposer
+    extends Composer<_$AppDatabase, $AccountRecoverySnapshotsTable> {
+  $$AccountRecoverySnapshotsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get ownerId => $composableBuilder(
+    column: $table.ownerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get schemaVersion => $composableBuilder(
+    column: $table.schemaVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AccountRecoverySnapshotsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AccountRecoverySnapshotsTable> {
+  $$AccountRecoverySnapshotsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get ownerId => $composableBuilder(
+    column: $table.ownerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get schemaVersion => $composableBuilder(
+    column: $table.schemaVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AccountRecoverySnapshotsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AccountRecoverySnapshotsTable> {
+  $$AccountRecoverySnapshotsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get ownerId =>
+      $composableBuilder(column: $table.ownerId, builder: (column) => column);
+
+  GeneratedColumn<int> get schemaVersion => $composableBuilder(
+    column: $table.schemaVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$AccountRecoverySnapshotsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AccountRecoverySnapshotsTable,
+          AccountRecoverySnapshotRow,
+          $$AccountRecoverySnapshotsTableFilterComposer,
+          $$AccountRecoverySnapshotsTableOrderingComposer,
+          $$AccountRecoverySnapshotsTableAnnotationComposer,
+          $$AccountRecoverySnapshotsTableCreateCompanionBuilder,
+          $$AccountRecoverySnapshotsTableUpdateCompanionBuilder,
+          (
+            AccountRecoverySnapshotRow,
+            BaseReferences<
+              _$AppDatabase,
+              $AccountRecoverySnapshotsTable,
+              AccountRecoverySnapshotRow
+            >,
+          ),
+          AccountRecoverySnapshotRow,
+          PrefetchHooks Function()
+        > {
+  $$AccountRecoverySnapshotsTableTableManager(
+    _$AppDatabase db,
+    $AccountRecoverySnapshotsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AccountRecoverySnapshotsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$AccountRecoverySnapshotsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$AccountRecoverySnapshotsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> ownerId = const Value.absent(),
+                Value<int> schemaVersion = const Value.absent(),
+                Value<String> payloadJson = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AccountRecoverySnapshotsCompanion(
+                ownerId: ownerId,
+                schemaVersion: schemaVersion,
+                payloadJson: payloadJson,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String ownerId,
+                required int schemaVersion,
+                required String payloadJson,
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => AccountRecoverySnapshotsCompanion.insert(
+                ownerId: ownerId,
+                schemaVersion: schemaVersion,
+                payloadJson: payloadJson,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AccountRecoverySnapshotsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AccountRecoverySnapshotsTable,
+      AccountRecoverySnapshotRow,
+      $$AccountRecoverySnapshotsTableFilterComposer,
+      $$AccountRecoverySnapshotsTableOrderingComposer,
+      $$AccountRecoverySnapshotsTableAnnotationComposer,
+      $$AccountRecoverySnapshotsTableCreateCompanionBuilder,
+      $$AccountRecoverySnapshotsTableUpdateCompanionBuilder,
+      (
+        AccountRecoverySnapshotRow,
+        BaseReferences<
+          _$AppDatabase,
+          $AccountRecoverySnapshotsTable,
+          AccountRecoverySnapshotRow
+        >,
+      ),
+      AccountRecoverySnapshotRow,
+      PrefetchHooks Function()
+    >;
 typedef $$SyncStateTableCreateCompanionBuilder =
     SyncStateCompanion Function({
       required String id,
@@ -22586,6 +23131,11 @@ class $AppDatabaseManager {
       $$FocusDailyStatsTableTableManager(_db, _db.focusDailyStats);
   $$SyncCommandsTableTableManager get syncCommands =>
       $$SyncCommandsTableTableManager(_db, _db.syncCommands);
+  $$AccountRecoverySnapshotsTableTableManager get accountRecoverySnapshots =>
+      $$AccountRecoverySnapshotsTableTableManager(
+        _db,
+        _db.accountRecoverySnapshots,
+      );
   $$SyncStateTableTableManager get syncState =>
       $$SyncStateTableTableManager(_db, _db.syncState);
   $$GoogleCalendarConnectionsTableTableManager get googleCalendarConnections =>

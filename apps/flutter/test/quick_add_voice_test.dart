@@ -344,6 +344,7 @@ void main() {
             overrides: [
               ...proVoiceOverrides,
               appDatabaseProvider.overrideWithValue(db),
+              localSyncOwnerProvider.overrideWith((ref) => Stream.value(null)),
               accountClientProvider.overrideWithValue(
                 _VoiceAccountClient(userId: 'user'),
               ),
@@ -465,6 +466,7 @@ void main() {
           overrides: [
             ...proVoiceOverrides,
             appDatabaseProvider.overrideWithValue(db),
+            localSyncOwnerProvider.overrideWith((ref) => Stream.value(null)),
             accountClientProvider.overrideWithValue(
               _VoiceAccountClient(userId: 'user'),
             ),
@@ -805,6 +807,7 @@ void main() {
         overrides: [
           ...emptySuggestionOverrides,
           appDatabaseProvider.overrideWithValue(db),
+          localSyncOwnerProvider.overrideWith((ref) => Stream.value(null)),
         ],
         child: MaterialApp(
           builder: testAppBuilder,
@@ -1001,6 +1004,7 @@ void main() {
         overrides: [
           ...emptySuggestionOverrides,
           appDatabaseProvider.overrideWithValue(db),
+          localSyncOwnerProvider.overrideWith((ref) => Stream.value(null)),
         ],
         child: const MaterialApp(
           builder: testAppBuilder,
@@ -1057,6 +1061,7 @@ void main() {
         overrides: [
           ...proVoiceOverrides,
           appDatabaseProvider.overrideWithValue(db),
+          localSyncOwnerProvider.overrideWith((ref) => Stream.value(null)),
           applePurchasesSupportedProvider.overrideWithValue(false),
           voiceRecognitionControllerProvider.overrideWithValue(controller),
           taskDecomposerProvider.overrideWithValue(
@@ -1411,6 +1416,7 @@ void main() {
         overrides: [
           ...proVoiceOverrides,
           appDatabaseProvider.overrideWithValue(db),
+          localSyncOwnerProvider.overrideWith((ref) => Stream.value(null)),
           applePurchasesSupportedProvider.overrideWithValue(false),
           voiceRecognitionControllerProvider.overrideWithValue(controller),
           taskDecomposerProvider.overrideWithValue(decomposer),
@@ -1890,6 +1896,7 @@ void main() {
         overrides: [
           ...proVoiceOverrides,
           appDatabaseProvider.overrideWithValue(db),
+          localSyncOwnerProvider.overrideWith((ref) => Stream.value(null)),
           applePurchasesSupportedProvider.overrideWithValue(false),
           voiceRecognitionControllerProvider.overrideWithValue(controller),
           taskDecomposerProvider.overrideWithValue(
@@ -1931,6 +1938,7 @@ void main() {
         overrides: [
           ...emptySuggestionOverrides,
           appDatabaseProvider.overrideWithValue(db),
+          localSyncOwnerProvider.overrideWith((ref) => Stream.value(null)),
         ],
         child: MaterialApp(
           builder: testAppBuilder,
@@ -1980,6 +1988,7 @@ void main() {
           overrides: [
             ...proVoiceOverrides,
             appDatabaseProvider.overrideWithValue(db),
+            localSyncOwnerProvider.overrideWith((ref) => Stream.value(null)),
             applePurchasesSupportedProvider.overrideWithValue(false),
             voiceRecognitionControllerProvider.overrideWithValue(controller),
             taskDecomposerProvider.overrideWithValue(
@@ -2268,6 +2277,7 @@ void main() {
         overrides: [
           ...proVoiceOverrides,
           appDatabaseProvider.overrideWithValue(db),
+          localSyncOwnerProvider.overrideWith((ref) => Stream.value(null)),
           applePurchasesSupportedProvider.overrideWithValue(false),
           voiceRecognitionControllerProvider.overrideWithValue(controller),
           taskDecomposerProvider.overrideWithValue(decomposer),
@@ -2411,6 +2421,7 @@ void main() {
           overrides: [
             ...proVoiceOverrides,
             appDatabaseProvider.overrideWithValue(db),
+            localSyncOwnerProvider.overrideWith((ref) => Stream.value(null)),
             applePurchasesSupportedProvider.overrideWithValue(false),
             voiceRecognitionControllerProvider.overrideWithValue(controller),
             taskDecomposerProvider.overrideWithValue(
@@ -2560,6 +2571,9 @@ void main() {
                 overrides: [
                   ...proVoiceOverrides,
                   appDatabaseProvider.overrideWithValue(db),
+                  localSyncOwnerProvider.overrideWith(
+                    (ref) => Stream.value(null),
+                  ),
                   applePurchasesSupportedProvider.overrideWithValue(false),
                   voiceRecognitionControllerProvider.overrideWithValue(
                     controller,

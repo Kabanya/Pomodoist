@@ -1971,5 +1971,12 @@
   "habitIconEmoji": "Emojis",
   "habitIconIcons": "Ícones",
   "habitIconReset": "Repor ícone",
-  "habitIconOption": "{icon, select, bookOpen{Leitura} dumbbell{Exercício} footprints{Caminhada} glassWater{Água} moon{Sono} sun{Sol} heart{Saúde} brain{Aprendizagem} apple{Nutrição} coffee{Café} music{Música} pencil{Escrita} code{Programação} leaf{Natureza} target{Objetivo} bike{Ciclismo} other{Ícone do hábito}}"
+  "habitIconOption": "{icon, select, bookOpen{Leitura} dumbbell{Exercício} footprints{Caminhada} glassWater{Água} moon{Sono} sun{Sol} heart{Saúde} brain{Aprendizagem} apple{Nutrição} coffee{Café} music{Música} pencil{Escrita} code{Programação} leaf{Natureza} target{Objetivo} bike{Ciclismo} other{Ícone do hábito}}",
+  "settingsSynchronization": "Sincronização",
+  "settingsRestartSync": "Reiniciar sincronização",
+  "settingsSyncRunning": "Verificando e sincronizando seus dados…",
+  "settingsSyncComplete": "Sincronização concluída.",
+  "settingsSyncPending": "Algumas alterações aguardam envio ou recuperação.",
+  "settingsSyncFailed": "Sincronização incompleta. Tentaremos novamente automaticamente.",
+  "syncUnresolvedChanges": "Rejeitados: {rejected}. Aguardando recuperação: {repair}."
 }

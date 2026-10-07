@@ -119,6 +119,11 @@ or an oversized single operation, stop the attempt with pending data retained.
 Flutter replays already accepted halves safely through receipts; the extension
 persists each acknowledged part before sending the next one.
 
+Habit validation accepts the account SDK's `schemaVersion` and `commandType`
+metadata while still rejecting unknown domain fields. Failed Flutter sync attempts
+wait for the retry delay; outbox attempt updates, polling, and Realtime hints cannot
+bypass it. Successful attempts continue draining pending commands normally.
+
 Release checklist:
 
 - [x] Apply and automatically verify quota integrity and shared sync validation
@@ -175,3 +180,34 @@ Run this command from `server/`; it reads only the local instance password.
 The runner refuses targets outside the `pomodoist-selfhost-*` Docker namespace. It uses the existing pgTAP suites and rolls back synthetic accounts after each file. It does not accept a database URL.
 
 Validated locally: fresh baseline plus shared migration, 238 assertions in 10 public suites; historical multi-application schema plus private adapters and the same shared migration, 215 assertions in 10 hosted suites. The hosted account overview was also compared before and after adoption for synthetic free and paid accounts with another application's purchase and usage records: the JSON was identical after removing `generatedAt`. All 49 common stored routine definitions matched between the two installations; only the two private application adapters differed. Hosted local grants stayed disabled and the configured MCP audience was preserved. These are local checks, not a production adoption or deployment.
+
+### Synchronization recovery rollout
+
+Client schema 12 preserves each account's local data and original outbox
+operations across sign-out. Pending operations are replayed unchanged; recognized
+single-command validation failures are retained while unrelated work progresses.
+A separate, bounded recovery scan discovers previously skipped task/project rows.
+Only complete same-owner local data may fill missing fields. Missing content with
+no verified source stays unresolved; restarting synchronization never resets the
+main cursor, deletes the outbox, or guesses content.
+
+Strict required-field validation remains a separate release gate: the current
+`pomodoist_sync_validation.test.sql` contract deliberately accepts minimal legacy
+payloads. No breaking validator or rollback migration is installed by this client
+change. Establish a supported-writer minimum before introducing either.
+
+`make -C server up` records aggregate malformed-row counts and the preceding
+five-minute validation-error rate, then runs a read-only health gate after startup
+(with at least a 30-second observation window). An increase fails the command
+without rolling back or deleting user data. It emits aggregate JSON only. The
+same commands are available to the hosted deployment consumer:
+
+```sh
+python3 server/scripts/sync_health.py capture DATABASE_CONTAINER baseline.json
+# Run the already-authorized deployment and wait for readiness.
+python3 server/scripts/sync_health.py check DATABASE_CONTAINER baseline.json
+```
+
+The public repository's self-hosted CI exercises this gate. The hosted backend is
+released by the separate private deployment repository; these local checks do
+not establish hosted health, an installed mobile release, or device data parity.

@@ -1360,5 +1360,12 @@
   "habitIconEmoji": "Эмодзи",
   "habitIconIcons": "Иконки",
   "habitIconReset": "Сбросить значок",
-  "habitIconOption": "{icon, select, bookOpen{Чтение} dumbbell{Тренировка} footprints{Ходьба} glassWater{Вода} moon{Сон} sun{Солнце} heart{Здоровье} brain{Учёба} apple{Питание} coffee{Кофе} music{Музыка} pencil{Письмо} code{Программирование} leaf{Природа} target{Цель} bike{Велосипед} other{Значок привычки}}"
+  "habitIconOption": "{icon, select, bookOpen{Чтение} dumbbell{Тренировка} footprints{Ходьба} glassWater{Вода} moon{Сон} sun{Солнце} heart{Здоровье} brain{Учёба} apple{Питание} coffee{Кофе} music{Музыка} pencil{Письмо} code{Программирование} leaf{Природа} target{Цель} bike{Велосипед} other{Значок привычки}}",
+  "settingsSynchronization": "Синхронизация",
+  "settingsRestartSync": "Перезапустить синхронизацию",
+  "settingsSyncRunning": "Проверяем и синхронизируем данные…",
+  "settingsSyncComplete": "Синхронизация завершена.",
+  "settingsSyncPending": "Часть изменений ещё ожидает отправки или восстановления.",
+  "settingsSyncFailed": "Синхронизация не завершена. Повторим автоматически.",
+  "syncUnresolvedChanges": "Отклонено: {rejected}. Ожидают восстановления: {repair}."
 }

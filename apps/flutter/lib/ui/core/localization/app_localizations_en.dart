@@ -4267,4 +4267,29 @@ class AppLocalizationsEn extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get settingsSynchronization => 'Synchronization';
+
+  @override
+  String get settingsRestartSync => 'Restart synchronization';
+
+  @override
+  String get settingsSyncRunning => 'Checking and syncing your data…';
+
+  @override
+  String get settingsSyncComplete => 'Synchronization completed.';
+
+  @override
+  String get settingsSyncPending =>
+      'Some changes are still pending or need recovery.';
+
+  @override
+  String get settingsSyncFailed =>
+      'Synchronization is incomplete. We will retry automatically.';
+
+  @override
+  String syncUnresolvedChanges(int rejected, int repair) {
+    return 'Rejected: $rejected. Awaiting recovery: $repair.';
+  }
 }

@@ -4272,4 +4272,29 @@ class AppLocalizationsRu extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get settingsSynchronization => 'Синхронизация';
+
+  @override
+  String get settingsRestartSync => 'Перезапустить синхронизацию';
+
+  @override
+  String get settingsSyncRunning => 'Проверяем и синхронизируем данные…';
+
+  @override
+  String get settingsSyncComplete => 'Синхронизация завершена.';
+
+  @override
+  String get settingsSyncPending =>
+      'Часть изменений ещё ожидает отправки или восстановления.';
+
+  @override
+  String get settingsSyncFailed =>
+      'Синхронизация не завершена. Повторим автоматически.';
+
+  @override
+  String syncUnresolvedChanges(int rejected, int repair) {
+    return 'Отклонено: $rejected. Ожидают восстановления: $repair.';
+  }
 }

@@ -1,10 +1,25 @@
 # App Store screenshot direction
 
-## Selected direction
+## Current direction
+
+On October 6, 2026, the existing **Editorial Signal** series was retained instead
+of the new explorations. Keep the coral-red gradient (`#F25447`, `#DF382F`,
+`#C82B27`), black Georgia headlines, cream details and real app captures.
+The refreshed Mac series and editable HTML live in `design/app-store/macos/`.
+Export Mac compositions at 2880 x 1800.
+
+Phone work is deferred until new screenshots are supplied. Future iPhone
+headlines must use the full available canvas width inside safe margins rather
+than a narrow text column. No new phone series is part of the Mac refresh.
+
+Use automated rendering, text measurements, asset and PNG checks for this
+refresh. Do not perform manual or visual browser checks.
+
+## Previous Grid study
 
 On October 5, 2026, **Grid (example 01)** was selected as the foundation for
-Pomodoist App Store screenshots. Use this direction for the next screenshot
-series. The other seven examples remain exploratory alternatives.
+Pomodoist App Store screenshots. It is now retained as a historical study;
+the current production direction is Editorial Signal above.
 
 ![Selected Grid reference](assets/app-store-grid-reference.png)
 

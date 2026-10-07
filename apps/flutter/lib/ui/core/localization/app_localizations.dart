@@ -7336,6 +7336,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{icon, select, bookOpen{Reading} dumbbell{Exercise} footprints{Walking} glassWater{Water} moon{Sleep} sun{Sun} heart{Health} brain{Learning} apple{Nutrition} coffee{Coffee} music{Music} pencil{Writing} code{Coding} leaf{Nature} target{Goal} bike{Cycling} other{Habit icon}}'**
   String habitIconOption(String icon);
+
+  /// No description provided for @settingsSynchronization.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization'**
+  String get settingsSynchronization;
+
+  /// No description provided for @settingsRestartSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart synchronization'**
+  String get settingsRestartSync;
+
+  /// No description provided for @settingsSyncRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking and syncing your data…'**
+  String get settingsSyncRunning;
+
+  /// No description provided for @settingsSyncComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization completed.'**
+  String get settingsSyncComplete;
+
+  /// No description provided for @settingsSyncPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Some changes are still pending or need recovery.'**
+  String get settingsSyncPending;
+
+  /// No description provided for @settingsSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization is incomplete. We will retry automatically.'**
+  String get settingsSyncFailed;
+
+  /// No description provided for @syncUnresolvedChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected: {rejected}. Awaiting recovery: {repair}.'**
+  String syncUnresolvedChanges(int rejected, int repair);
 }
 
 class _AppLocalizationsDelegate

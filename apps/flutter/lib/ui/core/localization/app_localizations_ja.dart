@@ -4125,4 +4125,27 @@ class AppLocalizationsJa extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get settingsSynchronization => '同期';
+
+  @override
+  String get settingsRestartSync => '同期を再開';
+
+  @override
+  String get settingsSyncRunning => 'データを確認して同期しています…';
+
+  @override
+  String get settingsSyncComplete => '同期が完了しました。';
+
+  @override
+  String get settingsSyncPending => '送信または復元を待っている変更があります。';
+
+  @override
+  String get settingsSyncFailed => '同期が完了していません。自動的に再試行します。';
+
+  @override
+  String syncUnresolvedChanges(int rejected, int repair) {
+    return '拒否: $rejected。復元待ち: $repair。';
+  }
 }

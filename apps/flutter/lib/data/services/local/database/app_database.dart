@@ -368,6 +368,17 @@ class FocusDailyStats extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+@DataClassName('AccountRecoverySnapshotRow')
+class AccountRecoverySnapshots extends Table {
+  TextColumn get ownerId => text()();
+  IntColumn get schemaVersion => integer()();
+  TextColumn get payloadJson => text()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {ownerId};
+}
+
 @DataClassName('SyncCommandRow')
 class SyncCommands extends Table {
   TextColumn get scopeId => text().nullable()();
@@ -523,6 +534,7 @@ class HabitCheckIns extends Table {
     FocusEvents,
     FocusDailyStats,
     SyncCommands,
+    AccountRecoverySnapshots,
     SyncState,
     GoogleCalendarConnections,
     GoogleCalendarEventLinks,
@@ -549,12 +561,18 @@ class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
+      if (from < 12) {
+        await _runResumableMigrationStep(
+          () => m.createTable(accountRecoverySnapshots),
+          alreadyAppliedMessage: 'already exists',
+        );
+      }
       if (from < 9) {
         await _runResumableMigrationStep(
           () => m.createTable(habits),
@@ -817,8 +835,8 @@ class AppDatabase extends _$AppDatabase {
       await delete(projects).go();
       await delete(workspaces).go();
       await delete(users).go();
+      await ensureSeedData();
     });
-    await ensureSeedData();
   }
 
   Future<void> ensureKanbanData({DateTime? now}) async {

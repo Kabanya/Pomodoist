@@ -2134,5 +2134,22 @@
         "type": "String"
       }
     }
+  },
+  "settingsSynchronization": "Synchronization",
+  "settingsRestartSync": "Restart synchronization",
+  "settingsSyncRunning": "Checking and syncing your data…",
+  "settingsSyncComplete": "Synchronization completed.",
+  "settingsSyncPending": "Some changes are still pending or need recovery.",
+  "settingsSyncFailed": "Synchronization is incomplete. We will retry automatically.",
+  "syncUnresolvedChanges": "Rejected: {rejected}. Awaiting recovery: {repair}.",
+  "@syncUnresolvedChanges": {
+    "placeholders": {
+      "rejected": {
+        "type": "int"
+      },
+      "repair": {
+        "type": "int"
+      }
+    }
   }
 }

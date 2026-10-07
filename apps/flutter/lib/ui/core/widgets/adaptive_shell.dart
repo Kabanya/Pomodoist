@@ -1294,12 +1294,6 @@ class _SidebarProfileHeader extends StatelessWidget {
                               ),
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        LucideIcons.chevronDown,
-                        color: colors.secondaryText,
-                        size: 20,
-                      ),
                     ],
                   ),
                 ),

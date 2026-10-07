@@ -4038,4 +4038,27 @@ class AppLocalizationsZh extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get settingsSynchronization => '同步';
+
+  @override
+  String get settingsRestartSync => '重新启动同步';
+
+  @override
+  String get settingsSyncRunning => '正在检查并同步数据…';
+
+  @override
+  String get settingsSyncComplete => '同步已完成。';
+
+  @override
+  String get settingsSyncPending => '部分更改仍在等待上传或恢复。';
+
+  @override
+  String get settingsSyncFailed => '同步尚未完成，将自动重试。';
+
+  @override
+  String syncUnresolvedChanges(int rejected, int repair) {
+    return '已拒绝：$rejected。等待恢复：$repair。';
+  }
 }

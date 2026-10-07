@@ -4293,6 +4293,31 @@ class AppLocalizationsPt extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get settingsSynchronization => 'Sincronização';
+
+  @override
+  String get settingsRestartSync => 'Reiniciar sincronização';
+
+  @override
+  String get settingsSyncRunning => 'Verificando e sincronizando seus dados…';
+
+  @override
+  String get settingsSyncComplete => 'Sincronização concluída.';
+
+  @override
+  String get settingsSyncPending =>
+      'Algumas alterações aguardam envio ou recuperação.';
+
+  @override
+  String get settingsSyncFailed =>
+      'Sincronização incompleta. Tentaremos novamente automaticamente.';
+
+  @override
+  String syncUnresolvedChanges(int rejected, int repair) {
+    return 'Rejeitados: $rejected. Aguardando recuperação: $repair.';
+  }
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).

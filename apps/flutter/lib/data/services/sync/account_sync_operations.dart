@@ -177,6 +177,9 @@ extension AccountSyncOperations on AccountSyncEngine {
     final payloadMap = payload is Map
         ? Map<String, Object?>.from(payload)
         : <String, Object?>{};
+    if (payloadMap.containsKey('_syncOperationsV1')) {
+      return _storedOperations(payloadMap);
+    }
     final commandType = command.type;
     final focusLifecycleCommand =
         commandType.startsWith('focus.run.') ||
@@ -187,7 +190,20 @@ extension AccountSyncOperations on AccountSyncEngine {
           commandType == 'focus.run.stop') {
         return _terminalFocusOperations(command, payloadMap);
       }
-      return const <AccountSyncOperation>[];
+      if (const {
+        'focus.run.start',
+        'focus.run.pause',
+        'focus.run.resume',
+        'focus.interval.start',
+        'focus.interval.pause',
+        'focus.interval.resume',
+        'focus.interval.complete',
+        'focus.interval.stop',
+        'focus.distraction.log',
+      }.contains(commandType)) {
+        return const <AccountSyncOperation>[];
+      }
+      throw const FormatException('Unknown Focus command');
     }
     final entityType = syncEntityTypeForCommand(commandType);
     var entityId = syncEntityIdForCommand(
@@ -291,13 +307,13 @@ extension AccountSyncOperations on AccountSyncEngine {
   ) async {
     final runId = payload['id'] as String? ?? command.clientId;
     if (runId == null) {
-      return const <AccountSyncOperation>[];
+      throw const FormatException('Missing terminal Focus run');
     }
     final run = await (_db.select(
       _db.focusRuns,
     )..where((row) => row.id.equals(runId))).getSingleOrNull();
     if (run == null || !_isTerminalFocusRun(run)) {
-      return const <AccountSyncOperation>[];
+      throw const FormatException('Missing terminal Focus history');
     }
     final intervals =
         await (_db.select(_db.focusIntervals)

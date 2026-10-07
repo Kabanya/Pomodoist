@@ -131,7 +131,7 @@ class DriftProjectRepository implements ProjectRepository {
     String? color,
     String? parentId,
   }) => Result.capture<String>(
-    () async => _db.transaction(() async {
+    () async => ownerBoundTransaction(_db, _syncQueue, () async {
       final scopeId = await _access.projectScope(parentId);
       await _access.requireEdit(scopeId);
       final trimmed = name.trim();
@@ -198,7 +198,7 @@ class DriftProjectRepository implements ProjectRepository {
     required String? parentId,
     String? beforeProjectId,
   }) => Result.capture<void>(
-    () async => _db.transaction(() async {
+    () async => ownerBoundTransaction(_db, _syncQueue, () async {
       await _access.project(id, destinationId: parentId, moving: true);
       final items = await _activeProjects();
       final project = items.firstWhereOrNull((p) => p.id == id);
@@ -301,7 +301,7 @@ class DriftProjectRepository implements ProjectRepository {
       return;
     }
     final now = DateTime.now().toUtc();
-    await _db.transaction(() async {
+    await ownerBoundTransaction(_db, _syncQueue, () async {
       await _projects.updateProject(
         id,
         ProjectsCompanion(
@@ -372,17 +372,19 @@ class DriftProjectRepository implements ProjectRepository {
         final current = scopes.where((row) => row['id'] == scopeId).firstOrNull;
         if (current != null) {
           // Use current roles when normal deletion continues below.
-          await (_db.update(
-            _db.sharedScopes,
-          )..where((row) => row.id.equals(scopeId))).write(
-            SharedScopesCompanion(
-              dataJson: Value(jsonEncode({...scope.data, ...current})),
-            ),
-          );
+          await ownerBoundTransaction(_db, _syncQueue, () async {
+            await (_db.update(
+              _db.sharedScopes,
+            )..where((row) => row.id.equals(scopeId))).write(
+              SharedScopesCompanion(
+                dataJson: Value(jsonEncode({...scope.data, ...current})),
+              ),
+            );
+          });
           return false;
         }
       }
-      await _db.transaction(() async {
+      await ownerBoundTransaction(_db, _syncQueue, () async {
         await removeSharedScope(_db, scopeId);
         await _projects.repairKanbanSettings(now: DateTime.now().toUtc());
       });
@@ -402,7 +404,7 @@ class DriftProjectRepository implements ProjectRepository {
     await api.deleteScope(scopeId);
     await SyncOwnerStore.serialized(
       _db,
-      () => _db.transaction(() async {
+      () => ownerBoundTransaction(_db, _syncQueue, () async {
         await removeSharedScope(_db, scopeId);
         await _projects.repairKanbanSettings(now: DateTime.now().toUtc());
       }),
@@ -417,7 +419,7 @@ class DriftProjectRepository implements ProjectRepository {
 
   Future<void> _deleteLocalProject(String id) async {
     final now = DateTime.now().toUtc();
-    await _db.transaction(() async {
+    await ownerBoundTransaction(_db, _syncQueue, () async {
       final project = await _projects.findActiveProject(id);
       if (project == null) {
         return;

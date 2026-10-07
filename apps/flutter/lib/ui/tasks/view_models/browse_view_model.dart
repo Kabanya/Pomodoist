@@ -96,10 +96,17 @@ final syncQueueViewModelProvider =
       SyncQueueViewModel.new,
     );
 
+final syncQueueStatusViewModelProvider = Provider(
+  (ref) => ref.watch(syncQueueStatusProvider),
+);
+
 class SyncQueueViewModel extends Notifier<AsyncValue<int>> {
   @override
   AsyncValue<int> build() => ref.watch(pendingSyncCommandCountProvider);
-  void retry() => ref.invalidate(pendingSyncCommandCountProvider);
+  void retry() {
+    ref.invalidate(pendingSyncCommandCountProvider);
+    ref.invalidate(syncQueueStatusProvider);
+  }
 }
 
 final completedTasksViewModelProvider =

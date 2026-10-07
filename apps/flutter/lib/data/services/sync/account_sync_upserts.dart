@@ -225,7 +225,7 @@ extension AccountSyncUpserts on AccountSyncEngine {
         .insertOnConflictUpdate(LabelRow.fromJson(merged));
   }
 
-  Future<void> _upsertProject(String id, Map<String, dynamic> data) async {
+  Future<bool> _upsertProject(String id, Map<String, dynamic> data) async {
     final existing = await (_db.select(
       _db.projects,
     )..where((row) => row.id.equals(id))).getSingleOrNull();
@@ -242,11 +242,12 @@ extension AccountSyncUpserts on AccountSyncEngine {
       'createdAt',
       'updatedAt',
     ])) {
-      return;
+      return false;
     }
     await _db
         .into(_db.projects)
         .insertOnConflictUpdate(ProjectRow.fromJson(merged).toCompanion(false));
+    return true;
   }
 
   Future<void> _upsertReminder(String id, Map<String, dynamic> data) async {
@@ -294,7 +295,7 @@ extension AccountSyncUpserts on AccountSyncEngine {
         .insertOnConflictUpdate(SectionRow.fromJson(merged));
   }
 
-  Future<void> _upsertTask(String id, Map<String, dynamic> data) async {
+  Future<bool> _upsertTask(String id, Map<String, dynamic> data) async {
     final existing = await (_db.select(
       _db.tasks,
     )..where((row) => row.id.equals(id))).getSingleOrNull();
@@ -303,7 +304,7 @@ extension AccountSyncUpserts on AccountSyncEngine {
         existing != null &&
         incomingUpdatedAt != null &&
         incomingUpdatedAt.isBefore(existing.updatedAt.toUtc())) {
-      return;
+      return true;
     }
     final merged = syncMergeRow(existing?.toJson(), data);
     merged.putIfAbsent('assigneeIdsJson', () => '[]');
@@ -342,11 +343,12 @@ extension AccountSyncUpserts on AccountSyncEngine {
       'createdAt',
       'updatedAt',
     ])) {
-      return;
+      return false;
     }
     await _db
         .into(_db.tasks)
         .insertOnConflictUpdate(TaskRow.fromJson(merged).toCompanion(false));
+    return true;
   }
 
   Future<void> _upsertTaskCompletion(

@@ -4288,4 +4288,30 @@ class AppLocalizationsFr extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get settingsSynchronization => 'Synchronisation';
+
+  @override
+  String get settingsRestartSync => 'Relancer la synchronisation';
+
+  @override
+  String get settingsSyncRunning =>
+      'Vérification et synchronisation des données…';
+
+  @override
+  String get settingsSyncComplete => 'Synchronisation terminée.';
+
+  @override
+  String get settingsSyncPending =>
+      'Certaines modifications attendent un envoi ou une récupération.';
+
+  @override
+  String get settingsSyncFailed =>
+      'Synchronisation incomplète. Une nouvelle tentative sera automatique.';
+
+  @override
+  String syncUnresolvedChanges(int rejected, int repair) {
+    return 'Rejetés : $rejected. En attente de récupération : $repair.';
+  }
 }

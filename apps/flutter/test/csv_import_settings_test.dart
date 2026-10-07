@@ -103,7 +103,10 @@ void main() {
 Future<void> _pumpCard(WidgetTester tester, Widget card, {AppDatabase? db}) {
   return tester.pumpWidget(
     ProviderScope(
-      overrides: [if (db != null) appDatabaseProvider.overrideWithValue(db)],
+      overrides: [
+        if (db != null) appDatabaseProvider.overrideWithValue(db),
+        localSyncOwnerProvider.overrideWith((ref) => Stream.value(null)),
+      ],
       child: MaterialApp(
         builder: testAppBuilder,
         localizationsDelegates: const [

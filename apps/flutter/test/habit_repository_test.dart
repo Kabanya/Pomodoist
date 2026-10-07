@@ -172,7 +172,7 @@ void main() {
         commands.singleWhere((c) => c.type == 'habit.update').payloadJson,
       );
       expect(payload['scheduleHistory'].last['dayPeriod'], 'morning');
-      expect(db.schemaVersion, 11);
+      expect(db.schemaVersion, 12);
     },
   );
   test(
@@ -378,7 +378,7 @@ void main() {
         expect(
           (await disk.customSelect('PRAGMA user_version').getSingle())
               .read<int>('user_version'),
-          11,
+          12,
         );
         expect(
           await disk
