@@ -4172,4 +4172,16 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get calendarUnsupportedEvent =>
       'リンクされた予定に繰り返し予定または移動された予定があります。カレンダーで修正すると同期を再開できます。';
+
+  @override
+  String get settingsFocusSoundTitle => '集中モードのサウンド';
+
+  @override
+  String get settingsFocusSoundSubtitle => '集中時間の開始、一時停止、再開、完了時のサウンドを選択します。';
+
+  @override
+  String get settingsFocusSoundPreview => '試聴';
+
+  @override
+  String get settingsFocusSoundPreviewError => 'サンプルを再生できませんでした。もう一度お試しください。';
 }

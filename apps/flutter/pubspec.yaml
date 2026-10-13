@@ -126,10 +126,9 @@ flutter:
   assets:
     - web/sqlite3.wasm
     - web/drift_worker.js
-    - assets/sounds/focus_start.wav
-    - assets/sounds/focus_complete.wav
-    - assets/sounds/focus_pause.wav
-    - assets/sounds/focus_resume.wav
+    - assets/sounds/soft_kalimba/
+    - assets/sounds/neon_pulse/
+    - assets/sounds/orbit_bloom/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

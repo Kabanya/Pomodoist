@@ -34,6 +34,7 @@ import 'package:pomodoist/ui/settings/view_models/connected_agents_view_model.da
 import 'package:pomodoist/ui/settings/view_models/settings_view_model.dart';
 import 'package:pomodoist/ui/settings/view_models/auth_view_model.dart';
 import 'package:pomodoist/ui/settings/widgets/task_list_settings.dart';
+import 'package:pomodoist/ui/settings/widgets/focus_sound_settings.dart';
 import 'package:pomodoist/ui/onboarding/view_models/learning_tour_view_model.dart';
 export 'package:pomodoist/ui/settings/widgets/login_screen.dart';
 export 'package:pomodoist/ui/settings/widgets/register_screen.dart';
@@ -401,6 +402,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     onChanged: (value) =>
                         saveSetting(context, viewModel.setCelebration(value)),
                   ),
+                ),
+                FocusSoundSettings(
+                  active: _navigation.selected == SettingsSection.tasksFocus,
                 ),
               ],
             ),

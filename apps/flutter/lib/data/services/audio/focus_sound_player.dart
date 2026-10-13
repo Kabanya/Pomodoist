@@ -1,6 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 
 import 'package:pomodoist/data/services/haptics/app_haptics.dart';
+import 'package:pomodoist/domain/models/focus/focus_sound_set.dart';
 
 enum FocusSoundCue { start, complete, pause, resume }
 
@@ -10,15 +11,11 @@ abstract interface class FocusSoundPlayer {
 }
 
 class AssetFocusSoundPlayer implements FocusSoundPlayer {
-  AssetFocusSoundPlayer({AudioPlayer? player})
-    : _player = player ?? AudioPlayer();
-
-  static const _paths = {
-    FocusSoundCue.start: 'sounds/focus_start.wav',
-    FocusSoundCue.complete: 'sounds/focus_complete.wav',
-    FocusSoundCue.pause: 'sounds/focus_pause.wav',
-    FocusSoundCue.resume: 'sounds/focus_resume.wav',
-  };
+  AssetFocusSoundPlayer({
+    AudioPlayer? player,
+    Future<FocusSoundSet> Function()? readSoundSet,
+  }) : _player = player ?? AudioPlayer(),
+       _readSoundSet = readSoundSet ?? (() async => FocusSoundSet.softKalimba);
 
   static const _haptics = {
     FocusSoundCue.start: AppHapticCue.light,
@@ -28,13 +25,18 @@ class AssetFocusSoundPlayer implements FocusSoundPlayer {
   };
 
   final AudioPlayer _player;
+  final Future<FocusSoundSet> Function() _readSoundSet;
+  bool _disposed = false;
 
   @override
   Future<void> play(FocusSoundCue cue) async {
+    if (_disposed) return;
     await playHaptic(_haptics[cue]!);
     try {
+      final soundSet = await _readSoundSet();
+      if (_disposed) return;
       await _player.play(
-        AssetSource(_paths[cue]!),
+        AssetSource('sounds/${soundSet.storageValue}/focus_${cue.name}.wav'),
         mode: PlayerMode.lowLatency,
         volume: 0.55,
       );
@@ -44,5 +46,9 @@ class AssetFocusSoundPlayer implements FocusSoundPlayer {
   }
 
   @override
-  Future<void> dispose() => _player.dispose();
+  Future<void> dispose() async {
+    if (_disposed) return;
+    _disposed = true;
+    await _player.dispose();
+  }
 }

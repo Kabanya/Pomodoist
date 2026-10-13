@@ -1026,6 +1026,21 @@ Changing this presentation never starts, stops or resets a running interval.
 Keep preset selection in the header and retain existing strict-mode constraints,
 localized feedback, accessible timer summaries and Reduce Motion behavior.
 
+### Focus sounds
+
+Tasks and Focus settings offer Soft kalimba, Neon pulse, and Orbit bloom, in that
+order, through the shared setting row and select control. Soft kalimba is the
+default for new and upgraded installations. The device-local choice applies to
+start, pause, resume, and completion cues at the existing 55% playback volume.
+Loading a stored choice precedes the first cue; changing it never resets a run.
+
+The localized Listen button auditions only the selected completion cue using a
+separate player, without vibration or timer actions. Repeated presses restart
+the sample; changing the family or leaving the settings section stops it. Keep
+save failures on the previous choice, and present playback failures inline.
+Use the shared light/dark styling and responsive setting-row geometry. Validation
+for this change is static analysis and targeted unit tests only.
+
 ### Focus completion actions
 
 Focus controls never show bottom success snackbars, including start, pause,

@@ -23,7 +23,7 @@ final focusPreferencesRepositoryProvider = Provider<FocusPreferencesRepository>(
     final repository = StoredFocusPreferencesRepository(
       PreferencesService(() => ref.read(sharedPreferencesProvider.future)),
     );
-    unawaited(repository.load());
+    unawaited(repository.ready);
     ref.onDispose(repository.dispose);
     return repository;
   },

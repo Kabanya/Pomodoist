@@ -1992,5 +1992,9 @@
   "calendarAuthRequired": "カレンダーの認証が必要です。再度ログインし、「今すぐ同期」を実行してください。",
   "calendarRateLimited": "カレンダーのリクエスト上限に達しました。数分待ってから再度同期してください。",
   "calendarSyncFailed": "カレンダーの同期に失敗しました。後でもう一度お試しください。",
-  "calendarUnsupportedEvent": "リンクされた予定に繰り返し予定または移動された予定があります。カレンダーで修正すると同期を再開できます。"
+  "calendarUnsupportedEvent": "リンクされた予定に繰り返し予定または移動された予定があります。カレンダーで修正すると同期を再開できます。",
+  "settingsFocusSoundTitle": "集中モードのサウンド",
+  "settingsFocusSoundSubtitle": "集中時間の開始、一時停止、再開、完了時のサウンドを選択します。",
+  "settingsFocusSoundPreview": "試聴",
+  "settingsFocusSoundPreviewError": "サンプルを再生できませんでした。もう一度お試しください。"
 }

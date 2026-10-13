@@ -1381,5 +1381,9 @@
       }
     }
   },
-  "calendarUnsupportedEvent": "Einige verknüpfte Termine sind wiederkehrend oder wurden verschoben. Korrigiere sie im Kalender, um die Synchronisierung fortzusetzen."
+  "calendarUnsupportedEvent": "Einige verknüpfte Termine sind wiederkehrend oder wurden verschoben. Korrigiere sie im Kalender, um die Synchronisierung fortzusetzen.",
+  "settingsFocusSoundTitle": "Fokusklänge",
+  "settingsFocusSoundSubtitle": "Wähle die Klänge für Start, Pause, Fortsetzung und Abschluss eines Fokusintervalls.",
+  "settingsFocusSoundPreview": "Anhören",
+  "settingsFocusSoundPreviewError": "Das Klangbeispiel konnte nicht abgespielt werden. Versuche es erneut."
 }

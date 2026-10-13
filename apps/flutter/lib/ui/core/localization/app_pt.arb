@@ -1992,5 +1992,9 @@
   "calendarAuthRequired": "É necessária autorização do Agenda. Entre novamente e execute Sincronizar agora.",
   "calendarRateLimited": "O limite de solicitações do Agenda foi atingido. Aguarde alguns minutos antes de sincronizar novamente.",
   "calendarSyncFailed": "A sincronização do Agenda falhou. Tente novamente mais tarde.",
-  "calendarUnsupportedEvent": "Alguns eventos vinculados são recorrentes ou foram movidos. Corrija-os no calendário para retomar a sincronização."
+  "calendarUnsupportedEvent": "Alguns eventos vinculados são recorrentes ou foram movidos. Corrija-os no calendário para retomar a sincronização.",
+  "settingsFocusSoundTitle": "Sons de concentração",
+  "settingsFocusSoundSubtitle": "Escolha os sons para iniciar, pausar, retomar e concluir um intervalo de concentração.",
+  "settingsFocusSoundPreview": "Ouvir",
+  "settingsFocusSoundPreviewError": "Não foi possível reproduzir a amostra. Tente novamente."
 }

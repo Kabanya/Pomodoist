@@ -1381,5 +1381,9 @@
       }
     }
   },
-  "calendarUnsupportedEvent": "بعض الأحداث المرتبطة متكررة أو تم نقلها. صححها في التقويم لاستئناف المزامنة."
+  "calendarUnsupportedEvent": "بعض الأحداث المرتبطة متكررة أو تم نقلها. صححها في التقويم لاستئناف المزامنة.",
+  "settingsFocusSoundTitle": "أصوات التركيز",
+  "settingsFocusSoundSubtitle": "اختر أصوات بدء فترة التركيز وإيقافها مؤقتًا واستئنافها وإكمالها.",
+  "settingsFocusSoundPreview": "استماع",
+  "settingsFocusSoundPreviewError": "تعذر تشغيل العينة. حاول مرة أخرى."
 }

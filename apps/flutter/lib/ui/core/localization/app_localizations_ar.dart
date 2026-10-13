@@ -4239,4 +4239,18 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get calendarUnsupportedEvent =>
       'بعض الأحداث المرتبطة متكررة أو تم نقلها. صححها في التقويم لاستئناف المزامنة.';
+
+  @override
+  String get settingsFocusSoundTitle => 'أصوات التركيز';
+
+  @override
+  String get settingsFocusSoundSubtitle =>
+      'اختر أصوات بدء فترة التركيز وإيقافها مؤقتًا واستئنافها وإكمالها.';
+
+  @override
+  String get settingsFocusSoundPreview => 'استماع';
+
+  @override
+  String get settingsFocusSoundPreviewError =>
+      'تعذر تشغيل العينة. حاول مرة أخرى.';
 }

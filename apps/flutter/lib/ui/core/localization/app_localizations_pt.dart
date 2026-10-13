@@ -4346,6 +4346,20 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get calendarUnsupportedEvent =>
       'Alguns eventos vinculados são recorrentes ou foram movidos. Corrija-os no calendário para retomar a sincronização.';
+
+  @override
+  String get settingsFocusSoundTitle => 'Sons de concentração';
+
+  @override
+  String get settingsFocusSoundSubtitle =>
+      'Escolha os sons para iniciar, pausar, retomar e concluir um intervalo de concentração.';
+
+  @override
+  String get settingsFocusSoundPreview => 'Ouvir';
+
+  @override
+  String get settingsFocusSoundPreviewError =>
+      'Não foi possível reproduzir a amostra. Tente novamente.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -5074,4 +5088,18 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get calendarUnsupportedEvent =>
       'Alguns eventos vinculados são recorrentes ou foram movidos. Corrija-os no calendário para retomar a sincronização.';
+
+  @override
+  String get settingsFocusSoundTitle => 'Sons de foco';
+
+  @override
+  String get settingsFocusSoundSubtitle =>
+      'Escolha os sons para iniciar, pausar, retomar e concluir um intervalo de foco.';
+
+  @override
+  String get settingsFocusSoundPreview => 'Ouvir';
+
+  @override
+  String get settingsFocusSoundPreviewError =>
+      'Não foi possível reproduzir a amostra. Tente novamente.';
 }

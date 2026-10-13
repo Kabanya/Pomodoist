@@ -116,7 +116,14 @@ final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
 });
 
 final focusSoundPlayerProvider = Provider<FocusSoundPlayer>((ref) {
-  final player = AssetFocusSoundPlayer();
+  final preferences = ref.watch(focusPreferencesRepositoryProvider);
+  final player = AssetFocusSoundPlayer(
+    readSoundSet: () async {
+      // Audio remains advisory if preference hydration fails.
+      await preferences.ready;
+      return preferences.state.soundSet;
+    },
+  );
   ref.onDispose(() => unawaited(player.dispose()));
   return player;
 });

@@ -1381,5 +1381,9 @@
   "calendarAuthRequired": "需要 Calendar 授权。请重新登录并运行立即同步。",
   "calendarRateLimited": "已达到 Calendar 请求频率上限。请等待几分钟后再同步。",
   "calendarSyncFailed": "Calendar 同步失败。请稍后重试。",
-  "calendarUnsupportedEvent": "部分关联事件为重复事件或已被移动。请在日历中修正以恢复同步。"
+  "calendarUnsupportedEvent": "部分关联事件为重复事件或已被移动。请在日历中修正以恢复同步。",
+  "settingsFocusSoundTitle": "专注音效",
+  "settingsFocusSoundSubtitle": "选择专注时段开始、暂停、继续和完成时的音效。",
+  "settingsFocusSoundPreview": "试听",
+  "settingsFocusSoundPreviewError": "无法播放示例，请重试。"
 }

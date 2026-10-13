@@ -1992,5 +1992,9 @@
   "calendarAuthRequired": "Calendar 승인이 필요합니다. 다시 로그인하고 지금 동기화를 실행하세요.",
   "calendarRateLimited": "Calendar 요청 한도에 도달했습니다. 몇 분 후에 다시 동기화하세요.",
   "calendarSyncFailed": "Calendar 동기화에 실패했습니다. 나중에 다시 시도하세요.",
-  "calendarUnsupportedEvent": "연결된 일부 일정이 반복 일정이거나 이동되었습니다. 캘린더에서 수정하면 동기화가 재개됩니다."
+  "calendarUnsupportedEvent": "연결된 일부 일정이 반복 일정이거나 이동되었습니다. 캘린더에서 수정하면 동기화가 재개됩니다.",
+  "settingsFocusSoundTitle": "집중 사운드",
+  "settingsFocusSoundSubtitle": "집중 시간의 시작, 일시 정지, 재개 및 완료 사운드를 선택하세요.",
+  "settingsFocusSoundPreview": "미리 듣기",
+  "settingsFocusSoundPreviewError": "샘플을 재생할 수 없습니다. 다시 시도하세요."
 }

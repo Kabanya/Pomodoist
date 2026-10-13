@@ -4182,4 +4182,17 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get calendarUnsupportedEvent =>
       '연결된 일부 일정이 반복 일정이거나 이동되었습니다. 캘린더에서 수정하면 동기화가 재개됩니다.';
+
+  @override
+  String get settingsFocusSoundTitle => '집중 사운드';
+
+  @override
+  String get settingsFocusSoundSubtitle =>
+      '집중 시간의 시작, 일시 정지, 재개 및 완료 사운드를 선택하세요.';
+
+  @override
+  String get settingsFocusSoundPreview => '미리 듣기';
+
+  @override
+  String get settingsFocusSoundPreviewError => '샘플을 재생할 수 없습니다. 다시 시도하세요.';
 }

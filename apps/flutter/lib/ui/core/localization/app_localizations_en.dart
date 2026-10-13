@@ -4319,4 +4319,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get calendarUnsupportedEvent =>
       'Some linked events are recurring or were moved. Resolve them in the calendar to resume syncing.';
+
+  @override
+  String get settingsFocusSoundTitle => 'Focus sounds';
+
+  @override
+  String get settingsFocusSoundSubtitle =>
+      'Choose the sounds for starting, pausing, resuming, and completing a focus interval.';
+
+  @override
+  String get settingsFocusSoundPreview => 'Listen';
+
+  @override
+  String get settingsFocusSoundPreviewError =>
+      'Could not play the sample. Try again.';
 }

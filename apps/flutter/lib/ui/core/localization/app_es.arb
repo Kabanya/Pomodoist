@@ -1381,5 +1381,9 @@
       }
     }
   },
-  "calendarUnsupportedEvent": "Algunos eventos vinculados son recurrentes o se movieron. Corrígelos en el calendario para reanudar la sincronización."
+  "calendarUnsupportedEvent": "Algunos eventos vinculados son recurrentes o se movieron. Corrígelos en el calendario para reanudar la sincronización.",
+  "settingsFocusSoundTitle": "Sonidos de concentración",
+  "settingsFocusSoundSubtitle": "Elige los sonidos para iniciar, pausar, reanudar y completar un intervalo de concentración.",
+  "settingsFocusSoundPreview": "Escuchar",
+  "settingsFocusSoundPreviewError": "No se pudo reproducir la muestra. Inténtalo de nuevo."
 }

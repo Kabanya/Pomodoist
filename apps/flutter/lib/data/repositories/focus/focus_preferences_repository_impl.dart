@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:pomodoist/data/repositories/focus/focus_preferences_repository.dart';
 import 'package:pomodoist/data/services/local/preferences_service.dart';
 import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
+import 'package:pomodoist/domain/models/focus/focus_sound_set.dart';
 import 'package:pomodoist/utils/result.dart';
 
 class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
@@ -17,6 +18,9 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
   final _changed = <String>{};
   bool _disposed = false;
   int _generation = 0;
+  Future<Result<void>>? _ready;
+  @override
+  Future<Result<void>> get ready => load();
   void _publish(FocusPreferencesState value) {
     if (_disposed) return;
     _state = value;
@@ -24,7 +28,7 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
   }
 
   @override
-  Future<Result<void>> load() => Result.capture(() async {
+  Future<Result<void>> load() => _ready ??= Result.capture(() async {
     final generation = _generation;
     final values = (await _preferences.read(const [
       focusViewModePreferenceKey,
@@ -32,6 +36,7 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
       focusSessionDisplayPreferenceKey,
       lastFocusPresetIdPreferenceKey,
       focusCompletionCelebrationEnabledPreferenceKey,
+      focusSoundSetPreferenceKey,
     ])).getOrThrow();
     if (_disposed || generation != _generation) return;
     _publish(
@@ -54,6 +59,11 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
         lastPresetId: _changed.contains(lastFocusPresetIdPreferenceKey)
             ? state.lastPresetId
             : values[lastFocusPresetIdPreferenceKey] as String?,
+        soundSet: _changed.contains(focusSoundSetPreferenceKey)
+            ? state.soundSet
+            : FocusSoundSet.fromStorageValue(
+                values[focusSoundSetPreferenceKey],
+              ),
         celebrationEnabled:
             _changed.contains(focusCompletionCelebrationEnabledPreferenceKey)
             ? state.celebrationEnabled
@@ -77,6 +87,7 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
               sessionDisplay: state.sessionDisplay,
               lastPresetId: state.lastPresetId,
               celebrationEnabled: state.celebrationEnabled,
+              soundSet: state.soundSet,
             ),
           );
         } catch (_) {
@@ -99,6 +110,7 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
               sessionDisplay: state.sessionDisplay,
               lastPresetId: state.lastPresetId,
               celebrationEnabled: state.celebrationEnabled,
+              soundSet: state.soundSet,
             ),
           );
         } catch (_) {
@@ -121,6 +133,7 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
               sessionDisplay: value,
               lastPresetId: state.lastPresetId,
               celebrationEnabled: state.celebrationEnabled,
+              soundSet: state.soundSet,
             ),
           );
         } catch (_) {
@@ -142,6 +155,7 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
           sessionDisplay: state.sessionDisplay,
           lastPresetId: value,
           celebrationEnabled: state.celebrationEnabled,
+          soundSet: state.soundSet,
         ),
       );
     } catch (_) {
@@ -164,12 +178,35 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
               sessionDisplay: state.sessionDisplay,
               lastPresetId: state.lastPresetId,
               celebrationEnabled: value,
+              soundSet: state.soundSet,
             ),
           );
         } catch (_) {
           _changed.remove(focusCompletionCelebrationEnabledPreferenceKey);
           rethrow;
         }
+      });
+  @override
+  Future<Result<void>> setSoundSet(FocusSoundSet value) =>
+      Result.capture(() async {
+        if (_disposed) return;
+        final generation = _generation;
+        (await _preferences.write({
+          focusSoundSetPreferenceKey: value.storageValue,
+        })).getOrThrow();
+        if (_disposed || generation != _generation) return;
+        // Only a committed selection may override delayed hydration.
+        _changed.add(focusSoundSetPreferenceKey);
+        _publish(
+          FocusPreferencesState(
+            viewMode: state.viewMode,
+            timerStyle: state.timerStyle,
+            sessionDisplay: state.sessionDisplay,
+            lastPresetId: state.lastPresetId,
+            celebrationEnabled: state.celebrationEnabled,
+            soundSet: value,
+          ),
+        );
       });
   @override
   Future<Result<void>> clear() => Result.capture(() async {
@@ -181,6 +218,7 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
       focusSessionDisplayPreferenceKey: null,
       lastFocusPresetIdPreferenceKey: null,
       focusCompletionCelebrationEnabledPreferenceKey: null,
+      focusSoundSetPreferenceKey: null,
     })).getOrThrow();
     _publish(const FocusPreferencesState());
   });

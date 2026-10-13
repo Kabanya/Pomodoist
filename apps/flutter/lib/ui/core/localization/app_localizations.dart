@@ -7420,6 +7420,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Some linked events are recurring or were moved. Resolve them in the calendar to resume syncing.'**
   String get calendarUnsupportedEvent;
+
+  /// No description provided for @settingsFocusSoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus sounds'**
+  String get settingsFocusSoundTitle;
+
+  /// No description provided for @settingsFocusSoundSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the sounds for starting, pausing, resuming, and completing a focus interval.'**
+  String get settingsFocusSoundSubtitle;
+
+  /// No description provided for @settingsFocusSoundPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen'**
+  String get settingsFocusSoundPreview;
+
+  /// No description provided for @settingsFocusSoundPreviewError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not play the sample. Try again.'**
+  String get settingsFocusSoundPreviewError;
 }
 
 class _AppLocalizationsDelegate

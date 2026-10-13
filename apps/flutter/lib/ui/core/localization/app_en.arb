@@ -2165,5 +2165,9 @@
   "calendarAuthRequired": "Reconnect this calendar to continue syncing.",
   "calendarRateLimited": "Calendar request limit reached. Wait a few minutes before syncing again.",
   "calendarSyncFailed": "Calendar sync failed. Try again later.",
-  "calendarUnsupportedEvent": "Some linked events are recurring or were moved. Resolve them in the calendar to resume syncing."
+  "calendarUnsupportedEvent": "Some linked events are recurring or were moved. Resolve them in the calendar to resume syncing.",
+  "settingsFocusSoundTitle": "Focus sounds",
+  "settingsFocusSoundSubtitle": "Choose the sounds for starting, pausing, resuming, and completing a focus interval.",
+  "settingsFocusSoundPreview": "Listen",
+  "settingsFocusSoundPreviewError": "Could not play the sample. Try again."
 }

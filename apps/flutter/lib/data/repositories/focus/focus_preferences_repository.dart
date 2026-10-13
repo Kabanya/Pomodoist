@@ -1,9 +1,11 @@
 import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
+import 'package:pomodoist/domain/models/focus/focus_sound_set.dart';
 import 'package:pomodoist/utils/result.dart';
 
 const focusViewModePreferenceKey = 'focus.viewMode';
 const focusTimerVisualStylePreferenceKey = 'focus.timerVisualStyle';
 const focusSessionDisplayPreferenceKey = 'focus.sessionDisplay';
+const focusSoundSetPreferenceKey = 'focus.soundSet';
 const lastFocusPresetIdPreferenceKey = 'focus.lastPresetId';
 const focusCompletionCelebrationEnabledPreferenceKey =
     'focus.completionCelebration.enabled';
@@ -15,12 +17,14 @@ class FocusPreferencesState {
     this.sessionDisplay = FocusSessionDisplay.compact,
     this.lastPresetId,
     this.celebrationEnabled = true,
+    this.soundSet = FocusSoundSet.softKalimba,
   });
   final FocusViewMode viewMode;
   final FocusTimerVisualStyle timerStyle;
   final FocusSessionDisplay sessionDisplay;
   final String? lastPresetId;
   final bool celebrationEnabled;
+  final FocusSoundSet soundSet;
 }
 
 /// Persisted focus view, timer and session styles, preset and celebration.
@@ -29,6 +33,8 @@ class FocusPreferencesState {
 /// and load generations keep a late hydration from overwriting an edit, and the
 /// owner calls [dispose] to close the source stream.
 abstract interface class FocusPreferencesRepository {
+  Future<Result<void>> get ready;
+
   FocusPreferencesState get state;
 
   Stream<FocusPreferencesState> watch();
@@ -44,6 +50,8 @@ abstract interface class FocusPreferencesRepository {
   Future<Result<void>> setPresetId(String? value);
 
   Future<Result<void>> setCelebrationEnabled(bool value);
+
+  Future<Result<void>> setSoundSet(FocusSoundSet value);
 
   Future<Result<void>> clear();
 

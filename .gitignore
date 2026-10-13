@@ -228,3 +228,7 @@ docs/assets/app-store-grid-reference.png
 
 # Local agent scratch files
 **/.superpowers/
+
+# Local sound auditions and email bundles; shipping WAV assets stay tracked.
+/artifacts/focus-sounds/
+/artifacts/pomodoist-focus-sounds*.zip

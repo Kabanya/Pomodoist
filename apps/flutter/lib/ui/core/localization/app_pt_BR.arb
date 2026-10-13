@@ -252,5 +252,9 @@
   "calendarAuthRequired": "Calendar authorization is required. Sign in again and run Sync now.",
   "calendarRateLimited": "Calendar request limit reached. Wait a few minutes before syncing again.",
   "calendarSyncFailed": "Calendar sync failed. Try again later.",
-  "calendarUnsupportedEvent": "Alguns eventos vinculados são recorrentes ou foram movidos. Corrija-os no calendário para retomar a sincronização."
+  "calendarUnsupportedEvent": "Alguns eventos vinculados são recorrentes ou foram movidos. Corrija-os no calendário para retomar a sincronização.",
+  "settingsFocusSoundTitle": "Sons de foco",
+  "settingsFocusSoundSubtitle": "Escolha os sons para iniciar, pausar, retomar e concluir um intervalo de foco.",
+  "settingsFocusSoundPreview": "Ouvir",
+  "settingsFocusSoundPreviewError": "Não foi possível reproduzir a amostra. Tente novamente."
 }

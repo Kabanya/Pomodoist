@@ -4333,4 +4333,18 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get calendarUnsupportedEvent =>
       'Algunos eventos vinculados son recurrentes o se movieron. Corrígelos en el calendario para reanudar la sincronización.';
+
+  @override
+  String get settingsFocusSoundTitle => 'Sonidos de concentración';
+
+  @override
+  String get settingsFocusSoundSubtitle =>
+      'Elige los sonidos para iniciar, pausar, reanudar y completar un intervalo de concentración.';
+
+  @override
+  String get settingsFocusSoundPreview => 'Escuchar';
+
+  @override
+  String get settingsFocusSoundPreviewError =>
+      'No se pudo reproducir la muestra. Inténtalo de nuevo.';
 }

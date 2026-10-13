@@ -4325,4 +4325,18 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get calendarUnsupportedEvent =>
       'Некоторые связанные события повторяются или перенесены. Исправьте их в календаре, чтобы возобновить синхронизацию.';
+
+  @override
+  String get settingsFocusSoundTitle => 'Звуки фокуса';
+
+  @override
+  String get settingsFocusSoundSubtitle =>
+      'Выберите звуки начала, паузы, продолжения и завершения интервала фокуса.';
+
+  @override
+  String get settingsFocusSoundPreview => 'Прослушать';
+
+  @override
+  String get settingsFocusSoundPreviewError =>
+      'Не удалось воспроизвести образец. Попробуйте ещё раз.';
 }

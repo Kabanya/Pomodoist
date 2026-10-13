@@ -4084,4 +4084,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get calendarUnsupportedEvent => '部分关联事件为重复事件或已被移动。请在日历中修正以恢复同步。';
+
+  @override
+  String get settingsFocusSoundTitle => '专注音效';
+
+  @override
+  String get settingsFocusSoundSubtitle => '选择专注时段开始、暂停、继续和完成时的音效。';
+
+  @override
+  String get settingsFocusSoundPreview => '试听';
+
+  @override
+  String get settingsFocusSoundPreviewError => '无法播放示例，请重试。';
 }

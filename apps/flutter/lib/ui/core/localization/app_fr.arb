@@ -1381,5 +1381,9 @@
       }
     }
   },
-  "calendarUnsupportedEvent": "Certains événements liés sont récurrents ou ont été déplacés. Corrigez-les dans le calendrier pour reprendre la synchronisation."
+  "calendarUnsupportedEvent": "Certains événements liés sont récurrents ou ont été déplacés. Corrigez-les dans le calendrier pour reprendre la synchronisation.",
+  "settingsFocusSoundTitle": "Sons de concentration",
+  "settingsFocusSoundSubtitle": "Choisissez les sons de début, de pause, de reprise et de fin d’un intervalle de concentration.",
+  "settingsFocusSoundPreview": "Écouter",
+  "settingsFocusSoundPreviewError": "Impossible de lire l’extrait. Réessayez."
 }

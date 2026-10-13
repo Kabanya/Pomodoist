@@ -4339,4 +4339,18 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get calendarUnsupportedEvent =>
       'Einige verknüpfte Termine sind wiederkehrend oder wurden verschoben. Korrigiere sie im Kalender, um die Synchronisierung fortzusetzen.';
+
+  @override
+  String get settingsFocusSoundTitle => 'Fokusklänge';
+
+  @override
+  String get settingsFocusSoundSubtitle =>
+      'Wähle die Klänge für Start, Pause, Fortsetzung und Abschluss eines Fokusintervalls.';
+
+  @override
+  String get settingsFocusSoundPreview => 'Anhören';
+
+  @override
+  String get settingsFocusSoundPreviewError =>
+      'Das Klangbeispiel konnte nicht abgespielt werden. Versuche es erneut.';
 }
