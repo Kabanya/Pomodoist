@@ -78,3 +78,6 @@ verify_jwt = false
 [functions.pomodoist-files-cleanup]
 # The handler accepts only the configured service-role bearer credential.
 verify_jwt = false
+
+[functions.pomodoist-outlook-calendar]
+verify_jwt = false

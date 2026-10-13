@@ -12,7 +12,6 @@ import 'package:pomodoist/config/providers.dart';
 /// the application scope exists.
 final startupBackgroundWiringProvider = Provider<void>((ref) {
   ref.watch(accountSyncLifecycleProvider);
-  ref.watch(googleCalendarSyncLifecycleProvider);
   ref.watch(recurringTaskMaterializationProvider);
   ref.watch(taskStartNotificationCoordinatorProvider);
   ref.watch(habitReminderStatusProvider);

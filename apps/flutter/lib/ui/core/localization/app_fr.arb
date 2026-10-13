@@ -638,7 +638,7 @@
   "recurrenceEveryMonths": "{interval, plural, =1{every month} other{every {interval} months}}",
   "noDate": "Sans date",
   "calendarNotLinked": "Calendrier non lié",
-  "calendarLinked": "Google Calendar lié",
+  "calendarLinked": "Calendar lié",
   "focusProgress": "{completed}/{total} focus",
   "startFocus": "Démarrer le focus",
   "focusStarted": "Focus démarré",
@@ -1367,5 +1367,19 @@
   "settingsSyncComplete": "Synchronisation terminée.",
   "settingsSyncPending": "Certaines modifications attendent un envoi ou une récupération.",
   "settingsSyncFailed": "Synchronisation incomplète. Une nouvelle tentative sera automatique.",
-  "syncUnresolvedChanges": "Rejetés : {rejected}. En attente de récupération : {repair}."
+  "syncUnresolvedChanges": "Rejetés : {rejected}. En attente de récupération : {repair}.",
+  "outlookCalendarTitle": "Outlook Calendar",
+  "calendarDisconnectedSubtitle": "Connectez un compte pour synchroniser les tâches planifiées.",
+  "calendarFailed": "Calendar a échoué : {message}",
+  "calendarAuthRequired": "L'autorisation Calendar est requise. Connectez-vous à nouveau puis lancez la synchronisation.",
+  "calendarRateLimited": "La limite de requêtes de Calendar est atteinte. Attendez quelques minutes avant de relancer la synchronisation.",
+  "calendarSyncFailed": "La synchronisation de Calendar a échoué. Réessayez plus tard.",
+  "@calendarFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarUnsupportedEvent": "Certains événements liés sont récurrents ou ont été déplacés. Corrigez-les dans le calendrier pour reprendre la synchronisation."
 }

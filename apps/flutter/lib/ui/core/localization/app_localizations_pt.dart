@@ -1972,7 +1972,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get calendarNotLinked => 'Calendário não vinculado';
 
   @override
-  String get calendarLinked => 'Google Agenda vinculado';
+  String get calendarLinked => 'Agenda vinculado';
 
   @override
   String focusProgress(int completed, int total) {
@@ -4318,6 +4318,34 @@ class AppLocalizationsPt extends AppLocalizations {
   String syncUnresolvedChanges(int rejected, int repair) {
     return 'Rejeitados: $rejected. Aguardando recuperação: $repair.';
   }
+
+  @override
+  String get outlookCalendarTitle => 'Outlook Calendar';
+
+  @override
+  String get calendarDisconnectedSubtitle =>
+      'Conecte uma conta para sincronizar tarefas agendadas.';
+
+  @override
+  String calendarFailed(String message) {
+    return 'Falha no Agenda: $message';
+  }
+
+  @override
+  String get calendarAuthRequired =>
+      'É necessária autorização do Agenda. Entre novamente e execute Sincronizar agora.';
+
+  @override
+  String get calendarRateLimited =>
+      'O limite de solicitações do Agenda foi atingido. Aguarde alguns minutos antes de sincronizar novamente.';
+
+  @override
+  String get calendarSyncFailed =>
+      'A sincronização do Agenda falhou. Tente novamente mais tarde.';
+
+  @override
+  String get calendarUnsupportedEvent =>
+      'Alguns eventos vinculados são recorrentes ou foram movidos. Corrija-os no calendário para retomar a sincronização.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -5019,4 +5047,31 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
     });
     return '$_temp0';
   }
+
+  @override
+  String get outlookCalendarTitle => 'Outlook Calendar';
+
+  @override
+  String get calendarDisconnectedSubtitle =>
+      'Connect a account to sync scheduled tasks.';
+
+  @override
+  String calendarFailed(String message) {
+    return 'Calendar failed: $message';
+  }
+
+  @override
+  String get calendarAuthRequired =>
+      'Calendar authorization is required. Sign in again and run Sync now.';
+
+  @override
+  String get calendarRateLimited =>
+      'Calendar request limit reached. Wait a few minutes before syncing again.';
+
+  @override
+  String get calendarSyncFailed => 'Calendar sync failed. Try again later.';
+
+  @override
+  String get calendarUnsupportedEvent =>
+      'Alguns eventos vinculados são recorrentes ou foram movidos. Corrija-os no calendário para retomar a sincronização.';
 }

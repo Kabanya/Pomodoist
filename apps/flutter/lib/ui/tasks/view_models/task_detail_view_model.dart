@@ -1,3 +1,4 @@
+import 'package:pomodoist/config/calendar_dependencies.dart';
 import 'package:pomodoist/domain/models/files/file_attachment.dart';
 import 'package:pomodoist/config/files_dependencies.dart';
 import 'package:pomodoist/config/collaboration_dependencies.dart';
@@ -143,6 +144,8 @@ class TaskDetailViewModel extends Notifier<TaskDetailState> {
       task: task,
       layout: ref.watch(taskPreferencesStateProvider).detailLayout,
       calendarLinked:
+          (ref.watch(calendarLinksProvider(taskId)).value?.isNotEmpty ??
+              false) ||
           ref.watch(googleCalendarLinkProvider(taskId)).value != null,
       preset: preset,
       focusEstimate: task.value == null

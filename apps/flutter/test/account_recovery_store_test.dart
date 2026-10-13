@@ -60,6 +60,73 @@ void main() {
   }
 
   test(
+    'calendar projections survive returning to their owner without leaking to another account',
+    () async {
+      for (final provider in ['google', 'outlook']) {
+        await db
+            .into(db.calendarProjections)
+            .insert(
+              CalendarProjectionRow(
+                entityType: 'calendar_connection',
+                id: provider,
+                dataJson: jsonEncode({
+                  'connectionId': provider,
+                  'provider': provider,
+                  'status': 'connected',
+                }),
+              ),
+            );
+        await db
+            .into(db.calendarProjections)
+            .insert(
+              CalendarProjectionRow(
+                entityType: 'calendar_event_link',
+                id: '$provider:task',
+                dataJson: jsonEncode({
+                  'taskId': 'task',
+                  'connectionId': provider,
+                  'eventId': '$provider-event',
+                  'provider': provider,
+                }),
+              ),
+            );
+      }
+      user = 'B';
+      await owners.prepareAccount();
+      expect(await db.select(db.calendarProjections).get(), isEmpty);
+      user = 'A';
+      await owners.prepareAccount();
+      expect(await db.select(db.calendarProjections).get(), hasLength(4));
+    },
+  );
+
+  test(
+    'pre-calendar account snapshots restore without the new projection table',
+    () async {
+      await task('legacy');
+      user = 'B';
+      await owners.prepareAccount();
+      final snapshot = await (db.select(
+        db.accountRecoverySnapshots,
+      )..where((row) => row.ownerId.equals('A'))).getSingle();
+      final payload = jsonDecode(snapshot.payloadJson) as Map<String, dynamic>;
+      (payload['tables'] as Map).remove('calendar_projections');
+      await (db.update(
+        db.accountRecoverySnapshots,
+      )..where((row) => row.ownerId.equals('A'))).write(
+        AccountRecoverySnapshotsCompanion(
+          schemaVersion: const Value(12),
+          payloadJson: Value(jsonEncode(payload)),
+        ),
+      );
+      user = 'A';
+      await owners.prepareAccount();
+      expect((await db.select(db.tasks).getSingle()).id, 'legacy');
+      expect(await db.select(db.calendarProjections).get(), isEmpty);
+    },
+  );
+
+  test(
     'A survives guest and B transitions with original command identity',
     () async {
       await task('a');

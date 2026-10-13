@@ -227,6 +227,14 @@ extension AccountSyncPull on AccountSyncEngine {
       case 'focus_event':
         await _upsertFocusEvent(entity.entityId, data);
         return;
+      case 'calendar_connection':
+      case 'calendar_event_link':
+        await _upsertCalendarProjection(
+          entity.entityType,
+          entity.entityId,
+          data,
+        );
+        return;
       case 'google_calendar_connection':
         await _upsertGoogleCalendarConnection(entity.entityId, data);
         return;
@@ -394,6 +402,15 @@ extension AccountSyncPull on AccountSyncEngine {
         await (_db.delete(
           _db.focusEvents,
         )..where((row) => row.id.equals(entity.entityId))).go();
+        return;
+      case 'calendar_connection':
+      case 'calendar_event_link':
+        await (_db.delete(_db.calendarProjections)..where(
+              (row) =>
+                  row.entityType.equals(entity.entityType) &
+                  row.id.equals(entity.entityId),
+            ))
+            .go();
         return;
       case 'google_calendar_connection':
         await (_db.delete(

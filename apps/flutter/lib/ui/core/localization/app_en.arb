@@ -977,7 +977,7 @@
   },
   "noDate": "No date",
   "calendarNotLinked": "Calendar not linked",
-  "calendarLinked": "Google Calendar linked",
+  "calendarLinked": "Calendar linked",
   "focusProgress": "{completed}/{total} focus",
   "@focusProgress": {
     "placeholders": {
@@ -2151,5 +2151,19 @@
         "type": "int"
       }
     }
-  }
+  },
+  "outlookCalendarTitle": "Outlook Calendar",
+  "calendarDisconnectedSubtitle": "Connect an account to sync scheduled tasks.",
+  "calendarFailed": "Calendar error: {message}",
+  "@calendarFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarAuthRequired": "Reconnect this calendar to continue syncing.",
+  "calendarRateLimited": "Calendar request limit reached. Wait a few minutes before syncing again.",
+  "calendarSyncFailed": "Calendar sync failed. Try again later.",
+  "calendarUnsupportedEvent": "Some linked events are recurring or were moved. Resolve them in the calendar to resume syncing."
 }

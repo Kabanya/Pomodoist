@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/calendar/provider_calendar_models.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -411,6 +412,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           children: [
             if (!kIsWeb) ...[
               const GoogleCalendarSettingsScreen(embedded: true),
+              const SizedBox(height: 24),
+              const GoogleCalendarSettingsScreen(
+                embedded: true,
+                provider: CalendarProvider.outlook,
+              ),
               const SizedBox(height: 24),
             ],
             if (settings.accountConfigured && settings.signedIn) ...[

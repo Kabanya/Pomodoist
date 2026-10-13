@@ -969,7 +969,7 @@
   },
   "noDate": "Sem data",
   "calendarNotLinked": "Calendário não vinculado",
-  "calendarLinked": "Google Agenda vinculado",
+  "calendarLinked": "Agenda vinculado",
   "focusProgress": "{completed}/{total} focos",
   "@focusProgress": {
     "placeholders": {
@@ -1978,5 +1978,19 @@
   "settingsSyncComplete": "Sincronização concluída.",
   "settingsSyncPending": "Algumas alterações aguardam envio ou recuperação.",
   "settingsSyncFailed": "Sincronização incompleta. Tentaremos novamente automaticamente.",
-  "syncUnresolvedChanges": "Rejeitados: {rejected}. Aguardando recuperação: {repair}."
+  "syncUnresolvedChanges": "Rejeitados: {rejected}. Aguardando recuperação: {repair}.",
+  "outlookCalendarTitle": "Outlook Calendar",
+  "calendarDisconnectedSubtitle": "Conecte uma conta para sincronizar tarefas agendadas.",
+  "calendarFailed": "Falha no Agenda: {message}",
+  "@calendarFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarAuthRequired": "É necessária autorização do Agenda. Entre novamente e execute Sincronizar agora.",
+  "calendarRateLimited": "O limite de solicitações do Agenda foi atingido. Aguarde alguns minutos antes de sincronizar novamente.",
+  "calendarSyncFailed": "A sincronização do Agenda falhou. Tente novamente mais tarde.",
+  "calendarUnsupportedEvent": "Alguns eventos vinculados são recorrentes ou foram movidos. Corrija-os no calendário para retomar a sincronização."
 }

@@ -969,7 +969,7 @@
   },
   "noDate": "日付なし",
   "calendarNotLinked": "カレンダー未連携",
-  "calendarLinked": "Googleカレンダー連携済み",
+  "calendarLinked": "カレンダー連携済み",
   "focusProgress": "集中{completed}/{total}",
   "@focusProgress": {
     "placeholders": {
@@ -1978,5 +1978,19 @@
   "settingsSyncComplete": "同期が完了しました。",
   "settingsSyncPending": "送信または復元を待っている変更があります。",
   "settingsSyncFailed": "同期が完了していません。自動的に再試行します。",
-  "syncUnresolvedChanges": "拒否: {rejected}。復元待ち: {repair}。"
+  "syncUnresolvedChanges": "拒否: {rejected}。復元待ち: {repair}。",
+  "outlookCalendarTitle": "Outlook Calendar",
+  "calendarDisconnectedSubtitle": "アカウントを接続して予定タスクを同期します。",
+  "calendarFailed": "カレンダーのエラー: {message}",
+  "@calendarFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarAuthRequired": "カレンダーの認証が必要です。再度ログインし、「今すぐ同期」を実行してください。",
+  "calendarRateLimited": "カレンダーのリクエスト上限に達しました。数分待ってから再度同期してください。",
+  "calendarSyncFailed": "カレンダーの同期に失敗しました。後でもう一度お試しください。",
+  "calendarUnsupportedEvent": "リンクされた予定に繰り返し予定または移動された予定があります。カレンダーで修正すると同期を再開できます。"
 }

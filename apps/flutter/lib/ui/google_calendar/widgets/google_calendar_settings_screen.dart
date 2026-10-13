@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/calendar/provider_calendar_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,7 +11,13 @@ import 'package:pomodoist/ui/core/localization/formatters.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 
 class GoogleCalendarSettingsScreen extends ConsumerStatefulWidget {
-  const GoogleCalendarSettingsScreen({this.embedded = false, super.key});
+  const GoogleCalendarSettingsScreen({
+    this.embedded = false,
+    this.provider = CalendarProvider.google,
+    super.key,
+  });
+
+  final CalendarProvider provider;
 
   final bool embedded;
 
@@ -21,10 +28,15 @@ class GoogleCalendarSettingsScreen extends ConsumerStatefulWidget {
 
 class _GoogleCalendarSettingsScreenState
     extends ConsumerState<GoogleCalendarSettingsScreen> {
+  NotifierProvider<GoogleCalendarViewModel, GoogleCalendarState>
+  get _viewModel => widget.provider == CalendarProvider.google
+      ? googleCalendarViewModelProvider
+      : outlookCalendarViewModelProvider;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final state = ref.watch(googleCalendarViewModelProvider);
+    final state = ref.watch(_viewModel);
     final connection = state.connection;
     final busy = state.busy;
     final child = connection.when(
@@ -33,14 +45,17 @@ class _GoogleCalendarSettingsScreenState
       data: (row) {
         final connected =
             row?.calendarId != null && row?.status != 'disconnected';
+        final requiresAuthorization = row?.status == 'reconnect_required';
         final children = [
           if (connection.isLoading) const LinearProgressIndicator(minHeight: 2),
           if (connection.hasError) _loadError(connection.error!),
           SettingsRow(
-            title: l10n.googleCalendarTitle,
+            title: widget.provider == CalendarProvider.google
+                ? l10n.googleCalendarTitle
+                : l10n.outlookCalendarTitle,
             subtitle: connected
                 ? l10n.googleCalendarConnectedSubtitle
-                : l10n.googleCalendarDisconnectedSubtitle,
+                : l10n.calendarDisconnectedSubtitle,
             control: Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -50,7 +65,7 @@ class _GoogleCalendarSettingsScreenState
                   enabled: !busy,
                   onPressed: busy
                       ? null
-                      : connected
+                      : connected && !requiresAuthorization
                       ? () => _sync()
                       : () => _connect(),
                   leading: busy
@@ -64,7 +79,11 @@ class _GoogleCalendarSettingsScreenState
                       : Icon(
                           connected ? LucideIcons.refreshCw : LucideIcons.link2,
                         ),
-                  child: Text(connected ? l10n.syncNow : l10n.connect),
+                  child: Text(
+                    connected && !requiresAuthorization
+                        ? l10n.syncNow
+                        : l10n.connect,
+                  ),
                 ),
                 if (connected)
                   ShadButton.outline(
@@ -137,26 +156,22 @@ class _GoogleCalendarSettingsScreenState
       ),
       ShadButton.ghost(
         height: 48,
-        onPressed: () =>
-            ref.read(googleCalendarViewModelProvider.notifier).retry(),
+        onPressed: () => ref.read(_viewModel.notifier).retry(),
         child: Text(context.l10n.commonRetry),
       ),
     ],
   );
 
-  Future<void> _connect() =>
-      _run(ref.read(googleCalendarViewModelProvider.notifier).connect);
-  Future<void> _sync() =>
-      _run(ref.read(googleCalendarViewModelProvider.notifier).sync);
-  Future<void> _disconnect() =>
-      _run(ref.read(googleCalendarViewModelProvider.notifier).disconnect);
+  Future<void> _connect() => _run(ref.read(_viewModel.notifier).connect);
+  Future<void> _sync() => _run(ref.read(_viewModel.notifier).sync);
+  Future<void> _disconnect() => _run(ref.read(_viewModel.notifier).disconnect);
   Future<void> _run(Future<CalendarFailure?> Function() action) async {
     final error = await action();
     if (error != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.l10n.googleCalendarFailed(
+            context.l10n.calendarFailed(
               _googleCalendarErrorMessage(context, error),
             ),
           ),
@@ -168,9 +183,9 @@ class _GoogleCalendarSettingsScreenState
 
 String _googleCalendarErrorMessage(BuildContext context, Object error) =>
     switch (CalendarFailure.fromError(error)) {
-      CalendarFailure.authRequired => context.l10n.googleAuthRequired,
-      CalendarFailure.rateLimited => context.l10n.googleCalendarRateLimited,
-      CalendarFailure.unavailable => context.l10n.googleCalendarSyncFailed,
+      CalendarFailure.authRequired => context.l10n.calendarAuthRequired,
+      CalendarFailure.rateLimited => context.l10n.calendarRateLimited,
+      CalendarFailure.unavailable => context.l10n.calendarSyncFailed,
     };
 
 class _StatusRows extends StatelessWidget {
@@ -227,7 +242,9 @@ class _StatusRows extends StatelessWidget {
           const SizedBox(height: 12),
           _MessageBand(
             icon: LucideIcons.triangleAlert,
-            text: context.l10n.googleAuthRequired,
+            text: warning == 'unsupported_event'
+                ? context.l10n.calendarUnsupportedEvent
+                : context.l10n.calendarAuthRequired,
             color: colors.warning,
           ),
         ],

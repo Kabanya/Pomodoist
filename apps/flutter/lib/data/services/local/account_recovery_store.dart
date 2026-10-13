@@ -28,6 +28,7 @@ class AccountRecoveryStore {
     'focus_daily_stats',
     'sync_commands',
     'sync_state',
+    'calendar_projections',
     'google_calendar_connections',
     'google_calendar_event_links',
     'id_mappings',
@@ -93,7 +94,11 @@ class AccountRecoveryStore {
     for (final name in tables) {
       final table = db.allTables.singleWhere((t) => t.actualTableName == name);
       final columns = table.$columns.map((c) => c.$name).toSet();
-      for (final raw in data[name] as List) {
+      // Snapshots from schema 11/12 predate generic calendar projections.
+      final rows = name == 'calendar_projections' && data[name] == null
+          ? const []
+          : data[name] as List;
+      for (final raw in rows) {
         final row = (raw as Map).cast<String, Object?>();
         // Shared cache is fetched again after membership validation. Keep the
         // original scoped commands, which the shared sync permission gate owns.

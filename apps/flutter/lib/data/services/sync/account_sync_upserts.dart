@@ -124,6 +124,52 @@ extension AccountSyncUpserts on AccountSyncEngine {
         .insertOnConflictUpdate(FocusRunRow.fromJson(merged));
   }
 
+  Future<void> _upsertCalendarProjection(
+    String type,
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    // Explicit allowlist keeps credentials and provider payloads out of local storage.
+    const fields = {
+      'id',
+      'provider',
+      'connectionId',
+      'accountEmail',
+      'calendarId',
+      'calendarName',
+      'status',
+      'lastError',
+      'warning',
+      'lastSyncFinishedAt',
+      'createdAt',
+      'updatedAt',
+      'taskId',
+      'eventId',
+      'unsupportedReason',
+    };
+    final safe = Map<String, dynamic>.fromEntries(
+      data.entries.where((entry) => fields.contains(entry.key)),
+    );
+    if (!{'google', 'outlook'}.contains(safe['provider']) ||
+        safe['connectionId'] is! String) {
+      return;
+    }
+    if (type == 'calendar_connection' && safe['status'] is! String) return;
+    if (type == 'calendar_event_link' &&
+        (safe['taskId'] is! String || safe['eventId'] is! String)) {
+      return;
+    }
+    await _db
+        .into(_db.calendarProjections)
+        .insertOnConflictUpdate(
+          CalendarProjectionRow(
+            entityType: type,
+            id: id,
+            dataJson: jsonEncode(safe),
+          ),
+        );
+  }
+
   Future<void> _upsertGoogleCalendarConnection(
     String id,
     Map<String, dynamic> data,

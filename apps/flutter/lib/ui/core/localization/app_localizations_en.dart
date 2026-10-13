@@ -1962,7 +1962,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarNotLinked => 'Calendar not linked';
 
   @override
-  String get calendarLinked => 'Google Calendar linked';
+  String get calendarLinked => 'Calendar linked';
 
   @override
   String focusProgress(int completed, int total) {
@@ -4292,4 +4292,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String syncUnresolvedChanges(int rejected, int repair) {
     return 'Rejected: $rejected. Awaiting recovery: $repair.';
   }
+
+  @override
+  String get outlookCalendarTitle => 'Outlook Calendar';
+
+  @override
+  String get calendarDisconnectedSubtitle =>
+      'Connect an account to sync scheduled tasks.';
+
+  @override
+  String calendarFailed(String message) {
+    return 'Calendar error: $message';
+  }
+
+  @override
+  String get calendarAuthRequired =>
+      'Reconnect this calendar to continue syncing.';
+
+  @override
+  String get calendarRateLimited =>
+      'Calendar request limit reached. Wait a few minutes before syncing again.';
+
+  @override
+  String get calendarSyncFailed => 'Calendar sync failed. Try again later.';
+
+  @override
+  String get calendarUnsupportedEvent =>
+      'Some linked events are recurring or were moved. Resolve them in the calendar to resume syncing.';
 }

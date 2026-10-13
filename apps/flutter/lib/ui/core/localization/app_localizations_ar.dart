@@ -1952,7 +1952,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get calendarNotLinked => 'التقويم غير مرتبط';
 
   @override
-  String get calendarLinked => 'Google Calendar مرتبط';
+  String get calendarLinked => 'Calendar مرتبط';
 
   @override
   String focusProgress(int completed, int total) {
@@ -4212,4 +4212,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String syncUnresolvedChanges(int rejected, int repair) {
     return 'مرفوضة: $rejected. بانتظار الاستعادة: $repair.';
   }
+
+  @override
+  String get outlookCalendarTitle => 'Outlook Calendar';
+
+  @override
+  String get calendarDisconnectedSubtitle => 'صل حساب لمزامنة المهام المجدولة.';
+
+  @override
+  String calendarFailed(String message) {
+    return 'فشل Calendar: $message';
+  }
+
+  @override
+  String get calendarAuthRequired =>
+      'يلزم تفويض Calendar. سجل الدخول مرة أخرى ثم شغل مزامنة الآن.';
+
+  @override
+  String get calendarRateLimited =>
+      'تم بلوغ حد طلبات Calendar. انتظر بضع دقائق قبل المزامنة مرة أخرى.';
+
+  @override
+  String get calendarSyncFailed =>
+      'تعذرت مزامنة Calendar. حاول مرة أخرى لاحقًا.';
+
+  @override
+  String get calendarUnsupportedEvent =>
+      'بعض الأحداث المرتبطة متكررة أو تم نقلها. صححها في التقويم لاستئناف المزامنة.';
 }

@@ -1914,7 +1914,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get calendarNotLinked => '캘린더 연결 안 됨';
 
   @override
-  String get calendarLinked => 'Google Calendar 연결됨';
+  String get calendarLinked => 'Calendar 연결됨';
 
   @override
   String focusProgress(int completed, int total) {
@@ -4157,4 +4157,29 @@ class AppLocalizationsKo extends AppLocalizations {
   String syncUnresolvedChanges(int rejected, int repair) {
     return '거부됨: $rejected. 복구 대기 중: $repair.';
   }
+
+  @override
+  String get outlookCalendarTitle => 'Outlook Calendar';
+
+  @override
+  String get calendarDisconnectedSubtitle => '계정을 연결하여 예정된 작업을 동기화하세요.';
+
+  @override
+  String calendarFailed(String message) {
+    return 'Calendar 오류: $message';
+  }
+
+  @override
+  String get calendarAuthRequired =>
+      'Calendar 승인이 필요합니다. 다시 로그인하고 지금 동기화를 실행하세요.';
+
+  @override
+  String get calendarRateLimited => 'Calendar 요청 한도에 도달했습니다. 몇 분 후에 다시 동기화하세요.';
+
+  @override
+  String get calendarSyncFailed => 'Calendar 동기화에 실패했습니다. 나중에 다시 시도하세요.';
+
+  @override
+  String get calendarUnsupportedEvent =>
+      '연결된 일부 일정이 반복 일정이거나 이동되었습니다. 캘린더에서 수정하면 동기화가 재개됩니다.';
 }

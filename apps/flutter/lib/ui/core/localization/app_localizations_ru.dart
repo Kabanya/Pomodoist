@@ -1985,7 +1985,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get calendarNotLinked => 'Календарь не связан';
 
   @override
-  String get calendarLinked => 'Google Calendar связан';
+  String get calendarLinked => 'Связано с календарём';
 
   @override
   String focusProgress(int completed, int total) {
@@ -4297,4 +4297,32 @@ class AppLocalizationsRu extends AppLocalizations {
   String syncUnresolvedChanges(int rejected, int repair) {
     return 'Отклонено: $rejected. Ожидают восстановления: $repair.';
   }
+
+  @override
+  String get outlookCalendarTitle => 'Outlook Calendar';
+
+  @override
+  String get calendarDisconnectedSubtitle =>
+      'Подключите аккаунт для синхронизации запланированных задач.';
+
+  @override
+  String calendarFailed(String message) {
+    return 'Ошибка календаря: $message';
+  }
+
+  @override
+  String get calendarAuthRequired =>
+      'Требуется повторное подключение календаря.';
+
+  @override
+  String get calendarRateLimited =>
+      'Достигнут лимит запросов календаря. Повторите позже.';
+
+  @override
+  String get calendarSyncFailed =>
+      'Не удалось синхронизировать календарь. Повторите позже.';
+
+  @override
+  String get calendarUnsupportedEvent =>
+      'Некоторые связанные события повторяются или перенесены. Исправьте их в календаре, чтобы возобновить синхронизацию.';
 }

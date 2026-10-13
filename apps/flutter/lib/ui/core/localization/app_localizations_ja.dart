@@ -1908,7 +1908,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get calendarNotLinked => 'カレンダー未連携';
 
   @override
-  String get calendarLinked => 'Googleカレンダー連携済み';
+  String get calendarLinked => 'カレンダー連携済み';
 
   @override
   String focusProgress(int completed, int total) {
@@ -4148,4 +4148,28 @@ class AppLocalizationsJa extends AppLocalizations {
   String syncUnresolvedChanges(int rejected, int repair) {
     return '拒否: $rejected。復元待ち: $repair。';
   }
+
+  @override
+  String get outlookCalendarTitle => 'Outlook Calendar';
+
+  @override
+  String get calendarDisconnectedSubtitle => 'アカウントを接続して予定タスクを同期します。';
+
+  @override
+  String calendarFailed(String message) {
+    return 'カレンダーのエラー: $message';
+  }
+
+  @override
+  String get calendarAuthRequired => 'カレンダーの認証が必要です。再度ログインし、「今すぐ同期」を実行してください。';
+
+  @override
+  String get calendarRateLimited => 'カレンダーのリクエスト上限に達しました。数分待ってから再度同期してください。';
+
+  @override
+  String get calendarSyncFailed => 'カレンダーの同期に失敗しました。後でもう一度お試しください。';
+
+  @override
+  String get calendarUnsupportedEvent =>
+      'リンクされた予定に繰り返し予定または移動された予定があります。カレンダーで修正すると同期を再開できます。';
 }

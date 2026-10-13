@@ -12556,6 +12556,274 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
   }
 }
 
+class $CalendarProjectionsTable extends CalendarProjections
+    with TableInfo<$CalendarProjectionsTable, CalendarProjectionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CalendarProjectionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _entityTypeMeta = const VerificationMeta(
+    'entityType',
+  );
+  @override
+  late final GeneratedColumn<String> entityType = GeneratedColumn<String>(
+    'entity_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dataJsonMeta = const VerificationMeta(
+    'dataJson',
+  );
+  @override
+  late final GeneratedColumn<String> dataJson = GeneratedColumn<String>(
+    'data_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [entityType, id, dataJson];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'calendar_projections';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CalendarProjectionRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('entity_type')) {
+      context.handle(
+        _entityTypeMeta,
+        entityType.isAcceptableOrUnknown(data['entity_type']!, _entityTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityTypeMeta);
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('data_json')) {
+      context.handle(
+        _dataJsonMeta,
+        dataJson.isAcceptableOrUnknown(data['data_json']!, _dataJsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dataJsonMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {entityType, id};
+  @override
+  CalendarProjectionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CalendarProjectionRow(
+      entityType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_type'],
+      )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      dataJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}data_json'],
+      )!,
+    );
+  }
+
+  @override
+  $CalendarProjectionsTable createAlias(String alias) {
+    return $CalendarProjectionsTable(attachedDatabase, alias);
+  }
+}
+
+class CalendarProjectionRow extends DataClass
+    implements Insertable<CalendarProjectionRow> {
+  final String entityType;
+  final String id;
+  final String dataJson;
+  const CalendarProjectionRow({
+    required this.entityType,
+    required this.id,
+    required this.dataJson,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['entity_type'] = Variable<String>(entityType);
+    map['id'] = Variable<String>(id);
+    map['data_json'] = Variable<String>(dataJson);
+    return map;
+  }
+
+  CalendarProjectionsCompanion toCompanion(bool nullToAbsent) {
+    return CalendarProjectionsCompanion(
+      entityType: Value(entityType),
+      id: Value(id),
+      dataJson: Value(dataJson),
+    );
+  }
+
+  factory CalendarProjectionRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CalendarProjectionRow(
+      entityType: serializer.fromJson<String>(json['entityType']),
+      id: serializer.fromJson<String>(json['id']),
+      dataJson: serializer.fromJson<String>(json['dataJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'entityType': serializer.toJson<String>(entityType),
+      'id': serializer.toJson<String>(id),
+      'dataJson': serializer.toJson<String>(dataJson),
+    };
+  }
+
+  CalendarProjectionRow copyWith({
+    String? entityType,
+    String? id,
+    String? dataJson,
+  }) => CalendarProjectionRow(
+    entityType: entityType ?? this.entityType,
+    id: id ?? this.id,
+    dataJson: dataJson ?? this.dataJson,
+  );
+  CalendarProjectionRow copyWithCompanion(CalendarProjectionsCompanion data) {
+    return CalendarProjectionRow(
+      entityType: data.entityType.present
+          ? data.entityType.value
+          : this.entityType,
+      id: data.id.present ? data.id.value : this.id,
+      dataJson: data.dataJson.present ? data.dataJson.value : this.dataJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalendarProjectionRow(')
+          ..write('entityType: $entityType, ')
+          ..write('id: $id, ')
+          ..write('dataJson: $dataJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(entityType, id, dataJson);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CalendarProjectionRow &&
+          other.entityType == this.entityType &&
+          other.id == this.id &&
+          other.dataJson == this.dataJson);
+}
+
+class CalendarProjectionsCompanion
+    extends UpdateCompanion<CalendarProjectionRow> {
+  final Value<String> entityType;
+  final Value<String> id;
+  final Value<String> dataJson;
+  final Value<int> rowid;
+  const CalendarProjectionsCompanion({
+    this.entityType = const Value.absent(),
+    this.id = const Value.absent(),
+    this.dataJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CalendarProjectionsCompanion.insert({
+    required String entityType,
+    required String id,
+    required String dataJson,
+    this.rowid = const Value.absent(),
+  }) : entityType = Value(entityType),
+       id = Value(id),
+       dataJson = Value(dataJson);
+  static Insertable<CalendarProjectionRow> custom({
+    Expression<String>? entityType,
+    Expression<String>? id,
+    Expression<String>? dataJson,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (entityType != null) 'entity_type': entityType,
+      if (id != null) 'id': id,
+      if (dataJson != null) 'data_json': dataJson,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CalendarProjectionsCompanion copyWith({
+    Value<String>? entityType,
+    Value<String>? id,
+    Value<String>? dataJson,
+    Value<int>? rowid,
+  }) {
+    return CalendarProjectionsCompanion(
+      entityType: entityType ?? this.entityType,
+      id: id ?? this.id,
+      dataJson: dataJson ?? this.dataJson,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (entityType.present) {
+      map['entity_type'] = Variable<String>(entityType.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (dataJson.present) {
+      map['data_json'] = Variable<String>(dataJson.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalendarProjectionsCompanion(')
+          ..write('entityType: $entityType, ')
+          ..write('id: $id, ')
+          ..write('dataJson: $dataJson, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $GoogleCalendarConnectionsTable extends GoogleCalendarConnections
     with
         TableInfo<
@@ -15450,6 +15718,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $AccountRecoverySnapshotsTable accountRecoverySnapshots =
       $AccountRecoverySnapshotsTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
+  late final $CalendarProjectionsTable calendarProjections =
+      $CalendarProjectionsTable(this);
   late final $GoogleCalendarConnectionsTable googleCalendarConnections =
       $GoogleCalendarConnectionsTable(this);
   late final $GoogleCalendarEventLinksTable googleCalendarEventLinks =
@@ -15507,6 +15777,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     syncCommands,
     accountRecoverySnapshots,
     syncState,
+    calendarProjections,
     googleCalendarConnections,
     googleCalendarEventLinks,
     idMappings,
@@ -21668,6 +21939,186 @@ typedef $$SyncStateTableProcessedTableManager =
       SyncStateRow,
       PrefetchHooks Function()
     >;
+typedef $$CalendarProjectionsTableCreateCompanionBuilder =
+    CalendarProjectionsCompanion Function({
+      required String entityType,
+      required String id,
+      required String dataJson,
+      Value<int> rowid,
+    });
+typedef $$CalendarProjectionsTableUpdateCompanionBuilder =
+    CalendarProjectionsCompanion Function({
+      Value<String> entityType,
+      Value<String> id,
+      Value<String> dataJson,
+      Value<int> rowid,
+    });
+
+class $$CalendarProjectionsTableFilterComposer
+    extends Composer<_$AppDatabase, $CalendarProjectionsTable> {
+  $$CalendarProjectionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dataJson => $composableBuilder(
+    column: $table.dataJson,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CalendarProjectionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CalendarProjectionsTable> {
+  $$CalendarProjectionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dataJson => $composableBuilder(
+    column: $table.dataJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CalendarProjectionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CalendarProjectionsTable> {
+  $$CalendarProjectionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get dataJson =>
+      $composableBuilder(column: $table.dataJson, builder: (column) => column);
+}
+
+class $$CalendarProjectionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CalendarProjectionsTable,
+          CalendarProjectionRow,
+          $$CalendarProjectionsTableFilterComposer,
+          $$CalendarProjectionsTableOrderingComposer,
+          $$CalendarProjectionsTableAnnotationComposer,
+          $$CalendarProjectionsTableCreateCompanionBuilder,
+          $$CalendarProjectionsTableUpdateCompanionBuilder,
+          (
+            CalendarProjectionRow,
+            BaseReferences<
+              _$AppDatabase,
+              $CalendarProjectionsTable,
+              CalendarProjectionRow
+            >,
+          ),
+          CalendarProjectionRow,
+          PrefetchHooks Function()
+        > {
+  $$CalendarProjectionsTableTableManager(
+    _$AppDatabase db,
+    $CalendarProjectionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CalendarProjectionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CalendarProjectionsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$CalendarProjectionsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> entityType = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> dataJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CalendarProjectionsCompanion(
+                entityType: entityType,
+                id: id,
+                dataJson: dataJson,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String entityType,
+                required String id,
+                required String dataJson,
+                Value<int> rowid = const Value.absent(),
+              }) => CalendarProjectionsCompanion.insert(
+                entityType: entityType,
+                id: id,
+                dataJson: dataJson,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CalendarProjectionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CalendarProjectionsTable,
+      CalendarProjectionRow,
+      $$CalendarProjectionsTableFilterComposer,
+      $$CalendarProjectionsTableOrderingComposer,
+      $$CalendarProjectionsTableAnnotationComposer,
+      $$CalendarProjectionsTableCreateCompanionBuilder,
+      $$CalendarProjectionsTableUpdateCompanionBuilder,
+      (
+        CalendarProjectionRow,
+        BaseReferences<
+          _$AppDatabase,
+          $CalendarProjectionsTable,
+          CalendarProjectionRow
+        >,
+      ),
+      CalendarProjectionRow,
+      PrefetchHooks Function()
+    >;
 typedef $$GoogleCalendarConnectionsTableCreateCompanionBuilder =
     GoogleCalendarConnectionsCompanion Function({
       required String id,
@@ -23138,6 +23589,8 @@ class $AppDatabaseManager {
       );
   $$SyncStateTableTableManager get syncState =>
       $$SyncStateTableTableManager(_db, _db.syncState);
+  $$CalendarProjectionsTableTableManager get calendarProjections =>
+      $$CalendarProjectionsTableTableManager(_db, _db.calendarProjections);
   $$GoogleCalendarConnectionsTableTableManager get googleCalendarConnections =>
       $$GoogleCalendarConnectionsTableTableManager(
         _db,

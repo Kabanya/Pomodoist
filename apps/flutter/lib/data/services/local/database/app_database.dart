@@ -450,6 +450,15 @@ class GoogleCalendarEventLinks extends Table {
   Set<Column<Object>> get primaryKey => {taskId};
 }
 
+@DataClassName('CalendarProjectionRow')
+class CalendarProjections extends Table {
+  TextColumn get entityType => text()();
+  TextColumn get id => text()();
+  TextColumn get dataJson => text()();
+  @override
+  Set<Column<Object>> get primaryKey => {entityType, id};
+}
+
 @DataClassName('IdMappingRow')
 class IdMappings extends Table {
   TextColumn get localId => text()();
@@ -536,6 +545,7 @@ class HabitCheckIns extends Table {
     SyncCommands,
     AccountRecoverySnapshots,
     SyncState,
+    CalendarProjections,
     GoogleCalendarConnections,
     GoogleCalendarEventLinks,
     IdMappings,
@@ -561,12 +571,18 @@ class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
+      if (from < 13) {
+        await _runResumableMigrationStep(
+          () => m.createTable(calendarProjections),
+          alreadyAppliedMessage: 'already exists',
+        );
+      }
       if (from < 12) {
         await _runResumableMigrationStep(
           () => m.createTable(accountRecoverySnapshots),
@@ -810,6 +826,7 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> resetAccountData() async {
     await transaction(() async {
+      await delete(calendarProjections).go();
       await delete(googleCalendarEventLinks).go();
       await delete(googleCalendarConnections).go();
       await delete(idMappings).go();
