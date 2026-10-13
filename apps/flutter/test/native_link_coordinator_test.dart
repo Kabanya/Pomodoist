@@ -6,6 +6,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/data/services/platform/native_link_coordinator.dart';
 
 void main() {
+  test('Outlook callback accepts only the exact application URI', () {
+    expect(
+      nativeRouteForLink(Uri.parse('pomodoist://outlook-calendar-connected')),
+      '/integrations/outlook-calendar',
+    );
+    for (final suffix in ['/', '?code=secret', '#fragment', ':42']) {
+      expect(
+        nativeRouteForLink(
+          Uri.parse('pomodoist://outlook-calendar-connected$suffix'),
+        ),
+        isNull,
+      );
+    }
+  });
   test('fingerprints canonical URI bytes without retaining raw secrets', () {
     final first = Uri.parse(
       'pomodoist://captcha-callback?state=${'A' * 43}&token=TOKEN_ONE',

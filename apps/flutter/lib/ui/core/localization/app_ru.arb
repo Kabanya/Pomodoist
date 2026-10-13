@@ -638,7 +638,7 @@
   "recurrenceEveryMonths": "{interval, plural, =1{каждый месяц} few{каждые {interval} месяца} many{каждые {interval} месяцев} other{каждые {interval} месяца}}",
   "noDate": "Без даты",
   "calendarNotLinked": "Календарь не связан",
-  "calendarLinked": "Google Calendar связан",
+  "calendarLinked": "Связано с календарём",
   "focusProgress": "{completed}/{total} фокус",
   "startFocus": "Начать фокус",
   "focusStarted": "Фокус начат",
@@ -1367,5 +1367,19 @@
   "settingsSyncComplete": "Синхронизация завершена.",
   "settingsSyncPending": "Часть изменений ещё ожидает отправки или восстановления.",
   "settingsSyncFailed": "Синхронизация не завершена. Повторим автоматически.",
-  "syncUnresolvedChanges": "Отклонено: {rejected}. Ожидают восстановления: {repair}."
+  "syncUnresolvedChanges": "Отклонено: {rejected}. Ожидают восстановления: {repair}.",
+  "outlookCalendarTitle": "Outlook Calendar",
+  "calendarDisconnectedSubtitle": "Подключите аккаунт для синхронизации запланированных задач.",
+  "calendarFailed": "Ошибка календаря: {message}",
+  "@calendarFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarAuthRequired": "Требуется повторное подключение календаря.",
+  "calendarRateLimited": "Достигнут лимит запросов календаря. Повторите позже.",
+  "calendarSyncFailed": "Не удалось синхронизировать календарь. Повторите позже.",
+  "calendarUnsupportedEvent": "Некоторые связанные события повторяются или перенесены. Исправьте их в календаре, чтобы возобновить синхронизацию."
 }

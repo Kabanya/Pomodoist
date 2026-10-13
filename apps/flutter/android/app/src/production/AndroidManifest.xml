@@ -11,6 +11,7 @@
                 <data android:scheme="${urlScheme}" android:host="login-callback" />
                 <data android:scheme="${urlScheme}" android:host="captcha-callback" />
                 <data android:scheme="${urlScheme}" android:host="google-calendar-connected" />
+                <data android:scheme="${urlScheme}" android:host="outlook-calendar-connected" />
                 <data android:scheme="${urlScheme}" android:host="focus" />
                 <data android:scheme="${urlScheme}" android:host="purchase-success" />
             </intent-filter>

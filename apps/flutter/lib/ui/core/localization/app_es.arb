@@ -638,7 +638,7 @@
   "recurrenceEveryMonths": "{interval, plural, =1{every month} other{every {interval} months}}",
   "noDate": "Sin fecha",
   "calendarNotLinked": "Calendario no vinculado",
-  "calendarLinked": "Google Calendar vinculado",
+  "calendarLinked": "Calendar vinculado",
   "focusProgress": "{completed}/{total} enfoque",
   "startFocus": "Iniciar enfoque",
   "focusStarted": "Enfoque iniciado",
@@ -1367,5 +1367,19 @@
   "settingsSyncComplete": "Sincronización completada.",
   "settingsSyncPending": "Algunos cambios están pendientes de envío o recuperación.",
   "settingsSyncFailed": "Sincronización incompleta. Se reintentará automáticamente.",
-  "syncUnresolvedChanges": "Rechazados: {rejected}. Pendientes de recuperación: {repair}."
+  "syncUnresolvedChanges": "Rechazados: {rejected}. Pendientes de recuperación: {repair}.",
+  "outlookCalendarTitle": "Outlook Calendar",
+  "calendarDisconnectedSubtitle": "Conecta una cuenta de para sincronizar tareas programadas.",
+  "calendarFailed": "Calendar falló: {message}",
+  "calendarAuthRequired": "Se requiere autorización de Calendar. Inicia sesión de nuevo y ejecuta Sincronizar ahora.",
+  "calendarRateLimited": "Se ha alcanzado el límite de solicitudes de Calendar. Espera unos minutos antes de volver a sincronizar.",
+  "calendarSyncFailed": "No se pudo sincronizar Calendar. Inténtalo más tarde.",
+  "@calendarFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarUnsupportedEvent": "Algunos eventos vinculados son recurrentes o se movieron. Corrígelos en el calendario para reanudar la sincronización."
 }

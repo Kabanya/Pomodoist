@@ -94,17 +94,8 @@ extension AccountSyncOperations on AccountSyncEngine {
     for (final row in await _db.select(_db.focusPresets).get()) {
       add('focus_preset', row.id, row.toJson(), row.updatedAt);
     }
-    for (final row in await _db.select(_db.googleCalendarConnections).get()) {
-      add('google_calendar_connection', row.id, row.toJson(), row.updatedAt);
-    }
-    for (final row in await _db.select(_db.googleCalendarEventLinks).get()) {
-      add(
-        'google_calendar_event_link',
-        row.taskId,
-        row.toJson(),
-        row.updatedAt,
-      );
-    }
+    // Calendar connections and event links are server-owned projections.
+    // Do not import another account's authorization state from a local snapshot.
 
     final completedRuns =
         await (_db.select(_db.focusRuns)..where(

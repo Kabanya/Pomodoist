@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/calendar/provider_calendar_models.dart';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +15,8 @@ enum CalendarFailure {
 
   static CalendarFailure fromError(Object error) {
     if (error is CalendarFailure) return error;
+    if (error == 'authorization_required') return authRequired;
+    if (error == 'rate_limited') return rateLimited;
     if (error is GoogleCalendarFailure && error.requiresAuthorization) {
       return authRequired;
     }
@@ -48,13 +51,28 @@ final googleCalendarViewModelProvider =
       GoogleCalendarViewModel.new,
     );
 
+final outlookCalendarViewModelProvider =
+    NotifierProvider.autoDispose<GoogleCalendarViewModel, GoogleCalendarState>(
+      () => GoogleCalendarViewModel(CalendarProvider.outlook),
+    );
+
 class GoogleCalendarViewModel extends Notifier<GoogleCalendarState> {
+  GoogleCalendarViewModel([this.provider = CalendarProvider.google]);
+  final CalendarProvider provider;
   late GoogleCalendarSyncRepository _repository;
   bool _busy = false;
   @override
   GoogleCalendarState build() {
-    _repository = ref.watch(googleCalendarSyncRepositoryProvider);
-    final value = ref.watch(googleCalendarConnectionProvider);
+    _repository = ref.watch(calendarSyncRepositoryProvider(provider));
+    final connections = ref.watch(calendarConnectionsProvider);
+    final legacy = provider == CalendarProvider.google
+        ? ref.watch(googleCalendarConnectionProvider)
+        : const AsyncData<GoogleCalendarConnection?>(null);
+    final value = connections.whenData<GoogleCalendarConnection?>(
+      (rows) =>
+          rows.where((row) => row.provider == provider).firstOrNull ??
+          legacy.value,
+    );
     return GoogleCalendarState(
       value.hasError
           ? AsyncError(classify(value.error!), value.stackTrace!)
@@ -64,7 +82,13 @@ class GoogleCalendarViewModel extends Notifier<GoogleCalendarState> {
   }
 
   CalendarFailure classify(Object error) => CalendarFailure.fromError(error);
-  void retry() => ref.invalidate(googleCalendarConnectionProvider);
+  void retry() {
+    ref.invalidate(calendarConnectionsProvider);
+    if (provider == CalendarProvider.google) {
+      ref.invalidate(googleCalendarConnectionProvider);
+    }
+  }
+
   Future<CalendarFailure?> connect() => _run(_repository.connect);
   Future<CalendarFailure?> sync() => _run(_repository.sync);
   Future<CalendarFailure?> disconnect() => _run(_repository.disconnect);

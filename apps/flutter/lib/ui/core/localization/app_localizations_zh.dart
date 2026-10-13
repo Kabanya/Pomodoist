@@ -1866,7 +1866,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get calendarNotLinked => '日历未关联';
 
   @override
-  String get calendarLinked => 'Google Calendar 已关联';
+  String get calendarLinked => 'Calendar 已关联';
 
   @override
   String focusProgress(int completed, int total) {
@@ -4061,4 +4061,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String syncUnresolvedChanges(int rejected, int repair) {
     return '已拒绝：$rejected。等待恢复：$repair。';
   }
+
+  @override
+  String get outlookCalendarTitle => 'Outlook Calendar';
+
+  @override
+  String get calendarDisconnectedSubtitle => '连接 账户以同步计划任务。';
+
+  @override
+  String calendarFailed(String message) {
+    return 'Calendar 失败：$message';
+  }
+
+  @override
+  String get calendarAuthRequired => '需要 Calendar 授权。请重新登录并运行立即同步。';
+
+  @override
+  String get calendarRateLimited => '已达到 Calendar 请求频率上限。请等待几分钟后再同步。';
+
+  @override
+  String get calendarSyncFailed => 'Calendar 同步失败。请稍后重试。';
+
+  @override
+  String get calendarUnsupportedEvent => '部分关联事件为重复事件或已被移动。请在日历中修正以恢复同步。';
 }

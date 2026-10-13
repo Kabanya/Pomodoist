@@ -3490,7 +3490,7 @@ abstract class AppLocalizations {
   /// No description provided for @calendarLinked.
   ///
   /// In en, this message translates to:
-  /// **'Google Calendar linked'**
+  /// **'Calendar linked'**
   String get calendarLinked;
 
   /// No description provided for @focusProgress.
@@ -7378,6 +7378,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rejected: {rejected}. Awaiting recovery: {repair}.'**
   String syncUnresolvedChanges(int rejected, int repair);
+
+  /// No description provided for @outlookCalendarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Outlook Calendar'**
+  String get outlookCalendarTitle;
+
+  /// No description provided for @calendarDisconnectedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect an account to sync scheduled tasks.'**
+  String get calendarDisconnectedSubtitle;
+
+  /// No description provided for @calendarFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar error: {message}'**
+  String calendarFailed(String message);
+
+  /// No description provided for @calendarAuthRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect this calendar to continue syncing.'**
+  String get calendarAuthRequired;
+
+  /// No description provided for @calendarRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar request limit reached. Wait a few minutes before syncing again.'**
+  String get calendarRateLimited;
+
+  /// No description provided for @calendarSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar sync failed. Try again later.'**
+  String get calendarSyncFailed;
+
+  /// No description provided for @calendarUnsupportedEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Some linked events are recurring or were moved. Resolve them in the calendar to resume syncing.'**
+  String get calendarUnsupportedEvent;
 }
 
 class _AppLocalizationsDelegate

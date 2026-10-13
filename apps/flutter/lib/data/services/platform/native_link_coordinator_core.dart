@@ -168,6 +168,9 @@ String? nativeRouteForLink(Uri uri) {
   if (_isExactGoogleCalendarConnectedLink(uri)) {
     return '/integrations/google-calendar';
   }
+  if (_isExactCalendarConnectedLink(uri, 'outlook')) {
+    return '/integrations/outlook-calendar';
+  }
   if (_isExactPurchaseSuccessLink(uri)) {
     return '/purchase-success?source=stripe';
   }
@@ -185,9 +188,12 @@ String? nativeRouteForLink(Uri uri) {
   ).toString();
 }
 
-bool _isExactGoogleCalendarConnectedLink(Uri uri) {
+bool _isExactGoogleCalendarConnectedLink(Uri uri) =>
+    _isExactCalendarConnectedLink(uri, 'google');
+
+bool _isExactCalendarConnectedLink(Uri uri, String provider) {
   return uri.scheme == appFlavor.urlScheme &&
-      uri.host == 'google-calendar-connected' &&
+      uri.host == '$provider-calendar-connected' &&
       uri.path.isEmpty &&
       uri.userInfo.isEmpty &&
       !uri.hasPort &&

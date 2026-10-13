@@ -238,5 +238,19 @@
   "habitIconEmoji": "Emojis",
   "habitIconIcons": "Ícones",
   "habitIconReset": "Redefinir ícone",
-  "habitIconOption": "{icon, select, bookOpen{Leitura} dumbbell{Exercício} footprints{Caminhada} glassWater{Água} moon{Sono} sun{Sol} heart{Saúde} brain{Aprendizado} apple{Nutrição} coffee{Café} music{Música} pencil{Escrita} code{Programação} leaf{Natureza} target{Objetivo} bike{Ciclismo} other{Ícone do hábito}}"
+  "habitIconOption": "{icon, select, bookOpen{Leitura} dumbbell{Exercício} footprints{Caminhada} glassWater{Água} moon{Sono} sun{Sol} heart{Saúde} brain{Aprendizado} apple{Nutrição} coffee{Café} music{Música} pencil{Escrita} code{Programação} leaf{Natureza} target{Objetivo} bike{Ciclismo} other{Ícone do hábito}}",
+  "outlookCalendarTitle": "Outlook Calendar",
+  "calendarDisconnectedSubtitle": "Connect a account to sync scheduled tasks.",
+  "calendarFailed": "Calendar failed: {message}",
+  "@calendarFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarAuthRequired": "Calendar authorization is required. Sign in again and run Sync now.",
+  "calendarRateLimited": "Calendar request limit reached. Wait a few minutes before syncing again.",
+  "calendarSyncFailed": "Calendar sync failed. Try again later.",
+  "calendarUnsupportedEvent": "Alguns eventos vinculados são recorrentes ou foram movidos. Corrija-os no calendário para retomar a sincronização."
 }

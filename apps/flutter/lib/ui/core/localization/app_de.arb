@@ -638,7 +638,7 @@
   "recurrenceEveryMonths": "{interval, plural, =1{every month} other{every {interval} months}}",
   "noDate": "Kein Datum",
   "calendarNotLinked": "Kalender nicht verknüpft",
-  "calendarLinked": "Google Kalender verknüpft",
+  "calendarLinked": "Kalender verknüpft",
   "focusProgress": "{completed}/{total} Fokus",
   "startFocus": "Fokus starten",
   "focusStarted": "Fokus gestartet",
@@ -1367,5 +1367,19 @@
   "settingsSyncComplete": "Synchronisierung abgeschlossen.",
   "settingsSyncPending": "Einige Änderungen warten auf Übertragung oder Wiederherstellung.",
   "settingsSyncFailed": "Synchronisierung unvollständig. Wir versuchen es automatisch erneut.",
-  "syncUnresolvedChanges": "Abgelehnt: {rejected}. Wiederherstellung ausstehend: {repair}."
+  "syncUnresolvedChanges": "Abgelehnt: {rejected}. Wiederherstellung ausstehend: {repair}.",
+  "outlookCalendarTitle": "Outlook Calendar",
+  "calendarDisconnectedSubtitle": "Verbinde ein-Konto, um geplante Aufgaben zu synchronisieren.",
+  "calendarFailed": "Kalender fehlgeschlagen: {message}",
+  "calendarAuthRequired": "Kalender-Autorisierung ist erforderlich. Melde dich erneut an und starte Jetzt synchronisieren.",
+  "calendarRateLimited": "Das Anfragelimit von Kalender wurde erreicht. Warte einige Minuten, bevor du erneut synchronisierst.",
+  "calendarSyncFailed": "Die Synchronisierung mit Kalender ist fehlgeschlagen. Versuche es später erneut.",
+  "@calendarFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarUnsupportedEvent": "Einige verknüpfte Termine sind wiederkehrend oder wurden verschoben. Korrigiere sie im Kalender, um die Synchronisierung fortzusetzen."
 }

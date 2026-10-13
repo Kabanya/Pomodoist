@@ -638,7 +638,7 @@
   "recurrenceEveryMonths": "{interval, plural, =1{every month} other{every {interval} months}}",
   "noDate": "بلا تاريخ",
   "calendarNotLinked": "التقويم غير مرتبط",
-  "calendarLinked": "Google Calendar مرتبط",
+  "calendarLinked": "Calendar مرتبط",
   "focusProgress": "{completed}/{total} تركيز",
   "startFocus": "بدء التركيز",
   "focusStarted": "بدأ التركيز",
@@ -1367,5 +1367,19 @@
   "settingsSyncComplete": "اكتملت المزامنة.",
   "settingsSyncPending": "بعض التغييرات تنتظر الإرسال أو الاستعادة.",
   "settingsSyncFailed": "لم تكتمل المزامنة. سنعيد المحاولة تلقائيًا.",
-  "syncUnresolvedChanges": "مرفوضة: {rejected}. بانتظار الاستعادة: {repair}."
+  "syncUnresolvedChanges": "مرفوضة: {rejected}. بانتظار الاستعادة: {repair}.",
+  "outlookCalendarTitle": "Outlook Calendar",
+  "calendarDisconnectedSubtitle": "صل حساب لمزامنة المهام المجدولة.",
+  "calendarFailed": "فشل Calendar: {message}",
+  "calendarAuthRequired": "يلزم تفويض Calendar. سجل الدخول مرة أخرى ثم شغل مزامنة الآن.",
+  "calendarRateLimited": "تم بلوغ حد طلبات Calendar. انتظر بضع دقائق قبل المزامنة مرة أخرى.",
+  "calendarSyncFailed": "تعذرت مزامنة Calendar. حاول مرة أخرى لاحقًا.",
+  "@calendarFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarUnsupportedEvent": "بعض الأحداث المرتبطة متكررة أو تم نقلها. صححها في التقويم لاستئناف المزامنة."
 }

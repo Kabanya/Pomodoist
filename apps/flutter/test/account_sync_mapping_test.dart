@@ -1,3 +1,5 @@
+import 'package:pomodoist/data/repositories/calendar/provider_calendar_repository.dart';
+import 'dart:convert';
 import 'package:app_account/app_account.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
@@ -8,6 +10,73 @@ import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:uuid/uuid.dart';
 
 void main() {
+  test(
+    'provider projections retain both connections and links without credentials',
+    () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      await db.ensureSeedData();
+      final changes = <AccountSyncEntity>[];
+      for (final provider in ['google', 'outlook']) {
+        changes.add(
+          AccountSyncEntity(
+            entityType: 'calendar_connection',
+            entityId: provider,
+            serverRevision: changes.length + 1,
+            data: {
+              'id': provider,
+              'provider': provider,
+              'connectionId': '$provider-connection',
+              'status': 'connected',
+              'calendarId': '$provider-calendar',
+              'refreshToken': 'secret',
+            },
+          ),
+        );
+        changes.add(
+          AccountSyncEntity(
+            entityType: 'calendar_event_link',
+            entityId: '$provider-connection:task',
+            serverRevision: changes.length + 1,
+            data: {
+              'taskId': 'task',
+              'provider': provider,
+              'connectionId': '$provider-connection',
+              'eventId': '$provider-event',
+            },
+          ),
+        );
+      }
+      final engine = testSyncEngine(
+        db: db,
+        uuid: const Uuid(),
+        account: _PullOnlyAccountClient(
+          AccountSyncPullResult(
+            nextCursor: 4,
+            hasMore: false,
+            changes: changes,
+          ),
+        ),
+      );
+      await engine.pullLatest();
+      final rows = await db.select(db.calendarProjections).get();
+      expect(rows, hasLength(4));
+      final calendars = ProviderCalendarRepository(db);
+      expect(await calendars.watchConnections().first, hasLength(2));
+      final links = await calendars.watchLinksForTask('task').first;
+      expect(
+        links.map((link) => link.eventId),
+        containsAll(['google-event', 'outlook-event']),
+      );
+      expect(
+        rows.map((row) => jsonDecode(row.dataJson)).toString(),
+        isNot(contains('secret')),
+      );
+      await db.resetAccountData();
+      expect(await db.select(db.calendarProjections).get(), isEmpty);
+    },
+  );
+
   test('remote Google Calendar deletion removes the stale local row', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);

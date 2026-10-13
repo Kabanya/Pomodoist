@@ -306,3 +306,76 @@ POMODOIST_TEST_DB=pomodoist-selfhost-refactor-db deno test \
   --config supabase/deno.json --allow-env --allow-run \
   tests/database/task_drafts_database_test.ts
 ```
+
+## Google and Outlook calendar synchronization
+
+Google and Outlook can be connected simultaneously. Each provider uses a separate
+account connection, dedicated Pomodoist calendar, event links and work lease.
+Scheduled personal tasks are mirrored into every connected provider. Supported
+external edits update the task before being published to its other calendars.
+Deleting a linked event preserves the task, clears its schedule and duration, and
+removes its counterpart. Explicit rescheduling creates a new scheduled incarnation.
+Disconnect preserves tasks and existing events while stopping further sync.
+
+Apply `20261011222749_calendar_provider_connections.sql` before releasing the
+updated calendar functions and Flutter client. The migration preserves existing
+Google credentials, calendar IDs, linked event IDs and watch state. The endpoints
+retain the authenticated `start`, `sync` and `disconnect` actions. Client-visible
+connection/link entities contain safe projections; OAuth tokens remain in Vault.
+The minute cron dispatches due jobs, expired leases and subscription maintenance;
+a complete recovery read runs at least daily. Outlook uses Microsoft Graph basic
+change notifications and lifecycle notifications rather than periodic five-minute
+calendar polling. Foreign mailbox events are filtered and own writes are recognized
+by their accepted baseline/version. Recurring or moved linked events pause that
+link and expose a warning; losing access to a calendar does not clear all schedules.
+
+Configure Microsoft identity platform as a confidential web application supporting
+the intended organizational and personal Microsoft accounts. Register the exact
+HTTPS callback `${SUPABASE_PUBLIC_URL}/functions/v1/pomodoist-outlook-calendar`,
+then set `OUTLOOK_CALENDAR_CLIENT_ID`, `OUTLOOK_CALENDAR_CLIENT_SECRET` and a random
+`OUTLOOK_CALENDAR_WORKER_SECRET` of at least 16 characters. The function requests
+delegated `Calendars.ReadWrite`, `User.Read` and offline access through PKCE.
+`OUTLOOK_CALENDAR_APP_REDIRECT_URI` defaults to
+`pomodoist://outlook-calendar-connected`; use the matching flavor scheme for other
+app flavors. The notification and lifecycle paths beneath the function URL must
+be reachable over HTTPS. Worker configuration is persisted when starting OAuth
+or requesting sync. Flutter currently exposes these controls on native platforms,
+matching the existing Google settings availability.
+
+Keep the existing Google calendar environment variables configured. New Google
+connections also request `calendar.calendarlist.readonly` for recovering a
+calendar creation whose response was lost; the normal event scope remains
+`calendar.app.created`. Existing migrated connections with a calendar ID continue
+using their original credentials.
+
+A provider account replacement invalidates old workers and callback identities.
+An old subscription whose credentials are no longer usable may remain at the
+provider until its expiration; its callbacks cannot mutate the replacement
+connection. Disconnect explicitly queues subscription/channel removal, then
+removes its credential. Provider outages and throttling remain asynchronous and
+retry according to backoff and `Retry-After`.
+
+Calendar verification is unit-only: the Deno tests use injected HTTP/RPC adapters;
+Flutter tests use provider containers and in-memory repositories. No live OAuth,
+provider API, widget, browser or database integration checks were performed for
+this change. Run the focused server units with:
+
+```sh
+deno test --config supabase/deno.json \
+  supabase/functions/_shared/calendar/ \
+  supabase/functions/pomodoist-outlook-calendar/ \
+  supabase/functions/pomodoist-google-calendar/
+```
+
+Implementation choices: work is based on develop `84b43a9` in the existing
+checkout; shared reconciliation contracts live in `reconcile.ts`. Local legacy
+Google rows remain a compatibility fallback until canonical server projections
+arrive, avoiding fabricated connection IDs. Foreground resume refreshes account
+projections without forcing another provider calendar read; missed notifications
+can therefore wait for daily recovery unless Sync now is requested. Outlook asks
+for a 48-hour subscription and renews 24 hours before its returned expiration.
+Same-account reconnect keeps a valid registration while invalidating worker
+leases; reconnect queues maintenance. Provider-neutral linked labels and a visible
+unsupported-event warning were included so Outlook users can identify their state.
+The completed feature branch is retained for later integration; the deferred
+cleanup behavior on account replacement is described above.

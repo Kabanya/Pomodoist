@@ -638,7 +638,7 @@
   "recurrenceEveryMonths": "{interval, plural, =1{every month} other{every {interval} months}}",
   "noDate": "无日期",
   "calendarNotLinked": "日历未关联",
-  "calendarLinked": "Google Calendar 已关联",
+  "calendarLinked": "Calendar 已关联",
   "focusProgress": "{completed}/{total} 专注",
   "startFocus": "开始专注",
   "focusStarted": "已开始专注",
@@ -1367,5 +1367,19 @@
   "settingsSyncComplete": "同步已完成。",
   "settingsSyncPending": "部分更改仍在等待上传或恢复。",
   "settingsSyncFailed": "同步尚未完成，将自动重试。",
-  "syncUnresolvedChanges": "已拒绝：{rejected}。等待恢复：{repair}。"
+  "syncUnresolvedChanges": "已拒绝：{rejected}。等待恢复：{repair}。",
+  "outlookCalendarTitle": "Outlook Calendar",
+  "calendarDisconnectedSubtitle": "连接 账户以同步计划任务。",
+  "calendarFailed": "Calendar 失败：{message}",
+  "@calendarFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarAuthRequired": "需要 Calendar 授权。请重新登录并运行立即同步。",
+  "calendarRateLimited": "已达到 Calendar 请求频率上限。请等待几分钟后再同步。",
+  "calendarSyncFailed": "Calendar 同步失败。请稍后重试。",
+  "calendarUnsupportedEvent": "部分关联事件为重复事件或已被移动。请在日历中修正以恢复同步。"
 }
