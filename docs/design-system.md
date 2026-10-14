@@ -1015,8 +1015,13 @@ no extra top padding and 12 px below them. Subtract the actual page padding from
 the available stage height, preserving system safe areas and control sizes.
 Extra viewport height belongs below the timer, before the dock. Let the entire stage scroll when its content
 exceeds that height; embedded stages size to their contents. Center the primary
-action independently of the session summary and Complete interval action. On
-narrow layouts, wrap controls below the summary and keep every action reachable.
+action independently of the session summary and Complete interval action. Below
+680 px of dock width, place the overflow menu at the trailing edge of the session
+summary row, with matching leading space to keep the summary centered. Stack the
+primary action and Complete interval on the timer's center axis with a 12 px gap.
+Reuse the summary's surrounding spacing for the 48 px menu target instead of
+adding another control row. Let summary text wrap when space or text scaling
+requires it, keeping every action reachable.
 
 The overflow menu offers **Compact** and **Icons** session displays. Compact
 uses duration-weighted segments; Icons preserves the numbered work sessions,

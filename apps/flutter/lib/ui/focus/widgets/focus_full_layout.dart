@@ -132,50 +132,63 @@ class _FocusControlDock extends StatelessWidget {
         context,
       ).textTheme.bodySmall?.copyWith(color: context.appColors.secondaryText),
     );
-    return Container(
-      key: const Key('focus-control-dock'),
-      padding: const EdgeInsets.only(top: 20),
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: context.appColors.border)),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth < 680) {
-            return Column(
-              children: [
-                copy,
-                const SizedBox(height: 16),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [primary, ?secondary, ?menu],
-                ),
-              ],
-            );
-          }
-          return Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 16),
-                  child: copy,
-                ),
-              ),
-              primary,
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final narrow = constraints.maxWidth < 680;
+        final summaryMenu = narrow && menu != null;
+        return Container(
+          key: const Key('focus-control-dock'),
+          padding: EdgeInsets.only(top: summaryMenu ? 16 : 20),
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: context.appColors.border)),
+          ),
+          child: narrow
+              ? Column(
                   children: [
-                    ?secondary,
-                    if (menu != null) ...[const SizedBox(width: 8), menu!],
+                    if (summaryMenu)
+                      Row(
+                        children: [
+                          const SizedBox(width: 56),
+                          Expanded(child: Center(child: copy)),
+                          const SizedBox(width: 8),
+                          menu!,
+                        ],
+                      )
+                    else
+                      copy,
+                    SizedBox(height: summaryMenu ? 4 : 16),
+                    primary,
+                    if (secondary != null) ...[
+                      const SizedBox(height: 12),
+                      secondary!,
+                    ],
+                  ],
+                )
+              : Row(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.only(end: 16),
+                        child: copy,
+                      ),
+                    ),
+                    primary,
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          ?secondary,
+                          if (menu != null) ...[
+                            const SizedBox(width: 8),
+                            menu!,
+                          ],
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ],
-          );
-        },
-      ),
+        );
+      },
     );
   }
 }
