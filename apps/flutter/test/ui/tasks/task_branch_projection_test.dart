@@ -180,6 +180,148 @@ void main() {
     );
   });
 
+  test('capped rail continues from a deep last child to its visible uncle', () {
+    final tasks = _deepBranchTasks();
+    final rows = visibleTaskRows(
+      tasks,
+      tasks,
+      expansion: {'b': true, 'c': true},
+    );
+    expect(rows.map((r) => r.task.id), ['a', 'b', 'c', 'd', 'e']);
+    expect(rows.map((r) => r.depth), [0, 1, 2, 3, 2]);
+    expect(rows.map((r) => r.continuesDisplayRail), [
+      false,
+      false,
+      true,
+      true,
+      false,
+    ]);
+    expect(rows[3].isLastSibling, isTrue);
+    expect(rows[3].visibleParentId, 'c');
+    expect(rows[3].ancestors.map((t) => t.id), ['a', 'b', 'c']);
+  });
+
+  test('capped rail spans deeper descendants and stops at a shallower row', () {
+    final tasks = [
+      ..._deepBranchTasks(),
+      _task('d1', parentId: 'd'),
+      _task('f', parentId: 'a'),
+      _task('z'),
+    ];
+    final rows = visibleTaskRows(
+      tasks,
+      tasks,
+      expansion: {'b': true, 'c': true, 'd': true},
+    );
+    expect(rows.map((r) => r.task.id), [
+      'a',
+      'b',
+      'c',
+      'd',
+      'd1',
+      'e',
+      'f',
+      'z',
+    ]);
+    expect(rows.map((r) => r.continuesDisplayRail), [
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+    ]);
+    expect(rows[4].ancestorContinuations[1], isTrue);
+  });
+
+  test('collapse and filtering recompute the final capped rail endpoint', () {
+    final tasks = _deepBranchTasks();
+    final collapsed = visibleTaskRows(tasks, tasks, expansion: {'b': true});
+    expect(collapsed.map((r) => r.task.id), ['a', 'b', 'c', 'e']);
+    expect(collapsed.map((r) => r.continuesDisplayRail), [
+      false,
+      false,
+      true,
+      false,
+    ]);
+    final filtered = visibleTaskRows(
+      tasks,
+      tasks.where((t) => t.id != 'e').toList(),
+      expansion: {'b': true, 'c': true},
+    );
+    expect(filtered.map((r) => r.task.id), ['a', 'b', 'c', 'd']);
+    expect(filtered.map((r) => r.continuesDisplayRail), [
+      false,
+      false,
+      true,
+      false,
+    ]);
+  });
+
+  test(
+    'completion retention and Undo keep the capped rail endpoint current',
+    () {
+      final tasks = _deepBranchTasks();
+      final completed = _task('e', parentId: 'b', completed: true);
+      final open = tasks.where((t) => t.id != 'e').toList();
+      const expansion = {'b': true, 'c': true};
+      final retained = visibleTaskRows(open, [
+        ...open,
+        completed,
+      ], expansion: expansion);
+      expect(retained[3].continuesDisplayRail, isTrue);
+      expect(retained.last.continuesDisplayRail, isFalse);
+      expect(retained.last.task.isCompleted, isTrue);
+      final settled = visibleTaskRows(tasks, open, expansion: expansion);
+      expect(settled.last.task.id, 'd');
+      expect(settled.last.continuesDisplayRail, isFalse);
+      final undone = visibleTaskRows(tasks, tasks, expansion: expansion);
+      expect(undone[3].continuesDisplayRail, isTrue);
+      expect(undone.last.task.isCompleted, isFalse);
+    },
+  );
+
+  test('details reannotation replaces stale capped rail continuation', () {
+    final tasks = _deepBranchTasks();
+    final projected = visibleTaskRows(
+      tasks,
+      tasks,
+      expansion: {'b': true, 'c': true},
+    );
+    final children = withTaskBranchGroups(projected.skip(1).toList());
+    expect(children.map((r) => r.continuesDisplayRail), [
+      false,
+      true,
+      true,
+      false,
+    ]);
+    final shortened = withTaskBranchGroups(children.take(3).toList());
+    expect(shortened.last.task.id, 'd');
+    expect(shortened.last.continuesDisplayRail, isFalse);
+  });
+
+  test(
+    'shallow last siblings do not extend their incoming rail to children',
+    () {
+      final tasks = [
+        _task('a'),
+        _task('b', parentId: 'a'),
+        _task('c', parentId: 'b'),
+        _task('z'),
+      ];
+      final rows = visibleTaskRows(tasks, tasks, expansion: {'b': true});
+      expect(rows.map((r) => r.continuesDisplayRail), [
+        false,
+        false,
+        false,
+        false,
+      ]);
+      expect(rows[1].hasVisibleChildren, isTrue);
+    },
+  );
+
   test(
     'missing parent has no fabricated path and collapsed cycles stay closed',
     () {
@@ -243,6 +385,14 @@ void main() {
     expect(visible.map((t) => t.content), ['Current']);
   });
 }
+
+List<TaskItem> _deepBranchTasks() => [
+  _task('a'),
+  _task('b', parentId: 'a'),
+  _task('c', parentId: 'b'),
+  _task('d', parentId: 'c'),
+  _task('e', parentId: 'b'),
+];
 
 TaskItem _task(
   String id, {

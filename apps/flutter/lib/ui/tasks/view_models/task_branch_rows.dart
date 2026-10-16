@@ -90,8 +90,11 @@ List<VisibleTaskRow> withTaskBranchGroups(List<VisibleTaskRow> rows) {
     rootByTask[row.task.id] = root;
     if (root != null) lastByRoot[root] = row.task.id;
   }
-  return List.unmodifiable([
-    for (final row in rows)
+  final annotated = <VisibleTaskRow>[];
+  for (var index = 0; index < rows.length; index++) {
+    final row = rows[index];
+    final next = index + 1 < rows.length ? rows[index + 1] : null;
+    annotated.add(
       VisibleTaskRow(
         task: row.task,
         depth: row.depth,
@@ -101,11 +104,16 @@ List<VisibleTaskRow> withTaskBranchGroups(List<VisibleTaskRow> rows) {
         expanded: row.expanded,
         ancestorContinuations: row.ancestorContinuations,
         isLastSibling: row.isLastSibling,
+        continuesDisplayRail: row.depth >= 2
+            ? next != null && next.displayDepth == 2
+            : row.depth > 0 && !row.isLastSibling,
         groupRootId: rootByTask[row.task.id],
         groupRootDepth: roots[rootByTask[row.task.id]]?.depth ?? 0,
         endsGroup: lastByRoot[rootByTask[row.task.id]] == row.task.id,
       ),
-  ]);
+    );
+  }
+  return List.unmodifiable(annotated);
 }
 
 List<TaskItem> taskAncestorPath(TaskItem task, Map<String, TaskItem> byId) {
@@ -157,10 +165,13 @@ class VisibleTaskRow {
     bool? expanded,
     this.ancestorContinuations = const [],
     this.isLastSibling = true,
+    bool? continuesDisplayRail,
     this.groupRootId,
     this.groupRootDepth = 0,
     this.endsGroup = false,
-  }) : expanded = expanded ?? depth == 0;
+  }) : expanded = expanded ?? depth == 0,
+       continuesDisplayRail =
+           continuesDisplayRail ?? (depth > 0 && !isLastSibling);
 
   final TaskItem task;
   final int depth;
@@ -171,6 +182,10 @@ class VisibleTaskRow {
   final bool expanded;
   final List<bool> ancestorContinuations;
   final bool isLastSibling;
+
+  /// Whether the incoming rail extends below this row's completion control.
+  /// Unlike actual sibling order, this accounts for capped visual indentation.
+  final bool continuesDisplayRail;
   final String? groupRootId;
   final int groupRootDepth;
   final bool endsGroup;

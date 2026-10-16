@@ -825,7 +825,12 @@ per level and a maximum visual indentation of two levels. Horizontal arms stop
 at the completion ring's outer edge, including its stroke (16.75 px arms for the
 24 px completion control), never inside the circle.
 On mobile, connector endpoints follow the completion circle's first-line anchor,
-not the row's vertical center. End rails at the last visible sibling. Keep actual
+not the row's vertical center. End rails at the last visible sibling. At the
+two-level indentation cap, keep the direct rail continuous while the next
+displayed row remains at that cap, including deeper descendants and returns to
+their ancestors' siblings. Recompute this continuation from the final displayed
+sequence, including retained motion rows and task-details subsets; end it before
+a shallower row or the end of the list. Keep actual
 ancestry at deeper levels and show its path beside the title block (below the
 title on mobile). With an absent visible parent, promote the row visually to the root
 and show a parent link instead of phantom indentation. An unavailable parent has

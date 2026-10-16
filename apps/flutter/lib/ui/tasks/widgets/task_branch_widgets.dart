@@ -385,9 +385,10 @@ class _BranchPainter extends CustomPainter {
 
     for (var level = 0; level < row.displayDepth; level++) {
       final direct = level == row.displayDepth - 1;
-      // Continuations describe the siblings of the child at each level.
+      // The direct rail follows displayed rows at capped indentation; outer
+      // rails still describe the siblings of the child at each actual level.
       final continues = direct
-          ? !row.isLastSibling
+          ? row.continuesDisplayRail
           : row.ancestorContinuations.length > level + 1 &&
                 row.ancestorContinuations[level + 1];
       if (!direct && !continues) continue;

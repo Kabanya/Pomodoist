@@ -137,6 +137,7 @@ class UpcomingLayout {
               row.hasVisibleChildren,
               row.ancestorContinuations.join(),
               row.isLastSibling,
+              row.continuesDisplayRail,
               row.groupRootId,
               row.groupRootDepth,
               row.endsGroup,
