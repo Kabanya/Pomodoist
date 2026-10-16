@@ -122,7 +122,7 @@ jobs:
           disable-animations: true
           script: bash tool/android/smoke_test.sh development
       - name: Save CI-only development APK and AAB
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: android-validation-development-NOT-FOR-DISTRIBUTION
           path: |
@@ -131,7 +131,7 @@ jobs:
           if-no-files-found: error
           retention-days: 3
       - name: Save CI-only staging APK and AAB
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: android-validation-staging-NOT-FOR-DISTRIBUTION
           path: |
@@ -140,7 +140,7 @@ jobs:
           if-no-files-found: error
           retention-days: 3
       - name: Save CI-only production APK and AAB
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: android-validation-NOT-FOR-DISTRIBUTION
           path: |
