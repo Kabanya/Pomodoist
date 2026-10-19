@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:pomodoist/config/focus_sound_dependencies.dart';
 import 'package:pomodoist/data/repositories/focus/focus_preferences_repository.dart';
-import 'package:pomodoist/data/services/audio/focus_sound_preview_player.dart';
 import 'package:pomodoist/domain/models/focus/focus_sound_set.dart';
+import 'package:pomodoist/domain/services/focus_sound_preview_player.dart';
 
 final class FocusSoundSettingsState {
   const FocusSoundSettingsState({
