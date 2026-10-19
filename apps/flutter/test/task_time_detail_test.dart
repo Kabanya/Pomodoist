@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/config/calendar_dependencies.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/utils/clock.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
@@ -46,6 +47,7 @@ void main() {
         overrides: [
           projectsProvider.overrideWith((ref) => Stream.value([])),
           taskProvider(task.id).overrideWith((ref) => Stream.value(task)),
+          calendarLinksProvider.overrideWith((ref, id) => Stream.value([])),
           googleCalendarLinkProvider(
             task.id,
           ).overrideWith((ref) => Stream.value(null)),

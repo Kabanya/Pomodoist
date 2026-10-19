@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:pomodoist/config/collaboration_dependencies.dart';
 import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/config/calendar_dependencies.dart';
 import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
@@ -109,6 +110,7 @@ void main() {
           activeFocusRunProvider.overrideWith((ref) => Stream.value(null)),
           activeFocusIntervalProvider.overrideWith((ref) => Stream.value(null)),
           lastFocusPresetIdProvider.overrideWithValue(null),
+          calendarLinksProvider.overrideWith((ref, id) => Stream.value([])),
           googleCalendarLinkProvider.overrideWith(
             (ref, id) => Stream.value(null),
           ),
