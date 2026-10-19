@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/config/calendar_dependencies.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/domain/models/calendar/calendar_models.dart';
 import 'package:pomodoist/data/services/google_calendar/google_calendar_sync_controller.dart';
@@ -34,6 +35,7 @@ void main() {
       ProviderScope(
         overrides: [
           googleCalendarSyncControllerProvider.overrideWithValue(controller),
+          calendarConnectionsProvider.overrideWith((ref) => Stream.value([])),
           googleCalendarConnectionProvider.overrideWith(
             (ref) => Stream.value(
               GoogleCalendarConnection(
@@ -60,7 +62,7 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.text('Sync now'), findsOneWidget);
     expect(find.text('Disconnect'), findsOneWidget);
@@ -85,6 +87,7 @@ void main() {
       ProviderScope(
         overrides: [
           googleCalendarSyncControllerProvider.overrideWithValue(controller),
+          calendarConnectionsProvider.overrideWith((ref) => Stream.value([])),
           googleCalendarConnectionProvider.overrideWith(
             (ref) => Stream.value(
               GoogleCalendarConnection(
@@ -111,12 +114,12 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     await tester.tap(find.widgetWithText(ShadButton, 'Sync now'));
     await tester.pump();
 
     expect(find.textContaining('DioException'), findsNothing);
-    expect(find.textContaining('Google Calendar sync failed'), findsOneWidget);
+    expect(find.textContaining('Calendar sync failed'), findsOneWidget);
   });
 }

@@ -3,9 +3,9 @@
 The web image is built **once** and serves staging, production and self-hosted
 deployments. Everything that differs between them arrives as container
 environment variables at runtime; the image itself is identical for all three.
-Coolify builds this image on its own infrastructure, so the build arguments
-live in its dashboard rather than in a workflow file — the two files below are
-what makes that arrangement checkable from the repository.
+GitHub Actions builds and smoke-tests the image on `ubuntu-24.04` for
+`linux/amd64`, then publishes a private GHCR image. Coolify pulls and runs it on
+the existing VPS. Environment configuration and domains stay in Coolify.
 
 ## What the image accepts
 
@@ -70,26 +70,71 @@ markup the build emitted. Every other flavor adopts its manifest first and falls
 back to the production identity when an asset is missing or unreadable, instead
 of leaving the page without an icon.
 
-## Coolify configuration
+## GitHub Actions and Coolify configuration
 
-The webhook-triggered build must use:
+`Deploy` wakes after a completed `Validate`. Only successful **push** runs from
+`Kabanya/Pomodoist`, on `develop` (staging) or `main` (production), qualify.
+Manual dispatch requires an explicit full SHA and independently checks that
+same branch/SHA has a successful push `Validate`. Deployments always require
+that SHA to still be the branch head. To republish/redeploy the current head,
+run `Deploy` manually; leave `deploy=false` for publication-only recovery.
 
-- Dockerfile: `tool/deploy/web/Dockerfile`
-- Build context: repository root (the Dockerfile copies `.fvmrc`,
-  `apps/flutter/**`, `apps/telegram-mini-app/**` and `tool/deploy/web/**`)
-- Build arguments: exactly the two rows above, with `RELEASE_SHA` set to the
-  SHA of the commit being deployed
+The image is `ghcr.io/kabanya/pomodoist-web:<full-SHA>`. An existing tag is
+pulled, checked and reused, never overwritten. CI serializes publishers per
+SHA, waits 30 seconds before starting, and checks branch freshness before
+building, publishing and immediately before modifying Coolify. The build job
+has a 60-minute limit. Only `POMODOIST_BILLING_CHANNEL=stripe` and `RELEASE_SHA`
+are build arguments. No runtime credentials or environment config enter the
+build, and runtime image source maps are removed and blocked by nginx.
 
-Coolify injects a build argument for **every** environment variable whose
-"buildtime" toggle is on, so the seven runtime variables above must be marked
-runtime-only in the dashboard. With the toggle on, the next build fails in the
-guard instead of producing an image with that environment baked in — a loud
-failure, but the setting still has to be right.
+Publishing uses `GITHUB_TOKEN` with `packages:write`. GHCR packages start
+private; keep package visibility private. After bootstrap, CI requires the existing
+package to remain private before building/reusing and immediately before pushing.
+A missing or public package fails closed. Give the VPS a separate classic PAT
+with **only** `read:packages`, using `docker login ghcr.io --username Kabanya
+--password-stdin` for the Coolify server user. Rotate it before its expiry.
+Never copy the publisher token or an account token with repo/write permissions
+to the VPS. See [GHCR authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
 
-The repository cannot read or verify those dashboard values. What it can do is
-fail when the code that the dashboard must match drifts: `check_build_contract.py`
-below compares the Dockerfile, `build-args.env`, `server/compose.yaml`, the
-entrypoint and every in-repository build site against each other.
+Create two [Docker Image](https://coolify.io/docs/applications/deployments/docker-image)
+resources, `Pomodoist Web Staging Image` and `Pomodoist Web Production Image`.
+Coolify 4.1.2 cannot convert the original Git resources through its API.
+Use port `8080`, HTTP health path `/healthz`, and the existing runtime variables,
+networks and domains. Disable Git autodeploy; no source build runs on the VPS.
+
+Repository secrets:
+
+- `COOLIFY_IMAGE_TOKEN`: dedicated API token with read/write/deploy abilities;
+  no sensitive read permission is needed.
+- Existing `COOLIFY_STAGING_WEBHOOK` / `COOLIFY_PRODUCTION_WEBHOOK`: used only to
+  derive the existing public HTTPS API origin, never invoked as webhooks.
+  Localhost URLs are rejected. Existing ingress restrictions remain unchanged.
+
+Repository variables:
+
+- `WEB_STAGING_IMAGE_UUID`, `WEB_PRODUCTION_IMAGE_UUID`: new Docker Image UUIDs.
+- `WEB_STAGING_IMAGE_DEPLOY_ENABLED`, `WEB_PRODUCTION_IMAGE_DEPLOY_ENABLED`:
+  explicitly `true` to allow automatic or manual rollout; absent/false means
+  publish only. Enable each after the initial resource/domain migration.
+
+Each environment has a serial rollout group with cancellation disabled. Before
+switching, CI records the previous tag, registry digest and observed release in
+`web-deployment.json`. The current image/release must form a recoverable pair.
+Image tag and `POMODOIST_RELEASE` are both updated **before** starting Coolify.
+Coolify must finish, `/healthz` return 200 and `/version.json` contain the exact
+SHA within five minutes. Otherwise both previous settings are restored, restarted
+and verified with the same deadline; a failed rollback requires an operator.
+Reports are retained as workflow artifacts. API error responses and runtime
+secrets are never logged. The two PATCH requests are serialized, not atomic;
+any partial update triggers restoration before another start.
+
+For an initial migration, keep publication enabled and rollout flags disabled.
+Verify a private pull on the VPS, start new resources without working domains,
+and check their container-local endpoints. Transfer staging's domain and verify
+public health/version before production. If a domain switch fails, return the
+domain to the original running resource. Keep old resources stopped, without
+domains or Git autodeploy, until another successful automatic update. Do not
+prune Docker globally. FinchForge keeps its existing build configuration.
 
 ## Building locally
 
@@ -99,8 +144,9 @@ tool/deploy/web/build_image.sh [tag]
 
 Sources `build-args.env`, takes `RELEASE_SHA` from the environment when the
 deployment runner sets it and otherwise from `git rev-parse HEAD`, and tags the
-result `pomodoist-web:<RELEASE_SHA>`. This is the same build Coolify performs,
-so it is the way to reproduce an image byte-for-byte before a deploy.
+result `pomodoist-web:<RELEASE_SHA>`. This uses the same Dockerfile and arguments
+as CI; build outputs need not be byte-identical across rebuilds. Deploy the
+recorded immutable digest rather than rebuilding an existing release.
 
 `server/compose.yaml` (service `web`) is the self-hosted equivalent: it passes
 `POMODOIST_BILLING_CHANNEL: stripe` and `RELEASE_SHA: ${POMODOIST_RELEASE}` and
@@ -111,6 +157,7 @@ supplies the runtime environment separately.
 ```sh
 python3 tool/deploy/web/check_build_contract.py
 python3 -m unittest discover -s tool -p 'test_web_build_contract.py'
+python3 -m unittest discover -s tool -p 'test_web_image_ci.py'
 ```
 
 The checker needs no Docker daemon and no third-party packages. It fails when a
@@ -125,3 +172,10 @@ failures actually fires.
 Docker-dependent verification (`tool/test_web_container.sh`,
 `tool/test_sentry_artifacts.sh`) still needs a running daemon; the checker only
 covers what can be decided from the sources.
+
+CI runs `image_ci.py smoke --sha <SHA>` against the prebuilt image, running it
+with both staging and production configuration and rejecting a mismatched SHA.
+It checks runtime identity/config, health, absent source maps and denied private
+artifacts. The existing full container/Sentry tests remain available outside
+the production VPS. Controller tests simulate stale heads, registry failure,
+failed deployments, failed health checks, partial writes and verified rollback.

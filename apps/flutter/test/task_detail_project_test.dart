@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/config/calendar_dependencies.dart';
 import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
 import 'package:pomodoist/domain/models/settings/task_preferences.dart';
@@ -93,6 +94,7 @@ Future<ProviderContainer> _container(
       activeFocusRunProvider.overrideWith((ref) => Stream.value(null)),
       activeFocusIntervalProvider.overrideWith((ref) => Stream.value(null)),
       lastFocusPresetIdProvider.overrideWithValue(null),
+      calendarLinksProvider.overrideWith((ref, id) => Stream.value([])),
       googleCalendarLinkProvider.overrideWith((ref, id) => Stream.value(null)),
     ],
   );

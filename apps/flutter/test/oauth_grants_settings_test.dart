@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/config/calendar_dependencies.dart';
 import 'package:pomodoist/config/billing_store_dependencies.dart';
 import 'package:pomodoist/domain/models/account/account_overview.dart';
 import 'package:pomodoist/ui/settings/widgets/settings_screen.dart';
@@ -283,6 +284,7 @@ Future<void> _updateSettingsAccount(
     ),
     applePurchasesSupportedProvider.overrideWithValue(false),
     pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
+    calendarConnectionsProvider.overrideWith((ref) => Stream.value([])),
     googleCalendarConnectionProvider.overrideWith((ref) => Stream.value(null)),
   ]);
   await tester.pumpAndSettle();
@@ -344,6 +346,7 @@ Future<void> _pumpSettings(
         ),
         applePurchasesSupportedProvider.overrideWithValue(false),
         pomodoistDeviceIdProvider.overrideWith((ref) async => 'device-1'),
+        calendarConnectionsProvider.overrideWith((ref) => Stream.value([])),
         googleCalendarConnectionProvider.overrideWith(
           (ref) => Stream.value(null),
         ),

@@ -1,11 +1,8 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:pomodoist/domain/models/focus/focus_sound_set.dart';
+import 'package:pomodoist/domain/services/focus_sound_preview_player.dart';
 
-abstract interface class FocusSoundPreviewPlayer {
-  Future<void> preview(FocusSoundSet soundSet);
-  Future<void> stop();
-  Future<void> dispose();
-}
+export 'package:pomodoist/domain/services/focus_sound_preview_player.dart';
 
 /// A Settings-owned player; auditioning never triggers timer events or haptics.
 class AssetFocusSoundPreviewPlayer implements FocusSoundPreviewPlayer {

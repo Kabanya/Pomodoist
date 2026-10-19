@@ -1,44 +1,160 @@
 name: Deploy
 
 on:
-  push:
+  workflow_run:
+    workflows: [Validate]
+    types: [completed]
     branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [staging, production]
+        required: true
+      sha:
+        description: Full SHA with a successful push Validate on the selected branch
+        type: string
+        required: true
+      deploy:
+        description: Deploy after publishing (also requires the environment enable variable)
+        type: boolean
+        default: false
 
-concurrency:
-  group: deploy-${{ github.ref_name }}
-  cancel-in-progress: true
+permissions:
+  contents: read
 
 jobs:
-  coolify:
-    runs-on: ubuntu-latest
+  select:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      environment: ${{ steps.release.outputs.environment }}
+      branch: ${{ steps.release.outputs.branch }}
+      sha: ${{ steps.release.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Select a validated release from the source repository
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tool/deploy/web/image_ci.py select
+
+  image:
+    needs: select
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    # Serialize writers of the immutable SHA tag, including manual reruns.
+    concurrency:
+      group: web-image-${{ needs.select.outputs.sha }}
+      cancel-in-progress: false
+    outputs:
+      digest: ${{ steps.published.outputs.digest }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_SHA: ${{ needs.select.outputs.sha }}
+      RELEASE_BRANCH: ${{ needs.select.outputs.branch }}
+      IMAGE: ghcr.io/kabanya/pomodoist-web
     steps:
       - name: Debounce rapid pushes
         run: sleep 30
-
-      - name: Check this is still the branch head
-        id: head
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.select.outputs.sha }}
+          persist-credentials: false
+      - name: Reject superseded releases before building
+        run: python3 tool/deploy/web/image_ci.py head --sha "$RELEASE_SHA" --branch "$RELEASE_BRANCH"
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Authenticate publisher (no VPS credential)
+        run: printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Look up immutable tag
+        id: existing
+        run: python3 tool/deploy/web/image_ci.py lookup --sha "$RELEASE_SHA"
+      - name: Build once on the GitHub runner
+        if: steps.existing.outputs.exists != 'true'
         run: |
-          latest=$(gh api "repos/${{ github.repository }}/commits/${{ github.ref_name }}" --jq .sha)
-          if [ "$latest" = "${{ github.sha }}" ]; then
-            echo "deploy=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "deploy=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Deploy production
-        if: github.ref_name == 'main' && steps.head.outputs.deploy == 'true'
-        env:
-          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
-          WEBHOOK: ${{ secrets.COOLIFY_PRODUCTION_WEBHOOK }}
+          docker buildx build --load --platform linux/amd64 \
+            --file tool/deploy/web/Dockerfile \
+            --build-arg POMODOIST_BILLING_CHANNEL=stripe \
+            --build-arg "RELEASE_SHA=$RELEASE_SHA" \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$RELEASE_SHA" \
+            --tag "$IMAGE:$RELEASE_SHA" .
+      - name: Reuse an existing immutable image
+        if: steps.existing.outputs.exists == 'true'
+        run: docker pull "$IMAGE:$RELEASE_SHA"
+      - name: Smoke test both runtime environments and reject mismatched SHA
+        run: python3 tool/deploy/web/image_ci.py smoke --sha "$RELEASE_SHA"
+      - name: Publish only a previously absent tag
+        if: steps.existing.outputs.exists != 'true'
         run: |
-          curl --fail-with-body --silent --show-error --retry 3 --max-time 30 --header "Authorization: Bearer $COOLIFY_TOKEN" "$WEBHOOK"
-
-      - name: Deploy staging
-        if: github.ref_name == 'develop' && steps.head.outputs.deploy == 'true'
+          python3 tool/deploy/web/image_ci.py head --sha "$RELEASE_SHA" --branch "$RELEASE_BRANCH"
+          test "$(gh api users/Kabanya/packages/container/pomodoist-web --jq .visibility)" = private
+          docker push "$IMAGE:$RELEASE_SHA"
+      - name: Record published digest
+        id: published
+        run: python3 tool/deploy/web/image_ci.py lookup --sha "$RELEASE_SHA"
+      - name: Preserve release identity
         env:
-          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
-          WEBHOOK: ${{ secrets.COOLIFY_STAGING_WEBHOOK }}
+          DIGEST: ${{ steps.published.outputs.digest }}
         run: |
-          curl --fail-with-body --silent --show-error --retry 3 --max-time 30 --header "Authorization: Bearer $COOLIFY_TOKEN" "$WEBHOOK"
+          test -n "$DIGEST"
+          python3 -c 'import json,os; open("web-image.json","w").write(json.dumps({"sha":os.environ["RELEASE_SHA"],"digest":os.environ["DIGEST"],"image":os.environ["IMAGE"]}))'
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: web-image-${{ needs.select.outputs.sha }}
+          path: web-image.json
+      - name: Clear runner registry credential
+        if: always()
+        run: docker logout ghcr.io
+
+  coolify:
+    needs: [select, image]
+    if: >-
+      (github.event_name != 'workflow_dispatch' || inputs.deploy) &&
+      ((needs.select.outputs.environment == 'staging' && vars.WEB_STAGING_IMAGE_DEPLOY_ENABLED == 'true') ||
+       (needs.select.outputs.environment == 'production' && vars.WEB_PRODUCTION_IMAGE_DEPLOY_ENABLED == 'true'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+    # Never automatically cancel a switch or its rollback. Newer pushes wait.
+    concurrency:
+      group: web-rollout-${{ needs.select.outputs.environment }}
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_SHA: ${{ needs.select.outputs.sha }}
+      RELEASE_BRANCH: ${{ needs.select.outputs.branch }}
+      DIGEST: ${{ needs.image.outputs.digest }}
+      COOLIFY_IMAGE_TOKEN: ${{ secrets.COOLIFY_IMAGE_TOKEN }}
+      COOLIFY_URL: ${{ needs.select.outputs.environment == 'production' && secrets.COOLIFY_PRODUCTION_WEBHOOK || secrets.COOLIFY_STAGING_WEBHOOK }}
+      COOLIFY_IMAGE_UUID: ${{ needs.select.outputs.environment == 'production' && vars.WEB_PRODUCTION_IMAGE_UUID || vars.WEB_STAGING_IMAGE_UUID }}
+      WEB_URL: ${{ needs.select.outputs.environment == 'production' && 'https://app.pomodoist.com' || 'https://app-test.pomodoist.com' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.select.outputs.sha }}
+          persist-credentials: false
+      - name: Switch image and release, verify within five minutes, restore on failure
+        run: python3 tool/deploy/web/image_ci.py deploy --sha "$RELEASE_SHA" --branch "$RELEASE_BRANCH" --digest "$DIGEST"
+      - name: Preserve previous image, digest and rollout evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: web-deployment-${{ needs.select.outputs.environment }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: web-deployment.json
+          if-no-files-found: ignore
