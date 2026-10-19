@@ -220,7 +220,14 @@ def deploy(api, uuid, sha, digest, latest, observe, preflight, timeout=300):
                     if status in TERMINAL:
                         break
                     if not cancellation_sent:
-                        api.request('POST', f'/deployments/{deployment}/cancel')
+                        try:
+                            api.request('POST', f'/deployments/{deployment}/cancel')
+                        except RuntimeError:
+                            # Cancellation races a natural completion (HTTP 400).
+                            # Only a confirmed terminal state makes restoration safe.
+                            if api.request('GET', f'/deployments/{deployment}')['status'] in TERMINAL:
+                                break
+                            raise
                         cancellation_sent = True
                 except (urllib.error.URLError, TimeoutError, TransientAPIError):
                     pass

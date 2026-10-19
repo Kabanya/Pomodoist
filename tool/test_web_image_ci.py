@@ -202,10 +202,52 @@ class ImageCITest(unittest.TestCase):
             return original(method, path, body)
         api.request = request
         with patch.object(ci.time, 'sleep') as sleep:
-            with self.assertRaises(RuntimeError):
+            with self.assertRaisesRegex(RuntimeError, 'Coolify deployment 0 cancelled-by-user'):
                 ci.deploy(api, 'app', SHA, DIGEST, lambda: True,
                           lambda: {'release': api.release}, lambda: None, timeout=0)
         sleep.assert_not_called()
+        self.assertEqual(api.deployments, [(SHA, SHA), (PREVIOUS, PREVIOUS)])
+
+    def test_lost_start_response_is_recovered_and_cancelled_before_restore(self):
+        api = FakeAPI()
+        original = api.request
+        active = [False]
+        api.active_deployments = lambda uuid: ['0'] if active[0] else []
+        cancelled = []
+        def request(method, path, body=None):
+            if method == 'POST' and path.endswith('/start') and not api.deployments:
+                original(method, path, body)
+                active[0] = True
+                raise ci.urllib.error.URLError('start response lost')
+            if method == 'POST' and path == '/deployments/0/cancel':
+                active[0] = False
+                cancelled.append('0')
+                return {}
+            if method == 'GET' and path == '/deployments/0':
+                return {'status': 'in_progress' if active[0] else 'cancelled-by-user'}
+            return original(method, path, body)
+        api.request = request
+        with self.assertRaises(RuntimeError):
+            ci.deploy(api, 'app', SHA, DIGEST, lambda: True,
+                      lambda: {'release': api.release}, lambda: None, timeout=0)
+        self.assertEqual(cancelled, ['0'])
+        self.assertEqual(api.deployments, [(SHA, SHA), (PREVIOUS, PREVIOUS)])
+
+    def test_job_finishing_during_cancellation_still_allows_rollback(self):
+        api = FakeAPI()
+        original = api.request
+        finished = [False]
+        def request(method, path, body=None):
+            if method == 'GET' and path == '/deployments/0':
+                return {'status': 'finished' if finished[0] else 'in_progress'}
+            if method == 'POST' and path == '/deployments/0/cancel':
+                finished[0] = True
+                raise RuntimeError('Cannot cancel: HTTP 400, already finished')
+            return original(method, path, body)
+        api.request = request
+        with self.assertRaises(RuntimeError):
+            ci.deploy(api, 'app', SHA, DIGEST, lambda: True,
+                      lambda: {'release': api.release}, lambda: None, timeout=0)
         self.assertEqual(api.deployments, [(SHA, SHA), (PREVIOUS, PREVIOUS)])
 
     def test_failed_pull_does_not_mutate_application(self):
