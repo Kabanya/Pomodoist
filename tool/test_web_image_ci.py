@@ -81,6 +81,14 @@ class ImageCITest(unittest.TestCase):
         self.assertEqual(observe.call_count, 3)
         sleep.assert_called_once_with(1)
 
+    def test_lookup_rejects_a_public_package(self):
+        with patch('sys.argv', ['image_ci.py', 'lookup', '--sha', SHA]), \
+             patch.object(ci, 'registry_digest', return_value=DIGEST), \
+             patch.object(ci, 'gh', return_value={'visibility': 'public'}), \
+             patch.dict(ci.os.environ, {'GITHUB_OUTPUT': ci.os.devnull}):
+            with self.assertRaisesRegex(RuntimeError, 'private'):
+                ci.main()
+
     def test_rejects_pull_requests_and_foreign_repositories(self):
         event = {'workflow_run': {'event': 'pull_request', 'conclusion': 'success',
                   'head_branch': 'main', 'head_sha': SHA,

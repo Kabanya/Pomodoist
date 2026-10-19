@@ -88,7 +88,9 @@ are build arguments. No runtime credentials or environment config enter the
 build, and runtime image source maps are removed and blocked by nginx.
 
 Publishing uses `GITHUB_TOKEN` with `packages:write`. GHCR packages start
-private; keep package visibility private. Give the VPS a separate classic PAT
+private; keep package visibility private. After bootstrap, CI requires the existing
+package to remain private before building/reusing and immediately before pushing.
+A missing or public package fails closed. Give the VPS a separate classic PAT
 with **only** `read:packages`, using `docker login ghcr.io --username Kabanya
 --password-stdin` for the Coolify server user. Rotate it before its expiry.
 Never copy the publisher token or an account token with repo/write permissions

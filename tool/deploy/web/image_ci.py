@@ -320,6 +320,8 @@ def main():
             raise ValueError('Release superseded; no deployment performed')
     elif args.command == 'lookup':
         digest = registry_digest(sha)
+        if gh('users/Kabanya/packages/container/pomodoist-web')['visibility'] != 'private':
+            raise RuntimeError('The web image package must remain private')
         with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
             output.write(f'exists={str(digest is not None).lower()}\ndigest={digest or ""}\n')
     elif args.command == 'smoke':

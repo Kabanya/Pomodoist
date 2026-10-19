@@ -100,6 +100,7 @@ jobs:
         if: steps.existing.outputs.exists != 'true'
         run: |
           python3 tool/deploy/web/image_ci.py head --sha "$RELEASE_SHA" --branch "$RELEASE_BRANCH"
+          test "$(gh api users/Kabanya/packages/container/pomodoist-web --jq .visibility)" = private
           docker push "$IMAGE:$RELEASE_SHA"
       - name: Record published digest
         id: published
