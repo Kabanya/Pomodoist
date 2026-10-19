@@ -197,7 +197,7 @@ def deploy(api, uuid, sha, digest, latest, observe, preflight, timeout=300):
                     last = 'unexpected release SHA'
                 else:
                     last = status
-            except (urllib.error.URLError, TimeoutError, KeyError, TransientAPIError) as error:
+            except (urllib.error.URLError, TimeoutError, ConnectionError, KeyError, TransientAPIError) as error:
                 last = type(error).__name__
             if time.monotonic() >= deadline:
                 raise RuntimeError(f'Deployment {deployment} verification timed out: {last}')
@@ -229,7 +229,7 @@ def deploy(api, uuid, sha, digest, latest, observe, preflight, timeout=300):
                                 break
                             raise
                         cancellation_sent = True
-                except (urllib.error.URLError, TimeoutError, TransientAPIError):
+                except (urllib.error.URLError, TimeoutError, ConnectionError, TransientAPIError):
                     pass
                 if time.monotonic() >= deadline:
                     raise RuntimeError('Active deployment could not be stopped; refusing competing rollback')
@@ -276,7 +276,7 @@ def smoke(image, sha):
                     actual = observe_url(url)
                     assert actual == {'environment': environment, 'release': sha}, actual
                     break
-                except urllib.error.URLError:
+                except (urllib.error.URLError, TimeoutError, ConnectionError):
                     if attempt == 29:
                         raise
                     time.sleep(1)

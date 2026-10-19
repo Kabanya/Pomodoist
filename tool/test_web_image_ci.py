@@ -54,6 +54,33 @@ class ImageCITest(unittest.TestCase):
         reporter.start()
         self.addCleanup(reporter.stop)
 
+    def test_container_startup_connection_reset_is_retried(self):
+        from types import SimpleNamespace
+        def output(args, **kwargs):
+            if args[1] == 'port':
+                return '127.0.0.1:12345'
+            if args[1] == 'exec':
+                return ''
+            return 'container'
+        def urlopen(url, **kwargs):
+            if url.endswith('/config.js'):
+                return SimpleNamespace(read=lambda: (
+                    b'https://app-test.pomodoist.com https://supabase-test.pomodoist.com '
+                    b'https://app.pomodoist.com https://ewauihswbwduvklrozke.supabase.co'))
+            raise ci.urllib.error.HTTPError(url, 404, 'absent', {}, None)
+        responses = [ConnectionResetError('nginx starting'),
+                     {'environment': 'staging', 'release': SHA},
+                     {'environment': 'production', 'release': SHA}]
+        with patch.object(ci, 'observe_url', side_effect=responses) as observe, \
+             patch.object(ci.urllib.request, 'urlopen', side_effect=urlopen), \
+             patch.object(ci.subprocess, 'check_output', side_effect=output), \
+             patch.object(ci.subprocess, 'run', return_value=SimpleNamespace(
+                 returncode=1, stderr='does not match this image')), \
+             patch.object(ci.time, 'sleep') as sleep:
+            ci.smoke('image', SHA)
+        self.assertEqual(observe.call_count, 3)
+        sleep.assert_called_once_with(1)
+
     def test_rejects_pull_requests_and_foreign_repositories(self):
         event = {'workflow_run': {'event': 'pull_request', 'conclusion': 'success',
                   'head_branch': 'main', 'head_sha': SHA,
