@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Prove the web image is environment-independent and built from versioned args.
 
-Coolify builds `tool/deploy/web/Dockerfile` on its own infrastructure, so the
+GitHub Actions builds `tool/deploy/web/Dockerfile` on its hosted runners, so the
 build arguments cannot live only in that dashboard: nothing in the repository
 would notice when they drift. This checker reads the Dockerfile, the versioned
 `build-args.env`, every in-repository build site and the self-hosted compose
@@ -50,6 +50,7 @@ BUILD_SITE_NAMES = [
     'tool/export_web_sourcemaps.sh',
     'tool/test_sentry_artifacts.sh',
     'tool/test_web_container.sh',
+    '.github/workflows/deploy.yml',
 ]
 
 ARG_DECLARATION = re.compile(r'^\s*ARG\s+([A-Za-z_][A-Za-z0-9_]*)', re.M)
