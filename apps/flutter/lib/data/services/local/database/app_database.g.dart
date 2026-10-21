@@ -3013,6 +3013,21 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
         type: DriftSqlType.int,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _isFocusEstimateManualMeta =
+      const VerificationMeta('isFocusEstimateManual');
+  @override
+  late final GeneratedColumn<bool> isFocusEstimateManual =
+      GeneratedColumn<bool>(
+        'is_focus_estimate_manual',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_focus_estimate_manual" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
   static const VerificationMeta _completedFocusIntervalsMeta =
       const VerificationMeta('completedFocusIntervals');
   @override
@@ -3141,6 +3156,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
     durationSeconds,
     status,
     estimatedFocusIntervals,
+    isFocusEstimateManual,
     completedFocusIntervals,
     totalFocusSeconds,
     orderKey,
@@ -3285,6 +3301,15 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
         estimatedFocusIntervals.isAcceptableOrUnknown(
           data['estimated_focus_intervals']!,
           _estimatedFocusIntervalsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_focus_estimate_manual')) {
+      context.handle(
+        _isFocusEstimateManualMeta,
+        isFocusEstimateManual.isAcceptableOrUnknown(
+          data['is_focus_estimate_manual']!,
+          _isFocusEstimateManualMeta,
         ),
       );
     }
@@ -3437,6 +3462,10 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
         DriftSqlType.int,
         data['${effectivePrefix}estimated_focus_intervals'],
       ),
+      isFocusEstimateManual: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_focus_estimate_manual'],
+      )!,
       completedFocusIntervals: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}completed_focus_intervals'],
@@ -3500,6 +3529,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   final int? durationSeconds;
   final String status;
   final int? estimatedFocusIntervals;
+  final bool isFocusEstimateManual;
   final int completedFocusIntervals;
   final int totalFocusSeconds;
   final String orderKey;
@@ -3527,6 +3557,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     this.durationSeconds,
     required this.status,
     this.estimatedFocusIntervals,
+    required this.isFocusEstimateManual,
     required this.completedFocusIntervals,
     required this.totalFocusSeconds,
     required this.orderKey,
@@ -3577,6 +3608,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     if (!nullToAbsent || estimatedFocusIntervals != null) {
       map['estimated_focus_intervals'] = Variable<int>(estimatedFocusIntervals);
     }
+    map['is_focus_estimate_manual'] = Variable<bool>(isFocusEstimateManual);
     map['completed_focus_intervals'] = Variable<int>(completedFocusIntervals);
     map['total_focus_seconds'] = Variable<int>(totalFocusSeconds);
     map['order_key'] = Variable<String>(orderKey);
@@ -3632,6 +3664,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       estimatedFocusIntervals: estimatedFocusIntervals == null && nullToAbsent
           ? const Value.absent()
           : Value(estimatedFocusIntervals),
+      isFocusEstimateManual: Value(isFocusEstimateManual),
       completedFocusIntervals: Value(completedFocusIntervals),
       totalFocusSeconds: Value(totalFocusSeconds),
       orderKey: Value(orderKey),
@@ -3673,6 +3706,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       estimatedFocusIntervals: serializer.fromJson<int?>(
         json['estimatedFocusIntervals'],
       ),
+      isFocusEstimateManual: serializer.fromJson<bool>(
+        json['isFocusEstimateManual'],
+      ),
       completedFocusIntervals: serializer.fromJson<int>(
         json['completedFocusIntervals'],
       ),
@@ -3709,6 +3745,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       'estimatedFocusIntervals': serializer.toJson<int?>(
         estimatedFocusIntervals,
       ),
+      'isFocusEstimateManual': serializer.toJson<bool>(isFocusEstimateManual),
       'completedFocusIntervals': serializer.toJson<int>(
         completedFocusIntervals,
       ),
@@ -3741,6 +3778,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     Value<int?> durationSeconds = const Value.absent(),
     String? status,
     Value<int?> estimatedFocusIntervals = const Value.absent(),
+    bool? isFocusEstimateManual,
     int? completedFocusIntervals,
     int? totalFocusSeconds,
     String? orderKey,
@@ -3772,6 +3810,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     estimatedFocusIntervals: estimatedFocusIntervals.present
         ? estimatedFocusIntervals.value
         : this.estimatedFocusIntervals,
+    isFocusEstimateManual: isFocusEstimateManual ?? this.isFocusEstimateManual,
     completedFocusIntervals:
         completedFocusIntervals ?? this.completedFocusIntervals,
     totalFocusSeconds: totalFocusSeconds ?? this.totalFocusSeconds,
@@ -3814,6 +3853,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       estimatedFocusIntervals: data.estimatedFocusIntervals.present
           ? data.estimatedFocusIntervals.value
           : this.estimatedFocusIntervals,
+      isFocusEstimateManual: data.isFocusEstimateManual.present
+          ? data.isFocusEstimateManual.value
+          : this.isFocusEstimateManual,
       completedFocusIntervals: data.completedFocusIntervals.present
           ? data.completedFocusIntervals.value
           : this.completedFocusIntervals,
@@ -3854,6 +3896,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
           ..write('durationSeconds: $durationSeconds, ')
           ..write('status: $status, ')
           ..write('estimatedFocusIntervals: $estimatedFocusIntervals, ')
+          ..write('isFocusEstimateManual: $isFocusEstimateManual, ')
           ..write('completedFocusIntervals: $completedFocusIntervals, ')
           ..write('totalFocusSeconds: $totalFocusSeconds, ')
           ..write('orderKey: $orderKey, ')
@@ -3886,6 +3929,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     durationSeconds,
     status,
     estimatedFocusIntervals,
+    isFocusEstimateManual,
     completedFocusIntervals,
     totalFocusSeconds,
     orderKey,
@@ -3917,6 +3961,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
           other.durationSeconds == this.durationSeconds &&
           other.status == this.status &&
           other.estimatedFocusIntervals == this.estimatedFocusIntervals &&
+          other.isFocusEstimateManual == this.isFocusEstimateManual &&
           other.completedFocusIntervals == this.completedFocusIntervals &&
           other.totalFocusSeconds == this.totalFocusSeconds &&
           other.orderKey == this.orderKey &&
@@ -3946,6 +3991,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
   final Value<int?> durationSeconds;
   final Value<String> status;
   final Value<int?> estimatedFocusIntervals;
+  final Value<bool> isFocusEstimateManual;
   final Value<int> completedFocusIntervals;
   final Value<int> totalFocusSeconds;
   final Value<String> orderKey;
@@ -3974,6 +4020,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     this.durationSeconds = const Value.absent(),
     this.status = const Value.absent(),
     this.estimatedFocusIntervals = const Value.absent(),
+    this.isFocusEstimateManual = const Value.absent(),
     this.completedFocusIntervals = const Value.absent(),
     this.totalFocusSeconds = const Value.absent(),
     this.orderKey = const Value.absent(),
@@ -4003,6 +4050,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     this.durationSeconds = const Value.absent(),
     this.status = const Value.absent(),
     this.estimatedFocusIntervals = const Value.absent(),
+    this.isFocusEstimateManual = const Value.absent(),
     this.completedFocusIntervals = const Value.absent(),
     this.totalFocusSeconds = const Value.absent(),
     required String orderKey,
@@ -4038,6 +4086,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Expression<int>? durationSeconds,
     Expression<String>? status,
     Expression<int>? estimatedFocusIntervals,
+    Expression<bool>? isFocusEstimateManual,
     Expression<int>? completedFocusIntervals,
     Expression<int>? totalFocusSeconds,
     Expression<String>? orderKey,
@@ -4068,6 +4117,8 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
       if (status != null) 'status': status,
       if (estimatedFocusIntervals != null)
         'estimated_focus_intervals': estimatedFocusIntervals,
+      if (isFocusEstimateManual != null)
+        'is_focus_estimate_manual': isFocusEstimateManual,
       if (completedFocusIntervals != null)
         'completed_focus_intervals': completedFocusIntervals,
       if (totalFocusSeconds != null) 'total_focus_seconds': totalFocusSeconds,
@@ -4100,6 +4151,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Value<int?>? durationSeconds,
     Value<String>? status,
     Value<int?>? estimatedFocusIntervals,
+    Value<bool>? isFocusEstimateManual,
     Value<int>? completedFocusIntervals,
     Value<int>? totalFocusSeconds,
     Value<String>? orderKey,
@@ -4130,6 +4182,8 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
       status: status ?? this.status,
       estimatedFocusIntervals:
           estimatedFocusIntervals ?? this.estimatedFocusIntervals,
+      isFocusEstimateManual:
+          isFocusEstimateManual ?? this.isFocusEstimateManual,
       completedFocusIntervals:
           completedFocusIntervals ?? this.completedFocusIntervals,
       totalFocusSeconds: totalFocusSeconds ?? this.totalFocusSeconds,
@@ -4200,6 +4254,11 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
         estimatedFocusIntervals.value,
       );
     }
+    if (isFocusEstimateManual.present) {
+      map['is_focus_estimate_manual'] = Variable<bool>(
+        isFocusEstimateManual.value,
+      );
+    }
     if (completedFocusIntervals.present) {
       map['completed_focus_intervals'] = Variable<int>(
         completedFocusIntervals.value,
@@ -4255,6 +4314,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
           ..write('durationSeconds: $durationSeconds, ')
           ..write('status: $status, ')
           ..write('estimatedFocusIntervals: $estimatedFocusIntervals, ')
+          ..write('isFocusEstimateManual: $isFocusEstimateManual, ')
           ..write('completedFocusIntervals: $completedFocusIntervals, ')
           ..write('totalFocusSeconds: $totalFocusSeconds, ')
           ..write('orderKey: $orderKey, ')
@@ -17265,6 +17325,7 @@ typedef $$TasksTableCreateCompanionBuilder =
       Value<int?> durationSeconds,
       Value<String> status,
       Value<int?> estimatedFocusIntervals,
+      Value<bool> isFocusEstimateManual,
       Value<int> completedFocusIntervals,
       Value<int> totalFocusSeconds,
       required String orderKey,
@@ -17295,6 +17356,7 @@ typedef $$TasksTableUpdateCompanionBuilder =
       Value<int?> durationSeconds,
       Value<String> status,
       Value<int?> estimatedFocusIntervals,
+      Value<bool> isFocusEstimateManual,
       Value<int> completedFocusIntervals,
       Value<int> totalFocusSeconds,
       Value<String> orderKey,
@@ -17397,6 +17459,11 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
 
   ColumnFilters<int> get estimatedFocusIntervals => $composableBuilder(
     column: $table.estimatedFocusIntervals,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isFocusEstimateManual => $composableBuilder(
+    column: $table.isFocusEstimateManual,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -17540,6 +17607,11 @@ class $$TasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isFocusEstimateManual => $composableBuilder(
+    column: $table.isFocusEstimateManual,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get completedFocusIntervals => $composableBuilder(
     column: $table.completedFocusIntervals,
     builder: (column) => ColumnOrderings(column),
@@ -17658,6 +17730,11 @@ class $$TasksTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get isFocusEstimateManual => $composableBuilder(
+    column: $table.isFocusEstimateManual,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get completedFocusIntervals => $composableBuilder(
     column: $table.completedFocusIntervals,
     builder: (column) => column,
@@ -17739,6 +17816,7 @@ class $$TasksTableTableManager
                 Value<int?> durationSeconds = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<int?> estimatedFocusIntervals = const Value.absent(),
+                Value<bool> isFocusEstimateManual = const Value.absent(),
                 Value<int> completedFocusIntervals = const Value.absent(),
                 Value<int> totalFocusSeconds = const Value.absent(),
                 Value<String> orderKey = const Value.absent(),
@@ -17767,6 +17845,7 @@ class $$TasksTableTableManager
                 durationSeconds: durationSeconds,
                 status: status,
                 estimatedFocusIntervals: estimatedFocusIntervals,
+                isFocusEstimateManual: isFocusEstimateManual,
                 completedFocusIntervals: completedFocusIntervals,
                 totalFocusSeconds: totalFocusSeconds,
                 orderKey: orderKey,
@@ -17797,6 +17876,7 @@ class $$TasksTableTableManager
                 Value<int?> durationSeconds = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<int?> estimatedFocusIntervals = const Value.absent(),
+                Value<bool> isFocusEstimateManual = const Value.absent(),
                 Value<int> completedFocusIntervals = const Value.absent(),
                 Value<int> totalFocusSeconds = const Value.absent(),
                 required String orderKey,
@@ -17825,6 +17905,7 @@ class $$TasksTableTableManager
                 durationSeconds: durationSeconds,
                 status: status,
                 estimatedFocusIntervals: estimatedFocusIntervals,
+                isFocusEstimateManual: isFocusEstimateManual,
                 completedFocusIntervals: completedFocusIntervals,
                 totalFocusSeconds: totalFocusSeconds,
                 orderKey: orderKey,

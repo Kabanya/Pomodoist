@@ -1,0 +1,95 @@
+{
+  "source": "pomo_3_0_2_all_animations_linked.blend",
+  "size": 384,
+  "fps": 24,
+  "clips": {
+    "greeting": {
+      "still": "greeting-still.webp",
+      "source": "pomo_3_0_2_all_animations_linked.blend",
+      "sourceSha256": "b723792fcd8b64d1031508c57a81673b9568f3de6c4867ecce97982ff12cf298",
+      "scene": "01 | Greeting",
+      "firstFrame": 1,
+      "lastFrame": 72,
+      "stillFrame": 28,
+      "sampledFrames": 1,
+      "durationMs": 3000
+    },
+    "happy": {
+      "still": "happy-still.webp",
+      "source": "pomo_3_0_2_all_animations_linked.blend",
+      "sourceSha256": "b723792fcd8b64d1031508c57a81673b9568f3de6c4867ecce97982ff12cf298",
+      "scene": "02 | Happy",
+      "firstFrame": 1,
+      "lastFrame": 72,
+      "stillFrame": 20,
+      "sampledFrames": 1,
+      "durationMs": 3000
+    },
+    "surprised": {
+      "still": "surprised-still.webp",
+      "source": "pomo_3_0_2_all_animations_linked.blend",
+      "sourceSha256": "b723792fcd8b64d1031508c57a81673b9568f3de6c4867ecce97982ff12cf298",
+      "scene": "03 | Surprised",
+      "firstFrame": 1,
+      "lastFrame": 72,
+      "stillFrame": 12,
+      "sampledFrames": 1,
+      "durationMs": 3000
+    },
+    "sad": {
+      "still": "sad-still.webp",
+      "source": "pomo_3_0_2_all_animations_linked.blend",
+      "sourceSha256": "b723792fcd8b64d1031508c57a81673b9568f3de6c4867ecce97982ff12cf298",
+      "scene": "04 | Sad",
+      "firstFrame": 8,
+      "lastFrame": 29,
+      "stillFrame": 29,
+      "sampledFrames": 1,
+      "durationMs": 900
+    },
+    "calm": {
+      "still": "calm-still.webp",
+      "source": "pomo_3_0_2_all_animations_linked.blend",
+      "sourceSha256": "b723792fcd8b64d1031508c57a81673b9568f3de6c4867ecce97982ff12cf298",
+      "scene": "06 | Calm",
+      "firstFrame": 1,
+      "lastFrame": 240,
+      "stillFrame": 58,
+      "sampledFrames": 1,
+      "durationMs": 10000
+    },
+    "focus": {
+      "still": "focus-still.webp",
+      "source": "pomo_3_0_2_all_animations_linked.blend",
+      "sourceSha256": "b723792fcd8b64d1031508c57a81673b9568f3de6c4867ecce97982ff12cf298",
+      "scene": "10 | Thinking reference",
+      "firstFrame": 1,
+      "lastFrame": 144,
+      "stillFrame": 49,
+      "sampledFrames": 1,
+      "durationMs": 6000
+    },
+    "rest": {
+      "still": "rest-still.webp",
+      "source": "pomo_3_0_2_all_animations_linked.blend",
+      "sourceSha256": "b723792fcd8b64d1031508c57a81673b9568f3de6c4867ecce97982ff12cf298",
+      "scene": "08 | Rest",
+      "firstFrame": 1,
+      "lastFrame": 96,
+      "stillFrame": 25,
+      "sampledFrames": 1,
+      "durationMs": 4000
+    },
+    "tired": {
+      "still": "tired-still.webp",
+      "source": "pomo_3_0_2_all_animations_linked.blend",
+      "sourceSha256": "b723792fcd8b64d1031508c57a81673b9568f3de6c4867ecce97982ff12cf298",
+      "scene": "09 | Tired",
+      "firstFrame": 1,
+      "lastFrame": 96,
+      "stillFrame": 25,
+      "sampledFrames": 1,
+      "durationMs": 4000
+    }
+  }
+}

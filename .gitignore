@@ -97,14 +97,20 @@ app.*.map.json
 **.png
 pomodoist_app_icon_no_background.png
 
+# Required asset in the vendored multiview_desktop package manifest and tests.
+!apps/flutter/third_party/multiview_desktop/test/fixtures/plus.png
+
 # Tracked icon masters, the source of truth for the icon generator.
 !apps/flutter/assets/branding/app_icons/pomodoist_icon_development.png
 !apps/flutter/assets/branding/app_icons/pomodoist_icon_staging.png
 !apps/flutter/assets/branding/app_icons/pomodoist_icon_production.png
+!apps/flutter/assets/branding/app_icons/icon-light-pomo.png
+!apps/flutter/assets/branding/app_icons/generated/*/*.png
 
 # Tracked Android launcher icons: the shared main source set plus each flavor.
 !apps/flutter/android/app/src/main/res/mipmap-*/ic_launcher.png
 !apps/flutter/android/app/src/*/res/mipmap-*/ic_launcher.png
+!apps/flutter/android/app/src/*/res/mipmap-*/ic_launcher_classic.png
 
 # Tracked Apple app icons: iOS app, watch app and macOS app, default plus flavors.
 !apps/flutter/ios/Runner/Assets.xcassets/AppIcon*.appiconset/*.png
@@ -126,6 +132,8 @@ server/supabase/.temp/
 design/
 output/
 docs/*
+!docs/apple-widget-studies/
+!docs/releases/
 !docs/performance/
 !docs/localization/
 !docs/subscription-offers.md
@@ -190,7 +198,6 @@ docs/superpowers/specs/*
 !docs/superpowers/plans/2026-09-13-repository-refactor-options.md
 !docs/superpowers/plans/2026-09-20-flutter-official-architecture-alignment.md
 !docs/superpowers/plans/2026-09-23-branch-based-backend-deployment.md
-!docs/superpowers/specs/2026-09-13-two-minor-release-refactor-design.md
 .kimi-code
 .agents
 .claude
@@ -233,3 +240,6 @@ docs/assets/app-store-grid-reference.png
 # Local sound auditions and email bundles; shipping WAV assets stay tracked.
 /artifacts/focus-sounds/
 /artifacts/pomodoist-focus-sounds*.zip
+
+# Desktop companion implementation and validation notes.
+!docs/pomo-companion.md

@@ -42,18 +42,25 @@ class EditTaskTitleUseCase {
     if (parsed.dueDate != null && schedule?.isAllDay == true) {
       schedule = task.schedule?.moveToDate(parsed.dueDate!) ?? schedule;
     }
-    final estimatedFocusIntervals = estimateFocusIntervalsForTaskDuration(
-      schedule: parsed.schedule,
-      durationSeconds: null,
-      explicitEstimate: parsed.estimatedFocusIntervals,
-      preset: focusPreset,
-    );
+    final estimatedFocusIntervals =
+        task.isFocusEstimateManual && parsed.estimatedFocusIntervals == null
+        ? null
+        : estimateFocusIntervalsForTaskDuration(
+            schedule: parsed.schedule,
+            durationSeconds: null,
+            explicitEstimate: parsed.estimatedFocusIntervals,
+            isFocusEstimateManual: parsed.estimatedFocusIntervals != null,
+            preset: focusPreset,
+          );
     final patch = UpdateTaskPatch(
       content: content == task.content ? null : content,
       priority: parsed.priority,
       schedule: schedule,
       dueDate: schedule == null ? parsed.dueDate : null,
       estimatedFocusIntervals: estimatedFocusIntervals,
+      isFocusEstimateManual: parsed.estimatedFocusIntervals != null
+          ? true
+          : null,
       labelNames: parsed.labels.isEmpty ? null : parsed.labels,
     );
     final shouldUpdateTask =

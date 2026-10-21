@@ -1,4 +1,6 @@
 #include "flutter_window.h"
+#include "app_icon_host.h"
+#include "pomo_window_bridge.h"
 
 #include <cctype>
 #include <cstring>
@@ -12,6 +14,7 @@
 #include <flutter_timezone/flutter_timezone_plugin_c_api.h>
 #include <multiview_desktop/multi_view_desktop_plugin.h>
 #include <record_windows/record_windows_plugin_c_api.h>
+#include <thermion_flutter/thermion_flutter_plugin_c_api.h>
 #include <url_launcher_windows/url_launcher_windows.h>
 
 extern "C" void SentryFlutterPluginRegisterWithRegistrar(
@@ -99,6 +102,8 @@ void RegisterPomodoistPlugins(FlutterDesktopEngineRef engine) {
                                              "RecordWindowsPluginCApi"));
   SentryFlutterPluginRegisterWithRegistrar(
       FlutterDesktopEngineGetPluginRegistrar(engine, "SentryFlutterPlugin"));
+  ThermionFlutterPluginCApiRegisterWithRegistrar(
+      FlutterDesktopEngineGetPluginRegistrar(engine, "ThermionFlutterPluginCApi"));
   UrlLauncherWindowsRegisterWithRegistrar(
       FlutterDesktopEngineGetPluginRegistrar(engine, "UrlLauncherWindows"));
 }
@@ -128,6 +133,8 @@ bool FlutterWindow::OnCreate() {
   RegisterPomodoistPlugins(engine);
   ConfigureQuickAddChannel(engine);
   ConfigureNativeLinkChannel(engine);
+  pomo_channel_ = CreatePomoWindowChannel(engine);
+  app_icon_channel_ = app_icon::CreateChannel(engine);
   const HWND flutter_hwnd =
       MultiViewDesktopGetFlutterHwnd(MultiViewDesktopGetMainViewId());
   if (flutter_hwnd != nullptr) {
@@ -143,6 +150,8 @@ void FlutterWindow::OnDestroy() {
   }
   quick_add_channel_.reset();
   native_link_channel_.reset();
+  pomo_channel_.reset();
+  app_icon_channel_.reset();
   Win32Window::OnDestroy();
 }
 

@@ -134,6 +134,7 @@ final class CsvTaskImportUseCase {
               schedule: schedule,
               deadline: draft.deadline,
               estimatedFocusIntervals: draft.estimatedFocusIntervals,
+              isFocusEstimateManual: draft.estimatedFocusIntervals != null,
               kanbanStatusId: statusName == null
                   ? null
                   : statusIds[statusName.toLowerCase()],

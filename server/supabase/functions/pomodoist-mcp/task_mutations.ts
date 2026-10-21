@@ -1,6 +1,5 @@
 import { z } from "zod";
 import {
-  MutationScope,
   assignment,
   completeOperations,
   deleteTaskOperations,
@@ -8,6 +7,7 @@ import {
   dueJson,
   labelAdditions,
   mutationPlan,
+  MutationScope,
   mutationSnapshot,
   requireProject,
   requireTask,
@@ -18,7 +18,6 @@ import {
   validateParent,
 } from "./mutation_helpers.ts";
 import {
-  ToolFailure,
   backlogId,
   createTaskSchema,
   entityId,
@@ -28,6 +27,7 @@ import {
   orderKey,
   outputSchemas,
   string,
+  ToolFailure,
   updateTaskSchema,
 } from "./tool_core.ts";
 
@@ -69,6 +69,7 @@ export function taskMutations({ define, context, annotations }: MutationScope) {
           dueJson: arguments_.schedule ? dueJson(arguments_.schedule) : null,
           status: "open",
           estimatedFocusIntervals: arguments_.estimate ?? null,
+          isFocusEstimateManual: arguments_.estimate != null,
           completedFocusIntervals: 0,
           totalFocusSeconds: 0,
           orderKey: orderKey(),
@@ -82,7 +83,7 @@ export function taskMutations({ define, context, annotations }: MutationScope) {
         assignment(id, backlogId, now),
         ...labelAdditions(snapshot, id, arguments_.label_names, now),
       ];
-      return mutationPlan( operations, { id });
+      return mutationPlan(operations, { id });
     },
   );
 
@@ -127,7 +128,10 @@ export function taskMutations({ define, context, annotations }: MutationScope) {
               ? { priority: arguments_.priority }
               : {}),
             ...(root && arguments_.estimate !== undefined
-              ? { estimatedFocusIntervals: arguments_.estimate }
+              ? {
+                estimatedFocusIntervals: arguments_.estimate,
+                isFocusEstimateManual: arguments_.estimate != null,
+              }
               : {}),
             ...(root && arguments_.schedule !== undefined
               ? {
@@ -153,7 +157,7 @@ export function taskMutations({ define, context, annotations }: MutationScope) {
           now,
         ),
       );
-      return mutationPlan( operations, { id: task.id });
+      return mutationPlan(operations, { id: task.id });
     },
   );
 
@@ -196,7 +200,7 @@ export function taskMutations({ define, context, annotations }: MutationScope) {
         recurrence_scope,
         now,
       );
-      return mutationPlan( operations, { id: task.id });
+      return mutationPlan(operations, { id: task.id });
     },
   );
 }

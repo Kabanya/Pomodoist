@@ -312,7 +312,7 @@ class DriftKanbanRepository implements KanbanRepository {
       targetStatusId,
     };
     final now = DateTime.now().toUtc();
-    await _db.transaction(() async {
+    await ownerBoundTransaction(_db, _syncQueue, () async {
       await _kanbanTransitions.moveTaskInTransaction(
         taskId,
         statusId: targetStatusId,
@@ -704,6 +704,7 @@ class DriftKanbanRepository implements KanbanRepository {
     durationSeconds: row.durationSeconds,
     status: row.status,
     estimatedFocusIntervals: row.estimatedFocusIntervals,
+    isFocusEstimateManual: row.isFocusEstimateManual,
     completedFocusIntervals: row.completedFocusIntervals,
     totalFocusSeconds: row.totalFocusSeconds,
     orderKey: row.orderKey,

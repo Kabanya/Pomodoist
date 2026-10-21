@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
@@ -302,11 +303,40 @@ class DriftOutboxService implements OutboxService {
 }
 
 /// Covers local-only writes and Undo as well as writes that enqueue sync work.
+final _localCommitKey = Object();
+
+/// Stage a notification until the enclosing owner-bound mutation commits.
+/// A scope-less call is deliberately ignored (e.g. import/sync internals).
+void afterLocalCommit(void Function() callback) {
+  (Zone.current[_localCommitKey] as List<void Function()>?)?.add(callback);
+}
+
 Future<T> ownerBoundTransaction<T>(
   AppDatabase db,
   OutboxService queue,
   Future<T> Function() action,
-) => db.transaction(() async {
-  if (queue is DriftOutboxService) await queue.checkOwner();
-  return action();
-});
+) async {
+  final parent = Zone.current[_localCommitKey] as List<void Function()>?;
+  final callbacks = <void Function()>[];
+  final result = await runZoned(
+    () => db.transaction(() async {
+      if (queue is DriftOutboxService) await queue.checkOwner();
+      return action();
+    }),
+    zoneValues: {_localCommitKey: callbacks},
+  );
+  if (parent != null) {
+    parent.addAll(callbacks);
+  } else {
+    for (final callback in callbacks) {
+      // Notification failures must never turn an already committed write into
+      // a reported failure that encourages the user to repeat the mutation.
+      try {
+        callback();
+      } on Object {
+        /* Advisory event only. */
+      }
+    }
+  }
+  return result;
+}

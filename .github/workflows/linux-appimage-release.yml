@@ -59,6 +59,7 @@ jobs:
             desktop-file-utils \
             file \
             git \
+            git-lfs \
             gh \
             gstreamer1.0-plugins-base \
             gstreamer1.0-plugins-good \
@@ -79,6 +80,7 @@ jobs:
             xz-utils
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          lfs: true
           fetch-depth: 0
       - name: Prepare application version
         id: version

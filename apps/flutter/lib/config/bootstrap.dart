@@ -7,12 +7,14 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:multiview_desktop/multiview_desktop.dart';
 
 import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/pomo_dependencies.dart';
 import 'package:pomodoist/config/app_environment.dart';
 import 'package:pomodoist/config/app_language.dart';
 import 'package:pomodoist/config/collaboration_dependencies.dart';
 import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/widgets/pomodoist_app.dart';
+import 'package:pomodoist/ui/core/widgets/app_icon_runtime.dart';
 import 'package:pomodoist/ui/quick_add/widgets/global_quick_add_window.dart';
 import 'package:pomodoist/config/auth/native_account_startup.dart';
 import 'package:pomodoist/data/services/platform/native_link_coordinator.dart';
@@ -96,8 +98,10 @@ Future<void> _startPomodoist(
 }
 
 void _runPomodoist(List<Override> overrides) {
-  Widget scope(Widget child) =>
-      ProviderScope(overrides: overrides, child: child);
+  Widget scope(Widget child) => ProviderScope(
+    overrides: [...overrides, ...pomoOverrides],
+    child: AppIconRuntime(child: PomoRuntime(child: child)),
+  );
 
   if (_supportsDesktopMultiView) {
     runMultiApp(

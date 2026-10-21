@@ -1837,6 +1837,10 @@
       }
     }
   },
+  "bottomNavigationEditingTitle": "Panel edit mode",
+  "bottomNavigationEditingHelp": "Drag the icons below or use the arrows. Tap an icon to replace it.",
+  "bottomNavigationReplace": "Replace with",
+  "bottomNavigationEditHint": "Hold to customize the bottom panel.",
   "settingsBottomNavigation": "Bottom navigation",
   "settingsBottomNavigationDescription": "Choose up to five sections, their order, and the navigation style. Saved on this device.",
   "settingsBottomNavigationSoft": "Soft accent",
@@ -2169,5 +2173,66 @@
   "settingsFocusSoundTitle": "Focus sounds",
   "settingsFocusSoundSubtitle": "Choose the sounds for starting, pausing, resuming, and completing a focus interval.",
   "settingsFocusSoundPreview": "Listen",
-  "settingsFocusSoundPreviewError": "Could not play the sample. Try again."
+  "settingsFocusSoundPreviewError": "Could not play the sample. Try again.",
+  "pomoTitle": "Pomo companion",
+  "pomoDescription": "A little companion for your desktop.",
+  "pomoFocusOnly": "Only during Focus",
+  "pomoQuiet": "Quiet mode",
+  "pomoQuietDescription": "Static reactions without background animation.",
+  "pomoReduceMotion": "Reduce companion motion",
+  "pomoShow": "Show Pomo",
+  "pomoHide": "Hide Pomo",
+  "pomoResetPosition": "Reset position",
+  "pomoInteract": "Pomo: react and toggle controls. Drag to move.",
+  "pomoQuickAdd": "Add a task",
+  "pomoError": "Pomo could not finish this action. Try showing Pomo again in Settings.",
+  "pomoShowTimer": "Show timer",
+  "pomoSettings": "Pomo settings",
+  "pomoSize": "Size",
+  "pomoSizeDecrease": "Make Pomo smaller",
+  "pomoSizeIncrease": "Make Pomo larger",
+  "pomoSizeReset": "Reset to 100%",
+  "pomoSizeEffective": "Shown at {percent}% to fit this screen",
+  "@pomoSizeEffective": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "appIconTitle": "App icon",
+  "appIconPomo": "Pomo",
+  "appIconClassic": "Classic",
+  "appIconError": "Could not apply or save the app icon. Please try again.",
+  "appIconMacosHint": "Changes the Dock icon while Pomodoist is running. Finder uses Pomo.",
+  "appIconDesktopHint": "Changes the app icon and Pomodoist shortcuts. Pinned copies may update later.",
+  "appIconWebHint": "Changes the browser tab icon. Installed web app icons are managed by your browser.",
+  "quickAddFocusEstimate": "Pomodoro estimate",
+  "quickAddEstimatedPomodoros": "{count, plural, one{1 Pomodoro} other{{count} Pomodoros}}",
+  "quickAddDecreaseEstimate": "Decrease estimate",
+  "quickAddIncreaseEstimate": "Increase estimate",
+  "quickAddEstimateRange": "Enter a whole number from 1 to 999.",
+  "quickAddEstimateFocusTime": "{count} × {workMinutes} min = {totalMinutes} min focus",
+  "quickAddEstimateAutomatic": "Based on task duration",
+  "quickAddClearEstimate": "Clear estimate",
+  "@quickAddEstimatedPomodoros": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@quickAddEstimateFocusTime": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "workMinutes": {
+        "type": "String"
+      },
+      "totalMinutes": {
+        "type": "String"
+      }
+    }
+  }
 }

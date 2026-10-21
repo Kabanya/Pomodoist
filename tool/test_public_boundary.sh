@@ -9,8 +9,17 @@ fail() {
   exit 1
 }
 
-! grep -Eq '^[[:space:]]+source: path$' apps/flutter/pubspec.lock ||
-  fail 'pubspec.lock contains local path dependencies; disable local overrides and run flutter pub get before committing'
+# Only the committed desktop patch may resolve from a local relative path.
+awk '
+  /^  [A-Za-z0-9_]+:$/ { package = $1; path = ""; relative = "" }
+  $1 == "path:" { path = $2 }
+  $1 == "relative:" { relative = $2 }
+  /^[[:space:]]+source: path$/ {
+    if (package != "multiview_desktop:" ||
+        path != "\"third_party/multiview_desktop\"" || relative != "true") exit 1
+  }
+' apps/flutter/pubspec.lock ||
+  fail 'pubspec.lock contains an unapproved local path dependency'
 
 version=$(awk '
   $0 == "  app_account:" { found = 1; next }

@@ -1,0 +1,8 @@
+Tool: built-in image_gen
+Source: user-attached codex-clipboard-0c2f6ab3-afbd-46d4-80c7-c65543f82737.png
+Output: pomo-clean-v1.png
+
+Use case: identity-preserve.
+Input image: attached square tomato mascot image, the edit target and exact visual identity/composition reference.
+Regenerate this same square illustration cleanly to repair visual rendering defects. Preserve the character identity, exact cheerful face, gaze, tilt, position and crop: large cute round red tomato cropped by the left and bottom edges, plump green leafy crown, two glossy dark oval eyes with one small white catchlight each and a small open curved smiling mouth. Preserve the saturated coral-red background and the cream partial circular timer arc at the upper right, same size, orientation and open gap. Keep the existing soft polished 3D clay/toy rendering style, red-green-cream palette and lighting direction.
+Correct rendering defects: make every leaf a coherent smooth solid form with clean silhouettes and natural overlaps; remove pinched geometry, accidental notches, seams, jagged edges, melted intersections, harsh dark creases and muddy patches. Preserve overall crown arrangement, with upright curved central leaf and a long rightward leaf. Smooth tomato surface gradients, no dents or dark halos around eyes and mouth. Clean smooth oval eyes and smile edges, naturally integrated into surface. Timer arc must have uniform line thickness, a precise circular curvature and clean rounded ends. High-quality antialiased contours, subtle contact shadows and smooth highlights. No extra objects, no new text, no watermark. Match original framing closely; do not redesign the mascot. Output one square finished image.

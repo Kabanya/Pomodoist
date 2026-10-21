@@ -3408,6 +3408,18 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get bottomNavigationEditingTitle => '编辑底部面板';
+
+  @override
+  String get bottomNavigationEditingHelp => '拖动下方图标或使用箭头调整顺序。点击图标即可替换。';
+
+  @override
+  String get bottomNavigationReplace => '替换为';
+
+  @override
+  String get bottomNavigationEditHint => '长按以自定义底部面板。';
+
+  @override
   String get settingsBottomNavigation => '底部导航';
 
   @override
@@ -4096,4 +4108,121 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsFocusSoundPreviewError => '无法播放示例，请重试。';
+
+  @override
+  String get pomoTitle => 'Pomo 伙伴';
+
+  @override
+  String get pomoDescription => '桌面上的小伙伴。';
+
+  @override
+  String get pomoFocusOnly => '仅在专注期间显示';
+
+  @override
+  String get pomoQuiet => '安静模式';
+
+  @override
+  String get pomoQuietDescription => '静态反应，无背景动画。';
+
+  @override
+  String get pomoReduceMotion => '减少 Pomo 动画';
+
+  @override
+  String get pomoShow => '显示 Pomo';
+
+  @override
+  String get pomoHide => '隐藏 Pomo';
+
+  @override
+  String get pomoResetPosition => '重置位置';
+
+  @override
+  String get pomoInteract => 'Pomo：互动并切换控制按钮。拖动以移动。';
+
+  @override
+  String get pomoQuickAdd => '添加任务';
+
+  @override
+  String get pomoError => 'Pomo 无法完成此操作。请在设置中尝试重新显示 Pomo。';
+
+  @override
+  String get pomoShowTimer => '显示计时器';
+
+  @override
+  String get pomoSettings => 'Pomo 设置';
+
+  @override
+  String get pomoSize => '大小';
+
+  @override
+  String get pomoSizeDecrease => '缩小 Pomo';
+
+  @override
+  String get pomoSizeIncrease => '放大 Pomo';
+
+  @override
+  String get pomoSizeReset => '重置为 100%';
+
+  @override
+  String pomoSizeEffective(int percent) {
+    return '为适应屏幕，当前显示为 $percent%';
+  }
+
+  @override
+  String get appIconTitle => '应用图标';
+
+  @override
+  String get appIconPomo => 'Pomo';
+
+  @override
+  String get appIconClassic => '经典';
+
+  @override
+  String get appIconError => '无法应用或保存图标。请重试。';
+
+  @override
+  String get appIconMacosHint => '在 Pomodoist 运行时更改 Dock 图标。Finder 使用 Pomo。';
+
+  @override
+  String get appIconDesktopHint => '更改应用图标和 Pomodoist 快捷方式。固定的副本可能稍后更新。';
+
+  @override
+  String get appIconWebHint => '更改标签页图标。已安装的网页应用图标由浏览器管理。';
+
+  @override
+  String get quickAddFocusEstimate => '番茄钟预估';
+
+  @override
+  String quickAddEstimatedPomodoros(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 个番茄钟',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get quickAddDecreaseEstimate => '减少预估';
+
+  @override
+  String get quickAddIncreaseEstimate => '增加预估';
+
+  @override
+  String get quickAddEstimateRange => '请输入 1 到 999 之间的整数。';
+
+  @override
+  String quickAddEstimateFocusTime(
+    String count,
+    String workMinutes,
+    String totalMinutes,
+  ) {
+    return '$count × $workMinutes 分钟 = 专注 $totalMinutes 分钟';
+  }
+
+  @override
+  String get quickAddEstimateAutomatic => '根据任务时长计算';
+
+  @override
+  String get quickAddClearEstimate => '清除预估';
 }

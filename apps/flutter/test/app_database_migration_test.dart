@@ -13,7 +13,7 @@ void main() {
   const inProgressId = 'kanban-status-in-progress-v1';
   const doneId = 'kanban-status-done-v1';
 
-  group('schema v13', () {
+  group('schema v14', () {
     late AppDatabase db;
     migrations.InitializedSchema? initializedV3;
 
@@ -21,6 +21,27 @@ void main() {
       await db.close();
       initializedV3?.close();
       initializedV3 = null;
+    });
+
+    test('v13 tasks keep estimates and default to legacy precedence', () async {
+      final verifier = migrations.SchemaVerifier(v3_schema.GeneratedHelper());
+      initializedV3 = await verifier.schemaAt(3);
+      _seedCompleteV3(initializedV3!.rawDatabase);
+      db = AppDatabase(initializedV3!.newConnection());
+      await db.ensureSeedData();
+      await db.customStatement(
+        'UPDATE tasks SET estimated_focus_intervals = 7',
+      );
+      await db.customStatement(
+        'ALTER TABLE tasks DROP COLUMN is_focus_estimate_manual',
+      );
+      await db.customStatement('PRAGMA user_version = 13');
+      await db.close();
+      db = AppDatabase(initializedV3!.newConnection());
+      final tasks = await db.select(db.tasks).get();
+      expect(tasks, isNotEmpty);
+      expect(tasks.every((task) => !task.isFocusEstimateManual), isTrue);
+      expect(tasks.every((task) => task.estimatedFocusIntervals == 7), isTrue);
     });
 
     test('v6 labels retain their data and links after adding icons', () async {
@@ -41,15 +62,15 @@ void main() {
         (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
           'user_version',
         ),
-        13,
+        14,
       );
     });
 
     test('fresh database creates compact Kanban schema and index', () async {
       db = AppDatabase(NativeDatabase.memory());
 
-      expect(db.schemaVersion, 13);
-      if (db.schemaVersion != 13) {
+      expect(db.schemaVersion, 14);
+      if (db.schemaVersion != 14) {
         return;
       }
       await db
@@ -149,8 +170,8 @@ void main() {
         final version = await db
             .customSelect('PRAGMA user_version')
             .getSingle();
-        expect(version.read<int>('user_version'), 13);
-        if (version.read<int>('user_version') != 13) {
+        expect(version.read<int>('user_version'), 14);
+        if (version.read<int>('user_version') != 14) {
           return;
         }
         final userLabels = await db
@@ -236,7 +257,7 @@ void main() {
 
       final version = await db.customSelect('PRAGMA user_version').getSingle();
 
-      expect(version.read<int>('user_version'), 13);
+      expect(version.read<int>('user_version'), 14);
       expect(
         await _columnNames(db, 'labels'),
         containsAll(['kind', 'system_key', 'icon']),
@@ -251,7 +272,7 @@ void main() {
       final retriedVersion = await db
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(retriedVersion.read<int>('user_version'), 13);
+      expect(retriedVersion.read<int>('user_version'), 14);
     });
   });
 

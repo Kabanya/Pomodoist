@@ -1,10 +1,11 @@
-// Generates every platform app icon from the three master PNGs.
+// Generates primary Pomo icons and classic alternatives for every flavor.
 //
 // The masters live in `assets/branding/app_icons/` and are the only icon
-// artwork in the repository a human edits. They are square, full bleed and
-// opaque: `pomodoist_icon_development.png` and `pomodoist_icon_staging.png` are
-// 1254x1254, `pomodoist_icon_production.png` is 1024x1024. Everything below is
-// a resize of one of them, so an icon change is a master change plus a rerun.
+// artwork in the repository a human edits. icon-light-pomo.png is the default;
+// the three previous masters remain the classic alternatives. The opaque
+// development and staging masters are 1254x1254; production is 1024x1024.
+// Everything below is
+// generated from these masters, so an icon change is a master change plus a rerun.
 //
 // Usage, from `apps/flutter`:
 //
@@ -23,10 +24,9 @@
 //
 // Two deliberate asymmetries:
 //
-//  * `Contents.json` is written for the development and staging appiconsets
-//    only. The production ones are Xcode-managed and their byte layout is
-//    Xcode's, so the script validates them structurally instead of rewriting
-//    them.
+//  * Primary production `Contents.json` files are Xcode-managed, so the
+//    script validates them structurally instead of rewriting them. Flavor
+//    and alternate icon catalogs are generated in full.
 //  * `web/manifest.json` keeps its existing path and JSON shape; the two extra
 //    manifests are the same shape with the other flavors' identity.
 import 'dart:convert';
@@ -37,7 +37,7 @@ import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import 'package:pomodoist/domain/models/app_flavor.dart';
 
-/// Directory (relative to `apps/flutter`) holding the three master images.
+/// Directory holding the Pomo master and the three classic flavor masters.
 const _masterDirectory = 'assets/branding/app_icons';
 
 /// Fraction of the macOS canvas the rounded artwork occupies.
@@ -143,7 +143,18 @@ void main(List<String> arguments) {
   }
 
   final masters = _loadMasters();
-  final plan = _buildPlan(masters);
+  final pomo = img.decodePng(
+    File('$_masterDirectory/icon-light-pomo.png').readAsBytesSync(),
+  );
+  if (pomo == null ||
+      pomo.width != pomo.height ||
+      pomo.width < _minimumMasterSize) {
+    stderr.writeln(
+      'icon-light-pomo.png must be a square PNG of at least 1024px.',
+    );
+    exit(66);
+  }
+  final plan = _buildPlan(masters, _opaque(pomo));
 
   if (check) {
     exit(_checkPlan(plan) ? 0 : 1);
@@ -287,10 +298,70 @@ class _Plan {
   final Set<String> managedDirectories = {};
 }
 
-_Plan _buildPlan(Map<AppFlavor, img.Image> masters) {
+_Plan _buildPlan(Map<AppFlavor, img.Image> masters, img.Image pomo) {
   final plan = _Plan();
   for (final flavor in AppFlavor.values) {
-    final master = masters[flavor]!;
+    final classic = masters[flavor]!;
+    final master = img.Image.from(pomo);
+    if (!flavor.isProduction) {
+      final badge = img.Image(width: 206, height: 80, numChannels: 4);
+      final isDevelopment = flavor == AppFlavor.development;
+      final radius = isDevelopment ? 16 : 40;
+      img.fillRect(
+        badge,
+        x1: 0,
+        y1: 0,
+        x2: badge.width - 1,
+        y2: badge.height - 1,
+        radius: radius,
+        color: isDevelopment
+            ? img.ColorRgb8(112, 163, 255)
+            : img.ColorRgb8(173, 108, 25),
+      );
+      img.fillRect(
+        badge,
+        x1: 2,
+        y1: 2,
+        x2: badge.width - 3,
+        y2: badge.height - 3,
+        radius: radius - 2,
+        color: isDevelopment
+            ? img.ColorRgb8(32, 72, 172)
+            : img.ColorRgb8(255, 202, 72),
+      );
+      final label = img.Image(width: 206, height: 80, numChannels: 4);
+      img.drawString(
+        label,
+        flavor == AppFlavor.development ? "DEV" : "STG",
+        font: img.arial48,
+        x: 0,
+        y: 0,
+        color: isDevelopment
+            ? img.ColorRgb8(255, 255, 255)
+            : img.ColorRgb8(30, 30, 30),
+      );
+      final text = img.trim(label, mode: img.TrimMode.transparent);
+      img.compositeImage(
+        badge,
+        text,
+        dstX: (badge.width - text.width) ~/ 2,
+        dstY: (badge.height - text.height) ~/ 2,
+      );
+      final enlarged = img.copyResize(
+        badge,
+        width: badge.width * 4,
+        height: badge.height * 4,
+        interpolation: img.Interpolation.cubic,
+      );
+      // Keep the enlarged badge clear of the rounded macOS corners.
+      img.compositeImage(
+        master,
+        enlarged,
+        dstX: (master.width - enlarged.width) ~/ 2,
+        dstY: 24,
+      );
+    }
+    _addAlternatives(plan, flavor, master, classic);
     _addAndroid(plan, flavor, master);
     _addAppleApp(plan, flavor, master);
     _addWatchApp(plan, flavor, master);
@@ -299,6 +370,83 @@ _Plan _buildPlan(Map<AppFlavor, img.Image> masters) {
     _addWeb(plan, flavor, master);
   }
   return plan;
+}
+
+void _addAlternatives(
+  _Plan plan,
+  AppFlavor flavor,
+  img.Image pomo,
+  img.Image classic,
+) {
+  final runtime = 'assets/branding/app_icons/generated/${flavor.name}';
+  plan.managedDirectories.add(runtime);
+  for (final entry in {'icon-light-pomo': pomo, 'classic': classic}.entries) {
+    plan.files.add(
+      _Output.png(
+        '$runtime/${entry.key}.png',
+        _png(_opaque(_resize(entry.value, 512))),
+        512,
+        _AlphaPolicy.opaque,
+      ),
+    );
+    plan.files.add(
+      _Output.png(
+        '$runtime/${entry.key}-macos.png',
+        _png(_macosIcon(entry.value, 1024)),
+        1024,
+        _AlphaPolicy.alpha,
+      ),
+    );
+    plan.files.add(
+      _Output.ico(
+        '$runtime/${entry.key}.ico',
+        _encodeIco([
+          for (final size in _windowsIcoSizes)
+            _alpha(_resize(entry.value, size)),
+        ]),
+        _windowsIcoSizes,
+      ),
+    );
+  }
+  final slots = [
+    for (final (idiom, size, scale) in _iosAppSlots)
+      _AssetSlot({
+        'size': size,
+        'idiom': idiom,
+        'filename': 'Icon-App-$size@$scale.png',
+        'scale': scale,
+      }),
+  ];
+  _addAppIconSet(
+    plan,
+    flavor,
+    'ios/Runner/Assets.xcassets/${_appIconSetName(flavor).replaceFirst('.appiconset', '-Classic.appiconset')}',
+    slots,
+    classic,
+    rounded: false,
+    writeContents: true,
+  );
+  for (final density in _androidDensities.entries) {
+    for (final sourceSet in [flavor.name, if (flavor.isProduction) 'main']) {
+      final directory = 'android/app/src/$sourceSet/res/mipmap-${density.key}';
+      plan.files.add(
+        _Output.png(
+          '$directory/ic_launcher_classic.png',
+          _png(_alpha(_resize(classic, density.value))),
+          density.value,
+          _AlphaPolicy.alpha,
+        ),
+      );
+    }
+  }
+  plan.files.add(
+    _Output.png(
+      'web/icons/${flavor.name}/classic.png',
+      _png(_opaque(_resize(classic, 192))),
+      192,
+      _AlphaPolicy.opaque,
+    ),
+  );
 }
 
 void _addAndroid(_Plan plan, AppFlavor flavor, img.Image master) {
@@ -405,6 +553,7 @@ void _addAppIconSet(
   List<_AssetSlot> slots,
   img.Image master, {
   required bool rounded,
+  bool writeContents = false,
 }) {
   plan.managedDirectories.add(directory);
   plan.iconSets[directory] = slots;
@@ -429,7 +578,7 @@ void _addAppIconSet(
     );
   }
 
-  if (!flavor.isProduction) {
+  if (writeContents || !flavor.isProduction) {
     plan.generatedContents.add(directory);
     plan.files.add(
       _Output.json('$directory/Contents.json', _contentsJson(slots)),

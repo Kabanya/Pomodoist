@@ -363,11 +363,22 @@ class FocusLocalService {
     );
   }
 
-  Future<void> completeInterval(String intervalId, DateTime completedAt) {
-    return (_db.update(
+  Future<void> completeInterval(String intervalId, DateTime completedAt) async {
+    final interval = await (_db.select(
+      _db.focusIntervals,
+    )..where((row) => row.id.equals(intervalId))).getSingleOrNull();
+    if (interval == null) return;
+    final openPause = interval.pausedAt == null
+        ? 0
+        : completedAt
+              .difference(interval.pausedAt!)
+              .inSeconds
+              .clamp(0, 1 << 31);
+    await (_db.update(
       _db.focusIntervals,
     )..where((row) => row.id.equals(intervalId))).write(
       FocusIntervalsCompanion(
+        pausedTotalSeconds: Value(interval.pausedTotalSeconds + openPause),
         status: const Value('completed'),
         completedAt: Value(completedAt),
         pausedAt: const Value(null),
@@ -432,11 +443,19 @@ class FocusLocalService {
     );
   }
 
-  Future<void> skipInterval(String intervalId, DateTime stoppedAt) {
-    return (_db.update(
+  Future<void> skipInterval(String intervalId, DateTime stoppedAt) async {
+    final interval = await (_db.select(
+      _db.focusIntervals,
+    )..where((row) => row.id.equals(intervalId))).getSingleOrNull();
+    if (interval == null) return;
+    final openPause = interval.pausedAt == null
+        ? 0
+        : stoppedAt.difference(interval.pausedAt!).inSeconds.clamp(0, 1 << 31);
+    await (_db.update(
       _db.focusIntervals,
     )..where((row) => row.id.equals(intervalId))).write(
       FocusIntervalsCompanion(
+        pausedTotalSeconds: Value(interval.pausedTotalSeconds + openPause),
         status: const Value('skipped'),
         pausedAt: const Value(null),
         stoppedAt: Value(stoppedAt),
@@ -445,12 +464,21 @@ class FocusLocalService {
     );
   }
 
-  Future<void> stopInterval(String intervalId, DateTime stoppedAt) {
-    return (_db.update(
+  Future<void> stopInterval(String intervalId, DateTime stoppedAt) async {
+    final interval = await (_db.select(
+      _db.focusIntervals,
+    )..where((row) => row.id.equals(intervalId))).getSingleOrNull();
+    if (interval == null) return;
+    final openPause = interval.pausedAt == null
+        ? 0
+        : stoppedAt.difference(interval.pausedAt!).inSeconds.clamp(0, 1 << 31);
+    await (_db.update(
       _db.focusIntervals,
     )..where((row) => row.id.equals(intervalId))).write(
       FocusIntervalsCompanion(
+        pausedTotalSeconds: Value(interval.pausedTotalSeconds + openPause),
         status: const Value('stopped'),
+        pausedAt: const Value(null),
         stoppedAt: Value(stoppedAt),
         updatedAt: Value(stoppedAt),
       ),

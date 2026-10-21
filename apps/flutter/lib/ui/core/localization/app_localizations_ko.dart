@@ -3499,6 +3499,19 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get bottomNavigationEditingTitle => '하단 패널 편집';
+
+  @override
+  String get bottomNavigationEditingHelp =>
+      '아래 아이콘을 드래그하거나 화살표로 순서를 바꾸세요. 아이콘을 탭하면 다른 항목으로 교체할 수 있습니다.';
+
+  @override
+  String get bottomNavigationReplace => '교체할 항목';
+
+  @override
+  String get bottomNavigationEditHint => '길게 눌러 하단 패널을 설정하세요.';
+
+  @override
   String get settingsBottomNavigation => '하단 탐색';
 
   @override
@@ -4195,4 +4208,123 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsFocusSoundPreviewError => '샘플을 재생할 수 없습니다. 다시 시도하세요.';
+
+  @override
+  String get pomoTitle => 'Pomo 친구';
+
+  @override
+  String get pomoDescription => '데스크톱의 작은 친구.';
+
+  @override
+  String get pomoFocusOnly => '집중 중에만 표시';
+
+  @override
+  String get pomoQuiet => '조용한 모드';
+
+  @override
+  String get pomoQuietDescription => '배경 애니메이션 없이 정적인 반응을 표시합니다.';
+
+  @override
+  String get pomoReduceMotion => 'Pomo 동작 줄이기';
+
+  @override
+  String get pomoShow => 'Pomo 표시';
+
+  @override
+  String get pomoHide => 'Pomo 숨기기';
+
+  @override
+  String get pomoResetPosition => '위치 초기화';
+
+  @override
+  String get pomoInteract => 'Pomo: 반응 및 컨트롤 전환. 드래그하여 이동하세요.';
+
+  @override
+  String get pomoQuickAdd => '작업 추가';
+
+  @override
+  String get pomoError => 'Pomo가 작업을 완료하지 못했습니다. 설정에서 다시 표시해 보세요.';
+
+  @override
+  String get pomoShowTimer => '타이머 표시';
+
+  @override
+  String get pomoSettings => 'Pomo 설정';
+
+  @override
+  String get pomoSize => '크기';
+
+  @override
+  String get pomoSizeDecrease => 'Pomo 축소';
+
+  @override
+  String get pomoSizeIncrease => 'Pomo 확대';
+
+  @override
+  String get pomoSizeReset => '100%로 초기화';
+
+  @override
+  String pomoSizeEffective(int percent) {
+    return '화면에 맞게 $percent%로 표시 중';
+  }
+
+  @override
+  String get appIconTitle => '앱 아이콘';
+
+  @override
+  String get appIconPomo => 'Pomo';
+
+  @override
+  String get appIconClassic => '클래식';
+
+  @override
+  String get appIconError => '아이콘을 적용하거나 저장하지 못했습니다. 다시 시도하세요.';
+
+  @override
+  String get appIconMacosHint =>
+      'Pomodoist 실행 중 Dock 아이콘을 변경합니다. Finder에서는 Pomo를 사용합니다.';
+
+  @override
+  String get appIconDesktopHint =>
+      '앱 아이콘과 Pomodoist 바로가기를 변경합니다. 고정된 복사본은 나중에 업데이트될 수 있습니다.';
+
+  @override
+  String get appIconWebHint => '탭 아이콘을 변경합니다. 설치된 웹 앱 아이콘은 브라우저에서 관리합니다.';
+
+  @override
+  String get quickAddFocusEstimate => '뽀모도로 예상 횟수';
+
+  @override
+  String quickAddEstimatedPomodoros(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '뽀모도로 $count회',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get quickAddDecreaseEstimate => '예상 횟수 줄이기';
+
+  @override
+  String get quickAddIncreaseEstimate => '예상 횟수 늘리기';
+
+  @override
+  String get quickAddEstimateRange => '1~999 사이의 정수를 입력하세요.';
+
+  @override
+  String quickAddEstimateFocusTime(
+    String count,
+    String workMinutes,
+    String totalMinutes,
+  ) {
+    return '$count × $workMinutes분 = 집중 시간 $totalMinutes분';
+  }
+
+  @override
+  String get quickAddEstimateAutomatic => '작업 시간 기준';
+
+  @override
+  String get quickAddClearEstimate => '예상 횟수 지우기';
 }

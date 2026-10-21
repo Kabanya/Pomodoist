@@ -11,6 +11,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   multiview_desktop
   record_linux
   sentry_flutter
+  thermion_flutter
   url_launcher_linux
 )
 

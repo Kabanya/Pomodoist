@@ -5,6 +5,8 @@ import UIKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+  private var appIconChannel: FlutterMethodChannel?
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -19,6 +21,34 @@ import UIKit
     }
     WatchCompanionHost.shared.configure(with: engineBridge)
     SystemSpeechHost.shared.configure(with: engineBridge)
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "AppIconHost") {
+      let channel = FlutterMethodChannel(name: "pomodoist/app_icon", binaryMessenger: registrar.messenger())
+      channel.setMethodCallHandler { call, result in
+        let app = UIApplication.shared
+        if call.method == "getIcon" {
+          result(app.alternateIconName == nil ? "icon-light-pomo" : "classic")
+          return
+        }
+        guard call.method == "setIcon" else { result(FlutterMethodNotImplemented); return }
+        guard let args = call.arguments as? [String: Any], let icon = args["icon"] as? String,
+              ["icon-light-pomo", "classic"].contains(icon),
+              let classic = Bundle.main.object(forInfoDictionaryKey: "PomodoistClassicIconName") as? String
+        else { result(FlutterError(code: "invalid_icon", message: "Unsupported app icon.", details: nil)); return }
+        let name: String? = icon == "classic" ? classic : nil
+        if app.alternateIconName == name { result(nil); return }
+        guard app.supportsAlternateIcons else {
+          result(FlutterError(code: "unsupported_icon", message: "Alternate app icons are unavailable.", details: nil)); return
+        }
+        app.setAlternateIconName(name) { error in
+          DispatchQueue.main.async {
+            if let error = error {
+              result(FlutterError(code: "icon_failed", message: error.localizedDescription, details: nil))
+            } else { result(nil) }
+          }
+        }
+      }
+      appIconChannel = channel
+    }
   }
 }
 

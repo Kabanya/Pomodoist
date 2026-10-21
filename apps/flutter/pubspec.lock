@@ -435,6 +435,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
+  ffigen_js:
+    dependency: transitive
+    description:
+      name: ffigen_js
+      sha256: ef53d70a1b7b4a48483613d3e0f5464615026d2abf68f887488bc606a54173ce
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.16-pre"
   file:
     dependency: transitive
     description:
@@ -906,10 +914,9 @@ packages:
   multiview_desktop:
     dependency: "direct main"
     description:
-      name: multiview_desktop
-      sha256: bd672ff9933726d017eea764e7479861f76df8461254d667059765bf5d46066c
-      url: "https://pub.dev"
-    source: hosted
+      path: "third_party/multiview_desktop"
+      relative: true
+    source: path
     version: "1.2.1"
   native_toolchain_c:
     dependency: transitive
@@ -931,10 +938,10 @@ packages:
     dependency: transitive
     description:
       name: objective_c
-      sha256: "100a1c87616ab6ed41ec263b083c0ef3261ee6cd1dc3b0f35f8ddfa4f996fe52"
+      sha256: "87103d96b19be76dc34b5ef859fecae78561d49779d5480b73c23b4dec8b9ec4"
       url: "https://pub.dev"
     source: hosted
-    version: "9.3.0"
+    version: "8.1.0"
   package_config:
     dependency: transitive
     description:
@@ -1003,10 +1010,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_foundation
-      sha256: "2a376b7d6392d80cd3705782d2caa734ca4727776db0b6ec36ef3f1855197699"
+      sha256: "6d13aece7b3f5c5a9731eaf553ff9dcbc2eff41087fd2df587fd0fed9a3eb0c4"
       url: "https://pub.dev"
     source: hosted
-    version: "2.6.0"
+    version: "2.5.1"
   path_provider_linux:
     dependency: transitive
     description:
@@ -1103,6 +1110,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.0"
+  quiver:
+    dependency: transitive
+    description:
+      name: quiver
+      sha256: ea0b925899e64ecdfbf9c7becb60d5b50e706ade44a85b2363be2a22d88117d2
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.2"
   realtime_client:
     dependency: transitive
     description:
@@ -1564,6 +1579,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.5.0"
+  thermion_dart:
+    dependency: transitive
+    description:
+      name: thermion_dart
+      sha256: "79d0328a045333a9e7044987c82624ed5a3cc168d03f5663cc59d2f612a83dd4"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.0"
+  thermion_flutter:
+    dependency: "direct main"
+    description:
+      name: thermion_flutter
+      sha256: a5890c72caa2116eb174b79c8307744b3c1cb69af946295df22c3c057cb2dc61
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.0"
   timezone:
     dependency: "direct main"
     description:
@@ -1693,7 +1724,7 @@ packages:
     source: hosted
     version: "1.3.0"
   vector_math:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: vector_math
       sha256: f36f9f3be64c6198714492bb455c11056e33e2f85d9a0b676a48301e44fdcf47
@@ -1780,6 +1811,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.3"
+  yaml_edit:
+    dependency: transitive
+    description:
+      name: yaml_edit
+      sha256: "07c9e63ba42519745182b88ca12264a7ba2484d8239958778dfe4d44fe760488"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.4"
   yet_another_json_isolate:
     dependency: transitive
     description:

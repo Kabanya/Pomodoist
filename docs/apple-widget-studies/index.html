@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Pomodoist — Apple widget studies</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f7f6f2; --ink: #262725; --muted: #72736b; --line: #deded5;
+      --stage: #eeede7; --card: #fffefa; --soft: #eeeee8; --track: #dfdfd7;
+      --accent: #d44a37; --accent-soft: #f8e9e1; --on-accent: #fffaf5;
+      --shade: #27251b18; --edge: #ffffffd9; --glass: #ffffff9e;
+      --green: #57725b; --green-soft: #dfe7d8;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --page: #171918; --ink: #f1f0e8; --muted: #a5a89e; --line: #393d36;
+      --stage: #222621; --card: #30352f; --soft: #3a4038; --track: #4a5046;
+      --accent: #ff8870; --accent-soft: #533e34; --on-accent: #261d17;
+      --shade: #00000055; --edge: #ffffff1c; --glass: #424940b3;
+      --green: #b5c6a0; --green-soft: #3e4b35;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+    body { margin: 0; background: var(--page); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    a { color: inherit; }
+    a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+    .shell { width: min(1280px, calc(100% - 80px)); margin: auto; }
+    .topbar { position: sticky; top: 0; z-index: 10; background: var(--page); border-bottom: 1px solid var(--line); }
+    .topbar-inner { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .brand { font-size: 16px; font-weight: 650; letter-spacing: -.5px; display: flex; align-items: center; gap: 10px; }
+    .brand-mark { width: 17px; height: 17px; border: 4px solid var(--accent); border-radius: 50%; border-right-color: transparent; transform: rotate(-32deg); }
+    .edition { color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: 1.7px; text-transform: uppercase; margin-left: 15px; }
+    .theme-switch { min-height: 44px; padding: 0 15px; border: 1px solid var(--line); border-radius: 30px; background: transparent; color: var(--ink); display: flex; align-items: center; gap: 9px; cursor: pointer; font: inherit; font-size: 12px; }
+    .theme-switch:hover { background: var(--soft); }
+    .theme-icon { width: 13px; height: 13px; border: 1.5px solid currentColor; border-radius: 50%; background: linear-gradient(90deg, currentColor 50%, transparent 50%); }
+    .hero { padding: 74px 0 48px; display: grid; grid-template-columns: 1.35fr 1fr; align-items: end; gap: 50px; }
+    .eyebrow { color: var(--accent); font-size: 11px; letter-spacing: 2px; font-weight: 650; text-transform: uppercase; margin: 0 0 22px; }
+    h1 { font-size: clamp(44px, 5.1vw, 72px); font-weight: 450; letter-spacing: -3.6px; line-height: 1.02; margin: 0; }
+    h1 em { font-family: Georgia, serif; font-weight: 400; }
+    .intro { max-width: 340px; margin: 0 0 5px auto; font-size: 14px; line-height: 1.8; color: var(--muted); }
+    .contents { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 24px; padding: 23px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .contents a { display: inline-flex; gap: 10px; align-items: center; min-height: 44px; font-size: 12px; text-decoration: none; }
+    .contents a:hover { color: var(--accent); }
+    .contents span { color: var(--muted); font-size: 10px; }
+    .snapshot-note { margin-left: auto; font-size: 10px; color: var(--muted); letter-spacing: .3px; }
+    .study-section { padding-top: 54px; }
+    .section-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 25px; margin-bottom: 26px; }
+    h2 { margin: 0; font-size: 24px; font-weight: 500; letter-spacing: -.8px; }
+    h2 span { font-family: Georgia, serif; font-style: italic; font-size: 19px; color: var(--muted); margin-right: 12px; }
+    .section-heading p { color: var(--muted); font-size: 12px; margin: 0; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 22px; }
+    figure { margin: 0; min-width: 0; }
+    .stage { padding: 40px 18px; min-height: 252px; display: grid; place-items: center; border-radius: 5px; background: var(--stage); border: 1px solid var(--line); }
+    figcaption { padding: 14px 1px 0; display: grid; grid-template-columns: 25px 1fr; gap: 9px; }
+    .number { padding-top: 2px; font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; color: var(--accent); font-size: 11px; }
+    h3 { margin: 0; font-size: 13px; font-weight: 550; letter-spacing: -.1px; }
+    figcaption p { margin: 5px 0 0; font-size: 11px; color: var(--muted); line-height: 1.6; }
+    .widget { position: relative; isolation: isolate; width: 100%; max-width: 344px; height: 170px; overflow: hidden; border-radius: 25px; background: var(--card); box-shadow: 0 7px 12px -10px var(--shade), 0 1px 2px var(--shade); color: var(--ink); padding: 21px; }
+    .row { display: flex; align-items: center; gap: 19px; height: 100%; }
+    .details { flex: 1; min-width: 0; }
+    .kicker { font-size: 9px; font-weight: 650; letter-spacing: 1.4px; text-transform: uppercase; }
+    .muted { color: var(--muted); }
+    .title { font-size: 18px; letter-spacing: -.7px; font-weight: 550; margin-top: 6px; }
+    .subtitle { font-size: 10px; color: var(--muted); margin-top: 6px; }
+    .mono { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-variant-numeric: tabular-nums; letter-spacing: -1.7px; font-weight: 450; }
+    .time { font-size: 46px; line-height: 1; white-space: nowrap; }
+    .ring { position: relative; width: 112px; height: 112px; flex: 0 0 112px; display: grid; place-items: center; }
+    .ring svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; transform: rotate(-90deg); }
+    .ring circle { fill: none; stroke-width: 5; }
+    .ring .track { stroke: var(--track); }
+    .ring .arc { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 75 100; }
+    .ring .time { font-size: 26px; letter-spacing: -1.3px; position: relative; z-index: 1; }
+    .ring-label { text-align: center; position: relative; z-index: 1; }
+    .ring-label .subtitle { font-size: 8px; letter-spacing: .7px; text-transform: uppercase; margin-top: 5px; }
+    .dots { display: flex; align-items: center; gap: 6px; margin-top: 14px; }
+    .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--track); }
+    .dots i:first-child { background: var(--accent); }
+    .dots i:nth-child(2) { outline: 1px solid var(--accent); outline-offset: 2px; background: var(--accent); }
+    .count { font-size: 10px; font-variant-numeric: tabular-nums; letter-spacing: .5px; }
+    .topline, .bottomline { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .badge { display: inline-flex; align-items: center; gap: 5px; color: var(--accent); font-size: 9px; }
+    .badge::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+    .bar { height: 3px; border-radius: 4px; background: var(--track); overflow: hidden; }
+    .bar::before { content: ""; display: block; width: 25.2%; height: 100%; background: var(--accent); border-radius: inherit; }
+    /* Materials: each surface uses its own construction, not just a new hue. */
+    .frost { background: radial-gradient(ellipse at 5% 0, var(--edge), transparent 65%), var(--glass); border: 1px solid var(--edge); box-shadow: inset 0 1px 1px var(--edge), 0 12px 22px -17px var(--shade); }
+    .frost .ring::before { content: ""; position: absolute; inset: -6px; border: 1px solid var(--edge); border-radius: 50%; box-shadow: 0 8px 13px var(--shade), inset 0 2px 4px var(--edge); }
+    .frost .arc { filter: drop-shadow(0 2px 2px #d44a3740); }
+    .porcelain { background: linear-gradient(145deg, var(--card), var(--soft)); box-shadow: inset 1px 1px 2px var(--edge), 0 7px 14px -8px var(--shade); }
+    .porcelain .row { flex-direction: row-reverse; }
+    .porcelain .ring { border-radius: 50%; background: var(--soft); box-shadow: inset 4px 4px 8px var(--shade), inset -3px -3px 7px var(--edge), 0 1px 0 var(--edge); }
+    .porcelain .ring svg { inset: 9px; width: calc(100% - 18px); height: calc(100% - 18px); }
+    .porcelain .ring circle { stroke-width: 3; }
+    .porcelain .title { font-family: Georgia, serif; font-size: 25px; font-weight: 400; }
+    .graphite { --ink: #eeeae4; --muted: #a6a7a1; --track: #42443f; --accent: #f4a47d; background: linear-gradient(135deg, #444640, #252824); border: 1px solid #ffffff18; box-shadow: inset 0 1px 1px #ffffff24, 0 8px 16px -7px #0005; }
+    [data-theme="dark"] .graphite { background: linear-gradient(135deg, #30332e, #111610); }
+    .graphite .ring { border-radius: 50%; background: repeating-conic-gradient(from 0deg, #ffffff32 0deg 1deg, transparent 1deg 10deg); }
+    .graphite .ring::before { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: #30332e; box-shadow: inset 0 2px 7px #0008, 0 1px 1px #ffffff22; }
+    .graphite .ring svg { inset: 13px; width: 86px; height: 86px; }
+    .graphite .ring circle { stroke-width: 3; }
+    .layered { background: linear-gradient(120deg, var(--accent-soft), var(--card) 70%); border: 1px solid var(--edge); padding: 18px; }
+    .layered::before { content: ""; position: absolute; width: 190px; height: 190px; right: -60px; top: -55px; border-radius: 50%; border: 30px solid var(--accent); opacity: .12; z-index: -1; }
+    .glass-panel { height: 100%; padding: 13px 16px; border: 1px solid var(--edge); border-radius: 16px; background: var(--glass); box-shadow: -4px 0 0 -1px var(--accent), 0 6px 15px var(--shade); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .layered .time { font-size: 38px; }
+    .layered .ring { flex-basis: 64px; width: 64px; height: 64px; }
+    .metal { background: linear-gradient(115deg, var(--soft), var(--card) 28%, var(--soft) 60%, var(--card)); border: 1px solid var(--edge); }
+    .metal .ring { flex-basis: 120px; width: 120px; height: 120px; border-radius: 50%; border: 1px solid var(--track); box-shadow: inset 0 1px 2px var(--edge), 0 2px 3px var(--shade); }
+    .metal .ring::before, .metal .ring::after { content: ""; position: absolute; inset: 5px; border: 1px solid var(--track); border-radius: 50%; }
+    .metal .ring::after { inset: 12px; border-color: var(--edge); }
+    .metal .ring svg { inset: 10px; width: 98px; height: 98px; }
+    .metal .ring circle { stroke-width: 2; }
+    .metal .title { font-size: 15px; text-transform: uppercase; letter-spacing: 2px; }
+    /* Information: same snapshot, five different reading orders. */
+    .session .time { margin-top: 15px; }
+    .session .bottomline { margin-top: 15px; }
+    .segments { display: flex; gap: 4px; width: 105px; }
+    .segments i { height: 5px; flex: 1; background: var(--track); border-radius: 3px; }
+    .segments i:first-child { background: var(--accent); }
+    .segments i:nth-child(2) { background: linear-gradient(90deg, var(--accent) 25.2%, var(--track) 25.2%); outline: 1px solid var(--accent); outline-offset: 2px; }
+    .rhythm .middle { margin: 15px 0 12px; display: flex; align-items: end; justify-content: space-between; }
+    .rhythm .time { font-size: 40px; }
+    .rhythm .rail { display: flex; gap: 4px; height: 17px; align-items: center; }
+    .rail i { height: 7px; background: var(--track); flex: 5; border-radius: 3px; }
+    .rail b { height: 7px; background: var(--green-soft); flex: 1; border-radius: 3px; }
+    .rail i:first-child { background: var(--accent); opacity: .45; }
+    .rail i.current { height: 13px; background: linear-gradient(90deg, var(--accent) 25.2%, var(--accent-soft) 25.2%); outline: 1px solid var(--accent); outline-offset: 1px; }
+    .rail-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 8px; margin-top: 7px; }
+    .next-card { display: grid; grid-template-columns: 1fr 96px; gap: 16px; align-items: center; }
+    .next-card .time { font-size: 37px; margin: 12px 0 14px; }
+    .next-block { align-self: stretch; background: var(--green-soft); color: var(--green); border-radius: 14px; padding: 15px 12px; display: flex; flex-direction: column; justify-content: space-between; }
+    .next-block strong { font-family: Georgia, serif; font-size: 31px; font-weight: 400; letter-spacing: -1px; }
+    .next-block small { font-size: 9px; }
+    .editorial { padding: 19px 21px; }
+    .editorial .editorial-body { display: grid; grid-template-columns: 1fr 62px; gap: 10px; margin-top: 15px; align-items: center; }
+    .editorial .time { font-size: 49px; letter-spacing: -3px; }
+    .editorial .fraction { border-left: 1px solid var(--line); padding-left: 14px; display: flex; align-items: baseline; gap: 3px; }
+    .fraction strong { font-size: 29px; font-weight: 400; }
+    .fraction span { font-size: 11px; color: var(--muted); }
+    .editorial .bottomline { border-top: 1px solid var(--line); padding-top: 11px; margin-top: 13px; font-size: 9px; }
+    .sequence .time { font-size: 36px; }
+    .sequence-header { display: flex; justify-content: space-between; align-items: center; }
+    .sequence-header .subtitle { font-size: 9px; }
+    .interval-strip { margin-top: 17px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+    .interval-strip span { border-radius: 9px; padding: 8px 3px; text-align: center; background: var(--soft); font-size: 10px; }
+    .interval-strip small { display: block; font-size: 7px; margin-top: 4px; color: var(--muted); }
+    .interval-strip .current { background: var(--accent); color: var(--on-accent); }
+    .interval-strip .current small { color: inherit; }
+    .interval-strip .done { color: var(--accent); background: var(--accent-soft); }
+    /* Pomo: original bundled stills; no regenerated or redrawn character. */
+    .pomo { position: absolute; width: 154px; height: 154px; object-fit: contain; pointer-events: none; }
+    .peek { background: linear-gradient(145deg, var(--card), var(--accent-soft)); }
+    .peek .pomo { left: 1px; bottom: 1px; width: 147px; height: 147px; z-index: 0; }
+    .peek .ring { position: absolute; left: 74px; bottom: 14px; width: 103px; height: 103px; z-index: 1; }
+    .peek .ring::before { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: var(--card); box-shadow: 0 4px 14px var(--shade); }
+    .peek .details { position: absolute; right: 19px; top: 27px; width: 110px; }
+    .peek .title { font-size: 16px; }
+    .buddy .pomo { right: -6px; bottom: -7px; width: 166px; height: 166px; }
+    .buddy .details { position: relative; z-index: 1; }
+    .buddy .time { margin-top: 16px; font-size: 38px; }
+    .buddy .count { margin-top: 15px; color: var(--muted); }
+    .orbit { background: linear-gradient(150deg, var(--green-soft), var(--card)); }
+    .orbit .ring { position: absolute; left: 9px; top: 11px; width: 146px; height: 146px; }
+    .orbit .ring .arc { stroke: var(--green); }
+    .orbit .ring .track { stroke-dasharray: 89 100; stroke-linecap: round; }
+    .orbit .pomo { left: 17px; bottom: 16px; width: 130px; height: 130px; }
+    .orbit .details { position: absolute; right: 19px; top: 32px; width: 139px; }
+    .orbit .time { font-size: 35px; margin: 11px 0 13px; }
+    .foreground { background: var(--accent-soft); }
+    .foreground .time { position: absolute; top: 44px; left: 17px; font-size: 66px; letter-spacing: -4px; opacity: .7; }
+    .foreground .pomo { right: -13px; bottom: -19px; width: 175px; height: 175px; }
+    .foreground .bottomline { position: absolute; bottom: 20px; left: 21px; right: 21px; z-index: 2; }
+    .foreground .count { padding: 5px 8px; background: var(--card); border-radius: 6px; font-size: 8px; }
+    .quiet { background: linear-gradient(0deg, var(--green-soft), var(--card)); }
+    .quiet .pomo { width: 150px; height: 150px; right: 2px; bottom: -8px; }
+    .quiet::before { content: ""; position: absolute; width: 122px; height: 26px; right: 12px; bottom: 10px; background: radial-gradient(ellipse, var(--shade), transparent 70%); }
+    .quiet .capsule { display: inline-block; margin-top: 15px; padding: 10px 13px; border-radius: 30px; background: var(--glass); border: 1px solid var(--edge); box-shadow: 0 4px 12px var(--shade); }
+    .quiet .time { font-size: 30px; }
+    .quiet .subtitle { margin-top: 13px; font-size: 9px; }
+    footer { margin-top: 64px; padding: 25px 0 38px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 30px; color: var(--muted); font-size: 11px; line-height: 1.8; }
+    footer p { margin: 0; max-width: 590px; }
+    @media (max-width: 1150px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .snapshot-note { width: 100%; margin-left: 0; } }
+    @media (max-width: 760px) {
+      .shell { width: calc(100% - 36px); }
+      .edition { display: none; }
+      .hero { grid-template-columns: 1fr; gap: 22px; padding: 45px 0 30px; }
+      h1 { letter-spacing: -2px; }
+      .intro { margin: 0; max-width: 360px; }
+      .grid { grid-template-columns: 1fr; gap: 26px; }
+      .stage { padding: 35px 12px; }
+      .section-heading { display: block; }
+      .section-heading p { margin-top: 10px; line-height: 1.6; }
+      .contents { gap: 2px 17px; }
+      .contents a { font-size: 11px; }
+      footer { flex-direction: column; gap: 14px; }
+    }
+    @media (max-width: 380px) {
+      .stage { padding: 30px 8px; }
+      .widget { padding: 17px; }
+      .row { gap: 12px; }
+      .ring { width: 100px; height: 100px; flex-basis: 100px; }
+      .metal .ring { width: 108px; height: 108px; flex-basis: 108px; }
+      .metal .ring svg { width: 86px; height: 86px; }
+      .peek .details { right: 12px; width: 88px; }
+      .peek .ring { left: 58px; }
+      .peek .pomo { left: -11px; }
+      .orbit .details { right: 12px; width: 116px; }
+      .orbit .ring { left: -6px; top: 21px; width: 128px; height: 128px; }
+      .orbit .pomo { left: 2px; bottom: 24px; width: 114px; height: 114px; }
+      .orbit .time { font-size: 31px; }
+      .editorial .time { font-size: 43px; }
+      .buddy .pomo { right: -22px; width: 150px; }
+      .foreground .time { top: 48px; font-size: 46px; letter-spacing: -3px; }
+      .foreground .pomo { right: -20px; bottom: -10px; width: 134px; height: 134px; }
+      .quiet .pomo { right: -20px; width: 140px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span>pomodoist <span class="edition">Interface studies / 01</span></div>
+      <button class="theme-switch" id="theme-switch" type="button" aria-pressed="false" aria-label="Dark appearance"><span class="theme-icon" aria-hidden="true"></span><span id="theme-label">Light appearance</span></button>
+    </div>
+  </header>
+  <main class="shell">
+    <div class="hero">
+      <div><p class="eyebrow">Apple widgets · 15 explorations</p><h1>A deeper kind<br>of <em>focus.</em></h1></div>
+      <p class="intro">One timer. Three directions.<br>A study in tactile surfaces, thoughtful information, and a little company from Pomo. Find the one that feels at home on your screen.</p>
+    </div>
+    <nav class="contents" aria-label="Design directions">
+      <a href="#materials"><span>01—05</span>Material & depth</a>
+      <a href="#information"><span>06—10</span>Information & rhythm</a>
+      <a href="#character"><span>11—15</span>Life with Pomo</a>
+      <div class="snapshot-note">MEDIUM WIDGET · 18:42 REMAINING · INTERVAL 2 OF 4</div>
+    </nav>
+
+    <section class="study-section" id="materials" aria-labelledby="materials-title">
+      <div class="section-heading"><h2 id="materials-title"><span>I.</span>Material & depth</h2><p>Light, relief, and surfaces you almost want to touch.</p></div>
+      <div class="grid">
+        <figure data-study="01">
+          <div class="stage"><div class="widget frost"><div class="row">
+            <div class="ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="44"/><circle class="arc" cx="50" cy="50" r="44" pathLength="100"/></svg><div class="ring-label"><div class="time mono">18:42</div><div class="subtitle">remaining</div></div></div>
+            <div class="details"><div class="kicker muted">Classic</div><div class="title">Deep in focus.</div><div class="subtitle">Interval 2 of 4</div><div class="dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+          </div></div></div><figcaption><span class="number">01</span><div><h3>Soft frost</h3><p>A luminous edge. A ring suspended just above the surface.</p></div></figcaption>
+        </figure>
+        <figure data-study="02">
+          <div class="stage"><div class="widget porcelain"><div class="row">
+            <div class="ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="43"/><circle class="arc" cx="50" cy="50" r="43" pathLength="100"/></svg><div class="time mono">18:42</div></div>
+            <div class="details"><div class="kicker muted">Classic / Focus</div><div class="title">Stay with it.</div><div class="subtitle">Interval 2 of 4</div><div class="dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+          </div></div></div><figcaption><span class="number">02</span><div><h3>Porcelain dial</h3><p>A recessed timer, quiet serif lettering, and ceramic softness.</p></div></figcaption>
+        </figure>
+        <figure data-study="03">
+          <div class="stage"><div class="widget graphite"><div class="row">
+            <div class="ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="44"/><circle class="arc" cx="50" cy="50" r="44" pathLength="100"/></svg><div class="time mono">18:42</div></div>
+            <div class="details"><div class="kicker muted">Classic</div><div class="title">Focus</div><div class="subtitle">Work interval</div><div class="dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div class="subtitle">02 / 04</div></div>
+          </div></div></div><figcaption><span class="number">03</span><div><h3>Graphite instrument</h3><p>Machined ticks and a warm indicator in a dark tactile housing.</p></div></figcaption>
+        </figure>
+        <figure data-study="04">
+          <div class="stage"><div class="widget layered"><div class="glass-panel">
+            <div class="details"><div class="kicker muted">Classic · Focus</div><div class="time mono" style="margin-top:12px">18:42</div><div class="subtitle">Interval 2 of 4</div></div>
+            <div class="ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="43"/><circle class="arc" cx="50" cy="50" r="43" pathLength="100"/></svg><span class="count">2 / 4</span></div>
+          </div></div></div><figcaption><span class="number">04</span><div><h3>Layered light</h3><p>A translucent inner pane resting on a coral-colored edge.</p></div></figcaption>
+        </figure>
+        <figure data-study="05">
+          <div class="stage"><div class="widget metal"><div class="row">
+            <div class="ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="43"/><circle class="arc" cx="50" cy="50" r="43" pathLength="100"/></svg><div class="time mono">18:42</div></div>
+            <div class="details"><div class="kicker muted">Pomodoist</div><div class="title">Focus</div><div class="subtitle">Classic · 25 min</div><div class="subtitle" style="margin-top:17px">INTERVAL <span class="count">02 / 04</span></div></div>
+          </div></div></div><figcaption><span class="number">05</span><div><h3>Silver concentric</h3><p>Fine engraved rings and a restrained brushed-metal reflection.</p></div></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="study-section" id="information" aria-labelledby="information-title">
+      <div class="section-heading"><h2 id="information-title"><span>II.</span>Information & rhythm</h2><p>Less searching. A clearer sense of where you are.</p></div>
+      <div class="grid">
+        <figure data-study="06">
+          <div class="stage"><div class="widget session">
+            <div class="topline"><span class="kicker">Classic</span><span class="badge">Focus</span></div><div class="time mono">18:42</div>
+            <div class="bottomline"><span class="count muted">Interval 2 of 4</span><div class="segments" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+          </div></div><figcaption><span class="number">06</span><div><h3>Time first</h3><p>The timer leads. Four small segments quietly hold the session.</p></div></figcaption>
+        </figure>
+        <figure data-study="07">
+          <div class="stage"><div class="widget rhythm">
+            <div class="topline"><span class="kicker">Session rhythm</span><span class="badge">Focus</span></div>
+            <div class="middle"><div class="time mono">18:42</div><span class="count muted">02 / 04</span></div>
+            <div class="rail" aria-hidden="true"><i></i><b></b><i class="current"></i><b></b><i></i><b></b><i></i></div>
+            <div class="rail-labels"><span>CLASSIC · 25 MIN WORK</span><span>5 MIN BREAKS</span></div>
+          </div></div><figcaption><span class="number">07</span><div><h3>Work / rest</h3><p>A proportional rhythm of work blocks and short breaks.</p></div></figcaption>
+        </figure>
+        <figure data-study="08">
+          <div class="stage"><div class="widget next-card">
+            <div><div class="kicker muted">Classic · Focus</div><div class="time mono">18:42</div><span class="count muted">Interval 2 of 4</span></div>
+            <div class="next-block"><span class="kicker">Up next</span><strong>5 min</strong><small>Short break</small></div>
+          </div></div><figcaption><span class="number">08</span><div><h3>A little ahead</h3><p>The current timer and the next break share a clear split layout.</p></div></figcaption>
+        </figure>
+        <figure data-study="09">
+          <div class="stage"><div class="widget editorial">
+            <div class="topline"><span class="kicker">Pomodoist / Classic</span><span class="badge">Focus</span></div>
+            <div class="editorial-body"><div class="time mono">18:42</div><div class="fraction" aria-label="Interval 2 of 4"><strong>2</strong><span>/ 4</span></div></div>
+            <div class="bottomline"><span class="muted">TIME REMAINING</span><span class="muted">WORK INTERVAL</span></div>
+          </div></div><figcaption><span class="number">09</span><div><h3>Typeset focus</h3><p>Generous numerals, precise rules, and no ornamental dial.</p></div></figcaption>
+        </figure>
+        <figure data-study="10">
+          <div class="stage"><div class="widget sequence">
+            <div class="sequence-header"><div><div class="kicker muted">Classic</div><div class="subtitle">Focus · interval 2 of 4</div></div><div class="time mono">18:42</div></div>
+            <div class="interval-strip" aria-hidden="true"><span class="done">01<small>DONE</small></span><span class="current">02<small>FOCUS</small></span><span>03<small>WORK</small></span><span>04<small>WORK</small></span></div>
+          </div></div><figcaption><span class="number">10</span><div><h3>One step at a time</h3><p>A numbered session strip gives the current interval its own place.</p></div></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="study-section" id="character" aria-labelledby="character-title">
+      <div class="section-heading"><h2 id="character-title"><span>III.</span>Life with Pomo</h2><p>A familiar companion. Five ways to share the space.</p></div>
+      <div class="grid">
+        <figure data-study="11">
+          <div class="stage"><div class="widget peek">
+            <img class="pomo" src="../../apps/flutter/assets/pomo/focus-still.webp" alt="" width="384" height="384">
+            <div class="ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="44"/><circle class="arc" cx="50" cy="50" r="44" pathLength="100"/></svg><div class="time mono">18:42</div></div>
+            <div class="details"><div class="kicker muted">Classic</div><div class="title">In good<br>company.</div><div class="subtitle">Focus · 2 of 4</div></div>
+          </div></div><figcaption><span class="number">11</span><div><h3>Just peeking</h3><p>Pomo peers around the dial without taking over the timer.</p></div></figcaption>
+        </figure>
+        <figure data-study="12">
+          <div class="stage"><div class="widget buddy">
+            <img class="pomo" src="../../apps/flutter/assets/pomo/focus-still.webp" alt="" width="384" height="384">
+            <div class="details"><div class="kicker muted">Classic · Focus</div><div class="time mono">18:42</div><div class="count">Interval 2 of 4</div></div>
+          </div></div><figcaption><span class="number">12</span><div><h3>Desk buddy</h3><p>A straightforward digital timer with Pomo by your side.</p></div></figcaption>
+        </figure>
+        <figure data-study="13">
+          <div class="stage"><div class="widget orbit">
+            <div class="ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="45" pathLength="100"/><circle class="arc" cx="50" cy="50" r="45" pathLength="100"/></svg></div>
+            <img class="pomo" src="../../apps/flutter/assets/pomo/calm-still.webp" alt="" width="384" height="384">
+            <div class="details"><div class="kicker muted">Classic · Focus</div><div class="time mono">18:42</div><div class="count muted">Interval 2 of 4</div></div>
+          </div></div><figcaption><span class="number">13</span><div><h3>Quiet orbit</h3><p>An open progress arc frames Pomo like a small protective space.</p></div></figcaption>
+        </figure>
+        <figure data-study="14">
+          <div class="stage"><div class="widget foreground">
+            <div class="kicker">Classic · Focus</div><div class="time mono">18:42</div>
+            <img class="pomo" src="../../apps/flutter/assets/pomo/focus-still.webp" alt="" width="384" height="384">
+            <div class="bottomline"><span class="count">INTERVAL 2 OF 4</span></div>
+          </div></div><figcaption><span class="number">14</span><div><h3>Front & center</h3><p>A bold layered composition: oversized time behind a familiar face.</p></div></figcaption>
+        </figure>
+        <figure data-study="15">
+          <div class="stage"><div class="widget quiet">
+            <img class="pomo" src="../../apps/flutter/assets/pomo/calm-still.webp" alt="" width="384" height="384">
+            <div class="details"><div class="kicker muted">Classic · Focus</div><div class="capsule"><div class="time mono">18:42</div></div><div class="subtitle">Interval 2 of 4</div></div>
+          </div></div><figcaption><span class="number">15</span><div><h3>A quiet moment</h3><p>A floating time capsule, soft ground, and a calm companion.</p></div></figcaption>
+        </figure>
+      </div>
+    </section>
+    <footer><p>Design explorations, not live widgets. Every study uses the same Classic focus session: 18:42 remaining in work interval 2 of 4. Pomo artwork comes from the app’s existing assets.</p><p>Native materials, system tinting, and other widget sizes<br>will be evaluated separately in WidgetKit.</p></footer>
+  </main>
+  <script>
+    const themeSwitch = document.getElementById('theme-switch');
+    const themeLabel = document.getElementById('theme-label');
+    themeSwitch.addEventListener('click', () => {
+      const dark = document.documentElement.dataset.theme !== 'dark';
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      themeSwitch.setAttribute('aria-pressed', String(dark));
+      themeLabel.textContent = dark ? 'Dark appearance' : 'Light appearance';
+    });
+  </script>
+</body>
+</html>

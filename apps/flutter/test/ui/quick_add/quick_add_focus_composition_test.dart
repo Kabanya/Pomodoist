@@ -51,6 +51,14 @@ void main() {
       )).getOrThrow();
       expect(tasks.created.last.estimatedFocusIntervals, 1);
       expect(focus.reads, 2);
+      expect(tasks.created.last.isFocusEstimateManual, isFalse);
+      (await useCase.createTask(
+        'Manual estimate 3p',
+        defaultSchedule: schedule,
+      )).getOrThrow();
+      expect(tasks.created.last.estimatedFocusIntervals, 3);
+      expect(tasks.created.last.schedule, schedule);
+      expect(tasks.created.last.isFocusEstimateManual, isTrue);
     },
   );
 }

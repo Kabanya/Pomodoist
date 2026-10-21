@@ -6,7 +6,11 @@ int? estimateFocusIntervalsForTaskDuration({
   required int? durationSeconds,
   required int? explicitEstimate,
   required FocusPresetItem? preset,
+  bool isFocusEstimateManual = false,
 }) {
+  if (isFocusEstimateManual && explicitEstimate != null) {
+    return explicitEstimate;
+  }
   final scheduledDuration = schedule?.duration;
   if (scheduledDuration != null && preset != null) {
     return estimateFocusIntervalsForDuration(
@@ -31,6 +35,7 @@ int? targetFocusIntervalsForTask(TaskItem task, FocusPresetItem? preset) {
     schedule: task.schedule,
     durationSeconds: task.durationSeconds,
     explicitEstimate: task.estimatedFocusIntervals,
+    isFocusEstimateManual: task.isFocusEstimateManual,
     preset: preset,
   );
 }

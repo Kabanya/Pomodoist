@@ -1,3 +1,6 @@
+import 'package:pomodoist/config/app_icon_dependencies.dart';
+import 'package:pomodoist/data/repositories/settings/app_icon_repository.dart';
+import 'package:pomodoist/domain/models/settings/app_icon_choice.dart';
 import 'package:pomodoist/domain/models/account/account_overview.dart';
 import 'package:pomodoist/domain/models/settings/app_language.dart';
 import 'package:pomodoist/ui/core/localization/app_locale.dart';
@@ -1439,6 +1442,8 @@ Future<_SidebarHarness> _pumpApp(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        appIconRepositoryProvider.overrideWithValue(_TestAppIconRepository()),
+        focusPresetsProvider.overrideWith((ref) => Stream.value([])),
         appStartupProvider.overrideWith((ref) => Future<void>.value()),
         appStartupViewModelProvider.overrideWith(_ReadyAppStartupViewModel.new),
         shortcutTargetPlatformProvider.overrideWithValue(TargetPlatform.macOS),
@@ -1698,4 +1703,11 @@ FocusIntervalItem _activeInterval(DateTime now) {
 class _ReadyAppStartupViewModel extends AppStartupViewModel {
   @override
   Future<void> build() async {}
+}
+
+class _TestAppIconRepository implements AppIconRepository {
+  @override
+  Future<AppIconChoice> read() async => AppIconChoice.pomo;
+  @override
+  Future<void> apply(AppIconChoice choice) async {}
 }

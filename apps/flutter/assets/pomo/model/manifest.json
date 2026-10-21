@@ -1,0 +1,124 @@
+{
+  "version": 2,
+  "source": "pomo_3_0_2_all_animations_linked.blend",
+  "sourceSha256": "b723792fcd8b64d1031508c57a81673b9568f3de6c4867ecce97982ff12cf298",
+  "format": "glTF 2.0",
+  "sourceVersion": "3.0.2",
+  "simplification": [
+    {
+      "mesh": "thinking-arm.l",
+      "sourceTriangles": 254380,
+      "runtimeTriangles": 16000,
+      "runtimeVertices": 8002
+    }
+  ],
+  "transitionMs": 250,
+  "camera": {
+    "position": [
+      0,
+      0.2,
+      3.8
+    ],
+    "target": [
+      0,
+      -0.025,
+      0
+    ],
+    "orthoScale": 1.28
+  },
+  "clips": {
+    "calm": {
+      "scene": "06 | Calm",
+      "firstFrame": 1,
+      "lastFrame": 240,
+      "stillFrame": 58,
+      "durationMs": 10000,
+      "stillSeconds": 2.375,
+      "loop": true
+    },
+    "focus": {
+      "scene": "10 | Thinking reference",
+      "firstFrame": 1,
+      "lastFrame": 144,
+      "stillFrame": 49,
+      "durationMs": 6000,
+      "stillSeconds": 2.0,
+      "loop": true
+    },
+    "rest": {
+      "scene": "08 | Rest",
+      "firstFrame": 1,
+      "lastFrame": 96,
+      "stillFrame": 25,
+      "durationMs": 4000,
+      "stillSeconds": 1.0,
+      "loop": true
+    },
+    "tired": {
+      "scene": "09 | Tired",
+      "firstFrame": 1,
+      "lastFrame": 96,
+      "stillFrame": 25,
+      "durationMs": 4000,
+      "stillSeconds": 1.0,
+      "loop": true
+    },
+    "greeting": {
+      "scene": "01 | Greeting",
+      "firstFrame": 1,
+      "lastFrame": 72,
+      "stillFrame": 28,
+      "durationMs": 3000,
+      "stillSeconds": 1.125,
+      "loop": false
+    },
+    "happy": {
+      "scene": "02 | Happy",
+      "firstFrame": 1,
+      "lastFrame": 72,
+      "stillFrame": 20,
+      "durationMs": 3000,
+      "stillSeconds": 0.7916666666666667,
+      "loop": false
+    },
+    "sad": {
+      "scene": "04 | Sad",
+      "firstFrame": 8,
+      "lastFrame": 29,
+      "stillFrame": 29,
+      "durationMs": 900,
+      "stillSeconds": 0.8590909090909091,
+      "loop": false
+    },
+    "surprised": {
+      "scene": "03 | Surprised",
+      "firstFrame": 1,
+      "lastFrame": 72,
+      "stillFrame": 12,
+      "durationMs": 3000,
+      "stillSeconds": 0.45833333333333337,
+      "loop": false
+    }
+  },
+  "modelSha256": "53f317767162e6720fd07607d4a5d9989019da9b2eacae1cc9dd7d2810e6f58f",
+  "asset": "pomo.glb.gz",
+  "encoding": "gzip",
+  "compressedSha256": "981138bba3d0d1461eadff58a12aa41c90f832ea6da80c99277df4264f56f88a",
+  "decodedBytes": 41858136,
+  "compressedBytes": 8646683,
+  "optimization": {
+    "floatGrid": {
+      "POSITION": 1e-05,
+      "NORMAL": 0.000244140625,
+      "TANGENT": 0.000244140625,
+      "TEXCOORD_0": 1.52587890625e-05
+    },
+    "maxAttributeError": 0.0001220703125,
+    "textureLimits": {
+      "color": 4096,
+      "normalAndRoughness": 2048
+    },
+    "viewsBefore": 2785,
+    "viewsAfter": 1353
+  }
+}

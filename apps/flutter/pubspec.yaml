@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.1.5+124
+version: 1.1.6+125
 
 environment:
   sdk: ^3.11.5
@@ -83,9 +83,12 @@ dependencies:
       path: app_voice
   in_app_purchase: ^3.3.0
   in_app_purchase_storekit: ^0.4.10+1
-  multiview_desktop: 1.2.1
+  multiview_desktop:
+    path: third_party/multiview_desktop
   dbus: 0.7.12
   emoji_picker_flutter: 4.5.4
+  thermion_flutter: 0.5.0
+  vector_math: ^2.2.0
 
 dev_dependencies:
   fake_async: 1.3.3
@@ -124,6 +127,20 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
+    - assets/branding/app_icons/generated/production/
+    - assets/branding/app_icons/generated/development/
+    - assets/branding/app_icons/generated/staging/
+    - assets/pomo/manifest.json
+    - assets/pomo/greeting-still.webp
+    - assets/pomo/happy-still.webp
+    - assets/pomo/surprised-still.webp
+    - assets/pomo/sad-still.webp
+    - assets/pomo/calm-still.webp
+    - assets/pomo/focus-still.webp
+    - assets/pomo/rest-still.webp
+    - assets/pomo/tired-still.webp
+    - assets/pomo/model/manifest.json
+    - assets/pomo/model/pomo.glb.gz
     - web/sqlite3.wasm
     - web/drift_worker.js
     - assets/sounds/soft_kalimba/

@@ -172,6 +172,40 @@ Browsers without Web Locks retain old image files instead of risking another tab
 photos. Missing image references cannot overwrite a valid saved draft. Photos do
 not synchronize or require new dependencies.
 
+## Application icon
+
+Appearance settings offer Pomo (the default) and Classic, with localized labels,
+previews and selected semantics. Keep `icon-light-pomo` as the internal identifier
+and asset name only; use the localized Pomo name in all user-facing copy. The
+selection is device-local, independent of account synchronization and of the
+companion's visibility. Disable choices during loading and saving; expose failures
+and a load retry. Apply the platform change
+before saving `app.icon`; a failed save restores the previous platform icon.
+Read the actual platform selection after a failure instead of claiming a rollback
+succeeded. Restore the saved choice when the application starts.
+
+`assets/branding/app_icons/icon-light-pomo.png` is the Pomo master. The existing
+`pomodoist_icon_<flavor>.png` masters remain unchanged as Classic. Run
+`tool/generate_app_icons.dart` to generate both choices, previews, native resources
+and the install-time defaults. Development and staging Pomo icons carry DEV/STG
+badges: a rounded cobalt rectangle for DEV and an amber capsule for STG, each
+with a thin contrasting rim and visually centered text. `--check` validates the
+generated output without writing it.
+
+On iOS/iPadOS use alternate app icons; on Android use launcher aliases while
+keeping MainActivity and its deep links enabled. Enable the new alias before
+disabling the previous one. Watch uses the default Pomo icon without a selector.
+On macOS selection changes the running Dock icon; Finder and the closed app use
+Pomo. Windows updates window icons and the current installation's Start menu
+shortcut, preserving its target, arguments and AppUserModelID. Linux updates GTK
+window icons and managed user desktop entries, preserving launcher fields and
+storing the selected image outside an AppImage mount. Unmarked personal desktop
+entries are left alone. Existing pinned or manually copied shortcuts are not
+migrated. Web selection changes the favicon only; installed PWA icons remain
+browser-managed. Explain these limits beside the choices, using localized copy.
+Validate favicon selection and manifest races with
+`node tool/test_app_icon_web.mjs` from `apps/flutter`.
+
 ## Interface zoom
 
 Native windows share a locally saved interface zoom of 50–200%, initially 100%.
@@ -422,6 +456,27 @@ frame, without restarting from the previous destination's final geometry.
 Retain the shared 180 ms color transition. Configuration changes and enabling
 Reduce Motion show the final layout immediately.
 
+Holding a destination in compact bottom navigation opens in-place editing,
+with that destination selected and without changing routes. Secondary click,
+Context Menu / Shift+F10 and an accessibility action provide alternative entry
+points. Editing uses equal icon targets, a visible selection border, horizontal
+drag-and-drop and earlier/later buttons. Tapping an icon selects it for replacement;
+choosing an already pinned destination swaps the two slots. Keep the existing
+zero-to-five count: adding/removing sections and restoring an empty panel remain
+in Appearance settings.
+
+Place the editor card above the actual dock in the compact Scaffold body,
+without moving or remounting route content. Use `BottomPanelSurface`, one shell
+SafeArea, scrollable editor content and fixed Save/Cancel controls. Block actions
+behind the card without dimming the screen. Hide the floating Add control and
+mini Focus player while editing without changing the Focus run. Retain both
+styles, all main destinations, localized copy, RTL and accessible touch targets.
+All changes remain a local draft until the existing preference write succeeds.
+Save failures retain the draft and show a retryable error; block edits and
+dismissal during saving. Close, outside tap, Back and Escape discard the draft.
+Route/detail changes, fullscreen map entry and switching to the wide shell also
+close the editor. Do not migrate or synchronize existing navigation preferences.
+
 ### Compact task creation
 
 In the inline Quick Add bar, center the microphone and Add buttons vertically
@@ -643,6 +698,18 @@ stay unobtrusive.
 `QuickAddComposer` owns this styling, so the dialog and the separate window
 stay consistent. Details stay below the editable input; the separate window
 scrolls when needed.
+
+A Pomodoro estimate chip precedes Comment whenever the phrase is nonempty.
+Without an estimate it remains a neutral, discoverable action. Manual estimates
+and recognized `3p` / `3п` tokens use the palette accent, independently of priority.
+The anchored, keyboard-accessible editor offers a 1–999 interval field, decrement,
+increment and Clear estimate. Opening it proposes one interval without changing
+the phrase. Edits replace only estimate spans; clearing reveals the automatic
+schedule estimate or an empty estimate. Manual estimates override schedule-based
+counts without changing the schedule. The focus-time preview uses only the selected
+preset's work duration, excludes breaks, and stays hidden until a preset is available.
+Use the existing viewport/keyboard-safe popover geometry, scroll constrained content,
+and retain 48 px touch controls and regular token text weight in both themes.
 
 All Quick Add surfaces (inline lists, dialogs, the separate window and voice
 previews including subtasks) offer a Comment chip alongside date, project and
@@ -1476,6 +1543,69 @@ acts.
   complete it immediately.
 - Cleanup of temporary visual state must not block the workflow when an effect
   has zero duration.
+
+### Pomo desktop companion
+
+The Satellites layout is a desktop-only transparent, size-adaptive surface.
+Keep the pet, progress ring, time capsule and 48 px satellite targets separate from
+visibility/reaction policy so future layouts can reuse the same behavior. Use the
+active Material palette, Geist/GeistMono typography and localized accessible
+labels. Automatic appearance must not activate the app. Hiding Pomo or dismissing
+its settings must not reopen or focus the main window. On macOS, generic app
+activation does not restore hidden windows; explicit Dock reopen still does.
+Transparent exterior
+space passes input to the desktop; only visible controls accept interaction.
+
+Pet activation opens/closes controls with a finite reaction; capsule activation
+only toggles controls. Dragging never triggers a tap, and Escape collapses controls.
+Greeting, Happy, Sad and Surprised are explicit events, never rebuild effects.
+Sad precedes manual hiding for 900 ms (1.2-second maximum); Reduce Motion and Quiet
+mode remove that delay. Motion preferences must stop the current animation as
+soon as they change. Render the Blender-derived skinned 3D model in a transparent
+native surface. Blend skeletal poses and facial morphs over 250 ms; the distinct
+Thinking hand/material variant shares that transition. Quiet and Reduce Motion
+set the matching 3D pose immediately and stop continuous rendering. Loading or
+rendering failure may use the corresponding raster still. Bundle the live model
+as a gzip-compressed GLB and decode it off the UI isolate; do not replace geometry
+or motion with image sequences. Pomo model/textures/stills/manifests together have
+a 10,000,000-byte budget, excluding native renderer libraries. Hidden windows dispose
+the scene and GPU surface. Resizing preserves the window, model and animation
+state. Use the shared
+Focus state and commands; the companion must never own a second timer.
+
+Pomo size is a device-local preference (25–250%, default 100%, 5% control steps).
+Use the same size control and controller in the main Pomo settings (including
+when disabled) and the compact utility panel opened by the upper-left gear.
+The upper-right Hide control mirrors the gear. The panel has its own fixed size,
+is excluded from main-window anchoring, and is reused without duplicates. Prefer
+placement left of Pomo, then right; clamp to the display work area. Escape,
+close and blur dismiss only the panel; hiding/disabling Pomo dismisses both.
+
+The main settings and compact gear panel share a device-local Show timer switch,
+enabled by default. Turning it off hides the entire capsule, including Start
+focus when idle, while retaining the progress ring and Focus controls. Hidden
+capsules have no semantics or native input region. Keep the mascot position and
+window size stable; only an active error indicator restores that input region.
+Save through the existing preference queue and retain the saved value on failure.
+
+Satellite buttons retain circular surfaces. Override their local Material style:
+transparent hover/pressed overlays, no ink splash, an accent-colored icon on
+hover/press and a circular keyboard focus outline. Never change the global icon
+button theme to implement this exception. Keep targets at least 48 logical pixels
+and timer text at least 12 pixels at every scale. The adaptive layout keeps
+controls separate rather than shrinking their hit targets below that minimum.
+
+Preview scale changes immediately in both settings surfaces; save slider changes
+on release and the last draft on panel close. Buttons/reset save immediately;
+failed writes restore the last saved scale and use the existing Pomo error text.
+One computed layout supplies Flutter geometry and native macOS/Windows hit regions.
+Serialize native resizing/movement/region updates and coalesce stale requests.
+Skip unchanged sizes, positions and input-region configurations; compare native
+frames with physical-pixel rounding tolerance. Menu/focus changes must not reset
+an already configured transparent backing surface or reposition the settings panel.
+Preserve the mascot center before work-area clamping. When the chosen size does
+not fit, apply the largest fitting scale without overwriting the preference;
+show chosen and applied percentages when they differ.
 
 ## Reports
 

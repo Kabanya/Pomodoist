@@ -6149,6 +6149,30 @@ abstract class AppLocalizations {
   /// **'Next: {phase} · {duration}'**
   String focusNextInterval(String phase, String duration);
 
+  /// No description provided for @bottomNavigationEditingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Panel edit mode'**
+  String get bottomNavigationEditingTitle;
+
+  /// No description provided for @bottomNavigationEditingHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag the icons below or use the arrows. Tap an icon to replace it.'**
+  String get bottomNavigationEditingHelp;
+
+  /// No description provided for @bottomNavigationReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace with'**
+  String get bottomNavigationReplace;
+
+  /// No description provided for @bottomNavigationEditHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to customize the bottom panel.'**
+  String get bottomNavigationEditHint;
+
   /// No description provided for @settingsBottomNavigation.
   ///
   /// In en, this message translates to:
@@ -7444,6 +7468,214 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not play the sample. Try again.'**
   String get settingsFocusSoundPreviewError;
+
+  /// No description provided for @pomoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomo companion'**
+  String get pomoTitle;
+
+  /// No description provided for @pomoDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A little companion for your desktop.'**
+  String get pomoDescription;
+
+  /// No description provided for @pomoFocusOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only during Focus'**
+  String get pomoFocusOnly;
+
+  /// No description provided for @pomoQuiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet mode'**
+  String get pomoQuiet;
+
+  /// No description provided for @pomoQuietDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Static reactions without background animation.'**
+  String get pomoQuietDescription;
+
+  /// No description provided for @pomoReduceMotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce companion motion'**
+  String get pomoReduceMotion;
+
+  /// No description provided for @pomoShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Pomo'**
+  String get pomoShow;
+
+  /// No description provided for @pomoHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Pomo'**
+  String get pomoHide;
+
+  /// No description provided for @pomoResetPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset position'**
+  String get pomoResetPosition;
+
+  /// No description provided for @pomoInteract.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomo: react and toggle controls. Drag to move.'**
+  String get pomoInteract;
+
+  /// No description provided for @pomoQuickAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a task'**
+  String get pomoQuickAdd;
+
+  /// No description provided for @pomoError.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomo could not finish this action. Try showing Pomo again in Settings.'**
+  String get pomoError;
+
+  /// No description provided for @pomoShowTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Show timer'**
+  String get pomoShowTimer;
+
+  /// No description provided for @pomoSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomo settings'**
+  String get pomoSettings;
+
+  /// No description provided for @pomoSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get pomoSize;
+
+  /// No description provided for @pomoSizeDecrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Make Pomo smaller'**
+  String get pomoSizeDecrease;
+
+  /// No description provided for @pomoSizeIncrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Make Pomo larger'**
+  String get pomoSizeIncrease;
+
+  /// No description provided for @pomoSizeReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to 100%'**
+  String get pomoSizeReset;
+
+  /// No description provided for @pomoSizeEffective.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown at {percent}% to fit this screen'**
+  String pomoSizeEffective(int percent);
+
+  /// No description provided for @appIconTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App icon'**
+  String get appIconTitle;
+
+  /// No description provided for @appIconPomo.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomo'**
+  String get appIconPomo;
+
+  /// No description provided for @appIconClassic.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic'**
+  String get appIconClassic;
+
+  /// No description provided for @appIconError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not apply or save the app icon. Please try again.'**
+  String get appIconError;
+
+  /// No description provided for @appIconMacosHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes the Dock icon while Pomodoist is running. Finder uses Pomo.'**
+  String get appIconMacosHint;
+
+  /// No description provided for @appIconDesktopHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes the app icon and Pomodoist shortcuts. Pinned copies may update later.'**
+  String get appIconDesktopHint;
+
+  /// No description provided for @appIconWebHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes the browser tab icon. Installed web app icons are managed by your browser.'**
+  String get appIconWebHint;
+
+  /// No description provided for @quickAddFocusEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomodoro estimate'**
+  String get quickAddFocusEstimate;
+
+  /// No description provided for @quickAddEstimatedPomodoros.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 Pomodoro} other{{count} Pomodoros}}'**
+  String quickAddEstimatedPomodoros(int count);
+
+  /// No description provided for @quickAddDecreaseEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease estimate'**
+  String get quickAddDecreaseEstimate;
+
+  /// No description provided for @quickAddIncreaseEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase estimate'**
+  String get quickAddIncreaseEstimate;
+
+  /// No description provided for @quickAddEstimateRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole number from 1 to 999.'**
+  String get quickAddEstimateRange;
+
+  /// No description provided for @quickAddEstimateFocusTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} × {workMinutes} min = {totalMinutes} min focus'**
+  String quickAddEstimateFocusTime(
+    String count,
+    String workMinutes,
+    String totalMinutes,
+  );
+
+  /// No description provided for @quickAddEstimateAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on task duration'**
+  String get quickAddEstimateAutomatic;
+
+  /// No description provided for @quickAddClearEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear estimate'**
+  String get quickAddClearEstimate;
 }
 
 class _AppLocalizationsDelegate

@@ -3,6 +3,12 @@ import 'dart:core';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_date_time_normalizer.dart';
 
+/// Matches the estimate editor and CSV import's supported interval range.
+int? parseQuickAddFocusEstimate(String value) {
+  final count = int.tryParse(value.trim());
+  return count != null && count >= 1 && count <= 999 ? count : null;
+}
+
 /// Canonical quoted metadata value; unknown legacy backslash escapes stay literal.
 String quickAddQuotedMetadataValue(String name) =>
     '"${name.replaceAll(r'\', r'\\').replaceAll('"', r'\"')}"';
@@ -188,8 +194,11 @@ class QuickAddParser {
         caseSensitive: false,
       ).firstMatch(token);
       if (estimateMatch != null) {
-        estimate = int.parse(estimateMatch.group(1)!);
-        continue;
+        final count = parseQuickAddFocusEstimate(estimateMatch.group(1)!);
+        if (count != null) {
+          estimate = count;
+          continue;
+        }
       }
       final timeRangeMatch = RegExp(
         r'^(\d{1,2}):(\d{2})[-–](\d{1,2}):(\d{2})$',
@@ -262,7 +271,7 @@ class QuickAddParser {
         final previous = contentTokens.isNotEmpty
             ? int.tryParse(contentTokens.last)
             : null;
-        if (previous != null) {
+        if (previous != null && previous >= 1 && previous <= 999) {
           estimate = previous;
           contentTokens.removeLast();
           continue;
@@ -318,7 +327,9 @@ class QuickAddParser {
         kind = QuickAddTokenKind.section;
       } else if (_priorityFromToken(value) != null) {
         kind = QuickAddTokenKind.priority;
-      } else if (RegExp(r'^\d+(p|п)$', caseSensitive: false).hasMatch(value)) {
+      } else if (RegExp(r'^\d+(p|п)$', caseSensitive: false).hasMatch(value) &&
+          parseQuickAddFocusEstimate(value.substring(0, value.length - 1)) !=
+              null) {
         kind = QuickAddTokenKind.focusEstimate;
       } else {
         final duration = RegExp(
@@ -338,7 +349,7 @@ class QuickAddParser {
 
       if (index > 0 && _isFocusWord(lower)) {
         final previous = tokens[index - 1];
-        if (int.tryParse(previous.text) != null &&
+        if (parseQuickAddFocusEstimate(previous.text) != null &&
             !matches.any((match) => match.end > previous.start)) {
           matches.add(
             QuickAddTokenMatch(

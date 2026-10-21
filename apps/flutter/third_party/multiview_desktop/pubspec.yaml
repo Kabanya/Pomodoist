@@ -1,0 +1,53 @@
+name: multiview_desktop
+description: >-
+  Flutter desktop library for managing multiple OS windows from a single
+  Flutter engine and a single Dart isolate. Supports macOS, Windows, and
+  Linux (X11 and Wayland).
+
+version: 1.2.1
+
+repository: https://github.com/vvlad-islavs/multi-view-desktop
+homepage: https://github.com/vvlad-islavs/multi-view-desktop
+issue_tracker: https://github.com/vvlad-islavs/multi-view-desktop/issues
+
+platforms:
+  linux:
+  macos:
+  windows:
+
+topics:
+  - window
+  - window-customize
+  - window-manager
+  - multi-window
+  - desktop
+
+environment:
+  sdk: ">=3.10.0 <4.0.0"
+  flutter: ">=3.38.2"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  meta: ^1.18.0
+  collection: ^1.19.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  plugin:
+    platforms:
+      macos:
+        pluginClass: MultiviewDesktopPlugin
+      windows:
+        pluginClass: MultiViewDesktopPlugin
+      linux:
+        pluginClass: MultiviewDesktopPlugin
+
+  uses-material-design: true
+
+  assets:
+    - test/fixtures/plus.png

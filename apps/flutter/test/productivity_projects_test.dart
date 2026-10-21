@@ -239,6 +239,7 @@ void main() {
 }
 
 TaskRow _task(String id, String project, {bool deleted = false}) => TaskRow(
+  isFocusEstimateManual: false,
   id: id,
   userId: localUserId,
   content: id,

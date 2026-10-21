@@ -352,7 +352,10 @@ class _IosProject {
         r'^\t{4}([A-Za-z_][A-Za-z0-9_]*) = (.*);$',
         multiLine: true,
       ).allMatches(body)) {
-        values[match.group(1)!] = match.group(2)!;
+        final value = match.group(2)!;
+        values[match.group(1)!] = value.startsWith('"') && value.endsWith('"')
+            ? value.substring(1, value.length - 1)
+            : value;
       }
       settings[_key(name.group(1) ?? name.group(2)!, target)] = values;
     }

@@ -25,6 +25,8 @@ protected:
                          LPARAM const lparam) noexcept override;
 
 private:
+  std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> pomo_channel_;
+  std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> app_icon_channel_;
   void ConfigureQuickAddChannel(FlutterDesktopEngineRef engine);
   void ConfigureNativeLinkChannel(FlutterDesktopEngineRef engine);
   bool SetQuickAddEnabled(bool enabled);

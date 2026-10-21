@@ -3624,6 +3624,20 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get bottomNavigationEditingTitle => 'Navigationsleiste bearbeiten';
+
+  @override
+  String get bottomNavigationEditingHelp =>
+      'Ziehe die Symbole unten oder nutze die Pfeile. Tippe auf ein Symbol, um es zu ersetzen.';
+
+  @override
+  String get bottomNavigationReplace => 'Ersetzen durch';
+
+  @override
+  String get bottomNavigationEditHint =>
+      'Gedrückt halten, um die untere Navigationsleiste anzupassen.';
+
+  @override
   String get settingsBottomNavigation => 'Untere Navigation';
 
   @override
@@ -4353,4 +4367,129 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsFocusSoundPreviewError =>
       'Das Klangbeispiel konnte nicht abgespielt werden. Versuche es erneut.';
+
+  @override
+  String get pomoTitle => 'Pomo-Begleiter';
+
+  @override
+  String get pomoDescription => 'Ein kleiner Begleiter für deinen Desktop.';
+
+  @override
+  String get pomoFocusOnly => 'Nur während Fokus';
+
+  @override
+  String get pomoQuiet => 'Ruhemodus';
+
+  @override
+  String get pomoQuietDescription =>
+      'Statische Reaktionen ohne Hintergrundanimation.';
+
+  @override
+  String get pomoReduceMotion => 'Pomo-Bewegung reduzieren';
+
+  @override
+  String get pomoShow => 'Pomo anzeigen';
+
+  @override
+  String get pomoHide => 'Pomo ausblenden';
+
+  @override
+  String get pomoResetPosition => 'Position zurücksetzen';
+
+  @override
+  String get pomoInteract =>
+      'Pomo: reagieren und Steuerung einblenden. Zum Verschieben ziehen.';
+
+  @override
+  String get pomoQuickAdd => 'Aufgabe hinzufügen';
+
+  @override
+  String get pomoError =>
+      'Pomo konnte die Aktion nicht abschließen. Blende Pomo in den Einstellungen erneut ein.';
+
+  @override
+  String get pomoShowTimer => 'Timer anzeigen';
+
+  @override
+  String get pomoSettings => 'Pomo-Einstellungen';
+
+  @override
+  String get pomoSize => 'Größe';
+
+  @override
+  String get pomoSizeDecrease => 'Pomo verkleinern';
+
+  @override
+  String get pomoSizeIncrease => 'Pomo vergrößern';
+
+  @override
+  String get pomoSizeReset => 'Auf 100% zurücksetzen';
+
+  @override
+  String pomoSizeEffective(int percent) {
+    return 'Auf diesem Bildschirm mit $percent% angezeigt';
+  }
+
+  @override
+  String get appIconTitle => 'App-Symbol';
+
+  @override
+  String get appIconPomo => 'Pomo';
+
+  @override
+  String get appIconClassic => 'Klassisch';
+
+  @override
+  String get appIconError =>
+      'Das App-Symbol konnte nicht angewendet oder gespeichert werden. Bitte erneut versuchen.';
+
+  @override
+  String get appIconMacosHint =>
+      'Ändert das Dock-Symbol, solange Pomodoist läuft. Finder verwendet Pomo.';
+
+  @override
+  String get appIconDesktopHint =>
+      'Ändert das App-Symbol und Pomodoist-Verknüpfungen. Angeheftete Kopien können später aktualisiert werden.';
+
+  @override
+  String get appIconWebHint =>
+      'Ändert das Tab-Symbol. Symbole installierter Web-Apps werden vom Browser verwaltet.';
+
+  @override
+  String get quickAddFocusEstimate => 'Pomodoro-Schätzung';
+
+  @override
+  String quickAddEstimatedPomodoros(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Pomodoros',
+      one: '1 Pomodoro',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get quickAddDecreaseEstimate => 'Schätzung verringern';
+
+  @override
+  String get quickAddIncreaseEstimate => 'Schätzung erhöhen';
+
+  @override
+  String get quickAddEstimateRange => 'Eine ganze Zahl von 1 bis 999 eingeben.';
+
+  @override
+  String quickAddEstimateFocusTime(
+    String count,
+    String workMinutes,
+    String totalMinutes,
+  ) {
+    return '$count × $workMinutes Min. = $totalMinutes Min. Fokus';
+  }
+
+  @override
+  String get quickAddEstimateAutomatic => 'Basierend auf der Aufgabendauer';
+
+  @override
+  String get quickAddClearEstimate => 'Schätzung löschen';
 }

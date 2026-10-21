@@ -12,5 +12,9 @@
 	<true/>
 	<key>com.apple.security.network.client</key>
 	<true/>
+	<!-- The Dart VM Service needs a local listening socket for hot reload and
+	     debugger connections in sandboxed local development builds. -->
+	<key>com.apple.security.network.server</key>
+	<true/>
 </dict>
 </plist>

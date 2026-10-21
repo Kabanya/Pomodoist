@@ -121,6 +121,7 @@ export function createParsedTaskOps(
     durationSeconds: parsed.durationSeconds ?? null,
     status: "open",
     estimatedFocusIntervals: parsed.estimatedFocusIntervals ?? null,
+    isFocusEstimateManual: parsed.estimatedFocusIntervals != null,
     completedFocusIntervals: 0,
     totalFocusSeconds: 0,
     orderKey: orderKey(now),
@@ -277,7 +278,12 @@ export function parseQuickAdd(input: string, now: Date): ParsedQuickAdd {
     } else if (/^\d+(h|ч)$/i.test(token)) {
       durationMinutes = Number(token.match(/^\d+/)?.[0]) * 60;
     } else if (/^\d+(p|п)$/i.test(token)) {
-      estimatedFocusIntervals = Number(token.match(/^\d+/)?.[0]);
+      const count = Number(token.match(/^\d+/)?.[0]);
+      if (Number.isSafeInteger(count) && count >= 1 && count <= 999) {
+        estimatedFocusIntervals = count;
+      } else {
+        content.push(token);
+      }
     } else {
       content.push(token);
     }

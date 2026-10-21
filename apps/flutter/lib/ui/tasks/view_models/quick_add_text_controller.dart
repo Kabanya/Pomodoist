@@ -80,9 +80,9 @@ class QuickAddTextController extends TextEditingController {
       QuickAddTokenKind.label => colors.warning,
       QuickAddTokenKind.date ||
       QuickAddTokenKind.time ||
-      QuickAddTokenKind.duration => colors.accent,
-      QuickAddTokenKind.priority ||
-      QuickAddTokenKind.focusEstimate => Theme.of(context).colorScheme.tertiary,
+      QuickAddTokenKind.duration ||
+      QuickAddTokenKind.focusEstimate => colors.accent,
+      QuickAddTokenKind.priority => Theme.of(context).colorScheme.tertiary,
     };
     return TextStyle(color: color);
   }

@@ -139,6 +139,8 @@ class Tasks extends Table {
   IntColumn get durationSeconds => integer().nullable()();
   TextColumn get status => text().withDefault(const Constant('open'))();
   IntColumn get estimatedFocusIntervals => integer().nullable()();
+  BoolColumn get isFocusEstimateManual =>
+      boolean().withDefault(const Constant(false))();
   IntColumn get completedFocusIntervals =>
       integer().withDefault(const Constant(0))();
   IntColumn get totalFocusSeconds => integer().withDefault(const Constant(0))();
@@ -571,12 +573,19 @@ class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
+      if (from < 14) {
+        await _runResumableMigrationStep(
+          () => m.addColumn(tasks, tasks.isFocusEstimateManual),
+          alreadyAppliedMessage:
+              'duplicate column name: is_focus_estimate_manual',
+        );
+      }
       if (from < 13) {
         await _runResumableMigrationStep(
           () => m.createTable(calendarProjections),

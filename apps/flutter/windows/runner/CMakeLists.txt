@@ -43,7 +43,7 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 # Add dependency libraries and include directories. Add any application-specific
 # dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app
-  flutter_wrapper_plugin)
+  flutter_wrapper_plugin ole32.lib uuid.lib)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
 # shell32.lib provides SetCurrentProcessExplicitAppUserModelID, which gives the
 # process its per-flavor taskbar and toast identity.

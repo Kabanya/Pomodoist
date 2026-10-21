@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/tasks/local_completion_event.dart';
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
@@ -12,10 +13,15 @@ const _backlogOrderKey = '00000000000000000000';
 const _doneOrderKey = '00004503599627370496';
 
 class KanbanTransitionCoordinator {
-  KanbanTransitionCoordinator(this._db, this._syncQueue, {Uuid? uuid})
-    : _uuid = uuid ?? const Uuid(),
-      _store = KanbanTransitionStore(_db);
+  KanbanTransitionCoordinator(
+    this._db,
+    this._syncQueue, {
+    Uuid? uuid,
+    this.onCompleted,
+  }) : _uuid = uuid ?? const Uuid(),
+       _store = KanbanTransitionStore(_db);
 
+  final void Function(LocalCompletionEvent)? onCompleted;
   final AppDatabase _db;
   final KanbanTransitionStore _store;
   final OutboxService _syncQueue;
@@ -66,6 +72,15 @@ class KanbanTransitionCoordinator {
           completedAt: timestamp,
           snapshotJson: Value(_completionSnapshot(previousStatusId)),
           createdAt: timestamp,
+        ),
+      );
+      afterLocalCommit(
+        () => onCompleted?.call(
+          LocalCompletionEvent(
+            operationId: completionId,
+            entityId: row.id,
+            isTask: true,
+          ),
         ),
       );
       final doneId = await _anchor(row.id, kanbanStatusDoneId);
