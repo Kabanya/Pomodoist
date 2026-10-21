@@ -17,11 +17,13 @@ jobs:
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version-file: .fvmrc
-      - name: Install Linux packaging validators
+      - name: Install Linux native and packaging dependencies
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends \
-            appstream desktop-file-utils
+            appstream desktop-file-utils clang \
+            libc++-dev libc++abi-dev libdrm-dev libegl1-mesa-dev \
+            libgl1-mesa-dev libgbm-dev zlib1g-dev
       - run: sh tool/test_public_boundary.sh
       - run: sh tool/test_xcode_warnings.sh
       - run: python3 tool/check_architecture.py

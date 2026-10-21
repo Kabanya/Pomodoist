@@ -111,6 +111,12 @@ select public.pomodoist_google_calendar_service(
   '{"refreshToken":"refresh-secret"}'
 );
 
+-- The provider service owns projections after the calendar cutover.
+select public.pomodoist_calendar_service(
+  'connect', '11111111-1111-4111-8111-111111111111', 'google',
+  '{"refreshToken":"refresh-secret"}'
+);
+
 select is(
   (
     select data ->> 'status'
@@ -176,13 +182,13 @@ insert into public.sync_entities (
 
 select is(
   (
-    select local_schedule_updated_at
-    from private.pomodoist_google_calendar_task_state
+    select incarnation
+    from private.pomodoist_calendar_task_state
     where user_id = '11111111-1111-4111-8111-111111111111'
       and task_id = 'task-1'
   ),
-  '2026-08-26 11:00:00+00'::timestamptz,
-  'task insert records the independent schedule timestamp'
+  1::bigint,
+  'task insert initializes the canonical schedule incarnation'
 );
 
 update public.sync_entities
@@ -193,13 +199,13 @@ where user_id = '11111111-1111-4111-8111-111111111111'
 
 select is(
   (
-    select local_schedule_updated_at
-    from private.pomodoist_google_calendar_task_state
+    select incarnation
+    from private.pomodoist_calendar_task_state
     where user_id = '11111111-1111-4111-8111-111111111111'
       and task_id = 'task-1'
   ),
-  '2026-08-26 11:00:00+00'::timestamptz,
-  'title changes do not overwrite the schedule conflict clock'
+  1::bigint,
+  'title changes retain the canonical schedule incarnation'
 );
 
 create temp table calendar_claim_result (payload jsonb);

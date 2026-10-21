@@ -81,7 +81,7 @@ select throws_ok($$select pg_temp.apply('task_kanban_status','task','{"taskId":"
   '22023','Task is inaccessible','revival cannot reference a deleted task');
 select is(pg_temp.apply('task','task','{"content":"Resurrect"}')->>'code','deleted','task deletion still wins');
 
-select is(pg_temp.apply('task','estimate','{"content":"Estimate","estimatedFocusIntervals":3,"isFocusEstimateManual":true}')->>'status',
+select is(pg_temp.apply('task','estimate','{"content":"Estimate","projectId":"project","estimatedFocusIntervals":3,"isFocusEstimateManual":true}')->>'status',
   'applied','shared tasks accept manual estimate metadata');
 select is(pg_temp.entity('task','estimate')->>'isFocusEstimateManual','true','shared task retains manual source');
 select is(pg_temp.apply('task','estimate','{"content":"Renamed"}')->>'status','applied','unrelated edits accept legacy patches');
