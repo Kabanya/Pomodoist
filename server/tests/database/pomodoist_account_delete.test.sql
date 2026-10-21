@@ -18,7 +18,7 @@ insert into public.sync_entities (
     nextval('public.sync_revision_seq'), '2026-09-10 10:01:00+00',
     '{"id":"account-cascade","dueJson":"{\"date\":\"2026-09-12\"}"}', '{}');
 
-delete from private.pomodoist_google_calendar_task_state
+delete from private.pomodoist_calendar_task_state
 where user_id = 'a7d71236-94bd-4a86-98b4-c04df381096d'
   and task_id = 'ordinary-delete';
 
@@ -28,10 +28,10 @@ where user_id = 'a7d71236-94bd-4a86-98b4-c04df381096d'
 
 select ok(
   exists (
-    select 1 from private.pomodoist_google_calendar_task_state
+    select 1 from private.pomodoist_calendar_task_state
     where user_id = 'a7d71236-94bd-4a86-98b4-c04df381096d'
       and task_id = 'ordinary-delete'
-      and local_schedule_updated_at = '2026-09-10 10:00:00+00'
+      and incarnation = 1
   ),
   'ordinary task deletion preserves calendar reconciliation state'
 );
@@ -54,7 +54,7 @@ select is(
 );
 
 select is(
-  (select count(*) from private.pomodoist_google_calendar_task_state where user_id = 'a7d71236-94bd-4a86-98b4-c04df381096d'),
+  (select count(*) from private.pomodoist_calendar_task_state where user_id = 'a7d71236-94bd-4a86-98b4-c04df381096d'),
   0::bigint,
   'account deletion removes calendar task state'
 );

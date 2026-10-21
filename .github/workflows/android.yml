@@ -44,6 +44,12 @@ jobs:
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version-file: .fvmrc
+      - name: Install Linux native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            clang libc++-dev libc++abi-dev libdrm-dev libegl1-mesa-dev \
+            libgl1-mesa-dev libgbm-dev zlib1g-dev
       - name: Test Android packaging and public configuration
         run: python3 -m unittest discover -s tool/android -p 'test_*.py' -v
       - name: Link Flutter build output into build/

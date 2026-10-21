@@ -44,6 +44,19 @@ class WebBuildContractTests(unittest.TestCase):
     def test_repository_tree_holds(self):
         self.assertEqual(contract.check(self.root), [])
 
+    def test_missing_local_dependencies_are_rejected(self):
+        self.edit(contract.DOCKERFILE,
+                  'COPY apps/flutter/third_party/ ./third_party/\n', '')
+        self.assert_rejected('must copy local path dependencies')
+
+    def test_local_dependencies_copied_after_pub_get_are_rejected(self):
+        self.edit(contract.DOCKERFILE,
+                  'COPY apps/flutter/third_party/ ./third_party/\n', '')
+        path = self.root / contract.DOCKERFILE
+        path.write_text(path.read_text() +
+                        '\nCOPY apps/flutter/third_party/ ./third_party/\n')
+        self.assert_rejected('must copy local path dependencies')
+
     def test_runtime_variable_without_a_declaration_is_rejected(self):
         self.edit(contract.DOCKERFILE, 'ARG TURNSTILE_SITE_KEY\n', '')
         self.assert_rejected('declares ARG')

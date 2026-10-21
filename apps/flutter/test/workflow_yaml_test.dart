@@ -36,6 +36,47 @@ void main() {
     }
   });
 
+  test(
+    'Linux jobs install Thermion native dependencies before compilation',
+    () {
+      const jobs = {
+        'validate': 'validate',
+        'android': 'release-build-smoke',
+        'desktop-updates': 'updater',
+        'linux-appimage-release': 'build-test-publish',
+      };
+      const dependencies = [
+        'libc++-dev',
+        'libc++abi-dev',
+        'libdrm-dev',
+        'libegl1-mesa-dev',
+        'libgl1-mesa-dev',
+        'libgbm-dev',
+        'zlib1g-dev',
+      ];
+      for (final entry in jobs.entries) {
+        final steps =
+            _job(
+                  '../../.github/workflows/${entry.key}.yml',
+                  entry.value,
+                )['steps']
+                as YamlList;
+        final install = steps.indexWhere((step) {
+          final run = step['run'] as String? ?? '';
+          return run.contains('apt-get install') &&
+              dependencies.every(run.contains);
+        });
+        expect(install, greaterThanOrEqualTo(0), reason: entry.key);
+        final compile = steps.indexWhere(
+          (step) => RegExp(
+            r'dart run|flutter test|flutter build|linux-pub-get',
+          ).hasMatch(step['run'] as String? ?? ''),
+        );
+        expect(compile, greaterThan(install), reason: entry.key);
+      }
+    },
+  );
+
   const desktopWorkflows = {
     '../../.github/workflows/linux-appimage-release.yml': 'build-test-publish',
     '../../.github/workflows/windows-exe-preview.yml': 'build-test',

@@ -16,7 +16,7 @@ FLAVOR_MANIFESTS = {
     'production': 'apps/flutter/android/app/src/production/AndroidManifest.xml',
 }
 FLAVOR_GETTERS = ('displayName', 'applicationId', 'urlScheme')
-CALLBACK_HOSTS = {'login-callback', 'captcha-callback', 'google-calendar-connected', 'focus', 'purchase-success'}
+CALLBACK_HOSTS = {'login-callback', 'captcha-callback', 'google-calendar-connected', 'outlook-calendar-connected', 'focus', 'purchase-success'}
 
 
 def dart_flavor_table():

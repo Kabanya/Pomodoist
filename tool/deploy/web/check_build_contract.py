@@ -123,6 +123,10 @@ def check_dockerfile():
     if not dockerfile:
         return
 
+    dependency_copy = 'COPY apps/flutter/third_party/ ./third_party/'
+    if dependency_copy not in dockerfile.split('flutter pub get', 1)[0]:
+        fail(f'{DOCKERFILE} must copy local path dependencies before flutter pub get')
+
     declared = set(ARG_DECLARATION.findall(dockerfile))
     if declared != EXPECTED_ARGS | GUARDED_ARGS:
         fail(f'{DOCKERFILE} declares ARG {sorted(declared)}; '

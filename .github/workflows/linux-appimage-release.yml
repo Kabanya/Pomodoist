@@ -64,6 +64,13 @@ jobs:
             gstreamer1.0-plugins-base \
             gstreamer1.0-plugins-good \
             gstreamer1.0-pulseaudio \
+            libc++-dev \
+            libc++abi-dev \
+            libdrm-dev \
+            libegl1-mesa-dev \
+            libgl1-mesa-dev \
+            libgbm-dev \
+            zlib1g-dev \
             libcurl4-openssl-dev \
             libgstreamer-plugins-base1.0-dev \
             libgstreamer1.0-dev \
