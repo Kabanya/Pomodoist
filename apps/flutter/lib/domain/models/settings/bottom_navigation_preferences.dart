@@ -80,6 +80,19 @@ class BottomNavigationPreferences {
     return copyWith(destinations: next);
   }
 
+  BottomNavigationPreferences replace(
+    BottomNavigationDestination current,
+    BottomNavigationDestination replacement,
+  ) {
+    final index = destinations.indexOf(current);
+    if (index < 0 || current == replacement) return this;
+    final next = [...destinations];
+    final existing = next.indexOf(replacement);
+    next[index] = replacement;
+    if (existing >= 0) next[existing] = current;
+    return copyWith(destinations: next);
+  }
+
   BottomNavigationDestination? selectedFor(String location) =>
       destinations.where((value) => value.matches(location)).firstOrNull;
 

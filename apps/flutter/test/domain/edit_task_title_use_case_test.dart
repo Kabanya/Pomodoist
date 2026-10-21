@@ -145,6 +145,36 @@ void main() {
     expect(patch.dueDate, isNull);
   });
 
+  test('title and schedule edits keep an existing manual target', () async {
+    final tasks = _RecordingTaskRepository(<String>[]);
+    final useCase = EditTaskTitleUseCase(
+      parser: parser,
+      taskRepository: tasks,
+      projectRepository: _RecordingProjectRepository(<String>[]),
+    );
+    for (final input in ['Renamed', 'Renamed 14:00-16:00']) {
+      (await useCase(
+        _task(manual: true),
+        input,
+        now: now,
+        focusPreset: preset,
+      )).getOrThrow();
+      final (_, patch) = tasks.updates.last;
+      expect(patch.estimatedFocusIntervals, isNull);
+      expect(patch.isFocusEstimateManual, isNull);
+    }
+    (await useCase(
+      _task(manual: true),
+      'Renamed 14:00-16:00 5p',
+      now: now,
+      focusPreset: preset,
+    )).getOrThrow();
+    final (_, patch) = tasks.updates.last;
+    expect(patch.estimatedFocusIntervals, 5);
+    expect(patch.isFocusEstimateManual, isTrue);
+    expect(patch.schedule!.duration, const Duration(hours: 2));
+  });
+
   test('empty input keeps the task untouched', () async {
     final events = <String>[];
     final tasks = _RecordingTaskRepository(events);
@@ -233,7 +263,9 @@ Future<List<ProjectRow>> _projectsNamed(AppDatabase db, String name) async {
   return rows.where((row) => row.name == name).toList();
 }
 
-TaskItem _task({TaskSchedule? schedule}) => TaskItem(
+TaskItem _task({TaskSchedule? schedule, bool manual = false}) => TaskItem(
+  estimatedFocusIntervals: manual ? 3 : null,
+  isFocusEstimateManual: manual,
   id: 'task-1',
   userId: 'user',
   content: 'Old title',

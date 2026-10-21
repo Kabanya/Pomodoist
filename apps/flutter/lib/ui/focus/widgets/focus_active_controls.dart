@@ -253,6 +253,7 @@ Widget _buildFocusMoreActionsMenu(
         tooltip: l10n.moreFocusActions,
         constraints: const BoxConstraints(minWidth: 220),
         items: [
+          if (pomoSupported) const PomoMenuItem(),
           ..._sessionDisplayMenuItems(
             context,
             sessionDisplay,

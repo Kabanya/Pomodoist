@@ -74,6 +74,7 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
+        focusPresetsProvider.overrideWith((ref) => Stream.value([])),
         appDatabaseProvider.overrideWithValue(db),
         notificationSchedulerProvider.overrideWithValue(
           _NoopNotificationScheduler(),
@@ -99,6 +100,7 @@ void main() {
     final now = DateTime(2026, 9, 20, 9);
     final container = ProviderContainer(
       overrides: [
+        focusPresetsProvider.overrideWith((ref) => Stream.value([])),
         projectsProvider.overrideWith(
           (ref) => Stream.value(const <ProjectItem>[]),
         ),
@@ -132,7 +134,10 @@ void main() {
 
   test('auth redirect decision follows account state changes', () {
     final signedOut = ProviderContainer(
-      overrides: [accountSignedInProvider.overrideWithValue(false)],
+      overrides: [
+        focusPresetsProvider.overrideWith((ref) => Stream.value([])),
+        accountSignedInProvider.overrideWithValue(false),
+      ],
     );
     addTearDown(signedOut.dispose);
     expect(
@@ -145,7 +150,10 @@ void main() {
     );
 
     final signedIn = ProviderContainer(
-      overrides: [accountSignedInProvider.overrideWithValue(true)],
+      overrides: [
+        focusPresetsProvider.overrideWith((ref) => Stream.value([])),
+        accountSignedInProvider.overrideWithValue(true),
+      ],
     );
     addTearDown(signedIn.dispose);
     expect(

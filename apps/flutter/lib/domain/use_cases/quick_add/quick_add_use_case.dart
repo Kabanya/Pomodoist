@@ -149,6 +149,7 @@ class QuickAddUseCase {
       schedule: effectiveSchedule,
       durationSeconds: null,
       explicitEstimate: parsed.estimatedFocusIntervals,
+      isFocusEstimateManual: parsed.estimatedFocusIntervals != null,
       preset: focusPreset,
     );
     return _QuickAddTaskContext(
@@ -168,6 +169,7 @@ class QuickAddUseCase {
         dueDate: effectiveSchedule == null ? parsed.dueDate : null,
         durationSeconds: effectiveSchedule?.duration?.inSeconds,
         estimatedFocusIntervals: estimatedFocusIntervals,
+        isFocusEstimateManual: parsed.estimatedFocusIntervals != null,
         kanbanStatusId: kanbanStatusId,
         labelId: labelId,
       ),

@@ -29,11 +29,29 @@
                 android:resource="@style/NormalTheme" />
             <!-- app_links owns callbacks; Flutter's router must not consume them twice. -->
             <meta-data android:name="flutter_deeplinking_enabled" android:value="false" />
+        </activity>
+        <activity-alias
+            android:name="com.finchforge.pomodoist.PomoLauncher"
+            android:targetActivity=".MainActivity"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+        <activity-alias
+            android:name="com.finchforge.pomodoist.ClassicLauncher"
+            android:targetActivity=".MainActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_classic">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
             android:exported="false" />

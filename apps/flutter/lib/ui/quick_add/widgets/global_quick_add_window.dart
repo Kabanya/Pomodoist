@@ -70,6 +70,7 @@ class GlobalQuickAddWindowManager extends WindowObserver {
       ),
       options: WindowOptions(
         size: globalQuickAddCompactSize,
+        isUtility: true,
         minimumSize: const Size(420, 200),
         maximumSize: const Size(900, 800),
         title: appFlavor.displayName,

@@ -13,6 +13,49 @@ import 'package:pomodoist/ui/core/widgets/app_bottom_navigation.dart';
 import 'package:pomodoist/utils/result.dart';
 
 void main() {
+  test('replacing a tab preserves count, order, style and the original', () {
+    for (var count = 1; count <= bottomNavigationMaxDestinations; count++) {
+      final original = BottomNavigationPreferences(
+        style: BottomNavigationStyle.labels,
+        destinations: BottomNavigationPreferences.defaultDestinations.take(
+          count,
+        ),
+      );
+      for (final current in original.destinations) {
+        for (final replacement in BottomNavigationDestination.values) {
+          final edited = original.replace(current, replacement);
+          final expected = [...original.destinations];
+          final index = expected.indexOf(current);
+          final existing = expected.indexOf(replacement);
+          expected[index] = replacement;
+          if (existing >= 0) expected[existing] = current;
+          expect(edited.destinations, expected);
+          expect(edited.destinations.toSet(), hasLength(count));
+          expect(edited.style, BottomNavigationStyle.labels);
+          expect(
+            original.destinations,
+            BottomNavigationPreferences.defaultDestinations.take(count),
+          );
+        }
+      }
+    }
+  });
+
+  test('replacing an absent tab never adds one or unhides an empty panel', () {
+    for (final preferences in [
+      BottomNavigationPreferences(),
+      BottomNavigationPreferences(destinations: []),
+    ]) {
+      expect(
+        preferences.replace(
+          BottomNavigationDestination.search,
+          BottomNavigationDestination.calendar,
+        ),
+        same(preferences),
+      );
+    }
+  });
+
   test('an empty navigation leaves no panel or motion in the shell', () {
     final navigation = AppBottomNavigation(
       preferences: BottomNavigationPreferences(destinations: []),

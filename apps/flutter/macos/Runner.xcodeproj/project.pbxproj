@@ -21,14 +21,19 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		0279F8A08B39CEABF321504A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F70640268851B1260EC1EDE2 /* Localizable.strings */; };
+		06D4C8BDD1AE87463F9B66BE /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F70640268851B1260EC1EDE2 /* Localizable.strings */; };
 		331C80D8294CF71000263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C80D7294CF71000263BE5 /* RunnerTests.swift */; };
 		335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335BBD1A22A9A15E00E9071D /* GeneratedPluginRegistrant.swift */; };
 		33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC10F02044A3C60003C045 /* AppDelegate.swift */; };
 		33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F22044A3C60003C045 /* Assets.xcassets */; };
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
+		3D5CECE55C35C80FAF683BC1 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 25778229D0DA21714F8F106D /* InfoPlist.strings */; };
+		443882ADEAE14DDA737D172B /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8428CCF3327C45D5C90545CF /* Pods_RunnerTests.framework */; };
 		4C5155414448444B45594246 /* QuickAddHotKeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5155414448444B45594346 /* QuickAddHotKeyController.swift */; };
 		4C5155424448444B45594246 /* QuickAddHotKeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5155414448444B45594346 /* QuickAddHotKeyController.swift */; };
+		6F97730789BD84AEE3DF839F /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 23FFD63ADFDC052B175E2B12 /* Pods_Runner.framework */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
 		7D0000010000000000000001 /* PomodoistFocusShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0000110000000000000001 /* PomodoistFocusShared.swift */; };
 		7D0000020000000000000002 /* PomodoistFocusShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0000110000000000000001 /* PomodoistFocusShared.swift */; };
@@ -44,10 +49,7 @@
 		B50000000000000000000001 /* SystemSpeechTranscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50000000000000000000002 /* SystemSpeechTranscriber.swift */; };
 		B60000000000000000000001 /* StoreKitHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60000000000000000000002 /* StoreKitHost.swift */; };
 		C60000000000000000000001 /* MacosGlassController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C60000000000000000000002 /* MacosGlassController.swift */; };
-		06D4C8BDD1AE87463F9B66BE /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F70640268851B1260EC1EDE2 /* Localizable.strings */; };
-		0279F8A08B39CEABF321504A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F70640268851B1260EC1EDE2 /* Localizable.strings */; };
 		EC94E618B3B8A02CFA518BBB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 25778229D0DA21714F8F106D /* InfoPlist.strings */; };
-		3D5CECE55C35C80FAF683BC1 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 25778229D0DA21714F8F106D /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -99,6 +101,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0C16B8AFEB66997DF560BF69 /* Pods-RunnerTests.release-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release-development.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release-development.xcconfig"; sourceTree = "<group>"; };
+		1D44B4ECF994E00AE89C14B7 /* zh */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = zh; path = ../apple/Localization/zh.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
+		20C9B970C30B42BF3075EE26 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ../apple/Localization/ja.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
+		23FFD63ADFDC052B175E2B12 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		2E25F70A236AF0539E7036F6 /* Pods-Runner.profile-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile-staging.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile-staging.xcconfig"; sourceTree = "<group>"; };
 		331C80D5294CF71000263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		331C80D7294CF71000263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		333000ED22D3DE5D00554162 /* Warnings.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Warnings.xcconfig; sourceTree = "<group>"; };
@@ -115,10 +122,23 @@
 		33E51913231747F40026EE4D /* DebugProfile.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DebugProfile.entitlements; sourceTree = "<group>"; };
 		33E51914231749380026EE4D /* Release.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = Release.entitlements; sourceTree = "<group>"; };
 		33E5194F232828860026EE4D /* AppInfo.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AppInfo.xcconfig; sourceTree = "<group>"; };
+		43BDA6975E3D5228E9131DFE /* Pods-Runner.debug-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug-development.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug-development.xcconfig"; sourceTree = "<group>"; };
+		46446F36DC1BB940FECA606A /* Pods-RunnerTests.profile-production.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile-production.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile-production.xcconfig"; sourceTree = "<group>"; };
+		467F35511336AB4938E60EC1 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		4C5155414448444B45594346 /* QuickAddHotKeyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddHotKeyController.swift; sourceTree = "<group>"; };
+		50D0C2D83066D941F5C754B9 /* Pods-Runner.debug-runnerstorekitlocal.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug-runnerstorekitlocal.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug-runnerstorekitlocal.xcconfig"; sourceTree = "<group>"; };
+		51416441E35201C14039E516 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ../apple/Localization/ar.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
+		55B86B3C392F271BA5CCCA30 /* Pods-RunnerTests.release-direct-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release-direct-development.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release-direct-development.xcconfig"; sourceTree = "<group>"; };
+		58C50937EA5FF6D3BB572E27 /* Pods-RunnerTests.debug-production.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug-production.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug-production.xcconfig"; sourceTree = "<group>"; };
+		596822A34DA75216F0BE5A9B /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ../apple/Localization/ko.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
+		5C174182C06C4785B85D769C /* Pods-RunnerTests.profile-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile-development.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile-development.xcconfig"; sourceTree = "<group>"; };
+		61ADA560E70C069266869D33 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
+		6B84D0128EA1EECA801AA5B6 /* Pods-RunnerTests.release-direct-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release-direct-staging.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release-direct-staging.xcconfig"; sourceTree = "<group>"; };
+		7389FA6C68453747C0EB960B /* Pods-Runner.release-production.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release-production.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release-production.xcconfig"; sourceTree = "<group>"; };
 		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
-				F70640268851B1260EC1EDE3 /* Direct.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Direct.xcconfig; sourceTree = "<group>"; };
-7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		7A9CF65B2E9A277BA3D6CD8D /* Pods-Runner.debug-production.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug-production.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug-production.xcconfig"; sourceTree = "<group>"; };
+		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		7C149D7442B9CA04A0DC5973 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = ../apple/Localization/en.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
 		7D0000100000000000000010 /* FlutterControllerResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlutterControllerResolver.swift; sourceTree = "<group>"; };
 		7D0000110000000000000001 /* PomodoistFocusShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PomodoistFocusShared.swift; path = ../apple/FocusWidget/PomodoistFocusShared.swift; sourceTree = SOURCE_ROOT; };
 		7D0000120000000000000002 /* FocusStatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusStatusItemController.swift; sourceTree = "<group>"; };
@@ -126,31 +146,47 @@
 		7D0000140000000000000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7D0000150000000000000005 /* PomodoistFocusWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PomodoistFocusWidget.entitlements; sourceTree = "<group>"; };
 		7D0000160000000000000006 /* PomodoistFocusWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PomodoistFocusWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7DB47CC3C3B188F6DC2DD807 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
+		81C28EA197EB939E1C4DF714 /* Pods-RunnerTests.profile-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile-staging.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile-staging.xcconfig"; sourceTree = "<group>"; };
+		81F5A8CC588B9A52FBF848BE /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = ../apple/Localization/es.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
+		8428CCF3327C45D5C90545CF /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		86B5DC34A403FCEAEC16871A /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = ../apple/Localization/de.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
+		8D324113D3C021523A21D4A9 /* zh */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = zh; path = ../apple/Localization/zh.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
+		9081EEA3EA7725F0DF8BCB5F /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = ../apple/Localization/fr.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		975E551E39E8E2A7F4C7B907 /* Pods-RunnerTests.release-production.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release-production.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release-production.xcconfig"; sourceTree = "<group>"; };
+		989592D338A4948AFF31EBD7 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ../apple/Localization/ko.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
 		A80000020000000000000002 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A90000030000000000000003 /* AppMenuController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMenuController.swift; sourceTree = "<group>"; };
+		A92C0E960894F2299E9920BF /* Pods-RunnerTests.debug-runnerstorekitlocal.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug-runnerstorekitlocal.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug-runnerstorekitlocal.xcconfig"; sourceTree = "<group>"; };
+		AEA64BF42F638DB702E1C955 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
+		AFA0D1FBAB1752830132539A /* Pods-Runner.release-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release-staging.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release-staging.xcconfig"; sourceTree = "<group>"; };
+		B0E913C5EA5068D3AA2EEED4 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
 		B50000000000000000000002 /* SystemSpeechTranscriber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SystemSpeechTranscriber.swift; path = ../apple/SystemSpeechTranscriber.swift; sourceTree = SOURCE_ROOT; };
-		B60000000000000000000002 /* StoreKitHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StoreKitHost.swift; path = ../apple/StoreKitHost.swift; sourceTree = SOURCE_ROOT; };
-		C60000000000000000000002 /* MacosGlassController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacosGlassController.swift; sourceTree = "<group>"; };
-		E95F3301AA714DDD7BE01CE5 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "../apple/Localization/pt-BR.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
-		B54BADFE35A7707C260E2C9E /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ja"; path = "../apple/Localization/ja.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
-		596822A34DA75216F0BE5A9B /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ko"; path = "../apple/Localization/ko.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
-		86B5DC34A403FCEAEC16871A /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "de"; path = "../apple/Localization/de.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
-		81F5A8CC588B9A52FBF848BE /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "es"; path = "../apple/Localization/es.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
-		D797E6D6D81F02D96F5A7DAF /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "fr"; path = "../apple/Localization/fr.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
-		B79A2EAB06A687BA8B46E01F /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ar"; path = "../apple/Localization/ar.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
-		F28A956C56BAF5A9BE122F1B /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ru"; path = "../apple/Localization/ru.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
-		1D44B4ECF994E00AE89C14B7 /* zh */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh"; path = "../apple/Localization/zh.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
-		7C149D7442B9CA04A0DC5973 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en"; path = "../apple/Localization/en.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
+		B54BADFE35A7707C260E2C9E /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ../apple/Localization/ja.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
 		B5E17B540E0E402457BAD6D4 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "../apple/Localization/pt-BR.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
-		20C9B970C30B42BF3075EE26 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ja"; path = "../apple/Localization/ja.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
-		989592D338A4948AFF31EBD7 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ko"; path = "../apple/Localization/ko.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
-		BB3AE3EEF07715BF2345BAB7 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "de"; path = "../apple/Localization/de.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
-		BA6752CCC9724F8815BA37E1 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "es"; path = "../apple/Localization/es.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
-		9081EEA3EA7725F0DF8BCB5F /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "fr"; path = "../apple/Localization/fr.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
-		51416441E35201C14039E516 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ar"; path = "../apple/Localization/ar.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
-		E0FB71430AC8A2D87BC942C2 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ru"; path = "../apple/Localization/ru.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
-		8D324113D3C021523A21D4A9 /* zh */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh"; path = "../apple/Localization/zh.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
+		B60000000000000000000002 /* StoreKitHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StoreKitHost.swift; path = ../apple/StoreKitHost.swift; sourceTree = SOURCE_ROOT; };
+		B79A2EAB06A687BA8B46E01F /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ../apple/Localization/ar.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
+		BA6752CCC9724F8815BA37E1 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = ../apple/Localization/es.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
+		BB3AE3EEF07715BF2345BAB7 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = ../apple/Localization/de.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
+		BFF636523402AAA133B7646E /* Pods-Runner.release-direct-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release-direct-staging.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release-direct-staging.xcconfig"; sourceTree = "<group>"; };
+		C2DC36E7B3E2E69C13D1B110 /* Pods-Runner.profile-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile-development.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile-development.xcconfig"; sourceTree = "<group>"; };
+		C60000000000000000000002 /* MacosGlassController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacosGlassController.swift; sourceTree = "<group>"; };
+		C7BEB58B18678328BAAC8D80 /* Pods-Runner.profile-production.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile-production.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile-production.xcconfig"; sourceTree = "<group>"; };
+		CBB44B83016A573A23A2C21C /* Pods-RunnerTests.release-direct-production.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release-direct-production.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release-direct-production.xcconfig"; sourceTree = "<group>"; };
+		CE03FC25738C76444CDDB25C /* Pods-Runner.release-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release-development.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release-development.xcconfig"; sourceTree = "<group>"; };
+		D65400D26257B33746E8D7D2 /* Pods-RunnerTests.debug-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug-staging.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug-staging.xcconfig"; sourceTree = "<group>"; };
+		D797E6D6D81F02D96F5A7DAF /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = ../apple/Localization/fr.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
+		DF6C30906B9087ECC08D9004 /* Pods-Runner.release-direct-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release-direct-development.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release-direct-development.xcconfig"; sourceTree = "<group>"; };
+		E0FB71430AC8A2D87BC942C2 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ../apple/Localization/ru.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
+		E230C5551AA3ACA26C882D75 /* Pods-RunnerTests.release-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release-staging.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release-staging.xcconfig"; sourceTree = "<group>"; };
+		E95F3301AA714DDD7BE01CE5 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "../apple/Localization/pt-BR.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
+		EC386BE873DC15DFD204DA82 /* Pods-RunnerTests.debug-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug-development.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug-development.xcconfig"; sourceTree = "<group>"; };
+		F28A956C56BAF5A9BE122F1B /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ../apple/Localization/ru.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
+		F39260D5055F53F71206DC24 /* Pods-Runner.debug-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug-staging.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug-staging.xcconfig"; sourceTree = "<group>"; };
+		F70640268851B1260EC1EDE3 /* Direct.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Direct.xcconfig; sourceTree = "<group>"; };
+		FAF0F5DBF24F03754627E7F8 /* Pods-Runner.release-direct-production.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release-direct-production.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release-direct-production.xcconfig"; sourceTree = "<group>"; };
+		FEAC13951B989D6877944A31 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -158,6 +194,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				443882ADEAE14DDA737D172B /* Pods_RunnerTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -166,6 +203,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */,
+				6F97730789BD84AEE3DF839F /* Pods_Runner.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -210,6 +248,8 @@
 				33CEB47122A05771004F2AC0 /* Flutter */,
 				331C80D6294CF71000263BE5 /* RunnerTests */,
 				33CC10EE2044A3C60003C045 /* Products */,
+				F88C5CCC5F2ECEFAC30926BB /* Pods */,
+				A34CD85632A8810A2AA049BE /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -285,6 +325,55 @@
 			path = PomodoistFocusWidget;
 			sourceTree = "<group>";
 		};
+		A34CD85632A8810A2AA049BE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				23FFD63ADFDC052B175E2B12 /* Pods_Runner.framework */,
+				8428CCF3327C45D5C90545CF /* Pods_RunnerTests.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F88C5CCC5F2ECEFAC30926BB /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				43BDA6975E3D5228E9131DFE /* Pods-Runner.debug-development.xcconfig */,
+				F39260D5055F53F71206DC24 /* Pods-Runner.debug-staging.xcconfig */,
+				7A9CF65B2E9A277BA3D6CD8D /* Pods-Runner.debug-production.xcconfig */,
+				61ADA560E70C069266869D33 /* Pods-Runner.debug.xcconfig */,
+				50D0C2D83066D941F5C754B9 /* Pods-Runner.debug-runnerstorekitlocal.xcconfig */,
+				CE03FC25738C76444CDDB25C /* Pods-Runner.release-development.xcconfig */,
+				DF6C30906B9087ECC08D9004 /* Pods-Runner.release-direct-development.xcconfig */,
+				AFA0D1FBAB1752830132539A /* Pods-Runner.release-staging.xcconfig */,
+				BFF636523402AAA133B7646E /* Pods-Runner.release-direct-staging.xcconfig */,
+				7389FA6C68453747C0EB960B /* Pods-Runner.release-production.xcconfig */,
+				FAF0F5DBF24F03754627E7F8 /* Pods-Runner.release-direct-production.xcconfig */,
+				FEAC13951B989D6877944A31 /* Pods-Runner.release.xcconfig */,
+				C2DC36E7B3E2E69C13D1B110 /* Pods-Runner.profile-development.xcconfig */,
+				2E25F70A236AF0539E7036F6 /* Pods-Runner.profile-staging.xcconfig */,
+				C7BEB58B18678328BAAC8D80 /* Pods-Runner.profile-production.xcconfig */,
+				467F35511336AB4938E60EC1 /* Pods-Runner.profile.xcconfig */,
+				EC386BE873DC15DFD204DA82 /* Pods-RunnerTests.debug-development.xcconfig */,
+				D65400D26257B33746E8D7D2 /* Pods-RunnerTests.debug-staging.xcconfig */,
+				58C50937EA5FF6D3BB572E27 /* Pods-RunnerTests.debug-production.xcconfig */,
+				AEA64BF42F638DB702E1C955 /* Pods-RunnerTests.debug.xcconfig */,
+				A92C0E960894F2299E9920BF /* Pods-RunnerTests.debug-runnerstorekitlocal.xcconfig */,
+				0C16B8AFEB66997DF560BF69 /* Pods-RunnerTests.release-development.xcconfig */,
+				55B86B3C392F271BA5CCCA30 /* Pods-RunnerTests.release-direct-development.xcconfig */,
+				E230C5551AA3ACA26C882D75 /* Pods-RunnerTests.release-staging.xcconfig */,
+				6B84D0128EA1EECA801AA5B6 /* Pods-RunnerTests.release-direct-staging.xcconfig */,
+				975E551E39E8E2A7F4C7B907 /* Pods-RunnerTests.release-production.xcconfig */,
+				CBB44B83016A573A23A2C21C /* Pods-RunnerTests.release-direct-production.xcconfig */,
+				7DB47CC3C3B188F6DC2DD807 /* Pods-RunnerTests.release.xcconfig */,
+				5C174182C06C4785B85D769C /* Pods-RunnerTests.profile-development.xcconfig */,
+				81C28EA197EB939E1C4DF714 /* Pods-RunnerTests.profile-staging.xcconfig */,
+				46446F36DC1BB940FECA606A /* Pods-RunnerTests.profile-production.xcconfig */,
+				B0E913C5EA5068D3AA2EEED4 /* Pods-RunnerTests.profile.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -292,6 +381,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 331C80DE294CF71000263BE5 /* Build configuration list for PBXNativeTarget "RunnerTests" */;
 			buildPhases = (
+				FF759CA64DEC10D5D7080CC6 /* [CP] Check Pods Manifest.lock */,
 				331C80D1294CF70F00263BE5 /* Sources */,
 				331C80D2294CF70F00263BE5 /* Frameworks */,
 				331C80D3294CF70F00263BE5 /* Resources */,
@@ -310,12 +400,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 33CC10FB2044A3C60003C045 /* Build configuration list for PBXNativeTarget "Runner" */;
 			buildPhases = (
+				6B628E96DE8ED6D26FA2A063 /* [CP] Check Pods Manifest.lock */,
 				33CC10E92044A3C60003C045 /* Sources */,
 				33CC10EA2044A3C60003C045 /* Frameworks */,
 				33CC10EB2044A3C60003C045 /* Resources */,
 				7D0000190000000000000019 /* Embed App Extensions */,
 				33CC110E2044A8840003C045 /* Bundle Framework */,
 				3399D490228B24CF009A79C7 /* ShellScript */,
+				CAFD812D639553F84101002F /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -407,16 +499,16 @@
 			knownRegions = (
 				en,
 				Base,
-							"ar",
-				"de",
-				"es",
-				"fr",
-				"ru",
-				"zh",
+				ar,
+				de,
+				es,
+				fr,
+				ru,
+				zh,
 				"pt-BR",
-				"ja",
-				"ko",
-);
+				ja,
+				ko,
+			);
 			mainGroup = 33CC10E42044A3C60003C045;
 			packageReferences = (
 				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */,
@@ -503,6 +595,67 @@
 			shellPath = /bin/sh;
 			shellScript = "\"$FLUTTER_ROOT\"/packages/flutter_tools/bin/macos_assemble.sh && touch Flutter/ephemeral/tripwire";
 		};
+		6B628E96DE8ED6D26FA2A063 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Runner-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		CAFD812D639553F84101002F /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		FF759CA64DEC10D5D7080CC6 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-RunnerTests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -566,6 +719,23 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		25778229D0DA21714F8F106D /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7C149D7442B9CA04A0DC5973 /* en */,
+				B5E17B540E0E402457BAD6D4 /* pt-BR */,
+				20C9B970C30B42BF3075EE26 /* ja */,
+				989592D338A4948AFF31EBD7 /* ko */,
+				BB3AE3EEF07715BF2345BAB7 /* de */,
+				BA6752CCC9724F8815BA37E1 /* es */,
+				9081EEA3EA7725F0DF8BCB5F /* fr */,
+				51416441E35201C14039E516 /* ar */,
+				E0FB71430AC8A2D87BC942C2 /* ru */,
+				8D324113D3C021523A21D4A9 /* zh */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
 		33CC10F42044A3C60003C045 /* MainMenu.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -591,28 +761,12 @@
 			name = Localizable.strings;
 			sourceTree = "<group>";
 		};
-		25778229D0DA21714F8F106D /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				7C149D7442B9CA04A0DC5973 /* en */,
-				B5E17B540E0E402457BAD6D4 /* pt-BR */,
-				20C9B970C30B42BF3075EE26 /* ja */,
-				989592D338A4948AFF31EBD7 /* ko */,
-				BB3AE3EEF07715BF2345BAB7 /* de */,
-				BA6752CCC9724F8815BA37E1 /* es */,
-				9081EEA3EA7725F0DF8BCB5F /* fr */,
-				51416441E35201C14039E516 /* ar */,
-				E0FB71430AC8A2D87BC942C2 /* ru */,
-				8D324113D3C021523A21D4A9 /* zh */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		331C80DB294CF71000263BE5 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AEA64BF42F638DB702E1C955 /* Pods-RunnerTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CURRENT_PROJECT_VERSION = 1;
@@ -627,6 +781,7 @@
 		};
 		331C80DC294CF71000263BE5 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7DB47CC3C3B188F6DC2DD807 /* Pods-RunnerTests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CURRENT_PROJECT_VERSION = 1;
@@ -641,6 +796,7 @@
 		};
 		331C80DD294CF71000263BE5 /* Profile */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B0E913C5EA5068D3AA2EEED4 /* Pods-RunnerTests.profile.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CURRENT_PROJECT_VERSION = 1;
@@ -694,7 +850,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				POMODOIST_APP_GROUP = group.com.pomodoist;
 				SDKROOT = macosx;
@@ -779,7 +935,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				POMODOIST_APP_GROUP = group.com.pomodoist;
@@ -830,7 +986,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				POMODOIST_APP_GROUP = group.com.pomodoist;
 				SDKROOT = macosx;
@@ -945,7 +1101,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				POMODOIST_APP_GROUP = group.com.pomodoist;
@@ -979,6 +1135,7 @@
 		};
 		7C5A01032EFBD00000A11CE1 /* Debug-RunnerStoreKitLocal */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A92C0E960894F2299E9920BF /* Pods-RunnerTests.debug-runnerstorekitlocal.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CURRENT_PROJECT_VERSION = 1;
@@ -1160,7 +1317,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
@@ -1169,90 +1326,6 @@
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-			};
-			name = "Debug-Development";
-		};
-		7E1000042EFBD10000000004 /* Debug-Development */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-Development;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/LocalDebug.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 4VK836929S;
-				INFOPLIST_FILE = Runner/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist.dev";
-				POMODOIST_BUILD_ENTITLEMENTS = "Runner/LocalDebug.entitlements";
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
-				POMODOIST_URL_SCHEME = "pomodoist-dev";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev;
-				PRODUCT_NAME = "Pomodoist Dev";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
-			};
-			name = "Debug-Development";
-		};
-		7E10000A2EFBD1000000000A /* Debug-Development */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.RunnerTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Dev.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Dev";
-			};
-			name = "Debug-Development";
-		};
-		7E10000D2EFBD1000000000D /* Debug-Development */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/LocalDebug.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 4VK836929S;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				OTHER_LDFLAGS = "";
-				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev Focus Widget";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.focuswidget;
-				PRODUCT_NAME = PomodoistFocusWidgetExtension;
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
-				WRAPPER_EXTENSION = appex;
-			};
-			name = "Debug-Development";
-		};
-		7E1000072EFBD10000000007 /* Debug-Development */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Manual;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = "Debug-Development";
 		};
@@ -1297,7 +1370,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
@@ -1307,219 +1380,6 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 			};
 			name = "Release-Development";
-		};
-		F70640268851B1260EC1EDE4 /* Release-Direct-Development */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CODE_SIGN_IDENTITY = "-";
-				COPY_PHASE_STRIP = NO;
-				DEAD_CODE_STRIPPING = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
-				POMODOIST_URL_SCHEME = "pomodoist-dev";
-				SDKROOT = macosx;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
-			};
-			name = "Release-Direct-Development";
-		};
-		7E1000052EFBD10000000005 /* Release-Development */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-Development;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/Release.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 4VK836929S;
-				INFOPLIST_FILE = Runner/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist.dev";
-				POMODOIST_BUILD_ENTITLEMENTS = "Runner/Release.entitlements";
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
-				POMODOIST_URL_SCHEME = "pomodoist-dev";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev;
-				PRODUCT_NAME = "Pomodoist Dev";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_VERSION = 5.0;
-			};
-			name = "Release-Development";
-		};
-		F70640268851B1260EC1EDE5 /* Release-Direct-Development */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-Development;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/Direct.entitlements;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
-				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = Runner/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist.dev";
-				POMODOIST_BUILD_ENTITLEMENTS = "Runner/Direct.entitlements";
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
-				POMODOIST_URL_SCHEME = "pomodoist-dev";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev;
-				PRODUCT_NAME = "Pomodoist Dev";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_VERSION = 5.0;
-			};
-			name = "Release-Direct-Development";
-		};
-		7E10000B2EFBD1000000000B /* Release-Development */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.RunnerTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Dev.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Dev";
-			};
-			name = "Release-Development";
-		};
-		F70640268851B1260EC1EDE6 /* Release-Direct-Development */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.RunnerTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Dev.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Dev";
-			};
-			name = "Release-Direct-Development";
-		};
-		7E10000E2EFBD1000000000E /* Release-Development */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/PomodoistFocusWidget.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 4VK836929S;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				OTHER_LDFLAGS = "";
-				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev Focus Widget";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.focuswidget;
-				PRODUCT_NAME = PomodoistFocusWidgetExtension;
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_VERSION = 5.0;
-				WRAPPER_EXTENSION = appex;
-			};
-			name = "Release-Development";
-		};
-		F70640268851B1260EC1EDE7 /* Release-Direct-Development */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/Direct.entitlements;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				OTHER_LDFLAGS = "";
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev Focus Widget";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.focuswidget;
-				PRODUCT_NAME = PomodoistFocusWidgetExtension;
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_VERSION = 5.0;
-				WRAPPER_EXTENSION = appex;
-			};
-			name = "Release-Direct-Development";
-		};
-		7E1000082EFBD10000000008 /* Release-Development */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = "Release-Development";
-		};
-		F70640268851B1260EC1EDE8 /* Release-Direct-Development */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = F70640268851B1260EC1EDE3 /* Direct.xcconfig */;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = "Release-Direct-Development";
 		};
 		7E1000032EFBD10000000003 /* Profile-Development */ = {
 			isa = XCBuildConfiguration;
@@ -1562,7 +1422,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
@@ -1573,11 +1433,68 @@
 			};
 			name = "Profile-Development";
 		};
+		7E1000042EFBD10000000004 /* Debug-Development */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Development";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/LocalDebug.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 4VK836929S;
+				INFOPLIST_FILE = Runner/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
+				POMODOIST_BUILD_BUNDLE_ID = com.finchforge.pomodoist.dev;
+				POMODOIST_BUILD_ENTITLEMENTS = Runner/LocalDebug.entitlements;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_URL_SCHEME = "pomodoist-dev";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev;
+				PRODUCT_NAME = "Pomodoist Dev";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = "Debug-Development";
+		};
+		7E1000052EFBD10000000005 /* Release-Development */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Development";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Release.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 4VK836929S;
+				INFOPLIST_FILE = Runner/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
+				POMODOIST_BUILD_BUNDLE_ID = com.finchforge.pomodoist.dev;
+				POMODOIST_BUILD_ENTITLEMENTS = Runner/Release.entitlements;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_URL_SCHEME = "pomodoist-dev";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev;
+				PRODUCT_NAME = "Pomodoist Dev";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_VERSION = 5.0;
+			};
+			name = "Release-Development";
+		};
 		7E1000062EFBD10000000006 /* Profile-Development */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-Development;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Development";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/DebugProfile.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -1590,8 +1507,8 @@
 					"@executable_path/../Frameworks",
 				);
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist.dev";
-				POMODOIST_BUILD_ENTITLEMENTS = "Runner/DebugProfile.entitlements";
+				POMODOIST_BUILD_BUNDLE_ID = com.finchforge.pomodoist.dev;
+				POMODOIST_BUILD_ENTITLEMENTS = Runner/DebugProfile.entitlements;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
 				POMODOIST_URL_SCHEME = "pomodoist-dev";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev;
@@ -1601,8 +1518,63 @@
 			};
 			name = "Profile-Development";
 		};
+		7E1000072EFBD10000000007 /* Debug-Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Manual;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Debug-Development";
+		};
+		7E1000082EFBD10000000008 /* Release-Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Release-Development";
+		};
+		7E1000092EFBD10000000009 /* Profile-Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Manual;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Profile-Development";
+		};
+		7E10000A2EFBD1000000000A /* Debug-Development */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = EC386BE873DC15DFD204DA82 /* Pods-RunnerTests.debug-development.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.RunnerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Dev.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Dev";
+			};
+			name = "Debug-Development";
+		};
+		7E10000B2EFBD1000000000B /* Release-Development */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0C16B8AFEB66997DF560BF69 /* Pods-RunnerTests.release-development.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.RunnerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Dev.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Dev";
+			};
+			name = "Release-Development";
+		};
 		7E10000C2EFBD1000000000C /* Profile-Development */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5C174182C06C4785B85D769C /* Pods-RunnerTests.profile-development.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CURRENT_PROJECT_VERSION = 1;
@@ -1614,6 +1586,71 @@
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Dev.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Dev";
 			};
 			name = "Profile-Development";
+		};
+		7E10000D2EFBD1000000000D /* Debug-Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/LocalDebug.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				OTHER_LDFLAGS = "";
+				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Dev Focus Widget";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.focuswidget;
+				PRODUCT_NAME = PomodoistFocusWidgetExtension;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = appex;
+			};
+			name = "Debug-Development";
+		};
+		7E10000E2EFBD1000000000E /* Release-Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/PomodoistFocusWidget.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				OTHER_LDFLAGS = "";
+				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Dev Focus Widget";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.focuswidget;
+				PRODUCT_NAME = PomodoistFocusWidgetExtension;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = appex;
+			};
+			name = "Release-Development";
 		};
 		7E10000F2EFBD1000000000F /* Profile-Development */ = {
 			isa = XCBuildConfiguration;
@@ -1644,14 +1681,6 @@
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_VERSION = 5.0;
 				WRAPPER_EXTENSION = appex;
-			};
-			name = "Profile-Development";
-		};
-		7E1000092EFBD10000000009 /* Profile-Development */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Manual;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = "Profile-Development";
 		};
@@ -1702,7 +1731,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
@@ -1711,90 +1740,6 @@
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-			};
-			name = "Debug-Staging";
-		};
-		7E2000042EFBD10000000004 /* Debug-Staging */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-Staging;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/LocalDebug.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 4VK836929S;
-				INFOPLIST_FILE = Runner/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist.stg";
-				POMODOIST_BUILD_ENTITLEMENTS = "Runner/LocalDebug.entitlements";
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
-				POMODOIST_URL_SCHEME = "pomodoist-stg";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg;
-				PRODUCT_NAME = "Pomodoist Stg";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
-			};
-			name = "Debug-Staging";
-		};
-		7E20000A2EFBD1000000000A /* Debug-Staging */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.RunnerTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Stg";
-			};
-			name = "Debug-Staging";
-		};
-		7E20000D2EFBD1000000000D /* Debug-Staging */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/LocalDebug.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 4VK836929S;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				OTHER_LDFLAGS = "";
-				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg Focus Widget";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.focuswidget;
-				PRODUCT_NAME = PomodoistFocusWidgetExtension;
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
-				WRAPPER_EXTENSION = appex;
-			};
-			name = "Debug-Staging";
-		};
-		7E2000072EFBD10000000007 /* Debug-Staging */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Manual;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = "Debug-Staging";
 		};
@@ -1839,7 +1784,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
@@ -1849,219 +1794,6 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 			};
 			name = "Release-Staging";
-		};
-		F70640268851B1260EC1EDE9 /* Release-Direct-Staging */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CODE_SIGN_IDENTITY = "-";
-				COPY_PHASE_STRIP = NO;
-				DEAD_CODE_STRIPPING = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
-				POMODOIST_URL_SCHEME = "pomodoist-stg";
-				SDKROOT = macosx;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
-			};
-			name = "Release-Direct-Staging";
-		};
-		7E2000052EFBD10000000005 /* Release-Staging */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-Staging;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/Release.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 4VK836929S;
-				INFOPLIST_FILE = Runner/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist.stg";
-				POMODOIST_BUILD_ENTITLEMENTS = "Runner/Release.entitlements";
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
-				POMODOIST_URL_SCHEME = "pomodoist-stg";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg;
-				PRODUCT_NAME = "Pomodoist Stg";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_VERSION = 5.0;
-			};
-			name = "Release-Staging";
-		};
-		F70640268851B1260EC1EDEA /* Release-Direct-Staging */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-Staging;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/Direct.entitlements;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
-				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = Runner/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist.stg";
-				POMODOIST_BUILD_ENTITLEMENTS = "Runner/Direct.entitlements";
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
-				POMODOIST_URL_SCHEME = "pomodoist-stg";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg;
-				PRODUCT_NAME = "Pomodoist Stg";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_VERSION = 5.0;
-			};
-			name = "Release-Direct-Staging";
-		};
-		7E20000B2EFBD1000000000B /* Release-Staging */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.RunnerTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Stg";
-			};
-			name = "Release-Staging";
-		};
-		F70640268851B1260EC1EDEB /* Release-Direct-Staging */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.RunnerTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Stg";
-			};
-			name = "Release-Direct-Staging";
-		};
-		7E20000E2EFBD1000000000E /* Release-Staging */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/PomodoistFocusWidget.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 4VK836929S;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				OTHER_LDFLAGS = "";
-				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg Focus Widget";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.focuswidget;
-				PRODUCT_NAME = PomodoistFocusWidgetExtension;
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_VERSION = 5.0;
-				WRAPPER_EXTENSION = appex;
-			};
-			name = "Release-Staging";
-		};
-		F70640268851B1260EC1EDEC /* Release-Direct-Staging */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/Direct.entitlements;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				OTHER_LDFLAGS = "";
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg Focus Widget";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.focuswidget;
-				PRODUCT_NAME = PomodoistFocusWidgetExtension;
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_VERSION = 5.0;
-				WRAPPER_EXTENSION = appex;
-			};
-			name = "Release-Direct-Staging";
-		};
-		7E2000082EFBD10000000008 /* Release-Staging */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = "Release-Staging";
-		};
-		F70640268851B1260EC1EDED /* Release-Direct-Staging */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = F70640268851B1260EC1EDE3 /* Direct.xcconfig */;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = "Release-Direct-Staging";
 		};
 		7E2000032EFBD10000000003 /* Profile-Staging */ = {
 			isa = XCBuildConfiguration;
@@ -2104,7 +1836,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
@@ -2115,11 +1847,68 @@
 			};
 			name = "Profile-Staging";
 		};
+		7E2000042EFBD10000000004 /* Debug-Staging */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Staging";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/LocalDebug.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 4VK836929S;
+				INFOPLIST_FILE = Runner/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
+				POMODOIST_BUILD_BUNDLE_ID = com.finchforge.pomodoist.stg;
+				POMODOIST_BUILD_ENTITLEMENTS = Runner/LocalDebug.entitlements;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_URL_SCHEME = "pomodoist-stg";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg;
+				PRODUCT_NAME = "Pomodoist Stg";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = "Debug-Staging";
+		};
+		7E2000052EFBD10000000005 /* Release-Staging */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Staging";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Release.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 4VK836929S;
+				INFOPLIST_FILE = Runner/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
+				POMODOIST_BUILD_BUNDLE_ID = com.finchforge.pomodoist.stg;
+				POMODOIST_BUILD_ENTITLEMENTS = Runner/Release.entitlements;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_URL_SCHEME = "pomodoist-stg";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg;
+				PRODUCT_NAME = "Pomodoist Stg";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_VERSION = 5.0;
+			};
+			name = "Release-Staging";
+		};
 		7E2000062EFBD10000000006 /* Profile-Staging */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-Staging;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Staging";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/DebugProfile.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -2132,8 +1921,8 @@
 					"@executable_path/../Frameworks",
 				);
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist.stg";
-				POMODOIST_BUILD_ENTITLEMENTS = "Runner/DebugProfile.entitlements";
+				POMODOIST_BUILD_BUNDLE_ID = com.finchforge.pomodoist.stg;
+				POMODOIST_BUILD_ENTITLEMENTS = Runner/DebugProfile.entitlements;
 				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg;
@@ -2143,8 +1932,63 @@
 			};
 			name = "Profile-Staging";
 		};
+		7E2000072EFBD10000000007 /* Debug-Staging */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Manual;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Debug-Staging";
+		};
+		7E2000082EFBD10000000008 /* Release-Staging */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Release-Staging";
+		};
+		7E2000092EFBD10000000009 /* Profile-Staging */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Manual;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Profile-Staging";
+		};
+		7E20000A2EFBD1000000000A /* Debug-Staging */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D65400D26257B33746E8D7D2 /* Pods-RunnerTests.debug-staging.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.RunnerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Stg";
+			};
+			name = "Debug-Staging";
+		};
+		7E20000B2EFBD1000000000B /* Release-Staging */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E230C5551AA3ACA26C882D75 /* Pods-RunnerTests.release-staging.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.RunnerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Stg";
+			};
+			name = "Release-Staging";
+		};
 		7E20000C2EFBD1000000000C /* Profile-Staging */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 81C28EA197EB939E1C4DF714 /* Pods-RunnerTests.profile-staging.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CURRENT_PROJECT_VERSION = 1;
@@ -2156,6 +2000,71 @@
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Stg";
 			};
 			name = "Profile-Staging";
+		};
+		7E20000D2EFBD1000000000D /* Debug-Staging */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/LocalDebug.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				OTHER_LDFLAGS = "";
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Stg Focus Widget";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.focuswidget;
+				PRODUCT_NAME = PomodoistFocusWidgetExtension;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = appex;
+			};
+			name = "Debug-Staging";
+		};
+		7E20000E2EFBD1000000000E /* Release-Staging */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/PomodoistFocusWidget.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				OTHER_LDFLAGS = "";
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Stg Focus Widget";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.focuswidget;
+				PRODUCT_NAME = PomodoistFocusWidgetExtension;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = appex;
+			};
+			name = "Release-Staging";
 		};
 		7E20000F2EFBD1000000000F /* Profile-Staging */ = {
 			isa = XCBuildConfiguration;
@@ -2186,14 +2095,6 @@
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_VERSION = 5.0;
 				WRAPPER_EXTENSION = appex;
-			};
-			name = "Profile-Staging";
-		};
-		7E2000092EFBD10000000009 /* Profile-Staging */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Manual;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = "Profile-Staging";
 		};
@@ -2244,99 +2145,15 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				POMODOIST_APP_GROUP = group.com.pomodoist;
-				POMODOIST_DISPLAY_NAME = "Pomodoist";
-				POMODOIST_URL_SCHEME = "pomodoist";
+				POMODOIST_DISPLAY_NAME = Pomodoist;
+				POMODOIST_URL_SCHEME = pomodoist;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-			};
-			name = "Debug-Production";
-		};
-		7E3000042EFBD10000000004 /* Debug-Production */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/LocalDebug.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 4VK836929S;
-				INFOPLIST_FILE = Runner/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				POMODOIST_APP_GROUP = group.com.pomodoist;
-				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist";
-				POMODOIST_BUILD_ENTITLEMENTS = "Runner/LocalDebug.entitlements";
-				POMODOIST_DISPLAY_NAME = "Pomodoist";
-				POMODOIST_URL_SCHEME = "pomodoist";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist;
-				PRODUCT_NAME = "Pomodoist";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
-			};
-			name = "Debug-Production";
-		};
-		7E30000A2EFBD1000000000A /* Debug-Production */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.RunnerTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist";
-			};
-			name = "Debug-Production";
-		};
-		7E30000D2EFBD1000000000D /* Debug-Production */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/LocalDebug.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 4VK836929S;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				OTHER_LDFLAGS = "";
-				POMODOIST_APP_GROUP = group.com.pomodoist;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Focus Widget";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.focuswidget;
-				PRODUCT_NAME = PomodoistFocusWidgetExtension;
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
-				WRAPPER_EXTENSION = appex;
-			};
-			name = "Debug-Production";
-		};
-		7E3000072EFBD10000000007 /* Debug-Production */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Manual;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = "Debug-Production";
 		};
@@ -2381,229 +2198,16 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				POMODOIST_APP_GROUP = group.com.pomodoist;
-				POMODOIST_DISPLAY_NAME = "Pomodoist";
-				POMODOIST_URL_SCHEME = "pomodoist";
+				POMODOIST_DISPLAY_NAME = Pomodoist;
+				POMODOIST_URL_SCHEME = pomodoist;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 			};
 			name = "Release-Production";
-		};
-		F70640268851B1260EC1EDEE /* Release-Direct-Production */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CODE_SIGN_IDENTITY = "-";
-				COPY_PHASE_STRIP = NO;
-				DEAD_CODE_STRIPPING = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				POMODOIST_APP_GROUP = group.com.pomodoist;
-				POMODOIST_DISPLAY_NAME = "Pomodoist";
-				POMODOIST_URL_SCHEME = "pomodoist";
-				SDKROOT = macosx;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
-			};
-			name = "Release-Direct-Production";
-		};
-		7E3000052EFBD10000000005 /* Release-Production */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/Release.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 4VK836929S;
-				INFOPLIST_FILE = Runner/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				POMODOIST_APP_GROUP = group.com.pomodoist;
-				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist";
-				POMODOIST_BUILD_ENTITLEMENTS = "Runner/Release.entitlements";
-				POMODOIST_DISPLAY_NAME = "Pomodoist";
-				POMODOIST_URL_SCHEME = "pomodoist";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist;
-				PRODUCT_NAME = "Pomodoist";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_VERSION = 5.0;
-			};
-			name = "Release-Production";
-		};
-		F70640268851B1260EC1EDEF /* Release-Direct-Production */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/Direct.entitlements;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
-				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = Runner/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist";
-				POMODOIST_BUILD_ENTITLEMENTS = "Runner/Direct.entitlements";
-				POMODOIST_DISPLAY_NAME = "Pomodoist";
-				POMODOIST_URL_SCHEME = "pomodoist";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist;
-				PRODUCT_NAME = "Pomodoist";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_VERSION = 5.0;
-			};
-			name = "Release-Direct-Production";
-		};
-		7E30000B2EFBD1000000000B /* Release-Production */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.RunnerTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist";
-			};
-			name = "Release-Production";
-		};
-		F70640268851B1260EC1EDF0 /* Release-Direct-Production */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.RunnerTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist";
-			};
-			name = "Release-Direct-Production";
-		};
-		7E30000E2EFBD1000000000E /* Release-Production */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/PomodoistFocusWidget.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 4VK836929S;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				OTHER_LDFLAGS = "";
-				POMODOIST_APP_GROUP = group.com.pomodoist;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Focus Widget";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.focuswidget;
-				PRODUCT_NAME = PomodoistFocusWidgetExtension;
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_VERSION = 5.0;
-				WRAPPER_EXTENSION = appex;
-			};
-			name = "Release-Production";
-		};
-		F70640268851B1260EC1EDF1 /* Release-Direct-Production */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/Direct.entitlements;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				OTHER_LDFLAGS = "";
-				POMODOIST_DISPLAY_NAME = "Pomodoist Focus Widget";
-				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.focuswidget;
-				PRODUCT_NAME = PomodoistFocusWidgetExtension;
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_VERSION = 5.0;
-				WRAPPER_EXTENSION = appex;
-			};
-			name = "Release-Direct-Production";
-		};
-		7E3000082EFBD10000000008 /* Release-Production */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = "Release-Production";
-		};
-		F70640268851B1260EC1EDF2 /* Release-Direct-Production */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = F70640268851B1260EC1EDE3 /* Direct.xcconfig */;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = "Release-Direct-Production";
 		};
 		7E3000032EFBD10000000003 /* Profile-Production */ = {
 			isa = XCBuildConfiguration;
@@ -2646,16 +2250,73 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				POMODOIST_APP_GROUP = group.com.pomodoist;
-				POMODOIST_DISPLAY_NAME = "Pomodoist";
-				POMODOIST_URL_SCHEME = "pomodoist";
+				POMODOIST_DISPLAY_NAME = Pomodoist;
+				POMODOIST_URL_SCHEME = pomodoist;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 			};
 			name = "Profile-Production";
+		};
+		7E3000042EFBD10000000004 /* Debug-Production */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/LocalDebug.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 4VK836929S;
+				INFOPLIST_FILE = Runner/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_BUILD_BUNDLE_ID = com.finchforge.pomodoist;
+				POMODOIST_BUILD_ENTITLEMENTS = Runner/LocalDebug.entitlements;
+				POMODOIST_DISPLAY_NAME = Pomodoist;
+				POMODOIST_URL_SCHEME = pomodoist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist;
+				PRODUCT_NAME = Pomodoist;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = "Debug-Production";
+		};
+		7E3000052EFBD10000000005 /* Release-Production */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Release.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 4VK836929S;
+				INFOPLIST_FILE = Runner/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_BUILD_BUNDLE_ID = com.finchforge.pomodoist;
+				POMODOIST_BUILD_ENTITLEMENTS = Runner/Release.entitlements;
+				POMODOIST_DISPLAY_NAME = Pomodoist;
+				POMODOIST_URL_SCHEME = pomodoist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist;
+				PRODUCT_NAME = Pomodoist;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_VERSION = 5.0;
+			};
+			name = "Release-Production";
 		};
 		7E3000062EFBD10000000006 /* Profile-Production */ = {
 			isa = XCBuildConfiguration;
@@ -2674,19 +2335,74 @@
 					"@executable_path/../Frameworks",
 				);
 				POMODOIST_APP_GROUP = group.com.pomodoist;
-				POMODOIST_BUILD_BUNDLE_ID = "com.finchforge.pomodoist";
-				POMODOIST_BUILD_ENTITLEMENTS = "Runner/DebugProfile.entitlements";
-				POMODOIST_DISPLAY_NAME = "Pomodoist";
-				POMODOIST_URL_SCHEME = "pomodoist";
+				POMODOIST_BUILD_BUNDLE_ID = com.finchforge.pomodoist;
+				POMODOIST_BUILD_ENTITLEMENTS = Runner/DebugProfile.entitlements;
+				POMODOIST_DISPLAY_NAME = Pomodoist;
+				POMODOIST_URL_SCHEME = pomodoist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist;
-				PRODUCT_NAME = "Pomodoist";
+				PRODUCT_NAME = Pomodoist;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 			};
 			name = "Profile-Production";
 		};
+		7E3000072EFBD10000000007 /* Debug-Production */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Manual;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Debug-Production";
+		};
+		7E3000082EFBD10000000008 /* Release-Production */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Release-Production";
+		};
+		7E3000092EFBD10000000009 /* Profile-Production */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Manual;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Profile-Production";
+		};
+		7E30000A2EFBD1000000000A /* Debug-Production */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 58C50937EA5FF6D3BB572E27 /* Pods-RunnerTests.debug-production.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.RunnerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist";
+			};
+			name = "Debug-Production";
+		};
+		7E30000B2EFBD1000000000B /* Release-Production */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 975E551E39E8E2A7F4C7B907 /* Pods-RunnerTests.release-production.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.RunnerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist";
+			};
+			name = "Release-Production";
+		};
 		7E30000C2EFBD1000000000C /* Profile-Production */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 46446F36DC1BB940FECA606A /* Pods-RunnerTests.profile-production.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CURRENT_PROJECT_VERSION = 1;
@@ -2698,6 +2414,71 @@
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist";
 			};
 			name = "Profile-Production";
+		};
+		7E30000D2EFBD1000000000D /* Debug-Production */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/LocalDebug.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				OTHER_LDFLAGS = "";
+				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Focus Widget";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.focuswidget;
+				PRODUCT_NAME = PomodoistFocusWidgetExtension;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = appex;
+			};
+			name = "Debug-Production";
+		};
+		7E30000E2EFBD1000000000E /* Release-Production */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/PomodoistFocusWidget.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				OTHER_LDFLAGS = "";
+				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Focus Widget";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.focuswidget;
+				PRODUCT_NAME = PomodoistFocusWidgetExtension;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = appex;
+			};
+			name = "Release-Production";
 		};
 		7E30000F2EFBD1000000000F /* Profile-Production */ = {
 			isa = XCBuildConfiguration;
@@ -2731,13 +2512,401 @@
 			};
 			name = "Profile-Production";
 		};
-		7E3000092EFBD10000000009 /* Profile-Production */ = {
+		F70640268851B1260EC1EDE4 /* Release-Direct-Development */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_URL_SCHEME = "pomodoist-dev";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = "Release-Direct-Development";
+		};
+		F70640268851B1260EC1EDE5 /* Release-Direct-Development */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Development";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Direct.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Runner/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				POMODOIST_BUILD_BUNDLE_ID = com.finchforge.pomodoist.dev;
+				POMODOIST_BUILD_ENTITLEMENTS = Runner/Direct.entitlements;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_URL_SCHEME = "pomodoist-dev";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev;
+				PRODUCT_NAME = "Pomodoist Dev";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_VERSION = 5.0;
+			};
+			name = "Release-Direct-Development";
+		};
+		F70640268851B1260EC1EDE6 /* Release-Direct-Development */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 55B86B3C392F271BA5CCCA30 /* Pods-RunnerTests.release-direct-development.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.RunnerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Dev.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Dev";
+			};
+			name = "Release-Direct-Development";
+		};
+		F70640268851B1260EC1EDE7 /* Release-Direct-Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/Direct.entitlements;
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				OTHER_LDFLAGS = "";
+				POMODOIST_DISPLAY_NAME = "Pomodoist Dev Focus Widget";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.focuswidget;
+				PRODUCT_NAME = PomodoistFocusWidgetExtension;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = appex;
+			};
+			name = "Release-Direct-Development";
+		};
+		F70640268851B1260EC1EDE8 /* Release-Direct-Development */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F70640268851B1260EC1EDE3 /* Direct.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
-			name = "Profile-Production";
+			name = "Release-Direct-Development";
+		};
+		F70640268851B1260EC1EDE9 /* Release-Direct-Staging */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_URL_SCHEME = "pomodoist-stg";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = "Release-Direct-Staging";
+		};
+		F70640268851B1260EC1EDEA /* Release-Direct-Staging */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Staging";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Direct.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Runner/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				POMODOIST_BUILD_BUNDLE_ID = com.finchforge.pomodoist.stg;
+				POMODOIST_BUILD_ENTITLEMENTS = Runner/Direct.entitlements;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_URL_SCHEME = "pomodoist-stg";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg;
+				PRODUCT_NAME = "Pomodoist Stg";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_VERSION = 5.0;
+			};
+			name = "Release-Direct-Staging";
+		};
+		F70640268851B1260EC1EDEB /* Release-Direct-Staging */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6B84D0128EA1EECA801AA5B6 /* Pods-RunnerTests.release-direct-staging.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.RunnerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Stg";
+			};
+			name = "Release-Direct-Staging";
+		};
+		F70640268851B1260EC1EDEC /* Release-Direct-Staging */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/Direct.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				OTHER_LDFLAGS = "";
+				POMODOIST_DISPLAY_NAME = "Pomodoist Stg Focus Widget";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.focuswidget;
+				PRODUCT_NAME = PomodoistFocusWidgetExtension;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = appex;
+			};
+			name = "Release-Direct-Staging";
+		};
+		F70640268851B1260EC1EDED /* Release-Direct-Staging */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F70640268851B1260EC1EDE3 /* Direct.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Release-Direct-Staging";
+		};
+		F70640268851B1260EC1EDEE /* Release-Direct-Production */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_DISPLAY_NAME = Pomodoist;
+				POMODOIST_URL_SCHEME = pomodoist;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = "Release-Direct-Production";
+		};
+		F70640268851B1260EC1EDEF /* Release-Direct-Production */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Direct.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Runner/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				POMODOIST_BUILD_BUNDLE_ID = com.finchforge.pomodoist;
+				POMODOIST_BUILD_ENTITLEMENTS = Runner/Direct.entitlements;
+				POMODOIST_DISPLAY_NAME = Pomodoist;
+				POMODOIST_URL_SCHEME = pomodoist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist;
+				PRODUCT_NAME = Pomodoist;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_VERSION = 5.0;
+			};
+			name = "Release-Direct-Production";
+		};
+		F70640268851B1260EC1EDF0 /* Release-Direct-Production */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CBB44B83016A573A23A2C21C /* Pods-RunnerTests.release-direct-production.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.RunnerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist";
+			};
+			name = "Release-Direct-Production";
+		};
+		F70640268851B1260EC1EDF1 /* Release-Direct-Production */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistFocusWidget/Direct.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistFocusWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				OTHER_LDFLAGS = "";
+				POMODOIST_DISPLAY_NAME = "Pomodoist Focus Widget";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.focuswidget;
+				PRODUCT_NAME = PomodoistFocusWidgetExtension;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = appex;
+			};
+			name = "Release-Direct-Production";
+		};
+		F70640268851B1260EC1EDF2 /* Release-Direct-Production */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F70640268851B1260EC1EDE3 /* Direct.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Release-Direct-Production";
 		};
 /* End XCBuildConfiguration section */
 

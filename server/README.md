@@ -379,3 +379,12 @@ leases; reconnect queues maintenance. Provider-neutral linked labels and a visib
 unsupported-event warning were included so Outlook users can identify their state.
 The completed feature branch is retained for later integration; the deferred
 cleanup behavior on account replacement is described above.
+
+### Manual Pomodoro estimate compatibility
+
+Deploy the `pomodoist_manual_focus_estimate` migration before releasing clients
+that send `isFocusEstimateManual`. The optional boolean travels with
+`estimatedFocusIntervals` through personal and shared sync. Missing values mean
+legacy automatic precedence; no existing estimates are reclassified. New manual
+estimates override the timed block's calculated target without changing its
+schedule. Older clients still apply their previous precedence when starting Focus.

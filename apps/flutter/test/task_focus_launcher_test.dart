@@ -9,7 +9,7 @@ import 'package:pomodoist/domain/use_cases/focus/task_focus_launcher.dart';
 
 void main() {
   test(
-    'starts with the selected preset and task estimate when no session exists',
+    'starts a timed task with its manual target and selected preset',
     () async {
       final repository = _FocusRepository();
       final launcher = TaskFocusLauncher(repository);
@@ -148,6 +148,11 @@ final _task = TaskItem(
   priority: 4,
   status: 'open',
   estimatedFocusIntervals: 3,
+  isFocusEstimateManual: true,
+  dueJson: TaskSchedule.timed(
+    start: _now,
+    end: _now.add(const Duration(minutes: 30)),
+  ).toJsonString(),
   completedFocusIntervals: 1,
   totalFocusSeconds: 0,
   orderKey: '1',

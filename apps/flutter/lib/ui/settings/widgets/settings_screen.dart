@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/pomo/widgets/pomo_settings.dart';
 import 'package:pomodoist/domain/models/calendar/provider_calendar_models.dart';
 import 'dart:async';
 
@@ -24,6 +25,7 @@ import 'package:pomodoist/ui/settings/widgets/account_avatar_dialog.dart';
 import 'package:pomodoist/ui/settings/widgets/app_info_card.dart';
 import 'package:pomodoist/ui/settings/widgets/csv_task_import_card.dart';
 import 'package:pomodoist/ui/settings/widgets/theme_settings_card.dart';
+import 'package:pomodoist/ui/settings/widgets/app_icon_settings.dart';
 import 'package:pomodoist/ui/settings/widgets/bottom_navigation_settings.dart';
 import 'package:pomodoist/ui/settings/widgets/voice_transcription_settings_card.dart';
 import 'package:pomodoist/ui/settings/widgets/pomodoist_account_actions.dart';
@@ -349,6 +351,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           children: [
             ThemeSettingsCard(),
             SizedBox(height: 24),
+            AppIconSettings(),
+            SizedBox(height: 24),
             BottomNavigationSettings(),
             SizedBox(height: 24),
             TaskListStyleSettings(),
@@ -360,6 +364,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const DefaultTimedBlockDurationSettings(),
+            const PomoSettings(),
             const SizedBox(height: 24),
             SettingsGroup(
               children: [

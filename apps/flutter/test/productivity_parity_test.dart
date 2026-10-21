@@ -233,6 +233,7 @@ List<TaskRow> _tasks(Map<String, dynamic> fixtureCase) {
     for (final row
         in (fixtureCase['tasks'] as List<dynamic>).cast<Map<String, dynamic>>())
       TaskRow(
+        isFocusEstimateManual: false,
         assigneeIdsJson: '[]',
         id: row['id'] as String,
         userId: fixtureCase['userId'] as String,

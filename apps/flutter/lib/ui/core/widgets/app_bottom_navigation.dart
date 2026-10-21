@@ -1,7 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show CustomSemanticsAction;
+import 'package:flutter/services.dart';
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'package:pomodoist/domain/models/settings/bottom_navigation_preferences.dart';
+import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/widgets/bottom_navigation_destination.dart';
@@ -16,6 +20,10 @@ class AppBottomNavigation extends StatelessWidget {
     required this.selected,
     required this.onSelected,
     this.preview = false,
+    this.onEditRequested,
+    this.editing = false,
+    this.enabled = true,
+    this.onReorder,
     super.key,
   });
 
@@ -23,11 +31,16 @@ class AppBottomNavigation extends StatelessWidget {
   final BottomNavigationDestination? selected;
   final ValueChanged<BottomNavigationDestination> onSelected;
   final bool preview;
+  final ValueChanged<BottomNavigationDestination>? onEditRequested;
+  final bool editing;
+  final bool enabled;
+  final void Function(int from, int to)? onReorder;
 
   @override
   Widget build(BuildContext context) {
     final destinations = preferences.destinations;
     if (destinations.isEmpty) return const SizedBox.shrink();
+    if (editing) return _editingPanel(context);
     final layout = bottomNavigationLayout(
       preferences.style,
       destinations.length,
@@ -176,6 +189,14 @@ class AppBottomNavigation extends StatelessWidget {
                                           textStyle: textStyle,
                                           onTap: () =>
                                               onSelected(destinations[index]),
+                                          onEdit:
+                                              !preview &&
+                                                  enabled &&
+                                                  onEditRequested != null
+                                              ? () => onEditRequested!(
+                                                  destinations[index],
+                                                )
+                                              : null,
                                         ),
                                       )
                                     : _DestinationButton(
@@ -187,6 +208,14 @@ class AppBottomNavigation extends StatelessWidget {
                                         textStyle: textStyle,
                                         onTap: () =>
                                             onSelected(destinations[index]),
+                                        onEdit:
+                                            !preview &&
+                                                enabled &&
+                                                onEditRequested != null
+                                            ? () => onEditRequested!(
+                                                destinations[index],
+                                              )
+                                            : null,
                                       ),
                               ),
                           ],
@@ -211,6 +240,127 @@ class AppBottomNavigation extends StatelessWidget {
       },
     );
   }
+
+  Widget _editingPanel(BuildContext context) {
+    final destinations = preferences.destinations;
+    final colors = context.appColors;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final available = math.max(
+          destinations.length * 48.0,
+          constraints.maxWidth - 36,
+        );
+        final width = destinations.length >= 4
+            ? available
+            : math.min(available, destinations.length * 56.0);
+        final itemWidth = width / destinations.length;
+        Widget button(BottomNavigationDestination destination) => Tooltip(
+          message: destination.label(context),
+          child: SizedBox(
+            width: itemWidth,
+            height: 48,
+            child: Material(
+              color: destination == selected
+                  ? colors.accentTint
+                  : colors.surface,
+              borderRadius: BorderRadius.circular(8),
+              child: InkWell(
+                onTap: enabled ? () => onSelected(destination) : null,
+                borderRadius: BorderRadius.circular(8),
+                child: Semantics(
+                  label: destination.label(context),
+                  selected: destination == selected,
+                  child: ExcludeSemantics(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(
+                          destination.icon,
+                          size: 22,
+                          color: destination == selected
+                              ? colors.accent
+                              : colors.secondaryText,
+                        ),
+                        PositionedDirectional(
+                          top: 2,
+                          end: 2,
+                          child: Icon(
+                            LucideIcons.gripVertical,
+                            size: 10,
+                            color: colors.secondaryText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        final panel = SizedBox(
+          width: width + 36,
+          child: BottomPanelSurface(
+            bottomSpacing: preview ? 0 : 12,
+            trackClearance: !preview,
+            child: Padding(
+              padding: const EdgeInsets.all(5),
+              child: Row(
+                children: [
+                  for (var index = 0; index < destinations.length; index++)
+                    DragTarget<BottomNavigationDestination>(
+                      onWillAcceptWithDetails: (details) =>
+                          enabled &&
+                          onReorder != null &&
+                          details.data != destinations[index],
+                      onAcceptWithDetails: (details) => onReorder?.call(
+                        destinations.indexOf(details.data),
+                        index,
+                      ),
+                      builder: (context, candidates, rejected) => DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color:
+                                candidates.isNotEmpty ||
+                                    destinations[index] == selected
+                                ? colors.accent
+                                : Colors.transparent,
+                          ),
+                        ),
+                        child: Draggable<BottomNavigationDestination>(
+                          data: destinations[index],
+                          axis: Axis.horizontal,
+                          maxSimultaneousDrags: enabled && onReorder != null
+                              ? 1
+                              : 0,
+                          onDragStarted: () => onSelected(destinations[index]),
+                          feedback: button(destinations[index]),
+                          childWhenDragging: Opacity(
+                            opacity: .35,
+                            child: button(destinations[index]),
+                          ),
+                          child: button(destinations[index]),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+        return Align(
+          heightFactor: 1,
+          child: width + 36 > constraints.maxWidth
+              ? SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: panel,
+                )
+              : panel,
+        );
+      },
+    );
+  }
 }
 
 class _DestinationButton extends StatelessWidget {
@@ -222,6 +372,7 @@ class _DestinationButton extends StatelessWidget {
     required this.labelsBelow,
     required this.textStyle,
     required this.onTap,
+    this.onEdit,
   });
 
   final BottomNavigationDestination destination;
@@ -231,6 +382,7 @@ class _DestinationButton extends StatelessWidget {
   final bool labelsBelow;
   final TextStyle textStyle;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -249,6 +401,14 @@ class _DestinationButton extends StatelessWidget {
       button: true,
       selected: selected,
       label: label,
+      hint: onEdit == null ? null : context.l10n.bottomNavigationEditHint,
+      customSemanticsActions: onEdit == null
+          ? null
+          : {
+              CustomSemanticsAction(
+                label: context.l10n.settingsBottomNavigationEdit,
+              ): onEdit!,
+            },
       child: Tooltip(
         message: label,
         excludeFromSemantics: true,
@@ -263,43 +423,61 @@ class _DestinationButton extends StatelessWidget {
           ),
           child: Material(
             color: Colors.transparent,
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(8),
-              child: ExcludeSemantics(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: labelsBelow ? 2 : 4,
-                    vertical: 6,
-                  ),
-                  child: labelsBelow
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [icon, const SizedBox(height: 4), text],
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            icon,
-                            Flexible(
-                              child: ClipRect(
-                                child: Align(
-                                  alignment: AlignmentDirectional.centerStart,
-                                  widthFactor: labelProgress,
-                                  child: Opacity(
-                                    opacity: labelProgress.clamp(0.0, 1.0),
-                                    child: Padding(
-                                      padding: const EdgeInsetsDirectional.only(
-                                        start: 6,
+            child: CallbackShortcuts(
+              bindings: onEdit == null
+                  ? const {}
+                  : {
+                      const SingleActivator(
+                        LogicalKeyboardKey.f10,
+                        shift: true,
+                      ): onEdit!,
+                      const SingleActivator(LogicalKeyboardKey.contextMenu):
+                          onEdit!,
+                    },
+              child: GestureDetector(
+                onSecondaryTapDown: onEdit == null ? null : (_) => onEdit!(),
+                child: InkWell(
+                  onTap: onTap,
+                  onLongPress: onEdit,
+                  borderRadius: BorderRadius.circular(8),
+                  child: ExcludeSemantics(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: labelsBelow ? 2 : 4,
+                        vertical: 6,
+                      ),
+                      child: labelsBelow
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [icon, const SizedBox(height: 4), text],
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                icon,
+                                Flexible(
+                                  child: ClipRect(
+                                    child: Align(
+                                      alignment:
+                                          AlignmentDirectional.centerStart,
+                                      widthFactor: labelProgress,
+                                      child: Opacity(
+                                        opacity: labelProgress.clamp(0.0, 1.0),
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsetsDirectional.only(
+                                                start: 6,
+                                              ),
+                                          child: text,
+                                        ),
                                       ),
-                                      child: text,
                                     ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
+                    ),
+                  ),
                 ),
               ),
             ),

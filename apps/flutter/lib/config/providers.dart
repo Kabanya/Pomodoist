@@ -1,3 +1,4 @@
+import 'package:pomodoist/config/local_completion_dependencies.dart';
 import 'package:pomodoist/data/repositories/planning/quick_add_hint_repository.dart';
 import 'package:pomodoist/data/repositories/planning/quick_add_hint_repository_impl.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_hint.dart';
@@ -242,7 +243,11 @@ final csvTaskImporterProvider = Provider<CsvTaskImportUseCase>((ref) {
     labels: ref.watch(labelRepositoryProvider),
     kanban: ref.watch(kanbanRepositoryProvider),
     tasks: ref.watch(taskRepositoryProvider),
-    runAtomically: db.transaction,
+    runAtomically: <T>(Future<T> Function() action) => ownerBoundTransaction<T>(
+      db,
+      ref.read(syncQueueRepositoryProvider),
+      action,
+    ),
     ensureSeedData: db.ensureSeedData,
     newId: const Uuid().v4,
   );
@@ -253,6 +258,7 @@ final kanbanTransitionCoordinatorProvider =
       return KanbanTransitionCoordinator(
         ref.watch(appDatabaseProvider),
         ref.watch(syncQueueRepositoryProvider),
+        onCompleted: ref.watch(localCompletionEventsProvider).publish,
       );
     });
 
@@ -296,6 +302,7 @@ final focusRepositoryProvider = Provider<FocusRepository>((ref) {
     ref.watch(notificationSchedulerProvider),
     soundPlayer: ref.watch(focusSoundPlayerProvider),
     kanbanTransitions: ref.watch(kanbanTransitionCoordinatorProvider),
+    onIntervalCompleted: ref.watch(localCompletionEventsProvider).publish,
     onRunCompleted: (event) {
       if (ref.read(focusCompletionCelebrationEnabledProvider)) {
         ref.read(focusCompletionRepositoryProvider).present(event);

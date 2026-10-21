@@ -564,6 +564,29 @@ void main() {
       );
     });
 
+    test('manual targets override timed blocks for every selected preset', () {
+      for (final minutes in [25, 50]) {
+        expect(
+          estimateFocusIntervalsForTaskDuration(
+            schedule: TaskSchedule.timed(
+              start: DateTime(2026, 5, 1, 10),
+              end: DateTime(2026, 5, 1, 11),
+            ),
+            durationSeconds: 3600,
+            explicitEstimate: 3,
+            isFocusEstimateManual: true,
+            preset: _testPreset(
+              id: defaultPresetId,
+              workMinutes: minutes,
+              shortBreakMinutes: 5,
+              longBreakMinutes: 15,
+            ),
+          ),
+          3,
+        );
+      }
+    });
+
     test('timed schedule overrides stale stored estimates and duration', () {
       expect(
         estimateFocusIntervalsForTaskDuration(
@@ -1792,6 +1815,7 @@ void main() {
       expect(task!.content, 'Подготовить релиз');
       expect(task.priority, 1);
       expect(task.estimatedFocusIntervals, 4);
+      expect(task.isFocusEstimateManual, isTrue);
       expect(commands.map((command) => command.type), contains('task.create'));
       expect(
         commands.map((command) => command.type),
@@ -1848,6 +1872,7 @@ void main() {
           .createTask(
             CreateTaskInput(
               content: 'Duplicate root',
+              isFocusEstimateManual: true,
               description: 'Copied description',
               sectionId: 'section-1',
               priority: 1,
@@ -1890,6 +1915,7 @@ void main() {
       expect(rootCopy.deadlineJson, isNotNull);
       expect(rootCopy.durationSeconds, 3600);
       expect(rootCopy.estimatedFocusIntervals, 3);
+      expect(rootCopy.isFocusEstimateManual, isTrue);
       expect(rootCopy.isCompleted, isFalse);
       expect(rootCopy.completedFocusIntervals, 0);
       expect(rootCopy.totalFocusSeconds, 0);
@@ -2836,6 +2862,8 @@ void main() {
           .createTask(
             CreateTaskInput(
               content: 'Daily root',
+              estimatedFocusIntervals: 3,
+              isFocusEstimateManual: true,
               labelNames: const ['habit'],
               schedule: TaskSchedule.timed(
                 start: DateTime(2026, 7, 1, 10),
@@ -2880,6 +2908,8 @@ void main() {
       expect(oldRoot.schedule!.recurrenceSeriesId, 'daily-series');
       expect(oldChild!.parentId, rootId);
       expect(newRoot.schedule!.recurrence, isNotNull);
+      expect(newRoot.isFocusEstimateManual, isTrue);
+      expect(newRoot.estimatedFocusIntervals, 3);
       expect(newRoot.schedule!.start!.toLocal(), DateTime(2026, 7, 2, 10));
       expect(newChild.parentId, newRoot.id);
       expect(newChild.schedule!.displayDate, DateTime(2026, 7, 2));

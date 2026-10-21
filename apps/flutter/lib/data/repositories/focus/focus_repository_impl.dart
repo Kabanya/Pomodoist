@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/tasks/local_completion_event.dart';
 import 'package:pomodoist/utils/result.dart';
 import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
 import 'dart:async';
@@ -25,6 +26,7 @@ class DriftFocusRepository implements FocusRepository {
     Uuid? uuid,
     KanbanTransitionCoordinator? kanbanTransitions,
     void Function(FocusRunCompletionEvent event)? onRunCompleted,
+    this.onIntervalCompleted,
   }) : _db = db,
        _soundPlayer = soundPlayer,
        _onRunCompleted = onRunCompleted,
@@ -34,6 +36,7 @@ class DriftFocusRepository implements FocusRepository {
        _uuid = uuid ?? const Uuid(),
        _focus = FocusLocalService(db);
 
+  final void Function(LocalCompletionEvent)? onIntervalCompleted;
   final AppDatabase _db;
   final OutboxService _syncQueue;
   final NotificationScheduler _notifications;
@@ -460,6 +463,17 @@ class DriftFocusRepository implements FocusRepository {
 
         await ownerBoundTransaction(_db, _syncQueue, () async {
           await _focus.completeInterval(interval.id, timestamp);
+          if (interval.type == 'work') {
+            afterLocalCommit(
+              () => onIntervalCompleted?.call(
+                LocalCompletionEvent(
+                  operationId: 'interval:${interval.id}',
+                  entityId: interval.id,
+                  isTask: false,
+                ),
+              ),
+            );
+          }
           await _insertEvent(
             interval.runId,
             interval.id,

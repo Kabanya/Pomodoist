@@ -154,7 +154,7 @@ export function registerOpenClawTools(server: McpServer, auth: PomodoistMcpAuth,
       const current = await state(task_id); const task = current.state.tasks.get(task_id);
       if (!task) throw new ActionError('not_found', 'Task not found.');
       const fields = ['id', 'content', 'description', 'projectId', 'parentId', 'priority', 'dueJson', 'deadlineJson',
-        'durationSeconds', 'status', 'estimatedFocusIntervals', 'completedFocusIntervals', 'totalFocusSeconds', 'updatedAt'];
+        'durationSeconds', 'status', 'estimatedFocusIntervals', 'isFocusEstimateManual', 'completedFocusIntervals', 'totalFocusSeconds', 'updatedAt'];
       return toolSuccess(Object.fromEntries(fields.map(key => [key, task[key] ?? null])));
     } catch (error) { return failure(error); }
   });

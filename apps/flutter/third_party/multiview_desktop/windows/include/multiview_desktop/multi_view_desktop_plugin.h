@@ -1,0 +1,6 @@
+#ifndef MULTIVIEW_DESKTOP_PLUGIN_INCLUDE_WRAPPER_H_
+#define MULTIVIEW_DESKTOP_PLUGIN_INCLUDE_WRAPPER_H_
+
+#include "../multi_view_desktop/multi_view_desktop.h"
+
+#endif  // MULTIVIEW_DESKTOP_PLUGIN_INCLUDE_WRAPPER_H_

@@ -7,6 +7,74 @@ import 'package:pomodoist/ui/tasks/view_models/quick_add_metadata_edit.dart';
 void main() {
   const parser = QuickAddParser();
   final now = DateTime(2026, 9, 9);
+  test(
+    'focus estimate replacement and reset preserve schedule and selection',
+    () {
+      const text = 'Report 3п p2 4p tomorrow 09:00 90m @work';
+      const value = TextEditingValue(
+        text: text,
+        selection: TextSelection(baseOffset: 0, extentOffset: 6),
+      );
+      final updated = rewriteQuickAddMetadata(
+        value,
+        parser.analyze(text, now: now),
+        {QuickAddTokenKind.focusEstimate},
+        '5p',
+      );
+      final parsed = parser.parse(updated.text, now: now);
+      expect(parsed.estimatedFocusIntervals, 5);
+      expect(parsed.priority, 2);
+      expect(parsed.labels, ['work']);
+      expect(parsed.schedule!.duration, const Duration(minutes: 90));
+      expect(updated.selection, value.selection);
+      expect(
+        parser
+            .analyze(updated.text, now: now)
+            .matches
+            .where((m) => m.kind == QuickAddTokenKind.focusEstimate),
+        hasLength(1),
+      );
+      final cleared = rewriteQuickAddMetadata(
+        updated,
+        parser.analyze(updated.text, now: now),
+        {QuickAddTokenKind.focusEstimate},
+        null,
+      );
+      expect(
+        parser.parse(cleared.text, now: now).estimatedFocusIntervals,
+        isNull,
+      );
+      expect(
+        parser.parse(cleared.text, now: now).schedule!.duration,
+        const Duration(minutes: 90),
+      );
+      final composing = value.copyWith(
+        composing: const TextRange(start: 0, end: 6),
+      );
+      expect(
+        rewriteQuickAddMetadata(composing, parser.analyze(text, now: now), {
+          QuickAddTokenKind.focusEstimate,
+        }, '7p'),
+        composing,
+      );
+    },
+  );
+  test('invalid estimates stay literal and cannot overflow the parser', () {
+    for (final token in ['0p', '1000p', '999999999999999999999999999p']) {
+      final parsed = parser.parse('Report $token', now: now);
+      expect(parsed.estimatedFocusIntervals, isNull);
+      expect(parsed.content, 'Report $token');
+      expect(
+        parser
+            .analyze('Report $token', now: now)
+            .matches
+            .where((m) => m.kind == QuickAddTokenKind.focusEstimate),
+        isEmpty,
+      );
+    }
+    expect(parser.parse('Report 1p', now: now).estimatedFocusIntervals, 1);
+    expect(parser.parse('Report 999п', now: now).estimatedFocusIntervals, 999);
+  });
   test('source replacement removes duplicates and preserves other source', () {
     const text = 'Task завтра p1 #"Old name" @"My label" /Work 3p p2';
     final value = TextEditingValue(

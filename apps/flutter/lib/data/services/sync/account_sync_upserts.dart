@@ -354,6 +354,7 @@ extension AccountSyncUpserts on AccountSyncEngine {
     }
     final merged = syncMergeRow(existing?.toJson(), data);
     merged.putIfAbsent('assigneeIdsJson', () => '[]');
+    merged['isFocusEstimateManual'] ??= false;
     merged['createdBy'] =
         data['createdBy'] ??
         existing?.createdBy ??

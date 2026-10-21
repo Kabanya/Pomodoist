@@ -98,6 +98,7 @@ export const publicTaskSchema = z.object({
   dueJson: z.string().nullable(),
   status: z.enum(["open", "completed"]).nullable(),
   estimatedFocusIntervals: z.number().int().nullable(),
+  isFocusEstimateManual: z.boolean().optional(),
   completedFocusIntervals: z.number().int().nullable(),
   totalFocusSeconds: z.number().int().nullable(),
   orderKey: z.string().nullable(),

@@ -17,6 +17,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          focusPresetsProvider.overrideWith((ref) => Stream.value([])),
           quickAddHintTextProvider.overrideWithValue(
             'Plan the next review 09:00 #App @coding',
           ),
@@ -122,6 +123,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          focusPresetsProvider.overrideWith((ref) => Stream.value([])),
           projectsProvider.overrideWith(
             (ref) => Stream.value(const <ProjectItem>[]),
           ),

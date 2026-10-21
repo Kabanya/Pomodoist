@@ -107,6 +107,7 @@ ProviderContainer _container({Stream<List<ProjectItem>>? projects}) {
   final now = DateTime(2026, 9, 20, 9);
   return ProviderContainer(
     overrides: [
+      focusPresetsProvider.overrideWith((ref) => Stream.value([])),
       projectsProvider.overrideWith(
         (ref) => projects ?? Stream.value(const <ProjectItem>[]),
       ),

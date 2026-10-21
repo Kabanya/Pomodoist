@@ -1,3 +1,5 @@
+import 'package:pomodoist/ui/pomo/view_models/pomo_controller.dart';
+import 'package:pomodoist/ui/pomo/widgets/pomo_settings.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_branch_widgets.dart';
 import 'package:pomodoist/ui/onboarding/widgets/learning_tour_overlay.dart';
 import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
@@ -341,7 +343,8 @@ class _FocusViewModeMenu extends StatelessWidget {
     final target = viewMode == FocusViewMode.full
         ? FocusViewMode.minimal
         : FocusViewMode.full;
-    final items = [
+    final items = <Widget>[
+      if (pomoSupported) const PomoMenuItem(),
       ..._sessionDisplayMenuItems(
         context,
         sessionDisplay,

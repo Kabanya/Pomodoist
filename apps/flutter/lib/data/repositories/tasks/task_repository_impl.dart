@@ -145,6 +145,7 @@ class DriftTaskRepository implements TaskRepository {
           deadlineJson: Value(_dateJson(input.deadline)),
           durationSeconds: Value(durationSeconds),
           estimatedFocusIntervals: Value(input.estimatedFocusIntervals),
+          isFocusEstimateManual: Value(input.isFocusEstimateManual),
           orderKey: _orderKey(now),
           createdAt: now,
           updatedAt: now,
@@ -166,6 +167,7 @@ class DriftTaskRepository implements TaskRepository {
               'priority': input.priority ?? 4,
               'due': schedule?.toJsonString(),
               'estimatedFocusIntervals': input.estimatedFocusIntervals,
+              'isFocusEstimateManual': input.isFocusEstimateManual,
             },
           ),
         ],
@@ -262,6 +264,7 @@ class DriftTaskRepository implements TaskRepository {
             deadlineJson: Value(source.deadlineJson),
             durationSeconds: Value(source.durationSeconds),
             estimatedFocusIntervals: Value(source.estimatedFocusIntervals),
+            isFocusEstimateManual: Value(source.isFocusEstimateManual),
             orderKey: orderKey,
             dayOrder: Value(source.dayOrder),
             isCollapsed: Value(source.isCollapsed),
@@ -286,6 +289,7 @@ class DriftTaskRepository implements TaskRepository {
                 'priority': source.priority,
                 'due': schedule?.toJsonString(),
                 'estimatedFocusIntervals': source.estimatedFocusIntervals,
+                'isFocusEstimateManual': source.isFocusEstimateManual,
               },
             ),
           ],
@@ -322,6 +326,7 @@ class DriftTaskRepository implements TaskRepository {
             patch.schedule != null ||
             patch.clearSchedule ||
             patch.estimatedFocusIntervals != null ||
+            patch.isFocusEstimateManual != null ||
             patch.labelNames != null) {
           await _access.task(id);
         }
@@ -355,6 +360,9 @@ class DriftTaskRepository implements TaskRepository {
               estimatedFocusIntervals: patch.estimatedFocusIntervals == null
                   ? const Value.absent()
                   : Value(patch.estimatedFocusIntervals),
+              isFocusEstimateManual: patch.isFocusEstimateManual == null
+                  ? const Value.absent()
+                  : Value(patch.isFocusEstimateManual!),
               isCollapsed: patch.isCollapsed == null
                   ? const Value.absent()
                   : Value(patch.isCollapsed!),
@@ -380,6 +388,8 @@ class DriftTaskRepository implements TaskRepository {
                 'durationSeconds': schedule?.duration?.inSeconds,
               if (patch.estimatedFocusIntervals != null)
                 'estimatedFocusIntervals': patch.estimatedFocusIntervals,
+              if (patch.isFocusEstimateManual != null)
+                'isFocusEstimateManual': patch.isFocusEstimateManual,
               if (patch.isCollapsed != null) 'isCollapsed': patch.isCollapsed,
             },
           );
@@ -1151,6 +1161,7 @@ class DriftTaskRepository implements TaskRepository {
           deadlineJson: Value(source.deadlineJson),
           durationSeconds: Value(source.durationSeconds),
           estimatedFocusIntervals: Value(source.estimatedFocusIntervals),
+          isFocusEstimateManual: Value(source.isFocusEstimateManual),
           orderKey: source.orderKey,
           dayOrder: Value(source.dayOrder),
           isCollapsed: Value(source.isCollapsed),
@@ -1436,6 +1447,7 @@ class DriftTaskRepository implements TaskRepository {
     durationSeconds: row.durationSeconds,
     status: row.status,
     estimatedFocusIntervals: row.estimatedFocusIntervals,
+    isFocusEstimateManual: row.isFocusEstimateManual,
     completedFocusIntervals: row.completedFocusIntervals,
     totalFocusSeconds: row.totalFocusSeconds,
     orderKey: row.orderKey,

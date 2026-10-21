@@ -359,6 +359,7 @@ class TaskEditorViewModel extends Notifier<TaskEditorState> {
           schedule: parsed.schedule,
           durationSeconds: null,
           explicitEstimate: parsed.estimatedFocusIntervals,
+          isFocusEstimateManual: parsed.estimatedFocusIntervals != null,
           preset: focusPreset,
         );
         (await ref
@@ -375,6 +376,8 @@ class TaskEditorViewModel extends Notifier<TaskEditorState> {
                     dueDate: parsed.schedule == null ? parsed.dueDate : null,
                     durationSeconds: parsed.schedule?.duration?.inSeconds,
                     estimatedFocusIntervals: estimatedFocusIntervals,
+                    isFocusEstimateManual:
+                        parsed.estimatedFocusIntervals != null,
                   ),
                 ))
             .getOrThrow();

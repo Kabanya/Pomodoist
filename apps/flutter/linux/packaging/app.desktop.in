@@ -1,6 +1,7 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
+X-Pomodoist-Managed=true
 Name=@DISPLAY_NAME@
 Comment=Task manager with Pomodoro focus sessions
 Comment[pt_BR]=Gerenciador de tarefas com sessões de foco Pomodoro

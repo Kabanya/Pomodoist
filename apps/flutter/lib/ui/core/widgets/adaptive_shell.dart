@@ -7,7 +7,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:pomodoist/ui/core/widgets/app_bottom_navigation.dart';
+import 'package:pomodoist/ui/core/widgets/bottom_navigation_editor.dart';
 import 'package:pomodoist/domain/models/settings/bottom_navigation_preferences.dart';
 import 'package:pomodoist/ui/settings/view_models/bottom_navigation_view_model.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
@@ -99,10 +101,95 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   bool _quickAddShortcutDialogOpen = false;
   bool _searchPaletteOpen = false;
   String? _lastTaskDetailsId;
+  BottomNavigationPreferences? _navigationDraft;
+  BottomNavigationDestination? _navigationEditingDestination;
+  bool _navigationSaving = false;
+  bool _navigationSaveFailed = false;
+  bool _restoreNavigationBrowserMenu = false;
+
+  void _resetNavigationEditor() {
+    if (_restoreNavigationBrowserMenu) {
+      _restoreNavigationBrowserMenu = false;
+      unawaited(BrowserContextMenu.enableContextMenu());
+    }
+    _navigationDraft = null;
+    _navigationEditingDestination = null;
+    _navigationSaving = false;
+    _navigationSaveFailed = false;
+  }
+
+  void _cancelNavigationEditor() {
+    if (_navigationSaving || _navigationDraft == null) return;
+    setState(_resetNavigationEditor);
+  }
+
+  void _openNavigationEditor(BottomNavigationDestination destination) {
+    if (_navigationDraft != null) return;
+    final preferences = ref.read(bottomNavigationProvider).value;
+    if (preferences == null ||
+        !preferences.destinations.contains(destination)) {
+      return;
+    }
+    if (kIsWeb && BrowserContextMenu.enabled) {
+      _restoreNavigationBrowserMenu = true;
+      unawaited(BrowserContextMenu.disableContextMenu());
+    }
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _navigationDraft = preferences;
+      _navigationEditingDestination = destination;
+      _navigationSaveFailed = false;
+    });
+  }
+
+  void _moveNavigationDestination(int from, int to) {
+    if (_navigationSaving || _navigationDraft == null) return;
+    setState(() {
+      _navigationDraft = _navigationDraft!.move(from, to);
+      _navigationSaveFailed = false;
+    });
+  }
+
+  Future<void> _saveNavigationEditor() async {
+    final draft = _navigationDraft;
+    if (draft == null || _navigationSaving) return;
+    setState(() {
+      _navigationSaving = true;
+      _navigationSaveFailed = false;
+    });
+    try {
+      await ref.read(bottomNavigationProvider.notifier).save(draft);
+      if (mounted && identical(_navigationDraft, draft)) {
+        setState(_resetNavigationEditor);
+      }
+    } catch (_) {
+      if (mounted && identical(_navigationDraft, draft)) {
+        setState(() => _navigationSaveFailed = true);
+      }
+    } finally {
+      if (mounted && identical(_navigationDraft, draft)) {
+        setState(() => _navigationSaving = false);
+      }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.sizeOf(context).width >= _wideLayoutBreakpoint) {
+      _resetNavigationEditor();
+    }
+  }
 
   @override
   void didUpdateWidget(covariant AdaptiveShell oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.location != widget.location ||
+        oldWidget.taskId != widget.taskId ||
+        oldWidget.habitId != widget.habitId ||
+        oldWidget.mapFullscreen != widget.mapFullscreen) {
+      _resetNavigationEditor();
+    }
     if (oldWidget.location == widget.location) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -157,6 +244,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
 
   @override
   void dispose() {
+    _resetNavigationEditor();
     HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
     RawKeyboard.instance.removeListener(_handleRawKeyEvent);
     _appMenuController?.dispose();
@@ -219,6 +307,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     final navigation =
         ref.watch(bottomNavigationProvider).value ??
         BottomNavigationPreferences();
+    final navigationDraft = _navigationDraft;
     final hasTodayFocusStrip =
         widget.location == '/today' &&
         ref.watch(shellTodayFocusStripVisibleProvider);
@@ -373,11 +462,54 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                       ),
                     ),
                   ),
-                  body: content,
+                  body: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      content,
+                      if (navigationDraft != null)
+                        Positioned.fill(
+                          child: BottomNavigationEditor(
+                            preferences: navigationDraft,
+                            selected: _navigationEditingDestination!,
+                            saving: _navigationSaving,
+                            failed: _navigationSaveFailed,
+                            onMove: (delta) {
+                              final from = navigationDraft.destinations.indexOf(
+                                _navigationEditingDestination!,
+                              );
+                              _moveNavigationDestination(from, from + delta);
+                            },
+                            onReplace: (destination) {
+                              if (_navigationSaving) return;
+                              setState(() {
+                                _navigationDraft = navigationDraft.replace(
+                                  _navigationEditingDestination!,
+                                  destination,
+                                );
+                                _navigationEditingDestination = destination;
+                                _navigationSaveFailed = false;
+                              });
+                            },
+                            onStyleChanged: (style) {
+                              if (_navigationSaving) return;
+                              setState(() {
+                                _navigationDraft = navigationDraft.copyWith(
+                                  style: style,
+                                );
+                                _navigationSaveFailed = false;
+                              });
+                            },
+                            onCancel: _cancelNavigationEditor,
+                            onSave: () => unawaited(_saveNavigationEditor()),
+                          ),
+                        ),
+                    ],
+                  ),
                   floatingActionButton: ValueListenableBuilder<bool>(
                     valueListenable: voiceQuickAddActiveOf(context),
                     builder: (context, voiceActive, _) =>
                         compactDetailsOpen ||
+                            navigationDraft != null ||
                             mapFullscreen ||
                             voiceActive ||
                             widget.location == '/calendar'
@@ -433,11 +565,26 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                       ? null
                       : VoicePanelBottomClearance(
                           child: _ShellBottomChrome(
-                            preferences: navigation,
-                            selected: navigation.selectedFor(widget.location),
-                            showMiniFocusPlayer: showMiniFocusPlayer,
-                            onDestinationSelected: (destination) =>
-                                _go(destination.path),
+                            preferences: navigationDraft ?? navigation,
+                            selected: navigationDraft != null
+                                ? _navigationEditingDestination
+                                : navigation.selectedFor(widget.location),
+                            showMiniFocusPlayer:
+                                showMiniFocusPlayer && navigationDraft == null,
+                            editing: navigationDraft != null,
+                            enabled: !_navigationSaving,
+                            onEditRequested: _openNavigationEditor,
+                            onReorder: _moveNavigationDestination,
+                            onDestinationSelected: (destination) {
+                              if (navigationDraft == null) {
+                                _go(destination.path);
+                              } else if (!_navigationSaving) {
+                                setState(
+                                  () => _navigationEditingDestination =
+                                      destination,
+                                );
+                              }
+                            },
                           ),
                         ),
                 ),
@@ -448,13 +595,27 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
       );
     }
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [scaffold, const FocusRunCompletionCelebrationSlot()],
+    return PopScope(
+      canPop: navigationDraft == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _cancelNavigationEditor();
+      },
+      child: Stack(
+        fit: StackFit.expand,
+        children: [scaffold, const FocusRunCompletionCelebrationSlot()],
+      ),
     );
   }
 
   bool _handleKeyEvent(KeyEvent event) {
+    if (_navigationDraft != null) {
+      if (event is KeyDownEvent &&
+          event.logicalKey == LogicalKeyboardKey.escape) {
+        _cancelNavigationEditor();
+        return true;
+      }
+      return false;
+    }
     if (event is! KeyDownEvent || widget.location == '/settings/shortcuts') {
       return false;
     }
@@ -484,6 +645,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   }
 
   void _runShortcut(AppShortcutCommand command) {
+    if (_navigationDraft != null) return;
     switch (command) {
       case AppShortcutCommand.toggleSidebar:
         _toggleSidebar();
@@ -927,12 +1089,20 @@ class _ShellBottomChrome extends StatelessWidget {
     required this.selected,
     required this.showMiniFocusPlayer,
     required this.onDestinationSelected,
+    required this.onEditRequested,
+    required this.onReorder,
+    required this.editing,
+    required this.enabled,
   });
 
   final BottomNavigationPreferences preferences;
   final BottomNavigationDestination? selected;
   final bool showMiniFocusPlayer;
   final ValueChanged<BottomNavigationDestination> onDestinationSelected;
+  final ValueChanged<BottomNavigationDestination> onEditRequested;
+  final void Function(int from, int to) onReorder;
+  final bool editing;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) => SafeArea(
@@ -946,6 +1116,10 @@ class _ShellBottomChrome extends StatelessWidget {
           preferences: preferences,
           selected: selected,
           onSelected: onDestinationSelected,
+          onEditRequested: onEditRequested,
+          onReorder: onReorder,
+          editing: editing,
+          enabled: enabled,
         ),
       ],
     ),

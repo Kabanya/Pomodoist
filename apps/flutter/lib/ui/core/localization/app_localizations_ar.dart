@@ -3539,6 +3539,19 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get bottomNavigationEditingTitle => 'تعديل الشريط السفلي';
+
+  @override
+  String get bottomNavigationEditingHelp =>
+      'اسحب الأيقونات أدناه أو استخدم الأسهم. اضغط على أيقونة لاستبدالها.';
+
+  @override
+  String get bottomNavigationReplace => 'استبدال بـ';
+
+  @override
+  String get bottomNavigationEditHint => 'اضغط مطولاً لتخصيص الشريط السفلي.';
+
+  @override
   String get settingsBottomNavigation => 'التنقل السفلي';
 
   @override
@@ -4253,4 +4266,131 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsFocusSoundPreviewError =>
       'تعذر تشغيل العينة. حاول مرة أخرى.';
+
+  @override
+  String get pomoTitle => 'رفيق بومو';
+
+  @override
+  String get pomoDescription => 'رفيق صغير لسطح المكتب.';
+
+  @override
+  String get pomoFocusOnly => 'أثناء التركيز فقط';
+
+  @override
+  String get pomoQuiet => 'الوضع الهادئ';
+
+  @override
+  String get pomoQuietDescription =>
+      'ردود فعل ثابتة دون رسوم متحركة في الخلفية.';
+
+  @override
+  String get pomoReduceMotion => 'تقليل حركة بومو';
+
+  @override
+  String get pomoShow => 'إظهار بومو';
+
+  @override
+  String get pomoHide => 'إخفاء بومو';
+
+  @override
+  String get pomoResetPosition => 'إعادة تعيين الموضع';
+
+  @override
+  String get pomoInteract => 'بومو: تفاعل وتبديل أدوات التحكم. اسحب للتحريك.';
+
+  @override
+  String get pomoQuickAdd => 'إضافة مهمة';
+
+  @override
+  String get pomoError =>
+      'تعذر على بومو إكمال هذا الإجراء. حاول إظهاره مجددًا من الإعدادات.';
+
+  @override
+  String get pomoShowTimer => 'إظهار المؤقت';
+
+  @override
+  String get pomoSettings => 'إعدادات Pomo';
+
+  @override
+  String get pomoSize => 'الحجم';
+
+  @override
+  String get pomoSizeDecrease => 'تصغير Pomo';
+
+  @override
+  String get pomoSizeIncrease => 'تكبير Pomo';
+
+  @override
+  String get pomoSizeReset => 'إعادة إلى 100%';
+
+  @override
+  String pomoSizeEffective(int percent) {
+    return 'يُعرض بحجم $percent% ليلائم هذه الشاشة';
+  }
+
+  @override
+  String get appIconTitle => 'أيقونة التطبيق';
+
+  @override
+  String get appIconPomo => 'بومو';
+
+  @override
+  String get appIconClassic => 'الكلاسيكية';
+
+  @override
+  String get appIconError => 'تعذر تطبيق الأيقونة أو حفظها. حاول مرة أخرى.';
+
+  @override
+  String get appIconMacosHint =>
+      'يغيّر أيقونة Dock أثناء تشغيل Pomodoist. يستخدم Finder أيقونة بومو.';
+
+  @override
+  String get appIconDesktopHint =>
+      'يغيّر أيقونة التطبيق واختصارات Pomodoist. قد تتحدث النسخ المثبتة لاحقًا.';
+
+  @override
+  String get appIconWebHint =>
+      'يغيّر أيقونة علامة التبويب. يدير المتصفح أيقونات تطبيقات الويب المثبتة.';
+
+  @override
+  String get quickAddFocusEstimate => 'تقدير جلسات بومودورو';
+
+  @override
+  String quickAddEstimatedPomodoros(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count جلسة بومودورو',
+      many: '$count جلسة بومودورو',
+      few: '$count جلسات بومودورو',
+      two: 'جلستا بومودورو',
+      one: 'جلسة بومودورو واحدة',
+      zero: 'لا جلسات بومودورو',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get quickAddDecreaseEstimate => 'تقليل التقدير';
+
+  @override
+  String get quickAddIncreaseEstimate => 'زيادة التقدير';
+
+  @override
+  String get quickAddEstimateRange => 'أدخل عددًا صحيحًا من 1 إلى 999.';
+
+  @override
+  String quickAddEstimateFocusTime(
+    String count,
+    String workMinutes,
+    String totalMinutes,
+  ) {
+    return '$count × $workMinutes دقيقة = $totalMinutes دقيقة تركيز';
+  }
+
+  @override
+  String get quickAddEstimateAutomatic => 'حسب مدة المهمة';
+
+  @override
+  String get quickAddClearEstimate => 'مسح التقدير';
 }

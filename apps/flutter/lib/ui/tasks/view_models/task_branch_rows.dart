@@ -222,6 +222,7 @@ Object taskStructureKey(TaskItem task) => (
   task.description,
   task.durationSeconds,
   task.estimatedFocusIntervals,
+  task.isFocusEstimateManual,
   task.completedFocusIntervals,
   task.totalFocusSeconds,
   task.isCollapsed,

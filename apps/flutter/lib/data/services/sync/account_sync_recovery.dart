@@ -232,7 +232,10 @@ extension AccountSyncRecovery on AccountSyncEngine {
         } else if (!syncHasRequired(payload, _required[type]!)) {
           continue;
         } else if (type == 'task') {
-          TaskRow.fromJson(payload);
+          TaskRow.fromJson({
+            ...payload,
+            'isFocusEstimateManual': payload['isFocusEstimateManual'] ?? false,
+          });
         } else {
           ProjectRow.fromJson(payload);
         }
@@ -544,7 +547,11 @@ extension AccountSyncRecovery on AccountSyncEngine {
             try {
               final data = syncDataWithoutSyncMetadata(entity.data);
               if (entity.entityType == 'task') {
-                TaskRow.fromJson(data);
+                TaskRow.fromJson({
+                  ...data,
+                  'isFocusEstimateManual':
+                      data['isFocusEstimateManual'] ?? false,
+                });
               } else {
                 ProjectRow.fromJson(data);
               }
@@ -638,7 +645,10 @@ extension AccountSyncRecovery on AccountSyncEngine {
     if (!syncHasRequired(payload, required)) return;
     try {
       if (entity.entityType == 'task') {
-        TaskRow.fromJson(payload);
+        TaskRow.fromJson({
+          ...payload,
+          'isFocusEstimateManual': payload['isFocusEstimateManual'] ?? false,
+        });
       } else {
         ProjectRow.fromJson(payload);
       }

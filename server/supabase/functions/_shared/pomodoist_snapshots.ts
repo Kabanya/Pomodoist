@@ -140,6 +140,7 @@ export function watchTask(task: JsonMap) {
     completed: task.status === "completed",
     schedule: scheduleMap(stringValue(task.dueJson)),
     estimatedFocusIntervals: task.estimatedFocusIntervals ?? null,
+    isFocusEstimateManual: task.isFocusEstimateManual === true,
     completedFocusIntervals: task.completedFocusIntervals ?? 0,
     createdAt: task.createdAt ?? null,
   };

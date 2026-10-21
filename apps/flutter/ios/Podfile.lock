@@ -1,0 +1,29 @@
+PODS:
+  - Flutter (1.0.0)
+  - objective_c (0.0.1):
+    - Flutter
+  - thermion_flutter (0.0.1):
+    - Flutter
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - objective_c (from `.symlinks/plugins/objective_c/ios`)
+  - thermion_flutter (from `.symlinks/plugins/thermion_flutter/darwin`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  objective_c:
+    :path: ".symlinks/plugins/objective_c/ios"
+  thermion_flutter:
+    :path: ".symlinks/plugins/thermion_flutter/darwin"
+
+SPEC CHECKSUMS:
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
+  objective_c: 89e720c30d716b036faf9c9684022048eee1eee2
+  thermion_flutter: ba41c1b6232890a4fd49d63e82b6d1679d8c2c26
+
+PODFILE CHECKSUM: 3ba3a73b1b12adcf321a227a745625fe0888cc82
+
+COCOAPODS: 1.17.0

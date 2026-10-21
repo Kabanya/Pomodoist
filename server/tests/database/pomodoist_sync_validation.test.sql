@@ -67,5 +67,18 @@ select is((select used from public.usage_periods where user_id=auth.uid()),1001,
 select throws_ok($$delete from public.quota_definitions where app_id='pomodoist' and quota_key='llm_requests'$$,
   '23503',null,'cannot delete a quota definition with history');
 
+select lives_ok($$select public.push_changes('pomodoist','valid',jsonb_build_array(
+  pg_temp.sync_op('manual-estimate') || '{"payload":{"estimatedFocusIntervals":3,"isFocusEstimateManual":true}}'))$$,
+  'manual estimate field is accepted in personal sync');
+select is((select data->>'isFocusEstimateManual' from public.sync_entities where user_id=auth.uid() and entity_id='manual-estimate'),
+  'true','personal sync preserves the estimate source');
+select throws_ok($$select public.push_changes('pomodoist','valid',jsonb_build_array(
+  pg_temp.sync_op('invalid-estimate') || '{"payload":{"isFocusEstimateManual":"true"}}'))$$,
+  '22023','Invalid Pomodoist manual focus estimate','invalid source type is rejected before writing');
+select is(private.pomodoist_mcp_task_json('manual','{"estimatedFocusIntervals":3,"isFocusEstimateManual":true}')->>'isFocusEstimateManual',
+  'true','MCP projection preserves manual source');
+select is(private.pomodoist_mcp_task_json('legacy','{"estimatedFocusIntervals":3}')->>'isFocusEstimateManual',
+  'false','MCP projection defaults legacy source to automatic');
+
 select * from finish();
 rollback;

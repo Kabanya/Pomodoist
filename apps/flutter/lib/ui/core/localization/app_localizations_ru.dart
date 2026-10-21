@@ -3606,6 +3606,20 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get bottomNavigationEditingTitle => 'Панель в режиме правки';
+
+  @override
+  String get bottomNavigationEditingHelp =>
+      'Перетащите значки внизу или используйте стрелки. Нажмите на значок, чтобы заменить его.';
+
+  @override
+  String get bottomNavigationReplace => 'Заменить на';
+
+  @override
+  String get bottomNavigationEditHint =>
+      'Удерживайте, чтобы настроить нижнюю панель.';
+
+  @override
   String get settingsBottomNavigation => 'Нижняя навигация';
 
   @override
@@ -4339,4 +4353,130 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsFocusSoundPreviewError =>
       'Не удалось воспроизвести образец. Попробуйте ещё раз.';
+
+  @override
+  String get pomoTitle => 'Спутник Помо';
+
+  @override
+  String get pomoDescription => 'Маленький спутник на рабочем столе.';
+
+  @override
+  String get pomoFocusOnly => 'Только во время фокуса';
+
+  @override
+  String get pomoQuiet => 'Тихий режим';
+
+  @override
+  String get pomoQuietDescription => 'Статичные реакции без фоновой анимации.';
+
+  @override
+  String get pomoReduceMotion => 'Уменьшить движение Помо';
+
+  @override
+  String get pomoShow => 'Показать Помо';
+
+  @override
+  String get pomoHide => 'Скрыть Помо';
+
+  @override
+  String get pomoResetPosition => 'Сбросить положение';
+
+  @override
+  String get pomoInteract =>
+      'Помо: реакция и кнопки управления. Потяните, чтобы переместить.';
+
+  @override
+  String get pomoQuickAdd => 'Добавить задачу';
+
+  @override
+  String get pomoError =>
+      'Помо не удалось выполнить действие. Попробуйте показать Помо снова в настройках.';
+
+  @override
+  String get pomoShowTimer => 'Показывать таймер';
+
+  @override
+  String get pomoSettings => 'Настройки Pomo';
+
+  @override
+  String get pomoSize => 'Размер';
+
+  @override
+  String get pomoSizeDecrease => 'Уменьшить Pomo';
+
+  @override
+  String get pomoSizeIncrease => 'Увеличить Pomo';
+
+  @override
+  String get pomoSizeReset => 'Сбросить до 100%';
+
+  @override
+  String pomoSizeEffective(int percent) {
+    return 'На этом экране отображается $percent%';
+  }
+
+  @override
+  String get appIconTitle => 'Иконка приложения';
+
+  @override
+  String get appIconPomo => 'Помо';
+
+  @override
+  String get appIconClassic => 'Классическая';
+
+  @override
+  String get appIconError =>
+      'Не удалось применить или сохранить иконку. Попробуйте ещё раз.';
+
+  @override
+  String get appIconMacosHint =>
+      'Меняет иконку Dock, пока Pomodoist работает. В Finder используется Помо.';
+
+  @override
+  String get appIconDesktopHint =>
+      'Меняет иконку приложения и ярлыки Pomodoist. Закреплённые копии могут обновиться позже.';
+
+  @override
+  String get appIconWebHint =>
+      'Меняет иконку вкладки. Иконками установленных веб-приложений управляет браузер.';
+
+  @override
+  String get quickAddFocusEstimate => 'Оценка помодоро';
+
+  @override
+  String quickAddEstimatedPomodoros(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count помодоро',
+      many: '$count помодоро',
+      few: '$count помодоро',
+      one: '$count помодоро',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get quickAddDecreaseEstimate => 'Уменьшить оценку';
+
+  @override
+  String get quickAddIncreaseEstimate => 'Увеличить оценку';
+
+  @override
+  String get quickAddEstimateRange => 'Введите целое число от 1 до 999.';
+
+  @override
+  String quickAddEstimateFocusTime(
+    String count,
+    String workMinutes,
+    String totalMinutes,
+  ) {
+    return '$count × $workMinutes мин = $totalMinutes мин фокуса';
+  }
+
+  @override
+  String get quickAddEstimateAutomatic => 'По длительности задачи';
+
+  @override
+  String get quickAddClearEstimate => 'Сбросить оценку';
 }

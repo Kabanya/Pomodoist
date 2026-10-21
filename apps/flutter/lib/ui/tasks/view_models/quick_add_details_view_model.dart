@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/config/focus_dependencies.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 import 'quick_add_metadata_edit.dart';
@@ -8,6 +10,7 @@ typedef QuickAddDetailsState = ({
   List<ProjectItem> projects,
   List<ProjectItem> allProjects,
   DateTime day,
+  FocusPresetItem? focusPreset,
 });
 final quickAddDetailsViewModelProvider =
     NotifierProvider.autoDispose<
@@ -35,6 +38,10 @@ class QuickAddDetailsViewModel extends Notifier<QuickAddDetailsState> {
       allProjects: List.unmodifiable(projects),
       projects: List.unmodifiable(projects.where((p) => !p.isArchived)),
       day: day,
+      focusPreset: selectedFocusPresetOrDefault(
+        ref.watch(focusPresetsProvider).value ?? const [],
+        ref.watch(lastFocusPresetIdProvider),
+      ),
     );
   }
 

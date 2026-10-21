@@ -422,6 +422,7 @@ class TaskItem {
     this.deadlineJson,
     this.durationSeconds,
     this.estimatedFocusIntervals,
+    this.isFocusEstimateManual = false,
     this.dayOrder,
     this.isCollapsed = false,
     this.completedAt,
@@ -445,6 +446,7 @@ class TaskItem {
   final int? durationSeconds;
   final String status;
   final int? estimatedFocusIntervals;
+  final bool isFocusEstimateManual;
   final int completedFocusIntervals;
   final int totalFocusSeconds;
   final String orderKey;
@@ -748,6 +750,7 @@ class CreateTaskInput {
     this.deadline,
     this.durationSeconds,
     this.estimatedFocusIntervals,
+    this.isFocusEstimateManual = false,
     this.kanbanStatusId,
   }) : labelNames = List.unmodifiable(labelNames);
 
@@ -764,6 +767,7 @@ class CreateTaskInput {
   final DateTime? deadline;
   final int? durationSeconds;
   final int? estimatedFocusIntervals;
+  final bool isFocusEstimateManual;
   final String? kanbanStatusId;
 }
 
@@ -777,6 +781,7 @@ class UpdateTaskPatch {
     this.schedule,
     this.clearSchedule = false,
     this.estimatedFocusIntervals,
+    this.isFocusEstimateManual,
     this.isCollapsed,
     List<String>? labelNames,
   }) : labelNames = labelNames == null ? null : List.unmodifiable(labelNames);
@@ -789,6 +794,7 @@ class UpdateTaskPatch {
   final TaskSchedule? schedule;
   final bool clearSchedule;
   final int? estimatedFocusIntervals;
+  final bool? isFocusEstimateManual;
   final bool? isCollapsed;
   final List<String>? labelNames;
 }

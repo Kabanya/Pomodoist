@@ -4,6 +4,38 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yaml/yaml.dart';
 
 void main() {
+  test('Flutter build and test checkouts download the Pomo LFS asset', () {
+    const jobs = {
+      'validate': 'validate',
+      'android': 'release-build-smoke',
+      'android-release': 'signed-apk-and-bundle',
+      'desktop-updates': 'updater',
+      'linux-appimage-release': 'build-test-publish',
+      'macos-dmg-release': 'build-test',
+      'windows-exe-preview': 'build-test',
+    };
+    for (final entry in jobs.entries) {
+      final steps =
+          _job('../../.github/workflows/${entry.key}.yml', entry.value)['steps']
+              as YamlList;
+      final checkout = steps.indexWhere(
+        (step) =>
+            (step['uses'] as String? ?? '').startsWith('actions/checkout@'),
+      );
+      expect(steps[checkout]['with']['lfs'], true, reason: entry.key);
+      if (entry.key == 'linux-appimage-release') {
+        expect(
+          steps
+              .take(checkout)
+              .any(
+                (step) => (step['run'] as String? ?? '').contains('git-lfs'),
+              ),
+          true,
+        );
+      }
+    }
+  });
+
   const desktopWorkflows = {
     '../../.github/workflows/linux-appimage-release.yml': 'build-test-publish',
     '../../.github/workflows/windows-exe-preview.yml': 'build-test',

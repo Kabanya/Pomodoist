@@ -96,7 +96,7 @@
         const flavor = flavors[name];
         document.documentElement.dataset.flavor = name;
         setLink('manifest', flavor.manifest);
-        setLink('icon', flavor.favicon);
+        if (!document.documentElement.dataset.appIcon) setLink('icon', flavor.favicon);
         setLink('apple-touch-icon', flavor.icon);
         setMeta('apple-mobile-web-app-title', flavor.title);
         document.title = flavor.title;
@@ -117,10 +117,20 @@
         if (!icon || !icon.src || !(await iconAvailable(icon.src))) {
           throw new Error(`${flavor.manifest} has no usable icon`);
         }
-        setLink('icon', icon.src);
+        if (!document.documentElement.dataset.appIcon) setLink('icon', icon.src);
         setLink('apple-touch-icon', icon.src);
         if (manifest.theme_color) setMeta('theme-color', manifest.theme_color);
         if (manifest.name) document.title = manifest.name;
+      };
+
+      window.pomodoistSetAppIcon = (icon, flavorName) => {
+        if (!['icon-light-pomo', 'classic'].includes(icon) || !Object.keys(flavors).includes(flavorName)) {
+          throw new Error('Unsupported app icon');
+        }
+        document.documentElement.dataset.appIcon = icon;
+        const selected = icon === 'classic'
+          ? `icons/${flavorName}/classic.png` : flavors[flavorName].favicon;
+        setLink('icon', selected);
       };
 
       const config = window.pomodoistRuntimeConfig;

@@ -52,10 +52,12 @@ The following application JSON request paths accept absent `apiVersion` (legacy)
 
 - account deletion, AI, Watch commands, transcription and purchase verification;
 - Stripe billing client requests and subscription-offer requests;
-- collaboration requests;
+- collaboration and file-attachment requests (`pomodoist-collaboration` and
+  `pomodoist-files`);
 - Telegram Mini App requests (not Telegram bot webhooks);
-- Google Calendar authenticated client POSTs (not callbacks, notifications or the
-  server worker-secret route).
+- Google Calendar and Outlook Calendar authenticated client POSTs
+  (`pomodoist-google-calendar` and `pomodoist-outlook-calendar`; not OAuth
+  callbacks, provider notifications or server worker-secret requests).
 
 Other explicit values, including strings, null and fractional numbers, return HTTP
 400 with `code: unsupported_api_version` before application mutations or provider
@@ -64,6 +66,32 @@ retain their precedence. Versioning does not activate a disabled feature.
 
 MCP/JSON-RPC, Stripe and Apple webhooks, and provider-defined callbacks keep their
 protocols. The application version is not added to signed/provider envelopes.
+The `pomodoist-files-cleanup` worker uses `X-Pomodoist-Cleanup-Secret`, not the
+application JSON version envelope.
+
+## Calendar client requests
+
+Both calendar functions use the shared
+[`calendar/actions.ts`](../../server/supabase/functions/_shared/calendar/actions.ts)
+handler. Send authenticated JSON POSTs to
+`/functions/v1/pomodoist-google-calendar` or
+`/functions/v1/pomodoist-outlook-calendar`, with an `action` and optional
+`apiVersion` as described above. The request body limit is 16,384 bytes.
+
+| Action | Successful JSON response | Meaning |
+| --- | --- | --- |
+| `start` | `{ "authorizationUrl": "..." }` | Open the provider authorization URL; OAuth uses PKCE and single-use state. Unconfigured integrations return HTTP 503. |
+| `sync` | `{ "queued": true }` | Queue synchronization; this response does not mean provider synchronization has completed. |
+| `disconnect` | `{ "disconnected": true }` | Record disconnection; provider cleanup can run asynchronously. |
+
+Successful actions return HTTP 200. Missing or invalid user authentication returns
+401; an unsupported action returns 400. OAuth callbacks use GET and redirect to
+the configured application URI after connecting the account.
+
+The shared [`calendar/runtime.ts`](../../server/supabase/functions/_shared/calendar/runtime.ts)
+routes provider traffic separately: Google notifications use `X-Goog-Channel-ID`,
+Outlook notifications use `/notifications` and `/lifecycle`, and worker POSTs use
+`X-Pomodoist-Worker-Secret`. These are not user-authenticated client actions.
 
 ## Deployment order
 
@@ -91,5 +119,12 @@ is switched to v1 by this repository change alone.
   migration recording, fresh initialization (including optional Storage), and
   data-only backup restoration, then runs the SQL contract suite. The source
   container is read only.
-- Deno tests cover version parsing, every application-owned handler and existing
-  provider-webhook behavior. No manual, device, emulator or UI tests are required.
+- `server/supabase/functions/_shared/api_version_test.ts` covers version parsing
+  and rejection before mutations for its listed handlers, including the legacy
+  Google Calendar handler. The current Google and Outlook entry points use the
+  shared calendar runtime instead; its routing tests and Outlook OAuth and
+  notification tests cover worker authentication, provider routing, PKCE and
+  OAuth state handling. File-request validation has separate tests in
+  `_shared/pomodoist_files_test.ts`. These suites do not establish exhaustive
+  version-rejection coverage for the current calendar runtime or file handler.
+  No manual, device, emulator or UI tests are required for this documentation.

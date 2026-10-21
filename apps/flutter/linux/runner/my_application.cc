@@ -1,4 +1,5 @@
 #include "my_application.h"
+#include "app_icon_host.h"
 
 #include <flutter_linux/flutter_linux.h>
 #ifdef GDK_WINDOWING_X11
@@ -350,6 +351,7 @@ static void my_application_activate(GApplication *application) {
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
   multiview_desktop_linux_runner_register_primary(window, view);
   configure_quick_add_channel(self, view);
+  configure_app_icon_channel(GTK_APPLICATION(application), view);
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }

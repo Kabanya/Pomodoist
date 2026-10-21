@@ -11,6 +11,71 @@ import 'package:uuid/uuid.dart';
 
 void main() {
   test(
+    'task pull retains manual estimates and accepts legacy snapshots',
+    () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      await db.ensureSeedData();
+      final now = DateTime.utc(2026, 10, 20);
+      final changes = <AccountSyncEntity>[];
+      for (final manual in [true, false, null]) {
+        final id = 'estimate-$manual';
+        changes.add(
+          AccountSyncEntity(
+            entityType: 'task',
+            entityId: id,
+            serverRevision: changes.length + 1,
+            data: {
+              'id': id,
+              'userId': localUserId,
+              'content': id,
+              'projectId': inboxProjectId,
+              'priority': 4,
+              'status': 'open',
+              'estimatedFocusIntervals': 3,
+              'isFocusEstimateManual': ?manual,
+              'completedFocusIntervals': 0,
+              'totalFocusSeconds': 0,
+              'orderKey': id,
+              'isCollapsed': false,
+              'isDeleted': false,
+              'createdAt': now.millisecondsSinceEpoch,
+              'updatedAt': now.millisecondsSinceEpoch,
+            },
+          ),
+        );
+      }
+      final engine = testSyncEngine(
+        db: db,
+        uuid: const Uuid(),
+        account: _PullOnlyAccountClient(
+          AccountSyncPullResult(
+            nextCursor: 3,
+            hasMore: false,
+            changes: changes,
+          ),
+        ),
+      );
+      await engine.pullLatest();
+      final tasks = await db.select(db.tasks).get();
+      expect(tasks, hasLength(3));
+      expect(
+        tasks
+            .singleWhere((task) => task.id == 'estimate-true')
+            .isFocusEstimateManual,
+        isTrue,
+      );
+      expect(
+        tasks
+            .where((task) => task.id != 'estimate-true')
+            .every((task) => !task.isFocusEstimateManual),
+        isTrue,
+      );
+      expect(tasks.every((task) => task.estimatedFocusIntervals == 3), isTrue);
+    },
+  );
+
+  test(
     'provider projections retain both connections and links without credentials',
     () async {
       final db = AppDatabase(NativeDatabase.memory());
@@ -345,6 +410,7 @@ void main() {
       final now = DateTime.utc(2026, 9, 3, 10);
       final later = now.add(const Duration(minutes: 1));
       final task = TaskRow(
+        isFocusEstimateManual: false,
         assigneeIdsJson: '[]',
         id: 'task-1',
         userId: localUserId,

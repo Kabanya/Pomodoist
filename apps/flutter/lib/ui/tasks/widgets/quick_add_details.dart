@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pomodoist/domain/models/tasks/task_focus_estimate.dart';
+import 'quick_add_focus_estimate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show
@@ -268,6 +270,23 @@ class QuickAddDetails extends ConsumerWidget {
                     edit({QuickAddTokenKind.priority}, null);
                   }),
                 ],
+              ),
+              QuickAddFocusEstimateChip(
+                estimate: estimateFocusIntervalsForTaskDuration(
+                  schedule: schedule,
+                  durationSeconds: null,
+                  explicitEstimate: parsed.estimatedFocusIntervals,
+                  isFocusEstimateManual: parsed.estimatedFocusIntervals != null,
+                  preset: viewState.focusPreset,
+                ),
+                manual: parsed.estimatedFocusIntervals != null,
+                workSeconds: viewState.focusPreset?.workSeconds,
+                enabled: canEdit,
+                touchTargets: touchTargets,
+                desktop: desktop,
+                onChanged: (count) => edit({
+                  QuickAddTokenKind.focusEstimate,
+                }, count == null ? null : '${count}p'),
               ),
               ?trailing,
             ],

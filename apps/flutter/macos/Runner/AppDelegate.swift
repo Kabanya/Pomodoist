@@ -10,6 +10,8 @@ class AppDelegate: FlutterAppDelegate {
   private var appMenuController: AppMenuController?
   private var focusStatusItemController: FocusStatusItemController?
   private var systemSpeechHost: SystemSpeechHost?
+  private var appIconChannel: FlutterMethodChannel?
+  private var selectedAppIcon = "icon-light-pomo"
   private var macosGlassController: MacosGlassController?
 
   override func applicationDidFinishLaunching(_ notification: Notification) {
@@ -27,7 +29,7 @@ class AppDelegate: FlutterAppDelegate {
             appMenuController == nil ||
             focusStatusItemController == nil ||
             systemSpeechHost == nil ||
-            macosGlassController == nil
+            macosGlassController == nil || appIconChannel == nil
     else {
       return
     }
@@ -40,6 +42,24 @@ class AppDelegate: FlutterAppDelegate {
         )
     else {
       return
+    }
+
+    if appIconChannel == nil {
+      let channel = FlutterMethodChannel(name: "pomodoist/app_icon", binaryMessenger: flutterViewController.engine.binaryMessenger)
+      channel.setMethodCallHandler { [weak self] call, result in
+        guard let self = self else { result(FlutterError(code: "unavailable", message: "App icon host is unavailable.", details: nil)); return }
+        if call.method == "getIcon" { result(self.selectedAppIcon); return }
+        guard call.method == "setIcon" else { result(FlutterMethodNotImplemented); return }
+        guard let args = call.arguments as? [String: Any], let icon = args["icon"] as? String,
+              ["icon-light-pomo", "classic"].contains(icon),
+              let bytes = args["image"] as? FlutterStandardTypedData,
+              bytes.data.count <= 8 * 1024 * 1024, let image = NSImage(data: bytes.data)
+        else { result(FlutterError(code: "invalid_icon", message: "Unsupported app icon image.", details: nil)); return }
+        NSApp.applicationIconImage = image
+        self.selectedAppIcon = icon
+        result(nil)
+      }
+      appIconChannel = channel
     }
 
     if quickAddHotKeyController == nil {
