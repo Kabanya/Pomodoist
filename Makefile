@@ -435,6 +435,7 @@ test-linux-flavor-identity:
 	./tool/linux/test_flavor_identity.sh
 
 test-linux-packaging: test-linux-installer test-linux-appimage test-linux-build-network test-linux-flavor-identity
+	python3 -m unittest discover -s tool/linux -p 'test_*.py' -v
 
 test-xcode-warnings:
 	sh tool/test_xcode_warnings.sh
