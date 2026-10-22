@@ -1,4 +1,3 @@
-import 'package:pomodoist/domain/models/calendar/provider_calendar_models.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +14,7 @@ import 'package:pomodoist/ui/planning/widgets/today_screen.dart';
 import 'package:pomodoist/ui/productivity/widgets/reports_screen.dart';
 import 'package:pomodoist/ui/productivity/widgets/achievements_screen.dart';
 import 'package:pomodoist/ui/settings/widgets/settings_screen.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_navigation.dart';
 import 'package:pomodoist/ui/settings/widgets/pomodoist_account_actions.dart';
 import 'package:pomodoist/ui/settings/widgets/keyboard_shortcuts_screen.dart';
 import 'package:pomodoist/ui/settings/widgets/telegram_account_link_screen.dart';
@@ -295,11 +295,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/integrations/outlook-calendar',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: GoogleCalendarSettingsScreen(
-                provider: CalendarProvider.outlook,
-              ),
-            ),
+            redirect: (_, _) =>
+                settingsLocation(SettingsSection.integrations).toString(),
           ),
           GoRoute(
             path: '/integrations/google-calendar',

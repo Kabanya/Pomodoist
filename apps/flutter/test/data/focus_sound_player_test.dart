@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/data/services/audio/focus_sound_player.dart';
@@ -126,6 +127,36 @@ void main() {
       expect(audio.disposals, 1);
     },
   );
+
+  test(
+    'preview logs the failed stage and preserves the platform error',
+    () async {
+      final messages = <String?>[];
+      final previousDebugPrint = debugPrint;
+      debugPrint = (message, {wrapWidth}) => messages.add(message);
+      addTearDown(() => debugPrint = previousDebugPrint);
+      final error = PlatformException(
+        code: 'LinuxAudioError',
+        message: 'Unable to set the pipeline to GST_STATE_READY.',
+      );
+      final audio = RecordingAudioPlayer()..playError = error;
+      final preview = AssetFocusSoundPreviewPlayer(player: audio);
+      await expectLater(
+        preview.preview(FocusSoundSet.softKalimba),
+        throwsA(same(error)),
+      );
+      expect(messages.join('\n'), contains('soft_kalimba'));
+      expect(messages.join('\n'), contains('play'));
+      expect(messages.join('\n'), contains('LinuxAudioError'));
+      expect(messages.join('\n'), contains('GST_STATE_READY'));
+
+      // A failed audition must not poison the queue for the next attempt.
+      audio.playError = null;
+      await preview.preview(FocusSoundSet.neonPulse);
+      expect(audio.paths.last, 'sounds/neon_pulse/focus_complete.wav');
+      await preview.dispose();
+    },
+  );
 }
 
 class RecordingAudioPlayer implements AudioPlayer {
@@ -134,6 +165,7 @@ class RecordingAudioPlayer implements AudioPlayer {
   int stops = 0;
   int disposals = 0;
   Completer<void>? stopping;
+  Object? playError;
 
   @override
   Future<void> play(
@@ -144,6 +176,7 @@ class RecordingAudioPlayer implements AudioPlayer {
     Duration? position,
     PlayerMode? mode,
   }) async {
+    if (playError case final error?) throw error;
     paths.add((source as AssetSource).path);
     volumes.add(volume);
   }

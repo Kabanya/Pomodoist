@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:pomodoist/domain/models/focus/focus_sound_set.dart';
 import 'package:pomodoist/domain/services/focus_sound_preview_player.dart';
 
@@ -25,14 +26,28 @@ class AssetFocusSoundPreviewPlayer implements FocusSoundPreviewPlayer {
     final generation = ++_generation;
     return _enqueue(() async {
       if (_disposed || generation != _generation) return;
-      await _player.stop();
-      if (_disposed || generation != _generation) return;
-      await _player.play(
-        AssetSource('sounds/${soundSet.storageValue}/focus_complete.wav'),
-        mode: PlayerMode.lowLatency,
-        volume: 0.55,
-      );
-      if (_disposed || generation != _generation) await _player.stop();
+      var stage = 'stop';
+      try {
+        await _player.stop();
+        if (_disposed || generation != _generation) return;
+        stage = 'play';
+        await _player.play(
+          AssetSource('sounds/${soundSet.storageValue}/focus_complete.wav'),
+          mode: PlayerMode.lowLatency,
+          volume: 0.55,
+        );
+        if (_disposed || generation != _generation) {
+          stage = 'cancel';
+          await _player.stop();
+        }
+      } catch (error, stackTrace) {
+        // Settings presents a generic message; retain the native cause in logs.
+        debugPrint(
+          'Focus sound preview failed '
+          '(${soundSet.storageValue}, $stage): $error\n$stackTrace',
+        );
+        rethrow;
+      }
     });
   }
 
