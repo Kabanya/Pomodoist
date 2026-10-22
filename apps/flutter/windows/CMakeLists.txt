@@ -133,6 +133,15 @@ endif()
 # them to the application.
 include(flutter/generated_plugins.cmake)
 
+# shortcut: Thermion 0.5.0 assumes no flavor; remove after upstream fixes asset paths.
+if(TARGET thermion_flutter_plugin)
+  target_link_directories(thermion_flutter_plugin BEFORE PRIVATE
+    "${PROJECT_BUILD_DIR}native_assets/windows")
+  # Flutter installs these assets below; discard the plugin's stale paths.
+  list(FILTER PLUGIN_BUNDLED_LIBRARIES EXCLUDE
+    REGEX "/thermion_dart\\.(dll|lib)$")
+endif()
+
 # multiview_desktop 1.2.1 drops DartProject's Impeller switch while building
 # FlutterDesktopEngineProperties. Keep the package unchanged and bridge only
 # its engine-create call through the runner-owned compatibility shim.

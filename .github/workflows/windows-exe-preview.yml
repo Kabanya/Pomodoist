@@ -83,6 +83,8 @@ jobs:
         run: >-
           powershell.exe -NoProfile -ExecutionPolicy Bypass
           -File .\tool\windows\installer\test.ps1
+      - name: Test native asset paths for every flavor
+        run: python -m unittest discover -s tool/windows -p 'test_*.py' -v
       - name: Install Inno Setup 6.7.1
         run: |
           choco install innosetup --version=6.7.1 --yes --no-progress

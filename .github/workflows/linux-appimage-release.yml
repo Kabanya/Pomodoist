@@ -49,6 +49,8 @@ jobs:
       - name: Install Linux build dependencies
         run: |
           apt-get update
+          # Jammy's default libc++ 14 conflicts with GStreamer's libunwind-dev;
+          # LLVM 15 supplies a compatible libunwind-dev provider.
           DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
             appstream \
             bash \
@@ -64,8 +66,8 @@ jobs:
             gstreamer1.0-plugins-base \
             gstreamer1.0-plugins-good \
             gstreamer1.0-pulseaudio \
-            libc++-dev \
-            libc++abi-dev \
+            libc++-15-dev \
+            libc++abi-15-dev \
             libdrm-dev \
             libegl1-mesa-dev \
             libgl1-mesa-dev \
