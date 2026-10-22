@@ -212,7 +212,7 @@ def check(root):
     helpers = set(manifest['helpers'])
     for name in helpers:
         helper = server / '_shared' / name
-        if not re.fullmatch(r'[a-z][a-z0-9_]*\.ts', name) or not helper.is_file():
+        if not re.fullmatch(r'(?:[a-z][a-z0-9_]*/)*[a-z][a-z0-9_]*\.ts', name) or not helper.is_file():
             errors.append(f'Invalid or missing manifest helper: {name}')
             continue
     packaged = [server / '_shared' / name for name in helpers]
@@ -225,8 +225,10 @@ def check(root):
             continue
         for dependency in dependencies(path):
             target = (path.parent / dependency).resolve()
-            if dependency.startswith('.') and target.parent == server / '_shared' and target.name not in helpers:
-                errors.append(f'Manifest omits {target.name} required by {path.relative_to(server)}')
+            if dependency.startswith('.') and target.is_relative_to(server / '_shared'):
+                helper_name = target.relative_to(server / '_shared').as_posix()
+                if helper_name not in helpers:
+                    errors.append(f'Manifest omits {helper_name} required by {path.relative_to(server)}')
     return errors
 
 
