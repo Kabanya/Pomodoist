@@ -5,6 +5,24 @@ from check_architecture import check, cycles, dart_target, dependencies
 
 
 class ArchitectureTests(unittest.TestCase):
+    def test_nested_manifest_helpers_require_complete_dependency_closure(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'apps/flutter/lib').mkdir(parents=True)
+            shared = root / 'server/supabase/functions/_shared/calendar'
+            shared.mkdir(parents=True)
+            (shared / 'serve.ts').write_text("export { token } from './token.ts';")
+            (shared / 'token.ts').write_text('export const token = true;')
+            manifest = root / 'server/core-manifest.json'
+            manifest.write_text('{"helpers":["calendar/serve.ts"],"functions":[]}')
+            failures = '\n'.join(check(root))
+            self.assertNotIn('Invalid or missing manifest helper', failures)
+            self.assertIn('Manifest omits calendar/token.ts', failures)
+            manifest.write_text('{"helpers":["calendar/serve.ts","calendar/token.ts"],"functions":[]}')
+            self.assertEqual(check(root), [])
+            manifest.write_text('{"helpers":["calendar/../../secret.ts"],"functions":[]}')
+            self.assertIn('Invalid or missing manifest helper', '\n'.join(check(root)))
+
     def test_mvvm_boundaries_reject_data_access_from_views(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
