@@ -33,6 +33,15 @@ FLUTTER_PLUGIN_EXPORT void multiview_desktop_linux_runner_register_primary(
 FLUTTER_PLUGIN_EXPORT void multiview_desktop_linux_runner_set_default_title(
     const char* title);
 
+/// Borrowed window/view pointers; valid on the GTK main thread until destroyed.
+FLUTTER_PLUGIN_EXPORT GtkWindow* multiview_desktop_linux_get_window(int64_t view_id);
+FLUTTER_PLUGIN_EXPORT FlView* multiview_desktop_linux_get_view(int64_t view_id);
+
+/// Native Pomo bridge; returns an owned response and never exposes the registry.
+/// Environment/cursor accept null arguments; window operations require viewId.
+FLUTTER_PLUGIN_EXPORT FlMethodResponse* multiview_desktop_linux_pomo_method(
+    const char* method, FlValue* arguments);
+
 G_END_DECLS
 
 #endif  // MULTIVIEW_DESKTOP_RUNNER_H_

@@ -1,0 +1,11 @@
+GTK Layer Shell
+https://github.com/wmww/gtk-layer-shell
+
+GTK Layer Shell is licensed under LGPL-3.0-or-later; individual source files
+also carry the MIT license. The accompanying LGPL, GPL and MIT texts are
+reproduced from the upstream v0.10.0 release, and apply to the dynamically
+linked runtime installed by the build distribution.
+
+The runtime is bundled as libgtk-layer-shell.so.0 and may be replaced with a
+compatible build. Source code and release archives are available from:
+https://github.com/wmww/gtk-layer-shell/releases

@@ -2,6 +2,7 @@ enum SettingsSection {
   general,
   appearance,
   tasksFocus,
+  pomo,
   integrations,
   account,
   about,
@@ -33,6 +34,12 @@ class SettingsNavigation {
 
   Uri location;
   SettingsSection? selected;
+  List<SettingsSection> _sections = SettingsSection.values;
+
+  List<SettingsSection> get sections => _sections;
+
+  int get contentIndex =>
+      selected == null ? 0 : _sections.indexOf(selected!) + 1;
 
   void syncLocation(Uri value) {
     if (value == location) return;
@@ -40,7 +47,15 @@ class SettingsNavigation {
     selected = settingsSectionFromUri(value);
   }
 
-  void resolveLayout({required bool wide}) {
+  void resolveLayout({required bool wide, bool pomoAvailable = true}) {
+    _sections = pomoAvailable
+        ? SettingsSection.values
+        : List.unmodifiable(
+            SettingsSection.values.where(
+              (section) => section != SettingsSection.pomo,
+            ),
+          );
+    if (!_sections.contains(selected)) selected = null;
     selected ??= wide ? SettingsSection.general : null;
   }
 }

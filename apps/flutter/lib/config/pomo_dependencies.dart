@@ -1,3 +1,8 @@
+import 'package:flutter/foundation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:pomodoist/data/repositories/pomo/pomo_environment_repository_impl.dart';
+import 'package:pomodoist/ui/pomo/view_models/pomo_environment_view_model.dart';
+import 'package:pomodoist/domain/models/pomo/pomo_models.dart';
 import 'package:pomodoist/data/repositories/pomo/pomo_activity_repository_impl.dart';
 import 'dart:async';
 import 'package:flutter/widgets.dart';
@@ -13,7 +18,7 @@ import 'package:pomodoist/data/repositories/pomo/pomo_preferences_repository_imp
 import 'package:pomodoist/domain/models/pomo/pomo_focus.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/routing/router.dart';
-import 'package:pomodoist/ui/pomo/widgets/pomo_window_host.dart';
+import 'package:pomodoist/ui/pomo/view_models/pomo_window_host.dart';
 import 'package:pomodoist/ui/pomo/widgets/pomo_window.dart';
 import 'package:pomodoist/ui/quick_add/widgets/global_quick_add_window.dart';
 
@@ -27,18 +32,43 @@ final pomoPreferencesProvider = Provider<PomoPreferencesRepository>((ref) {
 PomoController _buildPomoController(Ref ref) {
   final preferences = ref.watch(pomoPreferencesProvider);
   late final PomoController controller;
+  final environment = pomoIsLinux
+      ? ref.watch(pomoEnvironmentRepositoryProvider)
+      : null;
   final host = PomoWindowHost(
+    environment: environment,
+    readPreferences: () => preferences.state,
     builder: (_, id) => const PomoWindow(),
     settingsBuilder: (_, id) => const PomoWindow(settingsPanel: true),
     onLayout: (scale) => controller.appliedScale(scale),
-    savePosition: (position, display) => preferences.update(
-      (p) => p.copyWith(x: position.dx, y: position.dy, displayId: display),
-    ),
+    savePosition: (position, display) => preferences.update((p) {
+      final monitor = environment?.state.displays
+          .where((d) => d.id == display)
+          .firstOrNull;
+      return p.copyWith(
+        x: position.dx,
+        y: position.dy,
+        displayId: display,
+        displayPositions: monitor == null
+            ? p.displayPositions
+            : {
+                ...p.displayPositions,
+                display: PomoDisplayPosition(
+                  x: position.dx - monitor.workX,
+                  y: position.dy - monitor.workY,
+                ),
+              },
+      );
+    }),
     onError: (error) {
       unawaited(controller.perform(() => Future<void>.error(error)));
     },
   );
-  controller = PomoController(preferences, host);
+  controller = PomoController(preferences, host, hostAvailable: !pomoIsLinux);
+  final placement = preferences.changes.listen((p) {
+    unawaited(controller.perform(() => host.updatePlacementPreferences(p)));
+  });
+  ref.onDispose(() => unawaited(placement.cancel()));
   final subscription = ref
       .watch(localCompletionEventsProvider)
       .stream
@@ -75,11 +105,26 @@ PomoFocus _buildPomoFocus(Ref ref) {
   );
 }
 
+bool get pomoIsLinux =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.linux;
+
 List<Override> get pomoOverrides => [
+  pomoEnvironmentRepositoryProvider.overrideWith((ref) {
+    final repository = LinuxPomoEnvironmentRepository();
+    ref.onDispose(repository.dispose);
+    return repository;
+  }),
+  pomoAppVersionProvider.overrideWith((ref) async {
+    final info = await PackageInfo.fromPlatform();
+    return info.buildNumber.isEmpty
+        ? info.version
+        : '${info.version} (${info.buildNumber})';
+  }),
   pomoControllerProvider.overrideWith(_buildPomoController),
   pomoFocusProvider.overrideWith(_buildPomoFocus),
   pomoActionsProvider.overrideWith(
     (ref) => (
+      openApp: pomoOpenApp,
       toggleFocus: () => pomoToggleFocus(ref),
       completeInterval: () => pomoCompleteInterval(ref),
       quickAdd: pomoQuickAdd,
@@ -107,6 +152,16 @@ class _PomoRuntimeState extends ConsumerState<PomoRuntime> {
   @override
   Widget build(BuildContext context) {
     if (pomoSupported) {
+      if (pomoIsLinux) {
+        final environment = ref.watch(pomoEnvironmentStateProvider).value;
+        final controller = ref.read(pomoControllerProvider);
+        final available = environment?.available == true;
+        if (controller.hostAvailable != available) {
+          Future.microtask(() {
+            if (mounted) unawaited(controller.setHostAvailable(available));
+          });
+        }
+      }
       ref.listen(
         pomoFocusProvider,
         (_, next) => Future.microtask(() {
@@ -151,12 +206,16 @@ Future<void> pomoCompleteInterval(Ref ref) async {
 
 Future<void> pomoOpenFocus(Ref ref) async {
   ref.read(routerProvider).go('/focus');
+  await pomoOpenApp();
+}
+
+Future<void> pomoOpenApp() async {
   final id = MultiViewDesktop.getAnchorId();
-  if (id != null) {
-    final w = MultiViewDesktop.fromId(id);
-    await w.show();
-    await w.focus();
-  }
+  if (id == null) throw StateError('Main application window is unavailable');
+  final window = MultiViewDesktop.fromId(id);
+  if (await window.isMinimized()) await window.restore();
+  await window.show();
+  await window.focus();
 }
 
 Future<void> pomoQuickAdd() => globalQuickAddWindowManager.show();

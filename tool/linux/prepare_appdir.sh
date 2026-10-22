@@ -110,6 +110,18 @@ for plugin in "${gstreamer_plugins[@]}"; do
   fi
 done
 
+# The layer-shell library is linked even on X11, so every portable artifact
+# needs the SONAME and its license texts. Prefer a runtime already in the bundle.
+layer_shell_library="$bundle/lib/libgtk-layer-shell.so.0"
+if [[ ! -r "$layer_shell_library" ]] && command -v pkg-config > /dev/null 2>&1; then
+  layer_shell_libdir="$(pkg-config --variable=libdir gtk-layer-shell-0 2>/dev/null || true)"
+  layer_shell_library="$layer_shell_libdir/libgtk-layer-shell.so.0"
+fi
+if [[ ! -r "$layer_shell_library" ]]; then
+  echo 'gtk-layer-shell runtime is required to package the portable application.' >&2
+  exit 69
+fi
+
 if [[ "$appdir" != /* ]]; then
   appdir="$project_root/$appdir"
 fi
@@ -134,6 +146,17 @@ mkdir -p -- \
   "$appdir/usr/share/metainfo"
 
 cp -a -- "$bundle/." "$appdir/usr/lib/pomodoist/"
+# install follows a development package's SONAME symlink, producing a usable
+# standalone file rather than a dangling link to an unbundled versioned library.
+install -Dm755 "$layer_shell_library" \
+  "$appdir/usr/lib/pomodoist/lib/libgtk-layer-shell.so.0"
+for license_file in "$app_root/linux/packaging/licenses/gtk-layer-shell/"*; do
+  install -Dm644 "$license_file" \
+    "$appdir/usr/share/licenses/gtk-layer-shell/${license_file##*/}"
+done
+install -Dm644 "$app_root/linux/packaging/licenses/wayland-protocols/LICENSE-relative-pointer" \
+  "$appdir/usr/share/licenses/wayland-protocols/LICENSE-relative-pointer"
+
 ln -s -- '../lib/pomodoist/pomodoist' "$appdir/usr/bin/pomodoist"
 install -Dm755 "$app_root/linux/packaging/AppRun" "$appdir/AppRun"
 

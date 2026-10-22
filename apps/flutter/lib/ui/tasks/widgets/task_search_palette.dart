@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadInput;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/pomo/view_models/pomo_controller.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
@@ -87,6 +88,7 @@ class _TaskSearchPaletteState extends ConsumerState<_TaskSearchPalette> {
     'dictate',
     'focus',
     'all',
+    if (pomoSupported) 'pomo',
   ];
 
   @override
@@ -102,20 +104,28 @@ class _TaskSearchPaletteState extends ConsumerState<_TaskSearchPalette> {
         !_controller.value.composing.isCollapsed) {
       return;
     }
-    if (id == 'focus') {
+    if (id == 'focus' || id == 'pomo') {
       setState(() {
         _busy = true;
         _error = null;
       });
       try {
-        await ref
-            .read(taskSearchPaletteViewModelProvider.notifier)
-            .startFocusIfNeeded();
+        if (id == 'pomo') {
+          final pomo = ref.read(pomoControllerProvider);
+          await pomo.setEnabled(!pomo.prefs.enabled);
+          if (pomo.error != null) throw pomo.error!;
+        } else {
+          await ref
+              .read(taskSearchPaletteViewModelProvider.notifier)
+              .startFocusIfNeeded();
+        }
       } catch (_) {
         if (mounted) {
           setState(() {
             _busy = false;
-            _error = context.l10n.focusActionFailed;
+            _error = id == 'pomo'
+                ? context.l10n.pomoError
+                : context.l10n.focusActionFailed;
           });
         }
         return;
@@ -165,6 +175,7 @@ class _TaskSearchPaletteState extends ConsumerState<_TaskSearchPalette> {
   @override
   Widget build(BuildContext context) {
     final palette = ref.watch(taskSearchPaletteViewModelProvider);
+    final pomo = pomoSupported ? ref.watch(pomoControllerProvider) : null;
     final results = _results();
     final l10n = context.l10n;
     final query = _controller.text;
@@ -175,6 +186,7 @@ class _TaskSearchPaletteState extends ConsumerState<_TaskSearchPalette> {
       'dictate',
       'focus',
       'all',
+      if (pomoSupported) 'pomo',
     ];
     _selected = _selectFirstOnBuild
         ? ids.first
@@ -304,6 +316,14 @@ class _TaskSearchPaletteState extends ConsumerState<_TaskSearchPalette> {
                           l10n.commandSearchAllResults,
                           LucideIcons.search,
                         ),
+                        if (pomo != null)
+                          row(
+                            'pomo',
+                            pomo.prefs.enabled
+                                ? l10n.commandSearchDisablePomo
+                                : l10n.commandSearchEnablePomo,
+                            LucideIcons.power,
+                          ),
                         if (_error != null)
                           Padding(
                             padding: const EdgeInsets.all(16),

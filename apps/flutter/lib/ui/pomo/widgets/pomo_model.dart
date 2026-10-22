@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'package:pomodoist/domain/models/pomo/pomo_models.dart';
 import 'package:pomodoist/ui/pomo/models/pomo_model_asset.dart';
 import 'package:pomodoist/ui/pomo/models/pomo_morph_clips.dart';
+import 'package:pomodoist/ui/pomo/widgets/pomo_texture_surface.dart';
 import 'package:thermion_flutter/thermion_flutter.dart' as t;
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 
@@ -354,9 +355,11 @@ class _PomoModelState extends State<PomoModel>
             },
             surfaceWidgetBuilder: (descriptor, _) => descriptor == null
                 ? _fallback()
-                : Texture(
-                    textureId: descriptor.flutterTextureId,
-                    filterQuality: FilterQuality.low,
+                : PomoTextureSurface(
+                    child: Texture(
+                      textureId: descriptor.flutterTextureId,
+                      filterQuality: FilterQuality.low,
+                    ),
                   ),
           ),
   );

@@ -26,15 +26,21 @@ packages=(
   desktop-file-utils
   ffmpeg
   git
+  git-lfs
   gstreamer
   gst-plugins-base
   gst-plugins-good
   gtk3
+  gtk-layer-shell
   jdk17-openjdk
+  libc++
+  libc++abi
   libpulse
   libsecret
   ninja
   pkgconf
+  python
+  wayland
   xdg-utils
 )
 

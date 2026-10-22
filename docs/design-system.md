@@ -538,6 +538,17 @@ expansion intact. Start the dialog at 680 × 180 px and the native window at
 Group daily destinations separately from planning views, followed by the existing
 project tree. Search and Add task stay near the profile. Browse, Reports and
 Settings sit below projects and scroll with the list at every window height.
+On supported native desktops (macOS, Windows and Linux), place a 44 px Pomo button
+with a monochrome outlined tomato to the right of Settings, including in the
+narrow-window drawer. Match the other 20 px line icons and inherit the button
+foreground color. Stretch Settings and the Pomo button to the same row height,
+with a minimum 44 px target and room for larger text. Its
+localized tooltip offers Enable Pomo / Disable Pomo based on the saved enabled
+preference, independently of current visibility or an active Focus run. Use a
+neutral disabled-companion appearance and an accent enabled-companion appearance,
+with toggle semantics and visible keyboard focus. Keep the row scrolling with
+the list. Block repeated activation while saving, and expose failures through
+the standard action feedback using the existing localized Pomo error message.
 Preserve command identities and user shortcut bindings independently of visual
 order. Shortcut hints display the actual configured binding.
 Use `textTheme.titleMedium` for destination labels, Add task, and project names
@@ -1148,7 +1159,13 @@ The existing Search command and sidebar entry open a contextual palette on wide
 layouts; narrow layouts keep the full search screen. Preserve user-configured
 shortcut bindings. Show at most six matching open tasks and three active projects,
 followed by creation, dictation, Focus and full-search actions. Reuse local task
-data and filtering. Task results open contextual details; creation opens an
+data and filtering. On supported native desktops (macOS, Windows and Linux), append an
+Enable Pomo / Disable Pomo command after full search and before the keyboard hint.
+Its label follows the saved enabled preference, including while Pomo is temporarily
+hidden. Reuse the shared companion controller; block repeated activation while
+saving, close on success, and keep the palette open with localized Pomo error
+feedback on failure. The command participates in the same keyboard selection.
+Task results open contextual details; creation opens an
 editable draft. Dictation closes search and opens the existing voice panel,
 preserving its transcription preference, access checks and any active session.
 Arrow keys, Enter and Escape work without disrupting IME composition; restore
@@ -1178,9 +1195,15 @@ use a 216 px section menu and a content pane. Narrower layouts show the section
 index or the selected section with Back. Resize the existing tree: retain the
 selected section, each visited section's scroll position, and unfinished input.
 The `section` query parameter on `/settings` identifies General, Appearance,
-Tasks and Focus (`tasks-focus`), Integrations and data, Account and Pro, or About.
-Without a valid parameter, the initial wide view opens General and the narrow
-view opens the index. Profile and Browse account links open `section=account`.
+Tasks and Focus (`tasks-focus`), Pomo (`pomo`), Integrations and data, Account and
+Pro, or About. Pomo follows Tasks and Focus and contains the companion settings,
+including Linux monitor controls and availability feedback. Show the section on
+native macOS, Windows and Linux, even while Linux capabilities are being checked
+or the companion is unavailable. Hide it on mobile and web. The menu, content
+panes and selected content index use the same platform-filtered section list.
+Without a valid or available section parameter, the initial wide view opens
+General and the narrow view opens the index. Profile and Browse account links
+open `section=account`.
 Keep the existing shortcuts and Google Calendar routes and their return paths.
 
 Use flat setting rows with 12 px vertical padding, thin `border` separators,
@@ -1555,6 +1578,42 @@ its settings must not reopen or focus the main window. On macOS, generic app
 activation does not restore hidden windows; explicit Dock reopen still does.
 Transparent exterior
 space passes input to the desktop; only visible controls accept interaction.
+
+The pet's right-click menu offers Open application above Hide Pomo. Explicitly
+opening the application restores a minimized or hidden main window and transfers
+keyboard focus to it without changing the current route. Close the context menu
+after activation and include both rows in the native pointer-input region. Reuse
+the shared command busy/error handling; only explicit user actions raise the main
+window.
+
+On Linux, probe the actual GDK backend and compositor capabilities before opening
+Pomo. X11/XWayland uses a passive RGBA utility window; native Wayland uses a
+`gtk-layer-shell` top-layer surface with no exclusive zone and on-demand keyboard
+focus. Apply the role and transparent GTK/Flutter backing before realization.
+Linux native 3D textures are vertically inverted at the texture presentation
+boundary. Keep raster fallback images and other platforms upright as authored.
+The main app and Quick Add keep their normal roles. Keep Pomo settings visible
+while probing or unavailable; an unavailable state includes a localized
+explanation, `support@pomodoist.com`, an editable mail draft and copyable
+technical environment details. Never send a support message automatically.
+
+Linux monitor controls select either the user's screen or a pinned monitor.
+Follow the pointer in X11, KDE Plasma 6 and Hyprland; explain that Sway follows
+the active workspace. Dwell for 500 ms before changing outputs, and suspend
+following while the pointer interacts with Pomo, dragging, or menus/settings are
+open. Native Wayland dragging uses accelerated relative-pointer motion, sampled
+independently of surface-local pointer coordinates. Never add a new requested
+window origin to a pointer event based on an older compositor origin: that feeds
+surface movement back into the drag and causes jumps. X11 uses an anchored global
+pointer position. Serialize/coalesce drag moves, settle cancelled follow work
+before capturing the drag origin, and release tracking on end, hide or destroy.
+The manual cross-monitor switch applies only in automatic mode; disabling
+it by pinning retains its saved value. Keep monitor controls in main Settings;
+the compact size panel retains its fixed dimensions. Remember monitor-relative
+positions, preserve placement and the live scene on output changes, and fall
+back to the primary output while a pinned monitor is disconnected without
+forgetting the pin. If only automatic tracking is unavailable, keep manual
+monitor selection usable. These monitor controls are Linux-only.
 
 Pet activation opens/closes controls with a finite reaction; capsule activation
 only toggles controls. Dragging never triggers a tap, and Escape collapses controls.

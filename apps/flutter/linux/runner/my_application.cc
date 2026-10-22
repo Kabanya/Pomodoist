@@ -1,5 +1,6 @@
 #include "my_application.h"
 #include "app_icon_host.h"
+#include "pomo_window_bridge.h"
 
 #include <flutter_linux/flutter_linux.h>
 #ifdef GDK_WINDOWING_X11
@@ -14,6 +15,7 @@ struct _MyApplication {
   GtkApplication parent_instance;
   char **dart_entrypoint_arguments;
   FlMethodChannel *quick_add_channel;
+  FlMethodChannel *pomo_window_channel;
   gboolean quick_add_enabled;
   gint64 quick_add_key_code;
   gchar *quick_add_key_label;
@@ -351,6 +353,7 @@ static void my_application_activate(GApplication *application) {
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
   multiview_desktop_linux_runner_register_primary(window, view);
   configure_quick_add_channel(self, view);
+  self->pomo_window_channel = CreatePomoWindowChannel(view);
   configure_app_icon_channel(GTK_APPLICATION(application), view);
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
@@ -408,6 +411,7 @@ static void my_application_dispose(GObject *object) {
   }
 #endif
   g_clear_object(&self->quick_add_channel);
+  g_clear_object(&self->pomo_window_channel);
   g_clear_pointer(&self->quick_add_key_label, g_free);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);

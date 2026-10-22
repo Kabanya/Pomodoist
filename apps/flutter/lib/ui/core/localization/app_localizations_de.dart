@@ -18,6 +18,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsSectionTasksFocus => 'Aufgaben und Fokus';
 
   @override
+  String get settingsSectionPomo => 'Pomo';
+
+  @override
   String get settingsSectionIntegrations => 'Integrationen und Daten';
 
   @override
@@ -2904,6 +2907,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get commandSearchAllResults => 'Alle Ergebnisse';
 
   @override
+  String get commandSearchEnablePomo => 'Pomo aktivieren';
+
+  @override
+  String get commandSearchDisablePomo => 'Pomo deaktivieren';
+
+  @override
   String get commandSearchHint =>
       '↑ ↓ Navigieren · Enter Öffnen · Esc Schließen';
 
@@ -4391,6 +4400,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pomoShow => 'Pomo anzeigen';
 
   @override
+  String get pomoOpenApp => 'Anwendung öffnen';
+
+  @override
   String get pomoHide => 'Pomo ausblenden';
 
   @override
@@ -4492,4 +4504,67 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get quickAddClearEstimate => 'Schätzung löschen';
+
+  @override
+  String get pomoLinuxChecking => 'Desktop-Umgebung wird geprüft…';
+
+  @override
+  String pomoLinuxUnavailable(String environment) {
+    return 'Pomo ist in deiner Desktop-Umgebung noch nicht verfügbar: $environment. Schreibe an support@pomodoist.com und nenne deine Umgebung.';
+  }
+
+  @override
+  String get pomoLinuxWrite => 'Schreiben';
+
+  @override
+  String get pomoLinuxCopyDetails => 'Umgebungsdetails kopieren';
+
+  @override
+  String get pomoLinuxCopied => 'Umgebungsdetails kopiert.';
+
+  @override
+  String get pomoLinuxMailError =>
+      'Deine E-Mail-App konnte nicht geöffnet werden. Kopiere die Umgebungsdetails und sende sie an support@pomodoist.com.';
+
+  @override
+  String get pomoLinuxDisplayMode => 'Pomo-Bildschirm';
+
+  @override
+  String get pomoLinuxFollowUser => 'Meinem Bildschirm folgen';
+
+  @override
+  String get pomoLinuxPinned => 'Monitor auswählen';
+
+  @override
+  String get pomoLinuxMonitor => 'Monitor';
+
+  @override
+  String get pomoLinuxSelectMonitor => 'Wähle einen Monitor';
+
+  @override
+  String pomoLinuxMonitorUnavailable(String monitor) {
+    return '$monitor (getrennt)';
+  }
+
+  @override
+  String get pomoLinuxCrossDisplayDrag => 'Ziehen zwischen Monitoren erlauben';
+
+  @override
+  String get pomoLinuxCrossDisplayDragDescription =>
+      'Ziehe Pomo auf einen anderen Monitor, ohne den Anzeigemodus zu ändern.';
+
+  @override
+  String get pomoLinuxCrossDisplayDragPinned =>
+      'Pomo bleibt auf dem gewählten Monitor. Deine Einstellung zum Ziehen bleibt für den automatischen Modus erhalten.';
+
+  @override
+  String get pomoLinuxWorkspaceFollow =>
+      'Unter Sway folgt Pomo dem aktiven Arbeitsbereich.';
+
+  @override
+  String get pomoLinuxFollowUnavailable =>
+      'Automatisches Folgen ist in dieser Umgebung nicht verfügbar. Wähle einen Monitor, auf dem Pomo bleiben soll.';
+
+  @override
+  String get pomoLinuxUnknownEnvironment => 'Unbekannte Desktop-Umgebung';
 }

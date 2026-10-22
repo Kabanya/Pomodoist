@@ -30,6 +30,8 @@ printf 'printf "gst-plugin-path=%%s\\n" "$GST_PLUGIN_SYSTEM_PATH_1_0"\n' >> "$bu
 chmod 755 "$bundle/pomodoist"
 printf 'asset\n' > "$bundle/data/example.txt"
 printf 'library\n' > "$bundle/lib/example.so"
+printf 'layer-shell-runtime\n' > "$bundle/lib/libgtk-layer-shell.so.0.10.1"
+ln -s libgtk-layer-shell.so.0.10.1 "$bundle/lib/libgtk-layer-shell.so.0"
 
 # A non-production flavor takes its icon from web/icons/<flavor>/Icon-512.png,
 # which the icon build publishes. The packaging tests must not depend on that
@@ -71,6 +73,13 @@ test -x "$appdir/AppRun"
 test -x "$appdir/usr/lib/pomodoist/pomodoist"
 test "$(cat "$appdir/usr/lib/pomodoist/data/example.txt")" = 'asset'
 test "$(cat "$appdir/usr/lib/pomodoist/lib/example.so")" = 'library'
+test "$(cat "$appdir/usr/lib/pomodoist/lib/libgtk-layer-shell.so.0")" = 'layer-shell-runtime'
+test ! -L "$appdir/usr/lib/pomodoist/lib/libgtk-layer-shell.so.0"
+test -f "$appdir/usr/share/licenses/gtk-layer-shell/LICENSE_LGPL.txt"
+test -f "$appdir/usr/share/licenses/gtk-layer-shell/LICENSE_GPL.txt"
+test -f "$appdir/usr/share/licenses/gtk-layer-shell/LICENSE_MIT.txt"
+test -f "$appdir/usr/share/licenses/gtk-layer-shell/NOTICE"
+test -s "$appdir/usr/share/licenses/wayland-protocols/LICENSE-relative-pointer"
 test -L "$appdir/usr/bin/pomodoist"
 test "$(readlink "$appdir/usr/bin/pomodoist")" = '../lib/pomodoist/pomodoist'
 

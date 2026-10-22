@@ -133,6 +133,12 @@ abstract class AppLocalizations {
   /// **'Tasks and Focus'**
   String get settingsSectionTasksFocus;
 
+  /// No description provided for @settingsSectionPomo.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomo'**
+  String get settingsSectionPomo;
+
   /// No description provided for @settingsSectionIntegrations.
   ///
   /// In en, this message translates to:
@@ -5117,6 +5123,18 @@ abstract class AppLocalizations {
   /// **'See all results'**
   String get commandSearchAllResults;
 
+  /// No description provided for @commandSearchEnablePomo.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Pomo'**
+  String get commandSearchEnablePomo;
+
+  /// No description provided for @commandSearchDisablePomo.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable Pomo'**
+  String get commandSearchDisablePomo;
+
   /// No description provided for @commandSearchHint.
   ///
   /// In en, this message translates to:
@@ -7511,6 +7529,12 @@ abstract class AppLocalizations {
   /// **'Show Pomo'**
   String get pomoShow;
 
+  /// No description provided for @pomoOpenApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Open application'**
+  String get pomoOpenApp;
+
   /// No description provided for @pomoHide.
   ///
   /// In en, this message translates to:
@@ -7676,6 +7700,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear estimate'**
   String get quickAddClearEstimate;
+
+  /// No description provided for @pomoLinuxChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your desktop environment…'**
+  String get pomoLinuxChecking;
+
+  /// No description provided for @pomoLinuxUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomo is not yet available in your desktop environment: {environment}. Email support@pomodoist.com and include your environment.'**
+  String pomoLinuxUnavailable(String environment);
+
+  /// No description provided for @pomoLinuxWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Write'**
+  String get pomoLinuxWrite;
+
+  /// No description provided for @pomoLinuxCopyDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy environment details'**
+  String get pomoLinuxCopyDetails;
+
+  /// No description provided for @pomoLinuxCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Environment details copied.'**
+  String get pomoLinuxCopied;
+
+  /// No description provided for @pomoLinuxMailError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open your email app. Copy the environment details and email support@pomodoist.com.'**
+  String get pomoLinuxMailError;
+
+  /// No description provided for @pomoLinuxDisplayMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomo display'**
+  String get pomoLinuxDisplayMode;
+
+  /// No description provided for @pomoLinuxFollowUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow my screen'**
+  String get pomoLinuxFollowUser;
+
+  /// No description provided for @pomoLinuxPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a monitor'**
+  String get pomoLinuxPinned;
+
+  /// No description provided for @pomoLinuxMonitor.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitor'**
+  String get pomoLinuxMonitor;
+
+  /// No description provided for @pomoLinuxSelectMonitor.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a monitor'**
+  String get pomoLinuxSelectMonitor;
+
+  /// No description provided for @pomoLinuxMonitorUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{monitor} (disconnected)'**
+  String pomoLinuxMonitorUnavailable(String monitor);
+
+  /// No description provided for @pomoLinuxCrossDisplayDrag.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow dragging between monitors'**
+  String get pomoLinuxCrossDisplayDrag;
+
+  /// No description provided for @pomoLinuxCrossDisplayDragDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag Pomo to another monitor without changing its display mode.'**
+  String get pomoLinuxCrossDisplayDragDescription;
+
+  /// No description provided for @pomoLinuxCrossDisplayDragPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomo stays on the chosen monitor. Your drag preference is kept for automatic mode.'**
+  String get pomoLinuxCrossDisplayDragPinned;
+
+  /// No description provided for @pomoLinuxWorkspaceFollow.
+  ///
+  /// In en, this message translates to:
+  /// **'On Sway, Pomo follows the active workspace.'**
+  String get pomoLinuxWorkspaceFollow;
+
+  /// No description provided for @pomoLinuxFollowUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic following is unavailable in this environment. Choose a monitor to keep Pomo on a fixed display.'**
+  String get pomoLinuxFollowUnavailable;
+
+  /// No description provided for @pomoLinuxUnknownEnvironment.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown desktop environment'**
+  String get pomoLinuxUnknownEnvironment;
 }
 
 class _AppLocalizationsDelegate

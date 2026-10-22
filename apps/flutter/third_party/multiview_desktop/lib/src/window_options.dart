@@ -9,6 +9,7 @@ class WindowOptions {
     this.size,
     this.focusOnShow,
     this.isUtility = false,
+    this.linuxDesktopOverlay = false,
     this.minimumSize,
     this.maximumSize,
     this.alignment = Alignment.center,
@@ -30,6 +31,10 @@ class WindowOptions {
 
   /// Utility windows never replace the main app anchor.
   final bool isUtility;
+
+  /// Configures a Linux companion before realization: an X11 utility window
+  /// or a Wayland layer surface. Requires [isUtility]; defaults to disabled.
+  final bool linuxDesktopOverlay;
 
   /// Minimum resizable size enforced by the OS window.
   final Size? minimumSize;

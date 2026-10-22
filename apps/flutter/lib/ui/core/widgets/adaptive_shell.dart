@@ -48,6 +48,7 @@ import 'package:pomodoist/ui/core/themes/macos_glass.dart';
 import 'package:pomodoist/ui/core/widgets/mini_focus_player.dart';
 import 'package:pomodoist/ui/core/widgets/app_context_menu_region.dart';
 import 'package:pomodoist/ui/core/widgets/task_details_host.dart';
+import 'package:pomodoist/ui/pomo/widgets/pomo_toggle_button.dart';
 import 'package:pomodoist/ui/habits/widgets/habit_editor.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/ui/onboarding/widgets/learning_tour_overlay.dart';
@@ -1220,8 +1221,16 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
         const SizedBox(height: 12),
         Divider(height: 1, color: colors.border),
         const SizedBox(height: 8),
-        for (final path in ['/browse', '/reports', '/settings'])
-          destinationTile(path),
+        for (final path in ['/browse', '/reports']) destinationTile(path),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: destinationTile('/settings')),
+              const PomoToggleButton(),
+            ],
+          ),
+        ),
       ],
     );
 

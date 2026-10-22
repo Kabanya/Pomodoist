@@ -1,3 +1,5 @@
+import '../models/pomo_host.dart';
+export '../models/pomo_host.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,21 +10,14 @@ import 'package:pomodoist/domain/models/pomo/pomo_focus.dart';
 import 'package:pomodoist/domain/models/pomo/pomo_reactions.dart';
 import 'package:pomodoist/domain/models/tasks/local_completion_event.dart';
 
-abstract interface class PomoHost {
-  Future<void> show(PomoPreferences preferences);
-  Future<void> hide();
-  Future<void> resetPosition();
-  Future<void> setMenu(bool expanded);
-  Future<void> setCapsuleVisible(bool visible);
-  Future<void> setScale(double scale);
-  Future<void> openSettings();
-  Future<void> closeSettings();
-}
-
 /// Owns visibility and finite reactions; no independent timer/session state.
 class PomoController extends ChangeNotifier {
-  PomoController(this.preferences, this.host, {PomoReactions? reactions})
-    : reactions = reactions ?? PomoReactions() {
+  PomoController(
+    this.preferences,
+    this.host, {
+    PomoReactions? reactions,
+    this.hostAvailable = true,
+  }) : reactions = reactions ?? PomoReactions() {
     _reactionSubscription = this.reactions.changes.listen((_) {
       _notify();
       if (closing && !this.reactions.animated) _finishCloseMotion();
@@ -116,6 +111,14 @@ class PomoController extends ChangeNotifier {
       _explicit = false,
       _disposed = false,
       _ready = false;
+  bool hostAvailable;
+
+  Future<void> setHostAvailable(bool available) async {
+    if (hostAvailable == available) return;
+    hostAvailable = available;
+    await perform(_reconcile);
+  }
+
   Object? error;
   Timer? _reconcileTimer, _closingTimer;
   Completer<void>? _closingMotion;
@@ -186,13 +189,13 @@ class PomoController extends ChangeNotifier {
   Future<void> _reconcile() {
     final next = _pending.then((_) async {
       if (_disposed || !_ready || closing) return;
-      final wanted = prefs.shouldShow(
-        hasRun: focus.hasRun,
-        explicitShow: _explicit,
-      );
+      final wanted =
+          hostAvailable &&
+          prefs.shouldShow(hasRun: focus.hasRun, explicitShow: _explicit);
       if (wanted && !visible) {
         await host.show(prefs);
         if (_disposed ||
+            !hostAvailable ||
             closing ||
             !prefs.shouldShow(hasRun: focus.hasRun, explicitShow: _explicit)) {
           await host.hide();
@@ -204,7 +207,8 @@ class PomoController extends ChangeNotifier {
         _notify();
       } else if (!wanted &&
           visible &&
-          (!prefs.enabled ||
+          (!hostAvailable ||
+              !prefs.enabled ||
               prefs.dismissed ||
               reactions.emotion != PomoEmotion.happy)) {
         await _hideNow();
@@ -329,7 +333,8 @@ class PomoController extends ChangeNotifier {
 bool get pomoSupported =>
     !kIsWeb &&
     (defaultTargetPlatform == TargetPlatform.macOS ||
-        defaultTargetPlatform == TargetPlatform.windows);
+        defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux);
 
 // The composition root supplies one controller shared by every desktop view.
 final pomoControllerProvider = ChangeNotifierProvider<PomoController>(
@@ -339,6 +344,7 @@ final pomoFocusProvider = Provider<PomoFocus>(
   (ref) => throw StateError('Pomo dependencies were not installed'),
 );
 typedef PomoActions = ({
+  Future<void> Function() openApp,
   Future<void> Function() toggleFocus,
   Future<void> Function() completeInterval,
   Future<void> Function() quickAdd,

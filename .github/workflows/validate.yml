@@ -21,9 +21,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends \
-            appstream desktop-file-utils clang \
+            appstream desktop-file-utils clang libgtk-layer-shell-dev \
             libc++-dev libc++abi-dev libdrm-dev libegl1-mesa-dev \
-            libgl1-mesa-dev libgbm-dev zlib1g-dev
+            libgl1-mesa-dev libgbm-dev libwayland-dev zlib1g-dev
       - run: sh tool/test_public_boundary.sh
       - run: sh tool/test_xcode_warnings.sh
       - run: python3 tool/check_architecture.py
@@ -33,6 +33,8 @@ jobs:
       - run: python3 -m unittest discover -s tool -p test_web_image_ci.py
       - run: python3 -m unittest discover -s tool/windows -p 'test_*.py' -v
       - run: make test-linux-packaging
+      - run: tool/linux/test_pomo_geometry.sh
+      - run: python3 -m unittest discover -s tool/linux -p 'test_thermion*.py'
       - name: Link Flutter build output into build/
         run: make flutter-build-link
       - run: flutter pub get --enforce-lockfile

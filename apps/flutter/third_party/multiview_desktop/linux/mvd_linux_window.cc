@@ -1,4 +1,6 @@
 #include "mvd_linux_window.h"
+#include "mvd_linux_internal.h"
+#include <gtk-layer-shell.h>
 #include "mvd_linux_log.h"
 #include <gtk/gtk.h>
 
@@ -767,7 +769,7 @@ void MvdLinuxWindow::Show() {
   // the coordinates in the X11 MapRequest (PPosition hint).
   ApplyPendingMove();
   gtk_widget_show(GTK_WIDGET(window));
-  gtk_window_present(window);
+  if (focus_on_show) gtk_window_present(window);
   SeedConfigureBaseline();
   MVD_LOG("Show  DONE  view_id=%" G_GINT64_FORMAT, view_id);
 }
@@ -788,6 +790,7 @@ void MvdLinuxWindow::Hide() {
   MVD_LOG("Hide  current bounds: pos=(%d,%d) size=%dx%d  view_id=%"
           G_GINT64_FORMAT, x, y, w, h, view_id);
   gtk_widget_hide(GTK_WIDGET(window));
+  if (gtk_layer_is_layer_window(window)) return;
   gtk_window_move(window, x, y);
   gtk_window_resize(window, w, h);
   MVD_LOG("Hide  DONE  view_id=%" G_GINT64_FORMAT, view_id);
@@ -880,6 +883,7 @@ bool MvdLinuxWindow::SetBackgroundColor(int r, int g, int b, int a) {
   rgba.green = g / 255.0;
   rgba.blue = b / 255.0;
   rgba.alpha = a / 255.0;
+  if (view) fl_view_set_background_color(view, &rgba);
   g_autofree gchar* color = gdk_rgba_to_string(&rgba);
   g_autofree gchar* css =
       g_strdup_printf("window { background-color: %s; }", color);
@@ -899,6 +903,7 @@ FlValue* MvdLinuxWindow::GetBounds() {
   if (!window) {
     return nullptr;
   }
+  if (gtk_layer_is_layer_window(window)) return mvd_linux_layer_bounds(window);
   return MakeBounds(window);
 }
 
@@ -909,19 +914,23 @@ void MvdLinuxWindow::SetBounds(FlValue* args) {
   FlValue* x = fl_value_lookup_string(args, "x");
   FlValue* y = fl_value_lookup_string(args, "y");
   if (x && y) {
-    gtk_window_move(window, static_cast<gint>(fl_value_get_float(x)),
-                    static_cast<gint>(fl_value_get_float(y)));
+    SetPosition(fl_value_get_float(x), fl_value_get_float(y));
   }
   FlValue* w = fl_value_lookup_string(args, "width");
   FlValue* h = fl_value_lookup_string(args, "height");
   if (w && h) {
-    gtk_window_resize(window, static_cast<gint>(fl_value_get_float(w)),
-                      static_cast<gint>(fl_value_get_float(h)));
+    SetSize(fl_value_get_float(w), fl_value_get_float(h));
   }
 }
 
 void MvdLinuxWindow::SetSize(double width, double height) {
   if (!window) {
+    return;
+  }
+  if (gtk_layer_is_layer_window(window)) {
+    gtk_widget_set_size_request(GTK_WIDGET(window), static_cast<gint>(width),
+                                static_cast<gint>(height));
+    gtk_window_resize(window, 1, 1);
     return;
   }
   gtk_window_resize(window, static_cast<gint>(width), static_cast<gint>(height));
@@ -953,6 +962,10 @@ void MvdLinuxWindow::SetPosition(double x, double y) {
           window ? static_cast<int>(gtk_widget_get_visible(GTK_WIDGET(window)))
                  : -1);
   if (!window) return;
+  if (gtk_layer_is_layer_window(window)) {
+    mvd_linux_move_layer_window(window, x, y, nullptr);
+    return;
+  }
   pending_move_x = static_cast<gint>(x);
   pending_move_y = static_cast<gint>(y);
   has_pending_move = true;
@@ -1091,6 +1104,7 @@ void MvdLinuxWindow::SetResizable(bool v) {
   if (!window) {
     return;
   }
+  if (gtk_layer_is_layer_window(window)) return;
 
   if (!v) {
     gint w = 0;
@@ -1150,6 +1164,12 @@ bool MvdLinuxWindow::IsMinimizable() {
 // Updates type hint and taskbar-skip hints from stored state.
 void MvdLinuxWindow::ApplyWindowTypeHint() {
   if (!window) return;
+  if (is_pomo) {
+    gtk_window_set_type_hint(window, GDK_WINDOW_TYPE_HINT_UTILITY);
+    gtk_window_set_skip_taskbar_hint(window, TRUE);
+    gtk_window_set_skip_pager_hint(window, TRUE);
+    return;
+  }
   gtk_window_set_type_hint(
       window,
       is_minimizable ? GDK_WINDOW_TYPE_HINT_NORMAL : GDK_WINDOW_TYPE_HINT_DIALOG);

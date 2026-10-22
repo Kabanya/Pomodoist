@@ -4,11 +4,17 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 
 set(PLUGIN_NAME "multiview_desktop_plugin")
 
+pkg_check_modules(GTK_LAYER_SHELL REQUIRED IMPORTED_TARGET gtk-layer-shell-0>=0.6)
+pkg_check_modules(WAYLAND_CLIENT REQUIRED IMPORTED_TARGET wayland-client>=1.20)
+
 add_library(${PLUGIN_NAME} SHARED
   "multiview_desktop_plugin.cc"
   "mvd_linux_taskbar_menu.cc"
   "mvd_linux_window.cc"
   "mvd_linux_runner.cc"
+  "mvd_linux_pomo.cc"
+  "mvd_linux_pomo_drag.cc"
+  "protocols/relative-pointer-unstable-v1-protocol.cc"
 )
 
 apply_standard_settings(${PLUGIN_NAME})
@@ -21,7 +27,7 @@ target_include_directories(${PLUGIN_NAME} PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/include"
   "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
-target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
+target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK PkgConfig::GTK_LAYER_SHELL PkgConfig::WAYLAND_CLIENT)
 
 set(multiview_desktop_bundled_libraries
   ""

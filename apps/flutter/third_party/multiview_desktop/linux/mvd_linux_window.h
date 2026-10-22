@@ -23,6 +23,9 @@ class MvdLinuxWindow {
   GtkWindow* window = nullptr;
   FlView* view = nullptr;
 
+  bool focus_on_show = true;
+  bool is_utility = false;
+  bool is_pomo = false;
   bool is_prevent_close = false;
   bool is_confirm_close = false;
   bool is_pre_confirm = false;

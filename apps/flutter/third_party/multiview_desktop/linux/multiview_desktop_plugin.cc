@@ -1,3 +1,4 @@
+#include "mvd_linux_color.h"
 #include <multiview_desktop/multiview_desktop_plugin.h>
 
 #include "mvd_linux_internal.h"
@@ -185,6 +186,10 @@ static gboolean on_delete(GtkWidget* widget, GdkEvent*, gpointer data) {
           static_cast<int>(wm->is_modal),
           static_cast<int>(wm->is_dialog),
           wm->modal_owner_view_id);
+
+  // gtk-layer-shell <= 0.9 translates output loss into gtk_window_close.
+  // Keep Pomo alive for topology fallback instead of persisting manual dismissal.
+  if (wm->is_pomo && mvd_linux_layer_output_lost(wm->window)) return TRUE;
 
   if (!wm->is_pre_confirm) {
     MVD_LOG("on_delete  viewId=%" G_GINT64_FORMAT
@@ -426,6 +431,9 @@ static void register_window(GtkWindow* window, FlView* view, int64_t view_id,
   wm->view_id = view_id;
   wm->window = window;
   wm->view = view;
+  wm->focus_on_show = !g_object_get_data(G_OBJECT(window), "mvd-passive");
+  wm->is_utility = g_object_get_data(G_OBJECT(window), "mvd-utility") != nullptr;
+  wm->is_pomo = g_object_get_data(G_OBJECT(window), "mvd-pomo") != nullptr;
   wm->is_dialog = is_dialog;
   wm->is_modal = is_modal;
   wm->dialog_parent_view_id = dialog_parent_view_id;
@@ -806,11 +814,10 @@ static void handle_view_method(FlMethodCall* method_call,
     wm->SetBrightness(string_from_map(args, "brightness"));
     response = ok_null();
   } else if (g_strcmp0(method, "setBackgroundColor") == 0) {
-    const int r = static_cast<int>(double_from_map(args, "red", 0));
-    const int g = static_cast<int>(double_from_map(args, "green", 0));
-    const int b = static_cast<int>(double_from_map(args, "blue", 0));
-    const int a = static_cast<int>(double_from_map(args, "alpha", 255));
-    wm->SetBackgroundColor(r, g, b, a);
+    const auto color = mvd::DecodeBackgroundColor([&](const char* key, double fallback) {
+      return double_from_map(args, key, fallback);
+    });
+    wm->SetBackgroundColor(color.red, color.green, color.blue, color.alpha);
     response = ok_null();
   } else if (g_strcmp0(method, "setIgnoreMouseEvents") == 0) {
     wm->SetIgnoreMouseEvents(bool_from_map(args, "ignore", false),
@@ -896,22 +903,30 @@ static void method_cb(FlMethodChannel*, FlMethodCall* method_call, gpointer) {
       req.title = pending.title.c_str();
       req.title_bar_style = pending.title_bar_style.c_str();
       req.window_button_visibility = pending.window_button_visibility;
+      req.focus_on_show = bool_from_map(args, "focusOnShow", true);
+      req.is_utility = bool_from_map(args, "isUtility", false);
+      req.linux_desktop_overlay = bool_from_map(args, "linuxDesktopOverlay", false);
+      req.has_background_color = fl_value_lookup_string(args, "backgroundColorA") != nullptr;
+      const auto color = mvd::DecodeBackgroundColor([&](const char* key, double fallback) {
+        return double_from_map(args, key, fallback);
+      });
+      req.background_color = {color.red / 255.0, color.green / 255.0,
+                              color.blue / 255.0, color.alpha / 255.0};
       req.has_position = pending.has_position ? TRUE : FALSE;
       req.pos_x = pending.pos_x;
       req.pos_y = pending.pos_y;
-      // Call g_create_cb before moving pending; the callback copies strings async.
-      MVD_LOG("method_cb  createWindow  calling g_create_cb  token=%"
-              G_GINT64_FORMAT, req.token);
-      g_create_cb(&req);
-      MVD_LOG("method_cb  createWindow  g_create_cb returned  token=%"
-              G_GINT64_FORMAT, req.token);
-      {
-        std::lock_guard<std::mutex> lk(g_pending_mtx);
-        g_pending_create[pending.token] = std::move(pending);
-        MVD_LOG("method_cb  createWindow  stored in pending_create  pending_count=%zu",
-                g_pending_create.size());
+      if (req.linux_desktop_overlay && req.is_utility && !mvd_linux_pomo_available()) {
+        response = err("unsupported", "Pomo surface is unavailable on this display backend");
+      } else {
+        // g_main_context_invoke may run immediately on the GTK thread. Publish
+        // pending options before the runner can complete the native window.
+        {
+          std::lock_guard<std::mutex> lk(g_pending_mtx);
+          g_pending_create[pending.token] = pending;
+        }
+        g_create_cb(&req);
+        response = ok_null();
       }
-      response = ok_null();
     }
   } else if (g_strcmp0(method, "createModalDialog") == 0) {
     const int64_t parent_id = int64_from_map(args, "parentId");
@@ -1083,7 +1098,7 @@ void mvd_linux_complete_secondary_window(GtkWindow* window,
   MVD_LOG("complete_secondary_window  token=%" G_GINT64_FORMAT
           "  view_id=%" G_GINT64_FORMAT, token, view_id);
 
-  if (!pending.has_position) {
+  if (!pending.has_position && !g_object_get_data(G_OBJECT(window), "mvd-pomo")) {
     MVD_LOG("complete_secondary_window  no explicit position -> GTK_WIN_POS_CENTER"
             "  viewId=%" G_GINT64_FORMAT, view_id);
     gtk_window_set_position(window, GTK_WIN_POS_CENTER);
@@ -1098,7 +1113,7 @@ void mvd_linux_complete_secondary_window(GtkWindow* window,
   register_window(window, view, view_id);
 
   auto wm = MvdLinuxWindow::Find(view_id);
-  if (wm && !pending.title_bar_style.empty()) {
+  if (wm && !pending.title_bar_style.empty() && !wm->is_pomo) {
     MVD_LOG("complete_secondary_window  applying title_bar_style='%s'"
             "  wbv=%d  viewId=%" G_GINT64_FORMAT,
             pending.title_bar_style.c_str(),

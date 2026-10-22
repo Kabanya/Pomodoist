@@ -108,6 +108,10 @@ include(flutter/generated_plugins.cmake)
 # multiview_desktop uses structured bindings but does not request C++17 itself.
 target_compile_features(multiview_desktop_plugin PRIVATE cxx_std_17)
 
+if(TARGET thermion_flutter_plugin)
+  include("${CMAKE_CURRENT_SOURCE_DIR}/thermion_runtime.cmake")
+endif()
+
 
 # === Installation ===
 # By default, "installing" just makes a relocatable bundle in the build

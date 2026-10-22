@@ -6,6 +6,36 @@ import 'package:pomodoist/domain/models/pomo/pomo_models.dart';
 class PomoLayout {
   PomoLayout(this.scale);
   final double scale;
+
+  /// GTK windows use integer logical sizes even on a HiDPI output. Keep the
+  /// full fractional Flutter layout inside the native canvas and compare the
+  /// snapped frame on later transactions rather than repeatedly resizing it.
+  static Rect gtkBounds(Rect requested, Rect workArea) {
+    final width = math.min(
+      requested.width.ceilToDouble(),
+      workArea.width.floorToDouble(),
+    );
+    final height = math.min(
+      requested.height.ceilToDouble(),
+      workArea.height.floorToDouble(),
+    );
+    final left = requested.left
+        .roundToDouble()
+        .clamp(
+          workArea.left.ceilToDouble(),
+          (workArea.right - width).floorToDouble(),
+        )
+        .toDouble();
+    final top = requested.top
+        .roundToDouble()
+        .clamp(
+          workArea.top.ceilToDouble(),
+          (workArea.bottom - height).floorToDouble(),
+        )
+        .toDouble();
+    return Rect.fromLTWH(left, top, width, height);
+  }
+
   double get button => math.max(48, 48 * scale);
   double get gap => math.max(8, 8 * scale);
   double get padding => math.max(4, 4 * scale);

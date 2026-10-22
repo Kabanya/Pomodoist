@@ -11,6 +11,7 @@
 #endif
 
 #include <gtk/gtk.h>
+#include <gtk-layer-shell.h>
 
 #include <memory>
 #include <string>
@@ -38,10 +39,6 @@
 namespace {
   int (*g_prev_x_error_handler)(Display*, XErrorEvent*) = nullptr;
   int g_glx_opcode = -1;
-  // GLX defines its own error codes starting at error_base.
-  // We store it so we can identify GLX extension errors (GLXBadDrawable etc.)
-  // in addition to standard X11 errors like BadAccess.
-  int g_glx_error_base = -1;
 
   static int mvd_x11_error_handler(Display* dpy, XErrorEvent* ev) {
     // Suppress ALL errors that originate from the GLX extension.
@@ -90,7 +87,8 @@ static void first_frame_cb(gpointer user_data, FlView* view) {
   const int64_t view_id = fl_view_get_id(view);
   MVD_LOG("first_frame_cb  view=%p  view_id=%" G_GINT64_FORMAT "  skip=%d",
           static_cast<void*>(view), view_id, skip);
-  if (skip) {
+  if (skip || g_object_get_data(G_OBJECT(gtk_widget_get_toplevel(GTK_WIDGET(view))),
+                                 "mvd-passive")) {
     MVD_LOG("first_frame_cb  SKIP: skip flag set  view_id=%" G_GINT64_FORMAT,
             view_id);
     return;
@@ -185,13 +183,43 @@ static void create_secondary_window(const MvdCreateWindowRequest* request) {
   MVD_LOG("create_secondary_window  GtkWindow created: window=%p",
           static_cast<void*>(window));
 
-  MvdLinuxWindow::DecorateToplevel(window, title);
+  // Surface role, visual, and passive activation policy must precede realization.
+  g_object_set_data(G_OBJECT(window), "mvd-passive",
+                    GINT_TO_POINTER(!request->focus_on_show));
+  g_object_set_data(G_OBJECT(window), "mvd-utility",
+                    GINT_TO_POINTER(request->is_utility));
+  g_object_set_data(G_OBJECT(window), "mvd-pomo",
+                    GINT_TO_POINTER(request->linux_desktop_overlay && request->is_utility));
+  gtk_window_set_focus_on_map(window, request->focus_on_show);
+  if (request->linux_desktop_overlay && request->is_utility) {
+    mvd_linux_prepare_pomo_window(window);
+  } else {
+    MvdLinuxWindow::DecorateToplevel(window, title);
+  }
+  if (request->has_background_color) {
+    GdkVisual* visual = gdk_screen_get_rgba_visual(gtk_window_get_screen(window));
+    if (visual) gtk_widget_set_visual(GTK_WIDGET(window), visual);
+    gtk_widget_set_app_paintable(GTK_WIDGET(window), TRUE);
+    GtkCssProvider* provider = gtk_css_provider_new();
+    g_autofree gchar* color = gdk_rgba_to_string(&request->background_color);
+    g_autofree gchar* css = g_strdup_printf("window {background-color:%s;}", color);
+    gtk_css_provider_load_from_data(provider, css, -1, nullptr);
+    gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(window)),
+        GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    g_object_unref(provider);
+  }
   gtk_window_set_default_size(window, static_cast<int>(request->width),
                               static_cast<int>(request->height));
+  if (gtk_layer_is_layer_window(window)) {
+    gtk_widget_set_size_request(GTK_WIDGET(window), static_cast<int>(request->width),
+                                static_cast<int>(request->height));
+    if (request->has_position)
+      mvd_linux_move_layer_window(window, request->pos_x, request->pos_y, nullptr);
+  }
   MVD_LOG("create_secondary_window  default_size=%.0fx%.0f",
           request->width, request->height);
 
-  if (request->has_position) {
+  if (request->has_position && !gtk_layer_is_layer_window(window)) {
     MVD_LOG("create_secondary_window  moving window to (%.0f,%.0f)",
             request->pos_x, request->pos_y);
     gtk_window_move(window, static_cast<int>(request->pos_x),
@@ -205,7 +233,10 @@ static void create_secondary_window(const MvdCreateWindowRequest* request) {
           static_cast<void*>(view));
 
   GdkRGBA background_color;
-  gdk_rgba_parse(&background_color, "#000000");
+  if (request->has_background_color) background_color = request->background_color;
+  else if (request->linux_desktop_overlay && request->is_utility)
+    background_color = {0, 0, 0, 0};
+  else gdk_rgba_parse(&background_color, "#000000");
   fl_view_set_background_color(view, &background_color);
 
   MVD_LOG("create_secondary_window  calling gtk_widget_show on view=%p",
@@ -220,7 +251,7 @@ static void create_secondary_window(const MvdCreateWindowRequest* request) {
   MVD_LOG("create_secondary_window  connecting first-frame signal"
           "  view=%p", static_cast<void*>(view));
   g_signal_connect_swapped(view, "first-frame", G_CALLBACK(first_frame_cb),
-                           GINT_TO_POINTER(0));
+                           GINT_TO_POINTER(!request->focus_on_show));
 
   MVD_LOG("create_secondary_window  calling gtk_widget_realize  view=%p",
           static_cast<void*>(view));
@@ -297,7 +328,6 @@ void multiview_desktop_linux_runner_install(GtkApplication* application) {
     int error_base = 0;
     if (XQueryExtension(xdisplay, "GLX",
                         &g_glx_opcode, &event_base, &error_base)) {
-      g_glx_error_base = error_base;
       MVD_LOG("runner_install  X11: GLX found  opcode=%d"
               "  event_base=%d  error_base=%d"
               "  (GLXBadContext=%d GLXBadDrawable=%d)",
@@ -307,7 +337,6 @@ void multiview_desktop_linux_runner_install(GtkApplication* application) {
       MVD_LOG("runner_install  X11: GLX extension NOT found"
               "  (X11 error suppression will not be active)");
       g_glx_opcode = -1;
-      g_glx_error_base = -1;
     }
     // XSetErrorHandler is process-wide: replace GDK's handler with ours,
     // saving the previous one so we can chain non-GLX errors to it.

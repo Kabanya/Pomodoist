@@ -101,6 +101,61 @@ FocusRunItem run() => FocusRunItem(
 );
 void main() {
   test(
+    'enabling restores a dismissed companion and disabling persists',
+    () async {
+      final service = MemoryPreferences();
+      final prefs = LocalPomoPreferencesRepository(service);
+      final c = PomoController(prefs, Host());
+      addTearDown(prefs.dispose);
+      addTearDown(c.dispose);
+      await c.initialize();
+      await c.updatePreferences(
+        (p) => p.copyWith(dismissed: true, focusOnly: true),
+      );
+
+      await c.setEnabled(true);
+      expect(c.error, isNull);
+      expect(c.prefs.enabled, true);
+      expect(c.prefs.dismissed, false);
+      expect(c.visible, true);
+
+      await c.setEnabled(false);
+      expect(c.error, isNull);
+      expect(c.prefs.enabled, false);
+      expect(c.visible, false);
+      final loaded = LocalPomoPreferencesRepository(service);
+      addTearDown(loaded.dispose);
+      await loaded.load();
+      expect(loaded.state.enabled, false);
+      expect(loaded.state.focusOnly, true);
+    },
+  );
+
+  for (final enabled in [false, true]) {
+    test('failed toggle retains enabled=$enabled and allows retry', () async {
+      final service = MemoryPreferences();
+      final prefs = LocalPomoPreferencesRepository(service);
+      final c = PomoController(prefs, Host());
+      addTearDown(prefs.dispose);
+      addTearDown(c.dispose);
+      await c.initialize();
+      if (enabled) await c.setEnabled(true);
+
+      service.fail = true;
+      await c.setEnabled(!enabled);
+      expect(c.error, isA<StateError>());
+      expect(c.prefs.enabled, enabled);
+      expect(c.visible, enabled);
+
+      service.fail = false;
+      await c.setEnabled(!enabled);
+      expect(c.error, isNull);
+      expect(c.prefs.enabled, !enabled);
+      expect(c.visible, !enabled);
+    });
+  }
+
+  test(
     'composition shares the Pomo controller without opening a window',
     () async {
       final prefs = LocalPomoPreferencesRepository(MemoryPreferences());

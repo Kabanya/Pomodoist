@@ -18,6 +18,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsSectionTasksFocus => '任务与专注';
 
   @override
+  String get settingsSectionPomo => 'Pomo';
+
+  @override
   String get settingsSectionIntegrations => '集成与数据';
 
   @override
@@ -2753,6 +2756,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commandSearchAllResults => '查看所有结果';
 
   @override
+  String get commandSearchEnablePomo => '启用 Pomo';
+
+  @override
+  String get commandSearchDisablePomo => '禁用 Pomo';
+
+  @override
   String get commandSearchHint => '↑ ↓ 选择 · Enter 打开 · Esc 关闭';
 
   @override
@@ -4131,6 +4140,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pomoShow => '显示 Pomo';
 
   @override
+  String get pomoOpenApp => '打开应用';
+
+  @override
   String get pomoHide => '隐藏 Pomo';
 
   @override
@@ -4225,4 +4237,64 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get quickAddClearEstimate => '清除预估';
+
+  @override
+  String get pomoLinuxChecking => '正在检查桌面环境…';
+
+  @override
+  String pomoLinuxUnavailable(String environment) {
+    return 'Pomo 尚不支持您的桌面环境：$environment。请发送邮件至 support@pomodoist.com，并附上环境信息。';
+  }
+
+  @override
+  String get pomoLinuxWrite => '写邮件';
+
+  @override
+  String get pomoLinuxCopyDetails => '复制环境信息';
+
+  @override
+  String get pomoLinuxCopied => '已复制环境信息。';
+
+  @override
+  String get pomoLinuxMailError =>
+      '无法打开邮件应用。请复制环境信息并发送至 support@pomodoist.com。';
+
+  @override
+  String get pomoLinuxDisplayMode => 'Pomo 显示屏';
+
+  @override
+  String get pomoLinuxFollowUser => '跟随我使用的屏幕';
+
+  @override
+  String get pomoLinuxPinned => '选择显示器';
+
+  @override
+  String get pomoLinuxMonitor => '显示器';
+
+  @override
+  String get pomoLinuxSelectMonitor => '请选择显示器';
+
+  @override
+  String pomoLinuxMonitorUnavailable(String monitor) {
+    return '$monitor（已断开）';
+  }
+
+  @override
+  String get pomoLinuxCrossDisplayDrag => '允许在显示器之间拖动';
+
+  @override
+  String get pomoLinuxCrossDisplayDragDescription => '将 Pomo 拖到其他显示器，无需更改显示模式。';
+
+  @override
+  String get pomoLinuxCrossDisplayDragPinned => 'Pomo 将留在所选显示器上。拖动偏好将保留用于自动模式。';
+
+  @override
+  String get pomoLinuxWorkspaceFollow => '在 Sway 中，Pomo 会跟随当前活动工作区。';
+
+  @override
+  String get pomoLinuxFollowUnavailable =>
+      '此环境不支持自动跟随。请选择一个显示器，将 Pomo 固定在该屏幕上。';
+
+  @override
+  String get pomoLinuxUnknownEnvironment => '未知桌面环境';
 }

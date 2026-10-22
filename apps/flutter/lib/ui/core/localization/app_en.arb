@@ -2,6 +2,7 @@
   "settingsSectionGeneral": "General",
   "settingsSectionAppearance": "Appearance",
   "settingsSectionTasksFocus": "Tasks and Focus",
+  "settingsSectionPomo": "Pomo",
   "settingsSectionIntegrations": "Integrations and data",
   "settingsSectionAccount": "Account and Pro",
   "settingsThemeColorsTab": "Colors",
@@ -1499,6 +1500,8 @@
   "commandSearchActions": "Actions",
   "commandSearchDictateTask": "Dictate task",
   "commandSearchAllResults": "See all results",
+  "commandSearchEnablePomo": "Enable Pomo",
+  "commandSearchDisablePomo": "Disable Pomo",
   "commandSearchHint": "↑ ↓ Navigate · Enter Open · Esc Close",
   "commandSearchNoMatches": "No matching tasks or projects.",
   "overdueTitle": "Overdue",
@@ -2181,6 +2184,7 @@
   "pomoQuietDescription": "Static reactions without background animation.",
   "pomoReduceMotion": "Reduce companion motion",
   "pomoShow": "Show Pomo",
+  "pomoOpenApp": "Open application",
   "pomoHide": "Hide Pomo",
   "pomoResetPosition": "Reset position",
   "pomoInteract": "Pomo: react and toggle controls. Drag to move.",
@@ -2231,6 +2235,38 @@
         "type": "String"
       },
       "totalMinutes": {
+        "type": "String"
+      }
+    }
+  },
+  "pomoLinuxChecking": "Checking your desktop environment…",
+  "pomoLinuxUnavailable": "Pomo is not yet available in your desktop environment: {environment}. Email support@pomodoist.com and include your environment.",
+  "pomoLinuxWrite": "Write",
+  "pomoLinuxCopyDetails": "Copy environment details",
+  "pomoLinuxCopied": "Environment details copied.",
+  "pomoLinuxMailError": "Could not open your email app. Copy the environment details and email support@pomodoist.com.",
+  "pomoLinuxDisplayMode": "Pomo display",
+  "pomoLinuxFollowUser": "Follow my screen",
+  "pomoLinuxPinned": "Choose a monitor",
+  "pomoLinuxMonitor": "Monitor",
+  "pomoLinuxSelectMonitor": "Select a monitor",
+  "pomoLinuxMonitorUnavailable": "{monitor} (disconnected)",
+  "pomoLinuxCrossDisplayDrag": "Allow dragging between monitors",
+  "pomoLinuxCrossDisplayDragDescription": "Drag Pomo to another monitor without changing its display mode.",
+  "pomoLinuxCrossDisplayDragPinned": "Pomo stays on the chosen monitor. Your drag preference is kept for automatic mode.",
+  "pomoLinuxWorkspaceFollow": "On Sway, Pomo follows the active workspace.",
+  "pomoLinuxFollowUnavailable": "Automatic following is unavailable in this environment. Choose a monitor to keep Pomo on a fixed display.",
+  "pomoLinuxUnknownEnvironment": "Unknown desktop environment",
+  "@pomoLinuxUnavailable": {
+    "placeholders": {
+      "environment": {
+        "type": "String"
+      }
+    }
+  },
+  "@pomoLinuxMonitorUnavailable": {
+    "placeholders": {
+      "monitor": {
         "type": "String"
       }
     }

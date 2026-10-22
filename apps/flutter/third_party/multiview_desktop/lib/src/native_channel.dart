@@ -97,6 +97,9 @@ class NativeChannel {
   Future<void> createWindowRequest({
     required int token,
     bool focusOnShow = true,
+    bool isUtility = false,
+    bool linuxDesktopOverlay = false,
+    Color? backgroundColor,
     required String title,
     required String titleBarStyleStr,
     required bool windowButtonVisibility,
@@ -107,6 +110,14 @@ class NativeChannel {
     await _staticChannel.invokeMethod<void>(kMethodCreateWindow, {
       'token': token,
       'focusOnShow': focusOnShow,
+      'isUtility': isUtility,
+      'linuxDesktopOverlay': linuxDesktopOverlay,
+      if (backgroundColor != null) ...{
+        'backgroundColorA': (backgroundColor.a * 255).round(),
+        'backgroundColorR': (backgroundColor.r * 255).round(),
+        'backgroundColorG': (backgroundColor.g * 255).round(),
+        'backgroundColorB': (backgroundColor.b * 255).round(),
+      },
       'width': windowSize.width,
       'height': windowSize.height,
       'title': title,

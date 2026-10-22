@@ -1,17 +1,31 @@
 import 'dart:async';
-import 'pomo_scale_control.dart';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadSwitch, ShadContextMenuItem;
-import 'package:pomodoist/ui/pomo/view_models/pomo_controller.dart';
+
+import 'package:pomodoist/domain/models/pomo/pomo_environment.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/pomo/view_models/pomo_controller.dart';
+import 'package:pomodoist/ui/pomo/view_models/pomo_environment_view_model.dart';
 import 'package:pomodoist/ui/settings/widgets/settings_components.dart';
+
+import 'pomo_linux_settings.dart';
+import 'pomo_scale_control.dart';
 
 class PomoSettings extends ConsumerWidget {
   const PomoSettings({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (!pomoSupported) return const SizedBox.shrink();
+    final isLinux = !kIsWeb && defaultTargetPlatform == TargetPlatform.linux;
+    if (!isLinux && !pomoSupported) return const SizedBox.shrink();
+    final environment = isLinux
+        ? ref.watch(pomoEnvironmentStateProvider).value ??
+              const PomoEnvironment()
+        : null;
+    final available =
+        environment == null || (!environment.checking && environment.available);
     final c = ref.watch(pomoControllerProvider), p = c.prefs;
     final l = context.l10n;
     Widget row(
@@ -19,22 +33,31 @@ class PomoSettings extends ConsumerWidget {
       bool value,
       Future<void> Function(bool) update, {
       String? subtitle,
+      bool active = true,
     }) => SettingsRow(
       title: title,
       subtitle: subtitle,
       controlWidth: 48,
-      control: ShadSwitch(value: value, onChanged: (v) => unawaited(update(v))),
+      control: ShadSwitch(
+        value: value,
+        enabled: active,
+        onChanged: (v) => unawaited(update(v)),
+      ),
     );
-    return Padding(
-      padding: const EdgeInsets.only(top: 24),
-      child: SettingsGroup(
-        children: [
-          row(
-            l.pomoTitle,
-            p.enabled,
-            c.setEnabled,
-            subtitle: l.pomoDescription,
-          ),
+    return SettingsGroup(
+      children: [
+        row(
+          l.pomoTitle,
+          p.enabled,
+          c.setEnabled,
+          subtitle: l.pomoDescription,
+          active: available,
+        ),
+        if (environment != null && !available)
+          PomoLinuxAvailability(environment: environment),
+        if (available) ...[
+          if (environment != null)
+            PomoLinuxDisplaySettings(environment: environment),
           const Padding(padding: EdgeInsets.all(16), child: PomoScaleControl()),
           const PomoTimerControl(),
           if (p.enabled) ...[
@@ -76,16 +99,16 @@ class PomoSettings extends ConsumerWidget {
               ),
             ),
           ],
-          if (c.error != null)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                l.pomoError,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ),
         ],
-      ),
+        if (c.error != null)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              l.pomoError,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+      ],
     );
   }
 }

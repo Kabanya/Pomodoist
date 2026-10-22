@@ -18,6 +18,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsSectionTasksFocus => 'المهام والتركيز';
 
   @override
+  String get settingsSectionPomo => 'Pomo';
+
+  @override
   String get settingsSectionIntegrations => 'التكاملات والبيانات';
 
   @override
@@ -2859,6 +2862,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commandSearchAllResults => 'عرض كل النتائج';
 
   @override
+  String get commandSearchEnablePomo => 'تفعيل بومو';
+
+  @override
+  String get commandSearchDisablePomo => 'تعطيل بومو';
+
+  @override
   String get commandSearchHint => '↑ ↓ تنقّل · Enter فتح · Esc إغلاق';
 
   @override
@@ -4290,6 +4299,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pomoShow => 'إظهار بومو';
 
   @override
+  String get pomoOpenApp => 'فتح التطبيق';
+
+  @override
   String get pomoHide => 'إخفاء بومو';
 
   @override
@@ -4393,4 +4405,67 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quickAddClearEstimate => 'مسح التقدير';
+
+  @override
+  String get pomoLinuxChecking => 'جارٍ التحقق من بيئة سطح المكتب…';
+
+  @override
+  String pomoLinuxUnavailable(String environment) {
+    return 'Pomo غير متاح بعد في بيئة سطح المكتب لديك: $environment. راسل support@pomodoist.com وأرفق تفاصيل بيئتك.';
+  }
+
+  @override
+  String get pomoLinuxWrite => 'كتابة رسالة';
+
+  @override
+  String get pomoLinuxCopyDetails => 'نسخ تفاصيل البيئة';
+
+  @override
+  String get pomoLinuxCopied => 'تم نسخ تفاصيل البيئة.';
+
+  @override
+  String get pomoLinuxMailError =>
+      'تعذر فتح تطبيق البريد. انسخ تفاصيل البيئة وأرسلها إلى support@pomodoist.com.';
+
+  @override
+  String get pomoLinuxDisplayMode => 'شاشة Pomo';
+
+  @override
+  String get pomoLinuxFollowUser => 'اتباع شاشتي';
+
+  @override
+  String get pomoLinuxPinned => 'اختيار شاشة';
+
+  @override
+  String get pomoLinuxMonitor => 'الشاشة';
+
+  @override
+  String get pomoLinuxSelectMonitor => 'اختر شاشة';
+
+  @override
+  String pomoLinuxMonitorUnavailable(String monitor) {
+    return '$monitor (غير متصلة)';
+  }
+
+  @override
+  String get pomoLinuxCrossDisplayDrag => 'السماح بالسحب بين الشاشات';
+
+  @override
+  String get pomoLinuxCrossDisplayDragDescription =>
+      'اسحب Pomo إلى شاشة أخرى دون تغيير وضع العرض.';
+
+  @override
+  String get pomoLinuxCrossDisplayDragPinned =>
+      'يبقى Pomo على الشاشة المختارة. يُحتفظ بتفضيل السحب للوضع التلقائي.';
+
+  @override
+  String get pomoLinuxWorkspaceFollow =>
+      'في Sway، يتبع Pomo مساحة العمل النشطة.';
+
+  @override
+  String get pomoLinuxFollowUnavailable =>
+      'المتابعة التلقائية غير متاحة في هذه البيئة. اختر شاشة لإبقاء Pomo عليها.';
+
+  @override
+  String get pomoLinuxUnknownEnvironment => 'بيئة سطح مكتب غير معروفة';
 }

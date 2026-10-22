@@ -1,4 +1,6 @@
 import 'package:pomodoist/ui/pomo/widgets/pomo_settings.dart';
+import 'package:pomodoist/ui/pomo/view_models/pomo_controller.dart'
+    show pomoSupported;
 import 'package:pomodoist/domain/models/calendar/provider_calendar_models.dart';
 import 'dart:async';
 
@@ -106,6 +108,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       SettingsSection.general => l10n.settingsSectionGeneral,
       SettingsSection.appearance => l10n.settingsSectionAppearance,
       SettingsSection.tasksFocus => l10n.settingsSectionTasksFocus,
+      SettingsSection.pomo => l10n.settingsSectionPomo,
       SettingsSection.integrations => l10n.settingsSectionIntegrations,
       SettingsSection.account => l10n.settingsSectionAccount,
       SettingsSection.about => l10n.settingsAboutTitle,
@@ -116,6 +119,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     SettingsSection.general => LucideIcons.slidersHorizontal,
     SettingsSection.appearance => LucideIcons.palette,
     SettingsSection.tasksFocus => LucideIcons.timer,
+    SettingsSection.pomo => LucideIcons.smile,
     SettingsSection.integrations => LucideIcons.plug,
     SettingsSection.account => LucideIcons.userRound,
     SettingsSection.about => LucideIcons.info,
@@ -124,7 +128,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   Widget _menu({required bool wide}) => ListView(
     padding: EdgeInsets.zero,
     children: [
-      for (final section in SettingsSection.values)
+      for (final section in _navigation.sections)
         Padding(
           padding: const EdgeInsets.only(bottom: 4),
           child: Semantics(
@@ -162,7 +166,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     child: LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 960;
-        _navigation.resolveLayout(wide: wide);
+        _navigation.resolveLayout(wide: wide, pomoAvailable: pomoSupported);
         final selected = _navigation.selected;
         if (selected != null) _visited.add(selected);
         return PopScope(
@@ -215,14 +219,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           CurveTween(curve: AppMotion.curve),
                         ),
                         child: IndexedStack(
-                          index: selected == null ? 0 : selected.index + 1,
+                          index: _navigation.contentIndex,
                           children: [
                             ExcludeFocus(
                               excluding: selected != null,
                               child: _menu(wide: false),
                             ),
-                            for (final section in SettingsSection.values)
+                            for (final section in _navigation.sections)
                               TickerMode(
+                                key: ValueKey(section),
                                 enabled: selected == section,
                                 child: ExcludeFocus(
                                   excluding: selected != section,
@@ -364,7 +369,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const DefaultTimedBlockDurationSettings(),
-            const PomoSettings(),
             const SizedBox(height: 24),
             SettingsGroup(
               children: [
@@ -415,6 +419,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             ),
           ],
         );
+      case SettingsSection.pomo:
+        return const PomoSettings();
       case SettingsSection.integrations:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

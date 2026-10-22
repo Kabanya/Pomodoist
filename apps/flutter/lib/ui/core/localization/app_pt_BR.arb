@@ -1,4 +1,5 @@
 {
+  "settingsSectionPomo": "Pomo",
   "settingsShortcutsFocusAlternate": "Foco (segundo atalho)",
   "@@locale": "pt_BR",
   "navCalendar": "Calendário",
@@ -294,5 +295,23 @@
   "quickAddEstimateRange": "Digite um número inteiro de 1 a 999.",
   "quickAddEstimateFocusTime": "{count} × {workMinutes} min = {totalMinutes} min de foco",
   "quickAddEstimateAutomatic": "Com base na duração da tarefa",
-  "quickAddClearEstimate": "Limpar estimativa"
+  "quickAddClearEstimate": "Limpar estimativa",
+  "pomoLinuxChecking": "Verificando seu ambiente de desktop…",
+  "pomoLinuxUnavailable": "O Pomo ainda não está disponível no seu ambiente de desktop: {environment}. Escreva para support@pomodoist.com e informe seu ambiente.",
+  "pomoLinuxWrite": "Escrever",
+  "pomoLinuxCopyDetails": "Copiar detalhes do ambiente",
+  "pomoLinuxCopied": "Detalhes do ambiente copiados.",
+  "pomoLinuxMailError": "Não foi possível abrir seu aplicativo de e-mail. Copie os detalhes do ambiente e envie para support@pomodoist.com.",
+  "pomoLinuxDisplayMode": "Tela do Pomo",
+  "pomoLinuxFollowUser": "Seguir minha tela",
+  "pomoLinuxPinned": "Escolher um monitor",
+  "pomoLinuxMonitor": "Monitor",
+  "pomoLinuxSelectMonitor": "Selecione um monitor",
+  "pomoLinuxMonitorUnavailable": "{monitor} (desconectado)",
+  "pomoLinuxCrossDisplayDrag": "Permitir arrastar entre monitores",
+  "pomoLinuxCrossDisplayDragDescription": "Arraste o Pomo para outro monitor sem alterar o modo de exibição.",
+  "pomoLinuxCrossDisplayDragPinned": "O Pomo fica no monitor escolhido. Sua preferência de arrastar é mantida para o modo automático.",
+  "pomoLinuxWorkspaceFollow": "No Sway, o Pomo segue o espaço de trabalho ativo.",
+  "pomoLinuxFollowUnavailable": "O acompanhamento automático não está disponível neste ambiente. Escolha um monitor para manter o Pomo em uma tela fixa.",
+  "pomoLinuxUnknownEnvironment": "Ambiente de desktop desconhecido"
 }

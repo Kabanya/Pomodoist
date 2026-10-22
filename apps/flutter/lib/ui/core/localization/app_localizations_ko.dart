@@ -18,6 +18,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsSectionTasksFocus => '작업 및 집중';
 
   @override
+  String get settingsSectionPomo => 'Pomo';
+
+  @override
   String get settingsSectionIntegrations => '연동 및 데이터';
 
   @override
@@ -2833,6 +2836,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get commandSearchAllResults => '모든 결과 보기';
 
   @override
+  String get commandSearchEnablePomo => 'Pomo 켜기';
+
+  @override
+  String get commandSearchDisablePomo => 'Pomo 끄기';
+
+  @override
   String get commandSearchHint => '↑ ↓ 이동 · Enter 열기 · Esc 닫기';
 
   @override
@@ -4231,6 +4240,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pomoShow => 'Pomo 표시';
 
   @override
+  String get pomoOpenApp => '앱 열기';
+
+  @override
   String get pomoHide => 'Pomo 숨기기';
 
   @override
@@ -4327,4 +4339,66 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get quickAddClearEstimate => '예상 횟수 지우기';
+
+  @override
+  String get pomoLinuxChecking => '데스크톱 환경 확인 중…';
+
+  @override
+  String pomoLinuxUnavailable(String environment) {
+    return '현재 데스크톱 환경에서는 아직 Pomo를 사용할 수 없습니다: $environment. 환경 정보를 포함하여 support@pomodoist.com으로 이메일을 보내 주세요.';
+  }
+
+  @override
+  String get pomoLinuxWrite => '메일 쓰기';
+
+  @override
+  String get pomoLinuxCopyDetails => '환경 정보 복사';
+
+  @override
+  String get pomoLinuxCopied => '환경 정보를 복사했습니다.';
+
+  @override
+  String get pomoLinuxMailError =>
+      '이메일 앱을 열 수 없습니다. 환경 정보를 복사하여 support@pomodoist.com으로 보내 주세요.';
+
+  @override
+  String get pomoLinuxDisplayMode => 'Pomo 화면';
+
+  @override
+  String get pomoLinuxFollowUser => '사용 중인 화면 따라가기';
+
+  @override
+  String get pomoLinuxPinned => '모니터 선택';
+
+  @override
+  String get pomoLinuxMonitor => '모니터';
+
+  @override
+  String get pomoLinuxSelectMonitor => '모니터를 선택하세요';
+
+  @override
+  String pomoLinuxMonitorUnavailable(String monitor) {
+    return '$monitor (연결 끊김)';
+  }
+
+  @override
+  String get pomoLinuxCrossDisplayDrag => '모니터 간 드래그 허용';
+
+  @override
+  String get pomoLinuxCrossDisplayDragDescription =>
+      '표시 모드를 바꾸지 않고 Pomo를 다른 모니터로 드래그합니다.';
+
+  @override
+  String get pomoLinuxCrossDisplayDragPinned =>
+      'Pomo는 선택한 모니터에 유지됩니다. 드래그 설정은 자동 모드용으로 저장됩니다.';
+
+  @override
+  String get pomoLinuxWorkspaceFollow => 'Sway에서 Pomo는 활성 작업 공간을 따라갑니다.';
+
+  @override
+  String get pomoLinuxFollowUnavailable =>
+      '이 환경에서는 자동 따라가기를 사용할 수 없습니다. 모니터를 선택하여 Pomo를 한 화면에 고정하세요.';
+
+  @override
+  String get pomoLinuxUnknownEnvironment => '알 수 없는 데스크톱 환경';
 }

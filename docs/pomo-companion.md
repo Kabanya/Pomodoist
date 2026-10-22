@@ -16,7 +16,7 @@ layout variants are outside this iteration. Size is configurable locally.
    descendants; undo/recomplete gets a new operation ID. History reads, remote
    hydration and rollback do not publish. Work-interval completion uses its stable
    interval ID. No new timer, completion coordinator, or statistics are introduced.
-3. A single shared-scope desktop window, supported on macOS and Windows. The
+3. A single shared-scope desktop window, supported on macOS, Windows and capability-gated Linux. The
    local `multiview_desktop` 1.2.1 patch creates passive windows without activation.
    Pomo and Quick Add are utility windows: neither can replace the main app anchor.
    Native hit regions cover the pet, capsule and visible satellites only. Saved
@@ -310,3 +310,84 @@ Animated WebP files and their encoder are no longer part of the pipeline.
 - Automated UI routing to the passive companion window was unreliable; full
   visual acceptance of hover, keyboard focus and blur/Escape remains unconfirmed.
   Windows native compilation and runtime were not checked on this macOS host.
+
+## Linux integration and verification
+
+The Linux integration targets composited X11/XWayland and native Wayland compositors exposing
+layer-shell protocol v4 or later. The vendored multiview plugin receives
+transparency, passive-show and layer-role options before GTK realization.
+The application runner exposes the same `pomodoist/pomo_window` method channel
+as the other desktop platforms. Its `environment` and `cursor` probes and
+`bounds`/`move` geometry use GTK logical coordinates; display scale is metadata,
+not another coordinate multiplier. Input regions include only the pet, visible
+capsule, controls and context menu. The native Wayland placement uses output
+selection and anchored layer margins rather than `gtk_window_move`.
+Manual Wayland dragging uses `relative-pointer-unstable-v1` accelerated logical
+deltas, independently of surface-local motion or a delayed surface commit. X11
+uses global pointer displacement from the start of the drag. GTK frame-clock ticks apply movement directly at the display's refresh rate;
+Dart samples at 33 ms intervals only for monitor policy and saved placement.
+The host drains the last sample before releasing tracking. Wayland keeps the
+source surface alive throughout the grab and transfers to a permitted destination
+output after release, because changing layer-shell outputs remaps the surface
+and loses the pointer grab. A compositor without relative-pointer
+cannot start a native Wayland drag; other supported Pomo controls remain usable.
+The vendored MIT protocol client links `wayland-client >= 1.20`; its license is
+included in AppImage notices.
+
+The single companion can follow the user's screen or remain pinned to an
+output. X11 uses the native pointer probe; KDE Plasma 6 loads a temporary,
+per-process KWin script through session D-Bus; Hyprland uses read-only socket IPC.
+Sway follows the active workspace because its standard IPC does not expose the
+global pointer location. Other layer-shell compositors retain manual output
+selection when no tracking adapter is available. Temporary scripts and pointer/workspace
+tracking resources stop when hidden, disabled, pinned or disposed; lightweight
+environment/topology refresh remains active for settings and reconnection. Adapter
+failures are retried and do not disable a working desktop surface.
+
+`pomo.preferences.v1` adds `displayMode` (`followUser` by default),
+`allowCrossDisplayDrag` (true), optional `pinnedDisplayId`, and `displayPositions`
+with finite monitor-relative `x`/`y` offsets. Existing fields and defaults remain
+compatible. Reset clears position history while preserving the monitor policy.
+Monitor identities use GTK manufacturer/model/physical dimensions; identical
+panels receive connection-lifetime suffixes because GTK3 lacks a portable
+connector identity. Reconnecting indistinguishable panels may therefore require
+reselecting a pin. GTK work-area information is compositor-dependent; verify
+placement around panels during native acceptance.
+
+Unsupported environments retain the Pomo section with a localized explanation,
+a support mail draft, and a copy action containing the support address,
+desktop/session/backend/distribution and app version. The application never
+sends mail. The Linux distribution bundles `libgtk-layer-shell.so.0` with its
+license/source notices, and build/setup tooling installs its development files.
+
+Automated validation covers preferences, capabilities, IPC parsing/lifecycle,
+monitor selection/dwell/suspension, native geometry, creation-option encoding,
+packaging, and static analysis. Native builds and visual acceptance require a
+separately requested stage: X11/XWayland, KDE Wayland, Hyprland, Sway, and the
+unavailable state on GNOME, with multiple monitors and mixed DPI. Dart tests and
+native source syntax checks do not establish compositor behavior or GPU output.
+
+The user authorized native build/run verification on 2026-10-23. A Flutter 3.47.0
+development debug build runs on KDE Wayland with NVIDIA graphics. The live model
+loads from the hydrated Git LFS asset. Linux texture presentation flips its
+bottom-up GL rows; raster fallback images retain their original orientation.
+The Linux window color decoder uses the same `backgroundColorA/R/G/B` wire fields
+for creation and later updates, so applying options preserves transparency.
+Pixel orientation tests cover Linux, macOS and Windows; native color contract
+checks cover transparent and default opaque colors. The user confirmed upright
+rendering, transparent exterior and satisfactory native frame-clock dragging on
+KDE Wayland. A separate isolated XWayland app probe rendered the live model
+upright after the EGLImage bridge fix. Runtime captures and logs are under
+`build/design/pomo/2026-10-23-linux-runtime`. Other compositor acceptance,
+monitor/DPI transitions and complete interaction acceptance remain pending.
+Losing a native drag session cancels the Dart drag so output fallback can proceed;
+legacy layer-shell close events from a removed output preserve the companion.
+
+The Linux CMake integration resolves Thermion 0.5.0 native headers through the
+application's explicit package map, including symlinked build directories and
+encoded file URIs. A version-checked build-local Thermion override uses an X11
+EGLImage-to-2D bridge and restores temporary EGL/GLX state; the shared dependency
+cache remains unchanged. See `apps/flutter/linux/thermion/README.md` for the
+upstream source checksum and offscreen GPU regression procedure.
+Arch setup includes Git LFS for the model and libc++/libc++abi
+for the renderer's native asset build.

@@ -17,12 +17,24 @@ typedef struct {
   const char* title;
   const char* title_bar_style;
   gboolean window_button_visibility;
+  gboolean focus_on_show;
+  gboolean is_utility;
+  gboolean linux_desktop_overlay;
+  gboolean has_background_color;
+  GdkRGBA background_color;
   gboolean has_position;
   double pos_x;
   double pos_y;
 } MvdCreateWindowRequest;
 
 typedef void (*MvdWindowCreatedCallback)(const MvdCreateWindowRequest* request);
+
+gboolean mvd_linux_pomo_available(void);
+void mvd_linux_prepare_pomo_window(GtkWindow* window);
+gboolean mvd_linux_move_layer_window(GtkWindow* window, double x, double y,
+                                    const char* display_id);
+FlValue* mvd_linux_layer_bounds(GtkWindow* window);
+gboolean mvd_linux_layer_output_lost(GtkWindow* window);
 
 void mvd_linux_set_window_created_callback(MvdWindowCreatedCallback callback);
 
