@@ -22,8 +22,8 @@ CreatePomoWindowChannel(FlutterDesktopEngineRef engine) {
     const auto* encoded = find("viewId");
     if (!encoded) { result->Error("arguments", "Missing Pomo view"); return; }
     int64_t id;
-    if (auto p = std::get_if<int64_t>(encoded)) id = *p;
-    else if (auto p = std::get_if<int32_t>(encoded)) id = *p;
+    if (auto id64 = std::get_if<int64_t>(encoded)) id = *id64;
+    else if (auto id32 = std::get_if<int32_t>(encoded)) id = *id32;
     else { result->Error("arguments", "Invalid Pomo view"); return; }
     HWND child = MultiViewDesktopGetFlutterHwnd(id);
     HWND window = child ? GetAncestor(child, GA_ROOT) : nullptr;

@@ -26,7 +26,7 @@ inline State *&ActiveState() {
 struct State {
   std::string selected = "icon-light-pomo";
   HICON large = nullptr;
-  HICON small = nullptr;
+  HICON small_icon = nullptr;
   HHOOK window_hook = nullptr;
   ~State() {
     if (window_hook)
@@ -35,8 +35,8 @@ struct State {
       ActiveState() = nullptr;
     if (large)
       DestroyIcon(large);
-    if (small)
-      DestroyIcon(small);
+    if (small_icon)
+      DestroyIcon(small_icon);
   }
 };
 
@@ -105,12 +105,12 @@ inline BOOL CALLBACK ApplyToWindow(HWND window, LPARAM parameter) {
   SendMessageW(window, WM_SETICON, ICON_BIG,
                reinterpret_cast<LPARAM>(state->large));
   SendMessageW(window, WM_SETICON, ICON_SMALL,
-               reinterpret_cast<LPARAM>(state->small));
+               reinterpret_cast<LPARAM>(state->small_icon));
   // Keep both the window and its class consistent with the selected icon.
   SetClassLongPtrW(window, GCLP_HICON,
                    reinterpret_cast<LONG_PTR>(state->large));
   SetClassLongPtrW(window, GCLP_HICONSM,
-                   reinterpret_cast<LONG_PTR>(state->small));
+                   reinterpret_cast<LONG_PTR>(state->small_icon));
   return TRUE;
 }
 
@@ -181,22 +181,22 @@ CreateChannel(FlutterDesktopEngineRef engine) {
     HICON large = static_cast<HICON>(LoadImageW(
         nullptr, path.c_str(), IMAGE_ICON, GetSystemMetrics(SM_CXICON),
         GetSystemMetrics(SM_CYICON), LR_LOADFROMFILE));
-    HICON small = static_cast<HICON>(LoadImageW(
+    HICON small_icon = static_cast<HICON>(LoadImageW(
         nullptr, path.c_str(), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
         GetSystemMetrics(SM_CYSMICON), LR_LOADFROMFILE));
-    if (!large || !small || FAILED(UpdateShortcut(executable, path))) {
+    if (!large || !small_icon || FAILED(UpdateShortcut(executable, path))) {
       if (large)
         DestroyIcon(large);
-      if (small)
-        DestroyIcon(small);
+      if (small_icon)
+        DestroyIcon(small_icon);
       result->Error("icon_failed",
                     "Could not load the app icon or update its shortcut.");
       return;
     }
     HICON previous_large = state->large;
-    HICON previous_small = state->small;
+    HICON previous_small = state->small_icon;
     state->large = large;
-    state->small = small;
+    state->small_icon = small_icon;
     EnumThreadWindows(GetCurrentThreadId(), ApplyToWindow,
                       reinterpret_cast<LPARAM>(state.get()));
     state->selected = *icon;

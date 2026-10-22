@@ -46,8 +46,6 @@ void main() {
         'linux-appimage-release': 'build-test-publish',
       };
       const dependencies = [
-        'libc++-dev',
-        'libc++abi-dev',
         'libdrm-dev',
         'libegl1-mesa-dev',
         'libgl1-mesa-dev',
@@ -55,6 +53,7 @@ void main() {
         'zlib1g-dev',
       ];
       for (final entry in jobs.entries) {
+        final llvmVersion = entry.key == 'linux-appimage-release' ? '-12' : '';
         final steps =
             _job(
                   '../../.github/workflows/${entry.key}.yml',
@@ -64,6 +63,8 @@ void main() {
         final install = steps.indexWhere((step) {
           final run = step['run'] as String? ?? '';
           return run.contains('apt-get install') &&
+              run.contains('libc++$llvmVersion-dev') &&
+              run.contains('libc++abi$llvmVersion-dev') &&
               dependencies.every(run.contains);
         });
         expect(install, greaterThanOrEqualTo(0), reason: entry.key);

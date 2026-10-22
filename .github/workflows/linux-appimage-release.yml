@@ -49,11 +49,12 @@ jobs:
       - name: Install Linux build dependencies
         run: |
           apt-get update
+          # LLVM 12 leaves GNU libunwind-dev available for GStreamer's pkg-config metadata.
           DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
             appstream \
             bash \
             ca-certificates \
-            clang \
+            clang-12 \
             cmake \
             curl \
             desktop-file-utils \
@@ -64,8 +65,8 @@ jobs:
             gstreamer1.0-plugins-base \
             gstreamer1.0-plugins-good \
             gstreamer1.0-pulseaudio \
-            libc++-dev \
-            libc++abi-dev \
+            libc++-12-dev \
+            libc++abi-12-dev \
             libdrm-dev \
             libegl1-mesa-dev \
             libgl1-mesa-dev \
@@ -85,6 +86,11 @@ jobs:
             python3 \
             unzip \
             xz-utils
+          pkg-config --print-errors --exists \
+            gtk+-3.0 gstreamer-1.0 gstreamer-app-1.0 gstreamer-audio-1.0
+          echo '/usr/lib/llvm-12/bin' >> "$GITHUB_PATH"
+          printf '#include <type_traits>\n' | \
+            /usr/lib/llvm-12/bin/clang++ -stdlib=libc++ -x c++ -fsyntax-only -
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           lfs: true

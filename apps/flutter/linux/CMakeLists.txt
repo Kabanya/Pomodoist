@@ -1,6 +1,7 @@
 # Project-level configuration.
-cmake_minimum_required(VERSION 3.13)
-project(runner LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.19)
+# Sentry's vendored libunwind needs ASM enabled by the top-level project.
+project(runner LANGUAGES C CXX ASM)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
@@ -104,6 +105,30 @@ set_target_properties(${BINARY_NAME}
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
 include(flutter/generated_plugins.cmake)
+
+# shortcut: Thermion 0.5.0 assumes build/ is inside the app; remove after upstream fixes path discovery.
+if(TARGET thermion_flutter_plugin)
+  file(READ "${CMAKE_CURRENT_SOURCE_DIR}/../.dart_tool/package_config.json" packages)
+  string(JSON package_count LENGTH "${packages}" packages)
+  math(EXPR package_last "${package_count} - 1")
+  foreach(index RANGE ${package_last})
+    string(JSON package_name GET "${packages}" packages ${index} name)
+    if(package_name STREQUAL "thermion_dart")
+      string(JSON package_root GET "${packages}" packages ${index} rootUri)
+      string(REGEX REPLACE "^file://" "" package_root "${package_root}")
+      get_filename_component(package_root "${package_root}" ABSOLUTE
+        BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../.dart_tool")
+      set(thermion_include "${package_root}/native/include")
+      target_include_directories(thermion_flutter_plugin PRIVATE
+        "${thermion_include}" "${thermion_include}/filament"
+        "${thermion_include}/filament/$<IF:$<CONFIG:Debug>,debug,release>"
+        "${thermion_include}/vulkan/linux" "${thermion_include}/opengl/linux")
+      break()
+    endif()
+  endforeach()
+  target_link_directories(thermion_flutter_plugin BEFORE PRIVATE
+    "${PROJECT_BUILD_DIR}native_assets/linux")
+endif()
 
 # multiview_desktop uses structured bindings but does not request C++17 itself.
 target_compile_features(multiview_desktop_plugin PRIVATE cxx_std_17)
