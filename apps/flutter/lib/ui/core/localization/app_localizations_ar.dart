@@ -4468,4 +4468,52 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pomoLinuxUnknownEnvironment => 'بيئة سطح مكتب غير معروفة';
+
+  @override
+  String get pomoGnomeInstallDescription =>
+      'يحتاج Pomo إلى إضافة GNOME Shell للظهور على سطح المكتب. ثبّت الإضافة المرفقة لحساب المستخدم الخاص بك.';
+
+  @override
+  String get pomoGnomeEnableDescription =>
+      'فعّل إضافة Pomo في GNOME Shell. إذا كانت إضافات المستخدم معطّلة على مستوى النظام، ففعّلها أولاً في تطبيق الإضافات.';
+
+  @override
+  String get pomoGnomeReloginDescription =>
+      'تم تثبيت الإضافة. سجّل الخروج ثم سجّل الدخول مجدداً ليحمّل GNOME Shell هذا الإصدار، ثم أعد التحقق.';
+
+  @override
+  String get pomoGnomeUpdateDescription =>
+      'حدّث إضافة Pomo في GNOME Shell لاستخدام هذا الإصدار من Pomo.';
+
+  @override
+  String get pomoGnomeIncompatibleDescription =>
+      'إضافة Pomo المرفقة لا تدعم هذا الإصدار من GNOME Shell.';
+
+  @override
+  String get pomoGnomeErrorDescription =>
+      'تعذّر تشغيل إضافة Pomo في GNOME Shell. تحقّق من حالتها أو انسخ تفاصيل البيئة لإرسالها إلى الدعم.';
+
+  @override
+  String get pomoGnomePausedDescription =>
+      'Pomo غير متاح مؤقتاً في GNOME Shell. سيظهر مجدداً عندما يصبح اتصال سطح المكتب جاهزاً.';
+
+  @override
+  String get pomoGnomeInstall => 'تثبيت الإضافة';
+
+  @override
+  String get pomoGnomeEnable => 'تفعيل الإضافة';
+
+  @override
+  String get pomoGnomeUpdate => 'تحديث الإضافة';
+
+  @override
+  String get pomoGnomeCheckAgain => 'التحقق مجدداً';
+
+  @override
+  String get pomoGnomeXWaylandDescription =>
+      'XWayland غير متاح في جلسة GNOME هذه. يحتاج Pomo إلى XWayland وإضافة Shell معاً. فعّل XWayland وأعد تشغيل Pomodoist، ثم أعد التحقق.';
+
+  @override
+  String get pomoGnomeUserExtensionsDisabledDescription =>
+      'إضافات مستخدم GNOME معطّلة في هذه الجلسة. افتح تطبيق الإضافات وفعّل إضافات المستخدم، ثم أعد التحقق. لن يغيّر Pomodoist إعداد النظام هذا.';
 }

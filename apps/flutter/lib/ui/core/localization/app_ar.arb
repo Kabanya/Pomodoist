@@ -1445,5 +1445,18 @@
   "pomoLinuxCrossDisplayDragPinned": "يبقى Pomo على الشاشة المختارة. يُحتفظ بتفضيل السحب للوضع التلقائي.",
   "pomoLinuxWorkspaceFollow": "في Sway، يتبع Pomo مساحة العمل النشطة.",
   "pomoLinuxFollowUnavailable": "المتابعة التلقائية غير متاحة في هذه البيئة. اختر شاشة لإبقاء Pomo عليها.",
-  "pomoLinuxUnknownEnvironment": "بيئة سطح مكتب غير معروفة"
+  "pomoLinuxUnknownEnvironment": "بيئة سطح مكتب غير معروفة",
+  "pomoGnomeInstallDescription": "يحتاج Pomo إلى إضافة GNOME Shell للظهور على سطح المكتب. ثبّت الإضافة المرفقة لحساب المستخدم الخاص بك.",
+  "pomoGnomeEnableDescription": "فعّل إضافة Pomo في GNOME Shell. إذا كانت إضافات المستخدم معطّلة على مستوى النظام، ففعّلها أولاً في تطبيق الإضافات.",
+  "pomoGnomeReloginDescription": "تم تثبيت الإضافة. سجّل الخروج ثم سجّل الدخول مجدداً ليحمّل GNOME Shell هذا الإصدار، ثم أعد التحقق.",
+  "pomoGnomeUpdateDescription": "حدّث إضافة Pomo في GNOME Shell لاستخدام هذا الإصدار من Pomo.",
+  "pomoGnomeIncompatibleDescription": "إضافة Pomo المرفقة لا تدعم هذا الإصدار من GNOME Shell.",
+  "pomoGnomeErrorDescription": "تعذّر تشغيل إضافة Pomo في GNOME Shell. تحقّق من حالتها أو انسخ تفاصيل البيئة لإرسالها إلى الدعم.",
+  "pomoGnomePausedDescription": "Pomo غير متاح مؤقتاً في GNOME Shell. سيظهر مجدداً عندما يصبح اتصال سطح المكتب جاهزاً.",
+  "pomoGnomeInstall": "تثبيت الإضافة",
+  "pomoGnomeEnable": "تفعيل الإضافة",
+  "pomoGnomeUpdate": "تحديث الإضافة",
+  "pomoGnomeCheckAgain": "التحقق مجدداً",
+  "pomoGnomeXWaylandDescription": "XWayland غير متاح في جلسة GNOME هذه. يحتاج Pomo إلى XWayland وإضافة Shell معاً. فعّل XWayland وأعد تشغيل Pomodoist، ثم أعد التحقق.",
+  "pomoGnomeUserExtensionsDisabledDescription": "إضافات مستخدم GNOME معطّلة في هذه الجلسة. افتح تطبيق الإضافات وفعّل إضافات المستخدم، ثم أعد التحقق. لن يغيّر Pomodoist إعداد النظام هذا."
 }

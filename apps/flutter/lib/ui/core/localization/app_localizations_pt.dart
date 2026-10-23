@@ -4574,6 +4574,54 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pomoLinuxUnknownEnvironment => 'Ambiente de trabalho desconhecido';
+
+  @override
+  String get pomoGnomeInstallDescription =>
+      'O Pomo precisa da sua extensão do GNOME Shell para aparecer no ambiente de trabalho. Instale a extensão incluída para a sua conta de utilizador.';
+
+  @override
+  String get pomoGnomeEnableDescription =>
+      'Ative a extensão do Pomo no GNOME Shell. Se as extensões de utilizador estiverem desativadas globalmente, ative-as primeiro na aplicação Extensões.';
+
+  @override
+  String get pomoGnomeReloginDescription =>
+      'A extensão está instalada. Termine a sessão e volte a iniciá-la para o GNOME Shell carregar esta versão; depois, verifique novamente.';
+
+  @override
+  String get pomoGnomeUpdateDescription =>
+      'Atualize a extensão do Pomo para o GNOME Shell para utilizar esta versão do Pomo.';
+
+  @override
+  String get pomoGnomeIncompatibleDescription =>
+      'A extensão do Pomo incluída não suporta esta versão do GNOME Shell.';
+
+  @override
+  String get pomoGnomeErrorDescription =>
+      'Não foi possível iniciar a extensão do Pomo para o GNOME Shell. Verifique o estado ou copie os detalhes do ambiente para o suporte.';
+
+  @override
+  String get pomoGnomePausedDescription =>
+      'O Pomo está temporariamente indisponível no GNOME Shell. Voltará quando a ligação ao ambiente de trabalho estiver pronta.';
+
+  @override
+  String get pomoGnomeInstall => 'Instalar extensão';
+
+  @override
+  String get pomoGnomeEnable => 'Ativar extensão';
+
+  @override
+  String get pomoGnomeUpdate => 'Atualizar extensão';
+
+  @override
+  String get pomoGnomeCheckAgain => 'Verificar novamente';
+
+  @override
+  String get pomoGnomeXWaylandDescription =>
+      'O XWayland não está disponível nesta sessão do GNOME. O Pomo precisa do XWayland e da sua extensão do Shell. Ative o XWayland, reinicie o Pomodoist e verifique novamente.';
+
+  @override
+  String get pomoGnomeUserExtensionsDisabledDescription =>
+      'As extensões de utilizador do GNOME estão desativadas nesta sessão. Abra a aplicação Extensões, ative as extensões de utilizador e verifique novamente. O Pomodoist não altera esta definição do sistema.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -5521,4 +5569,52 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get pomoLinuxUnknownEnvironment => 'Ambiente de desktop desconhecido';
+
+  @override
+  String get pomoGnomeInstallDescription =>
+      'O Pomo precisa da extensão do GNOME Shell para aparecer na área de trabalho. Instale a extensão incluída para sua conta de usuário.';
+
+  @override
+  String get pomoGnomeEnableDescription =>
+      'Ative a extensão do Pomo no GNOME Shell. Se as extensões de usuário estiverem desativadas globalmente, ative-as primeiro no aplicativo Extensões.';
+
+  @override
+  String get pomoGnomeReloginDescription =>
+      'A extensão está instalada. Saia da sessão e entre novamente para o GNOME Shell carregar esta versão; depois, verifique novamente.';
+
+  @override
+  String get pomoGnomeUpdateDescription =>
+      'Atualize a extensão do Pomo para o GNOME Shell para usar esta versão do Pomo.';
+
+  @override
+  String get pomoGnomeIncompatibleDescription =>
+      'A extensão do Pomo incluída não é compatível com esta versão do GNOME Shell.';
+
+  @override
+  String get pomoGnomeErrorDescription =>
+      'Não foi possível iniciar a extensão do Pomo para o GNOME Shell. Verifique o status ou copie os detalhes do ambiente para o suporte.';
+
+  @override
+  String get pomoGnomePausedDescription =>
+      'O Pomo está temporariamente indisponível no GNOME Shell. Ele voltará quando a conexão com a área de trabalho estiver pronta.';
+
+  @override
+  String get pomoGnomeInstall => 'Instalar extensão';
+
+  @override
+  String get pomoGnomeEnable => 'Ativar extensão';
+
+  @override
+  String get pomoGnomeUpdate => 'Atualizar extensão';
+
+  @override
+  String get pomoGnomeCheckAgain => 'Verificar novamente';
+
+  @override
+  String get pomoGnomeXWaylandDescription =>
+      'O XWayland não está disponível nesta sessão do GNOME. O Pomo precisa do XWayland e da extensão do Shell. Ative o XWayland, reinicie o Pomodoist e verifique novamente.';
+
+  @override
+  String get pomoGnomeUserExtensionsDisabledDescription =>
+      'As extensões de usuário do GNOME estão desativadas nesta sessão. Abra o aplicativo Extensões, ative as extensões de usuário e verifique novamente. O Pomodoist não altera essa configuração do sistema.';
 }

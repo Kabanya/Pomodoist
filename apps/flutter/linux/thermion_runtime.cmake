@@ -20,9 +20,8 @@ target_include_directories(thermion_flutter_plugin BEFORE PRIVATE
   "${POMODOIST_THERMION_ROOT}/native/include/vulkan/linux"
   "${POMODOIST_THERMION_ROOT}/native/include/opengl/linux"
 )
-target_link_directories(thermion_flutter_plugin BEFORE PRIVATE
-  "${PROJECT_BUILD_DIR}native_assets/linux")
-set_property(TARGET thermion_flutter_plugin APPEND PROPERTY BUILD_RPATH
+include("${CMAKE_CURRENT_LIST_DIR}/thermion_runtime_paths.cmake")
+pomodoist_configure_thermion_runtime_paths(thermion_flutter_plugin
   "${PROJECT_BUILD_DIR}native_assets/linux")
 
 # Keep the dependency cache immutable. Generate the reviewed 0.5.0 source

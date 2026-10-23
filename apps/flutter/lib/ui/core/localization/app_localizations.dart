@@ -7808,6 +7808,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown desktop environment'**
   String get pomoLinuxUnknownEnvironment;
+
+  /// No description provided for @pomoGnomeInstallDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomo needs its GNOME Shell extension to appear on your desktop. Install the bundled extension for your user account.'**
+  String get pomoGnomeInstallDescription;
+
+  /// No description provided for @pomoGnomeEnableDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable the Pomo extension in GNOME Shell. If user extensions are disabled globally, turn them on in the Extensions app first.'**
+  String get pomoGnomeEnableDescription;
+
+  /// No description provided for @pomoGnomeReloginDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The extension is installed. Sign out and sign in again to let GNOME Shell load this version, then check again.'**
+  String get pomoGnomeReloginDescription;
+
+  /// No description provided for @pomoGnomeUpdateDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Update the Pomo GNOME Shell extension to use this version of Pomo.'**
+  String get pomoGnomeUpdateDescription;
+
+  /// No description provided for @pomoGnomeIncompatibleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This GNOME Shell version is not supported by the bundled Pomo extension.'**
+  String get pomoGnomeIncompatibleDescription;
+
+  /// No description provided for @pomoGnomeErrorDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The Pomo GNOME Shell extension could not start. Check its status or copy the environment details for support.'**
+  String get pomoGnomeErrorDescription;
+
+  /// No description provided for @pomoGnomePausedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomo is temporarily unavailable in GNOME Shell. It will return when the desktop connection is ready.'**
+  String get pomoGnomePausedDescription;
+
+  /// No description provided for @pomoGnomeInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install extension'**
+  String get pomoGnomeInstall;
+
+  /// No description provided for @pomoGnomeEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable extension'**
+  String get pomoGnomeEnable;
+
+  /// No description provided for @pomoGnomeUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update extension'**
+  String get pomoGnomeUpdate;
+
+  /// No description provided for @pomoGnomeCheckAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get pomoGnomeCheckAgain;
+
+  /// No description provided for @pomoGnomeXWaylandDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'XWayland is unavailable in this GNOME session. Pomo needs XWayland together with its Shell extension. Enable XWayland and restart Pomodoist, then check again.'**
+  String get pomoGnomeXWaylandDescription;
+
+  /// No description provided for @pomoGnomeUserExtensionsDisabledDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'GNOME user extensions are turned off for this session. Open the Extensions app and turn on user extensions, then check again. Pomodoist will keep this system setting unchanged.'**
+  String get pomoGnomeUserExtensionsDisabledDescription;
 }
 
 class _AppLocalizationsDelegate

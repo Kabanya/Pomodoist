@@ -1,6 +1,7 @@
 #include <multiview_desktop/multiview_desktop_runner.h>
 
 #include "mvd_linux_internal.h"
+#include "mvd_linux_gnome.h"
 #include "mvd_linux_pomo_geometry.h"
 #include "mvd_linux_pomo_drag.h"
 #include "mvd_linux_pomo_identity.h"
@@ -29,6 +30,7 @@ const char* Backend() {
   return "unknown";
 }
 const char* UnavailableReason() {
+  if (mvd_gnome_context()) return mvd_gnome_available() ? nullptr : mvd_gnome_reason();
   if (!gdk_display_get_default() ||
       gdk_display_get_n_monitors(gdk_display_get_default()) == 0) return "displayUnavailable";
   if (g_str_equal(Backend(), "x11")) {
@@ -91,7 +93,8 @@ FlValue* Environment() {
   String(result, "sessionType", g_getenv("XDG_SESSION_TYPE"));
   g_autofree gchar* distribution = g_get_os_info(G_OS_INFO_KEY_ID);
   String(result, "distribution", distribution);
-  String(result, "followSource", reason ? "none" : g_str_equal(Backend(), "x11") ? "cursor" : "workspace");
+  String(result, "placementBackend", g_str_equal(Backend(), "x11") ? "x11" : "layerShell");
+  String(result, "followSource", reason ? "none" : mvd_gnome_context() || g_str_equal(Backend(), "x11") ? "cursor" : "workspace");
   if (reason) String(result, "reason", reason);
   FlValue* monitors = fl_value_new_list();
   GdkDisplay* display = gdk_display_get_default();
@@ -117,6 +120,7 @@ FlValue* Environment() {
     }
   }
   fl_value_set_string_take(result, "displays", monitors);
+  if (mvd_gnome_context()) mvd_gnome_environment(result);
   return result;
 }
 bool Numeric(FlValue* map, const char* key, double* result) {
@@ -140,6 +144,42 @@ void ApplyInput(GtkWidget* widget, cairo_region_t* region) {
   }
   if (GTK_IS_CONTAINER(widget)) gtk_container_forall(GTK_CONTAINER(widget),
       [](GtkWidget* child, gpointer data) { ApplyInput(child, static_cast<cairo_region_t*>(data)); }, region);
+}
+cairo_region_t* BuildInput(GtkWindow* window, FlValue* regions) {
+  g_autoptr(FlValue) frame = mvd_gnome_window(window) ? mvd_gnome_bounds(window) : nullptr;
+  double frame_width = 0, frame_height = 0;
+  if (frame) { Numeric(frame, "width", &frame_width); Numeric(frame, "height", &frame_height); }
+  GtkWidget* viewport = gtk_bin_get_child(GTK_BIN(window));
+  if (!viewport) viewport = GTK_WIDGET(window);
+  cairo_region_t* combined = cairo_region_create();
+  for (size_t i = 0; i < fl_value_get_length(regions); ++i) {
+    FlValue* entry = fl_value_get_list_value(regions, i);
+    double x, y, width, height;
+    if (fl_value_get_type(entry) != FL_VALUE_TYPE_MAP ||
+        !Numeric(entry, "x", &x) || !Numeric(entry, "y", &y) ||
+        !Numeric(entry, "width", &width) || !Numeric(entry, "height", &height) ||
+        width < 0 || height < 0 || width > 32768 || height > 32768) {
+      cairo_region_destroy(combined);
+      return nullptr;
+    }
+    mvd::InputShape shape{x, y, width, height, Boolean(entry, "rectangle"), Boolean(entry, "rounded")};
+    if (mvd_gnome_window(window)) shape = mvd::ViewportInputShape(shape, frame_width, frame_height,
+        gtk_widget_get_allocated_width(viewport), gtk_widget_get_allocated_height(viewport));
+    for (const auto& r : mvd::InputRectangles(shape)) {
+      const cairo_rectangle_int_t rect{r.x, r.y, r.width, r.height};
+      cairo_region_union_rectangle(combined, &rect);
+    }
+  }
+  return combined;
+}
+void RefreshInput(GtkWindow* window) {
+  auto* regions = static_cast<FlValue*>(g_object_get_data(G_OBJECT(window), "mvd-pomo-input-regions"));
+  if (!regions) return;
+  cairo_region_t* combined = BuildInput(window, regions);
+  if (!combined) return;
+  g_object_set_data_full(G_OBJECT(window), "mvd-pomo-region", combined,
+      reinterpret_cast<GDestroyNotify>(cairo_region_destroy));
+  ApplyInput(GTK_WIDGET(window), combined);
 }
 FlMethodResponse* OkResponse(FlValue* result = nullptr) {
   return FL_METHOD_RESPONSE(fl_method_success_response_new(result));
@@ -169,7 +209,7 @@ void mvd_linux_prepare_pomo_window(GtkWindow* window) {
   gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(window)),
       GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION + 1);
   g_object_unref(provider);
-  if (g_str_equal(Backend(), "wayland") && !UnavailableReason()) {
+  if (!mvd_gnome_context() && g_str_equal(Backend(), "wayland") && !UnavailableReason()) {
     // This MUST run before gtk_widget_realize (including realization via FlView).
     gtk_layer_init_for_window(window);
     gtk_layer_set_namespace(window, "pomodoist-pomo");
@@ -227,6 +267,13 @@ FlValue* mvd_linux_layer_bounds(GtkWindow* window) {
   return bounds;
 }
 
+namespace {
+void Respond(FlMethodCall* call, FlValue* result, const char* error) {
+  g_autoptr(FlMethodResponse) response = error ? Error("gnomeShell", error) : OkResponse(result);
+  fl_method_call_respond(call, response, nullptr);
+}
+}  // namespace
+
 extern "C" {
 GtkWindow* multiview_desktop_linux_get_window(int64_t view_id) {
   auto window = MvdLinuxWindow::Find(view_id);
@@ -242,6 +289,9 @@ FlMethodResponse* multiview_desktop_linux_pomo_method(const char* method, FlValu
     return OkResponse(value);
   }
   if (g_str_equal(method, "cursor")) {
+    if (mvd_gnome_context()) {
+      g_autoptr(FlValue) cursor = mvd_gnome_cursor(); return OkResponse(cursor);
+    }
     if (!g_str_equal(Backend(), "x11")) return OkResponse();
     GdkDisplay* display = gdk_display_get_default();
     GdkSeat* seat = display ? gdk_display_get_default_seat(display) : nullptr;
@@ -252,6 +302,9 @@ FlMethodResponse* multiview_desktop_linux_pomo_method(const char* method, FlValu
     g_autoptr(FlValue) value = fl_value_new_map();
     Number(value, "x", x); Number(value, "y", y);
     return OkResponse(value);
+  }
+  if (g_str_equal(method, "setFollowing")) {
+    mvd_gnome_following(arguments && Boolean(arguments, "enabled")); return OkResponse();
   }
   if (!arguments || fl_value_get_type(arguments) != FL_VALUE_TYPE_MAP)
     return Error("arguments", "Missing Pomo arguments");
@@ -291,11 +344,12 @@ FlMethodResponse* multiview_desktop_linux_pomo_method(const char* method, FlValu
     mvd_linux_pomo_drag_end(window);
     ApplyInput(GTK_WIDGET(window), nullptr);
     g_object_set_data(G_OBJECT(window), "mvd-pomo-region", nullptr);
+    g_object_set_data(G_OBJECT(window), "mvd-pomo-input-regions", nullptr);
     return OkResponse();
   }
   if (g_str_equal(method, "bounds")) {
     g_autoptr(FlValue) value = wm->GetBounds();
-    if (value && !gtk_layer_is_layer_window(window))
+    if (value && !mvd_gnome_window(window) && !gtk_layer_is_layer_window(window))
       Number(value, "scale", gtk_widget_get_scale_factor(GTK_WIDGET(window)));
     return OkResponse(value);
   }
@@ -320,34 +374,73 @@ FlMethodResponse* multiview_desktop_linux_pomo_method(const char* method, FlValu
   FlValue* regions = fl_value_lookup_string(arguments, "regions");
   if (!regions || fl_value_get_type(regions) != FL_VALUE_TYPE_LIST)
     return Error("arguments", "Missing Pomo input regions");
-  cairo_region_t* combined = cairo_region_create();
-  for (size_t i = 0; i < fl_value_get_length(regions); ++i) {
-    FlValue* entry = fl_value_get_list_value(regions, i);
-    double x, y, width, height;
-    if (fl_value_get_type(entry) != FL_VALUE_TYPE_MAP ||
-        !Numeric(entry, "x", &x) || !Numeric(entry, "y", &y) ||
-        !Numeric(entry, "width", &width) || !Numeric(entry, "height", &height) ||
-        width < 0 || height < 0 || width > 32768 || height > 32768) {
-      cairo_region_destroy(combined);
-      return Error("arguments", "Invalid Pomo input region");
-    }
-    for (const auto& r : mvd::InputRectangles({x, y, width, height,
-            Boolean(entry, "rectangle"), Boolean(entry, "rounded")})) {
-      const cairo_rectangle_int_t rect{r.x, r.y, r.width, r.height};
-      cairo_region_union_rectangle(combined, &rect);
-    }
-  }
-  // Reapplying regions must not recreate the surface, move it, or take focus.
-  g_object_set_data_full(G_OBJECT(window), "mvd-pomo-region", combined,
-      reinterpret_cast<GDestroyNotify>(cairo_region_destroy));
-  ApplyInput(GTK_WIDGET(window), combined);
+  cairo_region_t* validated = BuildInput(window, regions);
+  if (!validated) return Error("arguments", "Invalid Pomo input region");
+  cairo_region_destroy(validated);
+  g_object_set_data_full(G_OBJECT(window), "mvd-pomo-input-regions", fl_value_ref(regions),
+      reinterpret_cast<GDestroyNotify>(fl_value_unref));
+  g_object_set_data(G_OBJECT(window), "mvd-pomo-input-refresh", reinterpret_cast<gpointer>(RefreshInput));
+  RefreshInput(window);
   if (!g_object_get_data(G_OBJECT(window), "mvd-pomo-map-hook")) {
     g_signal_connect(window, "map", G_CALLBACK(+[](GtkWidget* widget, gpointer) {
-      auto* region = static_cast<cairo_region_t*>(g_object_get_data(G_OBJECT(widget), "mvd-pomo-region"));
-      if (region) ApplyInput(widget, region);
+      RefreshInput(GTK_WINDOW(widget));
+    }), nullptr);
+    g_signal_connect(window, "size-allocate", G_CALLBACK(+[](GtkWidget* widget, GtkAllocation*, gpointer) {
+      RefreshInput(GTK_WINDOW(widget));
     }), nullptr);
     g_object_set_data(G_OBJECT(window), "mvd-pomo-map-hook", GINT_TO_POINTER(1));
   }
   return OkResponse();
+}
+
+void multiview_desktop_linux_pomo_call(FlMethodCall* call) {
+  const char* method = fl_method_call_get_name(call);
+  FlValue* args = fl_method_call_get_args(call);
+  if (mvd_gnome_context() && g_str_equal(method, "setFollowing")) {
+    FlValue* enabled = args && fl_value_get_type(args) == FL_VALUE_TYPE_MAP ? fl_value_lookup_string(args, "enabled") : nullptr;
+    if (!enabled || fl_value_get_type(enabled) != FL_VALUE_TYPE_BOOL) {
+      Respond(call, nullptr, "Invalid GNOME following lease"); return;
+    }
+    g_object_ref(call);
+    mvd_gnome_following(fl_value_get_bool(enabled), [call](const char* error) {
+      Respond(call, nullptr, error); g_object_unref(call);
+    });
+    return;
+  }
+  if (mvd_gnome_context() && (g_str_equal(method, "environment") ||
+      g_str_equal(method, "gnomeExtensionStatus") || g_str_equal(method, "installGnomeExtension") ||
+      g_str_equal(method, "enableGnomeExtension"))) {
+    g_object_ref(call);
+    auto complete = [call]() {
+      g_autoptr(FlValue) environment = Environment(); Respond(call, environment, nullptr); g_object_unref(call);
+    };
+    if (g_str_equal(method, "installGnomeExtension")) mvd_gnome_install(true, std::move(complete));
+    else if (g_str_equal(method, "enableGnomeExtension")) mvd_gnome_install(false, std::move(complete));
+    else mvd_gnome_status(std::move(complete));
+    return;
+  }
+  FlValue* id = args && fl_value_get_type(args) == FL_VALUE_TYPE_MAP ? fl_value_lookup_string(args, "viewId") : nullptr;
+  auto wm = id && fl_value_get_type(id) == FL_VALUE_TYPE_INT ? MvdLinuxWindow::Find(fl_value_get_int(id)) : nullptr;
+  if (wm && wm->is_pomo && mvd_gnome_window(wm->window) &&
+      (g_str_equal(method, "bounds") || g_str_equal(method, "move") || g_str_equal(method, "configure") ||
+       g_str_equal(method, "detach") || g_str_equal(method, "dragBegin") ||
+       g_str_equal(method, "dragPosition") || g_str_equal(method, "dragEnd"))) {
+    // Input regions belong to GTK; Shell alone owns global geometry.
+    if (g_str_equal(method, "configure") || g_str_equal(method, "detach")) {
+      g_autoptr(FlMethodResponse) local = multiview_desktop_linux_pomo_method(method, args);
+      if (FL_IS_METHOD_ERROR_RESPONSE(local)) { fl_method_call_respond(call, local, nullptr); return; }
+      if (g_str_equal(method, "configure") && mvd_gnome_command_is_local(method, args, true)) {
+        // GTK input masks do not alter Shell geometry or cancel its drag.
+        fl_method_call_respond(call, local, nullptr); return;
+      }
+    }
+    g_object_ref(call);
+    mvd_gnome_command(wm->window, method, args, [call](FlValue* result, const char* error) {
+      Respond(call, result, error); g_object_unref(call);
+    });
+    return;
+  }
+  g_autoptr(FlMethodResponse) response = multiview_desktop_linux_pomo_method(method, args);
+  fl_method_call_respond(call, response, nullptr);
 }
 }  // extern "C"

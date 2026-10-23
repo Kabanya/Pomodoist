@@ -348,7 +348,7 @@ static void my_application_activate(GApplication *application) {
   // Requires the view to be realized so we can start rendering.
   g_signal_connect_swapped(view, "first-frame", G_CALLBACK(first_frame_cb),
                            self);
-  gtk_widget_realize(GTK_WIDGET(view));
+  multiview_desktop_linux_runner_realize_view(view);
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
   multiview_desktop_linux_runner_register_primary(window, view);

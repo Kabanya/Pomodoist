@@ -1,7 +1,10 @@
 #include "mvd_linux_color.h"
 #include <multiview_desktop/multiview_desktop_plugin.h>
+#include <multiview_desktop/multiview_desktop_runner.h>
 
 #include "mvd_linux_internal.h"
+#include "mvd_linux_gnome_policy.h"
+#include "mvd_linux_gl_binding.h"
 #include "mvd_linux_log.h"
 #include "mvd_linux_taskbar_menu.h"
 #include "mvd_linux_window.h"
@@ -33,6 +36,7 @@ struct PendingCreate {
   double height = 600;
   std::string title;
   std::string title_bar_style;
+  std::string linux_desktop_overlay_role = "companion";
   bool window_button_visibility = true;
   bool has_position = false;
   double pos_x = 0;
@@ -312,11 +316,14 @@ static gboolean on_delete(GtkWidget* widget, GdkEvent*, gpointer data) {
         MVD_LOG("on_delete  deferred_destroy_cb  viewId=%" G_GINT64_FORMAT
                 "  calling gtk_widget_destroy  widget=%p",
                 c->view_id, static_cast<void*>(c->widget));
-        gtk_widget_destroy(c->widget);
-        MVD_LOG("on_delete  deferred_destroy_cb  viewId=%" G_GINT64_FORMAT
-                "  gtk_widget_destroy returned  releasing extra GObject ref",
-                c->view_id);
-        g_object_unref(c->widget);  // release the ref we took before the timer
+        {
+          mvd::X11GlBindingScope binding(gtk_widget_get_display(c->widget));
+          gtk_widget_destroy(c->widget);
+          MVD_LOG("on_delete  deferred_destroy_cb  viewId=%" G_GINT64_FORMAT
+                  "  gtk_widget_destroy returned  releasing extra GObject ref",
+                  c->view_id);
+          g_object_unref(c->widget);  // release the ref we took before the timer
+        }
         if (c->should_quit) {
           GApplication* app = g_application_get_default();
           MVD_LOG("on_delete  deferred_destroy_cb  viewId=%" G_GINT64_FORMAT
@@ -525,7 +532,7 @@ static void create_modal_dialog_impl(const DialogCreateParams& params) {
   g_signal_connect_swapped(view, "first-frame", G_CALLBACK(dialog_first_frame_cb),
                            nullptr);
 
-  gtk_widget_realize(GTK_WIDGET(view));
+  multiview_desktop_linux_runner_realize_view(view);
 
   const int64_t view_id = fl_view_get_id(view);
   register_window(window, view, view_id, true, params.is_modal,
@@ -877,6 +884,14 @@ static void method_cb(FlMethodChannel*, FlMethodCall* method_call, gpointer) {
     } else {
       PendingCreate pending{};
       pending.token = int64_from_map(args, "token");
+      FlValue* role = fl_value_lookup_string(args, "linuxDesktopOverlayRole");
+      if (role) {
+        if (fl_value_get_type(role) != FL_VALUE_TYPE_STRING || !mvd::ValidGnomeRole(fl_value_get_string(role))) {
+          response = err("arguments", "Invalid Linux desktop overlay role");
+          fl_method_call_respond(method_call, response, nullptr); return;
+        }
+        pending.linux_desktop_overlay_role = fl_value_get_string(role);
+      }
       pending.width = double_from_map(args, "width", 800);
       pending.height = double_from_map(args, "height", 600);
       pending.title = string_from_map(args, "title");
@@ -906,6 +921,7 @@ static void method_cb(FlMethodChannel*, FlMethodCall* method_call, gpointer) {
       req.focus_on_show = bool_from_map(args, "focusOnShow", true);
       req.is_utility = bool_from_map(args, "isUtility", false);
       req.linux_desktop_overlay = bool_from_map(args, "linuxDesktopOverlay", false);
+      req.linux_desktop_overlay_role = pending.linux_desktop_overlay_role.c_str();
       req.has_background_color = fl_value_lookup_string(args, "backgroundColorA") != nullptr;
       const auto color = mvd::DecodeBackgroundColor([&](const char* key, double fallback) {
         return double_from_map(args, key, fallback);

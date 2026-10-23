@@ -4390,4 +4390,52 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get pomoLinuxUnknownEnvironment => '不明なデスクトップ環境';
+
+  @override
+  String get pomoGnomeInstallDescription =>
+      'Pomo をデスクトップに表示するには GNOME Shell 拡張機能が必要です。同梱の拡張機能を自分のユーザーアカウントにインストールしてください。';
+
+  @override
+  String get pomoGnomeEnableDescription =>
+      'GNOME Shell で Pomo 拡張機能を有効にしてください。ユーザー拡張機能が全体で無効になっている場合は、まず「拡張機能」アプリで有効にしてください。';
+
+  @override
+  String get pomoGnomeReloginDescription =>
+      '拡張機能をインストールしました。GNOME Shell がこのバージョンを読み込むよう、一度ログアウトしてログインし直し、再確認してください。';
+
+  @override
+  String get pomoGnomeUpdateDescription =>
+      'このバージョンの Pomo を使うには、GNOME Shell 用の Pomo 拡張機能を更新してください。';
+
+  @override
+  String get pomoGnomeIncompatibleDescription =>
+      '同梱の Pomo 拡張機能は、この GNOME Shell バージョンに対応していません。';
+
+  @override
+  String get pomoGnomeErrorDescription =>
+      'GNOME Shell 用の Pomo 拡張機能を起動できませんでした。状態を確認するか、サポート用に環境情報をコピーしてください。';
+
+  @override
+  String get pomoGnomePausedDescription =>
+      'GNOME Shell で Pomo を一時的に利用できません。デスクトップ接続が復旧すると再表示されます。';
+
+  @override
+  String get pomoGnomeInstall => '拡張機能をインストール';
+
+  @override
+  String get pomoGnomeEnable => '拡張機能を有効化';
+
+  @override
+  String get pomoGnomeUpdate => '拡張機能を更新';
+
+  @override
+  String get pomoGnomeCheckAgain => '再確認';
+
+  @override
+  String get pomoGnomeXWaylandDescription =>
+      'この GNOME セッションでは XWayland を利用できません。Pomo には XWayland と Shell 拡張機能が必要です。XWayland を有効にして Pomodoist を再起動し、再確認してください。';
+
+  @override
+  String get pomoGnomeUserExtensionsDisabledDescription =>
+      'このセッションでは GNOME のユーザー拡張機能が無効です。「拡張機能」アプリでユーザー拡張機能を有効にして、再確認してください。Pomodoist はこのシステム設定を変更しません。';
 }

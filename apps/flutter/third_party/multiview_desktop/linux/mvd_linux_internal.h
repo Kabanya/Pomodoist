@@ -20,6 +20,7 @@ typedef struct {
   gboolean focus_on_show;
   gboolean is_utility;
   gboolean linux_desktop_overlay;
+  const char* linux_desktop_overlay_role;
   gboolean has_background_color;
   GdkRGBA background_color;
   gboolean has_position;

@@ -29,6 +29,14 @@ if [[ ! -x "$bundle/pomodoist" || ! -d "$bundle/data" || ! -d "$bundle/lib" ]]; 
   exit 66
 fi
 
+extension_payload="$bundle/data/gnome-extension"
+if [[ ! -s "$extension_payload/pomo@pomodoist.com.shell-extension.zip" ||
+      ! -s "$extension_payload/pomo@pomodoist.com/metadata.json" ||
+      ! -s "$extension_payload/pomo@pomodoist.com/extension.js" ]]; then
+  echo 'The Linux bundle must contain the offline Pomo GNOME extension ZIP and sources.' >&2
+  exit 66
+fi
+
 if [[ ! -f "$icon_source" ]]; then
   echo "Flavor icon is missing: $icon_source" >&2
   exit 66

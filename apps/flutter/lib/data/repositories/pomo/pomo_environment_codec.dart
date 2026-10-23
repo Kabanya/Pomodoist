@@ -62,8 +62,43 @@ PomoEnvironment parsePomoEnvironment(Object? value) {
   };
   return PomoEnvironment(
     checking: false,
-    available: value['available'] == true && displays.isNotEmpty,
+    available:
+        value['available'] == true &&
+        displays.isNotEmpty &&
+        (value['placementBackend'] != 'gnomeShell' ||
+            value['gnomeExtensionState'] == 'active'),
     backend: string('backend'),
+    placementBackend: switch (value['placementBackend']) {
+      'x11' => PomoPlacementBackend.x11,
+      'layerShell' => PomoPlacementBackend.layerShell,
+      'gnomeShell' => PomoPlacementBackend.gnomeShell,
+      null => switch (string('backend').toLowerCase()) {
+        'x11' => PomoPlacementBackend.x11,
+        'wayland' => PomoPlacementBackend.layerShell,
+        _ => PomoPlacementBackend.unknown,
+      },
+      _ => PomoPlacementBackend.unknown,
+    },
+    gnomeExtensionState: switch (value['gnomeExtensionState']) {
+      null => null,
+      'notInstalled' => PomoGnomeExtensionState.notInstalled,
+      'disabled' => PomoGnomeExtensionState.disabled,
+      'reloginRequired' => PomoGnomeExtensionState.reloginRequired,
+      'active' => PomoGnomeExtensionState.active,
+      'incompatible' => PomoGnomeExtensionState.incompatible,
+      _ => PomoGnomeExtensionState.error,
+    },
+    gnomeExtensionVersion:
+        value['gnomeExtensionVersion'] is int &&
+            (value['gnomeExtensionVersion'] as int) >= 0
+        ? value['gnomeExtensionVersion'] as int
+        : null,
+    gnomeShellVersion: value['gnomeShellVersion'] is String
+        ? value['gnomeShellVersion'] as String
+        : null,
+    gnomeExtensionError: value['gnomeExtensionError'] is String
+        ? value['gnomeExtensionError'] as String
+        : null,
     desktop: string('desktop'),
     sessionType: string('sessionType'),
     distribution: string('distribution'),

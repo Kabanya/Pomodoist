@@ -1,5 +1,7 @@
 #include "mvd_linux_window.h"
 #include "mvd_linux_internal.h"
+#include "mvd_linux_gnome.h"
+#include "mvd_linux_gl_binding.h"
 #include <gtk-layer-shell.h>
 #include "mvd_linux_log.h"
 #include <gtk/gtk.h>
@@ -504,11 +506,14 @@ void MvdLinuxWindow::Destroy() {
         MVD_LOG("Destroy  deferred_destroy_cb  view_id=%" G_GINT64_FORMAT
                 "  calling gtk_widget_destroy  widget=%p",
                 c->vid, static_cast<void*>(c->widget));
-        gtk_widget_destroy(c->widget);
-        MVD_LOG("Destroy  deferred_destroy_cb  view_id=%" G_GINT64_FORMAT
-                "  gtk_widget_destroy returned  releasing extra GObject ref",
-                c->vid);
-        g_object_unref(c->widget);
+        {
+          mvd::X11GlBindingScope binding(gtk_widget_get_display(c->widget));
+          gtk_widget_destroy(c->widget);
+          MVD_LOG("Destroy  deferred_destroy_cb  view_id=%" G_GINT64_FORMAT
+                  "  gtk_widget_destroy returned  releasing extra GObject ref",
+                  c->vid);
+          g_object_unref(c->widget);
+        }
         delete c;
         return G_SOURCE_REMOVE;
       },
@@ -765,6 +770,7 @@ void MvdLinuxWindow::Show() {
       ClampToParentBounds();
     }
   }
+  if (mvd_gnome_show(window)) return;
   // Apply any position set before the window was mapped so the WM receives
   // the coordinates in the X11 MapRequest (PPosition hint).
   ApplyPendingMove();
@@ -781,6 +787,7 @@ void MvdLinuxWindow::Hide() {
     MVD_LOG("Hide  SKIP: window is null  view_id=%" G_GINT64_FORMAT, view_id);
     return;
   }
+  if (mvd_gnome_window(window)) { mvd_gnome_hide(window); return; }
   gint x = 0;
   gint y = 0;
   gint w = 0;
@@ -903,6 +910,7 @@ FlValue* MvdLinuxWindow::GetBounds() {
   if (!window) {
     return nullptr;
   }
+  if (mvd_gnome_window(window)) return mvd_gnome_bounds(window);
   if (gtk_layer_is_layer_window(window)) return mvd_linux_layer_bounds(window);
   return MakeBounds(window);
 }
@@ -924,6 +932,15 @@ void MvdLinuxWindow::SetBounds(FlValue* args) {
 }
 
 void MvdLinuxWindow::SetSize(double width, double height) {
+  if (mvd_gnome_window(window)) {
+    g_autoptr(FlValue) args = fl_value_new_map();
+    fl_value_set_string_take(args, "width", fl_value_new_float(width));
+    fl_value_set_string_take(args, "height", fl_value_new_float(height));
+    mvd_gnome_configure(window, args);
+    // Mutter sends the resulting X configure to GTK; a second raw GTK resize
+    // would race its placement and confuse stage units with viewport units.
+    return;
+  }
   if (!window) {
     return;
   }
@@ -941,6 +958,7 @@ void MvdLinuxWindow::SetSize(double width, double height) {
 
 void MvdLinuxWindow::ApplyPendingMove() {
   if (!window || !has_pending_move) return;
+  if (mvd_gnome_window(window)) { has_pending_move = false; return; }
   has_pending_move = false;
   MVD_LOG("ApplyPendingMove  view_id=%" G_GINT64_FORMAT
           "  x=%d  y=%d  visible=%d",
@@ -962,6 +980,12 @@ void MvdLinuxWindow::SetPosition(double x, double y) {
           window ? static_cast<int>(gtk_widget_get_visible(GTK_WIDGET(window)))
                  : -1);
   if (!window) return;
+  if (mvd_gnome_window(window)) {
+    g_autoptr(FlValue) args = fl_value_new_map();
+    fl_value_set_string_take(args, "x", fl_value_new_float(x));
+    fl_value_set_string_take(args, "y", fl_value_new_float(y));
+    mvd_gnome_configure(window, args); return;
+  }
   if (gtk_layer_is_layer_window(window)) {
     mvd_linux_move_layer_window(window, x, y, nullptr);
     return;
@@ -982,6 +1006,7 @@ void MvdLinuxWindow::SetPosition(double x, double y) {
 }
 
 void MvdLinuxWindow::Center() {
+  if (mvd_gnome_window(window)) return;
   if (window) {
     gtk_window_set_position(window, GTK_WIN_POS_CENTER);
   }
@@ -1017,6 +1042,9 @@ void MvdLinuxWindow::RefreshShadowCache() {
 }
 
 void MvdLinuxWindow::ReapplyGeometryHints() {
+  // These hints use GTK viewport units. Shell owns the GNOME stage extent;
+  // raw fixed GTK min/max sizes would prevent fractional-scale placement.
+  if (mvd_gnome_window(window)) return;
   if (!window || hints == static_cast<GdkWindowHints>(0)) {
     return;
   }
@@ -1101,6 +1129,7 @@ void GetWindowContentSize(GtkWindow* window, gint* width, gint* height) {
 
 void MvdLinuxWindow::SetResizable(bool v) {
   is_resizable = v;
+  if (mvd_gnome_window(window)) return;
   if (!window) {
     return;
   }
@@ -1447,6 +1476,7 @@ void MvdLinuxWindow::PopUpWindowMenu() {
 }
 
 void MvdLinuxWindow::StartDragging() {
+  if (mvd_gnome_window(window)) return;
   if (!window) {
     return;
   }
@@ -1471,6 +1501,7 @@ void MvdLinuxWindow::StartDragging() {
 }
 
 void MvdLinuxWindow::StartResizing(const gchar* edge) {
+  if (mvd_gnome_window(window)) return;
   if (!window) {
     return;
   }
@@ -1514,6 +1545,7 @@ void MvdLinuxWindow::StartResizing(const gchar* edge) {
 }
 
 bool MvdLinuxWindow::IsMovable() {
+  if (mvd_gnome_window(window)) return is_resizable;
   return window ? gtk_window_get_resizable(window) : true;
 }
 

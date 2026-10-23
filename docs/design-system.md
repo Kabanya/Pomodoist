@@ -1592,13 +1592,37 @@ Pomo. X11/XWayland uses a passive RGBA utility window; native Wayland uses a
 focus. Apply the role and transparent GTK/Flutter backing before realization.
 Linux native 3D textures are vertically inverted at the texture presentation
 boundary. Keep raster fallback images and other platforms upright as authored.
+On GNOME Wayland, choose the XWayland backend for the whole Linux application
+before GTK initialization. The user's desktop session remains Wayland. Require
+the compatible Pomo GNOME extension for companion placement and tracking; the
+main application stays usable when it is missing or disabled. The extension
+controls only registered Pomo utility windows, never the main app or Quick Add.
+Use GNOME stage coordinates and actual Mutter window bounds as the authority;
+do not mix them with GDK/X11 global pointer coordinates. Move on Shell frames,
+resize only for layout/DPI changes, and read back constrained bounds. Convert
+local input regions using the measured viewport/frame relationship only.
+Keep the GNOME companion and compact panel in a fitted stage canvas when the
+Flutter viewport differs from the Shell frame. Drawing, transformed pointer hits
+and context-menu input bounds must share that mapping. Keep the canvas identity
+stable so viewport changes do not recreate the live model or restart a reaction.
+
 The main app and Quick Add keep their normal roles. Keep Pomo settings visible
 while probing or unavailable; an unavailable state includes a localized
 explanation, `support@pomodoist.com`, an editable mail draft and copyable
 technical environment details. Never send a support message automatically.
 
+GNOME availability includes explicit Install, Enable and Update actions with
+shared busy/error handling. First local installation or replacing loaded code
+may require signing out and back in; installed files alone never mean active
+support. Install only after a user action, without root or network access, and
+preserve other enabled extensions. Never restart the user's Shell, enable unsafe
+mode or invoke Shell Eval. Explain unsupported Shell versions and keep support
+contact/details accessible. Hide the companion during Overview, session lock or
+bridge loss without persisting a manual dismissal. Stop dragging and tracking,
+then restore only the existing enabled/visible intent after reconnection.
+
 Linux monitor controls select either the user's screen or a pinned monitor.
-Follow the pointer in X11, KDE Plasma 6 and Hyprland; explain that Sway follows
+Follow the pointer in X11, GNOME with its extension, KDE Plasma 6 and Hyprland; explain that Sway follows
 the active workspace. Dwell for 500 ms before changing outputs, and suspend
 following while the pointer interacts with Pomo, dragging, or menus/settings are
 open. Native Wayland dragging uses accelerated relative-pointer motion, sampled

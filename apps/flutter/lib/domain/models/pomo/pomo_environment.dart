@@ -23,11 +23,29 @@ class PomoDisplay {
 
 enum PomoFollowSource { cursor, workspace, none }
 
+enum PomoPlacementBackend { unknown, x11, layerShell, gnomeShell }
+
+enum PomoGnomeExtensionState {
+  notInstalled,
+  disabled,
+  reloginRequired,
+  active,
+  incompatible,
+  error,
+}
+
+enum PomoGnomeExtensionAction { install, enable, update }
+
 class PomoEnvironment {
   const PomoEnvironment({
     this.checking = true,
     this.available = false,
     this.backend = '',
+    this.placementBackend = PomoPlacementBackend.unknown,
+    this.gnomeExtensionState,
+    this.gnomeExtensionVersion,
+    this.gnomeShellVersion,
+    this.gnomeExtensionError,
     this.desktop = '',
     this.sessionType = '',
     this.distribution = '',
@@ -41,6 +59,35 @@ class PomoEnvironment {
   final bool checking, available;
   final String backend, desktop, sessionType, distribution;
   final String? reason;
+  final PomoPlacementBackend placementBackend;
+  final PomoGnomeExtensionState? gnomeExtensionState;
+  final int? gnomeExtensionVersion;
+  final String? gnomeShellVersion, gnomeExtensionError;
+  bool get usesGnomeShell =>
+      placementBackend == PomoPlacementBackend.gnomeShell;
+  bool get gnomeXWaylandUnavailable =>
+      usesGnomeShell && reason == 'gnomeXWaylandUnavailable';
+  bool get gnomeUserExtensionsDisabled =>
+      usesGnomeShell && reason == 'gnomeUserExtensionsDisabled';
+  bool get _gnomeExtensionNeedsUpdate =>
+      gnomeExtensionVersion != null && gnomeExtensionVersion != 1;
+  PomoGnomeExtensionAction? get gnomeExtensionAction {
+    if (!usesGnomeShell ||
+        gnomeXWaylandUnavailable ||
+        gnomeUserExtensionsDisabled ||
+        gnomeExtensionState == PomoGnomeExtensionState.reloginRequired) {
+      return null;
+    }
+    if (gnomeExtensionState == PomoGnomeExtensionState.notInstalled) {
+      return PomoGnomeExtensionAction.install;
+    }
+    if (_gnomeExtensionNeedsUpdate) return PomoGnomeExtensionAction.update;
+    if (gnomeExtensionState == PomoGnomeExtensionState.disabled) {
+      return PomoGnomeExtensionAction.enable;
+    }
+    return null;
+  }
+
   final PomoFollowSource followSource;
   final List<PomoDisplay> displays;
   final String? primaryDisplayId, userDisplayId;
@@ -50,6 +97,11 @@ class PomoEnvironment {
     bool? checking,
     bool? available,
     String? backend,
+    PomoPlacementBackend? placementBackend,
+    PomoGnomeExtensionState? gnomeExtensionState,
+    int? gnomeExtensionVersion,
+    String? gnomeShellVersion,
+    String? gnomeExtensionError,
     String? desktop,
     String? sessionType,
     String? distribution,
@@ -64,6 +116,11 @@ class PomoEnvironment {
     checking: checking ?? this.checking,
     available: available ?? this.available,
     backend: backend ?? this.backend,
+    placementBackend: placementBackend ?? this.placementBackend,
+    gnomeExtensionState: gnomeExtensionState ?? this.gnomeExtensionState,
+    gnomeExtensionVersion: gnomeExtensionVersion ?? this.gnomeExtensionVersion,
+    gnomeShellVersion: gnomeShellVersion ?? this.gnomeShellVersion,
+    gnomeExtensionError: gnomeExtensionError ?? this.gnomeExtensionError,
     desktop: desktop ?? this.desktop,
     sessionType: sessionType ?? this.sessionType,
     distribution: distribution ?? this.distribution,
@@ -86,6 +143,10 @@ String buildPomoSupportDetails(
     'Desktop: ${environment.desktop}\n'
     'Session: ${environment.sessionType}\n'
     'Backend: ${environment.backend}\n'
+    'Placement backend: ${environment.placementBackend.name}\n'
+    'GNOME Shell: ${environment.gnomeShellVersion ?? 'unknown'}\n'
+    'GNOME extension: ${environment.gnomeExtensionState?.name ?? 'not applicable'} '
+    '(version ${environment.gnomeExtensionVersion ?? 'unknown'})\n'
     'Distribution: ${environment.distribution}\n'
     'App version: $appVersion\n';
 

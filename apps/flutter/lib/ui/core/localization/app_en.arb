@@ -2270,5 +2270,18 @@
         "type": "String"
       }
     }
-  }
+  },
+  "pomoGnomeInstallDescription": "Pomo needs its GNOME Shell extension to appear on your desktop. Install the bundled extension for your user account.",
+  "pomoGnomeEnableDescription": "Enable the Pomo extension in GNOME Shell. If user extensions are disabled globally, turn them on in the Extensions app first.",
+  "pomoGnomeReloginDescription": "The extension is installed. Sign out and sign in again to let GNOME Shell load this version, then check again.",
+  "pomoGnomeUpdateDescription": "Update the Pomo GNOME Shell extension to use this version of Pomo.",
+  "pomoGnomeIncompatibleDescription": "This GNOME Shell version is not supported by the bundled Pomo extension.",
+  "pomoGnomeErrorDescription": "The Pomo GNOME Shell extension could not start. Check its status or copy the environment details for support.",
+  "pomoGnomePausedDescription": "Pomo is temporarily unavailable in GNOME Shell. It will return when the desktop connection is ready.",
+  "pomoGnomeInstall": "Install extension",
+  "pomoGnomeEnable": "Enable extension",
+  "pomoGnomeUpdate": "Update extension",
+  "pomoGnomeCheckAgain": "Check again",
+  "pomoGnomeXWaylandDescription": "XWayland is unavailable in this GNOME session. Pomo needs XWayland together with its Shell extension. Enable XWayland and restart Pomodoist, then check again.",
+  "pomoGnomeUserExtensionsDisabledDescription": "GNOME user extensions are turned off for this session. Open the Extensions app and turn on user extensions, then check again. Pomodoist will keep this system setting unchanged."
 }

@@ -15,6 +15,19 @@ struct InputShape {
   double x, y, width, height;
   bool rectangle, rounded;
 };
+// Regions arrive in Shell stage logical units. Native input uses the measured
+// local Flutter viewport, which can differ under fractional XWayland scaling.
+inline InputShape ViewportInputShape(InputShape shape, double frame_width,
+    double frame_height, double viewport_width, double viewport_height) {
+  if (!std::isfinite(frame_width) || !std::isfinite(frame_height) ||
+      !std::isfinite(viewport_width) || !std::isfinite(viewport_height) ||
+      frame_width <= 0 || frame_height <= 0 || viewport_width <= 0 || viewport_height <= 0)
+    return {0, 0, 0, 0, shape.rectangle, shape.rounded};
+  const double x_ratio = viewport_width / frame_width;
+  const double y_ratio = viewport_height / frame_height;
+  return {shape.x * x_ratio, shape.y * y_ratio, shape.width * x_ratio,
+      shape.height * y_ratio, shape.rectangle, shape.rounded};
+}
 struct InputRectangle { int x, y, width, height; };
 // GDK input regions use logical integer coordinates. Scan the curved shapes at
 // pixel centers so transparent corners pass through without clipping the view.

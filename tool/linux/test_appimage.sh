@@ -29,9 +29,24 @@ printf 'printf "ld-library-path=%%s\\n" "$LD_LIBRARY_PATH"\n' >> "$bundle/pomodo
 printf 'printf "gst-plugin-path=%%s\\n" "$GST_PLUGIN_SYSTEM_PATH_1_0"\n' >> "$bundle/pomodoist"
 chmod 755 "$bundle/pomodoist"
 printf 'asset\n' > "$bundle/data/example.txt"
+extension_source="$bundle/data/gnome-extension/pomo@pomodoist.com"
+mkdir -p -- "$extension_source"
+printf '%s\n' '{"uuid":"pomo@pomodoist.com","name":"Pomo","version":1,"shell-version":["46","50","51"]}' > "$extension_source/metadata.json"
+printf '%s\n' 'export default class Pomo {}' > "$extension_source/extension.js"
+python3 "$script_dir/package_gnome_extension.py" --source "$extension_source" \
+  --output "$bundle/data/gnome-extension/pomo@pomodoist.com.shell-extension.zip"
 printf 'library\n' > "$bundle/lib/example.so"
 printf 'layer-shell-runtime\n' > "$bundle/lib/libgtk-layer-shell.so.0.10.1"
 ln -s libgtk-layer-shell.so.0.10.1 "$bundle/lib/libgtk-layer-shell.so.0"
+
+mv "$bundle/data/gnome-extension/pomo@pomodoist.com.shell-extension.zip" "$test_root/extension.zip"
+if POMODOIST_LINUX_BUNDLE="$bundle" POMODOIST_APPDIR="$test_root/incomplete AppDir" \
+  "$script_dir/prepare_appdir.sh" > /dev/null 2>&1; then
+  echo 'prepare_appdir.sh accepted a bundle without the offline GNOME helper' >&2
+  exit 1
+fi
+test ! -e "$test_root/incomplete AppDir"
+mv "$test_root/extension.zip" "$bundle/data/gnome-extension/pomo@pomodoist.com.shell-extension.zip"
 
 # A non-production flavor takes its icon from web/icons/<flavor>/Icon-512.png,
 # which the icon build publishes. The packaging tests must not depend on that
@@ -75,6 +90,8 @@ test "$(cat "$appdir/usr/lib/pomodoist/data/example.txt")" = 'asset'
 test "$(cat "$appdir/usr/lib/pomodoist/lib/example.so")" = 'library'
 test "$(cat "$appdir/usr/lib/pomodoist/lib/libgtk-layer-shell.so.0")" = 'layer-shell-runtime'
 test ! -L "$appdir/usr/lib/pomodoist/lib/libgtk-layer-shell.so.0"
+test -s "$appdir/usr/lib/pomodoist/data/gnome-extension/pomo@pomodoist.com.shell-extension.zip"
+test -s "$appdir/usr/lib/pomodoist/data/gnome-extension/pomo@pomodoist.com/metadata.json"
 test -f "$appdir/usr/share/licenses/gtk-layer-shell/LICENSE_LGPL.txt"
 test -f "$appdir/usr/share/licenses/gtk-layer-shell/LICENSE_GPL.txt"
 test -f "$appdir/usr/share/licenses/gtk-layer-shell/LICENSE_MIT.txt"

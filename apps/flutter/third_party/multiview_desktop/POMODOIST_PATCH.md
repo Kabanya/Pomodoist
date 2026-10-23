@@ -25,8 +25,8 @@ it does not access the window registry. On X11, Pomo requires an RGBA visual and
 an active compositor. On Wayland, it requires `gtk-layer-shell` and layer-shell
 protocol version 4 for on-demand keyboard input. Only Pomo's mascot and compact
 panel use a top layer, zero exclusive zone, and on-demand keyboard mode.
-Unsupported native backends return an availability reason without changing GDK
-backend selection. Input regions are Cairo/GDK input shapes, preserving alpha
+Outside GNOME compatibility mode, unsupported native backends return an
+availability reason without changing GDK backend selection. Input regions are Cairo/GDK input shapes, preserving alpha
 and passing transparent exterior space through to other applications.
 
 Linux environment, cursor, bounds and move coordinates use GTK logical pixels;
@@ -49,3 +49,29 @@ Pure Linux geometry unit checks run with `tool/linux/test_pomo_geometry.sh` from
 the repository root. Creation encoding is covered by
 `test/native_channel_create_window_test.dart` in this package. Native builds,
 app launches and compositor-specific interaction checks are a separate phase.
+
+
+GNOME Wayland uses the application's pre-GTK XWayland selection and the bundled
+`pomo@pomodoist.com` extension. The plugin supplies an asynchronous GIO bridge for
+`com.pomodoist.Pomo.Gnome1`; existing method-channel window calls wait for its
+results. Each Pomo utility receives a random GTK role token before realization.
+The extension authenticates the D-Bus caller and matches the role, PID and
+application ID; ordinary application and Quick Add windows are excluded.
+
+GNOME stage coordinates, actual Mutter frame bounds and Shell pointer samples
+replace global GTK/X11 geometry in this route. GTK retains local rendering and
+input-region ownership; measured viewport/frame ratios align the fitted Flutter
+canvas and local click-through regions. The bridge suppresses competing native
+position writes and GTK geometry locks, and reveals mapped transparent utilities
+only after confirmed placement. Hidden/remapped surfaces retain pending role
+registrations until explicit detach, while owner loss retires them. Overview,
+locking and bridge loss cancel native motion and hide utilities without changing
+the user's dismissal preference. Local installation and activation are separate
+states; a new login can be required for first installation or loaded-code updates.
+
+Run `tool/linux/test_pomo_gnome_native.sh` for isolated policy/GIO tests. It uses
+a private D-Bus session, temporary bundle resources and memory-backed GSettings,
+without initializing a GTK display or installing anything into the user's Shell.
+The Flutter SDK's Linux engine cache may be selected with `FLUTTER_ENGINE_DIR`.
+GNOME native application builds and Ubuntu visual acceptance remain a separate
+stage; these checks do not establish compositor rendering or mixed-DPI behavior.

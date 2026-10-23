@@ -24,6 +24,9 @@ FLUTTER_PLUGIN_EXPORT void multiview_desktop_linux_runner_install(
 FLUTTER_PLUGIN_EXPORT void multiview_desktop_linux_runner_prepare_dart_project(
     FlDartProject* project);
 
+/// Realizes a view while preserving GTK/native GL bindings on X11.
+FLUTTER_PLUGIN_EXPORT void multiview_desktop_linux_runner_realize_view(FlView* view);
+
 /// Call after fl_register_plugins on the primary FlView.
 FLUTTER_PLUGIN_EXPORT void multiview_desktop_linux_runner_register_primary(
     GtkWindow* window,
@@ -41,6 +44,9 @@ FLUTTER_PLUGIN_EXPORT FlView* multiview_desktop_linux_get_view(int64_t view_id);
 /// Environment/cursor accept null arguments; window operations require viewId.
 FLUTTER_PLUGIN_EXPORT FlMethodResponse* multiview_desktop_linux_pomo_method(
     const char* method, FlValue* arguments);
+
+/// Dispatches asynchronous GNOME bridge operations and responds exactly once.
+FLUTTER_PLUGIN_EXPORT void multiview_desktop_linux_pomo_call(FlMethodCall* call);
 
 G_END_DECLS
 

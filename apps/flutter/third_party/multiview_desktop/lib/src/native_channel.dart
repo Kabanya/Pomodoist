@@ -99,6 +99,7 @@ class NativeChannel {
     bool focusOnShow = true,
     bool isUtility = false,
     bool linuxDesktopOverlay = false,
+    String linuxDesktopOverlayRole = 'companion',
     Color? backgroundColor,
     required String title,
     required String titleBarStyleStr,
@@ -112,6 +113,7 @@ class NativeChannel {
       'focusOnShow': focusOnShow,
       'isUtility': isUtility,
       'linuxDesktopOverlay': linuxDesktopOverlay,
+      'linuxDesktopOverlayRole': linuxDesktopOverlayRole,
       if (backgroundColor != null) ...{
         'backgroundColorA': (backgroundColor.a * 255).round(),
         'backgroundColorR': (backgroundColor.r * 255).round(),

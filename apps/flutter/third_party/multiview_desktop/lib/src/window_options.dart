@@ -10,6 +10,7 @@ class WindowOptions {
     this.focusOnShow,
     this.isUtility = false,
     this.linuxDesktopOverlay = false,
+    this.linuxDesktopOverlayRole = 'companion',
     this.minimumSize,
     this.maximumSize,
     this.alignment = Alignment.center,
@@ -35,6 +36,10 @@ class WindowOptions {
   /// Configures a Linux companion before realization: an X11 utility window
   /// or a Wayland layer surface. Requires [isUtility]; defaults to disabled.
   final bool linuxDesktopOverlay;
+
+  /// Immutable overlay identity, independent of title and activation policy.
+  /// Supported roles are `companion` and `settings`.
+  final String linuxDesktopOverlayRole;
 
   /// Minimum resizable size enforced by the OS window.
   final Size? minimumSize;

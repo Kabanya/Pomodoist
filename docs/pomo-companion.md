@@ -313,13 +313,15 @@ Animated WebP files and their encoder are no longer part of the pipeline.
 
 ## Linux integration and verification
 
-The Linux integration targets composited X11/XWayland and native Wayland compositors exposing
-layer-shell protocol v4 or later. The vendored multiview plugin receives
+The Linux integration targets composited X11/XWayland, GNOME Wayland through
+its Pomo extension and XWayland compatibility mode, and native Wayland
+compositors exposing layer-shell protocol v4 or later. The vendored multiview plugin receives
 transparency, passive-show and layer-role options before GTK realization.
 The application runner exposes the same `pomodoist/pomo_window` method channel
 as the other desktop platforms. Its `environment` and `cursor` probes and
-`bounds`/`move` geometry use GTK logical coordinates; display scale is metadata,
-not another coordinate multiplier. Input regions include only the pet, visible
+`bounds`/`move` geometry use GTK logical coordinates outside the GNOME bridge;
+display scale is metadata, not another coordinate multiplier. GNOME placement
+uses Shell stage coordinates and actual Mutter frame bounds instead. Input regions include only the pet, visible
 capsule, controls and context menu. The native Wayland placement uses output
 selection and anchored layer margins rather than `gtk_window_move`.
 Manual Wayland dragging uses `relative-pointer-unstable-v1` accelerated logical
@@ -364,7 +366,7 @@ Automated validation covers preferences, capabilities, IPC parsing/lifecycle,
 monitor selection/dwell/suspension, native geometry, creation-option encoding,
 packaging, and static analysis. Native builds and visual acceptance require a
 separately requested stage: X11/XWayland, KDE Wayland, Hyprland, Sway, and the
-unavailable state on GNOME, with multiple monitors and mixed DPI. Dart tests and
+GNOME extension installation/activation states, with multiple monitors and mixed DPI. Dart tests and
 native source syntax checks do not establish compositor behavior or GPU output.
 
 The user authorized native build/run verification on 2026-10-23. A Flutter 3.47.0
@@ -391,3 +393,93 @@ cache remains unchanged. See `apps/flutter/linux/thermion/README.md` for the
 upstream source checksum and offscreen GPU regression procedure.
 Arch setup includes Git LFS for the model and libc++/libc++abi
 for the renderer's native asset build.
+
+The Thermion plugin retains sibling `$ORIGIN` lookup in its build ELF because
+Flutter copies plugin files into the bundle without rewriting their install
+RPATH. A relocation regression deletes the original build and native-assets
+directories before loading the bundled dependency without `LD_LIBRARY_PATH`.
+On X11, primary, secondary and modal Flutter view realization also preserves
+GTK's current GLX context/cache and any native EGL binding. Flutter 3.47's
+compositor initialization temporarily binds EGL, while GTK3 paints through GLX;
+leaving that binding active can crash GTK on its next paint. The scoped native
+helper clears the temporary binding and restores the previous API, context and
+surfaces. Deferred window destruction and final reference release use the same
+scope for shader cleanup; a destroyed GTK drawable is never restored. Wayland
+retains its existing behavior. Unmapped-window GLX/EGL lifecycle regressions run
+on software Mesa under Xvfb in CI.
+
+
+### GNOME / standard Ubuntu integration
+
+The first GNOME targets are Ubuntu 24.04 (Shell 46), 26.04 (Shell 50), and
+26.10 (Shell 51), in their normal GNOME Wayland sessions. Other Shell majors
+require a compatibility update and native acceptance before being declared
+supported. The Linux binary chooses XWayland before GTK initializes, including
+when launched directly or from a user installation; AppRun is not the policy
+owner. Without a usable XWayland connection the main application can still use
+Wayland, but Pomo reports the missing compatibility capability.
+
+The per-user extension `pomo@pomodoist.com` preserves the existing Flutter and
+Thermion renderer. It exports the versioned `com.pomodoist.Pomo.Gnome1` session
+D-Bus interface. The native GIO bridge forwards existing Pomo window commands
+and feeds Shell environment/pointer snapshots to the Dart monitor policy. Only
+windows with a registered random role token, matching caller PID and an allowed
+Pomodoist flavor application ID can be controlled. Registrations and subscriptions
+are retired on caller loss. Main-window and Quick Add roles are never changed.
+
+All global placement is authoritative in GNOME stage logical coordinates,
+including monitor work areas, pointer samples over native Wayland applications
+and actual `Meta.Window` frame bounds. Dragging captures the actual frame and
+Shell pointer together and applies their delta on Shell frames through
+`move_frame`; it never derives the origin from delayed GTK pointer events or
+`XQueryPointer`. Resize requests are separate from movement, and constrained
+results are read back. Local Flutter input regions use a measured viewport/frame
+relationship rather than a guessed global XWayland scale. A GNOME-only fitted
+stage canvas aligns the rendered companion/panel and transformed pointer hits;
+menu bounds are mapped back into that same canvas before input-region encoding.
+The canvas identity stays stable across viewport changes. GNOME display IDs have
+their own namespace, so older saved X11 positions are not reinterpreted.
+
+The existing 500 ms follow dwell, interaction suspension, pinning, cross-monitor
+switch and disconnected-monitor preference recovery remain in the Dart policy.
+Overview, session lock, extension disable or bridge loss stops native dragging
+and hides utilities without writing a manual dismissal. Restoration follows the
+existing enabled and visibility intent. The extension retains no cursor polling
+or frame callbacks when their leases are inactive.
+
+Both the ordinary Linux bundle and AppImage contain the extension's runtime
+sources and a reproducible ZIP, built with the Python standard library. Settings
+provide explicit installation, enable and update actions without administrator
+rights or a network connection. First installation on an already running GNOME
+session can require signing out and in again. A loaded older extension also
+requires a new login after replacement; files on disk are not proof of active
+protocol compatibility. Installation preserves other enabled extensions and does
+not silently bypass the user's global extension-disable setting. Shell Eval,
+unsafe mode and forced Shell restarts are not used.
+
+The user authorized an existing-VM validation stage on 2026-10-23. The available
+VM runs Arch Linux, GNOME Shell 51.1, Wayland, XWayland 24.1.14 and Mesa/virgl on
+one 1280×800 monitor at scale 1. This is a compositor integration check, not
+Ubuntu release acceptance. Offline extension installation required a new login.
+After correcting bundle library lookup and the X11 realization binding leak,
+the ordinary animated application passed ten cold starts with actual 3D imports,
+no startup shader warnings and no crashes; the previous candidate crashed in
+two of three starts. Observed interactions include transparent click-through to
+a native Wayland window, Shell pointer samples over that window, actual Pomo
+dragging, passive restoration, settings and Quick Add creation, manual
+hide/show, extension disable/recovery and Overview suppression. Evidence is
+under `build/design/pomo/2026-10-23-gnome-runtime`.
+The final lifecycle candidate additionally passed three cold starts and five
+real Quick Add open/close cycles without initialization or cleanup shader
+warnings. The application and companion remained running afterward, with the
+native Wayland target retaining focus. This also validates the deferred
+destruction binding scope; it does not complete the remaining Ubuntu matrix.
+
+Ubuntu release acceptance remains pending. Core tests, method-channel tests,
+native contract tests and packaging fixtures do not establish rendered output,
+focus behavior, smoothness or fractional-DPI correctness on Ubuntu. The separate
+acceptance stage must cover all three target releases, initial installation and
+relogin, extension update/disable/recovery, pointer movement above native Wayland
+windows, two mixed-DPI monitors, transparent click-through, Dock/Alt-Tab, focus,
+Overview, locking, workspaces, renderer reactions, Reduce Motion, hide/show, main
+window/Quick Add behavior, and text clarity in XWayland compatibility mode.

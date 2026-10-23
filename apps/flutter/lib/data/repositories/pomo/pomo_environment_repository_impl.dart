@@ -26,6 +26,8 @@ class LinuxPomoEnvironmentRepository implements PomoEnvironmentRepository {
   Timer? _refreshTimer, _followTimer;
   Future<void>? _initialized;
   Future<void> _lifecycle = Future.value();
+  Future<void> _environmentQueue = Future.value();
+  bool _nativeFollowing = false;
   bool _disposed = false,
       _following = false,
       _refreshing = false,
@@ -57,33 +59,7 @@ class LinuxPomoEnvironmentRepository implements PomoEnvironmentRepository {
     if (_disposed || _refreshing) return;
     _refreshing = true;
     try {
-      var next = parsePomoEnvironment(await _native.environment());
-      if (_disposed) return;
-      var source = PomoFollowSource.none;
-      if (next.available) {
-        if (next.backend.toLowerCase() == 'x11') {
-          source = next.followSource;
-        } else {
-          try {
-            source = await _transport.probe(next);
-          } catch (_) {
-            /* Retry later. */
-          }
-        }
-      }
-      if (_disposed) return;
-      final previousId = _following && _lastSample != null
-          ? mapPomoMonitor(_lastSample!, next.displays) ?? _state.userDisplayId
-          : _state.userDisplayId;
-      next = next.copyWith(
-        followSource: source,
-        userDisplayId: next.displays.any((d) => d.id == previousId)
-            ? previousId
-            : null,
-        clearUserDisplay: !next.displays.any((d) => d.id == previousId),
-      );
-      _publish(next);
-      await _syncFollowing();
+      await _queueEnvironment(_native.environment);
     } catch (_) {
       if (!_disposed) {
         _publish(
@@ -99,6 +75,71 @@ class LinuxPomoEnvironmentRepository implements PomoEnvironmentRepository {
     } finally {
       _refreshing = false;
     }
+  }
+
+  @override
+  Future<void> gnomeExtensionStatus() =>
+      _queueEnvironment(_native.gnomeExtensionStatus);
+  @override
+  Future<void> installGnomeExtension() =>
+      _queueEnvironment(_native.installGnomeExtension);
+  @override
+  Future<void> enableGnomeExtension() =>
+      _queueEnvironment(_native.enableGnomeExtension);
+
+  Future<void> _queueEnvironment(Future<Object?> Function() read) {
+    final next = _environmentQueue.then((_) => _updateEnvironment(read));
+    _environmentQueue = next.catchError((Object _) {});
+    return next;
+  }
+
+  Future<void> _updateEnvironment(Future<Object?> Function() read) async {
+    if (_disposed) return;
+    var next = parsePomoEnvironment(await read());
+    if (_disposed) return;
+    var source = PomoFollowSource.none;
+    if (next.available) {
+      if (next.usesGnomeShell || next.backend.toLowerCase() == 'x11') {
+        source = next.followSource;
+      } else {
+        try {
+          source = await _transport.probe(next);
+        } catch (_) {
+          // Retry on the next environment refresh.
+        }
+      }
+    }
+    if (_disposed) return;
+    final sameCoordinates = next.placementBackend == _state.placementBackend;
+    if (!sameCoordinates) _lastSample = null;
+    final previousId = !sameCoordinates
+        ? null
+        : _following && _lastSample != null
+        ? mapPomoMonitor(_lastSample!, next.displays) ?? _state.userDisplayId
+        : _state.userDisplayId;
+    next = next.copyWith(
+      followSource: source,
+      userDisplayId: next.displays.any((d) => d.id == previousId)
+          ? previousId
+          : null,
+      clearUserDisplay:
+          !next.available || !next.displays.any((d) => d.id == previousId),
+    );
+    _publish(next);
+    await _syncFollowing();
+  }
+
+  Future<void> _stopAdapters() async {
+    if (_nativeFollowing) {
+      // Clear ownership before awaiting so failed/disconnected leases retry safely.
+      _nativeFollowing = false;
+      try {
+        await _native.setFollowing(false);
+      } catch (_) {
+        /* Owner may have vanished. */
+      }
+    }
+    await _transport.stop();
   }
 
   @override
@@ -124,17 +165,20 @@ class LinuxPomoEnvironmentRepository implements PomoEnvironmentRepository {
     final next = _lifecycle.then((_) async {
       final key =
           !_disposed && _following && _state.available && _state.canFollow
-          ? '${_state.backend}:${_state.desktop}:${_state.followSource.name}'
+          ? '${_state.placementBackend.name}:${_state.backend}:${_state.desktop}:${_state.followSource.name}'
           : null;
       if (key == _activeKey) return;
       final generation = ++_generation;
       _followTimer?.cancel();
       _followTimer = null;
       _activeKey = null;
-      await _transport.stop();
+      await _stopAdapters();
       if (key == null || _disposed || !_following) return;
       try {
-        if (_state.backend.toLowerCase() != 'x11') {
+        if (_state.usesGnomeShell) {
+          _nativeFollowing = true;
+          await _native.setFollowing(true);
+        } else if (_state.backend.toLowerCase() != 'x11') {
           await _transport.start(
             _state,
             (sample) => _accept(sample, generation),
@@ -142,7 +186,7 @@ class LinuxPomoEnvironmentRepository implements PomoEnvironmentRepository {
           );
         }
         if (_disposed || !_following || generation != _generation) {
-          await _transport.stop();
+          await _stopAdapters();
           return;
         }
         _activeKey = key;
@@ -168,7 +212,7 @@ class LinuxPomoEnvironmentRepository implements PomoEnvironmentRepository {
     _sampling = true;
     try {
       PomoMonitorSample? sample;
-      if (_state.backend.toLowerCase() == 'x11') {
+      if (_state.usesGnomeShell || _state.backend.toLowerCase() == 'x11') {
         final raw = await _native.cursor();
         if (raw is Map) {
           final x = pomoFiniteNumber(raw['x']), y = pomoFiniteNumber(raw['y']);
@@ -212,7 +256,7 @@ class LinuxPomoEnvironmentRepository implements PomoEnvironmentRepository {
     );
     // A failed adapter owns temporary resources until this cleanup finishes.
     _lifecycle = _lifecycle
-        .then((_) => _transport.stop())
+        .then((_) => _stopAdapters())
         .catchError((Object _) {});
   }
 
@@ -234,7 +278,7 @@ class LinuxPomoEnvironmentRepository implements PomoEnvironmentRepository {
       _lifecycle
           .then((_) async {
             try {
-              await _transport.stop();
+              await _stopAdapters();
             } finally {
               _transport.dispose();
             }
