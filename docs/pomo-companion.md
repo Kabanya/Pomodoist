@@ -361,6 +361,12 @@ a support mail draft, and a copy action containing the support address,
 desktop/session/backend/distribution and app version. The application never
 sends mail. The Linux distribution bundles `libgtk-layer-shell.so.0` with its
 license/source notices, and build/setup tooling installs its development files.
+AppRun prepends its bundled data directory while preserving the XDG default
+`/usr/local/share:/usr/share` when `XDG_DATA_DIRS` is unset or empty. GTK still
+needs the host MIME database and icon themes; hiding those paths can abort a
+GNOME launch while loading the client-side titlebar icons. Explicit nonempty
+data paths remain unchanged after the bundle prefix. Launcher regression tests
+cover all three cases.
 
 Automated validation covers preferences, capabilities, IPC parsing/lifecycle,
 monitor selection/dwell/suspension, native geometry, creation-option encoding,
@@ -475,11 +481,65 @@ warnings. The application and companion remained running afterward, with the
 native Wayland target retaining focus. This also validates the deferred
 destruction binding scope; it does not complete the remaining Ubuntu matrix.
 
-Ubuntu release acceptance remains pending. Core tests, method-channel tests,
+The user additionally authorized Ubuntu and Xubuntu VM verification on
+2026-10-23. A separate Noble guest uses the official Ubuntu cloud image with
+the official `ubuntu-desktop-minimal` and `xubuntu-desktop` packages, tested in
+separate login sessions. This checks desktop-package integration rather than an
+ISO installation. The runtime is Ubuntu 24.04.5 LTS, GNOME Shell 46.0 on Wayland
+or Xfce 4.18 on composited X11, with accelerated Mesa 25.2.8/virgl and one
+1280×800 display at scale 1. Native development-flavor debug and release bundles
+were built separately on Ubuntu 24.04 with Flutter 3.47.0 and Thermion 0.5.0;
+the runtime guest has the documented native library prerequisites, without a
+compiler or Flutter SDK. Build and runtime evidence is under
+`build/design/pomo/2026-10-23-ubuntu-runtime`.
+
+The native release bundle passed three animated cold starts in each desktop.
+GNOME's actual in-app offline extension installation displayed the new-login
+requirement and became active after signing in again, preserving Ubuntu's own
+extensions. Observations include the upright 3D model, Shell pointer samples and
+transparent click-through above a native Wayland client, passive focus,
+dragging, manual disable/enable, extension recovery and Quick Add. In Xubuntu,
+Pomo uses the existing X11 path without the GNOME extension; direct Quick Add
+typing and Escape were verified from the desktop. An initial empty-Escape
+observation did not reproduce in that deliberate keyboard check.
+
+The first Ubuntu release AppImage exposed the missing XDG fallback described
+above: the identical file failed on GNOME with an unset data path and rendered
+successfully when only the standard data path was supplied. The repaired
+AppImage passed direct GNOME launches with the variable both unset and empty,
+without an external workaround. Its 149 ELF payloads are byte-identical to the
+original release artifact; only the launcher changed. Runtime mappings confirm
+that libc++, libc++abi and Thermion load from the AppImage mount. GNOME logs also
+contain AT-SPI/atk-bridge warnings; accessibility compatibility was not accepted
+by these rendering checks.
+
+The repaired AppImage also passed Xubuntu launch, upright 3D, transparent
+click-through to an X11 client, dragging with unchanged surface size, persisted
+hide/show and three direct-typing/Escape Quick Add cycles. However, manual Enable
+Pomo reproducibly transferred keyboard focus from the main window to the
+companion in two checks, still present at 500 ms and 2.5 seconds after showing.
+This fails passive-show acceptance on Xfwm despite the existing GTK
+`focus-on-map=false` policy; it remains an open X11 integration defect. The
+transparent-corner check itself preserved the underlying client's focus. Do not
+declare Xubuntu acceptance complete until showing/restoring Pomo also preserves
+focus. Logs, the focus-reproduction JSON and final captures are in the same
+Ubuntu runtime evidence directory.
+
+One first GNOME release Quick Add close emitted
+`Failed to cleanup compositor shaders, unable to make OpenGL context current`.
+The application remained running; four subsequent closes under a targeted
+debugger did not reproduce it. A focused probe using the actual SDK shader
+implementation reproduces the same warning when GTK's GLX context is current
+during raw EGL cleanup, but no production stack confirmed that attribution.
+The binding guard covers application-owned realization/destruction callbacks;
+it does not establish that every asynchronous engine finalizer is guarded.
+Keep this intermittent cleanup warning open rather than declaring the entire
+window lifecycle warning-free. No engine hooks or warning suppression were added.
+
+Full Ubuntu release acceptance remains pending. Core tests, method-channel tests,
 native contract tests and packaging fixtures do not establish rendered output,
 focus behavior, smoothness or fractional-DPI correctness on Ubuntu. The separate
-acceptance stage must cover all three target releases, initial installation and
-relogin, extension update/disable/recovery, pointer movement above native Wayland
-windows, two mixed-DPI monitors, transparent click-through, Dock/Alt-Tab, focus,
-Overview, locking, workspaces, renderer reactions, Reduce Motion, hide/show, main
-window/Quick Add behavior, and text clarity in XWayland compatibility mode.
+acceptance stage still needs Ubuntu 26.04 and 26.10, extension updates, two
+mixed-DPI monitors, fractional scaling and text clarity in XWayland compatibility
+mode, Dock/Alt-Tab, Overview, locking, workspaces, renderer reactions and Reduce
+Motion. The single-monitor Ubuntu 24.04 checks above do not establish that matrix.

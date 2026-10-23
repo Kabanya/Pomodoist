@@ -26,6 +26,7 @@ printf '#!/usr/bin/env sh\n' > "$bundle/pomodoist"
 printf 'printf "argument=%%s\\n" "$1"\n' >> "$bundle/pomodoist"
 printf 'printf "appdir=%%s\\n" "$APPDIR"\n' >> "$bundle/pomodoist"
 printf 'printf "ld-library-path=%%s\\n" "$LD_LIBRARY_PATH"\n' >> "$bundle/pomodoist"
+printf 'printf "xdg-data-dirs=%%s\\n" "$XDG_DATA_DIRS"\n' >> "$bundle/pomodoist"
 printf 'printf "gst-plugin-path=%%s\\n" "$GST_PLUGIN_SYSTEM_PATH_1_0"\n' >> "$bundle/pomodoist"
 chmod 755 "$bundle/pomodoist"
 printf 'asset\n' > "$bundle/data/example.txt"
@@ -170,7 +171,7 @@ done
 test -x "$appdir/usr/lib/gstreamer-1.0/gst-plugin-scanner"
 
 runtime_output="$(
-  env -u APPDIR -u LD_LIBRARY_PATH -u GST_PLUGIN_SYSTEM_PATH_1_0 \
+  env -u APPDIR -u LD_LIBRARY_PATH -u GST_PLUGIN_SYSTEM_PATH_1_0 -u XDG_DATA_DIRS \
     "$appdir/AppRun" 'pomodoist://focus'
 )"
 grep -Fqx 'argument=pomodoist://focus' <<< "$runtime_output"
@@ -179,6 +180,23 @@ grep -Fqx \
   "ld-library-path=$appdir/usr/lib/pomodoist/lib:$appdir/usr/lib" \
   <<< "$runtime_output"
 grep -Fqx "gst-plugin-path=$appdir/usr/lib/gstreamer-1.0" <<< "$runtime_output"
+
+# Unset and empty XDG_DATA_DIRS both mean the XDG default search path. Keep
+# host MIME data and icons visible after adding the application's own data.
+grep -Fqx "xdg-data-dirs=$appdir/usr/share:/usr/local/share:/usr/share" \
+  <<< "$runtime_output"
+empty_data_dirs_output="$(
+  env -u APPDIR XDG_DATA_DIRS= "$appdir/AppRun" 'pomodoist://focus'
+)"
+grep -Fqx "xdg-data-dirs=$appdir/usr/share:/usr/local/share:/usr/share" \
+  <<< "$empty_data_dirs_output"
+
+custom_data_dirs_output="$(
+  env -u APPDIR XDG_DATA_DIRS=/custom/share:/another/share \
+    "$appdir/AppRun" 'pomodoist://focus'
+)"
+grep -Fqx "xdg-data-dirs=$appdir/usr/share:/custom/share:/another/share" \
+  <<< "$custom_data_dirs_output"
 
 invalid_appdir="$test_root/invalid AppDir"
 if POMODOIST_LINUX_BUNDLE="$test_root/missing bundle" \
