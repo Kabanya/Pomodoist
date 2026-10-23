@@ -159,7 +159,7 @@ void main() {
         desktop: 'KDE / Плазма',
         sessionType: 'wayland',
         distribution: 'NixOS #1',
-        reason: '/home/private-user/secret',
+        reason: '/tmp/private-diagnostics/secret',
         userDisplayId: 'private-monitor',
       );
       final uri = buildPomoSupportUri(environment, '1.2.3+4');
