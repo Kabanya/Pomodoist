@@ -543,3 +543,55 @@ acceptance stage still needs Ubuntu 26.04 and 26.10, extension updates, two
 mixed-DPI monitors, fractional scaling and text clarity in XWayland compatibility
 mode, Dock/Alt-Tab, Overview, locking, workspaces, renderer reactions and Reduce
 Motion. The single-monitor Ubuntu 24.04 checks above do not establish that matrix.
+
+### Desktop environment matrix verification (2026-10-23)
+
+The user requested broader native checks across common Linux desktops. The
+matrix uses the same release-mode development-flavor AppImage throughout:
+SHA-256 `e238a560b1680d8f06ea307edb89e85c52b3c5f0065f78b95d794fc1c80e02c3`,
+native source `12ad29b` and launcher correction `34661df`. Ubuntu sessions run
+the AppImage directly; Arch Wayland sessions execute its extracted AppRun with
+the identical payload. No product code or renderer was changed for these checks.
+
+Ubuntu 24.04 session packages cover X11 desktop families; these minimal sessions
+are not claims about the defaults of every corresponding distribution or ISO.
+Arch VM Lab profiles cover native Wayland compositors. Actual session variables,
+compositor capabilities, application protocol/window roles and native client
+input are recorded rather than inferred from installed package names. Virtual
+monitors and virgl rendering do not establish physical GPU, fractional/mixed-DPI
+or physical hotplug acceptance. Detailed per-check results, screenshots, logs and
+the validation contract are under `build/design/pomo/2026-10-23-desktop-matrix`.
+Unsupported capabilities, application failures and invalid harness attempts are
+reported separately; an untested check is never promoted to a pass.
+
+The observed results are below. A working renderer is only one acceptance gate;
+none of these rows establishes full Linux release acceptance.
+
+| Desktop and actual session | Observed companion behavior | Remaining observed problems |
+| --- | --- | --- |
+| GNOME 46 / Ubuntu 24.04, Wayland with XWayland app; GNOME 51.1 / Arch repeat | Real 3D, transparency, native-Wayland click-through, dragging and three Quick Add typing/Escape cycles pass. Ubuntu offline extension installation and relogin were exercised earlier. | Earlier intermittent GTK shader cleanup and accessibility warnings remain open. Arch repeat also reports missing canberra GTK modules. |
+| Plasma 6.8.1 / KWin Wayland | Native layer-shell 3D, transparency, drag, settings, Quick Add, cursor-driven monitor transfer and pinned-output fallback pass. | Default placement overlaps the reserved bottom panel. |
+| Hyprland 0.56.2 / Wayland | Native layer-shell 3D, transparency, drag, settings, Quick Add, cursor following and pinned-output fallback pass. | Reserved top bar introduces a placement offset; surface can extend below the output. |
+| Sway 1.12 / Wayland | Native layer-shell 3D, transparency, drag, Quick Add and pinned-output fallback pass. | Active-workspace following fails, settings closes immediately, and reserved bars cause bottom clipping. |
+| Xfce 4.18 / Xfwm, X11 | Animated 3D, transparency, drag, position restoration and direct Quick Add typing/Escape pass. | Both Enable and actual Show steal keyboard focus. A shader cleanup warning also occurs after interaction. |
+| Cinnamon 6.0.4 / Muffin, X11 | Animated 3D, transparency, drag, settings, position restoration, passive Show and task-switcher exclusion pass. | Global Quick Add fails to receive focus in three cycles, preventing direct typing/Escape. |
+| MATE 1.26 / Marco, X11 | Animated 3D, transparency, drag, position restoration, passive Show and task-switcher exclusion pass. | Global Quick Add focus fails in three cycles; post-interaction shader cleanup warning. |
+| Budgie 10.9.1 / budgie-wm, X11 | Animated 3D, transparency, drag, settings and task-switcher exclusion pass. | Global Quick Add focus fails in three cycles. A later launch is delayed with portal criticals before eventually mapping; actual Show remains untested. |
+| LXQt 1.4 / Openbox, X11 | Without a compositor, Pomo is unsupported. One explicitly labeled picom variant renders animated transparent 3D and supports dragging. | First-session main window failed to map within 45 seconds, with portal/drawable errors in its log; a later uncomposited control maps normally. The cause is not established. |
+| LXDE (lxsession 0.5.5) / Openbox, X11 | Main application starts; without a compositor, settings correctly explains that Pomo is unavailable. | One of three Quick Add cycles fails to receive focus. Companion rendering is unsupported in this session, not a renderer regression. |
+
+The X11 baselines use compositing where actually present; LXQt and LXDE's
+minimal sessions had none. Installing picom also installed a desktop autostart
+entry: it was stopped for an immediate uncomposited LXQt control before the
+single labeled composited probe. That probe does not establish default Lubuntu
+behavior or three composited cold starts.
+
+Plasma, Hyprland and Sway exercised two virtual outputs, with headless outputs
+used where necessary. Pin selection used controlled local preferences before
+restart, rather than the UI dropdown. Delayed follow observations include
+process/persistence overhead and do not prove an exact 500 ms deadline. Valid
+cross-output drag coverage is limited to the disabled-transition Hyprland case;
+invalid grabs are retained as harness evidence, not passes or product failures.
+Physical mixed/fractional DPI, full focus/lock/workspace behavior, reactions and
+Reduce Motion remain separate acceptance work. No product fix was attempted
+during this verification run.
