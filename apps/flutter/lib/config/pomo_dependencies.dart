@@ -3,7 +3,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pomodoist/data/repositories/pomo/pomo_environment_repository_impl.dart';
 import 'package:pomodoist/ui/pomo/view_models/pomo_environment_view_model.dart';
 import 'package:pomodoist/domain/models/pomo/pomo_models.dart';
-import 'package:pomodoist/data/repositories/pomo/pomo_activity_repository_impl.dart';
 import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,13 +10,13 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:pomodoist/ui/pomo/view_models/pomo_controller.dart';
 import 'package:multiview_desktop/multiview_desktop.dart';
 import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/config/local_completion_dependencies.dart';
 import 'package:pomodoist/data/repositories/pomo/pomo_preferences_repository.dart';
 import 'package:pomodoist/data/repositories/pomo/pomo_preferences_repository_impl.dart';
 import 'package:pomodoist/domain/models/pomo/pomo_focus.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
-import 'package:pomodoist/routing/router.dart';
 import 'package:pomodoist/ui/pomo/view_models/pomo_window_host.dart';
 import 'package:pomodoist/ui/pomo/widgets/pomo_window.dart';
 import 'package:pomodoist/ui/quick_add/widgets/global_quick_add_window.dart';
@@ -77,11 +76,6 @@ PomoController _buildPomoController(Ref ref) {
   return controller;
 }
 
-final _pomoIntervalsProvider = StreamProvider<List<FocusIntervalItem>>((ref) {
-  return LocalPomoActivityRepository(
-    ref.watch(appDatabaseProvider),
-  ).watchSinceBreak();
-});
 PomoFocus _buildPomoFocus(Ref ref) {
   final run = ref.watch(activeFocusRunProvider).value;
   final interval = ref.watch(activeFocusIntervalProvider).value;
@@ -91,17 +85,11 @@ PomoFocus _buildPomoFocus(Ref ref) {
       ?.where((p) => p.id == run?.presetId)
       .firstOrNull;
   final remaining = ref.watch(activeFocusRemainingProvider);
-  final history =
-      ref.watch(_pomoIntervalsProvider).value ?? const <FocusIntervalItem>[];
   return PomoFocus(
     run: run,
     interval: interval,
     preset: preset,
     remaining: remaining,
-    workSinceBreak: pomoWorkSinceBreak(
-      history,
-      ref.watch(focusTickerProvider).value ?? DateTime.now(),
-    ),
   );
 }
 
@@ -183,13 +171,31 @@ class _PomoRuntimeState extends ConsumerState<PomoRuntime> {
 }
 
 Future<void> pomoToggleFocus(Ref ref) async {
-  final focus = ref.read(pomoFocusProvider);
+  final repo = ref.read(focusRepositoryProvider);
+  final preferences = ref.read(focusPreferencesRepositoryProvider);
+  await preferences.ready;
+  final (run, interval, presets) = await (
+    repo.watchActiveRun().first,
+    repo.watchActiveInterval().first,
+    repo.watchPresets().first,
+  ).wait;
+  if (!ref.mounted) return;
+  final focus = PomoFocus(
+    run: run,
+    interval: interval,
+    preset: presets.where((p) => p.id == run?.presetId).firstOrNull,
+  );
   if (!focus.hasRun) {
-    await pomoOpenFocus(ref);
+    final preset = selectedFocusPresetOrDefault(
+      presets,
+      preferences.state.lastPresetId,
+    );
+    (await repo.startRun(
+      StartFocusRunInput(presetId: preset?.id),
+    )).getOrThrow();
     return;
   }
   if (!focus.canToggle) return;
-  final repo = ref.read(focusRepositoryProvider);
   (await (focus.ready
           ? repo.startReadyInterval()
           : focus.paused
@@ -202,11 +208,6 @@ Future<void> pomoCompleteInterval(Ref ref) async {
   if (!ref.read(pomoFocusProvider).canComplete) return;
   (await ref.read(focusRepositoryProvider).completeActiveInterval())
       .getOrThrow();
-}
-
-Future<void> pomoOpenFocus(Ref ref) async {
-  ref.read(routerProvider).go('/focus');
-  await pomoOpenApp();
 }
 
 Future<void> pomoOpenApp() async {

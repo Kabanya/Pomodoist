@@ -127,9 +127,50 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/branding/app_icons/generated/production/
-    - assets/branding/app_icons/generated/development/
-    - assets/branding/app_icons/generated/staging/
+    # Settings previews are shared with the web app, which selects its flavor at runtime.
+    # macOS also matches the title-cased Xcode scheme name.
+    - assets/branding/app_icons/generated/production/icon-light-pomo.png
+    - path: assets/branding/app_icons/generated/production/icon-light-pomo-macos.png
+      flavors: [production, Production]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/production/icon-light-pomo.ico
+      flavors: [production]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/production/classic.png
+    - path: assets/branding/app_icons/generated/production/classic-macos.png
+      flavors: [production, Production]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/production/classic.ico
+      flavors: [production]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/development/icon-light-pomo.png
+    - path: assets/branding/app_icons/generated/development/icon-light-pomo-macos.png
+      flavors: [development, Development]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/development/icon-light-pomo.ico
+      flavors: [development]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/development/classic.png
+    - path: assets/branding/app_icons/generated/development/classic-macos.png
+      flavors: [development, Development]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/development/classic.ico
+      flavors: [development]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/staging/icon-light-pomo.png
+    - path: assets/branding/app_icons/generated/staging/icon-light-pomo-macos.png
+      flavors: [staging, Staging]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/staging/icon-light-pomo.ico
+      flavors: [staging]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/staging/classic.png
+    - path: assets/branding/app_icons/generated/staging/classic-macos.png
+      flavors: [staging, Staging]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/staging/classic.ico
+      flavors: [staging]
+      platforms: [windows]
     - assets/pomo/manifest.json
     - assets/pomo/greeting-still.webp
     - assets/pomo/happy-still.webp
@@ -141,8 +182,10 @@ flutter:
     - assets/pomo/tired-still.webp
     - assets/pomo/model/manifest.json
     - assets/pomo/model/pomo.glb.gz
-    - web/sqlite3.wasm
-    - web/drift_worker.js
+    - path: web/sqlite3.wasm
+      platforms: [web]
+    - path: web/drift_worker.js
+      platforms: [web]
     - assets/sounds/soft_kalimba/
     - assets/sounds/neon_pulse/
     - assets/sounds/orbit_bloom/

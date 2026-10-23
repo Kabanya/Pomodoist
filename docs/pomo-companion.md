@@ -26,7 +26,8 @@ layout variants are outside this iteration. Size is configurable locally.
    background. Clearing only `NSWindow` leaves Flutter's default black backing
    surface visible around the transparent mascot and controls.
 4. Presentation: Pomo with a remaining-time ring and capsule. Pet activation toggles
-   controls and requests Surprised; capsule activation only toggles controls.
+   controls and requests Surprised; capsule activation starts Focus when idle
+   and toggles controls during a session.
    Drag gestures move the native window. Escape collapses controls.
    Right-clicking the pet opens the shared context menu with Hide Pomo, using the
    same persisted manual dismissal as the hide satellite. Escape and window blur
@@ -34,8 +35,10 @@ layout variants are outside this iteration. Size is configurable locally.
    the transparent exterior still passes input through to the desktop.
    The left satellite adds a task using the existing Quick Add window,
    right starts/pauses/resumes, top
-   completes the current interval, upper-right hides; upper-left opens the compact size settings panel. Idle Start Focus opens the
-   main Focus route. Repository and presentation checks respect ready, strictMode
+   completes the current interval, upper-right hides; upper-left opens the compact
+   size settings panel. Idle Start focus and play start a session using the saved
+   selected preset or the default, without opening the main window. Commands read
+   current repository state before creating a session. Repository and presentation checks respect ready, strictMode
    and allowPause restrictions.
 5. Settings → Tasks & Focus and the Focus overflow menu expose restoration/hiding.
    Preferences include enable, focus-only, quiet, reduced motion, scale and position reset.
@@ -53,6 +56,9 @@ otherwise right, clamped to the display work area. It does not replace the main
 app anchor. Escape, close and blur dismiss only this panel; hiding/disabling Pomo
 closes it too. Main Settings → Tasks & Focus → Pomo always exposes the same size
 control, including while Pomo is disabled; changing size never enables Pomo.
+While open, the panel retains its screen position during size changes, clamped
+only when needed to remain in the display work area. Reopening places it beside
+Pomo again.
 
 Size ranges from 25% to 250%, default 100%, in 5% control steps. Slider changes
 are shared live drafts, committed on release or panel close; −/+, reset save
@@ -83,8 +89,8 @@ cannot queue celebrations. Tap reactions have a two-second cooldown. Manual hide
 persists dismissal immediately, presents Sad for 900 ms, and caps the wait at
 1.2 seconds. Disable is immediate. Quiet/reduced-motion closing has no decorative
 wait. Hidden events are dropped, not replayed on restoration. Background state
-uses calm, focused, resting and tired poses; tired starts after 50 minutes of
-actual work across runs since the last completed break, excluding pauses.
+uses calm, focused and resting poses. Active work keeps the focused pose
+regardless of accumulated work time or previous breaks.
 
 Calm, Focus, Rest and Tired each repeat their own clip. Focus uses the approved
 thinking pose with a hand at the chin (6 seconds); Rest and Tired each loop for
@@ -97,12 +103,27 @@ Hidden windows release the texture, scene and animation resources. Changes are
 applied sequentially, coalescing intermediate requests; obsolete asynchronous
 work cannot restore a previous emotion after disposal.
 
-Animated emotion changes blend skeletal poses and facial morphs over 250 ms.
-The approved Thinking scene has distinct hand geometry and eye materials, so
-its mesh variant also fades over those 250 ms while sharing the same skeleton.
+Animated changes into or out of Focus use a 700 ms eased skeletal transition;
+other emotion changes use 250 ms. The native bone tracks start from a snapshot
+of the visible skeleton, including when a transition interrupts another one.
+Rotations use shortest-path spherical interpolation; facial and arm-volume morphs
+follow the same eased timing. The approved Thinking scene has distinct hand
+geometry and eye materials, so its mesh variant switches during a short blink
+at the movement's midpoint. Only one opaque variant is rendered at a time,
+preventing overlapping bodies, double contours and depth artifacts. Interrupted
+transitions retain the currently visible variant until their own midpoint.
 These are live meshes, not an image crossfade. Reduced motion switches immediately.
 Background clips loop; event clips remain finite. Resizing only changes the
 render surface; it does not reload the model or restart the current clip.
+
+Transition verification (2026-10-25): the separately authorized isolated macOS
+preview was inspected through intermediate and final frames for Focus transitions
+with all seven other emotions, rapid interruption, and animation disabled.
+The opaque variant handoff removed the double contours and depth speckling seen
+with the previous whole-model dissolve. No runtime errors were reported. Static
+analysis passed; 124 Pomo tests passed and four Linux transport tests failed on
+macOS because D-Bus could not determine the Linux UID. This check does not cover
+the full companion window, continuous video timing, or Windows/Linux rendering.
 
 ## Validation contract
 
@@ -110,7 +131,7 @@ Unit tests and automated static checks are the default validation scope. App
 launches and manual inspection require an explicit request; the size-settings
 iteration includes a separately authorized macOS runtime check. Unit coverage includes
 visibility/persistence, event priority and deduplication, strict/ready policies,
-fatigue calculation, geometry, commit/rollback/Kanban completion, and work-interval
+focus emotion selection, geometry, commit/rollback/Kanban completion, and work-interval
 notifications. Existing repository regression tests cover shared mutation paths.
 
 Run from `apps/flutter` with the pinned SDK:

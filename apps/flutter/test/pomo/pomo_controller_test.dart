@@ -372,13 +372,13 @@ void main() {
         PomoFocus(
           run: run(),
           interval: interval('work'),
-          workSinceBreak: const Duration(minutes: 50),
+          remaining: const Duration(minutes: 1),
         ),
       );
-      expect(c.emotion, PomoEmotion.tired);
+      expect(c.emotion, PomoEmotion.focus);
       c.updatePreferences((p) => p.copyWith(quiet: true));
       time.flushMicrotasks();
-      expect(c.emotion, PomoEmotion.tired);
+      expect(c.emotion, PomoEmotion.focus);
       expect(c.animated, false);
       c.setSystemMotion(true);
       c.updatePreferences((p) => p.copyWith(quiet: false));

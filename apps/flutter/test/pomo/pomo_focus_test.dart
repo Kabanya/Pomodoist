@@ -8,25 +8,18 @@ import 'package:pomodoist/ui/pomo/widgets/pomo_geometry.dart';
 FocusIntervalItem interval({
   String status = 'running',
   String type = 'work',
-  int sequence = 1,
   int seconds = 3600,
-  DateTime? started,
-  DateTime? paused,
-  DateTime? completed,
-  int pauseSeconds = 0,
 }) => FocusIntervalItem(
-  id: '$sequence',
+  id: '1',
   runId: 'r',
   type: type,
   status: status,
   plannedSeconds: seconds,
-  startedAt: started ?? DateTime(2026),
-  pausedTotalSeconds: pauseSeconds,
-  sequenceNumber: sequence,
+  startedAt: DateTime(2026),
+  pausedTotalSeconds: 0,
+  sequenceNumber: 1,
   createdAt: DateTime(2026),
   updatedAt: DateTime(2026),
-  pausedAt: paused,
-  completedAt: completed,
 );
 FocusPresetItem preset({bool strict = false, bool pause = true}) =>
     FocusPresetItem(
@@ -82,31 +75,24 @@ void main() {
     },
   );
   test(
-    'fatigue counts actual work, excludes paused time, resets on completed break',
+    'work stays focused throughout long intervals; paused and ready stay calm',
     () {
-      final now = DateTime(2026).add(const Duration(minutes: 60));
-      final first = interval(
-        paused: DateTime(2026).add(const Duration(minutes: 45)),
-        pauseSeconds: 300,
-      );
-      expect(pomoWorkSinceBreak([first], now), const Duration(minutes: 40));
+      for (final minutes in [60, 10, 0]) {
+        expect(
+          PomoFocus(
+            interval: interval(),
+            remaining: Duration(minutes: minutes),
+          ).background,
+          PomoEmotion.focus,
+        );
+      }
       expect(
-        pomoWorkSinceBreak([interval(status: 'ready')], now),
-        Duration.zero,
+        PomoFocus(interval: interval(status: 'paused')).background,
+        PomoEmotion.calm,
       );
-      final doneBreak = interval(
-        type: 'short_break',
-        status: 'completed',
-        sequence: 2,
-        completed: now,
-      );
-      expect(pomoWorkSinceBreak([first, doneBreak], now), Duration.zero);
       expect(
-        PomoFocus(
-          interval: interval(),
-          workSinceBreak: const Duration(minutes: 50),
-        ).background,
-        PomoEmotion.tired,
+        PomoFocus(interval: interval(status: 'ready')).background,
+        PomoEmotion.calm,
       );
     },
   );

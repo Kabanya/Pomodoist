@@ -47,6 +47,7 @@ class PomoWindowHost implements PomoHost {
   static const panelSize = Size(320, 256);
   int? id, settingsId;
   bool _expanded = false, _panelVisible = false;
+  Offset? _panelPosition;
   bool _shown = false;
   bool _capsuleVisible = true;
   double _wantedScale = 1;
@@ -655,6 +656,7 @@ class PomoWindowHost implements PomoHost {
       final area =
           (display.visiblePosition ?? Offset.zero) &
           (display.visibleSize ?? display.size);
+      _panelPosition = null;
       await _positionPanel(area, bounds);
       _panelVisible = true;
       await panel.show();
@@ -675,8 +677,15 @@ class PomoWindowHost implements PomoHost {
   }
 
   Future<void> _positionPanel(Rect area, Rect pomo) async {
-    final position = PomoLayout.panelPosition(area, pomo, panelSize);
+    final position = PomoLayout.panelPosition(
+      area,
+      pomo,
+      panelSize,
+      saved: _panelPosition,
+    );
+    if (!isLinux && position == _panelPosition) return;
     if (isLinux) {
+      // A child popup needs a fresh parent-relative anchor even at a fixed position.
       await _channel.invokeMethod<void>('move', {
         'viewId': _panel!.nativeViewId,
         'x': position.dx,
@@ -687,6 +696,7 @@ class PomoWindowHost implements PomoHost {
     } else {
       await _panel!.setPosition(position);
     }
+    _panelPosition = position;
   }
 
   @override

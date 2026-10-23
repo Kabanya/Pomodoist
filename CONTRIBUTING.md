@@ -23,3 +23,14 @@ Pro is not automatically unlocked. To intentionally query the staging app's
 App Store catalog, pass `MACOS_STAGING_STOREKIT_DEFINES=` to Make. Production
 continues to use the remote App Store catalog. Build configuration changes
 require rebuilding the app; pushing source does not update an existing binary.
+
+macOS release builds strip local native symbols after generating dSYM files.
+The Make targets also save Dart symbols under `build/symbols/macos/<flavor>/dart/`;
+native dSYM bundles remain beside the built `.app` in
+`build/flutter/macos/Build/Products/Release-<flavor>/`. Archive both sets with the
+matching release before rebuilding the same flavor. TestFlight archives also
+retain their native symbols under `build/TestFlight/*.xcarchive/dSYMs/`.
+The DMG script saves Dart and native symbols under its output directory's
+`symbols/<flavor>/` folder. CI retains these separately from public downloads in
+the `pomodoist-macos-symbols` artifact for 90 days; keep a durable copy for every
+supported release. Dart symbols can be used with `flutter symbolize`.

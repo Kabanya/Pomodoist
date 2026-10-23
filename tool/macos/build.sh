@@ -167,6 +167,7 @@ export FLUTTER_XCODE_ONLY_ACTIVE_ARCH=NO
 
 "$flutter_bin" build macos \
   --release \
+  --split-debug-info="$output_dir/symbols/$flavor/dart" \
   --flavor "$flavor" \
   --target "$entry_point" \
   --dart-define-from-file="$env_path" \
@@ -177,6 +178,9 @@ if [[ ! -d "$app_path" ]]; then
   printf 'Expected app at %s but it is missing.\n' "$app_path" >&2
   exit 1
 fi
+
+mkdir -p "$output_dir/symbols/$flavor/native"
+cp -R "${app_path%/*}/"*.dSYM "$output_dir/symbols/$flavor/native/"
 
 printf '==> Verifying the app is not sandboxed\n'
 # A positive check for the entitlement that makes a downloaded copy runnable,

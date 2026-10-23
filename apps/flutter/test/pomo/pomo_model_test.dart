@@ -7,8 +7,74 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/ui/pomo/models/pomo_morph_clips.dart';
 import 'package:pomodoist/ui/pomo/models/pomo_model_asset.dart';
 import 'package:pomodoist/domain/models/pomo/pomo_models.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 void main() {
+  test('variant handoff blinks without opening an already closed eye', () {
+    final clips = PomoMorphClips(
+      ByteData.sublistView(
+        decodePomoModel(
+          File('assets/pomo/model/pomo.glb.gz').readAsBytesSync(),
+        ),
+      ),
+    );
+    expect(PomoMorphClips.transitionBlink(0), 0);
+    expect(PomoMorphClips.transitionBlink(.5), 1);
+    expect(PomoMorphClips.transitionBlink(1), 0);
+    final pose = clips.sample('focus', .2, loop: true);
+    final original = [...pose['thinking-body']!];
+    clips.applyBlink(pose, 1);
+    expect(pose['thinking-body']!.take(2), [1.0, 1.0]);
+    expect(pose['thinking-body']!.skip(2), original.skip(2));
+    clips.applyBlink(pose, .1);
+    expect(pose['thinking-body']!.take(2), [1.0, 1.0]);
+  });
+  test(
+    'bone transitions preserve poses, rotations and interrupted movement',
+    () {
+      final clips = PomoMorphClips(
+        ByteData.sublistView(
+          decodePomoModel(
+            File('assets/pomo/model/pomo.glb.gz').readAsBytesSync(),
+          ),
+        ),
+      );
+      final calm = clips.sampleBones('calm', .8, loop: true);
+      final focus = clips.sampleBones('focus', .7, loop: true);
+      expect(calm.length, 19);
+      expect(focus.keys, unorderedEquals(calm.keys));
+      for (final name in calm.keys) {
+        final from = calm[name]!;
+        final to = focus[name]!;
+        expect(
+          PomoMorphClips.blendBone(from, to, 0).storage,
+          orderedEquals(from.storage),
+        );
+        expect(
+          PomoMorphClips.blendBone(from, to, 1).storage,
+          orderedEquals(to.storage),
+        );
+        final mid = PomoMorphClips.blendBone(from, to, .5);
+        expect(mid.storage.every((v) => v.isFinite), true);
+        expect(
+          PomoMorphClips.blendBone(mid, from, 0).storage,
+          orderedEquals(mid.storage),
+        );
+      }
+      final halfTurn = Matrix4.rotationY(3.141592653589793);
+      final mid = PomoMorphClips.blendBone(Matrix4.identity(), halfTurn, .5);
+      final direction = mid.transform3(Vector3(0, 0, 1));
+      expect(direction.length, closeTo(1, 1e-6));
+      expect(direction.x.abs(), closeTo(1, 1e-6));
+      expect(direction.z, closeTo(0, 1e-6));
+      for (final emotion in PomoEmotion.values) {
+        expect(
+          clips.sampleBones(emotion.name, 0, loop: false).keys,
+          unorderedEquals(calm.keys),
+        );
+      }
+    },
+  );
   test(
     'morph blending preserves endpoints, interrupted blends and loop boundaries',
     () {

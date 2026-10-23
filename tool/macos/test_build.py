@@ -35,6 +35,9 @@ class MacosBuildTests(unittest.TestCase):
             'CFBundleIdentifier': 'com.finchforge.pomodoist',
             'CFBundleExecutable': 'Pomodoist',
         }))
+        native_symbols = self.app.parent / 'Pomodoist.app.dSYM/Contents/Resources/DWARF/Pomodoist'
+        native_symbols.parent.mkdir(parents=True)
+        native_symbols.write_bytes(b'native crash symbols')
         self.bin = self.root / 'bin'
         self.bin.mkdir()
         self.env = os.environ | {
@@ -116,6 +119,10 @@ fi
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         output = self.output
         self.assertIn('stapled ticket', (output / 'Pomodoist-macOS.dmg').read_text())
+        self.assertEqual(
+            (output / 'symbols/production/native/Pomodoist.app.dSYM/Contents/Resources/DWARF/Pomodoist').read_bytes(),
+            b'native crash symbols',
+        )
         result = subprocess.run(['shasum', '-a', '256', '-c', 'Pomodoist-macOS.dmg.sha256'],
                                 cwd=output, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)

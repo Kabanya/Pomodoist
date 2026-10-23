@@ -167,4 +167,25 @@ void main() {
     expect(pos.dx, inInclusiveRange(0, 960));
     expect(pos.dy, 560);
   });
+
+  test('open settings stay fixed while Pomo grows and shrinks', () {
+    const area = Rect.fromLTWH(0, 0, 1920, 1080);
+    const panel = Size(320, 256);
+    const saved = Offset(468, 447);
+    for (final pomo in [
+      Rect.fromLTWH(500, 100, 1000, 900),
+      Rect.fromLTWH(900, 500, 100, 150),
+    ]) {
+      expect(PomoLayout.panelPosition(area, pomo, panel, saved: saved), saved);
+    }
+    expect(
+      PomoLayout.panelPosition(
+        const Rect.fromLTWH(-1280, 25, 1280, 775),
+        const Rect.fromLTWH(-400, 200, 300, 350),
+        panel,
+        saved: saved,
+      ),
+      const Offset(-320, 447),
+    );
+  });
 }

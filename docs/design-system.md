@@ -1664,8 +1664,13 @@ Greeting, Happy, Sad and Surprised are explicit events, never rebuild effects.
 Sad precedes manual hiding for 900 ms (1.2-second maximum); Reduce Motion and Quiet
 mode remove that delay. Motion preferences must stop the current animation as
 soon as they change. Render the Blender-derived skinned 3D model in a transparent
-native surface. Blend skeletal poses and facial morphs over 250 ms; the distinct
-Thinking hand/material variant shares that transition. Quiet and Reduce Motion
+native surface. Transitions into and out of Focus blend from the currently visible
+skeleton over 700 ms with easing at both ends; other emotion changes use 250 ms.
+Use spherical interpolation for bone rotations and synchronize facial/arm-volume
+morphs with that movement. Switch the distinct Thinking hand/material variant
+during a brief blink at the movement's midpoint; render only one opaque variant
+at a time to avoid double contours and depth artifacts. Interrupted
+transitions continue from the visible pose. Quiet and Reduce Motion
 set the matching 3D pose immediately and stop continuous rendering. Loading or
 rendering failure may use the corresponding raster still. Bundle the live model
 as a gzip-compressed GLB and decode it off the UI isolate; do not replace geometry
@@ -1674,6 +1679,13 @@ a 10,000,000-byte budget, excluding native renderer libraries. Hidden windows di
 the scene and GPU surface. Resizing preserves the window, model and animation
 state. Use the shared
 Focus state and commands; the companion must never own a second timer.
+Active work uses the focused pose regardless of accumulated work time; idle,
+ready and paused states use Calm, and breaks use Rest. Event reactions may
+temporarily override these poses.
+When idle, both the Start focus capsule and the play satellite start a Focus
+session with the saved selected preset, falling back to the default preset.
+Wait for Focus state to load before deciding to create a session. Keep the main
+window in place; active-session controls pause, resume or start the ready interval.
 
 Pomo size is a device-local preference (25–250%, default 100%, 5% control steps).
 Use the same size control and controller in the main Pomo settings (including
@@ -1682,6 +1694,9 @@ The upper-right Hide control mirrors the gear. The panel has its own fixed size,
 is excluded from main-window anchoring, and is reused without duplicates. Prefer
 placement left of Pomo, then right; clamp to the display work area. Escape,
 close and blur dismiss only the panel; hiding/disabling Pomo dismisses both.
+Keep the open panel at its screen position while resizing Pomo so the size
+control stays under the pointer. Only clamp it if the display work area changes;
+choose a new adjacent position on the next opening.
 
 The main settings and compact gear panel share a device-local Show timer switch,
 enabled by default. Turning it off hides the entire capsule, including Start

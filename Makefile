@@ -694,6 +694,7 @@ macos-run:
 
 macos-release: testflight-preflight flutter-build-link
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --release \
+		--split-debug-info="$(REPO_ROOT)/build/symbols/macos/$(MACOS_RELEASE_FLAVOR)/dart" \
 		--flavor "$(MACOS_RELEASE_FLAVOR)" \
 		--target "$(MACOS_RELEASE_TARGET)" \
 		--dart-define-from-file="$(call repo_path,$(MACOS_RELEASE_CONFIG))" \
@@ -708,6 +709,7 @@ macos-release: testflight-preflight flutter-build-link
 # that macos-release runs because it builds locally and never uploads.
 define macos_flavor_target
 	set -o pipefail; cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --$(1) \
+		$(if $(filter release,$(1)),--split-debug-info="$(REPO_ROOT)/build/symbols/macos/$(MACOS_$(2)_FLAVOR)/dart") \
 		--flavor "$(MACOS_$(2)_FLAVOR)" \
 		--target "$(MACOS_$(2)_TARGET)" \
 		--dart-define-from-file="$(call repo_path,$(MACOS_$(2)_CONFIG))" \
@@ -917,6 +919,7 @@ testflight-macos: testflight-preflight testflight-auth flutter-build-link
 		key_path="$$key_dir/AuthKey_$(ASC_KEY_ID).p8"; \
 		"$(DART)" tool/env_setup.dart write-asc-key --env "$(PRIVATE_CONFIG)" --output "$$key_path"; \
 		(cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --release \
+			--split-debug-info="$(REPO_ROOT)/build/symbols/macos/$(TESTFLIGHT_FLAVOR)/dart" \
 			--flavor "$(TESTFLIGHT_FLAVOR)" \
 			--target "$(TESTFLIGHT_TARGET)" \
 			--dart-define-from-file="$(call repo_path,$(TESTFLIGHT_CONFIG))" \

@@ -111,6 +111,14 @@ jobs:
       - name: Remove production configuration
         if: always()
         run: rm -f "$RUNNER_TEMP/macos-production.env"
+      - name: Preserve macOS crash symbols
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: pomodoist-macos-symbols
+          path: release/symbols/
+          if-no-files-found: warn
+          retention-days: 90
       - name: Verify architectures, checksum and release boundary
         run: |
           set -euo pipefail

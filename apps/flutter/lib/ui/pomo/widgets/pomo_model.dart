@@ -9,7 +9,7 @@ import 'package:pomodoist/ui/pomo/models/pomo_model_asset.dart';
 import 'package:pomodoist/ui/pomo/models/pomo_morph_clips.dart';
 import 'package:pomodoist/ui/pomo/widgets/pomo_texture_surface.dart';
 import 'package:thermion_flutter/thermion_flutter.dart' as t;
-import 'package:vector_math/vector_math_64.dart' show Vector3;
+import 'package:vector_math/vector_math_64.dart' show Matrix4, Vector3;
 
 /// A persistent native 3D scene; changing size or emotion keeps its GPU resources.
 class PomoModel extends StatefulWidget {
@@ -36,7 +36,9 @@ class _PomoModelState extends State<PomoModel>
   Future<void>? _releasing;
   t.ThermionViewer? _viewer;
   t.ThermionAsset? _asset;
-  final _materials = <(t.MaterialInstance, bool)>[];
+  late t.ThermionAsset _instance;
+  final _bones = <String, (int, t.ThermionEntity)>{};
+  bool? _thinkingVisible;
   late Map<String, dynamic> _clips;
   List<String> _names = [];
   late PomoMorphClips _morphs;
@@ -44,6 +46,8 @@ class _PomoModelState extends State<PomoModel>
   final _morphEntities = <t.ThermionEntity>{};
   final _clipClock = Stopwatch();
   Map<String, List<double>>? _morphFrom;
+  double _transitionSeconds = 0;
+  bool _transitionBlinks = false;
   PomoEmotion? _appliedEmotion;
   bool? _appliedAnimated;
   bool _dirty = false;
@@ -109,6 +113,12 @@ class _PomoModelState extends State<PomoModel>
       if (!mounted) return;
       _morphs = PomoMorphClips(ByteData.sublistView(bytes));
       final asset = _asset = await viewer.loadGltfFromBuffer(bytes);
+      _instance = asset.isInstance ? asset : await asset.getInstance(0);
+      final bones = await _instance.getBones();
+      final boneNames = await _instance.getBoneNames();
+      for (var i = 0; i < bones.length; i++) {
+        _bones[boneNames[i]] = (i, bones[i]);
+      }
       _names = await asset.getGltfAnimationNames();
       if (!PomoEmotion.values.every(
         (emotion) =>
@@ -130,7 +140,7 @@ class _PomoModelState extends State<PomoModel>
               : t.VisibilityLayers.LAYER_3,
         );
         for (final material in entry.value) {
-          _materials.add((material, name.startsWith('thinking-')));
+          await material.setDepthWriteEnabled(true);
         }
       }
       if (!mounted) return;
@@ -146,12 +156,6 @@ class _PomoModelState extends State<PomoModel>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.emotion != widget.emotion ||
         oldWidget.animated != widget.animated) {
-      final target = widget.emotion == PomoEmotion.focus ? 1.0 : 0.0;
-      if (widget.animated && _ready) {
-        unawaited(_variant.animateTo(target));
-      } else {
-        _variant.value = target;
-      }
       _schedule();
     }
   }
@@ -167,27 +171,53 @@ class _PomoModelState extends State<PomoModel>
     });
   }
 
-  void _prepareMorphTransition(PomoEmotion emotion, bool animated) {
+  Future<void> _prepareTransition(PomoEmotion emotion, bool animated) async {
     final manager = _viewer!.app.animationManager;
+    final previous = _appliedEmotion;
+    final seconds =
+        emotion == PomoEmotion.focus ||
+            previous == PomoEmotion.focus ||
+            _variant.value > 0
+        ? .7
+        : .25;
+    final blend = animated && _appliedAnimated == true && previous != null;
+    final blink = (emotion == PomoEmotion.focus) != (_variant.value >= .5);
+    final boneFrom = <String, Matrix4>{
+      if (blend)
+        for (final entry in _bones.entries)
+          entry.key: _viewer!.app.transformManager
+              .getLocalTransform(entry.value.$2)
+              .clone(),
+    };
+    await manager.removeBoneAnimationComponent(_instance);
     for (final entity in _morphEntities) {
       manager.removeMorphAnimationComponent(entity);
     }
     _morphEntities.clear();
-    final previous = _appliedEmotion;
     Map<String, List<double>>? from;
-    if (animated && _appliedAnimated == true && previous != null) {
+    if (blend) {
       final elapsed = _clipClock.elapsedMicroseconds / 1000000;
       from = _morphs.sample(
         previous.name,
         elapsed,
         loop: _clips[previous.name]['loop'] as bool,
       );
-      if (_morphFrom != null && elapsed < .25) {
-        from = PomoMorphClips.blend(_morphFrom!, from, elapsed / .25);
+      if (_morphFrom != null && elapsed < _transitionSeconds) {
+        from = PomoMorphClips.blend(
+          _morphFrom!,
+          from,
+          Curves.easeInOut.transform(elapsed / _transitionSeconds),
+        );
+        if (_transitionBlinks) {
+          _morphs.applyBlink(
+            from,
+            PomoMorphClips.transitionBlink(elapsed / _transitionSeconds),
+          );
+        }
       }
-      // Filament crossfades transforms only; native morph tracks complete the blend.
+      final frameCount = (seconds * 60).ceil() + 1;
       final frames = [
-        for (var i = 0; i < 16; i++)
+        for (var i = 0; i < frameCount; i++)
           PomoMorphClips.blend(
             from,
             _morphs.sample(
@@ -195,9 +225,17 @@ class _PomoModelState extends State<PomoModel>
               i / 60,
               loop: _clips[emotion.name]['loop'] as bool,
             ),
-            i / 15,
+            Curves.easeInOut.transform(i / (frameCount - 1)),
           ),
       ];
+      if (blink) {
+        for (var i = 0; i < frameCount; i++) {
+          _morphs.applyBlink(
+            frames[i],
+            PomoMorphClips.transitionBlink(i / (frameCount - 1)),
+          );
+        }
+      }
       for (final name in from.keys) {
         final entity = _meshEntities[name]!;
         final count = from[name]!.length;
@@ -213,8 +251,56 @@ class _PomoModelState extends State<PomoModel>
         }
         _morphEntities.add(entity);
       }
+      if (!await manager.addBoneAnimationComponent(_instance)) {
+        throw StateError('Cannot animate Pomo bones');
+      }
+      final poses = [
+        for (var i = 0; i < frameCount; i++)
+          _morphs.sampleBones(
+            emotion.name,
+            i / 60,
+            loop: _clips[emotion.name]['loop'] as bool,
+          ),
+      ];
+      // Snapshot the visible skeleton so an interrupted transition never restarts its old clip.
+      for (final entry in _bones.entries) {
+        if (!await manager.addBoneAnimation(
+          _instance,
+          0,
+          entry.value.$1,
+          [
+            for (var i = 0; i < frameCount; i++)
+              ...PomoMorphClips.blendBone(
+                boneFrom[entry.key]!,
+                poses[i][entry.key]!,
+                Curves.easeInOut.transform(i / (frameCount - 1)),
+              ).storage,
+          ],
+          frameCount,
+          1000 / 60,
+          maxDelta: 1,
+        )) {
+          throw StateError('Cannot blend Pomo bone: ${entry.key}');
+        }
+      }
     }
     _morphFrom = from;
+    _transitionSeconds = blend ? seconds : 0;
+    _transitionBlinks = blend && blink;
+    if (!mounted) return;
+    final target = emotion == PomoEmotion.focus ? 1.0 : 0.0;
+    _variant.value = _variant.value >= .5 ? 1 : 0;
+    if (blend) {
+      unawaited(
+        _variant.animateTo(
+          target,
+          duration: Duration(microseconds: (seconds * 1000000).round()),
+          curve: Curves.easeInOut,
+        ),
+      );
+    } else {
+      _variant.value = target;
+    }
     _clipClock
       ..reset()
       ..start();
@@ -231,13 +317,16 @@ class _PomoModelState extends State<PomoModel>
         if (_appliedEmotion != emotion || _appliedAnimated != animated) {
           final index = _names.indexOf(emotion.name);
           final clip = _clips[emotion.name] as Map<String, dynamic>;
-          _prepareMorphTransition(emotion, animated);
+          _variant.stop();
+          await viewer.setRendering(false);
+          await _prepareTransition(emotion, animated);
+          if (!mounted) return;
           if (animated) {
             if (_appliedAnimated != true) await asset.addAnimationComponent();
             await asset.playGltfAnimation(
               index,
               loop: clip['loop'] as bool,
-              crossfade: _appliedAnimated == true ? .25 : 0,
+              crossfade: _transitionSeconds,
             );
           } else {
             await viewer.setRendering(false);
@@ -252,19 +341,15 @@ class _PomoModelState extends State<PomoModel>
           _appliedEmotion = emotion;
           _appliedAnimated = animated;
         }
-        final focus = _variant.value;
-        await viewer.setLayerVisibility(t.VisibilityLayers.LAYER_3, focus < 1);
-        await viewer.setLayerVisibility(t.VisibilityLayers.LAYER_4, focus > 0);
-        for (final (material, thinking) in _materials) {
-          await material.setTransparencyMode(t.TransparencyMode.DEFAULT);
-          await material.setDepthWriteEnabled(focus == 0 || focus == 1);
-          await material.setParameterFloat4(
-            'baseColorFactor',
-            1,
-            1,
-            1,
-            thinking ? focus : 1 - focus,
+        final thinking = _variant.value >= .5;
+        if (_thinkingVisible != thinking) {
+          await viewer.setRendering(false);
+          await viewer.setLayerVisibility(
+            t.VisibilityLayers.LAYER_3,
+            !thinking,
           );
+          await viewer.setLayerVisibility(t.VisibilityLayers.LAYER_4, thinking);
+          _thinkingVisible = thinking;
         }
         if (!mounted) return;
         final viewport = _viewport;

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yaml/yaml.dart';
 
 void main() {
   test(
@@ -109,10 +110,23 @@ void main() {
 
   test('both runtime choices are bundled separately for every flavor', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
+    final assets = loadYaml(pubspec)['flutter']['assets'] as YamlList;
     for (final flavor in ['production', 'development', 'staging']) {
       final directory = 'assets/branding/app_icons/generated/$flavor';
-      expect(pubspec, contains('- $directory/'));
       for (final icon in ['icon-light-pomo', 'classic']) {
+        expect(pubspec, contains('- $directory/$icon.png'));
+        final macos = assets.whereType<YamlMap>().singleWhere(
+          (asset) => asset['path'] == '$directory/$icon-macos.png',
+        );
+        expect(macos['platforms'], ['macos']);
+        expect(
+          macos['flavors'],
+          containsAll([
+            flavor,
+            '${flavor[0].toUpperCase()}${flavor.substring(1)}',
+          ]),
+        );
+        expect(pubspec, contains('path: $directory/$icon.ico'));
         for (final suffix in ['.png', '-macos.png', '.ico']) {
           expect(File('$directory/$icon$suffix').lengthSync(), greaterThan(0));
         }

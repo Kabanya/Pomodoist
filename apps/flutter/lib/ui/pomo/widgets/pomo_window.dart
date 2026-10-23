@@ -390,7 +390,11 @@ class _SatellitesState extends ConsumerState<_Satellites> with WindowListener {
                             borderRadius: BorderRadius.circular(
                               g.capsule.height / 2,
                             ),
-                            onTap: () => unawaited(c.tap(react: false)),
+                            onTap: () => unawaited(
+                              f.hasRun
+                                  ? c.tap(react: false)
+                                  : c.command(() => pomoToggleFocus(ref)),
+                            ),
                             child: Center(
                               child: Text(
                                 f.hasRun ? time : l.startFocus,

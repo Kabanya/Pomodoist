@@ -132,15 +132,20 @@ class PomoLayout {
     point.dx.clamp(area.left, math.max(area.left, area.right - size.width)),
     point.dy.clamp(area.top, math.max(area.top, area.bottom - size.height)),
   );
-  static Offset panelPosition(Rect area, Rect pomo, Size panel) =>
-      clampPosition(
-        area,
-        panel,
+  static Offset panelPosition(
+    Rect area,
+    Rect pomo,
+    Size panel, {
+    Offset? saved,
+  }) => clampPosition(
+    area,
+    panel,
+    saved ??
         Offset(
           pomo.left - panel.width - 12 >= area.left
               ? pomo.left - panel.width - 12
               : pomo.right + 12,
           pomo.center.dy - panel.height / 2,
         ),
-      );
+  );
 }

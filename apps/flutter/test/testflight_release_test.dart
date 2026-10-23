@@ -17,6 +17,12 @@ void main() {
       expect(output, contains('--flavor "staging"'));
       expect(output, contains('--dart-define=POMODOIST_LOCAL_STOREKIT=1'));
       expect(output, isNot(contains('POMODOIST_DEV_UNLOCK=1')));
+      expect(
+        output,
+        mode == 'release'
+            ? contains('--split-debug-info=')
+            : isNot(contains('--split-debug-info=')),
+      );
     });
   }
 
