@@ -5,6 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/data/repositories/pomo/pomo_environment_repository_impl.dart';
 import 'package:pomodoist/data/services/platform/pomo_environment_gateway.dart';
 import 'package:pomodoist/data/services/platform/pomo_follow_transport.dart';
+import 'package:pomodoist/data/services/platform/pomo_follow_transport_io.dart';
+
+import 'pomo_environment_adapters_test.dart' show TestSwayConnection;
 import 'package:pomodoist/domain/models/pomo/pomo_environment.dart';
 
 import 'pomo_environment_test.dart' show environmentPayload;
@@ -13,6 +16,29 @@ class Native implements PomoNativeEnvironmentGateway {
   Object? payload = environmentPayload();
   Object? point = {'x': -10, 'y': 20};
   int reads = 0, cursors = 0;
+  final following = <bool>[];
+  final actions = <String>[];
+  bool failAction = false;
+  Completer<void>? followingGate, actionGate;
+  @override
+  Future<void> setFollowing(bool enabled) async {
+    following.add(enabled);
+    if (enabled) await followingGate?.future;
+  }
+
+  Future<Object?> action(String name) async {
+    actions.add(name);
+    await actionGate?.future;
+    if (failAction) throw StateError('Installer failed');
+    return payload;
+  }
+
+  @override
+  Future<Object?> gnomeExtensionStatus() => action('status');
+  @override
+  Future<Object?> installGnomeExtension() => action('install');
+  @override
+  Future<Object?> enableGnomeExtension() => action('enable');
   @override
   Future<Object?> environment() async {
     ++reads;
@@ -68,6 +94,146 @@ class Transport implements PomoFollowTransport {
 }
 
 void main() {
+  Map<String, Object?> gnome({bool available = true}) =>
+      environmentPayload()..addAll({
+        'desktop': 'GNOME',
+        'placementBackend': 'gnomeShell',
+        'gnomeExtensionState': available ? 'active' : 'disabled',
+        'gnomeExtensionVersion': 1,
+        'gnomeShellVersion': '50',
+        'available': available,
+      });
+
+  test(
+    'Sway repository subscribes and maps workspace reports to native displays',
+    () async {
+      final native = Native()
+        ..payload = (environmentPayload(backend: 'wayland')
+          ..['desktop'] = 'sway'
+          ..['followSource'] = 'workspace');
+      final connection = TestSwayConnection();
+      var output = 'HDMI-A-1';
+      final transport = LinuxPomoFollowTransport(
+        environment: {'SWAYSOCK': '/tmp/sway.sock'},
+        swayConnect: (_) async => connection,
+        request: (_, _, type) async => type == 3
+            ? [
+                {
+                  'name': output,
+                  'active': true,
+                  'rect': {'x': 0, 'y': 0, 'width': 2560, 'height': 1440},
+                },
+              ]
+            : [
+                {'focused': true, 'visible': true, 'output': output},
+              ],
+      );
+      final repository = LinuxPomoEnvironmentRepository(
+        native: native,
+        followTransport: transport,
+      );
+      try {
+        await repository.startFollowing();
+        expect(repository.state.followSource, PomoFollowSource.workspace);
+        expect(repository.state.userDisplayId, 'native-left');
+        output = 'DP-1';
+        connection.emit(0x80000000, '{"change":"focus"}');
+        await Future<void>.delayed(Duration.zero);
+        expect(repository.state.userDisplayId, 'native-right');
+        await repository.stopFollowing();
+        expect(connection.closed, isTrue);
+      } finally {
+        repository.dispose();
+      }
+    },
+  );
+
+  test(
+    'GNOME uses native Shell lease and reconnects without compositor transport',
+    () {
+      fakeAsync((async) {
+        final native = Native()..payload = gnome();
+        final transport = Transport();
+        final repository = LinuxPomoEnvironmentRepository(
+          native: native,
+          followTransport: transport,
+        );
+        unawaited(repository.initialize());
+        async.flushMicrotasks();
+        expect(native.following, isEmpty);
+        expect(native.actions, isEmpty);
+        unawaited(repository.startFollowing());
+        async.flushMicrotasks();
+        expect(native.following, [true]);
+        expect(repository.state.userDisplayId, 'native-left');
+        expect(transport.starts, 0);
+        native.payload = gnome(available: false);
+        async.elapse(const Duration(seconds: 2));
+        async.flushMicrotasks();
+        expect(native.following, [true, false]);
+        expect(repository.state.canFollow, false);
+        native.payload = gnome();
+        async.elapse(const Duration(seconds: 2));
+        async.flushMicrotasks();
+        expect(native.following, [true, false, true]);
+        unawaited(repository.stopFollowing());
+        async.flushMicrotasks();
+        expect(native.following, [true, false, true, false]);
+        repository.dispose();
+        async.flushMicrotasks();
+      });
+    },
+  );
+
+  test(
+    'GNOME releases a lease when stopped during asynchronous acquisition',
+    () {
+      fakeAsync((async) {
+        final native = Native()
+          ..payload = gnome()
+          ..followingGate = Completer<void>();
+        final repository = LinuxPomoEnvironmentRepository(
+          native: native,
+          followTransport: Transport(),
+        );
+        unawaited(repository.startFollowing());
+        async.flushMicrotasks();
+        unawaited(repository.stopFollowing());
+        async.flushMicrotasks();
+        native.followingGate!.complete();
+        async.flushMicrotasks();
+        expect(native.following, [true, false]);
+        expect(native.cursors, 0);
+        repository.dispose();
+        async.flushMicrotasks();
+      });
+    },
+  );
+
+  test(
+    'GNOME install and enable require explicit actions and publish returned status',
+    () async {
+      final native = Native()..payload = gnome(available: false);
+      final repository = LinuxPomoEnvironmentRepository(
+        native: native,
+        followTransport: Transport(),
+      );
+      addTearDown(repository.dispose);
+      await repository.initialize();
+      expect(native.actions, isEmpty);
+      native.payload = gnome();
+      await repository.installGnomeExtension();
+      expect(repository.state.available, true);
+      expect(native.actions, ['install']);
+      await repository.enableGnomeExtension();
+      await repository.gnomeExtensionStatus();
+      expect(native.actions, ['install', 'enable', 'status']);
+      native.failAction = true;
+      await expectLater(repository.installGnomeExtension(), throwsStateError);
+      expect(repository.state.available, true);
+    },
+  );
+
   test(
     'early compositor reports are remapped after native topology catches up',
     () {
@@ -150,6 +316,32 @@ void main() {
         expect(transport.disposed, 1);
         async.elapse(const Duration(seconds: 4));
         expect(native.reads, 3);
+      });
+    },
+  );
+
+  test(
+    'a new placement backend discards samples from the previous coordinate system',
+    () {
+      fakeAsync((async) {
+        final native = Native();
+        final repository = LinuxPomoEnvironmentRepository(
+          native: native,
+          followTransport: Transport(),
+        );
+        unawaited(repository.startFollowing());
+        async.flushMicrotasks();
+        expect(repository.state.userDisplayId, 'native-left');
+        final shell = gnome()..['followSource'] = 'none';
+        for (final display in shell['displays'] as List) {
+          display['id'] = 'gnome:${display['id']}';
+        }
+        native.payload = shell;
+        async.elapse(const Duration(seconds: 2));
+        async.flushMicrotasks();
+        expect(repository.state.userDisplayId, isNull);
+        repository.dispose();
+        async.flushMicrotasks();
       });
     },
   );

@@ -4401,4 +4401,52 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get pomoLinuxUnknownEnvironment => '알 수 없는 데스크톱 환경';
+
+  @override
+  String get pomoGnomeInstallDescription =>
+      'Pomo를 바탕 화면에 표시하려면 GNOME Shell 확장이 필요합니다. 포함된 확장을 사용자 계정에 설치하세요.';
+
+  @override
+  String get pomoGnomeEnableDescription =>
+      'GNOME Shell에서 Pomo 확장을 활성화하세요. 사용자 확장이 전체적으로 비활성화되어 있다면 먼저 확장 앱에서 활성화하세요.';
+
+  @override
+  String get pomoGnomeReloginDescription =>
+      '확장이 설치되었습니다. GNOME Shell이 이 버전을 불러오도록 로그아웃한 뒤 다시 로그인하고 재확인하세요.';
+
+  @override
+  String get pomoGnomeUpdateDescription =>
+      '이 버전의 Pomo를 사용하려면 GNOME Shell용 Pomo 확장을 업데이트하세요.';
+
+  @override
+  String get pomoGnomeIncompatibleDescription =>
+      '포함된 Pomo 확장은 이 GNOME Shell 버전을 지원하지 않습니다.';
+
+  @override
+  String get pomoGnomeErrorDescription =>
+      'GNOME Shell용 Pomo 확장을 시작할 수 없습니다. 상태를 확인하거나 지원팀에 보낼 환경 정보를 복사하세요.';
+
+  @override
+  String get pomoGnomePausedDescription =>
+      'GNOME Shell에서 Pomo를 일시적으로 사용할 수 없습니다. 바탕 화면 연결이 준비되면 다시 표시됩니다.';
+
+  @override
+  String get pomoGnomeInstall => '확장 설치';
+
+  @override
+  String get pomoGnomeEnable => '확장 활성화';
+
+  @override
+  String get pomoGnomeUpdate => '확장 업데이트';
+
+  @override
+  String get pomoGnomeCheckAgain => '다시 확인';
+
+  @override
+  String get pomoGnomeXWaylandDescription =>
+      '이 GNOME 세션에서 XWayland를 사용할 수 없습니다. Pomo에는 XWayland와 Shell 확장이 필요합니다. XWayland를 활성화하고 Pomodoist를 다시 시작한 뒤 재확인하세요.';
+
+  @override
+  String get pomoGnomeUserExtensionsDisabledDescription =>
+      '이 세션에서 GNOME 사용자 확장이 꺼져 있습니다. 확장 앱을 열어 사용자 확장을 켠 뒤 재확인하세요. Pomodoist는 이 시스템 설정을 변경하지 않습니다.';
 }

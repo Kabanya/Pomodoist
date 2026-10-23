@@ -4297,4 +4297,52 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pomoLinuxUnknownEnvironment => '未知桌面环境';
+
+  @override
+  String get pomoGnomeInstallDescription =>
+      'Pomo 需要 GNOME Shell 扩展才能显示在桌面上。请为当前用户账户安装随附的扩展。';
+
+  @override
+  String get pomoGnomeEnableDescription =>
+      '请在 GNOME Shell 中启用 Pomo 扩展。如果用户扩展被全局禁用，请先在“扩展”应用中启用它们。';
+
+  @override
+  String get pomoGnomeReloginDescription =>
+      '扩展已安装。请注销后重新登录，让 GNOME Shell 加载此版本，然后再次检查。';
+
+  @override
+  String get pomoGnomeUpdateDescription =>
+      '请更新 GNOME Shell 的 Pomo 扩展，以使用此版本的 Pomo。';
+
+  @override
+  String get pomoGnomeIncompatibleDescription =>
+      '随附的 Pomo 扩展不支持此 GNOME Shell 版本。';
+
+  @override
+  String get pomoGnomeErrorDescription =>
+      '无法启动 GNOME Shell 的 Pomo 扩展。请检查状态，或复制环境详情以寻求支持。';
+
+  @override
+  String get pomoGnomePausedDescription =>
+      'Pomo 在 GNOME Shell 中暂时不可用。桌面连接恢复后会重新显示。';
+
+  @override
+  String get pomoGnomeInstall => '安装扩展';
+
+  @override
+  String get pomoGnomeEnable => '启用扩展';
+
+  @override
+  String get pomoGnomeUpdate => '更新扩展';
+
+  @override
+  String get pomoGnomeCheckAgain => '再次检查';
+
+  @override
+  String get pomoGnomeXWaylandDescription =>
+      '此 GNOME 会话中无法使用 XWayland。Pomo 需要 XWayland 和 Shell 扩展。请启用 XWayland 并重启 Pomodoist，然后再次检查。';
+
+  @override
+  String get pomoGnomeUserExtensionsDisabledDescription =>
+      '此会话中的 GNOME 用户扩展已关闭。请打开“扩展”应用，启用用户扩展，然后再次检查。Pomodoist 不会更改此系统设置。';
 }

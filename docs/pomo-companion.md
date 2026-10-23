@@ -313,13 +313,15 @@ Animated WebP files and their encoder are no longer part of the pipeline.
 
 ## Linux integration and verification
 
-The Linux integration targets composited X11/XWayland and native Wayland compositors exposing
-layer-shell protocol v4 or later. The vendored multiview plugin receives
+The Linux integration targets composited X11/XWayland, GNOME Wayland through
+its Pomo extension and XWayland compatibility mode, and native Wayland
+compositors exposing layer-shell protocol v4 or later. The vendored multiview plugin receives
 transparency, passive-show and layer-role options before GTK realization.
 The application runner exposes the same `pomodoist/pomo_window` method channel
 as the other desktop platforms. Its `environment` and `cursor` probes and
-`bounds`/`move` geometry use GTK logical coordinates; display scale is metadata,
-not another coordinate multiplier. Input regions include only the pet, visible
+`bounds`/`move` geometry use GTK logical coordinates outside the GNOME bridge;
+display scale is metadata, not another coordinate multiplier. GNOME placement
+uses Shell stage coordinates and actual Mutter frame bounds instead. Input regions include only the pet, visible
 capsule, controls and context menu. The native Wayland placement uses output
 selection and anchored layer margins rather than `gtk_window_move`.
 Manual Wayland dragging uses `relative-pointer-unstable-v1` accelerated logical
@@ -359,12 +361,18 @@ a support mail draft, and a copy action containing the support address,
 desktop/session/backend/distribution and app version. The application never
 sends mail. The Linux distribution bundles `libgtk-layer-shell.so.0` with its
 license/source notices, and build/setup tooling installs its development files.
+AppRun prepends its bundled data directory while preserving the XDG default
+`/usr/local/share:/usr/share` when `XDG_DATA_DIRS` is unset or empty. GTK still
+needs the host MIME database and icon themes; hiding those paths can abort a
+GNOME launch while loading the client-side titlebar icons. Explicit nonempty
+data paths remain unchanged after the bundle prefix. Launcher regression tests
+cover all three cases.
 
 Automated validation covers preferences, capabilities, IPC parsing/lifecycle,
 monitor selection/dwell/suspension, native geometry, creation-option encoding,
 packaging, and static analysis. Native builds and visual acceptance require a
 separately requested stage: X11/XWayland, KDE Wayland, Hyprland, Sway, and the
-unavailable state on GNOME, with multiple monitors and mixed DPI. Dart tests and
+GNOME extension installation/activation states, with multiple monitors and mixed DPI. Dart tests and
 native source syntax checks do not establish compositor behavior or GPU output.
 
 The user authorized native build/run verification on 2026-10-23. A Flutter 3.47.0
@@ -391,3 +399,255 @@ cache remains unchanged. See `apps/flutter/linux/thermion/README.md` for the
 upstream source checksum and offscreen GPU regression procedure.
 Arch setup includes Git LFS for the model and libc++/libc++abi
 for the renderer's native asset build.
+
+The Thermion plugin retains sibling `$ORIGIN` lookup in its build ELF because
+Flutter copies plugin files into the bundle without rewriting their install
+RPATH. A relocation regression deletes the original build and native-assets
+directories before loading the bundled dependency without `LD_LIBRARY_PATH`.
+On X11, primary, secondary and modal Flutter view realization also preserves
+GTK's current GLX context/cache and any native EGL binding. Flutter 3.47's
+compositor initialization temporarily binds EGL, while GTK3 paints through GLX;
+leaving that binding active can crash GTK on its next paint. The scoped native
+helper clears the temporary binding and restores the previous API, context and
+surfaces. Deferred window destruction and final reference release use the same
+scope for shader cleanup; a destroyed GTK drawable is never restored. Wayland
+retains its existing behavior. Unmapped-window GLX/EGL lifecycle regressions run
+on software Mesa under Xvfb in CI.
+
+
+### GNOME / standard Ubuntu integration
+
+The first GNOME targets are Ubuntu 24.04 (Shell 46), 26.04 (Shell 50), and
+26.10 (Shell 51), in their normal GNOME Wayland sessions. Other Shell majors
+require a compatibility update and native acceptance before being declared
+supported. The Linux binary chooses XWayland before GTK initializes, including
+when launched directly or from a user installation; AppRun is not the policy
+owner. Without a usable XWayland connection the main application can still use
+Wayland, but Pomo reports the missing compatibility capability.
+
+The per-user extension `pomo@pomodoist.com` preserves the existing Flutter and
+Thermion renderer. It exports the versioned `com.pomodoist.Pomo.Gnome1` session
+D-Bus interface. The native GIO bridge forwards existing Pomo window commands
+and feeds Shell environment/pointer snapshots to the Dart monitor policy. Only
+windows with a registered random role token, matching caller PID and an allowed
+Pomodoist flavor application ID can be controlled. Registrations and subscriptions
+are retired on caller loss. Main-window and Quick Add roles are never changed.
+
+All global placement is authoritative in GNOME stage logical coordinates,
+including monitor work areas, pointer samples over native Wayland applications
+and actual `Meta.Window` frame bounds. Dragging captures the actual frame and
+Shell pointer together and applies their delta on Shell frames through
+`move_frame`; it never derives the origin from delayed GTK pointer events or
+`XQueryPointer`. Resize requests are separate from movement, and constrained
+results are read back. Local Flutter input regions use a measured viewport/frame
+relationship rather than a guessed global XWayland scale. A GNOME-only fitted
+stage canvas aligns the rendered companion/panel and transformed pointer hits;
+menu bounds are mapped back into that same canvas before input-region encoding.
+The canvas identity stays stable across viewport changes. GNOME display IDs have
+their own namespace, so older saved X11 positions are not reinterpreted.
+
+The existing 500 ms follow dwell, interaction suspension, pinning, cross-monitor
+switch and disconnected-monitor preference recovery remain in the Dart policy.
+Overview, session lock, extension disable or bridge loss stops native dragging
+and hides utilities without writing a manual dismissal. Restoration follows the
+existing enabled and visibility intent. The extension retains no cursor polling
+or frame callbacks when their leases are inactive.
+
+Both the ordinary Linux bundle and AppImage contain the extension's runtime
+sources and a reproducible ZIP, built with the Python standard library. Settings
+provide explicit installation, enable and update actions without administrator
+rights or a network connection. First installation on an already running GNOME
+session can require signing out and in again. A loaded older extension also
+requires a new login after replacement; files on disk are not proof of active
+protocol compatibility. Installation preserves other enabled extensions and does
+not silently bypass the user's global extension-disable setting. Shell Eval,
+unsafe mode and forced Shell restarts are not used.
+
+The user authorized an existing-VM validation stage on 2026-10-23. The available
+VM runs Arch Linux, GNOME Shell 51.1, Wayland, XWayland 24.1.14 and Mesa/virgl on
+one 1280×800 monitor at scale 1. This is a compositor integration check, not
+Ubuntu release acceptance. Offline extension installation required a new login.
+After correcting bundle library lookup and the X11 realization binding leak,
+the ordinary animated application passed ten cold starts with actual 3D imports,
+no startup shader warnings and no crashes; the previous candidate crashed in
+two of three starts. Observed interactions include transparent click-through to
+a native Wayland window, Shell pointer samples over that window, actual Pomo
+dragging, passive restoration, settings and Quick Add creation, manual
+hide/show, extension disable/recovery and Overview suppression. Evidence is
+under `build/design/pomo/2026-10-23-gnome-runtime`.
+The final lifecycle candidate additionally passed three cold starts and five
+real Quick Add open/close cycles without initialization or cleanup shader
+warnings. The application and companion remained running afterward, with the
+native Wayland target retaining focus. This also validates the deferred
+destruction binding scope; it does not complete the remaining Ubuntu matrix.
+
+The user additionally authorized Ubuntu and Xubuntu VM verification on
+2026-10-23. A separate Noble guest uses the official Ubuntu cloud image with
+the official `ubuntu-desktop-minimal` and `xubuntu-desktop` packages, tested in
+separate login sessions. This checks desktop-package integration rather than an
+ISO installation. The runtime is Ubuntu 24.04.5 LTS, GNOME Shell 46.0 on Wayland
+or Xfce 4.18 on composited X11, with accelerated Mesa 25.2.8/virgl and one
+1280×800 display at scale 1. Native development-flavor debug and release bundles
+were built separately on Ubuntu 24.04 with Flutter 3.47.0 and Thermion 0.5.0;
+the runtime guest has the documented native library prerequisites, without a
+compiler or Flutter SDK. Build and runtime evidence is under
+`build/design/pomo/2026-10-23-ubuntu-runtime`.
+
+The native release bundle passed three animated cold starts in each desktop.
+GNOME's actual in-app offline extension installation displayed the new-login
+requirement and became active after signing in again, preserving Ubuntu's own
+extensions. Observations include the upright 3D model, Shell pointer samples and
+transparent click-through above a native Wayland client, passive focus,
+dragging, manual disable/enable, extension recovery and Quick Add. In Xubuntu,
+Pomo uses the existing X11 path without the GNOME extension; direct Quick Add
+typing and Escape were verified from the desktop. An initial empty-Escape
+observation did not reproduce in that deliberate keyboard check.
+
+The first Ubuntu release AppImage exposed the missing XDG fallback described
+above: the identical file failed on GNOME with an unset data path and rendered
+successfully when only the standard data path was supplied. The repaired
+AppImage passed direct GNOME launches with the variable both unset and empty,
+without an external workaround. Its 149 ELF payloads are byte-identical to the
+original release artifact; only the launcher changed. Runtime mappings confirm
+that libc++, libc++abi and Thermion load from the AppImage mount. GNOME logs also
+contain AT-SPI/atk-bridge warnings; accessibility compatibility was not accepted
+by these rendering checks.
+
+The repaired AppImage also passed Xubuntu launch, upright 3D, transparent
+click-through to an X11 client, dragging with unchanged surface size, persisted
+hide/show and three direct-typing/Escape Quick Add cycles. However, manual Enable
+Pomo reproducibly transferred keyboard focus from the main window to the
+companion in two checks, still present at 500 ms and 2.5 seconds after showing.
+This fails passive-show acceptance on Xfwm despite the existing GTK
+`focus-on-map=false` policy; it remains an open X11 integration defect. The
+transparent-corner check itself preserved the underlying client's focus. Do not
+declare Xubuntu acceptance complete until showing/restoring Pomo also preserves
+focus. Logs, the focus-reproduction JSON and final captures are in the same
+Ubuntu runtime evidence directory.
+
+One first GNOME release Quick Add close emitted
+`Failed to cleanup compositor shaders, unable to make OpenGL context current`.
+The application remained running; four subsequent closes under a targeted
+debugger did not reproduce it. A focused probe using the actual SDK shader
+implementation reproduces the same warning when GTK's GLX context is current
+during raw EGL cleanup, but no production stack confirmed that attribution.
+The binding guard covers application-owned realization/destruction callbacks;
+it does not establish that every asynchronous engine finalizer is guarded.
+Keep this intermittent cleanup warning open rather than declaring the entire
+window lifecycle warning-free. No engine hooks or warning suppression were added.
+
+Full Ubuntu release acceptance remains pending. Core tests, method-channel tests,
+native contract tests and packaging fixtures do not establish rendered output,
+focus behavior, smoothness or fractional-DPI correctness on Ubuntu. The separate
+acceptance stage still needs Ubuntu 26.04 and 26.10, extension updates, two
+mixed-DPI monitors, fractional scaling and text clarity in XWayland compatibility
+mode, Dock/Alt-Tab, Overview, locking, workspaces, renderer reactions and Reduce
+Motion. The single-monitor Ubuntu 24.04 checks above do not establish that matrix.
+
+### Desktop environment matrix verification (2026-10-23)
+
+The user requested broader native checks across common Linux desktops. The
+matrix uses the same release-mode development-flavor AppImage throughout:
+SHA-256 `e238a560b1680d8f06ea307edb89e85c52b3c5f0065f78b95d794fc1c80e02c3`,
+native source `12ad29b` and launcher correction `34661df`. Ubuntu sessions run
+the AppImage directly; Arch Wayland sessions execute its extracted AppRun with
+the identical payload. No product code or renderer was changed for these checks.
+
+Ubuntu 24.04 session packages cover X11 desktop families; these minimal sessions
+are not claims about the defaults of every corresponding distribution or ISO.
+Arch VM Lab profiles cover native Wayland compositors. Actual session variables,
+compositor capabilities, application protocol/window roles and native client
+input are recorded rather than inferred from installed package names. Virtual
+monitors and virgl rendering do not establish physical GPU, fractional/mixed-DPI
+or physical hotplug acceptance. Detailed per-check results, screenshots, logs and
+the validation contract are under `build/design/pomo/2026-10-23-desktop-matrix`.
+Unsupported capabilities, application failures and invalid harness attempts are
+reported separately; an untested check is never promoted to a pass.
+
+The observed results are below. A working renderer is only one acceptance gate;
+none of these rows establishes full Linux release acceptance.
+
+| Desktop and actual session | Observed companion behavior | Remaining observed problems |
+| --- | --- | --- |
+| GNOME 46 / Ubuntu 24.04, Wayland with XWayland app; GNOME 51.1 / Arch repeat | Real 3D, transparency, native-Wayland click-through, dragging and three Quick Add typing/Escape cycles pass. Ubuntu offline extension installation and relogin were exercised earlier. | Earlier intermittent GTK shader cleanup and accessibility warnings remain open. Arch repeat also reports missing canberra GTK modules. |
+| Plasma 6.8.1 / KWin Wayland | Native layer-shell 3D, transparency, drag, settings, Quick Add, cursor-driven monitor transfer and pinned-output fallback pass. | Default placement overlaps the reserved bottom panel. |
+| Hyprland 0.56.2 / Wayland | Native layer-shell 3D, transparency, drag, settings, Quick Add, cursor following and pinned-output fallback pass. | Reserved top bar introduces a placement offset; surface can extend below the output. |
+| Sway 1.12 / Wayland | Native layer-shell 3D, transparency, drag, Quick Add and pinned-output fallback pass. | Active-workspace following fails, settings closes immediately, and reserved bars cause bottom clipping. |
+| Xfce 4.18 / Xfwm, X11 | Animated 3D, transparency, drag, position restoration and direct Quick Add typing/Escape pass. | Both Enable and actual Show steal keyboard focus. A shader cleanup warning also occurs after interaction. |
+| Cinnamon 6.0.4 / Muffin, X11 | Animated 3D, transparency, drag, settings, position restoration, passive Show and task-switcher exclusion pass. | Global Quick Add fails to receive focus in three cycles, preventing direct typing/Escape. |
+| MATE 1.26 / Marco, X11 | Animated 3D, transparency, drag, position restoration, passive Show and task-switcher exclusion pass. | Global Quick Add focus fails in three cycles; post-interaction shader cleanup warning. |
+| Budgie 10.9.1 / budgie-wm, X11 | Animated 3D, transparency, drag, settings and task-switcher exclusion pass. | Global Quick Add focus fails in three cycles. A later launch is delayed with portal criticals before eventually mapping; actual Show remains untested. |
+| LXQt 1.4 / Openbox, X11 | Without a compositor, Pomo is unsupported. One explicitly labeled picom variant renders animated transparent 3D and supports dragging. | First-session main window failed to map within 45 seconds, with portal/drawable errors in its log; a later uncomposited control maps normally. The cause is not established. |
+| LXDE (lxsession 0.5.5) / Openbox, X11 | Main application starts; without a compositor, settings correctly explains that Pomo is unavailable. | One of three Quick Add cycles fails to receive focus. Companion rendering is unsupported in this session, not a renderer regression. |
+
+The X11 baselines use compositing where actually present; LXQt and LXDE's
+minimal sessions had none. Installing picom also installed a desktop autostart
+entry: it was stopped for an immediate uncomposited LXQt control before the
+single labeled composited probe. That probe does not establish default Lubuntu
+behavior or three composited cold starts.
+
+Plasma, Hyprland and Sway exercised two virtual outputs, with headless outputs
+used where necessary. Pin selection used controlled local preferences before
+restart, rather than the UI dropdown. Delayed follow observations include
+process/persistence overhead and do not prove an exact 500 ms deadline. Valid
+cross-output drag coverage is limited to the disabled-transition Hyprland case;
+invalid grabs are retained as harness evidence, not passes or product failures.
+Physical mixed/fractional DPI, full focus/lock/workspace behavior, reactions and
+Reduce Motion remain separate acceptance work. No product fix was attempted
+during this verification run.
+
+
+### Desktop fixes after the October 23 baseline
+
+The baseline matrix above records the original candidate and remains historical.
+The subsequent candidate fixes explicit X11 activation using a fresh server
+input timestamp, while retaining passive companion show/restore behavior. Xfce's previously
+interactive companion explicitly declines focus when remapped/restored and
+accepts it again only on direct interaction. The regression uses the actual Show
+button after interaction and Hide, not only the initial Enable action.
+Native Wayland placement measures usable layer extents without claiming a
+compositor-global work-area origin. Independent xdg-output v2 descriptions
+provide committed connector names and logical rectangles during rearrangement.
+Probes have empty widget input regions before realization and are retired when
+no companion layer is mapped.
+
+The compact panel uses a real GTK child popup attached to the companion's layer
+surface. Its initiating event supplies the seat grab; constrained popup geometry
+is read back from GTK. Closing, hiding or destroying either surface releases
+keyboard and pointer grabs. Capture-phase observers retain the initiating event
+before Flutter's internal event widget consumes it. GTK child popup seat grabs
+can produce synthetic toplevel focus transitions; native popup dismissal owns
+those lifecycles instead of interpreting them as ordinary window blur.
+An opening failure clears the host's panel state so
+tracking and later opening attempts can recover. The Sway socket subscription
+was not changed speculatively: an integrated repository/real transport test and
+native event traces exercise acknowledgements, workspace events and reconnects.
+
+GNOME also exposed a shared-engine lifecycle issue after correct Quick Add
+activation: GTK delivered keyboard events, but Flutter still followed the main
+window's inactive state. Linux now reconciles engine lifecycle with actual
+native window focus, rejecting stale queries and work after disposal. Retained
+Quick Add and compact settings restore their input focus on reactivation.
+
+The Ubuntu 24.04 GNOME 46 Wayland guest passed transparent click-through over a
+native Wayland window, companion dragging, and three Quick Add cycles with
+native activation, typed text and Escape dismissal. The final lifecycle change
+also passed reused Sway popup keyboard input after typing in the main window.
+Plasma and Hyprland guests verified the native Wayland placement and popup
+changes, including panel-reserved space and cross-output dragging. Sway output
+removal and restoration retained a live companion without restarting its
+renderer. Earlier X11 checks passed Quick Add on Cinnamon, MATE, Budgie and
+Xfce, and passive Xfce companion Show retained the existing window's focus.
+These are scoped VM results; they do not certify other Ubuntu or GNOME versions.
+The final packaged AppImage also passed three Xfce Quick Add cycles with native
+focus, typed text and Escape dismissal.
+The existing X11 global Quick Add shortcut still does not open over a focused
+native Wayland application in GNOME. Matched runs with the immutable baseline
+and final AppImage both reproduced this limitation. The activation/input fix
+covers opening Quick Add from an XWayland application; it does not add a GNOME
+global-shortcut backend.
+
+Follow-up evidence is stored separately under
+`build/design/pomo/2026-10-23-desktop-fixes`. Headless virtual outputs and virgl
+still do not establish physical mixed/fractional-DPI acceptance. Portal startup
+delays and renderer cleanup warnings remain outside this fix scope.

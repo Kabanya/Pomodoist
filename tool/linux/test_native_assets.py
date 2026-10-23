@@ -21,6 +21,9 @@ class NativeAssetsTests(unittest.TestCase):
                 # Keep this fixture focused on package paths; the X11 source
                 # override is covered separately by test_thermion_x11.py.
                 (source / "thermion_runtime.cmake").write_text("# X11 override excluded from the path fixture.\n")
+                # The real extension CMake build/install is exercised by
+                # test_gnome_extension_bundle.py; keep this fixture on Thermion.
+                (source / "gnome_extension.cmake").write_text("# Extension packaging covered independently.\n")
                 headers = root / "packages/thermion_dart/native/include"
                 headers.mkdir(parents=True)
                 (headers / "Log.hpp").write_text("#pragma once\n")

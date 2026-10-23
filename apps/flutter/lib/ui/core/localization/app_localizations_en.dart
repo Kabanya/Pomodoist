@@ -4545,4 +4545,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pomoLinuxUnknownEnvironment => 'Unknown desktop environment';
+
+  @override
+  String get pomoGnomeInstallDescription =>
+      'Pomo needs its GNOME Shell extension to appear on your desktop. Install the bundled extension for your user account.';
+
+  @override
+  String get pomoGnomeEnableDescription =>
+      'Enable the Pomo extension in GNOME Shell. If user extensions are disabled globally, turn them on in the Extensions app first.';
+
+  @override
+  String get pomoGnomeReloginDescription =>
+      'The extension is installed. Sign out and sign in again to let GNOME Shell load this version, then check again.';
+
+  @override
+  String get pomoGnomeUpdateDescription =>
+      'Update the Pomo GNOME Shell extension to use this version of Pomo.';
+
+  @override
+  String get pomoGnomeIncompatibleDescription =>
+      'This GNOME Shell version is not supported by the bundled Pomo extension.';
+
+  @override
+  String get pomoGnomeErrorDescription =>
+      'The Pomo GNOME Shell extension could not start. Check its status or copy the environment details for support.';
+
+  @override
+  String get pomoGnomePausedDescription =>
+      'Pomo is temporarily unavailable in GNOME Shell. It will return when the desktop connection is ready.';
+
+  @override
+  String get pomoGnomeInstall => 'Install extension';
+
+  @override
+  String get pomoGnomeEnable => 'Enable extension';
+
+  @override
+  String get pomoGnomeUpdate => 'Update extension';
+
+  @override
+  String get pomoGnomeCheckAgain => 'Check again';
+
+  @override
+  String get pomoGnomeXWaylandDescription =>
+      'XWayland is unavailable in this GNOME session. Pomo needs XWayland together with its Shell extension. Enable XWayland and restart Pomodoist, then check again.';
+
+  @override
+  String get pomoGnomeUserExtensionsDisabledDescription =>
+      'GNOME user extensions are turned off for this session. Open the Extensions app and turn on user extensions, then check again. Pomodoist will keep this system setting unchanged.';
 }

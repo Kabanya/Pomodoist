@@ -49,6 +49,40 @@ void main() {
     },
   );
 
+  test(
+    'compact panel role is explicit even when its title is localized',
+    () async {
+      MethodCall? request;
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        request = call;
+        return null;
+      });
+      const options = WindowOptions(
+        linuxDesktopOverlay: true,
+        linuxDesktopOverlayRole: 'settings',
+        isUtility: true,
+        focusOnShow: false,
+      );
+      await NativeChannel().createWindowRequest(
+        token: 43,
+        title: 'Настройки Помо',
+        focusOnShow: options.focusOnShow!,
+        isUtility: options.isUtility,
+        linuxDesktopOverlay: options.linuxDesktopOverlay,
+        linuxDesktopOverlayRole: options.linuxDesktopOverlayRole,
+        titleBarStyleStr: 'hidden',
+        windowButtonVisibility: false,
+        windowSize: const Size(320, 256),
+        pos: null,
+      );
+      expect(
+        request!.arguments,
+        containsPair('linuxDesktopOverlayRole', 'settings'),
+      );
+      expect(request!.arguments, containsPair('focusOnShow', false));
+    },
+  );
+
   test('ordinary windows retain normal native creation defaults', () async {
     Map<dynamic, dynamic>? args;
     messenger.setMockMethodCallHandler(channel, (call) async {

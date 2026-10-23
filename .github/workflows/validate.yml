@@ -22,8 +22,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends \
             appstream desktop-file-utils clang libgtk-layer-shell-dev \
-            libc++-dev libc++abi-dev libdrm-dev libegl1-mesa-dev \
-            libgl1-mesa-dev libgbm-dev libwayland-dev zlib1g-dev
+            libc++-dev libc++abi-dev libdrm-dev libegl1-mesa-dev libepoxy-dev \
+            libgl1-mesa-dev libgbm-dev libwayland-dev zlib1g-dev \
+            libegl-mesa0 libgl1-mesa-dri xvfb xauth
       - run: sh tool/test_public_boundary.sh
       - run: sh tool/test_xcode_warnings.sh
       - run: python3 tool/check_architecture.py
@@ -34,11 +35,30 @@ jobs:
       - run: python3 -m unittest discover -s tool/windows -p 'test_*.py' -v
       - run: make test-linux-packaging
       - run: tool/linux/test_pomo_geometry.sh
+      - name: Test child popup lifecycle and consumed Flutter-style input
+        run: bash tool/linux/test_pomo_popup.sh
+      - name: Test GTK GLX and Flutter EGL initialization on software Mesa
+        run: bash tool/linux/test_gl_binding.sh
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Test the GNOME companion extension without a desktop session
+        run: node --test apps/flutter/linux/gnome-extension/pomo@pomodoist.com/tests/*.test.js
+      - name: Validate the GNOME extension entrypoint syntax
+        run: node --check apps/flutter/linux/gnome-extension/pomo@pomodoist.com/extension.js
       - run: python3 -m unittest discover -s tool/linux -p 'test_thermion*.py'
       - name: Link Flutter build output into build/
         run: make flutter-build-link
       - run: flutter pub get --enforce-lockfile
         working-directory: apps/flutter
+      - name: Prepare Linux engine headers for isolated native bridge tests
+        run: flutter precache --linux
+      - name: Test GNOME policy and asynchronous bridge on a private D-Bus session
+        run: |
+          FLUTTER_ENGINE_DIR="$FLUTTER_ROOT/bin/cache/artifacts/engine/linux-x64" \
+            bash tool/linux/test_pomo_gnome_native.sh
+          FLUTTER_ENGINE_DIR="$FLUTTER_ROOT/bin/cache/artifacts/engine/linux-x64" \
+            bash tool/linux/test_window_activation.sh
       - name: Check resolved Dart symbol boundaries
         run: dart run tool/check_architecture_types.dart
         working-directory: apps/flutter

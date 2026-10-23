@@ -1,8 +1,12 @@
 #include <multiview_desktop/multiview_desktop_runner.h>
 
 #include "mvd_linux_internal.h"
+#include "mvd_linux_gnome.h"
+#include "mvd_linux_gl_binding.h"
+#include "mvd_linux_gnome_policy.h"
 #include "mvd_linux_log.h"
 #include "mvd_linux_window.h"
+#include "mvd_linux_pomo_popup.h"
 
 #include <flutter_linux/flutter_linux.h>
 #ifdef GDK_WINDOWING_X11
@@ -113,7 +117,13 @@ static void first_frame_cb(gpointer user_data, FlView* view) {
 
   MVD_LOG("first_frame_cb  calling gtk_widget_show on toplevel=%p",
           static_cast<void*>(top));
-  gtk_widget_show(top);
+  if (mvd_gnome_show(GTK_WINDOW(top))) return;
+  if (wm) {
+    wm->Show();
+  } else {
+    gtk_widget_show(top);
+    MvdLinuxWindow::PresentWindow(GTK_WINDOW(top));
+  }
   MVD_LOG("first_frame_cb  calling gtk_widget_grab_focus on view=%p",
           static_cast<void*>(view));
   gtk_widget_grab_focus(GTK_WIDGET(view));
@@ -164,6 +174,8 @@ static void create_secondary_window(const MvdCreateWindowRequest* request) {
     return;
   }
 
+  const char* role = request->linux_desktop_overlay_role ? request->linux_desktop_overlay_role : "companion";
+  if (!mvd::ValidGnomeRole(role)) return;
   const char* title =
       (request->title && request->title[0]) ? request->title : g_default_title;
 
@@ -178,8 +190,16 @@ static void create_secondary_window(const MvdCreateWindowRequest* request) {
 
   MVD_LOG("create_secondary_window  calling gtk_application_window_new"
           "  g_app=%p", static_cast<void*>(g_app));
-  GtkWindow* window =
-      GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(g_app)));
+  const bool native_popup = request->linux_desktop_overlay && request->is_utility &&
+      g_str_equal(role, "settings") && !mvd_gnome_context() &&
+      gtk_layer_is_supported();
+  GtkWindow* window = native_popup
+      ? mvd_linux_pomo_popup_new(mvd_linux_pomo_companion_window())
+      : GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(g_app)));
+  if (!window) {
+    mvd_linux_secondary_window_failed(request->token);
+    return;
+  }
   MVD_LOG("create_secondary_window  GtkWindow created: window=%p",
           static_cast<void*>(window));
 
@@ -190,9 +210,12 @@ static void create_secondary_window(const MvdCreateWindowRequest* request) {
                     GINT_TO_POINTER(request->is_utility));
   g_object_set_data(G_OBJECT(window), "mvd-pomo",
                     GINT_TO_POINTER(request->linux_desktop_overlay && request->is_utility));
+  if (request->linux_desktop_overlay && request->is_utility)
+    g_object_set_data_full(G_OBJECT(window), "mvd-pomo-role", g_strdup(role), g_free);
   gtk_window_set_focus_on_map(window, request->focus_on_show);
   if (request->linux_desktop_overlay && request->is_utility) {
     mvd_linux_prepare_pomo_window(window);
+    mvd_gnome_prepare(window, role);
   } else {
     MvdLinuxWindow::DecorateToplevel(window, title);
   }
@@ -219,7 +242,18 @@ static void create_secondary_window(const MvdCreateWindowRequest* request) {
   MVD_LOG("create_secondary_window  default_size=%.0fx%.0f",
           request->width, request->height);
 
-  if (request->has_position && !gtk_layer_is_layer_window(window)) {
+  if (mvd_gnome_window(window)) {
+    g_autoptr(FlValue) initial = fl_value_new_map();
+    fl_value_set_string_take(initial, "width", fl_value_new_float(request->width));
+    fl_value_set_string_take(initial, "height", fl_value_new_float(request->height));
+    if (request->has_position) {
+      fl_value_set_string_take(initial, "x", fl_value_new_float(request->pos_x));
+      fl_value_set_string_take(initial, "y", fl_value_new_float(request->pos_y));
+    }
+    mvd_gnome_configure(window, initial);
+  }
+  if (request->has_position && !mvd_gnome_window(window) && !gtk_layer_is_layer_window(window) &&
+      !mvd_linux_pomo_popup_is(window)) {
     MVD_LOG("create_secondary_window  moving window to (%.0f,%.0f)",
             request->pos_x, request->pos_y);
     gtk_window_move(window, static_cast<int>(request->pos_x),
@@ -255,7 +289,7 @@ static void create_secondary_window(const MvdCreateWindowRequest* request) {
 
   MVD_LOG("create_secondary_window  calling gtk_widget_realize  view=%p",
           static_cast<void*>(view));
-  gtk_widget_realize(GTK_WIDGET(view));
+  multiview_desktop_linux_runner_realize_view(view);
   MVD_LOG("create_secondary_window  gtk_widget_realize returned  view=%p",
           static_cast<void*>(view));
 
@@ -284,13 +318,16 @@ static void window_created_callback(const MvdCreateWindowRequest* request) {
     MvdCreateWindowRequest request;
     std::string title;
     std::string title_bar_style;
+    std::string linux_desktop_overlay_role;
   };
   auto* ctx = new Ctx;
   ctx->title = request->title ? request->title : "";
   ctx->title_bar_style = request->title_bar_style ? request->title_bar_style : "";
+  ctx->linux_desktop_overlay_role = request->linux_desktop_overlay_role ? request->linux_desktop_overlay_role : "companion";
   ctx->request = *request;
   ctx->request.title = ctx->title.c_str();
   ctx->request.title_bar_style = ctx->title_bar_style.c_str();
+  ctx->request.linux_desktop_overlay_role = ctx->linux_desktop_overlay_role.c_str();
   MVD_LOG("window_created_callback  marshaling to main thread via"
           " g_main_context_invoke  token=%" G_GINT64_FORMAT, request->token);
   g_main_context_invoke(
@@ -311,10 +348,20 @@ static void window_created_callback(const MvdCreateWindowRequest* request) {
 
 extern "C" {
 
+void multiview_desktop_linux_runner_realize_view(FlView* view) {
+  g_return_if_fail(FL_IS_VIEW(view));
+  mvd::X11GlBindingScope binding(gtk_widget_get_display(GTK_WIDGET(view)));
+  gtk_widget_realize(GTK_WIDGET(view));
+}
+
 void multiview_desktop_linux_runner_install(GtkApplication* application) {
   MVD_LOG("runner_install  START  application=%p",
           static_cast<void*>(application));
   g_app = application;
+  mvd_gnome_start();
+  g_signal_connect(application, "shutdown", G_CALLBACK(+[](GApplication*, gpointer) {
+    mvd_gnome_shutdown();
+  }), nullptr);
   mvd_linux_set_window_created_callback(window_created_callback);
 
   // X11: install custom error handler.

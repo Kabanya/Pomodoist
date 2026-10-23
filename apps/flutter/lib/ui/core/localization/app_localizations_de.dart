@@ -4567,4 +4567,52 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pomoLinuxUnknownEnvironment => 'Unbekannte Desktop-Umgebung';
+
+  @override
+  String get pomoGnomeInstallDescription =>
+      'Pomo benötigt seine GNOME-Shell-Erweiterung zur Anzeige auf dem Desktop. Installiere die mitgelieferte Erweiterung für dein Benutzerkonto.';
+
+  @override
+  String get pomoGnomeEnableDescription =>
+      'Aktiviere die Pomo-Erweiterung in GNOME Shell. Falls Benutzererweiterungen global deaktiviert sind, aktiviere sie zuerst in der Erweiterungen-App.';
+
+  @override
+  String get pomoGnomeReloginDescription =>
+      'Die Erweiterung ist installiert. Melde dich ab und wieder an, damit GNOME Shell diese Version lädt, und prüfe erneut.';
+
+  @override
+  String get pomoGnomeUpdateDescription =>
+      'Aktualisiere die Pomo-Erweiterung für GNOME Shell, um diese Pomo-Version zu verwenden.';
+
+  @override
+  String get pomoGnomeIncompatibleDescription =>
+      'Diese GNOME-Shell-Version wird von der mitgelieferten Pomo-Erweiterung nicht unterstützt.';
+
+  @override
+  String get pomoGnomeErrorDescription =>
+      'Die Pomo-Erweiterung für GNOME Shell konnte nicht starten. Prüfe den Status oder kopiere die Umgebungsdetails für den Support.';
+
+  @override
+  String get pomoGnomePausedDescription =>
+      'Pomo ist in GNOME Shell vorübergehend nicht verfügbar. Es erscheint wieder, sobald die Desktop-Verbindung bereit ist.';
+
+  @override
+  String get pomoGnomeInstall => 'Erweiterung installieren';
+
+  @override
+  String get pomoGnomeEnable => 'Erweiterung aktivieren';
+
+  @override
+  String get pomoGnomeUpdate => 'Erweiterung aktualisieren';
+
+  @override
+  String get pomoGnomeCheckAgain => 'Erneut prüfen';
+
+  @override
+  String get pomoGnomeXWaylandDescription =>
+      'XWayland ist in dieser GNOME-Sitzung nicht verfügbar. Pomo benötigt XWayland und seine Shell-Erweiterung. Aktiviere XWayland, starte Pomodoist neu und prüfe erneut.';
+
+  @override
+  String get pomoGnomeUserExtensionsDisabledDescription =>
+      'GNOME-Benutzererweiterungen sind für diese Sitzung ausgeschaltet. Öffne die Erweiterungen-App, schalte Benutzererweiterungen ein und prüfe erneut. Pomodoist ändert diese Systemeinstellung nicht.';
 }

@@ -4556,4 +4556,52 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get pomoLinuxUnknownEnvironment =>
       'Неизвестное окружение рабочего стола';
+
+  @override
+  String get pomoGnomeInstallDescription =>
+      'Для отображения Pomo на рабочем столе нужно расширение GNOME Shell. Установите встроенное расширение для своей учётной записи.';
+
+  @override
+  String get pomoGnomeEnableDescription =>
+      'Включите расширение Pomo в GNOME Shell. Если расширения отключены глобально, сначала включите их в приложении «Расширения».';
+
+  @override
+  String get pomoGnomeReloginDescription =>
+      'Расширение установлено. Выйдите из системы и войдите снова, чтобы GNOME Shell загрузила эту версию, затем повторите проверку.';
+
+  @override
+  String get pomoGnomeUpdateDescription =>
+      'Обновите расширение Pomo для GNOME Shell, чтобы использовать эту версию Pomo.';
+
+  @override
+  String get pomoGnomeIncompatibleDescription =>
+      'Встроенное расширение Pomo не поддерживает эту версию GNOME Shell.';
+
+  @override
+  String get pomoGnomeErrorDescription =>
+      'Не удалось запустить расширение Pomo для GNOME Shell. Проверьте статус или скопируйте сведения об окружении для поддержки.';
+
+  @override
+  String get pomoGnomePausedDescription =>
+      'Pomo временно недоступен в GNOME Shell. Он появится снова, когда восстановится соединение с рабочим столом.';
+
+  @override
+  String get pomoGnomeInstall => 'Установить расширение';
+
+  @override
+  String get pomoGnomeEnable => 'Включить расширение';
+
+  @override
+  String get pomoGnomeUpdate => 'Обновить расширение';
+
+  @override
+  String get pomoGnomeCheckAgain => 'Проверить снова';
+
+  @override
+  String get pomoGnomeXWaylandDescription =>
+      'В этой сессии GNOME недоступен XWayland. Для Pomo нужны XWayland и расширение Shell. Включите XWayland, перезапустите Pomodoist и повторите проверку.';
+
+  @override
+  String get pomoGnomeUserExtensionsDisabledDescription =>
+      'В этой сессии GNOME отключены пользовательские расширения. Откройте приложение «Расширения», включите пользовательские расширения и повторите проверку. Pomodoist не изменяет эту системную настройку.';
 }

@@ -1,10 +1,59 @@
 // ignore_for_file: invalid_use_of_protected_member
 
+import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiview_desktop/src/window_lifecycle_policy.dart';
 
 void main() {
+  test(
+    'Linux secondary focus resumes keyboard lifecycle; external focus stays inactive',
+    () async {
+      var state = AppLifecycleState.inactive;
+      var focused = true;
+      final lifecycle = LinuxWindowLifecycle(
+        hasFocusedWindow: () async => focused,
+        readState: () => state,
+        applyState: (next) => state = next,
+      );
+      await lifecycle.synchronize();
+      expect(state, AppLifecycleState.resumed);
+      focused = false;
+      await lifecycle.synchronize();
+      expect(state, AppLifecycleState.inactive);
+      await lifecycle.synchronize();
+      expect(state, AppLifecycleState.inactive);
+      lifecycle.dispose();
+    },
+  );
+
+  test(
+    'Linux lifecycle rejects stale focus replies and disposed work',
+    () async {
+      var state = AppLifecycleState.inactive;
+      final replies = <Completer<bool>>[];
+      final lifecycle = LinuxWindowLifecycle(
+        hasFocusedWindow: () {
+          final reply = Completer<bool>();
+          replies.add(reply);
+          return reply.future;
+        },
+        readState: () => state,
+        applyState: (next) => state = next,
+      );
+      final first = lifecycle.synchronize(), second = lifecycle.synchronize();
+      replies[1].complete(false);
+      await second;
+      replies[0].complete(true);
+      await first;
+      expect(state, AppLifecycleState.inactive);
+      final closing = lifecycle.synchronize();
+      lifecycle.dispose();
+      replies[2].complete(true);
+      await closing;
+      expect(state, AppLifecycleState.inactive);
+    },
+  );
   testWidgets(
     'hidden desktop windows notify lifecycle listeners before resuming',
     (tester) async {

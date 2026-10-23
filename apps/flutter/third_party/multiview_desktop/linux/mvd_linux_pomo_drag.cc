@@ -95,7 +95,7 @@ gboolean DragTick(GtkWidget* widget, GdkFrameClock*, gpointer data) {
     return G_SOURCE_REMOVE;
   }
   GdkRectangle work{};
-  gdk_monitor_get_workarea(monitor, &work);
+  if (!mvd_linux_pomo_workarea(monitor, &work)) return G_SOURCE_CONTINUE;
   const auto visual = mvd::ClampPomoDragPosition(work.x, work.y,
       work.width, work.height, width, height, x, y);
   const int next_x = static_cast<int>(std::round(visual.x));
@@ -197,7 +197,7 @@ gboolean mvd_linux_pomo_drag_begin(GtkWindow* window, double x, double y,
     GdkWindow* gdk_window = gtk_widget_get_window(GTK_WIDGET(window));
     if (gdk_window) initial_monitor = gdk_display_get_monitor_at_window(display, gdk_window);
   }
-  if (!initial_monitor) return FALSE;
+  if (!MonitorConnected(display, initial_monitor)) return FALSE;
   session->initial_monitor = GDK_MONITOR(g_object_ref(initial_monitor));
   bool available = false;
 #ifdef GDK_WINDOWING_X11

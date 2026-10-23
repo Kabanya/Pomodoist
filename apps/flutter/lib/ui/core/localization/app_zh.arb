@@ -1445,5 +1445,18 @@
   "pomoLinuxCrossDisplayDragPinned": "Pomo 将留在所选显示器上。拖动偏好将保留用于自动模式。",
   "pomoLinuxWorkspaceFollow": "在 Sway 中，Pomo 会跟随当前活动工作区。",
   "pomoLinuxFollowUnavailable": "此环境不支持自动跟随。请选择一个显示器，将 Pomo 固定在该屏幕上。",
-  "pomoLinuxUnknownEnvironment": "未知桌面环境"
+  "pomoLinuxUnknownEnvironment": "未知桌面环境",
+  "pomoGnomeInstallDescription": "Pomo 需要 GNOME Shell 扩展才能显示在桌面上。请为当前用户账户安装随附的扩展。",
+  "pomoGnomeEnableDescription": "请在 GNOME Shell 中启用 Pomo 扩展。如果用户扩展被全局禁用，请先在“扩展”应用中启用它们。",
+  "pomoGnomeReloginDescription": "扩展已安装。请注销后重新登录，让 GNOME Shell 加载此版本，然后再次检查。",
+  "pomoGnomeUpdateDescription": "请更新 GNOME Shell 的 Pomo 扩展，以使用此版本的 Pomo。",
+  "pomoGnomeIncompatibleDescription": "随附的 Pomo 扩展不支持此 GNOME Shell 版本。",
+  "pomoGnomeErrorDescription": "无法启动 GNOME Shell 的 Pomo 扩展。请检查状态，或复制环境详情以寻求支持。",
+  "pomoGnomePausedDescription": "Pomo 在 GNOME Shell 中暂时不可用。桌面连接恢复后会重新显示。",
+  "pomoGnomeInstall": "安装扩展",
+  "pomoGnomeEnable": "启用扩展",
+  "pomoGnomeUpdate": "更新扩展",
+  "pomoGnomeCheckAgain": "再次检查",
+  "pomoGnomeXWaylandDescription": "此 GNOME 会话中无法使用 XWayland。Pomo 需要 XWayland 和 Shell 扩展。请启用 XWayland 并重启 Pomodoist，然后再次检查。",
+  "pomoGnomeUserExtensionsDisabledDescription": "此会话中的 GNOME 用户扩展已关闭。请打开“扩展”应用，启用用户扩展，然后再次检查。Pomodoist 不会更改此系统设置。"
 }

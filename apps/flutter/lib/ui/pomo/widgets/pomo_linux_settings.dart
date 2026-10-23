@@ -23,6 +23,30 @@ class PomoLinuxAvailability extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
     final version = ref.watch(pomoAppVersionProvider).value ?? 'unknown';
+    final controller = ref.watch(pomoControllerProvider);
+    final repository = ref.read(pomoEnvironmentRepositoryProvider);
+    final extensionAction = environment.gnomeExtensionAction;
+    final extensionDescription = environment.gnomeXWaylandUnavailable
+        ? l.pomoGnomeXWaylandDescription
+        : environment.gnomeUserExtensionsDisabled
+        ? l.pomoGnomeUserExtensionsDisabledDescription
+        : extensionAction == PomoGnomeExtensionAction.update
+        ? l.pomoGnomeUpdateDescription
+        : switch (environment.gnomeExtensionState) {
+            PomoGnomeExtensionState.notInstalled =>
+              l.pomoGnomeInstallDescription,
+            PomoGnomeExtensionState.disabled => l.pomoGnomeEnableDescription,
+            PomoGnomeExtensionState.reloginRequired =>
+              l.pomoGnomeReloginDescription,
+            PomoGnomeExtensionState.incompatible =>
+              extensionAction == PomoGnomeExtensionAction.update
+                  ? l.pomoGnomeUpdateDescription
+                  : l.pomoGnomeIncompatibleDescription,
+            PomoGnomeExtensionState.error => l.pomoGnomeErrorDescription,
+            _ => l.pomoGnomePausedDescription,
+          };
+    void run(Future<void> Function() action) =>
+        unawaited(controller.command(action));
     if (environment.checking) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -49,15 +73,47 @@ class PomoLinuxAvailability extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l.pomoLinuxUnavailable(
-              description.isEmpty ? l.pomoLinuxUnknownEnvironment : description,
-            ),
+            environment.usesGnomeShell
+                ? extensionDescription
+                : l.pomoLinuxUnavailable(
+                    description.isEmpty
+                        ? l.pomoLinuxUnknownEnvironment
+                        : description,
+                  ),
           ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
+              if (environment.usesGnomeShell) ...[
+                if (extensionAction != null)
+                  FilledButton(
+                    onPressed: controller.busy
+                        ? null
+                        : () => run(
+                            extensionAction == PomoGnomeExtensionAction.enable
+                                ? repository.enableGnomeExtension
+                                : repository.installGnomeExtension,
+                          ),
+                    child: Text(switch (extensionAction) {
+                      PomoGnomeExtensionAction.install => l.pomoGnomeInstall,
+                      PomoGnomeExtensionAction.enable => l.pomoGnomeEnable,
+                      PomoGnomeExtensionAction.update => l.pomoGnomeUpdate,
+                    }),
+                  ),
+                OutlinedButton(
+                  onPressed: controller.busy
+                      ? null
+                      : () => run(repository.gnomeExtensionStatus),
+                  child: Text(l.pomoGnomeCheckAgain),
+                ),
+                if (controller.busy)
+                  const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+              ],
               OutlinedButton(
                 onPressed: () => unawaited(_write(context, version)),
                 child: Text(l.pomoLinuxWrite),

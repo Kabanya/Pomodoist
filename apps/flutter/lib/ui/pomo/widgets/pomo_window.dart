@@ -25,16 +25,33 @@ import 'package:pomodoist/ui/settings/view_models/theme_settings_view_model.dart
 import 'package:pomodoist/ui/quick_add/view_models/global_quick_add_view_model.dart';
 
 import 'pomo_geometry.dart';
+import 'pomo_stage_canvas.dart';
 import 'pomo_model.dart';
 import 'pomo_scale_control.dart';
 import 'pomo_settings.dart';
 import '../view_models/pomo_window_host.dart';
 
-class PomoWindow extends ConsumerWidget {
+class PomoWindow extends ConsumerStatefulWidget {
   const PomoWindow({super.key, this.settingsPanel = false});
   final bool settingsPanel;
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PomoWindow> createState() => _PomoWindowState();
+}
+
+class _PomoWindowState extends ConsumerState<PomoWindow> {
+  final _canvasKey = GlobalKey();
+
+  @override
+  Widget build(BuildContext context) {
+    final (scale, usesGnomeShell) = ref.watch(
+      pomoControllerProvider.select(
+        (c) => (c.effectiveScale, (c.host as PomoWindowHost).usesGnomeShell),
+      ),
+    );
+    final size = PomoLayout(scale).size;
+    final stageSize = widget.settingsPanel
+        ? PomoWindowHost.panelSize
+        : Size(size.width.ceilToDouble(), size.height.ceilToDouble());
     final settings = ref.watch(appThemeSettingsProvider);
     final light = AppTheme.light(palette: settings.activeTheme.light);
     final dark = AppTheme.dark(palette: settings.activeTheme.dark);
@@ -61,25 +78,33 @@ class PomoWindow extends ConsumerWidget {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        builder: (context, child) => ShadTheme(
-          data: AppTheme.shadFromMaterial(
-            Theme.of(context),
-            reduceMotion:
-                reduceMotion || MediaQuery.disableAnimationsOf(context),
-          ),
-          child: ShadAppBuilder(
-            backgroundColor: Colors.transparent,
-            child: child ?? const SizedBox.shrink(),
+        builder: (context, child) => PomoStageCanvas(
+          enabled: usesGnomeShell,
+          stageSize: stageSize,
+          canvasKey: _canvasKey,
+          child: ShadTheme(
+            data: AppTheme.shadFromMaterial(
+              Theme.of(context),
+              reduceMotion:
+                  reduceMotion || MediaQuery.disableAnimationsOf(context),
+            ),
+            child: ShadAppBuilder(
+              backgroundColor: Colors.transparent,
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         ),
-        home: settingsPanel ? const _SettingsPanel() : const _Satellites(),
+        home: widget.settingsPanel
+            ? const _SettingsPanel()
+            : _Satellites(canvasKey: _canvasKey),
       ),
     );
   }
 }
 
 class _Satellites extends ConsumerStatefulWidget {
-  const _Satellites();
+  const _Satellites({required this.canvasKey});
+  final GlobalKey canvasKey;
   @override
   ConsumerState<_Satellites> createState() => _SatellitesState();
 }
@@ -112,19 +137,20 @@ class _SatellitesState extends ConsumerState<_Satellites> with WindowListener {
   void _syncContextMenuBounds() {
     if (!mounted) return;
     final c = ref.read(pomoControllerProvider);
-    Rect? itemBounds;
-    if (_contextMenu.isOpen) {
-      for (final key in [_openAppItem, _hideItem]) {
-        final box = key.currentContext?.findRenderObject() as RenderBox?;
-        if (box == null || !box.hasSize) continue;
-        final rect = box.localToGlobal(Offset.zero) & box.size;
-        itemBounds = itemBounds?.expandToInclude(rect) ?? rect;
-      }
-    }
-    // Include the menu padding and its 4 px entrance movement.
-    final bounds = itemBounds
-        ?.inflate(8)
-        .intersect(Offset.zero & PomoLayout(c.effectiveScale).size);
+    final canvas =
+        widget.canvasKey.currentContext?.findRenderObject() as RenderBox?;
+    if (canvas == null || !canvas.hasSize) return;
+    final bounds = !_contextMenu.isOpen
+        ? null
+        : pomoMenuBoundsInCanvas(
+            canvas,
+            [_openAppItem, _hideItem]
+                .map((key) => key.currentContext?.findRenderObject())
+                .whereType<RenderBox>(),
+            clip: (c.host as PomoWindowHost).usesGnomeShell
+                ? null
+                : Offset.zero & PomoLayout(c.effectiveScale).size,
+          );
     if (_contextBounds == bounds) return;
     _contextBounds = bounds;
     unawaited(
@@ -460,6 +486,13 @@ class _SettingsPanel extends ConsumerStatefulWidget {
 class _SettingsPanelState extends ConsumerState<_SettingsPanel>
     with WindowListener {
   void _close() => unawaited(ref.read(pomoControllerProvider).closeSettings());
+  @override
+  void onWindowFocus() {
+    // The panel is reused after hiding. Autofocus only runs on first mount;
+    // restore this window's scope when a different view last owned keyboard focus.
+    FocusScope.of(context).requestFocus();
+  }
+
   @override
   void onWindowClose() => _close();
   @override

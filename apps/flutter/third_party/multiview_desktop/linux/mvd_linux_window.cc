@@ -1,5 +1,8 @@
 #include "mvd_linux_window.h"
 #include "mvd_linux_internal.h"
+#include "mvd_linux_gnome.h"
+#include "mvd_linux_gl_binding.h"
+#include "mvd_linux_pomo_popup.h"
 #include <gtk-layer-shell.h>
 #include "mvd_linux_log.h"
 #include <gtk/gtk.h>
@@ -9,9 +12,23 @@
 #endif
 
 #include <cstring>
+#include <cmath>
 #include <vector>
 
 #define MVD_LOG MVD_LOG_WINDOW
+
+static void PreparePassivePomo(GtkWindow* window, bool focus_on_show, bool is_pomo) {
+  // Xfwm may reactivate a previously interactive utility on remap even with
+  // focus-on-map disabled. Restore focus acceptance only on an actual click.
+#ifdef GDK_WINDOWING_X11
+  if (!focus_on_show && is_pomo && !mvd_gnome_window(window) &&
+      GDK_IS_X11_DISPLAY(gtk_widget_get_display(GTK_WIDGET(window))) &&
+      g_strcmp0(static_cast<const char*>(g_object_get_data(G_OBJECT(window),
+          "mvd-pomo-role")), "companion") == 0) {
+    gtk_window_set_accept_focus(window, FALSE);
+  }
+#endif
+}
 
 // Returns X11 XID as a string for debug logs (X11 sessions only).
 static std::string mvd_xid_str(GtkWindow* w) {
@@ -504,11 +521,14 @@ void MvdLinuxWindow::Destroy() {
         MVD_LOG("Destroy  deferred_destroy_cb  view_id=%" G_GINT64_FORMAT
                 "  calling gtk_widget_destroy  widget=%p",
                 c->vid, static_cast<void*>(c->widget));
-        gtk_widget_destroy(c->widget);
-        MVD_LOG("Destroy  deferred_destroy_cb  view_id=%" G_GINT64_FORMAT
-                "  gtk_widget_destroy returned  releasing extra GObject ref",
-                c->vid);
-        g_object_unref(c->widget);
+        {
+          mvd::X11GlBindingScope binding(gtk_widget_get_display(c->widget));
+          gtk_widget_destroy(c->widget);
+          MVD_LOG("Destroy  deferred_destroy_cb  view_id=%" G_GINT64_FORMAT
+                  "  gtk_widget_destroy returned  releasing extra GObject ref",
+                  c->vid);
+          g_object_unref(c->widget);
+        }
         delete c;
         return G_SOURCE_REMOVE;
       },
@@ -738,8 +758,29 @@ void MvdLinuxWindow::ClampToParentBounds() {
 void MvdLinuxWindow::Focus() {
   MVD_LOG("Focus  view_id=%" G_GINT64_FORMAT "  window=%p",
           view_id, static_cast<void*>(window));
+  if (mvd_linux_pomo_popup_is(window)) {
+    // The popup grab owns activation; only select Flutter's keyboard target.
+    if (view && gtk_widget_get_mapped(GTK_WIDGET(window)))
+      gtk_widget_grab_focus(GTK_WIDGET(view));
+    return;
+  }
+  PresentWindow(window);
+}
+
+void MvdLinuxWindow::PresentWindow(GtkWindow* window) {
   if (window) {
-    gtk_window_present(window);
+    // A global shortcut arrives outside GDK's event stream. Its cached user
+    // time may predate interaction with another application, causing the WM
+    // to reject activation. Only this explicit activation path obtains a fresh
+    // server timestamp; passive Show must never issue this request.
+    guint32 timestamp = gtk_get_current_event_time();
+#ifdef GDK_WINDOWING_X11
+    GdkWindow* native = gtk_widget_get_window(GTK_WIDGET(window));
+    if (timestamp == GDK_CURRENT_TIME && native && GDK_IS_X11_WINDOW(native)) {
+      timestamp = gdk_x11_get_server_time(native);
+    }
+#endif
+    gtk_window_present_with_time(window, timestamp);
   }
 }
 
@@ -747,7 +788,7 @@ bool MvdLinuxWindow::IsFocused() {
   return window ? gtk_window_is_active(window) : false;
 }
 
-void MvdLinuxWindow::Show() {
+bool MvdLinuxWindow::Show() {
   MVD_LOG("Show  view_id=%" G_GINT64_FORMAT
           "  window=%p  is_dialog=%d  is_modal=%d  parent_id=%" G_GINT64_FORMAT,
           view_id, static_cast<void*>(window),
@@ -755,7 +796,7 @@ void MvdLinuxWindow::Show() {
           dialog_parent_view_id);
   if (!window) {
     MVD_LOG("Show  SKIP: window is null  view_id=%" G_GINT64_FORMAT, view_id);
-    return;
+    return false;
   }
   if (is_dialog && dialog_parent_view_id >= 0) {
     MVD_LOG("Show  centering dialog on parent_id=%" G_GINT64_FORMAT,
@@ -765,13 +806,22 @@ void MvdLinuxWindow::Show() {
       ClampToParentBounds();
     }
   }
+  if (mvd_linux_pomo_popup_is(window)) {
+    GtkWindow* parent = gtk_window_get_transient_for(window);
+    const auto* trigger = parent ? static_cast<const GdkEvent*>(
+        g_object_get_data(G_OBJECT(parent), "mvd-pomo-popup-trigger")) : nullptr;
+    return mvd_linux_pomo_popup_show(window, trigger);
+  }
+  if (mvd_gnome_show(window)) return true;
+  PreparePassivePomo(window, focus_on_show, is_pomo);
   // Apply any position set before the window was mapped so the WM receives
   // the coordinates in the X11 MapRequest (PPosition hint).
   ApplyPendingMove();
   gtk_widget_show(GTK_WIDGET(window));
-  if (focus_on_show) gtk_window_present(window);
+  if (focus_on_show) Focus();
   SeedConfigureBaseline();
   MVD_LOG("Show  DONE  view_id=%" G_GINT64_FORMAT, view_id);
+  return true;
 }
 
 void MvdLinuxWindow::Hide() {
@@ -781,6 +831,8 @@ void MvdLinuxWindow::Hide() {
     MVD_LOG("Hide  SKIP: window is null  view_id=%" G_GINT64_FORMAT, view_id);
     return;
   }
+  if (mvd_linux_pomo_popup_is(window)) { mvd_linux_pomo_popup_hide(window); return; }
+  if (mvd_gnome_window(window)) { mvd_gnome_hide(window); return; }
   gint x = 0;
   gint y = 0;
   gint w = 0;
@@ -835,8 +887,9 @@ void MvdLinuxWindow::Restore() {
   if (!window) {
     return;
   }
+  PreparePassivePomo(window, focus_on_show, is_pomo);
   gtk_window_deiconify(window);
-  gtk_window_present(window);
+  if (focus_on_show) Focus();
 }
 
 bool MvdLinuxWindow::IsFullScreen() {
@@ -903,6 +956,22 @@ FlValue* MvdLinuxWindow::GetBounds() {
   if (!window) {
     return nullptr;
   }
+  if (mvd_gnome_window(window)) return mvd_gnome_bounds(window);
+  if (mvd_linux_pomo_popup_is(window)) {
+    GdkRectangle rectangle{};
+    if (!mvd_linux_pomo_popup_bounds(window, &rectangle)) return nullptr;
+    FlValue* bounds = fl_value_new_map();
+    fl_value_set_string_take(bounds, "x", fl_value_new_float(rectangle.x));
+    fl_value_set_string_take(bounds, "y", fl_value_new_float(rectangle.y));
+    fl_value_set_string_take(bounds, "width", fl_value_new_float(rectangle.width));
+    fl_value_set_string_take(bounds, "height", fl_value_new_float(rectangle.height));
+    fl_value_set_string_take(bounds, "scale", fl_value_new_float(gtk_widget_get_scale_factor(GTK_WIDGET(window))));
+    GtkWindow* parent = gtk_window_get_transient_for(window);
+    g_autoptr(FlValue) parent_bounds = parent ? mvd_linux_layer_bounds(parent) : nullptr;
+    FlValue* display_id = parent_bounds ? fl_value_lookup_string(parent_bounds, "displayId") : nullptr;
+    if (display_id) fl_value_set_string_take(bounds, "displayId", fl_value_ref(display_id));
+    return bounds;
+  }
   if (gtk_layer_is_layer_window(window)) return mvd_linux_layer_bounds(window);
   return MakeBounds(window);
 }
@@ -924,6 +993,15 @@ void MvdLinuxWindow::SetBounds(FlValue* args) {
 }
 
 void MvdLinuxWindow::SetSize(double width, double height) {
+  if (mvd_gnome_window(window)) {
+    g_autoptr(FlValue) args = fl_value_new_map();
+    fl_value_set_string_take(args, "width", fl_value_new_float(width));
+    fl_value_set_string_take(args, "height", fl_value_new_float(height));
+    mvd_gnome_configure(window, args);
+    // Mutter sends the resulting X configure to GTK; a second raw GTK resize
+    // would race its placement and confuse stage units with viewport units.
+    return;
+  }
   if (!window) {
     return;
   }
@@ -941,6 +1019,7 @@ void MvdLinuxWindow::SetSize(double width, double height) {
 
 void MvdLinuxWindow::ApplyPendingMove() {
   if (!window || !has_pending_move) return;
+  if (mvd_gnome_window(window)) { has_pending_move = false; return; }
   has_pending_move = false;
   MVD_LOG("ApplyPendingMove  view_id=%" G_GINT64_FORMAT
           "  x=%d  y=%d  visible=%d",
@@ -962,6 +1041,27 @@ void MvdLinuxWindow::SetPosition(double x, double y) {
           window ? static_cast<int>(gtk_widget_get_visible(GTK_WIDGET(window)))
                  : -1);
   if (!window) return;
+  if (mvd_linux_pomo_popup_is(window)) {
+    GtkWindow* parent = gtk_window_get_transient_for(window);
+    g_autoptr(FlValue) bounds = parent ? mvd_linux_layer_bounds(parent) : nullptr;
+    if (!bounds) return;
+    const GdkRectangle parent_rect{
+      static_cast<int>(fl_value_get_float(fl_value_lookup_string(bounds, "x"))),
+      static_cast<int>(fl_value_get_float(fl_value_lookup_string(bounds, "y"))),
+      static_cast<int>(fl_value_get_float(fl_value_lookup_string(bounds, "width"))),
+      static_cast<int>(fl_value_get_float(fl_value_lookup_string(bounds, "height")))};
+    int width = 0, height = 0;
+    gtk_window_get_size(window, &width, &height);
+    const GdkRectangle desired{static_cast<int>(std::round(x)), static_cast<int>(std::round(y)), width, height};
+    mvd_linux_pomo_popup_move(window, &parent_rect, &desired);
+    return;
+  }
+  if (mvd_gnome_window(window)) {
+    g_autoptr(FlValue) args = fl_value_new_map();
+    fl_value_set_string_take(args, "x", fl_value_new_float(x));
+    fl_value_set_string_take(args, "y", fl_value_new_float(y));
+    mvd_gnome_configure(window, args); return;
+  }
   if (gtk_layer_is_layer_window(window)) {
     mvd_linux_move_layer_window(window, x, y, nullptr);
     return;
@@ -982,6 +1082,7 @@ void MvdLinuxWindow::SetPosition(double x, double y) {
 }
 
 void MvdLinuxWindow::Center() {
+  if (mvd_gnome_window(window)) return;
   if (window) {
     gtk_window_set_position(window, GTK_WIN_POS_CENTER);
   }
@@ -1017,6 +1118,9 @@ void MvdLinuxWindow::RefreshShadowCache() {
 }
 
 void MvdLinuxWindow::ReapplyGeometryHints() {
+  // These hints use GTK viewport units. Shell owns the GNOME stage extent;
+  // raw fixed GTK min/max sizes would prevent fractional-scale placement.
+  if (mvd_gnome_window(window)) return;
   if (!window || hints == static_cast<GdkWindowHints>(0)) {
     return;
   }
@@ -1101,6 +1205,7 @@ void GetWindowContentSize(GtkWindow* window, gint* width, gint* height) {
 
 void MvdLinuxWindow::SetResizable(bool v) {
   is_resizable = v;
+  if (mvd_gnome_window(window)) return;
   if (!window) {
     return;
   }
@@ -1447,6 +1552,7 @@ void MvdLinuxWindow::PopUpWindowMenu() {
 }
 
 void MvdLinuxWindow::StartDragging() {
+  if (mvd_gnome_window(window)) return;
   if (!window) {
     return;
   }
@@ -1471,6 +1577,7 @@ void MvdLinuxWindow::StartDragging() {
 }
 
 void MvdLinuxWindow::StartResizing(const gchar* edge) {
+  if (mvd_gnome_window(window)) return;
   if (!window) {
     return;
   }
@@ -1514,6 +1621,7 @@ void MvdLinuxWindow::StartResizing(const gchar* edge) {
 }
 
 bool MvdLinuxWindow::IsMovable() {
+  if (mvd_gnome_window(window)) return is_resizable;
   return window ? gtk_window_get_resizable(window) : true;
 }
 

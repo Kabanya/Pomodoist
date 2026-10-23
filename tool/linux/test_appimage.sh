@@ -26,12 +26,28 @@ printf '#!/usr/bin/env sh\n' > "$bundle/pomodoist"
 printf 'printf "argument=%%s\\n" "$1"\n' >> "$bundle/pomodoist"
 printf 'printf "appdir=%%s\\n" "$APPDIR"\n' >> "$bundle/pomodoist"
 printf 'printf "ld-library-path=%%s\\n" "$LD_LIBRARY_PATH"\n' >> "$bundle/pomodoist"
+printf 'printf "xdg-data-dirs=%%s\\n" "$XDG_DATA_DIRS"\n' >> "$bundle/pomodoist"
 printf 'printf "gst-plugin-path=%%s\\n" "$GST_PLUGIN_SYSTEM_PATH_1_0"\n' >> "$bundle/pomodoist"
 chmod 755 "$bundle/pomodoist"
 printf 'asset\n' > "$bundle/data/example.txt"
+extension_source="$bundle/data/gnome-extension/pomo@pomodoist.com"
+mkdir -p -- "$extension_source"
+printf '%s\n' '{"uuid":"pomo@pomodoist.com","name":"Pomo","version":1,"shell-version":["46","50","51"]}' > "$extension_source/metadata.json"
+printf '%s\n' 'export default class Pomo {}' > "$extension_source/extension.js"
+python3 "$script_dir/package_gnome_extension.py" --source "$extension_source" \
+  --output "$bundle/data/gnome-extension/pomo@pomodoist.com.shell-extension.zip"
 printf 'library\n' > "$bundle/lib/example.so"
 printf 'layer-shell-runtime\n' > "$bundle/lib/libgtk-layer-shell.so.0.10.1"
 ln -s libgtk-layer-shell.so.0.10.1 "$bundle/lib/libgtk-layer-shell.so.0"
+
+mv "$bundle/data/gnome-extension/pomo@pomodoist.com.shell-extension.zip" "$test_root/extension.zip"
+if POMODOIST_LINUX_BUNDLE="$bundle" POMODOIST_APPDIR="$test_root/incomplete AppDir" \
+  "$script_dir/prepare_appdir.sh" > /dev/null 2>&1; then
+  echo 'prepare_appdir.sh accepted a bundle without the offline GNOME helper' >&2
+  exit 1
+fi
+test ! -e "$test_root/incomplete AppDir"
+mv "$test_root/extension.zip" "$bundle/data/gnome-extension/pomo@pomodoist.com.shell-extension.zip"
 
 # A non-production flavor takes its icon from web/icons/<flavor>/Icon-512.png,
 # which the icon build publishes. The packaging tests must not depend on that
@@ -75,11 +91,14 @@ test "$(cat "$appdir/usr/lib/pomodoist/data/example.txt")" = 'asset'
 test "$(cat "$appdir/usr/lib/pomodoist/lib/example.so")" = 'library'
 test "$(cat "$appdir/usr/lib/pomodoist/lib/libgtk-layer-shell.so.0")" = 'layer-shell-runtime'
 test ! -L "$appdir/usr/lib/pomodoist/lib/libgtk-layer-shell.so.0"
+test -s "$appdir/usr/lib/pomodoist/data/gnome-extension/pomo@pomodoist.com.shell-extension.zip"
+test -s "$appdir/usr/lib/pomodoist/data/gnome-extension/pomo@pomodoist.com/metadata.json"
 test -f "$appdir/usr/share/licenses/gtk-layer-shell/LICENSE_LGPL.txt"
 test -f "$appdir/usr/share/licenses/gtk-layer-shell/LICENSE_GPL.txt"
 test -f "$appdir/usr/share/licenses/gtk-layer-shell/LICENSE_MIT.txt"
 test -f "$appdir/usr/share/licenses/gtk-layer-shell/NOTICE"
 test -s "$appdir/usr/share/licenses/wayland-protocols/LICENSE-relative-pointer"
+test -s "$appdir/usr/share/licenses/wayland-protocols/LICENSE-xdg-output"
 test -L "$appdir/usr/bin/pomodoist"
 test "$(readlink "$appdir/usr/bin/pomodoist")" = '../lib/pomodoist/pomodoist'
 
@@ -153,7 +172,7 @@ done
 test -x "$appdir/usr/lib/gstreamer-1.0/gst-plugin-scanner"
 
 runtime_output="$(
-  env -u APPDIR -u LD_LIBRARY_PATH -u GST_PLUGIN_SYSTEM_PATH_1_0 \
+  env -u APPDIR -u LD_LIBRARY_PATH -u GST_PLUGIN_SYSTEM_PATH_1_0 -u XDG_DATA_DIRS \
     "$appdir/AppRun" 'pomodoist://focus'
 )"
 grep -Fqx 'argument=pomodoist://focus' <<< "$runtime_output"
@@ -162,6 +181,23 @@ grep -Fqx \
   "ld-library-path=$appdir/usr/lib/pomodoist/lib:$appdir/usr/lib" \
   <<< "$runtime_output"
 grep -Fqx "gst-plugin-path=$appdir/usr/lib/gstreamer-1.0" <<< "$runtime_output"
+
+# Unset and empty XDG_DATA_DIRS both mean the XDG default search path. Keep
+# host MIME data and icons visible after adding the application's own data.
+grep -Fqx "xdg-data-dirs=$appdir/usr/share:/usr/local/share:/usr/share" \
+  <<< "$runtime_output"
+empty_data_dirs_output="$(
+  env -u APPDIR XDG_DATA_DIRS= "$appdir/AppRun" 'pomodoist://focus'
+)"
+grep -Fqx "xdg-data-dirs=$appdir/usr/share:/usr/local/share:/usr/share" \
+  <<< "$empty_data_dirs_output"
+
+custom_data_dirs_output="$(
+  env -u APPDIR XDG_DATA_DIRS=/custom/share:/another/share \
+    "$appdir/AppRun" 'pomodoist://focus'
+)"
+grep -Fqx "xdg-data-dirs=$appdir/usr/share:/custom/share:/another/share" \
+  <<< "$custom_data_dirs_output"
 
 invalid_appdir="$test_root/invalid AppDir"
 if POMODOIST_LINUX_BUNDLE="$test_root/missing bundle" \

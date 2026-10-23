@@ -36,6 +36,7 @@ class PomoWindowHost implements PomoHost {
   (PomoDisplayMode, String?, bool)? _placementSettings;
   bool get isLinux => environment != null;
   bool get _isWayland => environment?.state.backend == 'wayland';
+  bool get usesGnomeShell => environment?.state.usesGnomeShell == true;
   PomoPreferences get _preferences =>
       readPreferences?.call() ?? const PomoPreferences();
   final Widget Function(BuildContext, int) builder, settingsBuilder;
@@ -85,6 +86,7 @@ class PomoWindowHost implements PomoHost {
             focusOnShow: false,
             isUtility: true,
             linuxDesktopOverlay: isLinux,
+            linuxDesktopOverlayRole: 'companion',
           ),
         );
       }
@@ -326,6 +328,11 @@ class PomoWindowHost implements PomoHost {
 
   Future<void> _requestLayout() => _updates.request();
   Future<void> _applyLayout() async {
+    // A disconnected Shell owns no usable global geometry. Reconnection will
+    // apply the retained preferences through the normal show lifecycle.
+    if (environment case final repository? when !repository.state.available) {
+      return;
+    }
     final w = window!;
     final displays = await _displays();
     if (displays.isEmpty) throw StateError('No desktop display available');
@@ -451,7 +458,10 @@ class PomoWindowHost implements PomoHost {
         if (isLinux) 'displayId': display.id,
       });
     }
-    _appliedBounds = desired;
+    // GNOME owns placement in stage coordinates. A pending registration has no
+    // confirmed frame yet; never save a requested/GDK frame as Shell geometry.
+    final applied = usesGnomeShell ? (await _bounds())?.$1 : desired;
+    _appliedBounds = applied;
     if (isLinux) {
       _displayPolicy.placed(display.id);
       _displayArea = area;
@@ -470,16 +480,16 @@ class PomoWindowHost implements PomoHost {
       _configured = configuration;
     }
     onLayout(next.scale);
-    if (changed) {
+    if (changed && applied != null) {
       _saveTimer?.cancel();
       _saveTimer = Timer(const Duration(milliseconds: 350), () {
         unawaited(
-          savePosition(desired.topLeft, display!.id).catchError((Object e) {
+          savePosition(applied.topLeft, display!.id).catchError((Object e) {
             onError(e);
           }),
         );
       });
-      if (_panelVisible) await _positionPanel(area, desired);
+      if (_panelVisible) await _positionPanel(area, applied);
     }
   }
 
@@ -516,6 +526,9 @@ class PomoWindowHost implements PomoHost {
   }
 
   Future<void> _checkScreens() async {
+    if (environment case final repository? when !repository.state.available) {
+      return;
+    }
     try {
       final displays = await _displays();
       final signature = displays
@@ -558,7 +571,10 @@ class PomoWindowHost implements PomoHost {
     final data = await _channel.invokeMapMethod<String, Object?>('bounds', {
       'viewId': window!.nativeViewId,
     });
-    if (data == null) throw StateError('Missing native window geometry');
+    if (data == null) {
+      if (usesGnomeShell) return null;
+      throw StateError('Missing native window geometry');
+    }
     return (
       Rect.fromLTWH(
         (data['x'] as num).toDouble(),
@@ -604,6 +620,7 @@ class PomoWindowHost implements PomoHost {
           settingsBuilder,
           options: WindowOptions(
             linuxDesktopOverlay: isLinux,
+            linuxDesktopOverlayRole: 'settings',
             size: panelSize,
             minimumSize: panelSize,
             maximumSize: panelSize,
@@ -642,6 +659,16 @@ class PomoWindowHost implements PomoHost {
       _panelVisible = true;
       await panel.show();
       await panel.focus();
+    } catch (_) {
+      _panelVisible = false;
+      // A compositor can reject the popup if its initiating interaction expired.
+      // Release a partially shown panel before permitting tracking or a retry.
+      try {
+        await _panel?.hide();
+      } catch (_) {
+        // Preserve the original opening error for the shared error handler.
+      }
+      rethrow;
     } finally {
       _panelTransition = false;
     }

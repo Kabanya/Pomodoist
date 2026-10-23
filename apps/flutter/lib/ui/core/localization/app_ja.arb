@@ -2056,5 +2056,18 @@
   "pomoLinuxCrossDisplayDragPinned": "Pomo は選択したモニターに留まります。ドラッグ設定は自動モード用に保持されます。",
   "pomoLinuxWorkspaceFollow": "Sway では、Pomo はアクティブなワークスペースに追従します。",
   "pomoLinuxFollowUnavailable": "この環境では自動追従を利用できません。モニターを選択すると、Pomo をその画面に固定できます。",
-  "pomoLinuxUnknownEnvironment": "不明なデスクトップ環境"
+  "pomoLinuxUnknownEnvironment": "不明なデスクトップ環境",
+  "pomoGnomeInstallDescription": "Pomo をデスクトップに表示するには GNOME Shell 拡張機能が必要です。同梱の拡張機能を自分のユーザーアカウントにインストールしてください。",
+  "pomoGnomeEnableDescription": "GNOME Shell で Pomo 拡張機能を有効にしてください。ユーザー拡張機能が全体で無効になっている場合は、まず「拡張機能」アプリで有効にしてください。",
+  "pomoGnomeReloginDescription": "拡張機能をインストールしました。GNOME Shell がこのバージョンを読み込むよう、一度ログアウトしてログインし直し、再確認してください。",
+  "pomoGnomeUpdateDescription": "このバージョンの Pomo を使うには、GNOME Shell 用の Pomo 拡張機能を更新してください。",
+  "pomoGnomeIncompatibleDescription": "同梱の Pomo 拡張機能は、この GNOME Shell バージョンに対応していません。",
+  "pomoGnomeErrorDescription": "GNOME Shell 用の Pomo 拡張機能を起動できませんでした。状態を確認するか、サポート用に環境情報をコピーしてください。",
+  "pomoGnomePausedDescription": "GNOME Shell で Pomo を一時的に利用できません。デスクトップ接続が復旧すると再表示されます。",
+  "pomoGnomeInstall": "拡張機能をインストール",
+  "pomoGnomeEnable": "拡張機能を有効化",
+  "pomoGnomeUpdate": "拡張機能を更新",
+  "pomoGnomeCheckAgain": "再確認",
+  "pomoGnomeXWaylandDescription": "この GNOME セッションでは XWayland を利用できません。Pomo には XWayland と Shell 拡張機能が必要です。XWayland を有効にして Pomodoist を再起動し、再確認してください。",
+  "pomoGnomeUserExtensionsDisabledDescription": "このセッションでは GNOME のユーザー拡張機能が無効です。「拡張機能」アプリでユーザー拡張機能を有効にして、再確認してください。Pomodoist はこのシステム設定を変更しません。"
 }

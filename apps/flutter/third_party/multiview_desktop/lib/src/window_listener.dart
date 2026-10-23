@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'multi_view_desktop.dart';
+import 'view_scope.dart';
 
 /// Callback surface used by the library to deliver native window events.
 ///
@@ -90,6 +91,11 @@ mixin WindowListener<T extends StatefulWidget> on State<T> implements WindowList
   }
 
   void _mvdSyncWindowListenerRegistration() {
+    // Secondary-window content can also be embedded in a plain Flutter tree.
+    if (ViewScope.maybeOf(context) == null) {
+      _mvdUnregisterWindowListener();
+      return;
+    }
     final int shiftedViewId = MultiViewDesktop.getIdByContext(context);
     if (_mvdRegisteredViewId == shiftedViewId) return;
 

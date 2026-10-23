@@ -183,16 +183,20 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
             ),
           ),
         ),
-        home: ThemeBackground(
-          zone: ThemeBackgroundZone.quickAdd,
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            body: SafeArea(
-              child: QuickAddComposer(
-                onCompleted: onClose,
-                onCancel: onClose,
-                onVoiceModeChanged: onVoiceModeChanged,
-                onCommentExpandedChanged: onCommentExpandedChanged,
+        home: _QuickAddWindowFocus(
+          key: const Key('global-quick-add-focus'),
+          builder: (inputFocus) => ThemeBackground(
+            zone: ThemeBackgroundZone.quickAdd,
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: SafeArea(
+                child: QuickAddComposer(
+                  focusNode: inputFocus,
+                  onCompleted: onClose,
+                  onCancel: onClose,
+                  onVoiceModeChanged: onVoiceModeChanged,
+                  onCommentExpandedChanged: onCommentExpandedChanged,
+                ),
               ),
             ),
           ),
@@ -200,4 +204,39 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
       ),
     );
   }
+}
+
+// Native activation and Flutter's shared-engine keyboard scope are independent.
+// Keep the composer in this window's scope when a different view last had focus.
+class _QuickAddWindowFocus extends StatefulWidget {
+  const _QuickAddWindowFocus({required this.builder, super.key});
+  final Widget Function(FocusNode) builder;
+
+  @override
+  State<_QuickAddWindowFocus> createState() => _QuickAddWindowFocusState();
+}
+
+class _QuickAddWindowFocusState extends State<_QuickAddWindowFocus>
+    with WindowListener {
+  final _inputFocus = FocusNode(debugLabel: 'Global Quick Add input');
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _inputFocus.requestFocus();
+    });
+  }
+
+  @override
+  void onWindowFocus() => _inputFocus.requestFocus();
+
+  @override
+  void dispose() {
+    _inputFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(_inputFocus);
 }

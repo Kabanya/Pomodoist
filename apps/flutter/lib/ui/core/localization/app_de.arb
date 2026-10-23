@@ -1445,5 +1445,18 @@
   "pomoLinuxCrossDisplayDragPinned": "Pomo bleibt auf dem gewählten Monitor. Deine Einstellung zum Ziehen bleibt für den automatischen Modus erhalten.",
   "pomoLinuxWorkspaceFollow": "Unter Sway folgt Pomo dem aktiven Arbeitsbereich.",
   "pomoLinuxFollowUnavailable": "Automatisches Folgen ist in dieser Umgebung nicht verfügbar. Wähle einen Monitor, auf dem Pomo bleiben soll.",
-  "pomoLinuxUnknownEnvironment": "Unbekannte Desktop-Umgebung"
+  "pomoLinuxUnknownEnvironment": "Unbekannte Desktop-Umgebung",
+  "pomoGnomeInstallDescription": "Pomo benötigt seine GNOME-Shell-Erweiterung zur Anzeige auf dem Desktop. Installiere die mitgelieferte Erweiterung für dein Benutzerkonto.",
+  "pomoGnomeEnableDescription": "Aktiviere die Pomo-Erweiterung in GNOME Shell. Falls Benutzererweiterungen global deaktiviert sind, aktiviere sie zuerst in der Erweiterungen-App.",
+  "pomoGnomeReloginDescription": "Die Erweiterung ist installiert. Melde dich ab und wieder an, damit GNOME Shell diese Version lädt, und prüfe erneut.",
+  "pomoGnomeUpdateDescription": "Aktualisiere die Pomo-Erweiterung für GNOME Shell, um diese Pomo-Version zu verwenden.",
+  "pomoGnomeIncompatibleDescription": "Diese GNOME-Shell-Version wird von der mitgelieferten Pomo-Erweiterung nicht unterstützt.",
+  "pomoGnomeErrorDescription": "Die Pomo-Erweiterung für GNOME Shell konnte nicht starten. Prüfe den Status oder kopiere die Umgebungsdetails für den Support.",
+  "pomoGnomePausedDescription": "Pomo ist in GNOME Shell vorübergehend nicht verfügbar. Es erscheint wieder, sobald die Desktop-Verbindung bereit ist.",
+  "pomoGnomeInstall": "Erweiterung installieren",
+  "pomoGnomeEnable": "Erweiterung aktivieren",
+  "pomoGnomeUpdate": "Erweiterung aktualisieren",
+  "pomoGnomeCheckAgain": "Erneut prüfen",
+  "pomoGnomeXWaylandDescription": "XWayland ist in dieser GNOME-Sitzung nicht verfügbar. Pomo benötigt XWayland und seine Shell-Erweiterung. Aktiviere XWayland, starte Pomodoist neu und prüfe erneut.",
+  "pomoGnomeUserExtensionsDisabledDescription": "GNOME-Benutzererweiterungen sind für diese Sitzung ausgeschaltet. Öffne die Erweiterungen-App, schalte Benutzererweiterungen ein und prüfe erneut. Pomodoist ändert diese Systemeinstellung nicht."
 }

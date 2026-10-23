@@ -20,6 +20,7 @@ typedef struct {
   gboolean focus_on_show;
   gboolean is_utility;
   gboolean linux_desktop_overlay;
+  const char* linux_desktop_overlay_role;
   gboolean has_background_color;
   GdkRGBA background_color;
   gboolean has_position;
@@ -43,6 +44,8 @@ void mvd_linux_register_primary(GtkWindow* window, FlView* view);
 void mvd_linux_complete_secondary_window(GtkWindow* window,
                                          FlView* view,
                                          int64_t token);
+void mvd_linux_secondary_window_failed(int64_t token);
+GtkWindow* mvd_linux_pomo_companion_window(void);
 
 void mvd_linux_detach_flutter_quit_on_window_close(GtkWindow* window,
                                                    FlView* view);

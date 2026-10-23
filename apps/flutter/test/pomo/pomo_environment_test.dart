@@ -54,6 +54,123 @@ void main() {
     expect(() => environment.displays.clear(), throwsUnsupportedError);
   });
 
+  test(
+    'GNOME states retain bridge diagnostics without changing actual backend',
+    () {
+      final raw = environmentPayload()
+        ..addAll({
+          'placementBackend': 'gnomeShell',
+          'gnomeExtensionState': 'reloginRequired',
+          'gnomeExtensionVersion': 1,
+          'gnomeShellVersion': '50.2',
+          'gnomeExtensionError': 'Loaded version is stale',
+          'available': false,
+        });
+      final environment = parsePomoEnvironment(raw);
+      expect(environment.backend, 'x11');
+      expect(environment.placementBackend, PomoPlacementBackend.gnomeShell);
+      expect(
+        environment.gnomeExtensionState,
+        PomoGnomeExtensionState.reloginRequired,
+      );
+      expect(environment.gnomeExtensionVersion, 1);
+      expect(environment.gnomeShellVersion, '50.2');
+      expect(environment.gnomeExtensionError, 'Loaded version is stale');
+      expect(environment.available, false);
+      final copied = environment.copyWith(userDisplayId: 'native-left');
+      expect(
+        copied.gnomeExtensionState,
+        PomoGnomeExtensionState.reloginRequired,
+      );
+      expect(copied.gnomeExtensionVersion, 1);
+      expect(
+        buildPomoSupportDetails(copied, '1'),
+        contains('Placement backend: gnomeShell'),
+      );
+      expect(
+        buildPomoSupportDetails(copied, '1'),
+        contains('GNOME extension: reloginRequired (version 1)'),
+      );
+    },
+  );
+
+  test('GNOME offers only the action appropriate to extension state', () {
+    for (final (state, version, action) in [
+      ('notInstalled', null, PomoGnomeExtensionAction.install),
+      ('disabled', 1, PomoGnomeExtensionAction.enable),
+      ('incompatible', 0, PomoGnomeExtensionAction.update),
+      ('incompatible', 1, null),
+      ('reloginRequired', 0, null),
+      ('error', 1, null),
+      ('active', 1, null),
+    ]) {
+      final environment = parsePomoEnvironment(
+        environmentPayload()..addAll({
+          'placementBackend': 'gnomeShell',
+          'gnomeExtensionState': state,
+          'gnomeExtensionVersion': version,
+        }),
+      );
+      expect(environment.gnomeExtensionAction, action, reason: state);
+      expect(environment.available, state == 'active', reason: state);
+    }
+  });
+
+  test(
+    'legacy environment maps infer existing placement and omit GNOME actions',
+    () {
+      final x11 = parsePomoEnvironment(environmentPayload());
+      final wayland = parsePomoEnvironment(
+        environmentPayload(backend: 'wayland'),
+      );
+      expect(x11.placementBackend, PomoPlacementBackend.x11);
+      expect(wayland.placementBackend, PomoPlacementBackend.layerShell);
+      expect(x11.gnomeExtensionState, isNull);
+      final unknown = parsePomoEnvironment(
+        environmentPayload()..addAll({
+          'placementBackend': 'future',
+          'gnomeExtensionState': 'future',
+          'gnomeExtensionVersion': -4,
+        }),
+      );
+      expect(unknown.placementBackend, PomoPlacementBackend.unknown);
+      expect(unknown.gnomeExtensionState, PomoGnomeExtensionState.error);
+      expect(unknown.gnomeExtensionVersion, isNull);
+    },
+  );
+
+  test('missing XWayland cannot be repaired by installing the extension', () {
+    final environment = parsePomoEnvironment(
+      environmentPayload()..addAll({
+        'placementBackend': 'gnomeShell',
+        'gnomeExtensionState': 'notInstalled',
+        'reason': 'gnomeXWaylandUnavailable',
+        'available': false,
+      }),
+    );
+    expect(environment.gnomeExtensionAction, isNull);
+    expect(environment.gnomeXWaylandUnavailable, true);
+  });
+
+  test(
+    'global user-extension disable blocks install, enable and update actions',
+    () {
+      for (final state in ['notInstalled', 'disabled', 'incompatible']) {
+        final environment = parsePomoEnvironment(
+          environmentPayload()..addAll({
+            'placementBackend': 'gnomeShell',
+            'gnomeExtensionState': state,
+            'gnomeExtensionVersion': 0,
+            'reason': 'gnomeUserExtensionsDisabled',
+            'available': false,
+          }),
+        );
+        expect(environment.gnomeExtensionAction, isNull, reason: state);
+        expect(environment.gnomeUserExtensionsDisabled, true);
+      }
+    },
+  );
+
   test('malformed native payloads fail closed', () {
     for (final raw in [
       null,

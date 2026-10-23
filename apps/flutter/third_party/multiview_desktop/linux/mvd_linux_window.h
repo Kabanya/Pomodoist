@@ -13,6 +13,8 @@
 
 class MvdLinuxWindow {
  public:
+  // Explicit activation, including before a first-frame window is registered.
+  static void PresentWindow(GtkWindow* window);
   MvdLinuxWindow();
   ~MvdLinuxWindow();
 
@@ -108,7 +110,7 @@ class MvdLinuxWindow {
   void Destroy();
   void Focus();
   bool IsFocused();
-  void Show();
+  bool Show();
   void Hide();
   bool IsVisible();
   bool IsMaximized();

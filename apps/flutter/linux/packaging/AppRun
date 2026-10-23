@@ -9,7 +9,9 @@ export APPDIR
 
 export PATH="$APPDIR/usr/bin${PATH:+:$PATH}"
 export LD_LIBRARY_PATH="$APPDIR/usr/lib/pomodoist/lib:$APPDIR/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-export XDG_DATA_DIRS="$APPDIR/usr/share${XDG_DATA_DIRS:+:$XDG_DATA_DIRS}"
+# Preserve the XDG default when the caller leaves it unset or empty, so GTK
+# can still find the host MIME database and icon themes.
+export XDG_DATA_DIRS="$APPDIR/usr/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 export GST_PLUGIN_SYSTEM_PATH_1_0="$APPDIR/usr/lib/gstreamer-1.0"
 export GST_PLUGIN_SCANNER="$APPDIR/usr/lib/gstreamer-1.0/gst-plugin-scanner"
 export GST_PLUGIN_SCANNER_1_0="$GST_PLUGIN_SCANNER"

@@ -10,9 +10,7 @@ inline FlMethodChannel* CreatePomoWindowChannel(FlView* view) {
       "pomodoist/pomo_window", FL_METHOD_CODEC(codec));
   fl_method_channel_set_method_call_handler(channel,
       [](FlMethodChannel*, FlMethodCall* call, gpointer) {
-        g_autoptr(FlMethodResponse) response = multiview_desktop_linux_pomo_method(
-            fl_method_call_get_name(call), fl_method_call_get_args(call));
-        fl_method_call_respond(call, response, nullptr);
+        multiview_desktop_linux_pomo_call(call);
       }, nullptr, nullptr);
   return channel;
 }

@@ -313,5 +313,18 @@
   "pomoLinuxCrossDisplayDragPinned": "O Pomo fica no monitor escolhido. Sua preferência de arrastar é mantida para o modo automático.",
   "pomoLinuxWorkspaceFollow": "No Sway, o Pomo segue o espaço de trabalho ativo.",
   "pomoLinuxFollowUnavailable": "O acompanhamento automático não está disponível neste ambiente. Escolha um monitor para manter o Pomo em uma tela fixa.",
-  "pomoLinuxUnknownEnvironment": "Ambiente de desktop desconhecido"
+  "pomoLinuxUnknownEnvironment": "Ambiente de desktop desconhecido",
+  "pomoGnomeInstallDescription": "O Pomo precisa da extensão do GNOME Shell para aparecer na área de trabalho. Instale a extensão incluída para sua conta de usuário.",
+  "pomoGnomeEnableDescription": "Ative a extensão do Pomo no GNOME Shell. Se as extensões de usuário estiverem desativadas globalmente, ative-as primeiro no aplicativo Extensões.",
+  "pomoGnomeReloginDescription": "A extensão está instalada. Saia da sessão e entre novamente para o GNOME Shell carregar esta versão; depois, verifique novamente.",
+  "pomoGnomeUpdateDescription": "Atualize a extensão do Pomo para o GNOME Shell para usar esta versão do Pomo.",
+  "pomoGnomeIncompatibleDescription": "A extensão do Pomo incluída não é compatível com esta versão do GNOME Shell.",
+  "pomoGnomeErrorDescription": "Não foi possível iniciar a extensão do Pomo para o GNOME Shell. Verifique o status ou copie os detalhes do ambiente para o suporte.",
+  "pomoGnomePausedDescription": "O Pomo está temporariamente indisponível no GNOME Shell. Ele voltará quando a conexão com a área de trabalho estiver pronta.",
+  "pomoGnomeInstall": "Instalar extensão",
+  "pomoGnomeEnable": "Ativar extensão",
+  "pomoGnomeUpdate": "Atualizar extensão",
+  "pomoGnomeCheckAgain": "Verificar novamente",
+  "pomoGnomeXWaylandDescription": "O XWayland não está disponível nesta sessão do GNOME. O Pomo precisa do XWayland e da extensão do Shell. Ative o XWayland, reinicie o Pomodoist e verifique novamente.",
+  "pomoGnomeUserExtensionsDisabledDescription": "As extensões de usuário do GNOME estão desativadas nesta sessão. Abra o aplicativo Extensões, ative as extensões de usuário e verifique novamente. O Pomodoist não altera essa configuração do sistema."
 }

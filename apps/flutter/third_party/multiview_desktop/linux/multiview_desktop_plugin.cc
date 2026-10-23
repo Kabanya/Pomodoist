@@ -1,13 +1,22 @@
 #include "mvd_linux_color.h"
 #include <multiview_desktop/multiview_desktop_plugin.h>
+#include <multiview_desktop/multiview_desktop_runner.h>
 
 #include "mvd_linux_internal.h"
+#include "mvd_linux_gnome_policy.h"
+#include "mvd_linux_gnome.h"
+#include "mvd_linux_gl_binding.h"
 #include "mvd_linux_log.h"
 #include "mvd_linux_taskbar_menu.h"
 #include "mvd_linux_window.h"
+#include "mvd_linux_pomo_popup.h"
 
 #include <flutter_linux/flutter_linux.h>
 #include <gtk/gtk.h>
+#include <gtk-layer-shell.h>
+#ifdef GDK_WINDOWING_X11
+#include <gdk/gdkx.h>
+#endif
 
 #include <map>
 #include <memory>
@@ -33,6 +42,7 @@ struct PendingCreate {
   double height = 600;
   std::string title;
   std::string title_bar_style;
+  std::string linux_desktop_overlay_role = "companion";
   bool window_button_visibility = true;
   bool has_position = false;
   double pos_x = 0;
@@ -312,11 +322,14 @@ static gboolean on_delete(GtkWidget* widget, GdkEvent*, gpointer data) {
         MVD_LOG("on_delete  deferred_destroy_cb  viewId=%" G_GINT64_FORMAT
                 "  calling gtk_widget_destroy  widget=%p",
                 c->view_id, static_cast<void*>(c->widget));
-        gtk_widget_destroy(c->widget);
-        MVD_LOG("on_delete  deferred_destroy_cb  viewId=%" G_GINT64_FORMAT
-                "  gtk_widget_destroy returned  releasing extra GObject ref",
-                c->view_id);
-        g_object_unref(c->widget);  // release the ref we took before the timer
+        {
+          mvd::X11GlBindingScope binding(gtk_widget_get_display(c->widget));
+          gtk_widget_destroy(c->widget);
+          MVD_LOG("on_delete  deferred_destroy_cb  viewId=%" G_GINT64_FORMAT
+                  "  gtk_widget_destroy returned  releasing extra GObject ref",
+                  c->view_id);
+          g_object_unref(c->widget);  // release the ref we took before the timer
+        }
         if (c->should_quit) {
           GApplication* app = g_application_get_default();
           MVD_LOG("on_delete  deferred_destroy_cb  viewId=%" G_GINT64_FORMAT
@@ -341,7 +354,11 @@ static gboolean on_focus_in(GtkWidget*, GdkEvent*, gpointer data) {
   return FALSE;
 }
 
-static gboolean on_focus_out(GtkWidget*, GdkEvent*, gpointer data) {
+static gboolean on_focus_out(GtkWidget* widget, GdkEvent*, gpointer data) {
+  // GTK popups use a seat grab, not ordinary toplevel activation. Synthetic
+  // focus transitions during that grab are not a dismissal; the popup owns
+  // Escape, outside clicks, compositor dismissal and broken-grab cleanup.
+  if (mvd_linux_pomo_popup_is(GTK_WINDOW(widget))) return FALSE;
   emit_event("blur", pointer_to_view_id(data));
   return FALSE;
 }
@@ -400,6 +417,23 @@ static gboolean on_window_state(GtkWidget*, GdkEventWindowState* event,
   return FALSE;
 }
 
+static void remember_popup_trigger(GtkWindow* window, const GdkEvent* event, gpointer) {
+#ifdef GDK_WINDOWING_X11
+  if (event && (event->type == GDK_BUTTON_PRESS || event->type == GDK_TOUCH_BEGIN) &&
+      !mvd_gnome_context() && GDK_IS_X11_DISPLAY(gtk_widget_get_display(GTK_WIDGET(window))) &&
+      g_strcmp0(static_cast<const char*>(g_object_get_data(G_OBJECT(window),
+          "mvd-pomo-role")), "companion") == 0 && !gtk_window_get_accept_focus(window)) {
+    gtk_window_set_accept_focus(window, TRUE);
+    gtk_window_present_with_time(window, gdk_event_get_time(event));
+  }
+#endif
+  if (gtk_layer_is_layer_window(window) && event &&
+      (event->type == GDK_BUTTON_PRESS || event->type == GDK_KEY_PRESS || event->type == GDK_TOUCH_BEGIN)) {
+    g_object_set_data_full(G_OBJECT(window), "mvd-pomo-popup-trigger", gdk_event_copy(event),
+        reinterpret_cast<GDestroyNotify>(gdk_event_free));
+  }
+}
+
 static void connect_window_signals(GtkWindow* window, int64_t view_id) {
   MVD_LOG("connect_window_signals  viewId=%" G_GINT64_FORMAT "  window=%p",
           view_id, static_cast<void*>(window));
@@ -413,6 +447,11 @@ static void connect_window_signals(GtkWindow* window, int64_t view_id) {
   g_signal_connect(window, "hide", G_CALLBACK(on_hide), id_data);
   g_signal_connect(window, "window-state-event",
                    G_CALLBACK(on_window_state), id_data);
+  // Capture before FlView consumes input: popup grabs need the real initiating
+  // Wayland serial even when Flutter opens the panel asynchronously.
+  if (g_strcmp0(static_cast<const char*>(g_object_get_data(G_OBJECT(window),
+          "mvd-pomo-role")), "companion") == 0)
+    mvd_linux_pomo_popup_watch(window, remember_popup_trigger, nullptr);
   MVD_LOG("connect_window_signals  DONE  viewId=%" G_GINT64_FORMAT
           "  connected: delete-event focus-in-event focus-out-event"
           " configure-event map show hide window-state-event", view_id);
@@ -525,7 +564,7 @@ static void create_modal_dialog_impl(const DialogCreateParams& params) {
   g_signal_connect_swapped(view, "first-frame", G_CALLBACK(dialog_first_frame_cb),
                            nullptr);
 
-  gtk_widget_realize(GTK_WIDGET(view));
+  multiview_desktop_linux_runner_realize_view(view);
 
   const int64_t view_id = fl_view_get_id(view);
   register_window(window, view, view_id, true, params.is_modal,
@@ -705,8 +744,7 @@ static void handle_view_method(FlMethodCall* method_call,
     wm->SetAsFrameless();
     response = ok_null();
   } else if (g_strcmp0(method, "show") == 0) {
-    wm->Show();
-    response = ok_null();
+    response = wm->Show() ? ok_null() : err("activation", "Window could not be shown from this interaction");
   } else if (g_strcmp0(method, "hide") == 0) {
     wm->Hide();
     response = ok_null();
@@ -877,6 +915,14 @@ static void method_cb(FlMethodChannel*, FlMethodCall* method_call, gpointer) {
     } else {
       PendingCreate pending{};
       pending.token = int64_from_map(args, "token");
+      FlValue* role = fl_value_lookup_string(args, "linuxDesktopOverlayRole");
+      if (role) {
+        if (fl_value_get_type(role) != FL_VALUE_TYPE_STRING || !mvd::ValidGnomeRole(fl_value_get_string(role))) {
+          response = err("arguments", "Invalid Linux desktop overlay role");
+          fl_method_call_respond(method_call, response, nullptr); return;
+        }
+        pending.linux_desktop_overlay_role = fl_value_get_string(role);
+      }
       pending.width = double_from_map(args, "width", 800);
       pending.height = double_from_map(args, "height", 600);
       pending.title = string_from_map(args, "title");
@@ -906,6 +952,7 @@ static void method_cb(FlMethodChannel*, FlMethodCall* method_call, gpointer) {
       req.focus_on_show = bool_from_map(args, "focusOnShow", true);
       req.is_utility = bool_from_map(args, "isUtility", false);
       req.linux_desktop_overlay = bool_from_map(args, "linuxDesktopOverlay", false);
+      req.linux_desktop_overlay_role = pending.linux_desktop_overlay_role.c_str();
       req.has_background_color = fl_value_lookup_string(args, "backgroundColorA") != nullptr;
       const auto color = mvd::DecodeBackgroundColor([&](const char* key, double fallback) {
         return double_from_map(args, key, fallback);
@@ -1131,6 +1178,26 @@ void mvd_linux_complete_secondary_window(GtkWindow* window,
   emit_view_created(view_id, token);
   MVD_LOG("complete_secondary_window  DONE  viewId=%" G_GINT64_FORMAT
           "  token=%" G_GINT64_FORMAT, view_id, token);
+}
+
+void mvd_linux_secondary_window_failed(int64_t token) {
+  {
+    std::lock_guard<std::mutex> lock(g_pending_mtx);
+    g_pending_create.erase(token);
+  }
+  emit_view_created(-2, token);
+}
+
+GtkWindow* mvd_linux_pomo_companion_window(void) {
+  std::lock_guard<std::mutex> lock(MvdLinuxWindow::registry_mtx);
+  for (const auto& entry : MvdLinuxWindow::windows) {
+    GtkWindow* window = entry.second->window;
+    if (window && gtk_layer_is_layer_window(window) &&
+        gtk_widget_get_mapped(GTK_WIDGET(window)) &&
+        g_strcmp0(static_cast<const char*>(g_object_get_data(G_OBJECT(window), "mvd-pomo-role")),
+            "companion") == 0) return window;
+  }
+  return nullptr;
 }
 
 void mvd_linux_detach_flutter_quit_on_window_close(
