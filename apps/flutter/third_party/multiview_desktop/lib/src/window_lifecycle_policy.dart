@@ -33,3 +33,41 @@ List<int> appWindowCandidates({
         .map((window) => window.id)
         .toList()
       ..sort());
+
+/// The Linux embedder reports the implicit window's lifecycle for the engine.
+/// Secondary GTK windows must also keep Flutter's keyboard focus resumed.
+class LinuxWindowLifecycle {
+  LinuxWindowLifecycle({
+    required this.hasFocusedWindow,
+    required this.readState,
+    required this.applyState,
+  });
+
+  final Future<bool> Function() hasFocusedWindow;
+  final AppLifecycleState? Function() readState;
+  final void Function(AppLifecycleState) applyState;
+  int _revision = 0;
+  bool _disposed = false;
+
+  Future<void> synchronize() async {
+    final revision = ++_revision;
+    bool focused;
+    try {
+      focused = await hasFocusedWindow();
+    } catch (_) {
+      return;
+    }
+    if (_disposed || revision != _revision) return;
+    final state = readState();
+    if (state == null || state == AppLifecycleState.detached) return;
+    final desired = focused
+        ? AppLifecycleState.resumed
+        : AppLifecycleState.inactive;
+    if (state != desired) applyState(desired);
+  }
+
+  void dispose() {
+    _disposed = true;
+    _revision++;
+  }
+}

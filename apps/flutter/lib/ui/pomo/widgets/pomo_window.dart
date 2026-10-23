@@ -487,6 +487,13 @@ class _SettingsPanelState extends ConsumerState<_SettingsPanel>
     with WindowListener {
   void _close() => unawaited(ref.read(pomoControllerProvider).closeSettings());
   @override
+  void onWindowFocus() {
+    // The panel is reused after hiding. Autofocus only runs on first mount;
+    // restore this window's scope when a different view last owned keyboard focus.
+    FocusScope.of(context).requestFocus();
+  }
+
+  @override
   void onWindowClose() => _close();
   @override
   void onWindowBlur() => _close();

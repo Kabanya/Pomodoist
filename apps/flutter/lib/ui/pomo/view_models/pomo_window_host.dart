@@ -659,6 +659,16 @@ class PomoWindowHost implements PomoHost {
       _panelVisible = true;
       await panel.show();
       await panel.focus();
+    } catch (_) {
+      _panelVisible = false;
+      // A compositor can reject the popup if its initiating interaction expired.
+      // Release a partially shown panel before permitting tracking or a retry.
+      try {
+        await _panel?.hide();
+      } catch (_) {
+        // Preserve the original opening error for the shared error handler.
+      }
+      rethrow;
     } finally {
       _panelTransition = false;
     }

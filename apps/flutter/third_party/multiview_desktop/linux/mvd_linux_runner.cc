@@ -6,6 +6,7 @@
 #include "mvd_linux_gnome_policy.h"
 #include "mvd_linux_log.h"
 #include "mvd_linux_window.h"
+#include "mvd_linux_pomo_popup.h"
 
 #include <flutter_linux/flutter_linux.h>
 #ifdef GDK_WINDOWING_X11
@@ -117,7 +118,12 @@ static void first_frame_cb(gpointer user_data, FlView* view) {
   MVD_LOG("first_frame_cb  calling gtk_widget_show on toplevel=%p",
           static_cast<void*>(top));
   if (mvd_gnome_show(GTK_WINDOW(top))) return;
-  gtk_widget_show(top);
+  if (wm) {
+    wm->Show();
+  } else {
+    gtk_widget_show(top);
+    MvdLinuxWindow::PresentWindow(GTK_WINDOW(top));
+  }
   MVD_LOG("first_frame_cb  calling gtk_widget_grab_focus on view=%p",
           static_cast<void*>(view));
   gtk_widget_grab_focus(GTK_WIDGET(view));
@@ -184,8 +190,16 @@ static void create_secondary_window(const MvdCreateWindowRequest* request) {
 
   MVD_LOG("create_secondary_window  calling gtk_application_window_new"
           "  g_app=%p", static_cast<void*>(g_app));
-  GtkWindow* window =
-      GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(g_app)));
+  const bool native_popup = request->linux_desktop_overlay && request->is_utility &&
+      g_str_equal(role, "settings") && !mvd_gnome_context() &&
+      gtk_layer_is_supported();
+  GtkWindow* window = native_popup
+      ? mvd_linux_pomo_popup_new(mvd_linux_pomo_companion_window())
+      : GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(g_app)));
+  if (!window) {
+    mvd_linux_secondary_window_failed(request->token);
+    return;
+  }
   MVD_LOG("create_secondary_window  GtkWindow created: window=%p",
           static_cast<void*>(window));
 
@@ -196,6 +210,8 @@ static void create_secondary_window(const MvdCreateWindowRequest* request) {
                     GINT_TO_POINTER(request->is_utility));
   g_object_set_data(G_OBJECT(window), "mvd-pomo",
                     GINT_TO_POINTER(request->linux_desktop_overlay && request->is_utility));
+  if (request->linux_desktop_overlay && request->is_utility)
+    g_object_set_data_full(G_OBJECT(window), "mvd-pomo-role", g_strdup(role), g_free);
   gtk_window_set_focus_on_map(window, request->focus_on_show);
   if (request->linux_desktop_overlay && request->is_utility) {
     mvd_linux_prepare_pomo_window(window);
@@ -236,7 +252,8 @@ static void create_secondary_window(const MvdCreateWindowRequest* request) {
     }
     mvd_gnome_configure(window, initial);
   }
-  if (request->has_position && !mvd_gnome_window(window) && !gtk_layer_is_layer_window(window)) {
+  if (request->has_position && !mvd_gnome_window(window) && !gtk_layer_is_layer_window(window) &&
+      !mvd_linux_pomo_popup_is(window)) {
     MVD_LOG("create_secondary_window  moving window to (%.0f,%.0f)",
             request->pos_x, request->pos_y);
     gtk_window_move(window, static_cast<int>(request->pos_x),

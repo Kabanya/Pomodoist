@@ -5,6 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/data/repositories/pomo/pomo_environment_repository_impl.dart';
 import 'package:pomodoist/data/services/platform/pomo_environment_gateway.dart';
 import 'package:pomodoist/data/services/platform/pomo_follow_transport.dart';
+import 'package:pomodoist/data/services/platform/pomo_follow_transport_io.dart';
+
+import 'pomo_environment_adapters_test.dart' show TestSwayConnection;
 import 'package:pomodoist/domain/models/pomo/pomo_environment.dart';
 
 import 'pomo_environment_test.dart' show environmentPayload;
@@ -100,6 +103,50 @@ void main() {
         'gnomeShellVersion': '50',
         'available': available,
       });
+
+  test(
+    'Sway repository subscribes and maps workspace reports to native displays',
+    () async {
+      final native = Native()
+        ..payload = (environmentPayload(backend: 'wayland')
+          ..['desktop'] = 'sway'
+          ..['followSource'] = 'workspace');
+      final connection = TestSwayConnection();
+      var output = 'HDMI-A-1';
+      final transport = LinuxPomoFollowTransport(
+        environment: {'SWAYSOCK': '/tmp/sway.sock'},
+        swayConnect: (_) async => connection,
+        request: (_, _, type) async => type == 3
+            ? [
+                {
+                  'name': output,
+                  'active': true,
+                  'rect': {'x': 0, 'y': 0, 'width': 2560, 'height': 1440},
+                },
+              ]
+            : [
+                {'focused': true, 'visible': true, 'output': output},
+              ],
+      );
+      final repository = LinuxPomoEnvironmentRepository(
+        native: native,
+        followTransport: transport,
+      );
+      try {
+        await repository.startFollowing();
+        expect(repository.state.followSource, PomoFollowSource.workspace);
+        expect(repository.state.userDisplayId, 'native-left');
+        output = 'DP-1';
+        connection.emit(0x80000000, '{"change":"focus"}');
+        await Future<void>.delayed(Duration.zero);
+        expect(repository.state.userDisplayId, 'native-right');
+        await repository.stopFollowing();
+        expect(connection.closed, isTrue);
+      } finally {
+        repository.dispose();
+      }
+    },
+  );
 
   test(
     'GNOME uses native Shell lease and reconnects without compositor transport',

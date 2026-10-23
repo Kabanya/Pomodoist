@@ -6,7 +6,11 @@
 #include "mvd_linux_pomo_drag.h"
 #include "mvd_linux_pomo_identity.h"
 #include "mvd_linux_window.h"
+#include "mvd_linux_pomo_popup.h"
 #include <gtk-layer-shell.h>
+#include "protocols/xdg-output-unstable-v1-client-protocol.h"
+#include <wayland-client.h>
+#include <cstring>
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
@@ -15,6 +19,8 @@
 #endif
 #include <cmath>
 #include <limits>
+#include <map>
+#include <memory>
 #include <set>
 #include <string>
 
@@ -29,6 +35,273 @@ const char* Backend() {
 #endif
   return "unknown";
 }
+// Layer-shell exposes usable width/height through an all-anchored surface, but
+// never its global origin. Keep full monitor coordinates for identity and cursor
+// mapping; placement/bounds use usable-relative coordinates labeled by that origin.
+struct LayerAreaProbe {
+  explicit LayerAreaProbe(GdkMonitor* value) : monitor(GDK_MONITOR(g_object_ref(value))) {}
+  ~LayerAreaProbe() {
+    Retire();
+    if (logical_output) zxdg_output_v1_destroy(logical_output);
+    g_object_unref(monitor);
+  }
+  void Retire() {
+    GtkWidget* old = window; window = nullptr;
+    if (old) gtk_widget_destroy(old);
+  }
+  GdkMonitor* monitor;
+  GtkWidget* window = nullptr;
+  int width = 0, height = 0;
+  bool ready = false;
+  zxdg_output_v1* logical_output = nullptr;
+  wl_output* borrowed_output = nullptr;
+  mvd::LogicalOutputState logical;
+};
+std::map<GdkMonitor*, std::unique_ptr<LayerAreaProbe>> layer_areas;
+std::set<GtkWindow*> layer_utilities;
+int layer_area_requests = 0;
+
+wl_registry* logical_registry = nullptr;
+wl_callback* logical_registry_sync = nullptr;
+zxdg_output_manager_v1* logical_manager = nullptr;
+uint32_t logical_manager_name = 0;
+bool logical_registry_done = false;
+
+void AttachLogicalOutput(LayerAreaProbe* area) {
+#ifdef GDK_WINDOWING_WAYLAND
+  if (!logical_manager) return;
+  wl_output* output = gdk_wayland_monitor_get_wl_output(area->monitor);
+  if (area->logical_output && area->borrowed_output == output) return;
+  if (area->logical_output) zxdg_output_v1_destroy(area->logical_output);
+  area->logical_output = nullptr; area->borrowed_output = output;
+  area->logical = mvd::LogicalOutputState{};
+  if (!output) return;
+  // A new xdg object has our listener. GDK's borrowed wl_output/display and their
+  // listeners remain untouched; GTK dispatches our normal queue asynchronously.
+  area->logical_output = zxdg_output_manager_v1_get_xdg_output(logical_manager, output);
+  static const zxdg_output_v1_listener listener{
+    +[](void* data, zxdg_output_v1*, int32_t x, int32_t y) {
+      static_cast<LayerAreaProbe*>(data)->logical.Position(x, y);
+    },
+    +[](void* data, zxdg_output_v1*, int32_t width, int32_t height) {
+      static_cast<LayerAreaProbe*>(data)->logical.Size(width, height);
+    },
+    +[](void* data, zxdg_output_v1*) { static_cast<LayerAreaProbe*>(data)->logical.Done(); },
+    +[](void* data, zxdg_output_v1*, const char* name) {
+      static_cast<LayerAreaProbe*>(data)->logical.Name(name);
+    },
+    +[](void*, zxdg_output_v1*, const char*) {},
+  };
+  zxdg_output_v1_add_listener(area->logical_output, &listener, area);
+#endif
+}
+void EnsureLogicalOutputs() {
+#ifdef GDK_WINDOWING_WAYLAND
+  if (logical_registry) return;
+  GdkDisplay* gdk = gdk_display_get_default();
+  wl_display* display = gdk ? gdk_wayland_display_get_wl_display(gdk) : nullptr;
+  if (!display) { logical_registry_done = true; return; }
+  logical_registry = wl_display_get_registry(display);
+  static const wl_registry_listener listener{
+    +[](void*, wl_registry* registry, uint32_t name, const char* interface, uint32_t version) {
+      if (logical_manager || version < 2 || std::strcmp(interface, zxdg_output_manager_v1_interface.name)) return;
+      // Version2 has its own done event. Version3 instead relies on GDK-owned
+      // wl_output.done, whose listener must never be replaced or intercepted.
+      logical_manager = static_cast<zxdg_output_manager_v1*>(
+          wl_registry_bind(registry, name, &zxdg_output_manager_v1_interface, 2));
+      logical_manager_name = name;
+      for (auto& entry : layer_areas) AttachLogicalOutput(entry.second.get());
+    },
+    +[](void*, wl_registry*, uint32_t name) {
+      if (!logical_manager || name != logical_manager_name) return;
+      for (auto& entry : layer_areas) {
+        if (entry.second->logical_output) zxdg_output_v1_destroy(entry.second->logical_output);
+        entry.second->logical_output = nullptr; entry.second->borrowed_output = nullptr;
+        entry.second->logical = mvd::LogicalOutputState{};
+      }
+      zxdg_output_manager_v1_destroy(logical_manager); logical_manager = nullptr;
+    },
+  };
+  wl_registry_add_listener(logical_registry, &listener, nullptr);
+  logical_registry_sync = wl_display_sync(display);
+  static const wl_callback_listener synced{+[](void*, wl_callback* callback, uint32_t) {
+    logical_registry_done = true; logical_registry_sync = nullptr;
+    wl_callback_destroy(callback);
+  }};
+  wl_callback_add_listener(logical_registry_sync, &synced, nullptr);
+  wl_display_flush(display);
+#else
+  logical_registry_done = true;
+#endif
+}
+bool HasLogicalOutput(GdkMonitor* monitor) {
+  auto it = layer_areas.find(monitor);
+  return logical_manager && it != layer_areas.end() && it->second->logical.Get().ready;
+}
+void MonitorGeometry(GdkMonitor* monitor, GdkRectangle* geometry) {
+  if (HasLogicalOutput(monitor)) {
+    const auto& logical = layer_areas.at(monitor)->logical.Get().geometry;
+    *geometry = {logical.x, logical.y, logical.width, logical.height};
+  } else {
+    // Older compositors may not expose xdg-output v2. This is an explicit GDK
+    // fallback, not a claim that GDK has authoritative live logical geometry.
+    gdk_monitor_get_geometry(monitor, geometry);
+  }
+}
+const char* MonitorName(GdkMonitor* monitor) {
+  if (HasLogicalOutput(monitor)) {
+    const auto& name = layer_areas.at(monitor)->logical.Get().name;
+    if (!name.empty()) return name.c_str();
+  }
+  return gdk_monitor_get_model(monitor);
+}
+
+void RetireIdleLayerProbes() {
+  if (!layer_utilities.empty() || layer_area_requests) return;
+  for (auto& entry : layer_areas) entry.second->Retire();
+}
+bool MonitorConnected(GdkDisplay* display, GdkMonitor* monitor) {
+  if (!display || !monitor) return false;
+  for (int i = 0; i < gdk_display_get_n_monitors(display); ++i)
+    if (gdk_display_get_monitor(display, i) == monitor) return true;
+  return false;
+}
+void RecoverRemovedOutput(GdkDisplay* display, GdkMonitor* removed) {
+  GdkMonitor* fallback = gdk_display_get_primary_monitor(display);
+  if (!MonitorConnected(display, fallback)) fallback =
+      gdk_display_get_n_monitors(display) ? gdk_display_get_monitor(display, 0) : nullptr;
+  // A remap emits unmap/map and mutates layer_utilities. Retain a separate
+  // snapshot while GTK closes popup children and releases the implicit grab.
+  std::vector<GtkWindow*> affected;
+  for (GtkWindow* window : layer_utilities) {
+    if (gtk_layer_get_monitor(window) == removed)
+      affected.push_back(GTK_WINDOW(g_object_ref(window)));
+  }
+  for (GtkWindow* window : affected) {
+    // layer.closed queues gtk_window_close at default priority. A reassignment
+    // can finish before that queued delete arrives, so monitor comparison alone
+    // would misclassify it as manual dismissal. Consume only this dispatch turn;
+    // a later explicit close must retain its ordinary lifecycle.
+    g_object_set_data(G_OBJECT(window), "mvd-pomo-output-close", GINT_TO_POINTER(1));
+    g_idle_add_full(G_PRIORITY_DEFAULT_IDLE, +[](gpointer data) -> gboolean {
+      g_object_set_data(G_OBJECT(data), "mvd-pomo-output-close", nullptr);
+      return G_SOURCE_REMOVE;
+    }, g_object_ref(window), g_object_unref);
+    mvd_linux_pomo_drag_end(window);
+    GdkRectangle work{};
+    if (!fallback || !mvd_linux_pomo_workarea(fallback, &work)) {
+      // No usable replacement yet: remove the raw GTK-layer monitor pointer
+      // while hidden. Environment refresh will restore a retained companion.
+      gtk_widget_hide(GTK_WIDGET(window));
+      gtk_layer_set_monitor(window, fallback);
+    } else {
+      int width = 0, height = 0; gtk_window_get_size(window, &width, &height);
+      const auto margins = mvd::ClampLayerMargins(work.width, work.height,
+          width, height, {gtk_layer_get_margin(window, GTK_LAYER_SHELL_EDGE_LEFT),
+              gtk_layer_get_margin(window, GTK_LAYER_SHELL_EDGE_TOP)});
+      // GTK layer-shell 0.8 stores GdkMonitor as a borrowed raw pointer. Change
+      // it before pruning the probe's owning ref; reassignment remaps the closed
+      // layer instead of retaining a stale surface after compositor output loss.
+      gtk_layer_set_margin(window, GTK_LAYER_SHELL_EDGE_LEFT, margins.left);
+      gtk_layer_set_margin(window, GTK_LAYER_SHELL_EDGE_TOP, margins.top);
+      gtk_layer_set_monitor(window, fallback);
+    }
+    g_object_unref(window);
+  }
+}
+void PruneLayerAreas() {
+  GdkDisplay* display = gdk_display_get_default();
+  std::set<GdkMonitor*> connected;
+  if (display) for (int i = 0; i < gdk_display_get_n_monitors(display); ++i)
+    connected.insert(gdk_display_get_monitor(display, i));
+  for (auto it = layer_areas.begin(); it != layer_areas.end();) {
+    if (!connected.count(it->first)) it = layer_areas.erase(it);
+    else ++it;
+  }
+}
+void EnsureLayerAreas(bool refresh_idle_measurement = false) {
+  PruneLayerAreas();
+  EnsureLogicalOutputs();
+  GdkDisplay* display = gdk_display_get_default();
+  if (!display) return;
+  if (!g_object_get_data(G_OBJECT(display), "mvd-pomo-area-watch")) {
+    g_signal_connect(display, "monitor-removed", G_CALLBACK(+[](GdkDisplay* current, GdkMonitor* removed, gpointer) {
+      RecoverRemovedOutput(current, removed);
+      PruneLayerAreas();
+    }), nullptr);
+    g_object_set_data(G_OBJECT(display), "mvd-pomo-area-watch", GINT_TO_POINTER(1));
+  }
+  for (int i = 0; i < gdk_display_get_n_monitors(display); ++i) {
+    GdkMonitor* monitor = gdk_display_get_monitor(display, i);
+    auto& owned = layer_areas[monitor];
+    if (!owned) owned = std::make_unique<LayerAreaProbe>(monitor);
+    auto* probe = owned.get();
+    AttachLogicalOutput(probe);
+    if (probe->window) continue;
+    // A fresh first-show query must observe a compositor configure, not a stale
+    // extent retained while no utility was active.
+    if (refresh_idle_measurement && layer_utilities.empty()) probe->ready = false;
+    GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    probe->window = window;
+    g_signal_connect(window, "destroy", G_CALLBACK(+[](GtkWidget*, gpointer data) {
+      static_cast<LayerAreaProbe*>(data)->window = nullptr;
+    }), probe);
+    gtk_window_set_decorated(GTK_WINDOW(window), FALSE);
+    gtk_window_set_accept_focus(GTK_WINDOW(window), FALSE);
+    gtk_window_set_focus_on_map(GTK_WINDOW(window), FALSE);
+    gtk_widget_set_app_paintable(window, TRUE);
+    GdkVisual* visual = gdk_screen_get_rgba_visual(gtk_widget_get_screen(window));
+    if (visual) gtk_widget_set_visual(window, visual);
+    g_signal_connect(window, "draw", G_CALLBACK(+[](GtkWidget*, cairo_t* cr, gpointer) -> gboolean {
+      cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+      cairo_set_source_rgba(cr, 0, 0, 0, 0); cairo_paint(cr); return TRUE;
+    }), nullptr);
+    // Store the shape on GtkWidget before realization. Setting only its GDK
+    // window in realize is overwritten by GTK's later initial shape application.
+    cairo_region_t* empty = cairo_region_create();
+    gtk_widget_input_shape_combine_region(window, empty);
+    cairo_region_destroy(empty);
+    g_signal_connect(window, "realize", G_CALLBACK(+[](GtkWidget* widget, gpointer) {
+      gdk_window_set_opaque_region(gtk_widget_get_window(widget), nullptr);
+    }), nullptr);
+    g_signal_connect(window, "configure-event", G_CALLBACK(+[](GtkWidget*, GdkEventConfigure* event, gpointer data) -> gboolean {
+      auto* area = static_cast<LayerAreaProbe*>(data);
+      // Configure may precede the logical-output done event. Keep its raw
+      // extent and validate only when both independent streams are committed.
+      area->width = event->width; area->height = event->height;
+      area->ready = event->width > 0 && event->height > 0;
+      return FALSE;
+    }), probe);
+    gtk_layer_init_for_window(GTK_WINDOW(window));
+    gtk_layer_set_namespace(GTK_WINDOW(window), "pomodoist-workarea");
+    gtk_layer_set_layer(GTK_WINDOW(window), GTK_LAYER_SHELL_LAYER_TOP);
+    gtk_layer_set_exclusive_zone(GTK_WINDOW(window), 0);
+    gtk_layer_set_keyboard_mode(GTK_WINDOW(window), GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
+    gtk_layer_set_monitor(GTK_WINDOW(window), monitor);
+    for (auto edge : {GTK_LAYER_SHELL_EDGE_LEFT, GTK_LAYER_SHELL_EDGE_RIGHT,
+        GTK_LAYER_SHELL_EDGE_TOP, GTK_LAYER_SHELL_EDGE_BOTTOM})
+      gtk_layer_set_anchor(GTK_WINDOW(window), edge, TRUE);
+    gtk_widget_show(window);
+  }
+}
+bool LayerAreasReady() {
+  GdkDisplay* display = gdk_display_get_default();
+  if (!display || !gdk_display_get_n_monitors(display) || !logical_registry_done) return false;
+  for (int i = 0; i < gdk_display_get_n_monitors(display); ++i) {
+    auto it = layer_areas.find(gdk_display_get_monitor(display, i));
+    if (it == layer_areas.end() || !it->second->ready ||
+        (logical_manager && !it->second->logical.Get().ready)) return false;
+    GdkRectangle output{}; MonitorGeometry(it->first, &output);
+    const auto work = mvd::MeasuredLayerWorkArea(output.x, output.y, output.width,
+        output.height, it->second->width, it->second->height);
+    if (work.width <= 0 || work.height <= 0) return false;
+  }
+  return true;
+}
+void ReleaseLayerUtility(GtkWindow* window) {
+  layer_utilities.erase(window);
+  RetireIdleLayerProbes();
+}
 const char* UnavailableReason() {
   if (mvd_gnome_context()) return mvd_gnome_available() ? nullptr : mvd_gnome_reason();
   if (!gdk_display_get_default() ||
@@ -41,6 +314,7 @@ const char* UnavailableReason() {
   if (g_str_equal(Backend(), "wayland")) {
     if (!gtk_layer_is_supported()) return "layerShellUnavailable";
     if (gtk_layer_get_protocol_version() < 4) return "layerShellOnDemandUnavailable";
+    if (!LayerAreasReady()) return "displayUnavailable";
     return nullptr;
   }
   return "backendUnsupported";
@@ -76,6 +350,15 @@ GdkMonitor* MonitorById(const char* id, double x, double y) {
   }
   // A stale explicit display is rejected instead of jumping to an unrelated one.
   if (id && *id) return nullptr;
+  if (g_str_equal(Backend(), "wayland") && !mvd_gnome_context()) {
+    for (int i = 0; i < gdk_display_get_n_monitors(display); ++i) {
+      GdkMonitor* monitor = gdk_display_get_monitor(display, i);
+      GdkRectangle geometry{}; MonitorGeometry(monitor, &geometry);
+      if (x >= geometry.x && y >= geometry.y && x < geometry.x + geometry.width &&
+          y < geometry.y + geometry.height) return monitor;
+    }
+    return gdk_display_get_primary_monitor(display);
+  }
   return gdk_display_get_monitor_at_point(display, static_cast<int>(x), static_cast<int>(y));
 }
 void Number(FlValue* map, const char* key, double value) {
@@ -106,11 +389,13 @@ FlValue* Environment() {
     for (int i = 0; i < gdk_display_get_n_monitors(display); ++i) {
       GdkMonitor* monitor = gdk_display_get_monitor(display, i);
       GdkRectangle geometry{}, work{};
-      gdk_monitor_get_geometry(monitor, &geometry);
-      gdk_monitor_get_workarea(monitor, &work);
+      MonitorGeometry(monitor, &geometry);
+      mvd_linux_pomo_workarea(monitor, &work);
       FlValue* entry = fl_value_new_map();
       String(entry, "id", MonitorId(monitor).c_str());
-      String(entry, "name", gdk_monitor_get_model(monitor));
+      String(entry, "name", MonitorName(monitor));
+      if (!mvd_gnome_context() && g_str_equal(Backend(), "wayland"))
+        String(entry, "geometrySource", HasLogicalOutput(monitor) ? "xdgOutputV2" : "gdkFallback");
       Number(entry, "x", geometry.x); Number(entry, "y", geometry.y);
       Number(entry, "width", geometry.width); Number(entry, "height", geometry.height);
       Number(entry, "workX", work.x); Number(entry, "workY", work.y);
@@ -189,13 +474,31 @@ FlMethodResponse* Error(const char* code, const char* message) {
 }
 }  // namespace
 
+gboolean mvd_linux_pomo_workarea(GdkMonitor* monitor, GdkRectangle* work) {
+  if (!monitor || !work) return FALSE;
+  if (!MonitorConnected(gdk_display_get_default(), monitor)) {
+    *work = {0, 0, 0, 0}; return FALSE;
+  }
+  if (mvd_gnome_context() || !g_str_equal(Backend(), "wayland")) {
+    gdk_monitor_get_workarea(monitor, work); return TRUE;
+  }
+  GdkRectangle output{}; MonitorGeometry(monitor, &output);
+  auto it = layer_areas.find(monitor);
+  if (it == layer_areas.end() || !it->second->ready) { *work = {output.x, output.y, 0, 0}; return FALSE; }
+  const auto area = mvd::MeasuredLayerWorkArea(output.x, output.y, output.width, output.height,
+      it->second->width, it->second->height);
+  *work = {area.x, area.y, area.width, area.height};
+  return area.width > 0 && area.height > 0;
+}
+
 gboolean mvd_linux_pomo_available(void) { return UnavailableReason() == nullptr; }
 
 void mvd_linux_prepare_pomo_window(GtkWindow* window) {
   gtk_window_set_decorated(window, FALSE);
   gtk_window_set_skip_taskbar_hint(window, TRUE);
   gtk_window_set_skip_pager_hint(window, TRUE);
-  gtk_window_set_type_hint(window, GDK_WINDOW_TYPE_HINT_UTILITY);
+  if (!mvd_linux_pomo_popup_is(window))
+    gtk_window_set_type_hint(window, GDK_WINDOW_TYPE_HINT_UTILITY);
   gtk_window_set_keep_above(window, TRUE);
   // Accept keyboard after a click, without requesting focus when mapped.
   gtk_window_set_accept_focus(window, TRUE);
@@ -209,7 +512,20 @@ void mvd_linux_prepare_pomo_window(GtkWindow* window) {
   gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(window)),
       GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION + 1);
   g_object_unref(provider);
-  if (!mvd_gnome_context() && g_str_equal(Backend(), "wayland") && !UnavailableReason()) {
+  if (!mvd_linux_pomo_popup_is(window) && !mvd_gnome_context() &&
+      g_str_equal(Backend(), "wayland") && gtk_layer_is_supported() &&
+      gtk_layer_get_protocol_version() >= 4) {
+    // Hidden utility windows are reused. Map/unmap, not allocation alone, own
+    // the shared probe lifetime; settings and companion can map independently.
+    g_signal_connect(window, "map", G_CALLBACK(+[](GtkWidget* widget, gpointer) {
+      layer_utilities.insert(GTK_WINDOW(widget)); EnsureLayerAreas();
+    }), nullptr);
+    g_signal_connect(window, "unmap", G_CALLBACK(+[](GtkWidget* widget, gpointer) {
+      ReleaseLayerUtility(GTK_WINDOW(widget));
+    }), nullptr);
+    g_signal_connect(window, "destroy", G_CALLBACK(+[](GtkWidget* widget, gpointer) {
+      ReleaseLayerUtility(GTK_WINDOW(widget));
+    }), nullptr);
     // This MUST run before gtk_widget_realize (including realization via FlView).
     gtk_layer_init_for_window(window);
     gtk_layer_set_namespace(window, "pomodoist-pomo");
@@ -225,7 +541,7 @@ gboolean mvd_linux_move_layer_window(GtkWindow* window, double x, double y, cons
   GdkMonitor* monitor = MonitorById(display_id, x, y);
   if (!monitor || !gtk_layer_is_layer_window(window)) return FALSE;
   GdkRectangle work{};
-  gdk_monitor_get_workarea(monitor, &work);
+  if (!mvd_linux_pomo_workarea(monitor, &work)) return FALSE;
   const auto margins = mvd::LayerPlacement(work.x, work.y, x, y);
   // Avoid remapping on every drag update: changing monitor remaps the surface.
   if (gtk_layer_get_monitor(window) != monitor) gtk_layer_set_monitor(window, monitor);
@@ -235,6 +551,10 @@ gboolean mvd_linux_move_layer_window(GtkWindow* window, double x, double y, cons
 }
 
 gboolean mvd_linux_layer_output_lost(GtkWindow* window) {
+  if (g_object_get_data(G_OBJECT(window), "mvd-pomo-output-close")) {
+    g_object_set_data(G_OBJECT(window), "mvd-pomo-output-close", nullptr);
+    return TRUE;
+  }
   if (!gtk_layer_is_layer_window(window)) return FALSE;
   GdkMonitor* monitor = gtk_layer_get_monitor(window);
   if (!monitor) return FALSE;
@@ -255,7 +575,7 @@ FlValue* mvd_linux_layer_bounds(GtkWindow* window) {
     if (!monitor && gdk_display_get_n_monitors(display)) monitor = gdk_display_get_monitor(display, 0);
   }
   GdkRectangle work{};
-  if (monitor) gdk_monitor_get_workarea(monitor, &work);
+  if (!monitor || !mvd_linux_pomo_workarea(monitor, &work)) return nullptr;
   int width = 0, height = 0;
   gtk_window_get_size(window, &width, &height);
   FlValue* bounds = fl_value_new_map();
@@ -342,6 +662,7 @@ FlMethodResponse* multiview_desktop_linux_pomo_method(const char* method, FlValu
   }
   if (g_str_equal(method, "detach")) {
     mvd_linux_pomo_drag_end(window);
+    ReleaseLayerUtility(window);
     ApplyInput(GTK_WIDGET(window), nullptr);
     g_object_set_data(G_OBJECT(window), "mvd-pomo-region", nullptr);
     g_object_set_data(G_OBJECT(window), "mvd-pomo-input-regions", nullptr);
@@ -396,6 +717,26 @@ FlMethodResponse* multiview_desktop_linux_pomo_method(const char* method, FlValu
 void multiview_desktop_linux_pomo_call(FlMethodCall* call) {
   const char* method = fl_method_call_get_name(call);
   FlValue* args = fl_method_call_get_args(call);
+  if (g_str_equal(method, "environment") && !mvd_gnome_context() &&
+      g_str_equal(Backend(), "wayland") && gtk_layer_is_supported() && gtk_layer_get_protocol_version() >= 4) {
+    struct PendingAreaReply { FlMethodCall* call; gint64 deadline; };
+    ++layer_area_requests;
+    EnsureLayerAreas(true);
+    auto* pending = new PendingAreaReply{FL_METHOD_CALL(g_object_ref(call)), g_get_monotonic_time() + 750000};
+    g_timeout_add_full(G_PRIORITY_DEFAULT, 5, +[](gpointer data) -> gboolean {
+      auto* pending = static_cast<PendingAreaReply*>(data);
+      PruneLayerAreas();
+      if (!LayerAreasReady() && g_get_monotonic_time() < pending->deadline) return G_SOURCE_CONTINUE;
+      g_autoptr(FlValue) environment = Environment();
+      Respond(pending->call, environment, nullptr);
+      return G_SOURCE_REMOVE;
+    }, pending, +[](gpointer data) {
+      auto* pending = static_cast<PendingAreaReply*>(data);
+      g_object_unref(pending->call); delete pending;
+      --layer_area_requests; RetireIdleLayerProbes();
+    });
+    return;
+  }
   if (mvd_gnome_context() && g_str_equal(method, "setFollowing")) {
     FlValue* enabled = args && fl_value_get_type(args) == FL_VALUE_TYPE_MAP ? fl_value_lookup_string(args, "enabled") : nullptr;
     if (!enabled || fl_value_get_type(enabled) != FL_VALUE_TYPE_BOOL) {

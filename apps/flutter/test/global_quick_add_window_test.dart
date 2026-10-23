@@ -3,6 +3,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multiview_desktop/multiview_desktop.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pomodoist/ui/quick_add/widgets/global_quick_add_window.dart';
 import 'package:pomodoist/config/billing_dependencies.dart';
@@ -16,6 +17,41 @@ import '../testing/fakes/fake_focus_repository.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+  testWidgets('native reactivation returns keyboard input to the retained composer', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final otherWindowFocus = FocusNode();
+    final otherDraft = TextEditingController();
+    addTearDown(otherWindowFocus.dispose);
+    addTearDown(otherDraft.dispose);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        focusRepositoryProvider.overrideWithValue(FakeFocusRepository()),
+      ],
+      child: MaterialApp(home: Scaffold(body: Row(children: [
+        Expanded(child: TextField(focusNode: otherWindowFocus, controller: otherDraft)),
+        Expanded(child: GlobalQuickAddWindowApp(onClose: () {}, onVoiceModeChanged: (_) {})),
+      ]))),
+    ));
+    await tester.pumpAndSettle();
+    otherWindowFocus.requestFocus();
+    await tester.pump();
+    tester.testTextInput.enterText('Other window draft');
+    await tester.pump();
+    expect(otherWindowFocus.hasFocus, isTrue);
+    final listener = tester.state(find.byKey(const Key('global-quick-add-focus'))) as WindowListenerCallbacks;
+    listener.onWindowFocus();
+    await tester.pump();
+    tester.testTextInput.enterText('Restored quick add');
+    await tester.pump();
+    expect(find.text('Restored quick add'), findsOneWidget);
+    expect(otherDraft.text, 'Other window draft');
+    expect(otherWindowFocus.hasFocus, isFalse);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
+  });
   testWidgets('global voice window follows expansion and keeps composer text', (
     tester,
   ) async {

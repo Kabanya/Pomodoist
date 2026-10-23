@@ -14,9 +14,11 @@ add_library(${PLUGIN_NAME} SHARED
   "mvd_linux_window.cc"
   "mvd_linux_runner.cc"
   "mvd_linux_pomo.cc"
+  "mvd_linux_pomo_popup.cc"
   "mvd_linux_gnome.cc"
   "mvd_linux_pomo_drag.cc"
   "protocols/relative-pointer-unstable-v1-protocol.cc"
+  "protocols/xdg-output-unstable-v1-protocol.cc"
 )
 
 apply_standard_settings(${PLUGIN_NAME})

@@ -595,3 +595,59 @@ invalid grabs are retained as harness evidence, not passes or product failures.
 Physical mixed/fractional DPI, full focus/lock/workspace behavior, reactions and
 Reduce Motion remain separate acceptance work. No product fix was attempted
 during this verification run.
+
+
+### Desktop fixes after the October 23 baseline
+
+The baseline matrix above records the original candidate and remains historical.
+The subsequent candidate fixes explicit X11 activation using a fresh server
+input timestamp, while retaining passive companion show/restore behavior. Xfce's previously
+interactive companion explicitly declines focus when remapped/restored and
+accepts it again only on direct interaction. The regression uses the actual Show
+button after interaction and Hide, not only the initial Enable action.
+Native Wayland placement measures usable layer extents without claiming a
+compositor-global work-area origin. Independent xdg-output v2 descriptions
+provide committed connector names and logical rectangles during rearrangement.
+Probes have empty widget input regions before realization and are retired when
+no companion layer is mapped.
+
+The compact panel uses a real GTK child popup attached to the companion's layer
+surface. Its initiating event supplies the seat grab; constrained popup geometry
+is read back from GTK. Closing, hiding or destroying either surface releases
+keyboard and pointer grabs. Capture-phase observers retain the initiating event
+before Flutter's internal event widget consumes it. GTK child popup seat grabs
+can produce synthetic toplevel focus transitions; native popup dismissal owns
+those lifecycles instead of interpreting them as ordinary window blur.
+An opening failure clears the host's panel state so
+tracking and later opening attempts can recover. The Sway socket subscription
+was not changed speculatively: an integrated repository/real transport test and
+native event traces exercise acknowledgements, workspace events and reconnects.
+
+GNOME also exposed a shared-engine lifecycle issue after correct Quick Add
+activation: GTK delivered keyboard events, but Flutter still followed the main
+window's inactive state. Linux now reconciles engine lifecycle with actual
+native window focus, rejecting stale queries and work after disposal. Retained
+Quick Add and compact settings restore their input focus on reactivation.
+
+The Ubuntu 24.04 GNOME 46 Wayland guest passed transparent click-through over a
+native Wayland window, companion dragging, and three Quick Add cycles with
+native activation, typed text and Escape dismissal. The final lifecycle change
+also passed reused Sway popup keyboard input after typing in the main window.
+Plasma and Hyprland guests verified the native Wayland placement and popup
+changes, including panel-reserved space and cross-output dragging. Sway output
+removal and restoration retained a live companion without restarting its
+renderer. Earlier X11 checks passed Quick Add on Cinnamon, MATE, Budgie and
+Xfce, and passive Xfce companion Show retained the existing window's focus.
+These are scoped VM results; they do not certify other Ubuntu or GNOME versions.
+The final packaged AppImage also passed three Xfce Quick Add cycles with native
+focus, typed text and Escape dismissal.
+The existing X11 global Quick Add shortcut still does not open over a focused
+native Wayland application in GNOME. Matched runs with the immutable baseline
+and final AppImage both reproduced this limitation. The activation/input fix
+covers opening Quick Add from an XWayland application; it does not add a GNOME
+global-shortcut backend.
+
+Follow-up evidence is stored separately under
+`build/design/pomo/2026-10-23-desktop-fixes`. Headless virtual outputs and virgl
+still do not establish physical mixed/fractional-DPI acceptance. Portal startup
+delays and renderer cleanup warnings remain outside this fix scope.

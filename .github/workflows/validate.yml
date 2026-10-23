@@ -35,6 +35,8 @@ jobs:
       - run: python3 -m unittest discover -s tool/windows -p 'test_*.py' -v
       - run: make test-linux-packaging
       - run: tool/linux/test_pomo_geometry.sh
+      - name: Test child popup lifecycle and consumed Flutter-style input
+        run: bash tool/linux/test_pomo_popup.sh
       - name: Test GTK GLX and Flutter EGL initialization on software Mesa
         run: bash tool/linux/test_gl_binding.sh
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -55,6 +57,8 @@ jobs:
         run: |
           FLUTTER_ENGINE_DIR="$FLUTTER_ROOT/bin/cache/artifacts/engine/linux-x64" \
             bash tool/linux/test_pomo_gnome_native.sh
+          FLUTTER_ENGINE_DIR="$FLUTTER_ROOT/bin/cache/artifacts/engine/linux-x64" \
+            bash tool/linux/test_window_activation.sh
       - name: Check resolved Dart symbol boundaries
         run: dart run tool/check_architecture_types.dart
         working-directory: apps/flutter

@@ -149,6 +149,38 @@ class _MultiViewRoot extends StatefulWidget {
 
 class _MultiViewRootState extends State<_MultiViewRoot> with WidgetsBindingObserver {
   late final _ViewsManagerImpl _viewsManagerImpl;
+  int? _nativeFocusedViewId;
+  late final _linuxLifecycle = LinuxWindowLifecycle(
+    hasFocusedWindow: () async {
+      final ids = {
+        ..._viewsManagerImpl._windows.keys,
+        ..._viewsManagerImpl._dialogs.keys,
+        ?_nativeFocusedViewId,
+      };
+      final focused = await Future.wait(ids.map((id) async {
+        try {
+          return await _nativeChannel.isFocused(id);
+        } catch (_) {
+          // A native window may close while its focus query is in flight.
+          return false;
+        }
+      }));
+      return focused.any((value) => value);
+    },
+    readState: () => WidgetsBinding.instance.lifecycleState,
+    // ignore: invalid_use_of_protected_member
+    applyState: WidgetsBinding.instance.handleAppLifecycleStateChanged,
+  );
+
+  void _nativeFocusChanged(int viewId, String event) {
+    if (!Platform.isLinux) return;
+    if (event == 'focus') _nativeFocusedViewId = viewId;
+    if ((event == 'blur' || event == 'hide' || event == 'close') &&
+        _nativeFocusedViewId == viewId) {
+      _nativeFocusedViewId = null;
+    }
+    unawaited(_linuxLifecycle.synchronize());
+  }
 
   WindowCommunicator get communicator => _viewsManagerImpl.communicator;
 
@@ -210,6 +242,7 @@ class _MultiViewRootState extends State<_MultiViewRoot> with WidgetsBindingObser
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    if (Platform.isLinux) _linuxLifecycle.dispose();
     if (identical(_rootState, this)) _rootState = null;
     super.dispose();
   }
@@ -237,8 +270,12 @@ class _MultiViewRootState extends State<_MultiViewRoot> with WidgetsBindingObser
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.hidden) return;
-    keepDesktopFramesAlive(() => mounted && _viewsManagerImpl.allRealWindowIds.isNotEmpty);
+    if (state == AppLifecycleState.hidden) {
+      keepDesktopFramesAlive(() => mounted && _viewsManagerImpl.allRealWindowIds.isNotEmpty);
+    }
+    if (Platform.isLinux && (state == AppLifecycleState.inactive || state == AppLifecycleState.hidden)) {
+      unawaited(_linuxLifecycle.synchronize());
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -767,6 +804,9 @@ class _ViewsManagerImpl implements ViewsManager {
       final int? viewId = call.arguments['viewId'] as int?;
 
       if (viewId != null) {
+        if (eventName == 'focus' || eventName == 'blur' || eventName == 'hide' || eventName == 'close') {
+          _rootState?._nativeFocusChanged(viewId, eventName);
+        }
         _dispatchViewEvent(viewId, eventName);
       }
     }

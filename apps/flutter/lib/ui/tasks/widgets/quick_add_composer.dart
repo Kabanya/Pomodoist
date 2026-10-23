@@ -12,6 +12,7 @@ class QuickAddComposer extends ConsumerStatefulWidget {
     this.onCommentExpandedChanged,
     this.onVoiceSessionChanged,
     this.compact = false,
+    this.focusNode,
     super.key,
   });
 
@@ -25,6 +26,7 @@ class QuickAddComposer extends ConsumerStatefulWidget {
   final ValueChanged<bool>? onCommentExpandedChanged;
   final ValueChanged<bool>? onVoiceSessionChanged;
   final bool compact;
+  final FocusNode? focusNode;
 
   @override
   ConsumerState<QuickAddComposer> createState() => _QuickAddComposerState();
@@ -37,7 +39,8 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
   bool _commentExpanded = false;
   final _identity = Object();
   final _inputKey = GlobalKey();
-  final _inputFocus = FocusNode();
+  final _ownedInputFocus = FocusNode();
+  FocusNode get _inputFocus => widget.focusNode ?? _ownedInputFocus;
   bool get _busy =>
       ref.read(quickAddViewModelProvider(_identity)).result.isLoading;
 
@@ -56,7 +59,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
 
   @override
   void dispose() {
-    _inputFocus.dispose();
+    _ownedInputFocus.dispose();
     _controller.dispose();
     _commentController.dispose();
     super.dispose();

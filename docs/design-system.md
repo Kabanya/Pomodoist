@@ -1590,6 +1590,25 @@ On Linux, probe the actual GDK backend and compositor capabilities before openin
 Pomo. X11/XWayland uses a passive RGBA utility window; native Wayland uses a
 `gtk-layer-shell` top-layer surface with no exclusive zone and on-demand keyboard
 focus. Apply the role and transparent GTK/Flutter backing before realization.
+For native layer-shell placement, measure the available extent with transparent,
+non-interactive stretched surfaces. Keep placement, drag, panel anchoring and
+saved relative positions in the same usable-relative coordinate space; keep
+full logical output rectangles separate for cursor/output selection. Read
+committed xdg-output geometry when GDK monitor data is stale after rearrangement.
+The compact panel is a GTK child popup of the companion layer surface. Open it
+from the initiating input event, read its compositor-constrained bounds, and
+release keyboard/pointer grabs on dismissal, parent hide and destruction.
+Ordinary application/Quick Add windows activate explicitly with a current X11
+server timestamp when no current GTK input event exists. Passive companion show
+and restoration must never request activation. On X11, a remapped companion
+accepts keyboard focus only after direct interaction; keep the settings panel
+keyboard-accessible. Observe initiating input in GTK's capture phase so Flutter's
+internal event widget cannot consume the popup activation serial first.
+The Linux shared Flutter engine must remain resumed while any real GTK app
+window has keyboard focus, including secondary Quick Add windows. Reconcile
+native focus without activating windows, discard stale asynchronous replies,
+and return to inactive when focus leaves the app. Retained Quick Add and Pomo
+settings views restore their own input focus on native reactivation.
 Linux native 3D textures are vertically inverted at the texture presentation
 boundary. Keep raster fallback images and other platforms upright as authored.
 On GNOME Wayland, choose the XWayland backend for the whole Linux application

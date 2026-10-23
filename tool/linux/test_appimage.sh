@@ -98,6 +98,7 @@ test -f "$appdir/usr/share/licenses/gtk-layer-shell/LICENSE_GPL.txt"
 test -f "$appdir/usr/share/licenses/gtk-layer-shell/LICENSE_MIT.txt"
 test -f "$appdir/usr/share/licenses/gtk-layer-shell/NOTICE"
 test -s "$appdir/usr/share/licenses/wayland-protocols/LICENSE-relative-pointer"
+test -s "$appdir/usr/share/licenses/wayland-protocols/LICENSE-xdg-output"
 test -L "$appdir/usr/bin/pomodoist"
 test "$(readlink "$appdir/usr/bin/pomodoist")" = '../lib/pomodoist/pomodoist'
 
