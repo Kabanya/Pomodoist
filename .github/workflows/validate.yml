@@ -21,7 +21,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends \
-            appstream desktop-file-utils clang libgtk-layer-shell-dev \
+            appstream desktop-file-utils clang libgtk-3-dev libgtk-layer-shell-dev \
             libc++-dev libc++abi-dev libdrm-dev libegl1-mesa-dev libepoxy-dev \
             libgl1-mesa-dev libgbm-dev libwayland-dev zlib1g-dev \
             libegl-mesa0 libgl1-mesa-dri xvfb xauth
