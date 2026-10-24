@@ -273,7 +273,12 @@ printf '==> Stapling\n'
 xcrun stapler staple "$dmg_path"
 xcrun stapler validate "$dmg_path"
 
-# Write the release checksum only after notarization and stapling succeed.
+printf '==> Verifying Gatekeeper acceptance\n'
+codesign --verify --strict "$dmg_path"
+spctl --assess --type open --context context:primary-signature "$dmg_path"
+spctl --assess --type execute "$staged_app"
+
+# Write the release checksum only after notarization and Gatekeeper succeed.
 (
   cd "$output_dir"
   shasum -a 256 "$dmg_name" | awk '{print $1 "  " $2}' > "$dmg_name.sha256"

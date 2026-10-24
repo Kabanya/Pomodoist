@@ -49,6 +49,12 @@ class MacosBuildTests(unittest.TestCase):
         self.command('xcodebuild', "echo '    PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist'")
         self.command('security', 'printf \'1) ABC "%s"\\n\' "$POMODOIST_MACOS_SIGNING_IDENTITY"')
         self.command('lipo', "echo 'x86_64 arm64'")
+        self.command('spctl', '''
+echo "$*" >> "$TEST_APP/assessments"
+if [[ -n "${TEST_GATEKEEPER_REJECT:-}" && "$*" == *"--type $TEST_GATEKEEPER_REJECT"* ]]; then
+  exit 1
+fi
+''')
         self.command('file', '''
 case "${@: -1}" in
   */Pomodoist|*/App|*/sqlite3|*.dylib) echo 'Mach-O universal binary' ;;
@@ -116,6 +122,9 @@ fi
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         output = self.output
         self.assertIn('stapled ticket', (output / 'Pomodoist-macOS.dmg').read_text())
+        assessments = (self.app / 'assessments').read_text()
+        self.assertIn('--type open --context context:primary-signature', assessments)
+        self.assertIn('--type execute', assessments)
         result = subprocess.run(['shasum', '-a', '256', '-c', 'Pomodoist-macOS.dmg.sha256'],
                                 cwd=output, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -146,6 +155,15 @@ fi
         receipt = plistlib.loads(receipt_path.read_bytes())
         self.assertEqual(receipt['id'], 'test-submission')
         self.assertFalse((self.output / 'Pomodoist-macOS.dmg.sha256').exists())
+
+    @unittest.skipUnless(Path('/usr/libexec/PlistBuddy').is_file(), 'macOS packaging check')
+    def test_gatekeeper_rejection_prevents_release_checksum(self):
+        for target_type in ('open', 'execute'):
+            with self.subTest(target_type=target_type):
+                self.env['TEST_GATEKEEPER_REJECT'] = target_type
+                result = self.build()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse((self.output / 'Pomodoist-macOS.dmg.sha256').exists())
 
 
 if __name__ == '__main__':

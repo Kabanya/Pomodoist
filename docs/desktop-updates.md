@@ -11,6 +11,85 @@ updates, including through manual actions. Their Settings explain this restricti
 self-hosted clients must be rebuilt by their operator to preserve their server
 configuration. Production debug builds still support manual checks.
 
+## macOS direct downloads
+
+macOS is distributed separately through a universal `Pomodoist-macOS.dmg` for
+Apple Silicon and Intel, with a `Pomodoist-macOS.dmg.sha256` sidecar. Download
+these files from [GitHub Releases](https://github.com/Kabanya/Pomodoist/releases),
+open the DMG and drag Pomodoist into Applications. Update a direct-download
+installation by downloading the newer DMG; there is no native macOS updater.
+The direct download uses production configuration and Stripe billing and omits
+the Mac App Store focus widget.
+
+The `macOS DMG` workflow runs automatically for new `vX.Y.Z` and `vX.Y.Z-rc.N`
+tags. It signs the application, its nested code and the disk image using
+Developer ID Application, secure timestamps and Hardened Runtime. Apple
+notarization must return `Accepted`, the ticket must be stapled and validated,
+and Gatekeeper must accept the DMG and application before the release checksum
+is created. Verification also mounts the DMG, checks the app signature, bundle
+identity, Direct entitlements, and both architectures. Unsigned or rejected
+artifacts are never published.
+
+Windows, Linux and Android keep their existing release requirements and can
+publish before macOS finishes. The DMG is attached to the same release once it
+passes verification. A release created first by macOS stays draft until the
+required assets from the other platforms arrive. Existing release tags are not
+moved to add workflow changes.
+
+### Signing configuration
+
+Configure the GitHub environment `macos-production` with these secrets:
+
+| Secret | Value |
+| --- | --- |
+| `POMODOIST_MACOS_CERTIFICATE_P12_BASE64` | Base64-encoded password-protected P12 containing only the selected Developer ID Application certificate and private key |
+| `POMODOIST_MACOS_CERTIFICATE_PASSWORD` | Password protecting that P12 |
+| `POMODOIST_MACOS_SIGNING_IDENTITY` | `Developer ID Application: FinchForge, LLC (4VK836929S)` |
+| `POMODOIST_MACOS_NOTARY_PROFILE` | `pomodoist-developer-id` |
+| `ASC_KEY_ID` | Existing App Store Connect team API key ID |
+| `ASC_ISSUER_ID` | Issuer of that team API key |
+| `ASC_PRIVATE_KEY_BASE64` | Base64-encoded `.p8` API private key |
+| `GOOGLE_DESKTOP_CLIENT_SECRET` | Existing production desktop OAuth configuration |
+
+Export only the selected Developer ID identity, not every identity in the login
+Keychain. Set environment variables `WEB_APP_URL`, `TURNSTILE_SITE_KEY` and
+`GOOGLE_DESKTOP_CLIENT_ID` from the existing production desktop configuration.
+`SENTRY_DSN` is optional. Never commit certificate exports, passwords or private
+keys; keep local copies in ignored configuration only.
+
+`tool/macos/ci_signing.sh` imports the identity into a temporary Keychain,
+grants the system signing tools access and creates a validated `notarytool`
+profile. The wrapper restores the original default Keychain and search list
+and removes temporary signing files on success or failure. Apple credentials
+are never included in Flutter configuration. The production configuration is
+generated from an allowlist, checked with the existing desktop validator and
+removed after the build. Local `tool/macos/build.sh` builds can continue using
+their existing signing identity and Keychain profile without the CI wrapper.
+
+### Verification and troubleshooting
+
+Run `tool/macos/test_build_contract.sh` for the packaging and CI credential tests.
+After workflow changes reach `main`, run
+`gh workflow run macos-dmg-release.yml --ref main` for a verification build.
+Main-branch runs produce the `pomodoist-macos-dmg` Actions artifact only;
+supported release-tag runs attach assets to that tag's release. Download the
+published DMG through a browser and test installation and first launch with
+normal Gatekeeper settings before treating a release as verified for users.
+
+Missing credentials, a wrong P12 identity, notarization rejection, stapling
+failure or Gatekeeper rejection stops publication. Inspect the
+`pomodoist-macos-notarization` Actions artifact for the submission receipt,
+result and rejection log; diagnostics are retained for 14 days and contain no
+signing material. If the client fails while waiting, the receipt preserves the
+submission ID. Check it locally with `xcrun notarytool info <id>
+--keychain-profile pomodoist-developer-id` before re-uploading. An upload receipt
+alone does not prove accepted notarization. The CI build has a 90-minute limit.
+
+Developer ID signing and notarization prevent the unverified-developer and
+unverified-software blocks with standard Gatekeeper settings. macOS may still
+ask whether to open an app downloaded from the internet on its first launch;
+that confirmation is normal and does not mean the app is unverified.
+
 ## Channels and assets
 
 Stable is the persistent default. The optional RC switch includes `vX.Y.Z-rc.N`
