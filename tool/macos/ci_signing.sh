@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Run a CI build with a temporary Developer ID identity and notary profile.
 set -euo pipefail
+build_umask=$(umask)
 umask 077
 
 for name in RUNNER_TEMP POMODOIST_MACOS_CERTIFICATE_P12_BASE64 \
@@ -62,4 +63,5 @@ xcrun notarytool store-credentials "$POMODOIST_MACOS_NOTARY_PROFILE" \
   --keychain "$keychain_path" > /dev/null
 rm -f "$signing_dir/certificate.p12" "$signing_dir/notary.p8"
 
+umask "$build_umask"
 "$@"

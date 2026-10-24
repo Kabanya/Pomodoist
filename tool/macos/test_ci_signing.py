@@ -58,6 +58,7 @@ if command == 'security':
         pathlib.Path(args[-1]).unlink()
     elif args[0] == 'import':
         assert pathlib.Path(args[1]).read_bytes() == b'certificate'
+        assert pathlib.Path(args[1]).stat().st_mode & 0o777 == 0o600
         if os.environ.get('TEST_IMPORT_FAILURE'): status = 1
     elif args[0] == 'find-identity':
         if not os.environ.get('TEST_MISSING_IDENTITY'):
@@ -65,9 +66,13 @@ if command == 'security':
 elif command == 'xcrun':
     assert args[:2] == ['notarytool', 'store-credentials']
     assert pathlib.Path(args[args.index('--key') + 1]).read_bytes() == b'fixture-private-key'
+    assert pathlib.Path(args[args.index('--key') + 1]).stat().st_mode & 0o777 == 0o600
     if os.environ.get('TEST_NOTARY_FAILURE'): status = 1
 elif command == 'build':
     assert state['default'] != '/original/login.keychain-db'
+    mask = os.umask(0)
+    os.umask(mask)
+    state['build_umask'] = mask
     status = int(os.environ.get('TEST_BUILD_STATUS', '0'))
 state_path.write_text(json.dumps(state))
 sys.exit(status)
@@ -77,7 +82,8 @@ sys.exit(status)
             (self.bin / name).symlink_to(fake)
 
     def run_signing(self):
-        return subprocess.run(['bash', str(ROOT / 'tool/macos/ci_signing.sh'), 'build'],
+        return subprocess.run(['bash', '-c', 'umask 022; exec bash "$@"', 'ci-signing-test',
+                               str(ROOT / 'tool/macos/ci_signing.sh'), 'build'],
                               env=self.env, capture_output=True, text=True)
 
     def assert_cleaned(self):
@@ -122,6 +128,12 @@ sys.exit(status)
         self.env['TEST_BUILD_STATUS'] = '42'
         result = self.run_signing()
         self.assertEqual(result.returncode, 42, result.stdout + result.stderr)
+        self.assert_cleaned()
+
+    def test_build_preserves_original_umask_while_credentials_are_private(self):
+        result = self.run_signing()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(json.loads(self.state.read_text())['build_umask'], 0o022)
         self.assert_cleaned()
 
 
