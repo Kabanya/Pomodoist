@@ -22,6 +22,7 @@ jobs:
             appstream desktop-file-utils
       - run: sh tool/test_public_boundary.sh
       - run: sh tool/test_xcode_warnings.sh
+      - run: tool/macos/test_build_contract.sh
       - run: python3 tool/check_architecture.py
       - run: python3 tool/deploy/web/check_build_contract.py
       - run: python3 -m unittest discover -s tool -p test_architecture.py

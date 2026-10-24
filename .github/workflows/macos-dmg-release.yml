@@ -2,6 +2,9 @@ name: macOS DMG
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*'
 
 concurrency:
   group: desktop-release-${{ github.workflow }}-${{ github.ref }}
@@ -30,7 +33,8 @@ jobs:
     needs: validate-ref
     # An arm64 runner builds the universal binary in one pass; the artifact is
     # checked for both architectures below.
-    runs-on: macos-14
+    runs-on: macos-15
+    timeout-minutes: 90
     environment: macos-production
     permissions:
       contents: read
@@ -38,6 +42,8 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          lfs: true
       - name: Prepare application version
         id: version
         run: |
@@ -66,6 +72,7 @@ jobs:
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version-file: .fvmrc
+      - run: tool/link-build.sh
       - run: flutter pub get
         working-directory: apps/flutter
       - name: Check the direct-download contract
@@ -87,28 +94,47 @@ jobs:
           done
           # The direct download ships the same production profile as the other
           # desktop builds, with Stripe billing rather than StoreKit.
-          cat > "$RUNNER_TEMP/macos-production.env" <<EOF
-          POMODOIST_ENVIRONMENT=production
-          WEB_APP_URL=${WEB_APP_URL}
-          POMODOIST_REGISTRATION_URL=https://app.pomodoist.com/auth/challenge
-          TURNSTILE_SITE_KEY=${TURNSTILE_SITE_KEY}
-          SENTRY_DSN=${SENTRY_DSN}
-          GOOGLE_DESKTOP_CLIENT_ID=${GOOGLE_DESKTOP_CLIENT_ID}
-          GOOGLE_DESKTOP_CLIENT_SECRET=${GOOGLE_DESKTOP_CLIENT_SECRET}
-          POMODOIST_BILLING_CHANNEL=stripe
-          EOF
+          umask 077
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          config = {name: os.environ.get(name, '') for name in (
+              'WEB_APP_URL', 'TURNSTILE_SITE_KEY', 'SENTRY_DSN',
+              'GOOGLE_DESKTOP_CLIENT_ID', 'GOOGLE_DESKTOP_CLIENT_SECRET',
+          )}
+          config.update(
+              POMODOIST_ENVIRONMENT='production',
+              POMODOIST_REGISTRATION_URL='https://app.pomodoist.com/auth/challenge',
+              POMODOIST_BILLING_CHANNEL='stripe',
+          )
+          (Path(os.environ['RUNNER_TEMP']) / 'macos-production.json').write_text(json.dumps(config))
+          PY
+          dart tool/desktop_release_config.dart --config "$RUNNER_TEMP/macos-production.json"
       - name: Build DMG
         env:
-          # The signing identity and its private key must be installed on the
-          # runner, and the notary profile must exist in its Keychain. Missing
-          # credentials stop the build; unsigned artifacts are never published.
+          POMODOIST_MACOS_CERTIFICATE_P12_BASE64: ${{ secrets.POMODOIST_MACOS_CERTIFICATE_P12_BASE64 }}
+          POMODOIST_MACOS_CERTIFICATE_PASSWORD: ${{ secrets.POMODOIST_MACOS_CERTIFICATE_PASSWORD }}
           POMODOIST_MACOS_SIGNING_IDENTITY: ${{ secrets.POMODOIST_MACOS_SIGNING_IDENTITY }}
           POMODOIST_MACOS_NOTARY_PROFILE: ${{ secrets.POMODOIST_MACOS_NOTARY_PROFILE }}
-          POMODOIST_MACOS_CONFIG: ${{ runner.temp }}/macos-production.env
-        run: tool/macos/build.sh --flavor production --output release
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
+          POMODOIST_MACOS_CONFIG: ${{ runner.temp }}/macos-production.json
+        run: tool/macos/ci_signing.sh tool/macos/build.sh --flavor production --output release
       - name: Remove production configuration
         if: always()
-        run: rm -f "$RUNNER_TEMP/macos-production.env"
+        run: rm -f "$RUNNER_TEMP/macos-production.json"
+      - name: Preserve notarization diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: pomodoist-macos-notarization
+          path: |
+            release/notarization-submission.plist
+            release/notarization.plist
+            release/notarization-log.json
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Verify architectures, checksum and release boundary
         run: |
           set -euo pipefail
@@ -130,6 +156,8 @@ jobs:
             exit 1
           fi
           test -L "$mount_point/Applications"
+          codesign --verify --deep --strict "$app"
+          spctl --assess --type execute "$app"
           executable=$(find "$app/Contents/MacOS" -maxdepth 1 -type f -print -quit)
           archs=$(lipo -archs "$executable")
           for want in arm64 x86_64; do

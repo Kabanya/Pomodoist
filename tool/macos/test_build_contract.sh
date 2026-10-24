@@ -212,4 +212,5 @@ if (( failures > 0 )); then
 fi
 
 python3 "$tool_dir/test_build.py"
+python3 "$tool_dir/test_ci_signing.py"
 printf 'macOS direct-download contract is intact.\n'
