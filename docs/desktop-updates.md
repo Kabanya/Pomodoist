@@ -76,6 +76,9 @@ supported release-tag runs attach assets to that tag's release. Download the
 published DMG through a browser and test installation and first launch with
 normal Gatekeeper settings before treating a release as verified for users.
 
+The workflow selects Xcode 26.3 on `macos-15`: the runner's default Xcode 16.4
+does not include the StoreKit JWS promotional-offer API used by the app.
+
 Missing credentials, a wrong P12 identity, notarization rejection, stapling
 failure or Gatekeeper rejection stops publication. Inspect the
 `pomodoist-macos-notarization` Actions artifact for the submission receipt,

@@ -36,6 +36,9 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 90
     environment: macos-production
+    env:
+      # StoreKit's JWS promotional offers require the Xcode 26 SDK.
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
     permissions:
       contents: read
     outputs:
