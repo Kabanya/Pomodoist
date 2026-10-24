@@ -144,7 +144,7 @@ jobs:
           dmg=release/Pomodoist-macOS.dmg
           test -f "$dmg"
           test -f "$dmg.sha256"
-          shasum -a 256 -c "$dmg.sha256"
+          (cd release && shasum -a 256 -c Pomodoist-macOS.dmg.sha256)
 
           # A universal binary has to carry both slices, or one class of Mac
           # would have to fall back to emulation it cannot use.

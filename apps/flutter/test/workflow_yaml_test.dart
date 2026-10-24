@@ -4,6 +4,44 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yaml/yaml.dart';
 
 void main() {
+  test('macOS verifies its relative checksum from the release directory', () {
+    final steps =
+        _job(
+              '../../.github/workflows/macos-dmg-release.yml',
+              'build-test',
+            )['steps']
+            as YamlList;
+    final script =
+        steps.singleWhere(
+              (step) =>
+                  step['name'] ==
+                  'Verify architectures, checksum and release boundary',
+            )['run']
+            as String;
+    final temp = Directory.systemTemp.createTempSync('macos-checksum-');
+    try {
+      final release = Directory('${temp.path}/release')..createSync();
+      final dmg = File('${release.path}/Pomodoist-macOS.dmg')
+        ..writeAsStringSync('DMG fixture');
+      final checksum = Process.runSync('shasum', [
+        '-a',
+        '256',
+        'Pomodoist-macOS.dmg',
+      ], workingDirectory: release.path);
+      expect(checksum.exitCode, 0, reason: '${checksum.stderr}');
+      File('${dmg.path}.sha256').writeAsStringSync(checksum.stdout as String);
+      // Exercise the real checksum commands before mounting requires macOS.
+      expect(script, contains('mount_point='));
+      final verify = script.split('mount_point=').first;
+      final valid = _bash(verify, temp, {});
+      expect(valid.exitCode, 0, reason: '${valid.stderr}');
+      dmg.writeAsStringSync('corrupted DMG');
+      expect(_bash(verify, temp, {}).exitCode, isNot(0));
+    } finally {
+      temp.deleteSync(recursive: true);
+    }
+  });
+
   const desktopWorkflows = {
     '../../.github/workflows/linux-appimage-release.yml': 'build-test-publish',
     '../../.github/workflows/windows-exe-preview.yml': 'build-test',
