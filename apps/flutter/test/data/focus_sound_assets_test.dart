@@ -11,7 +11,7 @@ void main() {
       final pubspec =
           loadYaml(File('pubspec.yaml').readAsStringSync()) as YamlMap;
       final registered = (pubspec['flutter']['assets'] as YamlList)
-          .cast<String>();
+          .whereType<String>();
       for (final family in ['soft_kalimba', 'neon_pulse', 'orbit_bloom']) {
         for (final cue in ['start', 'pause', 'resume', 'complete']) {
           final path = 'assets/sounds/$family/focus_$cue.wav';
