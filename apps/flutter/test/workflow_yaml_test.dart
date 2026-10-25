@@ -7,6 +7,7 @@ void main() {
   test('Flutter build and test checkouts download the Pomo LFS asset', () {
     const jobs = {
       'validate': 'validate',
+      'deploy': 'image',
       'android': 'release-build-smoke',
       'android-release': 'signed-apk-and-bundle',
       'desktop-updates': 'updater',

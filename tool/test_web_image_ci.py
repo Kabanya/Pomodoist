@@ -121,6 +121,43 @@ class ImageCITest(unittest.TestCase):
         with self.assertRaises(ValueError):
             ci.select_release(event, 'workflow_dispatch')
 
+    def test_develop_push_selects_staging_without_default_branch_workflow(self):
+        event = {'repository': {'full_name': 'Kabanya/Pomodoist'},
+                 'ref': 'refs/heads/develop', 'after': SHA, 'deleted': False}
+        self.assertEqual(ci.select_release(event, 'push'), ('staging', 'develop', SHA))
+        for changes in ({'ref': 'refs/heads/main'}, {'deleted': True},
+                        {'repository': {'full_name': 'attacker/Pomodoist'}}):
+            with self.assertRaises(ValueError):
+                ci.select_release(dict(event, **changes), 'push')
+
+    def test_push_waits_for_its_own_validation(self):
+        run = {'head_sha': SHA, 'head_branch': 'develop', 'event': 'push',
+               'conclusion': 'success', 'head_repository': {'full_name': 'Kabanya/Pomodoist'}}
+        responses = [{'workflow_runs': []},
+                     {'workflow_runs': [dict(run, conclusion=None)]},
+                     {'workflow_runs': [run]}]
+        with patch.object(ci, 'gh', side_effect=responses), \
+             patch.object(ci.time, 'sleep') as sleep:
+            ci.require_validation('develop', SHA, timeout=60)
+        self.assertEqual(sleep.call_count, 2)
+
+    def test_failed_push_validation_stops_deployment_without_waiting(self):
+        run = {'head_sha': SHA, 'head_branch': 'develop', 'event': 'push',
+               'conclusion': 'failure', 'head_repository': {'full_name': 'Kabanya/Pomodoist'}}
+        with patch.object(ci, 'gh', return_value={'workflow_runs': [run]}), \
+             patch.object(ci.time, 'sleep') as sleep:
+            with self.assertRaises(ValueError):
+                ci.require_validation('develop', SHA, timeout=60)
+        sleep.assert_not_called()
+
+    def test_validation_wait_is_bounded(self):
+        with patch.object(ci, 'gh', return_value={'workflow_runs': []}), \
+             patch.object(ci.time, 'monotonic', side_effect=[0, 61]), \
+             patch.object(ci.time, 'sleep') as sleep:
+            with self.assertRaises(ValueError):
+                ci.require_validation('develop', SHA, timeout=60)
+        sleep.assert_not_called()
+
     def test_manual_sha_without_successful_validate_is_rejected(self):
         with patch.object(ci, 'gh', return_value={'workflow_runs': []}):
             with self.assertRaises(ValueError):

@@ -72,8 +72,11 @@ of leaving the page without an icon.
 
 ## GitHub Actions and Coolify configuration
 
-`Deploy` wakes after a completed `Validate`. Only successful **push** runs from
-`Kabanya/Pomodoist`, on `develop` (staging) or `main` (production), qualify.
+`Deploy` starts directly on `develop` pushes and waits up to 30 minutes for a
+successful `Validate` of that exact SHA before publishing staging. This works
+before the image workflow reaches the default branch, where GitHub resolves
+`workflow_run` subscriptions. Production wakes after a completed `Validate` on
+`main`. Only successful **push** validations from `Kabanya/Pomodoist` qualify.
 Manual dispatch requires an explicit full SHA and independently checks that
 same branch/SHA has a successful push `Validate`. Deployments always require
 that SHA to still be the branch head. To republish/redeploy the current head,

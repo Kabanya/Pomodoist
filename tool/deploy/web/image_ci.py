@@ -36,6 +36,11 @@ def full_sha(value):
 
 
 def select_release(event, kind):
+    if kind == 'push':
+        if (event['repository']['full_name'].lower() != REPOSITORY.lower()
+                or event['ref'] != 'refs/heads/develop' or event.get('deleted')):
+            raise ValueError('Only develop pushes from the source repository are accepted')
+        return 'staging', 'develop', full_sha(event['after'])
     if kind == 'workflow_run':
         run = event['workflow_run']
         if (run['event'] != 'push' or run['conclusion'] != 'success'
@@ -63,14 +68,21 @@ def is_latest(branch, sha):
     return gh(f'repos/{REPOSITORY}/commits/{branch}')['sha'] == sha
 
 
-def require_validation(branch, sha):
+def require_validation(branch, sha, timeout=0):
     # workflow_run is only a wakeup signal: independently verify the exact SHA.
-    runs = gh(f'repos/{REPOSITORY}/actions/workflows/validate.yml/runs?head_sha={sha}&event=push&per_page=100')['workflow_runs']
-    if not any(run['head_sha'] == sha and run['head_branch'] == branch
-               and run['event'] == 'push' and run['conclusion'] == 'success'
-               and run['head_repository']['full_name'].lower() == REPOSITORY.lower()
-               for run in runs):
-        raise ValueError('The selected SHA has no successful push Validate on this branch')
+    deadline = time.monotonic() + timeout
+    while True:
+        runs = gh(f'repos/{REPOSITORY}/actions/workflows/validate.yml/runs?head_sha={sha}&event=push&per_page=100')['workflow_runs']
+        runs = [run for run in runs if run['head_sha'] == sha and run['head_branch'] == branch
+                and run['event'] == 'push'
+                and run['head_repository']['full_name'].lower() == REPOSITORY.lower()]
+        if any(run['conclusion'] == 'success' for run in runs):
+            return
+        if (not timeout or (runs and all(run['conclusion'] is not None for run in runs))
+                or time.monotonic() >= deadline):
+            raise ValueError('The selected SHA has no successful push Validate on this branch')
+        print('Waiting for the selected SHA to pass Validate...', flush=True)
+        time.sleep(10)
 
 
 def registry_digest(tag):
@@ -310,7 +322,7 @@ def main():
     args = parser.parse_args()
     if args.command == 'select':
         environment, branch, sha = select_release(json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text()), os.environ['GITHUB_EVENT_NAME'])
-        require_validation(branch, sha)
+        require_validation(branch, sha, timeout=1800 if os.environ['GITHUB_EVENT_NAME'] == 'push' else 0)
         with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
             output.write(f'environment={environment}\nbranch={branch}\nsha={sha}\n')
         return
