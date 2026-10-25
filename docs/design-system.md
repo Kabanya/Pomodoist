@@ -1346,6 +1346,17 @@ keep a replay action in General settings. Opening Quick Add pauses the callout
 until the composer closes. Never create a sample task or start Focus on the
 user's behalf. Keep the launch-offer card out of the way during the tour.
 
+Automatically show the launch-offer mini card once per device, after onboarding
+and the tour have finished and confirmed billing access has no active Pro.
+Wait for preferences, access and any signed-in Stripe offer catalog to load.
+Record `launchOffer.shown.v1` through the existing local preferences repository
+after the card is first rendered; keep that presentation visible until dismissal
+or offer expiry. Closing the app without dismissing also consumes the display.
+Do not show it again on restart or in later weekly campaigns. A failed save must
+not crash the app or repeat the card in the current session. Existing installations
+without the flag get one eligible display; another device or cleared local data
+can get a new display. Offer terms and manually opening the paywall are unchanged.
+
 Use the active palette, 44 px or larger controls, safe-area-aware placement,
 keyboard focus and screen-reader announcements. Follow the shared 180 ms popup
 motion and show the final position immediately with Reduce Motion. Localize

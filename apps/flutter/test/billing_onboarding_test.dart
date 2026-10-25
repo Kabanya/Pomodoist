@@ -2131,6 +2131,8 @@ void main() {
     );
     expect(find.text('Take a quick look around Pomodoist?'), findsOneWidget);
     expect(find.byKey(const Key('launch-offer-mini-window')), findsNothing);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool(launchOfferShownPreferenceKey), isNull);
     await tester.tap(find.text('Later'));
     await tester.pumpAndSettle();
     if (pomodoistDevUnlock) {
@@ -2139,6 +2141,7 @@ void main() {
     }
     expect(find.byKey(const Key('launch-offer-mini-window')), findsOneWidget);
     expect(find.text('24:00:00 left on Lifetime offer'), findsOneWidget);
+    expect(prefs.getBool(launchOfferShownPreferenceKey), isTrue);
 
     await tester.tap(find.byKey(const Key('launch-offer-mini-window')));
     await tester.pumpAndSettle();
@@ -2187,7 +2190,7 @@ void main() {
 
     clock.value = DateTime.utc(2026, 1, 8, 10);
     await tester.pump(const Duration(seconds: 1));
-    expect(find.byKey(const Key('launch-offer-mini-window')), findsOneWidget);
+    expect(find.byKey(const Key('launch-offer-mini-window')), findsNothing);
   });
 
   testWidgets('expired Lifetime offer shows regular Lifetime in onboarding', (
@@ -2374,9 +2377,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('launch-offer-mini-window')), findsNothing);
+    expect(
+      (await SharedPreferences.getInstance()).getBool(
+        launchOfferShownPreferenceKey,
+      ),
+      isNull,
+    );
   });
 
-  testWidgets('active Pro suppresses the weekly mini offer', (tester) async {
+  testWidgets('active Pro does not consume the one-time mini offer', (
+    tester,
+  ) async {
     final startedAt = DateTime.utc(2026, 1, 1, 10);
     SharedPreferences.setMockInitialValues({
       onboardingCompletedPreferenceKey: true,
@@ -2397,6 +2408,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('launch-offer-mini-window')), findsNothing);
+    expect(
+      (await SharedPreferences.getInstance()).getBool(
+        launchOfferShownPreferenceKey,
+      ),
+      isNull,
+    );
   });
 
   testWidgets('Stripe subscription shows Link management without restore', (

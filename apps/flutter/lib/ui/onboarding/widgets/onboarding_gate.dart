@@ -720,17 +720,8 @@ class _LaunchOfferMiniWindow extends ConsumerStatefulWidget {
 class _LaunchOfferMiniWindowState
     extends ConsumerState<_LaunchOfferMiniWindow> {
   Timer? _timer;
-  int? _dismissedCycle;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() {});
-      }
-    });
-  }
+  bool _shown = false;
+  bool _dismissed = false;
 
   @override
   void dispose() {
@@ -742,7 +733,8 @@ class _LaunchOfferMiniWindowState
   Widget build(BuildContext context) {
     final onboarding = ref.watch(onboardingViewModelProvider);
     final billing = ref.watch(billingViewModelProvider);
-    final access = ref.watch(billingAccessProvider).value;
+    final accessState = ref.watch(billingAccessProvider);
+    final access = accessState.value;
     final now = ref.read(onboardingViewModelProvider.notifier).now();
     final serverOwned =
         ref.watch(billingChannelProvider) == BillingChannel.stripe &&
@@ -756,17 +748,37 @@ class _LaunchOfferMiniWindowState
             now: now,
             startedAt: onboarding.launchOfferStartedAt,
           );
-    final cycle = serverOwned
-        ? billing.stripeLaunchOfferEndsAt?.millisecondsSinceEpoch
-        : launchOfferCycle(
-            now: now,
-            startedAt: onboarding.launchOfferStartedAt,
-          );
-    if (_dismissedCycle == cycle ||
-        remaining == Duration.zero ||
-        (serverOwned && !billing.stripeLaunchOfferEligible) ||
-        (access?.hasActiveEntitlement ?? false)) {
+    if (_dismissed ||
+        (onboarding.launchOfferShown && !_shown) ||
+        onboarding.loading ||
+        accessState.isLoading ||
+        accessState.hasError ||
+        access == null ||
+        access.loading ||
+        (serverOwned && billing.loading)) {
       return const SizedBox.shrink();
+    }
+    if (remaining == Duration.zero ||
+        (serverOwned && !billing.stripeLaunchOfferEligible) ||
+        access.hasActiveEntitlement) {
+      _dismissed = true;
+      _timer?.cancel();
+      return const SizedBox.shrink();
+    }
+    if (!_shown) {
+      _shown = true;
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) setState(() {});
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          unawaited(
+            ref
+                .read(onboardingViewModelProvider.notifier)
+                .markLaunchOfferShown(),
+          );
+        }
+      });
     }
     final l10n = context.l10n;
     final colors = context.appColors;
@@ -807,9 +819,10 @@ class _LaunchOfferMiniWindowState
                       button: true,
                       child: IconButton(
                         key: const Key('launch-offer-mini-close'),
-                        onPressed: () => setState(() {
-                          _dismissedCycle = cycle;
-                        }),
+                        onPressed: () {
+                          _timer?.cancel();
+                          setState(() => _dismissed = true);
+                        },
                         icon: const Icon(LucideIcons.x),
                       ),
                     ),

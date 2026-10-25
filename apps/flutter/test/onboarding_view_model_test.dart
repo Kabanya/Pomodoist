@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/app_language.dart';
+import 'package:pomodoist/config/clock_provider.dart';
 import 'package:pomodoist/config/focus_dependencies.dart';
 import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
 import 'package:pomodoist/domain/models/settings/app_language.dart';
@@ -11,12 +12,101 @@ import 'package:pomodoist/ui/settings/view_models/task_settings_view_model.dart'
 import 'package:pomodoist/ui/settings/view_models/theme_settings_view_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pomodoist/data/repositories/focus/focus_preferences_repository.dart';
+import 'package:pomodoist/utils/clock.dart';
 // Override disk writes to test the existing onboarding error/retry path.
 // ignore: depend_on_referenced_packages
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test(
+    'launch offer is consumed only after display and survives restart',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final controller = container.read(onboardingViewModelProvider.notifier);
+      await container.read(sharedPreferencesProvider.future);
+      await container.pump();
+      final saved = await SharedPreferences.getInstance();
+      expect(
+        container.read(onboardingViewModelProvider).launchOfferShown,
+        isFalse,
+      );
+      expect(saved.getBool('launchOffer.shown.v1'), isNull);
+
+      await controller.markLaunchOfferShown();
+      expect(
+        container.read(onboardingViewModelProvider).launchOfferShown,
+        isTrue,
+      );
+      expect(saved.getBool('launchOffer.shown.v1'), isTrue);
+
+      final nextWeek = ProviderContainer(
+        overrides: [
+          clockProvider.overrideWithValue(
+            FixedClock(DateTime.utc(2026, 11, 2)),
+          ),
+        ],
+      );
+      addTearDown(nextWeek.dispose);
+      nextWeek.read(onboardingViewModelProvider);
+      await nextWeek.read(sharedPreferencesProvider.future);
+      await nextWeek.pump();
+      expect(
+        nextWeek.read(onboardingViewModelProvider).launchOfferShown,
+        isTrue,
+      );
+    },
+  );
+
+  test('launch offer cannot be consumed before preferences load', () async {
+    SharedPreferences.setMockInitialValues({});
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final controller = container.read(onboardingViewModelProvider.notifier);
+    await controller.markLaunchOfferShown();
+    await container.read(sharedPreferencesProvider.future);
+    await container.pump();
+    expect(
+      container.read(onboardingViewModelProvider).launchOfferShown,
+      isFalse,
+    );
+    expect(
+      (await SharedPreferences.getInstance()).getBool('launchOffer.shown.v1'),
+      isNull,
+    );
+  });
+
+  test(
+    'failed launch offer save still consumes this session without throwing',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final controller = container.read(onboardingViewModelProvider.notifier);
+      await container.read(sharedPreferencesProvider.future);
+      await container.pump();
+      final original = SharedPreferencesStorePlatform.instance;
+      final store = _FailingSessionStore(
+        await original.getAll(),
+        failedKey: 'launchOffer.shown.v1',
+      );
+      SharedPreferencesStorePlatform.instance = store;
+      addTearDown(() => SharedPreferencesStorePlatform.instance = original);
+
+      await controller.markLaunchOfferShown();
+      expect(
+        container.read(onboardingViewModelProvider).launchOfferShown,
+        isTrue,
+      );
+      expect((await store.getAll())['flutter.launchOffer.shown.v1'], isNull);
+      store.fail = false;
+      await controller.markLaunchOfferShown();
+      expect((await store.getAll())['flutter.launchOffer.shown.v1'], isNull);
+    },
+  );
 
   test('finishing onboarding leaves one learning invitation pending', () async {
     SharedPreferences.setMockInitialValues({});
@@ -303,12 +393,16 @@ void main() {
 }
 
 class _FailingSessionStore extends InMemorySharedPreferencesStore {
-  _FailingSessionStore(super.data) : super.withData();
+  _FailingSessionStore(
+    super.data, {
+    this.failedKey = focusSessionDisplayPreferenceKey,
+  }) : super.withData();
+  final String failedKey;
   bool fail = true;
 
   @override
   Future<bool> setValue(String valueType, String key, Object value) async {
-    if (fail && key == 'flutter.$focusSessionDisplayPreferenceKey') {
+    if (fail && key == 'flutter.$failedKey') {
       return false;
     }
     return super.setValue(valueType, key, value);

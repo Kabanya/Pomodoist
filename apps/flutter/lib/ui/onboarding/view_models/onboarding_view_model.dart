@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/app_language.dart';
 import 'package:pomodoist/config/clock_provider.dart';
@@ -11,6 +12,7 @@ import 'package:pomodoist/domain/models/settings/task_preferences.dart';
 
 const onboardingCompletedPreferenceKey = 'onboarding.completed.v1';
 const launchOfferStartedAtPreferenceKey = 'launchOffer.startedAt.v1';
+const launchOfferShownPreferenceKey = 'launchOffer.shown.v1';
 const launchOfferDuration = Duration(hours: 24);
 const launchOfferCycleDuration = Duration(days: 7);
 
@@ -31,6 +33,7 @@ class OnboardingState {
     this.completed = false,
     this.step = OnboardingStep.language,
     this.launchOfferStartedAt,
+    this.launchOfferShown = false,
     this.language = AppLanguage.system,
     this.timerStyle = FocusTimerVisualStyle.circle,
     this.sessionDisplay = FocusSessionDisplay.compact,
@@ -40,6 +43,7 @@ class OnboardingState {
   final bool completed;
   final OnboardingStep step;
   final DateTime? launchOfferStartedAt;
+  final bool launchOfferShown;
   final AppLanguage language;
   final FocusTimerVisualStyle timerStyle;
   final FocusSessionDisplay sessionDisplay;
@@ -49,6 +53,7 @@ class OnboardingState {
     bool? completed,
     OnboardingStep? step,
     DateTime? launchOfferStartedAt,
+    bool? launchOfferShown,
     AppLanguage? language,
     FocusTimerVisualStyle? timerStyle,
     FocusSessionDisplay? sessionDisplay,
@@ -57,6 +62,7 @@ class OnboardingState {
     completed: completed ?? this.completed,
     step: step ?? this.step,
     launchOfferStartedAt: launchOfferStartedAt ?? this.launchOfferStartedAt,
+    launchOfferShown: launchOfferShown ?? this.launchOfferShown,
     language: language ?? this.language,
     timerStyle: timerStyle ?? this.timerStyle,
     sessionDisplay: sessionDisplay ?? this.sessionDisplay,
@@ -145,11 +151,24 @@ class OnboardingViewModel extends Notifier<OnboardingState> {
     if (ref.mounted) state = state.copyWith(completed: true);
   }
 
+  Future<void> markLaunchOfferShown() async {
+    if (state.loading || state.launchOfferShown) return;
+    state = state.copyWith(launchOfferShown: true);
+    try {
+      (await ref.read(preferencesRepositoryProvider).write(const {
+        launchOfferShownPreferenceKey: true,
+      })).getOrThrow();
+    } catch (error) {
+      debugPrint('Could not save launch-offer display: $error');
+    }
+  }
+
   Future<void> _load() async {
     final preferences = ref.read(preferencesRepositoryProvider);
     final values = (await preferences.read(const [
       onboardingCompletedPreferenceKey,
       launchOfferStartedAtPreferenceKey,
+      launchOfferShownPreferenceKey,
     ])).getOrThrow();
     if (!ref.mounted) return;
     final completed =
@@ -169,6 +188,7 @@ class OnboardingViewModel extends Notifier<OnboardingState> {
         loading: false,
         completed: completed,
         launchOfferStartedAt: startedAt,
+        launchOfferShown: values[launchOfferShownPreferenceKey] == true,
       );
     }
   }
