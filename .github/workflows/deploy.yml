@@ -33,7 +33,7 @@ jobs:
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
           WEBHOOK: ${{ secrets.COOLIFY_PRODUCTION_WEBHOOK }}
         run: |
-          curl --fail-with-body --silent --show-error --retry 3 --max-time 30 --header "Authorization: Bearer $COOLIFY_TOKEN" "$WEBHOOK"
+          curl --request POST --fail-with-body --silent --show-error --retry 3 --max-time 30 --header "Authorization: Bearer $COOLIFY_TOKEN" "$WEBHOOK"
 
       - name: Deploy staging
         if: github.ref_name == 'develop' && steps.head.outputs.deploy == 'true'
@@ -41,4 +41,4 @@ jobs:
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
           WEBHOOK: ${{ secrets.COOLIFY_STAGING_WEBHOOK }}
         run: |
-          curl --fail-with-body --silent --show-error --retry 3 --max-time 30 --header "Authorization: Bearer $COOLIFY_TOKEN" "$WEBHOOK"
+          curl --request POST --fail-with-body --silent --show-error --retry 3 --max-time 30 --header "Authorization: Bearer $COOLIFY_TOKEN" "$WEBHOOK"
