@@ -1,5 +1,6 @@
 import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
 import 'dart:async';
+import 'package:pomodoist/ui/files/widgets/file_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -565,7 +566,7 @@ class _FilesPanelState extends ConsumerState<FilesPanel> {
           height: 40,
           child: file.isImage
               ? _FileImage(file: file)
-              : const Icon(LucideIcons.file, size: 24),
+              : Icon(fileIcon(file.name, file.contentType), size: 24),
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -607,7 +608,7 @@ class _FilesPanelState extends ConsumerState<FilesPanel> {
                   width: double.infinity,
                   child: file.isImage
                       ? _FileImage(file: file)
-                      : const Icon(LucideIcons.file, size: 40),
+                      : Icon(fileIcon(file.name, file.contentType), size: 40),
                 ),
                 const SizedBox(height: 8),
                 Text(file.name, maxLines: 2, overflow: TextOverflow.ellipsis),
@@ -625,47 +626,33 @@ class _FilesPanelState extends ConsumerState<FilesPanel> {
   );
 }
 
-class _FileImage extends ConsumerStatefulWidget {
+class _FileImage extends ConsumerWidget {
   const _FileImage({required this.file, this.fit = BoxFit.cover});
   final FileAttachment file;
   final BoxFit fit;
-  @override
-  ConsumerState<_FileImage> createState() => _FileImageState();
-}
-
-class _FileImageState extends ConsumerState<_FileImage> {
-  String? _url;
-  @override
-  void dispose() {
-    if (_url case final url?) unawaited(NetworkImage(url).evict());
-    super.dispose();
-  }
 
   @override
-  Widget build(BuildContext context) {
-    final preview = ref.watch(filePreviewProvider(widget.file));
-    final url = preview.value;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final provider = filePreviewProvider(file.previewKey);
+    final preview = ref.watch(provider);
+    final url = preview.isLoading || preview.hasError ? null : preview.value;
     if (url == null) {
-      if (_url case final old?) {
-        unawaited(NetworkImage(old).evict());
-      }
-      _url = null;
       return Icon(
         preview.hasError ? LucideIcons.imageOff : LucideIcons.image,
         size: 24,
         semanticLabel: context.l10n.filesPreview,
       );
     }
-    if (_url != url) {
-      if (_url case final previous?) unawaited(NetworkImage(previous).evict());
-      _url = url;
-    }
+    final controller = ref.read(provider.notifier);
     return Image.network(
       url,
-      fit: widget.fit,
+      fit: fit,
       excludeFromSemantics: true,
-      errorBuilder: (context, error, stack) =>
-          const Icon(LucideIcons.imageOff, size: 24),
+      errorBuilder: (context, error, stack) {
+        // Image errors arrive during build; update provider state afterwards.
+        scheduleMicrotask(() => controller.imageFailed(url, error, stack));
+        return const Icon(LucideIcons.imageOff, size: 24);
+      },
     );
   }
 }

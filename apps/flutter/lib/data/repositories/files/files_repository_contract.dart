@@ -8,7 +8,7 @@ abstract interface class FilesRepositoryContract {
   Stream<FileUploadState?> watchUpload(FileTarget target);
   Future<void> pickAndUpload(FileTarget target);
   Future<void> retry(FileTarget target);
-  Future<String> downloadUrl(FileAttachment file, {bool preview = false});
+  Future<String> downloadUrl(String attachmentId, {bool preview = false});
   Future<void> download(FileAttachment file);
   Future<void> delete(FileAttachment file);
   void dispose();

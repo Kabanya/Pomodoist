@@ -411,7 +411,7 @@ void main() {
     );
   });
   test(
-    'server capabilities preserve read access after Pro loss and SVG never requests inline preview',
+    'server capabilities preserve read access after Pro loss and SVG is excluded from image previews',
     () async {
       final capabilities = await repository.capabilities(
         FileTarget(projectId: project),
@@ -421,8 +421,25 @@ void main() {
       final file = FileAttachment.fromJson(
         attachment('svg', projectId: project, type: 'image/svg+xml'),
       );
-      await repository.downloadUrl(file, preview: true);
+      expect(file.isImage, false);
+      await repository.downloadUrl(file.id);
       expect(calls.last.containsKey('preview'), false);
+    },
+  );
+  test(
+    'preview URLs use the attachment ID and ordinary downloads omit preview',
+    () async {
+      expect(
+        await repository.downloadUrl('image-id', preview: true),
+        'https://storage.example/download',
+      );
+      expect(calls.single, {
+        'action': 'download',
+        'attachmentId': 'image-id',
+        'preview': true,
+      });
+      await repository.downloadUrl('document-id');
+      expect(calls.last, {'action': 'download', 'attachmentId': 'document-id'});
     },
   );
   test(

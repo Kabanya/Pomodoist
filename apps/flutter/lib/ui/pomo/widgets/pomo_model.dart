@@ -143,6 +143,7 @@ class _PomoModelState extends State<PomoModel>
           await material.setDepthWriteEnabled(true);
         }
       }
+      await asset.releaseSourceData();
       if (!mounted) return;
       setState(() => _ready = true);
       _schedule();
@@ -404,20 +405,46 @@ class _PomoModelState extends State<PomoModel>
       );
 
   Future<void> _disposeScene() async {
-    await _initializing;
-    await _updating;
-    final viewer = _viewer;
-    if (viewer == null) return;
-    try {
-      await t.ThermionFlutterPlugin.instance.destroyTextureForView(viewer.view);
-    } finally {
-      await viewer.dispose();
-      for (final swapChain in _swapChains) {
-        if (viewer.app.renderManager.getAttachedViews(swapChain).isEmpty) {
-          await viewer.app.destroySwapChain(swapChain);
-        }
+    Object? firstError;
+    StackTrace? firstStack;
+    Future<void> cleanup(Future<void> Function() action) async {
+      try {
+        await action();
+      } catch (error, stack) {
+        firstError ??= error;
+        firstStack ??= stack;
       }
-      await t.ThermionFlutterPlugin.instance.onViewerDisposed(viewer.view);
+    }
+
+    await cleanup(() => _initializing);
+    await cleanup(() async => await _updating);
+    final viewer = _viewer;
+    if (viewer != null) {
+      await cleanup(() => viewer.setRendering(false));
+      await cleanup(
+        () =>
+            t.ThermionFlutterPlugin.instance.destroyTextureForView(viewer.view),
+      );
+      await cleanup(() => viewer.dispose());
+      for (final swapChain in _swapChains) {
+        await cleanup(() async {
+          if (viewer.app.renderManager.getAttachedViews(swapChain).isEmpty) {
+            await viewer.app.destroySwapChain(swapChain);
+          }
+        });
+      }
+      await cleanup(
+        () => t.ThermionFlutterPlugin.instance.onViewerDisposed(viewer.view),
+      );
+    }
+    // Also release an engine left by a failed createViewer call.
+    final app = viewer?.app ?? t.FilamentApp.instance;
+    if (!kIsWeb && app != null) await cleanup(() => app.destroy());
+    _viewer = null;
+    _asset = null;
+    _swapChains.clear();
+    if (firstError != null) {
+      Error.throwWithStackTrace(firstError!, firstStack!);
     }
   }
 

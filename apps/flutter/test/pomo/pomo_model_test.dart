@@ -158,6 +158,13 @@ void main() {
     expect(handTriangles, inInclusiveRange(1, 16000));
     expect(manifest['simplification'][0]['runtimeTriangles'], handTriangles);
     final binaryOffset = 20 + jsonLength + 8;
+    for (final dynamic image in gltf['images']) {
+      final view = views[image['bufferView']] as Map<String, dynamic>;
+      final offset = binaryOffset + (view['byteOffset'] as int? ?? 0);
+      expect(image['mimeType'], 'image/png');
+      expect(data.getUint32(offset + 16), inInclusiveRange(1, 1024));
+      expect(data.getUint32(offset + 20), inInclusiveRange(1, 1024));
+    }
     expect(gltf['skins'], isNotEmpty);
     expect(
       (gltf['samplers'] as List).every((dynamic s) => s['minFilter'] == 9729),

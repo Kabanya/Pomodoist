@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/painting.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/files_dependencies.dart';
 import 'package:pomodoist/domain/models/files/file_attachment.dart';
@@ -19,12 +20,79 @@ final fileUploadProvider = StreamProvider.autoDispose
           ref.watch(filesRepositoryProvider)?.watchUpload(target) ??
           Stream.value(null),
     );
-final filePreviewProvider = FutureProvider.autoDispose
-    .family<String?, FileAttachment>(
-      (ref, file) =>
-          ref.watch(filesRepositoryProvider)?.downloadUrl(file, preview: true),
+final filePreviewProvider = AsyncNotifierProvider.autoDispose
+    .family<FilePreview, String?, FilePreviewKey>(
+      FilePreview.new,
       retry: (_, _) => null,
     );
+
+class FilePreview extends AsyncNotifier<String?> {
+  FilePreview(this.key);
+  final FilePreviewKey key;
+  int _generation = 0;
+  bool _retried = false;
+  Timer? _retryTimer;
+
+  @override
+  Future<String?> build() {
+    final repository = ref.watch(filesRepositoryProvider);
+    final generation = ++_generation;
+    final urls = <String>{};
+    _retried = false;
+    ref.onDispose(() {
+      ++_generation;
+      _retryTimer?.cancel();
+      for (final url in urls) {
+        unawaited(NetworkImage(url).evict());
+      }
+    });
+    Future<String?> load() async {
+      try {
+        final url = await repository?.downloadUrl(
+          key.attachmentId,
+          preview: true,
+        );
+        if (ref.mounted && generation == _generation && url != null) {
+          urls.add(url);
+        }
+        return url;
+      } catch (_) {
+        if (ref.mounted && generation == _generation) _scheduleRetry();
+        rethrow;
+      }
+    }
+
+    _reload = () async {
+      final result = await AsyncValue.guard(load);
+      if (ref.mounted && generation == _generation) state = result;
+    };
+    return load();
+  }
+
+  late Future<void> Function() _reload;
+
+  void _scheduleRetry() {
+    if (_retried) return;
+    _retried = true;
+    _retryTimer = Timer(const Duration(seconds: 1), () {
+      if (!ref.mounted) return;
+      state = const AsyncLoading();
+      unawaited(_reload());
+    });
+  }
+
+  void imageFailed(String url, Object error, StackTrace? stack) {
+    if (!ref.mounted ||
+        state.isLoading ||
+        state.hasError ||
+        state.value != url) {
+      return;
+    }
+    unawaited(NetworkImage(url).evict());
+    state = AsyncError(error, stack ?? StackTrace.current);
+    _scheduleRetry();
+  }
+}
 
 final filesSignedInProvider = Provider<bool>(
   (ref) => ref.watch(filesRepositoryProvider) != null,
@@ -166,6 +234,10 @@ class FilesViewModel extends Notifier<FileViewState> {
   }
 
   void refresh() {
+    for (final file
+        in ref.read(filesProvider(target)).value ?? <FileAttachment>[]) {
+      ref.invalidate(filePreviewProvider(file.previewKey));
+    }
     ref.invalidate(fileCapabilitiesProvider(target));
     ref.invalidate(filesProvider(target));
   }

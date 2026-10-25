@@ -15,7 +15,8 @@ class PomoMorphClips {
             )
             as Map<String, dynamic>;
     final binaryOffset = 28 + jsonLength;
-    List<double> read(int index) {
+    final accessors = <int, Float32List>{};
+    Float32List read(int index) => accessors.putIfAbsent(index, () {
       final accessor = gltf['accessors'][index] as Map<String, dynamic>;
       final width = switch (accessor['type']) {
         'SCALAR' => 1,
@@ -34,16 +35,17 @@ class PomoMorphClips {
           binaryOffset +
           (view['byteOffset'] as int? ?? 0) +
           (accessor['byteOffset'] as int? ?? 0);
-      return List.generate(
-        (accessor['count'] as int) * width,
-        (i) => bytes.getFloat32(
+      final values = Float32List((accessor['count'] as int) * width);
+      for (var i = 0; i < values.length; i++) {
+        values[i] = bytes.getFloat32(
           offset +
               (i ~/ width) * (view['byteStride'] as int? ?? width * 4) +
               (i % width) * 4,
           Endian.little,
-        ),
-      );
-    }
+        );
+      }
+      return values;
+    });
 
     for (final dynamic animation in gltf['animations']) {
       final curves = <String, _Curve>{};
@@ -167,8 +169,8 @@ class PomoMorphClips {
 
 class _Curve {
   _Curve(this.times, this.weights, {this.rotation = false, this.step = false});
-  final List<double> times;
-  final List<double> weights;
+  final Float32List times;
+  final Float32List weights;
   final bool rotation;
   final bool step;
 

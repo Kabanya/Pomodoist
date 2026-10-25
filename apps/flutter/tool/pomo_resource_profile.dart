@@ -13,10 +13,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multiview_desktop/multiview_desktop.dart';
 import 'package:pomodoist/config/pomo_dependencies.dart';
 import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/domain/models/pomo/pomo_models.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/ui/core/widgets/pomodoist_app.dart';
 import 'package:pomodoist/ui/pomo/view_models/pomo_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:thermion_flutter/thermion_flutter.dart' as t;
 // shortcut: uses Thermion 0.5.0 scheduler diagnostics; revisit on renderer upgrades.
 // ignore: implementation_imports
 import 'package:thermion_flutter/src/platform/src/frame_scheduler.dart';
@@ -66,10 +68,83 @@ Future<void> main() async {
               focusOnly: false,
               quiet: mode == 'static',
               reduceMotion: false,
-              scale: 1,
+              scale: double.tryParse(parameters['scale'] ?? '') ?? 1,
             ),
           );
-      await Future<void>.delayed(const Duration(seconds: 1));
+      await Future<void>.delayed(
+        Duration(
+          milliseconds: int.tryParse(parameters['settleMs'] ?? '') ?? 1000,
+        ),
+      );
+    }
+    bool? lifecycleStopped;
+    if (parameters['testLifecycle'] case final String state) {
+      WidgetsBinding.instance.handleAppLifecycleStateChanged(
+        AppLifecycleState.values.byName(state),
+      );
+      lifecycleStopped =
+          !FrameScheduler.instance.isActive || FrameScheduler.instance.isPaused;
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+    }
+    final controller = container.read(pomoControllerProvider);
+    if (parameters['pose'] case final String pose) {
+      controller.reactions.clear();
+      controller.reactions.emotion = PomoEmotion.values.byName(pose);
+      // The fixture pins a pose without an expiring decorative reaction.
+      // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+      controller.notifyListeners();
+      await Future<void>.delayed(
+        Duration(
+          milliseconds: int.tryParse(parameters['poseDelayMs'] ?? '') ?? 1000,
+        ),
+      );
+    }
+    if (parameters['holdTeardownMs'] case final String milliseconds) {
+      t.FilamentApp.instance!.onBeforeDestroy(
+        () => Future<void>.delayed(
+          Duration(milliseconds: int.parse(milliseconds)),
+        ),
+      );
+    }
+    Map<String, Object>? capture;
+    if (parameters['capture'] == 'true') {
+      t.ThermionWidgetInternal? surface;
+      void findSurface(Element element) {
+        if (element.widget is t.ThermionWidgetInternal) {
+          surface = element.widget as t.ThermionWidgetInternal;
+        }
+        element.visitChildren(findSurface);
+      }
+
+      WidgetsBinding.instance.rootElement?.visitChildren(findSurface);
+      final view = surface!.view;
+      final app = t.FilamentApp.instance!;
+      final chain = app.renderManager.getAttachedSwapChains(view).first;
+      final viewport = await view.getViewport();
+      final pause = !FrameScheduler.instance.isPaused;
+      if (pause) t.ThermionFlutterPlugin.instance.pauseFrameScheduler();
+      try {
+        final deadline = DateTime.now().add(const Duration(seconds: 10));
+        while (FrameScheduler.instance.isRendering) {
+          if (DateTime.now().isAfter(deadline)) {
+            throw StateError('Native frame did not drain before capture');
+          }
+          await Future<void>.delayed(const Duration(milliseconds: 1));
+        }
+        final pixels = await app.capture(
+          chain,
+          view: view,
+          captureRenderTarget: true,
+          pixelDataType: t.PixelDataType.UBYTE,
+        );
+        capture = {
+          'width': viewport.width,
+          'height': viewport.height,
+          'rgba': base64Encode(pixels.single.$2),
+        };
+      } finally {
+        if (pause) t.ThermionFlutterPlugin.instance.resumeFrameScheduler();
+      }
     }
     if (parameters['record'] == 'true') {
       _frames.clear();
@@ -85,10 +160,12 @@ Future<void> main() async {
     }
 
     WidgetsBinding.instance.rootElement?.visitChildren(visit);
-    final controller = container.read(pomoControllerProvider);
     return ServiceExtensionResponse.result(
       jsonEncode({
         'mode': _mode,
+        'engineAlive': t.FilamentApp.instance != null,
+        'lifecycleStopped': ?lifecycleStopped,
+        'capture': ?capture,
         'pid': pid,
         'visible': controller.visible,
         'animated': controller.animated,

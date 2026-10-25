@@ -242,13 +242,13 @@ class FilesRepository implements FilesRepositoryContract {
 
   @override
   Future<String> downloadUrl(
-    FileAttachment file, {
+    String attachmentId, {
     bool preview = false,
   }) async {
     _checkSession();
     final response = await service.call('download', {
-      'attachmentId': file.id,
-      if (preview && file.isImage) 'preview': true,
+      'attachmentId': attachmentId,
+      if (preview) 'preview': true,
     });
     _checkSession();
     return response['url'] as String;
@@ -256,7 +256,7 @@ class FilesRepository implements FilesRepositoryContract {
 
   @override
   Future<void> download(FileAttachment file) async {
-    final url = await downloadUrl(file);
+    final url = await downloadUrl(file.id);
     _checkSession();
     await service.open(url);
   }

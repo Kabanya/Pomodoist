@@ -41,7 +41,11 @@ def main():
     parser.add_argument("uri", help="HTTP VM service URI from flutter run")
     parser.add_argument("output", type=Path)
     parser.add_argument("--seconds", type=int, default=20)
+    parser.add_argument('--cycles', type=int, default=10)
+    parser.add_argument('--hidden-seconds', type=int, default=60)
+    parser.add_argument('--resume', action='store_true', help='Continue completed cycles in the same live process')
     args = parser.parse_args()
+    assert args.cycles >= 1 and args.hidden_seconds >= 60
     assert args.seconds >= 10
     assert distribution([1, 2, 3, 4])["median"] == 2.5
     assert ctypes.sizeof(Usage) == 96
@@ -62,7 +66,18 @@ def main():
     def control(**params):
         return rpc("ext.pomodoist.resourceProfile", isolateId=isolate, **params)
 
-    initial = control()
+    deadline = time.monotonic() + 60
+    while True:
+        try:
+            initial = control()
+            if initial['widgets']['TodayScreen'] and not initial['widgets']['_StartupLoading']:
+                break
+        except RuntimeError as error:
+            if 'Method not found' not in str(error):
+                raise
+        if time.monotonic() >= deadline:
+            raise TimeoutError('Profile extension/Today workload did not become ready')
+        time.sleep(.2)
     pid = initial["pid"]
     libproc = ctypes.CDLL("/usr/lib/libproc.dylib")
     timebase = Timebase()
@@ -87,7 +102,8 @@ def main():
                      - before_calibration.user - before_calibration.system) * ns_per_tick
     assert abs(calibrated_ns / elapsed_cpu_ns - 1) < .1, (calibrated_ns, elapsed_cpu_ns)
 
-    metadata = {"vm": vm, "initial": initial, "seconds_per_phase": args.seconds,
+    metadata = {"vm": vm, "initial": initial, "seconds_per_phase": args.seconds, "hidden_seconds": args.hidden_seconds,
+                "cycles": args.cycles,
                 "cpu_timebase": {"numer": timebase.numer, "denom": timebase.denom,
                                  "calibration_ratio": calibrated_ns / elapsed_cpu_ns},
                 "hardware": subprocess.check_output(
@@ -99,14 +115,30 @@ def main():
     rpc("clearCpuSamples", isolateId=isolate)
     profile_origin = rpc("getVMTimelineMicros")["timestamp"]
     results = []
+    if args.resume:
+        previous = json.loads((args.output / 'results.json').read_text())
+        assert previous['metadata']['initial']['pid'] == pid, 'Resume requires the same live app process'
+        completed = max([int(r['summary']['label'].rsplit('_', 1)[1])
+                         for r in previous['results']
+                         if r['summary']['label'].startswith('hidden_warm_')] or [0])
+        results = [r for r in previous['results'] if r['summary']['label'] == 'hidden_cold'
+                   or int(r['summary']['label'].rsplit('_', 1)[1]) <= completed]
+        metadata['original_run'] = previous['metadata']
     try:
-        for label, mode in [("hidden_cold", "hidden"), ("animated_1", "animated"),
-                            ("static_1", "static"), ("hidden_warm_1", "hidden"),
-                            ("animated_2", "animated"), ("static_2", "static"),
-                            ("hidden_warm_2", "hidden")]:
-            print(f"Warmup: {label}", flush=True)
+        phases = [('hidden_cold', 'hidden')]
+        for cycle in range(1, args.cycles + 1):
+            phases.extend([(f'animated_{cycle}', 'animated'),
+                           (f'static_{cycle}', 'static'),
+                           (f'hidden_warm_{cycle}', 'hidden')])
+        for label, mode in phases:
+            if any(r['summary']['label'] == label for r in results):
+                continue
+            print(f'Warmup: {label}', flush=True)
+            change_started = time.monotonic()
             control(mode=mode)
-            time.sleep(10)
+            if mode != 'hidden':
+                time.sleep(10)
+            phase_seconds = args.hidden_seconds if mode == 'hidden' else args.seconds
             status = control(record=True)
             assert status["error"] is None and not status["flutterErrors"], status
             assert status["widgets"]["TodayScreen"] > 0, status
@@ -116,26 +148,28 @@ def main():
             if mode != "hidden":
                 assert status["widgets"]["Texture"] > 0, status
                 assert status["animated"] == (mode == "animated"), status
+            assert status['engineAlive'] == (mode != 'hidden'), status
             native_start = status["nativeScheduler"]["scheduledFrames"]
             rpc("clearVMTimeline")
             origin = rpc("getVMTimelineMicros")["timestamp"]
             before = usage()
             previous_time = start = time.monotonic()
             samples = []
-            for index in range(args.seconds):
+            for index in range(phase_seconds):
                 time.sleep(max(0, start + index + 1 - time.monotonic()))
                 current = usage()
                 now = time.monotonic()
                 memory = rpc("getMemoryUsage", isolateId=isolate)
                 live = control()
                 samples.append({"elapsed_s": now - start,
+                    "since_state_change_s": now - change_started,
                     "cpu_ticks": current.user + current.system - before.user - before.system,
                     "cpu_interval_s": now - previous_time,
                     "cpu_one_core_percent": (current.user + current.system - before.user - before.system)
                         * ns_per_tick / 1e9 / (now - previous_time) * 100,
                     "rss_bytes": current.resident, "footprint_bytes": current.footprint,
                     "dart": memory, "native_scheduler": live["nativeScheduler"],
-                    "lifecycle": live["lifecycle"]})
+                    "lifecycle": live["lifecycle"], "engine_alive": live["engineAlive"]})
                 before, previous_time = current, now
             end = rpc("getVMTimelineMicros")["timestamp"]
             status = control(record=False)
@@ -162,11 +196,22 @@ def main():
                 "raster_ms": distribution([f["rasterUs"] / 1000 for f in frames]),
                 "flutter_frames_over_16_67ms": sum(max(f["buildUs"], f["rasterUs"]) > 16667 for f in frames),
                 "vm_time_origin_us": origin, "vm_time_end_us": end, "status": status}
+            summary['rendering_valid'] = (mode != 'animated' or (
+                summary['native_scheduled_fps'] >= 15 and
+                summary['native_active_samples'] == phase_seconds))
+            summary['released'] = mode != 'hidden' or not any(s['engine_alive'] for s in samples)
+            if mode == 'hidden':
+                summary['after_hide'] = {
+                    str(second): min(samples, key=lambda s: abs(s['since_state_change_s'] - second))
+                    for second in [5, 15, 60]}
             results.append({"summary": summary, "samples": samples, "frames": frames,
                             "process_memory": process_memory})
             (args.output / "results.json").write_text(json.dumps(
                 {"metadata": metadata, "results": results}, indent=2))
             print(json.dumps(summary), flush=True)
+            if not summary['rendering_valid']:
+                print(f'INVALID active-rendering interval: {label}; excluded from active CPU comparisons', flush=True)
+            assert summary['released'], f'{label}: native engine retained'
         # Native symbolization allocates heavily in the app's service isolate.
         # Export only after the last memory sample, so it cannot inflate later phases.
         cpu = rpc("getCpuSamples", isolateId=isolate, timeOriginMicros=profile_origin,

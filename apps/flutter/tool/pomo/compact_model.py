@@ -61,7 +61,7 @@ def compact(raw):
         index = image['bufferView']
         with Image.open(io.BytesIO(chunks[index])) as source:
             # Keep the base color and tangent-space normal maps as real textures.
-            limit = 4096 if image.get('name', '').endswith('-color') else 2048
+            limit = 1024
             source.thumbnail((limit, limit), Image.Resampling.LANCZOS)
             out = io.BytesIO()
             source.save(out, format='PNG', optimize=True)
@@ -93,7 +93,7 @@ def compact(raw):
               struct.pack('<II', len(encoded), 0x4e4f534a) + encoded +
               struct.pack('<II', len(packed), 0x004e4942) + packed)
     return result, {'floatGrid': STEPS, 'maxAttributeError': worst,
-                    'textureLimits': {'color': 4096, 'normalAndRoughness': 2048}, 'viewsBefore': len(views), 'viewsAfter': len(new_views)}
+                    'textureLimits': {'color': 1024, 'normalAndRoughness': 1024}, 'viewsBefore': len(views), 'viewsAfter': len(new_views)}
 
 
 def package(source, dest):

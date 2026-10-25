@@ -100,12 +100,12 @@
       "loop": false
     }
   },
-  "modelSha256": "53f317767162e6720fd07607d4a5d9989019da9b2eacae1cc9dd7d2810e6f58f",
+  "modelSha256": "c23835efd81281ceb19411a09035261f72c15e457751d9f57a891b65bd47cf7f",
   "asset": "pomo.glb.gz",
   "encoding": "gzip",
-  "compressedSha256": "981138bba3d0d1461eadff58a12aa41c90f832ea6da80c99277df4264f56f88a",
-  "decodedBytes": 41858136,
-  "compressedBytes": 8646683,
+  "compressedSha256": "4ed0987a1ef768aa804210bd387ddcd5eb256d942484fb56332f4f3ad9e9687c",
+  "decodedBytes": 40387312,
+  "compressedBytes": 7278509,
   "optimization": {
     "floatGrid": {
       "POSITION": 1e-05,
@@ -115,8 +115,8 @@
     },
     "maxAttributeError": 0.0001220703125,
     "textureLimits": {
-      "color": 4096,
-      "normalAndRoughness": 2048
+      "color": 1024,
+      "normalAndRoughness": 1024
     },
     "viewsBefore": 2785,
     "viewsAfter": 1353

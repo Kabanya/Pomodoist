@@ -1,3 +1,5 @@
+typedef FilePreviewKey = ({String? scopeId, String attachmentId});
+
 class FileTarget {
   const FileTarget({this.projectId, this.taskId})
     : assert((projectId == null) != (taskId == null));
@@ -55,6 +57,7 @@ class FileAttachment {
   final String? scopeId, taskId, projectId, taskName;
   final int bytes;
   final DateTime createdAt;
+  FilePreviewKey get previewKey => (scopeId: scopeId, attachmentId: id);
   bool get isImage => const {
     'image/jpeg',
     'image/png',

@@ -296,6 +296,15 @@ uploads follow edit permission and Pro entitlement. Confirm permanent file
 removal, and warn that deleting a project permanently removes files attached
 directly to it. Use palette surfaces and existing controls in both themes.
 
+Files uses the same format icons in list and gallery views, without extension
+badges: distinct Lucide signs for spreadsheets, documents, plain text, PDF,
+presentations, archives, audio, video and code. Match extensions without case
+sensitivity, fall back to MIME, and retain a generic icon for unknown types.
+Image previews share session-bound state by attachment and scope. Recover once
+from a failed URL or image load with a fresh signed URL after one second; further
+failure stays visible until Files is refreshed. Release cached images when their
+preview provider is disposed, not when an individual consumer disappears.
+
 ### Calendar planning view
 
 Calendar is a separate planning destination before Timeline in Views. Its Day,
@@ -1686,9 +1695,13 @@ set the matching 3D pose immediately and stop continuous rendering. Loading or
 rendering failure may use the corresponding raster still. Bundle the live model
 as a gzip-compressed GLB and decode it off the UI isolate; do not replace geometry
 or motion with image sequences. Pomo model/textures/stills/manifests together have
-a 10,000,000-byte budget, excluding native renderer libraries. Hidden windows dispose
-the scene and GPU surface. Resizing preserves the window, model and animation
-state. Use the shared
+a 10,000,000-byte budget, excluding native renderer libraries. Runtime texture
+maps have a maximum side of 1024 pixels; preserve aspect ratios and never upscale
+smaller maps. Keep high-resolution Blender source textures for authoring.
+Release glTF source data after loading scene metadata. Hidden windows dispose
+the scene, GPU surface and the companion-owned native renderer engine before a
+subsequent model initializes. Resizing and emotion changes preserve the window,
+model and animation state. Use the shared
 Focus state and commands; the companion must never own a second timer.
 Active work uses the focused pose regardless of accumulated work time; idle,
 ready and paused states use Calm, and breaks use Rest. Event reactions may

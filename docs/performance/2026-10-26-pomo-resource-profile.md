@@ -1,5 +1,7 @@
 # Pomo and application resource profile — 2026-10-26
 
+This is the original audit. See the [optimization follow-up](2026-10-26-pomo-memory-optimization.md) for the implemented changes, updated reproduction procedure and subsequent measurements.
+
 ## Device and workload
 
 Measurements use the physical Mac: Apple M3 Pro, 12 logical CPU cores, 18 GiB

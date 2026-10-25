@@ -2,10 +2,13 @@
 import gzip
 import hashlib
 import json
+import io
 import struct
 import tempfile
 import unittest
 from pathlib import Path
+
+from PIL import Image
 
 from compact_model import compact, package
 
@@ -48,6 +51,43 @@ class CompactTest(unittest.TestCase):
             self.assertEqual(gzip.decompress(a), compact(raw)[0])
             self.assertEqual((source/'pomo.glb').read_bytes(), raw)
             self.assertEqual(json.loads((root/'one/manifest.json').read_text())['clips']['focus']['durationMs'], 6000)
+
+    def test_all_texture_maps_fit_1024_without_upscaling_or_changing_alpha(self):
+        raw = fixture()
+        json_size = struct.unpack_from('<I', raw, 12)[0]
+        doc = json.loads(raw[20:20 + json_size])
+        binary = bytearray(raw[28 + json_size:])
+        doc['images'] = []
+        for name, size in [('body-color', (4096, 2048)),
+                           ('body-normal', (2048, 2048)),
+                           ('body-roughness', (512, 256))]:
+            image = Image.new('RGBA', size, (128, 128, 255, 123))
+            out = io.BytesIO()
+            image.save(out, format='PNG')
+            binary.extend(b'\0' * (-len(binary) % 4))
+            doc['images'].append({'name': name, 'mimeType': 'image/png',
+                                  'bufferView': len(doc['bufferViews'])})
+            doc['bufferViews'].append({'buffer': 0, 'byteOffset': len(binary),
+                                       'byteLength': len(out.getvalue())})
+            binary.extend(out.getvalue())
+        binary.extend(b'\0' * (-len(binary) % 4))
+        doc['buffers'][0]['byteLength'] = len(binary)
+        encoded = json.dumps(doc).encode()
+        encoded += b' ' * (-len(encoded) % 4)
+        raw = (struct.pack('<IIIII', 0x46546c67, 2, 28 + len(encoded) + len(binary),
+                           len(encoded), 0x4e4f534a) + encoded +
+               struct.pack('<II', len(binary), 0x004e4942) + binary)
+        packed, report = compact(raw)
+        json_size = struct.unpack_from('<I', packed, 12)[0]
+        doc = json.loads(packed[20:20 + json_size])
+        for image, expected in zip(doc['images'], [(1024, 512), (1024, 1024), (512, 256)]):
+            view = doc['bufferViews'][image['bufferView']]
+            offset = 28 + json_size + view['byteOffset']
+            with Image.open(io.BytesIO(packed[offset:offset + view['byteLength']])) as decoded:
+                self.assertEqual(decoded.size, expected)
+                self.assertEqual(decoded.mode, 'RGBA')
+                self.assertEqual(decoded.getpixel((0, 0))[3], 123)
+        self.assertEqual(report['textureLimits'], {'color': 1024, 'normalAndRoughness': 1024})
 
     def test_bad_input_is_rejected(self):
         with self.assertRaises(AssertionError):
