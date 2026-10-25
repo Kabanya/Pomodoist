@@ -388,3 +388,27 @@ that send `isFocusEstimateManual`. The optional boolean travels with
 legacy automatic precedence; no existing estimates are reclassified. New manual
 estimates override the timed block's calculated target without changing its
 schedule. Older clients still apply their previous precedence when starting Focus.
+
+### Synchronization repair and local archives
+
+The pending `20261020092144_pomodoist_manual_focus_estimate` migration also restores
+server-only attachment metadata writes and file/calendar lock ordering. Personal
+user-label memberships may be re-added with a newer clock; equal-time deletion
+wins. Shared memberships require a revision that includes the tombstone and still
+validate the referenced task, label and editor permissions. Deploy this server
+change before the recovery client.
+
+This migration was amended before its production application. An installation
+that already applied an earlier copy will not receive the changes by editing the
+file. Check its migration ledger before upgrading; do not alter checksums or
+remove ledger entries to force a replay.
+
+In Flutter Settings, **Restart synchronization** also detects a `legacy-unowned`
+local archive. It asks the user to confirm ownership for the displayed account
+before queuing personal records with their original IDs and clocks. The source
+archive is retained until explicit deletion of its confirmed account, and the claim and queued operations commit together. Later
+runs resume the existing queue; switching accounts cannot confirm or import the
+archive for the wrong session. Integration credentials, shared caches and sync
+cursors are excluded. Archived active Focus sessions are restored paused on this
+device and are not published as active sessions. An unresolved archive, rejected
+operation or unfinished recovery scan prevents a completed status.

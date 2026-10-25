@@ -1458,5 +1458,9 @@
   "pomoGnomeUpdate": "تحديث الإضافة",
   "pomoGnomeCheckAgain": "التحقق مجدداً",
   "pomoGnomeXWaylandDescription": "XWayland غير متاح في جلسة GNOME هذه. يحتاج Pomo إلى XWayland وإضافة Shell معاً. فعّل XWayland وأعد تشغيل Pomodoist، ثم أعد التحقق.",
-  "pomoGnomeUserExtensionsDisabledDescription": "إضافات مستخدم GNOME معطّلة في هذه الجلسة. افتح تطبيق الإضافات وفعّل إضافات المستخدم، ثم أعد التحقق. لن يغيّر Pomodoist إعداد النظام هذا."
+  "pomoGnomeUserExtensionsDisabledDescription": "إضافات مستخدم GNOME معطّلة في هذه الجلسة. افتح تطبيق الإضافات وفعّل إضافات المستخدم، ثم أعد التحقق. لن يغيّر Pomodoist إعداد النظام هذا.",
+  "settingsSyncRecoveryTitle": "استعادة البيانات المحلية",
+  "settingsSyncRecoveryBody": "عُثر على {count} من السجلات الشخصية في أرشيف محلي قديم. أكّد أن هذه البيانات تخص الحساب {account} قبل دمجها معه. ستُحفظ التغييرات الأحدث في السحابة وعمليات الحذف المؤكدة، وسيبقى الأرشيف نسخة احتياطية.",
+  "settingsSyncRecoveryConfirm": "استعادة بياناتي",
+  "settingsSyncRecoveryFailed": "لم تكتمل استعادة البيانات المحلية. تم الاحتفاظ بالأرشيف. حاول إعادة تشغيل المزامنة."
 }

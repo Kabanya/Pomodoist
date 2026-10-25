@@ -1458,5 +1458,9 @@
   "pomoGnomeUpdate": "更新扩展",
   "pomoGnomeCheckAgain": "再次检查",
   "pomoGnomeXWaylandDescription": "此 GNOME 会话中无法使用 XWayland。Pomo 需要 XWayland 和 Shell 扩展。请启用 XWayland 并重启 Pomodoist，然后再次检查。",
-  "pomoGnomeUserExtensionsDisabledDescription": "此会话中的 GNOME 用户扩展已关闭。请打开“扩展”应用，启用用户扩展，然后再次检查。Pomodoist 不会更改此系统设置。"
+  "pomoGnomeUserExtensionsDisabledDescription": "此会话中的 GNOME 用户扩展已关闭。请打开“扩展”应用，启用用户扩展，然后再次检查。Pomodoist 不会更改此系统设置。",
+  "settingsSyncRecoveryTitle": "恢复本地数据",
+  "settingsSyncRecoveryBody": "在旧的本地存档中找到 {count} 条个人记录。与此账户合并前，请确认这些数据属于 {account}。云端较新的更改和已确认的删除将保留。存档将作为备份保留。",
+  "settingsSyncRecoveryConfirm": "恢复我的数据",
+  "settingsSyncRecoveryFailed": "本地数据恢复尚未完成。存档已保留。请尝试重新启动同步。"
 }

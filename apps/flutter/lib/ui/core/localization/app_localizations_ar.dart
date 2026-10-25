@@ -4516,4 +4516,19 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get pomoGnomeUserExtensionsDisabledDescription =>
       'إضافات مستخدم GNOME معطّلة في هذه الجلسة. افتح تطبيق الإضافات وفعّل إضافات المستخدم، ثم أعد التحقق. لن يغيّر Pomodoist إعداد النظام هذا.';
+
+  @override
+  String get settingsSyncRecoveryTitle => 'استعادة البيانات المحلية';
+
+  @override
+  String settingsSyncRecoveryBody(int count, String account) {
+    return 'عُثر على $count من السجلات الشخصية في أرشيف محلي قديم. أكّد أن هذه البيانات تخص الحساب $account قبل دمجها معه. ستُحفظ التغييرات الأحدث في السحابة وعمليات الحذف المؤكدة، وسيبقى الأرشيف نسخة احتياطية.';
+  }
+
+  @override
+  String get settingsSyncRecoveryConfirm => 'استعادة بياناتي';
+
+  @override
+  String get settingsSyncRecoveryFailed =>
+      'لم تكتمل استعادة البيانات المحلية. تم الاحتفاظ بالأرشيف. حاول إعادة تشغيل المزامنة.';
 }

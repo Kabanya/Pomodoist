@@ -41,7 +41,9 @@ final deleteAccountUseCaseProvider =
           database,
           () => database.transaction(() async {
             if (deletedOwner == null) return;
-            await AccountRecoveryStore(database).discardOwner(deletedOwner);
+            await AccountRecoveryStore(
+              database,
+            ).discardOwner(deletedOwner, includeRecoveredLegacy: true);
             final store = SyncOwnerStore(database, const Uuid());
             final owner = (await store.owner())?.cursor;
             if (owner == deletedOwner ||

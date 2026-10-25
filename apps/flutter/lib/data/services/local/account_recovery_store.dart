@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
+import 'package:uuid/uuid.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 
 /// Durable account snapshots. Call archive/restore inside the owner transaction.
@@ -65,6 +66,21 @@ class AccountRecoveryStore {
             createdAt: DateTime.now().toUtc(),
           ),
         );
+  }
+
+  Future<AccountRecoveryData?> legacyData() async {
+    final snapshot = await (db.select(
+      db.accountRecoverySnapshots,
+    )..where((r) => r.ownerId.equals('legacy-unowned'))).getSingleOrNull();
+    if (snapshot == null) return null;
+    final payload = jsonDecode(snapshot.payloadJson) as Map<String, dynamic>;
+    if (payload['version'] != 1 ||
+        payload['owner'] != 'legacy-unowned' ||
+        snapshot.schemaVersion < 11 ||
+        snapshot.schemaVersion > db.schemaVersion) {
+      throw const FormatException('Unsupported legacy recovery snapshot');
+    }
+    return AccountRecoveryData(snapshot, payload);
   }
 
   Future<bool> restoreInTransaction(String ownerId) async {
@@ -146,7 +162,53 @@ class AccountRecoveryStore {
     return true;
   }
 
-  Future<void> discardOwner(String ownerId) => (db.delete(
-    db.accountRecoverySnapshots,
-  )..where((r) => r.ownerId.equals(ownerId))).go();
+  Future<void> discardOwner(
+    String ownerId, {
+    bool includeRecoveredLegacy = false,
+  }) =>
+      (db.delete(db.accountRecoverySnapshots)..where(
+            (r) =>
+                r.ownerId.equals(ownerId) |
+                (includeRecoveredLegacy
+                    ? r.ownerId.like('legacy-recovered:$ownerId:%')
+                    : const Constant(false)),
+          ))
+          .go();
+}
+
+/// Read typed rows without inserting archived state into the active database.
+class AccountRecoveryData {
+  AccountRecoveryData(this.snapshot, this.payload);
+  final AccountRecoverySnapshotRow snapshot;
+  final Map<String, dynamic> payload;
+  String get fingerprint => const Uuid().v5(
+    Namespace.url.value,
+    jsonEncode([
+      snapshot.schemaVersion,
+      snapshot.createdAt.toIso8601String(),
+      payload['tables'],
+    ]),
+  );
+
+  Future<List<D>> rows<T extends Table, D>(TableInfo<T, D> table) async {
+    if (!AccountRecoveryStore.tables.contains(table.actualTableName)) {
+      throw const FormatException('Unsupported recovery table');
+    }
+    final data = payload['tables'] as Map;
+    final raw = data[table.actualTableName];
+    if (raw is! List) throw const FormatException('Missing recovery table');
+    final columns = table.$columns.map((c) => c.$name).toSet();
+    return Future.wait(
+      raw.map((value) async {
+        final row = Map<String, dynamic>.from(value as Map);
+        if (!columns.containsAll(row.keys)) {
+          throw const FormatException('Unknown recovery columns');
+        }
+        if (table.actualTableName == 'tasks') {
+          row.putIfAbsent('is_focus_estimate_manual', () => 0);
+        }
+        return table.map(row);
+      }),
+    );
+  }
 }

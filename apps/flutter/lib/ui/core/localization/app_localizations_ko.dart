@@ -4449,4 +4449,19 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get pomoGnomeUserExtensionsDisabledDescription =>
       '이 세션에서 GNOME 사용자 확장이 꺼져 있습니다. 확장 앱을 열어 사용자 확장을 켠 뒤 재확인하세요. Pomodoist는 이 시스템 설정을 변경하지 않습니다.';
+
+  @override
+  String get settingsSyncRecoveryTitle => '로컬 데이터 복구';
+
+  @override
+  String settingsSyncRecoveryBody(int count, String account) {
+    return '이전 로컬 보관 파일에서 개인 기록 $count개를 찾았습니다. 이 계정과 병합하기 전에 데이터가 $account의 것인지 확인하세요. 클라우드의 최신 변경 사항과 확인된 삭제는 유지됩니다. 보관 파일은 백업으로 남습니다.';
+  }
+
+  @override
+  String get settingsSyncRecoveryConfirm => '내 데이터 복구';
+
+  @override
+  String get settingsSyncRecoveryFailed =>
+      '로컬 데이터 복구가 완료되지 않았습니다. 보관 파일은 유지됩니다. 동기화를 다시 시작해 보세요.';
 }

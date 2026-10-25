@@ -12,6 +12,7 @@ import 'package:pomodoist/domain/models/account/account_overview.dart';
 import 'package:pomodoist/domain/models/account/account_session.dart';
 import 'package:pomodoist/domain/use_cases/account/sync_account_use_case.dart';
 import 'dart:async';
+import 'package:pomodoist/domain/models/account/legacy_recovery_request.dart';
 
 import 'package:app_account/app_account.dart' hide AccountSession;
 import 'package:flutter/foundation.dart';
@@ -398,6 +399,21 @@ final syncAccountUseCaseProvider = Provider<SyncAccountUseCase>((ref) {
     loadHistoryPolicy: AccountHistoryPolicyStore(db).load,
   );
 });
+
+final legacyRecoveryRequestProvider =
+    Provider<Future<LegacyRecoveryRequest?> Function()>((ref) {
+      return () async =>
+          ref.read(accountSyncEngineProvider)?.legacyRecoveryRequest();
+    });
+
+final legacyRecoveryConfirmProvider =
+    Provider<Future<void> Function(LegacyRecoveryRequest)>((ref) {
+      return (request) async {
+        final engine = ref.read(accountSyncEngineProvider);
+        if (engine == null) throw StateError('Synchronization is unavailable');
+        await engine.recoverLegacyArchive(request);
+      };
+    });
 
 final accountSyncRestartProvider = Provider<Future<void> Function()>((ref) {
   return () async {

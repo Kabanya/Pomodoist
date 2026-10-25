@@ -511,6 +511,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 SyncRestartPhase.complete => l10n.settingsSyncComplete,
                 SyncRestartPhase.pending => l10n.settingsSyncPending,
                 SyncRestartPhase.failed => l10n.settingsSyncFailed,
+                SyncRestartPhase.recoveryFailed =>
+                  l10n.settingsSyncRecoveryFailed,
               },
               control: ShadButton.outline(
                 key: const Key('account-restart-sync'),
@@ -519,7 +521,57 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 enabled:
                     state.syncPrepared && syncPhase != SyncRestartPhase.running,
                 onPressed: () => unawaited(
-                  ref.read(syncRestartViewModelProvider.notifier).restart(),
+                  ref
+                      .read(syncRestartViewModelProvider.notifier)
+                      .restart(
+                        confirmRecovery: (request) async {
+                          if (!context.mounted) return false;
+                          return await showDialog<bool>(
+                                context: context,
+                                animationStyle: AnimationStyle(
+                                  duration: AppMotion.duration(
+                                    context,
+                                    AppMotion.popup,
+                                  ),
+                                  reverseDuration: AppMotion.duration(
+                                    context,
+                                    AppMotion.popup,
+                                  ),
+                                  curve: AppMotion.curve,
+                                ),
+                                builder: (dialogContext) => AlertDialog(
+                                  title: Text(l10n.settingsSyncRecoveryTitle),
+                                  content: SingleChildScrollView(
+                                    child: Text(
+                                      l10n.settingsSyncRecoveryBody(
+                                        request.recordCount,
+                                        state.email ?? request.userId,
+                                      ),
+                                    ),
+                                  ),
+                                  actions: [
+                                    ShadButton.ghost(
+                                      onPressed: () => Navigator.of(
+                                        dialogContext,
+                                      ).pop(false),
+                                      child: Text(l10n.commonCancel),
+                                    ),
+                                    ShadButton(
+                                      key: const Key(
+                                        'account-confirm-legacy-recovery',
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.of(dialogContext).pop(true),
+                                      child: Text(
+                                        l10n.settingsSyncRecoveryConfirm,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ) ??
+                              false;
+                        },
+                      ),
                 ),
                 leading: const Icon(LucideIcons.refreshCw, size: 18),
                 child: Text(l10n.settingsRestartSync),

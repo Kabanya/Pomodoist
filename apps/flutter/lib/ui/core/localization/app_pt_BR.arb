@@ -326,5 +326,9 @@
   "pomoGnomeUpdate": "Atualizar extensão",
   "pomoGnomeCheckAgain": "Verificar novamente",
   "pomoGnomeXWaylandDescription": "O XWayland não está disponível nesta sessão do GNOME. O Pomo precisa do XWayland e da extensão do Shell. Ative o XWayland, reinicie o Pomodoist e verifique novamente.",
-  "pomoGnomeUserExtensionsDisabledDescription": "As extensões de usuário do GNOME estão desativadas nesta sessão. Abra o aplicativo Extensões, ative as extensões de usuário e verifique novamente. O Pomodoist não altera essa configuração do sistema."
+  "pomoGnomeUserExtensionsDisabledDescription": "As extensões de usuário do GNOME estão desativadas nesta sessão. Abra o aplicativo Extensões, ative as extensões de usuário e verifique novamente. O Pomodoist não altera essa configuração do sistema.",
+  "settingsSyncRecoveryTitle": "Recuperar dados locais",
+  "settingsSyncRecoveryBody": "Foram encontrados {count} registros pessoais em um arquivo local antigo. Confirme que pertencem a {account} antes de combiná-los com esta conta. As alterações mais recentes na nuvem e as exclusões confirmadas serão preservadas. O arquivo permanecerá como backup.",
+  "settingsSyncRecoveryConfirm": "Recuperar meus dados",
+  "settingsSyncRecoveryFailed": "A recuperação dos dados locais está incompleta. O arquivo foi preservado. Tente reiniciar a sincronização."
 }

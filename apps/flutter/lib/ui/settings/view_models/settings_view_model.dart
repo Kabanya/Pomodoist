@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pomodoist/domain/models/account/legacy_recovery_request.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/account_management_dependencies.dart';
 import 'package:pomodoist/config/app_language.dart';
@@ -27,17 +28,35 @@ class SyncRestartViewModel extends Notifier<SyncRestartPhase> {
     return SyncRestartPhase.idle;
   }
 
-  Future<void> restart() {
+  Future<void> restart({
+    Future<bool> Function(LegacyRecoveryRequest)? confirmRecovery,
+  }) {
     final generation = _generation;
-    return _running ??= _restart().whenComplete(() {
+    return _running ??= _restart(confirmRecovery).whenComplete(() {
       if (generation == _generation) _running = null;
     });
   }
 
-  Future<void> _restart() async {
+  Future<void> _restart(
+    Future<bool> Function(LegacyRecoveryRequest)? confirmRecovery,
+  ) async {
     final generation = _generation;
     state = SyncRestartPhase.running;
+    var recoveringArchive = true;
     try {
+      final request = await ref.read(legacyRecoveryRequestProvider)();
+      if (!ref.mounted || generation != _generation) return;
+      if (request != null) {
+        final confirmed = await confirmRecovery?.call(request) ?? false;
+        if (!ref.mounted || generation != _generation) return;
+        if (!confirmed) {
+          state = SyncRestartPhase.pending;
+          return;
+        }
+        await ref.read(legacyRecoveryConfirmProvider)(request);
+        if (!ref.mounted || generation != _generation) return;
+      }
+      recoveringArchive = false;
       await ref.read(accountSyncRestartProvider)();
       if (!ref.mounted || generation != _generation) return;
       final subscription = ref.listen(syncQueueStatusProvider, (_, _) {});
@@ -53,7 +72,9 @@ class SyncRestartViewModel extends Notifier<SyncRestartPhase> {
           : SyncRestartPhase.complete;
     } catch (_) {
       if (ref.mounted && generation == _generation) {
-        state = SyncRestartPhase.failed;
+        state = recoveringArchive
+            ? SyncRestartPhase.recoveryFailed
+            : SyncRestartPhase.failed;
       }
     }
   }

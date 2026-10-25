@@ -1,6 +1,7 @@
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton;
 import 'support/test_app.dart';
 import 'dart:async';
+import 'package:pomodoist/domain/models/account/legacy_recovery_request.dart';
 
 import 'package:app_account/app_account.dart';
 import 'package:drift/native.dart';
@@ -26,6 +27,58 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues(const {});
   });
+
+  for (final recover in [true, false]) {
+    testWidgets(
+      'restart synchronization asks ownership before recovery: $recover',
+      (tester) async {
+        final account = _RecordingAccountClient(
+          onInvoke: () async =>
+              const AccountFunctionResponse(status: 200, data: {}),
+        );
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(db.close);
+        await db.ensureSeedData();
+        final events = <String>[];
+        await _pumpSettings(
+          tester,
+          account: account,
+          db: db,
+          syncPrepared: true,
+          recoveryRequest: const LegacyRecoveryRequest(
+            userId: 'user-1',
+            fingerprint: 'archive',
+            recordCount: 7,
+          ),
+          recoverArchive: (_) async {
+            events.add('recover');
+          },
+          restartSync: () async {
+            events.add('restart');
+          },
+        );
+        final button = find.byKey(const Key('account-restart-sync'));
+        await tester.ensureVisible(button);
+        await tester.pumpAndSettle();
+        await tester.tap(button);
+        await tester.pumpAndSettle();
+        expect(events, isEmpty);
+        expect(find.text('Recover local data'), findsOneWidget);
+        expect(find.textContaining('Found 7 personal records'), findsOneWidget);
+        expect(find.textContaining('user-1'), findsWidgets);
+        final action = recover
+            ? find.byKey(const Key('account-confirm-legacy-recovery'))
+            : find.text('Cancel');
+        await tester.tap(action);
+        await tester.pumpAndSettle();
+        expect(events, recover ? ['recover', 'restart'] : isEmpty);
+        expect(find.text('Recover local data'), findsNothing);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pumpAndSettle();
+      },
+    );
+  }
 
   testWidgets('delete account is last and requires two confirmations', (
     tester,
@@ -433,12 +486,25 @@ Future<void> _pumpSettings(
   PomodoistAccountOverview? overview,
   Object? overviewError,
   Duration requestTimeout = const Duration(seconds: 15),
+  bool syncPrepared = false,
+  LegacyRecoveryRequest? recoveryRequest,
+  Future<void> Function(LegacyRecoveryRequest)? recoverArchive,
+  Future<void> Function()? restartSync,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
-        localSyncOwnerProvider.overrideWith((ref) => Stream.value(null)),
+        localSyncOwnerProvider.overrideWith(
+          (ref) => Stream.value(syncPrepared ? account.currentUserId : null),
+        ),
+        legacyRecoveryRequestProvider.overrideWithValue(
+          () async => recoveryRequest,
+        ),
+        if (recoverArchive != null)
+          legacyRecoveryConfirmProvider.overrideWithValue(recoverArchive),
+        if (restartSync != null)
+          accountSyncRestartProvider.overrideWithValue(restartSync),
         accountClientProvider.overrideWithValue(account),
         accountConfiguredProvider.overrideWithValue(true),
         accountAuthStateProvider.overrideWithValue(

@@ -4345,4 +4345,18 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get pomoGnomeUserExtensionsDisabledDescription =>
       '此会话中的 GNOME 用户扩展已关闭。请打开“扩展”应用，启用用户扩展，然后再次检查。Pomodoist 不会更改此系统设置。';
+
+  @override
+  String get settingsSyncRecoveryTitle => '恢复本地数据';
+
+  @override
+  String settingsSyncRecoveryBody(int count, String account) {
+    return '在旧的本地存档中找到 $count 条个人记录。与此账户合并前，请确认这些数据属于 $account。云端较新的更改和已确认的删除将保留。存档将作为备份保留。';
+  }
+
+  @override
+  String get settingsSyncRecoveryConfirm => '恢复我的数据';
+
+  @override
+  String get settingsSyncRecoveryFailed => '本地数据恢复尚未完成。存档已保留。请尝试重新启动同步。';
 }

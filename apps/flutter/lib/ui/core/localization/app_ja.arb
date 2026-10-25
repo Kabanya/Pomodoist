@@ -2069,5 +2069,9 @@
   "pomoGnomeUpdate": "拡張機能を更新",
   "pomoGnomeCheckAgain": "再確認",
   "pomoGnomeXWaylandDescription": "この GNOME セッションでは XWayland を利用できません。Pomo には XWayland と Shell 拡張機能が必要です。XWayland を有効にして Pomodoist を再起動し、再確認してください。",
-  "pomoGnomeUserExtensionsDisabledDescription": "このセッションでは GNOME のユーザー拡張機能が無効です。「拡張機能」アプリでユーザー拡張機能を有効にして、再確認してください。Pomodoist はこのシステム設定を変更しません。"
+  "pomoGnomeUserExtensionsDisabledDescription": "このセッションでは GNOME のユーザー拡張機能が無効です。「拡張機能」アプリでユーザー拡張機能を有効にして、再確認してください。Pomodoist はこのシステム設定を変更しません。",
+  "settingsSyncRecoveryTitle": "ローカルデータの復元",
+  "settingsSyncRecoveryBody": "古いローカルアーカイブに個人用レコードが{count}件見つかりました。このアカウントと統合する前に、これらのデータが{account}に属することを確認してください。クラウド上の新しい変更と確認済みの削除は保持されます。アーカイブはバックアップとして残ります。",
+  "settingsSyncRecoveryConfirm": "自分のデータを復元",
+  "settingsSyncRecoveryFailed": "ローカルデータの復元が完了していません。アーカイブは保持されています。同期を再起動してください。"
 }

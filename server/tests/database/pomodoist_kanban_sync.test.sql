@@ -89,5 +89,25 @@ select is(pg_temp.entity('task','estimate')->>'isFocusEstimateManual','true','le
 select throws_ok($$select pg_temp.apply('task','estimate','{"isFocusEstimateManual":"true"}')$$,
   '22023','Invalid Pomodoist manual focus estimate','shared tasks reject invalid source types');
 
+-- Ordinary user labels reuse their task:label identity after removal.
+select pg_temp.put('task','relation-task','{"content":"Task","projectId":"project","status":"open"}');
+select pg_temp.put('label','user-label','{"name":"User label","kind":"user"}');
+select is(pg_temp.apply('task_label','relation-task:user-label','{"taskId":"relation-task","labelId":"user-label"}')->>'status',
+  'applied','add ordinary shared task label');
+select is(pg_temp.apply('task_label','relation-task:user-label','{}',null,'delete')->>'status',
+  'applied','remove ordinary shared task label');
+select is(pg_temp.apply('task_label','relation-task:user-label','{"taskId":"relation-task","labelId":"user-label"}',0)->>'code',
+  'deleted','stale shared add cannot restore a removed label');
+select is(pg_temp.apply('task_label','relation-task:user-label','{"taskId":"relation-task","labelId":"user-label"}')->>'status',
+  'applied','fresh shared add restores the same relation ID');
+select pg_temp.put('task_label','relation-task:user-label',pg_temp.entity('task_label','relation-task:user-label'),now());
+select pg_temp.put('label','user-label',pg_temp.entity('label','user-label'),now());
+select throws_ok($$select pg_temp.apply('task_label','relation-task:user-label','{"taskId":"relation-task","labelId":"user-label"}')$$,
+  '22023','Label must belong to the shared scope','shared revival still validates the label');
+select pg_temp.put('label','user-label','{"name":"User label","kind":"user"}');
+select pg_temp.put('task','relation-task',pg_temp.entity('task','relation-task'),now());
+select throws_ok($$select pg_temp.apply('task_label','relation-task:user-label','{"taskId":"relation-task","labelId":"user-label"}')$$,
+  '22023','Task is inaccessible','shared revival still validates the task');
+
 select * from finish();
 rollback;

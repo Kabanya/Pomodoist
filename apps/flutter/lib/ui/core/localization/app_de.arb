@@ -1458,5 +1458,9 @@
   "pomoGnomeUpdate": "Erweiterung aktualisieren",
   "pomoGnomeCheckAgain": "Erneut prüfen",
   "pomoGnomeXWaylandDescription": "XWayland ist in dieser GNOME-Sitzung nicht verfügbar. Pomo benötigt XWayland und seine Shell-Erweiterung. Aktiviere XWayland, starte Pomodoist neu und prüfe erneut.",
-  "pomoGnomeUserExtensionsDisabledDescription": "GNOME-Benutzererweiterungen sind für diese Sitzung ausgeschaltet. Öffne die Erweiterungen-App, schalte Benutzererweiterungen ein und prüfe erneut. Pomodoist ändert diese Systemeinstellung nicht."
+  "pomoGnomeUserExtensionsDisabledDescription": "GNOME-Benutzererweiterungen sind für diese Sitzung ausgeschaltet. Öffne die Erweiterungen-App, schalte Benutzererweiterungen ein und prüfe erneut. Pomodoist ändert diese Systemeinstellung nicht.",
+  "settingsSyncRecoveryTitle": "Lokale Daten wiederherstellen",
+  "settingsSyncRecoveryBody": "In einem älteren lokalen Archiv wurden {count} persönliche Einträge gefunden. Bestätige, dass diese Daten zu {account} gehören, um sie mit diesem Konto zusammenzuführen. Neuere Cloud-Änderungen und bestätigte Löschungen bleiben erhalten. Das Archiv bleibt als Sicherung bestehen.",
+  "settingsSyncRecoveryConfirm": "Meine Daten wiederherstellen",
+  "settingsSyncRecoveryFailed": "Die Wiederherstellung lokaler Daten ist unvollständig. Das Archiv wurde beibehalten. Starte die Synchronisierung erneut."
 }

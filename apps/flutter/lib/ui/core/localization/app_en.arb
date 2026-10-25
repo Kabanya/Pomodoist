@@ -2283,5 +2283,19 @@
   "pomoGnomeUpdate": "Update extension",
   "pomoGnomeCheckAgain": "Check again",
   "pomoGnomeXWaylandDescription": "XWayland is unavailable in this GNOME session. Pomo needs XWayland together with its Shell extension. Enable XWayland and restart Pomodoist, then check again.",
-  "pomoGnomeUserExtensionsDisabledDescription": "GNOME user extensions are turned off for this session. Open the Extensions app and turn on user extensions, then check again. Pomodoist will keep this system setting unchanged."
+  "pomoGnomeUserExtensionsDisabledDescription": "GNOME user extensions are turned off for this session. Open the Extensions app and turn on user extensions, then check again. Pomodoist will keep this system setting unchanged.",
+  "settingsSyncRecoveryTitle": "Recover local data",
+  "settingsSyncRecoveryBody": "Found {count} personal records in an older local archive. Confirm that this data belongs to {account} before merging it with this account. Newer cloud changes and confirmed deletions will be preserved. The archive will remain as a backup.",
+  "settingsSyncRecoveryConfirm": "Recover my data",
+  "@settingsSyncRecoveryBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsSyncRecoveryFailed": "Local data recovery is incomplete. The archive has been preserved. Try restarting synchronization again."
 }

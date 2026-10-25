@@ -4622,6 +4622,21 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get pomoGnomeUserExtensionsDisabledDescription =>
       'As extensões de utilizador do GNOME estão desativadas nesta sessão. Abra a aplicação Extensões, ative as extensões de utilizador e verifique novamente. O Pomodoist não altera esta definição do sistema.';
+
+  @override
+  String get settingsSyncRecoveryTitle => 'Recuperar dados locais';
+
+  @override
+  String settingsSyncRecoveryBody(int count, String account) {
+    return 'Foram encontrados $count registos pessoais num arquivo local antigo. Confirme que pertencem a $account antes de os combinar com esta conta. As alterações mais recentes na nuvem e as eliminações confirmadas serão preservadas. O arquivo permanecerá como cópia de segurança.';
+  }
+
+  @override
+  String get settingsSyncRecoveryConfirm => 'Recuperar os meus dados';
+
+  @override
+  String get settingsSyncRecoveryFailed =>
+      'A recuperação dos dados locais está incompleta. O arquivo foi preservado. Tente reiniciar a sincronização.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -5617,4 +5632,19 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get pomoGnomeUserExtensionsDisabledDescription =>
       'As extensões de usuário do GNOME estão desativadas nesta sessão. Abra o aplicativo Extensões, ative as extensões de usuário e verifique novamente. O Pomodoist não altera essa configuração do sistema.';
+
+  @override
+  String get settingsSyncRecoveryTitle => 'Recuperar dados locais';
+
+  @override
+  String settingsSyncRecoveryBody(int count, String account) {
+    return 'Foram encontrados $count registros pessoais em um arquivo local antigo. Confirme que pertencem a $account antes de combiná-los com esta conta. As alterações mais recentes na nuvem e as exclusões confirmadas serão preservadas. O arquivo permanecerá como backup.';
+  }
+
+  @override
+  String get settingsSyncRecoveryConfirm => 'Recuperar meus dados';
+
+  @override
+  String get settingsSyncRecoveryFailed =>
+      'A recuperação dos dados locais está incompleta. O arquivo foi preservado. Tente reiniciar a sincronização.';
 }

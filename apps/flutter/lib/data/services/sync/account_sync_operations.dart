@@ -1,19 +1,24 @@
 part of 'account_sync_engine.dart';
 
 extension AccountSyncOperations on AccountSyncEngine {
-  Future<List<AccountSyncOperation>> _snapshotOperations() async {
+  Future<List<AccountSyncOperation>> _snapshotOperations({
+    AccountRecoveryData? source,
+  }) async {
+    Future<List<D>> rows<T extends Table, D>(TableInfo<T, D> table) async =>
+        source == null ? _db.select(table).get() : source.rows(table);
     final operations = <AccountSyncOperation>[];
     final taskHistoryCutoff = _retentionCutoff;
 
-    final sharedProjects = (await (_db.select(
+    final sharedProjects = (await rows(
       _db.projects,
-    )..where((p) => p.scopeId.isNotNull())).get()).map((p) => p.id).toSet();
-    final sharedTasks = (await (_db.select(
-      _db.tasks,
-    )..where((t) => t.scopeId.isNotNull())).get()).map((t) => t.id).toSet();
-    final sharedEntityIds = (await _db.select(_db.sharedEntities).get())
-        .map((e) => '${e.entityType}:${e.entityId}')
+    )).where((p) => p.scopeId != null).map((p) => p.id).toSet();
+    final sharedTasks = (await rows(_db.tasks))
+        .where((t) => t.scopeId != null || sharedProjects.contains(t.projectId))
+        .map((t) => t.id)
         .toSet();
+    final sharedEntityIds = (await rows(
+      _db.sharedEntities,
+    )).map((e) => '${e.entityType}:${e.entityId}').toSet();
     void add(
       String entityType,
       String entityId,
@@ -40,28 +45,28 @@ extension AccountSyncOperations on AccountSyncEngine {
       );
     }
 
-    for (final row in await _db.select(_db.workspaces).get()) {
+    for (final row in await rows(_db.workspaces)) {
       add('workspace', row.id, row.toJson(), row.updatedAt);
     }
-    for (final row in await _db.select(_db.projects).get()) {
+    for (final row in await rows(_db.projects)) {
       add('project', row.id, row.toJson(), row.updatedAt);
     }
-    for (final row in await _db.select(_db.sections).get()) {
+    for (final row in await rows(_db.sections)) {
       add('section', row.id, row.toJson(), row.updatedAt);
     }
-    for (final row in await _db.select(_db.tasks).get()) {
+    for (final row in await rows(_db.tasks)) {
       if (_taskRowPastHistoryCutoff(row, taskHistoryCutoff)) {
         continue;
       }
       add('task', row.id, row.toJson(), row.updatedAt);
     }
-    for (final row in await _db.select(_db.taskCompletions).get()) {
+    for (final row in await rows(_db.taskCompletions)) {
       add('task_completion', row.id, row.toJson(), row.createdAt);
     }
-    for (final row in await _db.select(_db.labels).get()) {
+    for (final row in await rows(_db.labels)) {
       add('label', row.id, row.toJson(), _snapshotClockForLabel(row));
     }
-    for (final row in await _db.select(_db.taskLabels).get()) {
+    for (final row in await rows(_db.taskLabels)) {
       if (row.kind == labelKindKanbanStatus) {
         add('task_kanban_status', row.taskId, {
           'taskId': row.taskId,
@@ -77,7 +82,7 @@ extension AccountSyncOperations on AccountSyncEngine {
         );
       }
     }
-    for (final row in await _db.select(_db.kanbanSettings).get()) {
+    for (final row in await rows(_db.kanbanSettings)) {
       add(
         'kanban_settings',
         row.id,
@@ -85,48 +90,57 @@ extension AccountSyncOperations on AccountSyncEngine {
         _snapshotClockForSettings(row),
       );
     }
-    for (final row in await _db.select(_db.filters).get()) {
+    for (final row in await rows(_db.filters)) {
       add('filter', row.id, row.toJson(), row.updatedAt);
     }
-    for (final row in await _db.select(_db.reminders).get()) {
+    for (final row in await rows(_db.reminders)) {
       add('reminder', row.id, row.toJson(), row.updatedAt);
     }
-    for (final row in await _db.select(_db.focusPresets).get()) {
+    for (final row in await rows(_db.focusPresets)) {
       add('focus_preset', row.id, row.toJson(), row.updatedAt);
     }
     // Calendar connections and event links are server-owned projections.
     // Do not import another account's authorization state from a local snapshot.
 
-    final completedRuns =
-        await (_db.select(_db.focusRuns)..where(
-              (row) =>
-                  row.endedAt.isNotNull() |
-                  row.status.equals('completed') |
-                  row.status.equals('stopped') |
-                  row.status.equals('interrupted'),
-            ))
-            .get();
-    final completedRunIds = completedRuns.map((row) => row.id).toList();
+    final completedRuns = source == null
+        ? await (_db.select(_db.focusRuns)..where(
+                (r) =>
+                    r.endedAt.isNotNull() |
+                    r.status.equals('completed') |
+                    r.status.equals('stopped') |
+                    r.status.equals('interrupted'),
+              ))
+              .get()
+        : (await rows(_db.focusRuns)).where(_isTerminalFocusRun).toList();
+    final completedRunIds = completedRuns.map((row) => row.id).toSet();
     for (final row in completedRuns) {
       add('focus_run', row.id, row.toJson(), row.updatedAt);
     }
     if (completedRunIds.isNotEmpty) {
-      final intervals = await (_db.select(
-        _db.focusIntervals,
-      )..where((row) => row.runId.isIn(completedRunIds))).get();
+      final intervals = source == null
+          ? await (_db.select(
+              _db.focusIntervals,
+            )..where((r) => r.runId.isIn(completedRunIds))).get()
+          : (await rows(
+              _db.focusIntervals,
+            )).where((r) => completedRunIds.contains(r.runId));
       for (final row in intervals) {
         add('focus_interval', row.id, row.toJson(), row.updatedAt);
       }
 
-      final events = await (_db.select(
-        _db.focusEvents,
-      )..where((row) => row.runId.isIn(completedRunIds))).get();
+      final events = source == null
+          ? await (_db.select(
+              _db.focusEvents,
+            )..where((r) => r.runId.isIn(completedRunIds))).get()
+          : (await rows(
+              _db.focusEvents,
+            )).where((r) => completedRunIds.contains(r.runId));
       for (final row in events) {
         add('focus_event', row.id, row.toJson(), row.createdAt);
       }
     }
 
-    for (final row in await _db.select(_db.habits).get()) {
+    for (final row in await rows(_db.habits)) {
       final habit = habitFromRow(row);
       operations.add(
         _operation(
@@ -140,10 +154,10 @@ extension AccountSyncOperations on AccountSyncEngine {
         ),
       );
     }
-    final deletedHabits = (await (_db.select(
+    final deletedHabits = (await rows(
       _db.habits,
-    )..where((h) => h.isDeleted)).get()).map((h) => h.id).toSet();
-    for (final row in await _db.select(_db.habitCheckIns).get()) {
+    )).where((h) => h.isDeleted).map((h) => h.id).toSet();
+    for (final row in await rows(_db.habitCheckIns)) {
       if (deletedHabits.contains(row.habitId)) continue;
       operations.add(
         _operation(
@@ -162,8 +176,9 @@ extension AccountSyncOperations on AccountSyncEngine {
 
   Future<List<AccountSyncOperation>> _operationsFromCommand(
     SyncCommandRow command,
-    DateTime? taskHistoryCutoff,
-  ) async {
+    DateTime? taskHistoryCutoff, {
+    List<AccountSyncOperation>? sourceOperations,
+  }) async {
     final payload = jsonDecode(command.payloadJson);
     final payloadMap = payload is Map
         ? Map<String, Object?>.from(payload)
@@ -179,6 +194,40 @@ extension AccountSyncOperations on AccountSyncEngine {
     if (focusLifecycleCommand) {
       if (commandType == 'focus.run.complete' ||
           commandType == 'focus.run.stop') {
+        if (sourceOperations != null) {
+          final runId = payloadMap['id'] as String? ?? command.clientId;
+          final history = sourceOperations
+              .where(
+                (op) =>
+                    op.entityType == 'focus_run' && op.entityId == runId ||
+                    const {
+                          'focus_interval',
+                          'focus_event',
+                        }.contains(op.entityType) &&
+                        op.payload['runId'] == runId,
+              )
+              .toList();
+          if (!history.any((op) => op.entityType == 'focus_run')) {
+            throw const FormatException('Missing terminal Focus history');
+          }
+          return history
+              .map(
+                (op) => _operation(
+                  opId:
+                      '${command.uuid}:${op.entityType == 'focus_run'
+                          ? 'run'
+                          : op.entityType == 'focus_interval'
+                          ? 'interval'
+                          : 'event'}:${op.entityId}',
+                  entityType: op.entityType,
+                  entityId: op.entityId,
+                  operation: op.operation,
+                  payload: {'commandType': command.type, ...op.payload},
+                  clientUpdatedAt: op.clientUpdatedAt,
+                ),
+              )
+              .toList();
+        }
         return _terminalFocusOperations(command, payloadMap);
       }
       if (const {
@@ -212,6 +261,18 @@ extension AccountSyncOperations on AccountSyncEngine {
         ? payloadMap
         : (syncUsesCapturedPatch(commandType) || command.scopeId != null)
         ? syncCapturedPatchPayload(commandType, payloadMap, command.updatedAt)
+        : sourceOperations != null
+        ? Map<String, Object?>.from(
+            sourceOperations
+                    .where(
+                      (op) =>
+                          op.entityType == entityType &&
+                          op.entityId == entityId,
+                    )
+                    .firstOrNull
+                    ?.payload ??
+                payloadMap,
+          )
         : await _rowPayload(entityType, entityId, payloadMap);
     if (entityType == 'focus_event' && !rowPayload.containsKey('id')) {
       final event = await _latestFocusEvent(
@@ -226,6 +287,7 @@ extension AccountSyncOperations on AccountSyncEngine {
 
     final skipTaskEntity =
         entityType == 'task' &&
+        sourceOperations == null &&
         await _taskCommandPastHistoryCutoff(entityId, taskHistoryCutoff);
     if (!skipTaskEntity) {
       operations.add(
@@ -240,7 +302,34 @@ extension AccountSyncOperations on AccountSyncEngine {
       );
     }
 
-    if (commandType == 'task.complete') {
+    if (commandType == 'task.complete' && sourceOperations != null) {
+      final completionId = payloadMap['completionId'];
+      final completions =
+          sourceOperations
+              .where(
+                (op) =>
+                    op.entityType == 'task_completion' &&
+                    (completionId == null
+                        ? op.payload['taskId'] == entityId
+                        : op.entityId == completionId),
+              )
+              .toList()
+            ..sort((a, b) => b.clientUpdatedAt.compareTo(a.clientUpdatedAt));
+      if (completions.isNotEmpty) {
+        final op = completions.first;
+        operations.add(
+          _operation(
+            opId: '${command.uuid}:completion:${op.entityId}',
+            entityType: op.entityType,
+            entityId: op.entityId,
+            operation: op.operation,
+            payload: Map<String, dynamic>.from(op.payload),
+            clientUpdatedAt: op.clientUpdatedAt,
+          ),
+        );
+      }
+    }
+    if (commandType == 'task.complete' && sourceOperations == null) {
       final capturedCompletionId = payloadMap['completionId'] as String?;
       final completion =
           await (_db.select(_db.taskCompletions)

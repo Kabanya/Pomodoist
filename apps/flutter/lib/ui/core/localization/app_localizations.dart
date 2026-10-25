@@ -7886,6 +7886,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'GNOME user extensions are turned off for this session. Open the Extensions app and turn on user extensions, then check again. Pomodoist will keep this system setting unchanged.'**
   String get pomoGnomeUserExtensionsDisabledDescription;
+
+  /// No description provided for @settingsSyncRecoveryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover local data'**
+  String get settingsSyncRecoveryTitle;
+
+  /// No description provided for @settingsSyncRecoveryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {count} personal records in an older local archive. Confirm that this data belongs to {account} before merging it with this account. Newer cloud changes and confirmed deletions will be preserved. The archive will remain as a backup.'**
+  String settingsSyncRecoveryBody(int count, String account);
+
+  /// No description provided for @settingsSyncRecoveryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover my data'**
+  String get settingsSyncRecoveryConfirm;
+
+  /// No description provided for @settingsSyncRecoveryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Local data recovery is incomplete. The archive has been preserved. Try restarting synchronization again.'**
+  String get settingsSyncRecoveryFailed;
 }
 
 class _AppLocalizationsDelegate

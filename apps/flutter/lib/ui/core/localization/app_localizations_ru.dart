@@ -4604,4 +4604,19 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get pomoGnomeUserExtensionsDisabledDescription =>
       'В этой сессии GNOME отключены пользовательские расширения. Откройте приложение «Расширения», включите пользовательские расширения и повторите проверку. Pomodoist не изменяет эту системную настройку.';
+
+  @override
+  String get settingsSyncRecoveryTitle => 'Восстановление локальных данных';
+
+  @override
+  String settingsSyncRecoveryBody(int count, String account) {
+    return 'В старом локальном архиве найдено личных записей: $count. Подтвердите, что эти данные принадлежат аккаунту $account, чтобы объединить их с ним. Более свежие изменения в облаке и подтверждённые удаления сохранятся. Архив останется резервной копией.';
+  }
+
+  @override
+  String get settingsSyncRecoveryConfirm => 'Восстановить мои данные';
+
+  @override
+  String get settingsSyncRecoveryFailed =>
+      'Восстановление локальных данных не завершено. Архив сохранён. Попробуйте перезапустить синхронизацию ещё раз.';
 }

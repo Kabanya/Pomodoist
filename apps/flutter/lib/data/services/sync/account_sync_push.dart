@@ -182,6 +182,7 @@ extension AccountSyncPush on AccountSyncEngine {
         'Invalid habit weekdays',
         'Invalid check-in day period',
         'Invalid check-in habit',
+        'Task label references a deleted entity',
         'Incomplete task entity',
         'Incomplete project entity',
       }.contains(error.message);

@@ -4610,4 +4610,19 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get pomoGnomeUserExtensionsDisabledDescription =>
       'Las extensiones de usuario de GNOME están desactivadas en esta sesión. Abre la aplicación Extensiones, activa las extensiones de usuario y comprueba de nuevo. Pomodoist no modificará este ajuste del sistema.';
+
+  @override
+  String get settingsSyncRecoveryTitle => 'Recuperar datos locales';
+
+  @override
+  String settingsSyncRecoveryBody(int count, String account) {
+    return 'Se encontraron $count registros personales en un archivo local antiguo. Confirma que pertenecen a $account antes de combinarlos con esta cuenta. Se conservarán los cambios más recientes de la nube y las eliminaciones confirmadas. El archivo se mantendrá como copia de seguridad.';
+  }
+
+  @override
+  String get settingsSyncRecoveryConfirm => 'Recuperar mis datos';
+
+  @override
+  String get settingsSyncRecoveryFailed =>
+      'La recuperación de datos locales está incompleta. El archivo se ha conservado. Vuelve a reiniciar la sincronización.';
 }

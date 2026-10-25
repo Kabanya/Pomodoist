@@ -5,4 +5,11 @@ typedef SyncQueueStatus = ({
   bool recovering,
 });
 
-enum SyncRestartPhase { idle, running, complete, pending, failed }
+enum SyncRestartPhase {
+  idle,
+  running,
+  complete,
+  pending,
+  failed,
+  recoveryFailed,
+}

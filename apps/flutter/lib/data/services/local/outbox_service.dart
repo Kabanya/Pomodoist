@@ -18,9 +18,15 @@ Stream<SyncQueueStatus> watchSyncQueueStatus(AppDatabase db) => db
     (SELECT count(*) FROM shared_entities WHERE scope_id = '_account'
       AND entity_type LIKE 'sync_repair:%' AND is_deleted = 0) AS repair,
     EXISTS(SELECT 1 FROM sync_state WHERE id = 'pomodoist-repair-v1'
-      AND cursor NOT LIKE 'done:%') AS recovering
+      AND cursor NOT LIKE 'done:%') OR EXISTS(
+        SELECT 1 FROM account_recovery_snapshots WHERE owner_id = 'legacy-unowned') AS recovering
 ''',
-      readsFrom: {db.syncCommands, db.sharedEntities, db.syncState},
+      readsFrom: {
+        db.syncCommands,
+        db.sharedEntities,
+        db.syncState,
+        db.accountRecoverySnapshots,
+      },
     )
     .watchSingle()
     .map(

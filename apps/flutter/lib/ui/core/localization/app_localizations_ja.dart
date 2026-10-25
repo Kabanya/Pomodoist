@@ -4438,4 +4438,19 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get pomoGnomeUserExtensionsDisabledDescription =>
       'このセッションでは GNOME のユーザー拡張機能が無効です。「拡張機能」アプリでユーザー拡張機能を有効にして、再確認してください。Pomodoist はこのシステム設定を変更しません。';
+
+  @override
+  String get settingsSyncRecoveryTitle => 'ローカルデータの復元';
+
+  @override
+  String settingsSyncRecoveryBody(int count, String account) {
+    return '古いローカルアーカイブに個人用レコードが$count件見つかりました。このアカウントと統合する前に、これらのデータが$accountに属することを確認してください。クラウド上の新しい変更と確認済みの削除は保持されます。アーカイブはバックアップとして残ります。';
+  }
+
+  @override
+  String get settingsSyncRecoveryConfirm => '自分のデータを復元';
+
+  @override
+  String get settingsSyncRecoveryFailed =>
+      'ローカルデータの復元が完了していません。アーカイブは保持されています。同期を再起動してください。';
 }

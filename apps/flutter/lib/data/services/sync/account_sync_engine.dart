@@ -1,5 +1,7 @@
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'dart:convert';
+import 'package:pomodoist/data/services/local/account_recovery_store.dart';
+import 'package:pomodoist/domain/models/account/legacy_recovery_request.dart';
 import 'account_sync_failure.dart';
 export 'account_sync_failure.dart';
 
@@ -20,6 +22,7 @@ import 'package:pomodoist/domain/models/habits/habit_models.dart';
 part 'habit_account_sync.dart';
 part 'shared_account_sync.dart';
 part 'account_sync_import.dart';
+part 'account_sync_legacy_recovery.dart';
 part 'account_sync_push.dart';
 part 'account_sync_operations.dart';
 part 'account_sync_pull.dart';
