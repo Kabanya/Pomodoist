@@ -20,6 +20,11 @@ void main() {
   final negative = check('negative');
   final positive = check('positive');
 
+  // Cold SDK resolution belongs to shared setup, not the first rule's 30s limit.
+  setUpAll(() async {
+    await Future.wait([negative, positive]);
+  }, timeout: const Timeout(Duration(minutes: 5)));
+
   bool has(
     List<ArchitectureDiagnostic> diagnostics, {
     required String file,

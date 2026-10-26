@@ -39,7 +39,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-24.04
+          - os: ubuntu-22.04
             platform: linux
           - os: windows-2022
             platform: windows
@@ -56,12 +56,19 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
+          # Match the release toolchain: newer LLVM libunwind conflicts with
+          # the GNU libunwind pkg-config metadata required by GStreamer.
           sudo apt-get install --yes --no-install-recommends \
-            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
-            libc++-dev libc++abi-dev libdrm-dev libegl1-mesa-dev \
+            clang-12 cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
+            libc++-12-dev libc++abi-12-dev libunwind-dev libdrm-dev libegl1-mesa-dev \
             libgl1-mesa-dev libgbm-dev zlib1g-dev \
             libsecret-1-dev libcurl4-openssl-dev libgstreamer1.0-dev \
             libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base
+          pkg-config --print-errors --exists \
+            gtk+-3.0 gstreamer-1.0 gstreamer-app-1.0 gstreamer-audio-1.0
+          echo '/usr/lib/llvm-12/bin' >> "$GITHUB_PATH"
+          printf '#include <type_traits>\n' | \
+            /usr/lib/llvm-12/bin/clang++ -stdlib=libc++ -x c++ -fsyntax-only -
       - name: Execute Linux replacement and rollback scenarios
         if: runner.os == 'Linux'
         run: python3 -m unittest tool/test_desktop_update_helpers.py

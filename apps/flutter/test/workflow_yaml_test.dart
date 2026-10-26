@@ -54,7 +54,10 @@ void main() {
         'zlib1g-dev',
       ];
       for (final entry in jobs.entries) {
-        final llvmVersion = entry.key == 'linux-appimage-release' ? '-12' : '';
+        final llvmVersion =
+            ['linux-appimage-release', 'desktop-updates'].contains(entry.key)
+            ? '-12'
+            : '';
         final steps =
             _job(
                   '../../.github/workflows/${entry.key}.yml',
