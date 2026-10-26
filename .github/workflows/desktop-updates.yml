@@ -1,7 +1,20 @@
 name: Desktop updater
 
 on:
+  workflow_dispatch:
   pull_request:
+    paths:
+      - 'apps/flutter/lib/**'
+      - 'apps/flutter/test/**'
+      - 'tool/test_desktop_update*'
+      - '.github/workflows/desktop-updates.yml'
+      - 'apps/flutter/pubspec.*'
+      - '.fvmrc'
+      - 'apps/flutter/windows/**'
+      - 'apps/flutter/linux/**'
+
+  push:
+    branches: [develop]
     paths:
       - 'apps/flutter/lib/**'
       - 'apps/flutter/test/**'

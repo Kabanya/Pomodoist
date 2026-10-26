@@ -1,3 +1,4 @@
+import 'package:pomodoist/config/distraction_dependencies.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/domain/models/account/legacy_recovery_request.dart';
 import 'package:pomodoist/config/account_providers.dart';
@@ -211,6 +212,9 @@ class SettingsViewModel extends Notifier<SettingsViewState> {
   }
 
   Future<void> signOut() async {
+    if (desktopDistractionsAvailable) {
+      await ref.read(distractionRepositoryProvider)?.detach();
+    }
     final repository = ref.read(accountManagementRepositoryProvider);
     if (repository != null) {
       (await repository.signOut()).getOrThrow();

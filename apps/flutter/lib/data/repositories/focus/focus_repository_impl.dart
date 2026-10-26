@@ -27,6 +27,7 @@ class DriftFocusRepository implements FocusRepository {
     KanbanTransitionCoordinator? kanbanTransitions,
     void Function(FocusRunCompletionEvent event)? onRunCompleted,
     this.onIntervalCompleted,
+    Set<String>? serverOwnedRunIds,
   }) : _db = db,
        _soundPlayer = soundPlayer,
        _onRunCompleted = onRunCompleted,
@@ -34,7 +35,7 @@ class DriftFocusRepository implements FocusRepository {
            kanbanTransitions ??
            KanbanTransitionCoordinator(db, _syncQueue, uuid: uuid),
        _uuid = uuid ?? const Uuid(),
-       _focus = FocusLocalService(db);
+       _focus = FocusLocalService(db, serverOwnedRunIds: serverOwnedRunIds);
 
   final void Function(LocalCompletionEvent)? onIntervalCompleted;
   final AppDatabase _db;

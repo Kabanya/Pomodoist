@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/platform/watch_companion.dart';
 import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/config/distraction_dependencies.dart';
 
 /// Keeps application-lifetime service subscriptions alive while mounted.
 ///
@@ -12,6 +13,7 @@ import 'package:pomodoist/config/providers.dart';
 /// the application scope exists.
 final startupBackgroundWiringProvider = Provider<void>((ref) {
   ref.watch(accountSyncLifecycleProvider);
+  ref.watch(protectionCoordinatorProvider);
   ref.watch(recurringTaskMaterializationProvider);
   ref.watch(taskStartNotificationCoordinatorProvider);
   ref.watch(habitReminderStatusProvider);

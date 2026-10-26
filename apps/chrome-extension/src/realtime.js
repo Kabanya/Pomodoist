@@ -1,5 +1,5 @@
-// Realtime is only active while the popup is open. The worker has no timers or
-// persistent socket. Polling in the popup remains a bounded fallback.
+// The popup connects while open; the protection worker connects while enabled.
+// Consumers own the authoritative read fallback and stop this socket on detach.
 export class Realtime {
   constructor(getContext, changed, status, Socket = WebSocket) {
     this.getContext = getContext; this.changed = changed; this.status = status; this.Socket = Socket;

@@ -44,6 +44,10 @@ jobs:
           exit 1
       - name: Test schema, ownership, and synchronization
         run: make -C server test-db test-smoke test-sessions
+      - name: Verify concurrent Focus authority and idempotent replay
+        env:
+          POMODOIST_TEST_DB: pomodoist-selfhost-db
+        run: python3 server/tests/database/pomodoist_focus_concurrency_test.py
       - name: Verify OpenClaw OAuth, task, Focus, and revocation acceptance
         run: make -C server test-openclaw
       - name: Verify baseline upgrades and data restoration

@@ -21,6 +21,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		D70000000000000000000003 /* DistractionProtectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D70000000000000000000002 /* DistractionProtectionController.swift */; };
+		D70000000000000000000001 /* DistractionProtectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D70000000000000000000002 /* DistractionProtectionController.swift */; };
 		0279F8A08B39CEABF321504A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F70640268851B1260EC1EDE2 /* Localizable.strings */; };
 		06D4C8BDD1AE87463F9B66BE /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F70640268851B1260EC1EDE2 /* Localizable.strings */; };
 		331C80D8294CF71000263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C80D7294CF71000263BE5 /* RunnerTests.swift */; };
@@ -101,6 +103,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D70000000000000000000002 /* DistractionProtectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistractionProtectionController.swift; sourceTree = "<group>"; };
 		0C16B8AFEB66997DF560BF69 /* Pods-RunnerTests.release-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release-development.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release-development.xcconfig"; sourceTree = "<group>"; };
 		1D44B4ECF994E00AE89C14B7 /* zh */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = zh; path = ../apple/Localization/zh.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
 		20C9B970C30B42BF3075EE26 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ../apple/Localization/ja.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
@@ -295,6 +298,7 @@
 				4C5155414448444B45594346 /* QuickAddHotKeyController.swift */,
 				A90000030000000000000003 /* AppMenuController.swift */,
 				C60000000000000000000002 /* MacosGlassController.swift */,
+				D70000000000000000000002 /* DistractionProtectionController.swift */,
 				A80000020000000000000002 /* PrivacyInfo.xcprivacy */,
 				7D0000120000000000000002 /* FocusStatusItemController.swift */,
 				33E51913231747F40026EE4D /* DebugProfile.entitlements */,
@@ -664,6 +668,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				331C80D8294CF71000263BE5 /* RunnerTests.swift in Sources */,
+				D70000000000000000000003 /* DistractionProtectionController.swift in Sources */,
 				7D0000080000000000000008 /* FlutterControllerResolver.swift in Sources */,
 				7D0000020000000000000002 /* PomodoistFocusShared.swift in Sources */,
 				4C5155424448444B45594246 /* QuickAddHotKeyController.swift in Sources */,
@@ -680,6 +685,7 @@
 				B50000000000000000000001 /* SystemSpeechTranscriber.swift in Sources */,
 				B60000000000000000000001 /* StoreKitHost.swift in Sources */,
 				C60000000000000000000001 /* MacosGlassController.swift in Sources */,
+				D70000000000000000000001 /* DistractionProtectionController.swift in Sources */,
 				7D0000070000000000000007 /* FlutterControllerResolver.swift in Sources */,
 				4C5155414448444B45594246 /* QuickAddHotKeyController.swift in Sources */,
 				A90000010000000000000001 /* AppMenuController.swift in Sources */,

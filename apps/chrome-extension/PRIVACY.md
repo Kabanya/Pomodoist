@@ -28,12 +28,40 @@ extension storage, restricted to trusted extension contexts. They are not put in
 Chrome's cross-device `storage.sync`. The extension does not add its own encryption
 on top of browser/operating-system protection. Network synchronization uses the
 configured backend over HTTPS; HTTP is accepted only for loopback development.
-The extension contains no analytics, advertising or background browsing-history
-collection code and does not send task data to an additional extension service.
+After explicit website protection/discovery opt-in, the extension observes only
+HTTP/HTTPS top-level hostnames, storing up to 500 locally. It does not inventory
+paths, queries, fragments, page content, window titles or executable paths.
+Child-frame guards pause media using the parent tab's protection decision and do
+not add child hostnames to discovery. Explicitly saved domain assignments,
+profiles and shared Focus state sync to the configured account. The existing
+**Add current tab** action remains a separate, explicit full-URL task action.
+
+An additional Pro opt-in sends newly discovered public domain identities to the
+configured Pomodoist AI endpoint for web-search classification. Private, internal,
+loopback and IP identities are excluded. The server uses its configured search/AI
+provider and quota, returning category/source links. Known manual categories are
+preserved; unclassified resources remain eligible. Failed or uncertain automatic
+classifications are throttled locally. Cached results do not use the shared AI
+quota; new classifications and task analysis do. Quota usage/reset comes from the
+server. There are no extension analytics or advertising.
+
+Protection snapshots/rules and an optional independent loopback pairing token
+are kept in trusted local extension storage. Pairing reaches only numeric ports
+on 127.0.0.1 and pins the desktop account/environment. It never transmits account
+credentials to loopback. Website scripts receive only protection leases; private
+task text is rendered in a separate extension document, never in the host page's
+DOM. No browsing paths or media content are sent for blocking.
 
 ## User control
 
-Sign-out clears local credentials, cached account data and, after explicit
+Strict Focus applies its chosen exit policy before detaching this browser. A
+separately confirmed emergency release is local only. Protection leases expire
+without contacting the service. Release preserves the page and never resumes
+media automatically. Incognito protection/discovery requires Chrome’s separate
+incognito permission; its status is shown in the popup.
+
+Sign-out clears local credentials, pairing tokens, discovered domains, protection
+snapshots/rules, cached account data and, after explicit
 confirmation, unsynced changes. It requests revocation of this session only.
 It does not delete already-synchronized tasks from the shared service. Rebuilding
 for another backend resets the local account data, so synchronize first.

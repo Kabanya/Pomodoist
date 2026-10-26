@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {DistractionCore} from '../distractions.js';
+let now = 1000, active = null, minimized = [], restored = [];
+const own = {pid: 42, appId: 'com.finchforge.pomodoist'};
+const shell = {windows: () => [own], foreground: () => active,
+    minimize: app => minimized.push(app), restore: app => restored.push(app)};
+const core = new DistractionCore(shell, () => now);
+assert.throws(() => core.call(':bad', 7, {action: 'startDiscovery'}), /Pomodoist/);
+core.call(':1', 42, {action: 'startDiscovery'});
+core.call(':1', 42, {action: 'setProtection', active: true, blockedApps: ['linux:org.example.Chat'], expiresAt: new Date(5000).toISOString()});
+active = {id: 'linux:org.example.Chat', name: 'Chat', platform: 'linux', key: '1'};
+core.tick();
+assert.equal(minimized.length, 1);
+let events = core.call(':1', 42, {action: 'poll'}).events;
+assert.deepEqual(events.map(e => e.method), ['foregroundApp', 'blockedAttempt']);
+assert.deepEqual(Object.keys(events[0].app).sort(), ['id', 'name', 'platform']);
+now = 5000; core.tick(); assert.equal(restored.length, 1);
+core.ownerLost(':1'); assert.equal(core.owners.size, 0);
+assert.throws(() => core.call(':1', 42, {action:'setProtection',active:true,blockedApps:['/usr/bin/chat'],expiresAt:new Date(7000).toISOString()}), /identity/);
+console.log('distraction GNOME privacy, authentication, blocking and expiry tests passed');

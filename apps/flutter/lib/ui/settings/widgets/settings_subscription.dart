@@ -9,6 +9,7 @@ import 'package:pomodoist/domain/models/billing/billing_models.dart';
 import 'package:pomodoist/ui/billing/view_models/billing_view_model.dart';
 import 'package:pomodoist/ui/billing/widgets/launch_offer_paywall.dart';
 import 'package:pomodoist/ui/settings/widgets/settings_components.dart';
+import 'package:pomodoist/ui/settings/widgets/settings_ai_quota.dart';
 
 /// A failed or unfinished lookup is not evidence of a Free subscription.
 BillingAccessTier? settingsSubscriptionTier(BillingState state) {
@@ -59,6 +60,7 @@ class SettingsSubscription extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const SettingsAiQuota(),
         SettingsRow(
           title: l10n.billingTitle,
           subtitle: '${l10n.settingsPlanLabel}: $plan',

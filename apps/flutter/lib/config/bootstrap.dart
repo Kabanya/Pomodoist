@@ -1,3 +1,5 @@
+import 'package:pomodoist/config/distraction_dependencies.dart';
+import 'package:pomodoist/config/providers.dart' show focusRepositoryProvider;
 import 'package:app_account/app_account.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -99,7 +101,14 @@ Future<void> _startPomodoist(
 
 void _runPomodoist(List<Override> overrides) {
   Widget scope(Widget child) => ProviderScope(
-    overrides: [...overrides, ...pomoOverrides],
+    overrides: [
+      ...overrides,
+      ...pomoOverrides,
+      if (desktopDistractionsAvailable)
+        focusRepositoryProvider.overrideWith(
+          (ref) => ref.watch(liveFocusRepositoryProvider),
+        ),
+    ],
     child: AppIconRuntime(child: PomoRuntime(child: child)),
   );
 

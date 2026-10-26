@@ -388,5 +388,287 @@
   },
   "break_over_ready_to_focus": {
     "message": "Break over. Ready to focus?"
+  },
+  "protection_129": {
+    "message": "60-second countdown"
+  },
+  "protection_130": {
+    "message": "Account cloud"
+  },
+  "protection_131": {
+    "message": "Allow access to the desktop bridge."
+  },
+  "protection_132": {
+    "message": "Allow website access to enable protection."
+  },
+  "protection_133": {
+    "message": "Always allow"
+  },
+  "protection_134": {
+    "message": "Always block"
+  },
+  "protection_135": {
+    "message": "Block during long breaks"
+  },
+  "protection_136": {
+    "message": "Block during short breaks"
+  },
+  "protection_137": {
+    "message": "Block while paused"
+  },
+  "protection_138": {
+    "message": "Blocked categories"
+  },
+  "protection_139": {
+    "message": "Cancel exit"
+  },
+  "protection_140": {
+    "message": "Category"
+  },
+  "protection_141": {
+    "message": "Confirm immediately"
+  },
+  "protection_142": {
+    "message": "Desktop account or app environment does not match."
+  },
+  "protection_143": {
+    "message": "Desktop app unavailable. Local protection expires at the last confirmed deadline."
+  },
+  "protection_144": {
+    "message": "Desktop port"
+  },
+  "protection_145": {
+    "message": "Desktop response too large."
+  },
+  "protection_146": {
+    "message": "Distraction protection"
+  },
+  "protection_147": {
+    "message": "Domain"
+  },
+  "protection_148": {
+    "message": "Edit profile"
+  },
+  "protection_149": {
+    "message": "Emergency release on this browser"
+  },
+  "protection_150": {
+    "message": "Enable website protection and domain discovery"
+  },
+  "protection_151": {
+    "message": "End strict Focus now?"
+  },
+  "protection_152": {
+    "message": "Enter a profile name."
+  },
+  "protection_153": {
+    "message": "Enter a valid desktop port."
+  },
+  "protection_154": {
+    "message": "Enter a valid domain."
+  },
+  "protection_155": {
+    "message": "Enter the desktop pairing code."
+  },
+  "protection_156": {
+    "message": "Focus belongs to another account."
+  },
+  "protection_157": {
+    "message": "Focus is shared with your desktop. Protection continues when this popup closes."
+  },
+  "protection_158": {
+    "message": "Focus source"
+  },
+  "protection_159": {
+    "message": "Incognito allowed"
+  },
+  "protection_160": {
+    "message": "Incognito not enabled"
+  },
+  "protection_161": {
+    "message": "Invalid Focus command."
+  },
+  "protection_162": {
+    "message": "Invalid Focus deadline."
+  },
+  "protection_163": {
+    "message": "Invalid Focus response."
+  },
+  "protection_164": {
+    "message": "Invalid Focus server clock."
+  },
+  "protection_165": {
+    "message": "Invalid Focus session."
+  },
+  "protection_166": {
+    "message": "Invalid Focus source."
+  },
+  "protection_167": {
+    "message": "Invalid desktop protection lease."
+  },
+  "protection_168": {
+    "message": "New profile"
+  },
+  "protection_169": {
+    "message": "No blocking profile"
+  },
+  "protection_170": {
+    "message": "Open desktop protection settings for a one-use pairing code. Use the same account and environment."
+  },
+  "protection_171": {
+    "message": "Pair"
+  },
+  "protection_172": {
+    "message": "Pair desktop for offline Focus"
+  },
+  "protection_173": {
+    "message": "Pair the desktop app first."
+  },
+  "protection_174": {
+    "message": "Paired desktop"
+  },
+  "protection_175": {
+    "message": "Pairing code"
+  },
+  "protection_176": {
+    "message": "Profile name"
+  },
+  "protection_177": {
+    "message": "Profile override"
+  },
+  "protection_178": {
+    "message": "Profiles and domains"
+  },
+  "protection_179": {
+    "message": "Protection has ended. You can return to the page when ready."
+  },
+  "protection_180": {
+    "message": "Protection profile"
+  },
+  "protection_181": {
+    "message": "Release protection on this browser only? Shared Focus will continue."
+  },
+  "protection_182": {
+    "message": "Release strict protection on this browser now?"
+  },
+  "protection_183": {
+    "message": "Resume"
+  },
+  "protection_184": {
+    "message": "Return to task"
+  },
+  "protection_185": {
+    "message": "Return to your task."
+  },
+  "protection_186": {
+    "message": "Save domain"
+  },
+  "protection_187": {
+    "message": "Save profile"
+  },
+  "protection_188": {
+    "message": "Sign in or pair the desktop app."
+  },
+  "protection_189": {
+    "message": "Stop everywhere"
+  },
+  "protection_190": {
+    "message": "Strict Focus"
+  },
+  "protection_191": {
+    "message": "Strict exit"
+  },
+  "protection_192": {
+    "message": "Strict exit countdown is active."
+  },
+  "protection_193": {
+    "message": "Strict exit countdown is active. Keep protection enabled until it finishes."
+  },
+  "protection_194": {
+    "message": "Time to focus"
+  },
+  "protection_195": {
+    "message": "Too many website rules. Reduce profile assignments before enabling protection."
+  },
+  "protection_196": {
+    "message": "Unknown domains are allowed. Only selected assignments sync; discovery stays on this browser."
+  },
+  "protection_197": {
+    "message": "Use category"
+  },
+  "protection_198": {
+    "message": "Website access allowed · protection idle"
+  },
+  "protection_199": {
+    "message": "Website permission required"
+  },
+  "protection_200": {
+    "message": "Website protection active"
+  },
+  "protection_201": {
+    "message": "Your page is preserved. Media stays paused."
+  },
+  "protection_202": {
+    "message": "development"
+  },
+  "protection_203": {
+    "message": "education"
+  },
+  "protection_204": {
+    "message": "games"
+  },
+  "protection_205": {
+    "message": "messaging"
+  },
+  "protection_206": {
+    "message": "music"
+  },
+  "protection_207": {
+    "message": "news"
+  },
+  "protection_208": {
+    "message": "other"
+  },
+  "protection_209": {
+    "message": "productivity"
+  },
+  "protection_210": {
+    "message": "shopping"
+  },
+  "protection_211": {
+    "message": "social"
+  },
+  "protection_212": {
+    "message": "unclassified"
+  },
+  "protection_213": {
+    "message": "video"
+  },
+  "protection_214": {
+    "message": "AI usage unavailable."
+  },
+  "protection_215": {
+    "message": "Automatic categories require Pro."
+  },
+  "protection_216": {
+    "message": "Automatic classification is unavailable. Choose a category manually."
+  },
+  "protection_217": {
+    "message": "Automatically categorize new domains (Pro)"
+  },
+  "protection_218": {
+    "message": "Choose a profile for an explicit domain rule."
+  },
+  "protection_219": {
+    "message": "Invalid AI quota response."
+  },
+  "protection_220": {
+    "message": "Refresh AI usage"
+  },
+  "protection_221": {
+    "message": "Task analysis and new automatic categories share the monthly AI limit. Cached categories and manual corrections are free."
+  },
+  "protection_222": {
+    "message": "{used} of {limit} AI requests used · resets {date}"
   }
 }

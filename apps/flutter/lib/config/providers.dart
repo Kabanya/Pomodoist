@@ -294,12 +294,19 @@ final labelRepositoryProvider = Provider<LabelRepository>((ref) {
   );
 });
 
-final focusRepositoryProvider = Provider<FocusRepository>((ref) {
+final focusRepositoryProvider = Provider<FocusRepository>(
+  (ref) => ref.watch(localFocusRepositoryProvider),
+);
+
+final serverOwnedFocusRunIdsProvider = Provider<Set<String>>((ref) => {});
+
+final localFocusRepositoryProvider = Provider<FocusRepository>((ref) {
   ref.read(focusCompletionCelebrationEnabledProvider);
   return DriftFocusRepository(
     ref.watch(appDatabaseProvider),
     ref.watch(syncQueueRepositoryProvider),
     ref.watch(notificationSchedulerProvider),
+    serverOwnedRunIds: ref.watch(serverOwnedFocusRunIdsProvider),
     soundPlayer: ref.watch(focusSoundPlayerProvider),
     kanbanTransitions: ref.watch(kanbanTransitionCoordinatorProvider),
     onIntervalCompleted: ref.watch(localCompletionEventsProvider).publish,

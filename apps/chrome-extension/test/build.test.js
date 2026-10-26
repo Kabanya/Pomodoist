@@ -5,11 +5,13 @@ const env = { SUPABASE_URL: 'https://api.example.test', WEB_APP_URL: 'https://ta
 test('build uses exact backend origin, MV3, self-only code and minimal permissions', () => {
   const config = configuration(env), m = manifestFor(config);
   assert.equal(m.manifest_version, 3);
-  assert.deepEqual(m.permissions.sort(), ['activeTab', 'identity', 'storage']);
+  assert.deepEqual(m.permissions.sort(), ['activeTab','alarms','declarativeNetRequest','identity','scripting','storage','tabs','webNavigation']);
   assert.deepEqual(m.host_permissions, ['https://api.example.test/*']);
   assert.match(m.content_security_policy.extension_pages, /script-src 'self'/);
   assert.match(m.content_security_policy.extension_pages, /wss:\/\/api.example.test/);
+  assert.deepEqual(m.optional_host_permissions,['http://*/*','https://*/*']);
   assert.doesNotMatch(JSON.stringify(m), /<all_urls>|unsafe-eval|unsafe-inline|content_scripts|externally_connectable/);
+  assert.ok(m.web_accessible_resources[0].resources.includes('blocked.html'));
 });
 test('insecure non-loopback servers, URL credentials, paths and missing configuration are rejected', () => {
   for (const url of ['http://api.example.test', 'https://u:p@api.example.test', 'https://api.example.test/path', 'https://api.example.test/?secret=x']) {
@@ -42,6 +44,7 @@ test('packaged Chrome locales have complete native messages and the English fall
     await build(env, output);
     const manifest = JSON.parse(await readFile(path.join(output, 'manifest.json'), 'utf8'));
     assert.equal(manifest.default_locale, 'en');
+    for(const file of ['blocked.html','blocked.css','src/protection.js','src/guard.js','src/blocked.js','focus-still.webp']) assert.ok((await readFile(path.join(output,file))).length);
     assert.equal(manifest.description, '__MSG_extension_description__');
     const english = JSON.parse(await readFile(path.join(output, '_locales/en/messages.json'), 'utf8'));
     for (const locale of ['pt_BR', 'ja', 'ko']) {
@@ -54,4 +57,9 @@ test('packaged Chrome locales have complete native messages and the English fall
     }
     assert.match(await readFile(path.join(output, 'src/i18n.js'), 'utf8'), /chrome\?\.i18n\?\.getMessage/);
   } finally { await rm(output, { recursive: true, force: true }); }
+});
+test('desktop flavor is explicit and cannot be an arbitrary endpoint label',()=>{
+  assert.equal(configuration({...env,APP_ENV:'staging'}).flavor,'staging');
+  assert.equal(configuration(env).flavor,'production');
+  assert.throws(()=>configuration({...env,APP_ENV:'https://evil.test'}));
 });

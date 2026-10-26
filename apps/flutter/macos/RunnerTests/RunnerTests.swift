@@ -5,6 +5,35 @@ import XCTest
 
 class RunnerTests: XCTestCase {
 
+  func testDistractionShieldAllowsKeyFocusAndConsumesDismissalShortcuts() {
+    _ = NSApplication.shared
+    let panel = DistractionShieldPanel(frame: NSRect(x: 0, y: 0, width: 640, height: 480))
+    defer { panel.close() }
+    XCTAssertTrue(panel.canBecomeKey)
+    XCTAssertFalse(panel.styleMask.contains(.nonactivatingPanel))
+    XCTAssertFalse(panel.becomesKeyOnlyIfNeeded)
+    XCTAssertTrue(panel.hidesOnDeactivate)
+    let close = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [.command],
+      timestamp: 0, windowNumber: panel.windowNumber, context: nil,
+      characters: "w", charactersIgnoringModifiers: "w", isARepeat: false, keyCode: 13)!
+    XCTAssertTrue(panel.performKeyEquivalent(with: close))
+    let escape = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
+      timestamp: 0, windowNumber: panel.windowNumber, context: nil,
+      characters: "\u{1b}", charactersIgnoringModifiers: "\u{1b}", isARepeat: false, keyCode: 53)!
+    XCTAssertTrue(panel.performKeyEquivalent(with: escape))
+    for (text, code, modifiers) in [
+      ("\t", UInt16(48), NSEvent.ModifierFlags()),
+      ("\t", UInt16(48), NSEvent.ModifierFlags.shift),
+      ("\r", UInt16(36), NSEvent.ModifierFlags()),
+      ("q", UInt16(12), NSEvent.ModifierFlags.command),
+    ] {
+      let event = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: modifiers,
+        timestamp: 0, windowNumber: panel.windowNumber, context: nil,
+        characters: text, charactersIgnoringModifiers: text, isARepeat: false, keyCode: code)!
+      XCTAssertFalse(panel.performKeyEquivalent(with: event))
+    }
+  }
+
   func testQuickAddGlobalShortcutDefaultsAndRoundTrips() {
     let defaults = UserDefaults(suiteName: UUID().uuidString)!
     let expected = QuickAddGlobalShortcut.default

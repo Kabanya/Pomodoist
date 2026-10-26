@@ -8,25 +8,77 @@ Manifest V3 companion for Pomodoist. It uses the same Supabase Auth account, acc
 - Today (including overdue), Upcoming, Inbox and completed views.
 - Create, edit, schedule, complete, restore and delete tasks.
 - One-click task creation from the current tab's title and URL.
-- A standalone interval timer tab with 15/5/25/50-minute presets, automatic
-  focus-to-break transition and start/pause/reset controls.
+- Shared Focus controls with 15/5/25/50-minute start presets, common task/timer, strict exit policy and server-owned history.
+- Optional website protection, manual profiles/categories/overrides, local hostname discovery and opt-in Pro automatic classification.
+- Paired desktop Focus and protection leases for same-device offline use.
 - Durable local outbox, cursor-based pull, idempotent retries and remote tombstones.
 - Private Realtime hints while the popup is open, with a bounded refresh fallback.
 - Server-owned account and subscription/entitlement status.
 - Compact light/dark UI and keyboard-accessible task tabs.
 
-Recurring schedule metadata is preserved; recurrence rule management remains in the full app. Deleting a task removes only that task — its subtasks are left behind, and the confirmation reports how many there are before you commit. Project moves, Focus, voice and billing also remain in the full app.
+Recurring schedule metadata is preserved; recurrence rule management remains in the full app. Deleting a task removes only that task — its subtasks are left behind, and the confirmation reports how many there are before you commit. Project moves, voice and billing remain in the full app.
 
-The timer tab is local to the popup. It is deliberately not connected to tasks
-or to the synced Pomodoist Focus entities, so its intervals are never uploaded
-and never appear in the full app. It keeps counting against the wall clock, so
-reopening the popup shows the correct remaining time, but it stops when the
-popup is closed and there is no toolbar badge. The chosen duration and current
-phase are cached per browser session, not per account.
+## Focus and protection
+
+The timer tab controls the account's common Focus through `pomodoist_focus`.
+The server owns revisions, interval transitions and once-only history. A version
+conflict refreshes the common session and asks you to retry; it never creates a
+second offline timer. Presets are selected before starting. Strict sessions use
+one confirmed immediate exit or a persistent 60-second countdown, chosen before
+start. **Stop everywhere** ends the shared session. Disabling protection or
+signing out detaches this browser through the same exit policy. The separately
+confirmed emergency release affects this browser only and is available only when an authoritative read fails because the server/desktop is unreachable.
+
+Enable **website protection and domain discovery** to request HTTP/HTTPS host
+access. Unknown domains are allowed. Work and Study start with empty categories.
+Profiles can block categories or explicitly allow/block a domain and its
+subdomains; more specific explicit rules win. Manual category corrections apply
+during an active session. Opt-in automatic categorization requires server-verified
+Pro, searches public domain identities only, and shares the task-analysis AI
+quota. Cached categories and manual edits are free. The popup shows server quota
+usage/reset and actual website permission/incognito coverage. Enable incognito
+access separately in Chrome's extension settings if wanted.
+
+Protection runs in the MV3 worker, independently of the popup. New main-frame
+requests redirect to the packaged Focus page. Already-loaded, cached and SPA pages
+receive a removable shield; forms stay in the original document and accessible
+media is paused, including permitted child frames. Private task titles appear
+only inside an isolated extension frame or the extension's top-level block page.
+A restrictive page can retain a generic shield if its policy rejects the frame.
+Release never reloads a page, navigates back, resumes media or invents another
+interval. Deliberate page tampering, force quit and uninstall are outside the
+guarantee. Privileged Chrome pages and sites without granted host access cannot
+be protected. Chrome limits this implementation to 1,000 domain rules per active profile; exceeding it shows an error rather than silently dropping rules.
+
+The worker uses private realtime invalidations and a 15-second active fallback.
+Thirty-second alarms, tab/navigation events and guard checks recover after worker
+suspension. Leases expire locally without network access: running protection ends
+at the last confirmed deadline, and disconnected paused protection ends within
+five minutes of the last authoritative read. Browser alarms can be late; guards
+and the block page also check expiry. A late stale redirect stays on the released
+block page instead of redirecting in a loop.
+
+### Pair a desktop
+
+In the desktop app, create a one-use pairing code for this extension's exact
+`chrome-extension://<id>` origin. Enter its visible port/code in the popup.
+Defaults are production **51987**, staging **51988**, development **51989**.
+Build with the matching `APP_ENV`. The client accepts only
+`http://127.0.0.1:<numeric-port>`, pins the account/environment returned by pairing,
+and stores a separate random bridge token in trusted extension storage. Cloud
+account credentials are never sent to loopback. Choose **Account cloud** or
+**Paired desktop** explicitly; authorization and revision failures do not switch
+authority automatically. The desktop must keep renewing an offline lease while
+alive; closing it cannot leave permanent browser blocking.
+
+Bridge wire version 1: `POST /pair {code,deviceId,flavor}` returns
+`{token,owner,flavor}`; bearer-authenticated `GET /state` and
+`POST /command <FocusCommand>` return the Focus RPC envelope plus optional
+`protection`. Desktop logout revokes pairing; extension logout clears its token.
 
 ## Build
 
-Node 22 or later is sufficient; the extension has no runtime npm dependencies.
+Chrome 120 or later and Node 22 or later are required; the extension has no runtime npm dependencies.
 
 ```sh
 cd chrome-extension
@@ -34,13 +86,14 @@ export SUPABASE_URL='https://your-api.example.com'
 export SUPABASE_ANON_KEY='your-public-anon-or-sb_publishable-key'
 export WEB_APP_URL='https://your-web-app.example.com'
 export TURNSTILE_SITE_KEY=''
+export APP_ENV='production' # staging or development for the matching desktop
 npm test
 npm run build
 ```
 
 Use a public `anon` JWT or `sb_publishable_...` key only. The builder rejects service-role/secret keys and insecure non-loopback origins. `build/chrome` can be loaded from `chrome://extensions` in Developer mode or zipped for Chrome Web Store validation.
 
-The build reuses `apps/flutter/web/icons/Icon-192.png` and the repository `LICENSE`.
+The build reuses `apps/flutter/web/icons/Icon-192.png`, the existing `apps/flutter/assets/pomo/focus-still.webp` pose and the repository `LICENSE`.
 
 ### Make commands
 
@@ -103,7 +156,31 @@ When CAPTCHA is enabled, deploy `apps/flutter/web/auth/extension-challenge.html`
 
 ## Security and performance
 
-Permissions are limited to `storage`, `identity`, `activeTab` and the configured backend origin. There are no content scripts, history permission, analytics, remote extension code, `eval`, or all-URL host permissions. Extension storage is limited to trusted contexts. The Realtime socket and 30-second fallback refresh run only while the popup is open; closing it stops those timers. Unsynced edits are durable and retry on the next open.
+The configured backend is the only required host. Website hosts are optional.
+`storage`, `identity`, `activeTab`, `tabs`, `scripting`, `webNavigation`, `alarms`
+and `declarativeNetRequest` support the existing task flow and independent
+protection. Registered scripts start only after opt-in. Extension storage is
+restricted to trusted contexts. Content scripts can request a bounded guard
+lease/return-to-task action, never account tokens, task caches or arbitrary
+commands. There is no history permission, analytics, remote extension code or
+`eval`. Unsynced task edits are durable.
+
+`npm test` runs the dependency-free Node suite, including rules, expiry/restart,
+strict detach, revision/idempotency, account isolation and packaging checks.
+The optional real-browser acceptance check uses an existing Playwright install:
+
+```sh
+PLAYWRIGHT_MODULE=/absolute/path/to/playwright/index.mjs \
+CHROME_BIN=/absolute/path/to/chrome-for-testing \
+node test/browser-protection.mjs
+```
+
+It builds a temporary extension copy with website hosts granted at install and a
+test-only worker handle. It exercises the shipped guard/DNR code on existing,
+cached and SPA pages, media/form preservation, private iframe text, worker stop
+and offline expiry. The shipped build retains optional permissions. Live account
+sign-in, paid-provider classification and desktop pairing require their running
+services and separate acceptance testing.
 
 See [PRIVACY.md](PRIVACY.md).
 
