@@ -465,7 +465,7 @@ void mvd_gnome_following(bool enabled, std::function<void(const char*)> done) {
       [](GObject* object, GAsyncResult* result, gpointer data) {
         std::unique_ptr<Following> p(static_cast<Following*>(data));
         g_autoptr(GError) error = nullptr;
-        g_autoptr(GVariant) reply = g_dbus_connection_call_finish(G_DBUS_CONNECTION(object), result, &error);
+        [[maybe_unused]] g_autoptr(GVariant) reply = g_dbus_connection_call_finish(G_DBUS_CONNECTION(object), result, &error);
         const char* failure = p->epoch != generation || p->request != following_request ?
             "GNOME pointer lease changed" : error ? error->message : nullptr;
         if (!p->callback) return;

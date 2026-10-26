@@ -5,6 +5,7 @@ tmp="$(mktemp -d --suffix=' space')"
 trap 'rm -rf -- "$tmp"' EXIT
 native="$root/apps/flutter/third_party/multiview_desktop/linux"
 engine="${FLUTTER_ENGINE_DIR:-$root/apps/flutter/linux/flutter/ephemeral}"
+export CXX="${CXX:-clang++}"
 "${CXX:-c++}" -std=c++17 -Wall -Wextra -Werror "$native/tests/pomo_gnome_policy_test.cc" -o "$tmp/policy"
 "$tmp/policy"
 "${CXX:-c++}" -std=c++17 -Wall -Wextra -Werror $(pkg-config --cflags gtk+-3.0 gio-2.0) -I"$engine" \
