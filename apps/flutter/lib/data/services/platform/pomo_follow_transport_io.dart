@@ -25,13 +25,15 @@ class LinuxPomoFollowTransport implements PomoFollowTransport {
     PomoSwayConnect? swayConnect,
   }) : _environment = environment ?? Platform.environment,
        _request = request ?? requestPomoSocket,
-       _kwin = kwin ?? PomoKwinFollowService() {
+       _kwin = kwin {
     _sway = PomoSwayFollowService(request: _request, connect: swayConnect);
   }
 
   final Map<String, String> _environment;
   final PomoSocketRequest _request;
-  final PomoKwinFollowService _kwin;
+  PomoKwinFollowService? _kwin;
+  // Opening the session bus belongs to KDE selection, not transport creation.
+  PomoKwinFollowService get _kwinService => _kwin ??= PomoKwinFollowService();
   late final PomoSwayFollowService _sway;
   String? _kind, _path;
   List<Map> _outputs = const [];
@@ -44,7 +46,7 @@ class LinuxPomoFollowTransport implements PomoFollowTransport {
       return PomoFollowSource.none;
     }
     if (desktop.contains('kde') || desktop.contains('plasma')) {
-      return await _kwin.isAvailable()
+      return await _kwinService.isAvailable()
           ? PomoFollowSource.cursor
           : PomoFollowSource.none;
     }
@@ -94,7 +96,7 @@ class LinuxPomoFollowTransport implements PomoFollowTransport {
     final desktop = environment.desktop.toLowerCase();
     if (desktop.contains('kde') || desktop.contains('plasma')) {
       _kind = 'kwin';
-      await _kwin.start(onSample, onDisconnect);
+      await _kwinService.start(onSample, onDisconnect);
     } else {
       _kind = environment.followSource == PomoFollowSource.workspace
           ? 'sway'
@@ -109,7 +111,7 @@ class LinuxPomoFollowTransport implements PomoFollowTransport {
   Future<PomoMonitorSample?> sample() async {
     if (!_running) return null;
     if (_kind == 'kwin') {
-      await _kwin.checkConnection();
+      await _kwin!.checkConnection();
       return null; // KWin pushes output changes without cursor polling.
     }
     if (_kind == 'hyprland') {
@@ -140,13 +142,13 @@ class LinuxPomoFollowTransport implements PomoFollowTransport {
     _running = false;
     _kind = null;
     await _sway.stop();
-    await _kwin.stop();
+    await _kwin?.stop();
   }
 
   @override
   void dispose() {
     unawaited(_sway.stop());
-    _kwin.dispose();
+    _kwin?.dispose();
   }
 }
 

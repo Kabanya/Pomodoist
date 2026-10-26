@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/distractions/widgets/focus_exit_host.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show ShadApp, ShadAppBuilder, ShadTheme, GlobalShadLocalizations;
@@ -59,7 +60,7 @@ class PomodoistApp extends ConsumerWidget {
                 backgroundColor: rootBackground,
                 child: KeyboardDismissRegion(
                   child: DesktopUpdateHost(
-                    child: child ?? const SizedBox.shrink(),
+                    child: FocusExitHost(child: child ?? const SizedBox.shrink()),
                   ),
                 ),
               ),

@@ -2,6 +2,10 @@ import { mkdir, readFile, cp, copyFile, writeFile, rm } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 const root = path.dirname(fileURLToPath(import.meta.url));
+const appVersion = (await readFile(new URL('../flutter/pubspec.yaml', import.meta.url), 'utf8'))
+  .match(/^version:\s+(\d+\.\d+\.\d+)\+(\d+)\s*$/m);
+if (!appVersion) throw new Error('Flutter pubspec must define a release version and build number.');
+const [, releaseVersion, buildNumber] = appVersion;
 function origin(value, name) {
   let url;
   try { url = new URL(value); } catch { throw new Error(`${name} must be configured with a valid origin.`); }
@@ -19,17 +23,23 @@ export function configuration(env) {
     catch { publicKey = false; }
   }
   if (!publicKey) throw new Error('SUPABASE_ANON_KEY must be a public anon/publishable key, never a service-role or secret key.');
-  return { apiUrl, webUrl, anonKey, captchaEnabled: !!env.TURNSTILE_SITE_KEY?.trim() };
+  const flavor = env.APP_ENV || 'production';
+  if (!['production','staging','development'].includes(flavor)) throw new Error('APP_ENV must be production, staging or development.');
+  return { apiUrl, webUrl, anonKey, flavor, captchaEnabled: !!env.TURNSTILE_SITE_KEY?.trim() };
 }
 export function manifestFor(config) {
   const socket = new URL(config.apiUrl); socket.protocol = socket.protocol === 'https:' ? 'wss:' : 'ws:';
-  return { manifest_version: 3, name: 'Pomodoist', version: '0.1.0', minimum_chrome_version: '116',
+  return { manifest_version: 3, name: 'Pomodoist', version: `${releaseVersion}.${buildNumber}`,
+    version_name: `${releaseVersion} (${buildNumber})`, minimum_chrome_version: '120',
     default_locale: 'en', description: '__MSG_extension_description__',
     action: { default_popup: 'popup.html', default_title: 'Pomodoist', default_icon: 'icon.png' },
     icons: { 16: 'icon.png', 32: 'icon.png', 48: 'icon.png', 128: 'icon.png' },
     background: { service_worker: 'src/background.js', type: 'module' },
-    permissions: ['storage', 'identity', 'activeTab'], host_permissions: [`${config.apiUrl}/*`],
-    content_security_policy: { extension_pages: `default-src 'self'; script-src 'self'; object-src 'none'; style-src 'self'; img-src 'self'; connect-src ${config.apiUrl} ${socket.origin}; base-uri 'none'; form-action 'none'` },
+    permissions: ['storage', 'identity', 'activeTab', 'tabs', 'scripting', 'webNavigation', 'alarms', 'declarativeNetRequest'],
+    optional_host_permissions: ['http://*/*', 'https://*/*'],
+    web_accessible_resources: [{ resources: ['blocked.html','blocked.css','src/blocked.js','src/i18n.js','focus-still.webp'], matches: ['http://*/*','https://*/*'] }],
+    host_permissions: [`${config.apiUrl}/*`],
+    content_security_policy: { extension_pages: `default-src 'self'; script-src 'self'; object-src 'none'; style-src 'self'; img-src 'self'; connect-src ${config.apiUrl} ${socket.origin} http://127.0.0.1:*; base-uri 'none'; form-action 'none'` },
   };
 }
 export async function build(env = process.env, destination = path.join(root, '../../build/chrome')) {
@@ -38,13 +48,14 @@ export async function build(env = process.env, destination = path.join(root, '..
   if (destination === path.parse(destination).root || destination === root || root.startsWith(destination + path.sep)) throw new Error('Build output must not contain the extension source.');
   await rm(destination, { recursive: true, force: true });
   await mkdir(path.join(destination, 'src'), { recursive: true });
-  for (const file of ['i18n.js', 'background.js', 'client.js', 'core.js', 'popup.js', 'realtime.js', 'sync.js', 'timer.js']) {
+  for (const file of ['i18n.js', 'background.js', 'client.js', 'core.js', 'popup.js', 'realtime.js', 'sync.js', 'timer.js', 'protection.js', 'guard.js', 'blocked.js']) {
     await copyFile(path.join(root, 'src', file), path.join(destination, 'src', file));
   }
-  for (const file of ['popup.html', 'styles.css']) await copyFile(path.join(root, file), path.join(destination, file));
+  for (const file of ['popup.html', 'styles.css', 'blocked.html', 'blocked.css']) await copyFile(path.join(root, file), path.join(destination, file));
   await cp(path.join(root, '_locales'), path.join(destination, '_locales'), { recursive: true });
-  // Reuse the application's existing branded PNG; Chrome scales it for toolbar sizes.
-  await copyFile(path.join(root, '../flutter/web/icons/Icon-192.png'), path.join(destination, 'icon.png'));
+  // Share the app's Pomo icon and flavor badge; Chrome scales it for toolbar sizes.
+  await copyFile(path.join(root, `../flutter/assets/branding/app_icons/generated/${config.flavor}/icon-light-pomo.png`), path.join(destination, 'icon.png'));
+  await copyFile(path.join(root, '../flutter/assets/pomo/focus-still.webp'), path.join(destination, 'focus-still.webp'));
   await copyFile(path.join(root, '../../LICENSE'), path.join(destination, 'LICENSE'));
   await writeFile(path.join(destination, 'manifest.json'), JSON.stringify(manifestFor(config), null, 2) + '\n');
   await writeFile(path.join(destination, 'src/config.js'), `export const config = Object.freeze(${JSON.stringify(config, null, 2)});\n`);

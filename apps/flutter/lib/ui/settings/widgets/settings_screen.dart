@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/distractions/widgets/distraction_settings.dart';
 import 'package:pomodoist/ui/pomo/widgets/pomo_settings.dart';
 import 'package:pomodoist/ui/pomo/view_models/pomo_controller.dart'
     show pomoSupported;
@@ -411,6 +412,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         saveSetting(context, viewModel.setCelebration(value)),
                   ),
                 ),
+                const DistractionSettings(),
                 FocusSoundSettings(
                   active: _navigation.selected == SettingsSection.tasksFocus,
                 ),

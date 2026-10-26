@@ -135,6 +135,7 @@ bool FlutterWindow::OnCreate() {
   ConfigureNativeLinkChannel(engine);
   pomo_channel_ = CreatePomoWindowChannel(engine);
   app_icon_channel_ = app_icon::CreateChannel(engine);
+  distraction_host_ = std::make_unique<distractions::Host>(engine, GetHandle());
   const HWND flutter_hwnd =
       MultiViewDesktopGetFlutterHwnd(MultiViewDesktopGetMainViewId());
   if (flutter_hwnd != nullptr) {
@@ -151,6 +152,7 @@ void FlutterWindow::OnDestroy() {
   quick_add_channel_.reset();
   native_link_channel_.reset();
   pomo_channel_.reset();
+  distraction_host_.reset();
   app_icon_channel_.reset();
   Win32Window::OnDestroy();
 }
@@ -160,6 +162,10 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
   LRESULT result = 0;
+  if (message == WM_CLOSE && distraction_host_ && distraction_host_->Protected()) {
+    ShowWindow(hwnd, SW_MINIMIZE);
+    return 0;
+  }
   if (message == WM_HOTKEY && wparam == kQuickAddHotKeyId &&
       quick_add_channel_) {
     quick_add_channel_->InvokeMethod(

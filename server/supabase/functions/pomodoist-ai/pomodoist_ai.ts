@@ -1,3 +1,4 @@
+import { handleResourceClassification } from "./resource_classification.ts";
 import { apiVersionError } from "../_shared/api_version.ts";
 import {
   corsHeaders,
@@ -26,12 +27,15 @@ export async function handlePomodoistAi(
   if (versionError) return json(versionError, 400);
   const command = mapValue(body.command) ?? body;
   const type = stringValue(command.type);
-  if (type !== "task.decomposeTranscript") {
+  if (type !== "task.decomposeTranscript" && type !== "resource.classify") {
     return json({ ok: false, error: `Unsupported AI command: ${type}` }, 400);
   }
   const authorization = req.headers.get("Authorization");
   const client = authorization ? deps.createClient(authorization) : null;
   const user = client ? (await client.auth.getUser()).data.user : null;
+  if (type === "resource.classify") {
+    return handleResourceClassification(command, user, client, deps);
+  }
   return handleTaskDecomposition(
     body,
     command,

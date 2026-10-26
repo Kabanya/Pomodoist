@@ -445,12 +445,15 @@ Future<void> _openDeleteDialog(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> _scrollToDeleteButton(WidgetTester tester) {
-  return tester.scrollUntilVisible(
+Future<void> _scrollToDeleteButton(WidgetTester tester) async {
+  await tester.pumpAndSettle();
+  await tester.scrollUntilVisible(
     find.byKey(const Key('account-delete-button')),
     500,
     scrollable: find.byType(Scrollable).first,
   );
+  await tester.ensureVisible(find.byKey(const Key('account-delete-button')));
+  await tester.pumpAndSettle();
 }
 
 Future<void> _confirmDelete(WidgetTester tester) async {

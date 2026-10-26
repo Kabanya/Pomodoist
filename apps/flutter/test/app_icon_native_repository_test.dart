@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,7 +12,10 @@ void main() {
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
 
-  tearDown(() => messenger.setMockMethodCallHandler(channel, null));
+  tearDown(() {
+    messenger.setMockMethodCallHandler(channel, null);
+    messenger.setMockMessageHandler('flutter/assets', null);
+  });
 
   test('reads native selections and refuses unknown native state', () async {
     final repository = PlatformAppIconRepository();
@@ -31,6 +35,19 @@ void main() {
         calls.add(call);
         return null;
       });
+      // Plain tests omit flavor-filtered macOS assets; use the checked-in PNG fixture.
+      if (Platform.isMacOS) {
+        messenger.setMockMessageHandler('flutter/assets', (message) async {
+          final path = utf8.decode(
+            message!.buffer.asUint8List(
+              message.offsetInBytes,
+              message.lengthInBytes,
+            ),
+          );
+          final bytes = await File(path).readAsBytes();
+          return ByteData.sublistView(bytes);
+        });
+      }
       final repository = PlatformAppIconRepository();
       await repository.apply(AppIconChoice.classic);
       expect(calls.single.method, 'setIcon');

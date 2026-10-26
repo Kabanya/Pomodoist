@@ -174,6 +174,8 @@ Explore the code, run your own instance, or help improve Pomodoist.
 
 ## Build from source
 
+Development roadmap and acceptance status: [Stage 2 distraction protection](docs/distraction-blocking.md).
+
 Run `make setup` and `make check` from the repository root. Flutter lives in
 `apps/flutter`; the pinned SDK and environment profiles remain at the root.
 See the [repository architecture](https://pomodoist.com/docs/repository/) and

@@ -470,7 +470,7 @@ class _FilesPanelState extends ConsumerState<FilesPanel> {
               child: Row(
                 children: [
                   Icon(
-                    LucideIcons.file,
+                    fileIcon(file.name, file.contentType),
                     size: 24,
                     color: context.appColors.secondaryText,
                   ),

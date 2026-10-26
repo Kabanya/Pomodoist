@@ -192,6 +192,9 @@ badges: a rounded cobalt rectangle for DEV and an amber capsule for STG, each
 with a thin contrasting rim and visually centered text. `--check` validates the
 generated output without writing it.
 
+The Chrome extension uses the generated Pomo icon for its build flavor in both
+the toolbar and extension list.
+
 On iOS/iPadOS use alternate app icons; on Android use launcher aliases while
 keeping MainActivity and its deep links enabled. Enable the new alias before
 disabling the previous one. Watch uses the default Pomo icon without a selector.
