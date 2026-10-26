@@ -20,8 +20,8 @@ void main() {
   final negative = check('negative');
   final positive = check('positive');
 
-  // Cold SDK resolution belongs to shared setup, not the first rule's 30s limit.
-  setUpAll(() async {
+  // Cold SDK resolution gets its own budget before individual rule assertions.
+  test('resolves shared analyzer fixtures', () async {
     await Future.wait([negative, positive]);
   }, timeout: const Timeout(Duration(minutes: 5)));
 
