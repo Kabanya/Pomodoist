@@ -127,6 +127,7 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
+    - assets/branding/chrome-logo.svg
     # Settings previews are shared with the web app, which selects its flavor at runtime.
     # macOS also matches the title-cased Xcode scheme name.
     - assets/branding/app_icons/generated/production/icon-light-pomo.png

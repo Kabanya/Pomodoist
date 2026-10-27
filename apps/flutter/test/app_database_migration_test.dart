@@ -13,7 +13,7 @@ void main() {
   const inProgressId = 'kanban-status-in-progress-v1';
   const doneId = 'kanban-status-done-v1';
 
-  group('schema v14', () {
+  group('schema v15', () {
     late AppDatabase db;
     migrations.InitializedSchema? initializedV3;
 
@@ -21,6 +21,34 @@ void main() {
       await db.close();
       initializedV3?.close();
       initializedV3 = null;
+    });
+
+    test('v14 presets preserve rhythm and inherit the legacy profile', () async {
+      final verifier = migrations.SchemaVerifier(v3_schema.GeneratedHelper());
+      initializedV3 = await verifier.schemaAt(3);
+      _seedCompleteV3(initializedV3!.rawDatabase);
+      db = AppDatabase(initializedV3!.newConnection());
+      await db.ensureSeedData();
+      final before = await db.select(db.focusPresets).get();
+      await db.customStatement(
+        'ALTER TABLE focus_presets DROP COLUMN distraction_profile_configured',
+      );
+      await db.customStatement(
+        'ALTER TABLE focus_presets DROP COLUMN distraction_profile_id',
+      );
+      await db.customStatement('PRAGMA user_version = 14');
+      await db.close();
+      db = AppDatabase(initializedV3!.newConnection());
+      final after = await db.select(db.focusPresets).get();
+      expect(after.map((p) => p.name), before.map((p) => p.name));
+      expect(after.map((p) => p.workSeconds), before.map((p) => p.workSeconds));
+      expect(
+        after.every(
+          (p) =>
+              !p.distractionProfileConfigured && p.distractionProfileId == null,
+        ),
+        isTrue,
+      );
     });
 
     test('v13 tasks keep estimates and default to legacy precedence', () async {
@@ -62,15 +90,15 @@ void main() {
         (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
           'user_version',
         ),
-        14,
+        15,
       );
     });
 
     test('fresh database creates compact Kanban schema and index', () async {
       db = AppDatabase(NativeDatabase.memory());
 
-      expect(db.schemaVersion, 14);
-      if (db.schemaVersion != 14) {
+      expect(db.schemaVersion, 15);
+      if (db.schemaVersion != 15) {
         return;
       }
       await db
@@ -170,8 +198,8 @@ void main() {
         final version = await db
             .customSelect('PRAGMA user_version')
             .getSingle();
-        expect(version.read<int>('user_version'), 14);
-        if (version.read<int>('user_version') != 14) {
+        expect(version.read<int>('user_version'), 15);
+        if (version.read<int>('user_version') != 15) {
           return;
         }
         final userLabels = await db
@@ -257,7 +285,7 @@ void main() {
 
       final version = await db.customSelect('PRAGMA user_version').getSingle();
 
-      expect(version.read<int>('user_version'), 14);
+      expect(version.read<int>('user_version'), 15);
       expect(
         await _columnNames(db, 'labels'),
         containsAll(['kind', 'system_key', 'icon']),
@@ -272,7 +300,7 @@ void main() {
       final retriedVersion = await db
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(retriedVersion.read<int>('user_version'), 14);
+      expect(retriedVersion.read<int>('user_version'), 15);
     });
   });
 

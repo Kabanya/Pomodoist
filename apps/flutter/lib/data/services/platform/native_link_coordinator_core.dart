@@ -164,6 +164,9 @@ CaptchaTimeoutCancel _scheduleNativeLinkExpiry(
 }
 
 String? nativeRouteForLink(Uri uri) {
+  if (uri.scheme == appFlavor.urlScheme && uri.host == 'widget') {
+    return appleWidgetRoute(uri);
+  }
   if (_isExactFocusLink(uri)) return '/focus';
   if (_isExactGoogleCalendarConnectedLink(uri)) {
     return '/integrations/google-calendar';
@@ -186,6 +189,32 @@ String? nativeRouteForLink(Uri uri) {
     path: '/login-callback',
     queryParameters: {'returnTo': returnTo, 'authFailure': ?authFailure},
   ).toString();
+}
+
+String? appleWidgetRoute(Uri uri) {
+  if (uri.scheme != appFlavor.urlScheme ||
+      uri.host != 'widget' ||
+      uri.path.isNotEmpty ||
+      uri.userInfo.isNotEmpty ||
+      uri.hasPort ||
+      uri.hasFragment ||
+      uri.queryParametersAll.entries.any(
+        (entry) =>
+            !const {'screen', 'task'}.contains(entry.key) ||
+            entry.value.length != 1,
+      )) {
+    return null;
+  }
+  final path = switch (uri.queryParameters['screen']) {
+    'tasks' || 'day' => '/today',
+    'habits' => '/habits',
+    'progress' => '/reports',
+    _ => null,
+  };
+  if (path == null) return null;
+  final task = uri.queryParameters['task'];
+  if (path != '/today' || task == null || task.isEmpty) return path;
+  return Uri(path: path, queryParameters: {'task': task}).toString();
 }
 
 bool _isExactGoogleCalendarConnectedLink(Uri uri) =>

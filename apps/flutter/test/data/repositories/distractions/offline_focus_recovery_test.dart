@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:pomodoist/config/distraction_repository.dart';
+import 'package:pomodoist/domain/models/distractions/distraction_models.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/data/repositories/distractions/live_focus_repository.dart';
@@ -22,6 +24,16 @@ class Notifications extends NotificationScheduler {
     required String title,
     required String body,
   }) async {}
+}
+
+class FailingOutbox extends Fake implements OutboxService {
+  @override
+  Future<void> enqueue({
+    required String type,
+    required Map<String, Object?> payload,
+    String? clientId,
+    DateTime? availableAt,
+  }) async => throw StateError('outbox full');
 }
 
 void main() {
@@ -78,6 +90,198 @@ void main() {
     await focus.dispose();
     await db.close();
   });
+
+  test('binding transaction rolls back when enqueue fails', () async {
+    final repository = DriftFocusRepository(
+      db,
+      FailingOutbox(),
+      Notifications(),
+    );
+    final before = (await repository.watchPresets().first).first;
+    expect(
+      await repository.setPresetDistractionProfile(before.id, 'study'),
+      isA<Failure<void>>(),
+    );
+    final after = (await repository.watchPresets().first).firstWhere(
+      (p) => p.id == before.id,
+    );
+    expect(after.distractionProfileConfigured, false);
+    expect(after.distractionProfileId, isNull);
+    expect(after.updatedAt, before.updatedAt);
+  });
+
+  for (final reason in StopFocusReason.values) {
+    test(
+      'profile can be selected again after local Focus ends: $reason',
+      () async {
+        final preset = (await local.watchPresets().first).first;
+        focus.online = false;
+        final commands = CoordinatedDistractionRepository(
+          focus,
+          protection: () => null,
+          classifyResource: (resource) async => resource,
+        );
+        await commands.saveProfile(
+          DistractionProfile.fromJson({'id': 'custom', 'name': 'Custom'}),
+        );
+        (await focus.setPresetDistractionProfile(
+          preset.id,
+          'custom',
+        )).getOrThrow();
+        (await focus.startRun(
+          StartFocusRunInput(presetId: preset.id),
+        )).getOrThrow();
+        expect(commands.state.active, true);
+        (await focus.stopActiveRun(reason: reason)).getOrThrow();
+        expect(commands.state.active, false);
+        expect(await focus.watchActiveRun().first, isNull);
+        (await focus.setPresetDistractionProfile(preset.id, null)).getOrThrow();
+        final saved = (await focus.watchPresets().first).firstWhere(
+          (p) => p.id == preset.id,
+        );
+        expect(saved.distractionProfileId, isNull);
+        expect(saved.distractionProfileConfigured, true);
+      },
+    );
+  }
+
+  for (final paused in [false, true]) {
+    for (final profileId in <String?>['work', null]) {
+      test('next profile $profileId is saved without changing local Focus paused=$paused', () async {
+        focus.online = false;
+        final preset = (await local.watchPresets().first).first;
+        (await focus.setPresetDistractionProfile(preset.id, 'study')).getOrThrow();
+        (await focus.startRun(StartFocusRunInput(presetId: preset.id))).getOrThrow();
+        if (paused) (await focus.pauseActiveInterval()).getOrThrow();
+        final runId = focus.activeRun!.id;
+        final revision = focus.localRevision;
+        (await focus.setPresetDistractionProfile(preset.id, profileId)).getOrThrow();
+        final saved = (await focus.watchPresets().first).firstWhere((p) => p.id == preset.id);
+        expect(saved.distractionProfileConfigured, true);
+        expect(saved.distractionProfileId, profileId);
+        expect(focus.activeRun!.id, runId);
+        expect(focus.envelope['session']['profileId'], 'study');
+        expect(focus.selectedProfile?.id, 'study');
+        expect(focus.localRevision, revision);
+        expect(focus.pendingExitAction, isNull);
+        (await focus.stopActiveRun(reason: StopFocusReason.stopped)).getOrThrow();
+        (await focus.startRun(StartFocusRunInput(presetId: preset.id))).getOrThrow();
+        expect(focus.envelope['session']['profileId'], profileId);
+      });
+    }
+  }
+
+  test(
+    'binding saves both fields without changing rhythm and queues synchronization',
+    () async {
+      final before = (await local.watchPresets().first).first;
+      (await local.setPresetDistractionProfile(
+        before.id,
+        'study',
+      )).getOrThrow();
+      var saved = (await local.watchPresets().first).firstWhere(
+        (p) => p.id == before.id,
+      );
+      expect(saved.distractionProfileConfigured, true);
+      expect(saved.distractionProfileId, 'study');
+      expect(saved.workSeconds, before.workSeconds);
+      (await local.setPresetDistractionProfile(before.id, null)).getOrThrow();
+      saved = (await local.watchPresets().first).firstWhere(
+        (p) => p.id == before.id,
+      );
+      expect(saved.distractionProfileConfigured, true);
+      expect(saved.distractionProfileId, isNull);
+      expect(
+        (await db.select(db.syncCommands).get()).where(
+          (c) => c.type == 'focus.preset.update',
+        ),
+        isNotEmpty,
+      );
+      expect(
+        await local.setPresetDistractionProfile('missing', null),
+        isA<Failure<void>>(),
+      );
+    },
+  );
+
+  for (final profileId in <String?>['study', null]) {
+    test(
+      'explicit $profileId survives local restart and adoption instead of global work',
+      () async {
+        focus.selectedProfileId = 'work';
+        final preset = (await local.watchPresets().first).first;
+        (await focus.setPresetDistractionProfile(
+          preset.id,
+          profileId,
+        )).getOrThrow();
+        focus.online = false;
+        (await focus.startRun(
+          StartFocusRunInput(presetId: preset.id),
+        )).getOrThrow();
+        expect(focus.envelope['session']['profileId'], profileId);
+        expect(
+          await focus.setPresetDistractionProfile(preset.id, 'work'),
+          isA<Success<void>>(),
+        );
+        await focus.dispose();
+        focus = LiveFocusRepository(
+          local: local,
+          owner: 'owner',
+          deviceId: 'device',
+          preferences: prefs,
+          remote: (command) async {
+            if (command['action'] == 'read') return {'session': null};
+            final payload = command['payload'] as Map;
+            expect(payload['profileId'], profileId);
+            expect(
+              (payload['preset'] as Map).containsKey(
+                'distractionProfileConfigured',
+              ),
+              false,
+            );
+            final adopt = payload['adopt'] as Map;
+            return {
+              'session': {
+                'id': adopt['run']['id'],
+                'run': adopt['run'],
+                'interval': adopt['interval'],
+                'preset': payload['preset'],
+                'profileId': payload['profileId'],
+              },
+            };
+          },
+        );
+        await focus.start();
+        expect(focus.localMode, false);
+        expect(focus.session?['profileId'], profileId);
+        expect(focus.selectedProfile?.id, profileId);
+      },
+    );
+  }
+
+  test(
+    'missing assigned profile blocks start rather than removing protection',
+    () async {
+      final preset = (await local.watchPresets().first).first;
+      (await local.setPresetDistractionProfile(
+        preset.id,
+        'deleted',
+      )).getOrThrow();
+      expect(
+        await focus.startRun(StartFocusRunInput(presetId: preset.id)),
+        isA<Failure<String>>(),
+      );
+      expect(focus.activeRun, isNull);
+      focus.profiles.add(
+        DistractionProfile.fromJson({'id': 'deleted', 'name': 'Loaded'}),
+      );
+      focus.online = false;
+      expect(
+        await focus.startRun(StartFocusRunInput(presetId: preset.id)),
+        isA<Success<String>>(),
+      );
+    },
+  );
 
   test(
     'lost adoption response is acknowledged on the next authoritative read',

@@ -1700,7 +1700,10 @@ void main() {
 
       expect(harness.taskRepository.updatePatches.single.priority, 2);
       expect(harness.taskRepository.updatePatches.single.schedule, isNull);
-      expect(harness.taskRepository.updatePatches.single.clearSchedule, isFalse);
+      expect(
+        harness.taskRepository.updatePatches.single.clearSchedule,
+        isFalse,
+      );
       expect(harness.taskRepository.movedParentIds, isEmpty);
       expect(harness.taskRepository.movedProjectIds, isEmpty);
     } finally {
@@ -3680,7 +3683,6 @@ Future<_AppHarness> _pumpApp(
             projectRepository: projectRepository,
           ),
         ),
-        quickAddHintTextProvider.overrideWithValue(null),
         productivitySummaryProvider.overrideWith(
           (ref) => Stream.value(_summary),
         ),
@@ -4471,6 +4473,12 @@ Iterable<MethodCall> _hapticCalls(Iterable<MethodCall> calls) =>
     calls.where((call) => call.method == 'HapticFeedback.vibrate');
 
 class _FakeFocusRepository implements FocusRepository {
+  @override
+  Future<Result<void>> setPresetDistractionProfile(
+    String presetId,
+    String? profileId,
+  ) async => const Result.ok(null);
+
   _FakeFocusRepository({this.activeRun, this.activeInterval});
 
   final FocusRunItem? activeRun;

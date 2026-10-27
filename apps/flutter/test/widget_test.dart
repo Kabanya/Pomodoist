@@ -1750,6 +1750,12 @@ class _FakeNotificationScheduler extends NotificationScheduler {
 }
 
 class _FakeFocusRepository implements FocusRepository {
+  @override
+  Future<Result<void>> setPresetDistractionProfile(
+    String presetId,
+    String? profileId,
+  ) async => const Result.ok(null);
+
   _FakeFocusRepository({
     FocusRunItem? activeRun,
     FocusIntervalItem? activeInterval,

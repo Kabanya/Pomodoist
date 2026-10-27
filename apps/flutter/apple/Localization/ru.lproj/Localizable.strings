@@ -53,3 +53,24 @@
 "Classic" = "Классика";
 "Deep Work" = "Глубокая работа";
 "Short Sprint" = "Короткий спринт";
+
+"Tasks" = "Задачи";
+"Habits" = "Привычки";
+"Day" = "День";
+"Progress" = "Прогресс";
+"Next" = "Далее";
+"No tasks" = "Нет задач";
+"No habits today" = "Сегодня нет привычек";
+"Nothing scheduled" = "Нет запланированных дел";
+"Open Pomodoist to update" = "Откройте Pomodoist для обновления";
+"Focus this week" = "Фокус за неделю";
+"%d tasks today" = "Задач сегодня: %d";
+"All day" = "Весь день";
+"Shows your next tasks." = "Показывает следующие задачи.";
+"Shows today's habits." = "Показывает привычки на сегодня.";
+"Shows today's schedule." = "Показывает расписание на сегодня.";
+"Shows this week's progress." = "Показывает прогресс за неделю.";
+"Complete task" = "Завершить задачу";
+"Pause or resume focus" = "Приостановить или продолжить фокус";
+"Interval" = "Интервал";
+"Task" = "Задача";

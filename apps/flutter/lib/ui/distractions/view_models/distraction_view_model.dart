@@ -13,3 +13,30 @@ final distractionViewModelProvider = Provider<DistractionSettingsState>((ref) {
 final distractionCommandsProvider = Provider<DistractionRepository?>(
   (ref) => ref.watch(distractionRepositoryProvider),
 );
+
+final blockingAvailableProvider = Provider<bool>(
+  (ref) => desktopDistractionsAvailable,
+);
+
+({bool connected, bool applied}) distractionDeviceStatus(
+  Map<String, dynamic> device, {
+  required int? revision,
+  required DateTime now,
+}) {
+  final seen = DateTime.tryParse('${device['lastSeenAt']}');
+  final age = seen == null ? null : now.difference(seen);
+  final connected =
+      age != null && age >= Duration.zero && age < const Duration(seconds: 45);
+  final caps = device['capabilities'] is Map
+      ? device['capabilities'] as Map
+      : const {};
+  return (
+    connected: connected,
+    applied:
+        connected &&
+        device['detached'] != true &&
+        revision != null &&
+        device['appliedRevision'] == revision &&
+        (caps['nativeApplied'] == true || caps['websiteApplied'] == true),
+  );
+}

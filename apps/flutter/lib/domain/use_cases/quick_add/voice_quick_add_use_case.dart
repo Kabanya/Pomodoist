@@ -1,6 +1,5 @@
 import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
-import 'package:pomodoist/data/repositories/planning/quick_add_hint_repository.dart';
 
 /// Creates every voice draft and its subtasks in one local transaction.
 ///
@@ -13,14 +12,11 @@ class VoiceQuickAddUseCase {
     required QuickAddUseCase quickAdd,
     required Future<T> Function<T>(Future<T> Function() action)
     runLocalTransaction,
-    QuickAddHintRepository? hints,
   }) : _quickAdd = quickAdd,
-       _runLocalTransaction = runLocalTransaction,
-       _hints = hints;
+       _runLocalTransaction = runLocalTransaction;
 
   final QuickAddUseCase _quickAdd;
   final Future<T> Function<T>(Future<T> Function() action) _runLocalTransaction;
-  final QuickAddHintRepository? _hints;
 
   Future<List<String>> call(
     Iterable<DecomposedTaskDraft> tasks, {
@@ -30,7 +26,7 @@ class VoiceQuickAddUseCase {
     String? kanbanStatusId,
     String? labelId,
   }) async {
-    final created = await _runLocalTransaction(
+    return _runLocalTransaction(
       () => _createAll(
         tasks,
         defaultPriority: defaultPriority,
@@ -40,14 +36,6 @@ class VoiceQuickAddUseCase {
         labelId: labelId,
       ),
     );
-    try {
-      for (var index = 0; index < created.length; index++) {
-        await _hints?.recordUserTaskCreated();
-      }
-    } catch (_) {
-      // Hint bookkeeping is advisory and cannot fail a committed batch.
-    }
-    return created;
   }
 
   Future<List<String>> _createAll(
@@ -77,7 +65,6 @@ class VoiceQuickAddUseCase {
             defaultDate: defaultDate,
             kanbanStatusId: kanbanStatusId,
             labelId: labelId,
-            recordCreation: false,
           )
           .then((result) => result.getOrThrow());
       createdIds.add(task.id);

@@ -61,6 +61,7 @@ abstract interface class DistractionRepository {
   Future<void> saveProfile(DistractionProfile profile);
   Future<void> saveAssignment(ResourceAssignment assignment);
   Future<void> classify(ResourceAssignment resource);
+  Future<void> reload();
   Future<void> pair();
   Future<void> cancelExit();
   Future<void> confirmExit();

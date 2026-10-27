@@ -86,7 +86,6 @@ final saveVoiceDraftsProvider = Provider<SaveVoiceDrafts>((ref) {
   final useCase = VoiceQuickAddUseCase(
     quickAdd: ref.watch(quickAddUseCaseProvider),
     runLocalTransaction: ref.watch(localTransactionProvider),
-    hints: ref.watch(quickAddHintRepositoryProvider),
   );
   return (
     drafts, {

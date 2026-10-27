@@ -361,8 +361,9 @@ confirmation and deletion Undo. Clear due removes scheduling while preserving
 the task; Delete removes the task itself. Context-menu bulk actions always
 operate on the selected set, including when opened from an unselected card.
 
-Routine is an alternative calendar layout grouped by task start time, with
-localized default Morning, Afternoon and Evening periods. Users may name, add,
+Routine is the initial calendar layout on desktop and mobile when no mode is
+saved; subsequent visits restore each saved mode. It groups tasks by start time,
+with localized default Morning, Afternoon and Evening periods. Users may name, add,
 remove and adjust periods; invalid or overlapping ranges cannot be saved. Tasks
 outside the configured periods remain visible. The routine and selected mode are
 local preferences; failed saves retain the editor draft. Reuse shared colors,
@@ -372,7 +373,8 @@ Below 820 px of available calendar width, use three equal text segments: Day,
 Month and Rhythm. Keep the active segment visibly selected and exposed to
 accessibility; retain the selected date, project filter and visible selection
 when switching modes. Save the mobile mode separately from the desktop mode,
-defaulting legacy preferences to Day without changing the saved desktop view.
+defaulting missing mobile preferences to Rhythm without changing the saved
+desktop view.
 
 Mobile Day uses a single chronological column with time labels, full-width
 cards and tappable free windows. Concurrent tasks stack rather than shrinking
@@ -535,15 +537,25 @@ and desktop dialog, and keep the existing voice-session lifecycle.
 Desktop Quick Add uses a compact command panel in both the wide-layout dialog
 and the separate native window. Place a large multiline input between the
 list-plus icon and microphone, above a thin divider. Keep date, project and
-short priority menus together with Add in the bottom row; wrap the action below
-the menus when space is limited. Use 40 px desktop controls and the current
-theme, without a duplicate heading or an Escape hint. Enter submits and Escape
+short priority menus together with Add in the bottom row. Below 760 logical px
+of composer width, after interface zoom, show icon-only date, project, priority,
+Pomodoro estimate, Comment and Add controls. Keep localized accessible names and
+tooltips with current values, semantic colors and comment-presence indicators.
+Wrap metadata within its available width and scroll it vertically when height
+is limited; keep Add outside that scroll area and always available. Use 40 px
+desktop controls and the current theme, without a duplicate heading or an Escape
+hint. Enter submits and Escape
 closes as before; retain a localized accessible name for the panel. Keep the
 input scrollable and size its region to its content, with 12 px vertical padding;
 extra window height must not create a gap between the text and the footer. Keep
 the footer outside the input scroll area, resizing available, and voice-window
 expansion intact. Start the dialog at 680 × 180 px and the native window at
-680 × 200 px. The native title bar supplies window controls.
+680 × 200 px. The native title bar supplies window controls. The separate window
+remembers the user's width and height locally across openings and app restarts.
+Constrain restored and expanded sizes to native limits and the display's working
+area. Temporary comment or voice expansion does not replace the saved size;
+manual resizing in any mode becomes the new base size. Keep the last manual size
+usable in memory if local storage fails.
 
 ### Sidebar
 
@@ -707,6 +719,12 @@ schedule stays overdue, and finishing the review shows a quiet empty state.
 
 ### Quick Add
 
+Every empty Quick Add input uses the same permanent, localized syntax example:
+`Task name tomorrow p2 #Project @label 2p`. Keep it independent of task history,
+subscription status and saved suggestions; it never triggers AI generation or
+changes to a generic prompt after task creation. The separate window's native
+hint bridge uses the same localized copy.
+
 Parsed date/time, project and priority chips edit recognized spans in the source
 phrase. Both `#` and `№` introduce project names, including quoted names, in
 parsing, highlighting, and autocomplete. The phrase is the only metadata state:
@@ -762,13 +780,16 @@ The comment is literal task description text, never parsed as Quick Add metadata
 create and synchronize it atomically with the task. Keep both drafts after a
 failure and clear them only after successful text creation.
 
-Opening the comment raises the desktop dialog minimum height to 320 px and the
-separate window to 680 × 340 px. Preserve comment text and selection across
-mobile/desktop layout changes. In constrained windows, scroll the input and
+Opening the comment raises the desktop dialog minimum height to 320 px and
+temporarily raises the separate window height to at least 340 px without changing
+its chosen width. Expanded voice temporarily requests at least 720 × 720 px.
+Neither mode shrinks an already larger window; constrain both to the working area
+and restore the user's base size when closed. Preserve comment text and selection
+across mobile/desktop layout changes. In constrained windows, scroll the input and
 comment while keeping creation controls outside their scroll regions. Allow the
-metadata/action row to scroll independently when wrapping exceeds the available
-height. Mobile
-keeps the existing keyboard-aware sheet and pinned action row. Returning from
+metadata to scroll independently when wrapping exceeds the available height,
+keeping Add outside its scroll region. Mobile keeps the existing keyboard-aware
+sheet and pinned action row. Returning from
 voice mode restores the separate window's expanded comment size when applicable.
 
 Voice draft titles start at one line and grow with their text up to three lines;
@@ -1793,6 +1814,30 @@ the interval, even after a task moves. Keep unlinked, missing and deleted record
 in explicit groups; unavailable tasks do not open. Zero-time distributions have
 no percentage or proportion bar. Both themes use the shared palette and type.
 
+## Apple widget family
+
+The Quiet Typography family uses native SwiftUI system type, prominent monospaced
+digits, a restrained red accent, thin rules and adaptive system backgrounds.
+Focus retains the user's timer color. Tasks, Habits, Day and Progress share this
+hierarchy across iPhone/iPad and Mac widget sizes, Lock Screen accessories and
+Apple Watch Smart Stack widgets/complications. Keep accessory content short and
+legible when WidgetKit removes backgrounds or applies system tinting.
+
+Focus Live Activities use ActivityKit's countdown and support Dynamic Island
+and system StandBy presentation. Interactive completion and pause/resume open
+the app and use its existing command bridge; pause/resume validates the interval
+ID. Regular widgets display cached snapshots and deep-link to existing screens.
+Do not infer background execution or exact refresh timing from timeline entries.
+
+Snapshots contain personal tasks, scheduled habits with period-aware progress,
+today's schedule and a Monday-first calendar week of focus totals. Dates follow
+the local calendar day. A previous day's overview shows an update prompt until
+the app publishes fresh data. Empty states use real data; samples are limited
+to WidgetKit previews. Treat task titles and overview content as privacy-sensitive.
+Shared widget storage must never contain account credentials. Watch habits and
+reports currently refresh through iPhone; direct Watch API replies retain that
+same-day projection until a new iPhone snapshot arrives.
+
 ## Validation
 
 For styling work, the agent formats changed Dart files, runs static analysis,
@@ -1938,3 +1983,47 @@ serialized replacement queue, cover the next 30 calendar days and occupy at
 most 30 slots, preserving iOS capacity for other notifications and Focus.
 Validation for this feature is unit tests, SQL tests, localization/Drift
 generation and static/architecture analysis only.
+
+## Blocking preset desk
+
+The desktop-only `/blocking` destination follows Focus in the sidebar. Settings
+links to it rather than duplicating its controls. At a content width of 820 px or
+more, show the preset rail beside the selected preset's settings. Below that
+width, put a horizontal preset list above the settings. Selecting a preset edits
+its association without changing Focus selection or the active session.
+
+Preset tiles use a neutral surface with 10 px corners and an accent outline and
+filled checkmark for selection. Emphasize work minutes on the leading side,
+with labeled short and long breaks beside them and the profile status below.
+Use a 320 px preset rail and horizontal tiles; stack durations when scaled text
+needs more space. Keep all duration and profile labels localized and wrapping.
+
+Use flat sections for the preset rhythm, shared profile, blocked categories,
+allowed exceptions and expandable behavior. Resource management reuses the
+manual category and per-resource allow/block controls. Show all presets that
+share a profile so edits have a clear scope. Profile selection saves the preset's
+association for the next Focus and remains available during a session; preserve
+the running session's profile snapshot. Keep exit policy locked during a session,
+while categories and exceptions remain editable.
+
+Show computer and Chrome protection as two flat Settings rows with 32 px leading
+icons, a divider, and trailing read-only Enabled / Disabled pills. Use the shared
+Settings row geometry to stack labels and status on narrow layouts. Apps uses
+the Lucide overlapping-window icon; Chrome uses the bundled
+[Google Chrome logo](https://www.google.com/chrome/static/images/chrome-logo.svg).
+Enabled requires confirmation that native protection is applied, or a fresh
+device confirmation of the current rules revision. Availability and extension connection remain
+secondary descriptions, separate from protection state. Pair status text with
+check/pause icons and theme success/neutral colors. Keep Shared/Local Focus and
+the expandable device, pairing and privacy details in the footer.
+Keep Automatic categories with a Pro badge and the explanation
+that search assigns categories while manual choices take priority visible after
+devices and before the final action. Unverified subscription access is a pending
+or error state; it must never be presented as Free. Existing assignments survive
+subscription expiry. Pending writes and failed writes remain explicit.
+
+Show the real active task and remaining time below the preset list, or the
+selected preset duration while idle. Keep this summary free of mascot imagery.
+The final action starts that preset when idle and returns to the current Focus when
+a session exists. Missing assigned profiles block starts until reloaded or
+explicitly replaced, including an explicit choice of no blocking.

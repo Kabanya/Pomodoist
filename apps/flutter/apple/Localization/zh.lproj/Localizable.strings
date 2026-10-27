@@ -53,3 +53,24 @@
 "Classic" = "经典";
 "Deep Work" = "深度工作";
 "Short Sprint" = "短时冲刺";
+
+"Tasks" = "任务";
+"Habits" = "习惯";
+"Day" = "日程";
+"Progress" = "进度";
+"Next" = "接下来";
+"No tasks" = "暂无任务";
+"No habits today" = "今天没有习惯";
+"Nothing scheduled" = "暂无安排";
+"Open Pomodoist to update" = "打开 Pomodoist 以更新";
+"Focus this week" = "本周专注";
+"%d tasks today" = "今天完成 %d 个任务";
+"All day" = "全天";
+"Shows your next tasks." = "显示接下来的任务。";
+"Shows today's habits." = "显示今天的习惯。";
+"Shows today's schedule." = "显示今天的日程。";
+"Shows this week's progress." = "显示本周进度。";
+"Complete task" = "完成任务";
+"Pause or resume focus" = "暂停或继续专注";
+"Interval" = "时段";
+"Task" = "任务";

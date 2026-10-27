@@ -77,11 +77,14 @@ class CoordinatedDistractionRepository implements DistractionRepository {
     if (discovery != null) focus.discovery = discovery;
     if (collectAttempts != null) focus.collectAttempts = collectAttempts;
     if (automatic != null) {
-      this.automatic = automatic;
-      await focus.preferences?.setBool(
+      final saved = await focus.preferences?.setBool(
         'distractions.automatic.${focus.owner}',
         automatic,
       );
+      if (saved == false) {
+        throw StateError('Automatic categories could not be saved.');
+      }
+      this.automatic = automatic;
     }
     await focus.persist();
     await protection()?.apply();
@@ -96,6 +99,9 @@ class CoordinatedDistractionRepository implements DistractionRepository {
     final value = await classifyResource(r);
     await focus.saveAssignment(value);
   }
+
+  @override
+  Future<void> reload() => focus.refresh();
 
   @override
   Future<void> pair() async {

@@ -17,7 +17,7 @@ import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/widgets/pomodoist_app.dart';
 import 'package:pomodoist/ui/core/widgets/app_icon_runtime.dart';
-import 'package:pomodoist/ui/quick_add/widgets/global_quick_add_window.dart';
+import 'package:pomodoist/config/platform/platform_quick_add.dart';
 import 'package:pomodoist/config/auth/native_account_startup.dart';
 import 'package:pomodoist/data/services/platform/native_link_coordinator.dart';
 import 'package:pomodoist/config/runtime_public_config.dart';

@@ -70,6 +70,15 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
     ref.watch(
       quickAddViewModelProvider(_identity).select((state) => state.result),
     );
+    return LayoutBuilder(builder: _buildComposer);
+  }
+
+  Widget _buildComposer(BuildContext context, BoxConstraints constraints) {
+    final iconsOnly = !widget.compact && constraints.maxWidth < 760;
+    final footerMaxHeight = math.max(
+      40.0,
+      math.min(160.0, constraints.maxHeight * .45),
+    );
     final l10n = context.l10n;
     final input = QuickAddInput(
       key: _inputKey,
@@ -112,12 +121,14 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
       enabled: !_busy,
       touchTargets: widget.compact,
       desktop: !widget.compact,
+      iconsOnly: iconsOnly,
       onChanged: _syncDraft,
       trailing: _QuickAddCommentButton(
         controller: _commentController,
         expanded: _commentExpanded,
         enabled: !_busy,
         touchTargets: widget.compact,
+        iconsOnly: iconsOnly,
         onPressed: _toggleComment,
       ),
     );
@@ -128,24 +139,35 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
       onChanged: _syncDraft,
       onClose: _toggleComment,
     );
-    final submit = ShadButton(
-      key: const Key('sidebar-quick-add-submit'),
-      height: widget.compact ? 48 : 40,
-      enabled: !_busy,
-      onPressed: _busy ? null : _submit,
-      leading: _busy
-          ? SizedBox.square(
-              dimension: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: context.appColors.onAccent,
-              ),
-            )
-          : const Icon(LucideIcons.plus),
-      trailing: widget.compact
-          ? null
-          : const Icon(LucideIcons.cornerDownLeft, size: 16),
-      child: Text(l10n.commonAdd),
+    final submit = Tooltip(
+      message: l10n.commonAdd,
+      excludeFromSemantics: true,
+      child: MergeSemantics(
+        child: Semantics(
+          label: iconsOnly ? l10n.commonAdd : null,
+          child: ShadButton(
+            key: const Key('sidebar-quick-add-submit'),
+            width: iconsOnly ? 40 : null,
+            height: widget.compact ? 48 : 40,
+            padding: iconsOnly ? EdgeInsets.zero : null,
+            enabled: !_busy,
+            onPressed: _busy ? null : _submit,
+            leading: _busy
+                ? SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: context.appColors.onAccent,
+                    ),
+                  )
+                : const Icon(LucideIcons.plus),
+            trailing: widget.compact || iconsOnly
+                ? null
+                : const Icon(LucideIcons.cornerDownLeft, size: 16),
+            child: iconsOnly ? null : Text(l10n.commonAdd),
+          ),
+        ),
+      ),
     );
     return CallbackShortcuts(
       bindings: {const SingleActivator(LogicalKeyboardKey.escape): _cancel},
@@ -276,19 +298,21 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
                       ),
                     ),
                     Divider(height: 1, color: context.appColors.border),
-                    Flexible(
-                      flex: 2,
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxHeight: footerMaxHeight),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 24,
-                          vertical: 12,
+                          vertical: math.min(12, (footerMaxHeight - 40) / 2),
                         ),
-                        child: OverflowBar(
-                          alignment: MainAxisAlignment.spaceBetween,
-                          overflowAlignment: OverflowBarAlignment.end,
-                          spacing: 12,
-                          overflowSpacing: 12,
-                          children: [details, submit],
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: SingleChildScrollView(child: details),
+                            ),
+                            const SizedBox(width: 12),
+                            submit,
+                          ],
                         ),
                       ),
                     ),

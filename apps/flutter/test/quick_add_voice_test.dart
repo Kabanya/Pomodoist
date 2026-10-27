@@ -55,7 +55,6 @@ void main() {
   final emptySuggestionOverrides = [
     projectsProvider.overrideWith((ref) => Stream.value(const <ProjectItem>[])),
     labelsProvider.overrideWith((ref) => Stream.value(const <LabelItem>[])),
-    quickAddHintTextProvider.overrideWithValue(null),
     focusRepositoryProvider.overrideWithValue(FakeFocusRepository()),
   ];
   final proBillingRepository = FakeBillingRepository()
@@ -2663,7 +2662,6 @@ class _QuickAddMotionService implements QuickAddUseCase {
     TaskSchedule? defaultSchedule,
     String? kanbanStatusId,
     String? labelId,
-    bool recordCreation = true,
   }) => Result.capture<String>(() async => create());
 
   @override
@@ -2679,7 +2677,6 @@ Widget _quickAddMotionApp(
     overrides: [
       projectsProvider.overrideWith((ref) => Stream.value(const [])),
       labelsProvider.overrideWith((ref) => Stream.value(const [])),
-      quickAddHintTextProvider.overrideWithValue(null),
       quickAddUseCaseProvider.overrideWithValue(service),
     ],
     child: MaterialApp(

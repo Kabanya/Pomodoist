@@ -19,5 +19,4 @@ final startupBackgroundWiringProvider = Provider<void>((ref) {
   ref.watch(habitReminderStatusProvider);
   ref.watch(reengagementNotificationCoordinatorProvider);
   ref.watch(watchCompanionServiceProvider);
-  ref.watch(quickAddHintRepositoryProvider);
 });

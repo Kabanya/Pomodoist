@@ -339,7 +339,7 @@
   "distractionTitle": "Distraction blocking",
   "distractionDescription": "Choose what to block during Focus. Unknown resources stay allowed until you assign a category.",
   "distractionProfile": "Protection profile",
-  "distractionBeforeStart": "Choose before starting Focus. Categories and exceptions can be corrected at any time.",
+  "distractionBeforeStart": "O perfil selecionado se aplica ao próximo Focus. As categorias e exceções podem ser alteradas a qualquer momento.",
   "distractionNone": "No blocking profile",
   "distractionAddProfile": "Add profile",
   "distractionEditProfile": "Edit profile",
@@ -352,8 +352,8 @@
   "distractionDiscoveryPrivacy": "Only foreground app identities and product names are stored locally. No disk scan, document names or window titles.",
   "distractionAttempts": "Save distraction attempts",
   "distractionAttemptsPrivacy": "Optional local events, with repeated attempts combined. Usage time and page content are not recorded.",
-  "distractionAutomatic": "Automatic categories · Pro",
-  "distractionAutomaticDescription": "Public resource identifiers are searched on the web. New successful searches share your AI quota with task analysis; cache hits are free.",
+  "distractionAutomatic": "Categorias automáticas",
+  "distractionAutomaticDescription": "A pesquisa determina a categoria. A escolha manual tem prioridade.",
   "distractionLocal": "Local Focus · this computer",
   "distractionShared": "Shared Focus · connected",
   "distractionOffline": "Offline · protection ends at the confirmed deadline",
@@ -409,6 +409,45 @@
   "@distractionIncognito": {
     "placeholders": {
       "status": {
+        "type": "String"
+      }
+    }
+  },
+  "blockingTitle": "Bloqueios",
+  "blockingDescription": "Seu ritmo de trabalho e seus limites no mesmo lugar.",
+  "blockingRhythm": "{work} min de foco · {short} min de pausa · {long} min de pausa longa após {count} intervalos",
+  "blockingSharedPresets": "Usado por: {presets}. As alterações do perfil valem para todos.",
+  "blockingProfileMissing": "O perfil atribuído está indisponível. Recarregue ou escolha outro.",
+  "blockingWhatToClose": "O que fechar",
+  "blockingWhatToKeep": "O que manter disponível",
+  "blockingBehavior": "Comportamento do perfil",
+  "blockingApps": "Aplicativos",
+  "blockingEnabled": "Ativada",
+  "blockingDisabled": "Desativada",
+  "blockingDevices": "Este computador e Chrome",
+  "blockingDeviceDetails": "Dispositivos e privacidade",
+  "blockingSaving": "Salvando…",
+  "blockingCurrentFocus": "Ir ao Focus atual",
+  "blockingReady": "Pronto para começar",
+  "@blockingRhythm": {
+    "placeholders": {
+      "work": {
+        "type": "int"
+      },
+      "short": {
+        "type": "int"
+      },
+      "long": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@blockingSharedPresets": {
+    "placeholders": {
+      "presets": {
         "type": "String"
       }
     }

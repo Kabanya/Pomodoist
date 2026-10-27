@@ -1198,7 +1198,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addTask => 'إضافة مهمة';
 
   @override
-  String get quickAddHint => 'اكتب sync engine غدا p1 #App @coding 4p';
+  String get quickAddHint => 'اسم المهمة غدا p2 #مشروع @وسم 2p';
 
   @override
   String couldNotAddTask(Object error) {
@@ -4564,7 +4564,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get distractionBeforeStart =>
-      'Choose before starting Focus. Categories and exceptions can be corrected at any time.';
+      'يُطبّق الملف المحدد على جلسة Focus التالية. يمكن تعديل الفئات والاستثناءات في أي وقت.';
 
   @override
   String get distractionNone => 'No blocking profile';
@@ -4606,11 +4606,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'Optional local events, with repeated attempts combined. Usage time and page content are not recorded.';
 
   @override
-  String get distractionAutomatic => 'Automatic categories · Pro';
+  String get distractionAutomatic => 'الفئات التلقائية';
 
   @override
   String get distractionAutomaticDescription =>
-      'Public resource identifiers are searched on the web. New successful searches share your AI quota with task analysis; cache hits are free.';
+      'يحدد البحث الفئة. للاختيار اليدوي الأولوية.';
 
   @override
   String get distractionLocal => 'Local Focus · this computer';
@@ -4783,4 +4783,57 @@ class AppLocalizationsAr extends AppLocalizations {
   String distractionIncognito(String status) {
     return 'Incognito access: $status';
   }
+
+  @override
+  String get blockingTitle => 'الحظر';
+
+  @override
+  String get blockingDescription => 'إيقاع عملك وحدوده في مكان واحد.';
+
+  @override
+  String blockingRhythm(int work, int short, int long, int count) {
+    return 'تركيز $work د · استراحة $short د · استراحة طويلة $long د بعد $count فترات';
+  }
+
+  @override
+  String blockingSharedPresets(String presets) {
+    return 'تستخدمه الإعدادات: $presets. تنطبق تغييرات الملف عليها جميعًا.';
+  }
+
+  @override
+  String get blockingProfileMissing =>
+      'الملف المحدد غير متاح. أعد تحميله أو اختر ملفًا آخر.';
+
+  @override
+  String get blockingWhatToClose => 'ما الذي يُغلق';
+
+  @override
+  String get blockingWhatToKeep => 'ما الذي يبقى متاحًا';
+
+  @override
+  String get blockingBehavior => 'سلوك الملف';
+
+  @override
+  String get blockingApps => 'التطبيقات';
+
+  @override
+  String get blockingEnabled => 'مفعّلة';
+
+  @override
+  String get blockingDisabled => 'معطّلة';
+
+  @override
+  String get blockingDevices => 'هذا الكمبيوتر وChrome';
+
+  @override
+  String get blockingDeviceDetails => 'الأجهزة والخصوصية';
+
+  @override
+  String get blockingSaving => 'جارٍ الحفظ…';
+
+  @override
+  String get blockingCurrentFocus => 'إلى جلسة Focus الحالية';
+
+  @override
+  String get blockingReady => 'جاهز للبدء';
 }

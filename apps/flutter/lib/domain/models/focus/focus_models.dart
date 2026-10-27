@@ -105,6 +105,8 @@ class FocusPresetItem {
     required this.isDefault,
     required this.createdAt,
     required this.updatedAt,
+    this.distractionProfileConfigured = false,
+    this.distractionProfileId,
   });
 
   final String id;
@@ -119,6 +121,11 @@ class FocusPresetItem {
   final bool allowPause;
   final bool strictMode;
   final bool isDefault;
+  final bool distractionProfileConfigured;
+  final String? distractionProfileId;
+
+  String? effectiveDistractionProfileId(String? legacyProfileId) =>
+      distractionProfileConfigured ? distractionProfileId : legacyProfileId;
   final DateTime createdAt;
   final DateTime updatedAt;
 }

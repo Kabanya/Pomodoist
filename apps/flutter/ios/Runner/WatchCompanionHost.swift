@@ -1,6 +1,8 @@
 import Flutter
 import WatchConnectivity
 import WidgetKit
+import ActivityKit
+import UIKit
 
 func focusSnapshotDictionary(from context: [String: Any]) -> [String: Any] {
   (context["snapshot"] as? [String: Any]) ?? context
@@ -13,7 +15,9 @@ final class WatchCompanionHost: NSObject, WCSessionDelegate {
   private var latestSnapshot: [String: Any]?
   private var latestContext: [String: Any]?
   private let focusSnapshotStore = PomodoistFocusSnapshotStore()
+  private var activityUpdate: Task<Void, Never>?
 
+  @MainActor
   func configure(with engineBridge: FlutterImplicitEngineBridge) {
     guard let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "WatchCompanionHost") else {
       return
@@ -25,7 +29,17 @@ final class WatchCompanionHost: NSObject, WCSessionDelegate {
     channel?.setMethodCallHandler { [weak self] call, result in
       self?.handleFlutterCall(call, result: result)
     }
+    PomodoistWidgetCommands.handler = { [weak self] command, reply in
+      guard let self else { reply(["ok": false]); return }
+      self.forwardCommandToFlutter(command, replyHandler: reply)
+    }
+    NotificationCenter.default.addObserver(self, selector: #selector(didBecomeActive),
+      name: UIApplication.didBecomeActiveNotification, object: nil)
     activateSession()
+  }
+
+  @objc private func didBecomeActive() {
+    forwardCommandToFlutter(PomodoistFocusCommand.make(type: PomodoistFocusCommand.snapshotRequest), replyHandler: nil)
   }
 
   private func activateSession() {
@@ -65,8 +79,9 @@ final class WatchCompanionHost: NSObject, WCSessionDelegate {
       latestContext = context["snapshot"] == nil ? ["snapshot": snapshot] : context
       focusSnapshotStore.save(dictionary: snapshot)
       if #available(iOS 14.0, *) {
-        WidgetCenter.shared.reloadTimelines(ofKind: pomodoistFocusWidgetKind)
+        WidgetCenter.shared.reloadAllTimelines()
       }
+      updateLiveActivity(snapshot)
       updateWatchContext(latestContext ?? ["snapshot": snapshot])
       result(nil)
     default:
@@ -129,7 +144,40 @@ final class WatchCompanionHost: NSObject, WCSessionDelegate {
     var context = latestContext ?? [:]
     context["snapshot"] = snapshot
     latestContext = context
+    focusSnapshotStore.save(dictionary: snapshot)
+    WidgetCenter.shared.reloadAllTimelines()
+    updateLiveActivity(snapshot)
     updateWatchContext(context)
+  }
+
+  private func updateLiveActivity(_ dictionary: [String: Any]) {
+    guard #available(iOS 16.2, *), let snapshot = PomodoistSnapshot.decode(from: dictionary) else { return }
+    let previous = activityUpdate
+    activityUpdate = Task { @MainActor in
+      await previous?.value
+      let state = PomodoistFocusActivityAttributes.ContentState(snapshot: snapshot, now: Date())
+      var current: Activity<PomodoistFocusActivityAttributes>?
+      for activity in Activity<PomodoistFocusActivityAttributes>.activities {
+        if state != nil, activity.attributes.runID == snapshot.focus.run?.id {
+          current = activity
+        } else {
+          await activity.end(nil, dismissalPolicy: .immediate)
+        }
+      }
+      guard let state, let runID = snapshot.focus.run?.id else { return }
+      let content = ActivityContent(state: state, staleDate: state.end)
+      if let current {
+        await current.update(content)
+      } else if UIApplication.shared.applicationState == .active,
+        ActivityAuthorizationInfo().areActivitiesEnabled
+      {
+        do {
+          _ = try Activity.request(attributes: PomodoistFocusActivityAttributes(runID: runID), content: content, pushType: nil)
+        } catch {
+          NSLog("Pomodoist Live Activity request failed: %ld", (error as NSError).code)
+        }
+      }
+    }
   }
 
   func session(

@@ -103,7 +103,7 @@ final class FocusStatusItemController: NSObject, NSMenuDelegate {
     statusItem.button?.setAccessibilityLabel(pomodoistLocalized("Pomodoist focus timer", locale: decoded.locale))
     store.save(dictionary: dictionary)
     updateStatusItem()
-    WidgetCenter.shared.reloadTimelines(ofKind: pomodoistFocusWidgetKind)
+    WidgetCenter.shared.reloadAllTimelines()
   }
 
   private func requestSnapshot() {

@@ -77,10 +77,7 @@ class _QuickAddInputState extends ConsumerState<QuickAddInput> {
   Widget build(BuildContext context) {
     final inputState = ref.watch(quickAddInputViewModelProvider);
     final viewModel = ref.read(quickAddInputViewModelProvider.notifier);
-    final hint = inputState.hint;
-    final decoration = hint == null
-        ? widget.decoration
-        : widget.decoration.copyWith(hintText: hint);
+    final decoration = widget.decoration.copyWith(hintText: inputState.hint);
     return RawAutocomplete<QuickAddSuggestion>(
       textEditingController: widget.controller,
       focusNode: _focusNode,

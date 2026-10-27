@@ -76,6 +76,7 @@ extension AccountSyncUpserts on AccountSyncEngine {
       _db.focusPresets,
     )..where((row) => row.id.equals(id))).getSingleOrNull();
     final merged = syncMergeRow(existing?.toJson(), data);
+    merged.putIfAbsent('distractionProfileConfigured', () => false);
     if (!syncHasRequired(merged, [
       'id',
       'userId',
@@ -97,7 +98,9 @@ extension AccountSyncUpserts on AccountSyncEngine {
     }
     await _db
         .into(_db.focusPresets)
-        .insertOnConflictUpdate(FocusPresetRow.fromJson(merged));
+        .insertOnConflictUpdate(
+          FocusPresetRow.fromJson(merged).toCompanion(false),
+        );
   }
 
   Future<void> _upsertFocusRun(String id, Map<String, dynamic> data) async {

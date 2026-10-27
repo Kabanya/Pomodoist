@@ -1132,7 +1132,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addTask => '添加任务';
 
   @override
-  String get quickAddHint => '写 sync engine 明天 p1 #App @coding 4p';
+  String get quickAddHint => '任务名称 明天 p2 #项目 @标签 2p';
 
   @override
   String couldNotAddTask(Object error) {
@@ -4391,8 +4391,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get distractionProfile => 'Protection profile';
 
   @override
-  String get distractionBeforeStart =>
-      'Choose before starting Focus. Categories and exceptions can be corrected at any time.';
+  String get distractionBeforeStart => '所选配置将应用于下一次Focus。类别和例外可随时修改。';
 
   @override
   String get distractionNone => 'No blocking profile';
@@ -4434,11 +4433,10 @@ class AppLocalizationsZh extends AppLocalizations {
       'Optional local events, with repeated attempts combined. Usage time and page content are not recorded.';
 
   @override
-  String get distractionAutomatic => 'Automatic categories · Pro';
+  String get distractionAutomatic => '自动分类';
 
   @override
-  String get distractionAutomaticDescription =>
-      'Public resource identifiers are searched on the web. New successful searches share your AI quota with task analysis; cache hits are free.';
+  String get distractionAutomaticDescription => '搜索确定类别，手动选择优先。';
 
   @override
   String get distractionLocal => 'Local Focus · this computer';
@@ -4611,4 +4609,56 @@ class AppLocalizationsZh extends AppLocalizations {
   String distractionIncognito(String status) {
     return 'Incognito access: $status';
   }
+
+  @override
+  String get blockingTitle => '屏蔽';
+
+  @override
+  String get blockingDescription => '在一处管理工作节奏及其限制。';
+
+  @override
+  String blockingRhythm(int work, int short, int long, int count) {
+    return '专注 $work 分钟 · 休息 $short 分钟 · 每 $count 轮长休息 $long 分钟';
+  }
+
+  @override
+  String blockingSharedPresets(String presets) {
+    return '使用此配置的预设：$presets。配置更改将应用于全部预设。';
+  }
+
+  @override
+  String get blockingProfileMissing => '指定的配置不可用。请重新加载或选择其他配置。';
+
+  @override
+  String get blockingWhatToClose => '屏蔽哪些内容';
+
+  @override
+  String get blockingWhatToKeep => '保持哪些内容可用';
+
+  @override
+  String get blockingBehavior => '配置行为';
+
+  @override
+  String get blockingApps => '应用';
+
+  @override
+  String get blockingEnabled => '已启用';
+
+  @override
+  String get blockingDisabled => '已停用';
+
+  @override
+  String get blockingDevices => '此电脑和 Chrome';
+
+  @override
+  String get blockingDeviceDetails => '设备与隐私';
+
+  @override
+  String get blockingSaving => '正在保存…';
+
+  @override
+  String get blockingCurrentFocus => '前往当前 Focus';
+
+  @override
+  String get blockingReady => '准备开始';
 }

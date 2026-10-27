@@ -84,7 +84,7 @@ class QuickAddViewModel extends Notifier<QuickAddState> {
 typedef QuickAddInputState = ({
   List<ProjectItem> projects,
   List<LabelItem> labels,
-  String? hint,
+  String hint,
 });
 final quickAddInputViewModelProvider =
     NotifierProvider.autoDispose<QuickAddInputViewModel, QuickAddInputState>(

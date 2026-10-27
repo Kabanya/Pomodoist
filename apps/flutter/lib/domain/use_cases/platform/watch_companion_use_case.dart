@@ -9,12 +9,19 @@ import 'package:pomodoist/domain/use_cases/quick_add/voice_quick_add_use_case.da
 import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/domain/models/platform/watch_companion.dart';
+import 'package:pomodoist/domain/models/platform/apple_widget_snapshot.dart';
+import 'package:pomodoist/domain/models/habits/habit_models.dart';
+import 'package:pomodoist/domain/models/productivity/productivity_models.dart';
+import 'package:pomodoist/data/repositories/habits/habit_repository.dart';
+import 'package:pomodoist/data/repositories/productivity/productivity_repository.dart';
 
 class WatchCompanionUseCase {
   WatchCompanionUseCase({
     required TaskRepository taskRepository,
     required ProjectRepository projectRepository,
     required FocusRepository focusRepository,
+    required HabitRepository habitRepository,
+    required ProductivityRepository productivityRepository,
     required QuickAddUseCase quickAddService,
     required VoiceQuickAddUseCase voiceQuickAdd,
     required TaskDecomposer taskDecomposer,
@@ -24,6 +31,8 @@ class WatchCompanionUseCase {
   }) : _taskRepository = taskRepository,
        _projectRepository = projectRepository,
        _focusRepository = focusRepository,
+       _habitRepository = habitRepository,
+       _productivityRepository = productivityRepository,
        _quickAddService = quickAddService,
        _voiceQuickAdd = voiceQuickAdd,
        _taskDecomposer = taskDecomposer,
@@ -34,6 +43,8 @@ class WatchCompanionUseCase {
   final TaskRepository _taskRepository;
   final ProjectRepository _projectRepository;
   final FocusRepository _focusRepository;
+  final HabitRepository _habitRepository;
+  final ProductivityRepository _productivityRepository;
   final QuickAddUseCase _quickAddService;
   final VoiceQuickAddUseCase _voiceQuickAdd;
   final TaskDecomposer _taskDecomposer;
@@ -51,6 +62,9 @@ class WatchCompanionUseCase {
     _taskRepository.watchTasks(const TaskQuery.inbox()),
     _taskRepository.watchTasks(const TaskQuery.all()),
     _projectRepository.watchProjects(),
+    _habitRepository.watchHabits(),
+    _habitRepository.watchCheckIns(),
+    _productivityRepository.watchTodaySummary(),
   ];
 
   Future<WatchCommandResult> execute(WatchCommand command) async {
@@ -60,6 +74,11 @@ class WatchCompanionUseCase {
       return await _ok(appliedCommandId: commandId);
     }
     try {
+      if (command.expectedIntervalId != null &&
+          (await _focusRepository.watchActiveInterval().first)?.id !=
+              command.expectedIntervalId) {
+        return await _focusConflict();
+      }
       if (type == WatchAction.completeTask ||
           type == WatchAction.uncompleteTask) {
         await _requirePersonalTask(command.taskId!);
@@ -200,16 +219,16 @@ class WatchCompanionUseCase {
       _taskRepository.watchTasks(const TaskQuery.inbox()).first,
       _taskRepository.watchTasks(const TaskQuery.all()).first,
       _projectRepository.watchProjects().first,
+      _habitRepository.watchHabits().first,
+      _habitRepository.watchCheckIns().first,
+      _productivityRepository.watchTodaySummary().first,
     ]);
 
     final activeRun = results[0] as FocusRunItem?;
-    final run =
-        activeRun?.taskId != null &&
-            (await _taskRepository.watchTask(activeRun!.taskId!).first)
-                    ?.scopeId !=
-                null
+    final focusTask = activeRun?.taskId == null
         ? null
-        : activeRun;
+        : await _taskRepository.watchTask(activeRun!.taskId!).first;
+    final run = focusTask?.scopeId != null ? null : activeRun;
     final interval = run == null ? null : results[1] as FocusIntervalItem?;
     final presets = results[2] as List<FocusPresetItem>;
     final todayTasks = (results[3] as List<TaskItem>)
@@ -263,6 +282,17 @@ class WatchCompanionUseCase {
       projects: visibleProjects,
       projectCounts: counts,
       appliedCommandIds: _appliedCommandIds,
+      widgets: buildAppleWidgetSnapshot(
+        now: now,
+        tasks: {
+          for (final task in [...todayTasks, ...inboxTasks, ...allTasks])
+            task.id: task,
+        }.values,
+        habits: results[8] as List<Habit>,
+        checkIns: results[9] as List<HabitCheckIn>,
+        productivity: results[10] as ProductivitySummary,
+        focusTaskTitle: run == null ? null : focusTask?.content,
+      ),
     );
   }
 

@@ -1,5 +1,6 @@
 import Foundation
 import WatchConnectivity
+import WidgetKit
 
 @MainActor
 final class WatchCompanionStore: NSObject, ObservableObject {
@@ -141,6 +142,10 @@ final class WatchCompanionStore: NSObject, ObservableObject {
   private func persistSnapshot() {
     if let data = try? JSONEncoder().encode(snapshot) {
       defaults.set(data, forKey: snapshotKey)
+      if let dictionary = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+        PomodoistFocusSnapshotStore().save(dictionary: dictionary)
+        WidgetCenter.shared.reloadAllTimelines()
+      }
     }
   }
 
@@ -160,6 +165,11 @@ final class WatchCompanionStore: NSObject, ObservableObject {
       return
     }
     var merged = incoming
+    // shortcut: direct Watch replies omit habits/reports; refresh their projection from iPhone until the Watch API provides it.
+    if merged.widgets == nil, snapshot.widgets?.isCurrent(on: Date()) == true {
+      merged.widgets = snapshot.widgets
+      merged.locale = merged.locale ?? snapshot.locale
+    }
     for pending in pendingCommands {
       applyOptimistic(pending.payload, to: &merged)
     }
@@ -178,6 +188,11 @@ final class WatchCompanionStore: NSObject, ObservableObject {
 
   @discardableResult
   private func handleAccountSession(_ accountSession: WatchAccountSession) -> Bool {
+    if accountSession.userId != accountClient.accountSession?.userId {
+      snapshot.widgets = nil
+      PomodoistFocusSnapshotStore().save(dictionary: ["version": 1, "focus": ["active": false]])
+      WidgetCenter.shared.reloadAllTimelines()
+    }
     accountClient.updateSession(accountSession)
     if accountClient.accountSession?.usable == true {
       return true
@@ -198,6 +213,15 @@ final class WatchCompanionStore: NSObject, ObservableObject {
       return true
     }
     return accountSession.signedIn
+  }
+
+  private func receiveWidgetPresentation(from context: [String: Any]) {
+    guard shouldApplySnapshot(from: context),
+      let incoming = WatchSnapshot.decode(from: context),
+      incoming.widgets?.isCurrent(on: Date()) == true else { return }
+    snapshot.widgets = incoming.widgets
+    snapshot.locale = incoming.locale
+    persistSnapshot()
   }
 
   private func queue(_ command: [String: Any]) -> Bool {
@@ -596,6 +620,7 @@ extension WatchCompanionStore: WCSessionDelegate {
       if let accountSession = WatchAccountSession.decode(from: session.receivedApplicationContext["accountSession"]) {
         directAccountAvailable = self.handleAccountSession(accountSession)
       }
+      self.receiveWidgetPresentation(from: session.receivedApplicationContext)
       if !directAccountAvailable,
         self.shouldApplySnapshot(from: session.receivedApplicationContext),
         let snapshot = WatchSnapshot.decode(from: session.receivedApplicationContext)
@@ -621,6 +646,7 @@ extension WatchCompanionStore: WCSessionDelegate {
       if let accountSession = WatchAccountSession.decode(from: applicationContext["accountSession"]) {
         directAccountAvailable = self.handleAccountSession(accountSession)
       }
+      self.receiveWidgetPresentation(from: applicationContext)
       if directAccountAvailable {
         self.requestSnapshot()
       } else if self.shouldApplySnapshot(from: applicationContext),

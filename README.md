@@ -2,9 +2,9 @@
   <a href="https://trendshift.io/repositories/206223?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-206223" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/206223/daily?language=Dart" alt="Kabanya%2FPomodoist | Trendshift" width="250" height="55"/></a>
 </p>
 
-<h1 align="center">
-  <img src=".github/assets/readme/voice-to-task-cover.webp" alt="Pomodoist — voice capture becomes a task, with Pomo sitting on the wordmark and a Pomodoro focus timer" width="100%">
-</h1>
+<p align="center">
+  <img src=".github/assets/readme/voice-to-task-cover.webp" alt="Pomodoist — Pomo turns scattered notes into a clear plan beside a Pomodoro timer" width="100%">
+</p>
 
 <p align="center">
   <strong>A little focus. A better day.</strong>
@@ -41,7 +41,7 @@
 
 <img src=".github/assets/readme/pomo-plan.webp" alt="Pomo planning with a pencil and checklist" align="right" width="96">
 
-## Plan your day
+### Plan your day
 
 Capture tasks, organize your schedule, and keep everything in one place.
 
@@ -57,7 +57,7 @@ Capture tasks, organize your schedule, and keep everything in one place.
 
 <img src=".github/assets/readme/pomo-focus.webp" alt="Pomo resting with a mug" align="right" width="96">
 
-## Focus on what matters
+### Focus on what matters
 
 Work through Pomodoro sessions with configurable breaks and deep-focus tracking.
 
@@ -71,7 +71,7 @@ Work through Pomodoro sessions with configurable breaks and deep-focus tracking.
   <sub>Your full focus session: timeline, countdown, and interval controls. <a href=".github/assets/readme/macos-focus.webp">View the static screenshot</a>.</sub>
 </p>
 
-## Meet Pomo, your desktop companion
+### Meet Pomo, your desktop companion
 
 Pomo is an animated 3D mascot that lives on your desktop while you work.
 He follows your focus sessions, rests during breaks, and celebrates completed tasks.
@@ -96,12 +96,12 @@ He follows your focus sessions, rests during breaks, and celebrates completed ta
 
 Enable Pomo in **Settings → Pomo**.
 
-## Work together
+### Work together
 
 Share tasks, keep comments beside the work, and see your team's focus time.
 
 <p align="center">
-  <img src=".github/assets/readme/together-cover.webp" alt="Together: four Pomo teammates connected to one shared task, a generated feature illustration" width="100%">
+  <img src=".github/assets/readme/together-cover.webp" alt="Better together: four Pomo teammates collaborate around a shared plan at one table, a generated feature illustration" width="100%">
   <br>
   <a href=".github/assets/readme/macos-shared-task-comments-full.webp"><img src=".github/assets/readme/macos-shared-task-comments.webp" alt="Actual macOS app: a shared project with Review Pomo storyboards selected and a discussion between four team members" width="100%"></a>
   <br>
@@ -112,7 +112,7 @@ Share tasks, keep comments beside the work, and see your team's focus time.
 
 <img src=".github/assets/readme/pomo-progress.webp" alt="Pomo celebrating progress" align="right" width="96">
 
-## See your progress
+### See your progress
 
 Review your focus time and productivity trends with built-in reports.
 
@@ -124,14 +124,14 @@ Review your focus time and productivity trends with built-in reports.
   <a href=".github/assets/readme/macos-reports.webp"><img src=".github/assets/readme/macos-reports.webp" alt="Original macOS productivity report with weekly focus time, captured in dark mode" width="100%"></a>
 </p>
 
-## More ways to work
+### More ways to work
 
 <details>
 <summary><strong>Explore more features and macOS and iPhone screenshots</strong></summary>
 
 Choose a view for the work in front of you. Click any screenshot for a closer look.
 
-### macOS
+#### macOS
 
 <table>
 <tr>
@@ -148,7 +148,7 @@ Choose a view for the work in front of you. Click any screenshot for a closer lo
 </tr>
 </table>
 
-### iPhone
+#### iPhone
 
 <table>
 <tr>
@@ -163,7 +163,7 @@ Choose a view for the work in front of you. Click any screenshot for a closer lo
 
 </details>
 
-## Open source. Open to you.
+### Open source. Open to you.
 
 Explore the code, run your own instance, or help improve Pomodoist.
 
@@ -172,7 +172,7 @@ Explore the code, run your own instance, or help improve Pomodoist.
 [Contribute](CONTRIBUTING.md) ·
 [AGPL-3.0-only](LICENSE)
 
-## Build from source
+### Build from source
 
 Development roadmap and acceptance status: [Stage 2 distraction protection](docs/distraction-blocking.md).
 
@@ -195,14 +195,14 @@ Detailed build, self-hosting, and platform-specific instructions are available i
 - [Telegram Mini App development](https://pomodoist.com/docs/integrations/telegram-mini-app/#local-development): `make telegram-debug` with real staging accounts and `make telegram-release`
 - [Chrome extension development](https://pomodoist.com/docs/integrations/chrome-extension/#make-commands): `make chrome-debug` and `make chrome-release`
 
-## Contributing
+### Contributing
 
 Bug reports and focused pull requests are welcome. Open an
 [issue](https://github.com/Kabanya/Pomodoist/issues/new) before starting a
 substantial change, read the [contribution guide](CONTRIBUTING.md), and run
 `make check` before submitting a pull request.
 
-## License
+### License
 
 Copyright © 2026 FinchForge LLC.
 

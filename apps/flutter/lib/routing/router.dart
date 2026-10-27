@@ -1,3 +1,6 @@
+import 'package:pomodoist/ui/distractions/widgets/blocking_screen.dart';
+import 'package:pomodoist/data/services/platform/native_link_coordinator_core.dart'
+    show appleWidgetRoute;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,6 +73,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (_isFocusDeepLink(state.uri)) {
         return '/focus';
       }
+      final widgetRoute = appleWidgetRoute(state.uri);
+      if (widgetRoute != null) return widgetRoute;
       return webAppRedirectFor(
         isWeb: kIsWeb,
         signedIn: signedIn(),
@@ -242,6 +247,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => const NoTransitionPage(
               child: KanbanScreen(showMobileTitle: false),
             ),
+          ),
+          GoRoute(
+            path: '/blocking',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: BlockingScreen()),
           ),
           GoRoute(
             path: '/focus',

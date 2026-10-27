@@ -190,6 +190,35 @@ class DriftFocusRepository implements FocusRepository {
       );
 
   @override
+  Future<Result<void>> setPresetDistractionProfile(
+    String presetId,
+    String? profileId,
+  ) => Result.capture(
+    () => ownerBoundTransaction(_db, _syncQueue, () async {
+      if (await _presetById(presetId) == null) {
+        throw StateError('Focus preset is unavailable.');
+      }
+      await _focus.updatePreset(
+        presetId,
+        FocusPresetsCompanion(
+          distractionProfileConfigured: const Value(true),
+          distractionProfileId: Value(profileId),
+          updatedAt: Value(DateTime.now().toUtc()),
+        ),
+      );
+      await _syncQueue.enqueue(
+        type: 'focus.preset.update',
+        clientId: presetId,
+        payload: {
+          'id': presetId,
+          'distractionProfileConfigured': true,
+          'distractionProfileId': profileId,
+        },
+      );
+    }),
+  );
+
+  @override
   Future<Result<void>> deletePreset(String id) =>
       Result.capture<void>(() async {
         final preset = await _presetById(id);
@@ -1010,6 +1039,8 @@ class DriftFocusRepository implements FocusRepository {
     allowPause: row.allowPause,
     strictMode: row.strictMode,
     isDefault: row.isDefault,
+    distractionProfileConfigured: row.distractionProfileConfigured,
+    distractionProfileId: row.distractionProfileId,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   );

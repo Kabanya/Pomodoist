@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		1529BE55B063823E89EC3183 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 245C81F491365933D995082A /* Pods_Runner.framework */; };
+		19FBE0DBA6E7209D170BEF32 /* PomodoistFocusShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* PomodoistFocusShared.swift */; };
 		26A40429532E38D593C06D22 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4E7126E8F678C8FE5A1B9DAD /* Pods_RunnerTests.framework */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
@@ -19,9 +20,11 @@
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
 		82B6177415505F785860A5D3 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8F4EFFB60B73926832DEC3EB /* Localizable.strings */; };
 		8FF571977CE0106EEE36BA8C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8F4EFFB60B73926832DEC3EB /* Localizable.strings */; };
+		9010DAFD395F7930232449C0 /* PomodoistWatchWidgets.appex in Embed Widget Extensions */ = {isa = PBXBuildFile; fileRef = 477D55F2BC8DC28CDAFE6589 /* PomodoistWatchWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		9B84EDFD2577E70CE7C34B26 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 23C8B661E0A19C67C103E727 /* Foundation.framework */; };
 		A10000000000000000000001 /* WatchCompanionHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000017 /* WatchCompanionHost.swift */; };
 		A10000000000000000000002 /* PomodoistWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010 /* PomodoistWatchApp.swift */; };
 		A10000000000000000000003 /* WatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* WatchModels.swift */; };
@@ -43,6 +46,10 @@
 		C30000000000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C30000000000000000000011 /* PrivacyInfo.xcprivacy */; };
 		C30000000000000000000002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C30000000000000000000012 /* PrivacyInfo.xcprivacy */; };
 		C30000000000000000000003 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C30000000000000000000013 /* PrivacyInfo.xcprivacy */; };
+		CB51818941793745EFECAC71 /* PomodoistFocusShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* PomodoistFocusShared.swift */; };
+		DEC61960D65979C5233C4F7F /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8F4EFFB60B73926832DEC3EB /* Localizable.strings */; };
+		E67AE68273550003051FDECF /* PomodoistFocusWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000005 /* PomodoistFocusWidget.swift */; };
+		FED049A9B4AE5197C25E094A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C30000000000000000000013 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,6 +59,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 97C146ED1CF9000F007C117D;
 			remoteInfo = Runner;
+		};
+		58B5239CE41A9F82C18CFACC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EA62F71331C49BB6CB6F646A;
+			remoteInfo = PomodoistWatchWidgets;
 		};
 		A1000000000000000000002A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -77,6 +91,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		125BB149D6C4EDF7D8A5F848 /* Embed Widget Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				9010DAFD395F7930232449C0 /* PomodoistWatchWidgets.appex in Embed Widget Extensions */,
+			);
+			name = "Embed Widget Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9705A1C41CF9048500538489 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -118,6 +143,7 @@
 		0E52D87E90B8306387A42574 /* Pods-Runner.profile-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile-development.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile-development.xcconfig"; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		23C8B661E0A19C67C103E727 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		23EB61E9DFBE1C67DDD383FF /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ../apple/Localization/ru.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
 		245C81F491365933D995082A /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F8DB9340FF022D26780D7B1 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ../apple/Localization/ar.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
@@ -129,6 +155,7 @@
 		3954DDDE16D91955D07750AE /* Pods-RunnerTests.profile-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile-development.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile-development.xcconfig"; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		3CE637449709E0D615A23C58 /* Pods-RunnerTests.debug-runnerstorekitlocal.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug-runnerstorekitlocal.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug-runnerstorekitlocal.xcconfig"; sourceTree = "<group>"; };
+		477D55F2BC8DC28CDAFE6589 /* PomodoistWatchWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PomodoistWatchWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		489B5AC5AE04504A8A33E15B /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "../apple/Localization/pt-BR.lproj/InfoPlist.strings"; sourceTree = SOURCE_ROOT; };
 		4E7126E8F678C8FE5A1B9DAD /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6CE0D55457520EEF736D13F9 /* Pods-Runner.debug-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug-staging.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug-staging.xcconfig"; sourceTree = "<group>"; };
@@ -141,6 +168,7 @@
 		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
 		7A99EC6E1EF2F84788B653DF /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "../apple/Localization/pt-BR.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
+		83CAE50EDD82B1682C62ACE6 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		841449DDAE0BF255F0AF9F04 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ../apple/Localization/ko.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
 		9044980EE007D9224CFF27B1 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
 		952E56B002E2FB88099968EB /* Pods-Runner.release-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release-development.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release-development.xcconfig"; sourceTree = "<group>"; };
@@ -236,6 +264,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D1A1C0DCC3AC0C79725834AB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9B84EDFD2577E70CE7C34B26 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -247,6 +283,15 @@
 				331C807B294A618700263BE5 /* RunnerTests.swift */,
 			);
 			path = RunnerTests;
+			sourceTree = "<group>";
+		};
+		6C818C09ED60C6911FF16CFA /* PomodoistWatchWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				83CAE50EDD82B1682C62ACE6 /* Info.plist */,
+			);
+			name = PomodoistWatchWidgets;
+			path = PomodoistWatchWidgets;
 			sourceTree = "<group>";
 		};
 		6DA0A16309B0AA68ACA30DD8 /* Pods */ = {
@@ -301,6 +346,7 @@
 				A1000000000000000000001E /* PomodoistWatchTests */,
 				A92DAC15C22E0727609646AD /* Frameworks */,
 				6DA0A16309B0AA68ACA30DD8 /* Pods */,
+				6C818C09ED60C6911FF16CFA /* PomodoistWatchWidgets */,
 			);
 			sourceTree = "<group>";
 		};
@@ -312,6 +358,7 @@
 				A1000000000000000000000B /* PomodoistWatch.app */,
 				A1000000000000000000000C /* PomodoistWatchTests.xctest */,
 				B2000000000000000000000A /* PomodoistFocusWidgetExtension.appex */,
+				477D55F2BC8DC28CDAFE6589 /* PomodoistWatchWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -364,6 +411,7 @@
 				A10000000000000000000040 /* WatchConnectivity.framework */,
 				245C81F491365933D995082A /* Pods_Runner.framework */,
 				4E7126E8F678C8FE5A1B9DAD /* Pods_RunnerTests.framework */,
+				CF24D6D2B772A3CEE0296E52 /* watchOS */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -380,6 +428,14 @@
 				C30000000000000000000013 /* PrivacyInfo.xcprivacy */,
 			);
 			name = FocusWidget;
+			sourceTree = "<group>";
+		};
+		CF24D6D2B772A3CEE0296E52 /* watchOS */ = {
+			isa = PBXGroup;
+			children = (
+				23C8B661E0A19C67C103E727 /* Foundation.framework */,
+			);
+			name = watchOS;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -441,10 +497,12 @@
 				A10000000000000000000022 /* Sources */,
 				A10000000000000000000024 /* Frameworks */,
 				A10000000000000000000023 /* Resources */,
+				125BB149D6C4EDF7D8A5F848 /* Embed Widget Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				F326C7FEB1968FF702A40CAD /* PBXTargetDependency */,
 			);
 			name = PomodoistWatch;
 			productName = PomodoistWatch;
@@ -484,6 +542,23 @@
 			name = PomodoistFocusWidgetExtension;
 			productName = PomodoistFocusWidgetExtension;
 			productReference = B2000000000000000000000A /* PomodoistFocusWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		EA62F71331C49BB6CB6F646A /* PomodoistWatchWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2FFF3E677C0F33C619B31FE7 /* Build configuration list for PBXNativeTarget "PomodoistWatchWidgets" */;
+			buildPhases = (
+				AF486B89E1CA6BDF8A8960FE /* Sources */,
+				D1A1C0DCC3AC0C79725834AB /* Frameworks */,
+				86DB080560846FB27B9A0C3B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PomodoistWatchWidgets;
+			productName = PomodoistWatchWidgets;
+			productReference = 477D55F2BC8DC28CDAFE6589 /* PomodoistWatchWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -555,6 +630,7 @@
 				A10000000000000000000020 /* PomodoistWatch */,
 				A10000000000000000000021 /* PomodoistWatchTests */,
 				B20000000000000000000012 /* PomodoistFocusWidgetExtension */,
+				EA62F71331C49BB6CB6F646A /* PomodoistWatchWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -564,6 +640,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		86DB080560846FB27B9A0C3B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DEC61960D65979C5233C4F7F /* Localizable.strings in Resources */,
+				FED049A9B4AE5197C25E094A /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -752,6 +837,7 @@
 				A10000000000000000000004 /* WatchCompanionStore.swift in Sources */,
 				A10000000000000000000003 /* WatchModels.swift in Sources */,
 				A10000000000000000000002 /* PomodoistWatchApp.swift in Sources */,
+				19FBE0DBA6E7209D170BEF32 /* PomodoistFocusShared.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -760,6 +846,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000019 /* PomodoistWatchTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AF486B89E1CA6BDF8A8960FE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CB51818941793745EFECAC71 /* PomodoistFocusShared.swift in Sources */,
+				E67AE68273550003051FDECF /* PomodoistFocusWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -794,6 +889,12 @@
 			isa = PBXTargetDependency;
 			target = B20000000000000000000012 /* PomodoistFocusWidgetExtension */;
 			targetProxy = B20000000000000000000013 /* PBXContainerItemProxy */;
+		};
+		F326C7FEB1968FF702A40CAD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = PomodoistWatchWidgets;
+			target = EA62F71331C49BB6CB6F646A /* PomodoistWatchWidgets */;
+			targetProxy = 58B5239CE41A9F82C18CFACC /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -850,6 +951,39 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		16B4E7518E9A55E28D06DC90 /* Release-Development */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistWatch/PomodoistWatch.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_URL_SCHEME = "pomodoist-dev";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.watchkitapp.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = "Release-Development";
+		};
 		249021D3217E4FDB00AE95B9 /* Profile */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -932,6 +1066,40 @@
 			};
 			name = Profile;
 		};
+		314DB634401BDA6E21941E45 /* Debug-Staging */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistWatch/PomodoistWatch.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_URL_SCHEME = "pomodoist-stg";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.watchkitapp.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = "Debug-Staging";
+		};
 		331C8088294A63A400263BE5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = A3537DBB626CAD9B13F24F18 /* Pods-RunnerTests.debug.xcconfig */;
@@ -981,6 +1149,105 @@
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
 			};
 			name = Profile;
+		};
+		3FAED786B4510A26C938025D /* Profile-Development */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistWatch/PomodoistWatch.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_URL_SCHEME = "pomodoist-dev";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.watchkitapp.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = "Profile-Development";
+		};
+		4ECF8635EC3DAC3BFCF2D3A3 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistWatch/PomodoistWatch.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_DISPLAY_NAME = Pomodoist;
+				POMODOIST_URL_SCHEME = pomodoist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.watchkitapp.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Profile;
+		};
+		6EA90C44E40CD7189CA853BB /* Profile-Staging */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistWatch/PomodoistWatch.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_URL_SCHEME = "pomodoist-stg";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.watchkitapp.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = "Profile-Staging";
 		};
 		7C5A00012EFBD00000A11CE1 /* Debug-RunnerStoreKitLocal */ = {
 			isa = XCBuildConfiguration;
@@ -2273,6 +2540,73 @@
 			};
 			name = "Profile-Staging";
 		};
+		8F3E94677BDF59AF4769DB8F /* Release-Staging */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistWatch/PomodoistWatch.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_URL_SCHEME = "pomodoist-stg";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.watchkitapp.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = "Release-Staging";
+		};
+		95139A7BD048BA6BF90419ED /* Debug-Development */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistWatch/PomodoistWatch.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
+				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_URL_SCHEME = "pomodoist-dev";
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.watchkitapp.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = "Debug-Development";
+		};
 		97C147031CF9000F007C117D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2452,6 +2786,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistWatch/PomodoistWatch.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
@@ -2488,6 +2823,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistWatch/PomodoistWatch.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
@@ -2521,6 +2857,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistWatch/PomodoistWatch.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
@@ -2618,6 +2955,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistWatch/PomodoistWatch.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
@@ -2640,6 +2978,40 @@
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "watchos watchsimulator";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = "Debug-RunnerStoreKitLocal";
+		};
+		A2AFA016AF46F0DA025E45C8 /* Debug-RunnerStoreKitLocal */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistWatch/PomodoistWatch.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_DISPLAY_NAME = Pomodoist;
+				POMODOIST_URL_SCHEME = pomodoist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.watchkitapp.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
@@ -2777,9 +3149,93 @@
 			};
 			name = "Debug-RunnerStoreKitLocal";
 		};
+		D42F2A44E897CF6C895B1CF6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistWatch/PomodoistWatch.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_DISPLAY_NAME = Pomodoist;
+				POMODOIST_URL_SCHEME = pomodoist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.watchkitapp.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		FBCA9F72C898F6CECD3488F7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = PomodoistWatch/PomodoistWatch.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 4VK836929S;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PomodoistWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				POMODOIST_APP_GROUP = group.com.pomodoist;
+				POMODOIST_DISPLAY_NAME = Pomodoist;
+				POMODOIST_URL_SCHEME = pomodoist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.watchkitapp.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		2FFF3E677C0F33C619B31FE7 /* Build configuration list for PBXNativeTarget "PomodoistWatchWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				95139A7BD048BA6BF90419ED /* Debug-Development */,
+				314DB634401BDA6E21941E45 /* Debug-Staging */,
+				D42F2A44E897CF6C895B1CF6 /* Debug */,
+				A2AFA016AF46F0DA025E45C8 /* Debug-RunnerStoreKitLocal */,
+				16B4E7518E9A55E28D06DC90 /* Release-Development */,
+				8F3E94677BDF59AF4769DB8F /* Release-Staging */,
+				FBCA9F72C898F6CECD3488F7 /* Release */,
+				3FAED786B4510A26C938025D /* Profile-Development */,
+				6EA90C44E40CD7189CA853BB /* Profile-Staging */,
+				4ECF8635EC3DAC3BFCF2D3A3 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		331C8087294A63A400263BE5 /* Build configuration list for PBXNativeTarget "RunnerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

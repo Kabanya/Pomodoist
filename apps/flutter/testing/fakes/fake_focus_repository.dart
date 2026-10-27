@@ -22,7 +22,8 @@ class FakeFocusRepository extends StrictFake implements FocusRepository {
   final List<String> watchIntervalsForRunCalls = [];
   final List<DateTime> watchDailyStatsCalls = [];
   final List<CreateFocusPresetInput> createPresetCalls = [];
-  final List<({String id, UpdateFocusPresetInput input})> updatePresetCalls = [];
+  final List<({String id, UpdateFocusPresetInput input})> updatePresetCalls =
+      [];
   final List<String> deletePresetCalls = [];
   final List<String> setDefaultPresetCalls = [];
   final List<String> changeActiveRunPresetCalls = [];
@@ -131,6 +132,24 @@ class FakeFocusRepository extends StrictFake implements FocusRepository {
     return switch (updatePresetError) {
       final error? => Result.error(error, StackTrace.current),
       _ => Result.ok(null),
+    };
+  }
+
+  final List<({String presetId, String? profileId})>
+  setPresetDistractionProfileCalls = [];
+  Object? setPresetDistractionProfileError;
+  @override
+  Future<Result<void>> setPresetDistractionProfile(
+    String presetId,
+    String? profileId,
+  ) async {
+    setPresetDistractionProfileCalls.add((
+      presetId: presetId,
+      profileId: profileId,
+    ));
+    return switch (setPresetDistractionProfileError) {
+      final error? => Result.error(error, StackTrace.current),
+      _ => const Result.ok(null),
     };
   }
 

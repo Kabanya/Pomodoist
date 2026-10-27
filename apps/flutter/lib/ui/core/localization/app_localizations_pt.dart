@@ -1215,7 +1215,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get addTask => 'Adicionar tarefa';
 
   @override
-  String get quickAddHint => 'Criar sincronização amanhã p1 #App @coding 4p';
+  String get quickAddHint => 'Nome da tarefa amanhã p2 #Projeto @etiqueta 2p';
 
   @override
   String couldNotAddTask(Object error) {
@@ -4670,7 +4670,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get distractionBeforeStart =>
-      'Choose before starting Focus. Categories and exceptions can be corrected at any time.';
+      'O perfil selecionado aplica-se ao próximo Focus. As categorias e exceções podem ser alteradas a qualquer momento.';
 
   @override
   String get distractionNone => 'No blocking profile';
@@ -4712,11 +4712,11 @@ class AppLocalizationsPt extends AppLocalizations {
       'Optional local events, with repeated attempts combined. Usage time and page content are not recorded.';
 
   @override
-  String get distractionAutomatic => 'Automatic categories · Pro';
+  String get distractionAutomatic => 'Categorias automáticas';
 
   @override
   String get distractionAutomaticDescription =>
-      'Public resource identifiers are searched on the web. New successful searches share your AI quota with task analysis; cache hits are free.';
+      'A pesquisa determina a categoria. A escolha manual tem prioridade.';
 
   @override
   String get distractionLocal => 'Local Focus · this computer';
@@ -4889,6 +4889,60 @@ class AppLocalizationsPt extends AppLocalizations {
   String distractionIncognito(String status) {
     return 'Incognito access: $status';
   }
+
+  @override
+  String get blockingTitle => 'Bloqueios';
+
+  @override
+  String get blockingDescription =>
+      'O seu ritmo de trabalho e os seus limites no mesmo lugar.';
+
+  @override
+  String blockingRhythm(int work, int short, int long, int count) {
+    return '$work min de foco · $short min de pausa · $long min de pausa longa após $count intervalos';
+  }
+
+  @override
+  String blockingSharedPresets(String presets) {
+    return 'Usado por: $presets. As alterações do perfil aplicam-se a todos.';
+  }
+
+  @override
+  String get blockingProfileMissing =>
+      'O perfil atribuído está indisponível. Recarregue ou escolha outro.';
+
+  @override
+  String get blockingWhatToClose => 'O que fechar';
+
+  @override
+  String get blockingWhatToKeep => 'O que manter disponível';
+
+  @override
+  String get blockingBehavior => 'Comportamento do perfil';
+
+  @override
+  String get blockingApps => 'Aplicativos';
+
+  @override
+  String get blockingEnabled => 'Ativada';
+
+  @override
+  String get blockingDisabled => 'Desativada';
+
+  @override
+  String get blockingDevices => 'Este computador e Chrome';
+
+  @override
+  String get blockingDeviceDetails => 'Dispositivos e privacidade';
+
+  @override
+  String get blockingSaving => 'A guardar…';
+
+  @override
+  String get blockingCurrentFocus => 'Ir ao Focus atual';
+
+  @override
+  String get blockingReady => 'Pronto para começar';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -5932,7 +5986,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get distractionBeforeStart =>
-      'Choose before starting Focus. Categories and exceptions can be corrected at any time.';
+      'O perfil selecionado se aplica ao próximo Focus. As categorias e exceções podem ser alteradas a qualquer momento.';
 
   @override
   String get distractionNone => 'No blocking profile';
@@ -5974,11 +6028,11 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
       'Optional local events, with repeated attempts combined. Usage time and page content are not recorded.';
 
   @override
-  String get distractionAutomatic => 'Automatic categories · Pro';
+  String get distractionAutomatic => 'Categorias automáticas';
 
   @override
   String get distractionAutomaticDescription =>
-      'Public resource identifiers are searched on the web. New successful searches share your AI quota with task analysis; cache hits are free.';
+      'A pesquisa determina a categoria. A escolha manual tem prioridade.';
 
   @override
   String get distractionLocal => 'Local Focus · this computer';
@@ -6151,4 +6205,58 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String distractionIncognito(String status) {
     return 'Incognito access: $status';
   }
+
+  @override
+  String get blockingTitle => 'Bloqueios';
+
+  @override
+  String get blockingDescription =>
+      'Seu ritmo de trabalho e seus limites no mesmo lugar.';
+
+  @override
+  String blockingRhythm(int work, int short, int long, int count) {
+    return '$work min de foco · $short min de pausa · $long min de pausa longa após $count intervalos';
+  }
+
+  @override
+  String blockingSharedPresets(String presets) {
+    return 'Usado por: $presets. As alterações do perfil valem para todos.';
+  }
+
+  @override
+  String get blockingProfileMissing =>
+      'O perfil atribuído está indisponível. Recarregue ou escolha outro.';
+
+  @override
+  String get blockingWhatToClose => 'O que fechar';
+
+  @override
+  String get blockingWhatToKeep => 'O que manter disponível';
+
+  @override
+  String get blockingBehavior => 'Comportamento do perfil';
+
+  @override
+  String get blockingApps => 'Aplicativos';
+
+  @override
+  String get blockingEnabled => 'Ativada';
+
+  @override
+  String get blockingDisabled => 'Desativada';
+
+  @override
+  String get blockingDevices => 'Este computador e Chrome';
+
+  @override
+  String get blockingDeviceDetails => 'Dispositivos e privacidade';
+
+  @override
+  String get blockingSaving => 'Salvando…';
+
+  @override
+  String get blockingCurrentFocus => 'Ir ao Focus atual';
+
+  @override
+  String get blockingReady => 'Pronto para começar';
 }

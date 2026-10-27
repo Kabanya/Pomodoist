@@ -1,3 +1,5 @@
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import '../../../../testing/fakes/fake_focus_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/data/repositories/distractions/live_focus_repository.dart';
 import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
@@ -37,6 +39,118 @@ Map<String, dynamic> session(DateTime time, {bool paused = false}) => {
   },
 };
 void main() {
+  for (final paused in [false, true]) {
+    for (final profileId in <String?>['study', null]) {
+      test('next profile $profileId can be saved during shared Focus paused=$paused', () async {
+        final time = DateTime.utc(2026, 10, 26);
+        final local = FakeFocusRepository();
+        final repo = LiveFocusRepository(
+          local: local,
+          owner: 'u',
+          deviceId: 'd',
+          preferences: null,
+          clock: () => time,
+          remote: (_) async => throw StateError('must not change shared Focus'),
+        );
+        addTearDown(repo.dispose);
+        repo.profiles = [
+          for (final id in ['work', 'study'])
+            DistractionProfile.fromJson({'id': id, 'name': id}),
+        ];
+        repo.session = session(time, paused: paused);
+        final before = repo.session;
+        final protection = repo.protection;
+        (await repo.setPresetDistractionProfile('classic', profileId)).getOrThrow();
+        expect(local.setPresetDistractionProfileCalls.single, (
+          presetId: 'classic', profileId: profileId,
+        ));
+        expect(repo.session, same(before));
+        expect(repo.selectedProfile?.id, 'work');
+        expect(repo.protection, protection);
+        expect(repo.pendingExitAction, isNull);
+      });
+    }
+  }
+
+  for (final configured in [false, true]) {
+    for (final binding in <String?>['study', null]) {
+      for (final input in [
+        const StartFocusRunInput(),
+        const StartFocusRunInput(presetId: 'classic'),
+        const StartFocusRunInput(
+          presetId: 'classic',
+          taskId: 'task',
+          projectId: 'project',
+        ),
+      ]) {
+        test(
+          'shared start resolves configured=$configured binding=$binding task=${input.taskId}',
+          () async {
+            final time = DateTime.utc(2026, 10, 26);
+            final local = FakeFocusRepository()
+              ..presets = [
+                FocusPresetItem(
+                  id: 'classic',
+                  userId: 'u',
+                  name: 'Classic',
+                  workSeconds: 1500,
+                  shortBreakSeconds: 300,
+                  longBreakSeconds: 900,
+                  intervalsBeforeLongBreak: 4,
+                  autoStartBreaks: false,
+                  autoStartWork: false,
+                  allowPause: true,
+                  strictMode: false,
+                  isDefault: true,
+                  createdAt: time,
+                  updatedAt: time,
+                  distractionProfileConfigured: configured,
+                  distractionProfileId: binding,
+                ),
+              ];
+            Map? payload;
+            final repo = LiveFocusRepository(
+              local: local,
+              owner: 'u',
+              deviceId: 'd',
+              preferences: null,
+              remote: (command) async {
+                payload = command['payload'] as Map;
+                return {
+                  'session': {
+                    ...session(time),
+                    'profileId': payload!['profileId'],
+                  },
+                };
+              },
+            );
+            addTearDown(repo.dispose);
+            repo.online = true;
+            repo.selectedProfileId = 'work';
+            repo.profiles = [
+              for (final id in ['work', 'study'])
+                DistractionProfile.fromJson({'id': id, 'name': id}),
+            ];
+            (await repo.startRun(input)).getOrThrow();
+            expect(payload!['profileId'], configured ? binding : 'work');
+            expect(
+              (payload!['preset'] as Map).containsKey(
+                'distractionProfileConfigured',
+              ),
+              false,
+            );
+            expect(
+              (payload!['preset'] as Map).containsKey('distractionProfileId'),
+              false,
+            );
+            expect(repo.selectedProfile?.id, configured ? binding : 'work');
+            expect(local.startRunCalls, isEmpty);
+          },
+        );
+      }
+    }
+  }
+
   test(
     'shared protection expires while disconnected and cannot renew paused lease',
     () async {

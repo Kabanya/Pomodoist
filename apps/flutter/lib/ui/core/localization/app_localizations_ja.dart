@@ -1163,7 +1163,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get addTask => 'タスクを追加';
 
   @override
-  String get quickAddHint => '同期機能を作る 明日 p1 #App @coding 4p';
+  String get quickAddHint => 'タスク名 明日 p2 #プロジェクト @ラベル 2p';
 
   @override
   String couldNotAddTask(Object error) {
@@ -4486,7 +4486,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get distractionBeforeStart =>
-      'Choose before starting Focus. Categories and exceptions can be corrected at any time.';
+      '選択したプロファイルは次のFocusに適用されます。カテゴリと例外はいつでも変更できます。';
 
   @override
   String get distractionNone => 'No blocking profile';
@@ -4528,11 +4528,10 @@ class AppLocalizationsJa extends AppLocalizations {
       'Optional local events, with repeated attempts combined. Usage time and page content are not recorded.';
 
   @override
-  String get distractionAutomatic => 'Automatic categories · Pro';
+  String get distractionAutomatic => '自動カテゴリ';
 
   @override
-  String get distractionAutomaticDescription =>
-      'Public resource identifiers are searched on the web. New successful searches share your AI quota with task analysis; cache hits are free.';
+  String get distractionAutomaticDescription => '検索でカテゴリを判定します。手動の選択が優先されます。';
 
   @override
   String get distractionLocal => 'Local Focus · this computer';
@@ -4705,4 +4704,57 @@ class AppLocalizationsJa extends AppLocalizations {
   String distractionIncognito(String status) {
     return 'Incognito access: $status';
   }
+
+  @override
+  String get blockingTitle => 'ブロック';
+
+  @override
+  String get blockingDescription => '作業リズムと制限を一か所で管理。';
+
+  @override
+  String blockingRhythm(int work, int short, int long, int count) {
+    return '集中$work分 · 休憩$short分 · $count回ごとに$long分の長い休憩';
+  }
+
+  @override
+  String blockingSharedPresets(String presets) {
+    return '使用中のプリセット：$presets。プロファイルの変更はすべてに適用されます。';
+  }
+
+  @override
+  String get blockingProfileMissing =>
+      '設定されたプロファイルを利用できません。再読み込みするか別のものを選んでください。';
+
+  @override
+  String get blockingWhatToClose => '閉じるもの';
+
+  @override
+  String get blockingWhatToKeep => '利用を許可するもの';
+
+  @override
+  String get blockingBehavior => 'プロファイルの動作';
+
+  @override
+  String get blockingApps => 'アプリ';
+
+  @override
+  String get blockingEnabled => '有効';
+
+  @override
+  String get blockingDisabled => '無効';
+
+  @override
+  String get blockingDevices => 'このコンピューターとChrome';
+
+  @override
+  String get blockingDeviceDetails => 'デバイスとプライバシー';
+
+  @override
+  String get blockingSaving => '保存中…';
+
+  @override
+  String get blockingCurrentFocus => '現在のFocusへ';
+
+  @override
+  String get blockingReady => '開始の準備完了';
 }

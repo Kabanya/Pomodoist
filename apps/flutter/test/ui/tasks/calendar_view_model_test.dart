@@ -107,6 +107,38 @@ ProviderContainer container(
 
 void main() {
   test(
+    'first calendar visit uses routine and later visits restore choices',
+    () async {
+      final preferences = FakePreferences();
+      final first = container(FakeTasks(), preferences);
+      addTearDown(first.dispose);
+      final firstSub = first.listen(calendarViewModelProvider, (_, _) {});
+      addTearDown(firstSub.close);
+      await pumpEventQueue();
+
+      final initial = first.read(calendarViewModelProvider);
+      expect(initial.settingsLoaded, isTrue);
+      expect(initial.settings.mode, CalendarMode.routine);
+      expect(initial.settings.mobileMode, CalendarMobileMode.routine);
+
+      final vm = first.read(calendarViewModelProvider.notifier);
+      await vm.setMode(CalendarMode.week);
+      await vm.setMobileMode(CalendarMobileMode.day);
+
+      final reopened = container(FakeTasks(), preferences);
+      addTearDown(reopened.dispose);
+      final reopenedSub = reopened.listen(calendarViewModelProvider, (_, _) {});
+      addTearDown(reopenedSub.close);
+      await pumpEventQueue();
+
+      final restored = reopened.read(calendarViewModelProvider);
+      expect(restored.settingsLoaded, isTrue);
+      expect(restored.settings.mode, CalendarMode.week);
+      expect(restored.settings.mobileMode, CalendarMobileMode.day);
+    },
+  );
+
+  test(
     'mobile mode persists independently and failed writes keep the last mode',
     () async {
       final preferences = FakePreferences();

@@ -510,7 +510,7 @@
   "menuTooltip": "메뉴",
   "localUser": "로컬 사용자",
   "addTask": "작업 추가",
-  "quickAddHint": "동기화 기능 만들기 내일 p1 #App @coding 4p",
+  "quickAddHint": "작업 이름 내일 p2 #프로젝트 @라벨 2p",
   "couldNotAddTask": "작업을 추가하지 못했습니다: {error}",
   "@couldNotAddTask": {
     "placeholders": {
@@ -2082,7 +2082,7 @@
   "distractionTitle": "Distraction blocking",
   "distractionDescription": "Choose what to block during Focus. Unknown resources stay allowed until you assign a category.",
   "distractionProfile": "Protection profile",
-  "distractionBeforeStart": "Choose before starting Focus. Categories and exceptions can be corrected at any time.",
+  "distractionBeforeStart": "선택한 프로필은 다음 Focus에 적용됩니다. 카테고리와 예외는 언제든지 수정할 수 있습니다.",
   "distractionNone": "No blocking profile",
   "distractionAddProfile": "Add profile",
   "distractionEditProfile": "Edit profile",
@@ -2095,8 +2095,8 @@
   "distractionDiscoveryPrivacy": "Only foreground app identities and product names are stored locally. No disk scan, document names or window titles.",
   "distractionAttempts": "Save distraction attempts",
   "distractionAttemptsPrivacy": "Optional local events, with repeated attempts combined. Usage time and page content are not recorded.",
-  "distractionAutomatic": "Automatic categories · Pro",
-  "distractionAutomaticDescription": "Public resource identifiers are searched on the web. New successful searches share your AI quota with task analysis; cache hits are free.",
+  "distractionAutomatic": "자동 카테고리",
+  "distractionAutomaticDescription": "검색으로 카테고리를 정합니다. 수동 선택이 우선합니다.",
   "distractionLocal": "Local Focus · this computer",
   "distractionShared": "Shared Focus · connected",
   "distractionOffline": "Offline · protection ends at the confirmed deadline",
@@ -2152,6 +2152,45 @@
   "@distractionIncognito": {
     "placeholders": {
       "status": {
+        "type": "String"
+      }
+    }
+  },
+  "blockingTitle": "차단",
+  "blockingDescription": "작업 리듬과 제한을 한곳에서 관리하세요.",
+  "blockingRhythm": "집중 {work}분 · 휴식 {short}분 · {count}회마다 긴 휴식 {long}분",
+  "blockingSharedPresets": "사용 중인 프리셋: {presets}. 프로필 변경은 모두에 적용됩니다.",
+  "blockingProfileMissing": "지정한 프로필을 사용할 수 없습니다. 다시 불러오거나 다른 프로필을 선택하세요.",
+  "blockingWhatToClose": "닫을 항목",
+  "blockingWhatToKeep": "계속 사용할 항목",
+  "blockingBehavior": "프로필 동작",
+  "blockingApps": "앱",
+  "blockingEnabled": "사용",
+  "blockingDisabled": "사용 안 함",
+  "blockingDevices": "이 컴퓨터와 Chrome",
+  "blockingDeviceDetails": "기기 및 개인정보",
+  "blockingSaving": "저장 중…",
+  "blockingCurrentFocus": "진행 중인 Focus로",
+  "blockingReady": "시작 준비 완료",
+  "@blockingRhythm": {
+    "placeholders": {
+      "work": {
+        "type": "int"
+      },
+      "short": {
+        "type": "int"
+      },
+      "long": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@blockingSharedPresets": {
+    "placeholders": {
+      "presets": {
         "type": "String"
       }
     }

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct WatchRootView: View {
   @EnvironmentObject private var store: WatchCompanionStore
+  @State private var widgetScreen: String?
 
   var body: some View {
     TabView(selection: $store.selectedTab) {
@@ -12,6 +13,82 @@ struct WatchRootView: View {
       BrowseTabView()
         .tag(2)
     }
+    .onOpenURL { url in
+      guard url.scheme == pomodoistFocusURLScheme else { return }
+      if url.host == "focus" { store.selectedTab = 0 }
+      if url.host == "widget", let screen = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+        .queryItems?.first(where: { $0.name == "screen" })?.value,
+        ["tasks", "habits", "day", "progress"].contains(screen) {
+        widgetScreen = screen
+      }
+    }
+    .sheet(isPresented: Binding(get: { widgetScreen != nil }, set: { if !$0 { widgetScreen = nil } })) {
+      NavigationStack {
+        WatchWidgetDetails(screen: widgetScreen ?? "tasks")
+          .environmentObject(store)
+      }
+    }
+  }
+}
+
+private struct WatchWidgetDetails: View {
+  @EnvironmentObject private var store: WatchCompanionStore
+  let screen: String
+  private var data: PomodoistWidgetSnapshot? {
+    let value = store.snapshot.widgets ?? PomodoistFocusSnapshotStore().load().widgets
+    return value?.isCurrent(on: Date()) == true ? value : nil
+  }
+  private var title: String {
+    pomodoistLocalized(screen == "habits" ? "Habits" : screen == "progress" ? "Progress" : screen == "day" ? "Day" : "Tasks")
+  }
+
+  var body: some View {
+    List {
+      if screen == "tasks" {
+        ForEach(store.snapshot.tasks.today.isEmpty ? store.snapshot.tasks.inbox : store.snapshot.tasks.today) { task in
+          WatchTaskRow(task: task)
+        }
+      } else if let data {
+        if screen == "habits" {
+          Text("\(data.completedHabits) / \(data.totalHabits)").font(.title.bold()).monospacedDigit()
+          ForEach(data.habits) { habit in
+            Label {
+              VStack(alignment: .leading) {
+                Text(habit.title)
+                Text("\(habit.count) / \(habit.target)").font(.caption).foregroundStyle(.secondary)
+              }
+            } icon: { Image(systemName: habit.completed ? "checkmark.circle.fill" : "circle") }
+          }
+        } else if screen == "day" {
+          ForEach(data.agenda) { task in
+            VStack(alignment: .leading) {
+              if let date = task.start.flatMap(PomodoistDateCoding.date) {
+                Text(date, style: .time).font(.caption).foregroundStyle(.secondary)
+              }
+              Text(task.title)
+            }
+          }
+          if data.agenda.isEmpty { Text(pomodoistLocalized("Nothing scheduled")) }
+        } else {
+          Text(pomodoistLocalized("Focus this week")).font(.caption)
+          Text(Duration.seconds(data.focusSeconds).formatted(.units(allowed: [.hours, .minutes])))
+            .font(.title2.bold()).monospacedDigit()
+          Text(String(format: pomodoistLocalized("%d tasks today"), data.completedTasks))
+          ForEach(data.week) { day in
+            if let date = day.date {
+              HStack {
+                Text(date, format: .dateTime.weekday(.abbreviated))
+                Spacer()
+                Text(Duration.seconds(max(0, day.focusSeconds)).formatted(.units(allowed: [.hours, .minutes])))
+                  .font(.caption).foregroundStyle(.secondary)
+              }
+            }
+          }
+        }
+      } else {
+        Text(pomodoistLocalized("Open Pomodoist to update"))
+      }
+    }.navigationTitle(title)
   }
 }
 

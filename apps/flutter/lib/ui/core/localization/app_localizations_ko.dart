@@ -1168,7 +1168,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get addTask => '작업 추가';
 
   @override
-  String get quickAddHint => '동기화 기능 만들기 내일 p1 #App @coding 4p';
+  String get quickAddHint => '작업 이름 내일 p2 #프로젝트 @라벨 2p';
 
   @override
   String couldNotAddTask(Object error) {
@@ -4497,7 +4497,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get distractionBeforeStart =>
-      'Choose before starting Focus. Categories and exceptions can be corrected at any time.';
+      '선택한 프로필은 다음 Focus에 적용됩니다. 카테고리와 예외는 언제든지 수정할 수 있습니다.';
 
   @override
   String get distractionNone => 'No blocking profile';
@@ -4539,11 +4539,11 @@ class AppLocalizationsKo extends AppLocalizations {
       'Optional local events, with repeated attempts combined. Usage time and page content are not recorded.';
 
   @override
-  String get distractionAutomatic => 'Automatic categories · Pro';
+  String get distractionAutomatic => '자동 카테고리';
 
   @override
   String get distractionAutomaticDescription =>
-      'Public resource identifiers are searched on the web. New successful searches share your AI quota with task analysis; cache hits are free.';
+      '검색으로 카테고리를 정합니다. 수동 선택이 우선합니다.';
 
   @override
   String get distractionLocal => 'Local Focus · this computer';
@@ -4716,4 +4716,57 @@ class AppLocalizationsKo extends AppLocalizations {
   String distractionIncognito(String status) {
     return 'Incognito access: $status';
   }
+
+  @override
+  String get blockingTitle => '차단';
+
+  @override
+  String get blockingDescription => '작업 리듬과 제한을 한곳에서 관리하세요.';
+
+  @override
+  String blockingRhythm(int work, int short, int long, int count) {
+    return '집중 $work분 · 휴식 $short분 · $count회마다 긴 휴식 $long분';
+  }
+
+  @override
+  String blockingSharedPresets(String presets) {
+    return '사용 중인 프리셋: $presets. 프로필 변경은 모두에 적용됩니다.';
+  }
+
+  @override
+  String get blockingProfileMissing =>
+      '지정한 프로필을 사용할 수 없습니다. 다시 불러오거나 다른 프로필을 선택하세요.';
+
+  @override
+  String get blockingWhatToClose => '닫을 항목';
+
+  @override
+  String get blockingWhatToKeep => '계속 사용할 항목';
+
+  @override
+  String get blockingBehavior => '프로필 동작';
+
+  @override
+  String get blockingApps => '앱';
+
+  @override
+  String get blockingEnabled => '사용';
+
+  @override
+  String get blockingDisabled => '사용 안 함';
+
+  @override
+  String get blockingDevices => '이 컴퓨터와 Chrome';
+
+  @override
+  String get blockingDeviceDetails => '기기 및 개인정보';
+
+  @override
+  String get blockingSaving => '저장 중…';
+
+  @override
+  String get blockingCurrentFocus => '진행 중인 Focus로';
+
+  @override
+  String get blockingReady => '시작 준비 완료';
 }

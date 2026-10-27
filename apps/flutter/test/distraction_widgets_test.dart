@@ -1,3 +1,9 @@
+import 'package:pomodoist/domain/models/billing/billing_models.dart';
+import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
+import 'package:pomodoist/ui/billing/view_models/billing_view_model.dart';
+import 'package:pomodoist/ui/focus/view_models/focus_view_model.dart';
+import 'package:pomodoist/ui/distractions/widgets/blocking_screen.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -31,6 +37,8 @@ final _youtube = ResourceAssignment.fromJson({
 
 class _Commands implements DistractionRepository {
   _Commands(this.state);
+  @override
+  Future<void> reload() async {}
   @override
   DistractionSettingsState state;
   final _changes = StreamController<void>.broadcast(sync: true);
@@ -94,6 +102,48 @@ class _Commands implements DistractionRepository {
   }
 }
 
+class _DeskFocus extends FocusViewModel {
+  @override
+  FocusState build() {
+    final preset = FocusPresetItem(
+      id: 'classic',
+      userId: 'u',
+      name: 'Classic',
+      workSeconds: 1500,
+      shortBreakSeconds: 300,
+      longBreakSeconds: 900,
+      intervalsBeforeLongBreak: 4,
+      autoStartBreaks: false,
+      autoStartWork: false,
+      allowPause: true,
+      strictMode: false,
+      isDefault: true,
+      createdAt: DateTime.utc(2026),
+      updatedAt: DateTime.utc(2026),
+    );
+    return FocusState(
+      run: null,
+      interval: null,
+      presets: [preset],
+      intervals: [],
+      remaining: null,
+      viewMode: FocusViewMode.full,
+      timerVisualStyle: FocusTimerVisualStyle.circle,
+      sessionDisplay: FocusSessionDisplay.compact,
+      effectivePreset: preset,
+      activePreset: null,
+      loading: false,
+      loadError: null,
+    );
+  }
+}
+
+class _DeskBilling extends BillingViewModel {
+  @override
+  BillingState build() =>
+      BillingState(loading: false, accountEntitlementActive: true);
+}
+
 Future<void> _mount(
   WidgetTester tester,
   _Commands commands,
@@ -110,6 +160,8 @@ Future<void> _mount(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        focusViewModelProvider.overrideWith(_DeskFocus.new),
+        billingViewModelProvider.overrideWith(_DeskBilling.new),
         distractionCommandsProvider.overrideWithValue(commands),
         distractionViewModelProvider.overrideWith((ref) {
           final subscription = commands.changes.listen(
@@ -139,11 +191,7 @@ Future<void> _mount(
   await tester.pumpAndSettle();
 }
 
-Widget _settings() => const Scaffold(
-  body: SingleChildScrollView(
-    child: Padding(padding: EdgeInsets.all(24), child: DistractionSettings()),
-  ),
-);
+Widget _settings() => const Scaffold(body: BlockingScreen());
 
 Finder _button(String text) => find.widgetWithText(ShadButton, text);
 
@@ -175,7 +223,7 @@ void main() {
             brightness: brightness,
             reduceMotion: reduceMotion,
           );
-          expect(find.text('Distraction blocking'), findsOneWidget);
+          expect(find.text('Blocking'), findsOneWidget);
           expect(tester.takeException(), isNull);
           await tester.tap(_button('Edit profile'));
           await tester.pumpAndSettle();
@@ -186,12 +234,20 @@ void main() {
             matching: find.byType(EditableText),
           );
           await tester.enterText(name, 'Deep work');
-          await tester.tap(find.widgetWithText(FilterChip, 'Social media'));
+          await tester.tap(
+            find.descendant(
+              of: find.byType(AlertDialog),
+              matching: find.widgetWithText(FilterChip, 'Social media'),
+            ),
+          );
           await tester.pump();
           expect(
             tester
                 .widget<FilterChip>(
-                  find.widgetWithText(FilterChip, 'Social media'),
+                  find.descendant(
+                    of: find.byType(AlertDialog),
+                    matching: find.widgetWithText(FilterChip, 'Social media'),
+                  ),
                 )
                 .selected,
             isTrue,
@@ -401,6 +457,9 @@ void main() {
         brightness: Brightness.dark,
         reduceMotion: true,
       );
+      await tester.ensureVisible(_button('Resources'));
+      await tester.tap(_button('Resources'));
+      await tester.pumpAndSettle();
       final category = find.byType(DropdownButtonFormField<String>).at(1);
       await tester.ensureVisible(category);
       await tester.tap(category);
@@ -450,6 +509,9 @@ void main() {
             .onChanged,
         isNull,
       );
+      await tester.ensureVisible(find.text('Profile behavior'));
+      await tester.tap(find.text('Profile behavior'));
+      await tester.pumpAndSettle();
       expect(
         tester
             .widget<DropdownButtonFormField<int>>(
@@ -458,15 +520,16 @@ void main() {
             .onChanged,
         isNull,
       );
+      await tester.ensureVisible(find.text('Devices and privacy'));
+      await tester.tap(find.text('Devices and privacy'));
+      await tester.pumpAndSettle();
       await tester.ensureVisible(_button('Join shared Focus'));
       await tester.tap(_button('Join shared Focus'));
       await tester.pump();
       await tester.tap(_button('Finish local Focus'));
       await tester.pump();
-      await tester.ensureVisible(_button('End Focus on all devices'));
-      await tester.tap(_button('End Focus on all devices'));
-      await tester.pump();
-      expect(commands.calls, ['joinShared', 'finishLocal', 'requestExit']);
+      expect(_button('Go to current Focus'), findsOneWidget);
+      expect(commands.calls, ['joinShared', 'finishLocal']);
       expect(commands.configurations, isEmpty);
       expect(tester.takeException(), isNull);
     },
@@ -506,7 +569,7 @@ void main() {
         commands,
         const FocusExitHost(child: Scaffold(body: DistractionSettings())),
       );
-      expect(find.text('Distraction blocking'), findsNothing);
+      expect(find.text('Blocking'), findsNothing);
       expect(find.byType(Chip), findsNothing);
       expect(find.text('End strict Focus?'), findsNothing);
       expect(tester.takeException(), isNull);

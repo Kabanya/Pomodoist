@@ -60,6 +60,7 @@ class LiveFocusRepository implements FocusRepository {
       disposed = false,
       detached = false;
   bool discovery = false, collectAttempts = false;
+  String? localProfileId;
   String? selectedProfileId, error, pendingExitAction, pendingAdoptionRunId;
   DateTime? localExitAt;
   int strictExitSeconds = 60;
@@ -92,8 +93,8 @@ class LiveFocusRepository implements FocusRepository {
       : null;
   DistractionProfile? get selectedProfile {
     final id = localMode
-        ? selectedProfileId
-        : session?['profileId'] ?? selectedProfileId;
+        ? localProfileId
+        : (sharedActive ? session!['profileId'] as String? : selectedProfileId);
     for (final p in profiles) {
       if (p.id == id && !p.isDeleted) return p;
     }
@@ -165,6 +166,9 @@ class LiveFocusRepository implements FocusRepository {
             )
             .toList();
         selectedProfileId = data['selectedProfileId'];
+        localProfileId = data.containsKey('localProfileId')
+            ? data['localProfileId']
+            : selectedProfileId;
         strictExitSeconds = data['strictExitSeconds'] == 0 ? 0 : 60;
         discovery = data['discovery'] == true;
         collectAttempts = data['collectAttempts'] == true;
@@ -280,7 +284,7 @@ class LiveFocusRepository implements FocusRepository {
   }
 
   Future<void> persist() async {
-    await preferences?.setString(
+    final saved = await preferences?.setString(
       _key,
       jsonEncode({
         'pendingSettings': pendingSettings,
@@ -289,6 +293,7 @@ class LiveFocusRepository implements FocusRepository {
         'profiles': profiles.map((p) => p.json).toList(),
         'assignments': assignments.map((p) => p.json).toList(),
         'selectedProfileId': selectedProfileId,
+        'localProfileId': localProfileId,
         'strictExitSeconds': strictExitSeconds,
         'discovery': discovery,
         'collectAttempts': collectAttempts,
@@ -304,6 +309,9 @@ class LiveFocusRepository implements FocusRepository {
         'pendingExitAction': pendingExitAction,
       }),
     );
+    if (saved == false) {
+      throw StateError('Protection settings could not be saved.');
+    }
     notify();
   }
 
@@ -468,7 +476,7 @@ class LiveFocusRepository implements FocusRepository {
             await persist();
             await command('start', {
               'preset': snapshot,
-              'profileId': selectedProfileId,
+              'profileId': localProfileId,
               'strictExitSeconds': strictExitSeconds,
               'adopt': {
                 ...?await adoptionHistory?.call(run.id, interval.id),
@@ -550,24 +558,47 @@ class LiveFocusRepository implements FocusRepository {
     await persist();
   }
 
+  Future<void> _saveSettings(void Function() change) async {
+    final previous = _tail;
+    final done = Completer<void>();
+    _tail = done.future;
+    await previous;
+    final oldProfiles = profiles, oldAssignments = assignments;
+    final oldPending = List<Map<String, dynamic>>.from(pendingSettings);
+    try {
+      change();
+      await persist();
+    } on Object {
+      profiles = oldProfiles;
+      assignments = oldAssignments;
+      pendingSettings
+        ..clear()
+        ..addAll(oldPending);
+      rethrow;
+    } finally {
+      done.complete();
+    }
+  }
+
   Future<void> saveProfile(DistractionProfile profile) async {
     if (online && remote != null) {
       await command('profileUpsert', {'profile': profile.json});
     } else {
-      pendingSettings.removeWhere(
-        (p) =>
-            p['action'] == 'profileUpsert' &&
-            p['payload']['profile']['id'] == profile.id,
-      );
-      pendingSettings.add({
-        'action': 'profileUpsert',
-        'payload': {'profile': profile.json},
+      await _saveSettings(() {
+        pendingSettings.removeWhere(
+          (p) =>
+              p['action'] == 'profileUpsert' &&
+              p['payload']['profile']['id'] == profile.id,
+        );
+        pendingSettings.add({
+          'action': 'profileUpsert',
+          'payload': {'profile': profile.json},
+        });
+        profiles = [
+          ...profiles.where((p) => p.id != profile.id),
+          if (!profile.isDeleted) profile,
+        ];
       });
-      profiles = [
-        ...profiles.where((p) => p.id != profile.id),
-        if (!profile.isDeleted) profile,
-      ];
-      await persist();
     }
   }
 
@@ -575,24 +606,26 @@ class LiveFocusRepository implements FocusRepository {
     if (online && remote != null) {
       await command('assignmentUpsert', {'assignment': value.json});
     } else {
-      pendingSettings.removeWhere(
-        (p) =>
-            p['action'] == 'assignmentUpsert' &&
-            p['payload']['assignment']['id'] == value.id &&
-            p['payload']['assignment']['kind'] == value.kind,
-      );
-      pendingSettings.add({
-        'action': 'assignmentUpsert',
-        'payload': {'assignment': value.json},
+      await _saveSettings(() {
+        final old = assignments
+            .where((a) => a.kind == value.kind && a.id == value.id)
+            .firstOrNull;
+        final merged = mergeAssignment(old, value);
+        pendingSettings.removeWhere(
+          (p) =>
+              p['action'] == 'assignmentUpsert' &&
+              p['payload']['assignment']['id'] == value.id &&
+              p['payload']['assignment']['kind'] == value.kind,
+        );
+        pendingSettings.add({
+          'action': 'assignmentUpsert',
+          'payload': {'assignment': merged.json},
+        });
+        assignments = [
+          ...assignments.where((a) => a.kind != value.kind || a.id != value.id),
+          merged,
+        ];
       });
-      final old = assignments
-          .where((a) => a.kind == value.kind && a.id == value.id)
-          .firstOrNull;
-      assignments = [
-        ...assignments.where((a) => a.kind != value.kind || a.id != value.id),
-        mergeAssignment(old, value),
-      ];
-      await persist();
     }
   }
 
@@ -664,7 +697,7 @@ class LiveFocusRepository implements FocusRepository {
             'run': runWire(_localRun!),
             'interval': intervalWire(_localInterval!),
             'preset': localPreset ?? {'strictMode': strict},
-            'profileId': selectedProfileId,
+            'profileId': localProfileId,
             'strictExitSeconds': strictExitSeconds,
             'protectionExpiresAt': protection?['expiresAt'],
           }
@@ -791,6 +824,7 @@ class LiveFocusRepository implements FocusRepository {
           : localPreset;
       if (snapshot is! Map || activeRun == null) return values;
       final id = activeRun!.presetId, stamp = now();
+      final stored = values.where((p) => p.id == id).firstOrNull;
       final p = FocusPresetItem(
         id: id,
         userId: owner,
@@ -804,7 +838,10 @@ class LiveFocusRepository implements FocusRepository {
         autoStartWork: snapshot['autoStartWork'] == true,
         allowPause: snapshot['allowPause'] != false,
         strictMode: snapshot['strictMode'] == true,
-        isDefault: false,
+        isDefault: stored?.isDefault ?? false,
+        distractionProfileConfigured:
+            stored?.distractionProfileConfigured ?? false,
+        distractionProfileId: stored?.distractionProfileId,
         createdAt: stamp,
         updatedAt: stamp,
       );
@@ -850,6 +887,17 @@ class LiveFocusRepository implements FocusRepository {
   Future<Result<void>> updatePreset(String id, UpdateFocusPresetInput i) =>
       local.updatePreset(id, i);
   @override
+  Future<Result<void>> setPresetDistractionProfile(
+    String presetId,
+    String? profileId,
+  ) => Result.capture(() async {
+    if (profileId != null &&
+        !profiles.any((p) => p.id == profileId && !p.isDeleted)) {
+      throw StateError('Blocking profile is unavailable.');
+    }
+    (await local.setPresetDistractionProfile(presetId, profileId)).getOrThrow();
+  });
+  @override
   Future<Result<void>> deletePreset(String id) => local.deletePreset(id);
   @override
   Future<Result<void>> setDefaultPreset(String id) =>
@@ -884,40 +932,50 @@ class LiveFocusRepository implements FocusRepository {
     },
   );
   @override
-  Future<Result<String>> startRun(StartFocusRunInput input, {DateTime? now}) =>
-      Result.capture(() async {
-        if (sharedActive && !localMode && (online || !detached)) {
-          throw StateError('A shared Focus is already active.');
-        }
-        if (localMode && activeRun != null) await _guardLocal('start');
-        final presets = await local.watchPresets().first;
-        final p = selectedFocusPresetOrDefault(presets, input.presetId);
-        if (online && remote != null && p != null) {
-          await command('start', {
-            'preset': presetWire(p),
-            'taskId': input.taskId,
-            'projectId': input.projectId,
-            'targetWorkIntervals': input.targetWorkIntervals,
-            'note': input.note,
-            'profileId': selectedProfileId,
-            'strictExitSeconds': strictExitSeconds,
-          });
-          localMode = false;
-          detached = false;
-          await persist();
-          return session!['id'] as String;
-        }
-        if (session?['id'] is String) _rememberServerRun(session!['id']);
-        final id = (await local.startRun(input, now: now)).getOrThrow();
-        _localStrict = p?.strictMode ?? false;
-        localPreset = p == null ? null : presetWire(p);
-        detached = false;
-        localMode = true;
-        await _readLocal();
-        localRevision++;
-        await persist();
-        return id;
+  Future<Result<String>> startRun(
+    StartFocusRunInput input, {
+    DateTime? now,
+  }) => Result.capture(() async {
+    if (sharedActive && !localMode && (online || !detached)) {
+      throw StateError('A shared Focus is already active.');
+    }
+    if (localMode && activeRun != null) await _guardLocal('start');
+    final presets = await local.watchPresets().first;
+    final p = selectedFocusPresetOrDefault(presets, input.presetId);
+    final profileId = p?.effectiveDistractionProfileId(selectedProfileId);
+    if (profileId != null &&
+        !profiles.any((p) => p.id == profileId && !p.isDeleted)) {
+      throw StateError(
+        'The assigned blocking profile is unavailable. Reload profiles or choose another profile.',
+      );
+    }
+    if (online && remote != null && p != null) {
+      await command('start', {
+        'preset': presetWire(p),
+        'taskId': input.taskId,
+        'projectId': input.projectId,
+        'targetWorkIntervals': input.targetWorkIntervals,
+        'note': input.note,
+        'profileId': profileId,
+        'strictExitSeconds': strictExitSeconds,
       });
+      localMode = false;
+      detached = false;
+      await persist();
+      return session!['id'] as String;
+    }
+    if (session?['id'] is String) _rememberServerRun(session!['id']);
+    final id = (await local.startRun(input, now: now)).getOrThrow();
+    localProfileId = profileId;
+    _localStrict = p?.strictMode ?? false;
+    localPreset = p == null ? null : presetWire(p);
+    detached = false;
+    localMode = true;
+    await _readLocal();
+    localRevision++;
+    await persist();
+    return id;
+  });
   Future<Result<void>> _act(
     String action,
     Future<Result<void>> Function() fallback, {

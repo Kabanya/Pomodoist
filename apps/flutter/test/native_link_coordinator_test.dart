@@ -6,6 +6,35 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/data/services/platform/native_link_coordinator.dart';
 
 void main() {
+  test('widget links route only supported screens and preserve task IDs', () {
+    expect(
+      nativeRouteForLink(
+        Uri.parse('pomodoist://widget?screen=tasks&task=a%2Fb'),
+      ),
+      '/today?task=a%2Fb',
+    );
+    expect(
+      nativeRouteForLink(Uri.parse('pomodoist://widget?screen=habits')),
+      '/habits',
+    );
+    expect(
+      nativeRouteForLink(Uri.parse('pomodoist://widget?screen=day')),
+      '/today',
+    );
+    expect(
+      nativeRouteForLink(Uri.parse('pomodoist://widget?screen=progress')),
+      '/reports',
+    );
+    for (final url in [
+      'pomodoist://widget?screen=settings',
+      'pomodoist://widget/path?screen=tasks',
+      'pomodoist://widget?screen=tasks&next=https://example.com',
+      'other://widget?screen=tasks',
+      'pomodoist://widget?screen=tasks&screen=progress',
+    ]) {
+      expect(nativeRouteForLink(Uri.parse(url)), isNull, reason: url);
+    }
+  });
   test('Outlook callback accepts only the exact application URI', () {
     expect(
       nativeRouteForLink(Uri.parse('pomodoist://outlook-calendar-connected')),

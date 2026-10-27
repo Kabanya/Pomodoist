@@ -433,7 +433,7 @@
   "menuTooltip": "Меню",
   "localUser": "Локальный пользователь",
   "addTask": "Добавить задачу",
-  "quickAddHint": "Написать sync engine завтра p1 #App @coding 4p",
+  "quickAddHint": "Название задачи завтра p2 #Проект @метка 2p",
   "couldNotAddTask": "Не удалось добавить задачу: {error}",
   "taskCreateFailed": "Не удалось создать задачу. Попробуйте ещё раз.",
   "couldNotAddProject": "Не удалось добавить проект: {error}",
@@ -1471,7 +1471,7 @@
   "distractionTitle": "Блокировка отвлечений",
   "distractionDescription": "Выберите, что блокировать во время Focus. Неопределённые ресурсы разрешены до назначения категории.",
   "distractionProfile": "Профиль ограничений",
-  "distractionBeforeStart": "Выберите до запуска Focus. Категории и исключения можно исправлять в любое время.",
+  "distractionBeforeStart": "Выбранный профиль применяется к следующему Focus. Категории и исключения можно исправлять в любое время.",
   "distractionNone": "Без ограничений",
   "distractionAddProfile": "Добавить профиль",
   "distractionEditProfile": "Изменить профиль",
@@ -1484,8 +1484,8 @@
   "distractionDiscoveryPrivacy": "Только идентификаторы и названия используемых приложений сохраняются локально. Без сканирования диска, названий документов и окон.",
   "distractionAttempts": "Сохранять попытки отвлечься",
   "distractionAttemptsPrivacy": "Необязательные локальные события с устранением повторов. Время использования и содержимое страниц не записываются.",
-  "distractionAutomatic": "Автоматические категории · Pro",
-  "distractionAutomaticDescription": "Публичные идентификаторы ресурсов используются для поиска в интернете. Успешные новые поиски расходуют общий AI-лимит с разбором задач; кеш бесплатный.",
+  "distractionAutomatic": "Автоматические категории",
+  "distractionAutomaticDescription": "Поиск определяет категорию. Ручной выбор важнее.",
   "distractionLocal": "Локальный Focus · этот компьютер",
   "distractionShared": "Общий Focus · подключено",
   "distractionOffline": "Нет связи · защита действует до подтверждённого срока",
@@ -1541,6 +1541,45 @@
   "@distractionIncognito": {
     "placeholders": {
       "status": {
+        "type": "String"
+      }
+    }
+  },
+  "blockingTitle": "Блокировки",
+  "blockingDescription": "Рабочий ритм и его ограничения — в одном месте.",
+  "blockingRhythm": "{work} мин фокус · {short} мин перерыв · {long} мин длинный после {count} интервалов",
+  "blockingSharedPresets": "Используют пресеты: {presets}. Изменения профиля общие для них.",
+  "blockingProfileMissing": "Назначенный профиль недоступен. Загрузите его снова или выберите другой.",
+  "blockingWhatToClose": "Что закрыть",
+  "blockingWhatToKeep": "Что оставить доступным",
+  "blockingBehavior": "Поведение профиля",
+  "blockingApps": "Приложения",
+  "blockingEnabled": "Включено",
+  "blockingDisabled": "Выключено",
+  "blockingDevices": "Этот компьютер и Chrome",
+  "blockingDeviceDetails": "Устройства и конфиденциальность",
+  "blockingSaving": "Сохранение…",
+  "blockingCurrentFocus": "К текущему Focus",
+  "blockingReady": "Готов к запуску",
+  "@blockingRhythm": {
+    "placeholders": {
+      "work": {
+        "type": "int"
+      },
+      "short": {
+        "type": "int"
+      },
+      "long": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@blockingSharedPresets": {
+    "placeholders": {
+      "presets": {
         "type": "String"
       }
     }

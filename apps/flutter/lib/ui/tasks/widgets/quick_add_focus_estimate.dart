@@ -19,6 +19,7 @@ class QuickAddFocusEstimateChip extends StatefulWidget {
     required this.onChanged,
     this.touchTargets = false,
     this.desktop = false,
+    this.iconsOnly = false,
   });
 
   final int? estimate;
@@ -27,6 +28,7 @@ class QuickAddFocusEstimateChip extends StatefulWidget {
   final bool enabled;
   final bool touchTargets;
   final bool desktop;
+  final bool iconsOnly;
   final ValueChanged<int?> onChanged;
 
   @override
@@ -121,6 +123,9 @@ class _QuickAddFocusEstimateChipState extends State<QuickAddFocusEstimateChip> {
       colors.quickAddTokenColor(QuickAddTokenKind.focusEstimate),
     );
     final foreground = style.color!;
+    final label = widget.estimate == null
+        ? l10n.quickAddFocusEstimate
+        : l10n.quickAddEstimatedPomodoros(widget.estimate!);
     return ShadPopover(
       controller: _popover,
       anchor: ShadGlobalAnchor(Offset(centerX, space.top)),
@@ -256,44 +261,56 @@ class _QuickAddFocusEstimateChipState extends State<QuickAddFocusEstimateChip> {
           ),
         ),
       ),
-      child: Semantics(
-        expanded: _popover.isOpen,
-        child: ShadButton.outline(
-          key: _trigger,
-          focusNode: _triggerFocus,
-          size: ShadButtonSize.sm,
-          height: widget.touchTargets ? 48 : (widget.desktop ? 40 : null),
-          enabled: widget.enabled,
-          onPressed: widget.enabled ? _toggle : null,
-          foregroundColor: foreground,
-          hoverForegroundColor: foreground,
-          pressedForegroundColor: foreground,
-          backgroundColor: style.backgroundColor,
-          hoverBackgroundColor: colors.quickAddBackground(
-            foreground,
-            emphasized: true,
-          ),
-          pressedBackgroundColor: colors.quickAddBackground(
-            foreground,
-            emphasized: true,
-          ),
-          decoration: ShadDecoration(
-            border: ShadBorder.all(
-              color: colors.quickAddBorder(foreground, active: _popover.isOpen),
-              radius: BorderRadius.circular(8),
-            ),
-          ),
-          leading: Icon(
-            LucideIcons.timer,
-            size: widget.touchTargets || widget.desktop ? 18 : 14,
-          ),
-          child: Flexible(
-            child: Text(
-              widget.estimate == null
-                  ? l10n.quickAddFocusEstimate
-                  : l10n.quickAddEstimatedPomodoros(widget.estimate!),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+      child: Tooltip(
+        message: label,
+        excludeFromSemantics: true,
+        child: MergeSemantics(
+          child: Semantics(
+            label: widget.iconsOnly ? label : null,
+            expanded: _popover.isOpen,
+            child: ShadButton.outline(
+              key: _trigger,
+              focusNode: _triggerFocus,
+              size: ShadButtonSize.sm,
+              height: widget.touchTargets ? 48 : (widget.desktop ? 40 : null),
+              width: widget.iconsOnly ? 40 : null,
+              padding: widget.iconsOnly ? EdgeInsets.zero : null,
+              enabled: widget.enabled,
+              onPressed: widget.enabled ? _toggle : null,
+              foregroundColor: foreground,
+              hoverForegroundColor: foreground,
+              pressedForegroundColor: foreground,
+              backgroundColor: style.backgroundColor,
+              hoverBackgroundColor: colors.quickAddBackground(
+                foreground,
+                emphasized: true,
+              ),
+              pressedBackgroundColor: colors.quickAddBackground(
+                foreground,
+                emphasized: true,
+              ),
+              decoration: ShadDecoration(
+                border: ShadBorder.all(
+                  color: colors.quickAddBorder(
+                    foreground,
+                    active: _popover.isOpen,
+                  ),
+                  radius: BorderRadius.circular(8),
+                ),
+              ),
+              leading: Icon(
+                LucideIcons.timer,
+                size: widget.touchTargets || widget.desktop ? 18 : 14,
+              ),
+              child: widget.iconsOnly
+                  ? null
+                  : Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
             ),
           ),
         ),

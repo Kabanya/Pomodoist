@@ -1,39 +1,56 @@
+import 'package:pomodoist/ui/distractions/view_models/blocking_view_model.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
-    show ShadButton, ShadInput, ShadSwitch, LucideIcons;
+    show ShadButton, ShadInput, LucideIcons;
 import 'package:uuid/uuid.dart';
 import 'package:pomodoist/domain/models/distractions/distraction_models.dart';
 import 'package:pomodoist/ui/distractions/view_models/distraction_view_model.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
-import 'package:pomodoist/ui/settings/widgets/settings_components.dart';
 
 class DistractionSettings extends ConsumerWidget {
   const DistractionSettings({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(distractionViewModelProvider),
-        commands = ref.watch(distractionCommandsProvider);
-    if (!state.available || commands == null) return const SizedBox.shrink();
-    final l = context.l10n;
-    Future<void> act(Future<void> action) async {
-      try {
-        await action;
-      } on Object catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('$e')));
-        }
-      }
+    if (!ref.watch(distractionViewModelProvider).available) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: ShadButton.outline(
+        height: 48,
+        leading: const Icon(LucideIcons.shield, size: 16),
+        onPressed: () => context.go('/blocking'),
+        child: Text(context.l10n.blockingTitle),
+      ),
+    );
+  }
+}
+
+class DistractionResources extends ConsumerWidget {
+  const DistractionResources({
+    super.key,
+    required this.profileId,
+    required this.classify,
+  });
+  final String? profileId;
+  final Future<void> Function(ResourceAssignment) classify;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final editor = ref.watch(blockingViewModelProvider);
+    final saving = editor.saving, error = editor.error;
+    Future<void> act(Future<void> Function() action) async {
+      await ref.read(blockingViewModelProvider.notifier).save(action);
     }
 
-    final profile = state.profiles
-        .where((p) => p.id == state.profileId)
-        .firstOrNull;
+    final state = ref.watch(distractionViewModelProvider);
+    final commands = ref.watch(distractionCommandsProvider)!;
+    final l = context.l10n;
+    final profile = state.profiles.where((p) => p.id == profileId).firstOrNull;
     final resources = {
       for (final a in [...state.inventory, ...state.assignments])
         '${a.kind}:${a.id}': a,
@@ -41,161 +58,9 @@ class DistractionSettings extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 24),
-        Text(
-          l.distractionTitle,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 8),
-        Text(l.distractionDescription),
-        SettingsRow(
-          title: l.distractionProfile,
-          subtitle: l.distractionBeforeStart,
-          control: DropdownButtonFormField<String>(
-            initialValue: profile?.id ?? '',
-            isExpanded: true,
-            decoration: const InputDecoration(),
-            items: [
-              DropdownMenuItem(value: '', child: Text(l.distractionNone)),
-              for (final p in state.profiles)
-                DropdownMenuItem(
-                  value: p.id,
-                  child: Text(p.name, overflow: TextOverflow.ellipsis),
-                ),
-            ],
-            onChanged: state.active
-                ? null
-                : (id) => unawaited(
-                    act(
-                      commands.configure(profileId: id, clearProfile: id == ''),
-                    ),
-                  ),
-          ),
-        ),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            ShadButton.outline(
-              height: 48,
-              leading: const Icon(LucideIcons.plus, size: 16),
-              onPressed: () => _editProfile(context, ref),
-              child: Text(l.distractionAddProfile),
-            ),
-            if (profile != null)
-              ShadButton.outline(
-                height: 48,
-                onPressed: () => _editProfile(context, ref, profile),
-                child: Text(l.distractionEditProfile),
-              ),
-          ],
-        ),
-        SettingsRow(
-          title: l.distractionStrictExit,
-          subtitle: l.distractionStrictDescription,
-          control: DropdownButtonFormField<int>(
-            initialValue: state.strictExitSeconds,
-            items: [
-              DropdownMenuItem(value: 60, child: Text(l.distractionWait60)),
-              DropdownMenuItem(
-                value: 0,
-                child: Text(l.distractionConfirmImmediately),
-              ),
-            ],
-            onChanged: state.active
-                ? null
-                : (v) =>
-                      unawaited(act(commands.configure(strictExitSeconds: v))),
-          ),
-        ),
-        SettingsRow(
-          title: l.distractionDiscovery,
-          subtitle: l.distractionDiscoveryPrivacy,
-          controlWidth: 48,
-          control: ShadSwitch(
-            value: state.discovery,
-            onChanged: (v) => unawaited(act(commands.configure(discovery: v))),
-          ),
-        ),
-        SettingsRow(
-          title: l.distractionAttempts,
-          subtitle: l.distractionAttemptsPrivacy,
-          controlWidth: 48,
-          control: ShadSwitch(
-            value: state.collectAttempts,
-            onChanged: (v) =>
-                unawaited(act(commands.configure(collectAttempts: v))),
-          ),
-        ),
-        SettingsRow(
-          title: l.distractionAutomatic,
-          subtitle: l.distractionAutomaticDescription,
-          controlWidth: 48,
-          control: ShadSwitch(
-            value: state.automatic,
-            onChanged: (v) => unawaited(act(commands.configure(automatic: v))),
-          ),
-        ),
-        Text(
-          state.local
-              ? l.distractionLocal
-              : state.online
-              ? l.distractionShared
-              : l.distractionOffline,
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        Text(
-          state.nativeApplied
-              ? l.distractionNativeApplied
-              : state.nativeSupported
-              ? l.distractionNativeReady
-              : l.distractionNativeUnavailable,
-        ),
-        if (state.nativeReason != null)
-          Text(
-            state.nativeReason!,
-            style: TextStyle(color: context.appColors.secondaryText),
-          ),
-        const SizedBox(height: 12),
-        SettingsRow(
-          title: l.distractionChrome,
-          subtitle: state.pairingCode == null
-              ? l.distractionPairDescription
-              : l.distractionPairCode(state.pairingCode!, state.bridgePort),
-          control: ShadButton.outline(
-            height: 48,
-            onPressed: () => unawaited(act(commands.pair())),
-            child: Text(l.distractionPair),
-          ),
-        ),
-        if (state.error != null)
-          Text(state.error!, style: TextStyle(color: context.appColors.error)),
-        if (state.conflict) ...[
-          Text(l.distractionConflict),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ShadButton(
-                height: 48,
-                onPressed: () => unawaited(act(commands.joinShared())),
-                child: Text(l.distractionJoinShared),
-              ),
-              ShadButton.outline(
-                height: 48,
-                onPressed: () => unawaited(act(commands.finishLocal())),
-                child: Text(l.distractionFinishLocal),
-              ),
-            ],
-          ),
-        ],
-        if (state.active)
-          ShadButton.outline(
-            height: 48,
-            onPressed: () => unawaited(act(commands.requestExit())),
-            child: Text(l.distractionStopEverywhere),
-          ),
-        const SizedBox(height: 16),
+        if (saving) const LinearProgressIndicator(minHeight: 2),
+        if (error != null)
+          Text(error, style: TextStyle(color: context.appColors.error)),
         Row(
           children: [
             Expanded(
@@ -206,7 +71,7 @@ class DistractionSettings extends ConsumerWidget {
             ),
             ShadButton.ghost(
               height: 48,
-              onPressed: () => _addResource(context, ref),
+              onPressed: saving ? null : () => _addResource(context, ref),
               child: Text(l.distractionAddSite),
             ),
           ],
@@ -229,6 +94,9 @@ class DistractionSettings extends ConsumerWidget {
                     SizedBox(
                       width: 200,
                       child: DropdownButtonFormField<String>(
+                        key: ValueKey(
+                          '${a.kind}:${a.id}:${a.category}:$saving',
+                        ),
                         initialValue: a.category,
                         decoration: InputDecoration(
                           labelText: l.distractionCategory,
@@ -237,84 +105,37 @@ class DistractionSettings extends ConsumerWidget {
                           for (final c in distractionCategories)
                             DropdownMenuItem(
                               value: c,
-                              child: Text(_category(context, c)),
+                              child: Text(distractionCategoryLabel(context, c)),
                             ),
                         ],
-                        onChanged: (c) => unawaited(
-                          act(
-                            commands.saveAssignment(
-                              ResourceAssignment.fromJson({
-                                ...a.json,
-                                'category': c,
-                                'source': 'manual',
-                                'updatedAt': DateTime.now()
-                                    .toUtc()
-                                    .toIso8601String(),
-                              }),
-                            ),
-                          ),
-                        ),
+                        onChanged: saving
+                            ? null
+                            : (c) => unawaited(
+                                act(
+                                  () => commands.saveAssignment(
+                                    ResourceAssignment.fromJson({
+                                      ...a.json,
+                                      'category': c,
+                                      'source': 'manual',
+                                      'updatedAt': DateTime.now()
+                                          .toUtc()
+                                          .toIso8601String(),
+                                    }),
+                                  ),
+                                ),
+                              ),
                       ),
                     ),
                     if (profile != null)
-                      SizedBox(
-                        width: 200,
-                        child: DropdownButtonFormField<String>(
-                          initialValue:
-                              profile.overrides
-                                  .where(
-                                    (r) =>
-                                        r['id'] == a.id && r['kind'] == a.kind,
-                                  )
-                                  .firstOrNull?['action'] ??
-                              'category',
-                          decoration: InputDecoration(
-                            labelText: l.distractionException,
-                          ),
-                          items: [
-                            DropdownMenuItem(
-                              value: 'category',
-                              child: Text(l.distractionUseCategory),
-                            ),
-                            DropdownMenuItem(
-                              value: 'allow',
-                              child: Text(l.distractionAllow),
-                            ),
-                            DropdownMenuItem(
-                              value: 'block',
-                              child: Text(l.distractionBlock),
-                            ),
-                          ],
-                          onChanged: (action) => unawaited(
-                            act(
-                              commands.saveProfile(
-                                DistractionProfile.fromJson({
-                                  ...profile.json,
-                                  'updatedAt': DateTime.now()
-                                      .toUtc()
-                                      .toIso8601String(),
-                                  'overrides': [
-                                    ...profile.overrides.where(
-                                      (r) =>
-                                          r['id'] != a.id ||
-                                          r['kind'] != a.kind,
-                                    ),
-                                    if (action != 'category')
-                                      {
-                                        'kind': a.kind,
-                                        'id': a.id,
-                                        'action': action,
-                                      },
-                                  ],
-                                }),
-                              ),
-                            ),
-                          ),
-                        ),
+                      _DistractionResourceException(
+                        profile: profile,
+                        resource: a,
                       ),
                     ShadButton.ghost(
                       height: 48,
-                      onPressed: () => unawaited(act(commands.classify(a))),
+                      onPressed: saving
+                          ? null
+                          : () => unawaited(act(() => classify(a))),
                       child: Text(l.distractionClassify),
                     ),
                   ],
@@ -329,14 +150,81 @@ class DistractionSettings extends ConsumerWidget {
               ],
             ),
           ),
-        for (final d in state.devices)
-          _DeviceCoverage(device: d, revision: state.sessionRevision),
       ],
     );
   }
 }
 
-String _category(BuildContext context, String c) => switch (c) {
+// Dart AOT hoisted profile JSON reads before the parent's null guard on macOS.
+class _DistractionResourceException extends ConsumerWidget {
+  const _DistractionResourceException({
+    required this.profile,
+    required this.resource,
+  });
+
+  final DistractionProfile profile;
+  final ResourceAssignment resource;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final saving = ref.watch(blockingViewModelProvider).saving;
+    final commands = ref.watch(distractionCommandsProvider)!;
+    final l = context.l10n;
+    return SizedBox(
+      width: 200,
+      child: DropdownButtonFormField<String>(
+        key: ValueKey(
+          '${profile.id}:${resource.kind}:${resource.id}:${profile.json['updatedAt']}:$saving',
+        ),
+        initialValue:
+            profile.overrides
+                .where(
+                  (r) => r['id'] == resource.id && r['kind'] == resource.kind,
+                )
+                .firstOrNull?['action'] ??
+            'category',
+        decoration: InputDecoration(labelText: l.distractionException),
+        items: [
+          DropdownMenuItem(
+            value: 'category',
+            child: Text(l.distractionUseCategory),
+          ),
+          DropdownMenuItem(value: 'allow', child: Text(l.distractionAllow)),
+          DropdownMenuItem(value: 'block', child: Text(l.distractionBlock)),
+        ],
+        onChanged: saving
+            ? null
+            : (action) => unawaited(
+                ref
+                    .read(blockingViewModelProvider.notifier)
+                    .save(
+                      () => commands.saveProfile(
+                        DistractionProfile.fromJson({
+                          ...profile.json,
+                          'updatedAt': DateTime.now().toUtc().toIso8601String(),
+                          'overrides': [
+                            ...profile.overrides.where(
+                              (r) =>
+                                  r['id'] != resource.id ||
+                                  r['kind'] != resource.kind,
+                            ),
+                            if (action != 'category')
+                              {
+                                'kind': resource.kind,
+                                'id': resource.id,
+                                'action': action,
+                              },
+                          ],
+                        }),
+                      ),
+                    ),
+              ),
+      ),
+    );
+  }
+}
+
+String distractionCategoryLabel(BuildContext context, String c) => switch (c) {
   'social' => context.l10n.distractionSocial,
   'messaging' => context.l10n.distractionMessaging,
   'video' => context.l10n.distractionVideo,
@@ -350,7 +238,7 @@ String _category(BuildContext context, String c) => switch (c) {
   'other' => context.l10n.distractionOther,
   _ => context.l10n.distractionUnclassified,
 };
-Future<void> _editProfile(
+Future<void> showDistractionProfileEditor(
   BuildContext context,
   WidgetRef ref, [
   DistractionProfile? current,
@@ -393,7 +281,7 @@ Future<void> _editProfile(
                       (c) => c != 'unclassified',
                     ))
                       FilterChip(
-                        label: Text(_category(ctx, c)),
+                        label: Text(distractionCategoryLabel(ctx, c)),
                         selected: categories.contains(c),
                         onSelected: (v) => setState(
                           () => v ? categories.add(c) : categories.remove(c),
@@ -436,21 +324,33 @@ Future<void> _editProfile(
               }
               setState(() => saving = true);
               try {
-                await ref
-                    .read(distractionCommandsProvider)!
-                    .saveProfile(
-                      DistractionProfile.fromJson({
-                        ...?current?.json,
-                        'id': current?.id ?? const Uuid().v4(),
-                        'name': name.text.trim(),
-                        'blockedCategories': categories.toList(),
-                        'overrides': current?.overrides ?? [],
-                        'blockOnPause': pause,
-                        'blockOnShortBreak': short,
-                        'blockOnLongBreak': long,
-                        'updatedAt': DateTime.now().toUtc().toIso8601String(),
-                      }),
+                final saved = await ref
+                    .read(blockingViewModelProvider.notifier)
+                    .save(
+                      () => ref
+                          .read(distractionCommandsProvider)!
+                          .saveProfile(
+                            DistractionProfile.fromJson({
+                              ...?current?.json,
+                              'id': current?.id ?? const Uuid().v4(),
+                              'name': name.text.trim(),
+                              'blockedCategories': categories.toList(),
+                              'overrides': current?.overrides ?? [],
+                              'blockOnPause': pause,
+                              'blockOnShortBreak': short,
+                              'blockOnLongBreak': long,
+                              'updatedAt': DateTime.now()
+                                  .toUtc()
+                                  .toIso8601String(),
+                            }),
+                          ),
                     );
+                if (!saved) {
+                  throw StateError(
+                    ref.read(blockingViewModelProvider).error ??
+                        l.blockingSaving,
+                  );
+                }
                 if (ctx.mounted) Navigator.pop(ctx);
               } on Object catch (e) {
                 if (ctx.mounted) {
@@ -502,18 +402,30 @@ Future<void> _addResource(BuildContext context, WidgetRef ref) async {
                 return;
               }
               try {
-                await ref
-                    .read(distractionCommandsProvider)!
-                    .saveAssignment(
-                      ResourceAssignment.fromJson({
-                        'id': id,
-                        'kind': 'domain',
-                        'name': id,
-                        'category': 'unclassified',
-                        'source': 'manual',
-                        'updatedAt': DateTime.now().toUtc().toIso8601String(),
-                      }),
+                final saved = await ref
+                    .read(blockingViewModelProvider.notifier)
+                    .save(
+                      () => ref
+                          .read(distractionCommandsProvider)!
+                          .saveAssignment(
+                            ResourceAssignment.fromJson({
+                              'id': id,
+                              'kind': 'domain',
+                              'name': id,
+                              'category': 'unclassified',
+                              'source': 'manual',
+                              'updatedAt': DateTime.now()
+                                  .toUtc()
+                                  .toIso8601String(),
+                            }),
+                          ),
                     );
+                if (!saved) {
+                  throw StateError(
+                    ref.read(blockingViewModelProvider).error ??
+                        l.blockingSaving,
+                  );
+                }
                 if (ctx.mounted) Navigator.pop(ctx);
               } on Object catch (e) {
                 if (ctx.mounted) setState(() => error = '$e');
@@ -528,26 +440,26 @@ Future<void> _addResource(BuildContext context, WidgetRef ref) async {
   input.dispose();
 }
 
-class _DeviceCoverage extends StatelessWidget {
-  const _DeviceCoverage({required this.device, required this.revision});
+class DistractionDeviceCoverage extends StatelessWidget {
+  const DistractionDeviceCoverage({
+    super.key,
+    required this.device,
+    required this.revision,
+  });
   final Map<String, dynamic> device;
   final int? revision;
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
     final seen = DateTime.tryParse('${device['lastSeenAt']}');
-    final connected =
-        seen != null &&
-        DateTime.now().difference(seen) < const Duration(seconds: 45);
+    final status = distractionDeviceStatus(
+      device,
+      revision: revision,
+      now: DateTime.now(),
+    );
     final caps = device['capabilities'] is Map
         ? device['capabilities'] as Map
         : const {};
-    final applied =
-        connected &&
-        device['detached'] != true &&
-        revision != null &&
-        device['appliedRevision'] == revision &&
-        (caps['nativeApplied'] == true || caps['websiteApplied'] == true);
     final date = seen == null
         ? '—'
         : '${MaterialLocalizations.of(context).formatMediumDate(seen.toLocal())} ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(seen.toLocal()))}';
@@ -559,12 +471,14 @@ class _DeviceCoverage extends StatelessWidget {
           Text(
             '${device['name'] ?? device['platform'] ?? device['deviceId']} · ${device['detached'] == true
                 ? l.distractionDetached
-                : connected
+                : status.connected
                 ? l.distractionConnected
                 : l.distractionDisconnected}',
             style: Theme.of(context).textTheme.titleSmall,
           ),
-          Text(applied ? l.distractionProtected : l.distractionNotConfirmed),
+          Text(
+            status.applied ? l.distractionProtected : l.distractionNotConfirmed,
+          ),
           Text(
             device['platform'] == 'chrome'
                 ? l.distractionChrome

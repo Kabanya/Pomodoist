@@ -2260,7 +2260,7 @@ abstract class AppLocalizations {
   /// No description provided for @quickAddHint.
   ///
   /// In en, this message translates to:
-  /// **'Write sync engine tomorrow p1 #App @coding 4p'**
+  /// **'Task name tomorrow p2 #Project @label 2p'**
   String get quickAddHint;
 
   /// No description provided for @couldNotAddTask.
@@ -7962,7 +7962,7 @@ abstract class AppLocalizations {
   /// No description provided for @distractionBeforeStart.
   ///
   /// In en, this message translates to:
-  /// **'Choose before starting Focus. Categories and exceptions can be corrected at any time.'**
+  /// **'Profile selection applies to the next Focus. Categories and exceptions can be corrected at any time.'**
   String get distractionBeforeStart;
 
   /// No description provided for @distractionNone.
@@ -8040,13 +8040,13 @@ abstract class AppLocalizations {
   /// No description provided for @distractionAutomatic.
   ///
   /// In en, this message translates to:
-  /// **'Automatic categories · Pro'**
+  /// **'Automatic categories'**
   String get distractionAutomatic;
 
   /// No description provided for @distractionAutomaticDescription.
   ///
   /// In en, this message translates to:
-  /// **'Public resource identifiers are searched on the web. New successful searches share your AI quota with task analysis; cache hits are free.'**
+  /// **'Search determines the category. Manual choices take priority.'**
   String get distractionAutomaticDescription;
 
   /// No description provided for @distractionLocal.
@@ -8360,6 +8360,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Incognito access: {status}'**
   String distractionIncognito(String status);
+
+  /// No description provided for @blockingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocking'**
+  String get blockingTitle;
+
+  /// No description provided for @blockingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your work rhythm and its boundaries, together.'**
+  String get blockingDescription;
+
+  /// No description provided for @blockingRhythm.
+  ///
+  /// In en, this message translates to:
+  /// **'{work} min focus · {short} min break · {long} min long break after {count} intervals'**
+  String blockingRhythm(int work, int short, int long, int count);
+
+  /// No description provided for @blockingSharedPresets.
+  ///
+  /// In en, this message translates to:
+  /// **'Used by: {presets}. Profile changes apply to all of them.'**
+  String blockingSharedPresets(String presets);
+
+  /// No description provided for @blockingProfileMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The assigned profile is unavailable. Reload or choose another profile.'**
+  String get blockingProfileMissing;
+
+  /// No description provided for @blockingWhatToClose.
+  ///
+  /// In en, this message translates to:
+  /// **'What to close'**
+  String get blockingWhatToClose;
+
+  /// No description provided for @blockingWhatToKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'What to keep available'**
+  String get blockingWhatToKeep;
+
+  /// No description provided for @blockingBehavior.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile behavior'**
+  String get blockingBehavior;
+
+  /// No description provided for @blockingApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps'**
+  String get blockingApps;
+
+  /// No description provided for @blockingEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get blockingEnabled;
+
+  /// No description provided for @blockingDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get blockingDisabled;
+
+  /// No description provided for @blockingDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'This computer and Chrome'**
+  String get blockingDevices;
+
+  /// No description provided for @blockingDeviceDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices and privacy'**
+  String get blockingDeviceDetails;
+
+  /// No description provided for @blockingSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get blockingSaving;
+
+  /// No description provided for @blockingCurrentFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to current Focus'**
+  String get blockingCurrentFocus;
+
+  /// No description provided for @blockingReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to focus'**
+  String get blockingReady;
 }
 
 class _AppLocalizationsDelegate

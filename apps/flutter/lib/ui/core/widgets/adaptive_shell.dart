@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/distractions/view_models/distraction_view_model.dart';
 // ignore_for_file: deprecated_member_use
 
 import 'package:pomodoist/ui/core/widgets/compact_task_button_location.dart';
@@ -1288,6 +1289,7 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
                           '/today',
                           '/upcoming',
                           '/focus',
+                          if (ref.watch(blockingAvailableProvider)) '/blocking',
                           '/habits',
                         ])
                           destinationTile(path),
@@ -1822,6 +1824,12 @@ List<_Destination> _desktopDestinations(BuildContext context) {
       LucideIcons.repeat2,
     ),
     _Destination(l10n.navFocus, '/focus', LucideIcons.timer, LucideIcons.timer),
+    _Destination(
+      l10n.blockingTitle,
+      '/blocking',
+      LucideIcons.shield,
+      LucideIcons.shield,
+    ),
     _Destination(l10n.navInbox, '/inbox', LucideIcons.inbox, LucideIcons.inbox),
     _Destination(
       l10n.navPriorityMatrix,

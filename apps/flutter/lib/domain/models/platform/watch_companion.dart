@@ -1,6 +1,7 @@
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/domain/models/platform/apple_widget_snapshot.dart';
 
 enum WatchAction {
   createTask,
@@ -28,6 +29,7 @@ class WatchCommand {
     this.replaceActive = false,
     this.occurredAt,
     this.locale,
+    this.expectedIntervalId,
     Iterable<DecomposedTaskDraft> drafts = const [],
   }) : drafts = List.unmodifiable(drafts);
 
@@ -39,6 +41,7 @@ class WatchCommand {
   final bool replaceActive;
   final DateTime? occurredAt;
   final String? locale;
+  final String? expectedIntervalId;
   final List<DecomposedTaskDraft> drafts;
 }
 
@@ -54,6 +57,7 @@ class WatchSnapshot {
     required Iterable<ProjectItem> projects,
     required Map<String, int> projectCounts,
     required Iterable<String> appliedCommandIds,
+    required this.widgets,
   }) : taskLists = Map.unmodifiable({
          for (final e in taskLists.entries)
            e.key: List<TaskItem>.unmodifiable(e.value),
@@ -67,6 +71,7 @@ class WatchSnapshot {
        appliedCommandIds = List.unmodifiable(appliedCommandIds);
 
   final DateTime generatedAt;
+  final AppleWidgetSnapshot widgets;
   final String locale;
   final FocusRunItem? run;
   final FocusIntervalItem? interval;

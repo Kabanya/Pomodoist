@@ -1209,7 +1209,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addTask => 'Add task';
 
   @override
-  String get quickAddHint => 'Write sync engine tomorrow p1 #App @coding 4p';
+  String get quickAddHint => 'Task name tomorrow p2 #Project @label 2p';
 
   @override
   String couldNotAddTask(Object error) {
@@ -4641,7 +4641,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get distractionBeforeStart =>
-      'Choose before starting Focus. Categories and exceptions can be corrected at any time.';
+      'Profile selection applies to the next Focus. Categories and exceptions can be corrected at any time.';
 
   @override
   String get distractionNone => 'No blocking profile';
@@ -4683,11 +4683,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Optional local events, with repeated attempts combined. Usage time and page content are not recorded.';
 
   @override
-  String get distractionAutomatic => 'Automatic categories · Pro';
+  String get distractionAutomatic => 'Automatic categories';
 
   @override
   String get distractionAutomaticDescription =>
-      'Public resource identifiers are searched on the web. New successful searches share your AI quota with task analysis; cache hits are free.';
+      'Search determines the category. Manual choices take priority.';
 
   @override
   String get distractionLocal => 'Local Focus · this computer';
@@ -4860,4 +4860,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String distractionIncognito(String status) {
     return 'Incognito access: $status';
   }
+
+  @override
+  String get blockingTitle => 'Blocking';
+
+  @override
+  String get blockingDescription =>
+      'Your work rhythm and its boundaries, together.';
+
+  @override
+  String blockingRhythm(int work, int short, int long, int count) {
+    return '$work min focus · $short min break · $long min long break after $count intervals';
+  }
+
+  @override
+  String blockingSharedPresets(String presets) {
+    return 'Used by: $presets. Profile changes apply to all of them.';
+  }
+
+  @override
+  String get blockingProfileMissing =>
+      'The assigned profile is unavailable. Reload or choose another profile.';
+
+  @override
+  String get blockingWhatToClose => 'What to close';
+
+  @override
+  String get blockingWhatToKeep => 'What to keep available';
+
+  @override
+  String get blockingBehavior => 'Profile behavior';
+
+  @override
+  String get blockingApps => 'Apps';
+
+  @override
+  String get blockingEnabled => 'Enabled';
+
+  @override
+  String get blockingDisabled => 'Disabled';
+
+  @override
+  String get blockingDevices => 'This computer and Chrome';
+
+  @override
+  String get blockingDeviceDetails => 'Devices and privacy';
+
+  @override
+  String get blockingSaving => 'Saving…';
+
+  @override
+  String get blockingCurrentFocus => 'Go to current Focus';
+
+  @override
+  String get blockingReady => 'Ready to focus';
 }

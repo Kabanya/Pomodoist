@@ -7510,6 +7510,32 @@ class $FocusPresetsTable extends FocusPresets
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _distractionProfileConfiguredMeta =
+      const VerificationMeta('distractionProfileConfigured');
+  @override
+  late final GeneratedColumn<bool> distractionProfileConfigured =
+      GeneratedColumn<bool>(
+        'distraction_profile_configured',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("distraction_profile_configured" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _distractionProfileIdMeta =
+      const VerificationMeta('distractionProfileId');
+  @override
+  late final GeneratedColumn<String> distractionProfileId =
+      GeneratedColumn<String>(
+        'distraction_profile_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _isDeletedMeta = const VerificationMeta(
     'isDeleted',
   );
@@ -7561,6 +7587,8 @@ class $FocusPresetsTable extends FocusPresets
     allowPause,
     strictMode,
     isDefault,
+    distractionProfileConfigured,
+    distractionProfileId,
     isDeleted,
     createdAt,
     updatedAt,
@@ -7678,6 +7706,24 @@ class $FocusPresetsTable extends FocusPresets
         isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta),
       );
     }
+    if (data.containsKey('distraction_profile_configured')) {
+      context.handle(
+        _distractionProfileConfiguredMeta,
+        distractionProfileConfigured.isAcceptableOrUnknown(
+          data['distraction_profile_configured']!,
+          _distractionProfileConfiguredMeta,
+        ),
+      );
+    }
+    if (data.containsKey('distraction_profile_id')) {
+      context.handle(
+        _distractionProfileIdMeta,
+        distractionProfileId.isAcceptableOrUnknown(
+          data['distraction_profile_id']!,
+          _distractionProfileIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('is_deleted')) {
       context.handle(
         _isDeletedMeta,
@@ -7757,6 +7803,14 @@ class $FocusPresetsTable extends FocusPresets
         DriftSqlType.bool,
         data['${effectivePrefix}is_default'],
       )!,
+      distractionProfileConfigured: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}distraction_profile_configured'],
+      )!,
+      distractionProfileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}distraction_profile_id'],
+      ),
       isDeleted: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_deleted'],
@@ -7791,6 +7845,8 @@ class FocusPresetRow extends DataClass implements Insertable<FocusPresetRow> {
   final bool allowPause;
   final bool strictMode;
   final bool isDefault;
+  final bool distractionProfileConfigured;
+  final String? distractionProfileId;
   final bool isDeleted;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -7807,6 +7863,8 @@ class FocusPresetRow extends DataClass implements Insertable<FocusPresetRow> {
     required this.allowPause,
     required this.strictMode,
     required this.isDefault,
+    required this.distractionProfileConfigured,
+    this.distractionProfileId,
     required this.isDeleted,
     required this.createdAt,
     required this.updatedAt,
@@ -7828,6 +7886,12 @@ class FocusPresetRow extends DataClass implements Insertable<FocusPresetRow> {
     map['allow_pause'] = Variable<bool>(allowPause);
     map['strict_mode'] = Variable<bool>(strictMode);
     map['is_default'] = Variable<bool>(isDefault);
+    map['distraction_profile_configured'] = Variable<bool>(
+      distractionProfileConfigured,
+    );
+    if (!nullToAbsent || distractionProfileId != null) {
+      map['distraction_profile_id'] = Variable<String>(distractionProfileId);
+    }
     map['is_deleted'] = Variable<bool>(isDeleted);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -7848,6 +7912,10 @@ class FocusPresetRow extends DataClass implements Insertable<FocusPresetRow> {
       allowPause: Value(allowPause),
       strictMode: Value(strictMode),
       isDefault: Value(isDefault),
+      distractionProfileConfigured: Value(distractionProfileConfigured),
+      distractionProfileId: distractionProfileId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(distractionProfileId),
       isDeleted: Value(isDeleted),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -7874,6 +7942,12 @@ class FocusPresetRow extends DataClass implements Insertable<FocusPresetRow> {
       allowPause: serializer.fromJson<bool>(json['allowPause']),
       strictMode: serializer.fromJson<bool>(json['strictMode']),
       isDefault: serializer.fromJson<bool>(json['isDefault']),
+      distractionProfileConfigured: serializer.fromJson<bool>(
+        json['distractionProfileConfigured'],
+      ),
+      distractionProfileId: serializer.fromJson<String?>(
+        json['distractionProfileId'],
+      ),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -7897,6 +7971,10 @@ class FocusPresetRow extends DataClass implements Insertable<FocusPresetRow> {
       'allowPause': serializer.toJson<bool>(allowPause),
       'strictMode': serializer.toJson<bool>(strictMode),
       'isDefault': serializer.toJson<bool>(isDefault),
+      'distractionProfileConfigured': serializer.toJson<bool>(
+        distractionProfileConfigured,
+      ),
+      'distractionProfileId': serializer.toJson<String?>(distractionProfileId),
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -7916,6 +7994,8 @@ class FocusPresetRow extends DataClass implements Insertable<FocusPresetRow> {
     bool? allowPause,
     bool? strictMode,
     bool? isDefault,
+    bool? distractionProfileConfigured,
+    Value<String?> distractionProfileId = const Value.absent(),
     bool? isDeleted,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -7933,6 +8013,11 @@ class FocusPresetRow extends DataClass implements Insertable<FocusPresetRow> {
     allowPause: allowPause ?? this.allowPause,
     strictMode: strictMode ?? this.strictMode,
     isDefault: isDefault ?? this.isDefault,
+    distractionProfileConfigured:
+        distractionProfileConfigured ?? this.distractionProfileConfigured,
+    distractionProfileId: distractionProfileId.present
+        ? distractionProfileId.value
+        : this.distractionProfileId,
     isDeleted: isDeleted ?? this.isDeleted,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -7967,6 +8052,12 @@ class FocusPresetRow extends DataClass implements Insertable<FocusPresetRow> {
           ? data.strictMode.value
           : this.strictMode,
       isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+      distractionProfileConfigured: data.distractionProfileConfigured.present
+          ? data.distractionProfileConfigured.value
+          : this.distractionProfileConfigured,
+      distractionProfileId: data.distractionProfileId.present
+          ? data.distractionProfileId.value
+          : this.distractionProfileId,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -7988,6 +8079,10 @@ class FocusPresetRow extends DataClass implements Insertable<FocusPresetRow> {
           ..write('allowPause: $allowPause, ')
           ..write('strictMode: $strictMode, ')
           ..write('isDefault: $isDefault, ')
+          ..write(
+            'distractionProfileConfigured: $distractionProfileConfigured, ',
+          )
+          ..write('distractionProfileId: $distractionProfileId, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -8009,6 +8104,8 @@ class FocusPresetRow extends DataClass implements Insertable<FocusPresetRow> {
     allowPause,
     strictMode,
     isDefault,
+    distractionProfileConfigured,
+    distractionProfileId,
     isDeleted,
     createdAt,
     updatedAt,
@@ -8029,6 +8126,9 @@ class FocusPresetRow extends DataClass implements Insertable<FocusPresetRow> {
           other.allowPause == this.allowPause &&
           other.strictMode == this.strictMode &&
           other.isDefault == this.isDefault &&
+          other.distractionProfileConfigured ==
+              this.distractionProfileConfigured &&
+          other.distractionProfileId == this.distractionProfileId &&
           other.isDeleted == this.isDeleted &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -8047,6 +8147,8 @@ class FocusPresetsCompanion extends UpdateCompanion<FocusPresetRow> {
   final Value<bool> allowPause;
   final Value<bool> strictMode;
   final Value<bool> isDefault;
+  final Value<bool> distractionProfileConfigured;
+  final Value<String?> distractionProfileId;
   final Value<bool> isDeleted;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -8064,6 +8166,8 @@ class FocusPresetsCompanion extends UpdateCompanion<FocusPresetRow> {
     this.allowPause = const Value.absent(),
     this.strictMode = const Value.absent(),
     this.isDefault = const Value.absent(),
+    this.distractionProfileConfigured = const Value.absent(),
+    this.distractionProfileId = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -8082,6 +8186,8 @@ class FocusPresetsCompanion extends UpdateCompanion<FocusPresetRow> {
     this.allowPause = const Value.absent(),
     this.strictMode = const Value.absent(),
     this.isDefault = const Value.absent(),
+    this.distractionProfileConfigured = const Value.absent(),
+    this.distractionProfileId = const Value.absent(),
     this.isDeleted = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -8108,6 +8214,8 @@ class FocusPresetsCompanion extends UpdateCompanion<FocusPresetRow> {
     Expression<bool>? allowPause,
     Expression<bool>? strictMode,
     Expression<bool>? isDefault,
+    Expression<bool>? distractionProfileConfigured,
+    Expression<String>? distractionProfileId,
     Expression<bool>? isDeleted,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -8127,6 +8235,10 @@ class FocusPresetsCompanion extends UpdateCompanion<FocusPresetRow> {
       if (allowPause != null) 'allow_pause': allowPause,
       if (strictMode != null) 'strict_mode': strictMode,
       if (isDefault != null) 'is_default': isDefault,
+      if (distractionProfileConfigured != null)
+        'distraction_profile_configured': distractionProfileConfigured,
+      if (distractionProfileId != null)
+        'distraction_profile_id': distractionProfileId,
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -8147,6 +8259,8 @@ class FocusPresetsCompanion extends UpdateCompanion<FocusPresetRow> {
     Value<bool>? allowPause,
     Value<bool>? strictMode,
     Value<bool>? isDefault,
+    Value<bool>? distractionProfileConfigured,
+    Value<String?>? distractionProfileId,
     Value<bool>? isDeleted,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -8166,6 +8280,9 @@ class FocusPresetsCompanion extends UpdateCompanion<FocusPresetRow> {
       allowPause: allowPause ?? this.allowPause,
       strictMode: strictMode ?? this.strictMode,
       isDefault: isDefault ?? this.isDefault,
+      distractionProfileConfigured:
+          distractionProfileConfigured ?? this.distractionProfileConfigured,
+      distractionProfileId: distractionProfileId ?? this.distractionProfileId,
       isDeleted: isDeleted ?? this.isDeleted,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -8214,6 +8331,16 @@ class FocusPresetsCompanion extends UpdateCompanion<FocusPresetRow> {
     if (isDefault.present) {
       map['is_default'] = Variable<bool>(isDefault.value);
     }
+    if (distractionProfileConfigured.present) {
+      map['distraction_profile_configured'] = Variable<bool>(
+        distractionProfileConfigured.value,
+      );
+    }
+    if (distractionProfileId.present) {
+      map['distraction_profile_id'] = Variable<String>(
+        distractionProfileId.value,
+      );
+    }
     if (isDeleted.present) {
       map['is_deleted'] = Variable<bool>(isDeleted.value);
     }
@@ -8244,6 +8371,10 @@ class FocusPresetsCompanion extends UpdateCompanion<FocusPresetRow> {
           ..write('allowPause: $allowPause, ')
           ..write('strictMode: $strictMode, ')
           ..write('isDefault: $isDefault, ')
+          ..write(
+            'distractionProfileConfigured: $distractionProfileConfigured, ',
+          )
+          ..write('distractionProfileId: $distractionProfileId, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -19488,6 +19619,8 @@ typedef $$FocusPresetsTableCreateCompanionBuilder =
       Value<bool> allowPause,
       Value<bool> strictMode,
       Value<bool> isDefault,
+      Value<bool> distractionProfileConfigured,
+      Value<String?> distractionProfileId,
       Value<bool> isDeleted,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -19507,6 +19640,8 @@ typedef $$FocusPresetsTableUpdateCompanionBuilder =
       Value<bool> allowPause,
       Value<bool> strictMode,
       Value<bool> isDefault,
+      Value<bool> distractionProfileConfigured,
+      Value<String?> distractionProfileId,
       Value<bool> isDeleted,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -19579,6 +19714,16 @@ class $$FocusPresetsTableFilterComposer
 
   ColumnFilters<bool> get isDefault => $composableBuilder(
     column: $table.isDefault,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get distractionProfileConfigured => $composableBuilder(
+    column: $table.distractionProfileConfigured,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get distractionProfileId => $composableBuilder(
+    column: $table.distractionProfileId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -19667,6 +19812,16 @@ class $$FocusPresetsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get distractionProfileConfigured => $composableBuilder(
+    column: $table.distractionProfileConfigured,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get distractionProfileId => $composableBuilder(
+    column: $table.distractionProfileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isDeleted => $composableBuilder(
     column: $table.isDeleted,
     builder: (column) => ColumnOrderings(column),
@@ -19744,6 +19899,16 @@ class $$FocusPresetsTableAnnotationComposer
   GeneratedColumn<bool> get isDefault =>
       $composableBuilder(column: $table.isDefault, builder: (column) => column);
 
+  GeneratedColumn<bool> get distractionProfileConfigured => $composableBuilder(
+    column: $table.distractionProfileConfigured,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get distractionProfileId => $composableBuilder(
+    column: $table.distractionProfileId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get isDeleted =>
       $composableBuilder(column: $table.isDeleted, builder: (column) => column);
 
@@ -19797,6 +19962,8 @@ class $$FocusPresetsTableTableManager
                 Value<bool> allowPause = const Value.absent(),
                 Value<bool> strictMode = const Value.absent(),
                 Value<bool> isDefault = const Value.absent(),
+                Value<bool> distractionProfileConfigured = const Value.absent(),
+                Value<String?> distractionProfileId = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -19814,6 +19981,8 @@ class $$FocusPresetsTableTableManager
                 allowPause: allowPause,
                 strictMode: strictMode,
                 isDefault: isDefault,
+                distractionProfileConfigured: distractionProfileConfigured,
+                distractionProfileId: distractionProfileId,
                 isDeleted: isDeleted,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -19833,6 +20002,8 @@ class $$FocusPresetsTableTableManager
                 Value<bool> allowPause = const Value.absent(),
                 Value<bool> strictMode = const Value.absent(),
                 Value<bool> isDefault = const Value.absent(),
+                Value<bool> distractionProfileConfigured = const Value.absent(),
+                Value<String?> distractionProfileId = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -19850,6 +20021,8 @@ class $$FocusPresetsTableTableManager
                 allowPause: allowPause,
                 strictMode: strictMode,
                 isDefault: isDefault,
+                distractionProfileConfigured: distractionProfileConfigured,
+                distractionProfileId: distractionProfileId,
                 isDeleted: isDeleted,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
