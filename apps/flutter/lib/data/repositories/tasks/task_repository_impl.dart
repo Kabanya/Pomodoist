@@ -38,6 +38,7 @@ class DriftTaskRepository implements TaskRepository {
   final Uuid _uuid;
   final TaskLocalService _tasks;
   final KanbanTransitionCoordinator _kanbanTransitions;
+  Future<Result<void>>? _materializing;
   @override
   Stream<List<TaskItem>> watchTasks(TaskQuery query) {
     var previous = <String, ({TaskRow row, TaskItem item})>{};
@@ -457,6 +458,11 @@ class DriftTaskRepository implements TaskRepository {
 
   @override
   Future<Result<void>> materializeDueRecurringTasks({DateTime? now}) =>
+      _materializing ??= _materializeDueRecurringTasks(
+        now: now,
+      ).whenComplete(() => _materializing = null);
+
+  Future<Result<void>> _materializeDueRecurringTasks({DateTime? now}) =>
       Result.capture<void>(() async {
         final timestamp = (now ?? DateTime.now()).toUtc();
         final localNow = timestamp.toLocal();
@@ -466,16 +472,16 @@ class DriftTaskRepository implements TaskRepository {
           final childrenByParent = _tasks.childrenByParent(rows);
 
           for (final row in rows) {
-            if (row.scopeId != null &&
-                !((await _access.scope(row.scopeId))?.canEdit ?? false)) {
-              continue;
-            }
             final schedule = TaskSchedule.fromJsonString(row.dueJson);
             final recurrence = schedule?.recurrence;
             if (schedule == null || recurrence == null) {
               continue;
             }
             if (!_shouldMaterialize(row, schedule, localNow)) {
+              continue;
+            }
+            if (row.scopeId != null &&
+                !((await _access.scope(row.scopeId))?.canEdit ?? false)) {
               continue;
             }
 

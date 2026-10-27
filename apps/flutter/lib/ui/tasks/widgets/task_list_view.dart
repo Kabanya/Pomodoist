@@ -1,5 +1,6 @@
 import 'package:pomodoist/ui/tasks/view_models/task_subtask_progress.dart';
 import 'dart:async';
+import 'package:pomodoist/utils/startup_diagnostics.dart';
 import 'package:pomodoist/ui/tasks/view_models/task_branch_view_model.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_branch_widgets.dart';
 
@@ -214,6 +215,9 @@ class TaskListView extends ConsumerWidget {
                   skipLoadingOnReload: true,
                   skipError: true,
                   data: (_) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      traceStartupStage('task-list-ready');
+                    });
                     if (visibleItems.isEmpty &&
                         (tasks.isLoading || tasks.hasError)) {
                       return const SliverToBoxAdapter(child: SizedBox.shrink());

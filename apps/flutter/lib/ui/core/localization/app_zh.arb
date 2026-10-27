@@ -1604,5 +1604,6 @@
   "taskFormatBold": "粗体 (Markdown)",
   "taskFormatItalic": "斜体 (Markdown)",
   "taskFormatList": "项目符号列表",
-  "taskFormatLink": "链接 (Markdown)"
+  "taskFormatLink": "链接 (Markdown)",
+  "settingsShortcutsTogglePomo": "启用 / 停用 Pomo"
 }

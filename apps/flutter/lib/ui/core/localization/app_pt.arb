@@ -2215,5 +2215,6 @@
   "taskFormatBold": "Negrito (Markdown)",
   "taskFormatItalic": "Itálico (Markdown)",
   "taskFormatList": "Lista com marcadores",
-  "taskFormatLink": "Link (Markdown)"
+  "taskFormatLink": "Link (Markdown)",
+  "settingsShortcutsTogglePomo": "Ativar / desativar Pomo"
 }

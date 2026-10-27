@@ -1604,5 +1604,6 @@
   "taskFormatBold": "Gras (Markdown)",
   "taskFormatItalic": "Italique (Markdown)",
   "taskFormatList": "Liste à puces",
-  "taskFormatLink": "Lien (Markdown)"
+  "taskFormatLink": "Lien (Markdown)",
+  "settingsShortcutsTogglePomo": "Activer / désactiver Pomo"
 }

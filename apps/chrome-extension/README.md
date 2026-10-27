@@ -61,8 +61,14 @@ block page instead of redirecting in a loop.
 ### Pair a desktop
 
 In the desktop app, create a one-use pairing code for this extension's exact
-`chrome-extension://<id>` origin. Enter its visible port/code in the popup.
-Defaults are production **51987**, staging **51988**, development **51989**.
+`chrome-extension://<id>` origin. Enter its complete `port-code` value in the
+popup; the port is extracted automatically. The optional **Desktop port**
+details accept a separate port for older desktop versions with six-digit codes.
+Defaults are production **51987**, staging **51988**, development **51989**;
+each environment also uses `default + 3*n` for `n = 0…63`. Desktop startup
+remembers its last successful port and selects another when it is occupied.
+The extension automatically rediscovers an already paired desktop without
+asking for another code. Grant loopback-host access once when pairing.
 Build with the matching `APP_ENV`. The client accepts only
 `http://127.0.0.1:<numeric-port>`, pins the account/environment returned by pairing,
 and stores a separate random bridge token in trusted extension storage. Cloud
@@ -72,9 +78,17 @@ authority automatically. The desktop must keep renewing an offline lease while
 alive; closing it cannot leave permanent browser blocking.
 
 Bridge wire version 1: `POST /pair {code,deviceId,flavor}` returns
-`{token,owner,flavor}`; bearer-authenticated `GET /state` and
+`{token,owner,flavor,discoveryVersion:1}`; bearer-authenticated `GET /state` and
 `POST /command <FocusCommand>` return the Focus RPC envelope plus optional
 `protection`. Desktop logout revokes pairing; extension logout clears its token.
+`POST /discover` proves possession of the existing token using a fresh challenge
+and HMAC-SHA256 before any bearer-authenticated request to a discovered port.
+Searches send only a token digest, never the token, and validate account,
+environment, port and challenge. They use at most eight concurrent probes with
+500 ms timeouts and preserve command request IDs on reconnect. Legacy desktops
+remain supported at their saved port; modern pairings cannot downgrade to
+legacy discovery. See [the local channel protocol](../../docs/distraction-blocking.md#local-chrome-channel)
+for the exact proof encoding.
 
 ## Build
 

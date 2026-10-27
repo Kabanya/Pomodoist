@@ -59,6 +59,22 @@ export function bridgeOrigin(port) {
   if (!/^\d{1,5}$/.test(String(port)) || Number(port)<1 || Number(port)>65535) throw new Error('Enter a valid desktop port.');
   return `http://127.0.0.1:${Number(port)}`;
 }
+export function bridgePorts(flavor = 'production') {
+  const base = {production:51987,staging:51988,development:51989}[flavor];
+  if (!base) throw new Error('Invalid desktop environment.');
+  return Array.from({length:64}, (_,i) => base + 3*i);
+}
+export function pairingDetails(code, port, flavor = 'production') {
+  if (typeof code !== 'string') throw new Error('Enter the desktop pairing code.');
+  code = code.trim();
+  if (code.length < 4 || code.length > 128) throw new Error('Enter the desktop pairing code.');
+  const embedded = /^(\d{1,5})-\d{6}$/.exec(code);
+  port = embedded?.[1] ?? (port || bridgePorts(flavor)[0]);
+  bridgeOrigin(port);
+  return {port:Number(port),code};
+}
+const hex = bytes => Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2,'0')).join('');
+const sameBridge = (a,b) => !!a && !!b && a.token===b.token && a.owner===b.owner && a.flavor===b.flavor;
 export function pageMessage(message,sender,base) {
   if (sender.id!==new URL(base).hostname || !Number.isInteger(sender.tab?.id)) return null;
   if (message?.type==='returnToTask' && /^https?:/.test(sender.url??'')) return {type:'returnToTask',tabId:sender.tab.id};
@@ -139,26 +155,75 @@ export class FocusProtection {
     }
     return this.snapshot();
   }
+  async findBridge(bridge, scan = false) {
+    const encoder = new TextEncoder();
+    const clientId = hex(await crypto.subtle.digest('SHA-256',encoder.encode(bridge.token)));
+    const key = await crypto.subtle.importKey('raw',encoder.encode(bridge.token),{name:'HMAC',hash:'SHA-256'},false,['verify']);
+    const probe = async (port, legacy = false) => {
+      try {
+        const challenge = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
+        const response = await fetch(`${bridgeOrigin(port)}/discover`,{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({clientId,challenge,flavor:bridge.flavor}),credentials:'omit',redirect:'error',cache:'no-store',signal:AbortSignal.timeout(500)});
+        // shortcut: pre-discovery desktops are trusted only at their already paired port; remove after legacy support ends.
+        if (legacy && bridge.discoveryVersion!==1 && [401,403,404].includes(response.status)) return bridge;
+        if (!response.ok) return null;
+        const text = await response.text();
+        if (text.length>4096) return null;
+        const value = JSON.parse(text);
+        if (value.version!==1 || value.owner!==bridge.owner || value.flavor!==bridge.flavor || value.port!==port || !/^[a-f0-9]{64}$/.test(value.proof)) return null;
+        const signature = Uint8Array.from(value.proof.match(/../g),byte=>parseInt(byte,16));
+        const payload = JSON.stringify(['pomodoist-bridge-discovery-v1',challenge,bridge.owner,bridge.flavor,port]);
+        if (!await crypto.subtle.verify('HMAC',key,signature,encoder.encode(payload))) return null;
+        return {...bridge,port,discoveryVersion:1};
+      } catch { return null; }
+    };
+    let found = scan ? null : await probe(bridge.port,true);
+    const ports = bridgePorts(bridge.flavor).filter(port=>scan || port!==bridge.port);
+    for (let i=0; !found && i<ports.length; i+=8) {
+      if (!sameBridge(this.data.bridge,bridge) || this.data.source!=='desktop') throw new Error('Desktop pairing changed.');
+      found = (await Promise.all(ports.slice(i,i+8).map(port=>probe(port)))).find(Boolean);
+    }
+    if (!sameBridge(this.data.bridge,bridge) || this.data.source!=='desktop') throw new Error('Desktop pairing changed.');
+    if (!found) throw new Error('Desktop app unavailable. Local protection expires at the last confirmed deadline.');
+    if (found.port!==this.data.bridge.port || found.discoveryVersion!==this.data.bridge.discoveryVersion) await this.save({bridge:found});
+    return found;
+  }
+  async resolveBridge(bridge, scan = false) {
+    if (this.bridgeDiscovery && sameBridge(this.bridgeDiscovery.bridge,bridge)) return this.bridgeDiscovery.promise;
+    const search = {bridge};
+    this.bridgeDiscovery = search;
+    search.promise = this.findBridge(bridge,scan);
+    try { return await search.promise; }
+    finally { if (this.bridgeDiscovery===search) this.bridgeDiscovery=null; }
+  }
   async bridgeRequest(path,body,bridge=this.data.bridge) {
     if (!bridge) throw new Error('Pair the desktop app first.');
     if(path!=='/pair'&&bridge.flavor!==(this.config.flavor??'production'))throw new Error('Desktop environment does not match this extension.');
-    const origin=bridgeOrigin(bridge.port);
-    let response;
-    try { response=await fetch(`${origin}${path}`,{method:body?'POST':'GET',headers:{'Content-Type':'application/json',...(bridge.token?{Authorization:`Bearer ${bridge.token}`}:{})},
-      ...(body?{body:JSON.stringify(body)}:{}),credentials:'omit',redirect:'error',cache:'no-store',signal:AbortSignal.timeout(5000)}); }
-    catch { throw new Error('Desktop app unavailable. Local protection expires at the last confirmed deadline.'); }
-    if (!response.ok){const error=new Error(response.status===409?'Focus changed. Refresh and choose the current session.':response.status===401?'Pairing expired. Pair the desktop app again.':'Desktop Focus request failed.');error.status=response.status;throw error;}
-    const text=await response.text(); if(text.length>1024*1024) throw new Error('Desktop response too large.');
-    return JSON.parse(text);
+    const send = async target => {
+      if (path!=='/pair' && (!sameBridge(this.data.bridge,target) || this.data.source!=='desktop')) throw new Error('Desktop pairing changed.');
+      let response;
+      try { response=await fetch(`${bridgeOrigin(target.port)}${path}`,{method:body?'POST':'GET',headers:{'Content-Type':'application/json',...(target.token?{Authorization:`Bearer ${target.token}`}:{})},
+        ...(body?{body:JSON.stringify(body)}:{}),credentials:'omit',redirect:'error',cache:'no-store',signal:AbortSignal.timeout(5000)}); }
+      catch { throw new Error('Desktop app unavailable. Local protection expires at the last confirmed deadline.'); }
+      if (!response.ok){const error=new Error(response.status===409?'Focus changed. Refresh and choose the current session.':response.status===401?'Pairing expired. Pair the desktop app again.':'Desktop Focus request failed.');error.status=response.status;throw error;}
+      const text=await response.text(); if(text.length>1024*1024) throw new Error('Desktop response too large.');
+      return JSON.parse(text);
+    };
+    if (path==='/pair') return send(bridge);
+    const target = await this.resolveBridge(bridge);
+    try { return await send(target); }
+    catch(error) {
+      if (!sameBridge(this.data.bridge,bridge) || !(unavailable(error)||[401,403,404].includes(error.status))) throw error;
+      return send(await this.resolveBridge(this.data.bridge,true));
+    }
   }
   async pair({port,code,confirmed}) {
-    const origin=bridgeOrigin(port);
-    if (typeof code!=='string' || code.length<4 || code.length>128) throw new Error('Enter the desktop pairing code.');
-    if (!await this.chrome.permissions.contains({origins:[`${origin}/*`]})) throw new Error('Allow access to the desktop bridge.');
+    ({port,code}=pairingDetails(code,port,this.config.flavor??'production'));
+    if (!await this.chrome.permissions.contains({origins:['http://127.0.0.1/*']})) throw new Error('Allow access to the desktop bridge.');
     await this.detach(confirmed===true);
     const result=await this.bridgeRequest('/pair',{code,deviceId:this.store.data.deviceId,flavor:this.config.flavor??'production'},{port});
     if (typeof result.token!=='string' || result.token.length<32 || typeof result.owner!=='string' || result.flavor!==(this.config.flavor??'production') || this.store.data.owner && result.owner!==this.store.data.owner) throw new Error('Desktop account or app environment does not match.');
-    await this.save({bridge:{port:Number(port),token:result.token,owner:result.owner,flavor:result.flavor},source:'desktop',owner:result.owner,snapshot:null,envelope:null});
+    await this.save({bridge:{port:Number(port),token:result.token,owner:result.owner,flavor:result.flavor,...(result.discoveryVersion===1?{discoveryVersion:1}:{})},source:'desktop',owner:result.owner,snapshot:null,envelope:null});
     await this.read(); return this.snapshot();
   }
   async accept(result,observedAt=this.clock(),autoStart=false) {

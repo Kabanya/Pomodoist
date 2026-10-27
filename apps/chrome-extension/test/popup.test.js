@@ -12,7 +12,7 @@ import { text } from '../src/i18n.js';
 // handlers under test are the shipped ones.
 const BASE_TIME = 1_800_000_000_000;
 async function loadPopup({ snapshot = {}, readSnapshot = snapshot, confirm = () => true, currentTab, startAt = 0 } = {}) {
-  const elements = new Map(), messages = [], ticks = [], created = [];
+  const elements = new Map(), messages = [], ticks = [], created = [], permissions = [];
   const time = { now: BASE_TIME + startAt };
   const element = () => { const node = { value: '', dataset: {}, listeners: {}, hidden: false, classList: { add() {} },
     firstElementChild: { textContent: '' },
@@ -36,12 +36,12 @@ async function loadPopup({ snapshot = {}, readSnapshot = snapshot, confirm = () 
       createGain() { return { gain: {}, connect: () => ({ connect() {} }) }; } },
     chrome: { tabs: { query: async () => [currentTab] }, runtime: { onMessage: { addListener() {} },
         sendMessage: async message => { messages.push(structuredClone(message)); return { ok: true, value: message.type==='focusRead'?readSnapshot:snapshot }; } },
-      permissions:{request:async()=>true},storage: { session: { get: async () => ({}), set: async () => {} } } },
+      permissions:{request:async options=>{permissions.push(structuredClone(options));return true;}},storage: { session: { get: async () => ({}), set: async () => {} } } },
   };
   // The popup awaits its first snapshot at module scope, so evaluation resolves
   // only once render() has run and state is populated.
   await vm.runInNewContext(`(async () => {${source}\n})()`, context);
-  return { elements, get, views, presets, messages, ticks, created,
+  return { elements, get, views, presets, messages, ticks, created, permissions,
     advance: ms => { time.now += ms; } };
 }
 // A Date whose zero-argument form reads the shared test clock, so the
@@ -145,4 +145,35 @@ test('logout refreshes Focus before confirming immediate strict exit despite a s
   await popup.get('logout').listeners.click();
   assert.equal(popup.messages.filter(m=>m.type==='focusRead').length,1);
   assert.equal(popup.messages.filter(m=>m.type==='logout').length,0);
+});
+
+test('protection exposes permission, idle and active states independently of its translated message', async () => {
+  for (const [protection, expected] of [
+    [{enabled:true,hostPermission:false,active:false}, 'permission-required'],
+    [{enabled:true,hostPermission:true,active:false}, 'idle'],
+    [{enabled:true,hostPermission:true,active:true}, 'active'],
+  ]) {
+    const popup=await loadPopup({snapshot:{...snapshotFor({}),protection}});
+    assert.equal(popup.get('protection-status').dataset.state,expected);
+  }
+});
+
+test('pairing extracts the desktop port from the code and requests loopback discovery access', async () => {
+  const popup = await loadPopup({ snapshot: snapshotFor({}) });
+  popup.get('pair-code').value = '52001-123456';
+  popup.get('bridge-port').value = '51989';
+  await popup.get('pair-form').listeners.submit({ preventDefault() {} });
+  await new Promise(resolve=>setImmediate(resolve));
+  const pair = popup.messages.find(message=>message.type==='pair');
+  assert.ok(pair);
+  assert.equal(pair.payload.port,52001);
+  assert.equal(pair.payload.code,'52001-123456');
+  assert.deepEqual(popup.permissions,[{origins:['http://127.0.0.1/*']}]);
+});
+
+test('the desktop port is optional and hidden in additional pairing settings', async () => {
+  const html = await readFile(new URL('../popup.html',import.meta.url),'utf8');
+  const form=html.match(/<form id="pair-form">([\s\S]*?)<\/form>/)[1];
+  assert.match(form,/<details>[\s\S]*id="bridge-port"[\s\S]*<\/details>/);
+  assert.doesNotMatch(form.match(/<input id="bridge-port"[^>]*>/)[0],/required/);
 });

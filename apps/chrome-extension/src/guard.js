@@ -9,6 +9,7 @@
     lease=value.expiresAt;
     if(window.top===window && !shield && document.documentElement) {
       shield=document.createElement('div');
+      shield.setAttribute('data-testid','blocking-overlay');
       shield.style.cssText='position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:2147483647!important;display:block!important;';
       const shadow=shield.attachShadow({mode:'closed'}),frame=document.createElement('iframe');
       fallback=document.createElement('div');fallback.style.cssText='position:absolute;inset:0;display:grid;place-content:center;text-align:center;background:#211d1c;color:#f3edeb;font:20px system-ui;';

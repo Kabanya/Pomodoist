@@ -1604,5 +1604,6 @@
   "taskFormatBold": "Fett (Markdown)",
   "taskFormatItalic": "Kursiv (Markdown)",
   "taskFormatList": "Aufzählung",
-  "taskFormatLink": "Link (Markdown)"
+  "taskFormatLink": "Link (Markdown)",
+  "settingsShortcutsTogglePomo": "Pomo aktivieren / deaktivieren"
 }

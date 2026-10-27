@@ -1,0 +1,161 @@
+{
+  "date": "2026-10-28",
+  "flutterVersion": "3.47.0",
+  "authImage": "supabase/gotrue:v2.195.0",
+  "fixtureJwtLifetimeSeconds": 40,
+  "originalJwtLifetimeSecondsAfterTest": 3600,
+  "runs": [
+    {
+      "passed": true,
+      "durationMs": 88523,
+      "authResponses": {
+        "POST /admin/users 200": 1,
+        "POST /token 200": 3,
+        "GET /user 403": 2,
+        "POST /logout 204": 1,
+        "POST /token 400": 1,
+        "DELETE /admin/users/:fixture 200": 1
+      },
+      "run": 1,
+      "heldRefreshMilliseconds": 0,
+      "checksFullRestoredRowsAndStaleWriter": false,
+      "stages": [
+        {
+          "stage": "local-tasks-ready",
+          "elapsedMs": 3615
+        },
+        {
+          "stage": "expired-jwt-rejected",
+          "elapsedMs": 42037
+        },
+        {
+          "stage": "local-write-during-refresh",
+          "elapsedMs": 42056
+        },
+        {
+          "stage": "refresh-succeeded",
+          "elapsedMs": 42118
+        },
+        {
+          "stage": "revoked-jwt-expired",
+          "elapsedMs": 84023
+        },
+        {
+          "stage": "refresh-rejected-local-data-preserved",
+          "elapsedMs": 84045
+        },
+        {
+          "stage": "guest-owner-data-archived",
+          "elapsedMs": 84080
+        },
+        {
+          "stage": "restart-restored-tasks-and-pending-writes",
+          "elapsedMs": 84219
+        }
+      ]
+    },
+    {
+      "passed": true,
+      "durationMs": 112051,
+      "authResponses": {
+        "POST /admin/users 200": 1,
+        "POST /token 200": 3,
+        "GET /user 403": 2,
+        "POST /logout 204": 1,
+        "POST /token 400": 1,
+        "DELETE /admin/users/:fixture 200": 1
+      },
+      "run": 2,
+      "heldRefreshMilliseconds": 2000,
+      "checksFullRestoredRowsAndStaleWriter": true,
+      "stages": [
+        {
+          "stage": "local-tasks-ready",
+          "elapsedMs": 3642
+        },
+        {
+          "stage": "expired-jwt-rejected",
+          "elapsedMs": 41735
+        },
+        {
+          "stage": "local-write-during-refresh",
+          "elapsedMs": 43781
+        },
+        {
+          "stage": "refresh-succeeded",
+          "elapsedMs": 43910
+        },
+        {
+          "stage": "revoked-jwt-expired",
+          "elapsedMs": 85717
+        },
+        {
+          "stage": "refresh-rejected-local-data-preserved",
+          "elapsedMs": 85767
+        },
+        {
+          "stage": "guest-owner-data-archived",
+          "elapsedMs": 85804
+        },
+        {
+          "stage": "restart-restored-tasks-and-pending-writes",
+          "elapsedMs": 85951
+        }
+      ]
+    },
+    {
+      "passed": true,
+      "durationMs": 90525,
+      "authResponses": {
+        "POST /admin/users 200": 1,
+        "POST /token 200": 3,
+        "GET /user 403": 2,
+        "POST /logout 204": 1,
+        "POST /token 400": 1,
+        "DELETE /admin/users/:fixture 200": 1
+      },
+      "run": 3,
+      "heldRefreshMilliseconds": 2000,
+      "checksFullRestoredRowsAndStaleWriter": true,
+      "stages": [
+        {
+          "stage": "local-tasks-ready",
+          "elapsedMs": 706
+        },
+        {
+          "stage": "expired-jwt-rejected",
+          "elapsedMs": 42067
+        },
+        {
+          "stage": "local-write-during-refresh",
+          "elapsedMs": 44114
+        },
+        {
+          "stage": "refresh-succeeded",
+          "elapsedMs": 44203
+        },
+        {
+          "stage": "revoked-jwt-expired",
+          "elapsedMs": 86050
+        },
+        {
+          "stage": "refresh-rejected-local-data-preserved",
+          "elapsedMs": 86092
+        },
+        {
+          "stage": "guest-owner-data-archived",
+          "elapsedMs": 86133
+        },
+        {
+          "stage": "restart-restored-tasks-and-pending-writes",
+          "elapsedMs": 86291
+        }
+      ]
+    }
+  ],
+  "targetedRegressionsPassed": 46,
+  "cleanup": {
+    "fixtureAccountsRemaining": 0,
+    "temporaryAuthContainersRemaining": 0
+  }
+}

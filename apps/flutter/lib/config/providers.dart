@@ -1,4 +1,5 @@
 import 'package:pomodoist/config/local_completion_dependencies.dart';
+import 'package:pomodoist/utils/startup_diagnostics.dart';
 import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/domain/models/calendar/calendar_models.dart';
 import 'package:pomodoist/data/repositories/calendar/drift_calendar_integration_repository.dart';
@@ -62,10 +63,7 @@ final appStartupProvider = FutureProvider<void>((ref) async {
   ref.watch(focusAutoCompletionCoordinatorProvider);
   final db = ref.watch(appDatabaseProvider);
   await db.ensureSeedData();
-  await ref
-      .read(taskRepositoryProvider)
-      .materializeDueRecurringTasks()
-      .then((result) => result.getOrThrow());
+  traceStartupStage('database-ready');
   unawaited(
     _initializeNotificationsBestEffort(
       ref.watch(notificationRepositoryProvider),
@@ -305,7 +303,10 @@ final tasksByQueryProvider = StreamProvider.family<List<TaskItem>, TaskQuery>((
   ref,
   query,
 ) {
-  return ref.watch(taskRepositoryProvider).watchTasks(query);
+  return ref.watch(taskRepositoryProvider).watchTasks(query).map((tasks) {
+    traceStartupStage('tasks-emitted');
+    return tasks;
+  });
 });
 
 final taskProvider = StreamProvider.family<TaskItem?, String>((ref, id) {

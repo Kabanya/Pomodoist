@@ -1,0 +1,658 @@
+{
+  "live": {
+    "runs": [
+      {
+        "run": 1,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 408,
+          "first-frame": 793,
+          "shell-ready": 1194,
+          "database-ready": 1338,
+          "interface-ready": 1397,
+          "tasks-emitted": 1613
+        },
+        "launchToTasksMs": 4016,
+        "rssKiB": 474576,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 2,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 821,
+          "first-frame": 1160,
+          "shell-ready": 1783,
+          "database-ready": 1915,
+          "interface-ready": 1977,
+          "tasks-emitted": 2183
+        },
+        "launchToTasksMs": 2758,
+        "rssKiB": 512800,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 3,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 390,
+          "first-frame": 696,
+          "shell-ready": 1052,
+          "database-ready": 1212,
+          "interface-ready": 1272,
+          "tasks-emitted": 1464
+        },
+        "launchToTasksMs": 1979,
+        "rssKiB": 589792,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 4,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 439,
+          "first-frame": 802,
+          "shell-ready": 1213,
+          "database-ready": 1425,
+          "interface-ready": 1487,
+          "tasks-emitted": 1809
+        },
+        "launchToTasksMs": 2379,
+        "rssKiB": 446048,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 5,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 485,
+          "first-frame": 805,
+          "shell-ready": 1168,
+          "database-ready": 1300,
+          "interface-ready": 1362,
+          "tasks-emitted": 1574
+        },
+        "launchToTasksMs": 2730,
+        "rssKiB": 504384,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 6,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 537,
+          "first-frame": 872,
+          "shell-ready": 1232,
+          "database-ready": 1511,
+          "interface-ready": 1567,
+          "tasks-emitted": 1807
+        },
+        "launchToTasksMs": 2691,
+        "rssKiB": 514528,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 7,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 503,
+          "first-frame": 837,
+          "shell-ready": 1393,
+          "database-ready": 1597,
+          "interface-ready": 1681,
+          "tasks-emitted": 2221
+        },
+        "launchToTasksMs": 3133,
+        "rssKiB": 360768,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 8,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 432,
+          "first-frame": 797,
+          "shell-ready": 1188,
+          "database-ready": 1379,
+          "interface-ready": 1431,
+          "tasks-emitted": 1695
+        },
+        "launchToTasksMs": 3019,
+        "rssKiB": 602688,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 9,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 427,
+          "first-frame": 757,
+          "shell-ready": 1122,
+          "database-ready": 1300,
+          "interface-ready": 1361,
+          "tasks-emitted": 1557
+        },
+        "launchToTasksMs": 2142,
+        "rssKiB": 626272,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 10,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 359,
+          "first-frame": 677,
+          "shell-ready": 995,
+          "database-ready": 1115,
+          "interface-ready": 1169,
+          "tasks-emitted": 1370
+        },
+        "launchToTasksMs": 2011,
+        "rssKiB": 610784,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 11,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 357,
+          "first-frame": 655,
+          "shell-ready": 960,
+          "database-ready": 1091,
+          "interface-ready": 1133,
+          "tasks-emitted": 1308
+        },
+        "launchToTasksMs": 1826,
+        "rssKiB": 612752,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 12,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 338,
+          "first-frame": 635,
+          "shell-ready": 922,
+          "database-ready": 1042,
+          "interface-ready": 1090,
+          "tasks-emitted": 1269
+        },
+        "launchToTasksMs": 1735,
+        "rssKiB": 610256,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 13,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 361,
+          "first-frame": 665,
+          "shell-ready": 1003,
+          "database-ready": 1125,
+          "interface-ready": 1171,
+          "tasks-emitted": 1347
+        },
+        "launchToTasksMs": 1851,
+        "rssKiB": 610464,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 14,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 363,
+          "first-frame": 689,
+          "shell-ready": 1065,
+          "database-ready": 1247,
+          "interface-ready": 1314,
+          "tasks-emitted": 1532
+        },
+        "launchToTasksMs": 2917,
+        "rssKiB": 476176,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 15,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 400,
+          "first-frame": 716,
+          "shell-ready": 1009,
+          "database-ready": 1170,
+          "interface-ready": 1212,
+          "tasks-emitted": 1415
+        },
+        "launchToTasksMs": 2009,
+        "rssKiB": 503056,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 16,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 411,
+          "first-frame": 774,
+          "shell-ready": 1231,
+          "database-ready": 1444,
+          "interface-ready": 1486,
+          "tasks-emitted": 1671
+        },
+        "launchToTasksMs": 2153,
+        "rssKiB": 497424,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 17,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 363,
+          "first-frame": 680,
+          "shell-ready": 1126,
+          "database-ready": 1290,
+          "interface-ready": 1347,
+          "tasks-emitted": 1547
+        },
+        "launchToTasksMs": 2126,
+        "rssKiB": 520096,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 18,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 372,
+          "first-frame": 710,
+          "shell-ready": 1113,
+          "database-ready": 1332,
+          "interface-ready": 1424,
+          "tasks-emitted": 1682
+        },
+        "launchToTasksMs": 2232,
+        "rssKiB": 503264,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 19,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 434,
+          "first-frame": 753,
+          "shell-ready": 1128,
+          "database-ready": 1244,
+          "interface-ready": 1301,
+          "tasks-emitted": 1500
+        },
+        "launchToTasksMs": 1994,
+        "rssKiB": 527792,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 20,
+        "mode": "launchservices",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 452,
+          "first-frame": 790,
+          "shell-ready": 1089,
+          "database-ready": 1231,
+          "interface-ready": 1274,
+          "tasks-emitted": 1298
+        },
+        "launchToTasksMs": 1814,
+        "rssKiB": 442192,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 21,
+        "mode": "launchservices-concurrent-3",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 461,
+          "first-frame": 886,
+          "shell-ready": 1465,
+          "database-ready": 1750,
+          "interface-ready": 1809,
+          "tasks-emitted": 2062
+        },
+        "launchToTasksMs": 2594,
+        "rssKiB": 446304,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 22,
+        "mode": "launchservices-concurrent-3",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 522,
+          "first-frame": 1037,
+          "shell-ready": 1499,
+          "database-ready": 1823,
+          "interface-ready": 1940,
+          "tasks-emitted": 2190
+        },
+        "launchToTasksMs": 2936,
+        "rssKiB": 445120,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 23,
+        "mode": "launchservices-concurrent-3",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 671,
+          "first-frame": 1075,
+          "shell-ready": 1467,
+          "database-ready": 1654,
+          "interface-ready": 1755,
+          "tasks-emitted": 2050
+        },
+        "launchToTasksMs": 2703,
+        "rssKiB": 470016,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 24,
+        "mode": "launchservices-concurrent-3",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 420,
+          "first-frame": 1077,
+          "shell-ready": 1530,
+          "database-ready": 1732,
+          "interface-ready": 1830,
+          "tasks-emitted": 2332
+        },
+        "launchToTasksMs": 2864,
+        "rssKiB": 437360,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 25,
+        "mode": "launchservices-concurrent-3",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 504,
+          "first-frame": 1120,
+          "shell-ready": 1592,
+          "database-ready": 2018,
+          "interface-ready": 2118,
+          "tasks-emitted": 2400
+        },
+        "launchToTasksMs": 2875,
+        "rssKiB": 449472,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 26,
+        "mode": "launchservices-concurrent-3",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 740,
+          "first-frame": 1198,
+          "shell-ready": 1889,
+          "database-ready": 2125,
+          "interface-ready": 2183,
+          "tasks-emitted": 2446
+        },
+        "launchToTasksMs": 2957,
+        "rssKiB": 461728,
+        "errors": {},
+        "expectedNetworkDenialCount": 0
+      },
+      {
+        "run": 27,
+        "mode": "offline-direct",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 360,
+          "first-frame": 769,
+          "shell-ready": 992,
+          "database-ready": 1117,
+          "interface-ready": 1168,
+          "tasks-emitted": 1393
+        },
+        "launchToTasksMs": 1863,
+        "rssKiB": 583648,
+        "errors": {},
+        "expectedNetworkDenialCount": 1
+      },
+      {
+        "run": 28,
+        "mode": "offline-direct",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 616,
+          "first-frame": 1159,
+          "shell-ready": 1568,
+          "database-ready": 1835,
+          "interface-ready": 1920,
+          "tasks-emitted": 2266
+        },
+        "launchToTasksMs": 2787,
+        "rssKiB": 457168,
+        "errors": {},
+        "expectedNetworkDenialCount": 1
+      },
+      {
+        "run": 29,
+        "mode": "offline-direct",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 500,
+          "first-frame": 929,
+          "shell-ready": 1226,
+          "database-ready": 1401,
+          "interface-ready": 1465,
+          "tasks-emitted": 1713
+        },
+        "launchToTasksMs": 2635,
+        "rssKiB": 453600,
+        "errors": {},
+        "expectedNetworkDenialCount": 1
+      },
+      {
+        "run": 30,
+        "mode": "offline-direct",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 521,
+          "first-frame": 898,
+          "shell-ready": 1227,
+          "database-ready": 1418,
+          "interface-ready": 1479,
+          "tasks-emitted": 1874
+        },
+        "launchToTasksMs": 2838,
+        "rssKiB": 441232,
+        "errors": {},
+        "expectedNetworkDenialCount": 1
+      },
+      {
+        "run": 31,
+        "mode": "offline-direct",
+        "stagesMs": {
+          "begin": 0,
+          "window-attached": 424,
+          "first-frame": 745,
+          "shell-ready": 1116,
+          "database-ready": 1234,
+          "interface-ready": 1290,
+          "tasks-emitted": 1526
+        },
+        "launchToTasksMs": 2192,
+        "rssKiB": 607760,
+        "errors": {},
+        "expectedNetworkDenialCount": 1
+      }
+    ],
+    "taskRowsBefore": 1,
+    "taskRowsAfter": 1,
+    "taskRowsUnchanged": true
+  },
+  "testSeeds": [
+    {
+      "seed": 1,
+      "exitCode": 0,
+      "seconds": 31.65,
+      "passed": 46
+    },
+    {
+      "seed": 2,
+      "exitCode": 0,
+      "seconds": 9.98,
+      "passed": 46
+    },
+    {
+      "seed": 3,
+      "exitCode": 0,
+      "seconds": 19.28,
+      "passed": 46
+    },
+    {
+      "seed": 4,
+      "exitCode": 0,
+      "seconds": 74.15,
+      "passed": 46
+    },
+    {
+      "seed": 5,
+      "exitCode": 0,
+      "seconds": 49.34,
+      "passed": 46
+    },
+    {
+      "seed": 6,
+      "exitCode": 0,
+      "seconds": 7.92,
+      "passed": 46
+    },
+    {
+      "seed": 7,
+      "exitCode": 0,
+      "seconds": 7.91,
+      "passed": 46
+    },
+    {
+      "seed": 8,
+      "exitCode": 0,
+      "seconds": 7.22,
+      "passed": 46
+    },
+    {
+      "seed": 9,
+      "exitCode": 0,
+      "seconds": 8.27,
+      "passed": 46
+    },
+    {
+      "seed": 10,
+      "exitCode": 0,
+      "seconds": 6.74,
+      "passed": 46
+    },
+    {
+      "seed": 11,
+      "exitCode": 0,
+      "seconds": 7.29,
+      "passed": 46
+    },
+    {
+      "seed": 12,
+      "exitCode": 0,
+      "seconds": 7.33,
+      "passed": 46
+    },
+    {
+      "seed": 13,
+      "exitCode": 0,
+      "seconds": 8.26,
+      "passed": 46
+    },
+    {
+      "seed": 14,
+      "exitCode": 0,
+      "seconds": 6.98,
+      "passed": 46
+    },
+    {
+      "seed": 15,
+      "exitCode": 0,
+      "seconds": 6.58,
+      "passed": 46
+    },
+    {
+      "seed": 16,
+      "exitCode": 0,
+      "seconds": 7.11,
+      "passed": 46
+    },
+    {
+      "seed": 17,
+      "exitCode": 0,
+      "seconds": 6.55,
+      "passed": 46
+    },
+    {
+      "seed": 18,
+      "exitCode": 0,
+      "seconds": 6.46,
+      "passed": 46
+    },
+    {
+      "seed": 19,
+      "exitCode": 0,
+      "seconds": 6.46,
+      "passed": 46
+    },
+    {
+      "seed": 20,
+      "exitCode": 0,
+      "seconds": 6.48,
+      "passed": 46
+    }
+  ]
+}

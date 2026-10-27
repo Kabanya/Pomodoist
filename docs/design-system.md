@@ -1236,6 +1236,21 @@ Actions remain independent of the decorative animation and Reduce Motion.
 
 ### Empty states and full search
 
+The application shell and navigation render before local data is ready. Show
+preparation, errors and retry inside the main content area; retain the shell's
+state while preparation finishes or fails. Task creation, project creation,
+details, task counts, project lists, Focus playback and account-data overlays
+activate only after local database preparation and account ownership checks.
+Never read previous-owner data to populate the preparing shell. Task lists
+subscribe asynchronously after that boundary; loading a list does not block
+navigation. Defer onboarding overlays until local preparation completes.
+Token refresh, background synchronization and app resume retain the working
+interface and available rows; network failures use the existing sync status.
+Recurring task generation runs after local startup through the background wiring.
+Local preparation failures retain the existing error/retry screen, and retry
+cannot start a second preparation while the first is pending. A real account
+change still gates access until its ownership transition completes.
+
 Inbox, Today and project empty states explain the current context and offer a
 relevant Quick Add action. Today distinguishes no planned tasks from a clear list
 with completed work. Loading and errors retain available rows and offer retry.
@@ -2105,7 +2120,15 @@ Habits and projects receive no invented navigation shortcuts.
 
 Keep navigation labels and task counters stable while badges toggle. Search has
 no permanently visible shortcut label. Focus badges show both configured Focus
-bindings, including the alternate (Command/Control F by default). Do not
+bindings, including the alternate (Command/Control F by default).
+Command/Control E toggles Pomo's persisted enabled preference through its existing
+controller, guards concurrent writes and closing, and reports failures. The Pomo
+button shows the configured shortcut on hold; the binding is editable alongside
+the other app shortcuts. Adding it preserves existing user bindings, choosing a
+free modified key when E is occupied.
+
+On small icon buttons, anchor the full badge in an overlay sized to the viewport; flip its
+placement near window edges instead of squeezing it into the button. Do not
 show a floating shell help panel when the modifier is held; retain the in-place
 badges and compact local hints. Compact dialog hints sit beside their actions,
 with reserved space and wrapping for scaled text.

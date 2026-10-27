@@ -66,9 +66,9 @@
     <label class="check"><input id="enable-protection" type="checkbox"><span data-i18n="Enable website protection and domain discovery">Enable website protection and domain discovery</span></label>
     <p id="protection-status" role="status" class="small muted"></p>
     <label><span data-i18n="Focus source">Focus source</span><select id="focus-source"><option value="cloud" data-i18n="Account cloud">Account cloud</option><option value="desktop" data-i18n="Paired desktop">Paired desktop</option></select></label>
-    <details><summary data-i18n="Pair desktop for offline Focus">Pair desktop for offline Focus</summary>
+    <details><summary data-testid="desktop-pairing-toggle" data-i18n="Pair desktop for offline Focus">Pair desktop for offline Focus</summary>
       <p class="small muted" data-i18n="Open desktop protection settings for a one-use pairing code. Use the same account and environment.">Open desktop protection settings for a one-use pairing code. Use the same account and environment.</p>
-      <form id="pair-form"><label><span data-i18n="Desktop port">Desktop port</span><input id="bridge-port" type="number" min="1" max="65535" required></label><label><span data-i18n="Pairing code">Pairing code</span><input id="pair-code" autocomplete="off" minlength="4" maxlength="128" required></label><button type="submit" data-i18n="Pair">Pair</button></form>
+      <form id="pair-form"><label><span data-i18n="Pairing code">Pairing code</span><input id="pair-code" autocomplete="off" minlength="4" maxlength="128" required></label><details><summary data-i18n="Desktop port">Desktop port</summary><label><span data-i18n="Desktop port">Desktop port</span><input id="bridge-port" type="number" min="1" max="65535"></label></details><button type="submit" data-i18n="Pair">Pair</button></form>
     </details>
     <label class="check"><input id="auto-classify" type="checkbox"><span data-i18n="Automatically categorize new domains (Pro)">Automatically categorize new domains (Pro)</span></label>
     <p class="small muted" data-i18n="Task analysis and new automatic categories share the monthly AI limit. Cached categories and manual corrections are free.">Task analysis and new automatic categories share the monthly AI limit. Cached categories and manual corrections are free.</p>

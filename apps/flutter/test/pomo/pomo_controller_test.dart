@@ -101,6 +101,39 @@ FocusRunItem run() => FocusRunItem(
 );
 void main() {
   test(
+    'toggle enables and disables Pomo while guarding concurrent requests',
+    () async {
+      final service = MemoryPreferences();
+      final prefs = LocalPomoPreferencesRepository(service);
+      final c = PomoController(prefs, Host());
+      addTearDown(prefs.dispose);
+      addTearDown(c.dispose);
+      await c.initialize();
+      await c.toggleEnabled();
+      expect(c.prefs.enabled, isTrue);
+      expect(c.visible, isTrue);
+      service.gate = Completer<void>();
+      final saving = c.toggleEnabled();
+      expect(c.busy, isTrue);
+      await c.toggleEnabled();
+      service.gate!.complete();
+      await saving;
+      expect(c.prefs.enabled, isFalse);
+      expect(c.visible, isFalse);
+      expect(c.busy, isFalse);
+      service.gate = null;
+      c.closing = true;
+      await c.toggleEnabled();
+      expect(c.prefs.enabled, isFalse);
+      c.closing = false;
+      service.fail = true;
+      await c.toggleEnabled();
+      expect(c.prefs.enabled, isFalse);
+      expect(c.error, isA<StateError>());
+      expect(c.busy, isFalse);
+    },
+  );
+  test(
     'enabling restores a dismissed companion and disabling persists',
     () async {
       final service = MemoryPreferences();

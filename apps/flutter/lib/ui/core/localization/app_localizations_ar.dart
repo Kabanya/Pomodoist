@@ -4904,4 +4904,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get taskFormatLink => 'رابط (Markdown)';
+
+  @override
+  String get settingsShortcutsTogglePomo => 'تفعيل / تعطيل Pomo';
 }

@@ -23,21 +23,26 @@ import 'package:pomodoist/ui/settings/widgets/pomodoist_account_actions.dart';
 bool onboardingUsesFullScreen(Size size) => size.shortestSide < 600;
 
 class OnboardingGate extends ConsumerWidget {
-  const OnboardingGate({required this.child, super.key});
+  const OnboardingGate({required this.child, this.enabled = true, super.key});
 
   final Widget child;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen(onboardingViewModelProvider.select((state) => state.completed), (
-      _,
-      completed,
-    ) {
-      if (completed) ref.invalidate(learningTourProvider);
-    });
-    ref.watch(billingAccessProvider);
-    final state = ref.watch(onboardingViewModelProvider);
-    final tour = ref.watch(learningTourProvider).value;
+    if (enabled) {
+      ref.listen(
+        onboardingViewModelProvider.select((state) => state.completed),
+        (_, completed) {
+          if (completed) ref.invalidate(learningTourProvider);
+        },
+      );
+      ref.watch(billingAccessProvider);
+    }
+    final state = enabled
+        ? ref.watch(onboardingViewModelProvider)
+        : const OnboardingState();
+    final tour = enabled ? ref.watch(learningTourProvider).value : null;
     return Stack(
       fit: StackFit.expand,
       children: [

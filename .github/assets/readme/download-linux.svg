@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="224" height="76" viewBox="0 0 224 76" role="img" aria-label="Linux — AppImage · x86_64">
+  <title>Linux — AppImage · x86_64</title>
+  <rect x="4.5" y="4.5" width="215" height="67" rx="10" fill="#151e2b" stroke="#334155"/>
+  <g transform="translate(19 24)" fill="none" stroke="#f5ede0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" color="#f5ede0">
+    <rect x="1" y="3" width="26" height="22" rx="4"/><path d="m7 10 4 4-4 4m9 0h5"/>
+  </g>
+  <g font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+    <text x="61" y="33" fill="#fff7eb" font-size="15" font-weight="600">Linux</text>
+    <text x="61" y="52" fill="#a9b6c8" font-size="11">AppImage · x86_64</text>
+  </g>
+  <path d="M195 32h9m-4-4 4 4-4 4" fill="none" stroke="#f07b6e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

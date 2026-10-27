@@ -113,7 +113,7 @@ class _TaskSearchPaletteState extends ConsumerState<_TaskSearchPalette> {
       try {
         if (id == 'pomo') {
           final pomo = ref.read(pomoControllerProvider);
-          await pomo.setEnabled(!pomo.prefs.enabled);
+          await pomo.toggleEnabled();
           if (pomo.error != null) throw pomo.error!;
         } else {
           await ref

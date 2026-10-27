@@ -10,14 +10,16 @@ export 'package:pomodoist/ui/core/view_models/app_startup_view_model.dart'
     show AppStartupViewModel, appStartupViewModelProvider;
 
 class AppStartupGate extends ConsumerWidget {
-  const AppStartupGate({required this.child, super.key});
+  const AppStartupGate({required this.child, this.shellBuilder, super.key});
 
   final Widget child;
+  final Widget Function(Widget content, bool dataReady)? shellBuilder;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final startup = ref.watch(appStartupViewModelProvider);
-    return startup.when(
+    final content = startup.when(
+      skipLoadingOnRefresh: false,
       data: (_) => child,
       loading: () => const _StartupLoading(),
       error: (error, _) => _StartupError(
@@ -25,6 +27,11 @@ class AppStartupGate extends ConsumerWidget {
         onRetry: ref.read(appStartupViewModelProvider.notifier).retry,
       ),
     );
+    return shellBuilder?.call(
+          content,
+          !startup.isLoading && !startup.hasError,
+        ) ??
+        content;
   }
 }
 
@@ -121,7 +128,7 @@ class _StartupError extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Could not start Pomodoist',
+                context.l10n.taskListLoadError,
                 key: const Key('app-startup-error-title'),
                 style: Theme.of(context).textTheme.titleLarge,
                 textAlign: TextAlign.center,
@@ -137,7 +144,7 @@ class _StartupError extends StatelessWidget {
                 key: const Key('app-startup-retry-button'),
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                label: Text(context.l10n.commonRetry),
               ),
             ],
           ),

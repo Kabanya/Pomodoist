@@ -1604,5 +1604,6 @@
   "taskFormatBold": "Жирный (Markdown)",
   "taskFormatItalic": "Курсив (Markdown)",
   "taskFormatList": "Маркированный список",
-  "taskFormatLink": "Ссылка (Markdown)"
+  "taskFormatLink": "Ссылка (Markdown)",
+  "settingsShortcutsTogglePomo": "Включить / выключить Pomo"
 }

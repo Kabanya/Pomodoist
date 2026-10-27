@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_account/app_account.dart';
 import 'package:fake_async/fake_async.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/data/services/sync/account_sync_lifecycle.dart';
@@ -10,6 +11,34 @@ import 'package:pomodoist/data/services/sync/account_sync_failure.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('resume reuses an in-flight sync cycle', () async {
+    final queue = _FakeOutboxService();
+    final pending = Completer<Set<String>>();
+    var calls = 0;
+    final lifecycle = _lifecycle(
+      queue: queue,
+      syncNow: () async {
+        calls++;
+        await pending.future;
+      },
+    )..start();
+    addTearDown(() async {
+      lifecycle.dispose();
+      await queue.dispose();
+    });
+    await pumpEventQueue();
+    expect(calls, 1);
+    for (var resume = 0; resume < 1000; resume++) {
+      lifecycle.didChangeAppLifecycleState(AppLifecycleState.inactive);
+      lifecycle.didChangeAppLifecycleState(AppLifecycleState.resumed);
+    }
+    lifecycle.didChangeAppLifecycleState(AppLifecycleState.resumed);
+    await pumpEventQueue();
+    expect(calls, 1);
+    pending.complete({});
+    await pumpEventQueue();
+  });
 
   test(
     'restart bypasses one local backoff and coalesces repeated requests',

@@ -5011,6 +5011,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get taskFormatLink => 'Link (Markdown)';
+
+  @override
+  String get settingsShortcutsTogglePomo => 'Ativar / desativar Pomo';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -6395,4 +6398,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get taskFormatLink => 'Link (Markdown)';
+
+  @override
+  String get settingsShortcutsTogglePomo => 'Ativar / desativar Pomo';
 }

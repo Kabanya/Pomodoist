@@ -2,7 +2,7 @@ import { text, localize } from './i18n.js';
 import { config } from './config.js';
 import { dateKey, deleteConfirmation, dueDay, openSubtasks, parseDue, schedule, scheduleFields, tabDraft, tasksFor } from './core.js';
 import { PRESETS, preset, timerView } from './timer.js';
-import { CATEGORIES, domain, bridgeOrigin } from './protection.js';
+import { CATEGORIES, domain, pairingDetails } from './protection.js';
 import { Realtime } from './realtime.js';
 localize(document);
 const $ = id => document.getElementById(id);
@@ -221,6 +221,7 @@ function paintProtection(){
   $('auto-classify').checked=!!p.autoClassify;$('auto-classify').disabled=busy>0||!p.isPro;
   $('classification-error').textContent=text(p.classificationError||'');
   $('focus-source').value=p.source??'cloud';
+  $('protection-status').dataset.state=p.hostPermission?(p.active?'active':'idle'):'permission-required';
   $('protection-status').textContent=text(p.hostPermission?(p.active?'Website protection active':'Website access allowed · protection idle'):'Website permission required')+' · '+text(p.incognito?'Incognito allowed':'Incognito not enabled')+(p.error?' · '+text(p.error):'');
   const profiles=(state?.focus?.profiles??[]).filter(p=>!p.isDeleted);
   const selected=$('focus-profile').value || state?.focus?.session?.profileId || '';
@@ -267,9 +268,8 @@ $('enable-protection').addEventListener('change',()=>run(async()=>{
 async function confirmDetach(){render(await call('focusRead'));return !state?.focus?.session?.preset?.strictMode||state.focus.session.strictExitSeconds!==0||confirm(text('Release strict protection on this browser now?'));}
 $('focus-source').addEventListener('change',()=>run(async()=>{if(await confirmDetach())render(await call('protection',{source:$('focus-source').value,confirmed:true}));}));
 $('pair-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{
-  const port=$('bridge-port').value,code=$('pair-code').value;
-  const origin=bridgeOrigin(port);
-  if(!await chrome.permissions.request({origins:[`${origin}/*`]}))throw new Error('Allow access to the desktop bridge.');
+  const {port,code}=pairingDetails($('pair-code').value,$('bridge-port').value,config.flavor??'production');
+  if(!await chrome.permissions.request({origins:['http://127.0.0.1/*']}))throw new Error('Allow access to the desktop bridge.');
   if(!await confirmDetach())return;
   render(await call('pair',{port,code,confirmed:true}));$('pair-code').value='';
 });});

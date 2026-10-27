@@ -40,6 +40,7 @@ class _FocusFullHeader extends StatelessWidget {
         if (onMinimize != null)
           ShortcutHintBadge(
             command: AppShortcutCommand.focus,
+            outside: true,
             alignment: Alignment.topRight,
             child: IconButton(
               key: const Key('focus-header-minimize'),

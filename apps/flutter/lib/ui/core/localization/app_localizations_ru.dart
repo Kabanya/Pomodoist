@@ -4992,4 +4992,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get taskFormatLink => 'Ссылка (Markdown)';
+
+  @override
+  String get settingsShortcutsTogglePomo => 'Включить / выключить Pomo';
 }

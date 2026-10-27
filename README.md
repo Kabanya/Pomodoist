@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src=".github/assets/readme/voice-to-task-cover.webp" alt="Pomodoist — Pomo turns scattered notes into a clear plan beside a Pomodoro timer" width="100%">
+  <img src=".github/assets/readme/voice-to-task-cover.webp" alt="Pomodoist — Pomo turns voice notes into a task checklist beside a Pomodoro timer" width="100%">
 </p>
 
 <p align="center">
@@ -11,8 +11,8 @@
 </p>
 
 <p align="center">
-  Plan tasks. Protect focus time. See your progress.<br>
-  An open-source productivity app for work, study, and everything in between.
+  Tasks, Pomodoro sessions, and a little desktop companion to keep you company.<br>
+  Open source. Available across desktop, mobile, and web.
 </p>
 
 <p align="center">
@@ -20,8 +20,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Kabanya/Pomodoist/releases"><img src=".github/assets/readme/download.svg" alt="Download Pomodoist" width="224" height="44"></a>
-  <a href="https://app.pomodoist.com"><img src=".github/assets/readme/web.svg" alt="Try Web" width="124" height="44"></a>
+  <a href="#download"><img src=".github/assets/readme/download.svg" alt="Download Pomodoist" width="240" height="60"></a>
+  <a href="https://app.pomodoist.com"><img src=".github/assets/readme/web.svg" alt="Try Web" width="224" height="60"></a>
 </p>
 
 <p align="center">
@@ -38,6 +38,31 @@
 <p align="center">
   <a href=".github/assets/readme/product-overview.webp"><img src=".github/assets/readme/product-overview.webp" alt="Original dark macOS upcoming planner alongside the iPhone focus timer" width="100%"></a>
 </p>
+
+### Meet Pomo, your desktop companion
+
+Pomo is an animated 3D mascot that lives on your desktop while you work.
+He follows your focus sessions, rests during breaks, and celebrates completed tasks.
+
+- See your remaining focus time and control sessions from the desktop
+- Start, pause, or resume focus and quickly add a task from Pomo's controls
+- Move and resize Pomo, show him only during focus, or choose quiet and reduced-motion modes
+
+<table align="center">
+<tr>
+<td align="center" width="33%"><img src=".github/assets/readme/desktop-pomo-focus.webp" alt="The actual Pomo 3D model in its focused thinking pose" width="200"><br><strong>Focus</strong></td>
+<td align="center" width="33%"><img src=".github/assets/readme/desktop-pomo-rest.webp" alt="The actual Pomo 3D model resting during a break" width="200"><br><strong>Rest</strong></td>
+<td align="center" width="33%"><img src=".github/assets/readme/desktop-pomo-happy.webp" alt="The actual Pomo 3D model celebrating progress" width="200"><br><strong>Celebrate</strong></td>
+</tr>
+</table>
+
+<p align="center">
+  <a href=".github/assets/readme/desktop-pomo.gif"><img src=".github/assets/readme/desktop-pomo.gif" alt="The actual floating Pomo window, with animated 3D motion and a live focus countdown" width="420"></a>
+  <br>
+  <sub>Recorded from the macOS desktop companion. <a href=".github/assets/readme/desktop-pomo-poster.webp">View a still frame</a>.</sub>
+</p>
+
+Enable Pomo in **Settings → Pomo**.
 
 <img src=".github/assets/readme/pomo-plan.webp" alt="Pomo planning with a pencil and checklist" align="right" width="96">
 
@@ -71,31 +96,6 @@ Work through Pomodoro sessions with configurable breaks and deep-focus tracking.
   <sub>Your full focus session: timeline, countdown, and interval controls. <a href=".github/assets/readme/macos-focus.webp">View the static screenshot</a>.</sub>
 </p>
 
-### Meet Pomo, your desktop companion
-
-Pomo is an animated 3D mascot that lives on your desktop while you work.
-He follows your focus sessions, rests during breaks, and celebrates completed tasks.
-
-- See your remaining focus time and control sessions from the desktop
-- Start, pause, or resume focus and quickly add a task from Pomo's controls
-- Move and resize Pomo, show him only during focus, or choose quiet and reduced-motion modes
-
-<p align="center">
-  <img src=".github/assets/readme/desktop-pomo-focus.webp" alt="The actual Pomo 3D model in its focused thinking pose" width="28%">
-  <img src=".github/assets/readme/desktop-pomo-rest.webp" alt="The actual Pomo 3D model resting during a break" width="28%">
-  <img src=".github/assets/readme/desktop-pomo-happy.webp" alt="The actual Pomo 3D model celebrating progress" width="28%">
-  <br>
-  <sub>Focus · Take a break · Celebrate</sub>
-</p>
-
-<p align="center">
-  <a href=".github/assets/readme/desktop-pomo.gif"><img src=".github/assets/readme/desktop-pomo.gif" alt="The actual floating Pomo window, with animated 3D motion and a live focus countdown" width="420"></a>
-  <br>
-  <sub>Recorded from the macOS desktop companion. <a href=".github/assets/readme/desktop-pomo-poster.webp">View a still frame</a>.</sub>
-</p>
-
-Enable Pomo in **Settings → Pomo**.
-
 ### Work together
 
 Share tasks, keep comments beside the work, and see your team's focus time.
@@ -107,8 +107,6 @@ Share tasks, keep comments beside the work, and see your team's focus time.
   <br>
   <sub>Shared task discussion in the macOS app, using fictional demo data. Click the screenshot to enlarge.</sub>
 </p>
-
-**Self-hosted is fully free.** Run Pomodoist on your own infrastructure with your own accounts and provider credentials; infrastructure and provider costs are yours. The official app uses Pomodoist's hosted infrastructure, with free features and paid services or account entitlements. Subscriptions support those hosted services; the source code and official client binaries remain AGPL-3.0-only. See [Licensing](LICENSING.md).
 
 <img src=".github/assets/readme/pomo-progress.webp" alt="Pomo celebrating progress" align="right" width="96">
 
@@ -163,37 +161,80 @@ Choose a view for the work in front of you. Click any screenshot for a closer lo
 
 </details>
 
+### Free, hosted, or self-hosted
+
+<p align="center">
+  <a href="#download"><img src=".github/assets/readme/hosting-official.svg" alt="Official app: get started with free features. Paid services and account entitlements support Pomodoist's hosted infrastructure. Get Pomodoist." width="336" height="240"></a>
+  <a href="https://pomodoist.com/docs/self-hosting/"><img src=".github/assets/readme/hosting-self-host.svg" alt="Self-hosted: fully free to run on your infrastructure, using your own accounts and provider credentials. Infrastructure and provider costs are yours; official hosted services are not included. Self-hosting guide." width="336" height="240"></a>
+</p>
+
+**Open-source software:** the app, server, and official client binaries remain
+[AGPL-3.0-only](LICENSE). Subscriptions pay for hosted services and account entitlements.
+See [licensing details](LICENSING.md).
+
 ### Open source. Open to you.
 
 Explore the code, run your own instance, or help improve Pomodoist.
 
-[Self-hosting](https://pomodoist.com/docs/self-hosting/) ·
-[Build from source](#build-from-source) ·
-[Contribute](CONTRIBUTING.md) ·
-[AGPL-3.0-only](LICENSE)
+<p align="center">
+  <a href="https://pomodoist.com/docs/self-hosting/"><img src=".github/assets/readme/action-self-host.svg" alt="Self-host — run your own instance" width="224" height="76"></a>
+  <a href="#build-from-source"><img src=".github/assets/readme/action-build.svg" alt="Build — build from source" width="224" height="76"></a>
+  <a href="CONTRIBUTING.md"><img src=".github/assets/readme/action-contribute.svg" alt="Contribute — help improve Pomodoist" width="224" height="76"></a>
+</p>
+
+---
+
+### Download
+
+<p align="center">
+  <a href="https://apps.apple.com/app/pomodoist/id6794391064"><img src=".github/assets/readme/download-macos.svg" alt="macOS — Mac App Store" width="224" height="76"></a>
+  <a href="https://apps.apple.com/app/pomodoist/id6794391064"><img src=".github/assets/readme/download-ios.svg" alt="iPhone &amp; iPad — App Store" width="224" height="76"></a>
+  <a href="https://github.com/Kabanya/Pomodoist/releases/latest/download/Pomodoist-Android.apk"><img src=".github/assets/readme/download-android.svg" alt="Android — APK · direct download" width="224" height="76"></a>
+  <br>
+  <a href="https://github.com/Kabanya/Pomodoist/releases/latest/download/Pomodoist-Setup.exe"><img src=".github/assets/readme/download-windows.svg" alt="Windows — EXE · installer" width="224" height="76"></a>
+  <a href="https://github.com/Kabanya/Pomodoist/releases/latest/download/Pomodoist-x86_64.AppImage"><img src=".github/assets/readme/download-linux.svg" alt="Linux — AppImage · x86_64" width="224" height="76"></a>
+  <a href="https://app.pomodoist.com"><img src=".github/assets/readme/download-web.svg" alt="Web — Open in browser" width="224" height="76"></a>
+</p>
+
+Linux: make the AppImage executable before opening it. The Windows installer is
+unsigned, so SmartScreen may show an unknown-publisher warning.
+See [release notes and checksums](https://github.com/Kabanya/Pomodoist/releases/latest).
 
 ### Build from source
 
-Development roadmap and acceptance status: [Stage 2 distraction protection](docs/distraction-blocking.md).
+From the repository root:
 
-Run `make setup` and `make check` from the repository root. Flutter lives in
-`apps/flutter`; the pinned SDK and environment profiles remain at the root.
-See the [repository architecture](https://pomodoist.com/docs/repository/) and
-[compatibility and release sequence](https://pomodoist.com/docs/compatibility/).
+```sh
+make setup
+make check
+```
 
-Detailed build, self-hosting, and platform-specific instructions are available in the documentation:
+Flutter lives in `apps/flutter`; the pinned SDK and environment profiles remain
+at the root.
 
-- [Introduction](https://pomodoist.com/docs/): App overview, key features, and documentation navigation
-- [Self-hosting](https://pomodoist.com/docs/self-hosting/): Docker setup, HTTPS, email, integrations, backups, and updates
-- [OpenClaw integration](https://pomodoist.com/docs/integrations/openclaw/): Standalone skill, OAuth setup, tasks, synchronized Focus, and ClawHub publication
-- [Flutter quickstart](https://pomodoist.com/docs/quickstart/): FVM setup, environment generation, validation, and local development
-- [System requirements](https://pomodoist.com/docs/installation/system-requirements/): Flutter SDK and platform-specific build toolchains
-- [Linux and Windows builds](https://pomodoist.com/docs/installation/desktop/): Desktop prerequisites, development, and release builds
+- [Flutter quickstart](https://pomodoist.com/docs/quickstart/): SDK setup, environment generation, and local development
+- [System requirements](https://pomodoist.com/docs/installation/system-requirements/): Platform-specific build toolchains
+- [Developer guide](https://pomodoist.com/docs/developer-guide/): Repository layout, Make targets, testing, and migrations
+- [Self-hosting](https://pomodoist.com/docs/self-hosting/): Docker setup, integrations, backups, and updates
+
+<details>
+<summary><strong>Developer documentation</strong></summary>
+
+- [Documentation home](https://pomodoist.com/docs/): App overview and documentation navigation
+- [Repository architecture](https://pomodoist.com/docs/repository/): Workspace structure and dependency boundaries
+- [Compatibility and release sequence](https://pomodoist.com/docs/compatibility/): Client and server compatibility
+- [Linux and Windows builds](https://pomodoist.com/docs/installation/desktop/): Desktop prerequisites and release builds
 - [Configuration reference](https://pomodoist.com/docs/configuration/reference/): Environment files and client configuration
-- [Developer guide](https://pomodoist.com/docs/developer-guide/): Repository layout, Make targets, testing, migrations, and contributing
-- [Email address operations](https://pomodoist.com/docs/configuration/email-addresses/): Add incoming Cloudflare routes and outgoing Brevo senders
-- [Telegram Mini App development](https://pomodoist.com/docs/integrations/telegram-mini-app/#local-development): `make telegram-debug` with real staging accounts and `make telegram-release`
+- [OpenClaw integration](https://pomodoist.com/docs/integrations/openclaw/): Standalone skill, OAuth setup, tasks, and synchronized Focus
+- [Email address operations](https://pomodoist.com/docs/configuration/email-addresses/): Incoming Cloudflare routes and outgoing Brevo senders
+- [Telegram Mini App development](https://pomodoist.com/docs/integrations/telegram-mini-app/#local-development): `make telegram-debug` and `make telegram-release`
 - [Chrome extension development](https://pomodoist.com/docs/integrations/chrome-extension/#make-commands): `make chrome-debug` and `make chrome-release`
+
+</details>
+
+### Roadmap
+
+Development plan and acceptance status: [Stage 2 distraction protection](docs/distraction-blocking.md).
 
 ### Contributing
 

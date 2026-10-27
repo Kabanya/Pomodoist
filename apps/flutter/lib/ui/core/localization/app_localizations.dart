@@ -8582,6 +8582,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Link (Markdown)'**
   String get taskFormatLink;
+
+  /// No description provided for @settingsShortcutsTogglePomo.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable / disable Pomo'**
+  String get settingsShortcutsTogglePomo;
 }
 
 class _AppLocalizationsDelegate

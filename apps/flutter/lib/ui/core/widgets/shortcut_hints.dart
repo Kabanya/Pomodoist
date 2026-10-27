@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show ViewFocusEvent, ViewFocusState;
 
 import 'package:flutter/foundation.dart';
@@ -360,31 +361,60 @@ Widget _reveal(BuildContext context, Widget child) => IgnorePointer(
 );
 
 /// Overlay badges never take space from labels or task counters.
-class ShortcutHintBadge extends ConsumerWidget {
+class ShortcutHintBadge extends ConsumerStatefulWidget {
   const ShortcutHintBadge({
     super.key,
     required this.command,
     required this.child,
     this.alignment = Alignment.centerRight,
+    this.outside = false,
   });
   final AppShortcutCommand command;
   final Widget child;
   final Alignment alignment;
+  final bool outside;
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ShortcutHintBadge> createState() => _ShortcutHintBadgeState();
+}
+
+class _ShortcutHintBadgeState extends ConsumerState<ShortcutHintBadge> {
+  late final _popup = OverlayPortalController()..show();
+
+  @override
+  Widget build(BuildContext context) {
     final host = context.dependOnInheritedWidgetOfExactType<_HostData>()?.host;
     final scope = context.getInheritedWidgetOfExactType<_ScopeData>()?.scope;
     final keyboard = ref.watch(shellKeyboardViewModelProvider);
-    final hint = commandHint(context.l10n, keyboard, command);
+    final hint = commandHint(context.l10n, keyboard, widget.command);
+    if (widget.outside) {
+      return OverlayPortal.overlayChildLayoutBuilder(
+        controller: _popup,
+        overlayChildBuilder: (context, info) =>
+            host?.shows(scope) != true || hint == null
+            ? const SizedBox.shrink()
+            : IgnorePointer(
+                child: CustomSingleChildLayout(
+                  delegate: ShortcutHintPopupLayout(
+                    MatrixUtils.transformRect(
+                      info.childPaintTransform,
+                      Offset.zero & info.childSize,
+                    ),
+                  ),
+                  child: _reveal(context, ShortcutKeycap(hint.keys)),
+                ),
+              ),
+        child: widget.child,
+      );
+    }
     return Stack(
       clipBehavior: Clip.none,
-      alignment: alignment,
+      alignment: widget.alignment,
       children: [
-        child,
+        widget.child,
         if (host?.shows(scope) == true && hint != null)
           Positioned.fill(
             child: Align(
-              alignment: alignment,
+              alignment: widget.alignment,
               child: _reveal(context, ShortcutKeycap(hint.keys)),
             ),
           ),
@@ -485,4 +515,33 @@ class ShortcutHintsCompactHelp extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Button hints use the viewport's room and flip away from nearby edges.
+class ShortcutHintPopupLayout extends SingleChildLayoutDelegate {
+  const ShortcutHintPopupLayout(this.anchor);
+  final Rect anchor;
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
+      BoxConstraints.loose(
+        Size(
+          math.max(0, constraints.maxWidth - 16),
+          math.max(0, constraints.maxHeight - 16),
+        ),
+      );
+
+  @override
+  Offset getPositionForChild(Size size, Size childSize) => positionDependentBox(
+    size: size,
+    childSize: childSize,
+    target: anchor.center,
+    preferBelow: false,
+    verticalOffset: anchor.height / 2 + 6,
+    margin: 8,
+  );
+
+  @override
+  bool shouldRelayout(ShortcutHintPopupLayout oldDelegate) =>
+      anchor != oldDelegate.anchor;
 }

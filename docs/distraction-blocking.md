@@ -69,10 +69,38 @@ task totals remain server-owned.
 
 ## Local Chrome channel
 
-The bridge binds `127.0.0.1` only: production 51987, staging 51988, development
-51989. Pair using the code in Tasks and Focus settings. A code expires after two
+The bridge binds `127.0.0.1` only. Each environment has 64 candidates:
+production `51987 + 3*n`, staging `51988 + 3*n`, development `51989 + 3*n`,
+where `n` is 0–63. Startup tries the last successful port for the account and
+environment, then the remaining candidates, binding directly without a separate
+availability check. Only address-in-use conflicts advance to another port;
+exhaustion and other socket failures remain explicit errors. Repeated starts
+share one startup operation, and disposal closes an in-flight listener too.
+
+Pair using the `port-code` value in Tasks and Focus settings; the extension
+extracts the port, so no separate port entry is needed. The six-digit suffix
+and a manual port remain supported for legacy clients. A code expires after two
 minutes and is single-use. Pairing issues a separate random connection token,
 pinned to the extension origin and account/flavor. Logout revokes pairing.
+
+An already paired extension checks the saved port and automatically searches
+its environment's candidates after a move. Searches share one in-flight
+operation and probe at most eight ports concurrently, with a 500 ms timeout per
+probe. `POST /discover {clientId,challenge,flavor}` uses the SHA-256 hex digest
+of the paired token as `clientId` and a fresh 32-byte base64url challenge without
+padding. It returns `{version:1,owner,flavor,port,proof}`. `proof` is the lowercase
+hex HMAC-SHA256, keyed by the UTF-8 token, over the UTF-8 JSON array
+`["pomodoist-bridge-discovery-v1",challenge,owner,flavor,port]`. Host, Origin,
+paired extension origin and flavor are validated before signing. The extension
+verifies the proof before sending a bearer token or command and persists the
+verified port. Searches never send the token or change account, environment or
+Focus authority. Command retries retain their original request ID.
+
+Pair responses advertise `discoveryVersion:1`; existing tokens gain this flag
+after a successful proof. Legacy desktops without discovery support remain
+usable only at their saved paired port, without sending credentials to search
+candidates. Modern pairings never downgrade to legacy discovery. Chrome asks
+once for loopback-host access to support reconnecting across ports.
 
 Messages are bounded JSON state/Focus commands; no account credentials,
 arbitrary system commands or executable paths are exposed. Host and Origin are
@@ -188,6 +216,13 @@ owns keyboard focus and consumes typing/Cmd-W without modifying or closing its
 document. Playwright checks protection of an already loaded page, redirects for
 new pages, and the allowed exception. Stopping Focus through the UI must restore
 native and browser access while preserving drafts.
+
+Browser checks use the `blocking-overlay` and `desktop-pairing-toggle`
+`data-testid` attributes, existing form control IDs, and the protection status's
+`data-state` (`permission-required`, `idle`, `active`). Preserve these hooks when
+redesigning the extension. Colors, layout, CSS stacking values and translated
+status/pairing labels are not test contracts. The Chromium lifecycle harness
+also changes overlay styling while checking real input suppression and release.
 
 This run temporarily takes foreground focus and sends keys only while its own
 fixture or Pomodoist owns focus. Do not use the desktop during the run. It has a

@@ -1,0 +1,516 @@
+{
+  "sdk": "Flutter 3.47.0",
+  "buildMode": "profile",
+  "flavor": "development",
+  "notes": [
+    "Local development database, no signed-in account.",
+    "The early first-frame callback in these profile samples measured an empty root; it is renamed framework-warmup-frame here. Final code records first-frame after the main window builds.",
+    "tasks-emitted measures the first query emission, not task-list paint. Final code additionally records task-list-ready."
+  ],
+  "before": [
+    {
+      "run": 1,
+      "launchToTasksMs": 1319,
+      "stages": {
+        "begin": 0,
+        "database-ready": 726,
+        "interface-ready": 752,
+        "tasks-emitted": 788,
+        "framework-warmup-frame": 452
+      }
+    },
+    {
+      "run": 2,
+      "launchToTasksMs": 538,
+      "stages": {
+        "begin": 0,
+        "database-ready": 204,
+        "interface-ready": 210,
+        "tasks-emitted": 226,
+        "framework-warmup-frame": 25
+      }
+    },
+    {
+      "run": 3,
+      "launchToTasksMs": 424,
+      "stages": {
+        "begin": 0,
+        "database-ready": 135,
+        "interface-ready": 145,
+        "tasks-emitted": 164,
+        "framework-warmup-frame": 19
+      }
+    },
+    {
+      "run": 4,
+      "launchToTasksMs": 386,
+      "stages": {
+        "begin": 0,
+        "database-ready": 127,
+        "interface-ready": 136,
+        "tasks-emitted": 151,
+        "framework-warmup-frame": 17
+      }
+    },
+    {
+      "run": 5,
+      "launchToTasksMs": 440,
+      "stages": {
+        "begin": 0,
+        "database-ready": 141,
+        "interface-ready": 145,
+        "tasks-emitted": 157,
+        "framework-warmup-frame": 24
+      }
+    },
+    {
+      "run": 6,
+      "launchToTasksMs": 430,
+      "stages": {
+        "begin": 0,
+        "database-ready": 130,
+        "interface-ready": 134,
+        "tasks-emitted": 137,
+        "framework-warmup-frame": 19
+      }
+    },
+    {
+      "run": 7,
+      "launchToTasksMs": 432,
+      "stages": {
+        "begin": 0,
+        "database-ready": 132,
+        "interface-ready": 136,
+        "tasks-emitted": 150,
+        "framework-warmup-frame": 20
+      }
+    },
+    {
+      "run": 8,
+      "launchToTasksMs": 379,
+      "stages": {
+        "begin": 0,
+        "database-ready": 144,
+        "interface-ready": 152,
+        "tasks-emitted": 165,
+        "framework-warmup-frame": 21
+      }
+    },
+    {
+      "run": 9,
+      "launchToTasksMs": 383,
+      "stages": {
+        "begin": 0,
+        "database-ready": 132,
+        "interface-ready": 136,
+        "tasks-emitted": 149,
+        "framework-warmup-frame": 17
+      }
+    },
+    {
+      "run": 10,
+      "launchToTasksMs": 434,
+      "stages": {
+        "begin": 0,
+        "database-ready": 138,
+        "interface-ready": 142,
+        "tasks-emitted": 155,
+        "framework-warmup-frame": 25
+      }
+    }
+  ],
+  "after": [
+    {
+      "run": 1,
+      "stages": {
+        "begin": 0,
+        "window-attached": 178,
+        "database-ready": 295,
+        "interface-ready": 303,
+        "tasks-emitted": 357,
+        "framework-warmup-frame": 36
+      },
+      "launchToTasksMs": 2082
+    },
+    {
+      "run": 2,
+      "stages": {
+        "begin": 0,
+        "window-attached": 142,
+        "database-ready": 158,
+        "interface-ready": 164,
+        "tasks-emitted": 180,
+        "framework-warmup-frame": 20
+      },
+      "launchToTasksMs": 513
+    },
+    {
+      "run": 3,
+      "stages": {
+        "begin": 0,
+        "window-attached": 118,
+        "database-ready": 166,
+        "interface-ready": 173,
+        "tasks-emitted": 192,
+        "framework-warmup-frame": 25
+      },
+      "launchToTasksMs": 463
+    },
+    {
+      "run": 4,
+      "stages": {
+        "begin": 0,
+        "window-attached": 97,
+        "database-ready": 142,
+        "interface-ready": 147,
+        "tasks-emitted": 161,
+        "framework-warmup-frame": 18
+      },
+      "launchToTasksMs": 429
+    },
+    {
+      "run": 5,
+      "stages": {
+        "begin": 0,
+        "window-attached": 101,
+        "database-ready": 126,
+        "interface-ready": 130,
+        "tasks-emitted": 146,
+        "framework-warmup-frame": 17
+      },
+      "launchToTasksMs": 374
+    },
+    {
+      "run": 6,
+      "stages": {
+        "begin": 0,
+        "window-attached": 100,
+        "database-ready": 126,
+        "interface-ready": 130,
+        "tasks-emitted": 142,
+        "framework-warmup-frame": 16
+      },
+      "launchToTasksMs": 384
+    },
+    {
+      "run": 7,
+      "stages": {
+        "begin": 0,
+        "window-attached": 142,
+        "database-ready": 157,
+        "interface-ready": 165,
+        "tasks-emitted": 183,
+        "framework-warmup-frame": 18
+      },
+      "launchToTasksMs": 412
+    },
+    {
+      "run": 8,
+      "stages": {
+        "begin": 0,
+        "window-attached": 98,
+        "database-ready": 131,
+        "interface-ready": 136,
+        "tasks-emitted": 150,
+        "framework-warmup-frame": 15
+      },
+      "launchToTasksMs": 400
+    },
+    {
+      "run": 9,
+      "stages": {
+        "begin": 0,
+        "window-attached": 156,
+        "database-ready": 177,
+        "interface-ready": 186,
+        "tasks-emitted": 198,
+        "framework-warmup-frame": 63
+      },
+      "launchToTasksMs": 494
+    },
+    {
+      "run": 10,
+      "stages": {
+        "begin": 0,
+        "window-attached": 147,
+        "database-ready": 166,
+        "interface-ready": 171,
+        "tasks-emitted": 187,
+        "framework-warmup-frame": 51
+      },
+      "launchToTasksMs": 564
+    }
+  ],
+  "launchservices": [
+    {
+      "run": 1,
+      "stages": {
+        "begin": 0,
+        "window-attached": 106,
+        "database-ready": 121,
+        "interface-ready": 125,
+        "tasks-emitted": 137,
+        "framework-warmup-frame": 20
+      },
+      "launchToTasksMs": 453
+    },
+    {
+      "run": 2,
+      "stages": {
+        "begin": 0,
+        "window-attached": 105,
+        "database-ready": 118,
+        "interface-ready": 123,
+        "tasks-emitted": 135,
+        "framework-warmup-frame": 19
+      },
+      "launchToTasksMs": 511
+    },
+    {
+      "run": 3,
+      "stages": {
+        "begin": 0,
+        "window-attached": 113,
+        "database-ready": 126,
+        "interface-ready": 132,
+        "tasks-emitted": 145,
+        "framework-warmup-frame": 23
+      },
+      "launchToTasksMs": 504
+    },
+    {
+      "run": 4,
+      "stages": {
+        "begin": 0,
+        "window-attached": 105,
+        "database-ready": 117,
+        "interface-ready": 122,
+        "tasks-emitted": 138,
+        "framework-warmup-frame": 26
+      },
+      "launchToTasksMs": 452
+    },
+    {
+      "run": 5,
+      "stages": {
+        "begin": 0,
+        "window-attached": 172,
+        "database-ready": 201,
+        "interface-ready": 206,
+        "tasks-emitted": 212,
+        "framework-warmup-frame": 44
+      },
+      "launchToTasksMs": 599
+    },
+    {
+      "run": 6,
+      "stages": {
+        "begin": 0,
+        "window-attached": 111,
+        "database-ready": 133,
+        "interface-ready": 138,
+        "tasks-emitted": 154,
+        "framework-warmup-frame": 26
+      },
+      "launchToTasksMs": 471
+    },
+    {
+      "run": 7,
+      "stages": {
+        "begin": 0,
+        "window-attached": 107,
+        "database-ready": 121,
+        "interface-ready": 126,
+        "tasks-emitted": 141,
+        "framework-warmup-frame": 22
+      },
+      "launchToTasksMs": 479
+    },
+    {
+      "run": 8,
+      "stages": {
+        "begin": 0,
+        "window-attached": 148,
+        "database-ready": 197,
+        "interface-ready": 204,
+        "tasks-emitted": 221,
+        "framework-warmup-frame": 65
+      },
+      "launchToTasksMs": 564
+    },
+    {
+      "run": 9,
+      "stages": {
+        "begin": 0,
+        "window-attached": 115,
+        "database-ready": 135,
+        "interface-ready": 144,
+        "tasks-emitted": 149,
+        "framework-warmup-frame": 29
+      },
+      "launchToTasksMs": 491
+    },
+    {
+      "run": 10,
+      "stages": {
+        "begin": 0,
+        "window-attached": 98,
+        "database-ready": 111,
+        "interface-ready": 117,
+        "tasks-emitted": 131,
+        "framework-warmup-frame": 20
+      },
+      "launchToTasksMs": 423
+    }
+  ],
+  "offline": [
+    {
+      "run": 1,
+      "stages": {
+        "begin": 0,
+        "window-attached": 154,
+        "database-ready": 207,
+        "interface-ready": 216,
+        "tasks-emitted": 238,
+        "framework-warmup-frame": 39
+      },
+      "launchToTasksMs": 596
+    }
+  ],
+  "debug-launchservices-final": {
+    "buildMode": "debug",
+    "flavor": "development",
+    "runs": [
+      {
+        "run": 1,
+        "stages": {
+          "begin": 0,
+          "window-attached": 383,
+          "first-frame": 677,
+          "database-ready": 910,
+          "interface-ready": 966,
+          "tasks-emitted": 1266,
+          "task-list-ready": 1359
+        },
+        "launchToTaskListMs": 4324
+      },
+      {
+        "run": 2,
+        "stages": {
+          "begin": 0,
+          "window-attached": 549,
+          "first-frame": 879,
+          "database-ready": 1091,
+          "interface-ready": 1148,
+          "tasks-emitted": 1540,
+          "task-list-ready": 1637
+        },
+        "launchToTaskListMs": 2129
+      },
+      {
+        "run": 3,
+        "stages": {
+          "begin": 0,
+          "window-attached": 379,
+          "first-frame": 663,
+          "database-ready": 894,
+          "interface-ready": 945,
+          "tasks-emitted": 1220,
+          "task-list-ready": 1331
+        },
+        "launchToTaskListMs": 1862
+      },
+      {
+        "run": 4,
+        "stages": {
+          "begin": 0,
+          "window-attached": 341,
+          "first-frame": 610,
+          "database-ready": 846,
+          "interface-ready": 896,
+          "tasks-emitted": 1228,
+          "task-list-ready": 1310
+        },
+        "launchToTaskListMs": 1811
+      },
+      {
+        "run": 5,
+        "stages": {
+          "begin": 0,
+          "window-attached": 333,
+          "first-frame": 600,
+          "database-ready": 835,
+          "interface-ready": 876,
+          "tasks-emitted": 1187,
+          "task-list-ready": 1294
+        },
+        "launchToTaskListMs": 1757
+      },
+      {
+        "run": 6,
+        "stages": {
+          "begin": 0,
+          "window-attached": 363,
+          "first-frame": 708,
+          "database-ready": 1040,
+          "interface-ready": 1094,
+          "tasks-emitted": 1516,
+          "task-list-ready": 1625
+        },
+        "launchToTaskListMs": 2070
+      },
+      {
+        "run": 7,
+        "stages": {
+          "begin": 0,
+          "window-attached": 341,
+          "first-frame": 624,
+          "database-ready": 901,
+          "interface-ready": 947,
+          "tasks-emitted": 1269,
+          "task-list-ready": 1356
+        },
+        "launchToTaskListMs": 1839
+      },
+      {
+        "run": 8,
+        "stages": {
+          "begin": 0,
+          "window-attached": 338,
+          "first-frame": 620,
+          "database-ready": 890,
+          "interface-ready": 937,
+          "tasks-emitted": 1216,
+          "task-list-ready": 1317
+        },
+        "launchToTaskListMs": 1783
+      },
+      {
+        "run": 9,
+        "stages": {
+          "begin": 0,
+          "window-attached": 329,
+          "first-frame": 599,
+          "database-ready": 827,
+          "interface-ready": 871,
+          "tasks-emitted": 1141,
+          "task-list-ready": 1260
+        },
+        "launchToTaskListMs": 1815
+      },
+      {
+        "run": 10,
+        "stages": {
+          "begin": 0,
+          "window-attached": 330,
+          "first-frame": 615,
+          "database-ready": 842,
+          "interface-ready": 893,
+          "tasks-emitted": 1168,
+          "task-list-ready": 1262
+        },
+        "launchToTaskListMs": 1783
+      }
+    ]
+  }
+}

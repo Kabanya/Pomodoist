@@ -4728,4 +4728,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get taskFormatLink => '链接 (Markdown)';
+
+  @override
+  String get settingsShortcutsTogglePomo => '启用 / 停用 Pomo';
 }

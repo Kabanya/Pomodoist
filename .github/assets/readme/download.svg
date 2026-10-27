@@ -1,1 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="224" height="44" role="img" aria-label="Download Pomodoist"><rect x=".5" y=".5" width="223" height="43" rx="7" fill="#d83b31" stroke="#ffffff24"/><text x="112" y="27" text-anchor="middle" fill="white" font-family="Arial,sans-serif" font-size="14" font-weight="600">Download Pomodoist</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="60" viewBox="0 0 240 60" role="img" aria-label="Download Pomodoist">
+  <title>Download Pomodoist</title>
+  <rect x="4.5" y="4.5" width="231" height="51" rx="10" fill="#d83b31" stroke="#ef756b"/>
+  <g transform="translate(18 18)" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v13m-5-5 5 5 5-5M3 16v6h18v-6"/></g>
+  <text x="51" y="35" fill="#ffffff" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14" font-weight="600">Download Pomodoist</text>
+  <path d="M212 30h9m-4-4 4 4-4 4" fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

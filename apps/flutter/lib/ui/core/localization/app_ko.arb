@@ -2215,5 +2215,6 @@
   "taskFormatBold": "굵게 (Markdown)",
   "taskFormatItalic": "기울임꼴 (Markdown)",
   "taskFormatList": "글머리 기호 목록",
-  "taskFormatLink": "링크 (Markdown)"
+  "taskFormatLink": "링크 (Markdown)",
+  "settingsShortcutsTogglePomo": "Pomo 켜기 / 끄기"
 }

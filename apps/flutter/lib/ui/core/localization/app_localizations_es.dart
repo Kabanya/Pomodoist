@@ -5000,4 +5000,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get taskFormatLink => 'Enlace (Markdown)';
+
+  @override
+  String get settingsShortcutsTogglePomo => 'Activar / desactivar Pomo';
 }

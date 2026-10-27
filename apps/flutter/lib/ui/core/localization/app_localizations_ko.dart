@@ -4837,4 +4837,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get taskFormatLink => '링크 (Markdown)';
+
+  @override
+  String get settingsShortcutsTogglePomo => 'Pomo 켜기 / 끄기';
 }

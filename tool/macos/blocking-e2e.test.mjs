@@ -1,7 +1,29 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {once} from 'node:events';
-import {createControlServer, Processes} from './blocking-e2e-support.mjs';
+import {createControlServer, Processes, preserveDevelopmentApp} from './blocking-e2e-support.mjs';
+import {mkdtemp, mkdir, readFile, writeFile, rm, access} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import path from 'node:path';
+
+test('E2E cleanup restores the normal development app instead of leaving the test runner', async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'pomodoist-build-preservation-'));
+  const app = path.join(directory, 'Dev.app');
+  try {
+    await mkdir(app);
+    await writeFile(path.join(app, 'entrypoint'), 'normal application');
+    const restore = await preserveDevelopmentApp(app, path.join(directory, 'saved.app'));
+    await mkdir(app);
+    await writeFile(path.join(app, 'entrypoint'), 'integration test runner');
+    await restore();
+    assert.equal(await readFile(path.join(app, 'entrypoint'), 'utf8'), 'normal application');
+    const emptyApp = path.join(directory, 'Previously absent.app');
+    const removeTestBuild = await preserveDevelopmentApp(emptyApp, path.join(directory, 'absent-backup.app'));
+    await mkdir(emptyApp);
+    await removeTestBuild();
+    await assert.rejects(access(emptyApp), {code: 'ENOENT'});
+  } finally { await rm(directory, {recursive: true, force: true}); }
+});
 
 test('control channel rejects untrusted requests and dispatches authenticated steps', async () => {
   const calls = [];

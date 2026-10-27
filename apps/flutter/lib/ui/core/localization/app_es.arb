@@ -1604,5 +1604,6 @@
   "taskFormatBold": "Negrita (Markdown)",
   "taskFormatItalic": "Cursiva (Markdown)",
   "taskFormatList": "Lista con viñetas",
-  "taskFormatLink": "Enlace (Markdown)"
+  "taskFormatLink": "Enlace (Markdown)",
+  "settingsShortcutsTogglePomo": "Activar / desactivar Pomo"
 }

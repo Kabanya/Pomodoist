@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="336" height="240" viewBox="0 0 336 240" role="img" aria-label="Official app. Hosted by Pomodoist. Get started with free features. Paid services and account entitlements support Pomodoist’s hosted infrastructure. Get Pomodoist.">
+  <title>Official app. Hosted by Pomodoist. Get started with free features. Paid services and account entitlements support Pomodoist’s hosted infrastructure. Get Pomodoist.</title>
+  <rect x="4.5" y="4.5" width="327" height="231" rx="10" fill="#151e2b" stroke="#334155"/>
+  <g transform="translate(24 25)" fill="none" stroke="#f5ede0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="24" height="24" rx="7"/><path d="m8 14 4 4 8-9"/></g>
+  <g font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+    <text x="64" y="39" fill="#fff7eb" font-size="18" font-weight="600">Official app</text>
+    <text x="24" y="77" fill="#a9b6c8" font-size="12">Hosted by Pomodoist</text>
+    <text x="24" y="105" fill="#c3cddc" font-size="12">Get started with free features.</text>
+    <text x="24" y="125" fill="#c3cddc" font-size="12">Paid services and account entitlements</text>
+    <text x="24" y="145" fill="#c3cddc" font-size="12">support Pomodoist’s hosted infrastructure.</text>
+    <text x="24" y="214" fill="#f07b6e" font-size="13" font-weight="600">Get Pomodoist</text>
+  </g>
+  <path d="M24 188h288" stroke="#334155"/>
+  <path d="M294 210h12m-5-5 5 5-5 5" fill="none" stroke="#f07b6e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

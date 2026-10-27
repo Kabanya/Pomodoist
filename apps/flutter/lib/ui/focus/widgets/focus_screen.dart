@@ -87,6 +87,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                           excludeSemantics: true,
                           child: ShortcutHintBadge(
                             command: AppShortcutCommand.focus,
+                            outside: true,
                             alignment: Alignment.topRight,
                             child: IconButton(
                               tooltip: context.l10n.focusSwitchToFullView,

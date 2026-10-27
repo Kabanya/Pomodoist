@@ -1,6 +1,20 @@
 import {createServer} from 'node:http';
 import {spawn} from 'node:child_process';
 import {setTimeout as delay} from 'node:timers/promises';
+import {rename, rm} from 'node:fs/promises';
+
+// Flutter builds UI tests into the regular Dev.app output directory.
+export async function preserveDevelopmentApp(app, backup) {
+  let existed = true;
+  try { await rename(app, backup); } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    existed = false;
+  }
+  return async () => {
+    await rm(app, {recursive: true, force: true});
+    if (existed) await rename(backup, app);
+  };
+}
 
 export async function createControlServer(token, action) {
   if (!token) throw Error('A control token is required');

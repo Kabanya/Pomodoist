@@ -1,4 +1,5 @@
 import 'package:pomodoist/data/repositories/local/sync_ownership_coordinator.dart';
+import 'package:pomodoist/utils/startup_diagnostics.dart';
 import 'package:pomodoist/data/services/local/account_history_policy_store.dart';
 import 'package:pomodoist/data/repositories/planning/remote_task_decomposer.dart';
 import 'package:pomodoist/data/repositories/planning/task_decomposition_repository.dart';
@@ -345,13 +346,19 @@ final accountOverviewProvider = FutureProvider<PomodoistAccountOverview?>((
   );
 }, retry: (_, _) => null);
 
-final accountSyncEngineProvider = Provider<AccountSyncEngine?>((ref) {
+final _accountSyncIdentityProvider = Provider((ref) {
   final account = ref.watch(accountClientProvider);
-  final authState = ref.watch(accountAuthStateProvider).value;
-  if (account == null ||
-      !((authState?.signedIn ?? false) || account.currentUserId != null)) {
-    return null;
-  }
+  // Auth events also include token refreshes; only an owner change resets sync.
+  final userId = ref.watch(
+    accountAuthStateProvider.select((_) => account?.currentUserId),
+  );
+  return (account: account, userId: userId);
+});
+
+final accountSyncEngineProvider = Provider<AccountSyncEngine?>((ref) {
+  final identity = ref.watch(_accountSyncIdentityProvider);
+  final account = identity.account;
+  if (account == null || identity.userId == null) return null;
   return AccountSyncEngine(
     db: ref.watch(appDatabaseProvider),
     account: account,
@@ -477,6 +484,7 @@ final accountSyncStartupProvider = FutureProvider<void>((ref) async {
   await engine.prepareLocalAccountData(
     onReset: ref.read(_focusPreferenceCleanupProvider),
   );
+  traceStartupStage('account-local-ready');
 });
 
 final guestDataStartupProvider = FutureProvider.autoDispose<void>((ref) async {

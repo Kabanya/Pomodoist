@@ -2499,5 +2499,6 @@
   "taskFormatBold": "Bold (Markdown)",
   "taskFormatItalic": "Italic (Markdown)",
   "taskFormatList": "Bulleted list",
-  "taskFormatLink": "Link (Markdown)"
+  "taskFormatLink": "Link (Markdown)",
+  "settingsShortcutsTogglePomo": "Enable / disable Pomo"
 }

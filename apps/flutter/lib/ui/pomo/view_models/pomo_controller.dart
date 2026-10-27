@@ -227,6 +227,18 @@ class PomoController extends ChangeNotifier {
     _ready = true;
     await _reconcile();
   });
+  Future<void> toggleEnabled() async {
+    if (busy || closing) return;
+    busy = true;
+    _notify();
+    try {
+      await setEnabled(!prefs.enabled);
+    } finally {
+      busy = false;
+      _notify();
+    }
+  }
+
   Future<void> setEnabled(bool value) => value
       ? restore()
       : perform(() async {

@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/pomo/view_models/pomo_controller.dart';
 import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:pomodoist/ui/distractions/view_models/distraction_view_model.dart';
 // ignore_for_file: deprecated_member_use
@@ -6,6 +7,7 @@ import 'package:pomodoist/ui/core/widgets/compact_task_button_location.dart';
 
 import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
 import 'dart:async';
+import 'package:pomodoist/utils/startup_diagnostics.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -74,6 +76,7 @@ class AdaptiveShell extends ConsumerStatefulWidget {
     this.taskId,
     this.habitId,
     this.mapFullscreen = false,
+    this.dataReady = true,
     super.key,
   });
 
@@ -81,6 +84,7 @@ class AdaptiveShell extends ConsumerStatefulWidget {
   final String? taskId;
   final String? habitId;
   final bool mapFullscreen;
+  final bool dataReady;
   final Widget child;
 
   @override
@@ -187,13 +191,14 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   @override
   void didUpdateWidget(covariant AdaptiveShell oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!widget.dataReady) _lastTaskDetailsId = null;
     if (oldWidget.location != widget.location ||
         oldWidget.taskId != widget.taskId ||
         oldWidget.habitId != widget.habitId ||
         oldWidget.mapFullscreen != widget.mapFullscreen) {
       _resetNavigationEditor();
     }
-    if (oldWidget.location == widget.location) return;
+    if (!widget.dataReady || oldWidget.location == widget.location) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final tour = ref.read(learningTourProvider.notifier);
@@ -228,6 +233,9 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) traceStartupStage('shell-ready');
+    });
     _appMenuController = createShellAppMenu(
       keyboard: ref.read(shellKeyboardViewModelProvider),
       onSelected: _runMenuShortcut,
@@ -283,7 +291,9 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   Widget build(BuildContext context) {
     final selectedTaskId =
         widget.taskId ?? selectedTaskDetailsId(Uri.parse(widget.location));
-    if (selectedTaskId != null) _lastTaskDetailsId = selectedTaskId;
+    if (widget.dataReady && selectedTaskId != null) {
+      _lastTaskDetailsId = selectedTaskId;
+    }
     final keyboard = ref.watch(shellKeyboardViewModelProvider);
     final menuController = _appMenuController;
     if (menuController != null) {
@@ -312,9 +322,11 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
         BottomNavigationPreferences();
     final navigationDraft = _navigationDraft;
     final hasTodayFocusStrip =
+        widget.dataReady &&
         widget.location == '/today' &&
         ref.watch(shellTodayFocusStripVisibleProvider);
     final showMiniFocusPlayer =
+        widget.dataReady &&
         !mapFullscreen &&
         !focusLocation &&
         widget.location != '/kanban' &&
@@ -329,56 +341,59 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     final glass =
         backgrounds.type == ThemeBackgroundType.macosGlass &&
         macosGlassReady(context, ref);
-    final content = HabitDetailsHost(
-      key: _detailsHostKey,
-      habitId: widget.habitId,
-      child: TaskDetailsHost(
-        taskId: widget.taskId,
-        child: Column(
-          children: [
-            const AchievementAnnouncementBridge(),
-            if (!compactDetailsOpen && !mapFullscreen)
-              _ShellTopBar(
-                location: widget.location,
-                onMenuPressed: _toggleSidebar,
+    Widget content = Column(
+      children: [
+        if (widget.dataReady) const AchievementAnnouncementBridge(),
+        if (!compactDetailsOpen && !mapFullscreen)
+          _ShellTopBar(
+            dataReady: widget.dataReady,
+            location: widget.location,
+            onMenuPressed: _toggleSidebar,
+          ),
+        Expanded(
+          // Keep the route mounted when the surrounding shell bars disappear.
+          key: const ValueKey('shell-main-content'),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              MediaQuery.removePadding(
+                context: context,
+                removeTop: !compactDetailsOpen && !mapFullscreen,
+                removeBottom: !wide && !mapFullscreen,
+                child: widget.child,
               ),
-            Expanded(
-              // Keep the route mounted when the surrounding shell bars disappear.
-              key: const ValueKey('shell-main-content'),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  MediaQuery.removePadding(
-                    context: context,
-                    removeTop: !compactDetailsOpen && !mapFullscreen,
-                    removeBottom: !wide && !mapFullscreen,
-                    child: widget.child,
+              if (widget.dataReady)
+                const Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: AchievementAnnouncementSlot(
+                    presentation: AchievementPresentation.globalBanner,
                   ),
-                  const Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: AchievementAnnouncementSlot(
-                      presentation: AchievementPresentation.globalBanner,
-                    ),
+                ),
+              if (widget.dataReady)
+                const Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: AchievementAnnouncementSlot(
+                    presentation: AchievementPresentation.bottomPlaque,
                   ),
-                  const Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: AchievementAnnouncementSlot(
-                      presentation: AchievementPresentation.bottomPlaque,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (wide && showMiniFocusPlayer)
-              const VoicePanelBottomClearance(child: MiniFocusPlayer()),
-          ],
+                ),
+            ],
+          ),
         ),
-      ),
+        if (wide && showMiniFocusPlayer)
+          const VoicePanelBottomClearance(child: MiniFocusPlayer()),
+      ],
     );
+    if (widget.dataReady) {
+      content = HabitDetailsHost(
+        key: _detailsHostKey,
+        habitId: widget.habitId,
+        child: TaskDetailsHost(taskId: widget.taskId, child: content),
+      );
+    }
 
     late final Widget scaffold;
     if (wide) {
@@ -459,6 +474,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                         size: constraints.biggest,
                       ),
                       child: _TodoistSidebar(
+                        dataReady: widget.dataReady,
                         location: widget.location,
                         width: _wideSidebarDefaultWidth,
                         onDestinationSelected: _goFromDrawer,
@@ -512,6 +528,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                     valueListenable: voiceQuickAddActiveOf(context),
                     builder: (context, voiceActive, _) =>
                         compactDetailsOpen ||
+                            !widget.dataReady ||
                             navigationDraft != null ||
                             mapFullscreen ||
                             voiceActive ||
@@ -615,7 +632,10 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
         },
         child: Stack(
           fit: StackFit.expand,
-          children: [scaffold, const FocusRunCompletionCelebrationSlot()],
+          children: [
+            scaffold,
+            if (widget.dataReady) const FocusRunCompletionCelebrationSlot(),
+          ],
         ),
       ),
     );
@@ -661,6 +681,8 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   void _runShortcut(AppShortcutCommand command) {
     if (_navigationDraft != null) return;
     switch (command) {
+      case AppShortcutCommand.togglePomo:
+        unawaited(_togglePomo());
       case AppShortcutCommand.toggleSidebar:
         _toggleSidebar();
       case AppShortcutCommand.toggleTaskDetails ||
@@ -695,8 +717,26 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     }
   }
 
+  Future<void> _togglePomo() async {
+    if (!widget.dataReady || !pomoSupported) return;
+    final controller = ref.read(pomoControllerProvider);
+    try {
+      await controller.toggleEnabled();
+      if (controller.error != null) throw controller.error!;
+    } catch (_) {
+      if (!mounted) return;
+      showActionFeedback(
+        context,
+        message: context.l10n.pomoError,
+        icon: LucideIcons.triangleAlert,
+        sound: ActionFeedbackSound.none,
+        haptic: AppHapticCue.none,
+      );
+    }
+  }
+
   Future<void> _openOrToggleFocus() async {
-    if (!_isFocusLocation(widget.location)) {
+    if (!widget.dataReady || !_isFocusLocation(widget.location)) {
       _goFromShortcut('/focus');
       return;
     }
@@ -715,6 +755,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   }
 
   Future<void> _toggleTaskDetails() async {
+    if (!widget.dataReady) return;
     final router = GoRouter.of(context);
     final current = router.state.uri;
     final selected = selectedTaskDetailsId(current);
@@ -739,7 +780,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   }
 
   void _openQuickAddFromShortcut() {
-    if (_quickAddShortcutDialogOpen) return;
+    if (!widget.dataReady || _quickAddShortcutDialogOpen) return;
     _quickAddShortcutDialogOpen = true;
     unawaited(
       showLearningTourQuickAdd(
@@ -855,6 +896,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                           zone: ThemeBackgroundZone.sidebar,
                           sharedWholeApp: true,
                           child: _TodoistSidebar(
+                            dataReady: widget.dataReady,
                             location: widget.location,
                             width: contentWidth,
                             onDestinationSelected: _go,
@@ -1014,10 +1056,15 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
 }
 
 class _ShellTopBar extends StatelessWidget {
-  const _ShellTopBar({required this.location, required this.onMenuPressed});
+  const _ShellTopBar({
+    required this.location,
+    required this.onMenuPressed,
+    required this.dataReady,
+  });
 
   final String location;
   final VoidCallback onMenuPressed;
+  final bool dataReady;
 
   @override
   Widget build(BuildContext context) {
@@ -1049,7 +1096,9 @@ class _ShellTopBar extends StatelessWidget {
                   IconButton(
                     key: const Key('kanban-shell-add'),
                     tooltip: context.l10n.addTask,
-                    onPressed: () => showQuickAddDialog(context),
+                    onPressed: dataReady
+                        ? () => showQuickAddDialog(context)
+                        : null,
                     icon: const Icon(LucideIcons.circlePlus),
                     color: context.appColors.accent,
                   ),
@@ -1159,11 +1208,13 @@ class _TodoistSidebar extends ConsumerStatefulWidget {
     required this.location,
     required this.width,
     required this.onDestinationSelected,
+    required this.dataReady,
   });
 
   final String location;
   final double width;
   final ValueChanged<String> onDestinationSelected;
+  final bool dataReady;
 
   @override
   ConsumerState<_TodoistSidebar> createState() => _TodoistSidebarState();
@@ -1196,7 +1247,16 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
         destination.path: destination,
     };
     final keyboard = ref.watch(shellKeyboardViewModelProvider);
-    final sidebar = ref.watch(shellSidebarViewModelProvider);
+    final sidebar = widget.dataReady
+        ? ref.watch(shellSidebarViewModelProvider)
+        : const ShellSidebarState(
+            displayName: null,
+            inboxCount: 0,
+            todayCount: 0,
+            upcomingCount: 0,
+            projects: AsyncLoading(),
+            projectTaskCounts: {},
+          );
     final displayName = _displayName(context, sidebar.displayName);
     final projects = sidebar.projects;
     final projectTaskCounts = sidebar.projectTaskCounts;
@@ -1206,9 +1266,11 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
         )
         .length;
     final counts = <String, int>{
-      '/inbox': sidebar.inboxCount,
-      '/today': sidebar.todayCount,
-      '/upcoming': sidebar.upcomingCount,
+      if (widget.dataReady) ...{
+        '/inbox': sidebar.inboxCount,
+        '/today': sidebar.todayCount,
+        '/upcoming': sidebar.upcomingCount,
+      },
     };
 
     Widget destinationTile(String path) {
@@ -1267,7 +1329,7 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(child: destinationTile('/settings')),
-              const PomoToggleButton(),
+              if (widget.dataReady) const PomoToggleButton(),
             ],
           ),
         ),
@@ -1300,8 +1362,10 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
                 LearningTourAnchor(
                   id: LearningTourAnchorId.addDesktop,
                   child: _AddTaskTile(
-                    onTap: () =>
-                        unawaited(showLearningTourQuickAdd(context, ref)),
+                    onTap: widget.dataReady
+                        ? () =>
+                              unawaited(showLearningTourQuickAdd(context, ref))
+                        : null,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -1352,7 +1416,9 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
                             onToggle: () => setState(
                               () => _projectsExpanded = !_projectsExpanded,
                             ),
-                            onAdd: () => showCreateProjectDialog(context),
+                            onAdd: widget.dataReady
+                                ? () => showCreateProjectDialog(context)
+                                : null,
                           ),
                         ),
                         if (_projectsExpanded) ...[
@@ -1533,7 +1599,7 @@ class _SidebarProfileHeader extends StatelessWidget {
 class _AddTaskTile extends StatelessWidget {
   const _AddTaskTile({required this.onTap});
 
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -1579,7 +1645,7 @@ class _ProjectsHeader extends StatelessWidget {
   final bool selected;
   final VoidCallback onTitleTap;
   final VoidCallback onToggle;
-  final VoidCallback onAdd;
+  final VoidCallback? onAdd;
 
   @override
   Widget build(BuildContext context) {

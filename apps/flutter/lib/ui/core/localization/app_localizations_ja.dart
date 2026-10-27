@@ -4825,4 +4825,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get taskFormatLink => 'リンク (Markdown)';
+
+  @override
+  String get settingsShortcutsTogglePomo => 'Pomo を有効／無効にする';
 }

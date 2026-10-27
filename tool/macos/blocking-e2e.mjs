@@ -8,7 +8,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createInterface} from 'node:readline';
-import {Processes, createControlServer} from './blocking-e2e-support.mjs';
+import {Processes, createControlServer, preserveDevelopmentApp} from './blocking-e2e-support.mjs';
 import {build} from '../../apps/chrome-extension/build.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -18,6 +18,7 @@ const binary = path.join(fixtureApp, 'Contents/MacOS/blocking-fixture');
 const processes = new Processes();
 const token = randomBytes(32).toString('hex');
 let temporary, targetExecutable, context, browserLaunching, control, website, fixture, flutter, interrupted;
+let restoreDevelopmentApp;
 let step = 'preflight';
 const logs = [];
 const pending = new Map();
@@ -61,13 +62,16 @@ async function browserBefore(port, code) {
   const popup = await context.newPage();
   await popup.goto(`chrome-extension://${extensionId}/popup.html`);
   await popup.waitForFunction(() => document.getElementById('startup').hidden);
-  await popup.getByText('Pair desktop for offline Focus', {exact: true}).click();
-  await popup.locator('#bridge-port').fill(String(port));
+  await popup.getByTestId('desktop-pairing-toggle').click();
+  if (!code.includes('-')) {
+    await popup.locator('#pair-form details summary').click();
+    await popup.locator('#bridge-port').fill(String(port));
+  }
   await popup.locator('#pair-code').fill(code);
   await popup.locator('#pair-form button[type="submit"]').click();
   await popup.waitForFunction(() => document.getElementById('pair-code').value === '' && document.getElementById('focus-source').value === 'desktop');
   await popup.locator('#enable-protection').check();
-  await popup.waitForFunction(() => document.getElementById('protection-status').textContent.includes('protection idle'));
+  await popup.locator('#protection-status[data-state=idle]').waitFor();
   const address = `http://blocked.blocking.test:${website.address().port}`;
   const allowedAddress = `http://allowed.blocked.blocking.test:${website.address().port}`;
   const loaded = await context.newPage();
@@ -81,8 +85,8 @@ async function browserBefore(port, code) {
 
 let browser;
 async function browserBlocked() {
-  await browser.popup.waitForFunction(() => document.getElementById('protection-status').textContent.includes('Website protection active'));
-  await browser.loaded.waitForFunction(() => [...document.querySelectorAll('div')].some(d => d.style.zIndex === '2147483647'));
+  await browser.popup.locator('#protection-status[data-state=active]').waitFor();
+  await browser.loaded.getByTestId('blocking-overlay').waitFor({state: 'visible'});
   await browser.loaded.bringToFront();
   await browser.loaded.keyboard.type('blocked typing');
   assert.equal(await browser.loaded.locator('#draft').inputValue(), 'keep browser draft');
@@ -90,7 +94,7 @@ async function browserBlocked() {
   await fresh.goto(browser.address + '/new').catch(error => { if (!error.message.includes('ERR_BLOCKED_BY_CLIENT')) throw error; });
   await fresh.waitForURL(`chrome-extension://${browser.extensionId}/blocked.html`);
   await browser.allowed.reload();
-  await browser.allowed.waitForFunction(() => ![...document.querySelectorAll('div')].some(d => d.style.zIndex === '2147483647'));
+  await browser.allowed.getByTestId('blocking-overlay').waitFor({state: 'detached'});
   await browser.allowed.locator('#draft').click();
   await browser.allowed.keyboard.press('End');
   await browser.allowed.keyboard.type(' allowed during Focus');
@@ -98,8 +102,8 @@ async function browserBlocked() {
 }
 
 async function browserAfter() {
-  await browser.popup.waitForFunction(() => document.getElementById('protection-status').textContent.includes('protection idle'));
-  await browser.loaded.waitForFunction(() => ![...document.querySelectorAll('div')].some(d => d.style.zIndex === '2147483647'));
+  await browser.popup.locator('#protection-status[data-state=idle]').waitFor();
+  await browser.loaded.getByTestId('blocking-overlay').waitFor({state: 'detached'});
   assert.equal(await browser.loaded.locator('#draft').inputValue(), 'keep browser draft');
   assert.equal(browser.loaded.url(), browser.address + '/loaded');
   await browser.loaded.locator('#draft').click();
@@ -169,10 +173,12 @@ async function main() {
   await new Promise(resolve => website.listen(0, '127.0.0.1', resolve));
   control = await createControlServer(token, action);
   const appDirectory = path.join(root, 'apps/flutter');
+  const products = path.join(appDirectory, 'build/macos/Build/Products/Debug-Development');
+  restoreDevelopmentApp = await preserveDevelopmentApp(
+    path.join(products, 'Pomodoist Dev.app'), path.join(temporary, 'PreviousDevelopment.app'));
   step = 'build'; console.log('E2E: build isolated development application');
   await run(flutterSdk, ['build', 'macos', '--debug', '--no-pub', '--flavor', 'Development', '--target', 'integration_test/blocking_test.dart',
     `--dart-define=BLOCKING_E2E_URL=${control.url}`, `--dart-define=BLOCKING_E2E_TOKEN=${token}`], 'build', {cwd: appDirectory});
-  const products = path.join(appDirectory, 'build/macos/Build/Products/Debug-Development');
   const apps = (await readdir(products)).filter(name => name.endsWith('.app'));
   assert.equal(apps.length, 1, 'Expected one development app build');
   const testApp = path.join(temporary, 'Pomodoist Blocking E2E.app');
@@ -263,6 +269,7 @@ try {
   pending.clear();
   await control?.close();
   await processes.close();
+  await restoreDevelopmentApp?.();
   if (website) { website.closeAllConnections(); await new Promise(resolve => website.close(resolve)); }
   if (temporary) await rm(temporary, {recursive: true, force: true});
   await Promise.all(logs.map(log => new Promise(resolve => log.end(resolve))));

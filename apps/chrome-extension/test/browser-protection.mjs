@@ -26,7 +26,11 @@ try{
   const extensionId=new URL(worker.url()).host;
   const popup=await context.newPage();await popup.goto(`chrome-extension://${extensionId}/popup.html`);
   await popup.waitForFunction(()=>document.getElementById('startup').hidden);
-  assert.equal(await popup.locator('#protection-heading').textContent(),'Distraction protection');
+  const pairing=popup.getByTestId('desktop-pairing-toggle');
+  await pairing.evaluate(node=>{node.textContent='Desktop link';});
+  await pairing.click();assert.equal(await popup.locator('#pair-code').isVisible(),true);
+  await popup.locator('#protection-status').evaluate(node=>{node.textContent='Updated status copy';});
+  await popup.locator('#protection-status[data-state=idle]').waitFor();
   const page=await context.newPage();const address=`http://localhost:${server.address().port}`;
   await page.goto(address+'/cached');await page.locator('#draft').fill('keep my form');
   await page.evaluate(()=>document.querySelector('audio').play());
@@ -39,14 +43,23 @@ try{
     profile:{blockedCategories:['social'],overrides:[],blockOnPause:true},assignments:[{kind:'domain',id:'localhost',category:'social'}]}};
   await worker.evaluate(async saved=>{await globalThis.__testProtection.save(saved);await globalThis.__testProtection.reconcile();},saved);
   // Existing documents are shielded without navigation, including cached pages and SPA history changes.
-  await page.waitForFunction(()=>document.querySelector('div')?.shadowRoot===null&&[...document.querySelectorAll('div')].some(d=>d.style.zIndex==='2147483647'));
+  const overlay=page.getByTestId('blocking-overlay');
+  await overlay.waitFor({state:'visible'});
+  assert.equal(await overlay.evaluate(node=>node.shadowRoot),null);
+  // Keep verifying behavior when a redesign changes the overlay's CSS.
+  await overlay.evaluate(node=>{
+    node.style.setProperty('z-index','2147483000','important');
+    node.style.setProperty('background','#eef2ff','important');
+  });
+  await overlay.waitFor({state:'visible'});
+  await page.locator('#draft').focus();await page.keyboard.type('blocked typing');
   assert.equal(await page.locator('#draft').inputValue(),'keep my form');
   assert.equal(await page.locator('audio').evaluate(a=>a.paused),true);
   assert.ok(!(await page.content()).includes('PRIVATE TASK TITLE'));
   const restrictedCdp=await context.newCDPSession(restricted);await restrictedCdp.send('Accessibility.enable');
   const tree=await restrictedCdp.send('Accessibility.getFullAXTree');assert.ok(tree.nodes.some(n=>n.name?.value==='Focus'&&!n.ignored)||restricted.frames().some(f=>f.url().startsWith(`chrome-extension://${extensionId}/blocked.html`)),'restrictive CSP retains generic shield or extension frame');
   await cached.goBack().catch(()=>{});
-  await cached.waitForFunction(()=>location.protocol==='chrome-extension:'||[...document.querySelectorAll('div')].some(d=>d.style.zIndex==='2147483647'));
+  await cached.waitForFunction(()=>location.protocol==='chrome-extension:'||document.querySelector('[data-testid=blocking-overlay]'));
   await page.evaluate(()=>history.pushState({},'','/spa?private=yes#fragment'));
   const fresh=await context.newPage();await fresh.goto(address+'/new').catch(()=>{});
   await fresh.waitForURL(`chrome-extension://${extensionId}/blocked.html`);
@@ -57,10 +70,12 @@ try{
   await browserSession.send('ServiceWorker.enable');
   await browserSession.send('ServiceWorker.stopAllWorkers');
   await page.bringToFront();
-  await page.waitForFunction(()=>![...document.querySelectorAll('div')].some(d=>d.style.zIndex==='2147483647'),null,{timeout:15000});
+  await overlay.waitFor({state:'detached',timeout:15000});
   assert.equal(await page.locator('#draft').inputValue(),'keep my form');
   await page.waitForTimeout(350);assert.equal(await page.locator('audio').evaluate(a=>a.paused),true);
   assert.equal(page.url(),address+'/spa?private=yes#fragment');
+  await page.locator('#draft').click();await page.keyboard.press('End');await page.keyboard.type(' restored');
+  assert.equal(await page.locator('#draft').inputValue(),'keep my form restored');
   // Stale DNR redirects release on the packaged page; they never redirect back into a loop.
   await fresh.reload();await fresh.waitForFunction(()=>!document.getElementById('released').hidden);
   await fresh.goto(address+'/released');assert.ok(fresh.url().startsWith(address));

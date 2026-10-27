@@ -1,1 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="124" height="44" role="img" aria-label="Try Web"><rect x=".5" y=".5" width="123" height="43" rx="7" fill="#252b33" stroke="#ffffff24"/><text x="62" y="27" text-anchor="middle" fill="white" font-family="Arial,sans-serif" font-size="14" font-weight="600">Try Web</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="224" height="60" viewBox="0 0 224 60" role="img" aria-label="Try Web">
+  <title>Try Web</title>
+  <rect x="4.5" y="4.5" width="215" height="51" rx="10" fill="#151e2b" stroke="#334155"/>
+  <g transform="translate(18 18)" fill="none" stroke="#fff7eb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="4" ry="10"/><path d="M2 12h20"/></g>
+  <text x="51" y="35" fill="#fff7eb" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14" font-weight="600">Try Web</text>
+  <path d="M196 30h9m-4-4 4 4-4 4" fill="none" stroke="#f07b6e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -12,6 +12,7 @@ extension AppL10nContext on BuildContext {
 
 String appShortcutLabel(AppLocalizations l10n, AppShortcutCommand command) =>
     switch (command) {
+      AppShortcutCommand.togglePomo => l10n.settingsShortcutsTogglePomo,
       AppShortcutCommand.toggleSidebar => l10n.settingsShortcutsToggleSidebar,
       AppShortcutCommand.toggleTaskDetails =>
         l10n.settingsShortcutsToggleTaskDetails,

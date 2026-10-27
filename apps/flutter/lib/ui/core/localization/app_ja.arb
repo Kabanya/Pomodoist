@@ -2215,5 +2215,6 @@
   "taskFormatBold": "太字 (Markdown)",
   "taskFormatItalic": "斜体 (Markdown)",
   "taskFormatList": "箇条書き",
-  "taskFormatLink": "リンク (Markdown)"
+  "taskFormatLink": "リンク (Markdown)",
+  "settingsShortcutsTogglePomo": "Pomo を有効／無効にする"
 }

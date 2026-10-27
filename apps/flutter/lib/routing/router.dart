@@ -168,8 +168,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) {
           return AppStartupGate(
-            child: OnboardingGate(
+            shellBuilder: (content, dataReady) => OnboardingGate(
+              enabled: dataReady,
               child: AdaptiveShell(
+                dataReady: dataReady,
                 location: state.uri.path,
                 taskId: state.uri.queryParameters['task'],
                 habitId:
@@ -178,9 +180,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                     ? state.uri.queryParameters['habit']
                     : null,
                 mapFullscreen: isProjectMapFullscreen(state.uri),
-                child: child,
+                child: content,
               ),
             ),
+            child: child,
           );
         },
         routes: [
