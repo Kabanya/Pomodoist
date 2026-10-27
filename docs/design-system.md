@@ -2103,7 +2103,9 @@ Shell badges use `shellKeyboardViewModelProvider`, existing command
 names and binding formatting, including remaps and required modifiers. Blocking,
 Habits and projects receive no invented navigation shortcuts.
 
-Keep navigation labels and task counters stable while badges toggle. Do not
+Keep navigation labels and task counters stable while badges toggle. Search has
+no permanently visible shortcut label. Focus badges show both configured Focus
+bindings, including the alternate (Command/Control F by default). Do not
 show a floating shell help panel when the modifier is held; retain the in-place
 badges and compact local hints. Compact dialog hints sit beside their actions,
 with reserved space and wrapping for scaled text.

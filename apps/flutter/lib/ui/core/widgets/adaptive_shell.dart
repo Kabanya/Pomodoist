@@ -1231,12 +1231,9 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
         destination: destinations[path]!,
         selected: _isSelected(widget.location, path),
         count: counts[path],
-        shortcut:
-            command == null ||
-                (!shortcutHintsSupported(keyboard.platform) &&
-                    path != '/search')
+        shortcut: command == null || !shortcutHintsSupported(keyboard.platform)
             ? null
-            : keyboard.shortcuts[command]?.labelFor(keyboard.platform),
+            : commandHint(context.l10n, keyboard, command)?.keys,
         shortcutCommand: command,
         onTap: () => widget.onDestinationSelected(path),
       );
@@ -1733,40 +1730,19 @@ class _SidebarDestinationTile extends StatelessWidget {
                   ),
                 ),
                 if (shortcut case final label?)
-                  if (!shortcutHintsSupported(Theme.of(context).platform))
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 76),
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.labelSmall?.copyWith(color: metadataColor),
-                      ),
-                    )
-                  else
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4, right: 6),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 104),
-                        child: ShortcutHintBadge(
-                          command: shortcutCommand!,
-                          child: Stack(
-                            alignment: Alignment.centerRight,
-                            children: [
-                              Opacity(opacity: 0, child: ShortcutKeycap(label)),
-                              if (destination.path == '/search')
-                                Text(
-                                  label,
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(color: metadataColor),
-                                ),
-                            ],
-                          ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4, right: 6),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 104),
+                      child: ShortcutHintBadge(
+                        command: shortcutCommand!,
+                        child: Opacity(
+                          opacity: 0,
+                          child: ShortcutKeycap(label),
                         ),
                       ),
                     ),
+                  ),
                 if (showCount)
                   Text(
                     '$count',

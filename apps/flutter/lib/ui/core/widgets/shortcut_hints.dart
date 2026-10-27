@@ -35,12 +35,20 @@ ShortcutHint? commandHint(
   String? label,
   bool navigation = false,
 }) {
-  final binding = keyboard.shortcuts[command];
-  return binding == null
+  final keys = {
+    for (final candidate in [
+      command,
+      if (command == AppShortcutCommand.focus)
+        AppShortcutCommand.focusAlternate,
+    ])
+      if (keyboard.shortcuts[candidate] case final binding?)
+        binding.labelFor(keyboard.platform),
+  };
+  return keys.isEmpty
       ? null
       : ShortcutHint(
           label ?? appShortcutLabel(l10n, command),
-          binding.labelFor(keyboard.platform),
+          keys.join(' / '),
           navigation: navigation,
           release: false,
           icon: switch (command) {

@@ -40,9 +40,9 @@ void main() {
             AppShortcutCommand.quickAdd,
             AppShortcutCommand.toggleSidebar,
             AppShortcutCommand.search,
-            AppShortcutCommand.focus,
           ])
             bindings[command]!.labelFor(platform),
+          '${bindings[AppShortcutCommand.focus]!.labelFor(platform)} / ${bindings[AppShortcutCommand.focusAlternate]!.labelFor(platform)}',
         ]);
         expect(hints[0].label, l10n.addTask);
         expect(hints[2].navigation, isTrue);
@@ -81,6 +81,36 @@ void main() {
       expect(focus.last.label, l10n.shortcutHintsSwitchFocusView);
       expect(main.last.label, isNot(focus.last.label));
       expect(commandHint(l10n, custom, AppShortcutCommand.calendar), isNull);
+    },
+  );
+  test(
+    'Focus includes its remapped alternate and falls back when primary is absent',
+    () {
+      final l10n = AppLocalizationsEn();
+      const alternate = AppShortcutBinding(
+        physicalKeyId: 0x7000e,
+        keyLabel: 'K',
+        meta: true,
+        shift: true,
+      );
+      final bindings = {
+        AppShortcutCommand.focus: defaultAppShortcutBindings(
+          TargetPlatform.macOS,
+        )[AppShortcutCommand.focus]!,
+        AppShortcutCommand.focusAlternate: alternate,
+      };
+      ShellKeyboardState state() => ShellKeyboardState(
+        platform: TargetPlatform.macOS,
+        shortcuts: bindings,
+      );
+      expect(
+        commandHint(l10n, state(), AppShortcutCommand.focus)!.keys,
+        '⌘5 / ⇧⌘K',
+      );
+      bindings.remove(AppShortcutCommand.focus);
+      expect(commandHint(l10n, state(), AppShortcutCommand.focus)!.keys, '⇧⌘K');
+      bindings.clear();
+      expect(commandHint(l10n, state(), AppShortcutCommand.focus), isNull);
     },
   );
 }
