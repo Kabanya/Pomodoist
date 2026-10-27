@@ -714,16 +714,32 @@ clearing a token reveals the existing context defaults. Preview and creation use
 duration and clock. Preserve IME composition, selection and unrelated tokens.
 Quoted metadata names remain literal during date normalization. Ready voice
 subtasks preview the project inherited from their parent's current phrase.
-The composer renders entered text at a regular weight in opaque primary text;
-recognized tokens keep their accent through color alone. On mobile and desktop,
-the composer hint uses light weight (300) and secondary text at 65% opacity to
-stay unobtrusive.
+The composer renders entered text at a regular weight in opaque primary text.
+Recognized tokens use semantic foregrounds and soft fills shared with the metadata
+controls: green for dates, times and durations; blue for projects and sections;
+the existing P1–P4 colors for priority; the selected accent for Pomodoro estimates;
+and muted violet for labels and Comment. Resolve these through
+`AppThemePaletteQuickAdd` in `app_theme.dart`, including the shared light/dark
+violet role; no additional theme setting is stored. Foregrounds adjust toward
+primary text when needed to retain 4.5:1 contrast on normal and interaction fills.
+Use native `TextSpan.backgroundColor` without changing text metrics, selection
+or composing underlines. Tokens reflect the phrase's effective priority.
+On mobile and desktop, the composer hint uses light weight (300) and secondary
+text at 65% opacity to stay unobtrusive.
 `QuickAddComposer` owns this styling, so the dialog and the separate window
 stay consistent. Details stay below the editable input; the separate window
 scrolls when needed.
 
+Date, project, priority, Pomodoro estimate and Comment controls retain soft fills
+and thin tinted borders even without a value. Open menus and the expanded Comment
+control use a stronger semantic border. Hover and press retain the semantic color
+with a slightly stronger fill; disabled states retain the shared button behavior.
+Keep 8 px control corners, existing sizes and wrapping, and keyboard focus outlines.
+Apply this treatment to inline Quick Add, dialogs, the separate window and editable
+voice drafts including subtasks, using the existing shared components.
+
 A Pomodoro estimate chip precedes Comment whenever the phrase is nonempty.
-Without an estimate it remains a neutral, discoverable action. Manual estimates
+Without an estimate it remains a softly accent-tinted, discoverable action. Manual estimates
 and recognized `3p` / `3п` tokens use the palette accent, independently of priority.
 The anchored, keyboard-accessible editor offers a 1–999 interval field, decrement,
 increment and Clear estimate. Opening it proposes one interval without changing
@@ -1213,6 +1229,9 @@ including Linux monitor controls and availability feedback. Show the section on
 native macOS, Windows and Linux, even while Linux capabilities are being checked
 or the companion is unavailable. Hide it on mobile and web. The menu, content
 panes and selected content index use the same platform-filtered section list.
+The Pomo menu entry uses a monochrome tomato outline with a leafy crown, an
+18 px size and rounded strokes matching the Lucide icons. It inherits the menu's
+icon color, including the selected accent; do not use an emoji or a face.
 Without a valid or available section parameter, the initial wide view opens
 General and the narrow view opens the index. Profile and Browse account links
 open `section=account`.

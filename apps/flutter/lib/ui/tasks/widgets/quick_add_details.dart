@@ -5,12 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show
         LucideIcons,
+        ShadBorder,
         ShadButton,
         ShadButtonSize,
+        ShadDecoration,
         ShadPopover,
         ShadPopoverController;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/tasks/view_models/quick_add_details_view_model.dart';
 import 'package:pomodoist/ui/core/widgets/app_date_time_picker.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
@@ -66,6 +69,7 @@ class QuickAddDetails extends ConsumerWidget {
           defaultDate: defaultDate,
         );
         final parsed = analysis.parsed;
+        final colors = context.appColors;
         final schedule =
             parsed.schedule ??
             (parsed.dueDate == null ? defaultSchedule : null);
@@ -190,6 +194,7 @@ class QuickAddDetails extends ConsumerWidget {
                       ? dateLabel
                       : '$dateLabel · $timeLabel',
                   icon: LucideIcons.calendar,
+                  color: colors.quickAddTokenColor(QuickAddTokenKind.date),
                   enabled: canEdit,
                   items: (close) => [
                     _option(context.l10n.timelinePickDate, () {
@@ -223,6 +228,7 @@ class QuickAddDetails extends ConsumerWidget {
                 desktop: desktop,
                 label: projectName,
                 icon: LucideIcons.hash,
+                color: colors.quickAddTokenColor(QuickAddTokenKind.project),
                 enabled: canEdit,
                 items: (close) => [
                   _option(context.l10n.quickAddResetDetails, () {
@@ -258,6 +264,10 @@ class QuickAddDetails extends ConsumerWidget {
                   parsed.priority ?? priority ?? 4,
                 ),
                 icon: LucideIcons.flag,
+                color: colors.quickAddTokenColor(
+                  QuickAddTokenKind.priority,
+                  priority: parsed.priority ?? priority ?? 4,
+                ),
                 enabled: canEdit,
                 items: (close) => [
                   for (var number = 1; number <= 4; number++)
@@ -309,6 +319,7 @@ class _DetailsMenu extends StatefulWidget {
   const _DetailsMenu({
     required this.label,
     required this.icon,
+    required this.color,
     required this.enabled,
     required this.items,
     this.focusNode,
@@ -319,6 +330,7 @@ class _DetailsMenu extends StatefulWidget {
   final String label;
   final String? semanticLabel;
   final IconData icon;
+  final Color color;
   final FocusNode? focusNode;
   final bool enabled;
   final bool touchTargets;
@@ -331,46 +343,79 @@ class _DetailsMenu extends StatefulWidget {
 
 class _DetailsMenuState extends State<_DetailsMenu> {
   final _popover = ShadPopoverController();
+
+  @override
+  void initState() {
+    super.initState();
+    _popover.addListener(_onPopoverChanged);
+  }
+
+  void _onPopoverChanged() => setState(() {});
+
   @override
   void dispose() {
+    _popover.removeListener(_onPopoverChanged);
     _popover.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => ShadPopover(
-    controller: _popover,
-    popover: (context) => ConstrainedBox(
-      constraints: const BoxConstraints(maxHeight: 320, maxWidth: 280),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: widget.items(_popover.hide),
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final style = colors.quickAddStyle(widget.color);
+    final foreground = style.color!;
+    return ShadPopover(
+      controller: _popover,
+      popover: (context) => ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 320, maxWidth: 280),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: widget.items(_popover.hide),
+          ),
         ),
       ),
-    ),
-    child: ShadButton.outline(
-      focusNode: widget.focusNode,
-      size: ShadButtonSize.sm,
-      height: widget.touchTargets ? 48 : (widget.desktop ? 40 : null),
-      enabled: widget.enabled,
-      onPressed: widget.enabled ? _popover.toggle : null,
-      leading: Icon(
-        widget.icon,
-        size: widget.touchTargets || widget.desktop ? 18 : 14,
-      ),
-      trailing: widget.desktop
-          ? const Icon(LucideIcons.chevronDown, size: 12)
-          : null,
-      child: Flexible(
-        child: Text(
-          widget.label,
-          semanticsLabel: widget.semanticLabel,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+      child: ShadButton.outline(
+        focusNode: widget.focusNode,
+        size: ShadButtonSize.sm,
+        height: widget.touchTargets ? 48 : (widget.desktop ? 40 : null),
+        enabled: widget.enabled,
+        onPressed: widget.enabled ? _popover.toggle : null,
+        foregroundColor: foreground,
+        hoverForegroundColor: foreground,
+        pressedForegroundColor: foreground,
+        backgroundColor: style.backgroundColor,
+        hoverBackgroundColor: colors.quickAddBackground(
+          foreground,
+          emphasized: true,
+        ),
+        pressedBackgroundColor: colors.quickAddBackground(
+          foreground,
+          emphasized: true,
+        ),
+        decoration: ShadDecoration(
+          border: ShadBorder.all(
+            color: colors.quickAddBorder(foreground, active: _popover.isOpen),
+            radius: BorderRadius.circular(8),
+          ),
+        ),
+        leading: Icon(
+          widget.icon,
+          size: widget.touchTargets || widget.desktop ? 18 : 14,
+        ),
+        trailing: widget.desktop
+            ? const Icon(LucideIcons.chevronDown, size: 12)
+            : null,
+        child: Flexible(
+          child: Text(
+            widget.label,
+            semanticsLabel: widget.semanticLabel,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }

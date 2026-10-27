@@ -22,6 +22,8 @@ class _QuickAddCommentButton extends StatelessWidget {
         builder: (context, value, _) {
           final hasComment = value.text.trim().isNotEmpty;
           final colors = context.appColors;
+          final style = colors.quickAddStyle(colors.quickAddNoteColor);
+          final foreground = style.color!;
           return Semantics(
             expanded: expanded,
             value: hasComment ? value.text.trim() : null,
@@ -31,10 +33,24 @@ class _QuickAddCommentButton extends StatelessWidget {
               height: touchTargets ? 48 : 40,
               enabled: enabled,
               onPressed: enabled ? onPressed : null,
-              foregroundColor: expanded || hasComment
-                  ? colors.accent
-                  : colors.secondaryText,
-              backgroundColor: expanded ? colors.accentTint : colors.surface,
+              foregroundColor: foreground,
+              hoverForegroundColor: foreground,
+              pressedForegroundColor: foreground,
+              backgroundColor: style.backgroundColor,
+              hoverBackgroundColor: colors.quickAddBackground(
+                foreground,
+                emphasized: true,
+              ),
+              pressedBackgroundColor: colors.quickAddBackground(
+                foreground,
+                emphasized: true,
+              ),
+              decoration: ShadDecoration(
+                border: ShadBorder.all(
+                  color: colors.quickAddBorder(foreground, active: expanded),
+                  radius: BorderRadius.circular(8),
+                ),
+              ),
               leading: const Icon(LucideIcons.messageSquare, size: 18),
               trailing: hasComment
                   ? const Icon(LucideIcons.check, size: 14)

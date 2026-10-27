@@ -4,6 +4,7 @@ import 'package:shadcn_ui/shadcn_ui.dart' as shad;
 
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 
+import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 import 'package:pomodoist/domain/models/tasks/task_time.dart';
 
 enum AppThemeColor {
@@ -228,6 +229,56 @@ class AppThemePalette extends ThemeExtension<AppThemePalette> {
       overdue: Color.lerp(overdue, other.overdue, t)!,
       onAccent: Color.lerp(onAccent, other.onAccent, t)!,
       onError: Color.lerp(onError, other.onError, t)!,
+    );
+  }
+}
+
+extension AppThemePaletteQuickAdd on AppThemePalette {
+  Color get quickAddNoteColor => surface.computeLuminance() < .5
+      ? const Color(0xFFC2A7E8)
+      : const Color(0xFF71539A);
+
+  Color quickAddTokenColor(QuickAddTokenKind kind, {int priority = 4}) =>
+      switch (kind) {
+        QuickAddTokenKind.date ||
+        QuickAddTokenKind.time ||
+        QuickAddTokenKind.duration => success,
+        QuickAddTokenKind.project || QuickAddTokenKind.section => info,
+        QuickAddTokenKind.label => quickAddNoteColor,
+        QuickAddTokenKind.focusEstimate => accent,
+        QuickAddTokenKind.priority => switch (priority) {
+          1 => overdue,
+          2 => warning,
+          3 => info,
+          _ => secondaryText,
+        },
+      };
+
+  Color quickAddBackground(Color color, {bool emphasized = false}) =>
+      Color.alphaBlend(
+        color.withValues(alpha: emphasized ? .14 : .08),
+        surface,
+      );
+
+  Color quickAddBorder(Color color, {bool active = false}) =>
+      active ? color : Color.alphaBlend(color.withValues(alpha: .22), surface);
+
+  TextStyle quickAddStyle(Color color) {
+    var foreground = color;
+    // Keep semantic text readable on the strongest interaction fill.
+    for (var step = 1; step <= 10; step++) {
+      if (themeContrastRatio(
+            foreground,
+            quickAddBackground(foreground, emphasized: true),
+          ) >=
+          4.5) {
+        break;
+      }
+      foreground = Color.lerp(color, primaryText, step / 10)!;
+    }
+    return TextStyle(
+      color: foreground,
+      backgroundColor: quickAddBackground(foreground),
     );
   }
 }

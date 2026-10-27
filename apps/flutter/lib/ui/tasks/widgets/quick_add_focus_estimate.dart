@@ -117,7 +117,10 @@ class _QuickAddFocusEstimateChipState extends State<QuickAddFocusEstimateChip> {
             space.left + (width + 26) / 2,
             space.right - (width + 26) / 2,
           );
-    final active = widget.manual || _popover.isOpen;
+    final style = colors.quickAddStyle(
+      colors.quickAddTokenColor(QuickAddTokenKind.focusEstimate),
+    );
+    final foreground = style.color!;
     return ShadPopover(
       controller: _popover,
       anchor: ShadGlobalAnchor(Offset(centerX, space.top)),
@@ -262,11 +265,21 @@ class _QuickAddFocusEstimateChipState extends State<QuickAddFocusEstimateChip> {
           height: widget.touchTargets ? 48 : (widget.desktop ? 40 : null),
           enabled: widget.enabled,
           onPressed: widget.enabled ? _toggle : null,
-          foregroundColor: active ? colors.accent : colors.secondaryText,
-          backgroundColor: active ? colors.accentTint : colors.surface,
+          foregroundColor: foreground,
+          hoverForegroundColor: foreground,
+          pressedForegroundColor: foreground,
+          backgroundColor: style.backgroundColor,
+          hoverBackgroundColor: colors.quickAddBackground(
+            foreground,
+            emphasized: true,
+          ),
+          pressedBackgroundColor: colors.quickAddBackground(
+            foreground,
+            emphasized: true,
+          ),
           decoration: ShadDecoration(
             border: ShadBorder.all(
-              color: active ? colors.accent : colors.border,
+              color: colors.quickAddBorder(foreground, active: _popover.isOpen),
               radius: BorderRadius.circular(8),
             ),
           ),

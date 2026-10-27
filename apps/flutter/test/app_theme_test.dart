@@ -1,10 +1,125 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 import 'package:pomodoist/domain/models/tasks/task_time.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/settings/view_models/theme_settings_view_model.dart';
 
 void main() {
+  test(
+    'Quick Add tokens and controls share semantic colors in every theme',
+    () {
+      for (final preset in builtinAppThemes) {
+        for (final colors in [preset.light, preset.dark]) {
+          expect(
+            colors.quickAddTokenColor(QuickAddTokenKind.date),
+            colors.success,
+          );
+          expect(
+            colors.quickAddTokenColor(QuickAddTokenKind.time),
+            colors.success,
+          );
+          expect(
+            colors.quickAddTokenColor(QuickAddTokenKind.duration),
+            colors.success,
+          );
+          expect(
+            colors.quickAddTokenColor(QuickAddTokenKind.project),
+            colors.info,
+          );
+          expect(
+            colors.quickAddTokenColor(QuickAddTokenKind.section),
+            colors.info,
+          );
+          expect(
+            colors.quickAddTokenColor(QuickAddTokenKind.label),
+            colors.quickAddNoteColor,
+          );
+          expect(
+            colors.quickAddTokenColor(QuickAddTokenKind.focusEstimate),
+            colors.accent,
+          );
+          for (final (priority, color) in [
+            (1, colors.overdue),
+            (2, colors.warning),
+            (3, colors.info),
+            (4, colors.secondaryText),
+          ]) {
+            expect(
+              colors.quickAddTokenColor(
+                QuickAddTokenKind.priority,
+                priority: priority,
+              ),
+              color,
+            );
+          }
+        }
+      }
+    },
+  );
+
+  test(
+    'Quick Add fills retain readable semantic text and stronger open borders',
+    () {
+      for (final preset in builtinAppThemes) {
+        for (final colors in [preset.light, preset.dark]) {
+          for (final color in [
+            colors.success,
+            colors.info,
+            colors.overdue,
+            colors.warning,
+            colors.secondaryText,
+            colors.accent,
+            colors.quickAddNoteColor,
+          ]) {
+            final style = colors.quickAddStyle(color);
+            expect(style.fontWeight, isNull);
+            expect(style.backgroundColor, isNot(colors.surface));
+            expect(style.backgroundColor!.a, 1);
+            for (final background in [
+              style.backgroundColor!,
+              colors.quickAddBackground(style.color!, emphasized: true),
+            ]) {
+              expect(
+                themeContrastRatio(style.color!, background),
+                greaterThanOrEqualTo(4.5),
+                reason: '${preset.id}: $color on $background',
+              );
+            }
+            expect(
+              colors.quickAddBorder(style.color!, active: true),
+              style.color,
+            );
+            expect(
+              colors.quickAddBorder(style.color!),
+              isNot(colors.quickAddBorder(style.color!, active: true)),
+            );
+          }
+        }
+      }
+    },
+  );
+
+  test(
+    'Quick Add adapts bright custom accents without changing saved colors',
+    () {
+      final colors = AppTheme.classicLight.copyWith(accent: Colors.yellow);
+      final style = colors.quickAddStyle(colors.accent);
+      expect(colors.accent, Colors.yellow);
+      expect(
+        themeContrastRatio(
+          style.color!,
+          colors.quickAddBackground(style.color!, emphasized: true),
+        ),
+        greaterThanOrEqualTo(4.5),
+      );
+      expect(
+        AppThemePalette.fromJson(colors.toJson()).toJson(),
+        colors.toJson(),
+      );
+    },
+  );
+
   test('input focus outline stays inside the field in every theme', () {
     for (final preset in builtinAppThemes) {
       for (final theme in [

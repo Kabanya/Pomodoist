@@ -8,7 +8,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
-    show LucideIcons, ShadButton, ShadButtonSize, ShadIconButton, ShadSwitch;
+    show
+        LucideIcons,
+        ShadBorder,
+        ShadButton,
+        ShadButtonSize,
+        ShadDecoration,
+        ShadIconButton,
+        ShadSwitch;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
