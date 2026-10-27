@@ -40,6 +40,31 @@ void main() {
     },
   );
 
+  test(
+    'detailed editor expands within the work area and restores the base size',
+    () {
+      const base = Size(680, 240);
+      expect(
+        globalQuickAddWindowSize(
+          baseSize: base,
+          voiceExpanded: false,
+          commentExpanded: false,
+          editorExpanded: true,
+          workArea: const Size(850, 700),
+        ),
+        const Size(850, 700),
+      );
+      expect(
+        globalQuickAddWindowSize(
+          baseSize: base,
+          voiceExpanded: false,
+          commentExpanded: false,
+        ),
+        base,
+      );
+    },
+  );
+
   test('expansion preserves a larger base and the chosen comment width', () {
     expect(
       globalQuickAddWindowSize(
@@ -166,4 +191,32 @@ void main() {
     expect(restarted.baseSize, const Size(560, 290));
     expect(window.baseSize, restarted.baseSize);
   });
+
+  test(
+    'first opening fits the labeled toolbar without replacing manual sizes',
+    () async {
+      final initial = manager();
+      await initial.restoreSize();
+      await initial.setPreferredWidth(842.2);
+      expect(initial.baseSize, const Size(843, 200));
+      await initial.setPreferredWidth(880);
+      expect(initial.baseSize, const Size(843, 200));
+
+      await initial.rememberSize(const Size(540, 260));
+      final restored = manager();
+      await restored.restoreSize();
+      await restored.setPreferredWidth(843);
+      expect(restored.baseSize, const Size(540, 260));
+    },
+  );
+
+  test(
+    'initial width includes native borders outside the content viewport',
+    () async {
+      final window = manager();
+      await window.restoreSize();
+      await window.setPreferredWidth(842.2, frameWidthInset: 16);
+      expect(window.baseSize, const Size(859, 200));
+    },
+  );
 }

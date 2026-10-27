@@ -4914,4 +4914,72 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blockingReady => 'Ready to focus';
+
+  @override
+  String get shortcutHintsTitle => 'Keyboard hints';
+
+  @override
+  String get shortcutHintsNavigation => 'Navigation';
+
+  @override
+  String shortcutHintsHeld(String key) {
+    return '$key held · Release to hide';
+  }
+
+  @override
+  String shortcutHintsRelease(String key) {
+    return 'Release $key first to use these keys';
+  }
+
+  @override
+  String get shortcutHintsSwitchFocusView => 'Switch Focus view';
+
+  @override
+  String get shortcutHintsNavigate => 'Navigate';
+
+  @override
+  String get shortcutHintsAcceptSuggestion => 'Accept suggestion';
+
+  @override
+  String get blockingShowAllPresets => 'Show all';
+
+  @override
+  String get blockingCollapsePresets => 'Collapse';
+
+  @override
+  String get taskNew => 'New task';
+
+  @override
+  String get taskCreateAction => 'Create task';
+
+  @override
+  String get taskDescription => 'Description';
+
+  @override
+  String get taskExpandEditor => 'Expand editor';
+
+  @override
+  String get taskCollapseEditor => 'Collapse editor';
+
+  @override
+  String get taskVisibleToYou => 'Visible only to you';
+
+  @override
+  String get taskVisibleToTeam => 'Visible to team members';
+
+  @override
+  String get taskCreatedFilesPending =>
+      'Task created. Retry uploading the remaining files, or remove them to finish.';
+
+  @override
+  String get taskFormatBold => 'Bold (Markdown)';
+
+  @override
+  String get taskFormatItalic => 'Italic (Markdown)';
+
+  @override
+  String get taskFormatList => 'Bulleted list';
+
+  @override
+  String get taskFormatLink => 'Link (Markdown)';
 }

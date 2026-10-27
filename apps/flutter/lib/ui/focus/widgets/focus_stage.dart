@@ -1,3 +1,5 @@
+import 'package:pomodoist/domain/models/settings/app_shortcut.dart';
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:pomodoist/ui/pomo/view_models/pomo_controller.dart';
 import 'package:pomodoist/ui/pomo/widgets/pomo_settings.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_branch_widgets.dart';

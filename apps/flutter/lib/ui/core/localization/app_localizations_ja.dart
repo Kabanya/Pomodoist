@@ -4757,4 +4757,72 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get blockingReady => '開始の準備完了';
+
+  @override
+  String get shortcutHintsTitle => 'キーボードヒント';
+
+  @override
+  String get shortcutHintsNavigation => '移動';
+
+  @override
+  String shortcutHintsHeld(String key) {
+    return '$keyを長押し中 · 離すと非表示';
+  }
+
+  @override
+  String shortcutHintsRelease(String key) {
+    return 'これらのキーを使う前に$keyを離してください';
+  }
+
+  @override
+  String get shortcutHintsSwitchFocusView => '集中の表示を切り替え';
+
+  @override
+  String get shortcutHintsNavigate => '移動';
+
+  @override
+  String get shortcutHintsAcceptSuggestion => '候補を確定';
+
+  @override
+  String get blockingShowAllPresets => 'すべて表示';
+
+  @override
+  String get blockingCollapsePresets => '折りたたむ';
+
+  @override
+  String get taskNew => '新しいタスク';
+
+  @override
+  String get taskCreateAction => 'タスクを作成';
+
+  @override
+  String get taskDescription => '説明';
+
+  @override
+  String get taskExpandEditor => 'エディターを拡大';
+
+  @override
+  String get taskCollapseEditor => 'エディターを縮小';
+
+  @override
+  String get taskVisibleToYou => '自分のみ表示';
+
+  @override
+  String get taskVisibleToTeam => 'チームメンバーに表示';
+
+  @override
+  String get taskCreatedFilesPending =>
+      'タスクを作成しました。残りのファイルを再送信するか、リストから削除して完了してください。';
+
+  @override
+  String get taskFormatBold => '太字 (Markdown)';
+
+  @override
+  String get taskFormatItalic => '斜体 (Markdown)';
+
+  @override
+  String get taskFormatList => '箇条書き';
+
+  @override
+  String get taskFormatLink => 'リンク (Markdown)';
 }

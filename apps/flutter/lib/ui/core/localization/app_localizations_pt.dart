@@ -4943,6 +4943,74 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get blockingReady => 'Pronto para começar';
+
+  @override
+  String get shortcutHintsTitle => 'Atalhos de teclado';
+
+  @override
+  String get shortcutHintsNavigation => 'Navegação';
+
+  @override
+  String shortcutHintsHeld(String key) {
+    return '$key premida · Solte para ocultar';
+  }
+
+  @override
+  String shortcutHintsRelease(String key) {
+    return 'Solte $key antes de usar estas teclas';
+  }
+
+  @override
+  String get shortcutHintsSwitchFocusView => 'Mudar vista de Foco';
+
+  @override
+  String get shortcutHintsNavigate => 'Navegar';
+
+  @override
+  String get shortcutHintsAcceptSuggestion => 'Aceitar sugestão';
+
+  @override
+  String get blockingShowAllPresets => 'Mostrar todos';
+
+  @override
+  String get blockingCollapsePresets => 'Recolher';
+
+  @override
+  String get taskNew => 'Nova tarefa';
+
+  @override
+  String get taskCreateAction => 'Criar tarefa';
+
+  @override
+  String get taskDescription => 'Descrição';
+
+  @override
+  String get taskExpandEditor => 'Expandir editor';
+
+  @override
+  String get taskCollapseEditor => 'Recolher editor';
+
+  @override
+  String get taskVisibleToYou => 'Visível apenas para você';
+
+  @override
+  String get taskVisibleToTeam => 'Visível para a equipe';
+
+  @override
+  String get taskCreatedFilesPending =>
+      'Tarefa criada. Tente enviar os arquivos restantes novamente ou remova-os para concluir.';
+
+  @override
+  String get taskFormatBold => 'Negrito (Markdown)';
+
+  @override
+  String get taskFormatItalic => 'Itálico (Markdown)';
+
+  @override
+  String get taskFormatList => 'Lista com marcadores';
+
+  @override
+  String get taskFormatLink => 'Link (Markdown)';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -6259,4 +6327,72 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get blockingReady => 'Pronto para começar';
+
+  @override
+  String get shortcutHintsTitle => 'Atalhos de teclado';
+
+  @override
+  String get shortcutHintsNavigation => 'Navegação';
+
+  @override
+  String shortcutHintsHeld(String key) {
+    return '$key pressionada · Solte para ocultar';
+  }
+
+  @override
+  String shortcutHintsRelease(String key) {
+    return 'Solte $key antes de usar estas teclas';
+  }
+
+  @override
+  String get shortcutHintsSwitchFocusView => 'Alternar visualização de Foco';
+
+  @override
+  String get shortcutHintsNavigate => 'Navegar';
+
+  @override
+  String get shortcutHintsAcceptSuggestion => 'Aceitar sugestão';
+
+  @override
+  String get blockingShowAllPresets => 'Mostrar todos';
+
+  @override
+  String get blockingCollapsePresets => 'Recolher';
+
+  @override
+  String get taskNew => 'Nova tarefa';
+
+  @override
+  String get taskCreateAction => 'Criar tarefa';
+
+  @override
+  String get taskDescription => 'Descrição';
+
+  @override
+  String get taskExpandEditor => 'Expandir editor';
+
+  @override
+  String get taskCollapseEditor => 'Recolher editor';
+
+  @override
+  String get taskVisibleToYou => 'Visível apenas para você';
+
+  @override
+  String get taskVisibleToTeam => 'Visível para a equipe';
+
+  @override
+  String get taskCreatedFilesPending =>
+      'Tarefa criada. Tente enviar os arquivos restantes novamente ou remova-os para concluir.';
+
+  @override
+  String get taskFormatBold => 'Negrito (Markdown)';
+
+  @override
+  String get taskFormatItalic => 'Itálico (Markdown)';
+
+  @override
+  String get taskFormatList => 'Lista com marcadores';
+
+  @override
+  String get taskFormatLink => 'Link (Markdown)';
 }

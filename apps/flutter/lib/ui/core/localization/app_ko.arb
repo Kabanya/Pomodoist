@@ -2194,5 +2194,26 @@
         "type": "String"
       }
     }
-  }
+  },
+  "shortcutHintsTitle": "키보드 힌트",
+  "shortcutHintsNavigation": "이동",
+  "shortcutHintsHeld": "{key} 누르는 중 · 놓으면 숨김",
+  "shortcutHintsRelease": "이 키를 사용하려면 먼저 {key} 키를 놓으세요",
+  "shortcutHintsSwitchFocusView": "집중 보기 전환",
+  "shortcutHintsNavigate": "이동",
+  "shortcutHintsAcceptSuggestion": "제안 적용",
+  "blockingShowAllPresets": "모두 보기",
+  "blockingCollapsePresets": "접기",
+  "taskNew": "새 작업",
+  "taskCreateAction": "작업 만들기",
+  "taskDescription": "설명",
+  "taskExpandEditor": "편집기 확장",
+  "taskCollapseEditor": "편집기 축소",
+  "taskVisibleToYou": "나에게만 표시",
+  "taskVisibleToTeam": "팀원에게 표시",
+  "taskCreatedFilesPending": "작업이 생성되었습니다. 남은 파일을 다시 업로드하거나 목록에서 제거하여 완료하세요.",
+  "taskFormatBold": "굵게 (Markdown)",
+  "taskFormatItalic": "기울임꼴 (Markdown)",
+  "taskFormatList": "글머리 기호 목록",
+  "taskFormatLink": "링크 (Markdown)"
 }

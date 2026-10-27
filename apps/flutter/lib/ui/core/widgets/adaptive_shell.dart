@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:pomodoist/ui/distractions/view_models/distraction_view_model.dart';
 // ignore_for_file: deprecated_member_use
 
@@ -597,14 +598,25 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
       );
     }
 
-    return PopScope(
-      canPop: navigationDraft == null,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _cancelNavigationEditor();
-      },
-      child: Stack(
-        fit: StackFit.expand,
-        children: [scaffold, const FocusRunCompletionCelebrationSlot()],
+    return ShortcutHintsScope(
+      fallback: true,
+      identity: widget.location,
+      enabled:
+          widget.location != '/settings/shortcuts' && navigationDraft == null,
+      hints: shellShortcutHints(
+        context.l10n,
+        keyboard,
+        focusLocation: focusLocation,
+      ),
+      child: PopScope(
+        canPop: navigationDraft == null,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) _cancelNavigationEditor();
+        },
+        child: Stack(
+          fit: StackFit.expand,
+          children: [scaffold, const FocusRunCompletionCelebrationSlot()],
+        ),
       ),
     );
   }
@@ -1076,11 +1088,22 @@ class _ShellMenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      key: const Key('shell-menu-button'),
-      tooltip: context.l10n.menuTooltip,
-      onPressed: onPressed,
-      icon: const Icon(LucideIcons.panelLeft),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          key: const Key('shell-menu-button'),
+          tooltip: context.l10n.menuTooltip,
+          onPressed: onPressed,
+          icon: const Icon(LucideIcons.panelLeft),
+        ),
+        if (shortcutHintsSupported(Theme.of(context).platform))
+          const ShortcutHintBadge(
+            command: AppShortcutCommand.toggleSidebar,
+            alignment: Alignment.centerLeft,
+            child: SizedBox(width: 80, height: 32),
+          ),
+      ],
     );
   }
 }
@@ -1174,8 +1197,6 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
     };
     final keyboard = ref.watch(shellKeyboardViewModelProvider);
     final sidebar = ref.watch(shellSidebarViewModelProvider);
-    final searchShortcut = keyboard.shortcuts[AppShortcutCommand.search]
-        ?.labelFor(keyboard.platform);
     final displayName = _displayName(context, sidebar.displayName);
     final projects = sidebar.projects;
     final projectTaskCounts = sidebar.projectTaskCounts;
@@ -1191,11 +1212,32 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
     };
 
     Widget destinationTile(String path) {
+      final command = switch (path) {
+        '/browse' => AppShortcutCommand.browse,
+        '/search' => AppShortcutCommand.search,
+        '/today' => AppShortcutCommand.today,
+        '/upcoming' => AppShortcutCommand.upcoming,
+        '/focus' => AppShortcutCommand.focus,
+        '/inbox' => AppShortcutCommand.inbox,
+        '/priority-matrix' => AppShortcutCommand.priorityMatrix,
+        '/calendar' => AppShortcutCommand.calendar,
+        '/timeline' => AppShortcutCommand.timeline,
+        '/kanban' => AppShortcutCommand.kanban,
+        '/reports' => AppShortcutCommand.reports,
+        '/settings' => AppShortcutCommand.settings,
+        _ => null,
+      };
       final tile = _SidebarDestinationTile(
         destination: destinations[path]!,
         selected: _isSelected(widget.location, path),
         count: counts[path],
-        shortcut: path == '/search' ? searchShortcut : null,
+        shortcut:
+            command == null ||
+                (!shortcutHintsSupported(keyboard.platform) &&
+                    path != '/search')
+            ? null
+            : keyboard.shortcuts[command]?.labelFor(keyboard.platform),
+        shortcutCommand: command,
         onTap: () => widget.onDestinationSelected(path),
       );
       return path == '/focus'
@@ -1499,23 +1541,26 @@ class _AddTaskTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    return ShadButton.ghost(
-      key: const Key('sidebar-add-task'),
-      onPressed: onTap,
-      height: 0,
-      expands: true,
-      mainAxisAlignment: MainAxisAlignment.start,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      foregroundColor: colors.accent,
-      hoverForegroundColor: colors.accent,
-      leading: const Icon(LucideIcons.circlePlus, size: 20),
-      gap: 10,
-      child: Text(
-        context.l10n.addTask,
-        textAlign: TextAlign.start,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          color: colors.accent,
-          fontWeight: FontWeight.w600,
+    return ShortcutHintBadge(
+      command: AppShortcutCommand.quickAdd,
+      child: ShadButton.ghost(
+        key: const Key('sidebar-add-task'),
+        onPressed: onTap,
+        height: 0,
+        expands: true,
+        mainAxisAlignment: MainAxisAlignment.start,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        foregroundColor: colors.accent,
+        hoverForegroundColor: colors.accent,
+        leading: const Icon(LucideIcons.circlePlus, size: 20),
+        gap: 10,
+        child: Text(
+          context.l10n.addTask,
+          textAlign: TextAlign.start,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: colors.accent,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -1637,6 +1682,7 @@ class _SidebarDestinationTile extends StatelessWidget {
     required this.onTap,
     this.count,
     this.shortcut,
+    this.shortcutCommand,
   });
 
   final _Destination destination;
@@ -1644,6 +1690,7 @@ class _SidebarDestinationTile extends StatelessWidget {
   final VoidCallback onTap;
   final int? count;
   final String? shortcut;
+  final AppShortcutCommand? shortcutCommand;
 
   @override
   Widget build(BuildContext context) {
@@ -1686,10 +1733,9 @@ class _SidebarDestinationTile extends StatelessWidget {
                   ),
                 ),
                 if (shortcut case final label?)
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 76),
-                    child: Tooltip(
-                      message: label,
+                  if (!shortcutHintsSupported(Theme.of(context).platform))
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 76),
                       child: Text(
                         label,
                         maxLines: 1,
@@ -1698,8 +1744,29 @@ class _SidebarDestinationTile extends StatelessWidget {
                           context,
                         ).textTheme.labelSmall?.copyWith(color: metadataColor),
                       ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4, right: 6),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 104),
+                        child: ShortcutHintBadge(
+                          command: shortcutCommand!,
+                          child: Stack(
+                            alignment: Alignment.centerRight,
+                            children: [
+                              Opacity(opacity: 0, child: ShortcutKeycap(label)),
+                              if (destination.path == '/search')
+                                Text(
+                                  label,
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(color: metadataColor),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
                 if (showCount)
                   Text(
                     '$count',

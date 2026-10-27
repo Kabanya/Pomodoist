@@ -2194,5 +2194,26 @@
         "type": "String"
       }
     }
-  }
+  },
+  "shortcutHintsTitle": "キーボードヒント",
+  "shortcutHintsNavigation": "移動",
+  "shortcutHintsHeld": "{key}を長押し中 · 離すと非表示",
+  "shortcutHintsRelease": "これらのキーを使う前に{key}を離してください",
+  "shortcutHintsSwitchFocusView": "集中の表示を切り替え",
+  "shortcutHintsNavigate": "移動",
+  "shortcutHintsAcceptSuggestion": "候補を確定",
+  "blockingShowAllPresets": "すべて表示",
+  "blockingCollapsePresets": "折りたたむ",
+  "taskNew": "新しいタスク",
+  "taskCreateAction": "タスクを作成",
+  "taskDescription": "説明",
+  "taskExpandEditor": "エディターを拡大",
+  "taskCollapseEditor": "エディターを縮小",
+  "taskVisibleToYou": "自分のみ表示",
+  "taskVisibleToTeam": "チームメンバーに表示",
+  "taskCreatedFilesPending": "タスクを作成しました。残りのファイルを再送信するか、リストから削除して完了してください。",
+  "taskFormatBold": "太字 (Markdown)",
+  "taskFormatItalic": "斜体 (Markdown)",
+  "taskFormatList": "箇条書き",
+  "taskFormatLink": "リンク (Markdown)"
 }

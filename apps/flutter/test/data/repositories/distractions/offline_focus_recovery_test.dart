@@ -147,27 +147,44 @@ void main() {
 
   for (final paused in [false, true]) {
     for (final profileId in <String?>['work', null]) {
-      test('next profile $profileId is saved without changing local Focus paused=$paused', () async {
-        focus.online = false;
-        final preset = (await local.watchPresets().first).first;
-        (await focus.setPresetDistractionProfile(preset.id, 'study')).getOrThrow();
-        (await focus.startRun(StartFocusRunInput(presetId: preset.id))).getOrThrow();
-        if (paused) (await focus.pauseActiveInterval()).getOrThrow();
-        final runId = focus.activeRun!.id;
-        final revision = focus.localRevision;
-        (await focus.setPresetDistractionProfile(preset.id, profileId)).getOrThrow();
-        final saved = (await focus.watchPresets().first).firstWhere((p) => p.id == preset.id);
-        expect(saved.distractionProfileConfigured, true);
-        expect(saved.distractionProfileId, profileId);
-        expect(focus.activeRun!.id, runId);
-        expect(focus.envelope['session']['profileId'], 'study');
-        expect(focus.selectedProfile?.id, 'study');
-        expect(focus.localRevision, revision);
-        expect(focus.pendingExitAction, isNull);
-        (await focus.stopActiveRun(reason: StopFocusReason.stopped)).getOrThrow();
-        (await focus.startRun(StartFocusRunInput(presetId: preset.id))).getOrThrow();
-        expect(focus.envelope['session']['profileId'], profileId);
-      });
+      test(
+        'next profile $profileId is saved without changing local Focus paused=$paused',
+        () async {
+          focus.online = false;
+          final preset = (await local.watchPresets().first).first;
+          (await focus.setPresetDistractionProfile(
+            preset.id,
+            'study',
+          )).getOrThrow();
+          (await focus.startRun(
+            StartFocusRunInput(presetId: preset.id),
+          )).getOrThrow();
+          if (paused) (await focus.pauseActiveInterval()).getOrThrow();
+          final runId = focus.activeRun!.id;
+          final revision = focus.localRevision;
+          (await focus.setPresetDistractionProfile(
+            preset.id,
+            profileId,
+          )).getOrThrow();
+          final saved = (await focus.watchPresets().first).firstWhere(
+            (p) => p.id == preset.id,
+          );
+          expect(saved.distractionProfileConfigured, true);
+          expect(saved.distractionProfileId, profileId);
+          expect(focus.activeRun!.id, runId);
+          expect(focus.envelope['session']['profileId'], 'study');
+          expect(focus.selectedProfile?.id, 'study');
+          expect(focus.localRevision, revision);
+          expect(focus.pendingExitAction, isNull);
+          (await focus.stopActiveRun(
+            reason: StopFocusReason.stopped,
+          )).getOrThrow();
+          (await focus.startRun(
+            StartFocusRunInput(presetId: preset.id),
+          )).getOrThrow();
+          expect(focus.envelope['session']['profileId'], profileId);
+        },
+      );
     }
   }
 

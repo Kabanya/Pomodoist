@@ -4941,4 +4941,72 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get blockingReady => 'Prêt à démarrer';
+
+  @override
+  String get shortcutHintsTitle => 'Raccourcis clavier';
+
+  @override
+  String get shortcutHintsNavigation => 'Navigation';
+
+  @override
+  String shortcutHintsHeld(String key) {
+    return '$key maintenue · Relâchez pour masquer';
+  }
+
+  @override
+  String shortcutHintsRelease(String key) {
+    return 'Relâchez d’abord $key pour utiliser ces touches';
+  }
+
+  @override
+  String get shortcutHintsSwitchFocusView => 'Changer la vue Concentration';
+
+  @override
+  String get shortcutHintsNavigate => 'Naviguer';
+
+  @override
+  String get shortcutHintsAcceptSuggestion => 'Accepter la suggestion';
+
+  @override
+  String get blockingShowAllPresets => 'Tout afficher';
+
+  @override
+  String get blockingCollapsePresets => 'Réduire';
+
+  @override
+  String get taskNew => 'Nouvelle tâche';
+
+  @override
+  String get taskCreateAction => 'Créer la tâche';
+
+  @override
+  String get taskDescription => 'Description';
+
+  @override
+  String get taskExpandEditor => 'Agrandir l’éditeur';
+
+  @override
+  String get taskCollapseEditor => 'Réduire l’éditeur';
+
+  @override
+  String get taskVisibleToYou => 'Visible uniquement par vous';
+
+  @override
+  String get taskVisibleToTeam => 'Visible par l’équipe';
+
+  @override
+  String get taskCreatedFilesPending =>
+      'Tâche créée. Réessayez d’envoyer les fichiers restants ou retirez-les pour terminer.';
+
+  @override
+  String get taskFormatBold => 'Gras (Markdown)';
+
+  @override
+  String get taskFormatItalic => 'Italique (Markdown)';
+
+  @override
+  String get taskFormatList => 'Liste à puces';
+
+  @override
+  String get taskFormatLink => 'Lien (Markdown)';
 }

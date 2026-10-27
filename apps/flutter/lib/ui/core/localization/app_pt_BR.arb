@@ -451,5 +451,26 @@
         "type": "String"
       }
     }
-  }
+  },
+  "shortcutHintsTitle": "Atalhos de teclado",
+  "shortcutHintsNavigation": "Navegação",
+  "shortcutHintsHeld": "{key} pressionada · Solte para ocultar",
+  "shortcutHintsRelease": "Solte {key} antes de usar estas teclas",
+  "shortcutHintsSwitchFocusView": "Alternar visualização de Foco",
+  "shortcutHintsNavigate": "Navegar",
+  "shortcutHintsAcceptSuggestion": "Aceitar sugestão",
+  "blockingShowAllPresets": "Mostrar todos",
+  "blockingCollapsePresets": "Recolher",
+  "taskNew": "Nova tarefa",
+  "taskCreateAction": "Criar tarefa",
+  "taskDescription": "Descrição",
+  "taskExpandEditor": "Expandir editor",
+  "taskCollapseEditor": "Recolher editor",
+  "taskVisibleToYou": "Visível apenas para você",
+  "taskVisibleToTeam": "Visível para a equipe",
+  "taskCreatedFilesPending": "Tarefa criada. Tente enviar os arquivos restantes novamente ou remova-os para concluir.",
+  "taskFormatBold": "Negrito (Markdown)",
+  "taskFormatItalic": "Itálico (Markdown)",
+  "taskFormatList": "Lista com marcadores",
+  "taskFormatLink": "Link (Markdown)"
 }

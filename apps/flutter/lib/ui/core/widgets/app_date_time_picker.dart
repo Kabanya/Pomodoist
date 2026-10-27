@@ -1,3 +1,5 @@
+import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -560,56 +562,61 @@ class _TimePanelState extends State<_TimePanel> {
   @override
   Widget build(BuildContext context) {
     final material = MaterialLocalizations.of(context);
-    return CallbackShortcuts(
-      bindings: {const SingleActivator(LogicalKeyboardKey.enter): _submit},
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            widget.helpText ?? material.timePickerDialHelpText,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 12),
-          // Use the exported fields: ShadTimePicker 0.56.3 retains its old
-          // value when an input is cleared, allowing an unintended submission.
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.end,
-            children: [
-              ShadTimePickerField(
-                focusNode: _hourFocus,
-                controller: _hour,
-                label: Text(material.timePickerHourLabel),
-                onChanged: (_) => setState(() {}),
-              ),
-              ShadTimePickerField(
-                controller: _minute,
-                label: Text(material.timePickerMinuteLabel),
-                onChanged: (_) => setState(() {}),
-              ),
-              if (!widget.use24Hours)
-                ShadButton.outline(
-                  onPressed: () => setState(() {
-                    _period = _period == DayPeriod.am
-                        ? DayPeriod.pm
-                        : DayPeriod.am;
-                  }),
-                  child: Text(
-                    _period == DayPeriod.am
-                        ? material.anteMeridiemAbbreviation
-                        : material.postMeridiemAbbreviation,
-                  ),
+    return ShortcutHintsScope(
+      enabled: _value != null,
+      hints: [ShortcutHint(context.l10n.commonSave, 'Enter')],
+      child: CallbackShortcuts(
+        bindings: {const SingleActivator(LogicalKeyboardKey.enter): _submit},
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const ShortcutHintsBar(),
+            Text(
+              widget.helpText ?? material.timePickerDialHelpText,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 12),
+            // Use the exported fields: ShadTimePicker 0.56.3 retains its old
+            // value when an input is cleared, allowing an unintended submission.
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.end,
+              children: [
+                ShadTimePickerField(
+                  focusNode: _hourFocus,
+                  controller: _hour,
+                  label: Text(material.timePickerHourLabel),
+                  onChanged: (_) => setState(() {}),
                 ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _PickerActions(
-            onCancel: widget.onCancel,
-            onSubmit: _value == null ? null : _submit,
-          ),
-        ],
+                ShadTimePickerField(
+                  controller: _minute,
+                  label: Text(material.timePickerMinuteLabel),
+                  onChanged: (_) => setState(() {}),
+                ),
+                if (!widget.use24Hours)
+                  ShadButton.outline(
+                    onPressed: () => setState(() {
+                      _period = _period == DayPeriod.am
+                          ? DayPeriod.pm
+                          : DayPeriod.am;
+                    }),
+                    child: Text(
+                      _period == DayPeriod.am
+                          ? material.anteMeridiemAbbreviation
+                          : material.postMeridiemAbbreviation,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _PickerActions(
+              onCancel: widget.onCancel,
+              onSubmit: _value == null ? null : _submit,
+            ),
+          ],
+        ),
       ),
     );
   }

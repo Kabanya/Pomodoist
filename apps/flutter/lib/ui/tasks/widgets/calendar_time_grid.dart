@@ -473,51 +473,57 @@ class _CalendarResizableEventState extends State<_CalendarResizableEvent> {
             right: 0,
             bottom: 0,
             height: 12,
-            child: Focus(
-              onFocusChange: (value) => setState(() => _resizeFocused = value),
-              onKeyEvent: (_, eventKey) {
-                if (eventKey is! KeyDownEvent) return KeyEventResult.ignored;
-                if (eventKey.logicalKey == LogicalKeyboardKey.arrowDown) {
-                  unawaited(_resize(math.min(1440, event.endMinutes + 15)));
-                  return KeyEventResult.handled;
-                }
-                if (eventKey.logicalKey == LogicalKeyboardKey.arrowUp &&
-                    event.endMinutes - event.startMinutes > 15) {
-                  unawaited(_resize(event.endMinutes - 15));
-                  return KeyEventResult.handled;
-                }
-                return KeyEventResult.ignored;
-              },
-              child: Semantics(
-                label: context.l10n.calendarResize,
-                onIncrease: () =>
-                    unawaited(_resize(math.min(1440, event.endMinutes + 15))),
-                onDecrease: event.endMinutes - event.startMinutes > 15
-                    ? () => unawaited(_resize(event.endMinutes - 15))
-                    : null,
-                child: MouseRegion(
-                  cursor: SystemMouseCursors.resizeUpDown,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onVerticalDragStart: (_) => setState(() => _delta = 0),
-                    onVerticalDragUpdate: (details) => setState(
-                      () => _delta = (_delta ?? 0) + details.delta.dy,
-                    ),
-                    onVerticalDragCancel: () => setState(() => _delta = null),
-                    onVerticalDragEnd: (_) {
-                      final end = _end;
-                      setState(() => _delta = null);
-                      unawaited(_resize(end));
-                    },
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Container(
-                        width: 18,
-                        height: 2,
-                        margin: const EdgeInsets.only(bottom: 3),
-                        color: _resizeFocused
-                            ? context.appColors.accentFill
-                            : context.appColors.mutedText.withValues(alpha: .5),
+            child: ShortcutHintsScope(
+              hints: [ShortcutHint(context.l10n.calendarResize, '↑ ↓')],
+              child: Focus(
+                onFocusChange: (value) =>
+                    setState(() => _resizeFocused = value),
+                onKeyEvent: (_, eventKey) {
+                  if (eventKey is! KeyDownEvent) return KeyEventResult.ignored;
+                  if (eventKey.logicalKey == LogicalKeyboardKey.arrowDown) {
+                    unawaited(_resize(math.min(1440, event.endMinutes + 15)));
+                    return KeyEventResult.handled;
+                  }
+                  if (eventKey.logicalKey == LogicalKeyboardKey.arrowUp &&
+                      event.endMinutes - event.startMinutes > 15) {
+                    unawaited(_resize(event.endMinutes - 15));
+                    return KeyEventResult.handled;
+                  }
+                  return KeyEventResult.ignored;
+                },
+                child: Semantics(
+                  label: context.l10n.calendarResize,
+                  onIncrease: () =>
+                      unawaited(_resize(math.min(1440, event.endMinutes + 15))),
+                  onDecrease: event.endMinutes - event.startMinutes > 15
+                      ? () => unawaited(_resize(event.endMinutes - 15))
+                      : null,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.resizeUpDown,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onVerticalDragStart: (_) => setState(() => _delta = 0),
+                      onVerticalDragUpdate: (details) => setState(
+                        () => _delta = (_delta ?? 0) + details.delta.dy,
+                      ),
+                      onVerticalDragCancel: () => setState(() => _delta = null),
+                      onVerticalDragEnd: (_) {
+                        final end = _end;
+                        setState(() => _delta = null);
+                        unawaited(_resize(end));
+                      },
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Container(
+                          width: 18,
+                          height: 2,
+                          margin: const EdgeInsets.only(bottom: 3),
+                          color: _resizeFocused
+                              ? context.appColors.accentFill
+                              : context.appColors.mutedText.withValues(
+                                  alpha: .5,
+                                ),
+                        ),
                       ),
                     ),
                   ),

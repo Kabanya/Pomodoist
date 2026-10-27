@@ -1583,5 +1583,26 @@
         "type": "String"
       }
     }
-  }
+  },
+  "shortcutHintsTitle": "تلميحات لوحة المفاتيح",
+  "shortcutHintsNavigation": "التنقل",
+  "shortcutHintsHeld": "{key} مضغوط · اتركه للإخفاء",
+  "shortcutHintsRelease": "اترك {key} أولاً لاستخدام هذه المفاتيح",
+  "shortcutHintsSwitchFocusView": "تبديل عرض التركيز",
+  "shortcutHintsNavigate": "التنقل",
+  "shortcutHintsAcceptSuggestion": "قبول الاقتراح",
+  "blockingShowAllPresets": "إظهار الكل",
+  "blockingCollapsePresets": "طي القائمة",
+  "taskNew": "مهمة جديدة",
+  "taskCreateAction": "إنشاء مهمة",
+  "taskDescription": "الوصف",
+  "taskExpandEditor": "توسيع المحرر",
+  "taskCollapseEditor": "طي المحرر",
+  "taskVisibleToYou": "مرئية لك فقط",
+  "taskVisibleToTeam": "مرئية لأعضاء الفريق",
+  "taskCreatedFilesPending": "تم إنشاء المهمة. أعد رفع الملفات المتبقية أو أزلها من القائمة للإنهاء.",
+  "taskFormatBold": "عريض (Markdown)",
+  "taskFormatItalic": "مائل (Markdown)",
+  "taskFormatList": "قائمة نقطية",
+  "taskFormatLink": "رابط (Markdown)"
 }

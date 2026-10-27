@@ -1,4 +1,11 @@
-part of 'quick_add_bar.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
+import 'package:pomodoist/ui/tasks/view_models/quick_add_text_controller.dart';
+import 'package:pomodoist/ui/tasks/view_models/quick_add_view_model.dart';
+import 'package:pomodoist/ui/tasks/widgets/label_icon.dart';
 
 class QuickAddInput extends ConsumerStatefulWidget {
   const QuickAddInput({
@@ -93,42 +100,58 @@ class _QuickAddInputState extends ConsumerState<QuickAddInput> {
       },
       onSelected: _insertSuggestion,
       fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-        return Focus(
-          onKeyEvent: (node, event) {
-            if (event is! KeyDownEvent) {
+        return ShortcutHintsScope(
+          enabled:
+              widget.enabled &&
+              _hiddenForText != controller.text &&
+              viewModel.suggestions(controller.value).isNotEmpty,
+          identity:
+              _hiddenForText != controller.text &&
+              viewModel.suggestions(controller.value).isNotEmpty,
+          hints: [
+            ShortcutHint(
+              context.l10n.shortcutHintsAcceptSuggestion,
+              'Enter / Tab',
+            ),
+            ShortcutHint(context.l10n.commonClose, 'Esc'),
+          ],
+          child: Focus(
+            onKeyEvent: (node, event) {
+              if (event is! KeyDownEvent) {
+                return KeyEventResult.ignored;
+              }
+              final suggestions = viewModel.suggestions(controller.value);
+              final hasSuggestions =
+                  _hiddenForText != controller.text && suggestions.isNotEmpty;
+              if (event.logicalKey == LogicalKeyboardKey.escape &&
+                  hasSuggestions) {
+                setState(() => _hiddenForText = controller.text);
+                return KeyEventResult.handled;
+              }
+              if ((event.logicalKey == LogicalKeyboardKey.enter ||
+                      event.logicalKey == LogicalKeyboardKey.numpadEnter ||
+                      event.logicalKey == LogicalKeyboardKey.tab) &&
+                  hasSuggestions) {
+                _valueBeforeSelection = controller.value;
+                onFieldSubmitted();
+                return KeyEventResult.handled;
+              }
               return KeyEventResult.ignored;
-            }
-            final suggestions = viewModel.suggestions(controller.value);
-            final hasSuggestions =
-                _hiddenForText != controller.text && suggestions.isNotEmpty;
-            if (event.logicalKey == LogicalKeyboardKey.escape &&
-                hasSuggestions) {
-              setState(() => _hiddenForText = controller.text);
-              return KeyEventResult.handled;
-            }
-            if ((event.logicalKey == LogicalKeyboardKey.enter ||
-                    event.logicalKey == LogicalKeyboardKey.numpadEnter ||
-                    event.logicalKey == LogicalKeyboardKey.tab) &&
-                hasSuggestions) {
-              _valueBeforeSelection = controller.value;
-              onFieldSubmitted();
-              return KeyEventResult.handled;
-            }
-            return KeyEventResult.ignored;
-          },
-          child: TextField(
-            key: widget.textFieldKey,
-            controller: controller,
-            focusNode: focusNode,
-            autofocus: widget.autofocus,
-            enabled: widget.enabled,
-            minLines: 1,
-            maxLines: widget.maxLines,
-            style: widget.style,
-            textInputAction: widget.textInputAction,
-            decoration: decoration,
-            onSubmitted: widget.onSubmitted,
-            onChanged: widget.onChanged,
+            },
+            child: TextField(
+              key: widget.textFieldKey,
+              controller: controller,
+              focusNode: focusNode,
+              autofocus: widget.autofocus,
+              enabled: widget.enabled,
+              minLines: 1,
+              maxLines: widget.maxLines,
+              style: widget.style,
+              textInputAction: widget.textInputAction,
+              decoration: decoration,
+              onSubmitted: widget.onSubmitted,
+              onChanged: widget.onChanged,
+            ),
           ),
         );
       },

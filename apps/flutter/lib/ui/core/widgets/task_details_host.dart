@@ -1,3 +1,5 @@
+import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -7,24 +9,42 @@ import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 
 /// Keeps the task route mounted while the shared panel opens and resizes.
-class TaskDetailsHost extends StatelessWidget {
+class TaskDetailsHost extends StatefulWidget {
   const TaskDetailsHost({required this.taskId, required this.child, super.key});
 
   final String? taskId;
   final Widget child;
 
   @override
+  State<TaskDetailsHost> createState() => _TaskDetailsHostState();
+}
+
+class _TaskDetailsHostState extends State<TaskDetailsHost> {
+  bool _expanded = false;
+  @override
+  void didUpdateWidget(covariant TaskDetailsHost oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.taskId != widget.taskId) _expanded = false;
+  }
+
+  void _toggleExpanded() => setState(() => _expanded = !_expanded);
+
+  @override
   Widget build(BuildContext context) => DetailsPanelHost(
+    expanded: _expanded,
+    onCollapse: _toggleExpanded,
     onClose: () => closeTaskDetails(context),
-    panel: taskId == null
+    panel: widget.taskId == null
         ? null
         : TaskDetailScreen(
-            key: ValueKey(taskId),
-            taskId: taskId!,
+            key: ValueKey(widget.taskId),
+            taskId: widget.taskId!,
             isPanel: true,
+            expanded: _expanded,
+            onToggleExpanded: _toggleExpanded,
             onClose: () => closeTaskDetails(context),
           ),
-    child: child,
+    child: widget.child,
   );
 }
 
@@ -57,9 +77,13 @@ class DetailsPanelHost extends StatefulWidget {
     required this.panel,
     required this.onClose,
     required this.child,
+    this.expanded = false,
+    this.onCollapse,
     super.key,
   });
 
+  final bool expanded;
+  final VoidCallback? onCollapse;
   final Widget? panel;
   final VoidCallback onClose;
   final Widget child;
@@ -94,7 +118,14 @@ class _DetailsPanelHostState extends State<DetailsPanelHost> {
         child: widget.child,
       );
       final sideBySide = viewport.sideBySide;
-      final panelWidth = sideBySide ? 440.0 : constraints.maxWidth;
+      final expanded = widget.expanded;
+      final margin = expanded && constraints.maxWidth >= 820 ? 24.0 : 0.0;
+      final panelWidth = expanded
+          ? (constraints.maxWidth - margin * 2).clamp(0.0, 1280.0)
+          : sideBySide
+          ? 440.0
+          : constraints.maxWidth;
+      final modal = expanded || !sideBySide;
       final duration = AppMotion.duration(context, AppMotion.panel);
       return BackButtonListener(
         onBackButtonPressed: () async {
@@ -122,34 +153,62 @@ class _DetailsPanelHostState extends State<DetailsPanelHost> {
                 top: 0,
                 bottom: 0,
                 left: 0,
-                right: open && sideBySide ? panelWidth : 0,
+                right: open && sideBySide && !expanded ? panelWidth : 0,
                 child: ExcludeFocus(
-                  excluding: open && !sideBySide,
+                  excluding: open && modal,
                   child: ExcludeSemantics(
-                    excluding: open && !sideBySide,
+                    excluding: open && modal,
                     child: viewport,
                   ),
                 ),
               ),
+              if (open && expanded)
+                ModalBarrier(
+                  color: Colors.black54,
+                  dismissible: true,
+                  onDismiss: widget.onCollapse,
+                ),
               AnimatedPositioned(
                 duration: duration,
                 curve: AppMotion.curve,
-                top: 0,
-                bottom: 0,
+                top: margin,
+                bottom: margin,
                 width: panelWidth,
-                right: open ? 0 : -panelWidth,
+                right: open
+                    ? (expanded ? (constraints.maxWidth - panelWidth) / 2 : 0)
+                    : -panelWidth,
                 child: open
                     ? Material(
                         color: context.appColors.surface,
+                        borderRadius: expanded
+                            ? BorderRadius.circular(12)
+                            : null,
+                        clipBehavior: Clip.antiAlias,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            border: Border(
-                              left: BorderSide(color: context.appColors.border),
-                            ),
+                            border: expanded
+                                ? Border.all(color: context.appColors.border)
+                                : Border(
+                                    left: BorderSide(
+                                      color: context.appColors.border,
+                                    ),
+                                  ),
                           ),
                           child: FocusScope(
                             autofocus: true,
-                            child: widget.panel!,
+                            child: ShortcutHintsScope(
+                              modal: true,
+                              identity: widget.panel!.key,
+                              hints: [
+                                ShortcutHint(context.l10n.commonClose, 'Esc'),
+                              ],
+                              child: Column(
+                                children: [
+                                  const ShortcutHintsBar(),
+                                  Expanded(child: widget.panel!),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       )

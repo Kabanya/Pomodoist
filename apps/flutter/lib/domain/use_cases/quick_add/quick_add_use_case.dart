@@ -43,6 +43,7 @@ class QuickAddUseCase {
     TaskSchedule? defaultSchedule,
     String? kanbanStatusId,
     String? labelId,
+    List<String> assigneeIds = const [],
   }) => Result.capture<String>(() async {
     final task = await createTaskWithContext(
       input,
@@ -55,6 +56,7 @@ class QuickAddUseCase {
       defaultSchedule: defaultSchedule,
       kanbanStatusId: kanbanStatusId,
       labelId: labelId,
+      assigneeIds: assigneeIds,
     ).then((result) => result.getOrThrow());
     return task.id;
   });
@@ -71,6 +73,7 @@ class QuickAddUseCase {
     TaskSchedule? defaultSchedule,
     String? kanbanStatusId,
     String? labelId,
+    List<String> assigneeIds = const [],
   }) => Result.capture<({String id, String? projectId, String? sectionId})>(
     () async {
       final context = await _createTask(
@@ -84,6 +87,7 @@ class QuickAddUseCase {
         defaultSchedule,
         kanbanStatusId,
         labelId,
+        assigneeIds,
       );
       final id = await _taskRepository
           .createTask(context.input)
@@ -107,6 +111,7 @@ class QuickAddUseCase {
     TaskSchedule? defaultSchedule,
     String? kanbanStatusId,
     String? labelId,
+    List<String> assigneeIds,
   ) async {
     final parsed = _parser.parse(input, now: _now(), defaultDate: defaultDate);
     if (parsed.content.isEmpty) {
@@ -158,6 +163,7 @@ class QuickAddUseCase {
         isFocusEstimateManual: parsed.estimatedFocusIntervals != null,
         kanbanStatusId: kanbanStatusId,
         labelId: labelId,
+        assigneeIds: assigneeIds,
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/tasks/widgets/task_description_field.dart';
 import 'package:pomodoist/domain/models/settings/task_preferences.dart';
 import 'package:pomodoist/ui/files/widgets/files_panel.dart';
 import 'package:pomodoist/ui/tasks/view_models/task_subtask_progress.dart';
@@ -52,12 +53,16 @@ class TaskDetailScreen extends ConsumerStatefulWidget {
     required this.taskId,
     this.onClose,
     this.isPanel = false,
+    this.expanded = false,
+    this.onToggleExpanded,
     super.key,
   });
 
   final String taskId;
   final VoidCallback? onClose;
   final bool isPanel;
+  final bool expanded;
+  final VoidCallback? onToggleExpanded;
 
   @override
   ConsumerState<TaskDetailScreen> createState() => TaskDetailScreenState();
@@ -67,6 +72,7 @@ class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
   _TaskDetailTab _selectedTab = _TaskDetailTab.details;
   final _titleKey = GlobalKey<_EditableTaskTitleState>();
   final _descriptionKey = GlobalKey<_EditableTaskDescriptionState>();
+  final _discussionKey = GlobalKey();
   final _saveIdentity = Object();
   final _titleEditorIdentity = Object();
   final _descriptionEditorIdentity = Object();
@@ -178,6 +184,22 @@ class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
             ),
           ),
         ),
+        if (widget.onToggleExpanded != null &&
+            (widget.expanded || MediaQuery.sizeOf(context).width >= 820))
+          IconButton(
+            key: const Key('task-detail-expand'),
+            tooltip: widget.expanded
+                ? l10n.taskCollapseEditor
+                : l10n.taskExpandEditor,
+            onPressed: () async {
+              if (widget.expanded && !await saveEdits()) return;
+              if (mounted) widget.onToggleExpanded?.call();
+            },
+            icon: Icon(
+              widget.expanded ? LucideIcons.minimize2 : LucideIcons.maximize2,
+              size: 18,
+            ),
+          ),
         if (item != null)
           AppActionMenu(
             tooltip: l10n.taskMore,
@@ -276,6 +298,7 @@ class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     final l10n = context.l10n;
     final viewState = ref.watch(taskDetailViewModelProvider(taskId));
     final descriptionFirst =
+        widget.expanded ||
         viewState.layout == TaskDetailLayout.descriptionFirst;
     final task = viewState.task;
     final viewModel = ref.read(taskDetailViewModelProvider(taskId).notifier);
@@ -335,6 +358,7 @@ class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                     projectName: viewState.projectName,
                     projects: viewState.projects,
                     calendarLinked: viewState.calendarLinked,
+                    showAssignees: !widget.expanded,
                   ),
                 ),
               );
@@ -426,6 +450,15 @@ class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                       ],
                     ),
                   ),
+                  if (widget.expanded && shared)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(inset, 12, inset, 0),
+                      child: TaskCollaborationSection(
+                        task: item,
+                        showComments: false,
+                        assigneeChips: true,
+                      ),
+                    ),
                   Padding(
                     padding: EdgeInsets.fromLTRB(inset, 8, inset, 8),
                     child: Wrap(
@@ -525,61 +558,125 @@ class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                     ),
                   ),
                   Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.fromLTRB(inset, 20, inset, 24),
-                      child: TaskMotionItem(
-                        taskId: item.id,
-                        child: Column(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final split =
+                            widget.expanded &&
+                            shared &&
+                            constraints.maxWidth >= 900;
+                        final discussion = TaskCollaborationSection(
+                          key: _discussionKey,
+                          task: item,
+                          showAssignees: false,
+                        );
+                        return Row(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            if (!descriptionFirst) properties,
-                            retained(
-                              'description',
-                              showDetails,
-                              _EditableTaskDescription(
-                                key: _descriptionKey,
-                                identity: _descriptionEditorIdentity,
-                                task: item,
+                            Expanded(
+                              flex: split ? 65 : 1,
+                              child: SingleChildScrollView(
+                                padding: EdgeInsets.fromLTRB(
+                                  inset,
+                                  20,
+                                  inset,
+                                  24,
+                                ),
+                                child: TaskMotionItem(
+                                  taskId: item.id,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      if (!descriptionFirst) properties,
+                                      retained(
+                                        'description',
+                                        showDetails,
+                                        _EditableTaskDescription(
+                                          key: _descriptionKey,
+                                          expanded: widget.expanded,
+                                          identity: _descriptionEditorIdentity,
+                                          task: item,
+                                        ),
+                                      ),
+                                      retained(
+                                        'files',
+                                        descriptionFirst ||
+                                            activeTab == _TaskDetailTab.files,
+                                        FilesPanel(
+                                          taskId: item.id,
+                                          compact: true,
+                                        ),
+                                      ),
+                                      retained(
+                                        'subtasks',
+                                        showDetails,
+                                        _SubtasksSection(
+                                          identity: _subtaskEditorIdentity,
+                                          task: item,
+                                        ),
+                                      ),
+                                      if (descriptionFirst) properties,
+                                      retained(
+                                        'history',
+                                        showDetails,
+                                        _DetailDisclosure(
+                                          label: l10n.focusHistory,
+                                          child: _FocusHistory(task: item),
+                                        ),
+                                      ),
+                                      if (!split)
+                                        retained(
+                                          'discussion',
+                                          shared &&
+                                              (descriptionFirst ||
+                                                  activeTab ==
+                                                      _TaskDetailTab
+                                                          .discussion),
+                                          discussion,
+                                        ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
-                            retained(
-                              'files',
-                              descriptionFirst ||
-                                  activeTab == _TaskDetailTab.files,
-                              FilesPanel(taskId: item.id, compact: true),
-                            ),
-                            retained(
-                              'subtasks',
-                              showDetails,
-                              _SubtasksSection(
-                                identity: _subtaskEditorIdentity,
-                                task: item,
+                            if (split) ...[
+                              VerticalDivider(
+                                width: 1,
+                                color: context.appColors.border,
                               ),
-                            ),
-                            if (descriptionFirst) properties,
-                            retained(
-                              'history',
-                              showDetails,
-                              _DetailDisclosure(
-                                label: l10n.focusHistory,
-                                child: _FocusHistory(task: item),
+                              Expanded(
+                                flex: 35,
+                                child: SingleChildScrollView(
+                                  padding: EdgeInsets.fromLTRB(
+                                    inset,
+                                    20,
+                                    inset,
+                                    24,
+                                  ),
+                                  child: discussion,
+                                ),
                               ),
-                            ),
-                            retained(
-                              'discussion',
-                              shared &&
-                                  (descriptionFirst ||
-                                      activeTab == _TaskDetailTab.discussion),
-                              TaskCollaborationSection(
-                                task: item,
-                                showAssignees: false,
-                              ),
-                            ),
+                            ],
                           ],
+                        );
+                      },
+                    ),
+                  ),
+                  if (widget.expanded)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(inset, 12, inset, 16),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: ShadButton(
+                          onPressed: () async {
+                            if (await saveEdits() && mounted) {
+                              widget.onToggleExpanded?.call();
+                            }
+                          },
+                          child: Text(l10n.commonSave),
                         ),
                       ),
                     ),
-                  ),
                 ],
               );
             },
@@ -710,11 +807,13 @@ class _TaskProperties extends ConsumerWidget {
     required this.projectName,
     required this.projects,
     required this.calendarLinked,
+    this.showAssignees = true,
   });
   final TaskItem task;
   final String? projectName;
   final List<ProjectItem> projects;
   final bool calendarLinked;
+  final bool showAssignees;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -938,7 +1037,7 @@ class _TaskProperties extends ConsumerWidget {
             enabled: projects.isNotEmpty,
           ),
         ),
-        if (task.scopeId != null)
+        if (showAssignees && task.scopeId != null)
           TaskCollaborationSection(task: task, showComments: false),
         _DetailDisclosure(
           label: l10n.recurrenceTitle,
@@ -1140,11 +1239,13 @@ class _EditableTaskDescription extends ConsumerStatefulWidget {
   const _EditableTaskDescription({
     required this.identity,
     required this.task,
+    this.expanded = false,
     super.key,
   });
 
   final Object identity;
   final TaskItem task;
+  final bool expanded;
 
   @override
   ConsumerState<_EditableTaskDescription> createState() =>
@@ -1167,7 +1268,7 @@ class _EditableTaskDescriptionState
         ? state.draft
         : (widget.task.description ?? '');
     _focusNode.addListener(() {
-      if (!_focusNode.hasFocus) {
+      if (!_focusNode.hasFocus && !widget.expanded) {
         unawaited(_save());
       }
     });
@@ -1200,6 +1301,27 @@ class _EditableTaskDescriptionState
         widget.identity,
       ).select((state) => state.saving),
     );
+    if (widget.expanded) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            context.l10n.taskDescription,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 12),
+          TaskDescriptionField(
+            controller: _controller,
+            focusNode: _focusNode,
+            enabled: !_saving,
+            readOnly: !widget.task.canEdit,
+            onChanged: (value) => ref
+                .read(taskEditorViewModelProvider(widget.identity).notifier)
+                .updateDraft(value),
+          ),
+        ],
+      );
+    }
     return TextField(
       key: const Key('task-comment-editor'),
       controller: _controller,

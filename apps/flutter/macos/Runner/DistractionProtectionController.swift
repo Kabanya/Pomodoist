@@ -28,6 +28,7 @@ final class DistractionShieldPanel: NSPanel {
 final class DistractionProtectionController {
   private let channel: FlutterMethodChannel
   private var observers: [NSObjectProtocol] = []
+  private var activationObserver: NSObjectProtocol?
   private var sessionActive = true
   private var timer: Timer?
   private var discovery = false
@@ -44,6 +45,7 @@ final class DistractionProtectionController {
   private var image: NSImage?
   private var panels: [DistractionShieldPanel] = []
   private var takingShieldFocus = false
+  private var activationDeadline: Date?
   private var labels: [NSTextField] = []
   private var attempted: String?
   private let excluded = Set(["com.apple.finder", "com.apple.loginwindow", "com.apple.systempreferences", "com.apple.SecurityAgent", "com.apple.systemuiserver", "com.apple.dock"])
@@ -53,6 +55,9 @@ final class DistractionProtectionController {
     channel.setMethodCallHandler { [weak self] call, result in
       self?.handle(call, result: result)
     }
+    activationObserver = NotificationCenter.default.addObserver(
+      forName: NSApplication.didBecomeActiveNotification, object: NSApp, queue: .main
+    ) { [weak self] _ in self?.finishShieldFocus() }
     observers.append(NSWorkspace.shared.notificationCenter.addObserver(
       forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
     ) { [weak self] _ in self?.inspect() })
@@ -65,6 +70,7 @@ final class DistractionProtectionController {
   }
 
   deinit {
+    if let activationObserver = activationObserver { NotificationCenter.default.removeObserver(activationObserver) }
     observers.forEach { NSWorkspace.shared.notificationCenter.removeObserver($0) }
     timer?.invalidate()
     panels.forEach { $0.close() }
@@ -123,6 +129,8 @@ final class DistractionProtectionController {
 
   private func inspect() {
     if let expires = deadline, Date() >= expires { clear() }
+    // A refused activation must leave the next inspection free to retry.
+    if let activationDeadline = activationDeadline, Date() >= activationDeadline { hideShield() }
     guard discovery || deadline != nil else { return }
     guard sessionActive else { hideShield(); return }
     guard let app = NSWorkspace.shared.frontmostApplication else { hideShield(); return }
@@ -192,18 +200,18 @@ final class DistractionProtectionController {
   private func focusShield() {
     guard !panels.isEmpty, !takingShieldFocus else { return }
     takingShieldFocus = true
+    activationDeadline = Date().addingTimeInterval(1)
     // Never cover a foreign key window while waiting for application activation.
     panels.forEach { $0.orderOut(nil) }
     NSApp.activate(ignoringOtherApps: true)
     if NSApp.isActive {
       finishShieldFocus()
-    } else {
-      DispatchQueue.main.async { [weak self] in self?.finishShieldFocus() }
     }
   }
 
   private func finishShieldFocus() {
-    defer { takingShieldFocus = false }
+    guard takingShieldFocus else { return }
+    defer { takingShieldFocus = false; activationDeadline = nil }
     guard sessionActive, protectionActive, NSApp.isActive,
           let keyPanel = panels.first(where: { $0.screen === NSScreen.main }) ?? panels.first else {
       hideShield(); return
@@ -214,7 +222,7 @@ final class DistractionProtectionController {
     keyPanel.makeFirstResponder(keyPanel.initialFirstResponder)
   }
 
-  private func hideShield() { panels.forEach { $0.close() }; panels.removeAll(); labels.removeAll() }
+  private func hideShield() { takingShieldFocus = false; activationDeadline = nil; panels.forEach { $0.close() }; panels.removeAll(); labels.removeAll() }
 
   @objc private func returnToTask() {
     hideShield()

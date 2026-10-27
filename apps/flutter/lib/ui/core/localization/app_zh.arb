@@ -1583,5 +1583,26 @@
         "type": "String"
       }
     }
-  }
+  },
+  "shortcutHintsTitle": "快捷键提示",
+  "shortcutHintsNavigation": "导航",
+  "shortcutHintsHeld": "正在按住 {key} · 松开以隐藏",
+  "shortcutHintsRelease": "请先松开 {key}，再使用这些按键",
+  "shortcutHintsSwitchFocusView": "切换专注视图",
+  "shortcutHintsNavigate": "导航",
+  "shortcutHintsAcceptSuggestion": "接受建议",
+  "blockingShowAllPresets": "显示全部",
+  "blockingCollapsePresets": "收起",
+  "taskNew": "新建任务",
+  "taskCreateAction": "创建任务",
+  "taskDescription": "描述",
+  "taskExpandEditor": "展开编辑器",
+  "taskCollapseEditor": "收起编辑器",
+  "taskVisibleToYou": "仅自己可见",
+  "taskVisibleToTeam": "团队成员可见",
+  "taskCreatedFilesPending": "任务已创建。请重试上传剩余文件，或从列表中移除后完成。",
+  "taskFormatBold": "粗体 (Markdown)",
+  "taskFormatItalic": "斜体 (Markdown)",
+  "taskFormatList": "项目符号列表",
+  "taskFormatLink": "链接 (Markdown)"
 }

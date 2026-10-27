@@ -19,14 +19,19 @@ Size globalQuickAddWindowSize({
   Size baseSize = globalQuickAddCompactSize,
   required bool voiceExpanded,
   required bool commentExpanded,
+  bool editorExpanded = false,
   Size workArea = globalQuickAddMaximumSize,
 }) {
-  final width = voiceExpanded
+  final width = editorExpanded
+      ? globalQuickAddMaximumSize.width
+      : voiceExpanded
       ? math.max(baseSize.width, globalQuickAddVoiceSize.width)
       : baseSize.width;
   final height = math.max(
     baseSize.height,
-    voiceExpanded
+    editorExpanded
+        ? globalQuickAddMaximumSize.height
+        : voiceExpanded
         ? globalQuickAddVoiceSize.height
         : commentExpanded
         ? globalQuickAddCommentSize.height
@@ -56,9 +61,13 @@ class GlobalQuickAddWindowManager extends WindowObserver {
   Future<int>? _opening;
   bool _voiceExpanded = false;
   bool _commentExpanded = false;
+  bool _editorExpanded = false;
   Size _baseSize = globalQuickAddCompactSize;
+  Size? _lastRequestedSize;
   Size get baseSize => _baseSize;
   bool _loadedSize = false;
+  bool _hasManualSize = false;
+  bool _preferredWidthApplied = false;
   Future<void>? _loadingSize;
   Future<void> _savingSize = Future.value();
   Future<void> _resizing = Future.value();
@@ -86,6 +95,7 @@ class GlobalQuickAddWindowManager extends WindowObserver {
           voiceExpanded: false,
           commentExpanded: false,
         );
+        _hasManualSize = true;
       }
     } catch (error) {
       debugPrint('Could not restore Quick Add window size: $error');
@@ -99,6 +109,7 @@ class GlobalQuickAddWindowManager extends WindowObserver {
       return Future.value();
     }
     _loadedSize = true;
+    _hasManualSize = true;
     _baseSize = globalQuickAddWindowSize(
       baseSize: size,
       voiceExpanded: false,
@@ -143,6 +154,46 @@ class GlobalQuickAddWindowManager extends WindowObserver {
     }
   }
 
+  Future<void> setPreferredWidth(
+    double width, {
+    double frameWidthInset = 0,
+  }) async {
+    if (_hasManualSize ||
+        _preferredWidthApplied ||
+        !width.isFinite ||
+        width <= 0) {
+      return;
+    }
+    _preferredWidthApplied = true;
+    _baseSize = globalQuickAddWindowSize(
+      baseSize: Size(
+        math.max(_baseSize.width, (width + frameWidthInset).ceilToDouble()),
+        _baseSize.height,
+      ),
+      voiceExpanded: false,
+      commentExpanded: false,
+    );
+    await _resize();
+  }
+
+  Future<void> _setPreferredContentWidth(
+    double width,
+    double viewportWidth,
+  ) async {
+    final id = _viewId;
+    if (id == null || _hasManualSize || _preferredWidthApplied) return;
+    try {
+      final frame = await MultiViewDesktop.fromId(id).getSize();
+      if (_viewId != id) return;
+      await setPreferredWidth(
+        width,
+        frameWidthInset: math.max(0, frame.width - viewportWidth),
+      );
+    } catch (error) {
+      debugPrint('Could not fit Quick Add toolbar width: $error');
+    }
+  }
+
   Future<int> _open() async {
     await restoreSize();
     final area = await _workArea();
@@ -154,12 +205,16 @@ class GlobalQuickAddWindowManager extends WindowObserver {
     );
     _voiceExpanded = false;
     _commentExpanded = false;
+    _editorExpanded = false;
     final id = await openWindow(
       (context, id) => GlobalQuickAddWindowApp(
         onClose: () => unawaited(close()),
+        onEditorModeChanged: setEditorExpanded,
         onVoiceModeChanged: (active) => unawaited(setVoiceMode(active)),
         onCommentExpandedChanged: (active) =>
             unawaited(setCommentExpanded(active)),
+        onPreferredWidthChanged: (width, viewportWidth) =>
+            unawaited(_setPreferredContentWidth(width, viewportWidth)),
       ),
       options: WindowOptions(
         size: size,
@@ -186,6 +241,11 @@ class GlobalQuickAddWindowManager extends WindowObserver {
     if (id != null && MultiViewDesktop.allWindowViewIds.contains(id)) {
       await MultiViewDesktop.fromId(id).closeWindow();
     }
+  }
+
+  Future<void> setEditorExpanded(bool active) async {
+    _editorExpanded = active;
+    await _resize();
   }
 
   Future<void> setVoiceMode(bool active) async {
@@ -232,11 +292,13 @@ class GlobalQuickAddWindowManager extends WindowObserver {
         baseSize: _baseSize,
         voiceExpanded: _voiceExpanded,
         commentExpanded: _commentExpanded,
+        editorExpanded: _editorExpanded,
         workArea: area?.size ?? globalQuickAddMaximumSize,
       );
       await window.setMinimumSize(
         Size(math.min(420, size.width), math.min(200, size.height)),
       );
+      _lastRequestedSize = size;
       await window.setSize(size);
       if (area != null) {
         final bounds = await window.getBounds();
@@ -260,7 +322,7 @@ class GlobalQuickAddWindowManager extends WindowObserver {
 
   @override
   void onWindowEvent(int viewId, String eventName) {
-    if (viewId == _viewId && eventName == 'resized') {
+    if (viewId == _viewId && eventName == 'resized' && !_editorExpanded) {
       unawaited(_rememberWindowSize(viewId));
     }
   }
@@ -268,7 +330,9 @@ class GlobalQuickAddWindowManager extends WindowObserver {
   Future<void> _rememberWindowSize(int id) async {
     try {
       final size = await MultiViewDesktop.fromId(id).getSize();
-      if (_viewId == id) await rememberSize(size);
+      if (_viewId == id && !_editorExpanded && size != _lastRequestedSize) {
+        await rememberSize(size);
+      }
     } catch (error) {
       debugPrint('Could not read Quick Add window size: $error');
     }

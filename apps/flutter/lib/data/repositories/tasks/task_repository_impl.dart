@@ -129,12 +129,31 @@ class DriftTaskRepository implements TaskRepository {
     final durationSeconds =
         input.durationSeconds ?? schedule?.duration?.inSeconds;
     await ownerBoundTransaction(_db, _syncQueue, () async {
+      await _access.requireEdit(scopeId);
+      if (await _access.projectScope(projectId) != scopeId) {
+        throw const CollaborationException('cross_scope_move');
+      }
+      final assignees = input.assigneeIds.toSet().toList()..sort();
+      if (assignees.isNotEmpty) {
+        final scope = await _access.scope(scopeId);
+        if (scope == null || !scope.canEdit) {
+          throw const CollaborationException('shared_task_required');
+        }
+        final editors = scope.members
+            .where((member) => member.role.canEdit)
+            .map((member) => member.userId)
+            .toSet();
+        if (!editors.containsAll(assignees)) {
+          throw const CollaborationException('invalid_assignee');
+        }
+      }
       await _tasks.insertTask(
         TasksCompanion.insert(
           id: id,
           userId: localUserId,
           scopeId: Value(scopeId),
           createdBy: Value(creator),
+          assigneeIdsJson: Value(jsonEncode(assignees)),
           content: input.content,
           description: Value(input.description),
           projectId: projectId,
@@ -172,6 +191,18 @@ class DriftTaskRepository implements TaskRepository {
           ),
         ],
       );
+      if (assignees.isNotEmpty) {
+        await _syncQueue.enqueue(
+          type: 'task.assign',
+          clientId: id,
+          payload: {
+            'scopeId': scopeId,
+            'id': id,
+            'add': assignees,
+            'remove': <String>[],
+          },
+        );
+      }
       final contextLabelId = input.labelId;
       LabelRow? contextLabel;
       if (contextLabelId != null) {

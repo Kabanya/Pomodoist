@@ -4769,4 +4769,72 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get blockingReady => '시작 준비 완료';
+
+  @override
+  String get shortcutHintsTitle => '키보드 힌트';
+
+  @override
+  String get shortcutHintsNavigation => '이동';
+
+  @override
+  String shortcutHintsHeld(String key) {
+    return '$key 누르는 중 · 놓으면 숨김';
+  }
+
+  @override
+  String shortcutHintsRelease(String key) {
+    return '이 키를 사용하려면 먼저 $key 키를 놓으세요';
+  }
+
+  @override
+  String get shortcutHintsSwitchFocusView => '집중 보기 전환';
+
+  @override
+  String get shortcutHintsNavigate => '이동';
+
+  @override
+  String get shortcutHintsAcceptSuggestion => '제안 적용';
+
+  @override
+  String get blockingShowAllPresets => '모두 보기';
+
+  @override
+  String get blockingCollapsePresets => '접기';
+
+  @override
+  String get taskNew => '새 작업';
+
+  @override
+  String get taskCreateAction => '작업 만들기';
+
+  @override
+  String get taskDescription => '설명';
+
+  @override
+  String get taskExpandEditor => '편집기 확장';
+
+  @override
+  String get taskCollapseEditor => '편집기 축소';
+
+  @override
+  String get taskVisibleToYou => '나에게만 표시';
+
+  @override
+  String get taskVisibleToTeam => '팀원에게 표시';
+
+  @override
+  String get taskCreatedFilesPending =>
+      '작업이 생성되었습니다. 남은 파일을 다시 업로드하거나 목록에서 제거하여 완료하세요.';
+
+  @override
+  String get taskFormatBold => '굵게 (Markdown)';
+
+  @override
+  String get taskFormatItalic => '기울임꼴 (Markdown)';
+
+  @override
+  String get taskFormatList => '글머리 기호 목록';
+
+  @override
+  String get taskFormatLink => '링크 (Markdown)';
 }

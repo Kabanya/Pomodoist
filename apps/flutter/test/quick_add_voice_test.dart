@@ -2662,6 +2662,7 @@ class _QuickAddMotionService implements QuickAddUseCase {
     TaskSchedule? defaultSchedule,
     String? kanbanStatusId,
     String? labelId,
+    List<String> assigneeIds = const [],
   }) => Result.capture<String>(() async => create());
 
   @override

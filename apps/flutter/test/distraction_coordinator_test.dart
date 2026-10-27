@@ -11,6 +11,8 @@ import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/data/services/notifications/notification_scheduler.dart';
 import 'package:pomodoist/data/services/platform/distraction_native_gateway.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pomodoist/domain/models/distractions/distraction_models.dart';
+import '../testing/fakes/fake_focus_repository.dart';
 
 class Notifications extends NotificationScheduler {
   @override
@@ -25,6 +27,115 @@ class Notifications extends NotificationScheduler {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test(
+    'paired reads preserve cached shared Focus while cloud is unavailable',
+    () async {
+      final time = DateTime.utc(2026, 10, 27);
+      final stamp = time.toIso8601String();
+      final focus = LiveFocusRepository(
+        local: FakeFocusRepository(),
+        remote: (_) async => throw const SocketException('cloud unavailable'),
+        owner: 'account',
+        deviceId: 'desktop',
+        preferences: null,
+        clock: () => time,
+      );
+      focus.profiles = [
+        DistractionProfile.fromJson({'id': 'work', 'name': 'Work'}),
+      ];
+      focus.session = {
+        'id': 'shared',
+        'revision': 7,
+        'profileId': 'work',
+        'preset': {'strictMode': false},
+        'protectionExpiresAt': time
+            .add(const Duration(minutes: 5))
+            .toIso8601String(),
+        'run': {
+          'id': 'shared',
+          'presetId': 'classic',
+          'status': 'active',
+          'startedAt': stamp,
+          'createdAt': stamp,
+          'updatedAt': stamp,
+          'targetWorkIntervals': 4,
+          'completedWorkIntervals': 0,
+        },
+        'interval': {
+          'id': 'interval',
+          'runId': 'shared',
+          'type': 'work',
+          'status': 'running',
+          'plannedSeconds': 1500,
+          'pausedTotalSeconds': 0,
+          'sequenceNumber': 1,
+          'startedAt': stamp,
+          'createdAt': stamp,
+          'updatedAt': stamp,
+        },
+      };
+      const channel = MethodChannel('test/cached-distractions');
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(
+        channel,
+        (_) async => {'supported': true, 'platform': 'macos'},
+      );
+      final protection = ProtectionCoordinator(
+        focus: focus,
+        native: DistractionNativeGateway(channel: channel),
+        flavor: 'development',
+        bridgePort: 0,
+        preferences: null,
+        taskTitle: (_) async => null,
+      );
+      final previousOverrides = HttpOverrides.current;
+      HttpOverrides.global = null;
+      final client = HttpClient();
+      var token = '';
+      Future<Map> request(String path, Map body) async {
+        final r = await client.postUrl(
+          Uri.parse('http://127.0.0.1:${protection.bridge!.port}$path'),
+        );
+        r.headers.set(
+          'Origin',
+          'chrome-extension://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        );
+        if (token.isNotEmpty) r.headers.set('Authorization', 'Bearer $token');
+        r.headers.contentType = ContentType.json;
+        r.write(jsonEncode(body));
+        final response = await r.close();
+        expect(response.statusCode, 200);
+        return jsonDecode(await response.transform(utf8.decoder).join()) as Map;
+      }
+
+      try {
+        await protection.start();
+        token = (await request('/pair', {
+          'code': protection.bridge!.pair(),
+          'deviceId': 'browser',
+          'flavor': 'development',
+        }))['token'];
+        final result = await request('/command', {
+          'action': 'read',
+          'requestId': 'offline-read',
+        });
+        expect(result['session']['id'], 'shared');
+        expect(result['session']['revision'], 7);
+        expect(result['protection']['sessionId'], 'shared');
+        expect(
+          result['protection']['expiresAt'],
+          time.add(const Duration(minutes: 5)).toIso8601String(),
+        );
+      } finally {
+        client.close(force: true);
+        HttpOverrides.global = previousOverrides;
+        await protection.dispose();
+        await focus.dispose();
+        messenger.setMockMethodCallHandler(channel, null);
+      }
+    },
+  );
   test(
     'paired offline Chrome preserves preset, strict exit and revisions across restart',
     () async {

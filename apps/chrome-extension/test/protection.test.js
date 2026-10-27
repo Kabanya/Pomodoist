@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createServer} from 'node:http';
 import { domain, blocked, rulesFor, active, fromEnvelope, pageMessage, bridgeOrigin, FocusProtection } from '../src/protection.js';
 const now = Date.parse('2026-10-26T10:00:00Z');
 const snapshot = (extra = {}) => ({ version: 1, owner: 'owner', sessionId: 'run', revision: 1,
@@ -77,6 +78,29 @@ function controllerFixture(rpc){
   p.reconcile=async()=>{};p.data.owner='owner';return p;
 }
 const envelope=(revision=1)=>({serverNow:new Date(now).toISOString(),settingsRevision:1,profiles:[{id:'work',blockedCategories:[],overrides:[]}],assignments:[],devices:[],session:{id:'r',revision,profileId:'work',run:{status:'active'},preset:{},interval:{status:'running',type:'work',plannedSeconds:1500,startedAt:new Date(now).toISOString(),pausedTotalSeconds:0},protectionExpiresAt:new Date(now+1500000).toISOString()}});
+test('paired desktop reads work when Chromium omits Origin on GET', async()=>{
+  const server=createServer(async(req,res)=>{
+    // Chromium's extension GET has no Origin and is rejected by the bridge.
+    if(req.method!=='POST'||req.url!=='/command'||req.headers.authorization!=='Bearer paired-token'){
+      res.writeHead(403).end();return;
+    }
+    const chunks=[];for await(const chunk of req)chunks.push(chunk);
+    const command=JSON.parse(Buffer.concat(chunks));
+    if(command.action!=='read'||typeof command.requestId!=='string'){
+      res.writeHead(400).end();return;
+    }
+    res.setHeader('Content-Type','application/json');res.end(JSON.stringify(envelope(7)));
+  });
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  try{
+    const p=controllerFixture(()=>assert.fail('paired desktop must not read cloud state'));
+    p.data.source='desktop';
+    p.data.bridge={port:server.address().port,token:'paired-token',owner:'owner',flavor:'production'};
+    const result=await p.read({autoStart:false});
+    assert.equal(result.session.revision,7);
+    assert.equal(p.data.envelope.session.revision,7);
+  }finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
+});
 test('revision conflict adopts authoritative state and never calls a local fallback',async()=>{
   const p=controllerFixture(async()=>({...envelope(4),code:'revision_conflict'}));p.data.envelope=envelope(1);
   p.bridgeRequest=()=>assert.fail('conflict must not silently switch authority');

@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show ShadApp, ShadAppBuilder, ShadTheme, GlobalShadLocalizations;
@@ -11,6 +12,7 @@ import 'package:pomodoist/ui/quick_add/view_models/global_quick_add_view_model.d
 import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:pomodoist/ui/core/widgets/app_zoom.dart';
 import 'package:pomodoist/ui/core/view_models/app_theme_mode_view_model.dart';
+import 'package:pomodoist/ui/core/view_models/app_zoom_view_model.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/settings/view_models/theme_settings_view_model.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
@@ -23,12 +25,17 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
     required this.onClose,
     required this.onVoiceModeChanged,
     this.onCommentExpandedChanged,
+    this.onEditorModeChanged,
+    this.onPreferredWidthChanged,
     super.key,
   });
 
   final VoidCallback onClose;
   final ValueChanged<bool> onVoiceModeChanged;
   final ValueChanged<bool>? onCommentExpandedChanged;
+  final Future<void> Function(bool)? onEditorModeChanged;
+  final void Function(double width, double viewportWidth)?
+  onPreferredWidthChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -74,8 +81,10 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
             child: AppZoom(
               child: ShadAppBuilder(
                 backgroundColor: rootBackground,
-                child: KeyboardDismissRegion(
-                  child: child ?? const SizedBox.shrink(),
+                child: ShortcutHintsHost(
+                  child: KeyboardDismissRegion(
+                    child: child ?? const SizedBox.shrink(),
+                  ),
                 ),
               ),
             ),
@@ -94,6 +103,14 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
                   onCancel: onClose,
                   onVoiceModeChanged: onVoiceModeChanged,
                   onCommentExpandedChanged: onCommentExpandedChanged,
+                  onEditorModeChanged: onEditorModeChanged,
+                  onPreferredWidthChanged: (width) {
+                    final view = View.of(context);
+                    onPreferredWidthChanged?.call(
+                      width * ref.read(appZoomProvider) / 100,
+                      view.physicalSize.width / view.devicePixelRatio,
+                    );
+                  },
                 ),
               ),
             ),
@@ -127,7 +144,13 @@ class _QuickAddWindowFocusState extends State<_QuickAddWindowFocus>
   }
 
   @override
-  void onWindowFocus() => _inputFocus.requestFocus();
+  void onWindowFocus() {
+    final inputContext = _inputFocus.context;
+    if (inputContext != null &&
+        ModalRoute.of(inputContext)?.isCurrent == true) {
+      _inputFocus.requestFocus();
+    }
+  }
 
   @override
   void dispose() {

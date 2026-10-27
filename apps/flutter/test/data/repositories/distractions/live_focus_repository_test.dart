@@ -41,34 +41,43 @@ Map<String, dynamic> session(DateTime time, {bool paused = false}) => {
 void main() {
   for (final paused in [false, true]) {
     for (final profileId in <String?>['study', null]) {
-      test('next profile $profileId can be saved during shared Focus paused=$paused', () async {
-        final time = DateTime.utc(2026, 10, 26);
-        final local = FakeFocusRepository();
-        final repo = LiveFocusRepository(
-          local: local,
-          owner: 'u',
-          deviceId: 'd',
-          preferences: null,
-          clock: () => time,
-          remote: (_) async => throw StateError('must not change shared Focus'),
-        );
-        addTearDown(repo.dispose);
-        repo.profiles = [
-          for (final id in ['work', 'study'])
-            DistractionProfile.fromJson({'id': id, 'name': id}),
-        ];
-        repo.session = session(time, paused: paused);
-        final before = repo.session;
-        final protection = repo.protection;
-        (await repo.setPresetDistractionProfile('classic', profileId)).getOrThrow();
-        expect(local.setPresetDistractionProfileCalls.single, (
-          presetId: 'classic', profileId: profileId,
-        ));
-        expect(repo.session, same(before));
-        expect(repo.selectedProfile?.id, 'work');
-        expect(repo.protection, protection);
-        expect(repo.pendingExitAction, isNull);
-      });
+      test(
+        'next profile $profileId can be saved during shared Focus paused=$paused',
+        () async {
+          final time = DateTime.utc(2026, 10, 26);
+          final local = FakeFocusRepository();
+          final repo = LiveFocusRepository(
+            local: local,
+            owner: 'u',
+            deviceId: 'd',
+            preferences: null,
+            clock: () => time,
+            remote: (_) async =>
+                throw StateError('must not change shared Focus'),
+          );
+          addTearDown(repo.dispose);
+          repo.profiles = [
+            for (final id in ['work', 'study'])
+              DistractionProfile.fromJson({'id': id, 'name': id}),
+          ];
+          repo.session = session(time, paused: paused);
+          final before = repo.session;
+          final protection = repo.protection;
+          expect(protection, isNotNull);
+          (await repo.setPresetDistractionProfile(
+            'classic',
+            profileId,
+          )).getOrThrow();
+          expect(local.setPresetDistractionProfileCalls.single, (
+            presetId: 'classic',
+            profileId: profileId,
+          ));
+          expect(repo.session, same(before));
+          expect(repo.selectedProfile?.id, 'work');
+          expect(repo.protection, protection);
+          expect(repo.pendingExitAction, isNull);
+        },
+      );
     }
   }
 

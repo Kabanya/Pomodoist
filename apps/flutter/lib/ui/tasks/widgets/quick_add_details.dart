@@ -8,6 +8,7 @@ import 'package:shadcn_ui/shadcn_ui.dart'
         ShadBorder,
         ShadButton,
         ShadButtonSize,
+        ShadTheme,
         ShadDecoration,
         ShadPopover,
         ShadPopoverController;
@@ -19,6 +20,7 @@ import 'package:pomodoist/ui/core/widgets/app_date_time_picker.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
+import 'package:pomodoist/ui/tasks/widgets/quick_add_toolbar_layout.dart';
 import 'package:pomodoist/ui/tasks/view_models/quick_add_metadata_edit.dart';
 import 'package:pomodoist/ui/tasks/view_models/quick_add_text_controller.dart';
 
@@ -36,6 +38,7 @@ class QuickAddDetails extends ConsumerWidget {
     this.touchTargets = false,
     this.desktop = false,
     this.iconsOnly = false,
+    this.onNaturalWidthChanged,
     this.trailing,
   });
 
@@ -50,6 +53,7 @@ class QuickAddDetails extends ConsumerWidget {
   final bool touchTargets;
   final bool desktop;
   final bool iconsOnly;
+  final ValueChanged<double>? onNaturalWidthChanged;
   final Widget? trailing;
 
   @override
@@ -61,7 +65,7 @@ class QuickAddDetails extends ConsumerWidget {
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: controller,
       builder: (context, value, _) {
-        if (value.text.trim().isEmpty) {
+        if (value.text.trim().isEmpty && onNaturalWidthChanged == null) {
           return const SizedBox.shrink();
         }
         final now = viewModel.now();
@@ -181,6 +185,43 @@ class QuickAddDetails extends ConsumerWidget {
         final timeLabel = schedule?.isTimed == true
             ? TimeOfDay.fromDateTime(schedule!.start!.toLocal()).format(context)
             : null;
+        final scheduleLabel = timeLabel == null
+            ? dateLabel
+            : '$dateLabel · $timeLabel';
+        final estimate = estimateFocusIntervalsForTaskDuration(
+          schedule: schedule,
+          durationSeconds: null,
+          explicitEstimate: parsed.estimatedFocusIntervals,
+          isFocusEstimateManual: parsed.estimatedFocusIntervals != null,
+          preset: viewState.focusPreset,
+        );
+        if (onNaturalWidthChanged != null) {
+          final theme = ShadTheme.of(context);
+          final scaler = MediaQuery.textScalerOf(context);
+          final direction = Directionality.of(context);
+          final labels = [
+            scheduleLabel,
+            projectName,
+            'P${parsed.priority ?? priority ?? 4}',
+            estimate == null
+                ? context.l10n.quickAddFocusEstimate
+                : context.l10n.quickAddEstimatedPomodoros(estimate),
+          ];
+          var width = 3 * 8.0;
+          for (var index = 0; index < labels.length; index++) {
+            width += quickAddLabeledButtonWidth(
+              labels[index],
+              theme: theme,
+              textScaler: scaler,
+              textDirection: direction,
+              trailingWidth: index < 3 ? 12 : 0,
+            );
+          }
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => onNaturalWidthChanged?.call(width),
+          );
+        }
+        if (value.text.trim().isEmpty) return const SizedBox.shrink();
         return Padding(
           padding: EdgeInsets.only(top: desktop ? 0 : 8),
           child: Wrap(
@@ -193,9 +234,7 @@ class QuickAddDetails extends ConsumerWidget {
                   desktop: desktop,
                   iconsOnly: iconsOnly,
                   focusNode: picker.focusNode,
-                  label: timeLabel == null
-                      ? dateLabel
-                      : '$dateLabel · $timeLabel',
+                  label: scheduleLabel,
                   semanticLabel:
                       '${context.l10n.taskSchedule}: ${timeLabel == null ? dateLabel : '$dateLabel · $timeLabel'}',
                   icon: LucideIcons.calendar,
@@ -291,13 +330,7 @@ class QuickAddDetails extends ConsumerWidget {
                 ],
               ),
               QuickAddFocusEstimateChip(
-                estimate: estimateFocusIntervalsForTaskDuration(
-                  schedule: schedule,
-                  durationSeconds: null,
-                  explicitEstimate: parsed.estimatedFocusIntervals,
-                  isFocusEstimateManual: parsed.estimatedFocusIntervals != null,
-                  preset: viewState.focusPreset,
-                ),
+                estimate: estimate,
                 manual: parsed.estimatedFocusIntervals != null,
                 workSeconds: viewState.focusPreset?.workSeconds,
                 enabled: canEdit,

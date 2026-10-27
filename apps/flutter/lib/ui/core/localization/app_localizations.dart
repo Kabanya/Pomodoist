@@ -8456,6 +8456,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ready to focus'**
   String get blockingReady;
+
+  /// No description provided for @shortcutHintsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard hints'**
+  String get shortcutHintsTitle;
+
+  /// No description provided for @shortcutHintsNavigation.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation'**
+  String get shortcutHintsNavigation;
+
+  /// No description provided for @shortcutHintsHeld.
+  ///
+  /// In en, this message translates to:
+  /// **'{key} held · Release to hide'**
+  String shortcutHintsHeld(String key);
+
+  /// No description provided for @shortcutHintsRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'Release {key} first to use these keys'**
+  String shortcutHintsRelease(String key);
+
+  /// No description provided for @shortcutHintsSwitchFocusView.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch Focus view'**
+  String get shortcutHintsSwitchFocusView;
+
+  /// No description provided for @shortcutHintsNavigate.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigate'**
+  String get shortcutHintsNavigate;
+
+  /// No description provided for @shortcutHintsAcceptSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept suggestion'**
+  String get shortcutHintsAcceptSuggestion;
+
+  /// No description provided for @blockingShowAllPresets.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get blockingShowAllPresets;
+
+  /// No description provided for @blockingCollapsePresets.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get blockingCollapsePresets;
+
+  /// No description provided for @taskNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New task'**
+  String get taskNew;
+
+  /// No description provided for @taskCreateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create task'**
+  String get taskCreateAction;
+
+  /// No description provided for @taskDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get taskDescription;
+
+  /// No description provided for @taskExpandEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand editor'**
+  String get taskExpandEditor;
+
+  /// No description provided for @taskCollapseEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse editor'**
+  String get taskCollapseEditor;
+
+  /// No description provided for @taskVisibleToYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible only to you'**
+  String get taskVisibleToYou;
+
+  /// No description provided for @taskVisibleToTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible to team members'**
+  String get taskVisibleToTeam;
+
+  /// No description provided for @taskCreatedFilesPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Task created. Retry uploading the remaining files, or remove them to finish.'**
+  String get taskCreatedFilesPending;
+
+  /// No description provided for @taskFormatBold.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold (Markdown)'**
+  String get taskFormatBold;
+
+  /// No description provided for @taskFormatItalic.
+  ///
+  /// In en, this message translates to:
+  /// **'Italic (Markdown)'**
+  String get taskFormatItalic;
+
+  /// No description provided for @taskFormatList.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulleted list'**
+  String get taskFormatList;
+
+  /// No description provided for @taskFormatLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Link (Markdown)'**
+  String get taskFormatLink;
 }
 
 class _AppLocalizationsDelegate

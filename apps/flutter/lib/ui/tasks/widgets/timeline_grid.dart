@@ -186,16 +186,24 @@ class _TimelineGridState extends ConsumerState<_TimelineGrid> {
                         key: const Key('timeline-horizontal-scroll'),
                         controller: _horizontalScrollController,
                         scrollDirection: Axis.horizontal,
-                        child: Focus(
-                          focusNode: _gridFocusNode,
-                          onKeyEvent: _handleGridKeyEvent,
-                          child: _timelineSurface(
-                            context,
-                            start,
-                            end,
-                            trackWidth,
-                            totalHeight,
-                            projectLayouts,
+                        child: ShortcutHintsScope(
+                          hints: [
+                            ShortcutHint(
+                              context.l10n.shortcutHintsNavigate,
+                              '← →',
+                            ),
+                          ],
+                          child: Focus(
+                            focusNode: _gridFocusNode,
+                            onKeyEvent: _handleGridKeyEvent,
+                            child: _timelineSurface(
+                              context,
+                              start,
+                              end,
+                              trackWidth,
+                              totalHeight,
+                              projectLayouts,
+                            ),
                           ),
                         ),
                       ),

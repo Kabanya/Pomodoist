@@ -4924,4 +4924,72 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get blockingReady => 'Готов к запуску';
+
+  @override
+  String get shortcutHintsTitle => 'Подсказки клавиш';
+
+  @override
+  String get shortcutHintsNavigation => 'Переходы';
+
+  @override
+  String shortcutHintsHeld(String key) {
+    return '$key удерживается · Отпустите, чтобы скрыть';
+  }
+
+  @override
+  String shortcutHintsRelease(String key) {
+    return 'Сначала отпустите $key, чтобы использовать эти клавиши';
+  }
+
+  @override
+  String get shortcutHintsSwitchFocusView => 'Переключить вид Фокуса';
+
+  @override
+  String get shortcutHintsNavigate => 'Навигация';
+
+  @override
+  String get shortcutHintsAcceptSuggestion => 'Принять подсказку';
+
+  @override
+  String get blockingShowAllPresets => 'Показать все';
+
+  @override
+  String get blockingCollapsePresets => 'Свернуть';
+
+  @override
+  String get taskNew => 'Новая задача';
+
+  @override
+  String get taskCreateAction => 'Создать задачу';
+
+  @override
+  String get taskDescription => 'Описание';
+
+  @override
+  String get taskExpandEditor => 'Развернуть редактор';
+
+  @override
+  String get taskCollapseEditor => 'Свернуть редактор';
+
+  @override
+  String get taskVisibleToYou => 'Видна только вам';
+
+  @override
+  String get taskVisibleToTeam => 'Видна участникам команды';
+
+  @override
+  String get taskCreatedFilesPending =>
+      'Задача создана. Повторите загрузку оставшихся файлов или удалите их из списка, чтобы завершить.';
+
+  @override
+  String get taskFormatBold => 'Жирный (Markdown)';
+
+  @override
+  String get taskFormatItalic => 'Курсив (Markdown)';
+
+  @override
+  String get taskFormatList => 'Маркированный список';
+
+  @override
+  String get taskFormatLink => 'Ссылка (Markdown)';
 }

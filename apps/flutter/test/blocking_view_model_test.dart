@@ -7,6 +7,65 @@ import 'package:pomodoist/ui/distractions/view_models/blocking_view_model.dart';
 import '../testing/fakes/fake_focus_repository.dart';
 
 void main() {
+  test('preset list starts collapsed and toggles in both directions', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    expect(container.read(blockingPresetsExpandedProvider), false);
+    final vm = container.read(blockingPresetsExpandedProvider.notifier);
+    vm.toggle();
+    expect(container.read(blockingPresetsExpandedProvider), true);
+    vm.toggle();
+    expect(container.read(blockingPresetsExpandedProvider), false);
+  });
+
+  test('preset list remembers either state without listeners', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    var listener = container.listen(blockingPresetsExpandedProvider, (_, _) {});
+    container.read(blockingPresetsExpandedProvider.notifier).toggle();
+    listener.close();
+    await container.pump();
+
+    listener = container.listen(blockingPresetsExpandedProvider, (_, _) {});
+    expect(container.read(blockingPresetsExpandedProvider), true);
+    container.read(blockingPresetsExpandedProvider.notifier).toggle();
+    listener.close();
+    await container.pump();
+    expect(container.read(blockingPresetsExpandedProvider), false);
+  });
+
+  test('a new app container starts with the preset list collapsed', () {
+    final previous = ProviderContainer();
+    previous.read(blockingPresetsExpandedProvider.notifier).toggle();
+    expect(previous.read(blockingPresetsExpandedProvider), true);
+    previous.dispose();
+
+    final restarted = ProviderContainer();
+    addTearDown(restarted.dispose);
+    expect(restarted.read(blockingPresetsExpandedProvider), false);
+  });
+
+  test('preset selection and profile saves preserve list expansion', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final listener = container.listen(blockingViewModelProvider, (_, _) {});
+    addTearDown(listener.close);
+    container.read(blockingPresetsExpandedProvider.notifier).toggle();
+    final editor = container.read(blockingViewModelProvider.notifier);
+
+    editor.selectPreset('fourth');
+    expect(await editor.save(() async {}), true);
+    expect(container.read(blockingPresetsExpandedProvider), true);
+    container.read(blockingPresetsExpandedProvider.notifier).toggle();
+    expect(
+      container.read(blockingViewModelProvider).selectedPresetId,
+      'fourth',
+    );
+    expect(await editor.save(() async {}), true);
+    expect(container.read(blockingPresetsExpandedProvider), false);
+  });
+
   test('automatic categories distinguish Free, Pro and unverified access', () {
     expect(
       automaticCategoryAction(BillingState(), true),

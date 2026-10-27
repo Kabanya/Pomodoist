@@ -4935,4 +4935,72 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get blockingReady => 'Bereit für Focus';
+
+  @override
+  String get shortcutHintsTitle => 'Tastaturhinweise';
+
+  @override
+  String get shortcutHintsNavigation => 'Navigation';
+
+  @override
+  String shortcutHintsHeld(String key) {
+    return '$key gedrückt · Zum Ausblenden loslassen';
+  }
+
+  @override
+  String shortcutHintsRelease(String key) {
+    return 'Zuerst $key loslassen, um diese Tasten zu verwenden';
+  }
+
+  @override
+  String get shortcutHintsSwitchFocusView => 'Fokusansicht wechseln';
+
+  @override
+  String get shortcutHintsNavigate => 'Navigieren';
+
+  @override
+  String get shortcutHintsAcceptSuggestion => 'Vorschlag übernehmen';
+
+  @override
+  String get blockingShowAllPresets => 'Alle anzeigen';
+
+  @override
+  String get blockingCollapsePresets => 'Einklappen';
+
+  @override
+  String get taskNew => 'Neue Aufgabe';
+
+  @override
+  String get taskCreateAction => 'Aufgabe erstellen';
+
+  @override
+  String get taskDescription => 'Beschreibung';
+
+  @override
+  String get taskExpandEditor => 'Editor vergrößern';
+
+  @override
+  String get taskCollapseEditor => 'Editor verkleinern';
+
+  @override
+  String get taskVisibleToYou => 'Nur für dich sichtbar';
+
+  @override
+  String get taskVisibleToTeam => 'Für Teammitglieder sichtbar';
+
+  @override
+  String get taskCreatedFilesPending =>
+      'Aufgabe erstellt. Lade die übrigen Dateien erneut hoch oder entferne sie, um abzuschließen.';
+
+  @override
+  String get taskFormatBold => 'Fett (Markdown)';
+
+  @override
+  String get taskFormatItalic => 'Kursiv (Markdown)';
+
+  @override
+  String get taskFormatList => 'Aufzählung';
+
+  @override
+  String get taskFormatLink => 'Link (Markdown)';
 }

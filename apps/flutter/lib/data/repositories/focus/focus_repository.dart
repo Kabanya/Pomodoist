@@ -12,6 +12,7 @@ abstract interface class FocusRepository {
   Stream<FocusDailyStats> watchDailyStats(DateTime localDate);
   Future<Result<String>> createPreset(CreateFocusPresetInput input);
   Future<Result<void>> updatePreset(String id, UpdateFocusPresetInput input);
+
   /// Saves the next run's profile without changing an existing session.
   Future<Result<void>> setPresetDistractionProfile(
     String presetId,

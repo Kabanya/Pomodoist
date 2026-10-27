@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show LucideIcons, ShadButton, ShadIconButton;
@@ -122,52 +123,61 @@ class _UpcomingCalendarState extends State<UpcomingCalendar> {
             children: [
               _buildHeader(context, isWide: isWide, pageSize: pageSize),
               const Divider(),
-              Focus(
-                key: const ValueKey('upcoming-calendar-focus'),
-                focusNode: _railFocusNode,
-                onKeyEvent: _handleRailKey,
-                child: AnimatedBuilder(
-                  animation: _railFocusNode,
-                  builder: (context, child) {
-                    return Listener(
-                      key: const ValueKey('upcoming-calendar-days'),
-                      behavior: HitTestBehavior.opaque,
-                      onPointerDown: isWide
-                          ? null
-                          : (_) => _horizontalDragDistance = 0,
-                      onPointerMove: isWide
-                          ? null
-                          : (details) {
-                              _horizontalDragDistance += details.delta.dx;
-                            },
-                      onPointerUp: isWide
-                          ? null
-                          : (_) => _finishSwipe(Directionality.of(context)),
-                      child: SingleChildScrollView(
-                        controller: _railScrollController,
-                        scrollDirection: Axis.horizontal,
-                        child: SizedBox(
-                          width: railWidth,
-                          child: Row(
-                            children: [
-                              for (final date in dates)
-                                Expanded(
-                                  child: _DayCell(
-                                    date: date,
-                                    today: today,
-                                    selected: selectedDate == date,
-                                    count: scheduledCounts[date] ?? 0,
-                                    roving: _rovingDate == date,
-                                    railFocused: _railFocusNode.hasFocus,
-                                    onActivate: () => _activateDate(date),
+              ShortcutHintsScope(
+                hints: [
+                  ShortcutHint(
+                    context.l10n.shortcutHintsNavigate,
+                    '← ↑ ↓ → · Home · End · PageUp · PageDown',
+                  ),
+                  ShortcutHint(context.l10n.taskSelect, 'Enter / Space'),
+                ],
+                child: Focus(
+                  key: const ValueKey('upcoming-calendar-focus'),
+                  focusNode: _railFocusNode,
+                  onKeyEvent: _handleRailKey,
+                  child: AnimatedBuilder(
+                    animation: _railFocusNode,
+                    builder: (context, child) {
+                      return Listener(
+                        key: const ValueKey('upcoming-calendar-days'),
+                        behavior: HitTestBehavior.opaque,
+                        onPointerDown: isWide
+                            ? null
+                            : (_) => _horizontalDragDistance = 0,
+                        onPointerMove: isWide
+                            ? null
+                            : (details) {
+                                _horizontalDragDistance += details.delta.dx;
+                              },
+                        onPointerUp: isWide
+                            ? null
+                            : (_) => _finishSwipe(Directionality.of(context)),
+                        child: SingleChildScrollView(
+                          controller: _railScrollController,
+                          scrollDirection: Axis.horizontal,
+                          child: SizedBox(
+                            width: railWidth,
+                            child: Row(
+                              children: [
+                                for (final date in dates)
+                                  Expanded(
+                                    child: _DayCell(
+                                      date: date,
+                                      today: today,
+                                      selected: selectedDate == date,
+                                      count: scheduledCounts[date] ?? 0,
+                                      roving: _rovingDate == date,
+                                      railFocused: _railFocusNode.hasFocus,
+                                      onActivate: () => _activateDate(date),
+                                    ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
             ],

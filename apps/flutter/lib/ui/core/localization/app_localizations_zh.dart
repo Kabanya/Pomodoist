@@ -4661,4 +4661,71 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get blockingReady => '准备开始';
+
+  @override
+  String get shortcutHintsTitle => '快捷键提示';
+
+  @override
+  String get shortcutHintsNavigation => '导航';
+
+  @override
+  String shortcutHintsHeld(String key) {
+    return '正在按住 $key · 松开以隐藏';
+  }
+
+  @override
+  String shortcutHintsRelease(String key) {
+    return '请先松开 $key，再使用这些按键';
+  }
+
+  @override
+  String get shortcutHintsSwitchFocusView => '切换专注视图';
+
+  @override
+  String get shortcutHintsNavigate => '导航';
+
+  @override
+  String get shortcutHintsAcceptSuggestion => '接受建议';
+
+  @override
+  String get blockingShowAllPresets => '显示全部';
+
+  @override
+  String get blockingCollapsePresets => '收起';
+
+  @override
+  String get taskNew => '新建任务';
+
+  @override
+  String get taskCreateAction => '创建任务';
+
+  @override
+  String get taskDescription => '描述';
+
+  @override
+  String get taskExpandEditor => '展开编辑器';
+
+  @override
+  String get taskCollapseEditor => '收起编辑器';
+
+  @override
+  String get taskVisibleToYou => '仅自己可见';
+
+  @override
+  String get taskVisibleToTeam => '团队成员可见';
+
+  @override
+  String get taskCreatedFilesPending => '任务已创建。请重试上传剩余文件，或从列表中移除后完成。';
+
+  @override
+  String get taskFormatBold => '粗体 (Markdown)';
+
+  @override
+  String get taskFormatItalic => '斜体 (Markdown)';
+
+  @override
+  String get taskFormatList => '项目符号列表';
+
+  @override
+  String get taskFormatLink => '链接 (Markdown)';
 }

@@ -1,3 +1,4 @@
+import 'file_error_message.dart';
 import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
 import 'dart:async';
 import 'package:pomodoist/ui/files/widgets/file_icon.dart';
@@ -30,20 +31,7 @@ class _FilesPanelState extends ConsumerState<FilesPanel> {
       FileTarget(projectId: widget.projectId, taskId: widget.taskId);
   FilesViewModel get _model =>
       ref.read(filesViewModelProvider(_target).notifier);
-  String _error(Object? error) {
-    final l10n = context.l10n;
-    return switch (error is FileFailure ? error.code : null) {
-      'pro_required' => l10n.filesProRequired,
-      'read_only' || 'forbidden' || '42501' => l10n.filesReadOnly,
-      'file_too_large' => l10n.filesTooLarge,
-      '54000' ||
-      'quota_exceeded' ||
-      'monthly_quota_exceeded' ||
-      'yearly_quota_exceeded' => l10n.filesQuotaExceeded,
-      'session_changed' || 'unauthorized' => l10n.filesSignIn,
-      _ => l10n.filesUnavailable,
-    };
-  }
+  String _error(Object? error) => fileErrorMessage(context.l10n, error);
 
   Future<void> _run(Future<void> Function() action) async {
     try {

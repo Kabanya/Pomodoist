@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 // ignore_for_file: deprecated_member_use
 
 import 'dart:async';
@@ -343,40 +344,45 @@ class _ShortcutRecorderDialogState extends State<_ShortcutRecorderDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Focus(
-      focusNode: _focusNode,
-      autofocus: true,
-      onKeyEvent: (_, event) {
-        _handleKeyEvent(event);
-        return KeyEventResult.handled;
-      },
-      child: AlertDialog(
-        scrollable: true,
-        constraints: const BoxConstraints(maxWidth: 560),
-        key: const Key('shortcut-recorder-dialog'),
-        title: Text(l10n.settingsShortcutsRecordTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.settingsShortcutsRecordPrompt),
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
+    return ShortcutHintsScope(
+      modal: true,
+      enabled: false,
+      hints: const [],
+      child: Focus(
+        focusNode: _focusNode,
+        autofocus: true,
+        onKeyEvent: (_, event) {
+          _handleKeyEvent(event);
+          return KeyEventResult.handled;
+        },
+        child: AlertDialog(
+          scrollable: true,
+          constraints: const BoxConstraints(maxWidth: 560),
+          key: const Key('shortcut-recorder-dialog'),
+          title: Text(l10n.settingsShortcutsRecordTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.settingsShortcutsRecordPrompt),
+              if (_error != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
             ],
+          ),
+          actions: [
+            ShadButton.ghost(
+              height: 48,
+              enabled: !_busy,
+              onPressed: _busy ? null : () => Navigator.of(context).pop(),
+              child: Text(l10n.commonCancel),
+            ),
           ],
         ),
-        actions: [
-          ShadButton.ghost(
-            height: 48,
-            enabled: !_busy,
-            onPressed: _busy ? null : () => Navigator.of(context).pop(),
-            child: Text(l10n.commonCancel),
-          ),
-        ],
       ),
     );
   }
@@ -462,30 +468,35 @@ class _GlobalShortcutRecorderDialogState
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AlertDialog(
-      scrollable: true,
-      constraints: const BoxConstraints(maxWidth: 560),
-      key: const Key('shortcut-recorder-dialog'),
-      title: Text(l10n.settingsShortcutsRecordTitle),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l10n.settingsShortcutsRecordPrompt),
-          const SizedBox(height: 16),
-          const Center(child: CircularProgressIndicator()),
-          if (_error != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              _error!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
+    return ShortcutHintsScope(
+      modal: true,
+      enabled: false,
+      hints: const [],
+      child: AlertDialog(
+        scrollable: true,
+        constraints: const BoxConstraints(maxWidth: 560),
+        key: const Key('shortcut-recorder-dialog'),
+        title: Text(l10n.settingsShortcutsRecordTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.settingsShortcutsRecordPrompt),
+            const SizedBox(height: 16),
+            const Center(child: CircularProgressIndicator()),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
           ],
+        ),
+        actions: [
+          ShadButton.ghost(onPressed: _cancel, child: Text(l10n.commonCancel)),
         ],
       ),
-      actions: [
-        ShadButton.ghost(onPressed: _cancel, child: Text(l10n.commonCancel)),
-      ],
     );
   }
 

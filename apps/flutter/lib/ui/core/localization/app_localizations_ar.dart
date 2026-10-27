@@ -4836,4 +4836,72 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get blockingReady => 'جاهز للبدء';
+
+  @override
+  String get shortcutHintsTitle => 'تلميحات لوحة المفاتيح';
+
+  @override
+  String get shortcutHintsNavigation => 'التنقل';
+
+  @override
+  String shortcutHintsHeld(String key) {
+    return '$key مضغوط · اتركه للإخفاء';
+  }
+
+  @override
+  String shortcutHintsRelease(String key) {
+    return 'اترك $key أولاً لاستخدام هذه المفاتيح';
+  }
+
+  @override
+  String get shortcutHintsSwitchFocusView => 'تبديل عرض التركيز';
+
+  @override
+  String get shortcutHintsNavigate => 'التنقل';
+
+  @override
+  String get shortcutHintsAcceptSuggestion => 'قبول الاقتراح';
+
+  @override
+  String get blockingShowAllPresets => 'إظهار الكل';
+
+  @override
+  String get blockingCollapsePresets => 'طي القائمة';
+
+  @override
+  String get taskNew => 'مهمة جديدة';
+
+  @override
+  String get taskCreateAction => 'إنشاء مهمة';
+
+  @override
+  String get taskDescription => 'الوصف';
+
+  @override
+  String get taskExpandEditor => 'توسيع المحرر';
+
+  @override
+  String get taskCollapseEditor => 'طي المحرر';
+
+  @override
+  String get taskVisibleToYou => 'مرئية لك فقط';
+
+  @override
+  String get taskVisibleToTeam => 'مرئية لأعضاء الفريق';
+
+  @override
+  String get taskCreatedFilesPending =>
+      'تم إنشاء المهمة. أعد رفع الملفات المتبقية أو أزلها من القائمة للإنهاء.';
+
+  @override
+  String get taskFormatBold => 'عريض (Markdown)';
+
+  @override
+  String get taskFormatItalic => 'مائل (Markdown)';
+
+  @override
+  String get taskFormatList => 'قائمة نقطية';
+
+  @override
+  String get taskFormatLink => 'رابط (Markdown)';
 }

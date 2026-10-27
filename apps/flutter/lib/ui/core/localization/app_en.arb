@@ -2464,5 +2464,40 @@
         "type": "String"
       }
     }
-  }
+  },
+  "shortcutHintsTitle": "Keyboard hints",
+  "shortcutHintsNavigation": "Navigation",
+  "shortcutHintsHeld": "{key} held · Release to hide",
+  "shortcutHintsRelease": "Release {key} first to use these keys",
+  "shortcutHintsSwitchFocusView": "Switch Focus view",
+  "shortcutHintsNavigate": "Navigate",
+  "shortcutHintsAcceptSuggestion": "Accept suggestion",
+  "@shortcutHintsHeld": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "@shortcutHintsRelease": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "blockingShowAllPresets": "Show all",
+  "blockingCollapsePresets": "Collapse",
+  "taskNew": "New task",
+  "taskCreateAction": "Create task",
+  "taskDescription": "Description",
+  "taskExpandEditor": "Expand editor",
+  "taskCollapseEditor": "Collapse editor",
+  "taskVisibleToYou": "Visible only to you",
+  "taskVisibleToTeam": "Visible to team members",
+  "taskCreatedFilesPending": "Task created. Retry uploading the remaining files, or remove them to finish.",
+  "taskFormatBold": "Bold (Markdown)",
+  "taskFormatItalic": "Italic (Markdown)",
+  "taskFormatList": "Bulleted list",
+  "taskFormatLink": "Link (Markdown)"
 }

@@ -227,6 +227,12 @@ class ProtectionCoordinator {
   Future<Map<String, dynamic>> _executeCommand(
     Map<String, dynamic> value,
   ) async {
+    final requestId = value['requestId'];
+    if (requestId is! String || requestId.length > 128) {
+      throw const FormatException('Invalid request id');
+    }
+    // Paired browsers read the same cached authority as GET /state, even offline.
+    if (value['action'] == 'read') return _envelope();
     if (!focus.localMode && focus.remote != null) {
       final result = await focus.remote!(value).timeout(
         const Duration(seconds: 12),
@@ -241,10 +247,6 @@ class ProtectionCoordinator {
         ...await _envelope(),
         if (result['code'] != null) 'code': result['code'],
       };
-    }
-    final requestId = value['requestId'];
-    if (requestId is! String || requestId.length > 128) {
-      throw const FormatException('Invalid request id');
     }
     if (_commands.containsKey(requestId)) return _commands[requestId]!;
     if (![

@@ -50,6 +50,10 @@ class BlockingScreen extends ConsumerWidget {
       return Center(child: Text(l.distractionNativeUnavailable));
     }
     final focus = ref.watch(focusViewModelProvider);
+    final presetsExpanded = ref.watch(blockingPresetsExpandedProvider);
+    final visiblePresets = presetsExpanded
+        ? focus.presets
+        : focus.presets.take(3);
     final editor = ref.watch(blockingViewModelProvider);
     final vm = ref.read(blockingViewModelProvider.notifier);
     final commands = ref.watch(distractionCommandsProvider)!;
@@ -711,6 +715,7 @@ class BlockingScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(bottom: 8),
           child: Material(
             color: colors.surface,
+            clipBehavior: Clip.antiAlias,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
               side: BorderSide(color: selected ? colors.accent : colors.border),
@@ -722,92 +727,111 @@ class BlockingScreen extends ConsumerWidget {
                 selected: selected,
                 button: true,
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.only(top: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              p.displayName(l),
-                              style: textTheme.titleSmall,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                p.displayName(l),
+                                style: textTheme.titleSmall,
+                              ),
                             ),
-                          ),
-                          if (selected) ...[
-                            const SizedBox(width: 8),
-                            ExcludeSemantics(
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  color: colors.accentFill,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(4),
-                                  child: Icon(
-                                    LucideIcons.check,
-                                    size: 14,
-                                    color: colors.onAccent,
+                            if (selected) ...[
+                              const SizedBox(width: 8),
+                              ExcludeSemantics(
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: colors.accentFill,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4),
+                                    child: Icon(
+                                      LucideIcons.check,
+                                      size: 14,
+                                      color: colors.onAccent,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                       const SizedBox(height: 16),
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          if (constraints.maxWidth <
-                              MediaQuery.textScalerOf(context).scale(260)) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            if (constraints.maxWidth <
+                                MediaQuery.textScalerOf(context).scale(260)) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  work,
+                                  const SizedBox(height: 12),
+                                  breaks,
+                                ],
+                              );
+                            }
+                            return Row(
                               children: [
-                                work,
-                                const SizedBox(height: 12),
-                                breaks,
+                                Expanded(flex: 2, child: work),
+                                SizedBox(
+                                  height: 64,
+                                  child: VerticalDivider(
+                                    width: 25,
+                                    color: colors.border,
+                                  ),
+                                ),
+                                Expanded(flex: 3, child: breaks),
                               ],
                             );
-                          }
-                          return Row(
-                            children: [
-                              Expanded(flex: 2, child: work),
-                              SizedBox(
-                                height: 64,
-                                child: VerticalDivider(
-                                  width: 25,
-                                  color: colors.border,
-                                ),
-                              ),
-                              Expanded(flex: 3, child: breaks),
-                            ],
-                          );
-                        },
+                          },
+                        ),
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ExcludeSemantics(
-                            child: Icon(
-                              id == null
-                                  ? LucideIcons.shieldOff
-                                  : LucideIcons.shield,
-                              size: 16,
-                              color: colors.secondaryText,
+                      Divider(height: 1, color: colors.border),
+                      Ink(
+                        color: colors.surfaceTint,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 72),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                ExcludeSemantics(
+                                  child: Icon(
+                                    id == null
+                                        ? LucideIcons.shieldOff
+                                        : LucideIcons.shield,
+                                    size: 24,
+                                    color: colors.secondaryText,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    id == null
+                                        ? l.distractionNone
+                                        : name ?? l.blockingProfileMissing,
+                                    style: name == null
+                                        ? textTheme.bodyMedium
+                                        : textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              id == null
-                                  ? l.distractionNone
-                                  : name ?? l.blockingProfileMissing,
-                              style: textTheme.bodySmall,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
@@ -819,33 +843,16 @@ class BlockingScreen extends ConsumerWidget {
       );
     }
 
-    final taskId = focus.interval?.taskId ?? focus.run?.taskId;
-    final task = taskId == null
-        ? null
-        : ref
-              .watch(
-                focusLinkedTaskViewModelProvider((
-                  taskId,
-                  focus.run?.projectId,
-                )),
-              )
-              .task;
-    final seconds = active
-        ? focus.remaining?.inSeconds ?? 0
-        : preset?.workSeconds ?? 0;
-    final timer =
-        '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}';
-    final sessionSummary = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      child: Column(
-        children: [
-          Text(timer, style: AppTheme.monoTextStyle.copyWith(fontSize: 24)),
-          const SizedBox(height: 8),
-          Text(
-            active ? task?.content ?? l.navFocus : l.blockingReady,
-            textAlign: TextAlign.center,
-          ),
-        ],
+    final presetsToggle = Semantics(
+      expanded: presetsExpanded,
+      child: ShadButton.ghost(
+        height: 44,
+        onPressed: ref.read(blockingPresetsExpandedProvider.notifier).toggle,
+        child: Text(
+          presetsExpanded
+              ? l.blockingCollapsePresets
+              : l.blockingShowAllPresets,
+        ),
       ),
     );
     return LayoutBuilder(
@@ -881,9 +888,9 @@ class BlockingScreen extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              for (final p in focus.presets)
+                              for (final p in visiblePresets)
                                 presetTile(p, compact: false),
-                              sessionSummary,
+                              if (focus.presets.length > 3) presetsToggle,
                             ],
                           ),
                         ),
@@ -897,7 +904,7 @@ class BlockingScreen extends ConsumerWidget {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          for (final p in focus.presets)
+                          for (final p in visiblePresets)
                             Padding(
                               padding: const EdgeInsetsDirectional.only(end: 8),
                               child: presetTile(p, compact: true),
@@ -905,7 +912,11 @@ class BlockingScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    sessionSummary,
+                    if (focus.presets.length > 3)
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: presetsToggle,
+                      ),
                     detail,
                   ],
                 ],

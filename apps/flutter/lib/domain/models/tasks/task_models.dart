@@ -745,6 +745,7 @@ class CreateTaskInput {
     this.parentId,
     this.priority,
     List<String> labelNames = const [],
+    List<String> assigneeIds = const [],
     this.dueDate,
     this.schedule,
     this.deadline,
@@ -752,7 +753,8 @@ class CreateTaskInput {
     this.estimatedFocusIntervals,
     this.isFocusEstimateManual = false,
     this.kanbanStatusId,
-  }) : labelNames = List.unmodifiable(labelNames);
+  }) : labelNames = List.unmodifiable(labelNames),
+       assigneeIds = List.unmodifiable(assigneeIds);
 
   final String content;
   final String? description;
@@ -762,6 +764,7 @@ class CreateTaskInput {
   final String? parentId;
   final int? priority;
   final List<String> labelNames;
+  final List<String> assigneeIds;
   final DateTime? dueDate;
   final TaskSchedule? schedule;
   final DateTime? deadline;

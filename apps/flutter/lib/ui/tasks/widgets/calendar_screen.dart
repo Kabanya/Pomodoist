@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_branch_widgets.dart';
 import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
 import 'dart:async';

@@ -14,7 +14,7 @@ Repository documentation is English; Flutter styling follows the shared
 | 2.1 shared Focus | Account RPC, revisions, idempotent commands, real-time invalidation and 15-second refresh, local fallback/adoption | Concurrent commands and once-only history tested against PostgreSQL |
 | 2.2 profiles | Work, Study, custom profiles, categories, exceptions, phase rules, foreground discovery | Dart rule, settings, lifecycle and database tests |
 | 2.3 Chrome | DNR redirects, loaded-page guards, media pause, recovery, shared/local Focus | Node and real Chromium lifecycle acceptance |
-| 2.4 macOS | Public NSWorkspace discovery and activating AppKit shields, sandbox server entitlement | Local build and AppKit checks; signed distribution, Spaces/full-screen and VoiceOver acceptance pending |
+| 2.4 macOS | Public NSWorkspace discovery and activating AppKit shields, sandbox server entitlement | Real UI lifecycle and AppKit checks passed; signed distribution, Spaces/full-screen and VoiceOver acceptance pending |
 | 2.5 Windows/Linux | Win32, GNOME, Plasma 6, X11, Sway and Hyprland adapters | CI compilation plus actual compositor/window acceptance; unsupported Wayland fails explicitly |
 | 2.6 Pro categories | Authenticated web search, shared cache, manual precedence and existing AI quota | SQL/Deno tests; real provider/account acceptance separate |
 
@@ -79,6 +79,11 @@ arbitrary system commands or executable paths are exposed. Host and Origin are
 validated, including preflight requests. Test fixtures use ephemeral loopback
 ports to avoid colliding with running desktop apps.
 
+Chrome reads cached desktop state with the existing authenticated POST
+`/command` (`read`) operation. Chromium omits `Origin` on extension GET requests;
+POST retains the bridge's origin validation. Reads never require a cloud round
+trip or extend the last confirmed shared lease.
+
 Running leases end at the last confirmed deadline. Paused shared leases expire
 five minutes after confirmation. Only a live local coordinator can renew an
 offline local lease. Deadline conversion uses request observation time, so
@@ -140,6 +145,72 @@ unit test explicitly loads its checked-in PNG fixture because flavor-filtered
 macOS assets are omitted by that test runner. UTC makes fixed timeline fixtures
 independent of the developer's timezone.
 
+### Automated macOS and Chrome UI lifecycle
+
+From the repository root, run:
+
+```sh
+node tool/macos/blocking-e2e.mjs
+```
+
+Prerequisites: an unlocked macOS console session, Xcode command-line tools, Node
+22+, the pinned Flutter SDK (`fvm install`), resolved Flutter dependencies
+(`cd apps/flutter && fvm flutter pub get`), and Playwright with its Chromium
+installed. The runner imports `playwright`; if it is installed outside normal
+Node resolution, set `PLAYWRIGHT_MODULE` to its absolute `index.mjs` path. Set
+`CHROME_BIN` to a compatible Chromium executable if needed, and `FLUTTER_BIN` to
+the pinned Flutter executable when `.fvm/flutter_sdk` is unavailable. Dependencies
+and browsers are never installed by the runner.
+
+`node tool/macos/blocking-e2e.mjs --preflight` checks prerequisites without
+starting the UI scenario. The development build is copied to a unique temporary
+app bundle, assigned the test-only `com.finchforge.pomodoist.dev.e2e` identity and
+ad-hoc signed with only sandbox, loopback network and JIT entitlements. Existing
+Pomodoist instances are not reused or closed. The compiled helper at
+`build/blocking-e2e/BlockingFixture.app` needs Accessibility and event posting
+access (depending on macOS, consent belongs to the launching terminal). Grant
+these in System Settings if preflight reports them missing; permission dialogs
+are not automated. A changed helper may require renewed consent.
+
+The test mounts the actual Pomodoist UI with the real Drift Focus repository,
+live Focus wrapper, protection coordinator, native method channel and loopback
+bridge. Only storage and external services are isolated: the database is in
+memory, preferences are process-local, no account is initialized, and system
+notifications and purchases are disabled. Application bootstrap/distribution
+behavior is outside this test. The browser uses a temporary profile and a test
+copy of the extension with host access granted at installation; permission
+prompts are outside this test too.
+
+Through the UI, the test enables discovery, creates a profile, classifies an
+expendable native app and local test domains, adds an allow exception, pairs
+Chrome, and starts Focus. An external AppKit helper checks that the real shield
+owns keyboard focus and consumes typing/Cmd-W without modifying or closing its
+document. Playwright checks protection of an already loaded page, redirects for
+new pages, and the allowed exception. Stopping Focus through the UI must restore
+native and browser access while preserving drafts.
+
+This run temporarily takes foreground focus and sends keys only while its own
+fixture or Pomodoist owns focus. Do not use the desktop during the run. It has a
+15-minute overall timeout. Logs, available browser screenshots and a Playwright
+trace are retained under `build/blocking-e2e/<timestamp>/`; temporary browser
+profiles, servers and owned processes are removed on success, failure and
+SIGINT/SIGTERM. Native cleanup matches the unique temporary executable path,
+including Runner instances started outside Flutter's process group. The compiled
+helper is retained for stable macOS consent.
+
+Run it twice to check repeatability. Set `E2E_FAIL_AFTER=before` for an intentional
+failure before Focus, to exercise cleanup. Inspect the recorded process IDs and
+temporary path in `processes.json` to verify that they no longer exist. Runner
+protocol and process cleanup checks run without GUI access:
+
+```sh
+node --test tool/macos/blocking-e2e.test.mjs
+```
+
+Pause/break policies, strict exit, cloud synchronization, multi-display behavior
+and signed App Store/DMG acceptance remain separate checks. This desktop suite is
+not added to headless CI.
+
 CI adds SQL tests to the existing database suite and runs real concurrent Focus
 commands against its disposable PostgreSQL container. `Desktop updater` compiles
 Windows and Linux on develop changes. The browser acceptance harness is
@@ -180,6 +251,16 @@ clients can be exercised against staging after the migration is installed.
 
 ## Verification record (2026-10-27)
 
+- Local UI acceptance: two consecutive complete macOS/Chromium runs passed,
+  including UI pairing, native keyboard/Cmd-W protection, loaded-page and new
+  navigation protection, the allow exception and release with preserved drafts.
+  An injected failure and SIGINT during active Focus both removed their owned
+  processes and temporary profiles. Artifacts are retained under
+  `build/blocking-e2e/`. The current extension suite passes 103 tests; the
+  coordinator/view-model suite passes 10 and runner checks pass four. The shared
+  working-tree Flutter suite completed with 2,727 passes and 16 failures; its
+  import architecture check also reports a task-editor dependency cycle. These
+  results do not replace the historical CI record below.
 - Automated: 102 extension tests plus a real Chromium loaded-page/SPA/media,
   worker suspension, expiry and release harness; 453 Deno server tests; 89
   PostgreSQL Focus assertions plus four real concurrent command scenarios.

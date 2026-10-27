@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -170,45 +171,49 @@ class _ProjectDiagramState extends ConsumerState<ProjectDiagram> {
         dismiss();
         return true;
       },
-      child: Focus(
-        canRequestFocus: false,
-        onKeyEvent: (node, event) {
-          if (widget.isActive &&
-              fullscreen &&
-              !taskDetailsOpen &&
-              event is KeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.escape) {
-            dismiss();
-            return KeyEventResult.handled;
-          }
-          return KeyEventResult.ignored;
-        },
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            _buildMap(context),
-            PositionedDirectional(
-              top: 8,
-              end: 24,
-              child: IconButton(
-                key: const Key('project-map-fullscreen'),
-                tooltip: fullscreen
-                    ? context.l10n.projectMapCollapse
-                    : context.l10n.projectMapExpand,
-                style: IconButton.styleFrom(
-                  backgroundColor: context.appColors.surface,
-                  minimumSize: const Size(48, 48),
-                ),
-                onPressed: widget.isActive
-                    ? () => setProjectMapFullscreen(context, !fullscreen)
-                    : null,
-                icon: Icon(
-                  fullscreen ? LucideIcons.minimize : LucideIcons.maximize,
-                  size: 18,
+      child: ShortcutHintsScope(
+        enabled: widget.isActive && fullscreen && !taskDetailsOpen,
+        hints: [ShortcutHint(context.l10n.commonClose, 'Esc')],
+        child: Focus(
+          canRequestFocus: false,
+          onKeyEvent: (node, event) {
+            if (widget.isActive &&
+                fullscreen &&
+                !taskDetailsOpen &&
+                event is KeyDownEvent &&
+                event.logicalKey == LogicalKeyboardKey.escape) {
+              dismiss();
+              return KeyEventResult.handled;
+            }
+            return KeyEventResult.ignored;
+          },
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              _buildMap(context),
+              PositionedDirectional(
+                top: 8,
+                end: 24,
+                child: IconButton(
+                  key: const Key('project-map-fullscreen'),
+                  tooltip: fullscreen
+                      ? context.l10n.projectMapCollapse
+                      : context.l10n.projectMapExpand,
+                  style: IconButton.styleFrom(
+                    backgroundColor: context.appColors.surface,
+                    minimumSize: const Size(48, 48),
+                  ),
+                  onPressed: widget.isActive
+                      ? () => setProjectMapFullscreen(context, !fullscreen)
+                      : null,
+                  icon: Icon(
+                    fullscreen ? LucideIcons.minimize : LucideIcons.maximize,
+                    size: 18,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

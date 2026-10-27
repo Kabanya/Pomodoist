@@ -1583,5 +1583,26 @@
         "type": "String"
       }
     }
-  }
+  },
+  "shortcutHintsTitle": "Подсказки клавиш",
+  "shortcutHintsNavigation": "Переходы",
+  "shortcutHintsHeld": "{key} удерживается · Отпустите, чтобы скрыть",
+  "shortcutHintsRelease": "Сначала отпустите {key}, чтобы использовать эти клавиши",
+  "shortcutHintsSwitchFocusView": "Переключить вид Фокуса",
+  "shortcutHintsNavigate": "Навигация",
+  "shortcutHintsAcceptSuggestion": "Принять подсказку",
+  "blockingShowAllPresets": "Показать все",
+  "blockingCollapsePresets": "Свернуть",
+  "taskNew": "Новая задача",
+  "taskCreateAction": "Создать задачу",
+  "taskDescription": "Описание",
+  "taskExpandEditor": "Развернуть редактор",
+  "taskCollapseEditor": "Свернуть редактор",
+  "taskVisibleToYou": "Видна только вам",
+  "taskVisibleToTeam": "Видна участникам команды",
+  "taskCreatedFilesPending": "Задача создана. Повторите загрузку оставшихся файлов или удалите их из списка, чтобы завершить.",
+  "taskFormatBold": "Жирный (Markdown)",
+  "taskFormatItalic": "Курсив (Markdown)",
+  "taskFormatList": "Маркированный список",
+  "taskFormatLink": "Ссылка (Markdown)"
 }

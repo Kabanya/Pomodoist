@@ -290,61 +290,64 @@ class _InlineAddFieldState extends State<_InlineAddField> {
 
   @override
   Widget build(BuildContext context) {
-    return CallbackShortcuts(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.escape): widget.onCancel,
-      },
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: context.appColors.surface,
-          border: Border.all(color: context.appColors.accent),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 2, 4, 2),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _controller,
-                  autofocus: true,
-                  textInputAction: TextInputAction.done,
-                  decoration: InputDecoration(
-                    hintText: widget.hintText,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    isDense: true,
+    return ShortcutHintsScope(
+      hints: [ShortcutHint(context.l10n.commonCancel, 'Esc')],
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.escape): widget.onCancel,
+        },
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: context.appColors.surface,
+            border: Border.all(color: context.appColors.accent),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 2, 4, 2),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    autofocus: true,
+                    textInputAction: TextInputAction.done,
+                    decoration: InputDecoration(
+                      hintText: widget.hintText,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      isDense: true,
+                    ),
+                    onSubmitted: (_) => _submit(),
                   ),
-                  onSubmitted: (_) => _submit(),
                 ),
-              ),
-              Tooltip(
-                message: context.l10n.commonCancel,
-                child: ShadIconButton.ghost(
-                  onPressed: _busy ? null : widget.onCancel,
-                  icon: const Icon(LucideIcons.x),
-                  enabled: !(_busy),
-                  width: 40,
-                  height: 40,
+                Tooltip(
+                  message: context.l10n.commonCancel,
+                  child: ShadIconButton.ghost(
+                    onPressed: _busy ? null : widget.onCancel,
+                    icon: const Icon(LucideIcons.x),
+                    enabled: !(_busy),
+                    width: 40,
+                    height: 40,
+                  ),
                 ),
-              ),
-              Tooltip(
-                message: context.l10n.commonAdd,
-                child: ShadIconButton.secondary(
-                  onPressed: _busy ? null : _submit,
-                  icon: _busy
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(LucideIcons.plus),
-                  enabled: !(_busy),
-                  width: 40,
-                  height: 40,
+                Tooltip(
+                  message: context.l10n.commonAdd,
+                  child: ShadIconButton.secondary(
+                    onPressed: _busy ? null : _submit,
+                    icon: _busy
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(LucideIcons.plus),
+                    enabled: !(_busy),
+                    width: 40,
+                    height: 40,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

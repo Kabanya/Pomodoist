@@ -250,6 +250,43 @@ configurable. Before any task is opened, or after that task is deleted, they
 do nothing. Reuse the existing full-screen details layout below the shell
 breakpoint.
 
+### Detailed task editor
+
+The leading Quick Add icon opens the detailed creation editor. Reuse the same
+syntax-aware title controller and description draft; Cancel returns to Quick
+Add with that text intact. Do not repeat project, date, priority, tag or Pomodoro
+pickers inside this editor. Its header shows the resolved project, followed by
+assignee chips for shared projects, description, and pending attachments. There
+is one Create task action. Discussion, history and subtasks appear only after a
+task exists. Keep the header and actions pinned while the form scrolls.
+
+Use a resizable 1080 × 760 dialog, constrained to the viewport and keyboard.
+The separate native Quick Add window temporarily expands within its display's
+work area and restores its previous base size afterward. Temporary editor sizes
+must not overwrite the saved Quick Add dimensions. Light, dark and custom themes
+use the same palette roles, 12 px dialog corners and 44 px action targets.
+Description formatting inserts portable Markdown emphasis, list and link syntax
+in a plain-text field; it does not introduce a separate rich-text data format.
+
+Only editable members of the resolved collaboration scope can be assigned.
+Create the task, its assignees and their ordered sync commands in one local
+transaction. Pending files remain local until Create. Commit the task identity
+before uploading, retain remaining files after failure, and retry the existing
+upload reservation rather than creating another task. Once a task exists, lock
+its creation fields; offer upload retry or removal of pending files followed by
+Done. Busy creation/upload blocks dismissal. Cancellation before creation never
+publishes a task or an attachment.
+
+Existing task panels expose Expand editor in their header. Expansion keeps the
+same mounted task screen and editor identities, centered at up to 1280 px with
+24 px viewport margins on desktop; narrow viewports use the available area.
+Shared tasks use a 65/35 content/discussion split at 900 px of editor width.
+Below that width, discussion follows the content in one scrollable column.
+Retain the same discussion section when moving between columns so its unsent
+draft survives resizing. Assignees sit below the title without a second copy in
+Properties. Save persists title/description and returns to the side panel;
+existing permissions and immediate task actions retain their current behavior.
+
 ### Task card and files
 
 Task cards follow the internal-tabs concept: a quiet project header, completion
@@ -537,9 +574,11 @@ and desktop dialog, and keep the existing voice-session lifecycle.
 Desktop Quick Add uses a compact command panel in both the wide-layout dialog
 and the separate native window. Place a large multiline input between the
 list-plus icon and microphone, above a thin divider. Keep date, project and
-short priority menus together with Add in the bottom row. Below 760 logical px
-of composer width, after interface zoom, show icon-only date, project, priority,
-Pomodoro estimate, Comment and Add controls. Keep localized accessible names and
+short priority menus together with Add in the bottom row. Show full labels while
+the complete row fits; switch all six controls to icons only when any labeled
+control would wrap. Measure the current labels, values, text scale and shared
+button geometry rather than using a fixed width breakpoint. Keep localized
+accessible names and
 tooltips with current values, semantic colors and comment-presence indicators.
 Wrap metadata within its available width and scroll it vertically when height
 is limited; keep Add outside that scroll area and always available. Use 40 px
@@ -550,7 +589,10 @@ input scrollable and size its region to its content, with 12 px vertical padding
 extra window height must not create a gap between the text and the footer. Keep
 the footer outside the input scroll area, resizing available, and voice-window
 expansion intact. Start the dialog at 680 × 180 px and the native window at
-680 × 200 px. The native title bar supplies window controls. The separate window
+680 × 200 px, widening the native window on its first opening to fit the full
+labeled toolbar within native and display limits. The native title bar supplies
+window controls. A saved manual size takes priority over this initial width.
+The separate window
 remembers the user's width and height locally across openings and app restarts.
 Constrain restored and expanded sizes to native limits and the display's working
 area. Temporary comment or voice expansion does not replace the saved size;
@@ -1992,11 +2034,24 @@ more, show the preset rail beside the selected preset's settings. Below that
 width, put a horizontal preset list above the settings. Selecting a preset edits
 its association without changing Focus selection or the active session.
 
+Initially show the first three presets in their existing order. When there are
+more than three, place a 44 px ghost Show all / Collapse button below the list
+in both layouts. Keep expansion state in memory
+for the app lifetime, including navigation away and back; a fresh app starts
+collapsed. Collapsing never changes selection or brings a later preset into
+the first three. Profile saves and preset refreshes preserve expansion state.
+
 Preset tiles use a neutral surface with 10 px corners and an accent outline and
 filled checkmark for selection. Emphasize work minutes on the leading side,
 with labeled short and long breaks beside them and the profile status below.
 Use a 320 px preset rail and horizontal tiles; stack durations when scaled text
 needs more space. Keep all duration and profile labels localized and wrapping.
+The profile occupies a separate full-width secondary surface below a divider,
+with a 72 px minimum height, 16 px padding and a neutral shield icon. An assigned
+profile shows only its name in semibold text, without a "Blocking profile"
+caption. Let long names wrap and grow the footer. Preserve the localized empty
+and unavailable-profile messages; assignment alone does not indicate active
+protection.
 
 Use flat sections for the preset rhythm, shared profile, blocked categories,
 allowed exceptions and expandable behavior. Resource management reuses the
@@ -2022,8 +2077,38 @@ devices and before the final action. Unverified subscription access is a pending
 or error state; it must never be presented as Free. Existing assignments survive
 subscription expiry. Pending writes and failed writes remain explicit.
 
-Show the real active task and remaining time below the preset list, or the
-selected preset duration while idle. Keep this summary free of mascot imagery.
+Keep the preset list free of a timer or current-task summary.
 The final action starts that preset when idle and returns to the current Focus when
 a session exists. Missing assigned profiles block starts until reloaded or
 explicitly replaced, including an explicit choice of no blocking.
+
+## Held-modifier shortcut hints
+
+Desktop native and desktop web views reveal informational shortcut hints after
+one second of holding Command (macOS) or Control (Windows/Linux) alone. Each
+window owns its observer and timer. Shortcut execution remains immediate and
+unchanged. An ordinary key cancels the hold until the modifier is released;
+autorepeat never rearms it. Additional modifiers retain already visible hints.
+Release, window blur, context changes, recording a shortcut, and disposal reset
+hints immediately. Touch interfaces retain their existing layout.
+
+Use `ShortcutHintsHost` inside the zoomed application root, and
+`ShortcutHintsScope` at existing local keyboard handlers. Focused local scopes
+replace shell hints; modal scopes own their context for their mounted lifetime.
+Unregistered dialogs and open context menus suppress shell hints. Recorders
+explicitly disable hints. Register only commands handled in that context, and
+omit unavailable actions. Plain Enter/Escape/navigation hints explain that the
+primary modifier must first be released. Do not duplicate system text editing.
+Shell badges use `shellKeyboardViewModelProvider`, existing command
+names and binding formatting, including remaps and required modifiers. Blocking,
+Habits and projects receive no invented navigation shortcuts.
+
+Keep navigation labels and task counters stable while badges toggle. Do not
+show a floating shell help panel when the modifier is held; retain the in-place
+badges and compact local hints. Compact dialog hints sit beside their actions,
+with reserved space and wrapping for scaled text.
+Hints ignore pointer events and cannot receive focus. Use the current palette,
+Geist/GeistMono and Lucide icons in both themes. Fade in with `AppMotion.popup`
+(180 ms), respecting Reduce Motion; removal is immediate. No preference or
+persisted state is added. Validate hold logic and command projection with unit
+tests, plus static and architecture checks; visual acceptance remains manual.

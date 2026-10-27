@@ -493,213 +493,217 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
         : formatTaskSchedule(context, task.schedule);
     final focusActions = ref.watch(calendarTaskFocusActionsProvider(task));
     final card = AppDateTimePicker(
-      builder: (context, picker) => CallbackShortcuts(
-        bindings: {
-          const SingleActivator(LogicalKeyboardKey.contextMenu):
-              _menuController.show,
-          const SingleActivator(LogicalKeyboardKey.f10, shift: true):
-              _menuController.show,
-        },
-        child: AppContextMenuRegion(
-          controller: _menuController,
-          enableLongPress: false,
-          items: _menuItems(context, picker, enabled, focusActions),
-          child: Tooltip(
-            message: '${task.content}\n$time',
-            child: Material(
-              color: selected
-                  ? colors.accentTint
-                  : Color.alphaBlend(
-                      accent.withValues(alpha: 0.08),
-                      colors.surface,
-                    ),
-              borderRadius: BorderRadius.circular(8),
-              child: InkWell(
-                onLongPress: widget.mobile ? selectTask : null,
-                onTap: () {
-                  final keyboard = HardwareKeyboard.instance;
-                  if (selection != null &&
-                      (selecting ||
-                          keyboard.isControlPressed ||
-                          keyboard.isMetaPressed)) {
-                    selectTask();
-                  } else if (widget.mobile) {
-                    unawaited(_mobileActions());
-                  } else {
-                    openTaskDetails(context, task.id);
-                  }
-                },
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  clipBehavior: Clip.antiAlias,
-                  constraints: fill
-                      ? const BoxConstraints.expand()
-                      : BoxConstraints(
-                          minHeight: widget.mobile
-                              ? 76
-                              : compact
-                              ? 40
-                              : 58,
-                        ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      width: selected ? 2 : 1,
-                      color: selected
-                          ? colors.accent
-                          : task.priority == 1
-                          ? colors.overdue.withValues(alpha: .6)
-                          : colors.border,
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      PositionedDirectional(
-                        start: 0,
-                        top: 0,
-                        bottom: 0,
-                        width: 3,
-                        child: ColoredBox(color: accent),
+      builder: (context, picker) => ShortcutHintsScope(
+        hints: [ShortcutHint(context.l10n.menuTooltip, 'Shift+F10')],
+        child: CallbackShortcuts(
+          bindings: {
+            const SingleActivator(LogicalKeyboardKey.contextMenu):
+                _menuController.show,
+            const SingleActivator(LogicalKeyboardKey.f10, shift: true):
+                _menuController.show,
+          },
+          child: AppContextMenuRegion(
+            controller: _menuController,
+            enableLongPress: false,
+            items: _menuItems(context, picker, enabled, focusActions),
+            child: Tooltip(
+              message: '${task.content}\n$time',
+              child: Material(
+                color: selected
+                    ? colors.accentTint
+                    : Color.alphaBlend(
+                        accent.withValues(alpha: 0.08),
+                        colors.surface,
                       ),
-                      Padding(
-                        padding: const EdgeInsetsDirectional.fromSTEB(
-                          9,
-                          4,
-                          4,
-                          4,
+                borderRadius: BorderRadius.circular(8),
+                child: InkWell(
+                  onLongPress: widget.mobile ? selectTask : null,
+                  onTap: () {
+                    final keyboard = HardwareKeyboard.instance;
+                    if (selection != null &&
+                        (selecting ||
+                            keyboard.isControlPressed ||
+                            keyboard.isMetaPressed)) {
+                      selectTask();
+                    } else if (widget.mobile) {
+                      unawaited(_mobileActions());
+                    } else {
+                      openTaskDetails(context, task.id);
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    clipBehavior: Clip.antiAlias,
+                    constraints: fill
+                        ? const BoxConstraints.expand()
+                        : BoxConstraints(
+                            minHeight: widget.mobile
+                                ? 76
+                                : compact
+                                ? 40
+                                : 58,
+                          ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        width: selected ? 2 : 1,
+                        color: selected
+                            ? colors.accent
+                            : task.priority == 1
+                            ? colors.overdue.withValues(alpha: .6)
+                            : colors.border,
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        PositionedDirectional(
+                          start: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: 3,
+                          child: ColoredBox(color: accent),
                         ),
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final textStyle = Theme.of(
-                              context,
-                            ).textTheme.bodySmall!;
-                            final lineHeight =
-                                MediaQuery.textScalerOf(
-                                  context,
-                                ).scale(textStyle.fontSize ?? 12) *
-                                (textStyle.height ?? 1.4);
-                            if (constraints.maxHeight < lineHeight) {
-                              return const SizedBox.shrink();
-                            }
-                            final menu =
-                                constraints.maxWidth >= 90 &&
-                                constraints.maxHeight >= 32;
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (selecting &&
-                                    task.canEdit &&
-                                    constraints.maxWidth >= 40)
-                                  Padding(
-                                    padding: const EdgeInsetsDirectional.only(
-                                      end: 4,
+                        Padding(
+                          padding: const EdgeInsetsDirectional.fromSTEB(
+                            9,
+                            4,
+                            4,
+                            4,
+                          ),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final textStyle = Theme.of(
+                                context,
+                              ).textTheme.bodySmall!;
+                              final lineHeight =
+                                  MediaQuery.textScalerOf(
+                                    context,
+                                  ).scale(textStyle.fontSize ?? 12) *
+                                  (textStyle.height ?? 1.4);
+                              if (constraints.maxHeight < lineHeight) {
+                                return const SizedBox.shrink();
+                              }
+                              final menu =
+                                  constraints.maxWidth >= 90 &&
+                                  constraints.maxHeight >= 32;
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (selecting &&
+                                      task.canEdit &&
+                                      constraints.maxWidth >= 40)
+                                    Padding(
+                                      padding: const EdgeInsetsDirectional.only(
+                                        end: 4,
+                                      ),
+                                      child: Icon(
+                                        selected
+                                            ? LucideIcons.circleCheck
+                                            : LucideIcons.circle,
+                                        size: 16,
+                                        color: selected
+                                            ? colors.accent
+                                            : colors.secondaryText,
+                                      ),
                                     ),
-                                    child: Icon(
-                                      selected
-                                          ? LucideIcons.circleCheck
-                                          : LucideIcons.circle,
-                                      size: 16,
-                                      color: selected
-                                          ? colors.accent
-                                          : colors.secondaryText,
-                                    ),
-                                  ),
-                                Expanded(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              task.content,
-                                              maxLines:
-                                                  !compact &&
-                                                      constraints.maxHeight >
-                                                          lineHeight * 5
-                                                  ? 2
-                                                  : 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                task.content,
+                                                maxLines:
+                                                    !compact &&
+                                                        constraints.maxHeight >
+                                                            lineHeight * 5
+                                                    ? 2
+                                                    : 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                              ),
                                             ),
-                                          ),
-                                          ConstrainedBox(
-                                            constraints: BoxConstraints(
-                                              maxWidth:
-                                                  constraints.maxWidth / 4,
+                                            ConstrainedBox(
+                                              constraints: BoxConstraints(
+                                                maxWidth:
+                                                    constraints.maxWidth / 4,
+                                              ),
+                                              child: TaskHierarchySummary(
+                                                task: task,
+                                                compact: true,
+                                              ),
                                             ),
-                                            child: TaskHierarchySummary(
-                                              task: task,
-                                              compact: true,
-                                            ),
+                                          ],
+                                        ),
+                                        if (!compact &&
+                                            constraints.maxHeight >=
+                                                lineHeight * 3) ...[
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            task.schedule?.isTimed == true
+                                                ? '${_calendarTime(context, task.schedule!.start!.toLocal().hour * 60 + task.schedule!.start!.toLocal().minute)}–${_calendarTime(context, task.schedule!.end!.toLocal().hour * 60 + task.schedule!.end!.toLocal().minute)}'
+                                                : time,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelSmall
+                                                ?.copyWith(color: accent),
                                           ),
                                         ],
-                                      ),
-                                      if (!compact &&
-                                          constraints.maxHeight >=
-                                              lineHeight * 3) ...[
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          task.schedule?.isTimed == true
-                                              ? '${_calendarTime(context, task.schedule!.start!.toLocal().hour * 60 + task.schedule!.start!.toLocal().minute)}–${_calendarTime(context, task.schedule!.end!.toLocal().hour * 60 + task.schedule!.end!.toLocal().minute)}'
-                                              : time,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .labelSmall
-                                              ?.copyWith(color: accent),
-                                        ),
+                                        if (!compact &&
+                                            constraints.maxHeight >=
+                                                lineHeight * 5 &&
+                                            project != null) ...[
+                                          const SizedBox(height: 5),
+                                          Text(
+                                            project!.displayName(context.l10n),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelSmall
+                                                ?.copyWith(
+                                                  color: colors.secondaryText,
+                                                ),
+                                          ),
+                                        ],
                                       ],
-                                      if (!compact &&
-                                          constraints.maxHeight >=
-                                              lineHeight * 5 &&
-                                          project != null) ...[
-                                        const SizedBox(height: 5),
-                                        Text(
-                                          project!.displayName(context.l10n),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .labelSmall
-                                              ?.copyWith(
-                                                color: colors.secondaryText,
-                                              ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                                if (menu)
-                                  SizedBox(
-                                    width: widget.mobile ? 44 : 28,
-                                    height: widget.mobile ? 44 : 32,
-                                    child: IconButton(
-                                      padding: EdgeInsets.zero,
-                                      tooltip: context.l10n.taskMore,
-                                      icon: const Icon(
-                                        LucideIcons.ellipsis,
-                                        size: 15,
-                                      ),
-                                      onPressed: widget.mobile
-                                          ? () => unawaited(_mobileActions())
-                                          : _menuController.show,
                                     ),
                                   ),
-                              ],
-                            );
-                          },
+                                  if (menu)
+                                    SizedBox(
+                                      width: widget.mobile ? 44 : 28,
+                                      height: widget.mobile ? 44 : 32,
+                                      child: IconButton(
+                                        padding: EdgeInsets.zero,
+                                        tooltip: context.l10n.taskMore,
+                                        icon: const Icon(
+                                          LucideIcons.ellipsis,
+                                          size: 15,
+                                        ),
+                                        onPressed: widget.mobile
+                                            ? () => unawaited(_mobileActions())
+                                            : _menuController.show,
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

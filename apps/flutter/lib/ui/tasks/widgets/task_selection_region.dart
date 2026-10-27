@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
 import 'dart:async';
 
@@ -201,41 +202,48 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
   @override
   Widget build(BuildContext context) {
     final selection = ref.watch(taskSelectionViewModelProvider(_identity));
-    return PopScope(
-      canPop: !widget.isActive || !_controller.active,
-      onPopInvokedWithResult: (didPop, result) {
-        if (widget.isActive && !didPop) _controller.close();
-      },
-      child: Focus(
-        autofocus: widget.isActive && !widget.shrinkWrap,
-        canRequestFocus: widget.isActive,
-        descendantsAreFocusable: widget.isActive,
-        descendantsAreTraversable: widget.isActive,
-        child: CallbackShortcuts(
-          bindings: {
-            if (widget.isActive && _controller.active)
-              const SingleActivator(LogicalKeyboardKey.escape):
-                  _controller.close,
-          },
-          child: TaskSelectionScope(
-            controller: _controller,
-            active: selection.active,
-            pending: selection.pending,
-            selectedIds: selection.selectedIds,
-            child: Column(
-              mainAxisSize: widget.shrinkWrap
-                  ? MainAxisSize.min
-                  : MainAxisSize.max,
-              children: [
-                if (_controller.active) _selectionHeader(context),
-                KeyedSubtree(
-                  key: const ValueKey('task-selection-content'),
-                  child: widget.shrinkWrap
-                      ? widget.child
-                      : Expanded(child: widget.child),
-                ),
-                if (_controller.active) _selectionBar(context),
-              ],
+    return ShortcutHintsScope(
+      enabled: widget.isActive && _controller.active,
+      hints: [
+        if (widget.isActive && _controller.active)
+          ShortcutHint(context.l10n.taskDeselectAll, 'Esc'),
+      ],
+      child: PopScope(
+        canPop: !widget.isActive || !_controller.active,
+        onPopInvokedWithResult: (didPop, result) {
+          if (widget.isActive && !didPop) _controller.close();
+        },
+        child: Focus(
+          autofocus: widget.isActive && !widget.shrinkWrap,
+          canRequestFocus: widget.isActive,
+          descendantsAreFocusable: widget.isActive,
+          descendantsAreTraversable: widget.isActive,
+          child: CallbackShortcuts(
+            bindings: {
+              if (widget.isActive && _controller.active)
+                const SingleActivator(LogicalKeyboardKey.escape):
+                    _controller.close,
+            },
+            child: TaskSelectionScope(
+              controller: _controller,
+              active: selection.active,
+              pending: selection.pending,
+              selectedIds: selection.selectedIds,
+              child: Column(
+                mainAxisSize: widget.shrinkWrap
+                    ? MainAxisSize.min
+                    : MainAxisSize.max,
+                children: [
+                  if (_controller.active) _selectionHeader(context),
+                  KeyedSubtree(
+                    key: const ValueKey('task-selection-content'),
+                    child: widget.shrinkWrap
+                        ? widget.child
+                        : Expanded(child: widget.child),
+                  ),
+                  if (_controller.active) _selectionBar(context),
+                ],
+              ),
             ),
           ),
         ),

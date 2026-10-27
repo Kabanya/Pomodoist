@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:pomodoist/ui/distractions/widgets/focus_exit_host.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
@@ -58,9 +59,13 @@ class PomodoistApp extends ConsumerWidget {
             child: AppZoom(
               child: ShadAppBuilder(
                 backgroundColor: rootBackground,
-                child: KeyboardDismissRegion(
-                  child: DesktopUpdateHost(
-                    child: FocusExitHost(child: child ?? const SizedBox.shrink()),
+                child: ShortcutHintsHost(
+                  child: KeyboardDismissRegion(
+                    child: DesktopUpdateHost(
+                      child: FocusExitHost(
+                        child: child ?? const SizedBox.shrink(),
+                      ),
+                    ),
                   ),
                 ),
               ),

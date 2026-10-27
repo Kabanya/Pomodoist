@@ -195,7 +195,9 @@ export class FocusProtection {
     try {
       if (this.data.source==='cloud' && !this.store.data.session) { await this.reconcile(); return null; }
       const observedAt=this.clock();
-      let result=await this.accept(this.data.source==='desktop'?await this.bridgeRequest('/state'):await this.client.rpc('pomodoist_focus',{p_command:{action:'read',requestId:crypto.randomUUID(),deviceId:this.store.data.deviceId}}),observedAt,autoStart);
+      const command={action:'read',requestId:crypto.randomUUID(),deviceId:this.store.data.deviceId};
+      // Chromium omits Origin on extension GETs; POST preserves the bridge's origin check.
+      let result=await this.accept(this.data.source==='desktop'?await this.bridgeRequest('/command',command):await this.client.rpc('pomodoist_focus',{p_command:command}),observedAt,autoStart);
       if(!result.profiles.length){
         for(const name of ['Work','Study']) result=await this.command('profileUpsert',{profile:{id:name.toLowerCase(),name,blockedCategories:[],overrides:[],blockOnPause:true,blockOnShortBreak:false,blockOnLongBreak:false,updatedAt:new Date(this.clock()).toISOString()}});
       }

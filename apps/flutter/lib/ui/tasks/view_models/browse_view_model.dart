@@ -10,6 +10,7 @@ import 'package:pomodoist/domain/use_cases/tasks/project_list_data.dart';
 
 typedef BrowseState = ({
   AsyncValue<ProductivitySummary> summary,
+  DateTime today,
   BrowsePeriod period,
   ({int completedTasks, int focusIntervals, int focusSeconds, int openTasks})?
   numbers,
@@ -23,9 +24,17 @@ class BrowseViewModel extends Notifier<BrowseState> {
   BrowsePeriod _period = BrowsePeriod.today;
   @override
   BrowseState build() {
+    final clock = ref.watch(clockProvider);
+    final today = ref.watch(
+      focusTickerProvider.select((tick) {
+        final now = (tick.value ?? clock.now()).toLocal();
+        return DateTime(now.year, now.month, now.day);
+      }),
+    );
     final summary = ref.watch(productivitySummaryProvider);
     return (
       summary: summary,
+      today: today,
       period: _period,
       numbers: summary.hasValue ? browseSummary(summary.value!, _period) : null,
     );

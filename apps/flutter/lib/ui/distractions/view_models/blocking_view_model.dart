@@ -4,6 +4,18 @@ import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/domain/models/distractions/distraction_models.dart';
 import 'package:pomodoist/config/distraction_dependencies.dart';
 
+final blockingPresetsExpandedProvider =
+    NotifierProvider<BlockingPresetsExpanded, bool>(
+      BlockingPresetsExpanded.new,
+    );
+
+class BlockingPresetsExpanded extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void toggle() => state = !state;
+}
+
 class BlockingEditorState {
   const BlockingEditorState({
     this.selectedPresetId,
