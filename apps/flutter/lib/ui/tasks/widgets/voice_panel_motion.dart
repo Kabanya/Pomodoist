@@ -476,7 +476,7 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 const ShortcutHintsBar(),
-                                                widget.panel,
+                                                Flexible(child: widget.panel),
                                               ],
                                             ),
                                           ),

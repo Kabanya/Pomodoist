@@ -1,4 +1,5 @@
 import 'package:pomodoist/domain/models/billing/billing_models.dart';
+import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
 import 'package:pomodoist/ui/billing/view_models/billing_view_model.dart';
@@ -20,6 +21,7 @@ import 'package:pomodoist/ui/distractions/widgets/focus_exit_host.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show ShadButton, ShadInput;
 
 import 'support/test_app.dart';
+import '../testing/fakes/fake_focus_repository.dart';
 
 final _work = DistractionProfile.fromJson({
   'id': 'work',
@@ -151,6 +153,7 @@ Future<void> _mount(
   double width = 360,
   Brightness brightness = Brightness.light,
   bool reduceMotion = false,
+  FakeFocusRepository? focusRepository,
 }) async {
   tester.view.physicalSize = Size(width, 900);
   tester.view.devicePixelRatio = 1;
@@ -161,6 +164,8 @@ Future<void> _mount(
     ProviderScope(
       overrides: [
         focusViewModelProvider.overrideWith(_DeskFocus.new),
+        if (focusRepository != null)
+          focusRepositoryProvider.overrideWithValue(focusRepository),
         billingViewModelProvider.overrideWith(_DeskBilling.new),
         distractionCommandsProvider.overrideWithValue(commands),
         distractionViewModelProvider.overrideWith((ref) {
@@ -428,7 +433,13 @@ void main() {
     await tester.tap(_button('Save'));
     await tester.pumpAndSettle();
     expect(find.byType(AlertDialog), findsOneWidget);
-    expect(find.textContaining('Save failed'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.textContaining('Save failed'),
+      ),
+      findsOneWidget,
+    );
     expect(tester.widget<EditableText>(name).controller.text, 'Retained draft');
     expect(commands.profiles, isEmpty);
     commands.saveError = null;
@@ -457,10 +468,14 @@ void main() {
         brightness: Brightness.dark,
         reduceMotion: true,
       );
-      await tester.ensureVisible(_button('Resources'));
-      await tester.tap(_button('Resources'));
+      await tester.ensureVisible(_button('Resources and exceptions'));
+      await tester.tap(_button('Resources and exceptions'));
       await tester.pumpAndSettle();
-      final category = find.byType(DropdownButtonFormField<String>).at(1);
+      final resourceControls = find.descendant(
+        of: find.byType(Dialog),
+        matching: find.byType(DropdownButtonFormField<String>),
+      );
+      final category = resourceControls.first;
       await tester.ensureVisible(category);
       await tester.tap(category);
       await tester.pumpAndSettle();
@@ -469,7 +484,7 @@ void main() {
       expect(commands.assignments.single.id, 'youtube.com');
       expect(commands.assignments.single.category, 'education');
       expect(commands.assignments.single.source, 'manual');
-      final exception = find.byType(DropdownButtonFormField<String>).at(2);
+      final exception = resourceControls.last;
       await tester.ensureVisible(exception);
       await tester.tap(exception);
       await tester.pumpAndSettle();
@@ -488,7 +503,7 @@ void main() {
   );
 
   testWidgets(
-    'active Focus locks policy selection while conflict actions remain explicit',
+    'active Focus permits future profile selection but locks exit policy and keeps conflict actions explicit',
     (tester) async {
       final commands = _Commands(
         DistractionSettingsState(
@@ -500,15 +515,24 @@ void main() {
           local: true,
         ),
       );
-      await _mount(tester, commands, _settings(), width: 1200);
-      expect(
-        tester
-            .widget<DropdownButtonFormField<String>>(
-              find.byType(DropdownButtonFormField<String>).first,
-            )
-            .onChanged,
-        isNull,
+      final focusRepository = FakeFocusRepository();
+      await _mount(
+        tester,
+        commands,
+        _settings(),
+        width: 1200,
+        focusRepository: focusRepository,
       );
+      await tester.tap(find.byType(DropdownButtonFormField<String>).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('No blocking profile').last);
+      await tester.pumpAndSettle();
+      expect(focusRepository.setPresetDistractionProfileCalls.single, (
+        presetId: 'classic',
+        profileId: null,
+      ));
+      expect(focusRepository.changeActiveRunPresetCalls, isEmpty);
+      expect(focusRepository.startRunCalls, isEmpty);
       await tester.ensureVisible(find.text('Profile behavior'));
       await tester.tap(find.text('Profile behavior'));
       await tester.pumpAndSettle();

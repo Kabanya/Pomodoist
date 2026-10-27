@@ -2582,6 +2582,7 @@ void main() {
       onRouter: (value) => router = value,
       size: const Size(1200, 900),
       tasks: const <TaskItem>[],
+      focusNow: DateTime(2026, 1, 2, 11),
     );
 
     router.go('/timeline?date=${_routeDate(today)}');
@@ -3522,6 +3523,8 @@ void main() {
     );
 
     router.go('/browse');
+    await _pumpFrames(tester);
+    await tester.ensureVisible(find.byKey(const Key('browse-completed-tasks')));
     await _pumpFrames(tester);
     await tester.tap(find.byKey(const Key('browse-completed-tasks')));
     await _pumpFrames(tester);

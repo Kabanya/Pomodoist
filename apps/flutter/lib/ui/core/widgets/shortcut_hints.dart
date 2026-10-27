@@ -383,6 +383,7 @@ class _ShortcutHintBadgeState extends ConsumerState<ShortcutHintBadge> {
   @override
   Widget build(BuildContext context) {
     final host = context.dependOnInheritedWidgetOfExactType<_HostData>()?.host;
+    if (host == null) return widget.child;
     final scope = context.getInheritedWidgetOfExactType<_ScopeData>()?.scope;
     final keyboard = ref.watch(shellKeyboardViewModelProvider);
     final hint = commandHint(context.l10n, keyboard, widget.command);
@@ -390,7 +391,7 @@ class _ShortcutHintBadgeState extends ConsumerState<ShortcutHintBadge> {
       return OverlayPortal.overlayChildLayoutBuilder(
         controller: _popup,
         overlayChildBuilder: (context, info) =>
-            host?.shows(scope) != true || hint == null
+            !host.shows(scope) || hint == null
             ? const SizedBox.shrink()
             : IgnorePointer(
                 child: CustomSingleChildLayout(
@@ -411,7 +412,7 @@ class _ShortcutHintBadgeState extends ConsumerState<ShortcutHintBadge> {
       alignment: widget.alignment,
       children: [
         widget.child,
-        if (host?.shows(scope) == true && hint != null)
+        if (host.shows(scope) && hint != null)
           Positioned.fill(
             child: Align(
               alignment: widget.alignment,
