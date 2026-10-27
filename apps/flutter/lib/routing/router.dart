@@ -1,4 +1,5 @@
 import 'package:pomodoist/ui/distractions/widgets/blocking_screen.dart';
+import 'package:pomodoist/ui/distractions/view_models/distraction_view_model.dart';
 import 'package:pomodoist/data/services/platform/native_link_coordinator_core.dart'
     show appleWidgetRoute;
 import 'package:flutter/foundation.dart';
@@ -253,6 +254,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/blocking',
+            redirect: (context, state) =>
+                ref.read(blockingAvailableProvider) ? null : '/focus',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: BlockingScreen()),
           ),

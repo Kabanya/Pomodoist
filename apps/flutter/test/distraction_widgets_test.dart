@@ -201,6 +201,20 @@ Widget _settings() => const Scaffold(body: BlockingScreen());
 Finder _button(String text) => find.widgetWithText(ShadButton, text);
 
 void main() {
+  testWidgets(
+    'Blocking UI is disabled on desktop',
+    (tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(container.read(blockingAvailableProvider), isFalse);
+    },
+    variant: TargetPlatformVariant({
+      TargetPlatform.macOS,
+      TargetPlatform.windows,
+      TargetPlatform.linux,
+    }),
+  );
+
   setUpAll(loadTestAppResources);
 
   for (final width in [360.0, 1200.0]) {
@@ -581,6 +595,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(AlertDialog), findsNothing);
     expect(commands.profiles, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Blocking settings stay hidden while protection is available', (
+    tester,
+  ) async {
+    final commands = _Commands(const DistractionSettingsState(available: true));
+    await _mount(tester, commands, const Scaffold(body: DistractionSettings()));
+    expect(find.text('Blocking'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

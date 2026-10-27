@@ -2043,6 +2043,12 @@ generation and static/architecture analysis only.
 
 ## Blocking preset desk
 
+Blocking UI is temporarily disabled through `blockingAvailableProvider`: hide
+the sidebar destination and Settings link, and redirect `/blocking` to `/focus`.
+Keep the screen implementation, profiles, protection services, synchronization,
+and active-session controls intact. The following rules apply when the UI is
+enabled again.
+
 The desktop-only `/blocking` destination follows Focus in the sidebar. Settings
 links to it rather than duplicating its controls. At a content width of 820 px or
 more, show the preset rail beside the selected preset's settings. Below that

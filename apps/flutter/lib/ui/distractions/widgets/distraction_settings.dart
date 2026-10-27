@@ -16,7 +16,8 @@ class DistractionSettings extends ConsumerWidget {
   const DistractionSettings({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (!ref.watch(distractionViewModelProvider).available) {
+    if (!ref.watch(blockingAvailableProvider) ||
+        !ref.watch(distractionViewModelProvider).available) {
       return const SizedBox.shrink();
     }
     return Padding(

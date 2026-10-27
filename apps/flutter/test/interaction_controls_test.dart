@@ -3504,6 +3504,31 @@ void main() {
     expect(find.text('Open browse task'), findsNothing);
   });
 
+  testWidgets('Blocking stays hidden and its route redirects to Focus', (
+    tester,
+  ) async {
+    late GoRouter router;
+    await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      size: const Size(1200, 900),
+    );
+
+    expect(
+      find.byKey(const ValueKey('sidebar-destination-/focus')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('sidebar-destination-/blocking')),
+      findsNothing,
+    );
+    router.go('/blocking');
+    await _pumpFrames(tester);
+    expect(_routerUri(router), '/focus');
+    expect(find.byType(FocusScreen), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('browse completed task link opens completed task screen', (
     tester,
   ) async {
