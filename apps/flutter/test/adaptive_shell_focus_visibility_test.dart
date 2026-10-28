@@ -166,6 +166,25 @@ void main() {
     },
   );
 
+  for (final path in const ['/blocking', '/focus']) {
+    testWidgets('compact $path leaves its session actions unobstructed', (
+      tester,
+    ) async {
+      await _pumpShell(
+        tester,
+        size: const Size(600, 800),
+        initialLocation: path,
+      );
+
+      expect(find.byKey(const Key('compact-add-task')), findsNothing);
+      expect(find.byKey(const Key('mobile-bottom-navigation')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('go-inbox')));
+      await _pumpShellFrame(tester);
+      expect(find.byKey(const Key('compact-add-task')), findsOneWidget);
+    });
+  }
+
   testWidgets('compact task details replace shell chrome and fill viewport', (
     tester,
   ) async {

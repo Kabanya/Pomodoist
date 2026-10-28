@@ -2160,6 +2160,8 @@ Keep the preset list free of a timer or current-task summary.
 The final action starts that preset when idle and returns to the current Focus when
 a session exists. Missing assigned profiles block starts until reloaded or
 explicitly replaced, including an explicit choice of no blocking.
+Hide the compact quick-add floating button on Blocking and Focus so it cannot
+cover the final action or the session menu. Keyboard quick-add remains available.
 
 ## Held-modifier shortcut hints
 

@@ -527,7 +527,9 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                             navigationDraft != null ||
                             mapFullscreen ||
                             voiceActive ||
-                            widget.location == '/calendar'
+                            widget.location == '/calendar' ||
+                            widget.location == '/blocking' ||
+                            _isFocusLocation(widget.location)
                         ? const SizedBox.shrink()
                         : LearningTourAnchor(
                             id: LearningTourAnchorId.addMobile,
