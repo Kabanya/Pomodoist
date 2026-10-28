@@ -217,7 +217,9 @@ creates a profile, classifies an
 expendable native app and local test domains, adds an allow exception, pairs
 Chrome, and starts Focus. An external AppKit helper checks that the real shield
 owns keyboard focus and consumes typing/Cmd-W without modifying or closing its
-document. Playwright checks protection of an already loaded page, redirects for
+document across ten repeated activations. The integration binding runs live
+frames while awaiting native multi-window registration. Playwright checks
+protection of an already loaded page, redirects for
 new pages, and the allowed exception. Stopping Focus through the UI must restore
 native and browser access while preserving drafts.
 

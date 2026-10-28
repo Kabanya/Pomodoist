@@ -90,6 +90,8 @@ Future<void> _host(
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  // Native window registration must progress before test pumps begin.
+  binding.framePolicy = LiveTestWidgetsFlutterBindingFramePolicy.fullyLive;
 
   testWidgets('UI configures, blocks and releases macOS apps and Chrome sites', (
     tester,
@@ -164,21 +166,23 @@ void main() {
     // The macOS host uses explicit views; pumping an implicit view renders into
     // the hidden bootstrap window instead of the actual application window.
     binding.deviceEventDispatcher = null;
-    runMultiApp(
-      home: (_, _) => const PomodoistApp(),
-      globalScope: (child) =>
-          UncontrolledProviderScope(container: container, child: child),
-      config: MultiAppConfig(
-        globalWindowOptions: const WindowOptions(
-          size: Size(1280, 900),
-          titleBarStyle: TitleBarStyle.normal,
-          windowButtonVisibility: true,
+    await tester.runAsync(
+      () => runMultiApp(
+        home: (_, _) => const PomodoistApp(),
+        globalScope: (child) =>
+            UncontrolledProviderScope(container: container, child: child),
+        config: MultiAppConfig(
+          globalWindowOptions: const WindowOptions(
+            size: Size(1280, 900),
+            titleBarStyle: TitleBarStyle.normal,
+            windowButtonVisibility: true,
+          ),
+          macosParams: const MacosPlatformParams(
+            closeAppAfterLastWindowClosed: false,
+            saveLastWindowToReopen: false,
+          ),
         ),
-        macosParams: const MacosPlatformParams(
-          closeAppAfterLastWindowClosed: false,
-          saveLastWindowToReopen: false,
-        ),
-      ),
+      ).timeout(const Duration(seconds: 20)),
     );
     debugPrint('E2E UI: mounting PomodoistApp');
 

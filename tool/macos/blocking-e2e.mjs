@@ -135,7 +135,11 @@ async function action(body) {
       return {ok: true};
     case 'blocked':
       await browserBlocked();
-      return native({step: 'blocked'});
+      // Re-activation must survive the coordinator's one-second snapshot updates.
+      for (let attempt = 0; attempt < 10; attempt++) {
+        await native({step: 'blocked'});
+      }
+      return {ok: true};
     case 'after':
       await browserAfter();
       return native({step: 'after'});
