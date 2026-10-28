@@ -39,6 +39,36 @@ Map<String, dynamic> session(DateTime time, {bool paused = false}) => {
   },
 };
 void main() {
+  for (final interval in [false, true]) {
+    test(
+      'active ${interval ? 'interval' : 'run'} keeps startup updates',
+      () async {
+        final repo = LiveFocusRepository(
+          local: Local(),
+          owner: 'u',
+          deviceId: 'd',
+          preferences: null,
+          remote: null,
+        );
+        addTearDown(repo.dispose);
+        final values = <String?>[];
+        final stream = interval
+            ? repo.watchActiveInterval().map((value) => value?.id)
+            : repo.watchActiveRun().map((value) => value?.id);
+        final subscription = stream.listen((value) {
+          values.add(value);
+          if (value == null) {
+            repo.session = session(DateTime.utc(2026, 10, 29));
+            repo.notify();
+          }
+        });
+        addTearDown(subscription.cancel);
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        expect(values, [null, interval ? 'i' : 'run']);
+      },
+    );
+  }
+
   test(
     'settings commands use the latest acknowledged settings revision',
     () async {

@@ -811,17 +811,27 @@ class LiveFocusRepository implements FocusRepository {
     await _changes.close();
   }
 
+  // Subscribe before the snapshot so startup hydration cannot fall between them.
   @override
-  Stream<FocusRunItem?> watchActiveRun() async* {
-    yield activeRun;
-    yield* changes.map((_) => activeRun);
-  }
+  Stream<FocusRunItem?> watchActiveRun() => Stream.multi((controller) {
+    final subscription = changes.listen(
+      (_) => controller.add(activeRun),
+      onDone: controller.close,
+    );
+    controller.add(activeRun);
+    controller.onCancel = subscription.cancel;
+  });
 
   @override
-  Stream<FocusIntervalItem?> watchActiveInterval() async* {
-    yield activeInterval;
-    yield* changes.map((_) => activeInterval);
-  }
+  Stream<FocusIntervalItem?> watchActiveInterval() =>
+      Stream.multi((controller) {
+        final subscription = changes.listen(
+          (_) => controller.add(activeInterval),
+          onDone: controller.close,
+        );
+        controller.add(activeInterval);
+        controller.onCancel = subscription.cancel;
+      });
 
   @override
   Stream<List<FocusPresetItem>> watchPresets() async* {
