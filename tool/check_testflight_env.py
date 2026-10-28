@@ -33,7 +33,7 @@ environments = {
     "production": {
         "WEB_APP_URL": "https://app.pomodoist.com",
         "POMODOIST_REGISTRATION_URL": "https://app.pomodoist.com/auth/challenge",
-        "SUPABASE_URL": "https://ewauihswbwduvklrozke.supabase.co",
+        "SUPABASE_URL": "https://supabase-test.pomodoist.com",
     },
     "staging": {
         "WEB_APP_URL": "https://app-test.pomodoist.com",

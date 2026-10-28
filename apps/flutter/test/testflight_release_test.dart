@@ -97,7 +97,7 @@ SENTRY_DSN=
         (await check(
           environment: 'production',
           webAppUrl: productionWebUrl,
-          supabaseUrl: 'https://ewauihswbwduvklrozke.supabase.co',
+          supabaseUrl: 'https://supabase-test.pomodoist.com',
         )).exitCode,
         0,
       );
@@ -121,7 +121,7 @@ SENTRY_DSN=
         (await check(
           environment: 'production',
           webAppUrl: productionWebUrl,
-          supabaseUrl: 'https://ewauihswbwduvklrozke.supabase.co',
+          supabaseUrl: 'https://supabase-test.pomodoist.com',
           role: 'service_role',
         )).exitCode,
         isNot(0),

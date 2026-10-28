@@ -381,7 +381,7 @@ function validateConfig(config: PomodoistMcpConfig) {
   const issuer = new URL(config.issuer);
   const resource = new URL(config.resourceUrl);
   const productionGateway = config.issuer ===
-      "https://ewauihswbwduvklrozke.supabase.co/auth/v1" &&
+      "https://supabase-test.pomodoist.com/auth/v1" &&
     config.resourceUrl ===
       "https://mcp.pomodoist.com/functions/v1/pomodoist-mcp";
   if (

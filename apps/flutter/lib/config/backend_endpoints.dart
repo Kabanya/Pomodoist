@@ -1,7 +1,7 @@
 // Reviewed deployment origins. Add a future domain here only after ownership,
 // Auth callbacks and deployment configuration are ready; never trust a runtime
 // config value to extend its own allowlist.
-const productionSupabaseUrl = 'https://ewauihswbwduvklrozke.supabase.co';
+const productionSupabaseUrl = 'https://supabase-test.pomodoist.com';
 const productionSupabaseOrigins = {productionSupabaseUrl};
 const stagingSupabaseOrigins = {'https://supabase-test.pomodoist.com'};
 
