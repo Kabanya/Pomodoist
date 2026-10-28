@@ -17,7 +17,20 @@ class CoordinatedDistractionRepository implements DistractionRepository {
   classifyResource;
   bool automatic = false;
   @override
-  Stream<void> get changes => focus.changes;
+  Stream<void> get changes => Stream<void>.multi((controller) {
+    final focusSubscription = focus.changes.listen(
+      controller.add,
+      onError: controller.addError,
+    );
+    final nativeSubscription = protection()?.changes.listen(
+      controller.add,
+      onError: controller.addError,
+    );
+    controller.onCancel = () async {
+      await focusSubscription.cancel();
+      await nativeSubscription?.cancel();
+    };
+  });
   @override
   DistractionSettingsState get state {
     final p = protection();

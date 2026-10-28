@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/distraction_protection_coordinator.dart';
+import 'package:pomodoist/config/distraction_repository.dart';
 import 'package:pomodoist/data/repositories/distractions/live_focus_repository.dart';
 import 'package:pomodoist/data/repositories/focus/focus_repository_impl.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
@@ -27,6 +29,81 @@ class Notifications extends NotificationScheduler {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test(
+    'native completion publishes status and error changes to Blocking',
+    () async {
+      final focus = LiveFocusRepository(
+        local: FakeFocusRepository(),
+        remote: null,
+        owner: 'local',
+        deviceId: 'desktop',
+        preferences: null,
+      );
+      const channel = MethodChannel('test/native-status-notifications');
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      final cleared = Completer<void>();
+      var fail = false;
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        if (call.method == 'clearProtection') {
+          if (fail) throw PlatformException(code: 'native-unavailable');
+          await cleared.future;
+        }
+        return null;
+      });
+      final native = DistractionNativeGateway(channel: channel);
+      final protection = ProtectionCoordinator(
+        focus: focus,
+        native: native,
+        flavor: 'development',
+        preferences: null,
+        taskTitle: (_) async => null,
+      )..nativeApplied = true;
+      final repository = CoordinatedDistractionRepository(
+        focus,
+        protection: () => protection,
+        classifyResource: (resource) async => resource,
+      );
+      final observed = <({bool applied, String? error})>[];
+      final subscription = repository.changes.listen((_) {
+        final state = repository.state;
+        observed.add((applied: state.nativeApplied, error: state.error));
+      });
+      try {
+        final pending = protection.apply();
+        await Future<void>.delayed(Duration.zero);
+        expect(observed, isEmpty);
+        expect(repository.state.nativeApplied, isTrue);
+        cleared.complete();
+        await pending;
+        await Future<void>.delayed(Duration.zero);
+        expect(observed, [(applied: false, error: null)]);
+
+        await protection.apply();
+        await Future<void>.delayed(Duration.zero);
+        expect(observed, hasLength(1));
+
+        fail = true;
+        await protection.apply();
+        await Future<void>.delayed(Duration.zero);
+        expect(observed.last.error, contains('native-unavailable'));
+        expect(observed, hasLength(2));
+
+        fail = false;
+        await protection.apply();
+        await Future<void>.delayed(Duration.zero);
+        expect(observed.last, (applied: false, error: null));
+        expect(observed, hasLength(3));
+      } finally {
+        await subscription.cancel();
+        await protection.dispose();
+        await native.dispose();
+        await focus.dispose();
+        messenger.setMockMethodCallHandler(channel, null);
+      }
+    },
+  );
+
   test(
     'paired reads preserve cached shared Focus while cloud is unavailable',
     () async {

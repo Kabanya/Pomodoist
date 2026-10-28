@@ -29,6 +29,8 @@ class ProtectionCoordinator {
   DistractionNativeCapabilities? capabilities;
   bool nativeApplied = false, applying = false, disposed = false;
   String? error;
+  final _changes = StreamController<void>.broadcast();
+  Stream<void> get changes => _changes.stream;
   final List<ResourceAssignment> inventory = [];
   final Map<String, DateTime> _attempts = {};
   final Map<String, Map<String, dynamic>> _commands = {};
@@ -393,6 +395,8 @@ class ProtectionCoordinator {
 
   Future<void> apply() async {
     if (disposed || applying) return;
+    final previousApplied = nativeApplied;
+    final previousError = error;
     applying = true;
     _applyingDone = Completer<void>();
     try {
@@ -467,6 +471,10 @@ class ProtectionCoordinator {
     } finally {
       applying = false;
       _applyingDone?.complete();
+      if (!disposed &&
+          (nativeApplied != previousApplied || error != previousError)) {
+        _changes.add(null);
+      }
     }
   }
 
@@ -501,6 +509,7 @@ class ProtectionCoordinator {
     await _attemptSub?.cancel();
     await bridge?.dispose();
     await _applyingDone?.future;
+    await _changes.close();
     await native.clearProtection();
     await native.stopDiscovery();
     await native.dispose();
