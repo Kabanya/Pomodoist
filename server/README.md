@@ -278,6 +278,41 @@ Container versions are pinned in `compose.yaml` and the Dockerfiles. Read the up
 
 This package intentionally omits Studio, Storage, image transformation, connection pooling, and log analytics because Pomodoist core does not need them. Add a service only when a deployed feature requires it.
 
+## Focus replay receipts
+
+`pomodoist_focus` retains the last five non-heartbeat command responses per
+account/device pair. Reads and `registerDevice` do not create receipts; device
+heartbeats still update the existing device row. New commands prune older
+responses in the same account-locked transaction, so no cleanup job is needed.
+The receipt-limit migration also removes existing heartbeat and excess receipts.
+
+Within this window, an exact request retry returns its original response.
+Evicted timer commands are checked against `expectedRevision`; profile and
+assignment writes require `expectedSettingsRevision` from the last envelope.
+A stale revision returns `revision_conflict` with current state and does not
+apply the command. Refresh that state before issuing a new command.
+
+Roll out the updated desktop and Chrome extension before applying
+`20261028161223_pomodoist_core_focus_receipt_limit`. They also work with the
+preceding server. After the migration, older clients that omit the settings
+revision must upgrade to edit blocking profiles or assignments; timer and
+heartbeat requests keep their existing format. Apply this through the normal
+migration runner; do not edit the earlier Focus migration or its checksum.
+
+Focus rejects `complete` for a `ready` interval with
+`invalid_focus_transition`; call `startReady` before completing it. A rejected
+completion preserves its revision, history, and task statistics.
+
+Completing, skipping, or stopping a paused interval closes its open pause at
+the terminal timestamp and adds it to `pausedTotalSeconds` exactly once before
+crediting work. This also applies when a persisted strict-exit countdown ends.
+The migration changes future finalization; it does not rewrite old statistics.
+
+Focus transactions share the file-lifecycle advisory lock, allowing unrelated
+accounts to read, send heartbeats, and process expiry concurrently. Exclusive
+file, sync, calendar, and account lifecycle work still excludes Focus. Shared
+task credits lock their project scope before updating contributions and totals.
+
 ## Companion and AI endpoints
 
 `pomodoist-ai` accepts the existing `command.type: task.decomposeTranscript`

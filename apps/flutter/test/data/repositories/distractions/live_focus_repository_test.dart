@@ -39,6 +39,39 @@ Map<String, dynamic> session(DateTime time, {bool paused = false}) => {
   },
 };
 void main() {
+  test(
+    'settings commands use the latest acknowledged settings revision',
+    () async {
+      final seen = <int?>[];
+      var revision = 7;
+      final repo = LiveFocusRepository(
+        local: Local(),
+        owner: 'u',
+        deviceId: 'd',
+        preferences: null,
+        remote: (command) async {
+          if (command['action'] != 'read') {
+            seen.add(command['expectedSettingsRevision'] as int?);
+            revision++;
+          }
+          return {'session': null, 'settingsRevision': revision};
+        },
+      );
+      addTearDown(repo.dispose);
+      await repo.command('read');
+      await Future.wait([
+        repo.command('profileUpsert', {
+          'profile': {'id': 'work'},
+        }),
+        repo.command('assignmentUpsert', {
+          'assignment': {'id': 'github.com'},
+        }),
+      ]);
+      expect(seen, [7, 8]);
+      expect(repo.envelope['settingsRevision'], 9);
+    },
+  );
+
   for (final paused in [false, true]) {
     for (final profileId in <String?>['study', null]) {
       test(

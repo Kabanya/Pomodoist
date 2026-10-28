@@ -73,6 +73,7 @@ class LiveFocusRepository implements FocusRepository {
   }
 
   bool _refreshing = false;
+  int _settingsRevision = 0;
   DateTime? _lastConfirmedAt;
   Future<void> _tail = Future.value();
   String get _key => 'distractions.v1.$owner';
@@ -179,6 +180,7 @@ class LiveFocusRepository implements FocusRepository {
         pendingExitAction = data['pendingExitAction'];
         _localStrict = data['localStrict'] == true;
         localRevision = data['localRevision'] as int? ?? 0;
+        _settingsRevision = data['settingsRevision'] as int? ?? 0;
         localPreset = data['localPreset'] is Map
             ? Map<String, dynamic>.from(data['localPreset'])
             : null;
@@ -301,6 +303,7 @@ class LiveFocusRepository implements FocusRepository {
         'pendingAdoptionRunId': pendingAdoptionRunId,
         'localStrict': _localStrict,
         'localRevision': localRevision,
+        'settingsRevision': _settingsRevision,
         'localPreset': localPreset,
         'serverOffsetMilliseconds': _serverOffsetMilliseconds,
         'detached': detached,
@@ -323,6 +326,7 @@ class LiveFocusRepository implements FocusRepository {
           .inMilliseconds;
     }
     _lastConfirmedAt = now();
+    _settingsRevision = value['settingsRevision'] as int? ?? _settingsRevision;
     session = value['session'] == null
         ? null
         : Map<String, dynamic>.from(value['session']);
@@ -386,6 +390,8 @@ class LiveFocusRepository implements FocusRepository {
         'requestId': const Uuid().v4(),
         'deviceId': deviceId,
         'expectedRevision': session?['revision'] ?? 0,
+        if (action == 'profileUpsert' || action == 'assignmentUpsert')
+          'expectedSettingsRevision': _settingsRevision,
         'payload': payload,
       }).timeout(const Duration(seconds: 12));
       final previousSession = session;
@@ -715,6 +721,7 @@ class LiveFocusRepository implements FocusRepository {
               ).toUtc().toIso8601String(),
           },
     'serverNow': now().toUtc().toIso8601String(),
+    'settingsRevision': localMode ? localRevision : _settingsRevision,
     'profiles': profiles.map((p) => p.json).toList(),
     'assignments': assignments.map((p) => p.json).toList(),
     'devices': localMode ? devices : devices.map(_localDates).toList(),

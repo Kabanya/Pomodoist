@@ -78,6 +78,22 @@ function controllerFixture(rpc){
   p.reconcile=async()=>{};p.data.owner='owner';return p;
 }
 const envelope=(revision=1)=>({serverNow:new Date(now).toISOString(),settingsRevision:1,profiles:[{id:'work',blockedCategories:[],overrides:[]}],assignments:[],devices:[],session:{id:'r',revision,profileId:'work',run:{status:'active'},preset:{},interval:{status:'running',type:'work',plannedSeconds:1500,startedAt:new Date(now).toISOString(),pausedTotalSeconds:0},protectionExpiresAt:new Date(now+1500000).toISOString()}});
+test('settings commands send the acknowledged settings revision and retain it on retry', async()=>{
+  const commands=[];
+  const p=controllerFixture(async(name,args)=>{
+    commands.push(args.p_command);
+    if(commands.length===1)throw new Error('response lost');
+    return {...envelope(),settingsRevision:8};
+  });
+  p.data.envelope={...envelope(),settingsRevision:7};
+  const payload={profile:{id:'work'}};
+  await assert.rejects(p.command('profileUpsert',payload),/response lost/);
+  p.data.envelope.settingsRevision=99;
+  p.read=async()=>envelope();
+  await p.command('profileUpsert',payload);
+  assert.equal(commands[0].expectedSettingsRevision,7);
+  assert.deepEqual(commands[1],commands[0]);
+});
 test('paired desktop reads work when Chromium omits Origin on GET', async()=>{
   const server=createServer(async(req,res)=>{
     // Chromium's extension GET has no Origin and is rejected by the bridge.

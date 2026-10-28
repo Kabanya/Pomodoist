@@ -273,7 +273,7 @@ export class FocusProtection {
     if (!['start','startReady','changePreset','pause','resume','restart','complete','skip','requestStop','cancelStop','detach','registerDevice','profileUpsert','assignmentUpsert'].includes(action)) throw new Error('Invalid Focus command.');
     const previous=this.data.pendingCommand;
     const retry=previous && previous.source===this.data.source && previous.command.action===action && JSON.stringify(previous.command.payload)===JSON.stringify(payload);
-    const command=retry?previous.command:{action,requestId:crypto.randomUUID(),deviceId:this.store.data.deviceId,expectedRevision:this.data.envelope?.session?.revision??0,...(payload?{payload}:{})};
+    const command=retry?previous.command:{action,requestId:crypto.randomUUID(),deviceId:this.store.data.deviceId,expectedRevision:this.data.envelope?.session?.revision??0,...(['profileUpsert','assignmentUpsert'].includes(action)?{expectedSettingsRevision:this.data.envelope?.settingsRevision??0}:{}),...(payload?{payload}:{})};
     await this.save({pendingCommand:{source:this.data.source,command}});
     const observedAt=this.clock();
     const result=this.data.source==='desktop'?await this.bridgeRequest('/command',command):await this.client.rpc('pomodoist_focus',{p_command:command});
