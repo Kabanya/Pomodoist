@@ -2100,11 +2100,10 @@ generation and static/architecture analysis only.
 
 ## Blocking preset desk
 
-Blocking UI is temporarily disabled through `blockingAvailableProvider`: hide
-the sidebar destination and Settings link, and redirect `/blocking` to `/focus`.
-Keep the screen implementation, profiles, protection services, synchronization,
-and active-session controls intact. The following rules apply when the UI is
-enabled again.
+Blocking UI is available on native desktop through `blockingAvailableProvider`.
+Keep the sidebar destination and Settings link visible there; redirect
+unsupported platforms from `/blocking` to `/focus`. Protection services remain
+independent of the screen.
 
 The desktop-only `/blocking` destination follows Focus in the sidebar. Settings
 links to it rather than duplicating its controls. At a content width of 820 px or
@@ -2147,8 +2146,10 @@ the Lucide overlapping-window icon; Chrome uses the bundled
 Enabled requires confirmation that native protection is applied, or a fresh
 device confirmation of the current rules revision. Availability and extension connection remain
 secondary descriptions, separate from protection state. Pair status text with
-check/pause icons and theme success/neutral colors. Keep Shared/Local Focus and
-the expandable device, pairing and privacy details in the footer.
+check/pause icons and theme success/neutral colors. Keep app discovery and Chrome
+pairing visible below the protection rows, so first-time setup does not require
+expanding a section. Keep Shared/Local Focus and expandable device and privacy
+details in the footer.
 Keep Automatic categories with a Pro badge and the explanation
 that search assigns categories while manual choices take priority visible after
 devices and before the final action. Unverified subscription access is a pending

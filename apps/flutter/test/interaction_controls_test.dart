@@ -3053,8 +3053,7 @@ void main() {
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
     await _pumpFrames(tester);
 
-    final surface = find.byKey(const Key('mobile-bottom-navigation'));
-    expect(find.byKey(const Key('mini-focus-player-surface')), findsNothing);
+    final surface = find.byKey(const Key('mini-focus-player-surface'));
     final bottomNavigation = find.byKey(const Key('mobile-bottom-navigation'));
     final lastTaskRow = find
         .ancestor(of: lastTask, matching: find.byType(InkWell))

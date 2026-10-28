@@ -12,6 +12,10 @@ import {Processes, createControlServer, preserveDevelopmentApp} from './blocking
 import {build} from '../../apps/chrome-extension/build.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const flavor = process.env.BLOCKING_E2E_FLAVOR ?? 'development';
+assert.ok(['development', 'staging'].includes(flavor), 'BLOCKING_E2E_FLAVOR must be development or staging');
+const scheme = flavor === 'staging' ? 'Staging' : 'Development';
+const applicationName = flavor === 'staging' ? 'Pomodoist Stg.app' : 'Pomodoist Dev.app';
 const artifacts = path.join(root, 'build/blocking-e2e', new Date().toISOString().replaceAll(':', '-'));
 const fixtureApp = path.join(root, 'build/blocking-e2e/BlockingFixture.app');
 const binary = path.join(fixtureApp, 'Contents/MacOS/blocking-fixture');
@@ -173,14 +177,15 @@ async function main() {
   await new Promise(resolve => website.listen(0, '127.0.0.1', resolve));
   control = await createControlServer(token, action);
   const appDirectory = path.join(root, 'apps/flutter');
-  const products = path.join(appDirectory, 'build/macos/Build/Products/Debug-Development');
+  const products = path.join(appDirectory, `build/macos/Build/Products/Debug-${scheme}`);
   restoreDevelopmentApp = await preserveDevelopmentApp(
-    path.join(products, 'Pomodoist Dev.app'), path.join(temporary, 'PreviousDevelopment.app'));
-  step = 'build'; console.log('E2E: build isolated development application');
-  await run(flutterSdk, ['build', 'macos', '--debug', '--no-pub', '--flavor', 'Development', '--target', 'integration_test/blocking_test.dart',
+    path.join(products, applicationName), path.join(temporary, 'PreviousDevelopment.app'));
+  step = 'build'; console.log(`E2E: build isolated ${flavor} application`);
+  await run(flutterSdk, ['build', 'macos', '--debug', '--no-pub', '--flavor', scheme, '--target', 'integration_test/blocking_test.dart',
+    `--dart-define=BLOCKING_E2E_FLAVOR=${flavor}`,
     `--dart-define=BLOCKING_E2E_URL=${control.url}`, `--dart-define=BLOCKING_E2E_TOKEN=${token}`], 'build', {cwd: appDirectory});
   const apps = (await readdir(products)).filter(name => name.endsWith('.app'));
-  assert.equal(apps.length, 1, 'Expected one development app build');
+  assert.equal(apps.length, 1, `Expected one ${flavor} app build`);
   const testApp = path.join(temporary, 'Pomodoist Blocking E2E.app');
   await run('ditto', [await realpath(path.join(products, apps[0])), testApp], 'copy-app');
   const plist = path.join(testApp, 'Contents/Info.plist');
@@ -194,7 +199,7 @@ async function main() {
   await writeFile(entitlements, '<?xml version="1.0"?><plist version="1.0"><dict><key>com.apple.security.app-sandbox</key><true/><key>com.apple.security.network.client</key><true/><key>com.apple.security.network.server</key><true/><key>com.apple.security.cs.allow-jit</key><true/></dict></plist>');
   await run('codesign', ['--force', '--sign', '-', '--entitlements', entitlements, testApp], 'sign-test-app');
   const extension = path.join(temporary, 'extension');
-  await build({SUPABASE_URL: 'https://api.example.test', WEB_APP_URL: 'https://tasks.example.test', SUPABASE_ANON_KEY: 'sb_publishable_e2e', APP_ENV: 'development'}, extension);
+  await build({SUPABASE_URL: 'https://api.example.test', WEB_APP_URL: 'https://tasks.example.test', SUPABASE_ANON_KEY: 'sb_publishable_e2e', APP_ENV: flavor}, extension);
   const manifestPath = path.join(extension, 'manifest.json');
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   manifest.host_permissions.push('http://*/*', 'https://*/*');
@@ -231,7 +236,7 @@ async function main() {
     });
   });
   await ready;
-  flutter = logged(flutterSdk, ['drive', '--no-pub', '-d', 'macos', '--flavor', 'Development',
+  flutter = logged(flutterSdk, ['drive', '--no-pub', '-d', 'macos', '--flavor', scheme,
     '--driver=test_driver/integration_test.dart', '--target=integration_test/blocking_test.dart', `--use-application-binary=${testApp}`], 'flutter', {cwd: appDirectory});
   await writeFile(path.join(artifacts, 'processes.json'), JSON.stringify({flutter: flutter.pid, native: fixture.pid, temporary}, null, 2));
   const result = await flutter.done;

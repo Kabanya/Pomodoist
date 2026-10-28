@@ -3,7 +3,7 @@ import {spawn} from 'node:child_process';
 import {setTimeout as delay} from 'node:timers/promises';
 import {rename, rm} from 'node:fs/promises';
 
-// Flutter builds UI tests into the regular Dev.app output directory.
+// Flutter builds UI tests into the regular flavor's app output directory.
 export async function preserveDevelopmentApp(app, backup) {
   let existed = true;
   try { await rename(app, backup); } catch (error) {

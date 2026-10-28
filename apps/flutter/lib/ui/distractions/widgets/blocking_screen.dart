@@ -468,6 +468,33 @@ class BlockingScreen extends ConsumerWidget {
               '${l.distractionChrome} · ${chromeStatuses.any((s) => s.connected) ? l.distractionConnected : l.distractionDisconnected}',
           enabled: state.active && chromeStatuses.any((s) => s.applied),
         ),
+        SettingsRow(
+          title: l.distractionChrome,
+          subtitle: state.pairingCode == null
+              ? l.distractionPairDescription
+              : l.distractionPairCode(state.pairingCode!, state.bridgePort),
+          control: ShadButton.outline(
+            height: 48,
+            onPressed: busy ? null : () => unawaited(vm.save(commands.pair)),
+            child: Text(l.distractionPair),
+          ),
+        ),
+        SettingsRow(
+          title: l.distractionDiscovery,
+          subtitle: l.distractionDiscoveryPrivacy,
+          controlWidth: 48,
+          control: Semantics(
+            label: l.distractionDiscovery,
+            child: ShadSwitch(
+              value: state.discovery,
+              onChanged: busy
+                  ? null
+                  : (v) => unawaited(
+                      vm.save(() => commands.configure(discovery: v)),
+                    ),
+            ),
+          ),
+        ),
         ExpansionTile(
           tilePadding: EdgeInsets.zero,
           title: Wrap(
@@ -490,35 +517,6 @@ class BlockingScreen extends ConsumerWidget {
             ],
           ),
           children: [
-            SettingsRow(
-              title: l.distractionChrome,
-              subtitle: state.pairingCode == null
-                  ? l.distractionPairDescription
-                  : l.distractionPairCode(state.pairingCode!, state.bridgePort),
-              control: ShadButton.outline(
-                height: 48,
-                onPressed: busy
-                    ? null
-                    : () => unawaited(vm.save(commands.pair)),
-                child: Text(l.distractionPair),
-              ),
-            ),
-            SettingsRow(
-              title: l.distractionDiscovery,
-              subtitle: l.distractionDiscoveryPrivacy,
-              controlWidth: 48,
-              control: Semantics(
-                label: l.distractionDiscovery,
-                child: ShadSwitch(
-                  value: state.discovery,
-                  onChanged: busy
-                      ? null
-                      : (v) => unawaited(
-                          vm.save(() => commands.configure(discovery: v)),
-                        ),
-                ),
-              ),
-            ),
             SettingsRow(
               title: l.distractionAttempts,
               subtitle: l.distractionAttemptsPrivacy,

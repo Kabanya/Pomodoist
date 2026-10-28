@@ -104,7 +104,11 @@ void main() {
     }
     await _host('register', {'pid': pid});
     debugPrint('E2E UI: isolated Runner registered');
-    setAppFlavor(AppFlavor.development);
+    const testFlavor = String.fromEnvironment(
+      'BLOCKING_E2E_FLAVOR',
+      defaultValue: 'development',
+    );
+    setAppFlavor(AppFlavor.values.byName(testFlavor));
     SharedPreferences.setMockInitialValues({
       'onboarding.completed.v1': true,
       'launchOffer.shown.v1': true,
@@ -132,7 +136,7 @@ void main() {
           final coordinator = ProtectionCoordinator(
             focus: focus,
             native: DistractionNativeGateway(),
-            flavor: 'development',
+            flavor: testFlavor,
             preferences: prefs,
             bridgePort: 0,
             taskTitle: (_) async => null,
@@ -226,7 +230,6 @@ void main() {
     }
 
     await tap(find.text('Blocking').first);
-    await tap(find.widgetWithText(ExpansionTile, 'Devices and privacy'));
     final discovery = find.descendant(
       of: find.byWidgetPredicate(
         (widget) =>
@@ -305,21 +308,20 @@ void main() {
     final codeFinder = find.byWidgetPredicate(
       (widget) =>
           widget is Text &&
-          RegExp(r'^Code \d{6} · port \d+$').hasMatch(widget.data ?? ''),
+          RegExp(r'^Code \d+-\d{6} · port \d+$').hasMatch(widget.data ?? ''),
     );
     await until(
       () => codeFinder.evaluate().isNotEmpty,
       'pairing code displayed',
     );
     final match = RegExp(
-      r'^Code (\d{6}) · port (\d+)$',
+      r'^Code (\d+-\d{6}) · port (\d+)$',
     ).firstMatch(tester.widget<Text>(codeFinder).data!)!;
     await _host('before', {
       'code': match.group(1),
       'port': int.parse(match.group(2)!),
     });
 
-    await tap(find.widgetWithText(ExpansionTile, 'Devices and privacy'));
     await tap(button('Start focus'));
     await until(
       () => find.byKey(const Key('focus-details-menu')).evaluate().isNotEmpty,

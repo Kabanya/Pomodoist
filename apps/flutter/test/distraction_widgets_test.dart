@@ -202,16 +202,29 @@ Finder _button(String text) => find.widgetWithText(ShadButton, text);
 
 void main() {
   testWidgets(
-    'Blocking UI is disabled on desktop',
+    'Blocking UI is available on desktop',
+    (tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(container.read(blockingAvailableProvider), isTrue);
+    },
+    variant: TargetPlatformVariant({
+      TargetPlatform.macOS,
+      TargetPlatform.windows,
+      TargetPlatform.linux,
+    }),
+  );
+
+  testWidgets(
+    'Blocking UI is unavailable on mobile',
     (tester) async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
       expect(container.read(blockingAvailableProvider), isFalse);
     },
     variant: TargetPlatformVariant({
-      TargetPlatform.macOS,
-      TargetPlatform.windows,
-      TargetPlatform.linux,
+      TargetPlatform.android,
+      TargetPlatform.iOS,
     }),
   );
 
@@ -598,12 +611,29 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Blocking settings stay hidden while protection is available', (
-    tester,
-  ) async {
+  testWidgets('Blocking settings link is visible on desktop', (tester) async {
     final commands = _Commands(const DistractionSettingsState(available: true));
     await _mount(tester, commands, const Scaffold(body: DistractionSettings()));
-    expect(find.text('Blocking'), findsNothing);
+    expect(find.text('Blocking'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  }, variant: TargetPlatformVariant({TargetPlatform.macOS}));
+
+  testWidgets('Blocking setup does not require expanding privacy details', (
+    tester,
+  ) async {
+    final commands = _Commands(
+      DistractionSettingsState(
+        available: true,
+        profiles: [_work],
+        profileId: 'work',
+      ),
+    );
+    await _mount(tester, commands, _settings(), width: 1200);
+    await tester.ensureVisible(_button('Show pairing code'));
+    await tester.tap(_button('Show pairing code'));
+    await tester.pumpAndSettle();
+    expect(commands.calls, ['pair']);
+    expect(find.text('Discover used apps'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

@@ -179,6 +179,7 @@ From the repository root, run:
 
 ```sh
 node tool/macos/blocking-e2e.mjs
+BLOCKING_E2E_FLAVOR=staging node tool/macos/blocking-e2e.mjs
 ```
 
 Prerequisites: an unlocked macOS console session, Xcode command-line tools, Node
@@ -191,7 +192,9 @@ the pinned Flutter executable when `.fvm/flutter_sdk` is unavailable. Dependenci
 and browsers are never installed by the runner.
 
 `node tool/macos/blocking-e2e.mjs --preflight` checks prerequisites without
-starting the UI scenario. The development build is copied to a unique temporary
+starting the UI scenario. The runner accepts development (default) and staging,
+and builds the matching macOS scheme, runtime flavor and extension. Production
+is rejected. The selected build is copied to a unique temporary
 app bundle, assigned the test-only `com.finchforge.pomodoist.dev.e2e` identity and
 ad-hoc signed with only sandbox, loopback network and JIT entitlements. Existing
 Pomodoist instances are not reused or closed. The compiled helper at
@@ -209,7 +212,8 @@ behavior is outside this test. The browser uses a temporary profile and a test
 copy of the extension with host access granted at installation; permission
 prompts are outside this test too.
 
-Through the UI, the test enables discovery, creates a profile, classifies an
+Through the UI, the test uses the visible discovery and pairing controls,
+creates a profile, classifies an
 expendable native app and local test domains, adds an allow exception, pairs
 Chrome, and starts Focus. An external AppKit helper checks that the real shield
 owns keyboard focus and consumes typing/Cmd-W without modifying or closing its
@@ -233,7 +237,8 @@ SIGINT/SIGTERM. Native cleanup matches the unique temporary executable path,
 including Runner instances started outside Flutter's process group. The compiled
 helper is retained for stable macOS consent.
 
-Run it twice to check repeatability. Set `E2E_FAIL_AFTER=before` for an intentional
+Run both flavors to check environment coverage, and repeat development to check
+repeatability. Set `E2E_FAIL_AFTER=before` for an intentional
 failure before Focus, to exercise cleanup. Inspect the recorded process IDs and
 temporary path in `processes.json` to verify that they no longer exist. Runner
 protocol and process cleanup checks run without GUI access:

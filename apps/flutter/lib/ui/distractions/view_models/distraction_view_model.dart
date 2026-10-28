@@ -14,8 +14,9 @@ final distractionCommandsProvider = Provider<DistractionRepository?>(
   (ref) => ref.watch(distractionRepositoryProvider),
 );
 
-// Hide the Blocking UI while keeping protection services active.
-final blockingAvailableProvider = Provider<bool>((ref) => false);
+final blockingAvailableProvider = Provider<bool>(
+  (ref) => desktopDistractionsAvailable,
+);
 
 ({bool connected, bool applied}) distractionDeviceStatus(
   Map<String, dynamic> device, {
