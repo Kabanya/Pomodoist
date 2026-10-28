@@ -141,7 +141,7 @@ void main() {
       environment: 'production',
       release: '0123456789abcdef0123456789abcdef01234567',
       webAppUrl: 'https://app.pomodoist.com',
-      supabaseUrl: 'https://ewauihswbwduvklrozke.supabase.co',
+      supabaseUrl: 'https://supabase-test.pomodoist.com',
       supabaseAnonKey: 'production-anon-key',
       turnstileSiteKey: 'turnstile-public-key',
       sentryDsn: 'https://public@o12345.ingest.sentry.io/42',
@@ -166,7 +166,7 @@ void main() {
     expect(payload['environment'], 'production');
     expect(payload['release'], '0123456789abcdef0123456789abcdef01234567');
     expect(payload['webAppUrl'], 'https://app.pomodoist.com');
-    expect(payload['supabaseUrl'], 'https://ewauihswbwduvklrozke.supabase.co');
+    expect(payload['supabaseUrl'], 'https://supabase-test.pomodoist.com');
     expect(payload['supabaseAnonKey'], 'production-anon-key');
     expect(payload['anonKey'], 'production-anon-key');
     expect(payload['turnstileSiteKey'], 'turnstile-public-key');

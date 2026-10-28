@@ -153,7 +153,7 @@ RuntimePublicConfig _productionConfig() => RuntimePublicConfig.fromRuntimeJson({
   'environment': 'production',
   'release': _release,
   'webAppUrl': 'https://app.pomodoist.com',
-  'supabaseUrl': 'https://ewauihswbwduvklrozke.supabase.co',
+  'supabaseUrl': 'https://supabase-test.pomodoist.com',
   'supabaseAnonKey': 'production-anon-key',
   'turnstileSiteKey': 'turnstile-public-key',
   'sentryDsn': '',

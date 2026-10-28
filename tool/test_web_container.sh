@@ -314,7 +314,7 @@ run_remote \
   "$production_name" \
   production \
   https://app.pomodoist.com \
-  https://ewauihswbwduvklrozke.supabase.co \
+  https://supabase-test.pomodoist.com \
   0x4AAAAAAAabcdefghijklmnopqrstuv
 production_url=$(container_url "$production_name")
 wait_for_http "$production_url/healthz"

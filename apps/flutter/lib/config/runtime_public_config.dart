@@ -5,8 +5,8 @@ import 'backend_endpoints.dart';
 
 enum RuntimeEnvironment { local, selfhosted, staging, production }
 
-const _productionSupabasePublishableKey =
-    'sb_publishable_tH-xsHgay-S5L5NEt6u4Rg_BK9aM3rh';
+const _productionSupabaseAnonKey =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InBvbW9kb2lzdC1zZWxmaG9zdCIsImlhdCI6MTc4ODczOTYwMiwiZXhwIjoyMTA0MDk5NjAyfQ.liQqiqTn-JQp17UBdfIsBF3iS38VuYnM4it_FnYLw7M';
 
 class RuntimePublicConfig {
   const RuntimePublicConfig._({
@@ -112,7 +112,7 @@ class RuntimePublicConfig {
       webAppUrl: webAppUrl,
       supabaseUrl: useSupabaseFallback ? productionSupabaseUrl : supabaseUrl,
       supabaseAnonKey: useSupabaseFallback
-          ? _productionSupabasePublishableKey
+          ? _productionSupabaseAnonKey
           : supabaseAnonKey,
       turnstileSiteKey: turnstileSiteKey,
       sentryDsn: sentryDsn,

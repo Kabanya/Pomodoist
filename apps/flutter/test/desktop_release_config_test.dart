@@ -108,7 +108,7 @@ void main() {
     (
       name: 'non-production Supabase URL',
       config: _validConfig()
-        ..['SUPABASE_URL'] = 'https://supabase-test.pomodoist.com'
+        ..['SUPABASE_URL'] = 'https://unapproved.example.com'
         ..['SUPABASE_ANON_KEY'] = 'sb_publishable_public-test-value',
     ),
   ]) {
@@ -134,6 +134,8 @@ Map<String, Object?> _validConfig() => {
   'POMODOIST_REGISTRATION_URL': 'https://app.pomodoist.com/auth/challenge',
   'TURNSTILE_SITE_KEY': '0x4AAAAAAAabcdefghijklmnopqrstuv',
   'SENTRY_DSN': '',
+  'SUPABASE_URL': 'https://supabase-test.pomodoist.com',
+  'SUPABASE_ANON_KEY': 'public-anon-key',
 };
 
 ProcessResult _validateConfig(Map<String, Object?> config) {

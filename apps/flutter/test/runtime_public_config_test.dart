@@ -32,12 +32,12 @@ void main() {
       });
     });
 
-    test('accepts production with the approved Supabase Cloud host', () {
+    test('accepts production with the shared Pomodoist backend', () {
       final config = RuntimePublicConfig.fromRuntimeJson({
         ..._stagingConfig(),
         'environment': 'production',
         'webAppUrl': 'https://app.pomodoist.com',
-        'supabaseUrl': 'https://ewauihswbwduvklrozke.supabase.co',
+        'supabaseUrl': 'https://supabase-test.pomodoist.com',
       });
 
       expect(config.environment, RuntimeEnvironment.production);
@@ -45,13 +45,13 @@ void main() {
 
     test('hosted backend URLs must be approved origins', () {
       for (final url in [
-        'https://user@ewauihswbwduvklrozke.supabase.co',
-        'https://ewauihswbwduvklrozke.supabase.co:8443',
-        'https://ewauihswbwduvklrozke.supabase.co/other',
-        'https://ewauihswbwduvklrozke.supabase.co?route=other',
-        'https://ewauihswbwduvklrozke.supabase.co#other',
-        'https://ewauihswbwduvklrozke.supabase.co.example.test',
-        'https://supabase-test.pomodoist.com',
+        'https://user@supabase-test.pomodoist.com',
+        'https://supabase-test.pomodoist.com:8443',
+        'https://supabase-test.pomodoist.com/other',
+        'https://supabase-test.pomodoist.com?route=other',
+        'https://supabase-test.pomodoist.com#other',
+        'https://supabase-test.pomodoist.com.example.test',
+        'https://ewauihswbwduvklrozke.supabase.co',
       ]) {
         expect(
           () => RuntimePublicConfig.fromRuntimeJson({
@@ -314,8 +314,7 @@ void main() {
         () => RuntimePublicConfig.fromRuntimeJson({
           ..._stagingConfig(),
           'environment': 'production',
-          'webAppUrl': 'https://app.pomodoist.com',
-          'supabaseUrl': 'https://supabase-test.pomodoist.com',
+          'webAppUrl': 'https://app-test.pomodoist.com',
         }),
         throwsFormatException,
       );
@@ -351,9 +350,9 @@ void main() {
 
       expect(
         config.supabaseUrl,
-        Uri.parse('https://ewauihswbwduvklrozke.supabase.co'),
+        Uri.parse('https://supabase-test.pomodoist.com'),
       );
-      expect(config.supabaseAnonKey, startsWith('sb_publishable_'));
+      expect(config.supabaseAnonKey.split('.'), hasLength(3));
     });
 
     test('explicit local native release does not fall back to cloud', () {

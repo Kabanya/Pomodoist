@@ -53,7 +53,7 @@ case "$POMODOIST_ENVIRONMENT" in
     [ -n "${TURNSTILE_SITE_KEY:-}" ] || fail 'TURNSTILE_SITE_KEY is required'
     [ "$POMODOIST_WEB_URL" = 'https://app.pomodoist.com' ] ||
       fail 'production requires the approved web URL'
-    [ "$SUPABASE_URL" = 'https://ewauihswbwduvklrozke.supabase.co' ] ||
+    [ "$SUPABASE_URL" = 'https://supabase-test.pomodoist.com' ] ||
       fail 'production requires the approved Supabase URL'
     ;;
   selfhosted)

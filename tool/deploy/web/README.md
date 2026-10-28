@@ -1,5 +1,12 @@
 # Web image build contract
 
+Hosted staging and production use `https://supabase-test.pomodoist.com` and
+its public anon key. Their web domains and application identities remain
+separate, but account and task data are shared. Native release builds use the
+same backend when no explicit Supabase pair is supplied. The retired Supabase
+Cloud endpoint is rejected for production. This endpoint change does not copy
+accounts or data from the retired backend.
+
 The web image is built **once** and serves staging, production and self-hosted
 deployments. Everything that differs between them arrives as container
 environment variables at runtime; the image itself is identical for all three.

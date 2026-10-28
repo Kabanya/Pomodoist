@@ -25,7 +25,7 @@ void main() {
     (
       'production',
       'https://app.pomodoist.com',
-      'https://ewauihswbwduvklrozke.supabase.co',
+      'https://supabase-test.pomodoist.com',
       true,
     ),
   ]) {
