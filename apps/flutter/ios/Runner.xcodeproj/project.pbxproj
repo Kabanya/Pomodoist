@@ -50,6 +50,7 @@
 		DEC61960D65979C5233C4F7F /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8F4EFFB60B73926832DEC3EB /* Localizable.strings */; };
 		E67AE68273550003051FDECF /* PomodoistFocusWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000005 /* PomodoistFocusWidget.swift */; };
 		FED049A9B4AE5197C25E094A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C30000000000000000000013 /* PrivacyInfo.xcprivacy */; };
+		D80000000000000000000001 /* Pomo in Resources */ = {isa = PBXBuildFile; fileRef = D80000000000000000000002 /* Pomo */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -221,6 +222,7 @@
 		EF19D8120472F6CEBC5A3B97 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ../apple/Localization/ja.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
 		FAD8E79575C70FBEED6CB7A1 /* Pods-RunnerTests.debug-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug-staging.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug-staging.xcconfig"; sourceTree = "<group>"; };
 		FCC289EFC3EEA8630758A52B /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ../apple/Localization/ru.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
+		D80000000000000000000002 /* Pomo */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Pomo; path = ../apple/FocusWidget/Pomo; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -419,6 +421,7 @@
 		B20000000000000000000003 /* FocusWidget */ = {
 			isa = PBXGroup;
 			children = (
+				D80000000000000000000002 /* Pomo */,
 				B20000000000000000000002 /* PomodoistFocusShared.swift */,
 				B50000000000000000000002 /* SystemSpeechTranscriber.swift */,
 				B60000000000000000000002 /* StoreKitHost.swift */,
@@ -687,6 +690,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D80000000000000000000001 /* Pomo in Resources */,
 				6769A74B55C1AA4EADA7CE8D /* InfoPlist.strings in Resources */,
 				82B6177415505F785860A5D3 /* Localizable.strings in Resources */,
 				C30000000000000000000003 /* PrivacyInfo.xcprivacy in Resources */,

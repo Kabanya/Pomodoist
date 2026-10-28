@@ -90,7 +90,11 @@ class AppDelegate: FlutterAppDelegate {
         name: watchCompanionChannelName,
         binaryMessenger: flutterViewController.engine.binaryMessenger
       )
-      focusStatusItemController = FocusStatusItemController(channel: focusChannel)
+      let styleChannel = FlutterMethodChannel(
+        name: FocusStatusItemController.styleChannelName,
+        binaryMessenger: flutterViewController.engine.binaryMessenger
+      )
+      focusStatusItemController = FocusStatusItemController(channel: focusChannel, styleChannel: styleChannel)
       focusStatusItemController?.start()
     }
 

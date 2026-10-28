@@ -10,6 +10,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:shadcn_ui/shadcn_ui.dart'
     show
         LucideIcons,

@@ -473,5 +473,12 @@
   "taskFormatItalic": "Itálico (Markdown)",
   "taskFormatList": "Lista com marcadores",
   "taskFormatLink": "Link (Markdown)",
-  "settingsShortcutsTogglePomo": "Ativar / desativar Pomo"
+  "settingsShortcutsTogglePomo": "Ativar / desativar Pomo",
+  "settingsMenuBarTimerTitle": "Temporizador na barra de menus",
+  "settingsMenuBarTimerClassic": "Antigo",
+  "settingsMenuBarTimerModern": "Novo",
+  "settingsMenuBarTimerError": "Não foi possível atualizar o temporizador da barra de menus. Tente novamente.",
+  "quickAddEnterEstimate": "Inserir número",
+  "quickAddEstimateTotalTime": "{minutes} min de foco",
+  "quickAddEstimateInterval": "{minutes} min cada"
 }

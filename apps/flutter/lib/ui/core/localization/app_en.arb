@@ -2500,5 +2500,26 @@
   "taskFormatItalic": "Italic (Markdown)",
   "taskFormatList": "Bulleted list",
   "taskFormatLink": "Link (Markdown)",
-  "settingsShortcutsTogglePomo": "Enable / disable Pomo"
+  "settingsShortcutsTogglePomo": "Enable / disable Pomo",
+  "settingsMenuBarTimerTitle": "Menu bar timer",
+  "settingsMenuBarTimerClassic": "Old",
+  "settingsMenuBarTimerModern": "New",
+  "settingsMenuBarTimerError": "Could not update the menu bar timer. Please try again.",
+  "quickAddEnterEstimate": "Enter number",
+  "quickAddEstimateTotalTime": "{minutes} min focus",
+  "quickAddEstimateInterval": "{minutes} min each",
+  "@quickAddEstimateTotalTime": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "@quickAddEstimateInterval": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -1,5 +1,6 @@
 import SwiftUI
 import WidgetKit
+import ImageIO
 #if os(iOS)
 import UIKit
 import ActivityKit
@@ -114,6 +115,51 @@ private extension WidgetFamily {
 
 private var quietAccent: Color { Color(red: 0.85, green: 0.23, blue: 0.18) }
 
+private struct PomodoistWidgetPomo: View {
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @Environment(\.self) private var environment
+  let state: PomodoistWidgetPomoState
+  var centered = false
+
+  private var luminanceReduced: Bool {
+    if #available(iOS 16.0, macOS 13.0, watchOS 8.0, *) {
+      return environment.isLuminanceReduced
+    }
+    return false
+  }
+
+  private static let images: [PomodoistWidgetPomoState.Pose: CGImage] = Dictionary(
+    uniqueKeysWithValues: PomodoistWidgetPomoState.Pose.allCases.compactMap { pose in
+      guard let url = Bundle.main.url(forResource: "\(pose.rawValue)-still", withExtension: "webp", subdirectory: "Pomo"),
+        let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+        let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
+      return (pose, image)
+    })
+
+  var body: some View {
+    GeometryReader { geometry in
+      let side = max(0, min(128, geometry.size.width, geometry.size.height))
+      let still = reduceMotion || luminanceReduced
+      ZStack {
+        if side >= 32, let image = Self.images[state.pose] {
+          Image(decorative: image, scale: 1)
+            .resizable().scaledToFit().frame(width: side, height: side)
+            .id(state)
+            .transition(still ? .identity : .scale(scale: 0.92, anchor: .bottom)
+              .combined(with: .offset(y: 8)).combined(with: .opacity))
+        }
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: centered ? .bottom : .bottomTrailing)
+      .animation(still ? nil : .easeInOut(duration: 2), value: state)
+    }
+    .frame(minHeight: 0)
+    .layoutPriority(-1)
+    .clipped()
+    .accessibilityHidden(true)
+    .allowsHitTesting(false)
+  }
+}
+
 struct PomodoistFocusWidgetView: View {
   @Environment(\.widgetFamily) private var family
   let entry: PomodoistFocusEntry
@@ -202,7 +248,7 @@ struct PomodoistFocusWidgetView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
           }
           if family.quietIsLarge {
-            Spacer(minLength: 4)
+            PomodoistWidgetPomo(state: .init(focus: focus))
             Text(PomodoistFocusDisplay.nextIntervalLabel(focus: focus, locale: entry.snapshot.locale))
               .font(.subheadline).foregroundStyle(.secondary)
           }
@@ -232,8 +278,7 @@ struct PomodoistFocusWidget: Widget {
   }
 }
 
-enum PomodoistOverviewKind: String {
-  case tasks, habits, day, progress
+extension PomodoistOverviewKind {
   var title: String {
     switch self {
     case .tasks: return "Tasks"
@@ -371,7 +416,9 @@ struct PomodoistOverviewView: View {
       } else {
         Text(localized("No tasks")).font(.headline)
       }
-      if !compact { Spacer(minLength: 0) }
+      if family.quietIsLarge {
+        PomodoistWidgetPomo(state: .init(kind: .tasks, data: data))
+      } else if !compact { Spacer(minLength: 0) }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
   }
@@ -393,26 +440,31 @@ struct PomodoistOverviewView: View {
   }
 
   private func habits(_ data: PomodoistWidgetSnapshot) -> some View {
-    HStack(alignment: .top, spacing: 12) {
-      VStack(alignment: .leading, spacing: 3) {
-        Text("\(max(0, data.completedHabits)) / \(max(0, data.totalHabits))")
-          .font(.system(size: compact ? 25 : 34, weight: .bold)).monospacedDigit()
-          .minimumScaleFactor(0.6).lineLimit(1).foregroundStyle(quietAccent).quietAccentable()
-        if !compact { Text(localized("Habits")).font(.caption).foregroundStyle(.secondary) }
-      }
-      if !family.quietIsSmall {
-        VStack(alignment: .leading, spacing: compact ? 3 : 8) {
-          ForEach(Array(data.habits.prefix(compact ? 2 : family.quietIsLarge ? 6 : 3))) { habit in
-            HStack(spacing: 6) {
-              Image(systemName: habit.completed ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(habit.completed ? quietAccent : Color.secondary)
-              Text(habit.title).lineLimit(1)
-              Spacer(minLength: 0)
-              if !habit.completed { Text("\(max(0, habit.count))/\(max(1, habit.target))").monospacedDigit() }
-            }.font(compact ? .caption : .subheadline)
-          }
-          if data.totalHabits == 0 { Text(localized("No habits today")).font(.caption) }
+    VStack(alignment: .leading, spacing: 0) {
+      HStack(alignment: .top, spacing: 12) {
+        VStack(alignment: .leading, spacing: 3) {
+          Text("\(max(0, data.completedHabits)) / \(max(0, data.totalHabits))")
+            .font(.system(size: compact ? 25 : 34, weight: .bold)).monospacedDigit()
+            .minimumScaleFactor(0.6).lineLimit(1).foregroundStyle(quietAccent).quietAccentable()
+          if !compact { Text(localized("Habits")).font(.caption).foregroundStyle(.secondary) }
         }
+        if !family.quietIsSmall {
+          VStack(alignment: .leading, spacing: compact ? 3 : 8) {
+            ForEach(Array(data.habits.prefix(compact ? 2 : family.quietIsLarge ? 6 : 3))) { habit in
+              HStack(spacing: 6) {
+                Image(systemName: habit.completed ? "checkmark.circle.fill" : "circle")
+                  .foregroundStyle(habit.completed ? quietAccent : Color.secondary)
+                Text(habit.title).lineLimit(1)
+                Spacer(minLength: 0)
+                if !habit.completed { Text("\(max(0, habit.count))/\(max(1, habit.target))").monospacedDigit() }
+              }.font(compact ? .caption : .subheadline)
+            }
+            if data.totalHabits == 0 { Text(localized("No habits today")).font(.caption) }
+          }
+        }
+      }
+      if family.quietIsLarge {
+        PomodoistWidgetPomo(state: .init(kind: .habits, data: data), centered: true)
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -444,7 +496,9 @@ struct PomodoistOverviewView: View {
           }
         }
       }
-      if !compact { Spacer(minLength: 0) }
+      if family.quietIsLarge {
+        PomodoistWidgetPomo(state: .init(kind: .day, data: data))
+      } else if !compact { Spacer(minLength: 0) }
     }.frame(maxWidth: .infinity, alignment: .leading)
   }
 
@@ -460,6 +514,9 @@ struct PomodoistOverviewView: View {
       }
       Text(String(format: localized("%d tasks today"), max(0, data.completedTasks)))
         .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+      if family.quietIsLarge {
+        PomodoistWidgetPomo(state: .init(kind: .progress, data: data))
+      }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
   }

@@ -7,7 +7,6 @@ import 'package:pomodoist/ui/core/localization/formatters.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/planning/view_models/today_view_model.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
-import 'package:pomodoist/ui/core/widgets/mini_focus_player.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_list_item.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_list_view.dart';
@@ -51,7 +50,6 @@ class _TodayContext extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final viewState = ref.watch(todayContextViewModelProvider(query));
     final showSummary = viewState.showSummary;
-    final showFocus = viewState.showFocus;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -66,10 +64,6 @@ class _TodayContext extends ConsumerWidget {
               color: context.appColors.secondaryText,
             ),
           ),
-        if (showFocus) ...[
-          if (showSummary) const SizedBox(height: 12),
-          const MiniFocusPlayer(dailyContext: true),
-        ],
       ],
     );
   }

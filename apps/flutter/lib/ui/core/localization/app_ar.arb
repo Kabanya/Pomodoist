@@ -1605,5 +1605,12 @@
   "taskFormatItalic": "مائل (Markdown)",
   "taskFormatList": "قائمة نقطية",
   "taskFormatLink": "رابط (Markdown)",
-  "settingsShortcutsTogglePomo": "تفعيل / تعطيل Pomo"
+  "settingsShortcutsTogglePomo": "تفعيل / تعطيل Pomo",
+  "settingsMenuBarTimerTitle": "مؤقت شريط القوائم",
+  "settingsMenuBarTimerClassic": "القديم",
+  "settingsMenuBarTimerModern": "الجديد",
+  "settingsMenuBarTimerError": "تعذر تحديث مؤقت شريط القوائم. يرجى المحاولة مرة أخرى.",
+  "quickAddEnterEstimate": "إدخال عدد",
+  "quickAddEstimateTotalTime": "{minutes} دقيقة تركيز",
+  "quickAddEstimateInterval": "{minutes} دقيقة لكل جلسة"
 }

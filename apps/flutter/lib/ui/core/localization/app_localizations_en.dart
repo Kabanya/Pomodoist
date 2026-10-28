@@ -4985,4 +4985,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsShortcutsTogglePomo => 'Enable / disable Pomo';
+
+  @override
+  String get settingsMenuBarTimerTitle => 'Menu bar timer';
+
+  @override
+  String get settingsMenuBarTimerClassic => 'Old';
+
+  @override
+  String get settingsMenuBarTimerModern => 'New';
+
+  @override
+  String get settingsMenuBarTimerError =>
+      'Could not update the menu bar timer. Please try again.';
+
+  @override
+  String get quickAddEnterEstimate => 'Enter number';
+
+  @override
+  String quickAddEstimateTotalTime(String minutes) {
+    return '$minutes min focus';
+  }
+
+  @override
+  String quickAddEstimateInterval(String minutes) {
+    return '$minutes min each';
+  }
 }

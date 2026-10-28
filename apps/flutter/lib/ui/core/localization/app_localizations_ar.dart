@@ -4907,4 +4907,30 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsShortcutsTogglePomo => 'تفعيل / تعطيل Pomo';
+
+  @override
+  String get settingsMenuBarTimerTitle => 'مؤقت شريط القوائم';
+
+  @override
+  String get settingsMenuBarTimerClassic => 'القديم';
+
+  @override
+  String get settingsMenuBarTimerModern => 'الجديد';
+
+  @override
+  String get settingsMenuBarTimerError =>
+      'تعذر تحديث مؤقت شريط القوائم. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get quickAddEnterEstimate => 'إدخال عدد';
+
+  @override
+  String quickAddEstimateTotalTime(String minutes) {
+    return '$minutes دقيقة تركيز';
+  }
+
+  @override
+  String quickAddEstimateInterval(String minutes) {
+    return '$minutes دقيقة لكل جلسة';
+  }
 }

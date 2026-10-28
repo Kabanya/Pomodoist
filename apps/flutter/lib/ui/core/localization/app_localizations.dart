@@ -8588,6 +8588,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enable / disable Pomo'**
   String get settingsShortcutsTogglePomo;
+
+  /// No description provided for @settingsMenuBarTimerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu bar timer'**
+  String get settingsMenuBarTimerTitle;
+
+  /// No description provided for @settingsMenuBarTimerClassic.
+  ///
+  /// In en, this message translates to:
+  /// **'Old'**
+  String get settingsMenuBarTimerClassic;
+
+  /// No description provided for @settingsMenuBarTimerModern.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get settingsMenuBarTimerModern;
+
+  /// No description provided for @settingsMenuBarTimerError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update the menu bar timer. Please try again.'**
+  String get settingsMenuBarTimerError;
+
+  /// No description provided for @quickAddEnterEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter number'**
+  String get quickAddEnterEstimate;
+
+  /// No description provided for @quickAddEstimateTotalTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min focus'**
+  String quickAddEstimateTotalTime(String minutes);
+
+  /// No description provided for @quickAddEstimateInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min each'**
+  String quickAddEstimateInterval(String minutes);
 }
 
 class _AppLocalizationsDelegate

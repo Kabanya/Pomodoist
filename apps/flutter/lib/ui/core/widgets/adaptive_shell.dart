@@ -321,16 +321,11 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
         ref.watch(bottomNavigationProvider).value ??
         BottomNavigationPreferences();
     final navigationDraft = _navigationDraft;
-    final hasTodayFocusStrip =
-        widget.dataReady &&
-        widget.location == '/today' &&
-        ref.watch(shellTodayFocusStripVisibleProvider);
     final showMiniFocusPlayer =
         widget.dataReady &&
         !mapFullscreen &&
         !focusLocation &&
-        widget.location != '/kanban' &&
-        !hasTodayFocusStrip;
+        widget.location != '/kanban';
     final colors = context.appColors;
     final backgrounds = ref.watch(
       appThemeSettingsProvider.select(

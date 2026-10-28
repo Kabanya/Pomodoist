@@ -1,0 +1,89 @@
+{
+  "generator": "Built-in imagegen",
+  "date": "2026-10-28",
+  "boards": [
+    {
+      "key": "focus",
+      "title": "Focus",
+      "file": "focus.png",
+      "variants": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5"
+      ],
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1314669,
+      "sha256": "7e420c3d6df783be6f232b9ede3c41b0f7c83a56e2867192c1339a09305c6647"
+    },
+    {
+      "key": "tasks",
+      "title": "Tasks",
+      "file": "tasks.png",
+      "variants": [
+        "T1",
+        "T2",
+        "T3",
+        "T4",
+        "T5"
+      ],
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1245152,
+      "sha256": "6fd6883b9f69c0435870a0af786e82aac5fb0763dfaf8781c0e33242c7923daa"
+    },
+    {
+      "key": "habits",
+      "title": "Habits",
+      "file": "habits.png",
+      "variants": [
+        "H1",
+        "H2",
+        "H3",
+        "H4",
+        "H5"
+      ],
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1371839,
+      "sha256": "c5240faad32a3721552896d8612323a153d87eca8a5c4dfd6bf773b0499467af"
+    },
+    {
+      "key": "day",
+      "title": "Day plan",
+      "file": "day.png",
+      "variants": [
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D5"
+      ],
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1400316,
+      "sha256": "a4ae762e03e2941b166cfdb1fcd967ab341f2ff231dcdd688a43b3355ae55b4d"
+    },
+    {
+      "key": "progress",
+      "title": "Progress",
+      "file": "progress.png",
+      "variants": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5"
+      ],
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1504446,
+      "sha256": "83ceb42f5b69f63a5467b4b1d015b7cc4a044c7411cd383c14ffd05b29a320ec"
+    }
+  ],
+  "review": "All five final boards inspected for five labeled concepts, unobstructed primary text and Pomo identity. Progress chart corrected to seven columns. Generated UI details are illustrative, not pixel-exact native screenshots.",
+  "native_runtime": "Not tested",
+  "production_code": "Unchanged"
+}

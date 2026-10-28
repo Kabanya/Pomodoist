@@ -4,6 +4,28 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('shared Apple widgets compile for iOS 15', () async {
+    if (!Platform.isMacOS) return;
+    final sdk = await Process.run('xcrun', [
+      '--sdk',
+      'iphoneos',
+      '--show-sdk-path',
+    ]);
+    expect(sdk.exitCode, 0, reason: '${sdk.stderr}');
+    final compile = await Process.run('xcrun', [
+      'swiftc',
+      '-typecheck',
+      '-parse-as-library',
+      '-target',
+      'arm64-apple-ios15.0',
+      '-sdk',
+      (sdk.stdout as String).trim(),
+      'apple/FocusWidget/PomodoistFocusShared.swift',
+      'apple/FocusWidget/PomodoistFocusWidget.swift',
+    ]);
+    expect(compile.exitCode, 0, reason: '${compile.stderr}');
+  });
+
   test(
     'native widget snapshots retain legacy decoding and safe links',
     () async {
@@ -24,6 +46,49 @@ void main() {
       final run = await Process.run(binary, []);
       expect(run.exitCode, 0, reason: '${run.stderr}');
       expect(run.stdout, contains('Apple widget snapshot checks passed'));
+    },
+  );
+
+  test(
+    'iOS and macOS widget extensions bundle the existing Pomo poses',
+    () async {
+      if (!Platform.isMacOS) return;
+      for (final platform in ['ios', 'macos']) {
+        final result = await Process.run('plutil', [
+          '-convert',
+          'json',
+          '-o',
+          '-',
+          '$platform/Runner.xcodeproj/project.pbxproj',
+        ]);
+        expect(result.exitCode, 0, reason: '${result.stderr}');
+        final objects =
+            (jsonDecode(result.stdout as String)
+                    as Map<String, dynamic>)['objects']
+                as Map<String, dynamic>;
+        final widget = objects.values
+            .whereType<Map<String, dynamic>>()
+            .singleWhere(
+              (object) =>
+                  object['isa'] == 'PBXNativeTarget' &&
+                  object['name'] == 'PomodoistFocusWidgetExtension',
+            );
+        final resources = (widget['buildPhases'] as List)
+            .map((id) => objects[id] as Map<String, dynamic>)
+            .singleWhere((phase) => phase['isa'] == 'PBXResourcesBuildPhase');
+        final pomo = (resources['files'] as List)
+            .map(
+              (id) => objects[objects[id]['fileRef']] as Map<String, dynamic>,
+            )
+            .singleWhere((ref) => ref['name'] == 'Pomo');
+        expect(pomo['lastKnownFileType'], 'folder');
+        expect(pomo['sourceTree'], 'SOURCE_ROOT');
+        for (final pose in ['calm', 'focus', 'happy', 'rest']) {
+          final bundled = File('$platform/${pomo['path']}/$pose-still.webp');
+          final original = File('assets/pomo/$pose-still.webp');
+          expect(await bundled.readAsBytes(), await original.readAsBytes());
+        }
+      }
     },
   );
 

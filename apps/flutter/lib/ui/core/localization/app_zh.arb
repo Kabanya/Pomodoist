@@ -1605,5 +1605,12 @@
   "taskFormatItalic": "斜体 (Markdown)",
   "taskFormatList": "项目符号列表",
   "taskFormatLink": "链接 (Markdown)",
-  "settingsShortcutsTogglePomo": "启用 / 停用 Pomo"
+  "settingsShortcutsTogglePomo": "启用 / 停用 Pomo",
+  "settingsMenuBarTimerTitle": "菜单栏计时器",
+  "settingsMenuBarTimerClassic": "旧版",
+  "settingsMenuBarTimerModern": "新版",
+  "settingsMenuBarTimerError": "无法更新菜单栏计时器，请重试。",
+  "quickAddEnterEstimate": "输入数量",
+  "quickAddEstimateTotalTime": "专注 {minutes} 分钟",
+  "quickAddEstimateInterval": "每次 {minutes} 分钟"
 }

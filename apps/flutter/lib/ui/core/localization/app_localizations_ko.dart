@@ -4840,4 +4840,30 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsShortcutsTogglePomo => 'Pomo 켜기 / 끄기';
+
+  @override
+  String get settingsMenuBarTimerTitle => '메뉴 막대 타이머';
+
+  @override
+  String get settingsMenuBarTimerClassic => '이전';
+
+  @override
+  String get settingsMenuBarTimerModern => '새로운';
+
+  @override
+  String get settingsMenuBarTimerError =>
+      '메뉴 막대 타이머를 업데이트하지 못했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get quickAddEnterEstimate => '숫자 입력';
+
+  @override
+  String quickAddEstimateTotalTime(String minutes) {
+    return '집중 시간 $minutes분';
+  }
+
+  @override
+  String quickAddEstimateInterval(String minutes) {
+    return '회당 $minutes분';
+  }
 }

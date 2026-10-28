@@ -4828,4 +4828,29 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsShortcutsTogglePomo => 'Pomo を有効／無効にする';
+
+  @override
+  String get settingsMenuBarTimerTitle => 'メニューバーのタイマー';
+
+  @override
+  String get settingsMenuBarTimerClassic => '旧スタイル';
+
+  @override
+  String get settingsMenuBarTimerModern => '新スタイル';
+
+  @override
+  String get settingsMenuBarTimerError => 'メニューバーのタイマーを更新できませんでした。もう一度お試しください。';
+
+  @override
+  String get quickAddEnterEstimate => '数値を入力';
+
+  @override
+  String quickAddEstimateTotalTime(String minutes) {
+    return '集中時間 $minutes 分';
+  }
+
+  @override
+  String quickAddEstimateInterval(String minutes) {
+    return '1回 $minutes 分';
+  }
 }

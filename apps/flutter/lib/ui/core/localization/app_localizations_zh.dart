@@ -4731,4 +4731,29 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsShortcutsTogglePomo => '启用 / 停用 Pomo';
+
+  @override
+  String get settingsMenuBarTimerTitle => '菜单栏计时器';
+
+  @override
+  String get settingsMenuBarTimerClassic => '旧版';
+
+  @override
+  String get settingsMenuBarTimerModern => '新版';
+
+  @override
+  String get settingsMenuBarTimerError => '无法更新菜单栏计时器，请重试。';
+
+  @override
+  String get quickAddEnterEstimate => '输入数量';
+
+  @override
+  String quickAddEstimateTotalTime(String minutes) {
+    return '专注 $minutes 分钟';
+  }
+
+  @override
+  String quickAddEstimateInterval(String minutes) {
+    return '每次 $minutes 分钟';
+  }
 }

@@ -9,7 +9,7 @@ import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/widgets/action_feedback.dart';
 
-enum TaskSwipeAction { focus, schedule }
+enum TaskSwipeAction { focus, delete }
 
 /// Gesture state only: revealing an action can never execute it.
 class TaskSwipeState {
@@ -24,7 +24,7 @@ class TaskSwipeState {
       ? null
       : offset > 0
       ? TaskSwipeAction.focus
-      : TaskSwipeAction.schedule;
+      : TaskSwipeAction.delete;
 
   void begin(double currentOffset) {
     _origin = offset = currentOffset;
@@ -58,14 +58,14 @@ class TaskSwipeActions extends StatefulWidget {
   const TaskSwipeActions({
     required this.enabled,
     required this.onFocus,
-    required this.onSchedule,
+    required this.onDelete,
     required this.builder,
     super.key,
   });
 
   final bool enabled;
   final Future<void> Function() onFocus;
-  final Future<void> Function() onSchedule;
+  final Future<void> Function() onDelete;
   final Widget Function(ValueChanged<bool> onTaskDraggingChanged) builder;
 
   @override
@@ -138,7 +138,7 @@ class _TaskSwipeActionsState extends State<TaskSwipeActions>
     try {
       await (action == TaskSwipeAction.focus
           ? widget.onFocus
-          : widget.onSchedule)();
+          : widget.onDelete)();
     } catch (_) {
       if (mounted) {
         showActionFeedback(
@@ -167,10 +167,10 @@ class _TaskSwipeActionsState extends State<TaskSwipeActions>
             final offset = _slide.value.clamp(-extent, extent);
             final action = offset > 0
                 ? TaskSwipeAction.focus
-                : TaskSwipeAction.schedule;
+                : TaskSwipeAction.delete;
             final label = action == TaskSwipeAction.focus
                 ? context.l10n.navFocus
-                : context.l10n.taskSchedule;
+                : context.l10n.commonDelete;
             return PopScope(
               canPop: offset == 0,
               onPopInvokedWithResult: (didPop, _) {
@@ -201,7 +201,11 @@ class _TaskSwipeActionsState extends State<TaskSwipeActions>
                           setState(() => _swipe.end(extent));
                           _settle();
                         },
-                  onHorizontalDragCancel: !_enabled ? null : _close,
+                  onHorizontalDragCancel: !_enabled
+                      ? null
+                      : () {
+                          if (_swipe.dragging) _close();
+                        },
                   child: ClipRect(
                     child: Stack(
                       children: [
@@ -220,8 +224,18 @@ class _TaskSwipeActionsState extends State<TaskSwipeActions>
                                 minWidth: extent,
                                 maxWidth: extent,
                                 child: Material(
-                                  color: context.appColors.accentTint,
+                                  color: action == TaskSwipeAction.delete
+                                      ? context.appColors.error.withValues(
+                                          alpha: 0.12,
+                                        )
+                                      : context.appColors.accentTint,
                                   child: TextButton(
+                                    style: action == TaskSwipeAction.delete
+                                        ? TextButton.styleFrom(
+                                            foregroundColor:
+                                                context.appColors.error,
+                                          )
+                                        : null,
                                     onPressed:
                                         _enabled && _swipe.revealed == action
                                         ? () => _activate(action)

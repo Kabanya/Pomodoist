@@ -36,6 +36,42 @@ enum PomodoistTimerColor: String, CaseIterable {
   case purple
 }
 
+enum PomodoistOverviewKind: String {
+  case tasks, habits, day, progress
+}
+
+struct PomodoistWidgetPomoState: Hashable {
+  enum Pose: String, CaseIterable { case calm, focus, happy, rest }
+  let pose: Pose
+  private let event: String
+
+  init(focus: PomodoistFocusSnapshot) {
+    if !focus.isActive || focus.interval?.status == "paused" {
+      pose = .calm
+    } else {
+      pose = focus.interval?.type == "work" ? .focus : .rest
+    }
+    event = "\(focus.run?.id ?? "")/\(focus.interval?.id ?? "")/\(focus.interval?.status ?? "")"
+  }
+
+  init(kind: PomodoistOverviewKind, data: PomodoistWidgetSnapshot) {
+    switch kind {
+    case .tasks:
+      pose = data.tasks.isEmpty ? .happy : .focus
+      event = "\(data.day)/\(data.completedTasks)/\(data.tasks.first?.id ?? "")"
+    case .habits:
+      pose = data.totalHabits > 0 && data.completedHabits >= data.totalHabits ? .happy : .calm
+      event = "\(data.day)/\(data.completedHabits)/\(data.totalHabits)"
+    case .day:
+      pose = data.agenda.isEmpty ? .calm : .focus
+      event = "\(data.day)/\(data.agenda.first?.id ?? "")/\(data.agenda.first?.start ?? "")"
+    case .progress:
+      pose = data.completedTasks > 0 || data.focusSeconds > 0 ? .happy : .calm
+      event = "\(data.day)/\(data.completedTasks)/\(data.focusSeconds)"
+    }
+  }
+}
+
 enum PomodoistDateCoding {
   static func string(from date: Date) -> String {
     let formatter = ISO8601DateFormatter()

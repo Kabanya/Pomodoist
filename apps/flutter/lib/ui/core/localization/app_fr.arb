@@ -1605,5 +1605,12 @@
   "taskFormatItalic": "Italique (Markdown)",
   "taskFormatList": "Liste à puces",
   "taskFormatLink": "Lien (Markdown)",
-  "settingsShortcutsTogglePomo": "Activer / désactiver Pomo"
+  "settingsShortcutsTogglePomo": "Activer / désactiver Pomo",
+  "settingsMenuBarTimerTitle": "Minuteur dans la barre des menus",
+  "settingsMenuBarTimerClassic": "Ancien",
+  "settingsMenuBarTimerModern": "Nouveau",
+  "settingsMenuBarTimerError": "Impossible de mettre à jour le minuteur de la barre des menus. Réessayez.",
+  "quickAddEnterEstimate": "Saisir un nombre",
+  "quickAddEstimateTotalTime": "{minutes} min de concentration",
+  "quickAddEstimateInterval": "{minutes} min chacun"
 }

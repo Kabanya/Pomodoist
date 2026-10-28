@@ -5014,6 +5014,32 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsShortcutsTogglePomo => 'Ativar / desativar Pomo';
+
+  @override
+  String get settingsMenuBarTimerTitle => 'Temporizador na barra de menus';
+
+  @override
+  String get settingsMenuBarTimerClassic => 'Antigo';
+
+  @override
+  String get settingsMenuBarTimerModern => 'Novo';
+
+  @override
+  String get settingsMenuBarTimerError =>
+      'Não foi possível atualizar o temporizador da barra de menus. Tente novamente.';
+
+  @override
+  String get quickAddEnterEstimate => 'Inserir número';
+
+  @override
+  String quickAddEstimateTotalTime(String minutes) {
+    return '$minutes min de foco';
+  }
+
+  @override
+  String quickAddEstimateInterval(String minutes) {
+    return '$minutes min cada';
+  }
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -6401,4 +6427,30 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get settingsShortcutsTogglePomo => 'Ativar / desativar Pomo';
+
+  @override
+  String get settingsMenuBarTimerTitle => 'Temporizador na barra de menus';
+
+  @override
+  String get settingsMenuBarTimerClassic => 'Antigo';
+
+  @override
+  String get settingsMenuBarTimerModern => 'Novo';
+
+  @override
+  String get settingsMenuBarTimerError =>
+      'Não foi possível atualizar o temporizador da barra de menus. Tente novamente.';
+
+  @override
+  String get quickAddEnterEstimate => 'Inserir número';
+
+  @override
+  String quickAddEstimateTotalTime(String minutes) {
+    return '$minutes min de foco';
+  }
+
+  @override
+  String quickAddEstimateInterval(String minutes) {
+    return '$minutes min cada';
+  }
 }

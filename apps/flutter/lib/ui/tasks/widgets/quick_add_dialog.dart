@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/themes/theme_background.dart';
 import 'package:pomodoist/ui/core/widgets/app_date_time_picker.dart';
 import 'package:pomodoist/ui/core/widgets/resizable_dialog.dart';
@@ -35,6 +36,9 @@ class _SidebarQuickAddDialog extends StatefulWidget {
 class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
   bool _voiceActive = false;
   bool _commentExpanded = false;
+  bool _expanded = false;
+  double _compactHeight = 0;
+  final _panelKey = GlobalKey();
   bool _disposing = false;
   LocalHistoryEntry? _backEntry;
   final _focus = FocusScopeNode();
@@ -97,6 +101,16 @@ class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
     final composer = QuickAddComposer(
       key: _composerKey,
       compact: compact,
+      expanded: compact && _expanded,
+      onExpand: () {
+        if (_expanded) return;
+        final height = _panelKey.currentContext?.size?.height;
+        if (height == null) return;
+        setState(() {
+          _compactHeight = height;
+          _expanded = true;
+        });
+      },
       initialText: widget.initialText,
       defaultDate: widget.defaultDate,
       projectId: widget.projectId,
@@ -125,22 +139,49 @@ class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
                       padding: MediaQuery.viewInsetsOf(context),
                       child: SafeArea(
                         bottom: false,
-                        minimum: const EdgeInsets.only(top: 16),
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Material(
-                            color: Colors.transparent,
-                            clipBehavior: Clip.antiAlias,
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(12),
-                            ),
-                            child: ThemeBackground(
-                              zone: ThemeBackgroundZone.quickAdd,
-                              blurBehind: true,
-                              color: context.appColors.surface,
-                              child: SafeArea(top: false, child: composer),
-                            ),
-                          ),
+                        minimum: EdgeInsets.only(top: _expanded ? 0 : 16),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            return Align(
+                              alignment: Alignment.bottomCenter,
+                              child: TweenAnimationBuilder<double>(
+                                tween: Tween(begin: 0, end: _expanded ? 1 : 0),
+                                duration: AppMotion.duration(
+                                  context,
+                                  AppMotion.panel,
+                                ),
+                                curve: AppMotion.curve,
+                                builder: (context, progress, child) => SizedBox(
+                                  height: _expanded
+                                      ? _compactHeight +
+                                            (constraints.maxHeight -
+                                                    _compactHeight) *
+                                                progress
+                                      : null,
+                                  child: child,
+                                ),
+                                child: Material(
+                                  key: _panelKey,
+                                  color: Colors.transparent,
+                                  clipBehavior: Clip.antiAlias,
+                                  borderRadius: _expanded
+                                      ? BorderRadius.zero
+                                      : const BorderRadius.vertical(
+                                          top: Radius.circular(12),
+                                        ),
+                                  child: ThemeBackground(
+                                    zone: ThemeBackgroundZone.quickAdd,
+                                    blurBehind: true,
+                                    color: context.appColors.surface,
+                                    child: SafeArea(
+                                      top: false,
+                                      child: composer,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     )

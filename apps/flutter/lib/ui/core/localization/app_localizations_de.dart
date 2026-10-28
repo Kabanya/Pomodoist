@@ -5006,4 +5006,30 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsShortcutsTogglePomo => 'Pomo aktivieren / deaktivieren';
+
+  @override
+  String get settingsMenuBarTimerTitle => 'Timer in der Menüleiste';
+
+  @override
+  String get settingsMenuBarTimerClassic => 'Alt';
+
+  @override
+  String get settingsMenuBarTimerModern => 'Neu';
+
+  @override
+  String get settingsMenuBarTimerError =>
+      'Der Timer in der Menüleiste konnte nicht aktualisiert werden. Bitte erneut versuchen.';
+
+  @override
+  String get quickAddEnterEstimate => 'Zahl eingeben';
+
+  @override
+  String quickAddEstimateTotalTime(String minutes) {
+    return '$minutes Min. Fokus';
+  }
+
+  @override
+  String quickAddEstimateInterval(String minutes) {
+    return 'Je $minutes Minuten';
+  }
 }

@@ -2216,5 +2216,12 @@
   "taskFormatItalic": "기울임꼴 (Markdown)",
   "taskFormatList": "글머리 기호 목록",
   "taskFormatLink": "링크 (Markdown)",
-  "settingsShortcutsTogglePomo": "Pomo 켜기 / 끄기"
+  "settingsShortcutsTogglePomo": "Pomo 켜기 / 끄기",
+  "settingsMenuBarTimerTitle": "메뉴 막대 타이머",
+  "settingsMenuBarTimerClassic": "이전",
+  "settingsMenuBarTimerModern": "새로운",
+  "settingsMenuBarTimerError": "메뉴 막대 타이머를 업데이트하지 못했습니다. 다시 시도해 주세요.",
+  "quickAddEnterEstimate": "숫자 입력",
+  "quickAddEstimateTotalTime": "집중 시간 {minutes}분",
+  "quickAddEstimateInterval": "회당 {minutes}분"
 }

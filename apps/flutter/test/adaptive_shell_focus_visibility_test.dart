@@ -18,6 +18,9 @@ import 'package:pomodoist/ui/core/widgets/adaptive_shell.dart';
 import 'package:pomodoist/ui/onboarding/view_models/learning_tour_view_model.dart';
 import 'package:pomodoist/ui/core/widgets/task_details_host.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/domain/models/productivity/productivity_models.dart';
+import 'package:pomodoist/ui/planning/widgets/today_screen.dart';
+import 'package:pomodoist/ui/core/widgets/mini_focus_player.dart';
 import 'package:pomodoist/data/repositories/calendar/google_calendar_repository.dart';
 import 'package:pomodoist/domain/models/productivity/achievement_models.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
@@ -57,6 +60,35 @@ void main() {
     'compact': Size(600, 800),
     'wide': Size(1200, 900),
   }.entries) {
+    for (final status in ['ready', 'running', 'paused']) {
+      testWidgets(
+        'Today keeps only the bottom player when $status on ${layout.key}',
+        (tester) async {
+          await _pumpShell(
+            tester,
+            size: layout.value,
+            initialLocation: '/today',
+            intervalStatus: status,
+          );
+          expect(_miniPlayerSurface, findsOneWidget);
+          expect(
+            find.descendant(
+              of: find.byType(TodayScreen),
+              matching: find.byType(MiniFocusPlayer),
+            ),
+            findsNothing,
+          );
+          final context = tester.element(find.byType(TodayScreen));
+          expect(
+            find.text(
+              AppLocalizations.of(context).todayTaskSummary(0, 2, '0m'),
+            ),
+            findsOneWidget,
+          );
+        },
+      );
+    }
+
     testWidgets(
       'active mini player hides on Focus paths and returns on ${layout.key}',
       (tester) async {
@@ -240,6 +272,7 @@ Future<void> _pumpShell(
   WidgetTester tester, {
   required Size size,
   String initialLocation = '/inbox',
+  String intervalStatus = 'running',
   String? taskId,
   TaskRepository? taskRepository,
 }) async {
@@ -273,7 +306,22 @@ Future<void> _pumpShell(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        focusRepositoryProvider.overrideWithValue(_ActiveFocusRepository(now)),
+        focusRepositoryProvider.overrideWithValue(
+          _ActiveFocusRepository(now, intervalStatus: intervalStatus),
+        ),
+        productivitySummaryProvider.overrideWithValue(
+          AsyncData(
+            ProductivitySummary(
+              completedTasks: 0,
+              completedFocusIntervals: 0,
+              totalFocusSeconds: 0,
+              plannedFocusIntervals: 2,
+              openTasks: 0,
+              allTimeCompletedTasks: 0,
+              allTimeCompletedFocusIntervals: 0,
+            ),
+          ),
+        ),
         focusTickerProvider.overrideWith((ref) => Stream.value(now)),
         accountProfileProvider.overrideWith((ref) => null),
         tasksByQueryProvider.overrideWith(
@@ -338,42 +386,46 @@ class _AdaptiveShellRouteHarnessState
     return AdaptiveShell(
       location: _location,
       taskId: widget.taskId,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (onFocus)
-              IconButton(
-                tooltip: 'Pause',
-                onPressed: () {},
-                icon: const Icon(Icons.pause),
+      child: _location == '/today'
+          ? const TodayScreen()
+          : Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (onFocus)
+                    IconButton(
+                      tooltip: 'Pause',
+                      onPressed: () {},
+                      icon: const Icon(Icons.pause),
+                    ),
+                  TextButton(
+                    key: const Key('go-focus'),
+                    onPressed: () => setState(() => _location = '/focus'),
+                    child: const Text('Open Focus'),
+                  ),
+                  TextButton(
+                    key: const Key('go-nested-focus'),
+                    onPressed: () =>
+                        setState(() => _location = '/focus/session'),
+                    child: const Text('Open nested Focus'),
+                  ),
+                  TextButton(
+                    key: const Key('go-inbox'),
+                    onPressed: () => setState(() => _location = '/inbox'),
+                    child: const Text('Open Inbox'),
+                  ),
+                ],
               ),
-            TextButton(
-              key: const Key('go-focus'),
-              onPressed: () => setState(() => _location = '/focus'),
-              child: const Text('Open Focus'),
             ),
-            TextButton(
-              key: const Key('go-nested-focus'),
-              onPressed: () => setState(() => _location = '/focus/session'),
-              child: const Text('Open nested Focus'),
-            ),
-            TextButton(
-              key: const Key('go-inbox'),
-              onPressed: () => setState(() => _location = '/inbox'),
-              child: const Text('Open Inbox'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
 
 class _ActiveFocusRepository implements FocusRepository {
-  _ActiveFocusRepository(this.now);
+  _ActiveFocusRepository(this.now, {this.intervalStatus = 'running'});
 
   final DateTime now;
+  final String intervalStatus;
 
   @override
   Stream<FocusRunItem?> watchActiveRun() => Stream.value(
@@ -396,7 +448,7 @@ class _ActiveFocusRepository implements FocusRepository {
       id: 'interval',
       runId: 'run',
       type: 'work',
-      status: 'running',
+      status: intervalStatus,
       plannedSeconds: 25 * 60,
       startedAt: now,
       pausedTotalSeconds: 0,

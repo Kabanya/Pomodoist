@@ -2216,5 +2216,12 @@
   "taskFormatItalic": "斜体 (Markdown)",
   "taskFormatList": "箇条書き",
   "taskFormatLink": "リンク (Markdown)",
-  "settingsShortcutsTogglePomo": "Pomo を有効／無効にする"
+  "settingsShortcutsTogglePomo": "Pomo を有効／無効にする",
+  "settingsMenuBarTimerTitle": "メニューバーのタイマー",
+  "settingsMenuBarTimerClassic": "旧スタイル",
+  "settingsMenuBarTimerModern": "新スタイル",
+  "settingsMenuBarTimerError": "メニューバーのタイマーを更新できませんでした。もう一度お試しください。",
+  "quickAddEnterEstimate": "数値を入力",
+  "quickAddEstimateTotalTime": "集中時間 {minutes} 分",
+  "quickAddEstimateInterval": "1回 {minutes} 分"
 }

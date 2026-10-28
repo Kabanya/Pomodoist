@@ -377,20 +377,6 @@ final activeFocusIntervalProvider = StreamProvider<FocusIntervalItem?>((ref) {
   return ref.watch(focusRepositoryProvider).watchActiveInterval();
 });
 
-// Only replace the global player after both streams describe the same session.
-final todayFocusStripVisibleProvider = Provider<bool>((ref) {
-  final runId = ref.watch(
-    activeFocusRunProvider.select((value) => value.value?.id),
-  );
-  final intervalRunId = ref.watch(
-    activeFocusIntervalProvider.select((value) => value.value?.runId),
-  );
-  final hasRemaining = ref.watch(
-    activeFocusRemainingProvider.select((value) => value != null),
-  );
-  return runId != null && runId == intervalRunId && hasRemaining;
-});
-
 final focusIntervalsForRunProvider =
     StreamProvider.family<List<FocusIntervalItem>, String>((ref, runId) {
       return ref.watch(focusRepositoryProvider).watchIntervalsForRun(runId);

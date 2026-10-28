@@ -1605,5 +1605,12 @@
   "taskFormatItalic": "Курсив (Markdown)",
   "taskFormatList": "Маркированный список",
   "taskFormatLink": "Ссылка (Markdown)",
-  "settingsShortcutsTogglePomo": "Включить / выключить Pomo"
+  "settingsShortcutsTogglePomo": "Включить / выключить Pomo",
+  "settingsMenuBarTimerTitle": "Таймер в строке меню",
+  "settingsMenuBarTimerClassic": "Старый",
+  "settingsMenuBarTimerModern": "Новый",
+  "settingsMenuBarTimerError": "Не удалось обновить таймер в строке меню. Попробуйте ещё раз.",
+  "quickAddEnterEstimate": "Ввести число",
+  "quickAddEstimateTotalTime": "{minutes} мин фокуса",
+  "quickAddEstimateInterval": "По {minutes} минут"
 }

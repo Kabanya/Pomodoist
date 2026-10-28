@@ -222,126 +222,145 @@ class QuickAddDetails extends ConsumerWidget {
           );
         }
         if (value.text.trim().isEmpty) return const SizedBox.shrink();
+        final inlineEstimate =
+            !desktop && MediaQuery.sizeOf(context).width < 820;
+        final estimateControl = QuickAddFocusEstimateChip(
+          estimate: estimate,
+          manual: parsed.estimatedFocusIntervals != null,
+          workSeconds: viewState.focusPreset?.workSeconds,
+          enabled: canEdit,
+          touchTargets: touchTargets || inlineEstimate,
+          desktop: desktop,
+          iconsOnly: iconsOnly,
+          onChanged: (count) => edit({
+            QuickAddTokenKind.focusEstimate,
+          }, count == null ? null : '${count}p'),
+        );
         return Padding(
           padding: EdgeInsets.only(top: desktop ? 0 : 8),
-          child: Wrap(
-            spacing: touchTargets || desktop ? 8 : 4,
-            runSpacing: touchTargets || desktop ? 8 : 4,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: inlineEstimate
+                ? CrossAxisAlignment.stretch
+                : CrossAxisAlignment.start,
             children: [
-              AppDateTimePicker(
-                builder: (context, picker) => _DetailsMenu(
-                  touchTargets: touchTargets,
-                  desktop: desktop,
-                  iconsOnly: iconsOnly,
-                  focusNode: picker.focusNode,
-                  label: scheduleLabel,
-                  semanticLabel:
-                      '${context.l10n.taskSchedule}: ${timeLabel == null ? dateLabel : '$dateLabel · $timeLabel'}',
-                  icon: LucideIcons.calendar,
-                  color: colors.quickAddTokenColor(QuickAddTokenKind.date),
-                  enabled: canEdit,
-                  items: (close) => [
-                    _option(context.l10n.timelinePickDate, () {
-                      close();
-                      changeDate(picker);
-                    }),
-                    _option(context.l10n.quickAddChangeTime, () {
-                      close();
-                      changeTime(picker);
-                    }),
-                    _option(context.l10n.allDay, () {
-                      close();
-                      edit(
-                        quickAddSchedulingKinds,
-                        quickAddScheduleToken(
-                          TaskSchedule.allDay(
-                            currentSchedule()?.displayDate ?? viewModel.now(),
+              Wrap(
+                spacing: touchTargets || desktop ? 8 : 4,
+                runSpacing: touchTargets || desktop ? 8 : 4,
+                children: [
+                  AppDateTimePicker(
+                    builder: (context, picker) => _DetailsMenu(
+                      touchTargets: touchTargets,
+                      desktop: desktop,
+                      iconsOnly: iconsOnly,
+                      focusNode: picker.focusNode,
+                      label: scheduleLabel,
+                      semanticLabel:
+                          '${context.l10n.taskSchedule}: ${timeLabel == null ? dateLabel : '$dateLabel · $timeLabel'}',
+                      icon: LucideIcons.calendar,
+                      color: colors.quickAddTokenColor(QuickAddTokenKind.date),
+                      enabled: canEdit,
+                      items: (close) => [
+                        _option(context.l10n.timelinePickDate, () {
+                          close();
+                          changeDate(picker);
+                        }),
+                        _option(context.l10n.quickAddChangeTime, () {
+                          close();
+                          changeTime(picker);
+                        }),
+                        _option(context.l10n.allDay, () {
+                          close();
+                          edit(
+                            quickAddSchedulingKinds,
+                            quickAddScheduleToken(
+                              TaskSchedule.allDay(
+                                currentSchedule()?.displayDate ??
+                                    viewModel.now(),
+                              ),
+                            ),
+                          );
+                        }),
+                        _option(context.l10n.quickAddResetDetails, () {
+                          close();
+                          edit(quickAddSchedulingKinds, null);
+                        }),
+                      ],
+                    ),
+                  ),
+                  _DetailsMenu(
+                    touchTargets: touchTargets,
+                    desktop: desktop,
+                    iconsOnly: iconsOnly,
+                    label: projectName,
+                    semanticLabel:
+                        '${context.l10n.kanbanProjectField}: $projectName',
+                    icon: LucideIcons.hash,
+                    color: colors.quickAddTokenColor(QuickAddTokenKind.project),
+                    enabled: canEdit,
+                    items: (close) => [
+                      _option(context.l10n.quickAddResetDetails, () {
+                        close();
+                        edit({QuickAddTokenKind.project}, null);
+                      }),
+                      for (final project in projects)
+                        Tooltip(
+                          message: viewModel.projectToken(project.name) == null
+                              ? context.l10n.quickAddProjectNameUnsupported
+                              : project.displayName(context.l10n),
+                          child: _option(
+                            project.displayName(context.l10n),
+                            viewModel.projectToken(project.name) == null
+                                ? null
+                                : () {
+                                    close();
+                                    edit({
+                                      QuickAddTokenKind.project,
+                                    }, viewModel.projectToken(project.name));
+                                  },
                           ),
                         ),
-                      );
-                    }),
-                    _option(context.l10n.quickAddResetDetails, () {
-                      close();
-                      edit(quickAddSchedulingKinds, null);
-                    }),
-                  ],
-                ),
-              ),
-              _DetailsMenu(
-                touchTargets: touchTargets,
-                desktop: desktop,
-                iconsOnly: iconsOnly,
-                label: projectName,
-                semanticLabel:
-                    '${context.l10n.kanbanProjectField}: $projectName',
-                icon: LucideIcons.hash,
-                color: colors.quickAddTokenColor(QuickAddTokenKind.project),
-                enabled: canEdit,
-                items: (close) => [
-                  _option(context.l10n.quickAddResetDetails, () {
-                    close();
-                    edit({QuickAddTokenKind.project}, null);
-                  }),
-                  for (final project in projects)
-                    Tooltip(
-                      message: viewModel.projectToken(project.name) == null
-                          ? context.l10n.quickAddProjectNameUnsupported
-                          : project.displayName(context.l10n),
-                      child: _option(
-                        project.displayName(context.l10n),
-                        viewModel.projectToken(project.name) == null
-                            ? null
-                            : () {
-                                close();
-                                edit({
-                                  QuickAddTokenKind.project,
-                                }, viewModel.projectToken(project.name));
-                              },
-                      ),
+                    ],
+                  ),
+                  _DetailsMenu(
+                    touchTargets: touchTargets,
+                    desktop: desktop,
+                    iconsOnly: iconsOnly,
+                    label: touchTargets || desktop
+                        ? 'P${parsed.priority ?? priority ?? 4}'
+                        : context.l10n.priority(
+                            parsed.priority ?? priority ?? 4,
+                          ),
+                    semanticLabel: context.l10n.priority(
+                      parsed.priority ?? priority ?? 4,
                     ),
+                    icon: LucideIcons.flag,
+                    color: colors.quickAddTokenColor(
+                      QuickAddTokenKind.priority,
+                      priority: parsed.priority ?? priority ?? 4,
+                    ),
+                    enabled: canEdit,
+                    items: (close) => [
+                      for (var number = 1; number <= 4; number++)
+                        _option(context.l10n.priority(number), () {
+                          close();
+                          edit({QuickAddTokenKind.priority}, 'p$number');
+                        }),
+                      _option(context.l10n.quickAddResetDetails, () {
+                        close();
+                        edit({QuickAddTokenKind.priority}, null);
+                      }),
+                    ],
+                  ),
+                  if (!inlineEstimate) estimateControl,
+                  ?trailing,
                 ],
               ),
-              _DetailsMenu(
-                touchTargets: touchTargets,
-                desktop: desktop,
-                iconsOnly: iconsOnly,
-                label: touchTargets || desktop
-                    ? 'P${parsed.priority ?? priority ?? 4}'
-                    : context.l10n.priority(parsed.priority ?? priority ?? 4),
-                semanticLabel: context.l10n.priority(
-                  parsed.priority ?? priority ?? 4,
+              if (inlineEstimate)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: estimateControl,
                 ),
-                icon: LucideIcons.flag,
-                color: colors.quickAddTokenColor(
-                  QuickAddTokenKind.priority,
-                  priority: parsed.priority ?? priority ?? 4,
-                ),
-                enabled: canEdit,
-                items: (close) => [
-                  for (var number = 1; number <= 4; number++)
-                    _option(context.l10n.priority(number), () {
-                      close();
-                      edit({QuickAddTokenKind.priority}, 'p$number');
-                    }),
-                  _option(context.l10n.quickAddResetDetails, () {
-                    close();
-                    edit({QuickAddTokenKind.priority}, null);
-                  }),
-                ],
-              ),
-              QuickAddFocusEstimateChip(
-                estimate: estimate,
-                manual: parsed.estimatedFocusIntervals != null,
-                workSeconds: viewState.focusPreset?.workSeconds,
-                enabled: canEdit,
-                touchTargets: touchTargets,
-                desktop: desktop,
-                iconsOnly: iconsOnly,
-                onChanged: (count) => edit({
-                  QuickAddTokenKind.focusEstimate,
-                }, count == null ? null : '${count}p'),
-              ),
-              ?trailing,
             ],
           ),
         );

@@ -28,6 +28,7 @@ import 'package:pomodoist/ui/settings/widgets/app_info_card.dart';
 import 'package:pomodoist/ui/settings/widgets/csv_task_import_card.dart';
 import 'package:pomodoist/ui/settings/widgets/theme_settings_card.dart';
 import 'package:pomodoist/ui/settings/widgets/app_icon_settings.dart';
+import 'package:pomodoist/ui/settings/widgets/status_item_style_settings.dart';
 import 'package:pomodoist/ui/settings/widgets/bottom_navigation_settings.dart';
 import 'package:pomodoist/ui/settings/widgets/voice_transcription_settings_card.dart';
 import 'package:pomodoist/ui/settings/widgets/pomodoist_account_actions.dart';
@@ -354,16 +355,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ],
         );
       case SettingsSection.appearance:
-        return const Column(
+        return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ThemeSettingsCard(),
-            SizedBox(height: 24),
-            AppIconSettings(),
-            SizedBox(height: 24),
-            BottomNavigationSettings(),
-            SizedBox(height: 24),
-            TaskListStyleSettings(),
+            const ThemeSettingsCard(),
+            if (statusItemStyleSupported) ...[
+              const SizedBox(height: 24),
+              const StatusItemStyleSettings(),
+            ],
+            const SizedBox(height: 24),
+            const AppIconSettings(),
+            const SizedBox(height: 24),
+            const BottomNavigationSettings(),
+            const SizedBox(height: 24),
+            const TaskListStyleSettings(),
           ],
         );
       case SettingsSection.tasksFocus:

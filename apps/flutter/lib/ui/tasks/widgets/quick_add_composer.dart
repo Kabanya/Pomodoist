@@ -14,6 +14,8 @@ class QuickAddComposer extends ConsumerStatefulWidget {
     this.onVoiceSessionChanged,
     this.onPreferredWidthChanged,
     this.compact = false,
+    this.expanded = false,
+    this.onExpand,
     this.focusNode,
     super.key,
   });
@@ -30,6 +32,8 @@ class QuickAddComposer extends ConsumerStatefulWidget {
   final ValueChanged<bool>? onVoiceSessionChanged;
   final ValueChanged<double>? onPreferredWidthChanged;
   final bool compact;
+  final bool expanded;
+  final VoidCallback? onExpand;
   final FocusNode? focusNode;
 
   @override
@@ -48,6 +52,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
   final _ownedInputFocus = FocusNode();
   FocusNode get _inputFocus => widget.focusNode ?? _ownedInputFocus;
   bool _editorOpen = false;
+  Offset _headerDrag = Offset.zero;
   bool get _busy =>
       _editorOpen ||
       ref.read(quickAddViewModelProvider(_identity)).result.isLoading;
@@ -229,105 +234,76 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
         if (!_busy) ShortcutHint(context.l10n.commonAdd, 'Enter'),
       ],
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: widget.expanded ? MainAxisSize.max : MainAxisSize.min,
         children: [
           Flexible(
+            fit: widget.expanded ? FlexFit.tight : FlexFit.loose,
             child: CallbackShortcuts(
               bindings: {
                 const SingleActivator(LogicalKeyboardKey.escape): _cancel,
               },
               child: Focus(
                 child: widget.compact
-                    ? Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Flexible(
-                            child: SingleChildScrollView(
-                              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                    ? Semantics(
+                        scopesRoute: true,
+                        namesRoute: true,
+                        explicitChildNodes: true,
+                        label: l10n.addTask,
+                        child: Column(
+                          mainAxisSize: widget.expanded
+                              ? MainAxisSize.max
+                              : MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _compactHeader(),
+                            Flexible(
+                              fit: widget.expanded
+                                  ? FlexFit.tight
+                                  : FlexFit.loose,
+                              child: SingleChildScrollView(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  0,
+                                  20,
+                                  0,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    input,
+                                    details,
+                                    if (_commentExpanded) comment,
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Row(
                                 children: [
-                                  Center(
-                                    child: Container(
-                                      width: 36,
-                                      height: 4,
-                                      decoration: BoxDecoration(
-                                        color: context.appColors.border,
-                                        borderRadius: BorderRadius.circular(2),
+                                  Tooltip(
+                                    message: l10n.voiceQuickAdd,
+                                    child: ShadButton.secondary(
+                                      key: const Key('sidebar-quick-add-voice'),
+                                      width: 48,
+                                      height: 48,
+                                      padding: EdgeInsets.zero,
+                                      enabled: !_busy,
+                                      onPressed: _busy ? null : _openVoiceSheet,
+                                      child: Icon(
+                                        LucideIcons.mic,
+                                        semanticLabel: l10n.voiceQuickAdd,
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Semantics(
-                                          namesRoute: true,
-                                          header: true,
-                                          child: Text(
-                                            l10n.addTask,
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.titleMedium,
-                                          ),
-                                        ),
-                                      ),
-                                      IconButton(
-                                        tooltip: l10n.commonClose,
-                                        onPressed: _busy ? null : _cancel,
-                                        constraints:
-                                            const BoxConstraints.tightFor(
-                                              width: 48,
-                                              height: 48,
-                                            ),
-                                        icon: const Icon(LucideIcons.x),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        tooltip: l10n.taskExpandEditor,
-                                        onPressed: _busy ? null : _openEditor,
-                                        icon: const Icon(LucideIcons.listPlus),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(child: input),
-                                    ],
-                                  ),
-                                  details,
-                                  if (_commentExpanded) comment,
+                                  const SizedBox(width: 12),
+                                  Expanded(child: submit),
                                 ],
                               ),
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Row(
-                              children: [
-                                Tooltip(
-                                  message: l10n.voiceQuickAdd,
-                                  child: ShadButton.secondary(
-                                    key: const Key('sidebar-quick-add-voice'),
-                                    width: 48,
-                                    height: 48,
-                                    padding: EdgeInsets.zero,
-                                    enabled: !_busy,
-                                    onPressed: _busy ? null : _openVoiceSheet,
-                                    child: Icon(
-                                      LucideIcons.mic,
-                                      semanticLabel: l10n.voiceQuickAdd,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(child: submit),
-                              ],
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       )
                     : Semantics(
                         scopesRoute: true,
@@ -429,6 +405,85 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
       ),
     );
   }
+
+  void _expand() {
+    if (!_busy && !widget.expanded) widget.onExpand?.call();
+  }
+
+  Widget _compactHeader() => Listener(
+    key: const Key('quick-add-sheet-header'),
+    // Accepted pointer cancellations can also produce a recognizer drag end.
+    onPointerCancel: (_) => _headerDrag = Offset.zero,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      dragStartBehavior: DragStartBehavior.down,
+      excludeFromSemantics: true,
+      onPanStart: (_) => _headerDrag = Offset.zero,
+      onPanUpdate: (details) => _headerDrag += details.delta,
+      onPanCancel: () => _headerDrag = Offset.zero,
+      onPanEnd: (_) {
+        final delta = _headerDrag;
+        _headerDrag = Offset.zero;
+        if (delta.dy.abs() < 48 || delta.dy.abs() <= delta.dx.abs()) return;
+        if (delta.dy > 0) {
+          _cancel();
+        } else {
+          _expand();
+        }
+      },
+      child: SizedBox(
+        height: 48,
+        child: Stack(
+          children: [
+            Center(
+              child: Semantics(
+                key: const Key('quick-add-sheet-expand'),
+                button: true,
+                expanded: widget.expanded,
+                enabled: !_busy && !widget.expanded && widget.onExpand != null,
+                label: context.l10n.taskExpandEditor,
+                onTap: !_busy && !widget.expanded && widget.onExpand != null
+                    ? _expand
+                    : null,
+                child: InkWell(
+                  onTap: !_busy && !widget.expanded && widget.onExpand != null
+                      ? _expand
+                      : null,
+                  excludeFromSemantics: true,
+                  child: SizedBox.square(
+                    dimension: 48,
+                    child: Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: context.appColors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            PositionedDirectional(
+              end: 20,
+              top: 0,
+              child: IconButton(
+                tooltip: context.l10n.commonClose,
+                onPressed: _busy ? null : _cancel,
+                constraints: const BoxConstraints.tightFor(
+                  width: 48,
+                  height: 48,
+                ),
+                icon: const Icon(LucideIcons.x),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 
   void _toggleComment() {
     setState(() => _commentExpanded = !_commentExpanded);

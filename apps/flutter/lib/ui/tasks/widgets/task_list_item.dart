@@ -781,7 +781,7 @@ class TaskListItem extends ConsumerWidget {
         enabled:
             !task.isCompleted && !(selection?.active ?? false) && !accepting,
         onFocus: () => _startFocus(context, ref),
-        onSchedule: () => _scheduleTask(context, ref),
+        onDelete: () => deleteTaskWithRecurringPrompt(context, ref, task),
         builder: (_) => buildContent(),
       );
     }

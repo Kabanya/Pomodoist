@@ -4995,4 +4995,30 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsShortcutsTogglePomo => 'Включить / выключить Pomo';
+
+  @override
+  String get settingsMenuBarTimerTitle => 'Таймер в строке меню';
+
+  @override
+  String get settingsMenuBarTimerClassic => 'Старый';
+
+  @override
+  String get settingsMenuBarTimerModern => 'Новый';
+
+  @override
+  String get settingsMenuBarTimerError =>
+      'Не удалось обновить таймер в строке меню. Попробуйте ещё раз.';
+
+  @override
+  String get quickAddEnterEstimate => 'Ввести число';
+
+  @override
+  String quickAddEstimateTotalTime(String minutes) {
+    return '$minutes мин фокуса';
+  }
+
+  @override
+  String quickAddEstimateInterval(String minutes) {
+    return 'По $minutes минут';
+  }
 }

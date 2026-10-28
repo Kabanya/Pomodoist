@@ -1605,5 +1605,12 @@
   "taskFormatItalic": "Kursiv (Markdown)",
   "taskFormatList": "Aufzählung",
   "taskFormatLink": "Link (Markdown)",
-  "settingsShortcutsTogglePomo": "Pomo aktivieren / deaktivieren"
+  "settingsShortcutsTogglePomo": "Pomo aktivieren / deaktivieren",
+  "settingsMenuBarTimerTitle": "Timer in der Menüleiste",
+  "settingsMenuBarTimerClassic": "Alt",
+  "settingsMenuBarTimerModern": "Neu",
+  "settingsMenuBarTimerError": "Der Timer in der Menüleiste konnte nicht aktualisiert werden. Bitte erneut versuchen.",
+  "quickAddEnterEstimate": "Zahl eingeben",
+  "quickAddEstimateTotalTime": "{minutes} Min. Fokus",
+  "quickAddEstimateInterval": "Je {minutes} Minuten"
 }

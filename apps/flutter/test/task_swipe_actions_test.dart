@@ -1,7 +1,58 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
+import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_swipe_actions.dart';
 
 void main() {
+  testWidgets('revealed actions execute only when tapped', (tester) async {
+    for (final reduceMotion in [false, true]) {
+      for (final direction in [-1.0, 1.0]) {
+        var focusCount = 0;
+        var deleteCount = 0;
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: MediaQuery(
+              data: MediaQueryData(disableAnimations: reduceMotion),
+              child: Scaffold(
+                body: TaskSwipeActions(
+                  key: UniqueKey(),
+                  enabled: true,
+                  onFocus: () async => focusCount++,
+                  onDelete: () async => deleteCount++,
+                  builder: (_) => const SizedBox(
+                    height: 64,
+                    width: double.infinity,
+                    child: ColoredBox(color: Colors.white, child: Text('Task')),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.drag(find.text('Task'), Offset(100 * direction, 0));
+        await tester.pumpAndSettle();
+        expect(focusCount, 0);
+        expect(deleteCount, 0);
+
+        final l10n = tester.element(find.text('Task')).l10n;
+        await tester.tap(
+          find.text(direction > 0 ? l10n.navFocus : l10n.commonDelete),
+        );
+        await tester.pumpAndSettle();
+
+        expect(focusCount, direction > 0 ? 1 : 0);
+        expect(deleteCount, direction < 0 ? 1 : 0);
+        expect(find.byType(TextButton), findsNothing);
+      }
+    }
+  });
+
   test(
     '48px reveals a button; arbitrarily long swipes never execute actions',
     () {
@@ -21,7 +72,7 @@ void main() {
           expect(swipe.offset, 144 * direction);
           expect(
             swipe.revealed,
-            direction > 0 ? TaskSwipeAction.focus : TaskSwipeAction.schedule,
+            direction > 0 ? TaskSwipeAction.focus : TaskSwipeAction.delete,
           );
         }
       }

@@ -1,4 +1,5 @@
 import Foundation
+import ImageIO
 
 @main
 struct AppleWidgetSnapshotCheck {
@@ -43,6 +44,45 @@ struct AppleWidgetSnapshotCheck {
     precondition(!String(decoding: stored, as: UTF8.self).contains("test-token"))
     defaults.removeObject(forKey: pomodoistFocusSnapshotDefaultsKey)
     precondition(store.load() == snapshot)
+    var focus = PomodoistFocusSnapshot.empty
+    precondition(PomodoistWidgetPomoState(focus: focus).pose == .calm)
+    focus.active = true
+    focus.run = PomodoistFocusRun(id: "run", status: "active", taskId: nil,
+      projectId: nil, startedAt: "2026-05-01T00:00:00Z", completedWorkIntervals: 0, targetWorkIntervals: 4)
+    focus.interval = PomodoistFocusInterval(id: "interval", type: "work", status: "running",
+      plannedSeconds: 1500, startedAt: "2026-05-01T00:00:00Z", pausedAt: nil,
+      pausedTotalSeconds: 0, sequenceNumber: 1)
+    let working = PomodoistWidgetPomoState(focus: focus)
+    precondition(working.pose == .focus)
+    focus.interval!.status = "paused"
+    precondition(PomodoistWidgetPomoState(focus: focus).pose == .calm)
+    precondition(PomodoistWidgetPomoState(focus: focus) != working)
+    focus.interval!.status = "running"
+    focus.interval!.type = "short_break"
+    precondition(PomodoistWidgetPomoState(focus: focus).pose == .rest)
+    var overview = snapshot.widgets!
+    let tasks = PomodoistWidgetPomoState(kind: .tasks, data: overview)
+    overview.focusTaskTitle = "Edited title"
+    overview.week[0].focusSeconds += 60
+    precondition(PomodoistWidgetPomoState(kind: .tasks, data: overview) == tasks)
+    overview.completedTasks += 1
+    precondition(PomodoistWidgetPomoState(kind: .tasks, data: overview) != tasks)
+    overview.tasks = []
+    precondition(PomodoistWidgetPomoState(kind: .tasks, data: overview).pose == .happy)
+    precondition(PomodoistWidgetPomoState(kind: .habits, data: overview).pose == .calm)
+    overview.totalHabits = 2
+    overview.completedHabits = 2
+    precondition(PomodoistWidgetPomoState(kind: .habits, data: overview).pose == .happy)
+    precondition(PomodoistWidgetPomoState(kind: .day, data: overview).pose == .calm)
+    overview.agenda = snapshot.widgets!.tasks
+    precondition(PomodoistWidgetPomoState(kind: .day, data: overview).pose == .focus)
+    precondition(PomodoistWidgetPomoState(kind: .progress, data: overview).pose == .happy)
+    for pose in PomodoistWidgetPomoState.Pose.allCases {
+      let url = URL(fileURLWithPath: "apple/FocusWidget/Pomo/\(pose.rawValue)-still.webp")
+      let source = CGImageSourceCreateWithURL(url as CFURL, nil)!
+      let image = CGImageSourceCreateImageAtIndex(source, 0, nil)!
+      precondition(image.width == 384 && image.height == 384)
+    }
     print("Apple widget snapshot checks passed")
   }
 }
