@@ -670,5 +670,8 @@
   },
   "protection_222": {
     "message": "AI 요청 {used}/{limit} 사용 · {date}에 초기화"
+  },
+  "website_protection_unavailable": {
+    "message": "웹사이트 보호를 사용할 수 없습니다. chrome://extensions에서 Pomodoist를 업데이트하거나 새로고침하세요."
   }
 }

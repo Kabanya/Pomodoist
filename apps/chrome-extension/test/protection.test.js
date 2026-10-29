@@ -267,6 +267,15 @@ test('coverage acknowledgement follows successful DNR and guard application with
   await f.p.reconcile();f.advance(14999);await f.p.reconcile();assert.equal(f.reports.length,1);
   f.advance(1);await f.p.reconcile();assert.equal(f.reports.length,2);
 });
+test('missing website protection API cannot advertise website capability or applied protection',async()=>{
+  const f=coverageFixture();await f.p.reconcile();
+  delete f.p.chrome.declarativeNetRequest;
+  await assert.rejects(f.p.reconcile(),/reload.*chrome:\/\/extensions/i);
+  assert.equal((await f.p.coverage()).active,false);
+  assert.equal(f.reports.at(-1).payload.capabilities.websiteBlocking,false);
+  assert.equal(f.reports.at(-1).payload.capabilities.websiteApplied,false);
+  assert.equal(f.reports.at(-1).payload.appliedRevision,null);
+});
 test('coverage changes report immediately and cannot claim applied protection without permission or after expiry/detach',async()=>{
   const f=coverageFixture();await f.p.reconcile();f.p.data.envelope.session.revision=8;f.p.data.snapshot.revision=8;await f.p.reconcile();assert.equal(f.reports.at(-1).payload.appliedRevision,8);
   f.permission(false);await f.p.reconcile();assert.equal(f.reports.at(-1).payload.capabilities.websiteBlocking,false);assert.equal(f.reports.at(-1).payload.appliedRevision,null);

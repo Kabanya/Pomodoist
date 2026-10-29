@@ -91,8 +91,11 @@ export class FocusProtection {
   async init() {
     const saved=(await this.chrome.storage.local.get(KEY))[KEY];
     if (saved?.instance===this.config.apiUrl && (saved.flavor??'production')===(this.config.flavor??'production')) this.data={...this.data,...saved};
-    if (this.data.owner && this.store.data.owner && this.data.owner!==this.store.data.owner) await this.clear();
-    await this.reconcile();
+    // Protection setup failures must not disable unrelated task commands.
+    try {
+      if (this.data.owner && this.store.data.owner && this.data.owner!==this.store.data.owner) await this.clear();
+      await this.reconcile();
+    } catch(error) { this.coverageError=error.message; }
     await this.chrome.alarms.create('focus-refresh',{periodInMinutes:0.5});
   }
   isPro(){
@@ -323,7 +326,8 @@ export class FocusProtection {
     this.reconcileTail=run;return run;
   }
   async applyRules() {
-    const permitted=await this.chrome.permissions.contains({origins:ORIGINS});
+    const dnr=this.chrome.declarativeNetRequest;
+    const permitted=!!dnr && await this.chrome.permissions.contains({origins:ORIGINS});
     const detached=this.data.envelope?.devices?.find(d=>d.deviceId===this.store.data.deviceId)?.detached;
     const s=this.data.enabled && permitted && !detached?this.data.snapshot:null;
     const rules=rulesFor(s,this.clock());
@@ -332,8 +336,9 @@ export class FocusProtection {
     if(this.appliedSignature===signature){await this.reportCoverage(permitted,this.rulesApplied===true);return;}
     this.rulesApplied=false;
     try {
-    const current=await this.chrome.declarativeNetRequest.getDynamicRules();
-    await this.chrome.declarativeNetRequest.updateDynamicRules({removeRuleIds:current.map(r=>r.id),addRules:rules});
+    if(!dnr)throw new Error('Website protection is unavailable. Update or reload Pomodoist in chrome://extensions.');
+    const current=await dnr.getDynamicRules();
+    await dnr.updateDynamicRules({removeRuleIds:current.map(r=>r.id),addRules:rules});
     if(active(s,this.clock())) await this.chrome.alarms.create('focus-expiry',{when:Date.parse(s.expiresAt)});
     else await this.chrome.alarms.clear('focus-expiry');
     await this.chrome.scripting.unregisterContentScripts({ids:['pomodoist-guard']}).catch(()=>{});

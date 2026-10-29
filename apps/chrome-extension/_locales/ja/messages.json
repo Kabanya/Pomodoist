@@ -670,5 +670,8 @@
   },
   "protection_222": {
     "message": "AI使用量 {used}/{limit} · {date}にリセット"
+  },
+  "website_protection_unavailable": {
+    "message": "ウェブサイト保護を利用できません。chrome://extensions で Pomodoist を更新または再読み込みしてください。"
   }
 }

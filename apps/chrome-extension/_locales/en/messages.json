@@ -670,5 +670,8 @@
   },
   "protection_222": {
     "message": "{used} of {limit} AI requests used · resets {date}"
+  },
+  "website_protection_unavailable": {
+    "message": "Website protection is unavailable. Update or reload Pomodoist in chrome://extensions."
   }
 }

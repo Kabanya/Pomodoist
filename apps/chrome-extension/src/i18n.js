@@ -1,4 +1,5 @@
 const keys = {
+  "Website protection is unavailable. Update or reload Pomodoist in chrome://extensions.": "website_protection_unavailable",
   "Open app ↗": "open_app",
   "Your tasks, one click away.": "your_tasks_one_click_away",
   "Sign in with your existing Pomodoist account.": "sign_in_with_your_existing_pomodoist_account",
