@@ -17,7 +17,7 @@ select ok(not exists (
     and p.proname not in ('ensure_profile','get_account_overview','get_apple_app_account_token',
       'get_usage_period','consume_quota','push_changes','pull_changes','pomodoist_files',
       'pomodoist_collaboration','pomodoist_session_is_active','pomodoist_focus',
-      'pomodoist_resource_classification')
+      'pomodoist_resource_classification','pomodoist_app_settings_device')
 ), 'authenticated private execution matches the explicit RPC allowlist');
 select is(count(*), 2::bigint, 'Focus and resource classification expose authenticated invoker wrappers only')
 from pg_proc p join pg_namespace n on n.oid=p.pronamespace

@@ -50,7 +50,7 @@ begin
  update private.pomodoist_app_settings_requests set claim_deadline=clock_timestamp()-interval '1 second' where status='pending';
  assert pg_temp.agent('{"action":"status","request_id":"cccccccc-cccc-4ccc-8ccc-cccccccccccc"}')->>'status'='expired';
  begin perform pg_temp.agent(command||'{"request_id":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","operation":"appearance","setting":"billing","value":"anything","expected_version":"v1"}'); raise exception 'Expected invalid setting'; exception when invalid_parameter_value then null; end;
- begin perform pg_temp.agent(command||'{"request_id":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","operation":"appearance","setting":"customTheme","value":{"imagePath":"/Users/private/photo.png"},"expected_version":"v1"}'); raise exception 'Expected invalid private path'; exception when invalid_parameter_value then null; end;
+ begin perform pg_temp.agent(command||'{"request_id":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","operation":"appearance","setting":"customTheme","value":{"imagePath":"/private/photo.png"},"expected_version":"v1"}'); raise exception 'Expected invalid private path'; exception when invalid_parameter_value then null; end;
  -- A live heartbeat cannot keep abandoned claimed execution pending forever.
  perform pg_temp.agent(command||'{"request_id":"abababab-abab-4bab-8bab-abababababab"}');
  perform pg_temp.device('{"action":"claim","instanceId":"88888888-8888-4888-8888-888888888888"}');
