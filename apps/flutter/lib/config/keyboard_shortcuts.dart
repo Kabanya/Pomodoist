@@ -358,6 +358,11 @@ class KeyboardShortcutsController
 
   Future<void> load() => _loadFuture ??= _load();
 
+  Future<void> reload() async {
+    await load();
+    await _load();
+  }
+
   Future<AppShortcutCommand?> setBinding(
     AppShortcutCommand command,
     AppShortcutBinding binding,
@@ -384,7 +389,10 @@ class KeyboardShortcutsController
     final defaults = defaultAppShortcutBindings(_platform);
     final raw = (await ref.read(keyboardShortcutsRepositoryProvider).read())
         .getOrThrow();
-    if (raw == null) return;
+    if (raw == null) {
+      if (ref.mounted) state = Map.unmodifiable(defaults);
+      return;
+    }
 
     Object? decoded;
     try {

@@ -39,7 +39,7 @@ abstract interface class FocusPreferencesRepository {
 
   Stream<FocusPreferencesState> watch();
 
-  Future<Result<void>> load();
+  Future<Result<void>> load({bool reload = false});
 
   Future<Result<void>> setViewMode(FocusViewMode value);
 

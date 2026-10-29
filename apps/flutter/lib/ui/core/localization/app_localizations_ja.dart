@@ -316,7 +316,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oauthConsentManagePlanning =>
-      'タスク、習慣、プロジェクト、ユーザーラベル、カンバンの読み取りと管理。';
+      'タスク、習慣、プロジェクト、ユーザーラベル、カンバンの読み取りと管理。 オンラインの選択したデバイスでショートカットと外観を確認・変更する。';
 
   @override
   String get oauthConsentReadInsights => '完了した集中履歴、生産性レポート、実績の読み取り。';

@@ -95,7 +95,7 @@
   "oauthConsentClientRequest": "{clientName} запрашивает доступ к Pomodoist",
   "oauthConsentRedirectOrigin": "Адрес возврата",
   "oauthConsentCapabilitiesTitle": "Этот агент сможет",
-  "oauthConsentManagePlanning": "Читать и изменять задачи, привычки, проекты, пользовательские метки и канбан.",
+  "oauthConsentManagePlanning": "Читать и изменять задачи, привычки, проекты, пользовательские метки и канбан. Читать и менять горячие клавиши и оформление на выбранном устройстве в сети.",
   "oauthConsentReadInsights": "Читать историю завершённого фокуса, отчёты продуктивности и достижения.",
   "oauthConsentUnavailableTitle": "Этот агент не сможет",
   "oauthConsentUnavailable": "Получать доступ к аккаунту и оплате, Google Calendar или активному таймеру фокуса.",

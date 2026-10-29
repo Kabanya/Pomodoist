@@ -28,7 +28,16 @@ class StoredFocusPreferencesRepository implements FocusPreferencesRepository {
   }
 
   @override
-  Future<Result<void>> load() => _ready ??= Result.capture(() async {
+  Future<Result<void>> load({bool reload = false}) {
+    if (reload) {
+      _changed.clear();
+      _generation++;
+      _ready = null;
+    }
+    return _ready ??= _load();
+  }
+
+  Future<Result<void>> _load() => Result.capture(() async {
     final generation = _generation;
     final values = (await _preferences.read(const [
       focusViewModePreferenceKey,

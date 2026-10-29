@@ -14,9 +14,8 @@ final distractionCommandsProvider = Provider<DistractionRepository?>(
   (ref) => ref.watch(distractionRepositoryProvider),
 );
 
-final blockingAvailableProvider = Provider<bool>(
-  (ref) => desktopDistractionsAvailable,
-);
+// Hide release UI without disabling protection services or deleting saved profiles.
+final blockingAvailableProvider = Provider<bool>((ref) => false);
 
 ({bool connected, bool applied}) distractionDeviceStatus(
   Map<String, dynamic> device, {

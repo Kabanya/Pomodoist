@@ -94,7 +94,7 @@
   "oauthConsentClientRequest": "{clientName} souhaite accéder à Pomodoist",
   "oauthConsentRedirectOrigin": "Adresse de retour",
   "oauthConsentCapabilitiesTitle": "Cet agent peut",
-  "oauthConsentManagePlanning": "Lire et gérer les tâches, habitudes, projets, libellés personnels et Kanban.",
+  "oauthConsentManagePlanning": "Lire et gérer les tâches, habitudes, projets, libellés personnels et Kanban. Lire et modifier les raccourcis et l’apparence sur un appareil sélectionné en ligne.",
   "oauthConsentReadInsights": "Lire l’historique de focus terminé, les rapports de productivité et les succès.",
   "oauthConsentUnavailableTitle": "Cet agent ne peut pas",
   "oauthConsentUnavailable": "Accéder à votre compte ou facturation, Google Agenda ou au minuteur de focus actif.",

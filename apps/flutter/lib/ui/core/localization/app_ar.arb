@@ -94,7 +94,7 @@
   "oauthConsentClientRequest": "يريد {clientName} الوصول إلى Pomodoist",
   "oauthConsentRedirectOrigin": "عنوان العودة",
   "oauthConsentCapabilitiesTitle": "يمكن لهذا الوكيل",
-  "oauthConsentManagePlanning": "قراءة وإدارة المهام والعادات والمشاريع والتسميات الشخصية وكانبان.",
+  "oauthConsentManagePlanning": "قراءة وإدارة المهام والعادات والمشاريع والتسميات الشخصية وكانبان. قراءة اختصارات لوحة المفاتيح والمظهر وتغييرها على جهاز محدد متصل بالإنترنت.",
   "oauthConsentReadInsights": "قراءة سجل التركيز المكتمل وتقارير الإنتاجية والإنجازات.",
   "oauthConsentUnavailableTitle": "لا يمكن لهذا الوكيل",
   "oauthConsentUnavailable": "الوصول إلى حسابك أو الفوترة أو تقويم Google أو مؤقت التركيز المباشر.",

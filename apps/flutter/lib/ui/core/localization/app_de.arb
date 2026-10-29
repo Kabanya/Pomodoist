@@ -94,7 +94,7 @@
   "oauthConsentClientRequest": "{clientName} möchte auf Pomodoist zugreifen",
   "oauthConsentRedirectOrigin": "Rücksprungadresse",
   "oauthConsentCapabilitiesTitle": "Dieser Agent kann",
-  "oauthConsentManagePlanning": "Aufgaben, Gewohnheiten, Projekte, eigene Labels und Kanban lesen und verwalten.",
+  "oauthConsentManagePlanning": "Aufgaben, Gewohnheiten, Projekte, eigene Labels und Kanban lesen und verwalten. Tastenkürzel und Darstellung auf einem ausgewählten Gerät mit Internetverbindung lesen und ändern.",
   "oauthConsentReadInsights": "Abgeschlossenen Fokusverlauf, Produktivitätsberichte und Erfolge lesen.",
   "oauthConsentUnavailableTitle": "Dieser Agent kann nicht",
   "oauthConsentUnavailable": "Auf dein Konto oder Zahlungen, Google Kalender oder den laufenden Fokus-Timer zugreifen.",

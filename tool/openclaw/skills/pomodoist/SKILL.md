@@ -1,6 +1,6 @@
 ---
 name: pomodoist
-description: Manage the user's Pomodoist tasks, habits, projects, deadlines and synchronized Focus sessions through the configured Pomodoist MCP connection.
+description: Manage the user's Pomodoist tasks, habits, projects, Focus sessions and device settings through the configured Pomodoist MCP connection.
 version: 1.0.0
 license: MIT-0
 metadata:
@@ -13,7 +13,7 @@ metadata:
 # Pomodoist
 
 Use this skill when the user asks about their Pomodoist lists, tasks, habits, projects,
-priorities, scheduling, deadlines, productivity or Pomodoro/Focus sessions.
+priorities, scheduling, deadlines, productivity, Pomodoro/Focus sessions or device settings.
 Use only the configured Pomodoist MCP tools. Native OpenClaw may prefix their
 names with the configured server name; select tools by their original names and
 descriptions. Never substitute shell/database access when a tool is unavailable.
@@ -69,7 +69,7 @@ Use only `openclaw_*` mutations, never legacy `create_task`, `update_task`, etc.
 A read-only configuration is deliberate: explain how the user can enable writes;
 do not change tool filters, credentials or permissions yourself.
 
-Generate one UUID request_id per intended action. Every guarded tool takes
+Generate one UUID request_id per intended action. Task, habit, project and Focus guarded tools take
 `request_id` and nested `arguments`, which must match that tool's discovered
 schema. Explicit user requests authorize the requested ordinary change; do not
 invent additional edits. Before deleting a task/habit/project/label, describe the
@@ -112,6 +112,28 @@ Pause/resume respect the current preset's pause restrictions. Complete only when
 the interval has elapsed; never fabricate productive time. To stop, obtain
 confirmation and include arguments.confirmed=true. Custom timer lengths and
 preset editing are not supported by these tools; do not promise them.
+
+## Device settings
+
+Use `openclaw_list_app_devices` to see registered devices and their `online`
+availability. Select the intended online device, then call
+`openclaw_get_app_settings` for fresh values, versions and capabilities.
+`openclaw_set_app_shortcut` and `openclaw_set_app_appearance` take top-level
+`request_id`, `device_id`, `expected_version` and `value` (appearance also takes
+`setting`). Use the version of the affected group; shortcuts are one group.
+Internal shortcuts use `physicalKeyId`; global Quick Add uses the current OS
+native `keyCode` from its snapshot. A null binding resets the shortcut.
+
+Settings remain local to the selected running device. Custom theme image imports
+accept public HTTPS URLs; never send bytes, base64 or local file paths.
+Poll `openclaw_get_app_settings_request` after a pending response. Only a terminal
+`status: applied` confirms success: `ok: true` alone means transport success.
+Keep the same UUID and identical arguments on timeout. Requests expire if not
+claimed within 15 seconds. An `uncertain` result after a lost runtime must never
+be blindly replayed: read fresh settings and reassess. Receipts expire after 24
+hours and at most 100 are retained per device; do not resubmit old UUIDs after
+that retention window. Existing tool filters must be reapplied deliberately to
+expose these tools; read mode excludes settings changes.
 
 ## Results, retries and access
 

@@ -143,7 +143,7 @@
   },
   "oauthConsentRedirectOrigin": "戻り先アドレス",
   "oauthConsentCapabilitiesTitle": "このエージェントができること",
-  "oauthConsentManagePlanning": "タスク、習慣、プロジェクト、ユーザーラベル、カンバンの読み取りと管理。",
+  "oauthConsentManagePlanning": "タスク、習慣、プロジェクト、ユーザーラベル、カンバンの読み取りと管理。 オンラインの選択したデバイスでショートカットと外観を確認・変更する。",
   "oauthConsentReadInsights": "完了した集中履歴、生産性レポート、実績の読み取り。",
   "oauthConsentUnavailableTitle": "このエージェントができないこと",
   "oauthConsentUnavailable": "アカウント、請求情報、Googleカレンダー、実行中の集中タイマーへのアクセス。",

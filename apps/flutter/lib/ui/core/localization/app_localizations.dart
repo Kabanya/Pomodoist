@@ -682,7 +682,7 @@ abstract class AppLocalizations {
   /// No description provided for @oauthConsentManagePlanning.
   ///
   /// In en, this message translates to:
-  /// **'Read and manage tasks, habits, projects, user labels, and Kanban.'**
+  /// **'Read and manage tasks, habits, projects, user labels, and Kanban. Read and change shortcuts and appearance on a selected online device.'**
   String get oauthConsentManagePlanning;
 
   /// No description provided for @oauthConsentReadInsights.

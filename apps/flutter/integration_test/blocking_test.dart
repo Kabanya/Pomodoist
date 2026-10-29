@@ -24,6 +24,7 @@ import 'package:pomodoist/data/services/platform/distraction_native_gateway.dart
 import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:pomodoist/domain/models/notifications/notification_copy.dart';
 import 'package:pomodoist/ui/core/widgets/pomodoist_app.dart';
+import 'package:pomodoist/ui/distractions/view_models/distraction_view_model.dart';
 
 class _OfflineAccount extends AccountBootstrapController {
   @override
@@ -123,6 +124,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         ...pomoOverrides,
+        blockingAvailableProvider.overrideWithValue(true),
         appDatabaseProvider.overrideWithValue(db),
         accountBootstrapProvider.overrideWith(_OfflineAccount.new),
         applePurchasesSupportedProvider.overrideWithValue(false),

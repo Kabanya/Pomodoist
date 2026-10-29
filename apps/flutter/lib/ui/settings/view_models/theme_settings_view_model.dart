@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:pomodoist/config/theme_settings_dependencies.dart';
+import 'package:pomodoist/domain/models/settings/theme_image.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/themes/theme_backgrounds.dart';
 
@@ -273,6 +274,8 @@ final appThemeSettingsProvider =
       AppThemeSettingsController.new,
     );
 
+class ThemeSettingsConflictException implements Exception {}
+
 class AppThemeSettingsController extends Notifier<AppThemeSettings> {
   Future<void>? _loading;
   String? _legacySettings;
@@ -341,6 +344,20 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
 
   Future<void> load() => _loading ??= _load();
 
+  Future<AppThemeSettings> refreshSaved() async {
+    await load();
+    if (state.isSaving) throw StateError('Theme settings are busy');
+    final raw =
+        (await ref.read(themeSettingsRepositoryProvider).read(reload: true))
+            .getOrThrow();
+    final decoded = ThemeSettingsCodec.decode(raw);
+    if (ref.mounted && !state.isSaving && state.preview == null) {
+      _legacySettings = decoded.legacyRaw;
+      state = decoded.settings;
+    }
+    return decoded.settings;
+  }
+
   Future<void> _load() async {
     try {
       final repository = ref.read(themeSettingsRepositoryProvider);
@@ -361,13 +378,35 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
     }
   }
 
-  Future<void> selectTheme(String id) async {
+  Future<void> saveCustomFromAgent(
+    AppThemeDefinition custom, {
+    PreparedThemeImage? image,
+    required bool Function() isCurrent,
+  }) async {
+    _requireReady();
+    if (state.preview != null || state.isPreparingImage) {
+      throw StateError('Theme editor is busy');
+    }
+    if (!isCurrent()) throw StateError('Settings session expired');
+    if (image != null) _pendingImages[image.id] = image.bytes;
+    try {
+      await _persist(
+        state.copyWith(selectedId: 'custom', customTheme: custom),
+        savingPreview: true,
+        isCurrent: isCurrent,
+      );
+    } finally {
+      _pendingImages.clear();
+    }
+  }
+
+  Future<void> selectTheme(String id, {bool Function()? isCurrent}) async {
     await load();
     _requireReady();
     if (state.preview != null || !state.themes.any((theme) => theme.id == id)) {
       throw ArgumentError.value(id, 'id');
     }
-    await _persist(state.copyWith(selectedId: id));
+    await _persist(state.copyWith(selectedId: id), isCurrent: isCurrent);
   }
 
   void beginEdit() {
@@ -429,7 +468,11 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
   Future<void> _persist(
     AppThemeSettings next, {
     bool savingPreview = false,
+    bool Function()? isCurrent,
   }) async {
+    final expectedSettings = ThemeSettingsCodec.encode(
+      ThemeSettingsCodec.decode(ThemeSettingsCodec.encode(state)).settings,
+    );
     state = state.copyWith(isSaving: true);
     final repository = ref.read(themeSettingsRepositoryProvider);
     try {
@@ -442,6 +485,9 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
           ).settings.customTheme,
         );
       }
+      if (isCurrent != null && !isCurrent()) {
+        throw StateError('Settings session expired');
+      }
       await ref
           .read(themeSettingsStorageUseCaseProvider)
           .save(
@@ -450,6 +496,20 @@ class AppThemeSettingsController extends Notifier<AppThemeSettings> {
             pendingImages: Map.unmodifiable(_pendingImages),
             legacyBackup: _legacySettings,
             verifyRetainedImages: savingPreview,
+            isCurrent: isCurrent,
+            beforeWrite: isCurrent == null
+                ? null
+                : () async {
+                    final raw = (await repository.read(
+                      reload: true,
+                    )).getOrThrow();
+                    final saved = ThemeSettingsCodec.encode(
+                      ThemeSettingsCodec.decode(raw).settings,
+                    );
+                    if (saved != expectedSettings) {
+                      throw ThemeSettingsConflictException();
+                    }
+                  },
           );
       _legacySettings = null;
       _pendingImages.clear();

@@ -1,7 +1,7 @@
 begin;
 select no_plan();
 select has_schema('api_v1');
-select is((select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='api_v1'),7::bigint,'exactly seven versioned RPCs');
+select is((select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='api_v1'),8::bigint,'eight versioned RPCs including device settings');
 select ok(not has_schema_privilege('anon','api_v1','USAGE'),'anonymous role cannot access v1');
 select ok(not p.prosecdef,'v1 wrapper is an invoker: '||p.proname)
 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='api_v1';

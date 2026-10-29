@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { registerAppSettingsTools } from './app_settings_tools.ts';
 import { type PomodoistMcpAuth, type ToolErrorCode, toolError, toolSuccess } from './pomodoist_mcp.ts';
 import { pomodoistState } from '../_shared/pomodoist_state.ts';
 import { telegramCommandOps } from '../_shared/pomodoist_commands.ts';
@@ -44,6 +45,7 @@ function capture(auth: PomodoistMcpAuth, dependencies: PomodoistToolDependencies
 }
 
 export function registerOpenClawTools(server: McpServer, auth: PomodoistMcpAuth, dependencies: PomodoistToolDependencies) {
+  registerAppSettingsTools(server, auth, dependencies, 'openclaw_');
   const fetcher = dependencies.fetch ?? fetch;
   const identity = { p_subject: auth.subject, p_session_id: auth.sessionId, p_client_id: auth.clientId };
   async function rpc(name: string, args: JsonMap): Promise<JsonMap> {

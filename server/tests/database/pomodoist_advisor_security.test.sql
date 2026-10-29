@@ -8,7 +8,7 @@ where n.nspname='public' and p.proname in
   and not p.prosecdef and not has_function_privilege('anon',p.oid,'EXECUTE')
   and has_function_privilege('authenticated',p.oid,'EXECUTE')
   and has_function_privilege('service_role',p.oid,'EXECUTE');
-select is(count(*), 12::bigint, 'only eleven private RPCs and the session predicate are executable by authenticated')
+select is(count(*), 13::bigint, 'only twelve private RPCs and the session predicate are executable by authenticated')
 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
 where n.nspname='private' and has_function_privilege('authenticated',p.oid,'EXECUTE');
 select ok(not exists (

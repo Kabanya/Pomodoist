@@ -94,7 +94,7 @@
   "oauthConsentClientRequest": "{clientName} quiere acceder a Pomodoist",
   "oauthConsentRedirectOrigin": "Dirección de retorno",
   "oauthConsentCapabilitiesTitle": "Este agente puede",
-  "oauthConsentManagePlanning": "Leer y gestionar tareas, hábitos, proyectos, etiquetas propias y Kanban.",
+  "oauthConsentManagePlanning": "Leer y gestionar tareas, hábitos, proyectos, etiquetas propias y Kanban. Consultar y cambiar los atajos y la apariencia en un dispositivo seleccionado conectado.",
   "oauthConsentReadInsights": "Leer el historial de enfoque completado, informes de productividad y logros.",
   "oauthConsentUnavailableTitle": "Este agente no puede",
   "oauthConsentUnavailable": "Acceder a tu cuenta o pagos, Google Calendar ni al temporizador de enfoque activo.",

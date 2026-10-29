@@ -95,7 +95,7 @@
   "oauthConsentClientRequest": "{clientName} 想要访问 Pomodoist",
   "oauthConsentRedirectOrigin": "返回地址",
   "oauthConsentCapabilitiesTitle": "此智能体可以",
-  "oauthConsentManagePlanning": "读取和管理任务、习惯、项目、自定义标签与看板。",
+  "oauthConsentManagePlanning": "读取和管理任务、习惯、项目、自定义标签与看板。 读取和更改所选在线设备的快捷键与外观。",
   "oauthConsentReadInsights": "读取已完成的专注历史、效率报告与成就。",
   "oauthConsentUnavailableTitle": "此智能体不能",
   "oauthConsentUnavailable": "访问你的账户或账单、Google 日历或正在运行的专注计时器。",

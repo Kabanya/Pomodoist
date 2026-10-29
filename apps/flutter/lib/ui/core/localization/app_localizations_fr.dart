@@ -331,7 +331,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get oauthConsentManagePlanning =>
-      'Lire et gérer les tâches, habitudes, projets, libellés personnels et Kanban.';
+      'Lire et gérer les tâches, habitudes, projets, libellés personnels et Kanban. Lire et modifier les raccourcis et l’apparence sur un appareil sélectionné en ligne.';
 
   @override
   String get oauthConsentReadInsights =>

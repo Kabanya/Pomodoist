@@ -143,7 +143,7 @@
   },
   "oauthConsentRedirectOrigin": "반환 주소",
   "oauthConsentCapabilitiesTitle": "이 에이전트가 할 수 있는 일",
-  "oauthConsentManagePlanning": "작업, 습관, 프로젝트, 사용자 라벨, 칸반을 읽고 관리합니다.",
+  "oauthConsentManagePlanning": "작업, 습관, 프로젝트, 사용자 라벨, 칸반을 읽고 관리합니다. 선택한 온라인 기기의 단축키와 외관을 읽고 변경합니다.",
   "oauthConsentReadInsights": "완료된 집중 기록, 생산성 보고서, 업적을 읽습니다.",
   "oauthConsentUnavailableTitle": "이 에이전트가 할 수 없는 일",
   "oauthConsentUnavailable": "계정이나 결제, Google Calendar, 실행 중인 집중 타이머에 접근합니다.",

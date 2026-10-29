@@ -328,7 +328,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get oauthConsentManagePlanning =>
-      'Читать и изменять задачи, привычки, проекты, пользовательские метки и канбан.';
+      'Читать и изменять задачи, привычки, проекты, пользовательские метки и канбан. Читать и менять горячие клавиши и оформление на выбранном устройстве в сети.';
 
   @override
   String get oauthConsentReadInsights =>

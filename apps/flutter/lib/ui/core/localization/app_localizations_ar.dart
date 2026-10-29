@@ -323,7 +323,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get oauthConsentManagePlanning =>
-      'قراءة وإدارة المهام والعادات والمشاريع والتسميات الشخصية وكانبان.';
+      'قراءة وإدارة المهام والعادات والمشاريع والتسميات الشخصية وكانبان. قراءة اختصارات لوحة المفاتيح والمظهر وتغييرها على جهاز محدد متصل بالإنترنت.';
 
   @override
   String get oauthConsentReadInsights =>

@@ -146,6 +146,26 @@ native view is ready, after native errors, and when Reduce Transparency is
 enabled. Accessibility changes update live. Preserve the existing 180 ms theme
 transition, Reduce Motion behavior and interface zoom.
 
+### Agent changes to local appearance
+
+Connected agents may read and change the existing appearance controls on a chosen
+online device through MCP. Reuse the same controllers, palette validation,
+platform capabilities and persistence as manual settings. A successful response
+requires saved preferences and any required native acknowledgment. Changes appear
+immediately, including in Quick Add through its existing shared providers.
+
+An unfinished theme editor owns its preview: agent theme writes return `busy`
+rather than replacing it. Compare a fresh version of the changed settings group
+before applying; manual edits invalidate that version. Preserve light/dark pairs,
+semantic role meanings, Reduce Motion and platform fallbacks. Agent access adds
+no arbitrary UI code, preference keys or new design tokens.
+
+Remote background imports download directly on the selected device, use the same
+50 MiB/2560 px image preparation and local storage as manual imports, and preserve
+the current background on failure. Never send image bytes, base64 or local paths
+to MCP or store images in the server database/Storage. The command lifecycle and
+wire values are documented in [Agent app settings](agent-app-settings.md).
+
 ### Photo backgrounds
 
 Custom supports optional photos in three modes: main area only, one continuous
@@ -2100,13 +2120,16 @@ generation and static/architecture analysis only.
 
 ## Blocking preset desk
 
-Blocking UI is available on native desktop through `blockingAvailableProvider`.
-Keep the sidebar destination and Settings link visible there; redirect
-unsupported platforms from `/blocking` to `/focus`. Protection services remain
-independent of the screen.
+Blocking UI is temporarily hidden for this release through
+`blockingAvailableProvider`. Hide the sidebar destination and Settings link on
+all platforms and redirect `/blocking` to `/focus`. Keep the screen, saved
+profiles, preset associations, sync and protection services intact and independent
+of this UI gate. The isolated Blocking E2E overrides the gate to exercise the
+retained functionality.
 
-The desktop-only `/blocking` destination follows Focus in the sidebar. Settings
-links to it rather than duplicating its controls. At a content width of 820 px or
+When enabled for isolated validation, the desktop-only `/blocking` destination
+follows Focus in the sidebar. Settings links to it rather than duplicating its
+controls. At a content width of 820 px or
 more, show the preset rail beside the selected preset's settings. Below that
 width, put a horizontal preset list above the settings. Selecting a preset edits
 its association without changing Focus selection or the active session.

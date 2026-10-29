@@ -307,7 +307,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oauthConsentCapabilitiesTitle => '此智能体可以';
 
   @override
-  String get oauthConsentManagePlanning => '读取和管理任务、习惯、项目、自定义标签与看板。';
+  String get oauthConsentManagePlanning =>
+      '读取和管理任务、习惯、项目、自定义标签与看板。 读取和更改所选在线设备的快捷键与外观。';
 
   @override
   String get oauthConsentReadInsights => '读取已完成的专注历史、效率报告与成就。';

@@ -328,7 +328,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get oauthConsentManagePlanning =>
-      'Ler e gerenciar tarefas, hábitos, projetos, etiquetas do usuário e Kanban.';
+      'Ler e gerenciar tarefas, hábitos, projetos, etiquetas do usuário e Kanban. Ler e alterar atalhos e aparência em um dispositivo selecionado online.';
 
   @override
   String get oauthConsentReadInsights =>

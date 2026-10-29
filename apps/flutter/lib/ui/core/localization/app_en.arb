@@ -146,7 +146,7 @@
   },
   "oauthConsentRedirectOrigin": "Return address",
   "oauthConsentCapabilitiesTitle": "This agent can",
-  "oauthConsentManagePlanning": "Read and manage tasks, habits, projects, user labels, and Kanban.",
+  "oauthConsentManagePlanning": "Read and manage tasks, habits, projects, user labels, and Kanban. Read and change shortcuts and appearance on a selected online device.",
   "oauthConsentReadInsights": "Read completed focus history, productivity reports, and achievements.",
   "oauthConsentUnavailableTitle": "This agent cannot",
   "oauthConsentUnavailable": "Access your account or billing, Google Calendar, or the live focus timer.",

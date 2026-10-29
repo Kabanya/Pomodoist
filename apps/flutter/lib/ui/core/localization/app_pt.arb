@@ -143,7 +143,7 @@
   },
   "oauthConsentRedirectOrigin": "Endereço de retorno",
   "oauthConsentCapabilitiesTitle": "Este agente pode",
-  "oauthConsentManagePlanning": "Ler e gerenciar tarefas, hábitos, projetos, etiquetas do usuário e Kanban.",
+  "oauthConsentManagePlanning": "Ler e gerenciar tarefas, hábitos, projetos, etiquetas do usuário e Kanban. Ler e alterar atalhos e aparência em um dispositivo selecionado online.",
   "oauthConsentReadInsights": "Ler histórico de foco concluído, relatórios de produtividade e conquistas.",
   "oauthConsentUnavailableTitle": "Este agente não pode",
   "oauthConsentUnavailable": "Acessar sua conta ou cobrança, Google Agenda ou o timer de foco em andamento.",

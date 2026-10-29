@@ -202,11 +202,11 @@ Finder _button(String text) => find.widgetWithText(ShadButton, text);
 
 void main() {
   testWidgets(
-    'Blocking UI is available on desktop',
+    'Blocking UI stays hidden on desktop for this release',
     (tester) async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
-      expect(container.read(blockingAvailableProvider), isTrue);
+      expect(container.read(blockingAvailableProvider), isFalse);
     },
     variant: TargetPlatformVariant({
       TargetPlatform.macOS,
@@ -611,10 +611,10 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Blocking settings link is visible on desktop', (tester) async {
+  testWidgets('Blocking settings link stays hidden on desktop', (tester) async {
     final commands = _Commands(const DistractionSettingsState(available: true));
     await _mount(tester, commands, const Scaffold(body: DistractionSettings()));
-    expect(find.text('Blocking'), findsOneWidget);
+    expect(find.text('Blocking'), findsNothing);
     expect(tester.takeException(), isNull);
   }, variant: TargetPlatformVariant({TargetPlatform.macOS}));
 

@@ -317,7 +317,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get oauthConsentManagePlanning =>
-      '작업, 습관, 프로젝트, 사용자 라벨, 칸반을 읽고 관리합니다.';
+      '작업, 습관, 프로젝트, 사용자 라벨, 칸반을 읽고 관리합니다. 선택한 온라인 기기의 단축키와 외관을 읽고 변경합니다.';
 
   @override
   String get oauthConsentReadInsights => '완료된 집중 기록, 생산성 보고서, 업적을 읽습니다.';

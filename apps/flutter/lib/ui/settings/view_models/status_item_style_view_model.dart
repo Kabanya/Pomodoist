@@ -44,6 +44,18 @@ class StatusItemStyleViewModel extends Notifier<StatusItemStyleState> {
 
   Future<void> retry() => _apply(_retryOperation ?? _repository.read);
 
+  Future<void> selectStrict(StatusItemStyle style) async {
+    if (state.style == null || state.isBusy) {
+      throw StateError('Menu bar style is busy');
+    }
+    await select(style);
+    if (!ref.mounted) throw StateError('Menu bar controller disposed');
+    if (state.error != null) throw state.error!;
+    if (state.style != style) {
+      throw StateError('Menu bar style was not applied');
+    }
+  }
+
   Future<void> select(StatusItemStyle style) async {
     if (state.style == null || state.style == style) return;
     await _apply(() => _repository.select(style));
