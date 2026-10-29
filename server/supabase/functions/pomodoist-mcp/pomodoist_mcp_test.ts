@@ -569,7 +569,7 @@ Deno.test("rejects invalid dependency configuration", () => {
 Deno.test("accepts only the reviewed production gateway origin", () => {
   const productionConfig = {
     ...dependencies().config,
-    issuer: "https://supabase-test.pomodoist.com/auth/v1",
+    issuer: "https://ewauihswbwduvklrozke.supabase.co/auth/v1",
     resourceUrl: "https://mcp.pomodoist.com/functions/v1/pomodoist-mcp",
   };
 

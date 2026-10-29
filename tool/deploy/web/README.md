@@ -1,18 +1,66 @@
 # Web image build contract
 
-Hosted staging and production use `https://supabase-test.pomodoist.com` and
-its public anon key. Their web domains and application identities remain
-separate, but account and task data are shared. Native release builds use the
-same backend when no explicit Supabase pair is supplied. The retired Supabase
-Cloud endpoint is rejected for production. This endpoint change does not copy
-accounts or data from the retired backend.
-
 The web image is built **once** and serves staging, production and self-hosted
 deployments. Everything that differs between them arrives as container
 environment variables at runtime; the image itself is identical for all three.
 GitHub Actions builds and smoke-tests the image on `ubuntu-24.04` for
 `linux/amd64`, then publishes a private GHCR image. Coolify pulls and runs it on
 the existing VPS. Environment configuration and domains stay in Coolify.
+
+## Backend separation and release prerequisite
+
+Production uses `https://pomodoist.supabase.co` with that Cloud
+project's public key. This free vanity subdomain was confirmed active for
+project `ewauihswbwduvklrozke` on 2026-10-30; it requires no paid Custom Domain
+add-on or changes to the `pomodoist.com` DNS zone. HTTPS settings and Google/Apple
+OAuth authorize redirects respond successfully through the vanity hostname;
+a complete signed-in callback still needs device/browser verification.
+The OAuth server metadata continues to declare
+`https://ewauihswbwduvklrozke.supabase.co/auth/v1` as its issuer, so MCP token
+validation must retain that canonical issuer. Staging alone uses Xubuntu at
+`https://supabase-test.pomodoist.com` with its own public key. Native production
+releases use the Cloud pair when no explicit pair is supplied. Official web,
+Chrome and Telegram configurations reject the other environment's backend;
+custom self-hosted endpoints remain supported. Local development profiles do
+not connect to Xubuntu.
+
+Keep `.env.setup` and its generated production profiles consistent. Empty
+values in `.env.setup` do not clear existing generated values: when removing a
+development backend, clear both `SUPABASE_URL` and `SUPABASE_ANON_KEY` in the
+existing local profile as well. Never commit private configuration files.
+
+A read-only Cloud inspection on **2026-10-30** confirmed existing Pomodoist sync
+data and a latest applied migration of `20261022080300`. The following repository
+migrations are absent and must be reviewed, tested and applied in order before
+releasing the current `develop` clients against Cloud:
+
+| Missing migration (under `server/supabase/migrations/`) | Required behavior |
+| --- | --- |
+| `20261026081733_pomodoist_core_distraction_blocking_focus.sql` | Shared Focus authority and resource classification/cache RPCs |
+| `20261028161223_pomodoist_core_focus_receipt_limit.sql` | Bounded Focus command receipts |
+| `20261028162356_pomodoist_core_focus_transitions_and_locks.sql` | Concurrent Focus transitions and lifecycle locking |
+| `20261028164545_pomodoist_core_focus_open_pause.sql` | Correct credit for an open pause at completion |
+| `20261029081042_pomodoist_core_app_settings.sql` | Agent/device settings RPCs and private request metadata |
+
+The same inspection found these SQL entrypoints absent:
+`public.pomodoist_focus(jsonb)`,
+`public.pomodoist_resource_classification(jsonb)`,
+`public.pomodoist_resource_cache_store(jsonb)`,
+`public.pomodoist_app_settings_agent(uuid,uuid,uuid,jsonb)` and
+`api_v1.pomodoist_app_settings_device(jsonb)`. Their private implementations,
+permissions and tables are installed by the migrations above. Check the
+`pomodoist-ai` and `pomodoist-mcp` Edge Functions against the selected release
+as part of that deployment; the classification and app-settings consumers
+require the corresponding SQL contracts.
+
+This configuration correction does not apply migrations, copy Xubuntu data,
+reset accounts or local SQLite databases, deploy services, or publish builds.
+Production readiness is blocked on the Cloud compatibility work above. Do not
+replay the initial self-hosted baseline against the existing Cloud database.
+When publication is authorized, update production runtime URL and public key
+in Coolify and release configuration together with the compatible image;
+leave staging variables unchanged. Existing running services are not changed
+by this source-only correction.
 
 ## What the image accepts
 

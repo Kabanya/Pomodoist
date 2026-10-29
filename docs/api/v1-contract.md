@@ -6,7 +6,8 @@ data, authorization rules and durable operation receipts as legacy v0.
 ## Transport
 
 The Supabase origin remains configurable through the existing public configuration.
-No custom domain is activated by this change. Reviewed hosted origins live in
+Production uses the active Cloud vanity hostname `https://pomodoist.supabase.co`;
+staging keeps its separate Xubuntu backend. Reviewed hosted origins live in
 `apps/flutter/lib/config/backend_endpoints.dart`; runtime configuration cannot
 extend its own allowlist. A future domain still requires ownership, Auth callback,
 client session-storage and deployment verification before it is approved there.

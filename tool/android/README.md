@@ -130,8 +130,9 @@ bash tool/android/build_release.sh .env.android.json
 ```
 
 The default official backend is the existing native-production fallback in
-`RuntimePublicConfig`. An override must provide both `SUPABASE_URL` and a public
-`SUPABASE_ANON_KEY`; service-role/secret keys are rejected. The configuration
+`RuntimePublicConfig`: `https://pomodoist.supabase.co`. An explicit
+pair must use the same Cloud project and its public `SUPABASE_ANON_KEY`; the
+staging backend and service-role/secret keys are rejected. The configuration
 validator also rejects unknown fields, duplicate JSON keys, HTTP endpoints,
 development unlocks, local StoreKit testing and embedded server/signing secrets.
 All dart-defines can be extracted from the client: they are **not secret storage**.
@@ -186,19 +187,19 @@ build/app/outputs/bundle/<flavor>Release/app-<flavor>-release.aab
 
 ## GitHub Actions
 
-`Android validation` runs on pull requests that touch Flutter or Android files and on every new tag, without production secrets.
+`Android validation` runs only on application release tags matching `v*.*.*`,
+without production secrets. Ordinary branch pushes, pull requests, server tags
+and Windows preview publication do not start it.
 It checks packaging/configuration, Android Dart contracts, fails an unsigned
 release deliberately, then builds APK/AAB for **all three flavors** using a
 disposable non-debug CI key and verifies each against its own application ID.
-On tags, it installs the release APK on an API 35 x86_64 emulator and checks process launch,
+It installs the release APK on an API 35 x86_64 emulator and checks process launch,
 background/resume, and cold/warm native deep-link delivery for the `development`
 flavor — the only flavor whose runtime configuration CI can satisfy without
 backend credentials; the `staging` and `production` artifacts are compile- and
 identity-checked only. CI-only artifacts are explicitly labelled **NOT FOR
 DISTRIBUTION** and retained for three days. This smoke test does not validate
 authenticated flows, microphone hardware or layouts.
-Server and Windows preview tags created with `GITHUB_TOKEN` call the same validation
-workflow directly, because their tag events do not start another workflow.
 
 `Android production release` runs manually or on the same `vX.Y.Z` / `vX.Y.Z-rc.N`
 tags as desktop releases. It accepts only commits already in `main`, builds from

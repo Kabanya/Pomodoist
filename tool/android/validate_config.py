@@ -67,6 +67,8 @@ def validate(config):
         raise ValueError('SUPABASE_URL and SUPABASE_ANON_KEY must be provided together or both omitted.')
     if backend:
         https_url(backend, 'SUPABASE_URL')
+        if backend != 'https://pomodoist.supabase.co':
+            raise ValueError('SUPABASE_URL must use the production Cloud project.')
         if not key.startswith('sb_publishable_'):
             try:
                 payload = key.split('.')[1]

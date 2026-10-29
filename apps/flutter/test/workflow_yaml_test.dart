@@ -4,6 +4,46 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yaml/yaml.dart';
 
 void main() {
+  test('Android smoke runs only for application release tags', () {
+    final android =
+        loadYaml(File('../../.github/workflows/android.yml').readAsStringSync())
+            as YamlMap;
+    final triggers = android['on'] as YamlMap;
+    expect(triggers.keys.toSet(), {'push'});
+    final push = triggers['push'] as YamlMap;
+    expect(push.keys.toSet(), {'tags'});
+    expect(push['tags'], ['v*.*.*']);
+    final steps =
+        _job(
+              '../../.github/workflows/android.yml',
+              'release-build-smoke',
+            )['steps']
+            as YamlList;
+    final emulator = steps.singleWhere(
+      (step) => (step['uses'] as String? ?? '').startsWith(
+        'ReactiveCircus/android-emulator-runner@',
+      ),
+    );
+    expect(emulator['if'], isNull);
+    expect(
+      emulator['with']['script'],
+      'bash tool/android/smoke_test.sh development',
+    );
+    for (final name in ['selfhost', 'windows-exe-preview']) {
+      final workflow =
+          loadYaml(File('../../.github/workflows/$name.yml').readAsStringSync())
+              as YamlMap;
+      final jobs = workflow['jobs'] as YamlMap;
+      expect(
+        jobs.values.where(
+          (job) => job['uses'] == './.github/workflows/android.yml',
+        ),
+        isEmpty,
+        reason: name,
+      );
+    }
+  });
+
   test('Flutter build and test checkouts download the Pomo LFS asset', () {
     const jobs = {
       'validate': 'validate',

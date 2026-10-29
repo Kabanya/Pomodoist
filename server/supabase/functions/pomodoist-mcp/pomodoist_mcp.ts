@@ -380,8 +380,9 @@ function secureEndpoint(url: URL) {
 function validateConfig(config: PomodoistMcpConfig) {
   const issuer = new URL(config.issuer);
   const resource = new URL(config.resourceUrl);
+  // Cloud OAuth metadata retains the project issuer behind its vanity hostname.
   const productionGateway = config.issuer ===
-      "https://supabase-test.pomodoist.com/auth/v1" &&
+      "https://ewauihswbwduvklrozke.supabase.co/auth/v1" &&
     config.resourceUrl ===
       "https://mcp.pomodoist.com/functions/v1/pomodoist-mcp";
   if (

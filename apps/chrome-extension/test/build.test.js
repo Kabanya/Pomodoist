@@ -78,3 +78,15 @@ test('desktop flavor is explicit and cannot be an arbitrary endpoint label',()=>
   assert.equal(configuration(env).flavor,'production');
   assert.throws(()=>configuration({...env,APP_ENV:'https://evil.test'}));
 });
+
+// Official clients must not silently cross production and staging databases.
+test('official web origins require their own backend while custom hosts stay configurable', () => {
+  for (const [APP_ENV, WEB_APP_URL, SUPABASE_URL, other] of [
+    ['production', 'https://app.pomodoist.com', 'https://pomodoist.supabase.co', 'https://supabase-test.pomodoist.com'],
+    ['staging', 'https://app-test.pomodoist.com', 'https://supabase-test.pomodoist.com', 'https://pomodoist.supabase.co'],
+  ]) {
+    assert.equal(configuration({ ...env, APP_ENV, WEB_APP_URL, SUPABASE_URL }).apiUrl, SUPABASE_URL);
+    assert.throws(() => configuration({ ...env, APP_ENV, WEB_APP_URL, SUPABASE_URL: other }), /backend/i);
+  }
+  assert.equal(configuration(env).apiUrl, 'https://api.example.test');
+});

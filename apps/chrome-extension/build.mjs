@@ -16,6 +16,11 @@ function origin(value, name) {
 }
 export function configuration(env) {
   const apiUrl = origin(env.SUPABASE_URL, 'SUPABASE_URL'), webUrl = origin(env.WEB_APP_URL, 'WEB_APP_URL');
+  const hostedBackend = {
+    'https://app.pomodoist.com': 'https://pomodoist.supabase.co',
+    'https://app-test.pomodoist.com': 'https://supabase-test.pomodoist.com',
+  }[webUrl];
+  if (hostedBackend && apiUrl !== hostedBackend) throw new Error('Official web origins must use their approved backend.');
   const anonKey = env.SUPABASE_ANON_KEY?.trim() ?? '';
   let publicKey = /^sb_publishable_[A-Za-z0-9_-]+$/.test(anonKey);
   if (!publicKey) {

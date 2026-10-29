@@ -325,7 +325,7 @@ RuntimePublicConfig _config({
     supabaseUrl: local
         ? ''
         : production
-        ? 'https://supabase-test.pomodoist.com'
+        ? 'https://pomodoist.supabase.co'
         : 'https://supabase-test.pomodoist.com',
     supabaseAnonKey: local ? '' : 'public-anon-key',
     turnstileSiteKey: local ? '' : 'test-turnstile-site-key',

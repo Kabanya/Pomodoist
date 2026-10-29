@@ -97,10 +97,23 @@ SENTRY_DSN=
         (await check(
           environment: 'production',
           webAppUrl: productionWebUrl,
-          supabaseUrl: 'https://supabase-test.pomodoist.com',
+          supabaseUrl: 'https://pomodoist.supabase.co',
         )).exitCode,
         0,
       );
+      for (final (environment, web, backend) in [
+        ('production', productionWebUrl, 'https://supabase-test.pomodoist.com'),
+        ('staging', stagingWebUrl, 'https://pomodoist.supabase.co'),
+      ]) {
+        expect(
+          (await check(
+            environment: environment,
+            webAppUrl: web,
+            supabaseUrl: backend,
+          )).exitCode,
+          isNot(0),
+        );
+      }
       expect(
         (await check(
           environment: 'staging',
@@ -121,7 +134,7 @@ SENTRY_DSN=
         (await check(
           environment: 'production',
           webAppUrl: productionWebUrl,
-          supabaseUrl: 'https://supabase-test.pomodoist.com',
+          supabaseUrl: 'https://pomodoist.supabase.co',
           role: 'service_role',
         )).exitCode,
         isNot(0),
